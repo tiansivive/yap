@@ -10,7 +10,7 @@
 	"author": {
 		"email": "tiago.vilaverde@elastic.co"
 	},
-	"type": "module",
+	"type": "commonjs",
 	"main": "./lib/index.js",
 	"files": [
 		"lib/",
@@ -23,17 +23,29 @@
 		"format": "prettier .",
 		"lint": "eslint . --max-warnings 0",
 		"lint:knip": "knip",
+		"nearley": "nearleyc src/QTT/parser/grammar.ne -o src/QTT/parser/grammar.ts",
+		"parse": "npm run nearley && nearley-test src/QTT/parser/grammar.js",
 		"prepare": "husky",
+		"railroad": "nearley-railroad src/QTT/parser/grammar.ne -o gen/QTT/grammar.html",
 		"test": "vitest",
 		"tsc": "tsc"
 	},
 	"lint-staged": {
 		"*": "prettier --ignore-unknown --write"
 	},
+	"dependencies": {
+		"fp-ts": "^2.16.9",
+		"lodash": "^4.17.21",
+		"moo": "^0.5.2",
+		"ts-pattern": "^5.3.1"
+	},
 	"devDependencies": {
 		"@eslint/js": "^9.10.0",
 		"@release-it/conventional-changelog": "^8.0.1",
 		"@types/eslint__js": "^8.42.3",
+		"@types/lodash": "^4.17.7",
+		"@types/moo": "^0.5.9",
+		"@types/nearley": "^2.11.5",
 		"@types/node": "^22.5.4",
 		"@vitest/coverage-v8": "^2.0.5",
 		"@vitest/eslint-plugin": "^1.1.0",
@@ -43,13 +55,15 @@
 		"husky": "^9.1.5",
 		"knip": "^5.30.0",
 		"lint-staged": "^15.2.10",
+		"nearley": "^2.20.1",
 		"prettier": "^3.3.3",
 		"prettier-plugin-curly": "^0.2.2",
 		"prettier-plugin-packagejson": "^2.5.2",
 		"prettier-plugin-sh": "^0.14.0",
 		"release-it": "^17.6.0",
+		"ts-node": "^10.9.2",
 		"tsup": "^8.2.4",
-		"typescript": "^5.5.4",
+		"typescript": "^5.7.3",
 		"typescript-eslint": "^8.4.0",
 		"vitest": "^2.0.5"
 	},

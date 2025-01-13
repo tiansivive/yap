@@ -3,14 +3,15 @@
 		"declaration": true,
 		"declarationMap": true,
 		"esModuleInterop": true,
-		"module": "NodeNext",
-		"moduleResolution": "NodeNext",
+		"module": "CommonJS",
+		"moduleResolution": "node10",
 		"noEmit": true,
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"target": "ES2022"
+		"target": "ESNext",
+		"noErrorTruncation": false
 	},
 	"include": ["src"]
 }

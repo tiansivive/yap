@@ -1,0 +1,359 @@
+import { match } from "ts-pattern";
+import * as Src from "../parser/src";
+
+import * as El from "./syntax";
+import * as NF from "./normalized";
+import * as Eval from "./evaluator";
+
+import * as Con from "./constructors";
+
+import Shared, { Literal, Multiplicity } from "../shared";
+import { Reader } from "fp-ts/lib/Reader";
+import { Writer } from "fp-ts/lib/Writer";
+
+import * as RW from "./monad";
+
+import * as F from "fp-ts/lib/function";
+import * as R from "fp-ts/lib/Reader";
+import * as W from "fp-ts/lib/Writer";
+
+import { Monoid } from "fp-ts/lib/Monoid";
+import { freshMeta } from "./supply";
+
+import { P } from "ts-pattern";
+import { Extend } from "../../utils/types";
+
+type Origin = "inserted" | "source";
+// type Node = { type: "node", value: El.Term, annotation: NF.Value }
+// type Node = [El.Term, NF.ModalValue]
+
+const ex: El.Node = [
+	{
+		type: "App",
+		icit: "Explicit",
+		func: 1 as any,
+		arg: [
+			{ type: "Lit", value: { type: "Atom", value: "" } },
+			[{ type: "Lit", value: { type: "Atom", value: "Type" } }, "Many"],
+		],
+	},
+	[{ type: "Neutral", variable: { type: "Bound", index: 0 } }, Shared.Many],
+];
+
+export type Context = {
+	types: Array<[String, Origin, NF.ModalValue]>;
+	env: NF.Env;
+	names: Array<String>;
+};
+
+type Constraint =
+	| { type: "equals"; left: El.ModalTerm; right: El.ModalTerm }
+	| { type: "assign"; left: NF.ModalValue; right: NF.ModalValue };
+
+type Elaboration<T> = RW.RW<Context, Constraint[], T>;
+
+type AST = [El.Term, NF.ModalValue];
+
+let count = 0;
+
+export function infer(ast: Src.Term): Elaboration<AST> {
+	return F.pipe(
+		ask(),
+		chain((ctx) => {
+			const { env, types } = ctx;
+			return match(ast)
+				.with({ type: "lit" }, ({ value }): Elaboration<AST> => {
+					const atom: Literal = match(value)
+						.with({ type: "String" }, (_) => Shared.Atom("String"))
+						.with({ type: "Num" }, (_) => Shared.Atom("Num"))
+						.with({ type: "Bool" }, (_) => Shared.Atom("Bool"))
+						.with({ type: "Unit" }, (_) => Shared.Unit())
+						.with({ type: "Type" }, (_) => Shared.Type())
+						.with({ type: "Atom" }, (_) => Shared.Type())
+						.exhaustive();
+
+					return of<AST>([
+						{ type: "Lit", value },
+						[{ type: "Lit", value: atom }, Shared.Many],
+					]);
+				})
+
+				.with({ type: "hole" }, (_) => {
+					const meta = El.Var(freshMeta());
+					const annotation = Eval.evaluate(env, meta);
+					const modal = NF.infer(env, annotation);
+					return of<AST>([meta, modal]);
+				})
+
+				.with(
+					{ type: "var" },
+					({ variable }): Elaboration<AST> => of<AST>(lookup(variable, types)),
+				)
+
+				.with({ type: "pi" }, { type: "arrow" }, (pi): Elaboration<AST> => {
+					const v = pi.type === "pi" ? pi.variable : `t${++count}`;
+					const body = pi.type === "pi" ? pi.body : pi.rhs;
+					const ann = pi.type === "pi" ? pi.annotation : pi.lhs;
+
+					return F.pipe(
+						Do,
+						bind_("ann", () => check(ann, NF.Type)),
+						bind_("body", ({ ann }) => {
+							const va = Eval.evaluate(env, ann);
+							const mva = NF.infer(env, va);
+							const ctx_ = bind(ctx, v, mva);
+							return local(ctx_, check(body, NF.Type));
+						}),
+						RW.fmap(({ ann, body }) => [
+							Con.Term.Pi(v, pi.icit, ann, body),
+							NF.Type,
+						]),
+					);
+				})
+				.with({ type: "lambda" }, (lam): Elaboration<AST> => {
+					const meta: El.Term = El.Var(freshMeta());
+					const nf = Eval.evaluate(env, meta);
+					const mnf = NF.infer(env, nf);
+
+					const node: AST = [meta, mnf];
+
+					return F.pipe(
+						lam.annotation ? check(lam.annotation, NF.Type) : of(meta),
+						chain((tm) => {
+							const va = Eval.evaluate(env, tm);
+							const mva = NF.infer(env, va);
+							const ctx_ = bind(ctx, lam.variable, mva);
+							return local(
+								ctx_,
+								F.pipe(
+									infer(lam.body),
+									chain(insertImplicitApps),
+									RW.fmap((inferred): AST => {
+										const [body, bodyTy] = inferred;
+										return [
+											Con.Term.Lambda(lam.variable, lam.icit, body),
+											[
+												Con.Type.Pi(
+													lam.variable,
+													lam.icit,
+													mva,
+													closeVal(ctx, bodyTy),
+												),
+												Shared.Many,
+											],
+										];
+									}),
+								),
+							);
+						}),
+					);
+				})
+				.otherwise((val) => {
+					console.log(val);
+					throw new Error("Not implemented yet");
+				});
+		}),
+	);
+}
+
+function check(
+	term: Src.Term,
+	annotation: NF.ModalValue,
+): Elaboration<El.Term> {
+	return F.pipe(
+		ask(),
+		chain((ctx) => {
+			const [ty, q] = annotation;
+			return match([term, ty])
+				.with(
+					[{ type: "lambda" }, { type: "Abs", binder: { type: "Pi" } }],
+					([tm, ty]) => tm.icit === ty.binder.icit,
+					([tm, ty]) => {
+						// const [m, n] = checkModality(tm.multiplicity, q)
+						const bodyTy = Eval.apply(
+							ty.closure,
+							Con.Type.Rigid(ctx.env.length),
+						);
+						const mbody = NF.infer(ctx.env, bodyTy);
+
+						const ctx_ = bind(ctx, tm.variable, ty.binder.annotation);
+						return local(
+							ctx_,
+							F.pipe(
+								check(tm.body, mbody),
+								RW.fmap(
+									(body): El.Term =>
+										Con.Term.Lambda(tm.variable, tm.icit, body),
+								),
+							),
+						);
+					},
+				)
+				.with(
+					[P._, { type: "Abs", binder: { type: "Pi" } }],
+					([_, ty]) => ty.binder.icit === "Implicit",
+					([tm, ty]) => {
+						const bodyTy = Eval.apply(
+							ty.closure,
+							Con.Type.Rigid(ctx.env.length),
+						);
+						const mbody = NF.infer(ctx.env, bodyTy);
+						const ctx_ = bindInsertedImplicit(
+							ctx,
+							ty.binder.variable,
+							ty.binder.annotation,
+						);
+						return local(
+							ctx_,
+							F.pipe(
+								check(tm, mbody),
+								RW.fmap(
+									(tm): El.Term =>
+										Con.Term.Lambda(ty.binder.variable, "Implicit", tm),
+								),
+							),
+						);
+					},
+				)
+				.with([{ type: "hole" }, P._], () =>
+					of<El.Term>(Con.Term.Var(freshMeta())),
+				)
+				.otherwise(([tm, _]) => {
+					return F.pipe(
+						infer(tm),
+						chain(insertImplicitApps),
+						discard(([, inferred]) =>
+							tell({ type: "assign", left: inferred, right: annotation }),
+						),
+						RW.fmap(([tm]) => tm),
+					);
+				});
+		}),
+	);
+}
+
+function insertImplicitApps(node: AST): Elaboration<AST> {
+	const [term, annotation] = node;
+	return F.pipe(
+		ask(),
+		chain((ctx) =>
+			match(node)
+				.with(
+					[{ type: "Abs", binding: { type: "Lambda", icit: "Implicit" } }, P._],
+					() => of<AST>(node),
+				)
+
+				.with(
+					[
+						P._,
+						[{ type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._],
+					],
+					([, [pi]]) => {
+						const meta = Con.Term.Var(freshMeta());
+						const vNF = Eval.evaluate(ctx.env, meta);
+						const vMNF = NF.infer(ctx.env, vNF);
+
+						const tm = Con.Term.App("Implicit", term, meta);
+
+						const bodyNF = Eval.apply(pi.closure, vNF);
+						const bodyMNF = NF.infer(ctx.env, bodyNF);
+
+						return insertImplicitApps([tm, bodyMNF]);
+					},
+				)
+				.otherwise(() => of(node)),
+		),
+	);
+}
+
+function checkModality(
+	m: Multiplicity = Shared.Many,
+	n: Multiplicity = Shared.Many,
+) {
+	if (m !== n) {
+		throw new Error("Multiplicity mismatch");
+	}
+	return [m, n];
+}
+
+const lookup = (variable: Src.Variable, types: Context["types"]): AST => {
+	const _lookup = (
+		i: number,
+		variable: Src.Variable,
+		types: Context["types"],
+	): AST => {
+		if (types.length === 0) {
+			throw new Error("Variable not found");
+		}
+
+		const [[name, origin, mnf], ...rest] = types;
+		if (name === variable.value && origin === "source") {
+			return [El.Var({ type: "Bound", index: i }), mnf];
+		}
+
+		return _lookup(i + 1, variable, types);
+	};
+	return _lookup(0, variable, types);
+};
+
+const closeVal = (ctx: Context, value: NF.ModalValue): NF.Closure => ({
+	env: ctx.env,
+	term: NF.quote(ctx.env.length + 1, value),
+});
+
+const bind = (
+	context: Context,
+	variable: string,
+	annotation: NF.ModalValue,
+): Context => {
+	const [, q] = annotation;
+	const { env, types } = context;
+	return {
+		env: [[Con.Type.Rigid(env.length), q], ...env],
+		types: [[variable, "source", annotation], ...types],
+		names: [variable, ...context.names],
+	};
+};
+
+const bindInsertedImplicit = (
+	context: Context,
+	variable: string,
+	annotation: NF.ModalValue,
+): Context => {
+	const [, q] = annotation;
+	const { env, types } = context;
+	return {
+		env: [[Con.Type.Rigid(env.length), q], ...env],
+		types: [[variable, "inserted", annotation], ...types],
+		names: [variable, ...context.names],
+	};
+};
+
+const monoid: Monoid<Constraint[]> = {
+	concat: (x, y) => x.concat(y),
+	empty: [],
+};
+
+const of = RW.of(monoid) as <A>(a: A) => Elaboration<A>;
+const ask = () =>
+	RW.liftR<Context, Constraint[], Context>(monoid)(R.ask<Context>());
+const chain = RW.getChain<Constraint[]>(monoid);
+
+const Do: Elaboration<{}> = RW.Do(monoid);
+const bind_ = RW.bind<Context, Constraint[]>(monoid);
+
+const discard = <A, B>(f: (a: A) => RW.RW<Context, Constraint[], B>) =>
+	chain<Context, A, A>((val) => RW.fmap(f(val), () => val));
+
+const tell = <R>(constraint: Constraint) =>
+	RW.liftW<R, Constraint[], void>(W.tell([constraint]));
+
+const local: <A>(
+	f: Context | ((ctx: Context) => Context),
+	rw: RW.RW<Context, Constraint[], A>,
+) => RW.RW<Context, Constraint[], A> = (f, rw) => {
+	return (ctx: Context) => {
+		const _ctx = typeof f === "function" ? f(ctx) : f;
+		return rw(_ctx);
+	};
+};

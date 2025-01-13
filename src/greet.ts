@@ -11,3 +11,5 @@ export function greet(options: GreetOptions | string) {
 		logger(message);
 	}
 }
+
+greet({ message: "Hello, world!", times: 3 });

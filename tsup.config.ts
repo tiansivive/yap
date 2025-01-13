@@ -8,4 +8,7 @@ export default defineConfig({
 	format: "esm",
 	outDir: "lib",
 	sourcemap: true,
+	loader: {
+		".lama": "text",
+	},
 });

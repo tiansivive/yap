@@ -1,15 +1,26 @@
 {
 	"configurations": [
 		{
-			"args": ["run", "${relativeFile}"],
-			"autoAttachChildProcesses": true,
-			"console": "integratedTerminal",
-			"name": "Debug Current Test File",
-			"program": "${workspaceRoot}/node_modules/vitest/vitest.mjs",
+			"type": "node",
 			"request": "launch",
-			"skipFiles": ["<node_internals>/**", "**/node_modules/**"],
-			"smartStep": true,
-			"type": "node"
+			"name": "Debug Program",
+			"skipFiles": ["<node_internals>/**"],
+			"program": "lib/index.js",
+			"preLaunchTask": "build"
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "ts node",
+			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
+			"runtimeArgs": [
+				"--transpile-only"
+				// if you use esm
+			],
+			"program": "${file}",
+			"cwd": "${workspaceRoot}",
+			"internalConsoleOptions": "openOnSessionStart",
+			"skipFiles": ["<node_internals>/**", "node_modules/**"]
 		}
 	],
 	"version": "0.2.0"

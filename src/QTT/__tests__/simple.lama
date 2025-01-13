@@ -1,0 +1,30 @@
+
+
+let app = f g h;
+let app = f (g 1);
+
+let block = {
+  let v = f 1;
+  v + 1;
+  return v;
+};
+
+let patterns = match 1
+  | x -> \f -> f x
+  | y -> y
+  ;
+
+let ann = x : Int;
+
+let lambda = \y -> \x -> f x y;
+
+let op = f + g;
+
+
+let pi = (x:Int) -> (f x);
+
+let arrow = Int -> Bool;
+let param = \(f:Int -> Bool) -> f 1;
+let hole = _;
+
+
