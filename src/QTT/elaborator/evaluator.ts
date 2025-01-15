@@ -49,13 +49,3 @@ export const apply = (
 	const { env, term } = closure;
 	return evaluate([[value, multiplicity], ...env], term);
 };
-
-//  eval' (Syn.Abs (Syn.Lam { Syn.var, Syn.icit }) e) = Abs (Lam var icit) (Closure ctx e)
-//         eval' (Syn.Abs (Syn.Pi { Syn.var, Syn.icit, Syn.term }) e) = Abs (Pi var icit (eval ctx term)) (Closure ctx e)
-//         eval' (Syn.Abs (Syn.Let { Syn.term }) e) = eval (ctx :> eval ctx term) e
-//         eval' (Syn.App icit f e) = app icit (eval ctx f) (eval ctx e)
-
-//         eval' (Syn.Ann e _) = eval ctx e
-
-//         eval' (Syn.Abs b e) = error $ "Abs: Not yet implemented for: " ++ show b
-//         eval' (Syn.Match {}) = error "Eval Match: Not yet implemente

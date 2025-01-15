@@ -3,7 +3,7 @@ import * as E from "./syntax";
 import * as NF from "./normalized";
 
 import { match } from "ts-pattern";
-import { Implicitness, Literal } from "../shared";
+import { displayIcit, displayLit } from "../shared";
 
 export const print: {
 	(term: E.Term): string;
@@ -84,25 +84,4 @@ const displayValue = (value: NF.Value): string => {
 			({ func, arg }) => `${displayValue(func)} ${displayValue(arg)}`,
 		)
 		.exhaustive();
-};
-
-const displayLit = (lit: Literal): string => {
-	switch (lit.type) {
-		case "String":
-			return `"${lit.value}"`;
-		case "Num":
-			return `${lit.value}`;
-		case "Bool":
-			return `${lit.value}`;
-		case "Type":
-			return "Type";
-		case "Unit":
-			return "Unit";
-		case "Atom":
-			return lit.value;
-	}
-};
-
-const displayIcit = (icit: Implicitness): string => {
-	return icit === "Implicit" ? "#" : "";
 };

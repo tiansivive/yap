@@ -1,2 +1,2 @@
 
-let lambda = \#x => \y -> 1;
+let foo = (\x -> \y -> x): ((a:Type) => (b:Type) => a -> b -> b);

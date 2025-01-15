@@ -21,45 +21,36 @@ import { Monoid } from "fp-ts/lib/Monoid";
 import { freshMeta } from "./supply";
 
 import { P } from "ts-pattern";
-import { Extend } from "../../utils/types";
+import { print as srcPrint } from "../parser/pretty";
+import { print } from "./pretty";
+import { log } from "./logging";
 
 type Origin = "inserted" | "source";
 // type Node = { type: "node", value: El.Term, annotation: NF.Value }
 // type Node = [El.Term, NF.ModalValue]
 
-const ex: El.Node = [
-	{
-		type: "App",
-		icit: "Explicit",
-		func: 1 as any,
-		arg: [
-			{ type: "Lit", value: { type: "Atom", value: "" } },
-			[{ type: "Lit", value: { type: "Atom", value: "Type" } }, "Many"],
-		],
-	},
-	[{ type: "Neutral", variable: { type: "Bound", index: 0 } }, Shared.Many],
-];
-
 export type Context = {
 	types: Array<[String, Origin, NF.ModalValue]>;
 	env: NF.Env;
 	names: Array<String>;
+	imports: Record<string, NF.ModalValue>;
 };
 
-type Constraint =
-	| { type: "equals"; left: El.ModalTerm; right: El.ModalTerm }
-	| { type: "assign"; left: NF.ModalValue; right: NF.ModalValue };
+export type Constraint =
+	//| { type: "equals"; left: El.ModalTerm; right: El.ModalTerm }
+	{ type: "assign"; left: NF.ModalValue; right: NF.ModalValue };
 
 type Elaboration<T> = RW.RW<Context, Constraint[], T>;
 
-type AST = [El.Term, NF.ModalValue];
+export type AST = [El.Term, NF.ModalValue];
 
 let count = 0;
 
 export function infer(ast: Src.Term): Elaboration<AST> {
-	return F.pipe(
+	const result = F.pipe(
 		ask(),
 		chain((ctx) => {
+			log.infer.entry(ctx, ast);
 			const { env, types } = ctx;
 			return match(ast)
 				.with({ type: "lit" }, ({ value }): Elaboration<AST> => {
@@ -67,9 +58,7 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 						.with({ type: "String" }, (_) => Shared.Atom("String"))
 						.with({ type: "Num" }, (_) => Shared.Atom("Num"))
 						.with({ type: "Bool" }, (_) => Shared.Atom("Bool"))
-						.with({ type: "Unit" }, (_) => Shared.Unit())
-						.with({ type: "Type" }, (_) => Shared.Type())
-						.with({ type: "Atom" }, (_) => Shared.Type())
+						.with({ type: "Atom" }, (_) => Shared.Atom("Type"))
 						.exhaustive();
 
 					return of<AST>([
@@ -87,9 +76,21 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 
 				.with(
 					{ type: "var" },
-					({ variable }): Elaboration<AST> => of<AST>(lookup(variable, types)),
+					({ variable }): Elaboration<AST> => of<AST>(lookup(variable, ctx)),
 				)
-
+				.with({ type: "annotation" }, ({ term, ann }) =>
+					F.pipe(
+						Do,
+						bind_("type", (_) => check(ann, NF.Type)),
+						bind_("mtype", ({ type }) => {
+							const val = Eval.evaluate(env, type);
+							const mval = NF.infer(env, val);
+							return of(mval);
+						}),
+						bind_("term", ({ mtype }) => check(term, mtype)),
+						RW.fmap(({ term, mtype }): AST => [term, mtype]),
+					),
+				)
 				.with({ type: "pi" }, { type: "arrow" }, (pi): Elaboration<AST> => {
 					const v = pi.type === "pi" ? pi.variable : `t${++count}`;
 					const body = pi.type === "pi" ? pi.body : pi.rhs;
@@ -112,11 +113,6 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 				})
 				.with({ type: "lambda" }, (lam): Elaboration<AST> => {
 					const meta: El.Term = El.Var(freshMeta());
-					const nf = Eval.evaluate(env, meta);
-					const mnf = NF.infer(env, nf);
-
-					const node: AST = [meta, mnf];
-
 					return F.pipe(
 						lam.annotation ? check(lam.annotation, NF.Type) : of(meta),
 						chain((tm) => {
@@ -128,9 +124,8 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 								F.pipe(
 									infer(lam.body),
 									chain(insertImplicitApps),
-									RW.fmap((inferred): AST => {
-										const [body, bodyTy] = inferred;
-										return [
+									RW.fmap(
+										([body, bodyTy]): AST => [
 											Con.Term.Lambda(lam.variable, lam.icit, body),
 											[
 												Con.Type.Pi(
@@ -141,19 +136,20 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 												),
 												Shared.Many,
 											],
-										];
-									}),
+										],
+									),
 								),
 							);
 						}),
 					);
 				})
-				.otherwise((val) => {
-					console.log(val);
+				.otherwise(() => {
 					throw new Error("Not implemented yet");
 				});
 		}),
+		discard(log.infer.exit),
 	);
+	return result;
 }
 
 function check(
@@ -163,6 +159,7 @@ function check(
 	return F.pipe(
 		ask(),
 		chain((ctx) => {
+			log.check.entry(term, annotation);
 			const [ty, q] = annotation;
 			return match([term, ty])
 				.with(
@@ -222,13 +219,18 @@ function check(
 					return F.pipe(
 						infer(tm),
 						chain(insertImplicitApps),
-						discard(([, inferred]) =>
-							tell({ type: "assign", left: inferred, right: annotation }),
-						),
+						discard(([, inferred]) => {
+							return tell({
+								type: "assign",
+								left: inferred,
+								right: annotation,
+							});
+						}),
 						RW.fmap(([tm]) => tm),
 					);
 				});
 		}),
+		listen(log.check.exit),
 	);
 }
 
@@ -276,13 +278,18 @@ function checkModality(
 	return [m, n];
 }
 
-const lookup = (variable: Src.Variable, types: Context["types"]): AST => {
+const lookup = (variable: Src.Variable, ctx: Context): AST => {
 	const _lookup = (
 		i: number,
 		variable: Src.Variable,
 		types: Context["types"],
 	): AST => {
 		if (types.length === 0) {
+			const free = ctx.imports[variable.value];
+			if (free) {
+				return [El.Var({ type: "Free", name: variable.value }), free];
+			}
+
 			throw new Error("Variable not found");
 		}
 
@@ -291,12 +298,13 @@ const lookup = (variable: Src.Variable, types: Context["types"]): AST => {
 			return [El.Var({ type: "Bound", index: i }), mnf];
 		}
 
-		return _lookup(i + 1, variable, types);
+		return _lookup(i + 1, variable, rest);
 	};
-	return _lookup(0, variable, types);
+
+	return _lookup(0, variable, ctx.types);
 };
 
-const closeVal = (ctx: Context, value: NF.ModalValue): NF.Closure => ({
+const closeVal = (ctx: Context, [value]: NF.ModalValue): NF.Closure => ({
 	env: ctx.env,
 	term: NF.quote(ctx.env.length + 1, value),
 });
@@ -309,6 +317,7 @@ const bind = (
 	const [, q] = annotation;
 	const { env, types } = context;
 	return {
+		...context,
 		env: [[Con.Type.Rigid(env.length), q], ...env],
 		types: [[variable, "source", annotation], ...types],
 		names: [variable, ...context.names],
@@ -323,6 +332,7 @@ const bindInsertedImplicit = (
 	const [, q] = annotation;
 	const { env, types } = context;
 	return {
+		...context,
 		env: [[Con.Type.Rigid(env.length), q], ...env],
 		types: [[variable, "inserted", annotation], ...types],
 		names: [variable, ...context.names],
@@ -334,7 +344,7 @@ const monoid: Monoid<Constraint[]> = {
 	empty: [],
 };
 
-const of = RW.of(monoid) as <A>(a: A) => Elaboration<A>;
+export const of = RW.of(monoid) as <A>(a: A) => Elaboration<A>;
 const ask = () =>
 	RW.liftR<Context, Constraint[], Context>(monoid)(R.ask<Context>());
 const chain = RW.getChain<Constraint[]>(monoid);
@@ -347,6 +357,11 @@ const discard = <A, B>(f: (a: A) => RW.RW<Context, Constraint[], B>) =>
 
 const tell = <R>(constraint: Constraint) =>
 	RW.liftW<R, Constraint[], void>(W.tell([constraint]));
+
+export const listen =
+	<A, B>(f: (aw: [A, Constraint[]]) => B) =>
+	(rw: RW.RW<Context, Constraint[], A>): RW.RW<Context, Constraint[], B> =>
+		F.pipe(rw, R.map(W.listen), RW.fmap(f));
 
 const local: <A>(
 	f: Context | ((ctx: Context) => Context),

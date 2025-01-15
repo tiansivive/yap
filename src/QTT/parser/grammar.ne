@@ -76,9 +76,11 @@ Param -> Identifier {% Con.Param %}
 	   | Parens[Param] {% id %}
 		 
 
-Pi -> Expr %ws:? %arrow %ws Atom 		{% Con.Pi("Explicit") %}
-	| Expr %ws:? %fatArrow %ws Atom 	{% Con.Pi("Implicit") %}
+Pi -> Expr %ws:? %arrow %ws PiTail 		{% Con.Pi("Explicit") %}
+	| Expr %ws:? %fatArrow %ws PiTail 	{% Con.Pi("Implicit") %}
 
+PiTail -> Pi {% id %}
+		| Atom {% id %}
 
 # BLOCKS
 Wrap[X] -> %NL:? %ws:? $X %NL:? %ws:? %semicolon {% Con.unwrapStatement %}

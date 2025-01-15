@@ -5,14 +5,15 @@ import { ModalTerm } from "./syntax";
 import * as El from "./syntax";
 
 import Shared from "../shared";
-import { Extend, Tag } from "../../utils/types";
+import * as Eval from "./evaluator";
+import * as Con from "./constructors";
 
 // export type ModalValue = Extend<Value, Value, Multiplicity>
 export type ModalValue = [Value, Multiplicity];
 
 export type Value =
 	| { type: "Lit"; value: Literal }
-	| { type: "App"; func: Value; arg: Value }
+	| { type: "App"; func: Value; arg: Value; icit: Implicitness }
 	| { type: "Abs"; binder: Binder; closure: Closure }
 	| { type: "Neutral"; variable: Variable };
 
@@ -46,21 +47,44 @@ export type Env = ModalValue[];
 //     ({ type: "Quantity", multiplicity, value: { type: "Abs", binder: { type: "Pi", variable, annotation, icit }, closure } })
 
 export const Type: ModalValue = [
-	{ type: "Lit", value: Shared.Type() },
+	{ type: "Lit", value: { type: "Atom", value: "Type" } },
 	Shared.Zero,
 ];
 
 export const Closure = (env: Env, term: El.Term): Closure => ({ env, term });
 
-export const quote = (lvl: number, mv: ModalValue): El.Term => {
-	const [value, quantity] = mv;
+export const quote = (lvl: number, val: Value): El.Term => {
 	return (
-		match(value)
+		match(val)
 			.with({ type: "Lit" }, ({ value }) => El.Lit(value))
-			// .with({ type: "App" }, ({ func, arg }) => El.AppM("Explicit", quote(func), quote(arg), mv.multiplicity))
-			.otherwise(() => {
-				throw new Error("Quoting: Not implemented");
+			.with({ type: "Neutral", variable: { type: "Bound" } }, ({ variable }) =>
+				El.Var({ type: "Bound", index: lvl - variable.index - 1 }),
+			)
+			.with({ type: "Neutral" }, ({ variable }) => El.Var(variable))
+			.with({ type: "App" }, ({ func, arg, icit }) =>
+				El.App(icit, quote(lvl, func), quote(lvl, arg)),
+			)
+			.with(
+				{ type: "Abs", binder: { type: "Lambda" } },
+				({ binder, closure }) => {
+					const { variable, icit } = binder;
+					const val = Eval.apply(closure, Con.Type.Rigid(lvl));
+					const body = quote(lvl + 1, val);
+					return El.Abs(El.Lambda(variable, icit), body);
+				},
+			)
+			.with({ type: "Abs", binder: { type: "Pi" } }, ({ binder, closure }) => {
+				const {
+					variable,
+					icit,
+					annotation: [ann],
+				} = binder;
+				const val = Eval.apply(closure, Con.Type.Rigid(lvl));
+				const body = quote(lvl + 1, val);
+				return El.Abs(El.Pi(variable, quote(lvl, ann), icit), body);
 			})
+			// .with({ type: "App" }, ({ func, arg }) => El.AppM("Explicit", quote(func), quote(arg), mv.multiplicity))
+			.exhaustive()
 	);
 };
 

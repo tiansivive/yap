@@ -3,6 +3,7 @@ import Grammar from "./parser/grammar";
 import Nearley from "nearley";
 
 import * as Elab from "./elaborator/elaborate";
+import * as NF from "./elaborator/normalized";
 import * as Q from "../utils/quokka";
 
 import * as R from "fp-ts/lib/Reader";
@@ -32,6 +33,12 @@ try {
 		env: [],
 		types: [],
 		names: [],
+		imports: {
+			Num: NF.Type,
+			Bool: NF.Type,
+			String: NF.Type,
+			Unit: NF.Type,
+		},
 	};
 
 	const runReader = Elab.infer(def);
@@ -39,8 +46,18 @@ try {
 	const runWriter = runReader(empty);
 	const [ast, cst] = runWriter();
 
-	console.log("Term:\n", P.print(ast[0]));
-	console.log("Type:\n", P.print(ast[1]));
+	console.log("--------------------");
+	console.log("Term:\t", P.print(ast[0]));
+
+	console.log("--------------------");
+	console.log("Type:\t", P.print(ast[1]));
+
+	console.log("--------------------");
+	console.log("Constraints:");
+	const cs = cst
+		.map((c) => "  " + [c.left, c.right].map(P.print).join("\t  ?=\t"))
+		.join("\n");
+	console.log(cs);
 
 	console.log("done");
 } catch (e) {
