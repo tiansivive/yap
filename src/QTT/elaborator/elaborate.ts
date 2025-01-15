@@ -51,7 +51,7 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 		ask(),
 		chain((ctx) => {
 			log.infer.entry(ctx, ast);
-			const { env, types } = ctx;
+			const { env } = ctx;
 			return match(ast)
 				.with({ type: "lit" }, ({ value }): Elaboration<AST> => {
 					const atom: Literal = match(value)
@@ -113,35 +113,35 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 				})
 				.with({ type: "lambda" }, (lam): Elaboration<AST> => {
 					const meta: El.Term = El.Var(freshMeta());
-					return F.pipe(
-						lam.annotation ? check(lam.annotation, NF.Type) : of(meta),
-						chain((tm) => {
-							const va = Eval.evaluate(env, tm);
-							const mva = NF.infer(env, va);
-							const ctx_ = bind(ctx, lam.variable, mva);
-							return local(
-								ctx_,
-								F.pipe(
-									infer(lam.body),
-									chain(insertImplicitApps),
-									RW.fmap(
-										([body, bodyTy]): AST => [
-											Con.Term.Lambda(lam.variable, lam.icit, body),
-											[
-												Con.Type.Pi(
-													lam.variable,
-													lam.icit,
-													mva,
-													closeVal(ctx, bodyTy),
-												),
-												Shared.Many,
-											],
+					const ann = lam.annotation
+						? check(lam.annotation, NF.Type)
+						: of(meta);
+					return chain(ann, (tm) => {
+						const va = Eval.evaluate(env, tm);
+						const mva = NF.infer(env, va);
+						const ctx_ = bind(ctx, lam.variable, mva);
+						return local(
+							ctx_,
+							F.pipe(
+								infer(lam.body),
+								chain(insertImplicitApps),
+								RW.fmap(
+									([body, bodyTy]): AST => [
+										Con.Term.Lambda(lam.variable, lam.icit, body),
+										[
+											Con.Type.Pi(
+												lam.variable,
+												lam.icit,
+												mva,
+												closeVal(ctx, bodyTy),
+											),
+											Shared.Many,
 										],
-									),
+									],
 								),
-							);
-						}),
-					);
+							),
+						);
+					});
 				})
 				.otherwise(() => {
 					throw new Error("Not implemented yet");
@@ -160,7 +160,7 @@ function check(
 		ask(),
 		chain((ctx) => {
 			log.check.entry(term, annotation);
-			const [ty, q] = annotation;
+			const [ty] = annotation;
 			return match([term, ty])
 				.with(
 					[{ type: "lambda" }, { type: "Abs", binder: { type: "Pi" } }],
@@ -215,8 +215,8 @@ function check(
 				.with([{ type: "hole" }, P._], () =>
 					of<El.Term>(Con.Term.Var(freshMeta())),
 				)
-				.otherwise(([tm, _]) => {
-					return F.pipe(
+				.otherwise(([tm, _]) =>
+					F.pipe(
 						infer(tm),
 						chain(insertImplicitApps),
 						discard(([, inferred]) => {
@@ -227,15 +227,15 @@ function check(
 							});
 						}),
 						RW.fmap(([tm]) => tm),
-					);
-				});
+					),
+				);
 		}),
 		listen(log.check.exit),
 	);
 }
 
 function insertImplicitApps(node: AST): Elaboration<AST> {
-	const [term, annotation] = node;
+	const [term] = node;
 	return F.pipe(
 		ask(),
 		chain((ctx) =>
@@ -266,16 +266,6 @@ function insertImplicitApps(node: AST): Elaboration<AST> {
 				.otherwise(() => of(node)),
 		),
 	);
-}
-
-function checkModality(
-	m: Multiplicity = Shared.Many,
-	n: Multiplicity = Shared.Many,
-) {
-	if (m !== n) {
-		throw new Error("Multiplicity mismatch");
-	}
-	return [m, n];
 }
 
 const lookup = (variable: Src.Variable, ctx: Context): AST => {
