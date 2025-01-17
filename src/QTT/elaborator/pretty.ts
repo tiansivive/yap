@@ -3,14 +3,14 @@ import * as E from "./syntax";
 import * as NF from "./normalized";
 
 import { match } from "ts-pattern";
-import { displayIcit, displayLit } from "../shared";
+import { displayIcit, displayLit, Multiplicity } from "../shared";
 
 export const print: {
 	(term: E.Term): string;
 	(term: NF.ModalValue): string;
 } = (tm: E.Term | NF.ModalValue) => {
 	if (Array.isArray(tm)) {
-		return displayValue(tm[0]);
+		return "<" + displayValue(tm[0]) + "::" + displayMultiplicity(tm[1]) + ">";
 	}
 
 	return displayTerm(tm);
@@ -83,5 +83,13 @@ const displayValue = (value: NF.Value): string => {
 			{ type: "App" },
 			({ func, arg }) => `${displayValue(func)} ${displayValue(arg)}`,
 		)
+		.exhaustive();
+};
+
+const displayMultiplicity = (multiplicity: Multiplicity): string => {
+	return match(multiplicity)
+		.with("One", () => "1")
+		.with("Zero", () => "0")
+		.with("Many", () => "ω")
 		.exhaustive();
 };

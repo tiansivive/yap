@@ -33,7 +33,7 @@ export type Context = {
 	types: Array<[String, Origin, NF.ModalValue]>;
 	env: NF.Env;
 	names: Array<String>;
-	imports: Record<string, NF.ModalValue>;
+	imports: Record<string, AST>;
 };
 
 export type Constraint =
@@ -69,7 +69,7 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 
 				.with({ type: "hole" }, (_) => {
 					const meta = El.Var(freshMeta());
-					const annotation = Eval.evaluate(env, meta);
+					const annotation = Eval.evaluate(env, ctx.imports, meta);
 					const modal = NF.infer(env, annotation);
 					return of<AST>([meta, modal]);
 				})
@@ -83,12 +83,61 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 						Do,
 						bind_("type", (_) => check(ann, NF.Type)),
 						bind_("mtype", ({ type }) => {
-							const val = Eval.evaluate(env, type);
+							const val = Eval.evaluate(env, ctx.imports, type);
 							const mval = NF.infer(env, val);
 							return of(mval);
 						}),
 						bind_("term", ({ mtype }) => check(term, mtype)),
 						RW.fmap(({ term, mtype }): AST => [term, mtype]),
+					),
+				)
+
+				.with({ type: "application" }, ({ fn, arg, icit }) =>
+					F.pipe(
+						infer(fn),
+						chain(icit === "Explicit" ? insertImplicitApps : of),
+						chain(([t, [ty, m]]) => {
+							const components = match(ty)
+								.with({ type: "Abs", binder: { type: "Pi" } }, (pi) => {
+									if (pi.binder.icit !== icit) {
+										throw new Error("Implicitness mismatch");
+									}
+
+									return of([pi.binder.annotation, pi.closure] as const);
+								})
+								.otherwise(() => {
+									const meta = Con.Term.Var(freshMeta());
+									const nf = Eval.evaluate(env, ctx.imports, meta);
+									const mnf = NF.infer(env, nf);
+									const closure = NF.Closure(env, Con.Term.Var(freshMeta()));
+
+									const pi = Con.Type.Pi("x", icit, mnf, closure);
+									const mpi = NF.infer(env, pi);
+
+									return F.pipe(
+										of([mnf, closure] as const),
+										discard(() =>
+											tell({ type: "assign", left: [ty, m], right: mpi }),
+										),
+									);
+								});
+
+							return F.pipe(
+								Do,
+								bind_("components", () => components),
+								bind_("arg", ({ components: [ann] }) => check(arg, ann)),
+								RW.fmap(({ arg, components }): AST => {
+									const [, cls] = components;
+									const val = Eval.apply(
+										ctx.imports,
+										cls,
+										Eval.evaluate(env, ctx.imports, arg),
+									);
+									const mval = NF.infer(env, val);
+									return [Con.Term.App(icit, t, arg), mval];
+								}),
+							);
+						}),
 					),
 				)
 				.with({ type: "pi" }, { type: "arrow" }, (pi): Elaboration<AST> => {
@@ -100,7 +149,7 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 						Do,
 						bind_("ann", () => check(ann, NF.Type)),
 						bind_("body", ({ ann }) => {
-							const va = Eval.evaluate(env, ann);
+							const va = Eval.evaluate(env, ctx.imports, ann);
 							const mva = NF.infer(env, va);
 							const ctx_ = bind(ctx, v, mva);
 							return local(ctx_, check(body, NF.Type));
@@ -117,7 +166,7 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 						? check(lam.annotation, NF.Type)
 						: of(meta);
 					return chain(ann, (tm) => {
-						const va = Eval.evaluate(env, tm);
+						const va = Eval.evaluate(env, ctx.imports, tm);
 						const mva = NF.infer(env, va);
 						const ctx_ = bind(ctx, lam.variable, mva);
 						return local(
@@ -168,6 +217,7 @@ function check(
 					([tm, ty]) => {
 						// const [m, n] = checkModality(tm.multiplicity, q)
 						const bodyTy = Eval.apply(
+							ctx.imports,
 							ty.closure,
 							Con.Type.Rigid(ctx.env.length),
 						);
@@ -191,6 +241,7 @@ function check(
 					([_, ty]) => ty.binder.icit === "Implicit",
 					([tm, ty]) => {
 						const bodyTy = Eval.apply(
+							ctx.imports,
 							ty.closure,
 							Con.Type.Rigid(ctx.env.length),
 						);
@@ -252,12 +303,12 @@ function insertImplicitApps(node: AST): Elaboration<AST> {
 					],
 					([, [pi]]) => {
 						const meta = Con.Term.Var(freshMeta());
-						const vNF = Eval.evaluate(ctx.env, meta);
+						const vNF = Eval.evaluate(ctx.env, ctx.imports, meta);
 						const vMNF = NF.infer(ctx.env, vNF);
 
 						const tm = Con.Term.App("Implicit", term, meta);
 
-						const bodyNF = Eval.apply(pi.closure, vNF);
+						const bodyNF = Eval.apply(ctx.imports, pi.closure, vNF);
 						const bodyMNF = NF.infer(ctx.env, bodyNF);
 
 						return insertImplicitApps([tm, bodyMNF]);
@@ -277,7 +328,8 @@ const lookup = (variable: Src.Variable, ctx: Context): AST => {
 		if (types.length === 0) {
 			const free = ctx.imports[variable.value];
 			if (free) {
-				return [El.Var({ type: "Free", name: variable.value }), free];
+				const [, mnf] = free;
+				return [El.Var({ type: "Free", name: variable.value }), mnf];
 			}
 
 			throw new Error("Variable not found");
@@ -296,7 +348,7 @@ const lookup = (variable: Src.Variable, ctx: Context): AST => {
 
 const closeVal = (ctx: Context, [value]: NF.ModalValue): NF.Closure => ({
 	env: ctx.env,
-	term: NF.quote(ctx.env.length + 1, value),
+	term: NF.quote(ctx.imports, ctx.env.length + 1, value),
 });
 
 const bind = (

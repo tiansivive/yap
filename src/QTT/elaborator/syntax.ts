@@ -40,12 +40,6 @@ export const App = (icit: Implicitness, func: Term, arg: Term): Term => ({
 	arg,
 });
 
-export const Annotation = (term: Term, ann: ModalTerm): Term => ({
-	type: "Annotation",
-	term,
-	ann,
-});
-
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
 export const Free = (name: string): Variable => ({ type: "Free", name });
 export const Meta = (index: number): Variable => ({ type: "Meta", index });
@@ -60,12 +54,6 @@ export const Pi = (
 	annotation: Term,
 	icit: Implicitness,
 ): Binding => ({ type: "Pi", variable, annotation, icit });
-export const Lambda = (variable: string, icit: Implicitness): Binding => ({
-	type: "Lambda",
-	variable,
-	icit,
-	annotation,
-});
 
 export const LitM = (
 	value: Literal,

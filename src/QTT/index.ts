@@ -3,11 +3,13 @@ import Grammar from "./parser/grammar";
 import Nearley from "nearley";
 
 import * as Elab from "./elaborator/elaborate";
+import * as Con from "./elaborator/constructors";
 import * as NF from "./elaborator/normalized";
 import * as Q from "../utils/quokka";
 
-import * as R from "fp-ts/lib/Reader";
-import * as W from "fp-ts/lib/Writer";
+import * as Src from "./parser/src";
+
+import Shared from "./shared";
 
 import * as P from "./elaborator/pretty";
 // import simple from "./__tests__/simple.lama"
@@ -27,37 +29,58 @@ try {
 	data = parser.feed(test);
 	data.results.length;
 
-	const [def] = data.results.map((x) => x.script[0].value);
-
 	const empty: Elab.Context = {
 		env: [],
 		types: [],
 		names: [],
 		imports: {
-			Num: NF.Type,
-			Bool: NF.Type,
-			String: NF.Type,
-			Unit: NF.Type,
+			Num: [Con.Term.Lit(Shared.Atom("Num")), NF.Type],
+			Bool: [Con.Term.Lit(Shared.Atom("Bool")), NF.Type],
+			String: [Con.Term.Lit(Shared.Atom("String")), NF.Type],
+			Unit: [Con.Term.Lit(Shared.Atom("Unit")), NF.Type],
 		},
 	};
 
-	const runReader = Elab.infer(def);
+	const results: Array<[Elab.AST, Elab.Constraint[]]> = [];
+	const [ctx] = data.results.map((x) =>
+		x.script.reduce((ctx: Elab.Context, stmt: Src.Statement): Elab.Context => {
+			if (stmt.type !== "let") {
+				return ctx;
+			}
 
-	const runWriter = runReader(empty);
-	const [ast, cst] = runWriter();
+			const runReader = Elab.infer(stmt.value);
+			const runWriter = runReader(ctx);
 
-	console.log("--------------------");
-	console.log("Term:\t", P.print(ast[0]));
+			const result = runWriter();
 
-	console.log("--------------------");
-	console.log("Type:\t", P.print(ast[1]));
+			const [ast] = result;
 
-	console.log("--------------------");
-	console.log("Constraints:");
-	const cs = cst
-		.map((c) => "  " + [c.left, c.right].map(P.print).join("\t  ?=\t"))
-		.join("\n");
-	console.log(cs);
+			results.push(result);
+
+			return {
+				...ctx,
+				imports: {
+					...ctx.imports,
+					[stmt.variable]: ast,
+				},
+			};
+		}, empty),
+	);
+
+	results.forEach(([ast, cst]) => {
+		console.log("\n\n--------------------");
+		console.log("Term:\t", P.print(ast[0]));
+
+		console.log("--------------------");
+		console.log("Type:\t", P.print(ast[1]));
+
+		console.log("--------------------");
+		console.log("Constraints:");
+		const cs = cst
+			.map((c) => "  " + [c.left, c.right].map(P.print).join("\t  ?=\t"))
+			.join("\n");
+		console.log(cs);
+	});
 
 	console.log("done");
 } catch (e) {

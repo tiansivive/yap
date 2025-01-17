@@ -60,4 +60,10 @@ export const Type = {
 		type: "Neutral" as const,
 		variable,
 	}),
+	App: <A, B>(func: A, arg: B, icit: Implicitness) => ({
+		type: "App" as const,
+		func,
+		arg,
+		icit,
+	}),
 };
