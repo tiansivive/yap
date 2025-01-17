@@ -9,10 +9,15 @@ import * as Src from "../parser/src";
 import * as NF from "./normalized";
 import * as El from "./syntax";
 
+import fs from "fs";
+
+export const logFilePath = ".logs/elaboration.json.log";
 let ident = 0;
 export const log = {
 	infer: {
 		entry: (ctx: Context, ast: Src.Term) => {
+			const msg = `\n"Infer": { "Context": ${JSON.stringify(ctx)}, "AST": "${srcPrint(ast)}",`;
+			fs.appendFileSync(logFilePath, msg);
 			const padding = "  ".repeat(ident);
 			const prefix = padding + "| ";
 			const separator =
@@ -24,9 +29,10 @@ export const log = {
 			const pretty = srcPrint(ast).replace(/\n/g, `\n${padding}`);
 			console.log(prefix + pretty);
 			ident++;
-			const { env, types } = ctx;
 		},
 		exit: ([tm, ty]: AST) => {
+			const msg = `\n"Result": { "Term": "${print(tm)}", "Type": "${print(ty)}" } },`;
+			fs.appendFileSync(logFilePath, msg);
 			--ident;
 			const padding = "  ".repeat(ident);
 			const prefix = padding + "| ";
@@ -40,6 +46,8 @@ export const log = {
 
 	check: {
 		entry: (term: Src.Term, annotation: NF.ModalValue) => {
+			const msg = `\n"Check": { "Term": "${srcPrint(term)}", "Annotation": "${print(annotation)}",`;
+			fs.appendFileSync(logFilePath, msg);
 			const padding = "  ".repeat(ident);
 			const prefix = padding + "| ";
 			const separator =
@@ -54,6 +62,8 @@ export const log = {
 			ident++;
 		},
 		exit: ([tm, csts]: [El.Term, Constraint[]]) => {
+			const msg = `\n"Result": { "Term": "${print(tm)}", "Constraints": [${csts.map((c) => `"${print(c.left)}  ~~  ${print(c.right)}"`).join(", ")}] } },`;
+			fs.appendFileSync(logFilePath, msg);
 			--ident;
 			const padding = "  ".repeat(ident);
 			const prefix = padding + "| ";

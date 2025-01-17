@@ -12,6 +12,9 @@ import * as Src from "./parser/src";
 import Shared from "./shared";
 
 import * as P from "./elaborator/pretty";
+
+import fs from "fs";
+import { logFilePath } from "./elaborator/logging";
 // import simple from "./__tests__/simple.lama"
 // import test from "./__tests__/test.lama"
 
@@ -25,6 +28,9 @@ try {
 	// data = parser.feed(simple)
 	// data.results.length
 	// data.results
+
+	// wipe log file
+	fs.writeFileSync(logFilePath, "{\n");
 
 	data = parser.feed(test);
 	data.results.length;
@@ -81,6 +87,8 @@ try {
 			.join("\n");
 		console.log(cs);
 	});
+
+	fs.appendFileSync(logFilePath, "\n}");
 
 	console.log("done");
 } catch (e) {
