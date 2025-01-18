@@ -24,6 +24,8 @@
 		rparens: /\)/,
 		lbrace: /\{/,
 		rbrace: /\}/,
+		langle: /</,
+		rangle: />/,
 		semicolon: /\;/,
 		colon: /\:/,
 		bar: /\|/,
@@ -41,6 +43,7 @@
 # Def -> "def" %ws Identifier %ws %equals %ws:? Expr %ws:? %semicolon {% d => ({ type: "def", binding: d[2], value: d[6] }) %}
 
 Parens[X] -> %lparens %ws:? $X %ws:? %rparens {% Con.unwrapParenthesis %}
+Angles[X] -> %langle %ws:? $X %ws:? %rangle {% Con.unwrapAngles %}
 
 Script -> Statement:+ %NL:? {% d => ({ type: "script", script: d[0] }) %}
 		| Expr {% id %}
@@ -65,15 +68,17 @@ Atom -> Literal 		{% Con.Lit %}
 	  | Parens[Expr]  	{% id %}
 
 	 
-Ann -> Expr %ws:? %colon %ws:? Atom {% Con.Annotation %}
+Ann -> Expr %ws:? %colon %ws:? Atom 						{% Con.Annotation %}
+     | Expr %ws:? %colon %ws:? Angles[Quantity] %ws:? Atom 	{% Con.Annotation %}
 
 # FUNCTIONS
 Lambda -> %backslash Param %ws %arrow %ws Expr 			{% Con.Lambda %}
 		| %backslash %hash Param %ws %fatArrow %ws Expr {% Con.Lambda %}
 		
-Param -> Identifier {% Con.Param %}
-	   | Identifier %ws:? %colon %ws:? Expr {% Con.Param %}
-	   | Parens[Param] {% id %}
+Param -> Identifier 													{% Con.Param %}
+	   | Identifier %ws:? %colon %ws:? Expr 							{% Con.Param %}
+	   | Identifier %ws:? %colon %ws:? Angles[Quantity] %ws:? Expr 		{% Con.Param %}
+	   | Parens[Param] 													{% id %}
 		 
 
 Pi -> Expr %ws:? %arrow %ws PiTail 		{% Con.Pi("Explicit") %}
@@ -100,6 +105,10 @@ Letdec -> "let" %ws Identifier %ws:? %equals %ws:? Expr {% Con.LetDec %}
 
 # VARIABLES
 Identifier -> %variable {% Con.Name %}
+
+# Multiplicity
+Quantity -> "1" {% () => Shared.One %}
+		  | "0" {% () => Shared.Zero %}
 
 # PATTERN MATCHING
 Match -> "match" %ws Expr Alt:+ {% d => ({ type: "match", scrutinee: d[2], alternatives: d[3] }) %} 

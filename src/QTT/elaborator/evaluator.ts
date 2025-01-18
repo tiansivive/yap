@@ -6,13 +6,16 @@ import Shared, { Multiplicity } from "../shared";
 
 import * as Con from "./constructors";
 import * as Elab from "./elaborate";
+import { log } from "./logging";
+import { displayValue, print } from "./pretty";
 
 export function evaluate(
 	env: NF.Env,
 	imports: Elab.Context["imports"],
 	term: El.Term,
 ): NF.Value {
-	return match(term)
+	log("entry", "Evaluation", { env, imports, term: print(term) });
+	const res = match(term)
 		.with({ type: "Lit" }, ({ value }): NF.Value => Con.Type.Lit(value))
 		.with({ type: "Var", variable: { type: "Free" } }, ({ variable }) => {
 			const val = imports[variable.name];
@@ -23,7 +26,7 @@ export function evaluate(
 			return evaluate(env, imports, val[0]);
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) =>
-			Con.Type.Neutral(variable),
+			Con.Type.Neutral<NF.Value>({ type: "Var", variable }),
 		)
 		.with(
 			{ type: "Var", variable: { type: "Bound" } },
@@ -54,7 +57,10 @@ export function evaluate(
 				.with({ type: "Abs", binder: { type: "Lambda" } }, ({ closure }) =>
 					apply(imports, closure, nfa),
 				)
-				.with({ type: "Neutral" }, () => Con.Type.App(nff, nfa, icit))
+				.with({ type: "Neutral" }, () =>
+					Con.Type.Neutral(Con.Type.App(nff, nfa, icit)),
+				)
+
 				.otherwise(() => {
 					throw new Error(
 						"Impossible: Tried to apply a non-function while evaluating: " +
@@ -65,6 +71,10 @@ export function evaluate(
 		.otherwise(() => {
 			throw new Error("Not implemented");
 		});
+
+	log("exit", "Result", { nf: displayValue(res) });
+
+	return res;
 }
 
 export const apply = (

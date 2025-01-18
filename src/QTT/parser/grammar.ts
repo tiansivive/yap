@@ -12,6 +12,8 @@ declare var op: any;
 declare var lparens: any;
 declare var rparens: any;
 declare var colon: any;
+declare var langle: any;
+declare var rangle: any;
 declare var backslash: any;
 declare var arrow: any;
 declare var hash: any;
@@ -58,6 +60,8 @@ const lexer = moo.compile({
 	rparens: /\)/,
 	lbrace: /\{/,
 	rbrace: /\}/,
+	langle: /</,
+	rangle: />/,
 	semicolon: /\;/,
 	colon: /\:/,
 	bar: /\|/,
@@ -208,6 +212,61 @@ const grammar: Grammar = {
 			postprocess: Con.Annotation,
 		},
 		{
+			name: "Ann$ebnf$3",
+			symbols: [lexer.has("ws") ? { type: "ws" } : ws],
+			postprocess: id,
+		},
+		{ name: "Ann$ebnf$3", symbols: [], postprocess: () => null },
+		{
+			name: "Ann$ebnf$4",
+			symbols: [lexer.has("ws") ? { type: "ws" } : ws],
+			postprocess: id,
+		},
+		{ name: "Ann$ebnf$4", symbols: [], postprocess: () => null },
+		{ name: "Ann$macrocall$2", symbols: ["Quantity"] },
+		{
+			name: "Ann$macrocall$1$ebnf$1",
+			symbols: [lexer.has("ws") ? { type: "ws" } : ws],
+			postprocess: id,
+		},
+		{ name: "Ann$macrocall$1$ebnf$1", symbols: [], postprocess: () => null },
+		{
+			name: "Ann$macrocall$1$ebnf$2",
+			symbols: [lexer.has("ws") ? { type: "ws" } : ws],
+			postprocess: id,
+		},
+		{ name: "Ann$macrocall$1$ebnf$2", symbols: [], postprocess: () => null },
+		{
+			name: "Ann$macrocall$1",
+			symbols: [
+				lexer.has("langle") ? { type: "langle" } : langle,
+				"Ann$macrocall$1$ebnf$1",
+				"Ann$macrocall$2",
+				"Ann$macrocall$1$ebnf$2",
+				lexer.has("rangle") ? { type: "rangle" } : rangle,
+			],
+			postprocess: Con.unwrapAngles,
+		},
+		{
+			name: "Ann$ebnf$5",
+			symbols: [lexer.has("ws") ? { type: "ws" } : ws],
+			postprocess: id,
+		},
+		{ name: "Ann$ebnf$5", symbols: [], postprocess: () => null },
+		{
+			name: "Ann",
+			symbols: [
+				"Expr",
+				"Ann$ebnf$3",
+				lexer.has("colon") ? { type: "colon" } : colon,
+				"Ann$ebnf$4",
+				"Ann$macrocall$1",
+				"Ann$ebnf$5",
+				"Atom",
+			],
+			postprocess: Con.Annotation,
+		},
+		{
 			name: "Lambda",
 			symbols: [
 				lexer.has("backslash") ? { type: "backslash" } : backslash,
@@ -256,7 +315,19 @@ const grammar: Grammar = {
 			],
 			postprocess: Con.Param,
 		},
-		{ name: "Param$macrocall$2", symbols: ["Param"] },
+		{
+			name: "Param$ebnf$3",
+			symbols: [lexer.has("ws") ? { type: "ws" } : ws],
+			postprocess: id,
+		},
+		{ name: "Param$ebnf$3", symbols: [], postprocess: () => null },
+		{
+			name: "Param$ebnf$4",
+			symbols: [lexer.has("ws") ? { type: "ws" } : ws],
+			postprocess: id,
+		},
+		{ name: "Param$ebnf$4", symbols: [], postprocess: () => null },
+		{ name: "Param$macrocall$2", symbols: ["Quantity"] },
 		{
 			name: "Param$macrocall$1$ebnf$1",
 			symbols: [lexer.has("ws") ? { type: "ws" } : ws],
@@ -272,15 +343,58 @@ const grammar: Grammar = {
 		{
 			name: "Param$macrocall$1",
 			symbols: [
-				lexer.has("lparens") ? { type: "lparens" } : lparens,
+				lexer.has("langle") ? { type: "langle" } : langle,
 				"Param$macrocall$1$ebnf$1",
 				"Param$macrocall$2",
 				"Param$macrocall$1$ebnf$2",
+				lexer.has("rangle") ? { type: "rangle" } : rangle,
+			],
+			postprocess: Con.unwrapAngles,
+		},
+		{
+			name: "Param$ebnf$5",
+			symbols: [lexer.has("ws") ? { type: "ws" } : ws],
+			postprocess: id,
+		},
+		{ name: "Param$ebnf$5", symbols: [], postprocess: () => null },
+		{
+			name: "Param",
+			symbols: [
+				"Identifier",
+				"Param$ebnf$3",
+				lexer.has("colon") ? { type: "colon" } : colon,
+				"Param$ebnf$4",
+				"Param$macrocall$1",
+				"Param$ebnf$5",
+				"Expr",
+			],
+			postprocess: Con.Param,
+		},
+		{ name: "Param$macrocall$4", symbols: ["Param"] },
+		{
+			name: "Param$macrocall$3$ebnf$1",
+			symbols: [lexer.has("ws") ? { type: "ws" } : ws],
+			postprocess: id,
+		},
+		{ name: "Param$macrocall$3$ebnf$1", symbols: [], postprocess: () => null },
+		{
+			name: "Param$macrocall$3$ebnf$2",
+			symbols: [lexer.has("ws") ? { type: "ws" } : ws],
+			postprocess: id,
+		},
+		{ name: "Param$macrocall$3$ebnf$2", symbols: [], postprocess: () => null },
+		{
+			name: "Param$macrocall$3",
+			symbols: [
+				lexer.has("lparens") ? { type: "lparens" } : lparens,
+				"Param$macrocall$3$ebnf$1",
+				"Param$macrocall$4",
+				"Param$macrocall$3$ebnf$2",
 				lexer.has("rparens") ? { type: "rparens" } : rparens,
 			],
 			postprocess: Con.unwrapParenthesis,
 		},
-		{ name: "Param", symbols: ["Param$macrocall$1"], postprocess: id },
+		{ name: "Param", symbols: ["Param$macrocall$3"], postprocess: id },
 		{
 			name: "Pi$ebnf$1",
 			symbols: [lexer.has("ws") ? { type: "ws" } : ws],
@@ -601,6 +715,16 @@ const grammar: Grammar = {
 			name: "Identifier",
 			symbols: [lexer.has("variable") ? { type: "variable" } : variable],
 			postprocess: Con.Name,
+		},
+		{
+			name: "Quantity",
+			symbols: [{ literal: "1" }],
+			postprocess: () => Shared.One,
+		},
+		{
+			name: "Quantity",
+			symbols: [{ literal: "0" }],
+			postprocess: () => Shared.Zero,
 		},
 		{ name: "Match$ebnf$1", symbols: ["Alt"] },
 		{

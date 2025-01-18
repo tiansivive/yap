@@ -11,10 +11,11 @@ import * as Elab from "./elaborate";
 export type ModalValue = [Value, Multiplicity];
 
 export type Value =
+	| { type: "Var"; variable: Variable }
 	| { type: "Lit"; value: Literal }
 	| { type: "App"; func: Value; arg: Value; icit: Implicitness }
 	| { type: "Abs"; binder: Binder; closure: Closure }
-	| { type: "Neutral"; variable: Variable };
+	| { type: "Neutral"; value: Value };
 
 export type Binder =
 	| { type: "Pi"; variable: string; annotation: ModalValue; icit: Implicitness }
@@ -46,10 +47,13 @@ export const quote = (
 ): El.Term => {
 	return match(val)
 		.with({ type: "Lit" }, ({ value }) => El.Lit(value))
-		.with({ type: "Neutral", variable: { type: "Bound" } }, ({ variable }) =>
-			El.Var({ type: "Bound", index: lvl - variable.index - 1 }),
-		)
-		.with({ type: "Neutral" }, ({ variable }) => El.Var(variable))
+		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
+			return El.Var({ type: "Bound", index: lvl - variable.index - 1 });
+		})
+		.with({ type: "Var" }, ({ variable }) => El.Var(variable))
+
+		.with({ type: "Neutral" }, ({ value }) => quote(imports, lvl, value))
+
 		.with({ type: "App" }, ({ func, arg, icit }) =>
 			El.App(icit, quote(imports, lvl, func), quote(imports, lvl, arg)),
 		)

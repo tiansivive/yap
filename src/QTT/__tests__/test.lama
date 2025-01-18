@@ -1,4 +1,3 @@
 
-let fst = \(a:Type) -> \(b:Type) -> a;
 
-let foo = 1 : (fst Num String);
+let m = \(x: <1> Num) -> snd x x;

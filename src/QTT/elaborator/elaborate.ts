@@ -50,7 +50,7 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 	const result = F.pipe(
 		ask(),
 		chain((ctx) => {
-			log.infer.entry(ctx, ast);
+			log("entry", "Infer", { Context: ctx, AST: srcPrint(ast) });
 			const { env } = ctx;
 			return match(ast)
 				.with({ type: "lit" }, ({ value }): Elaboration<AST> => {
@@ -196,7 +196,10 @@ export function infer(ast: Src.Term): Elaboration<AST> {
 					throw new Error("Not implemented yet");
 				});
 		}),
-		discard(log.infer.exit),
+		discard(([tm, ty]) => {
+			log("exit", "Result", { Term: print(tm), Type: print(ty) });
+			return of(null);
+		}),
 	);
 	return result;
 }
@@ -208,7 +211,10 @@ function check(
 	return F.pipe(
 		ask(),
 		chain((ctx) => {
-			log.check.entry(term, annotation);
+			log("entry", "Check", {
+				Term: srcPrint(term),
+				Annotation: print(annotation),
+			});
 			const [ty] = annotation;
 			return match([term, ty])
 				.with(
@@ -281,16 +287,23 @@ function check(
 					),
 				);
 		}),
-		listen(log.check.exit),
+		listen(([tm, csts]) => {
+			log("exit", "Result", {
+				Term: print(tm),
+				Constraints: csts.map((c) => `${print(c.left)}  ~~  ${print(c.right)}`),
+			});
+			return tm;
+		}),
 	);
 }
 
 function insertImplicitApps(node: AST): Elaboration<AST> {
-	const [term] = node;
+	const [term, ty] = node;
 	return F.pipe(
 		ask(),
-		chain((ctx) =>
-			match(node)
+		chain((ctx) => {
+			log("entry", "Insert", { Term: print(term), Type: print(ty) });
+			return match(node)
 				.with(
 					[{ type: "Abs", binding: { type: "Lambda", icit: "Implicit" } }, P._],
 					() => of<AST>(node),
@@ -314,8 +327,12 @@ function insertImplicitApps(node: AST): Elaboration<AST> {
 						return insertImplicitApps([tm, bodyMNF]);
 					},
 				)
-				.otherwise(() => of(node)),
-		),
+				.otherwise(() => of(node));
+		}),
+		discard(([tm, ty]) => {
+			log("exit", "Result", { Term: print(tm), Type: print(ty) });
+			return of(null);
+		}),
 	);
 }
 

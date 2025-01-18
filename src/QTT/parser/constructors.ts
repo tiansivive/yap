@@ -1,5 +1,5 @@
 import { PostProcessor } from "nearley";
-import { Implicitness, Literal } from "../shared";
+import { Implicitness, Literal, Multiplicity } from "../shared";
 import type { Statement, Term, Variable } from "./src";
 import * as Src from "./src";
 
@@ -29,10 +29,23 @@ export const Operation: PostProcessor<
 		rhs,
 	);
 
-export const Annotation: PostProcessor<
-	[Term, Whitespace, Colon, Whitespace, Term],
-	Term
-> = ([term, , colon, , ann]) => Src.Annotation(term, ann);
+export const Annotation: PostProcessor<[Term, ...Annotation], Term> = ([
+	term,
+	...rest
+]: [Term, ...Annotation]) => {
+	if (rest.length === 0) {
+		throw new Error("Expected annotation");
+	}
+
+	if (rest.length === 4) {
+		const [, , , ann] = rest;
+		return Src.Annotation(term, ann);
+	}
+
+	const q = rest[3];
+	const ann = rest[5];
+	return Src.Annotation(term, ann, q);
+};
 
 export const Pi: (
 	icit: Implicitness,
@@ -40,7 +53,7 @@ export const Pi: (
 	(icit) =>
 	([expr, , arr, , body]) => {
 		if (expr.type === "annotation") {
-			const { term, ann } = expr;
+			const { term, ann, multiplicity } = expr;
 
 			if (term.type !== "var") {
 				throw new Error("Expected variable in Pi binding");
@@ -50,7 +63,7 @@ export const Pi: (
 				throw new Error("No cumulative annotations in Pi bindings allowed");
 			}
 
-			return Src.Pi(icit, term.variable.value, ann, body);
+			return Src.Pi(icit, term.variable.value, ann, body, multiplicity);
 		}
 
 		return Src.Arrow(expr, body, icit);
@@ -63,22 +76,59 @@ export const Lambda:
 	| PostProcessor<Implicit, Term> = (data: Implicit | Explicit) => {
 	if (data.length === 7) {
 		const [, , param, , , , body] = data;
-		return Src.Lambda("Implicit", param.binding.value, body, param.annotation);
+		return Src.Lambda(
+			"Implicit",
+			param.binding.value,
+			body,
+			param.annotation,
+			param.multiplicity,
+		);
 	}
 	const [, param, , , , body] = data;
-	return Src.Lambda("Explicit", param.binding.value, body, param.annotation);
+	return Src.Lambda(
+		"Explicit",
+		param.binding.value,
+		body,
+		param.annotation,
+		param.multiplicity,
+	);
 };
 
 export const Param: PostProcessor<[Variable, ...Annotation], Param> = ([
 	binding,
 	...ann
-]: [Variable, ...Annotation]): Param => ({
-	type: "param",
-	binding,
-	annotation: ann.length === 0 ? undefined : ann[3],
-});
+]: [Variable, ...Annotation]): Param => {
+	if (ann.length === 0) {
+		return {
+			type: "param",
+			binding,
+		};
+	}
 
-type Param = { type: "param"; binding: Variable; annotation?: Term };
+	if (ann.length === 4) {
+		const [, , , term] = ann;
+		return {
+			type: "param",
+			binding,
+			annotation: term,
+		};
+	}
+	const q = ann[3];
+	const term = ann[5];
+	return {
+		type: "param",
+		binding,
+		annotation: term,
+		multiplicity: q,
+	};
+};
+
+type Param = {
+	type: "param";
+	binding: Variable;
+	annotation?: Term;
+	multiplicity?: Multiplicity;
+};
 
 export const Block: PostProcessor<[[Statement[], Term]], Term> = ([
 	[statements, ret],
@@ -114,18 +164,30 @@ export const LetDec: PostProcessor<LetDec, Statement> = ([
 		return Src.Let(variable.value, value);
 	}
 
-	const [, , , ann, , , , value] = rest;
-	return Src.Let(variable.value, value, ann);
+	if (rest.length === 8) {
+		const [, , , ann, , , , value] = rest;
+		return Src.Let(variable.value, value, ann);
+	}
+
+	const q = rest[3];
+	const ann = rest[5];
+	const value = rest[9];
+	return Src.Let(variable.value, value, ann, q);
 };
 
 /**
  * Utils
  */
 
-type Annotation = [Whitespace, Colon, Whitespace, Term] | [];
+type Annotation =
+	| [Whitespace, Colon, Whitespace, Term]
+	| [Whitespace, Colon, Whitespace, Multiplicity, Whitespace, Term]
+	| [];
 
 type LParens = Token;
 type RParens = Token;
+type LAngle = Token;
+type RAngle = Token;
 type Whitespace = Token;
 type Newline = Token;
 type Comma = Token;
@@ -153,6 +215,13 @@ export const unwrapParenthesis = <T>([l, , [t], , r]: [
 	T[],
 	Whitespace,
 	RParens,
+]) => t;
+export const unwrapAngles = <T>([l, , [t], , r]: [
+	LAngle,
+	Whitespace,
+	T[],
+	Whitespace,
+	RAngle,
 ]) => t;
 export const unwrapCurlyBraces = <T>([l, t, , , r]: [
 	LBrace,

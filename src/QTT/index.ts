@@ -14,7 +14,7 @@ import Shared from "./shared";
 import * as P from "./elaborator/pretty";
 
 import fs from "fs";
-import { logFilePath } from "./elaborator/logging";
+import { log, logFilePath } from "./elaborator/logging";
 // import simple from "./__tests__/simple.lama"
 // import test from "./__tests__/test.lama"
 
@@ -54,14 +54,22 @@ try {
 				return ctx;
 			}
 
+			log("entry", stmt.variable, { statement: stmt.type });
+
 			const runReader = Elab.infer(stmt.value);
 			const runWriter = runReader(ctx);
 
 			const result = runWriter();
 
-			const [ast] = result;
+			const [ast, cst] = result;
 
 			results.push(result);
+
+			log("exit", "result", {
+				term: P.print(ast[0]),
+				type: P.print(ast[1]),
+				constraint: cst.map((c) => [P.print(c.left), P.print(c.right)]),
+			});
 
 			return {
 				...ctx,

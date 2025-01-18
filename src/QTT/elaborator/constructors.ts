@@ -50,15 +50,18 @@ export const Type = {
 	}),
 	Rigid: (lvl: number) => ({
 		type: "Neutral" as const,
-		variable: { type: "Bound" as const, index: lvl },
+		value: {
+			type: "Var" as const,
+			variable: { type: "Bound" as const, index: lvl },
+		},
 	}),
 	Lit: (value: Literal) => ({
 		type: "Lit" as const,
 		value,
 	}),
-	Neutral: (variable: El.Variable) => ({
+	Neutral: <T>(value: T) => ({
 		type: "Neutral" as const,
-		variable,
+		value,
 	}),
 	App: <A, B>(func: A, arg: B, icit: Implicitness) => ({
 		type: "App" as const,

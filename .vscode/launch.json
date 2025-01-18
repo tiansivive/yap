@@ -17,7 +17,7 @@
 				"--transpile-only"
 				// if you use esm
 			],
-			"program": "${file}",
+			"program": "${workspaceRoot}/src/QTT/index.ts",
 			"cwd": "${workspaceRoot}",
 			"internalConsoleOptions": "openOnSessionStart",
 			"skipFiles": ["<node_internals>/**", "node_modules/**"]

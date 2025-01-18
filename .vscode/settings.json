@@ -84,5 +84,8 @@
 		"spwn": "spwn build",
 		"pkl": "cd $dir && pkl eval -f yaml $fileName -o $fileNameWithoutExt.yaml",
 		"gleam": "gleam run -m $fileNameWithoutExt"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "vscode.json-language-features"
 	}
 }

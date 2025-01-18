@@ -57,12 +57,13 @@ const displayTerm = (term: E.Term): string => {
 		.exhaustive();
 };
 
-const displayValue = (value: NF.Value): string => {
+export const displayValue = (value: NF.Value): string => {
 	return match(value)
 		.with({ type: "Lit" }, ({ value }) => displayLit(value))
-		.with({ type: "Neutral" }, ({ variable }) =>
+		.with({ type: "Var" }, ({ variable }) =>
 			variable.type === "Free" ? variable.name : `?${variable.index}`,
 		)
+		.with({ type: "Neutral" }, ({ value }) => displayValue(value))
 		.with({ type: "Abs" }, ({ binder, closure }) => {
 			const b = match(binder)
 				.with(

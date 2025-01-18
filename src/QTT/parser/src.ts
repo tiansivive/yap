@@ -21,7 +21,7 @@ export type Term =
 			body: Term;
 	  }
 	| { type: "application"; fn: Term; arg: Term; icit: Implicitness }
-	| { type: "annotation"; term: Term; ann: Term }
+	| { type: "annotation"; term: Term; ann: Term; multiplicity?: Multiplicity }
 	| { type: "hole" }
 	| { type: "block"; statements: Statement[]; return?: Term };
 
@@ -67,10 +67,15 @@ export const Application = (
 	icit: Implicitness = "Explicit",
 ): Term => ({ type: "application", fn, arg, icit });
 
-export const Annotation = (term: Term, ann: Term): Term => ({
+export const Annotation = (
+	term: Term,
+	ann: Term,
+	multiplicity?: Multiplicity,
+): Term => ({
 	type: "annotation",
 	term,
 	ann,
+	multiplicity,
 });
 
 export const Hole: Term = { type: "hole" };
