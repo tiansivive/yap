@@ -40,11 +40,10 @@ export function evaluate(
 			{ type: "Abs", binding: { type: "Pi" } },
 			({ body, binding }): NF.Value => {
 				const annotation = evaluate(env, imports, binding.annotation);
-				const ma = NF.infer(env, annotation);
 				return Con.Type.Pi(
 					binding.variable,
 					binding.icit,
-					ma,
+					[annotation, binding.multiplicity],
 					NF.Closure(env, body),
 				);
 			},

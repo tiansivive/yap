@@ -23,7 +23,13 @@ export type Variable =
 
 export type Binding =
 	| { type: "Let"; variable: string; value: Term; annotation: Term }
-	| { type: "Pi"; variable: string; annotation: Term; icit: Implicitness }
+	| {
+			type: "Pi";
+			variable: string;
+			annotation: Term;
+			multiplicity: Multiplicity;
+			icit: Implicitness;
+	  }
 	| { type: "Lambda"; variable: string; icit: Implicitness };
 
 type Spine = Array<"Bound" | "Defined">;
@@ -53,7 +59,8 @@ export const Pi = (
 	variable: string,
 	annotation: Term,
 	icit: Implicitness,
-): Binding => ({ type: "Pi", variable, annotation, icit });
+	multiplicity: Multiplicity,
+): Binding => ({ type: "Pi", variable, annotation, multiplicity, icit });
 
 export const LitM = (
 	value: Literal,

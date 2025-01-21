@@ -109,6 +109,7 @@ Identifier -> %variable {% Con.Name %}
 # Multiplicity
 Quantity -> "1" {% () => Shared.One %}
 		  | "0" {% () => Shared.Zero %}
+		  | "*" {% () => Shared.Many %}
 
 # PATTERN MATCHING
 Match -> "match" %ws Expr Alt:+ {% d => ({ type: "match", scrutinee: d[2], alternatives: d[3] }) %} 

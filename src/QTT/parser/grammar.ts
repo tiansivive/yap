@@ -726,6 +726,11 @@ const grammar: Grammar = {
 			symbols: [{ literal: "0" }],
 			postprocess: () => Shared.Zero,
 		},
+		{
+			name: "Quantity",
+			symbols: [{ literal: "*" }],
+			postprocess: () => Shared.Many,
+		},
 		{ name: "Match$ebnf$1", symbols: ["Alt"] },
 		{
 			name: "Match$ebnf$1",

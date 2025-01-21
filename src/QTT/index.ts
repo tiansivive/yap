@@ -40,10 +40,10 @@ try {
 		types: [],
 		names: [],
 		imports: {
-			Num: [Con.Term.Lit(Shared.Atom("Num")), NF.Type],
-			Bool: [Con.Term.Lit(Shared.Atom("Bool")), NF.Type],
-			String: [Con.Term.Lit(Shared.Atom("String")), NF.Type],
-			Unit: [Con.Term.Lit(Shared.Atom("Unit")), NF.Type],
+			Num: [Con.Term.Lit(Shared.Atom("Num")), NF.Type, []],
+			Bool: [Con.Term.Lit(Shared.Atom("Bool")), NF.Type, []],
+			String: [Con.Term.Lit(Shared.Atom("String")), NF.Type, []],
+			Unit: [Con.Term.Lit(Shared.Atom("Unit")), NF.Type, []],
 		},
 	};
 
@@ -62,13 +62,14 @@ try {
 			const result = runWriter();
 
 			const [ast, cst] = result;
+			const [tm, ty, us] = ast;
 
 			results.push(result);
 
 			log("exit", "result", {
-				term: P.print(ast[0]),
-				type: P.print(ast[1]),
-				constraint: cst.map((c) => [P.print(c.left), P.print(c.right)]),
+				term: P.print(tm),
+				type: P.displayValue(ty),
+				constraint: cst.map(P.displayConstraint),
 			});
 
 			return {
@@ -81,18 +82,16 @@ try {
 		}, empty),
 	);
 
-	results.forEach(([ast, cst]) => {
+	results.forEach(([[tm, ty, us], cst]) => {
 		console.log("\n\n--------------------");
-		console.log("Term:\t", P.print(ast[0]));
+		console.log("Term:\t", P.print(tm));
 
 		console.log("--------------------");
-		console.log("Type:\t", P.print(ast[1]));
+		console.log("Type:\t", P.displayValue(ty));
 
 		console.log("--------------------");
 		console.log("Constraints:");
-		const cs = cst
-			.map((c) => "  " + [c.left, c.right].map(P.print).join("\t  ?=\t"))
-			.join("\n");
+		const cs = cst.map((c) => "  " + P.displayConstraint(c)).join("\n");
 		console.log(cs);
 	});
 

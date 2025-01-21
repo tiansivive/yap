@@ -33,10 +33,10 @@ export type Closure = {
 
 export type Env = ModalValue[];
 
-export const Type: ModalValue = [
-	{ type: "Lit", value: { type: "Atom", value: "Type" } },
-	Shared.Zero,
-];
+export const Type: Value = {
+	type: "Lit",
+	value: { type: "Atom", value: "Type" },
+};
 
 export const Closure = (env: Env, term: El.Term): Closure => ({ env, term });
 
@@ -70,11 +70,11 @@ export const quote = (
 			const {
 				variable,
 				icit,
-				annotation: [ann],
+				annotation: [ann, q],
 			} = binder;
 			const val = Eval.apply(imports, closure, Con.Type.Rigid(lvl));
 			const body = quote(imports, lvl + 1, val);
-			return Con.Term.Pi(variable, icit, quote(imports, lvl, ann), body);
+			return Con.Term.Pi(variable, icit, q, quote(imports, lvl, ann), body);
 		})
 		.exhaustive();
 };
@@ -88,6 +88,10 @@ export const infer = (env: Env, value: Value): ModalValue =>
 
 			return [ty, m];
 		})
+		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
+			return env[variable.index];
+		})
+		.with({ type: "Neutral" }, ({ value }) => infer(env, value))
 		.otherwise(() => {
 			return [value, Shared.Many];
 		});

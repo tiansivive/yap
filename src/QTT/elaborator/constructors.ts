@@ -1,5 +1,5 @@
 import { Tag } from "../../utils/types";
-import { Implicitness, Literal } from "../shared";
+import { Implicitness, Literal, Multiplicity } from "../shared";
 import { Value, Binder, Closure } from "./normalized";
 
 import * as El from "./syntax";
@@ -10,9 +10,15 @@ export const Term = {
 		binding: { type: "Lambda" as const, variable, icit },
 		body,
 	}),
-	Pi: <T>(variable: string, icit: Implicitness, annotation: T, body: T) => ({
+	Pi: <T>(
+		variable: string,
+		icit: Implicitness,
+		multiplicity: Multiplicity,
+		annotation: T,
+		body: T,
+	) => ({
 		type: "Abs" as const,
-		binding: { type: "Pi" as const, variable, icit, annotation },
+		binding: { type: "Pi" as const, variable, icit, annotation, multiplicity },
 		body,
 	}),
 	Var: (variable: El.Variable) => ({

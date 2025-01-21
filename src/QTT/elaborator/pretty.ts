@@ -4,6 +4,7 @@ import * as NF from "./normalized";
 
 import { match } from "ts-pattern";
 import { displayIcit, displayLit, Multiplicity } from "../shared";
+import { Constraint, Context } from "./elaborate";
 
 export const print: {
 	(term: E.Term): string;
@@ -35,8 +36,8 @@ const displayTerm = (term: E.Term): string => {
 				)
 				.with(
 					{ type: "Pi" },
-					({ icit, variable, annotation }) =>
-						`Π(${displayIcit(icit)}${variable}: ${print(annotation)})`,
+					({ icit, variable, annotation, multiplicity }) =>
+						`Π(${displayIcit(icit)}${variable}: <${displayMultiplicity(multiplicity)}>${print(annotation)})`,
 				)
 				.otherwise(() => {
 					throw new Error("Display Term Binder: Not implemented");
@@ -92,5 +93,29 @@ const displayMultiplicity = (multiplicity: Multiplicity): string => {
 		.with("One", () => "1")
 		.with("Zero", () => "0")
 		.with("Many", () => "ω")
-		.exhaustive();
+		.otherwise(() => JSON.stringify(multiplicity));
+};
+
+export const displayConstraint = (constraint: Constraint): string => {
+	if (constraint.type === "assign") {
+		return `${displayValue(constraint.left)}  ~~  ${displayValue(constraint.right)}`;
+	}
+
+	if (constraint.type === "usage") {
+		return `${displayMultiplicity(constraint.computed)}  <=  ${displayMultiplicity(constraint.expected)}`;
+	}
+
+	return "Unknown Constraint";
+};
+
+export const displayContext = (context: Context): object => {
+	const pretty = {
+		env: context.env.map(print),
+		types: context.types.map(
+			([name, origin, mv]) => `${name} (${origin}): ${print(mv)}`,
+		),
+		names: context.names,
+		imports: context.imports,
+	};
+	return pretty;
 };
