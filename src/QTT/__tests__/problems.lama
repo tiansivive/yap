@@ -1,0 +1,16 @@
+
+let sort = (_ : ?0)
+let g = \xs -> sort xs
+
+- g: ?1 -> ?2
+- ?0 ~~ ?1 -> ?2
+
+- from somewhere else: ?0 = (a:Type) => List a -> List a
+-- ?0 = (a:Type) => List a -> List a    ~~ ?1 -> ?2
+--  | Type => List v0 -> List v1        ~~ ?3 => ?1 -> ?2
+--  | ?1 ~~ List v0
+    , ?2 ~~ list v1
+    , ?3 ~~ Type
+
+- Zonk it!
+-- uh-oh, g doesnt know about ?3!!!

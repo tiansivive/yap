@@ -24,7 +24,7 @@
 		"lint": "eslint . --max-warnings 0",
 		"lint:knip": "knip",
 		"nearley": "nearleyc src/QTT/parser/grammar.ne -o src/QTT/parser/grammar.ts",
-		"parse": "npm run nearley && nearley-test src/QTT/parser/grammar.js",
+		"parse": "tsc src/QTT/parser/grammar.ts --skipLibCheck --noEmitOnError --allowJs && nearley-test bin/grammar.js",
 		"prepare": "husky",
 		"railroad": "nearley-railroad src/QTT/parser/grammar.ne -o gen/QTT/grammar.html",
 		"test": "vitest",

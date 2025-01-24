@@ -3,3 +3,6 @@ lib/
 node_modules/
 gen/
 .logs/
+
+.vscode
+bin/

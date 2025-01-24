@@ -1,6 +1,6 @@
 import { PostProcessor } from "nearley";
 import { Implicitness, Literal, Multiplicity } from "../shared";
-import type { Statement, Term, Variable } from "./src";
+import type { Statement, Term, Variable, Row } from "./src";
 import * as Src from "./src";
 
 import { Token } from "moo";
@@ -15,24 +15,11 @@ export const Name: PostProcessor<[Token], Variable> = ([v]) => ({
 
 export const Hole: PostProcessor<[], Term> = () => Src.Hole;
 
-export const Application: PostProcessor<[Term, Whitespace, Term], Term> = ([
-	fn,
-	,
-	arg,
-]) => Src.Application(fn, arg);
-export const Operation: PostProcessor<
-	[Term, Whitespace, Token, Whitespace, Term],
-	Term
-> = ([lhs, , op, , rhs]) =>
-	Src.Application(
-		Src.Application(Src.Var({ type: "name", value: op.value }), lhs),
-		rhs,
-	);
+export const Application: PostProcessor<[Term, Whitespace, Term], Term> = ([fn, , arg]) => Src.Application(fn, arg);
+export const Operation: PostProcessor<[Term, Whitespace, Token, Whitespace, Term], Term> = ([lhs, , op, , rhs]) =>
+	Src.Application(Src.Application(Src.Var({ type: "name", value: op.value }), lhs), rhs);
 
-export const Annotation: PostProcessor<[Term, ...Annotation], Term> = ([
-	term,
-	...rest
-]: [Term, ...Annotation]) => {
+export const Annotation: PostProcessor<[Term, ...Annotation], Term> = ([term, ...rest]: [Term, ...Annotation]) => {
 	if (rest.length === 0) {
 		throw new Error("Expected annotation");
 	}
@@ -47,10 +34,8 @@ export const Annotation: PostProcessor<[Term, ...Annotation], Term> = ([
 	return Src.Annotation(term, ann, q);
 };
 
-export const Pi: (
-	icit: Implicitness,
-) => PostProcessor<[Term, Whitespace, Token, Whitespace, Term], Term> =
-	(icit) =>
+export const Pi: (icit: Implicitness) => PostProcessor<[Term, Whitespace, Token, Whitespace, Term], Term> =
+	icit =>
 	([expr, , arr, , body]) => {
 		if (expr.type === "annotation") {
 			const { term, ann, multiplicity } = expr;
@@ -71,33 +56,16 @@ export const Pi: (
 
 type Implicit = [Backslash, Hash, Param, Whitespace, Arrow, Whitespace, Term];
 type Explicit = [Backslash, Param, Whitespace, Arrow, Whitespace, Term];
-export const Lambda:
-	| PostProcessor<Explicit, Term>
-	| PostProcessor<Implicit, Term> = (data: Implicit | Explicit) => {
+export const Lambda: PostProcessor<Explicit, Term> | PostProcessor<Implicit, Term> = (data: Implicit | Explicit) => {
 	if (data.length === 7) {
 		const [, , param, , , , body] = data;
-		return Src.Lambda(
-			"Implicit",
-			param.binding.value,
-			body,
-			param.annotation,
-			param.multiplicity,
-		);
+		return Src.Lambda("Implicit", param.binding.value, body, param.annotation, param.multiplicity);
 	}
 	const [, param, , , , body] = data;
-	return Src.Lambda(
-		"Explicit",
-		param.binding.value,
-		body,
-		param.annotation,
-		param.multiplicity,
-	);
+	return Src.Lambda("Explicit", param.binding.value, body, param.annotation, param.multiplicity);
 };
 
-export const Param: PostProcessor<[Variable, ...Annotation], Param> = ([
-	binding,
-	...ann
-]: [Variable, ...Annotation]): Param => {
+export const Param: PostProcessor<[Variable, ...Annotation], Param> = ([binding, ...ann]: [Variable, ...Annotation]): Param => {
 	if (ann.length === 0) {
 		return {
 			type: "param",
@@ -130,35 +98,25 @@ type Param = {
 	multiplicity?: Multiplicity;
 };
 
-export const Block: PostProcessor<[[Statement[], Term]], Term> = ([
-	[statements, ret],
-]) => Src.Block(statements, ret);
+type KeyVal = [string, Term];
+export const keyval: PostProcessor<[Variable, Whitespace, Colon, Whitespace, Term], KeyVal> = ([v, , , , tm]) => [v.value, tm];
 
-export const Expr: PostProcessor<[Term], Statement> = ([value]) =>
-	Src.Expression(value);
+export const emptyRow = (): Term => Src.Row({ type: "empty" });
+export const row: PostProcessor<[[KeyVal[], KeyVal]], Term> = ([[pairs, last]]): Term => {
+	// TODO: Update when parsing accounts for row variables
+	const end: Row = { type: "extension", label: last[0], value: last[1], rest: { type: "empty" } };
+	const row = pairs.reduceRight<Row>((acc, [label, value]) => ({ type: "extension", label, value, rest: acc }), end);
+	return Src.Row(row);
+};
 
-export const Return: PostProcessor<[Keyword, Whitespace, Term], Term> = ([
-	,
-	,
-	term,
-]) => term;
+export const Block: PostProcessor<[[Statement[], Term]], Term> = ([[statements, ret]]) => Src.Block(statements, ret);
 
-type LetDec = [
-	Keyword,
-	Whitespace,
-	Variable,
-	...Annotation,
-	Whitespace,
-	Equals,
-	Whitespace,
-	Term,
-];
-export const LetDec: PostProcessor<LetDec, Statement> = ([
-	,
-	,
-	variable,
-	...rest
-]: LetDec) => {
+export const Expr: PostProcessor<[Term], Statement> = ([value]) => Src.Expression(value);
+
+export const Return: PostProcessor<[Keyword, Whitespace, Term], Term> = ([, , term]) => term;
+
+type LetDec = [Keyword, Whitespace, Variable, ...Annotation, Whitespace, Equals, Whitespace, Term];
+export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]: LetDec) => {
 	if (rest.length === 4) {
 		const [, , , value] = rest;
 		return Src.Let(variable.value, value);
@@ -179,10 +137,7 @@ export const LetDec: PostProcessor<LetDec, Statement> = ([
  * Utils
  */
 
-type Annotation =
-	| [Whitespace, Colon, Whitespace, Term]
-	| [Whitespace, Colon, Whitespace, Multiplicity, Whitespace, Term]
-	| [];
+type Annotation = [Whitespace, Colon, Whitespace, Term] | [Whitespace, Colon, Whitespace, Multiplicity, Whitespace, Term] | [];
 
 type LParens = Token;
 type RParens = Token;
@@ -205,36 +160,8 @@ type RBrace = Token;
 
 type Keyword = Token;
 
-type Unwrap<T> = PostProcessor<
-	[LParens, Whitespace, T[], Whitespace, RParens],
-	T
->;
-export const unwrapParenthesis = <T>([l, , [t], , r]: [
-	LParens,
-	Whitespace,
-	T[],
-	Whitespace,
-	RParens,
-]) => t;
-export const unwrapAngles = <T>([l, , [t], , r]: [
-	LAngle,
-	Whitespace,
-	T[],
-	Whitespace,
-	RAngle,
-]) => t;
-export const unwrapCurlyBraces = <T>([l, t, , , r]: [
-	LBrace,
-	T[],
-	Whitespace,
-	Newline,
-	RBrace,
-]) => t;
-export const unwrapStatement = <T>([, , [t]]: [
-	Newline,
-	Whitespace,
-	T[],
-	Newline,
-	Whitespace,
-	SemiColon,
-]) => t;
+type Unwrap<T> = PostProcessor<[LParens, Whitespace, T[], Whitespace, RParens], T>;
+export const unwrapParenthesis = <T>([l, , [t], , r]: [LParens, Whitespace, T[], Whitespace, RParens]) => t;
+export const unwrapAngles = <T>([l, , [t], , r]: [LAngle, Whitespace, T[], Whitespace, RAngle]) => t;
+export const unwrapCurlyBraces = <T>([l, t, , , r]: [LBrace, T[], Whitespace, Newline, RBrace]) => t;
+export const unwrapStatement = <T>([, , [t]]: [Newline, Whitespace, T[], Newline, Whitespace, SemiColon]) => t;

@@ -28,6 +28,7 @@
 		rangle: />/,
 		semicolon: /\;/,
 		colon: /\:/,
+		comma: /\,/,
 		bar: /\|/,
 		hash: /#/,
 		hole: /_/,
@@ -44,6 +45,7 @@
 
 Parens[X] -> %lparens %ws:? $X %ws:? %rparens {% Con.unwrapParenthesis %}
 Angles[X] -> %langle %ws:? $X %ws:? %rangle {% Con.unwrapAngles %}
+Curly[X] -> %lbrace $X %ws:? %NL:? %rbrace {% Con.unwrapCurlyBraces %} 
 
 Script -> Statement:+ %NL:? {% d => ({ type: "script", script: d[0] }) %}
 		| Expr {% id %}
@@ -52,7 +54,7 @@ Expr
 	-> Lambda		{% id %}
 	 | Ann 			{% id %}
      | Match 		{% id %}
-	 | Block 		{% id %}
+	 | Row 			{% id %}
 	 | App 			{% id %}
 	 | Pi			{% id %}
 	 | %hole 		{% Con.Hole %}
@@ -66,6 +68,7 @@ App -> App %ws Atom 				{% Con.Application %}
 Atom -> Literal 		{% Con.Lit %}
 	  | Identifier 		{% Con.Var %} 
 	  | Parens[Expr]  	{% id %}
+	  | Block 		    {% id %}
 
 	 
 Ann -> Expr %ws:? %colon %ws:? Atom 						{% Con.Annotation %}
@@ -87,15 +90,22 @@ Pi -> Expr %ws:? %arrow %ws PiTail 		{% Con.Pi("Explicit") %}
 PiTail -> Pi {% id %}
 		| Atom {% id %}
 
+# ROWS
+Row -> %lbrace %NL:? %ws:? %NL:? %rbrace 	{% Con.emptyRow %}
+	 | Curly[RowItem:* EndItem] 			{% Con.row %}
+
+EndItem -> %NL:? %ws:? KeyVal 					{% d => d[2] %}
+RowItem -> %NL:? %ws:? KeyVal %comma 			{% d => d[2] %}
+KeyVal -> Identifier %ws:? %colon %ws:? Expr 	{% Con.keyval %}
+
 # BLOCKS
 Wrap[X] -> %NL:? %ws:? $X %NL:? %ws:? %semicolon {% Con.unwrapStatement %}
-Curly[X] -> %lbrace $X %ws:? %NL:? %rbrace {% Con.unwrapCurlyBraces %} 
 
-Block -> Curly[Statement:* Wrap[Return]:?] 	{% Con.Block %}
+Block -> Curly[Statement:+ Wrap[Return]:?] 	{% Con.Block %}
+	   | Curly[Wrap[Return]] 				{% Con.Block %}
 
 Statement -> Wrap[Expr] 	{% Con.Expr %}
            | Wrap[Letdec] 	{% id %}
-		   
 		   
 Return    -> "return" %ws Expr {% Con.Return %}
 

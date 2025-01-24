@@ -22,6 +22,7 @@ const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar));
 
 const simple = Q.load("./src/QTT/__tests__/simple.lama");
 const test = Q.load("./src/QTT/__tests__/test.lama");
+const row = Q.load("./src/QTT/__tests__/row.lama");
 
 try {
 	let data;
@@ -31,9 +32,9 @@ try {
 
 	// wipe log file
 	fs.writeFileSync(logFilePath, "{\n");
-
-	data = parser.feed(test);
-	data.results.length;
+	parser.grammar.start = "Expr";
+	data = parser.feed("x");
+	const vals = data.results.map(s => s.script[0]);
 
 	const empty: Elab.Context = {
 		env: [],
@@ -48,7 +49,7 @@ try {
 	};
 
 	const results: Array<[Elab.AST, Elab.Constraint[]]> = [];
-	const [ctx] = data.results.map((x) =>
+	const [ctx] = data.results.map(x =>
 		x.script.reduce((ctx: Elab.Context, stmt: Src.Statement): Elab.Context => {
 			if (stmt.type !== "let") {
 				return ctx;
@@ -91,7 +92,7 @@ try {
 
 		console.log("--------------------");
 		console.log("Constraints:");
-		const cs = cst.map((c) => "  " + P.displayConstraint(c)).join("\n");
+		const cs = cst.map(c => "  " + P.displayConstraint(c)).join("\n");
 		console.log(cs);
 	});
 
@@ -102,3 +103,18 @@ try {
 	e;
 	console.error(e);
 }
+
+const writeTable = function (p: any) {
+	console.log("Table length: ", p.table!.length);
+	console.log("Results length: ", p.results.length);
+
+	console.log("Parse Charts:");
+
+	p.table.forEach((column: any, index: number) => {
+		console.log("Chart: ", index++);
+		column.states.forEach((state: any, stateIndex: number) => {
+			console.log(stateIndex + ": " + state.toString());
+		});
+	});
+	console.log("\n\nParse results: ");
+};
