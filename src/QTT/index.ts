@@ -33,7 +33,7 @@ try {
 	// wipe log file
 	fs.writeFileSync(logFilePath, "{\n");
 	parser.grammar.start = "Expr";
-	data = parser.feed("x");
+	data = parser.feed("{ }");
 	const vals = data.results.map(s => s.script[0]);
 
 	const empty: Elab.Context = {

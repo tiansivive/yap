@@ -4,5 +4,5 @@ node_modules/
 gen/
 .logs/
 
-.vscode
+.vscode/
 bin/

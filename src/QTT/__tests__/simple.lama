@@ -3,6 +3,20 @@
 let app = f g h;
 let app = f (g 1);
 
+let op = f + g;
+
+let ann = x : Int;
+
+let lambda = \y -> \x -> f x y;
+let pi = (x:Int) -> (f x);
+let arrow = Int -> Bool;
+
+let param = \(f:Int -> Bool) -> f 1;
+let hole = _;
+
+let fst = \#(a:Type) => \#(b:Type) => a;
+let foo = 1 : (fst);
+
 let block = {
   let v = f 1;
   v + 1;
@@ -14,20 +28,11 @@ let patterns = match 1
   | y -> y
   ;
 
-let ann = x : Int;
+let struct = { x: 1, a: "hello" };
+let variant = { foo: 1 } | { bar: 2 };
 
-let lambda = \y -> \x -> f x y;
+let row = [x: 1, a: "hello"];
+let row = [foo: 1, bar: 2];
 
-let op = f + g;
-
-
-let pi = (x:Int) -> (f x);
-
-let arrow = Int -> Bool;
-let param = \(f:Int -> Bool) -> f 1;
-let hole = _;
-
-
-let fst = \#(a:Type) => \#(b:Type) => a;
-
-let foo = 1 : (fst);
+let tuple = {1,2,3,4};
+let array = [5,6,7,8];

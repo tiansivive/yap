@@ -4,8 +4,19 @@
 	},
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
 	"editor.formatOnSave": true,
-	"editor.rulers": [80],
-	"eslint.probe": ["javascript", "javascriptreact", "json", "jsonc", "markdown", "typescript", "typescriptreact", "yaml"],
+	"editor.rulers": [
+		80
+	],
+	"eslint.probe": [
+		"javascript",
+		"javascriptreact",
+		"json",
+		"jsonc",
+		"markdown",
+		"typescript",
+		"typescriptreact",
+		"yaml"
+	],
 	"eslint.rules.customizations": [
 		{
 			"rule": "*",
@@ -16,7 +27,14 @@
 	"typescript.tsdk": "node_modules/typescript/lib",
 	"typescript.tsserver.nodePath": "node",
 	"typescript.tsserver.maxTsServerMemory": 4096,
-	"cSpell.words": ["mtype", "mval", "mvnf", "Nearley", "tmnf"],
+	"cSpell.words": [
+		"keyval",
+		"mtype",
+		"mval",
+		"mvnf",
+		"Nearley",
+		"tmnf"
+	],
 	"code-runner.executorMap": {
 		"javascript": "node",
 		"java": "cd $dir && javac $fileName && java $fileNameWithoutExt",
@@ -80,6 +98,6 @@
 		"editor.defaultFormatter": "vscode.json-language-features"
 	},
 	"[typescript]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
+		"editor.defaultFormatter": "rvest.vs-code-prettier-eslint"
 	}
 }

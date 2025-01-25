@@ -101,22 +101,49 @@ type Param = {
 type KeyVal = [string, Term];
 export const keyval: PostProcessor<[Variable, Whitespace, Colon, Whitespace, Term], KeyVal> = ([v, , , , tm]) => [v.value, tm];
 
-export const emptyRow = (): Term => Src.Row({ type: "empty" });
+export const emptyStruct = (): Term => Src.Struct({ type: "empty" });
+
+export const struct: PostProcessor<[[KeyVal[]]], Term> = ([[pairs]]) => {
+	const row = pairs.reduceRight<Row>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), { type: "empty" });
+	return Src.Struct(row);
+};
+
+export const Variant: PostProcessor<[Bar, KeyVal[]], Term> = ([, pairs]) => {
+	const row = pairs.reduceRight<Row>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), { type: "empty" });
+	return Src.Variant(row);
+};
+
+export const tuple: PostProcessor<[[Term[]]], Term> = ([[terms]]) => {
+	return Src.Tuple(terms);
+};
+
+export const list: PostProcessor<[[Term[]]], Term> = ([[terms]]) => {
+	return Src.List(terms);
+};
+
 export const row: PostProcessor<[[KeyVal[], KeyVal]], Term> = ([[pairs, last]]): Term => {
 	// TODO: Update when parsing accounts for row variables
-	const end: Row = { type: "extension", label: last[0], value: last[1], rest: { type: "empty" } };
-	const row = pairs.reduceRight<Row>((acc, [label, value]) => ({ type: "extension", label, value, rest: acc }), end);
+	const end: Row = { type: "extension", label: last[0], value: last[1], row: { type: "empty" } };
+	const row = pairs.reduceRight<Row>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), end);
 	return Src.Row(row);
 };
 
-export const Block: PostProcessor<[[Statement[], Term]], Term> = ([[statements, ret]]) => Src.Block(statements, ret);
+export const Block: PostProcessor<[[Statement[], SemiColon, Term?] | [Term]], Term> = ([input]) => {
+	if (Array.isArray(input[0])) {
+		const [statements, , ret] = input;
+		return Src.Block(statements, ret || undefined); // Ensure ret is undefined and not null
+	}
+
+	const [ret] = input;
+	return Src.Block([], ret);
+};
 
 export const Expr: PostProcessor<[Term], Statement> = ([value]) => Src.Expression(value);
 
-export const Return: PostProcessor<[Keyword, Whitespace, Term], Term> = ([, , term]) => term;
+export const Return: PostProcessor<[Newline, Whitespace, Keyword, Whitespace, Term, SemiColon], Term> = d => d[4];
 
 type LetDec = [Keyword, Whitespace, Variable, ...Annotation, Whitespace, Equals, Whitespace, Term];
-export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]: LetDec) => {
+export const LetDec: PostProcessor<[LetDec], Statement> = ([[, , variable, ...rest]]: [LetDec]) => {
 	if (rest.length === 4) {
 		const [, , , value] = rest;
 		return Src.Let(variable.value, value);
@@ -154,14 +181,26 @@ type Dot = Token;
 type Arrow = Token;
 type FatArrow = Token;
 type Equals = Token;
+type Bar = Token;
 
 type LBrace = Token;
 type RBrace = Token;
 
 type Keyword = Token;
 
-type Unwrap<T> = PostProcessor<[LParens, Whitespace, T[], Whitespace, RParens], T>;
-export const unwrapParenthesis = <T>([l, , [t], , r]: [LParens, Whitespace, T[], Whitespace, RParens]) => t;
-export const unwrapAngles = <T>([l, , [t], , r]: [LAngle, Whitespace, T[], Whitespace, RAngle]) => t;
-export const unwrapCurlyBraces = <T>([l, t, , , r]: [LBrace, T[], Whitespace, Newline, RBrace]) => t;
-export const unwrapStatement = <T>([, , [t]]: [Newline, Whitespace, T[], Newline, Whitespace, SemiColon]) => t;
+export const none = () => undefined;
+export const unwrap: <T>(arg: [Token, T[], Whitespace, Token]) => T = arg => {
+	const [, [t]] = arg;
+	return t;
+};
+
+export const extract: <T>(arg: [[T]]) => T = arg => {
+	return arg[0][0];
+};
+
+export const many: <T>(arg: [Array<[Newline, Whitespace, T[], Newline, Whitespace, Token]>, Newline, Whitespace, T]) => T[] = arg => {
+	const [arr, , , t2] = arg;
+
+	const t1 = arr.flatMap(([, , t]) => t);
+	return t1.concat(t2);
+};

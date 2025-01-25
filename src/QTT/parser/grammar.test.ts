@@ -17,7 +17,7 @@ describe("Grammar", () => {
 
 	describe("Expressions", () => {
 		beforeEach(() => {
-			parser.grammar.start = "Expr";
+			parser.grammar.start = "Ann";
 		});
 		describe("Literals", () => {
 			it("should parse numbers:\t\t1", () => {
@@ -164,17 +164,17 @@ describe("Grammar", () => {
 		});
 
 		describe("Row terms", () => {
-			it("should parse empty row terms:\t{}", () => {
+			it("should parse empty structs:\t\t{}", () => {
 				const src = `{}`;
 				const data = parser.feed(src);
 
-				const empty = Ctor.Row({ type: "empty" });
+				const empty = Ctor.Struct({ type: "empty" });
 
 				expect(data.results.length).toBe(1);
 				expect(data.results[0]).toStrictEqual(empty);
 			});
 
-			it("should parse row terms:\t\t{ x: 1, y: 2 }", () => {
+			it("should parse structs:\t\t{ x: 1, y: 2 }", () => {
 				const src = `{ x: 1, y: 2 }`;
 				const data = parser.feed(src);
 
@@ -184,12 +184,80 @@ describe("Grammar", () => {
 				const row = data.results[0];
 
 				const empty: Ctor.Row = { type: "empty" };
-				const y: Ctor.Row = { type: "extension", label: "y", value: yVal, rest: empty };
-				const x: Ctor.Row = { type: "extension", label: "x", value: xVal, rest: y };
-				const expected = Ctor.Row(x);
+				const y: Ctor.Row = { type: "extension", label: "y", value: yVal, row: empty };
+				const x: Ctor.Row = { type: "extension", label: "x", value: xVal, row: y };
+				const expected = Ctor.Struct(x);
 
 				expect(data.results.length).toBe(1);
 				expect(row).toStrictEqual(expected);
+			});
+
+			it("should parse variants:\t\t| x: 1 | y: 2", () => {
+				const src = `| x: 1 | y: 2`;
+				const data = parser.feed(src);
+
+				const xVal = Ctor.num(1);
+				const yVal = Ctor.num(2);
+
+				const row = data.results[0];
+
+				const empty: Ctor.Row = { type: "empty" };
+				const y: Ctor.Row = { type: "extension", label: "y", value: yVal, row: empty };
+				const x: Ctor.Row = { type: "extension", label: "x", value: xVal, row: y };
+				const expected = Ctor.Variant(x);
+
+				expect(data.results.length).toBe(1);
+				expect(row).toStrictEqual(expected);
+			});
+
+			it("should parse tuples:\t\t{1, 2}", () => {
+				const src = `{1, 2}`;
+				const data = parser.feed(src);
+
+				const one = Ctor.num(1);
+				const two = Ctor.num(2);
+
+				const tuple = Ctor.Tuple([one, two]);
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(tuple);
+			});
+		});
+
+		describe("Blocks", () => {
+			it("should parse expression in a block:\t\t{ 1; x; }", () => {
+				const src = `{ 1; x; }`;
+				const data = parser.feed(src);
+
+				const one = Ctor.num(1);
+				const x = Ctor.Var({ type: "name", value: "x" });
+
+				const block = Ctor.Block([Ctor.Expression(one), Ctor.Expression(x)]);
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(block);
+			});
+
+			it("should parse block with a return value:\t{ x; return 2; }", () => {
+				const src = `{ x; return 2; }`;
+				const data = parser.feed(src);
+
+				const x = Ctor.Var({ type: "name", value: "x" });
+				const two = Ctor.num(2);
+
+				const block = Ctor.Block([Ctor.Expression(x)], two);
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(block);
+			});
+
+			it("should parse a block with a return value:\t{ return 2; }", () => {
+				const src = `{ return 2; }`;
+				const data = parser.feed(src);
+
+				const two = Ctor.num(2);
+
+				const block = Ctor.Block([], two);
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(block);
 			});
 		});
 	});

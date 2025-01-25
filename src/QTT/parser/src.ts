@@ -24,9 +24,13 @@ export type Term =
 	| { type: "annotation"; term: Term; ann: Term; multiplicity?: Multiplicity }
 	| { type: "hole" }
 	| { type: "block"; statements: Statement[]; return?: Term }
-	| { type: "row"; row: Row };
+	| { type: "row"; row: Row }
+	| { type: "struct"; row: Row }
+	| { type: "variant"; row: Row }
+	| { type: "tuple"; row: Row }
+	| { type: "list"; elements: Term[] };
 
-export type Row = { type: "empty" } | { type: "extension"; label: string; value: Term; rest: Row } | { type: "variable"; variable: Variable };
+export type Row = { type: "empty" } | { type: "extension"; label: string; value: Term; row: Row } | { type: "variable"; variable: Variable };
 
 export type Statement =
 	| { type: "expression"; value: Term }
@@ -72,6 +76,26 @@ export const Lambda = (icit: Implicitness, variable: string, body: Term, annotat
 
 export const Application = (fn: Term, arg: Term, icit: Implicitness = "Explicit"): Term => ({ type: "application", fn, arg, icit });
 
+export const Row = (row: Row): Term => ({ type: "row", row });
+export const Struct = (row: Row): Term => ({ type: "struct", row });
+export const Variant = (row: Row): Term => ({ type: "variant", row });
+export const Tuple = (row: Term[]): Term => ({
+	type: "tuple",
+	row: row.reduceRight<Row>(
+		(r, el, i) => {
+			return {
+				type: "extension",
+				label: i.toString(),
+				value: el,
+				row: r,
+			};
+		},
+		{ type: "empty" },
+	),
+});
+
+export const List = (elements: Term[]): Term => ({ type: "list", elements });
+
 export const Annotation = (term: Term, ann: Term, multiplicity?: Multiplicity): Term => ({
 	type: "annotation",
 	term,
@@ -79,13 +103,13 @@ export const Annotation = (term: Term, ann: Term, multiplicity?: Multiplicity): 
 	multiplicity,
 });
 
-export const Row = (row: Row): Term => ({ type: "row", row });
-
-export const Block = (statements: Statement[], ret?: Term): Term => ({
-	type: "block",
-	statements,
-	return: ret,
-});
+export const Block = (statements: Statement[], ret?: Term): Term => {
+	return {
+		type: "block",
+		statements,
+		return: ret,
+	};
+};
 export const Expression = (value: Term): Statement => ({
 	type: "expression",
 	value,

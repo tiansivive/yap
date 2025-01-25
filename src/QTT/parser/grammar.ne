@@ -26,6 +26,8 @@
 		rbrace: /\}/,
 		langle: /</,
 		rangle: />/,
+		lbracket: /\[/,
+		rbracket: /\]/,
 		semicolon: /\;/,
 		colon: /\:/,
 		comma: /\,/,
@@ -43,36 +45,55 @@
 # Declaration
 # Def -> "def" %ws Identifier %ws %equals %ws:? Expr %ws:? %semicolon {% d => ({ type: "def", binding: d[2], value: d[6] }) %}
 
-Parens[X] -> %lparens %ws:? $X %ws:? %rparens {% Con.unwrapParenthesis %}
-Angles[X] -> %langle %ws:? $X %ws:? %rangle {% Con.unwrapAngles %}
-Curly[X] -> %lbrace $X %ws:? %NL:? %rbrace {% Con.unwrapCurlyBraces %} 
+# Parens[X] 	-> %lparens %ws:? $X %ws:? %rparens 	{% Con.unwrapParenthesis %}
+# Angles[X] 	-> %langle %ws:? $X %ws:? %rangle 		{% Con.unwrapAngles %}
+# Curly[X] 	-> %lbrace $X %ws:? %NL:? %rbrace 		{% Con.unwrapCurlyBraces %} 
+# Square[X] 	-> %lbracket $X %ws:? %NL:? %rbracket 	{% Con.unwrapSquareBrackets %}
+# Separate[X, EndSymbol] -> %NL:? %ws:? $X %NL:? %ws:? $EndSymbol {% Con.unwrapSeparator %}
+
+Empty[X, Y] -> $X %NL:? %ws:? %NL:? $Y 												{% Con.none %}
+Wrap[X, L, R] -> $L $X %ws:? $R 													{% Con.unwrap %}
+
+Many[X, Separator] 	-> (%NL:? %ws:? $X %NL:? %ws:? $Separator):* %NL:? %ws:? $X 	{% Con.many %}
+Prefixed[Prefix, X] -> $Prefix %ws:? $X 											{% Con.prefix %}
+Suffixed[X, Suffix] -> $X %ws:? $Suffix 											{% Con.suffix %}
+
+Parens[X] -> Wrap[$X, %lparens, %rparens] 		{% id %}
+Angle[X] -> Wrap[$X, %langle, %rangle] 			{% id %}
+Curly[X] -> Wrap[$X, %lbrace, %rbrace] 			{% id %}
+Square[X] -> Wrap[$X, %lbracket, %rbracket] 	{% id %}
+
+
 
 Script -> Statement:+ %NL:? {% d => ({ type: "script", script: d[0] }) %}
-		| Expr {% id %}
+		| Ann 				{% id %}
 
-Expr 
-	-> Lambda		{% id %}
-	 | Ann 			{% id %}
-     | Match 		{% id %}
-	 | Row 			{% id %}
-	 | App 			{% id %}
-	 | Pi			{% id %}
-	 | %hole 		{% Con.Hole %}
-	 
-App -> App %ws Atom 				{% Con.Application %}
-	 | App %ws:? %op %ws:? Atom 	{% Con.Operation %}
-     | Atom 						{% id %}
+Ann -> Ann %ws:? %colon %ws:? TypeExpr 							{% Con.Annotation %}
+     | Ann %ws:? %colon %ws:? Angle[Quantity] %ws:? TypeExpr 	{% Con.Annotation %}
+	 | TypeExpr 												{% id %}
 
+TypeExpr -> Pi 			{% id %}
+	  	  | Variant 	{% id %} 
+	  	  | App 		{% id %}
 
+App -> App %ws Expr 				{% Con.Application %}
+	 | App %ws:? %op %ws:? Expr 	{% Con.Operation %}
+     | Expr 						{% id %}
 
-Atom -> Literal 		{% Con.Lit %}
-	  | Identifier 		{% Con.Var %} 
-	  | Parens[Expr]  	{% id %}
-	  | Block 		    {% id %}
+Expr -> Lambda		{% id %}
+      | Match 		{% id %}
+	  | Block 		{% id %}
+	  | Struct 		{% id %}
+	  | Row 		{% id %}	
+      | Tuple 		{% id %}
+	  | List 		{% id %}
+	  | Atom 		{% id %}
 
-	 
-Ann -> Expr %ws:? %colon %ws:? Atom 						{% Con.Annotation %}
-     | Expr %ws:? %colon %ws:? Angles[Quantity] %ws:? Atom 	{% Con.Annotation %}
+Atom -> Identifier 		{% Con.Var %} 
+	  | Literal 		{% Con.Lit %}
+	  | %hole 			{% Con.Hole %}
+	  | Parens[Ann]  	{% Con.extract %}
+
 
 # FUNCTIONS
 Lambda -> %backslash Param %ws %arrow %ws Expr 			{% Con.Lambda %}
@@ -80,8 +101,8 @@ Lambda -> %backslash Param %ws %arrow %ws Expr 			{% Con.Lambda %}
 		
 Param -> Identifier 													{% Con.Param %}
 	   | Identifier %ws:? %colon %ws:? Expr 							{% Con.Param %}
-	   | Identifier %ws:? %colon %ws:? Angles[Quantity] %ws:? Expr 		{% Con.Param %}
-	   | Parens[Param] 													{% id %}
+	   | Identifier %ws:? %colon %ws:? Angle[Quantity] %ws:? Expr 		{% Con.Param %}
+	   | Parens[Param] 													{% Con.extract %}
 		 
 
 Pi -> Expr %ws:? %arrow %ws PiTail 		{% Con.Pi("Explicit") %}
@@ -91,25 +112,30 @@ PiTail -> Pi {% id %}
 		| Atom {% id %}
 
 # ROWS
-Row -> %lbrace %NL:? %ws:? %NL:? %rbrace 	{% Con.emptyRow %}
-	 | Curly[RowItem:* EndItem] 			{% Con.row %}
+Struct -> Empty[%lbrace, %rbrace] 				{% Con.emptyStruct %}
+	 	| Curly[ Many[KeyVal, %comma] ] 		{% Con.struct %}
 
-EndItem -> %NL:? %ws:? KeyVal 					{% d => d[2] %}
-RowItem -> %NL:? %ws:? KeyVal %comma 			{% d => d[2] %}
+Variant -> %bar Many[KeyVal, %bar]				{% Con.Variant %}
+
+Row -> Empty[%lbracket, %rbracket] 				{% Con.emptyRow %}
+	 | Square[ Many[KeyVal, %comma] ] 			{% Con.row %}
+
 KeyVal -> Identifier %ws:? %colon %ws:? Expr 	{% Con.keyval %}
 
+
+Tuple -> Curly[ Many[Expr, %comma] ] 			{% Con.tuple %}
+List ->  Square[ Many[Expr, %comma] ] 			{% Con.list %}
+
 # BLOCKS
-Wrap[X] -> %NL:? %ws:? $X %NL:? %ws:? %semicolon {% Con.unwrapStatement %}
+Block -> Curly[ Many[Statement, %semicolon] %semicolon Return:? ] 		{% Con.Block %}
+	   | Curly[ Return ] 												{% Con.Block %}
 
-Block -> Curly[Statement:+ Wrap[Return]:?] 	{% Con.Block %}
-	   | Curly[Wrap[Return]] 				{% Con.Block %}
+Statement -> Expr 			{% Con.Expr %}
+           | Letdec			{% id %}
 
-Statement -> Wrap[Expr] 	{% Con.Expr %}
-           | Wrap[Letdec] 	{% id %}
-		   
-Return    -> "return" %ws Expr {% Con.Return %}
+Return    -> %NL:? %ws:? "return" %ws:+ Expr %semicolon 	{% Con.Return %}
 
-Letdec -> "let" %ws Identifier %ws:? %equals %ws:? Expr {% Con.LetDec %}
+Letdec -> "let" %ws Identifier %ws:? %equals %ws:? Expr 						{% Con.LetDec %}
 		| "let" %ws Identifier %ws:? %colon %ws:? Expr %ws:? %equals %ws:? Expr {% Con.LetDec %}
 
 
