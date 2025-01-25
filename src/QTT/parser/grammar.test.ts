@@ -222,6 +222,71 @@ describe("Grammar", () => {
 				expect(data.results.length).toBe(1);
 				expect(data.results[0]).toStrictEqual(tuple);
 			});
+
+			it("should parse lists:\t\t[1, 2]", () => {
+				const src = `[1, 2]`;
+				const data = parser.feed(src);
+
+				const one = Ctor.num(1);
+				const two = Ctor.num(2);
+
+				const list = Ctor.List([one, two]);
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(list);
+			});
+
+			it("should parse projections:\t\tx.y", () => {
+				const src = `x.y`;
+				const data = parser.feed(src);
+
+				const x = Ctor.Var({ type: "name", value: "x" });
+				const proj = Ctor.Projection("y", x);
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(proj);
+			});
+
+			it("should parse shorthand projections:\t.x", () => {
+				const src = `.x`;
+				const data = parser.feed(src);
+
+				const generatedName = "x";
+				const obj = Ctor.Var({ type: "name", value: generatedName });
+				const proj = Ctor.Projection("x", obj);
+				const lambda = Ctor.Lambda("Explicit", generatedName, proj);
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(lambda);
+			});
+
+			it("should parse injections:\t\t{ x | y: 1}", () => {
+				const src = `{ x | y: 1 }`;
+				const data = parser.feed(src);
+
+				const x = Ctor.Var({ type: "name", value: "x" });
+				const one = Ctor.num(1);
+
+				const inj = Ctor.Injection("y", one, x);
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(inj);
+			});
+
+			it("should parse shorthand injections:\t{ | y: 1}", () => {
+				const src = `{ | y: 1 }`;
+				const data = parser.feed(src);
+
+				const generatedName = "x";
+				const obj = Ctor.Var({ type: "name", value: generatedName });
+				const one = Ctor.num(1);
+
+				const inj = Ctor.Injection("y", one, obj);
+				const lambda = Ctor.Lambda("Explicit", generatedName, inj);
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(lambda);
+			});
 		});
 
 		describe("Blocks", () => {

@@ -3,14 +3,6 @@ import { Implicitness, Literal, Multiplicity } from "../shared";
 export type Term =
 	| { type: "lit"; value: Literal }
 	| { type: "var"; variable: Variable }
-	| {
-			type: "pi";
-			icit: Implicitness;
-			variable: string;
-			multiplicity?: Multiplicity;
-			annotation: Term;
-			body: Term;
-	  }
 	| { type: "arrow"; lhs: Term; rhs: Term; icit: Implicitness }
 	| {
 			type: "lambda";
@@ -20,15 +12,25 @@ export type Term =
 			annotation?: Term;
 			body: Term;
 	  }
+	| {
+			type: "pi";
+			icit: Implicitness;
+			variable: string;
+			multiplicity?: Multiplicity;
+			annotation: Term;
+			body: Term;
+	  }
 	| { type: "application"; fn: Term; arg: Term; icit: Implicitness }
 	| { type: "annotation"; term: Term; ann: Term; multiplicity?: Multiplicity }
 	| { type: "hole" }
 	| { type: "block"; statements: Statement[]; return?: Term }
-	| { type: "row"; row: Row }
+	| { type: "list"; elements: Term[] }
+	| { type: "tuple"; row: Row }
 	| { type: "struct"; row: Row }
 	| { type: "variant"; row: Row }
-	| { type: "tuple"; row: Row }
-	| { type: "list"; elements: Term[] };
+	| { type: "row"; row: Row }
+	| { type: "injection"; label: string; value: Term; term: Term }
+	| { type: "projection"; label: string; term: Term };
 
 export type Row = { type: "empty" } | { type: "extension"; label: string; value: Term; row: Row } | { type: "variable"; variable: Variable };
 
@@ -79,6 +81,7 @@ export const Application = (fn: Term, arg: Term, icit: Implicitness = "Explicit"
 export const Row = (row: Row): Term => ({ type: "row", row });
 export const Struct = (row: Row): Term => ({ type: "struct", row });
 export const Variant = (row: Row): Term => ({ type: "variant", row });
+export const List = (elements: Term[]): Term => ({ type: "list", elements });
 export const Tuple = (row: Term[]): Term => ({
 	type: "tuple",
 	row: row.reduceRight<Row>(
@@ -94,7 +97,8 @@ export const Tuple = (row: Term[]): Term => ({
 	),
 });
 
-export const List = (elements: Term[]): Term => ({ type: "list", elements });
+export const Injection = (label: string, value: Term, term: Term): Term => ({ type: "injection", label, value, term });
+export const Projection = (label: string, term: Term): Term => ({ type: "projection", label, term });
 
 export const Annotation = (term: Term, ann: Term, multiplicity?: Multiplicity): Term => ({
 	type: "annotation",
@@ -123,3 +127,14 @@ export const Let = (variable: string, value: Term, annotation?: Term, multiplici
 });
 
 export const Hole: Term = { type: "hole" };
+
+//
+const a = (obj: Record<string, any>) => ({ ...obj, a: 1 });
+// { obj | a: 1 }
+// { a: 1 | obj }
+
+// [...arr]
+// [ |arr]
+// [ 1, 2, 3, |arr]
+
+// fn (a, b, |rest]) => a + b + c

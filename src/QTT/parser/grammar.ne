@@ -82,22 +82,24 @@ App -> App %ws Expr 				{% Con.Application %}
 
 Expr -> Lambda		{% id %}
       | Match 		{% id %}
-	  | Block 		{% id %}
-	  | Struct 		{% id %}
-	  | Row 		{% id %}	
-      | Tuple 		{% id %}
-	  | List 		{% id %}
+	  | Projection 	{% id %}
+	  | Injection 	{% id %}
 	  | Atom 		{% id %}
 
 Atom -> Identifier 		{% Con.Var %} 
 	  | Literal 		{% Con.Lit %}
+	  | Block 		    {% id %}
+	  | Struct 			{% id %}
+	  | Row 			{% id %}	
+      | Tuple 			{% id %}
+	  | List 			{% id %}
 	  | %hole 			{% Con.Hole %}
 	  | Parens[Ann]  	{% Con.extract %}
 
 
 # FUNCTIONS
-Lambda -> %backslash Param %ws %arrow %ws Expr 			{% Con.Lambda %}
-		| %backslash %hash Param %ws %fatArrow %ws Expr {% Con.Lambda %}
+Lambda -> %backslash Param %ws %arrow %ws Expr 				{% Con.Lambda %}
+		| %backslash %hash Param %ws %fatArrow %ws Expr 	{% Con.Lambda %}
 		
 Param -> Identifier 													{% Con.Param %}
 	   | Identifier %ws:? %colon %ws:? Expr 							{% Con.Param %}
@@ -122,6 +124,11 @@ Row -> Empty[%lbracket, %rbracket] 				{% Con.emptyRow %}
 
 KeyVal -> Identifier %ws:? %colon %ws:? Expr 	{% Con.keyval %}
 
+Projection -> Expr %dot Identifier 									{% Con.Projection %}
+			| %dot Identifier 										{% Con.Projection %}
+
+Injection -> Curly[ %ws:? App %ws:? %bar Many[KeyVal, %comma] ] 	{% Con.Injection %}
+		   | Curly[ %ws:? %bar Many[KeyVal, %comma] ] 				{% Con.Injection %}
 
 Tuple -> Curly[ Many[Expr, %comma] ] 			{% Con.tuple %}
 List ->  Square[ Many[Expr, %comma] ] 			{% Con.list %}

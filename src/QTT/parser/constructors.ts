@@ -128,6 +128,29 @@ export const row: PostProcessor<[[KeyVal[], KeyVal]], Term> = ([[pairs, last]]):
 	return Src.Row(row);
 };
 
+export const Projection: PostProcessor<[Term, Dot, Variable] | [Dot, Variable], Term> = (input: [Term, Dot, Variable] | [Dot, Variable]) => {
+	if (input.length === 2) {
+		const [, variable] = input;
+		const paramName = "x";
+		return Src.Lambda("Explicit", paramName, Src.Projection(variable.value, Src.Var({ type: "name", value: paramName })));
+	}
+	const [term, , variable] = input;
+	return Src.Projection(variable.value, term);
+};
+
+type Injection = [Whitespace, Term, Whitespace, Bar, KeyVal[]] | [Whitespace, Bar, KeyVal[]];
+export const Injection: PostProcessor<[Injection], Term> = ([inj]) => {
+	if (inj.length === 3) {
+		const [, , pairs] = inj;
+		const param = "x";
+		const body = pairs.reduce((tm, [label, value]) => Src.Injection(label, value, tm), Src.Var({ type: "name", value: param }));
+		return Src.Lambda("Explicit", param, body);
+	}
+
+	const [, term, , , pairs] = inj;
+	return pairs.reduce((tm, [label, value]) => Src.Injection(label, value, tm), term);
+};
+
 export const Block: PostProcessor<[[Statement[], SemiColon, Term?] | [Term]], Term> = ([input]) => {
 	if (Array.isArray(input[0])) {
 		const [statements, , ret] = input;
