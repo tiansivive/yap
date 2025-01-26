@@ -1,5 +1,5 @@
 import { match } from "ts-pattern";
-import * as Src from "./src";
+import * as Src from "./terms";
 
 import { displayIcit, displayLit } from "../shared";
 
@@ -23,7 +23,7 @@ export const print = (term: Src.Term): string => {
 		.with({ type: "annotation" }, ({ term, ann }) => {
 			return `(${print(term)} : ${print(ann)})`;
 		})
-		.with({ type: "hole" }, (_) => "?")
+		.with({ type: "hole" }, _ => "?")
 		.otherwise(() => {
 			throw new Error("Display Term Binder: Not implemented");
 		});

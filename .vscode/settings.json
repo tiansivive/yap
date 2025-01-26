@@ -29,10 +29,13 @@
 	"typescript.tsserver.maxTsServerMemory": 4096,
 	"cSpell.words": [
 		"keyval",
+		"langle",
+		"lparens",
 		"mtype",
 		"mval",
 		"mvnf",
 		"Nearley",
+		"rangle",
 		"tmnf"
 	],
 	"code-runner.executorMap": {

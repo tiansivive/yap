@@ -11,7 +11,13 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "ESNext",
-		"noErrorTruncation": false
+		"noErrorTruncation": false,
+		"paths": {
+			"@qtt/shared/*": ["./src/QTT/shared/*"],
+			"@qtt/src/*": ["./src/QTT/parser/*"],
+			"@qtt/elaboration": ["./src/QTT/elaboration/index"],
+			"@qtt/elaboration/*": ["./src/QTT/elaboration/*"]
+		}
 	},
 	"include": ["src"]
 }

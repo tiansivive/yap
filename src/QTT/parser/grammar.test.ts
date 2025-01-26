@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import Nearley from "nearley";
 import Grammar from "./grammar";
 
-import * as Ctor from "./src";
+import * as Ctor from "./terms";
 
 describe("Grammar", () => {
 	let parser: Nearley.Parser;

@@ -1,4 +1,5 @@
-import { Implicitness, Literal, Multiplicity } from "../shared";
+import { Implicitness, Literal } from "../shared";
+import * as Q from "@qtt/shared/modalities/multiplicity";
 
 export type Term =
 	| { type: "lit"; value: Literal }
@@ -8,7 +9,7 @@ export type Term =
 			type: "lambda";
 			icit: Implicitness;
 			variable: string;
-			multiplicity?: Multiplicity;
+			multiplicity?: Q.Multiplicity;
 			annotation?: Term;
 			body: Term;
 	  }
@@ -16,12 +17,12 @@ export type Term =
 			type: "pi";
 			icit: Implicitness;
 			variable: string;
-			multiplicity?: Multiplicity;
+			multiplicity?: Q.Multiplicity;
 			annotation: Term;
 			body: Term;
 	  }
 	| { type: "application"; fn: Term; arg: Term; icit: Implicitness }
-	| { type: "annotation"; term: Term; ann: Term; multiplicity?: Multiplicity }
+	| { type: "annotation"; term: Term; ann: Term; multiplicity?: Q.Multiplicity }
 	| { type: "hole" }
 	| { type: "block"; statements: Statement[]; return?: Term }
 	| { type: "list"; elements: Term[] }
@@ -41,7 +42,7 @@ export type Statement =
 			variable: string;
 			value: Term;
 			annotation?: Term;
-			multiplicity?: Multiplicity;
+			multiplicity?: Q.Multiplicity;
 	  };
 
 export type Variable = { type: "name"; value: string };
@@ -59,7 +60,7 @@ export const Arrow = (lhs: Term, rhs: Term, icit: Implicitness): Term => ({
 	rhs,
 	icit,
 });
-export const Pi = (icit: Implicitness, variable: string, annotation: Term, body: Term, multiplicity?: Multiplicity): Term => ({
+export const Pi = (icit: Implicitness, variable: string, annotation: Term, body: Term, multiplicity?: Q.Multiplicity): Term => ({
 	type: "pi",
 	icit,
 	variable,
@@ -67,7 +68,7 @@ export const Pi = (icit: Implicitness, variable: string, annotation: Term, body:
 	body,
 	multiplicity,
 });
-export const Lambda = (icit: Implicitness, variable: string, body: Term, annotation?: Term, multiplicity?: Multiplicity): Term => ({
+export const Lambda = (icit: Implicitness, variable: string, body: Term, annotation?: Term, multiplicity?: Q.Multiplicity): Term => ({
 	type: "lambda",
 	icit,
 	variable,
@@ -100,7 +101,7 @@ export const Tuple = (row: Term[]): Term => ({
 export const Injection = (label: string, value: Term, term: Term): Term => ({ type: "injection", label, value, term });
 export const Projection = (label: string, term: Term): Term => ({ type: "projection", label, term });
 
-export const Annotation = (term: Term, ann: Term, multiplicity?: Multiplicity): Term => ({
+export const Annotation = (term: Term, ann: Term, multiplicity?: Q.Multiplicity): Term => ({
 	type: "annotation",
 	term,
 	ann,
@@ -118,7 +119,7 @@ export const Expression = (value: Term): Statement => ({
 	type: "expression",
 	value,
 });
-export const Let = (variable: string, value: Term, annotation?: Term, multiplicity?: Multiplicity): Statement => ({
+export const Let = (variable: string, value: Term, annotation?: Term, multiplicity?: Q.Multiplicity): Statement => ({
 	type: "let",
 	variable,
 	value,

@@ -35,13 +35,13 @@ declare var string: any;
 // https://github.com/no-context/moo
 
 import moo from "moo";
-import Shared from "../shared";
-import * as Src from "./src";
+import * as Q from "@qtt/shared/modalities/multiplicity";
+import * as Lit from "@qtt/shared/literals";
 import * as Con from "./constructors";
 
 const lexer = moo.compile({
 	number: /[0-9]+/,
-	variable: { match: /[a-zA-Z][a-zA-Z0-9]*/, type: moo.keywords({ ret: "return", dec: "let", match: "match", Type: "Type", Unit: "Unit" }) },
+	variable: { match: /[a-zA-Z][a-zA-Z0-9]*/, type: moo.keywords({ ret: "return", dec: "let", match: "match", Type: "Type", Unit: "Unit", Row: "Row" }) },
 	string: /"(?:\\["bfnrt\/\\]|\\u[a-fA-F0-9]{4}|[^"\\])*"/,
 	dot: /\./,
 	equals: /\=(?!>)/,
@@ -804,9 +804,9 @@ const grammar: Grammar = {
 			postprocess: Con.LetDec,
 		},
 		{ name: "Identifier", symbols: [lexer.has("variable") ? { type: "variable" } : variable], postprocess: Con.Name },
-		{ name: "Quantity", symbols: [{ literal: "1" }], postprocess: () => Shared.One },
-		{ name: "Quantity", symbols: [{ literal: "0" }], postprocess: () => Shared.Zero },
-		{ name: "Quantity", symbols: [{ literal: "*" }], postprocess: () => Shared.Many },
+		{ name: "Quantity", symbols: [{ literal: "1" }], postprocess: () => Q.One },
+		{ name: "Quantity", symbols: [{ literal: "0" }], postprocess: () => Q.Zero },
+		{ name: "Quantity", symbols: [{ literal: "*" }], postprocess: () => Q.Many },
 		{ name: "Match$ebnf$1", symbols: ["Alt"] },
 		{ name: "Match$ebnf$1", symbols: ["Match$ebnf$1", "Alt"], postprocess: d => d[0].concat([d[1]]) },
 		{
@@ -834,10 +834,11 @@ const grammar: Grammar = {
 			postprocess: d => ({ type: "alternative", pattern: d[4], body: d[8] }),
 		},
 		{ name: "Pattern", symbols: ["Identifier"], postprocess: d => ({ type: "Var", binding: d[0] }) },
-		{ name: "Literal", symbols: ["String"], postprocess: ([s]) => Shared.String(s) },
-		{ name: "Literal", symbols: ["Number"], postprocess: ([n]) => Shared.Num(n) },
-		{ name: "Literal", symbols: [{ literal: "Type" }], postprocess: () => Shared.Type() },
-		{ name: "Literal", symbols: [{ literal: "Unit" }], postprocess: () => Shared.Unit() },
+		{ name: "Literal", symbols: ["String"], postprocess: ([s]) => Lit.String(s) },
+		{ name: "Literal", symbols: ["Number"], postprocess: ([n]) => Lit.Num(n) },
+		{ name: "Literal", symbols: [{ literal: "Type" }], postprocess: () => Lit.Type() },
+		{ name: "Literal", symbols: [{ literal: "Unit" }], postprocess: () => Lit.Unit() },
+		{ name: "Literal", symbols: [{ literal: "Row" }], postprocess: () => Lit.Row() },
 		{ name: "Number", symbols: ["Int", lexer.has("dot") ? { type: "dot" } : dot, "Int"], postprocess: d => parseFloat(d.join("")) },
 		{ name: "Number", symbols: ["Int"], postprocess: d => parseInt(d) },
 		{ name: "Int", symbols: [lexer.has("number") ? { type: "number" } : number], postprocess: id },

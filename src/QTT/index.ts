@@ -2,27 +2,21 @@ import Grammar from "./parser/grammar";
 
 import Nearley from "nearley";
 
-import * as Elab from "./elaborator/elaborate";
-import * as Con from "./elaborator/constructors";
-import * as NF from "./elaborator/normalized";
 import * as Q from "../utils/quokka";
 
-import * as Src from "./parser/src";
-
-import Shared from "./shared";
-
-import * as P from "./elaborator/pretty";
-
-import fs from "fs";
-import { log, logFilePath } from "./elaborator/logging";
-// import simple from "./__tests__/simple.lama"
-// import test from "./__tests__/test.lama"
+import * as Src from "@qtt/src/index";
+import * as EB from "@qtt/elaboration";
+import * as NF from "@qtt/elaboration/normalization";
+import * as Lit from "@qtt/shared/literals";
+import { mkLogger } from "@qtt/shared/logging";
 
 const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar));
 
 const simple = Q.load("./src/QTT/__tests__/simple.lama");
 const test = Q.load("./src/QTT/__tests__/test.lama");
 const row = Q.load("./src/QTT/__tests__/row.lama");
+
+const logger = mkLogger();
 
 try {
 	let data;
@@ -31,33 +25,33 @@ try {
 	// data.results
 
 	// wipe log file
-	fs.writeFileSync(logFilePath, "{\n");
+	logger.open("{\n");
 	parser.grammar.start = "Expr";
 	data = parser.feed("{ }");
 	const vals = data.results.map(s => s.script[0]);
 
-	const empty: Elab.Context = {
+	const empty: EB.Context = {
 		env: [],
 		types: [],
 		names: [],
 		imports: {
-			Num: [Con.Term.Lit(Shared.Atom("Num")), NF.Type, []],
-			Bool: [Con.Term.Lit(Shared.Atom("Bool")), NF.Type, []],
-			String: [Con.Term.Lit(Shared.Atom("String")), NF.Type, []],
-			Unit: [Con.Term.Lit(Shared.Atom("Unit")), NF.Type, []],
+			Num: [EB.Constructors.Lit(Lit.Atom("Num")), NF.Type, []],
+			Bool: [EB.Constructors.Lit(Lit.Atom("Bool")), NF.Type, []],
+			String: [EB.Constructors.Lit(Lit.Atom("String")), NF.Type, []],
+			Unit: [EB.Constructors.Lit(Lit.Atom("Unit")), NF.Type, []],
 		},
 	};
 
-	const results: Array<[Elab.AST, Elab.Constraint[]]> = [];
+	const results: Array<[EB.AST, EB.Constraint[]]> = [];
 	const [ctx] = data.results.map(x =>
-		x.script.reduce((ctx: Elab.Context, stmt: Src.Statement): Elab.Context => {
+		x.script.reduce((ctx: EB.Context, stmt: Src.Statement): EB.Context => {
 			if (stmt.type !== "let") {
 				return ctx;
 			}
 
-			log("entry", stmt.variable, { statement: stmt.type });
+			logger.log("entry", stmt.variable, { statement: stmt.type });
 
-			const runReader = Elab.infer(stmt.value);
+			const runReader = EB.infer(stmt.value);
 			const runWriter = runReader(ctx);
 
 			const result = runWriter();
@@ -67,10 +61,10 @@ try {
 
 			results.push(result);
 
-			log("exit", "result", {
-				term: P.print(tm),
-				type: P.displayValue(ty),
-				constraint: cst.map(P.displayConstraint),
+			logger.log("exit", "result", {
+				term: EB.display(tm),
+				type: NF.display(ty),
+				constraint: cst.map(EB.displayConstraint),
 			});
 
 			return {
@@ -85,18 +79,18 @@ try {
 
 	results.forEach(([[tm, ty, us], cst]) => {
 		console.log("\n\n--------------------");
-		console.log("Term:\t", P.print(tm));
+		console.log("Term:\t", EB.display(tm));
 
 		console.log("--------------------");
-		console.log("Type:\t", P.displayValue(ty));
+		console.log("Type:\t", NF.display(ty));
 
 		console.log("--------------------");
 		console.log("Constraints:");
-		const cs = cst.map(c => "  " + P.displayConstraint(c)).join("\n");
+		const cs = cst.map(c => "  " + EB.displayConstraint(c)).join("\n");
 		console.log(cs);
 	});
 
-	fs.appendFileSync(logFilePath, "\n}");
+	logger.close("\n}\n");
 
 	console.log("done");
 } catch (e) {

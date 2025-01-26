@@ -1,0 +1,96 @@
+import { Monoid } from "fp-ts/lib/Monoid";
+import { Reader } from "fp-ts/lib/Reader";
+import * as R from "fp-ts/lib/Reader";
+import * as F from "fp-ts/lib/function";
+
+import { Writer } from "fp-ts/lib/Writer";
+import * as W from "fp-ts/lib/Writer";
+
+import * as EB from ".";
+
+export type Elaboration<T> = Reader<EB.Context, Emitter<T>>;
+type Emitter<T> = Writer<EB.Constraint[], T>;
+
+const monoid: Monoid<EB.Constraint[]> = {
+	concat: (x, y) => x.concat(y),
+	empty: [],
+};
+
+const URI = "Elaboration";
+type URI = typeof URI;
+
+declare module "fp-ts/HKT" {
+	interface URItoKind<A> {
+		readonly [URI]: Elaboration<A>;
+	}
+}
+
+export function fmap<A, B>(fa: Elaboration<A>, f: (x: A) => B): Elaboration<B>;
+export function fmap<A, B>(f: (x: A) => B): (fa: Elaboration<A>) => Elaboration<B>;
+export function fmap<A, B>(...args: [(x: A) => B] | [Elaboration<A>, (x: A) => B]): any {
+	if (args.length === 1) {
+		const [f] = args;
+		return R.map<Emitter<A>, Emitter<B>>(W.map(f));
+	}
+
+	const [fa, f] = args;
+	return R.Functor.map(fa, W.map(f));
+}
+
+export function chain<A, B>(fa: Elaboration<A>, f: (x: A) => Elaboration<B>): Elaboration<B>;
+export function chain<A, B>(f: (x: A) => Elaboration<B>): (fa: Elaboration<A>) => Elaboration<B>;
+export function chain<A, B>(...args: [(x: A) => Elaboration<B>] | [Elaboration<A>, (x: A) => Elaboration<B>]) {
+	if (args.length === 1) {
+		const [f] = args;
+		return (rw: Elaboration<A>) =>
+			(r: EB.Context): Emitter<B> => {
+				const [a, w1] = rw(r)();
+				const [b, w2] = f(a)(r)();
+
+				return W.Functor.map(W.tell(monoid.concat(w1, w2)), _ => b);
+			};
+	}
+
+	const [rw, f] = args;
+	return (r: EB.Context): Emitter<B> => {
+		const [a, w1] = rw(r)();
+		const [b, w2] = f(a)(r)();
+		return W.Functor.map(W.tell(monoid.concat(w1, w2)), _ => b);
+	};
+}
+
+export const of = <A>(a: A): Elaboration<A> => {
+	const w = W.getPointed(monoid).of(a);
+	return R.of(w);
+};
+
+export const liftW = <A>(w: Emitter<A>): Elaboration<A> => R.of(w);
+export const liftR =
+	<A>(fa: Reader<EB.Context, A>): Elaboration<A> =>
+	(r: EB.Context) =>
+		W.getPointed(monoid).of(fa(r));
+// R.Functor.map(r, a => W.getPointed(M).of(a))
+
+export const Do = of<{}>({});
+
+export const bind =
+	<N extends string, A, B>(name: Exclude<N, keyof A>, f: (a: A) => Elaboration<B>) =>
+	(ma: Elaboration<A>): Elaboration<{ readonly [K in keyof A | N]: K extends keyof A ? A[K] : B }> => {
+		return chain(ma, a => {
+			return fmap(f(a), b => Object.assign({}, a, { [name]: b }) as any);
+		});
+	};
+
+export const ask = F.flow(R.ask, liftR<EB.Context>);
+export const discard = <A, B>(f: (a: A) => Elaboration<B>) => chain<A, A>(val => fmap(f(val), () => val));
+export const tell = (constraint: EB.Constraint) => liftW<void>(W.tell([constraint]));
+
+export const listen: <A, B>(f: (aw: [A, EB.Constraint[]]) => B) => (rw: Elaboration<A>) => Elaboration<B> = f => rw => F.pipe(rw, R.map(W.listen), fmap(f));
+
+type Local = EB.Context | ((ctx: EB.Context) => EB.Context);
+export const local: <A>(f: Local, rw: Elaboration<A>) => Elaboration<A> = (f, rw) => {
+	return (ctx: EB.Context) => {
+		const _ctx = typeof f === "function" ? f(ctx) : f;
+		return rw(_ctx);
+	};
+};

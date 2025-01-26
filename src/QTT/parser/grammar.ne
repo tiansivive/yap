@@ -1,17 +1,17 @@
 @preprocessor typescript
 
 @{%
-	// Moo lexer documention is here:
+	// Moo lexer documentation is here:
 	// https://github.com/no-context/moo
 
 	import moo from "moo";
-	import Shared from "../shared";
-	import * as Src from "./src";
+	import * as Q from "@qtt/shared/modalities/multiplicity";
+	import * as Lit from "@qtt/shared/literals";
 	import * as Con from "./constructors";
 
 	const lexer = moo.compile({
 	  	number: /[0-9]+/,
-	  	variable: { match: /[a-zA-Z][a-zA-Z0-9]*/, type: moo.keywords({ ret: "return", dec: "let", match: "match", Type: "Type", Unit: "Unit" }) },
+	  	variable: { match: /[a-zA-Z][a-zA-Z0-9]*/, type: moo.keywords({ ret: "return", dec: "let", match: "match", Type: "Type", Unit: "Unit", Row: "Row" }) },
 	  	string: /"(?:\\["bfnrt\/\\]|\\u[a-fA-F0-9]{4}|[^"\\])*"/,
 	  	dot: /\./,
 		equals: /\=(?!>)/,
@@ -150,9 +150,9 @@ Letdec -> "let" %ws Identifier %ws:? %equals %ws:? Expr 						{% Con.LetDec %}
 Identifier -> %variable {% Con.Name %}
 
 # Multiplicity
-Quantity -> "1" {% () => Shared.One %}
-		  | "0" {% () => Shared.Zero %}
-		  | "*" {% () => Shared.Many %}
+Quantity -> "1" {% () => Q.One %}
+		  | "0" {% () => Q.Zero %}
+		  | "*" {% () => Q.Many %}
 
 # PATTERN MATCHING
 Match -> "match" %ws Expr Alt:+ {% d => ({ type: "match", scrutinee: d[2], alternatives: d[3] }) %} 
@@ -163,10 +163,11 @@ Pattern -> Identifier {% d => ({ type: "Var", binding: d[0] }) %}
 
 # LITERALS
 Literal 
-	-> String {% ([s]) => Shared.String(s) %}
-	 | Number {% ([n]) => Shared.Num(n) %}
-	 | "Type" {% () => Shared.Type() %}
-	 | "Unit" {% () => Shared.Unit() %}
+	-> String {% ([s]) => Lit.String(s) %}
+	 | Number {% ([n]) => Lit.Num(n) %}
+	 | "Type" {% () => Lit.Type() %}
+	 | "Unit" {% () => Lit.Unit() %}
+	 | "Row" {% () => Lit.Row() %}
 	  
 Number 
 	-> Int %dot Int {% d => parseFloat(d.join(''))  %}

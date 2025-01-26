@@ -1,9 +1,14 @@
-import { zipWith } from "fp-ts/lib/Array";
-import type { Multiplicity } from "../shared";
 import { Semiring } from "fp-ts/lib/Semiring";
 import { match, P } from "ts-pattern";
 import _ from "lodash";
 
+const MULTIPLICITY = {
+	Zero: "Zero",
+	One: "One",
+	Many: "Many",
+} as const;
+export const { Zero, One, Many } = MULTIPLICITY;
+export type Multiplicity = (typeof MULTIPLICITY)[keyof typeof MULTIPLICITY];
 export type Usages = Multiplicity[];
 
 export const SR: Semiring<Multiplicity> = {
@@ -27,10 +32,17 @@ export const SR: Semiring<Multiplicity> = {
 
 export const noUsage = (lvl: number): Multiplicity[] => Array(lvl).fill("Zero");
 
-export const multiply = (q: Multiplicity, usages: Usages) =>
-	usages.map((u) => SR.mul(q, u));
+export const multiply = (q: Multiplicity, usages: Usages) => usages.map(u => SR.mul(q, u));
 export const add = (u1: Usages, u2: Usages) => {
 	// if (u1.length !== u2.length) throw new Error("Mismatched usage lengths")
 
 	return _.zipWith(u1, u2, (a = "Zero", b = "Zero") => SR.add(a, b));
+};
+
+export const display = (multiplicity: Multiplicity): string => {
+	return match(multiplicity)
+		.with("One", () => "1")
+		.with("Zero", () => "0")
+		.with("Many", () => "ω")
+		.otherwise(() => JSON.stringify(multiplicity));
 };

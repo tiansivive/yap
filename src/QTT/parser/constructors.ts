@@ -1,9 +1,12 @@
 import { PostProcessor } from "nearley";
-import { Implicitness, Literal, Multiplicity } from "../shared";
-import type { Statement, Term, Variable, Row } from "./src";
-import * as Src from "./src";
+
+import type { Statement, Term, Variable, Row } from "./terms";
+import * as Src from "./terms";
+import * as Q from "@qtt/shared/modalities/multiplicity";
 
 import { Token } from "moo";
+import { Literal } from "@qtt/shared/literals";
+import { Implicitness } from "@qtt/shared/implicitness";
 
 export const Lit: PostProcessor<[Literal], Term> = ([l]) => Src.Lit(l);
 export const Var: PostProcessor<[Variable], Term> = ([v]) => Src.Var(v);
@@ -95,7 +98,7 @@ type Param = {
 	type: "param";
 	binding: Variable;
 	annotation?: Term;
-	multiplicity?: Multiplicity;
+	multiplicity?: Q.Multiplicity;
 };
 
 type KeyVal = [string, Term];
@@ -187,7 +190,7 @@ export const LetDec: PostProcessor<[LetDec], Statement> = ([[, , variable, ...re
  * Utils
  */
 
-type Annotation = [Whitespace, Colon, Whitespace, Term] | [Whitespace, Colon, Whitespace, Multiplicity, Whitespace, Term] | [];
+type Annotation = [Whitespace, Colon, Whitespace, Term] | [Whitespace, Colon, Whitespace, Q.Multiplicity, Whitespace, Term] | [];
 
 type LParens = Token;
 type RParens = Token;
