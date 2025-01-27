@@ -26,10 +26,12 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => NF.Constructors.Neutral<NF.Value>({ type: "Var", variable }))
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => env[variable.index][0])
 
-		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) => NF.Constructors.Lambda(binding.variable, binding.icit, NF.Closure(env, body)))
+		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) =>
+			NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(env, body)),
+		)
 		.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }): NF.Value => {
 			const annotation = evaluate(env, imports, binding.annotation);
-			return NF.Constructors.Pi(binding.variable, binding.icit, [annotation, binding.multiplicity], NF.Closure(env, body));
+			return NF.Constructors.Pi(binding.variable, binding.icit, [annotation, binding.multiplicity], NF.Constructors.Closure(env, body));
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
 			const nff = evaluate(env, imports, func);

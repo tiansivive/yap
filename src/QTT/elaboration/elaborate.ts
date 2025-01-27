@@ -12,7 +12,7 @@ import * as Q from "@qtt/shared/modalities/multiplicity";
 import { mkLogger } from "@qtt/shared/logging";
 
 import { P } from "ts-pattern";
-import { print as srcPrint } from "../parser/pretty";
+
 import { displayConstraint, displayContext } from "./pretty";
 
 import { freshMeta } from "./supply";
@@ -20,13 +20,17 @@ import { freshMeta } from "./supply";
 export type Constraint = { type: "assign"; left: NF.Value; right: NF.Value } | { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity };
 
 let count = 0;
+export const resetCount = () => {
+	count = 0;
+};
+
 const { log } = mkLogger();
 
 export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 	const result = F.pipe(
 		M.ask(),
 		M.chain(ctx => {
-			log("entry", "Infer", { Context: displayContext(ctx), AST: srcPrint(ast) });
+			log("entry", "Infer", { Context: displayContext(ctx), AST: Src.display(ast) });
 			const { env } = ctx;
 			return match(ast)
 				.with({ type: "lit" }, ({ value }): M.Elaboration<EB.AST> => {
@@ -47,7 +51,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 					return M.of<EB.AST>([meta, ty, Q.noUsage(ctx.env.length)]);
 				})
 
-				.with({ type: "var" }, ({ variable }): M.Elaboration<EB.AST> => M.of<EB.AST>(EB.lookup(variable, ctx)))
+				.with({ type: "var" }, ({ variable }) => M.of<EB.AST>(EB.lookup(variable, ctx)))
 				.with({ type: "annotation" }, ({ term, ann, multiplicity }) =>
 					F.pipe(
 						M.Do,
@@ -80,7 +84,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 									const meta = EB.Constructors.Var(freshMeta());
 									const nf = NF.evaluate(env, ctx.imports, meta);
 									const mnf: NF.ModalValue = [nf, Q.Many];
-									const closure = NF.Closure(env, EB.Constructors.Var(freshMeta()));
+									const closure = NF.Constructors.Closure(env, EB.Constructors.Var(freshMeta()));
 
 									const pi = NF.Constructors.Pi("x", icit, mnf, closure);
 
@@ -145,12 +149,49 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 					});
 				})
 
+				.with({ type: "row" }, tm => M.fmap(check(tm, NF.Row), ([row, qs]): EB.AST => [row, NF.Row, qs]))
 				.with({ type: "struct" }, ({ row }) => {
-					// const ty = NF.Constructors.App(
-					// 	EB.Constructors.Lit(Shared.Atom("Struct")),
+					const elaborate = (row: Src.Row): M.Elaboration<[EB.Row, NF.Row, Q.Usages]> =>
+						match(row)
+							.with({ type: "empty" }, r => M.of<[EB.Row, NF.Row, Q.Usages]>([r, { type: "empty" }, Q.noUsage(ctx.env.length)]))
+							.with({ type: "variable" }, ({ variable }) => {
+								const [tm, ty, qs] = EB.lookup(variable, ctx);
 
-					// );
-					return 1 as any;
+								if (tm.type !== "Var") {
+									throw new Error("Elaborating Row Var: Not a variable");
+								}
+
+								if (ty.type !== "Row" && ty.type !== "Var") {
+									throw new Error("Elaborating Row Var: Type not a row or var");
+								}
+
+								return M.of<[EB.Row, NF.Row, Q.Usages]>([
+									{ type: "variable", variable: tm.variable },
+									ty.type === "Row" ? ty.row : { type: "variable", variable: ty.variable },
+									qs,
+								]);
+							})
+							.with({ type: "extension" }, ({ label, value, row }) =>
+								F.pipe(
+									M.Do,
+									M.bind("value", () => infer(value)),
+									M.bind("row", () => elaborate(row)),
+									M.fmap(({ value, row }): [EB.Row, NF.Row, Q.Usages] => {
+										const q = Q.add(value[2], row[2]);
+										const ty = NF.Constructors.Extension(label, value[1], row[1]);
+										const tm = EB.Constructors.Extension(label, value[0], row[0]);
+										return [tm, ty, q];
+									}),
+								),
+							)
+							.exhaustive();
+
+					return M.fmap(elaborate(row), ([row, ty, qs]): EB.AST => {
+						const atom = Lit.Atom("Struct");
+						const struct = EB.Constructors.App("Explicit", EB.Constructors.Lit(atom), EB.Constructors.Row(row));
+						const structTy = NF.Constructors.App(NF.Constructors.Neutral(NF.Constructors.Lit(atom)), NF.Constructors.Row(ty), "Explicit");
+						return [struct, structTy, qs];
+					});
 				})
 				.otherwise(() => {
 					throw new Error("Not implemented yet");
@@ -168,7 +209,7 @@ function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q.Usages
 	return F.pipe(
 		M.ask(),
 		M.chain(ctx => {
-			log("entry", "Check", { Term: srcPrint(term), Annotation: NF.display(type) });
+			log("entry", "Check", { Term: Src.display(term), Annotation: NF.display(type) });
 			return match([term, type])
 				.with(
 					[{ type: "lambda" }, { type: "Abs", binder: { type: "Pi" } }],

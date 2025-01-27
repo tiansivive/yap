@@ -1,4 +1,5 @@
 import * as Q from "@qtt/shared/modalities/multiplicity";
+import * as R from "@qtt/shared/rows";
 import * as EB from "@qtt/elaboration";
 
 import { Literal } from "@qtt/shared/literals";
@@ -14,11 +15,11 @@ export type Value =
 	| { type: "Abs"; binder: Binder; closure: Closure }
 	| { type: "Neutral"; value: Value };
 
-export type Row = { type: "Empty" } | { type: "Extension"; label: string; value: Value; row: Row } | { type: "Variable"; variable: Variable };
+export type Row = R.Row<Value, Variable>;
 
 export type Binder = { type: "Pi"; variable: string; annotation: ModalValue; icit: Implicitness } | { type: "Lambda"; variable: string; icit: Implicitness };
 
-type Variable = { type: "Bound"; index: number } | { type: "Meta"; index: number } | { type: "Free"; name: string };
+export type Variable = { type: "Bound"; index: number } | { type: "Meta"; index: number } | { type: "Free"; name: string };
 
 export type Closure = {
 	env: Env;
@@ -26,13 +27,6 @@ export type Closure = {
 };
 
 export type Env = ModalValue[];
-
-export const Type: Value = {
-	type: "Lit",
-	value: { type: "Atom", value: "Type" },
-};
-
-export const Closure = (env: Env, term: EB.Term): Closure => ({ env, term });
 
 export const Constructors = {
 	Pi: <A, B>(variable: string, icit: Implicitness, annotation: A, closure: B) => ({
@@ -66,4 +60,18 @@ export const Constructors = {
 		arg,
 		icit,
 	}),
+	Closure: (env: Env, term: EB.Term): Closure => ({ env, term }),
+
+	Row: (row: Row): Value => ({ type: "Row", row }),
+	Extension: (label: string, value: Value, row: Row): Row => ({ type: "extension", label, value, row }),
+};
+
+export const Type: Value = {
+	type: "Lit",
+	value: { type: "Atom", value: "Type" },
+};
+
+export const Row: Value = {
+	type: "Lit",
+	value: { type: "Atom", value: "Row" },
 };

@@ -5,6 +5,8 @@ import * as Q from "@qtt/shared/modalities/multiplicity";
 import { match } from "ts-pattern";
 import * as Icit from "@qtt/shared/implicitness";
 import * as Lit from "@qtt/shared/literals";
+import * as R from "@qtt/shared/rows";
+
 import { Constraint } from "./elaborate";
 
 import * as EB from ".";
@@ -30,18 +32,25 @@ export const display = (term: EB.Term): string => {
 			const arr = binding.type !== "Let" && binding.icit === "Implicit" ? "=>" : "->";
 			return `${b} ${arr} ${display(body)}`;
 		})
-		.with({ type: "App" }, ({ icit, func, arg }) => `${display(func)} ${display(arg)}`)
+		.with({ type: "App" }, ({ icit, func, arg }) => `${display(func)} ${Icit.display(icit)}${display(arg)}`)
 		.with({ type: "Annotation" }, ({ term, ann }) => `${display(term)} : ${display(ann)}`)
-		.exhaustive();
+		.with({ type: "Row" }, ({ row }) =>
+			R.display({
+				term: display,
+				var: (v: EB.Variable) => display({ type: "Var", variable: v }),
+			})(row),
+		)
+
+		.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
 };
 
 export const displayConstraint = (constraint: Constraint): string => {
 	if (constraint.type === "assign") {
-		return `${NF.display(constraint.left)}  ~~  ${NF.display(constraint.right)}`;
+		return `${NF.display(constraint.left)} ~~ ${NF.display(constraint.right)}`;
 	}
 
 	if (constraint.type === "usage") {
-		return `${Q.display(constraint.computed)}  <=  ${Q.display(constraint.expected)}`;
+		return `${Q.display(constraint.computed)} <= ${Q.display(constraint.expected)}`;
 	}
 
 	return "Unknown Constraint";
@@ -49,7 +58,7 @@ export const displayConstraint = (constraint: Constraint): string => {
 
 export const displayContext = (context: EB.Context): object => {
 	const pretty = {
-		env: context.env.map(print),
+		env: context.env.map(NF.display),
 		types: context.types.map(([name, origin, mv]) => `${name} (${origin}): ${NF.display(mv)}`),
 		names: context.names,
 		imports: context.imports,

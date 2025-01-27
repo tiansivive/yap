@@ -4,6 +4,7 @@ import * as NF from "./index";
 import * as Lit from "@qtt/shared/literals";
 import * as Icit from "@qtt/shared/implicitness";
 import * as Q from "@qtt/shared/modalities/multiplicity";
+import * as R from "@qtt/shared/rows";
 
 import * as EB from "@qtt/elaboration";
 
@@ -26,20 +27,11 @@ export const display = (value: NF.Value | NF.ModalValue): string => {
 			return `${b} ${arr} ${EB.display(closure.term)}`; // TODO: Print environment
 		})
 		.with({ type: "App" }, ({ func, arg }) => `${display(func)} ${display(arg)}`)
-		.with({ type: "Row" }, ({ row }) => {
-			const displayR = (row: NF.Row): string => {
-				if (row.type === "Empty") {
-					return "";
-				}
-
-				if (row.type === "Extension") {
-					return `${row.label} : ${display(row.value)}, ${displayR(row.row)}`;
-				}
-
-				return display({ type: "Var", variable: row.variable });
-			};
-
-			return `{ ${displayR(row)} }`;
-		})
+		.with({ type: "Row" }, ({ row }) =>
+			R.display({
+				term: display,
+				var: (v: NF.Variable) => display({ type: "Var", variable: v }),
+			})(row),
+		)
 		.exhaustive();
 };

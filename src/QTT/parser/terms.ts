@@ -1,5 +1,7 @@
-import { Implicitness, Literal } from "../shared";
+import { Implicitness } from "@qtt/shared/implicitness";
+import { Literal } from "@qtt/shared/literals";
 import * as Q from "@qtt/shared/modalities/multiplicity";
+import * as R from "@qtt/shared/rows";
 
 export type Term =
 	| { type: "lit"; value: Literal }
@@ -33,8 +35,6 @@ export type Term =
 	| { type: "injection"; label: string; value: Term; term: Term }
 	| { type: "projection"; label: string; term: Term };
 
-export type Row = { type: "empty" } | { type: "extension"; label: string; value: Term; row: Row } | { type: "variable"; variable: Variable };
-
 export type Statement =
 	| { type: "expression"; value: Term }
 	| {
@@ -46,6 +46,7 @@ export type Statement =
 	  };
 
 export type Variable = { type: "name"; value: string };
+export type Row = R.Row<Term, Variable>;
 
 export const num = (value: number) => Lit({ type: "Num", value });
 export const bool = (value: boolean) => Lit({ type: "Bool", value });

@@ -1,32 +1,41 @@
 import { match } from "ts-pattern";
-import * as Src from "./terms";
 
-import { displayIcit, displayLit } from "../shared";
+import * as Lit from "@qtt/shared/literals";
+import * as Icit from "@qtt/shared/implicitness";
 
-export const print = (term: Src.Term): string => {
+import * as Src from "@qtt/src/index";
+import * as R from "@qtt/shared/rows";
+
+export const display = (term: Src.Term): string => {
 	return match(term)
-		.with({ type: "lit" }, ({ value }) => displayLit(value))
+		.with({ type: "lit" }, ({ value }) => Lit.display(value))
 		.with({ type: "var" }, ({ variable }) => variable.value)
+		.with({ type: "hole" }, _ => "?")
 		.with({ type: "arrow" }, ({ lhs, rhs, icit }) => {
-			return `${displayIcit(icit)}${print(lhs)} ${arr(icit)} ${print(rhs)}`;
+			return `${Icit.display(icit)}${display(lhs)} ${arr(icit)} ${display(rhs)}`;
 		})
 		.with({ type: "lambda" }, ({ icit, variable, annotation, body }) => {
-			const ann = annotation ? `: ${print(annotation)}` : "";
-			return `λ(${displayIcit(icit)}${variable}${ann}) ${arr(icit)} ${print(body)}`;
+			const ann = annotation ? `: ${display(annotation)}` : "";
+			return `λ(${Icit.display(icit)}${variable}${ann}) ${arr(icit)} ${display(body)}`;
 		})
 		.with({ type: "pi" }, ({ icit, variable, annotation, body }) => {
-			return `Π(${displayIcit(icit)}${variable}: ${print(annotation)}) ${arr(icit)} ${print(body)}`;
+			return `Π(${Icit.display(icit)}${variable}: ${display(annotation)}) ${arr(icit)} ${display(body)}`;
 		})
 		.with({ type: "application" }, ({ icit, fn, arg }) => {
-			return `${print(fn)} ${print(arg)}`;
+			return `${display(fn)} ${display(arg)}`;
 		})
 		.with({ type: "annotation" }, ({ term, ann }) => {
-			return `(${print(term)} : ${print(ann)})`;
+			return `(${display(term)} : ${display(ann)})`;
 		})
-		.with({ type: "hole" }, _ => "?")
-		.otherwise(() => {
-			throw new Error("Display Term Binder: Not implemented");
-		});
+
+		.with({ type: "row" }, ({ row }) => {
+			return R.display({
+				term: display,
+				var: (v: Src.Variable) => v.value,
+			})(row);
+		})
+
+		.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
 };
 
 const arr = (icit: string) => (icit === "Implicit" ? "=>" : "->");
