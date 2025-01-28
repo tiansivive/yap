@@ -40,8 +40,10 @@ export const display = (term: EB.Term): string => {
 				var: (v: EB.Variable) => display({ type: "Var", variable: v }),
 			})(row),
 		)
-
-		.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
+		.with({ type: "Proj" }, ({ label, term }) => `(${display(term)}).${label}`)
+		.with({ type: "Inj" }, ({ label, value, term }) => `{ ${display(term)} | ${label} = ${display(value)} }`)
+		.exhaustive();
+	//.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
 };
 
 export const displayConstraint = (constraint: Constraint): string => {

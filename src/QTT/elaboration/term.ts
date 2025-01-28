@@ -3,8 +3,9 @@ import { Extend } from "../../utils/types";
 import * as Q from "@qtt/shared/modalities/multiplicity";
 import * as NF from "./normalization";
 import * as R from "@qtt/shared/rows";
-import { Literal } from "@qtt/shared/literals";
+import * as Lit from "@qtt/shared/literals";
 import { Implicitness } from "@qtt/shared/implicitness";
+import { Literal } from "@qtt/shared/literals";
 
 export type ModalTerm = Extend<Term, Term, Q.Multiplicity>;
 export type Node = Extend<Term, Term, NF.ModalValue>;
@@ -55,7 +56,7 @@ export const Constructors = {
 		variable,
 	}),
 
-	App: <T>(icit: Implicitness, func: Term, arg: Term): Term => ({
+	App: (icit: Implicitness, func: Term, arg: Term): Term => ({
 		type: "App",
 		icit,
 		func,
@@ -71,7 +72,12 @@ export const Constructors = {
 	Row: (row: Row): Term => ({ type: "Row", row }),
 	Extension: (label: string, value: Term, row: Row): Row => ({ type: "extension", label, value, row }),
 
-	Struct: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit({ type: "Atom", value: "Struct" }), Constructors.Row(row)),
+	Struct: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row)),
+	Variant: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row)),
 	Proj: (label: string, term: Term): Term => ({ type: "Proj", label, term }),
 	Inj: (label: string, value: Term, term: Term): Term => ({ type: "Inj", label, value, term }),
 };
+
+type Foo = { [k: number]: number };
+
+const foo: Foo = [1, 2, 3];

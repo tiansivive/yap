@@ -52,13 +52,36 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 				})
 
 				.with({ type: "var" }, ({ variable }) => M.of<EB.AST>(EB.lookup(variable, ctx)))
+
+				.with({ type: "row" }, tm => M.fmap(check(tm, NF.Row), ([row, qs]): EB.AST => [row, NF.Row, qs]))
+				.with({ type: "struct" }, ({ row }) => M.fmap(elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Struct(row), NF.Constructors.Struct(ty), qs]))
+				.with({ type: "variant" }, ({ row }) =>
+					M.fmap(elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Variant(row), NF.Constructors.Variant(ty), qs]),
+				)
+
+				.with({ type: "projection" }, ({ term, label }) =>
+					F.pipe(
+						M.Do,
+						M.let("term", infer(term)),
+						M.bind("inferred", ({ term: [tm, ty, us] }) => project(label, tm, ty, us)),
+						M.fmap(({ term: [tm, , us], inferred }): EB.AST => [EB.Constructors.Proj(label, tm), inferred, us]), // TODO: Subtract usages?
+					),
+				)
+				.with({ type: "injection" }, ({ label, value, term }) =>
+					F.pipe(
+						M.Do,
+						M.let("value", infer(value)),
+						M.let("term", infer(term)),
+						M.bind("inferred", ({ value, term }) => inject(label, value, term)),
+						M.fmap(({ term: [tm, , u1], value: [val, , u2], inferred }): EB.AST => [EB.Constructors.Inj(label, val, tm), inferred, Q.add(u1, u2)]),
+					),
+				)
 				.with({ type: "annotation" }, ({ term, ann, multiplicity }) =>
 					F.pipe(
 						M.Do,
-						M.bind("ann", _ => check(ann, NF.Type)),
+						M.let("ann", check(ann, NF.Type)),
 						M.bind("type", ({ ann: [type, us] }) => {
 							const val = NF.evaluate(env, ctx.imports, type);
-							//const mval = NF.infer(env, val);
 							return M.of([val, us] as const);
 						}),
 						M.bind("term", ({ type: [type, us] }) => check(term, type)),
@@ -69,8 +92,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 				.with({ type: "application" }, ({ fn, arg, icit }) =>
 					F.pipe(
 						M.Do,
-						M.bind("fn", () => M.chain(infer(fn), icit === "Explicit" ? insertImplicitApps : M.of)),
-
+						M.let("fn", M.chain(infer(fn), icit === "Explicit" ? insertImplicitApps : M.of)),
 						M.bind("pi", ({ fn: [ft, fty] }) =>
 							match(fty)
 								.with({ type: "Abs", binder: { type: "Pi" } }, pi => {
@@ -115,7 +137,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 
 					return F.pipe(
 						M.Do,
-						M.bind("ann", () => check(ann, NF.Type)),
+						M.let("ann", check(ann, NF.Type)),
 						M.bind("body", ({ ann: [ann] }) => {
 							const va = NF.evaluate(env, ctx.imports, ann);
 							const mva: NF.ModalValue = [va, q];
@@ -149,50 +171,6 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 					});
 				})
 
-				.with({ type: "row" }, tm => M.fmap(check(tm, NF.Row), ([row, qs]): EB.AST => [row, NF.Row, qs]))
-				.with({ type: "struct" }, ({ row }) => {
-					const elaborate = (row: Src.Row): M.Elaboration<[EB.Row, NF.Row, Q.Usages]> =>
-						match(row)
-							.with({ type: "empty" }, r => M.of<[EB.Row, NF.Row, Q.Usages]>([r, { type: "empty" }, Q.noUsage(ctx.env.length)]))
-							.with({ type: "variable" }, ({ variable }) => {
-								const [tm, ty, qs] = EB.lookup(variable, ctx);
-
-								if (tm.type !== "Var") {
-									throw new Error("Elaborating Row Var: Not a variable");
-								}
-
-								if (ty.type !== "Row" && ty.type !== "Var") {
-									throw new Error("Elaborating Row Var: Type not a row or var");
-								}
-
-								return M.of<[EB.Row, NF.Row, Q.Usages]>([
-									{ type: "variable", variable: tm.variable },
-									ty.type === "Row" ? ty.row : { type: "variable", variable: ty.variable },
-									qs,
-								]);
-							})
-							.with({ type: "extension" }, ({ label, value, row }) =>
-								F.pipe(
-									M.Do,
-									M.bind("value", () => infer(value)),
-									M.bind("row", () => elaborate(row)),
-									M.fmap(({ value, row }): [EB.Row, NF.Row, Q.Usages] => {
-										const q = Q.add(value[2], row[2]);
-										const ty = NF.Constructors.Extension(label, value[1], row[1]);
-										const tm = EB.Constructors.Extension(label, value[0], row[0]);
-										return [tm, ty, q];
-									}),
-								),
-							)
-							.exhaustive();
-
-					return M.fmap(elaborate(row), ([row, ty, qs]): EB.AST => {
-						const atom = Lit.Atom("Struct");
-						const struct = EB.Constructors.App("Explicit", EB.Constructors.Lit(atom), EB.Constructors.Row(row));
-						const structTy = NF.Constructors.App(NF.Constructors.Neutral(NF.Constructors.Lit(atom)), NF.Constructors.Row(ty), "Explicit");
-						return [struct, structTy, qs];
-					});
-				})
 				.otherwise(() => {
 					throw new Error("Not implemented yet");
 				});
@@ -287,3 +265,163 @@ function insertImplicitApps(node: EB.AST): M.Elaboration<EB.AST> {
 		}),
 	);
 }
+
+const elaborate = (row: Src.Row): M.Elaboration<[EB.Row, NF.Row, Q.Usages]> =>
+	M.chain(M.ask(), ctx =>
+		match(row)
+			.with({ type: "empty" }, r => M.of<[EB.Row, NF.Row, Q.Usages]>([r, { type: "empty" }, Q.noUsage(ctx.env.length)]))
+			.with({ type: "variable" }, ({ variable }) => {
+				const [tm, ty, qs] = EB.lookup(variable, ctx);
+				return F.pipe(
+					kindOf(ty),
+					M.discard(k => M.tell({ type: "assign", left: k, right: NF.Row })),
+					M.chain(k => {
+						if (tm.type !== "Var") {
+							throw new Error("Elaborating Row Var: Not a variable");
+						}
+
+						if (ty.type !== "Row" && ty.type !== "Var") {
+							throw new Error("Elaborating Row Var: Type not a row or var");
+						}
+
+						return M.of<[EB.Row, NF.Row, Q.Usages]>([
+							{ type: "variable", variable: tm.variable },
+							ty.type === "Row" ? ty.row : { type: "variable", variable: ty.variable },
+							qs,
+						]);
+					}),
+				);
+			})
+			.with({ type: "extension" }, ({ label, value, row }) =>
+				F.pipe(
+					M.Do,
+					M.bind("value", () => infer(value)),
+					M.bind("row", () => elaborate(row)),
+					M.fmap(({ value, row }): [EB.Row, NF.Row, Q.Usages] => {
+						const q = Q.add(value[2], row[2]);
+						const ty = NF.Constructors.Extension(label, value[1], row[1]);
+						const tm = EB.Constructors.Extension(label, value[0], row[0]);
+						return [tm, ty, q];
+					}),
+				),
+			)
+			.exhaustive(),
+	);
+
+const kindOf = (ty: NF.Value): M.Elaboration<NF.Value> =>
+	match(ty)
+		.with({ type: "Row" }, _ => M.of(NF.Row))
+		.with({ type: "Var" }, ({ variable }) =>
+			M.chain(M.ask(), ctx =>
+				match(variable)
+					.with({ type: "Free" }, ({ name }) => {
+						const val = ctx.imports[name];
+
+						if (!val) {
+							throw new Error("Unbound free variable: " + name);
+						}
+
+						return kindOf(NF.evaluate(ctx.env, ctx.imports, val[0]));
+					})
+					.with({ type: "Meta" }, _ => M.of(NF.evaluate(ctx.env, ctx.imports, { type: "Var", variable: freshMeta() })))
+					.with({ type: "Bound" }, ({ index }) => M.of(ctx.env[index][0]))
+					.exhaustive(),
+			),
+		)
+		.otherwise(() => M.of(NF.Type));
+
+const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages): M.Elaboration<NF.Value> =>
+	M.chain(M.ask(), ctx =>
+		match(ty)
+			.with({ type: "Neutral" }, ({ value }) => project(label, tm, value, us))
+			.with({ type: "Var" }, _ => {
+				const r: NF.Row = { type: "variable", variable: freshMeta() };
+				const ctor = NF.evaluate(ctx.env, ctx.imports, EB.Constructors.Var(freshMeta()));
+				const val = NF.evaluate(ctx.env, ctx.imports, EB.Constructors.Var(freshMeta()));
+
+				const inferred = NF.Constructors.App(ctor, { type: "Row", row: NF.Constructors.Extension(label, val, r) }, "Explicit");
+
+				return M.fmap(M.tell({ type: "assign", left: inferred, right: ty }), () => inferred);
+			})
+			.with(
+				NF.Patterns.Struct,
+				({
+					func: {
+						value: { value },
+					},
+				}) => value === "Struct" || value === "Variant",
+				({ func, arg }) => {
+					const from = (l: string, row: NF.Row): [NF.Row, NF.Value] =>
+						match(row)
+							.with({ type: "empty" }, _ => {
+								throw new Error("Label not found: " + l);
+							})
+							.with(
+								{ type: "extension" },
+								({ label: l_ }) => l === l_,
+								({ label, value, row }): [NF.Row, NF.Value] => [NF.Constructors.Extension(label, value, row), value],
+							)
+							.with({ type: "extension" }, (r): [NF.Row, NF.Value] => {
+								const [rr, vv] = from(l, r);
+								return [NF.Constructors.Extension(r.label, r.value, rr), vv];
+							})
+							.with({ type: "variable" }, (r): [NF.Row, NF.Value] => {
+								const val = NF.evaluate(ctx.env, ctx.imports, EB.Constructors.Var(freshMeta()));
+								return [NF.Constructors.Extension(l, val, r), val];
+							})
+							.exhaustive();
+
+					const [r, v] = from(label, arg.row);
+					const inferred = NF.Constructors.App(func, NF.Constructors.Row(r), "Explicit");
+					return M.fmap(M.tell({ type: "assign", left: inferred, right: ty }), () => v);
+				},
+			)
+			.otherwise(_ => {
+				throw new Error("Expected Row Type");
+			}),
+	);
+
+/** 
+ * 
+case t' of
+	Var v -> do
+		r < - RVar.Meta < $ > fresh
+		con < - Var.Meta < $ > fresh
+		tell[t' :~: App con (Row r)]
+		return $ App con(Row $ Extension l s' r)
+
+	App c@(Lit(Atom con))(Row r)
+		| con == "Struct" || con == "Variant" -> do
+			return $ App c(Row $ Extension l s' r)
+			_ -> error "Expected row type"
+
+*/
+
+const inject = (label: string, value: EB.AST, tm: EB.AST): M.Elaboration<NF.Value> =>
+	M.chain(M.ask(), ctx =>
+		match(tm[1])
+			.with({ type: "Neutral" }, ({ value: v }) => inject(label, value, [tm[0], v, tm[2]]))
+			.with({ type: "Var" }, _ => {
+				const r: NF.Row = { type: "variable", variable: freshMeta() };
+				const ctor = NF.evaluate(ctx.env, ctx.imports, EB.Constructors.Var(freshMeta()));
+
+				const inferred = NF.Constructors.App(ctor, NF.Constructors.Row(r), "Explicit");
+				const extended = NF.Constructors.App(ctor, NF.Constructors.Row(NF.Constructors.Extension(label, value[1], r)), "Explicit");
+				return M.fmap(M.tell({ type: "assign", left: inferred, right: tm[1] }), () => extended);
+			})
+			.with(
+				{ type: "App", func: { type: "Lit", value: { type: "Atom" } }, arg: { type: "Row" } },
+				({
+					func: {
+						value: { value },
+					},
+				}) => value === "Struct" || value === "Variant",
+				({ func, arg }) => {
+					const extended = NF.Constructors.App(func, NF.Constructors.Row(NF.Constructors.Extension(label, value[1], arg.row)), "Explicit");
+					return M.of(extended);
+				},
+			)
+			.otherwise(_ => {
+				throw new Error("Injection: Expected Row type");
+			}),
+	);

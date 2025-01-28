@@ -2,6 +2,7 @@ import * as Q from "@qtt/shared/modalities/multiplicity";
 import * as R from "@qtt/shared/rows";
 import * as EB from "@qtt/elaboration";
 
+import * as Lit from "@qtt/shared/literals";
 import { Literal } from "@qtt/shared/literals";
 import { Implicitness } from "@qtt/shared/implicitness";
 
@@ -54,7 +55,7 @@ export const Constructors = {
 		type: "Neutral" as const,
 		value,
 	}),
-	App: <A, B>(func: A, arg: B, icit: Implicitness) => ({
+	App: (func: Value, arg: Value, icit: Implicitness) => ({
 		type: "App" as const,
 		func,
 		arg,
@@ -64,6 +65,14 @@ export const Constructors = {
 
 	Row: (row: Row): Value => ({ type: "Row", row }),
 	Extension: (label: string, value: Value, row: Row): Row => ({ type: "extension", label, value, row }),
+
+	Struct: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row), "Explicit")),
+	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),
+};
+
+export const Patterns = {
+	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } } as const,
+	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } } as const,
 };
 
 export const Type: Value = {

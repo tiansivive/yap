@@ -35,4 +35,27 @@ let row = [x: 1, a: "hello"];
 let row = [foo: 1, bar: 2];
 
 let tuple = {1,2,3,4};
-let array = [5,6,7,8];
+let list = [5,6,7,8];
+
+let array:  { [Num]: String }    = ["hello", "world", "!"];
+let array': Struct [Num: String] = ["hello", "world", "!"];
+
+let record:  { foo: Num, bar: String }          = { foo: 1, bar: "one" };
+let record': Struct ["foo": Num, "bar": String] = { foo: 1, bar: "one" };
+
+let table:  { [String]: Num, required: "String" }       = { foo: 1, bar: 2, baz: 3, required: "THIS ONE IS DIFFERENT" };
+let table': Struct [String: Num, "required": "String"]  = { foo: 1, bar: 2, baz: 3, required: "THIS ONE IS DIFFERENT" };
+
+let multimap: { [Num, String]: String }       = { [0, "foo"]: "foo", [0, "bar"]: "bar" };
+let multimap': Struct [{Num, String}: String] = { [0, "foo"]: "foo", [0, "bar"]: "bar" };
+
+multimap.0 // => ["foo", "bar"]
+multimap.foo // => "foo" 
+multimap.bar // => "bar"
+
+let relation: { [Num, Num, Num] } = { [1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1] };
+
+relation[1]   // => [[2,3], [3,2]]
+relation[1,2] // => 3
+
+relation[3]  // => [[1,2], [2,1]]

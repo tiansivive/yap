@@ -25,6 +25,9 @@ describe("Elaboration", () => {
 	beforeEach(() => {
 		parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar), { keepHistory: true });
 		parser.grammar.start = "Ann";
+
+		EB.resetCount();
+		EB.resetSupply();
 	});
 
 	afterEach(() => {
@@ -110,10 +113,6 @@ describe("Elaboration", () => {
 	});
 
 	describe("Functions", () => {
-		beforeEach(() => {
-			EB.resetCount();
-		});
-
 		it("should elaborate lambda abstractions", () => {
 			const row = `\\x -> 1`;
 			const data = parser.feed(row);
@@ -228,6 +227,46 @@ describe("Elaboration", () => {
 
 			expect(EB.display(tm)).toStrictEqual(`Struct [ x: 1, y: 2 | r ]`);
 			expect(NF.display(ty)).toStrictEqual(`Struct [ x: Num, y: Num | r ]`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toStrictEqual([]);
+		});
+
+		it("should elaborate struct projections", () => {
+			const row = `{ x: 1, y: 2 }.x`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(empty);
+
+			const [[tm, ty, qs], cst] = runWriter();
+
+			expect(EB.display(tm)).toStrictEqual(`(Struct [ x: 1, y: 2 ]).x`);
+			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(qs).toStrictEqual([]);
+			expect(cst.length).toBe(1);
+			expect(EB.displayConstraint(cst[0])).toBe("Struct [ x: Num, y: Num ] ~~ Struct [ x: Num, y: Num ]");
+		});
+
+		it("should elaborate struct injections", () => {
+			const row = `{ {x: 1, y: 2} | z: 3 }`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(empty);
+
+			const [[tm, ty, qs], cst] = runWriter();
+
+			expect(EB.display(tm)).toStrictEqual(`{ Struct [ x: 1, y: 2 ] | z = 3 }`);
+			// Rows don't have a fixed order. This happens because we recursively build the row from the base case (empty row)
+			expect(NF.display(ty)).toStrictEqual(`Struct [ z: Num, x: Num, y: Num ]`);
 			expect(qs).toStrictEqual([]);
 			expect(cst).toStrictEqual([]);
 		});

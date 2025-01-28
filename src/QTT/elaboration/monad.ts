@@ -69,8 +69,8 @@ export const liftR =
 	<A>(fa: Reader<EB.Context, A>): Elaboration<A> =>
 	(r: EB.Context) =>
 		W.getPointed(monoid).of(fa(r));
-// R.Functor.map(r, a => W.getPointed(M).of(a))
 
+// DO NOTATION
 export const Do = of<{}>({});
 
 export const bind =
@@ -80,6 +80,14 @@ export const bind =
 			return fmap(f(a), b => Object.assign({}, a, { [name]: b }) as any);
 		});
 	};
+
+export const bindTo = <N extends string>(name: N): (<A>(ma: Elaboration<A>) => Elaboration<{ [K in N]: A }>) => fmap(a => ({ [name]: a }) as any);
+
+const _let = <N extends string, A, B>(
+	name: Exclude<N, keyof A>,
+	fa: Elaboration<B>,
+): ((ma: Elaboration<A>) => Elaboration<{ readonly [K in keyof A | N]: K extends keyof A ? A[K] : B }>) => bind(name, () => fa);
+export { _let as let };
 
 export const ask = F.flow(R.ask, liftR<EB.Context>);
 export const discard = <A, B>(f: (a: A) => Elaboration<B>) => chain<A, A>(val => fmap(f(val), () => val));
