@@ -72,9 +72,11 @@ Ann -> Ann %ws:? %colon %ws:? TypeExpr 							{% Con.Annotation %}
      | Ann %ws:? %colon %ws:? Angle[Quantity] %ws:? TypeExpr 	{% Con.Annotation %}
 	 | TypeExpr 												{% id %}
 
-TypeExpr -> Pi 			{% id %}
-	  	  | Variant 	{% id %} 
-	  	  | App 		{% id %}
+TypeExpr -> Pi 				{% id %}
+	  	  | Variant 		{% id %} 
+		  | Schema 			{% id %}
+		  | Row 			{% id %}	
+	  	  | App 			{% id %}
 
 App -> App %ws Expr 				{% Con.Application %}
 	 | App %ws:? %op %ws:? Expr 	{% Con.Operation %}
@@ -90,20 +92,21 @@ Atom -> Identifier 		{% Con.Var %}
 	  | Literal 		{% Con.Lit %}
 	  | Block 		    {% id %}
 	  | Struct 			{% id %}
-	  | Row 			{% id %}	
       | Tuple 			{% id %}
 	  | List 			{% id %}
 	  | %hole 			{% Con.Hole %}
 	  | Parens[Ann]  	{% Con.extract %}
 
 
+# ------------------------------------
 # FUNCTIONS
-Lambda -> %backslash Param %ws %arrow %ws Expr 				{% Con.Lambda %}
-		| %backslash %hash Param %ws %fatArrow %ws Expr 	{% Con.Lambda %}
+# ------------------------------------
+Lambda -> %backslash Param %ws %arrow %ws Ann 				{% Con.Lambda %}
+		| %backslash %hash Param %ws %fatArrow %ws Ann 	{% Con.Lambda %}
 		
 Param -> Identifier 													{% Con.Param %}
-	   | Identifier %ws:? %colon %ws:? Expr 							{% Con.Param %}
-	   | Identifier %ws:? %colon %ws:? Angle[Quantity] %ws:? Expr 		{% Con.Param %}
+	   | Identifier %ws:? %colon %ws:? TypeExpr 							{% Con.Param %}
+	   | Identifier %ws:? %colon %ws:? Angle[Quantity] %ws:? TypeExpr 		{% Con.Param %}
 	   | Parens[Param] 													{% Con.extract %}
 		 
 
@@ -113,37 +116,51 @@ Pi -> Expr %ws:? %arrow %ws PiTail 		{% Con.Pi("Explicit") %}
 PiTail -> Pi {% id %}
 		| Atom {% id %}
 
-# ROWS
-Struct -> Empty[%lbrace, %rbrace] 				{% Con.emptyStruct %}
-	 	| Curly[ Many[KeyVal, %comma] ] 		{% Con.struct %}
+# ------------------------------------
+# ROW TERMS
+# ------------------------------------
+Row -> Empty[%lbracket, %rbracket] 					{% Con.emptyRow %}
+	 | Square[ Many[KeyVal, %comma] RowTail:? ] 	{% Con.row %}
 
-Variant -> %bar Many[KeyVal, %bar]				{% Con.Variant %}
+RowTail -> %ws:? %bar %ws:? Identifier 				{% d => d[3] %}
 
-Row -> Empty[%lbracket, %rbracket] 				{% Con.emptyRow %}
-	 | Square[ Many[KeyVal, %comma] ] 			{% Con.row %}
+# Values
+Struct -> Empty[%lbrace, %rbrace] 					{% Con.emptyStruct %}
+	 	| Curly[ Many[KeyVal, %comma] ] 			{% Con.struct %}
 
-KeyVal -> Identifier %ws:? %colon %ws:? Expr 	{% Con.keyval %}
+Tuple -> Curly[ Many[TypeExpr, %comma] ] 				{% Con.tuple %}
+List -> Square[ Many[TypeExpr, %comma] ] 				{% Con.list %}
 
-Projection -> Expr %dot Identifier 									{% Con.Projection %}
+# Types
+Schema -> Curly[ Many[SchemaPair, %comma] RowTail:? ] 	{% Con.schema %}
+
+Variant -> %bar Many[KeyVal, %bar]						{% Con.Variant %}
+
+# Fields
+KeyVal -> Identifier %ws:? %colon %ws:? Ann 				{% Con.keyval %}
+SchemaPair -> Identifier %ws:? %colon %colon %ws:? Ann 		{% Con.keyval %}
+Assignment -> Identifier %ws:? %equals %ws:? Ann 			{% Con.keyval %}
+
+Projection -> Ann %dot Identifier 									{% Con.Projection %}
 			| %dot Identifier 										{% Con.Projection %}
 
-Injection -> Curly[ %ws:? App %ws:? %bar Many[KeyVal, %comma] ] 	{% Con.Injection %}
-		   | Curly[ %ws:? %bar Many[KeyVal, %comma] ] 				{% Con.Injection %}
+Injection -> Curly[ %ws:? Ann %ws:? %bar Many[Assignment, %comma] ] 	{% Con.Injection %}
+		   | Curly[ %ws:? %bar Many[Assignment, %comma] ] 				{% Con.Injection %}
 
-Tuple -> Curly[ Many[Expr, %comma] ] 			{% Con.tuple %}
-List ->  Square[ Many[Expr, %comma] ] 			{% Con.list %}
 
-# BLOCKS
+# ------------------------------------
+# Blocks
+# ------------------------------------
 Block -> Curly[ Many[Statement, %semicolon] %semicolon Return:? ] 		{% Con.Block %}
 	   | Curly[ Return ] 												{% Con.Block %}
 
-Statement -> Expr 			{% Con.Expr %}
+Statement -> Ann 			{% Con.Expr %}
            | Letdec			{% id %}
 
-Return    -> %NL:? %ws:? "return" %ws:+ Expr %semicolon 	{% Con.Return %}
+Return    -> %NL:? %ws:? "return" %ws:+ Ann %semicolon 					{% Con.Return %}
 
-Letdec -> "let" %ws Identifier %ws:? %equals %ws:? Expr 						{% Con.LetDec %}
-		| "let" %ws Identifier %ws:? %colon %ws:? Expr %ws:? %equals %ws:? Expr {% Con.LetDec %}
+Letdec -> "let" %ws Identifier %ws:? %equals %ws:? Ann 									{% Con.LetDec %}
+		| "let" %ws Identifier %ws:? %colon %ws:? TypeExpr %ws:? %equals %ws:? TypeExpr {% Con.LetDec %}
 
 
 # VARIABLES

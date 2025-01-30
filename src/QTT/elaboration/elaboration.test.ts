@@ -190,6 +190,84 @@ describe("Elaboration", () => {
 
 			cst.forEach(c => expect(EB.displayConstraint(c)).toBe("Type ~~ Type"));
 		});
+
+		it("should elaborate implicit pi types", () => {
+			const row = `(x: Num) => Num`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(empty);
+
+			const [[tm, ty, qs], cst] = runWriter();
+
+			expect(EB.display(tm)).toStrictEqual(`Π(#x: <ω> Num) => Num`);
+			expect(NF.display(ty)).toStrictEqual(`Type`);
+			expect(qs).toStrictEqual([]);
+
+			cst.forEach(c => expect(EB.displayConstraint(c)).toBe("Type ~~ Type"));
+		});
+
+		it("should constrain the pi output to a Type", () => {
+			const row = `(x: Num) -> x`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(empty);
+
+			const [[tm, ty, qs], cst] = runWriter();
+			expect(EB.display(tm)).toStrictEqual(`Π(x: <ω> Num) -> v0`);
+			expect(NF.display(ty)).toStrictEqual(`Type`);
+			expect(qs).toStrictEqual([]);
+
+			expect(cst.map(EB.displayConstraint)).toContain("Num ~~ Type");
+		});
+	});
+
+	describe("Rows", () => {
+		it("should elaborate empty rows", () => {
+			const row = `[]`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(empty);
+
+			const [[tm, ty, qs], cst] = runWriter();
+
+			expect(EB.display(tm)).toStrictEqual(`[]`);
+			expect(NF.display(ty)).toStrictEqual(`Row`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toStrictEqual([]);
+		});
+
+		it("should elaborate row extensions", () => {
+			const row = `[ x: String, y: Num ]`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(empty);
+
+			const [[tm, ty, qs], cst] = runWriter();
+			expect(EB.display(tm)).toStrictEqual(`[ x: String, y: Num ]`);
+			expect(NF.display(ty)).toStrictEqual(`Row`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toStrictEqual([]);
+		});
 	});
 
 	describe("Structs", () => {
@@ -207,13 +285,13 @@ describe("Elaboration", () => {
 			const [[tm, ty, qs], cst] = runWriter();
 
 			expect(EB.display(tm)).toStrictEqual(`Struct [ x: 1, y: 2 ]`);
-			expect(NF.display(ty)).toStrictEqual(`Struct [ x: Num, y: Num ]`);
+			expect(NF.display(ty)).toStrictEqual(`Schema [ x: Num, y: Num ]`);
 			expect(qs).toStrictEqual([]);
 			expect(cst).toStrictEqual([]);
 		});
 
-		it.skip("should elaborate row polymorphic structs", () => {
-			const row = `{ x: 1, y: 2 | r }`;
+		it("should elaborate row polymorphic schemas", () => {
+			const row = `\\r -> { x:: Num, y:: Num | r }`;
 			const data = parser.feed(row);
 
 			expect(data.results.length).toBe(1);
@@ -225,10 +303,15 @@ describe("Elaboration", () => {
 
 			const [[tm, ty, qs], cst] = runWriter();
 
-			expect(EB.display(tm)).toStrictEqual(`Struct [ x: 1, y: 2 | r ]`);
-			expect(NF.display(ty)).toStrictEqual(`Struct [ x: Num, y: Num | r ]`);
+			expect(EB.display(tm)).toStrictEqual(`λr -> Schema [ x: Num, y: Num | v0 ]`);
+			expect(NF.display(ty)).toStrictEqual(`Π(r:<ω> ?1) -> Type`);
 			expect(qs).toStrictEqual([]);
-			expect(cst).toStrictEqual([]);
+
+			expect(cst.length).toBe(2);
+			const ensuringRow = EB.displayConstraint(cst[0]);
+			expect(ensuringRow).toBe("?1 ~~ Row");
+			const usageConstraint = EB.displayConstraint(cst[1]);
+			expect(usageConstraint).toBe("ω <= ω"); // `r` gets assigned `ω`
 		});
 
 		it("should elaborate struct projections", () => {
@@ -248,11 +331,11 @@ describe("Elaboration", () => {
 			expect(NF.display(ty)).toStrictEqual(`Num`);
 			expect(qs).toStrictEqual([]);
 			expect(cst.length).toBe(1);
-			expect(EB.displayConstraint(cst[0])).toBe("Struct [ x: Num, y: Num ] ~~ Struct [ x: Num, y: Num ]");
+			expect(EB.displayConstraint(cst[0])).toBe("Schema [ x: Num, y: Num ] ~~ Schema [ x: Num, y: Num ]");
 		});
 
 		it("should elaborate struct injections", () => {
-			const row = `{ {x: 1, y: 2} | z: 3 }`;
+			const row = `{ {x: 1, y: 2} | z = 3 }`;
 			const data = parser.feed(row);
 
 			expect(data.results.length).toBe(1);
@@ -266,7 +349,7 @@ describe("Elaboration", () => {
 
 			expect(EB.display(tm)).toStrictEqual(`{ Struct [ x: 1, y: 2 ] | z = 3 }`);
 			// Rows don't have a fixed order. This happens because we recursively build the row from the base case (empty row)
-			expect(NF.display(ty)).toStrictEqual(`Struct [ z: Num, x: Num, y: Num ]`);
+			expect(NF.display(ty)).toStrictEqual(`Schema [ z: Num, x: Num, y: Num ]`);
 			expect(qs).toStrictEqual([]);
 			expect(cst).toStrictEqual([]);
 		});

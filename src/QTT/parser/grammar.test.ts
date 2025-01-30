@@ -164,6 +164,16 @@ describe("Grammar", () => {
 		});
 
 		describe("Row terms", () => {
+			it.skip("should parse empty rows:\t\t[]", () => {
+				const src = `[]`;
+				const data = parser.feed(src);
+
+				const empty = Ctor.Row({ type: "empty" });
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(empty);
+			});
+
 			it("should parse empty structs:\t\t{}", () => {
 				const src = `{}`;
 				const data = parser.feed(src);
@@ -187,6 +197,25 @@ describe("Grammar", () => {
 				const y: Ctor.Row = { type: "extension", label: "y", value: yVal, row: empty };
 				const x: Ctor.Row = { type: "extension", label: "x", value: xVal, row: y };
 				const expected = Ctor.Struct(x);
+
+				expect(data.results.length).toBe(1);
+				expect(row).toStrictEqual(expected);
+			});
+
+			it("should parse schemas:\t\t{ x: 1, y: 2 }", () => {
+				// parser.grammar.start = "TypeExpr";
+				const src = `{ x:: 1, y:: 2 }`;
+				const data = parser.feed(src);
+
+				const xVal = Ctor.num(1);
+				const yVal = Ctor.num(2);
+
+				const row = data.results[0];
+
+				const empty: Ctor.Row = { type: "empty" };
+				const y: Ctor.Row = { type: "extension", label: "y", value: yVal, row: empty };
+				const x: Ctor.Row = { type: "extension", label: "x", value: xVal, row: y };
+				const expected = Ctor.Schema(x);
 
 				expect(data.results.length).toBe(1);
 				expect(row).toStrictEqual(expected);
@@ -260,8 +289,8 @@ describe("Grammar", () => {
 				expect(data.results[0]).toStrictEqual(lambda);
 			});
 
-			it("should parse injections:\t\t{ x | y: 1}", () => {
-				const src = `{ x | y: 1 }`;
+			it("should parse injections:\t\t{ x | y = 1}", () => {
+				const src = `{ x | y = 1 }`;
 				const data = parser.feed(src);
 
 				const x = Ctor.Var({ type: "name", value: "x" });
@@ -273,8 +302,8 @@ describe("Grammar", () => {
 				expect(data.results[0]).toStrictEqual(inj);
 			});
 
-			it("should parse shorthand injections:\t{ | y: 1}", () => {
-				const src = `{ | y: 1 }`;
+			it("should parse shorthand injections:\t{ | y = 1}", () => {
+				const src = `{ | y = 1 }`;
 				const data = parser.feed(src);
 
 				const generatedName = "x";

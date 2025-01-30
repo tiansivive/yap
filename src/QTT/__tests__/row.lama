@@ -1,4 +1,10 @@
 
 
 
-let row = { foo: 1 };
+let poly 
+    : Row -> Type
+    = \r -> { foo: Num, ...r } // (Struct [foo: Num]) ++ r
+
+let val
+    : poly { bar: String }
+    = { foo: 1, bar: "one" }

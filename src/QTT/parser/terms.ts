@@ -30,6 +30,7 @@ export type Term =
 	| { type: "list"; elements: Term[] }
 	| { type: "tuple"; row: Row }
 	| { type: "struct"; row: Row }
+	| { type: "schema"; row: Row }
 	| { type: "variant"; row: Row }
 	| { type: "row"; row: Row }
 	| { type: "injection"; label: string; value: Term; term: Term }
@@ -82,6 +83,7 @@ export const Application = (fn: Term, arg: Term, icit: Implicitness = "Explicit"
 
 export const Row = (row: Row): Term => ({ type: "row", row });
 export const Struct = (row: Row): Term => ({ type: "struct", row });
+export const Schema = (row: Row): Term => ({ type: "schema", row });
 export const Variant = (row: Row): Term => ({ type: "variant", row });
 export const List = (elements: Term[]): Term => ({ type: "list", elements });
 export const Tuple = (row: Term[]): Term => ({

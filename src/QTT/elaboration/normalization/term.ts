@@ -30,6 +30,7 @@ export type Closure = {
 export type Env = ModalValue[];
 
 export const Constructors = {
+	Var: (variable: Variable): Value => ({ type: "Var", variable }),
 	Pi: <A, B>(variable: string, icit: Implicitness, annotation: A, closure: B) => ({
 		type: "Abs" as const,
 		binder: { type: "Pi" as const, variable, icit, annotation },
@@ -66,13 +67,15 @@ export const Constructors = {
 	Row: (row: Row): Value => ({ type: "Row", row }),
 	Extension: (label: string, value: Value, row: Row): Row => ({ type: "extension", label, value, row }),
 
-	Struct: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row), "Explicit")),
+	Schema: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit")),
 	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),
 };
 
 export const Patterns = {
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } } as const,
-	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } } as const,
+	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } } as const,
+	Type: { type: "Lit", value: { type: "Atom", value: "Type" } } as const,
+	Row: { type: "Lit", value: { type: "Atom", value: "Row" } } as const,
 };
 
 export const Type: Value = {

@@ -102,13 +102,37 @@ type Param = {
 };
 
 type KeyVal = [string, Term];
-export const keyval: PostProcessor<[Variable, Whitespace, Colon, Whitespace, Term], KeyVal> = ([v, , , , tm]) => [v.value, tm];
+export const keyval = (pair: [Variable, Whitespace, Colon, Whitespace, Term] | [Variable, Whitespace, Colon, Colon, Whitespace, Term]): KeyVal => {
+	if (pair.length === 5) {
+		const [v, , , , value] = pair;
+		return [v.value, value];
+	}
+
+	const [v, , , , , value] = pair;
+	return [v.value, value];
+};
+
+export const emptyRow = (): Term => Src.Row({ type: "empty" });
+
+export const row: PostProcessor<[[KeyVal[]], Variable?], Term> = ([[pairs], v]): Term => {
+	const tail: Row = !v ? { type: "empty" } : { type: "variable", variable: v };
+	const row = pairs.reduceRight<Row>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), tail);
+	return Src.Row(row);
+};
 
 export const emptyStruct = (): Term => Src.Struct({ type: "empty" });
 
 export const struct: PostProcessor<[[KeyVal[]]], Term> = ([[pairs]]) => {
 	const row = pairs.reduceRight<Row>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), { type: "empty" });
 	return Src.Struct(row);
+};
+
+export const emptySchema = (): Term => Src.Schema({ type: "empty" });
+
+export const schema: PostProcessor<[[KeyVal[], Variable?]], Term> = ([[pairs, v]]) => {
+	const tail: Row = !v ? { type: "empty" } : { type: "variable", variable: v };
+	const row = pairs.reduceRight<Row>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), tail);
+	return Src.Schema(row);
 };
 
 export const Variant: PostProcessor<[Bar, KeyVal[]], Term> = ([, pairs]) => {
@@ -122,13 +146,6 @@ export const tuple: PostProcessor<[[Term[]]], Term> = ([[terms]]) => {
 
 export const list: PostProcessor<[[Term[]]], Term> = ([[terms]]) => {
 	return Src.List(terms);
-};
-
-export const row: PostProcessor<[[KeyVal[], KeyVal]], Term> = ([[pairs, last]]): Term => {
-	// TODO: Update when parsing accounts for row variables
-	const end: Row = { type: "extension", label: last[0], value: last[1], row: { type: "empty" } };
-	const row = pairs.reduceRight<Row>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), end);
-	return Src.Row(row);
 };
 
 export const Projection: PostProcessor<[Term, Dot, Variable] | [Dot, Variable], Term> = (input: [Term, Dot, Variable] | [Dot, Variable]) => {

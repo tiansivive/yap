@@ -73,6 +73,7 @@ export const Constructors = {
 	Extension: (label: string, value: Term, row: Row): Row => ({ type: "extension", label, value, row }),
 
 	Struct: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row)),
+	Schema: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row)),
 	Variant: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row)),
 	Proj: (label: string, term: Term): Term => ({ type: "Proj", label, term }),
 	Inj: (label: string, value: Term, term: Term): Term => ({ type: "Inj", label, value, term }),

@@ -30,8 +30,15 @@ export const quote = (imports: EB.Context["imports"], lvl: number, val: NF.Value
 			const body = quote(imports, lvl + 1, val);
 			return EB.Constructors.Pi(variable, icit, q, quote(imports, lvl, ann), body);
 		})
-		.with({ type: "Row" }, row => {
-			throw new Error("Row quoting: Not implemented yet");
+		.with({ type: "Row" }, ({ row }) => {
+			const _quote = (r: NF.Row): EB.Row =>
+				match(r)
+					.with({ type: "empty" }, (): EB.Row => ({ type: "empty" }))
+					.with({ type: "extension" }, ({ label, value, row }) => EB.Constructors.Extension(label, quote(imports, lvl, value), _quote(row)))
+					.with({ type: "variable" }, ({ variable }): EB.Row => ({ type: "variable", variable }))
+					.exhaustive();
+
+			return EB.Constructors.Row(_quote(row));
 		})
 		.exhaustive();
 };

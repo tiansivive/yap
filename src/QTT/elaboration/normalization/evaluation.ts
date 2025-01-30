@@ -58,3 +58,9 @@ export const apply = (imports: EB.Context["imports"], closure: NF.Closure, value
 	const { env, term } = closure;
 	return evaluate([[value, multiplicity], ...env], imports, term);
 };
+
+export const unwrapNeutral = (value: NF.Value): NF.Value => {
+	return match(value)
+		.with({ type: "Neutral" }, ({ value }) => unwrapNeutral(value))
+		.otherwise(() => value);
+};
