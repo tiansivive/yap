@@ -91,7 +91,7 @@ export { _let as let };
 
 export const ask = F.flow(R.ask, liftR<EB.Context>);
 export const discard = <A, B>(f: (a: A) => Elaboration<B>) => chain<A, A>(val => fmap(f(val), () => val));
-export const tell = (constraint: EB.Constraint) => liftW<void>(W.tell([constraint]));
+export const tell = (constraint: EB.Constraint | EB.Constraint[]) => liftW<void>(W.tell(Array.isArray(constraint) ? constraint : [constraint]));
 
 export const listen: <A, B>(f: (aw: [A, EB.Constraint[]]) => B) => (rw: Elaboration<A>) => Elaboration<B> = f => rw => F.pipe(rw, R.map(W.listen), fmap(f));
 

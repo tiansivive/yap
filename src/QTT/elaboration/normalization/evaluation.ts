@@ -38,7 +38,7 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 			const nfa = evaluate(env, imports, arg);
 
 			return match(nff)
-				.with({ type: "Abs", binder: { type: "Lambda" } }, ({ closure }) => apply(imports, closure, nfa))
+				.with({ type: "Abs" }, ({ closure }) => apply(imports, closure, nfa))
 				.with({ type: "Neutral" }, () => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
 
 				.otherwise(() => {

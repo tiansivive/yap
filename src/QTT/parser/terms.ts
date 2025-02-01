@@ -6,6 +6,7 @@ import * as R from "@qtt/shared/rows";
 export type Term =
 	| { type: "lit"; value: Literal }
 	| { type: "var"; variable: Variable }
+	| { type: "hole" }
 	| { type: "arrow"; lhs: Term; rhs: Term; icit: Implicitness }
 	| {
 			type: "lambda";
@@ -25,8 +26,6 @@ export type Term =
 	  }
 	| { type: "application"; fn: Term; arg: Term; icit: Implicitness }
 	| { type: "annotation"; term: Term; ann: Term; multiplicity?: Q.Multiplicity }
-	| { type: "hole" }
-	| { type: "block"; statements: Statement[]; return?: Term }
 	| { type: "list"; elements: Term[] }
 	| { type: "tuple"; row: Row }
 	| { type: "struct"; row: Row }
@@ -34,7 +33,16 @@ export type Term =
 	| { type: "variant"; row: Row }
 	| { type: "row"; row: Row }
 	| { type: "injection"; label: string; value: Term; term: Term }
-	| { type: "projection"; label: string; term: Term };
+	| { type: "projection"; label: string; term: Term }
+	| { type: "match"; scrutinee: Term; alternatives: Array<Alternative> }
+	| { type: "block"; statements: Statement[]; return?: Term };
+
+export type Alternative = { pattern: Pattern; term: Term };
+export type Pattern =
+	| { type: "var"; value: Variable }
+	| { type: "lit"; value: Literal }
+	| { type: "row"; row: R.Row<Pattern, Variable> }
+	| { type: "struct"; row: R.Row<Pattern, Variable> };
 
 export type Statement =
 	| { type: "expression"; value: Term }
@@ -104,6 +112,15 @@ export const Tuple = (row: Term[]): Term => ({
 export const Injection = (label: string, value: Term, term: Term): Term => ({ type: "injection", label, value, term });
 export const Projection = (label: string, term: Term): Term => ({ type: "projection", label, term });
 
+export const Match = (scrutinee: Term, alternatives: Array<Alternative>): Term => ({ type: "match", scrutinee, alternatives });
+export const Alternative = (pattern: Pattern, term: Term): Alternative => ({ pattern, term });
+export const Patterns = {
+	Var: (value: Variable): Pattern => ({ type: "var", value }),
+	Lit: (value: Literal): Pattern => ({ type: "lit", value }),
+	Row: (row: R.Row<Pattern, Variable>): Pattern => ({ type: "row", row }),
+	Struct: (row: R.Row<Pattern, Variable>): Pattern => ({ type: "struct", row }),
+};
+
 export const Annotation = (term: Term, ann: Term, multiplicity?: Q.Multiplicity): Term => ({
 	type: "annotation",
 	term,
@@ -131,14 +148,3 @@ export const Let = (variable: string, value: Term, annotation?: Term, multiplici
 });
 
 export const Hole: Term = { type: "hole" };
-
-//
-const a = (obj: Record<string, any>) => ({ ...obj, a: 1 });
-// { obj | a: 1 }
-// { a: 1 | obj }
-
-// [...arr]
-// [ |arr]
-// [ 1, 2, 3, |arr]
-
-// fn (a, b, |rest]) => a + b + c

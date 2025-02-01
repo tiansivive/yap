@@ -155,7 +155,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 					);
 				})
 				.with({ type: "lambda" }, (lam): M.Elaboration<EB.AST> => {
-					const meta: EB.Term = EB.Constructors.Var(freshMeta());
+					const meta = EB.Constructors.Var(freshMeta());
 					const ann = lam.annotation ? check(lam.annotation, NF.Type) : M.of<[EB.Term, Q.Usages]>([meta, Q.noUsage(ctx.env.length)]);
 					return M.chain(ann, ([tm]) => {
 						const va = NF.evaluate(env, ctx.imports, tm);
@@ -178,6 +178,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 					});
 				})
 
+				.with({ type: "match" }, EB.Match.infer)
 				.otherwise(() => {
 					throw new Error("Not implemented yet");
 				});

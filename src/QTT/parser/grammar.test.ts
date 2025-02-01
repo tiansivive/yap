@@ -354,5 +354,35 @@ describe("Grammar", () => {
 				expect(data.results[0]).toStrictEqual(block);
 			});
 		});
+
+		describe("Pattern matching", () => {
+			it('should parse a match expression:\t\tmatch x | 1 -> 10 | y -> "hello"', () => {
+				const src = `match x
+					| 1 -> 10
+					| y -> "hello"`;
+				const data = parser.feed(src);
+
+				const x = Ctor.Var({ type: "name", value: "x" });
+				const one = Ctor.Patterns.Lit({ type: "Num", value: 1 });
+				const ten = Ctor.num(10);
+				const y = Ctor.Patterns.Var({ type: "name", value: "y" });
+				const hello = Ctor.str("hello");
+
+				const match = Ctor.Match(x, [Ctor.Alternative(one, ten), Ctor.Alternative(y, hello)]);
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(match);
+			});
+
+			it.skip("should parse a match expression for structs:\tmatch x | { x: 1, y: 2 } -> 10 | { x: 2, y: 1 } -> 20", () => {
+				const src = `match x
+					| { x: 1, y: 2 } -> 10
+					| { x: 2, y: 1 } -> 20`;
+				const data = parser.feed(src);
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(undefined);
+			});
+		});
 	});
 });

@@ -171,14 +171,21 @@ Quantity -> "1" {% () => Q.One %}
 		  | "0" {% () => Q.Zero %}
 		  | "*" {% () => Q.Many %}
 
-# PATTERN MATCHING
-Match -> "match" %ws Expr Alt:+ {% d => ({ type: "match", scrutinee: d[2], alternatives: d[3] }) %} 
-Alt -> %NL:? %ws:? %bar %ws Pattern %ws %arrow %ws Expr {% d => ({ type: "alternative", pattern: d[4], body: d[8] }) %}
+# ------------------------------------
+# Pattern Matching
+# ------------------------------------
+Match -> "match" %ws:+ TypeExpr Alt:+ 							{% Con.Match %} 
+Alt -> %NL:? %ws:? %bar %ws:? Pattern %ws:? %arrow %ws:? Ann 	{% Con.Alternative %}
 
 
-Pattern -> Identifier {% d => ({ type: "Var", binding: d[0] }) %}
+Pattern -> Identifier 		{% Con.Pattern %}
+		 | Literal 			{% Con.Pattern %}
+		 | Parens[Pattern] 	{% Con.extract %}
 
-# LITERALS
+
+# ------------------------------------
+# Literals
+# ------------------------------------
 Literal 
 	-> String {% ([s]) => Lit.String(s) %}
 	 | Number {% ([n]) => Lit.Num(n) %}

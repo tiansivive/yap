@@ -18,7 +18,15 @@ export type Term =
 	| { type: "Row"; row: Row }
 	| { type: "Proj"; label: string; term: Term }
 	| { type: "Inj"; label: string; value: Term; term: Term }
-	| { type: "Annotation"; term: Term; ann: Term };
+	| { type: "Annotation"; term: Term; ann: Term }
+	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> };
+
+export type Alternative = { pattern: Pattern; term: Term };
+export type Pattern =
+	| { type: "Var"; value: string }
+	| { type: "Lit"; value: Literal }
+	| { type: "Row"; row: R.Row<Pattern, Variable> }
+	| { type: "Struct"; row: R.Row<Pattern, Variable> };
 
 export type Variable = { type: "Bound"; index: number } | { type: "Free"; name: string } | { type: "Meta"; index: number };
 
@@ -77,8 +85,13 @@ export const Constructors = {
 	Variant: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row)),
 	Proj: (label: string, term: Term): Term => ({ type: "Proj", label, term }),
 	Inj: (label: string, value: Term, term: Term): Term => ({ type: "Inj", label, value, term }),
+
+	Match: (scrutinee: Term, alternatives: Array<Alternative>): Term => ({ type: "Match", scrutinee, alternatives }),
+	Alternative: (pattern: Pattern, term: Term): Alternative => ({ pattern, term }),
+	Patterns: {
+		Var: (value: Variable): Pattern => ({ type: "Var", value }),
+		Lit: (value: Literal): Pattern => ({ type: "Lit", value }),
+		Row: (row: R.Row<Pattern, Variable>): Pattern => ({ type: "Row", row }),
+		Struct: (row: R.Row<Pattern, Variable>): Pattern => ({ type: "Struct", row }),
+	},
 };
-
-type Foo = { [k: number]: number };
-
-const foo: Foo = [1, 2, 3];

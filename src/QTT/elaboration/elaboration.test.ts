@@ -354,4 +354,26 @@ describe("Elaboration", () => {
 			expect(cst).toStrictEqual([]);
 		});
 	});
+
+	describe("Pattern matching", () => {
+		it("should elaborate pattern matching", () => {
+			const src = `match x with | 1 -> 2 | 3 -> 4`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+			const ctx = EB.bind(empty, "x", [NF.Constructors.Lit(Lit.Atom("Num")), Q.Many]);
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(ctx);
+
+			const [[tm, ty, qs], cst] = runWriter();
+
+			expect(EB.display(tm)).toStrictEqual(`match v0 with { x: x, y: y } -> x`);
+			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toStrictEqual([]);
+		});
+	});
 });

@@ -1,4 +1,4 @@
-import { PostProcessor } from "nearley";
+import { Postprocessor, PostProcessor } from "nearley";
 
 import type { Statement, Term, Variable, Row } from "./terms";
 import * as Src from "./terms";
@@ -169,6 +169,27 @@ export const Injection: PostProcessor<[Injection], Term> = ([inj]) => {
 
 	const [, term, , , pairs] = inj;
 	return pairs.reduce((tm, [label, value]) => Src.Injection(label, value, tm), term);
+};
+
+export const Match: PostProcessor<[Keyword, Whitespace, Term, Src.Alternative[]], Term> = ([, , term, alts]) => Src.Match(term, alts);
+export const Alternative: PostProcessor<[Newline, Whitespace, Bar, Whitespace, Src.Pattern, Whitespace, Arrow, Whitespace, Term], Src.Alternative> = ([
+	,
+	,
+	,
+	,
+	pat,
+	,
+	,
+	,
+	term,
+]) => Src.Alternative(pat, term);
+
+export const Pattern: PostProcessor<[Variable | Literal], Src.Pattern> = ([p]) => {
+	if (p.type === "name") {
+		return Src.Patterns.Var(p);
+	}
+
+	return Src.Patterns.Lit(p);
 };
 
 export const Block: PostProcessor<[[Statement[], SemiColon, Term?] | [Term]], Term> = ([input]) => {
