@@ -8,6 +8,8 @@ import * as Q from "@qtt/shared/modalities/multiplicity";
 
 import Grammar from "@qtt/src/grammar";
 
+import * as Log from "@qtt/shared/logging";
+
 describe("Elaboration", () => {
 	let parser: Nearley.Parser;
 	const empty: EB.Context = {
@@ -21,6 +23,8 @@ describe("Elaboration", () => {
 			Unit: [EB.Constructors.Lit(Lit.Atom("Unit")), NF.Type, []],
 		},
 	};
+
+	Log.push("test");
 
 	beforeEach(() => {
 		parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar), { keepHistory: true });

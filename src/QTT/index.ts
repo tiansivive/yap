@@ -9,6 +9,7 @@ import * as EB from "@qtt/elaboration";
 import * as NF from "@qtt/elaboration/normalization";
 import * as Lit from "@qtt/shared/literals";
 import { mkLogger } from "@qtt/shared/logging";
+import * as Log from "@qtt/shared/logging";
 
 const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar));
 
@@ -26,8 +27,8 @@ try {
 
 	// wipe log file
 	logger.open("{\n");
-	parser.grammar.start = "Expr";
-	data = parser.feed("{ }");
+	parser.grammar.start = "Ann";
+	data = parser.feed("\\x -> 1");
 	const vals = data.results.map(s => s.script[0]);
 
 	const empty: EB.Context = {
@@ -49,6 +50,7 @@ try {
 				return ctx;
 			}
 
+			Log.logger.debug("Elaborating statement: " + stmt.variable, { statement: stmt.type });
 			logger.log("entry", stmt.variable, { statement: stmt.type });
 
 			const runReader = EB.infer(stmt.value);
@@ -61,6 +63,11 @@ try {
 
 			results.push(result);
 
+			Log.logger.debug("Result", {
+				term: EB.display(tm),
+				type: NF.display(ty),
+				constraint: cst.map(EB.displayConstraint),
+			});
 			logger.log("exit", "result", {
 				term: EB.display(tm),
 				type: NF.display(ty),

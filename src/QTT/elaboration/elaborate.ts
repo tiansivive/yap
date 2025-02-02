@@ -9,7 +9,7 @@ import * as M from "./monad";
 import * as Src from "@qtt/src/index";
 import * as Lit from "@qtt/shared/literals";
 import * as Q from "@qtt/shared/modalities/multiplicity";
-import { mkLogger } from "@qtt/shared/logging";
+import * as Log from "@qtt/shared/logging";
 
 import { P } from "ts-pattern";
 
@@ -19,13 +19,12 @@ import { freshMeta } from "./supply";
 
 export type Constraint = { type: "assign"; left: NF.Value; right: NF.Value } | { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity };
 
-const { log } = mkLogger();
-
 export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 	const result = F.pipe(
 		M.ask(),
 		M.chain(ctx => {
-			log("entry", "Infer", { Context: displayContext(ctx), AST: Src.display(ast) });
+			Log.push("infer");
+			Log.logger.debug(Src.display(ast), { Context: displayContext(ctx) });
 			const { env } = ctx;
 			return match(ast)
 				.with({ type: "lit" }, ({ value }): M.Elaboration<EB.AST> => {
@@ -102,7 +101,8 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 				});
 		}),
 		M.discard(([tm, ty, us]) => {
-			log("exit", "Result", { Term: EB.display(tm), Type: NF.display(ty), Usages: us });
+			Log.logger.debug("[Result] " + Src.display(ast), { Term: EB.display(tm), Type: NF.display(ty), Usages: us });
+			Log.pop();
 			return M.of(null);
 		}),
 	);
@@ -113,7 +113,11 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 	return F.pipe(
 		M.ask(),
 		M.chain(ctx => {
-			log("entry", "Check", { Term: Src.display(term), Annotation: NF.display(type) });
+			Log.push("check");
+			Log.logger.debug("Checking", { Context: displayContext(ctx) });
+			Log.logger.debug(Src.display(term));
+			Log.logger.debug(NF.display(type));
+
 			return match([term, type])
 				.with([{ type: "hole" }, P._], () => M.of<[EB.Term, Q.Usages]>([EB.Constructors.Var(freshMeta()), []]))
 				.with(
@@ -160,7 +164,9 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				);
 		}),
 		M.listen(([[tm, us], cs]) => {
-			log("exit", "Result", { Term: EB.display(tm), Usages: us, Constraints: cs.map(displayConstraint) });
+			Log.logger.debug("[Result] " + EB.display(tm), { Usages: us, Constraints: cs.map(displayConstraint) });
+			Log.pop();
+
 			return [tm, us];
 		}),
 	);

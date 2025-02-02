@@ -4,7 +4,9 @@
 			"type": "node",
 			"request": "launch",
 			"name": "Debug Program",
-			"skipFiles": ["<node_internals>/**"],
+			"skipFiles": [
+				"<node_internals>/**"
+			],
 			"program": "lib/index.js",
 			"preLaunchTask": "build"
 		},
@@ -14,13 +16,16 @@
 			"name": "ts node",
 			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
 			"runtimeArgs": [
-				"--transpile-only"
+				"--transpile-only",
 				// if you use esm
 			],
 			"program": "${workspaceRoot}/src/QTT/index.ts",
 			"cwd": "${workspaceRoot}",
 			"internalConsoleOptions": "openOnSessionStart",
-			"skipFiles": ["<node_internals>/**", "node_modules/**"]
+			"skipFiles": [
+				"<node_internals>/**",
+				"node_modules/**"
+			]
 		}
 	],
 	"version": "0.2.0"
