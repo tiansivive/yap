@@ -34,8 +34,51 @@ export const display = (term: Src.Term): string => {
 				var: (v: Src.Variable) => v.value,
 			})(row);
 		})
+		.with({ type: "struct" }, ({ row }) => {
+			const r = R.display({
+				term: display,
+				var: (v: Src.Variable) => v.value,
+			})(row);
+			return `struct ${r}`;
+		})
+		.with({ type: "projection" }, ({ term, label }) => {
+			return `(${display(term)}).${label}`;
+		})
+		.with({ type: "injection" }, ({ label, value, term }) => {
+			return `{ ${display(term)} | ${label} = ${display(value)} }`;
+		})
+		.with({ type: "match" }, ({ scrutinee, alternatives }) => {
+			const scut = display(scrutinee);
+			const alts = alternatives.map(({ pattern, term }) => `| ${Pat.display(pattern)} -> ${display(term)}`).join("\n");
+			return `match ${scut}\n${alts}`;
+		})
 
 		.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
 };
 
 const arr = (icit: string) => (icit === "Implicit" ? "=>" : "->");
+
+export const Pat = {
+	display: (pat: Src.Pattern): string => {
+		return (
+			match(pat)
+				.with({ type: "lit" }, ({ value }) => Lit.display(value))
+				.with({ type: "var" }, ({ value }) => value.value)
+				// .with({ type: "Wildcard" }, () => "_")
+				.with({ type: "row" }, ({ row }) =>
+					R.display({
+						term: Pat.display,
+						var: (v: Src.Variable) => v.value,
+					})(row),
+				)
+				.with({ type: "struct" }, ({ row }) => {
+					const r = R.display({
+						term: Pat.display,
+						var: (v: Src.Variable) => v.value,
+					})(row);
+					return `Struct ${r}`;
+				})
+				.otherwise(() => "Pattern Display: Not implemented")
+		);
+	},
+};

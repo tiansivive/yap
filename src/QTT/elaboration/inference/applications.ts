@@ -6,11 +6,8 @@ import * as Q from "@qtt/shared/modalities/multiplicity";
 
 import * as NF from "@qtt/elaboration/normalization";
 import * as Src from "@qtt/src/index";
-import { mkLogger } from "@qtt/shared/logging";
 
-import { match, P } from "ts-pattern";
-
-const { log } = mkLogger();
+import { match } from "ts-pattern";
 
 type Application = Extract<Src.Term, { type: "application" }>;
 

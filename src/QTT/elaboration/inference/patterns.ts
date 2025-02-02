@@ -10,9 +10,6 @@ import { M } from "@qtt/elaboration";
 
 import * as Src from "@qtt/src/index";
 import * as Lit from "@qtt/shared/literals";
-import { mkLogger } from "@qtt/shared/logging";
-
-import { P } from "ts-pattern";
 
 import * as R from "@qtt/shared/rows";
 import { capitalize } from "lodash";

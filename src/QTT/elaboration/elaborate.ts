@@ -101,7 +101,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 				});
 		}),
 		M.discard(([tm, ty, us]) => {
-			Log.logger.debug("[Result] " + Src.display(ast), { Term: EB.display(tm), Type: NF.display(ty), Usages: us });
+			Log.logger.debug("[Result] " + NF.display(ty), { Term: EB.display(tm), Type: NF.display(ty), Usages: us });
 			Log.pop();
 			return M.of(null);
 		}),

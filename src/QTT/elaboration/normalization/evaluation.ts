@@ -7,12 +7,11 @@ import * as Q from "@qtt/shared/modalities/multiplicity";
 import * as EB from "@qtt/elaboration";
 import * as NF from ".";
 
-import { mkLogger } from "@qtt/shared/logging";
-
-const { log } = mkLogger();
+import * as Log from "@qtt/shared/logging";
 
 export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.Term): NF.Value {
-	log("entry", "Evaluation", { env, imports, term: EB.display(term) });
+	Log.push("eval");
+	Log.logger.debug(EB.display(term), { env, imports, term: EB.display(term) });
 	const res = match(term)
 		.with({ type: "Lit" }, ({ value }): NF.Value => NF.Constructors.Lit(value))
 		.with({ type: "Var", variable: { type: "Free" } }, ({ variable }) => {
@@ -49,7 +48,8 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 			throw new Error("Not implemented");
 		});
 
-	log("exit", "Result", { nf: NF.display(res) });
+	Log.logger.debug("[Result] " + NF.display(res));
+	Log.pop();
 
 	return res;
 }
