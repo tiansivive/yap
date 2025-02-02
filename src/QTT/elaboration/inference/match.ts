@@ -1,4 +1,6 @@
 import * as EB from "@qtt/elaboration";
+import { M } from "@qtt/elaboration";
+import { Patterns } from "@qtt/elaboration";
 import * as NF from "@qtt/elaboration/normalization";
 import * as Src from "@qtt/src/index";
 
@@ -9,7 +11,6 @@ import * as F from "fp-ts/function";
 import { match, P } from "ts-pattern";
 
 type Match = Extract<Src.Term, { type: "match" }>;
-const { M } = EB;
 export const infer = (tm: Match): EB.M.Elaboration<EB.AST> =>
 	F.pipe(
 		M.Do,
@@ -20,10 +21,7 @@ export const infer = (tm: Match): EB.M.Elaboration<EB.AST> =>
 			// TODO: Also deal with Multiplicity constraints
 			type Accumulator = [EB.Constraint[], NF.Value, Q.Usages];
 			const start: Accumulator = [[], a[1], a[2]];
-			const constraints = as.reduce(
-				([cs, a_, q]: Accumulator, [alt, ty, us]): Accumulator => [[...cs, { type: "assign", left: ty, right: a_ }], ty, us],
-				start,
-			);
+			const constraints = as.reduce(([cs, common, q], [alt, ty, us]): Accumulator => [[...cs, { type: "assign", left: ty, right: common }], ty, us], start);
 
 			return M.tell(constraints[0]);
 		}),
@@ -41,11 +39,11 @@ export const infer = (tm: Match): EB.M.Elaboration<EB.AST> =>
 
 /**
  * 
-    NOTE: This enforces that the return type of the function is the same for all branches.    
-    TODO: Allow for returning a Variant type    
-    TODO: Implement other pattern types    
-    TODO: Augment the context with the bindings from the pattern    
-    TODO: Augment the context with the scrutinee narrowed to the pattern   
+	NOTE: This enforces that the return type of the function is the same for all branches.    
+	TODO: Allow for returning a Variant type    
+	TODO: Implement other pattern types    
+	TODO: Augment the context with the bindings from the pattern    
+	TODO: Augment the context with the scrutinee narrowed to the pattern   
  */
 export const elaborate = (alts: Src.Alternative[], [scrutinee, scuty, us]: EB.AST): EB.M.Elaboration<[EB.Alternative, NF.Value, Q.Usages][]> => {
 	return match(alts)
@@ -79,28 +77,33 @@ export const elaborate = (alts: Src.Alternative[], [scrutinee, scuty, us]: EB.AS
 				);
 			});
 		})
+		.with([{ pattern: { type: "struct" } }], ([{ pattern, term }]) => {
+			return F.pipe(
+				M.Do,
+				M.let("ctx", M.ask()),
+				M.let("pat", Patterns.infer.Struct(pattern)),
+				M.chain(({ pat: [pat, ty, qs, binders], ctx }) => {
+					const ctx_ = binders.reduce((ctx, [name, va]) => EB.bind(ctx, name, [va, Q.Many]), ctx);
+					return M.local(
+						ctx_,
+						F.pipe(
+							M.tell({ type: "assign", left: ty, right: scuty }),
+							M.chain(_ => EB.infer(term)),
+							M.fmap((branch): [EB.Alternative, NF.Value, Q.Usages][] => [[EB.Constructors.Alternative(pat, branch[0]), branch[1], branch[2]]]),
+						),
+					);
+				}),
+			);
+		})
 		.with([{ pattern: P._ }, ...P.array()], ([pat, ...pats]) =>
 			F.pipe(
 				M.Do,
 				M.let("branch", elaborate([pat], [scrutinee, scuty, us])),
 				M.let("rest", elaborate(pats, [scrutinee, scuty, us])),
-				M.fmap(({ branch, rest }) => branch.concat(rest)),
+				M.fmap(({ branch, rest }) => [branch, rest].flat()),
 			),
 		)
 		.otherwise(([alt]) => {
 			throw new Error(`Pattern Matching for ${alt.pattern.type}: Not implemented`);
 		});
-
-	// M.discard(([a, ...as]) => {
-	//     // TODO: Also deal with Multiplicity constraints
-	//     type Accumulator = [EB.Constraint[], NF.Value, Q.Usages];
-	//     const start: Accumulator = [[], a[1], a[2]];
-	//     const constraints = as.reduce(([cs, a_, q]: Accumulator, [alt, ty, us]): Accumulator => [
-	//         [...cs, { type: "assign", left: ty, right: a_ }],
-	//         ty,
-	//         us,
-	//     ], start)
-
-	//     return M.tell(constraints[0])
-	// })
 };

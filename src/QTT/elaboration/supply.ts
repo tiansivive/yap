@@ -1,11 +1,20 @@
 import * as EB from "@qtt/elaboration";
 
-let count = 0;
-export const resetSupply = () => {
-	count = 0;
+const counts = {
+	meta: 0,
+	var: 0,
+};
+
+export const resetSupply = (key: keyof typeof counts) => {
+	counts[key] = 0;
 };
 
 export const freshMeta = (): EB.Variable => {
-	count++;
-	return EB.Meta(count);
+	counts.meta++;
+	return EB.Meta(counts.meta);
+};
+
+export const getVarCount = () => {
+	counts.var++;
+	return counts.var;
 };

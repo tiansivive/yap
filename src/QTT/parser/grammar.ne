@@ -178,10 +178,12 @@ Match -> "match" %ws:+ TypeExpr Alt:+ 							{% Con.Match %}
 Alt -> %NL:? %ws:? %bar %ws:? Pattern %ws:? %arrow %ws:? Ann 	{% Con.Alternative %}
 
 
-Pattern -> Identifier 		{% Con.Pattern %}
-		 | Literal 			{% Con.Pattern %}
+Pattern -> Identifier 									{% Con.Pattern %}
+		 | Literal 										{% Con.Pattern %}
+		 | Curly[ Many[PatKeyVal, %comma] RowTail:? ] 	{% Con.Pattern %}
 		 | Parens[Pattern] 	{% Con.extract %}
 
+PatKeyVal -> Identifier %ws:? %colon %ws:? Pattern 		{% Con.keyvalPat %}
 
 # ------------------------------------
 # Literals

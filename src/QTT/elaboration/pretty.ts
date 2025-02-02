@@ -42,6 +42,11 @@ export const display = (term: EB.Term): string => {
 		)
 		.with({ type: "Proj" }, ({ label, term }) => `(${display(term)}).${label}`)
 		.with({ type: "Inj" }, ({ label, value, term }) => `{ ${display(term)} | ${label} = ${display(value)} }`)
+		.with({ type: "Match" }, ({ scrutinee, alternatives }) => {
+			const scut = display(scrutinee);
+			const alts = alternatives.map(({ pattern, term }) => `| ${Pat.display(pattern)} -> ${display(term)}`).join("\n");
+			return `match ${scut}\n${alts}`;
+		})
 		.exhaustive();
 	//.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
 };
@@ -66,4 +71,29 @@ export const displayContext = (context: EB.Context): object => {
 		imports: context.imports,
 	};
 	return pretty;
+};
+
+export const Pat = {
+	display: (pat: EB.Pattern): string => {
+		return (
+			match(pat)
+				.with({ type: "Lit" }, ({ value }) => Lit.display(value))
+				.with({ type: "Var" }, ({ value }) => value)
+				// .with({ type: "Wildcard" }, () => "_")
+				.with({ type: "Row" }, ({ row }) =>
+					R.display({
+						term: Pat.display,
+						var: (v: string) => v,
+					})(row),
+				)
+				.with({ type: "Struct" }, ({ row }) => {
+					const r = R.display({
+						term: Pat.display,
+						var: (v: string) => v,
+					})(row);
+					return `Struct ${r}`;
+				})
+				.otherwise(() => "Pattern Display: Not implemented")
+		);
+	},
 };

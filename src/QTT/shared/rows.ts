@@ -33,3 +33,9 @@ export const display =
 
 		return `[ ${recurse(row)} ]`;
 	};
+
+export const Constructors = {
+	Extension: <T, V>(label: string, value: T, row: Row<T, V>): Row<T, V> => ({ type: "extension", label, value, row }),
+	Variable: <T, V>(variable: V): Row<T, V> => ({ type: "variable", variable }),
+	Empty: <T, V>(): Row<T, V> => ({ type: "empty" }),
+};

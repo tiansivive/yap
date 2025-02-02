@@ -8,3 +8,5 @@ export * from "./inference";
 
 export * as M from "./monad";
 export * as NF from "./normalization";
+
+export * as Icit from "./implicits";

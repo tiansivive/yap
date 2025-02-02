@@ -3,6 +3,7 @@ import { Postprocessor, PostProcessor } from "nearley";
 import type { Statement, Term, Variable, Row } from "./terms";
 import * as Src from "./terms";
 import * as Q from "@qtt/shared/modalities/multiplicity";
+import * as R from "@qtt/shared/rows";
 
 import { Token } from "moo";
 import { Literal } from "@qtt/shared/literals";
@@ -172,19 +173,26 @@ export const Injection: PostProcessor<[Injection], Term> = ([inj]) => {
 };
 
 export const Match: PostProcessor<[Keyword, Whitespace, Term, Src.Alternative[]], Term> = ([, , term, alts]) => Src.Match(term, alts);
-export const Alternative: PostProcessor<[Newline, Whitespace, Bar, Whitespace, Src.Pattern, Whitespace, Arrow, Whitespace, Term], Src.Alternative> = ([
-	,
-	,
-	,
-	,
-	pat,
-	,
-	,
-	,
-	term,
-]) => Src.Alternative(pat, term);
+export const Alternative: PostProcessor<[Newline, Whitespace, Bar, Whitespace, Src.Pattern, Whitespace, Arrow, Whitespace, Term], Src.Alternative> = alt => {
+	const pat = alt[4];
+	const term = alt[8];
+	return Src.Alternative(pat, term);
+};
 
-export const Pattern: PostProcessor<[Variable | Literal], Src.Pattern> = ([p]) => {
+type PatKeyVal = [string, Src.Pattern];
+export const keyvalPat = (pair: [Variable, Whitespace, Colon, Whitespace, Src.Pattern]): PatKeyVal => {
+	const [v, , , , pat] = pair;
+	return [v.value, pat];
+};
+export const Pattern: PostProcessor<[Variable | Literal | [PatKeyVal[], Variable?]], Src.Pattern> = ([p]) => {
+	type RowPat = R.Row<Src.Pattern, Variable>;
+	if (Array.isArray(p)) {
+		const [pairs, v] = p;
+		const tail: RowPat = !v ? { type: "empty" } : { type: "variable", variable: v };
+		const row = pairs.reduceRight<RowPat>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), tail);
+		return Src.Patterns.Struct(row);
+	}
+
 	if (p.type === "name") {
 		return Src.Patterns.Var(p);
 	}

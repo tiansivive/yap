@@ -26,8 +26,8 @@ describe("Elaboration", () => {
 		parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar), { keepHistory: true });
 		parser.grammar.start = "Ann";
 
-		EB.resetCount();
-		EB.resetSupply();
+		EB.resetSupply("meta");
+		EB.resetSupply("var");
 	});
 
 	afterEach(() => {
@@ -356,24 +356,112 @@ describe("Elaboration", () => {
 	});
 
 	describe("Pattern matching", () => {
-		it("should elaborate pattern matching", () => {
-			const src = `match x with | 1 -> 2 | 3 -> 4`;
+		const ctx = EB.bind(empty, "x", [NF.Constructors.Lit(Lit.Atom("Num")), Q.Many]);
+
+		it("should elaborate literal pattern matching", () => {
+			const src = `match x | 1 -> 2 | 3 -> 4`;
 			const data = parser.feed(src);
 
 			expect(data.results.length).toBe(1);
 
 			const expr = data.results[0];
-			const ctx = EB.bind(empty, "x", [NF.Constructors.Lit(Lit.Atom("Num")), Q.Many]);
 
 			const runReader = EB.infer(expr);
 			const runWriter = runReader(ctx);
 
 			const [[tm, ty, qs], cst] = runWriter();
 
-			expect(EB.display(tm)).toStrictEqual(`match v0 with { x: x, y: y } -> x`);
+			expect(EB.display(tm)).toStrictEqual(`match v0\n| 1 -> 2\n| 3 -> 4`);
 			expect(NF.display(ty)).toStrictEqual(`Num`);
-			expect(qs).toStrictEqual([]);
-			expect(cst).toStrictEqual([]);
+			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+			// 1: to unify the two branches
+			// 2: to unify each pattern with the scrutinee,
+			expect(cst.length).toBe(2 + 1);
+			cst.forEach(c => expect(EB.displayConstraint(c)).toBe("Num ~~ Num"));
+		});
+
+		it("should unify each branch's return type", () => {
+			const src = `match x | 1 -> 2 | 3 -> "hello"`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(ctx);
+
+			const [[tm, ty, qs], cst] = runWriter();
+
+			expect(EB.display(tm)).toStrictEqual(`match v0\n| 1 -> 2\n| 3 -> "hello"`);
+
+			// 1: to unify the two branches
+			// 2: to unify each pattern with the scrutinee,
+			expect(cst.length).toBe(2 + 1);
+
+			const prettyCst = cst.map(EB.displayConstraint);
+
+			// the 2 literal patterns unify with the scrutinee
+			expect(prettyCst).toContain("Num ~~ Num");
+			// the two branches unify with each other
+			expect(prettyCst).toContain("String ~~ Num");
+		});
+
+		it("should elaborate variable pattern matching", () => {
+			const src = `match x | y -> 2 | z -> 4`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(ctx);
+
+			const [[tm, ty, qs], cst] = runWriter();
+
+			expect(EB.display(tm)).toStrictEqual(`match v0\n| y -> 2\n| z -> 4`);
+			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+			// 1: to unify the two branches
+			// 2: to unify each pattern with the scrutinee,
+			expect(cst.length).toBe(2 + 1);
+
+			const prettyCst = cst.map(EB.displayConstraint);
+
+			expect(prettyCst).toContain("Num ~~ Num");
+			expect(prettyCst).toContain("?1 ~~ Num");
+			expect(prettyCst).toContain("?2 ~~ Num");
+		});
+
+		it("should elaborate struct pattern matching", () => {
+			const src = `match x | { x: 1, y: 2 } -> 11 | { z: 3, w: 4 } -> 22`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(ctx);
+
+			const [[tm, ty, qs], cst] = runWriter();
+
+			expect(EB.display(tm)).toStrictEqual(`match v0\n| Struct [ x: 1, y: 2 ] -> 11\n| Struct [ z: 3, w: 4 ] -> 22`);
+			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+			// 1: to unify the two branches
+			// 2: to unify each pattern with the scrutinee,
+			expect(cst.length).toBe(2 + 1);
+
+			const prettyCst = cst.map(EB.displayConstraint);
+
+			expect(prettyCst).toContain("Num ~~ Num");
+			expect(prettyCst).toContain("Schema [ x: Num, y: Num ] ~~ Num");
+			expect(prettyCst).toContain("Schema [ z: Num, w: Num ] ~~ Num");
 		});
 	});
 });

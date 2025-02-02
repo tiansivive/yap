@@ -25,8 +25,8 @@ export type Alternative = { pattern: Pattern; term: Term };
 export type Pattern =
 	| { type: "Var"; value: string }
 	| { type: "Lit"; value: Literal }
-	| { type: "Row"; row: R.Row<Pattern, Variable> }
-	| { type: "Struct"; row: R.Row<Pattern, Variable> };
+	| { type: "Row"; row: R.Row<Pattern, string> }
+	| { type: "Struct"; row: R.Row<Pattern, string> };
 
 export type Variable = { type: "Bound"; index: number } | { type: "Free"; name: string } | { type: "Meta"; index: number };
 
@@ -89,9 +89,10 @@ export const Constructors = {
 	Match: (scrutinee: Term, alternatives: Array<Alternative>): Term => ({ type: "Match", scrutinee, alternatives }),
 	Alternative: (pattern: Pattern, term: Term): Alternative => ({ pattern, term }),
 	Patterns: {
-		Var: (value: Variable): Pattern => ({ type: "Var", value }),
+		Var: (value: string): Pattern => ({ type: "Var", value }),
 		Lit: (value: Literal): Pattern => ({ type: "Lit", value }),
-		Row: (row: R.Row<Pattern, Variable>): Pattern => ({ type: "Row", row }),
-		Struct: (row: R.Row<Pattern, Variable>): Pattern => ({ type: "Struct", row }),
+		Row: (row: R.Row<Pattern, string>): Pattern => ({ type: "Row", row }),
+		Extension: (label: string, value: Pattern, row: R.Row<Pattern, string>): R.Row<Pattern, string> => R.Constructors.Extension(label, value, row),
+		Struct: (row: R.Row<Pattern, string>): Pattern => ({ type: "Struct", row }),
 	},
 };
