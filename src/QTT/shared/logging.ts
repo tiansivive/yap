@@ -31,13 +31,13 @@ export const logger = winston.createLogger({
 					const msg = `[${label.join(".")}] ${info.message}`;
 					info[Symbol.for("message")] = msg.replace(/\n/g, " ");
 
-					// const meta = Object.entries(info).reduce((acc: object, [key, value]) => {
-					// 	if (typeof key !== 'symbol' && key !== 'message' && key !== 'level') {
-					// 		return { ...acc, [key]: value }
-					// 	}
-					// 	return acc;
-					// }, {});
-					// info.meta = meta;
+					const meta = Object.entries(info).reduce((acc: object, [key, value]) => {
+						if (typeof key !== "symbol" && key !== "message" && key !== "level") {
+							return { ...acc, [key]: value };
+						}
+						return acc;
+					}, {});
+					info.metadata = meta;
 					return info;
 				})(),
 				winston.format.metadata(),

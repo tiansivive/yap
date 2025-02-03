@@ -49,7 +49,7 @@ export const display = (term: Src.Term): string => {
 		})
 		.with({ type: "match" }, ({ scrutinee, alternatives }) => {
 			const scut = display(scrutinee);
-			const alts = alternatives.map(({ pattern, term }) => `| ${Pat.display(pattern)} -> ${display(term)}`).join("\n");
+			const alts = alternatives.map(Alt.display).join("\n");
 			return `match ${scut}\n${alts}`;
 		})
 
@@ -57,6 +57,10 @@ export const display = (term: Src.Term): string => {
 };
 
 const arr = (icit: string) => (icit === "Implicit" ? "=>" : "->");
+
+export const Alt = {
+	display: (alt: Src.Alternative): string => `| ${Pat.display(alt.pattern)} -> ${display(alt.term)}`,
+};
 
 export const Pat = {
 	display: (pat: Src.Pattern): string => {

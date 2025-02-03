@@ -6,6 +6,8 @@ import * as EB from "@qtt/elaboration";
 import * as NF from "@qtt/elaboration/normalization";
 import * as Q from "@qtt/shared/modalities/multiplicity";
 
+import * as Log from "@qtt/shared/logging";
+
 import { M } from "@qtt/elaboration";
 
 import * as Src from "@qtt/src/index";
@@ -24,7 +26,7 @@ type Inference<T, Key> = Key extends string
 export type Result = [EB.Pattern, NF.Value, Q.Usages, Binder[]];
 type Binder = [string, NF.Value, Q.Usages];
 
-export const infer: Inference<Src.Pattern, "type"> = {
+export const infer_: Inference<Src.Pattern, "type"> = {
 	Lit: pat => {
 		const atom: Lit.Literal = match(pat.value)
 			.with({ type: "String" }, _ => Lit.Atom("String"))
@@ -38,16 +40,45 @@ export const infer: Inference<Src.Pattern, "type"> = {
 
 	Var: pat =>
 		M.fmap(M.ask(), (ctx): Result => {
+			const free = ctx.imports[pat.value.value];
+			if (free) {
+				const [tm, ty, us] = free;
+				return [EB.Constructors.Patterns.Var(pat.value.value, tm), ty, us, []];
+			}
 			const meta = EB.Constructors.Var(EB.freshMeta());
 			const va = NF.evaluate(ctx.env, ctx.imports, meta);
 			const zero = Q.noUsage(ctx.env.length);
 			const binder: Binder = [pat.value.value, va, zero];
-			return [{ type: "Var", value: pat.value.value }, va, zero, [binder]];
+			return [{ type: "Binder", value: pat.value.value }, va, zero, [binder]];
 		}),
 
 	Row: pat => M.fmap(elaborate(pat.row), ([tm, ty, qs, binders]): Result => [EB.Constructors.Patterns.Row(tm), NF.Constructors.Row(ty), qs, binders]),
 	Struct: pat => M.fmap(elaborate(pat.row), ([tm, ty, qs, binders]): Result => [EB.Constructors.Patterns.Struct(tm), NF.Constructors.Schema(ty), qs, binders]),
 };
+
+const keys = Object.keys(infer_) as (keyof typeof infer_)[];
+export const infer: Inference<Src.Pattern, "type"> = keys.reduce(
+	(acc, key) => {
+		const f = (pat: Src.Pattern) => {
+			Log.push("pattern");
+
+			Log.logger.debug(Src.Pat.display(pat));
+			const result = infer_[key](pat as any) as M.Elaboration<Result>;
+
+			return M.fmap(result, result => {
+				Log.push("result");
+				Log.logger.debug("[Type] " + NF.display(result[1]));
+				Log.logger.debug("[Binders] (" + result[3].map(([name, va]) => `${name} : ${NF.display(va)}`).join(", ") + ")");
+				Log.pop();
+				Log.pop();
+				return result;
+			});
+		};
+
+		return { ...acc, [key]: f };
+	},
+	{} as Inference<Src.Pattern, "type">,
+);
 
 type Row = R.Row<EB.Pattern, string>;
 

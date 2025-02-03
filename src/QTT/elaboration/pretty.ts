@@ -44,7 +44,7 @@ export const display = (term: EB.Term): string => {
 		.with({ type: "Inj" }, ({ label, value, term }) => `{ ${display(term)} | ${label} = ${display(value)} }`)
 		.with({ type: "Match" }, ({ scrutinee, alternatives }) => {
 			const scut = display(scrutinee);
-			const alts = alternatives.map(({ pattern, term }) => `| ${Pat.display(pattern)} -> ${display(term)}`).join("\n");
+			const alts = alternatives.map(Alt.display).join("\n");
 			return `match ${scut}\n${alts}`;
 		})
 		.exhaustive();
@@ -73,12 +73,17 @@ export const displayContext = (context: EB.Context): object => {
 	return pretty;
 };
 
+export const Alt = {
+	display: (alt: EB.Alternative): string => `| ${Pat.display(alt.pattern)} -> ${display(alt.term)}`,
+};
+
 export const Pat = {
 	display: (pat: EB.Pattern): string => {
 		return (
 			match(pat)
 				.with({ type: "Lit" }, ({ value }) => Lit.display(value))
-				.with({ type: "Var" }, ({ value }) => value)
+				.with({ type: "Var" }, ({ value }) => `Imports.${value}`)
+				.with({ type: "Binder" }, ({ value }) => value)
 				// .with({ type: "Wildcard" }, () => "_")
 				.with({ type: "Row" }, ({ row }) =>
 					R.display({

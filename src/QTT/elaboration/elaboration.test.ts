@@ -467,5 +467,63 @@ describe("Elaboration", () => {
 			expect(prettyCst).toContain("Schema [ x: Num, y: Num ] ~~ Num");
 			expect(prettyCst).toContain("Schema [ z: Num, w: Num ] ~~ Num");
 		});
+
+		it("should elaborate struct pattern matching with row polymorphism", () => {
+			const src = `match x | { x: 1, y: 2 | r } -> r | { z: 3, w: 4 | r } -> x`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(ctx);
+
+			const [[tm, ty, qs], cst] = runWriter();
+
+			expect(EB.display(tm)).toStrictEqual(`match v0\n| Struct [ x: 1, y: 2 | r ] -> v0\n| Struct [ z: 3, w: 4 | r ] -> v1`);
+			expect(NF.display(ty)).toStrictEqual(`?1`); // return type is unified, so it just picks up the type of the first branch
+			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+			// 1: to unify the two branches
+			// 2: to unify each pattern with the scrutinee,
+			expect(cst.length).toBe(2 + 1);
+
+			const prettyCst = cst.map(EB.displayConstraint);
+
+			expect(prettyCst).toContain("Num ~~ ?1"); // the return type is unified
+			// Event tho both patterns introduce a row var `r`, their scopes are different, so their types are different metavariables
+			expect(prettyCst).toContain("Schema [ x: Num, y: Num | ?1 ] ~~ Num"); // The first branch pattern is unified with the scrutinee
+			expect(prettyCst).toContain("Schema [ z: Num, w: Num | ?2 ] ~~ Num"); // The second branch pattern is unified with the scrutinee
+		});
+
+		it("should pattern match on types", () => {
+			const src = `match x | Num -> 1 | String -> "hello"`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(ctx);
+
+			const [[tm, ty, qs], cst] = runWriter();
+
+			expect(EB.display(tm)).toStrictEqual(`match v0\n| Imports.Num -> 1\n| Imports.String -> "hello"`);
+			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+			// 1: to unify the two branches
+			// 2: to unify each pattern with the scrutinee,
+			expect(cst.length).toBe(2 + 1);
+
+			const prettyCst = cst.map(EB.displayConstraint);
+
+			expect(prettyCst).toContain("Type ~~ Num");
+			expect(prettyCst.filter(c => c === "Type ~~ Num").length).toBe(2);
+
+			expect(prettyCst).toContain("String ~~ Num"); // Unifying the 2 branches
+		});
 	});
 });
