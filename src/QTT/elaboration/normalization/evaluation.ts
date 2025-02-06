@@ -11,7 +11,7 @@ import * as Log from "@qtt/shared/logging";
 
 export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.Term): NF.Value {
 	Log.push("eval");
-	Log.logger.debug(EB.display(term), { env, imports, term: EB.display(term) });
+	Log.logger.debug(EB.Display.Term(term), { env, imports, term: EB.Display.Term(term) });
 	const res = match(term)
 		.with({ type: "Lit" }, ({ value }): NF.Value => NF.Constructors.Lit(value))
 		.with({ type: "Var", variable: { type: "Free" } }, ({ variable }) => {
@@ -43,6 +43,43 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 				.otherwise(() => {
 					throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
 				});
+		})
+		.with({ type: "Row" }, ({ row }) => {
+			const _eval = (row: El.Row): NF.Row =>
+				match(row)
+					.with({ type: "empty" }, r => r)
+					.with({ type: "extension" }, ({ label, value: term, row }) => {
+						const value = evaluate(env, imports, term);
+						const rest = _eval(row);
+						return NF.Constructors.Extension(label, value, rest);
+					})
+					.with({ type: "variable" }, (r): NF.Row => {
+						if (r.variable.type === "Meta") {
+							return r;
+						}
+
+						if (r.variable.type === "Bound") {
+							const [_val] = env[r.variable.index];
+							const val = unwrapNeutral(_val);
+
+							if (val.type === "Row") {
+								return val.row;
+							}
+
+							if (val.type === "Var") {
+								return { type: "variable", variable: val.variable };
+							}
+
+							throw new Error("Evaluating a row variable that is not a row or a variable: " + NF.display(val));
+						}
+
+						throw new Error(`Eval Row Variable: Not implemented yet: ${JSON.stringify(r)}`);
+					})
+					.otherwise(() => {
+						throw new Error("Not implemented");
+					});
+
+			return NF.Constructors.Row(_eval(row));
 		})
 		.otherwise(() => {
 			throw new Error("Not implemented");

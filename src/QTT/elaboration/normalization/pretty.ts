@@ -24,7 +24,7 @@ export const display = (value: NF.Value | NF.ModalValue): string => {
 				.exhaustive();
 
 			const arr = binder.icit === "Implicit" ? "=>" : "->";
-			return `${b} ${arr} ${EB.display(closure.term)}`; // TODO: Print environment
+			return `${b} ${arr} ${EB.Display.Term(closure.term)}`; // TODO: Print environment
 		})
 		.with({ type: "App" }, ({ func, arg }) => `${display(func)} ${display(arg)}`)
 		.with({ type: "Row" }, ({ row }) =>

@@ -15,16 +15,19 @@ export const infer = (pi: Pi): EB.M.Elaboration<EB.AST> => {
 	const ann = pi.type === "pi" ? pi.annotation : pi.lhs;
 	const q = pi.type === "pi" && pi.multiplicity ? pi.multiplicity : Q.Many;
 
-	return F.pipe(
-		M.Do,
-		M.bind("ctx", M.ask),
-		M.let("ann", EB.check(ann, NF.Type)),
-		M.bind("body", ({ ann: [ann], ctx }) => {
-			const va = NF.evaluate(ctx.env, ctx.imports, ann);
-			const mva: NF.ModalValue = [va, q];
-			const ctx_ = EB.bind(ctx, v, mva);
-			return M.local(ctx_, EB.check(body, NF.Type));
-		}),
-		M.fmap(({ ann: [ann, aus], body: [body, [, ...busTail]] }) => [EB.Constructors.Pi(v, pi.icit, q, ann, body), NF.Type, Q.add(aus, busTail)]),
+	return M.local(
+		EB.muContext,
+		F.pipe(
+			M.Do,
+			M.bind("ctx", M.ask),
+			M.let("ann", EB.check(ann, NF.Type)),
+			M.bind("body", ({ ann: [ann], ctx }) => {
+				const va = NF.evaluate(ctx.env, ctx.imports, ann);
+				const mva: NF.ModalValue = [va, q];
+				const ctx_ = EB.bind(ctx, { type: "Pi", variable: v }, mva);
+				return M.local(ctx_, EB.check(body, NF.Type));
+			}),
+			M.fmap(({ ann: [ann, aus], body: [body, [, ...busTail]] }) => [EB.Constructors.Pi(v, pi.icit, q, ann, body), NF.Type, Q.add(aus, busTail)]),
+		),
 	);
 };

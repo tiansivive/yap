@@ -24,7 +24,7 @@ export const infer = (tm: Match): EB.M.Elaboration<EB.AST> =>
 			const start: Accumulator = [[], a[1], a[2]];
 			const constraints = as.reduce(([cs, common, q], [alt, ty, us]): Accumulator => [[...cs, { type: "assign", left: ty, right: common }], ty, us], start);
 
-			return M.tell(constraints[0]);
+			return M.tell("constraint", constraints[0]);
 		}),
 
 		M.fmap(({ alternatives, scrutinee }) => {
@@ -62,7 +62,7 @@ export const elaborate = (alts: Src.Alternative[], [scrutinee, scuty, us]: EB.AS
 				M.Do,
 				M.let("patty", Patterns.infer.Lit(pattern)),
 				M.let("branch", EB.infer(term)),
-				M.discard(({ patty }) => M.tell({ type: "assign", left: patty[1], right: scuty })),
+				M.discard(({ patty }) => M.tell("constraint", { type: "assign", left: patty[1], right: scuty })),
 				M.fmap(({ branch }): [EB.Alternative, NF.Value, Q.Usages][] => [
 					[EB.Constructors.Alternative({ type: "Lit", value: pattern.value }, branch[0]), branch[1], branch[2]],
 				]),
@@ -73,11 +73,11 @@ export const elaborate = (alts: Src.Alternative[], [scrutinee, scuty, us]: EB.AS
 			return F.pipe(
 				M.Do,
 				M.let("patty", Patterns.infer.Var(pattern)),
-				M.discard(({ patty }) => M.tell({ type: "assign", left: patty[1], right: scuty })),
+				M.discard(({ patty }) => M.tell("constraint", { type: "assign", left: patty[1], right: scuty })),
 				M.bind("ctx", M.ask),
 				M.chain(({ patty, ctx }) => {
 					const binders = patty[3];
-					const ctx_ = binders.reduce((ctx, [name, va]) => EB.bind(ctx, name, [va, Q.Many]), ctx);
+					const ctx_ = binders.reduce((ctx, [name, va]) => EB.bind(ctx, { type: "Lambda", variable: name }, [va, Q.Many]), ctx);
 					return M.local(
 						ctx_,
 						M.fmap(EB.infer(term), (branch): [EB.Alternative, NF.Value, Q.Usages][] => [
@@ -94,9 +94,9 @@ export const elaborate = (alts: Src.Alternative[], [scrutinee, scuty, us]: EB.AS
 				M.let("pat", Patterns.infer.Struct(pattern)),
 				M.chain(({ pat: [pat, ty, qs, binders], ctx }) =>
 					M.local(
-						ctx_ => binders.reduce((ctx, [name, va]) => EB.bind(ctx, name, [va, Q.Many]), ctx_),
+						ctx_ => binders.reduce((ctx, [name, va]) => EB.bind(ctx, { type: "Lambda", variable: name }, [va, Q.Many]), ctx_),
 						F.pipe(
-							M.tell({ type: "assign", left: ty, right: scuty }),
+							M.tell("constraint", { type: "assign", left: ty, right: scuty }),
 							M.chain(_ => EB.infer(term)),
 							M.fmap((branch): [EB.Alternative, NF.Value, Q.Usages][] => [[EB.Constructors.Alternative(pat, branch[0]), branch[1], branch[2]]]),
 						),
@@ -124,7 +124,7 @@ export const elaborate = (alts: Src.Alternative[], [scrutinee, scuty, us]: EB.AS
 	return M.fmap(result, result => {
 		if (alts.length === 1) {
 			Log.push("result");
-			Log.logger.debug(EB.Alt.display(result[0][0]));
+			Log.logger.debug(EB.Display.Alternative(result[0][0]));
 			Log.logger.debug("[Type] " + NF.display(result[0][1]));
 			Log.pop();
 		}

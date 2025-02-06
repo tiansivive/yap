@@ -20,6 +20,7 @@ const label = ["Lama"];
 
 export const push = (l: string) => label.push(l);
 export const pop = () => label.pop();
+export const peek = () => label[label.length - 1];
 
 export const logger = winston.createLogger({
 	transports: [

@@ -41,6 +41,7 @@ export const infer_: Inference<Src.Pattern, "type"> = {
 	Var: pat =>
 		M.fmap(M.ask(), (ctx): Result => {
 			const free = ctx.imports[pat.value.value];
+			// TODO:FIXME: Remove this check for now. Let's ignore matching on defined variables for now, until we answer how to match on lambdas and others
 			if (free) {
 				const [tm, ty, us] = free;
 				return [EB.Constructors.Patterns.Var(pat.value.value, tm), ty, us, []];

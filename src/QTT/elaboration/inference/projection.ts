@@ -16,7 +16,7 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 
 				const inferred = NF.Constructors.App(ctor, { type: "Row", row: NF.Constructors.Extension(label, val, r) }, "Explicit");
 
-				return M.fmap(M.tell({ type: "assign", left: inferred, right: ty }), () => inferred);
+				return M.fmap(M.tell("constraint", { type: "assign", left: inferred, right: ty }), () => inferred);
 			})
 			.with(
 				NF.Patterns.Schema,
@@ -48,7 +48,7 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 
 					const [r, v] = from(label, arg.row);
 					const inferred = NF.Constructors.App(func, NF.Constructors.Row(r), "Explicit");
-					return M.fmap(M.tell({ type: "assign", left: inferred, right: ty }), () => v);
+					return M.fmap(M.tell("constraint", { type: "assign", left: inferred, right: ty }), () => v);
 				},
 			)
 			.otherwise(_ => {

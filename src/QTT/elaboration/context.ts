@@ -1,38 +1,42 @@
 import { replicate, unsafeUpdateAt } from "fp-ts/lib/Array";
 import * as NF from "./normalization";
-import * as ED from "./index";
+import * as EB from "./index";
 import * as Q from "@qtt/shared/modalities/multiplicity";
+
+import { M } from "@qtt/elaboration";
 
 import * as Src from "@qtt/src/index";
 
 type Origin = "inserted" | "source";
 
 export type Context = {
-	types: Array<[String, Origin, NF.ModalValue]>;
+	types: Array<[Binder, Origin, NF.ModalValue]>;
 	env: NF.Env;
-	names: Array<String>;
+	names: Array<Binder>;
 	imports: Record<string, AST>;
 };
 
-export type AST = [ED.Term, NF.Value, Q.Usages];
+export type AST = [EB.Term, NF.Value, Q.Usages];
 
-export const lookup = (variable: Src.Variable, ctx: Context): AST => {
-	const _lookup = (i: number, variable: Src.Variable, types: Context["types"]): AST => {
+export type Binder = Pick<EB.Binding, "type" | "variable">;
+
+export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<AST> => {
+	const _lookup = (i: number, variable: Src.Variable, types: Context["types"]): M.Elaboration<AST> => {
 		const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
 		if (types.length === 0) {
 			const free = ctx.imports[variable.value];
 			if (free) {
 				const [, nf, us] = free;
-				return [ED.Constructors.Var({ type: "Free", name: variable.value }), nf, Q.add(us, zeros)];
+				return M.of<AST>([EB.Constructors.Var({ type: "Free", name: variable.value }), nf, Q.add(us, zeros)]);
 			}
 
 			throw new Error("Variable not found");
 		}
 
-		const [[name, origin, [nf, m]], ...rest] = types;
+		const [[binder, origin, [nf, m]], ...rest] = types;
 		const usages = unsafeUpdateAt(i, m, zeros);
-		if (name === variable.value && origin === "source") {
-			return [ED.Constructors.Var({ type: "Bound", index: i }), nf, usages];
+		if (binder.variable === variable.value && origin === "source") {
+			return M.fmap(M.tell("binder", binder), _ => [EB.Constructors.Var({ type: "Bound", index: i }), nf, usages]);
 		}
 
 		return _lookup(i + 1, variable, rest);
@@ -41,24 +45,23 @@ export const lookup = (variable: Src.Variable, ctx: Context): AST => {
 	return _lookup(0, variable, ctx.types);
 };
 
-export const bind = (context: Context, variable: string, annotation: NF.ModalValue): Context => {
+export const bind = (context: Context, binder: Binder, annotation: NF.ModalValue, origin: Origin = "source"): Context => {
 	const [, q] = annotation;
 	const { env, types } = context;
 	return {
 		...context,
 		env: [[NF.Constructors.Rigid(env.length), q], ...env],
-		types: [[variable, "source", annotation], ...types],
-		names: [variable, ...context.names],
+		types: [[binder, "source", annotation], ...types],
+		names: [binder, ...context.names],
 	};
 };
 
-export const bindInsertedImplicit = (context: Context, variable: string, annotation: NF.ModalValue): Context => {
-	const [, q] = annotation;
-	const { env, types } = context;
-	return {
-		...context,
-		env: [[NF.Constructors.Rigid(env.length), q], ...env],
-		types: [[variable, "inserted", annotation], ...types],
-		names: [variable, ...context.names],
-	};
-};
+export const muContext = (ctx: Context): Context => ({
+	...ctx,
+	types: ctx.types.map(([b, ...rest]) => {
+		if (b.type === "Let") {
+			return [{ ...b, type: "Mu" }, ...rest];
+		}
+		return [b, ...rest];
+	}),
+});

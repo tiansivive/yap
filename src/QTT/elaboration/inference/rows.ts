@@ -14,27 +14,32 @@ export const elaborate = (row: Src.Row): M.Elaboration<[EB.Row, NF.Row, Q.Usages
 	M.chain(M.ask(), ctx =>
 		match(row)
 			.with({ type: "empty" }, r => M.of<[EB.Row, NF.Row, Q.Usages]>([r, R.Constructors.Empty(), Q.noUsage(ctx.env.length)]))
-			.with({ type: "variable" }, ({ variable }) => {
-				const [tm, ty, qs] = EB.lookup(variable, ctx);
-				if (tm.type !== "Var") {
-					throw new Error("Elaborating Row Var: Not a variable");
-				}
+			.with({ type: "variable" }, ({ variable }) =>
+				F.pipe(
+					EB.lookup(variable, ctx),
+					M.chain(([tm, ty, qs]) => {
+						if (tm.type !== "Var") {
+							throw new Error("Elaborating Row Var: Not a variable");
+						}
 
-				const _ty = NF.unwrapNeutral(ty);
-				if (_ty.type !== "Row" && _ty.type !== "Var") {
-					throw new Error("Elaborating Row Var: Type not a row or var");
-				}
+						const _ty = NF.unwrapNeutral(ty);
+						if (_ty.type !== "Row" && _ty.type !== "Var") {
+							throw new Error("Elaborating Row Var: Type not a row or var");
+						}
 
-				const ast: [EB.Row, NF.Row, Q.Usages] = [
-					{ type: "variable", variable: tm.variable },
-					_ty.type === "Row" ? _ty.row : { type: "variable", variable: _ty.variable },
-					qs,
-				];
-				return F.pipe(
-					M.of(ast),
-					M.discard(_ => M.tell({ type: "assign", left: _ty, right: NF.Row })),
-				);
-			})
+						const ast: [EB.Row, NF.Row, Q.Usages] = [
+							{ type: "variable", variable: tm.variable },
+							_ty.type === "Row" ? _ty.row : { type: "variable", variable: _ty.variable },
+							qs,
+						];
+						return F.pipe(
+							M.of(ast),
+							M.discard(_ => M.tell("constraint", { type: "assign", left: _ty, right: NF.Row })),
+						);
+					}),
+				),
+			)
+
 			.with({ type: "extension" }, ({ label, value, row }) =>
 				F.pipe(
 					M.Do,

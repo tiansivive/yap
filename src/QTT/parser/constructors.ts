@@ -215,7 +215,7 @@ export const Expr: PostProcessor<[Term], Statement> = ([value]) => Src.Expressio
 export const Return: PostProcessor<[Newline, Whitespace, Keyword, Whitespace, Term, SemiColon], Term> = d => d[4];
 
 type LetDec = [Keyword, Whitespace, Variable, ...Annotation, Whitespace, Equals, Whitespace, Term];
-export const LetDec: PostProcessor<[LetDec], Statement> = ([[, , variable, ...rest]]: [LetDec]) => {
+export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]: LetDec) => {
 	if (rest.length === 4) {
 		const [, , , value] = rest;
 		return Src.Let(variable.value, value);

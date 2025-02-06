@@ -35,7 +35,7 @@ export const infer = ({ fn, arg, icit }: Application) =>
 
 					return F.pipe(
 						M.of([mnf, closure] as const),
-						M.discard(() => M.tell({ type: "assign", left: fty, right: pi })),
+						M.discard(() => M.tell("constraint", { type: "assign", left: fty, right: pi })),
 					);
 				}),
 		),

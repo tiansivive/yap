@@ -11,7 +11,7 @@ import { Constraint } from "./elaborate";
 
 import * as EB from ".";
 
-export const display = (term: EB.Term): string => {
+const display = (term: EB.Term): string => {
 	return match(term)
 		.with({ type: "Lit" }, ({ value }) => Lit.display(value))
 		.with({ type: "Var" }, ({ variable }) =>
@@ -25,11 +25,12 @@ export const display = (term: EB.Term): string => {
 					{ type: "Pi" },
 					({ icit, variable, annotation, multiplicity }) => `Π(${Icit.display(icit)}${variable}: <${Q.display(multiplicity)}> ${display(annotation)})`,
 				)
+				.with({ type: "Mu" }, ({ variable, annotation }) => `μ${variable}: ${display(annotation)}`)
 				.otherwise(() => {
 					throw new Error("Display Term Binder: Not implemented");
 				});
 
-			const arr = binding.type !== "Let" && binding.icit === "Implicit" ? "=>" : "->";
+			const arr = binding.type !== "Let" && binding.type !== "Mu" && binding.icit === "Implicit" ? "=>" : "->";
 			return `${b} ${arr} ${display(body)}`;
 		})
 		.with({ type: "App" }, ({ icit, func, arg }) => `${display(func)} ${Icit.display(icit)}${display(arg)}`)
@@ -51,7 +52,7 @@ export const display = (term: EB.Term): string => {
 	//.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
 };
 
-export const displayConstraint = (constraint: Constraint): string => {
+const displayConstraint = (constraint: Constraint): string => {
 	if (constraint.type === "assign") {
 		return `${NF.display(constraint.left)} ~~ ${NF.display(constraint.right)}`;
 	}
@@ -63,21 +64,30 @@ export const displayConstraint = (constraint: Constraint): string => {
 	return "Unknown Constraint";
 };
 
-export const displayContext = (context: EB.Context): object => {
+const displayContext = (context: EB.Context): object => {
 	const pretty = {
 		env: context.env.map(NF.display),
-		types: context.types.map(([name, origin, mv]) => `${name} (${origin}): ${NF.display(mv)}`),
+		types: context.types.map(([binder, origin, mv]) => `${displayBinder(binder.type)} ${binder.variable} (${origin}): ${NF.display(mv)}`),
 		names: context.names,
 		imports: context.imports,
 	};
 	return pretty;
 };
 
-export const Alt = {
+const displayBinder = (binder: EB.Binder["type"]): string => {
+	return match(binder)
+		.with("Let", () => "def")
+		.with("Lambda", () => "λ")
+		.with("Pi", () => "Π")
+		.with("Mu", () => "μ")
+		.otherwise(() => "Binder Display: Not implemented");
+};
+
+const Alt = {
 	display: (alt: EB.Alternative): string => `| ${Pat.display(alt.pattern)} -> ${display(alt.term)}`,
 };
 
-export const Pat = {
+const Pat = {
 	display: (pat: EB.Pattern): string => {
 		return (
 			match(pat)
@@ -101,4 +111,22 @@ export const Pat = {
 				.otherwise(() => "Pattern Display: Not implemented")
 		);
 	},
+};
+
+const Stmt = {
+	display: (stmt: EB.Statement): string => {
+		return match(stmt)
+			.with({ type: "Expression" }, ({ value }) => display(value))
+			.with({ type: "Let" }, ({ variable, value, annotation }) => `let ${variable}: ${display(annotation)} = ${display(value)}`)
+			.otherwise(() => "Statement Display: Not implemented");
+	},
+};
+
+export const Display = {
+	Term: display,
+	Constraint: displayConstraint,
+	Context: displayContext,
+	Alternative: Alt.display,
+	Pattern: Pat.display,
+	Statement: Stmt.display,
 };

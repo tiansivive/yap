@@ -27,6 +27,7 @@ export type Row = R.Row<Term, Variable>;
 export type Binding =
 	| { type: "Let"; variable: string; value: Term; annotation: Term }
 	| { type: "Lambda"; variable: string; icit: Implicitness }
+	| { type: "Mu"; variable: string; annotation: Term }
 	| {
 			type: "Pi";
 			variable: string;
@@ -45,6 +46,8 @@ export type Pattern =
 
 type Spine = Array<"Bound" | "Defined">;
 
+export type Statement = { type: "Expression"; value: Term } | { type: "Let"; variable: string; value: Term; annotation: Term };
+
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
 export const Free = (name: string): Variable => ({ type: "Free", name });
 export const Meta = (index: number): Variable => ({ type: "Meta", index });
@@ -58,6 +61,11 @@ export const Constructors = {
 	Pi: (variable: string, icit: Implicitness, multiplicity: Q.Multiplicity, annotation: Term, body: Term): Term => ({
 		type: "Abs",
 		binding: { type: "Pi" as const, variable, icit, annotation, multiplicity },
+		body,
+	}),
+	Mu: (variable: string, annotation: Term, body: Term): Term => ({
+		type: "Abs",
+		binding: { type: "Mu" as const, variable, annotation },
 		body,
 	}),
 	Var: (variable: Variable): Term => ({
@@ -96,5 +104,9 @@ export const Constructors = {
 		Row: (row: R.Row<Pattern, string>): Pattern => ({ type: "Row", row }),
 		Extension: (label: string, value: Pattern, row: R.Row<Pattern, string>): R.Row<Pattern, string> => R.Constructors.Extension(label, value, row),
 		Struct: (row: R.Row<Pattern, string>): Pattern => ({ type: "Struct", row }),
+	},
+	Stmt: {
+		Let: (variable: string, value: Term, annotation: Term): Statement => ({ type: "Let", variable, value, annotation }),
+		Expr: (value: Term): Statement => ({ type: "Expression", value }),
 	},
 };

@@ -20,13 +20,13 @@ export const infer = (lam: Lambda): EB.M.Elaboration<EB.AST> =>
 		M.chain(({ ann: [tm], ctx }) => {
 			const va = NF.evaluate(ctx.env, ctx.imports, tm);
 			const mva: NF.ModalValue = [va, lam.multiplicity ? lam.multiplicity : Q.Many];
-			const ctx_ = EB.bind(ctx, lam.variable, mva);
+			const ctx_ = EB.bind(ctx, { type: "Lambda", variable: lam.variable }, mva);
 			return M.local(
 				ctx_,
 				F.pipe(
 					EB.infer(lam.body),
 					M.chain(EB.Icit.insert),
-					M.discard(([, , [vu]]) => M.tell({ type: "usage", expected: mva[1], computed: vu })),
+					M.discard(([, , [vu]]) => M.tell("constraint", { type: "usage", expected: mva[1], computed: vu })),
 					M.fmap(([bTerm, bType, [vu, ...us]]): EB.AST => {
 						const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm);
 						const pi = NF.Constructors.Pi(lam.variable, lam.icit, mva, NF.closeVal(ctx, bType));

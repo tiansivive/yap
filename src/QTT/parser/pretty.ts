@@ -41,6 +41,13 @@ export const display = (term: Src.Term): string => {
 			})(row);
 			return `struct ${r}`;
 		})
+		.with({ type: "variant" }, ({ row }) => {
+			const r = R.display({
+				term: display,
+				var: (v: Src.Variable) => v.value,
+			})(row);
+			return `variant ${r}`;
+		})
 		.with({ type: "projection" }, ({ term, label }) => {
 			return `(${display(term)}).${label}`;
 		})
@@ -84,5 +91,18 @@ export const Pat = {
 				})
 				.otherwise(() => "Pattern Display: Not implemented")
 		);
+	},
+};
+
+export const Stmt = {
+	display: (stmt: Src.Statement): string => {
+		return match(stmt)
+			.with({ type: "expression" }, ({ value }) => display(value))
+			.with({ type: "let" }, ({ variable, annotation, value, multiplicity }) => {
+				const ann = annotation ? `: ${display(annotation)}` : "";
+				const mul = multiplicity ? `${multiplicity} ` : "";
+				return `let ${mul}${variable}${ann} = ${display(value)}`;
+			})
+			.otherwise(() => "Statement Display: Not implemented");
 	},
 };

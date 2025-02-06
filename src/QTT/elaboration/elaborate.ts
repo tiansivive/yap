@@ -13,18 +13,59 @@ import * as Log from "@qtt/shared/logging";
 
 import { P } from "ts-pattern";
 
-import { displayConstraint, displayContext } from "./pretty";
-
 import { freshMeta } from "./supply";
 
-export type Constraint = { type: "assign"; left: NF.Value; right: NF.Value } | { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity };
+export type Constraint =
+	| { type: "assign"; left: NF.Value; right: NF.Value; lvl?: number }
+	| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity };
 
+type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
+export const Stmt = {
+	infer: (stmt: Src.Statement): M.Elaboration<ElaboratedStmt> => {
+		Log.push("stmt");
+		Log.logger.debug(Src.Stmt.display(stmt));
+		return match(stmt)
+			.with({ type: "let" }, letdec => {
+				return F.pipe(
+					M.Do,
+					M.let("ctx", M.ask()),
+					M.bind("ann", ({ ctx }) =>
+						letdec.annotation ? check(letdec.annotation, NF.Type) : M.of([EB.Constructors.Var(freshMeta()), Q.noUsage(ctx.env.length)] as const),
+					),
+					M.bind("inferred", ({ ctx, ann }) => {
+						const va = NF.evaluate(ctx.env, ctx.imports, ann[0]);
+						const q = letdec.multiplicity || Q.Many;
+						const ctx_ = EB.bind(ctx, { type: "Let", variable: letdec.variable }, [va, q]);
+						return M.local(
+							ctx_,
+							F.pipe(
+								infer(letdec.value),
+								M.discard(inferred => M.tell("constraint", { type: "assign", left: va, right: inferred[1] })),
+							),
+						);
+					}),
+					M.listen(([{ inferred, ann }, { binders }]): ElaboratedStmt => {
+						// TODO: This binders array is not overly useful for now
+						// In theory, all we need is to emit a flag signalling the letdec var has been used
+						const tm = binders.find(b => b.type === "Mu" && b.variable === letdec.variable) ? EB.Constructors.Mu("x", ann[0], inferred[0]) : inferred[0];
+
+						const def = EB.Constructors.Stmt.Let(letdec.variable, tm, ann[0]);
+						return [def, inferred[1], inferred[2]];
+					}),
+				);
+			})
+			.with({ type: "expression" }, ({ value }) => M.fmap(infer(value), (expr): ElaboratedStmt => [EB.Constructors.Stmt.Expr(expr[0]), expr[1], expr[2]]))
+			.otherwise(() => {
+				throw new Error("Not implemented yet");
+			});
+	},
+};
 export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 	const result = F.pipe(
 		M.ask(),
 		M.chain(ctx => {
 			Log.push("infer");
-			Log.logger.debug(Src.display(ast), { Context: displayContext(ctx) });
+			Log.logger.debug(Src.display(ast), { Context: EB.Display.Context(ctx) });
 			const { env } = ctx;
 			return match(ast)
 				.with({ type: "lit" }, ({ value }): M.Elaboration<EB.AST> => {
@@ -45,21 +86,30 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 					return M.of<EB.AST>([meta, ty, Q.noUsage(ctx.env.length)]);
 				})
 
-				.with({ type: "var" }, ({ variable }) => M.of<EB.AST>(EB.lookup(variable, ctx)))
+				.with({ type: "var" }, ({ variable }) => EB.lookup(variable, ctx))
 
 				.with({ type: "row" }, ({ row }) =>
-					F.pipe(
-						EB.Rows.elaborate(row),
-						M.fmap(([row, ty, qs]): EB.AST => [EB.Constructors.Row(row), NF.Row, qs]), // QUESTION:? can we do anything to the ty row? Should we?
+					M.local(
+						EB.muContext,
+						// QUESTION:? can we do anything to the ty row? Should we?
+						M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Row(row), NF.Row, qs]),
 					),
 				)
 				.with({ type: "struct" }, ({ row }) =>
 					M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Struct(row), NF.Constructors.Schema(ty), qs]),
 				)
-				.with({ type: "schema" }, ({ row }) => M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Schema(row), NF.Type, qs]))
+				.with({ type: "schema" }, ({ row }) =>
+					M.local(
+						EB.muContext,
+						M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Schema(row), NF.Type, qs]),
+					),
+				)
 
 				.with({ type: "variant" }, ({ row }) =>
-					M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Variant(row), NF.Constructors.Variant(ty), qs]),
+					M.local(
+						EB.muContext,
+						M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Variant(row), NF.Type, qs]),
+					),
 				)
 
 				.with({ type: "projection" }, ({ term, label }) =>
@@ -101,7 +151,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 				});
 		}),
 		M.discard(([tm, ty, us]) => {
-			Log.logger.debug("[Result] " + NF.display(ty), { Term: EB.display(tm), Type: NF.display(ty), Usages: us });
+			Log.logger.debug("[Result] " + NF.display(ty), { Term: EB.Display.Term(tm), Type: NF.display(ty), Usages: us });
 			Log.pop();
 			return M.of(null);
 		}),
@@ -114,7 +164,7 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 		M.ask(),
 		M.chain(ctx => {
 			Log.push("check");
-			Log.logger.debug("Checking", { Context: displayContext(ctx) });
+			Log.logger.debug("Checking", { Context: EB.Display.Context(ctx) });
 			Log.logger.debug(Src.display(term));
 			Log.logger.debug(NF.display(type));
 
@@ -126,12 +176,12 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					([tm, ty]) => {
 						const bType = NF.apply(ctx.imports, ty.closure, NF.Constructors.Rigid(ctx.env.length));
 
-						const ctx_ = EB.bind(ctx, tm.variable, ty.binder.annotation);
+						const ctx_ = EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation);
 						return M.local(
 							ctx_,
 							F.pipe(
 								check(tm.body, bType),
-								M.discard(([, [vu]]) => M.tell({ type: "usage", expected: ty.binder.annotation[1], computed: vu })),
+								M.discard(([, [vu]]) => M.tell("constraint", { type: "usage", expected: ty.binder.annotation[1], computed: vu })),
 								M.fmap(([body, [, ...us]]): [EB.Term, Q.Usages] => [EB.Constructors.Lambda(tm.variable, tm.icit, body), us]),
 							),
 						);
@@ -142,12 +192,12 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					([_, ty]) => ty.binder.icit === "Implicit",
 					([tm, ty]) => {
 						const bType = NF.apply(ctx.imports, ty.closure, NF.Constructors.Rigid(ctx.env.length));
-						const ctx_ = EB.bindInsertedImplicit(ctx, ty.binder.variable, ty.binder.annotation);
+						const ctx_ = EB.bind(ctx, { type: "Lambda", variable: ty.binder.variable }, ty.binder.annotation, "inserted");
 						return M.local(
 							ctx_,
 							F.pipe(
 								check(tm, bType),
-								M.discard(([, [vu]]) => M.tell({ type: "usage", expected: ty.binder.annotation[1], computed: vu })),
+								M.discard(([, [vu]]) => M.tell("constraint", { type: "usage", expected: ty.binder.annotation[1], computed: vu })),
 								M.fmap(([tm, [, ...us]]): [EB.Term, Q.Usages] => [EB.Constructors.Lambda(ty.binder.variable, "Implicit", tm), us]),
 							),
 						);
@@ -158,13 +208,13 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					F.pipe(
 						infer(tm),
 						M.chain(EB.Icit.insert),
-						M.discard(([, inferred]) => M.tell({ type: "assign", left: inferred, right: type })),
+						M.discard(([, inferred]) => M.tell("constraint", { type: "assign", left: inferred, right: type })),
 						M.fmap(([tm, , us]): [EB.Term, Q.Usages] => [tm, us]),
 					),
 				);
 		}),
-		M.listen(([[tm, us], cs]) => {
-			Log.logger.debug("[Result] " + EB.display(tm), { Usages: us, Constraints: cs.map(displayConstraint) });
+		M.listen(([[tm, us], { constraints }]) => {
+			Log.logger.debug("[Result] " + EB.Display.Term(tm), { Usages: us, Constraints: constraints.map(EB.Display.Constraint) });
 			Log.pop();
 
 			return [tm, us];

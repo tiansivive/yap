@@ -14,3 +14,33 @@ let g = \xs -> sort xs
 
 - Zonk it!
 -- uh-oh, g doesnt know about ?3!!!
+
+
+
+
+// nat = µt. 0 | t + 1
+let nat = | 0 | nat + 1
+
+let n: nat = 0 // fold (project.l 0)
+let n: nat = 1 // fold (project.r 0)
+
+// list = µ(t: Type -> Type). (a:Type) -> | [] | [a, ...t a]
+let list = \(a:Type) -> [] | [a, ...list a] 
+
+//  rec = fix (\f -> match x | 0 -> 0 | y -> y + f (x - 1))
+let rec = \x -> match x | 0 -> 0 | y -> y + rec (x - 1)
+
+
+let what = [0, what]
+
+
+
+let nat = \x -> loop x
+    | unit -> 0
+    | y  -> repeat y + 1 
+
+let list = \a -> [a, ...list a]
+
+
+//  mkPairAsList : (a:Type) => (x: a) -> List a
+let mkPairAsList = \x -> [x,x]

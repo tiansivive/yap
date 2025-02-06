@@ -64,14 +64,14 @@ try {
 			results.push(result);
 
 			Log.logger.debug("Result", {
-				term: EB.display(tm),
+				term: EB.Display.Term(tm),
 				type: NF.display(ty),
-				constraint: cst.map(EB.displayConstraint),
+				constraint: cst.map(EB.Display.Constraint),
 			});
 			logger.log("exit", "result", {
-				term: EB.display(tm),
+				term: EB.Display.Term(tm),
 				type: NF.display(ty),
-				constraint: cst.map(EB.displayConstraint),
+				constraint: cst.map(EB.Display.Constraint),
 			});
 
 			return {
@@ -86,14 +86,14 @@ try {
 
 	results.forEach(([[tm, ty, us], cst]) => {
 		console.log("\n\n--------------------");
-		console.log("Term:\t", EB.display(tm));
+		console.log("Term:\t", EB.Display.Term(tm));
 
 		console.log("--------------------");
 		console.log("Type:\t", NF.display(ty));
 
 		console.log("--------------------");
 		console.log("Constraints:");
-		const cs = cst.map(c => "  " + EB.displayConstraint(c)).join("\n");
+		const cs = cst.map(c => "  " + EB.Display.Constraint(c)).join("\n");
 		console.log(cs);
 	});
 

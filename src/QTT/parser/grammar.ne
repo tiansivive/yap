@@ -73,36 +73,42 @@ Ann -> Ann %ws:? %colon %ws:? TypeExpr 							{% Con.Annotation %}
 	 | TypeExpr 												{% id %}
 
 TypeExpr -> Pi 				{% id %}
+		  | Mu 				{% id %}
 	  	  | Variant 		{% id %} 
 		  | Schema 			{% id %}
 		  | Row 			{% id %}	
-	  	  | App 			{% id %}
-
-App -> App %ws Expr 				{% Con.Application %}
-	 | App %ws:? %op %ws:? Expr 	{% Con.Operation %}
-     | Expr 						{% id %}
+	  	  | Expr 			{% id %}
 
 Expr -> Lambda		{% id %}
       | Match 		{% id %}
-	  | Projection 	{% id %}
-	  | Injection 	{% id %}
-	  | Atom 		{% id %}
+	  | Block 		{% id %}
+	  | App 		{% id %}
+
+App -> App %ws Expr 				{% Con.Application %}
+	 | App %ws:? %op %ws:? Expr 	{% Con.Operation %}
+     | Atom 						{% id %}
 
 Atom -> Identifier 		{% Con.Var %} 
+	  | %hole 			{% Con.Hole %}
+	  | Projection 		{% id %}
+	  | Injection 		{% id %}
 	  | Literal 		{% Con.Lit %}
-	  | Block 		    {% id %}
 	  | Struct 			{% id %}
       | Tuple 			{% id %}
 	  | List 			{% id %}
-	  | %hole 			{% Con.Hole %}
 	  | Parens[Ann]  	{% Con.extract %}
 
+# ------------------------------------
+# RECURSIVE TYPES
+# ------------------------------------
+
+Mu -> "μ" %ws:? Identifier %ws:? %arrow %ws:? TypeExpr 		{% Con.Mu %}
 
 # ------------------------------------
 # FUNCTIONS
 # ------------------------------------
-Lambda -> %backslash Param %ws %arrow %ws Ann 				{% Con.Lambda %}
-		| %backslash %hash Param %ws %fatArrow %ws Ann 	{% Con.Lambda %}
+Lambda -> %backslash Param %ws %arrow %ws TypeExpr 				{% Con.Lambda %}
+		| %backslash %hash Param %ws %fatArrow %ws TypeExpr 	{% Con.Lambda %}
 		
 Param -> Identifier 													{% Con.Param %}
 	   | Identifier %ws:? %colon %ws:? TypeExpr 							{% Con.Param %}
@@ -110,11 +116,12 @@ Param -> Identifier 													{% Con.Param %}
 	   | Parens[Param] 													{% Con.extract %}
 		 
 
-Pi -> Expr %ws:? %arrow %ws PiTail 		{% Con.Pi("Explicit") %}
-	| Expr %ws:? %fatArrow %ws PiTail 	{% Con.Pi("Implicit") %}
+Pi -> TypeExpr %ws:? %arrow %ws PiTail 		{% Con.Pi("Explicit") %}
+	| TypeExpr %ws:? %fatArrow %ws PiTail 	{% Con.Pi("Implicit") %}
 
 PiTail -> Pi {% id %}
 		| Atom {% id %}
+
 
 # ------------------------------------
 # ROW TERMS
@@ -137,14 +144,14 @@ Schema -> Curly[ Many[SchemaPair, %comma] RowTail:? ] 	{% Con.schema %}
 Variant -> %bar Many[KeyVal, %bar]						{% Con.Variant %}
 
 # Fields
-KeyVal -> Identifier %ws:? %colon %ws:? Ann 				{% Con.keyval %}
-SchemaPair -> Identifier %ws:? %colon %colon %ws:? Ann 		{% Con.keyval %}
-Assignment -> Identifier %ws:? %equals %ws:? Ann 			{% Con.keyval %}
+KeyVal -> Identifier %ws:? %colon %ws:? TypeExpr 				{% Con.keyval %}
+SchemaPair -> Identifier %ws:? %colon %colon %ws:? TypeExpr 		{% Con.keyval %}
+Assignment -> Identifier %ws:? %equals %ws:? TypeExpr 			{% Con.keyval %}
 
-Projection -> Ann %dot Identifier 									{% Con.Projection %}
+Projection -> TypeExpr %dot Identifier 									{% Con.Projection %}
 			| %dot Identifier 										{% Con.Projection %}
 
-Injection -> Curly[ %ws:? Ann %ws:? %bar Many[Assignment, %comma] ] 	{% Con.Injection %}
+Injection -> Curly[ %ws:? TypeExpr %ws:? %bar Many[Assignment, %comma] ] 	{% Con.Injection %}
 		   | Curly[ %ws:? %bar Many[Assignment, %comma] ] 				{% Con.Injection %}
 
 
@@ -159,8 +166,8 @@ Statement -> Ann 			{% Con.Expr %}
 
 Return    -> %NL:? %ws:? "return" %ws:+ Ann %semicolon 					{% Con.Return %}
 
-Letdec -> "let" %ws Identifier %ws:? %equals %ws:? Ann 									{% Con.LetDec %}
-		| "let" %ws Identifier %ws:? %colon %ws:? TypeExpr %ws:? %equals %ws:? TypeExpr {% Con.LetDec %}
+Letdec -> "let" %ws Identifier %ws:? %equals %ws:? Ann 										{% Con.LetDec %}
+		| "let" %ws Identifier %ws:? %colon %ws:? TypeExpr %ws:? %equals %ws:? TypeExpr 	{% Con.LetDec %}
 
 
 # VARIABLES
@@ -175,7 +182,7 @@ Quantity -> "1" {% () => Q.One %}
 # Pattern Matching
 # ------------------------------------
 Match -> "match" %ws:+ TypeExpr Alt:+ 							{% Con.Match %} 
-Alt -> %NL:? %ws:? %bar %ws:? Pattern %ws:? %arrow %ws:? Ann 	{% Con.Alternative %}
+Alt -> %NL:? %ws:? %bar %ws:? Pattern %ws:? %arrow %ws:? TypeExpr 	{% Con.Alternative %}
 
 
 Pattern -> Identifier 									{% Con.Pattern %}

@@ -3,6 +3,7 @@ export * from "./context";
 export * from "./pretty";
 export * from "./term";
 export * from "./supply";
+export * from "./unification";
 
 export * from "./inference";
 

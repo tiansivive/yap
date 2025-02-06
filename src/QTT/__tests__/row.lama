@@ -8,3 +8,4 @@ let poly
 let val
     : poly { bar: String }
     = { foo: 1, bar: "one" }
+

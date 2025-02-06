@@ -13,8 +13,8 @@ export function insert(node: EB.AST): EB.M.Elaboration<EB.AST> {
 		M.ask(),
 		M.chain(ctx => {
 			Log.push("insert");
-			Log.logger.debug("[Term] " + EB.display(term), { Context: EB.displayContext(ctx) });
-			Log.logger.debug("[Type] " + NF.display(ty), { Context: EB.displayContext(ctx) });
+			Log.logger.debug("[Term] " + EB.Display.Term(term), { Context: EB.Display.Context(ctx) });
+			Log.logger.debug("[Type] " + NF.display(ty), { Context: EB.Display.Context(ctx) });
 			return match(node)
 				.with([{ type: "Abs", binding: { type: "Lambda", icit: "Implicit" } }, P._, P._], () => M.of<EB.AST>(node))
 				.with([P._, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._], ([, pi]) => {
@@ -31,7 +31,7 @@ export function insert(node: EB.AST): EB.M.Elaboration<EB.AST> {
 		}),
 		M.discard(([tm, ty]) => {
 			Log.push("result");
-			Log.logger.debug("[Term] " + EB.display(tm));
+			Log.logger.debug("[Term] " + EB.Display.Term(tm));
 			Log.logger.debug("[Type] " + NF.display(ty));
 			Log.pop();
 			Log.pop();

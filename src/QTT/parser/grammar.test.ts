@@ -384,5 +384,69 @@ describe("Grammar", () => {
 				expect(data.results[0]).toStrictEqual(undefined);
 			});
 		});
+
+		describe("Statements", () => {
+			beforeEach(() => {
+				parser.grammar.start = "Statement";
+			});
+			it("should parse let decs:\t\tlet x = 1", () => {
+				const src = `let x = 1`;
+				const data = parser.feed(src);
+
+				const x = "x";
+				const one = Ctor.num(1);
+
+				const letDec = Ctor.Let(x, one);
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(letDec);
+			});
+		});
+
+		describe("Precedence", () => {
+			it("should parse a lambda with an application:\t\\x -> f x", () => {
+				const src = `\\x -> f x`;
+				const data = parser.feed(src);
+
+				const x = "x";
+				const f = Ctor.Var({ type: "name", value: "f" });
+				const app = Ctor.Application(f, Ctor.Var({ type: "name", value: x }));
+
+				const lambda = Ctor.Lambda("Explicit", x, app);
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(lambda);
+			});
+
+			it("should parse a projection with an application:\tx.y z", () => {
+				const src = `x.y z`;
+				const data = parser.feed(src);
+
+				const x = Ctor.Var({ type: "name", value: "x" });
+				const xy = Ctor.Projection("y", x);
+				const z = Ctor.Var({ type: "name", value: "z" });
+
+				const app = Ctor.Application(xy, z, "Explicit");
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(app);
+			});
+
+			it("should parse a lambda with an annotation:\t\\x -> y : Int -> Int", () => {
+				const src = `\\x -> y : Int -> Int`;
+				const data = parser.feed(src);
+
+				const x = "x";
+				const y = Ctor.Var({ type: "name", value: "y" });
+				const int = Ctor.Var({ type: "name", value: "Int" });
+				const arrow = Ctor.Arrow(int, int, "Explicit");
+
+				const lambda = Ctor.Lambda("Explicit", x, y);
+				const ann = Ctor.Annotation(lambda, arrow);
+
+				expect(data.results.length).toBe(1);
+				expect(data.results[0]).toStrictEqual(ann);
+			});
+		});
 	});
 });

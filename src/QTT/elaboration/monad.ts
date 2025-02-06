@@ -9,11 +9,19 @@ import * as W from "fp-ts/lib/Writer";
 import * as EB from ".";
 
 export type Elaboration<T> = Reader<EB.Context, Emitter<T>>;
-type Emitter<T> = Writer<EB.Constraint[], T>;
+type Emitter<T> = Writer<Accumulator, T>;
 
-const monoid: Monoid<EB.Constraint[]> = {
-	concat: (x, y) => x.concat(y),
-	empty: [],
+type Accumulator = {
+	constraints: EB.Constraint[];
+	binders: EB.Binder[];
+};
+
+const monoid: Monoid<Accumulator> = {
+	concat: (x, y) => ({
+		constraints: x.constraints.concat(y.constraints),
+		binders: x.binders.concat(y.binders),
+	}),
+	empty: { constraints: [], binders: [] },
 };
 
 const URI = "Elaboration";
@@ -91,9 +99,17 @@ export { _let as let };
 
 export const ask = F.flow(R.ask, liftR<EB.Context>);
 export const discard = <A, B>(f: (a: A) => Elaboration<B>) => chain<A, A>(val => fmap(f(val), () => val));
-export const tell = (constraint: EB.Constraint | EB.Constraint[]) => liftW<void>(W.tell(Array.isArray(constraint) ? constraint : [constraint]));
 
-export const listen: <A, B>(f: (aw: [A, EB.Constraint[]]) => B) => (rw: Elaboration<A>) => Elaboration<B> = f => rw => F.pipe(rw, R.map(W.listen), fmap(f));
+type Channel = "constraint" | "binder";
+type Payload<K extends Channel> = K extends "constraint" ? EB.Constraint : EB.Binder;
+export const tell = <K extends Channel>(channel: K, payload: Payload<K> | Payload<K>[]) => {
+	const many = Array.isArray(payload) ? payload : [payload];
+	const acc: Accumulator = channel === "constraint" ? { constraints: many as EB.Constraint[], binders: [] } : { constraints: [], binders: many as EB.Binder[] };
+
+	return liftW<void>(W.tell(acc));
+};
+
+export const listen: <A, B>(f: (aw: [A, Accumulator]) => B) => (rw: Elaboration<A>) => Elaboration<B> = f => rw => F.pipe(rw, R.map(W.listen), fmap(f));
 
 type Local = EB.Context | ((ctx: EB.Context) => EB.Context);
 export const local: <A>(f: Local, rw: Elaboration<A>) => Elaboration<A> = (f, rw) => {

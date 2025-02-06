@@ -14,7 +14,7 @@ export const inject = (label: string, value: EB.AST, tm: EB.AST): M.Elaboration<
 
 				const inferred = NF.Constructors.App(ctor, NF.Constructors.Row(r), "Explicit");
 				const extended = NF.Constructors.App(ctor, NF.Constructors.Row(NF.Constructors.Extension(label, value[1], r)), "Explicit");
-				return M.fmap(M.tell({ type: "assign", left: inferred, right: tm[1] }), () => extended);
+				return M.fmap(M.tell("constraint", { type: "assign", left: inferred, right: tm[1] }), () => extended);
 			})
 			.with(
 				{ type: "App", func: { type: "Lit", value: { type: "Atom" } }, arg: { type: "Row" } },
