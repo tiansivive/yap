@@ -18,7 +18,10 @@ export type Value =
 
 export type Row = R.Row<Value, Variable>;
 
-export type Binder = { type: "Pi"; variable: string; annotation: ModalValue; icit: Implicitness } | { type: "Lambda"; variable: string; icit: Implicitness };
+export type Binder =
+	| { type: "Pi"; variable: string; annotation: ModalValue; icit: Implicitness }
+	| { type: "Lambda"; variable: string; icit: Implicitness }
+	| { type: "Mu"; variable: string; annotation: ModalValue };
 
 export type Variable = { type: "Bound"; index: number } | { type: "Meta"; index: number } | { type: "Free"; name: string };
 
@@ -31,12 +34,17 @@ export type Env = ModalValue[];
 
 export const Constructors = {
 	Var: (variable: Variable): Value => ({ type: "Var", variable }),
-	Pi: <A, B>(variable: string, icit: Implicitness, annotation: A, closure: B) => ({
+	Pi: (variable: string, icit: Implicitness, annotation: ModalValue, closure: Closure) => ({
 		type: "Abs" as const,
 		binder: { type: "Pi" as const, variable, icit, annotation },
 		closure,
 	}),
-	Lambda: <A>(variable: string, icit: Implicitness, closure: A) => ({
+	Mu: (variable: string, annotation: ModalValue, closure: Closure) => ({
+		type: "Abs" as const,
+		binder: { type: "Mu" as const, variable, annotation },
+		closure,
+	}),
+	Lambda: (variable: string, icit: Implicitness, closure: Closure) => ({
 		type: "Abs" as const,
 		binder: { type: "Lambda" as const, variable, icit },
 		closure,
@@ -71,13 +79,6 @@ export const Constructors = {
 	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),
 };
 
-export const Patterns = {
-	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } } as const,
-	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } } as const,
-	Type: { type: "Lit", value: { type: "Atom", value: "Type" } } as const,
-	Row: { type: "Lit", value: { type: "Atom", value: "Row" } } as const,
-};
-
 export const Type: Value = {
 	type: "Lit",
 	value: { type: "Atom", value: "Type" },
@@ -86,4 +87,25 @@ export const Type: Value = {
 export const Row: Value = {
 	type: "Lit",
 	value: { type: "Atom", value: "Row" },
+};
+
+export const Patterns = {
+	Var: { type: "Var" } as const,
+	Rigid: { type: "Var", variable: { type: "Bound" } } as const,
+	Flex: { type: "Var", variable: { type: "Meta" } } as const,
+	Free: { type: "Var", variable: { type: "Free" } } as const,
+
+	Lit: { type: "Lit" } as const,
+	Atom: { type: "Lit", value: { type: "Atom" } } as const,
+	Type: { type: "Lit", value: { type: "Atom", value: "Type" } } as const,
+	Unit: { type: "Lit", value: { type: "Atom", value: "Unit" } } as const,
+
+	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } } as const,
+	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } } as const,
+
+	App: { type: "App" } as const,
+	Pi: { type: "Abs", binder: { type: "Pi" } } as const,
+	Lambda: { type: "Abs", binder: { type: "Lambda" } } as const,
+	Mu: { type: "Abs", binder: { type: "Mu" } } as const,
+	Row: { type: "Row" } as const,
 };

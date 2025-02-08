@@ -118,3 +118,5 @@ export const local: <A>(f: Local, rw: Elaboration<A>) => Elaboration<A> = (f, rw
 		return rw(_ctx);
 	};
 };
+
+export const run = <A>(rw: Elaboration<A>, ctx: EB.Context) => rw(ctx)();

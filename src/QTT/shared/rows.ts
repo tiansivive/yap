@@ -39,3 +39,10 @@ export const Constructors = {
 	Variable: <T, V>(variable: V): Row<T, V> => ({ type: "variable", variable }),
 	Empty: <T, V>(): Row<T, V> => ({ type: "empty" }),
 };
+
+export const traverse = <T, V, A, B>(row: Row<T, V>, onVal: (value: T) => A, onVar: (v: V) => Row<A, B>): Row<A, B> =>
+	match(row)
+		.with({ type: "empty" }, (r): Row<A, B> => r)
+		.with({ type: "extension" }, ({ label, value, row }) => Constructors.Extension(label, onVal(value), traverse(row, onVal, onVar)))
+		.with({ type: "variable" }, ({ variable }) => onVar(variable))
+		.exhaustive();

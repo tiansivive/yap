@@ -7,6 +7,8 @@ import * as Lit from "@qtt/shared/literals";
 import { Implicitness } from "@qtt/shared/implicitness";
 import { Literal } from "@qtt/shared/literals";
 
+import { Pattern as Pat } from "ts-pattern";
+
 export type ModalTerm = Extend<Term, Term, Q.Multiplicity>;
 export type Node = Extend<Term, Term, NF.ModalValue>;
 
@@ -53,6 +55,7 @@ export const Free = (name: string): Variable => ({ type: "Free", name });
 export const Meta = (index: number): Variable => ({ type: "Meta", index });
 
 export const Constructors = {
+	Abs: (binding: Binding, body: Term): Term => ({ type: "Abs", binding, body }),
 	Lambda: (variable: string, icit: Implicitness, body: Term): Term => ({
 		type: "Abs",
 		binding: { type: "Lambda" as const, variable, icit },
@@ -109,4 +112,17 @@ export const Constructors = {
 		Let: (variable: string, value: Term, annotation: Term): Statement => ({ type: "Let", variable, value, annotation }),
 		Expr: (value: Term): Statement => ({ type: "Expression", value }),
 	},
+};
+
+export const PatternMatch: Record<string, Pat.Pattern<Term>> = {
+	Var: { type: "Var" },
+	Lit: { type: "Lit" },
+	Lambda: { type: "Abs", binding: { type: "Lambda" } },
+	Pi: { type: "Abs", binding: { type: "Pi" } },
+	Mu: { type: "Abs", binding: { type: "Mu" } },
+	Match: { type: "Match" },
+	Row: { type: "Row" },
+	Proj: { type: "Proj" },
+	Inj: { type: "Inj" },
+	Annotation: { type: "Annotation" },
 };
