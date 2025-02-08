@@ -14,6 +14,8 @@ import * as Log from "@qtt/shared/logging";
 import { P } from "ts-pattern";
 
 import { freshMeta } from "./supply";
+import { Subst, Substitute } from "./substitution";
+import { solve } from "./solver";
 
 export type Constraint =
 	| { type: "assign"; left: NF.Value; right: NF.Value; lvl?: number }
@@ -222,25 +224,29 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 	);
 }
 
-const kindOf = (ty: NF.Value): M.Elaboration<NF.Value> =>
-	match(ty)
-		.with({ type: "Neutral" }, ({ value }) => kindOf(value))
-		.with({ type: "Row" }, _ => M.of(NF.Row))
-		.with({ type: "Var" }, ({ variable }) =>
-			M.chain(M.ask(), ctx =>
-				match(variable)
-					.with({ type: "Free" }, ({ name }) => {
-						const val = ctx.imports[name];
+type ZonkSwitch = {
+	term: EB.Term;
+	nf: NF.Value;
+	closure: NF.Closure;
+};
 
-						if (!val) {
-							throw new Error("Unbound free variable: " + name);
-						}
+export const zonk = <K extends keyof ZonkSwitch>(key: K, term: ZonkSwitch[K], subst: Subst): M.Elaboration<ZonkSwitch[K]> =>
+	M.fmap(M.ask(), ctx => {
+		const f = Substitute(ctx)[key];
+		return f(subst, term as any) as ZonkSwitch[K];
+	});
 
-						return kindOf(NF.evaluate(ctx.env, ctx.imports, val[0]));
-					})
-					.with({ type: "Meta" }, _ => M.of(NF.Constructors.Var(freshMeta())))
-					.with({ type: "Bound" }, ({ index }) => M.of(ctx.env[index][0]))
-					.exhaustive(),
-			),
-		)
-		.otherwise(() => M.of(NF.Type));
+export const run = (term: Src.Term, ctx: EB.Context) => {
+	const elaboration = F.pipe(
+		infer(term),
+		M.listen(([[tm, ty], { constraints }]) => ({ inferred: { tm, ty }, constraints })),
+		M.bind("sub", ({ constraints }) => solve(constraints)),
+		M.bind("term", ({ sub, inferred }) => zonk("term", inferred.tm, sub)),
+		M.bind("ty", ({ sub, inferred }) => zonk("nf", inferred.ty, sub)),
+	);
+
+	const runWriter = elaboration(ctx);
+	const [result] = runWriter();
+
+	return result;
+};
