@@ -75,6 +75,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 						.with({ type: "String" }, _ => Lit.Atom("String"))
 						.with({ type: "Num" }, _ => Lit.Atom("Num"))
 						.with({ type: "Bool" }, _ => Lit.Atom("Bool"))
+						.with({ type: "unit" }, _ => Lit.Atom("Unit"))
 						.with({ type: "Atom" }, _ => Lit.Atom("Type"))
 						.exhaustive();
 
