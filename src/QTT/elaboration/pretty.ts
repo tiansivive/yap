@@ -48,6 +48,10 @@ const display = (term: EB.Term): string => {
 			const alts = alternatives.map(Alt.display).join("\n");
 			return `match ${scut}\n${alts}`;
 		})
+		.with({ type: "Block" }, ({ statements, return: ret }) => {
+			const stmts = statements.map(Stmt.display).join("; ");
+			return `{ ${stmts}; return ${display(ret)}; }`;
+		})
 		.exhaustive();
 	//.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
 };

@@ -30,7 +30,7 @@ export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<AST>
 				return M.of<AST>([EB.Constructors.Var({ type: "Free", name: variable.value }), nf, Q.add(us, zeros)]);
 			}
 
-			throw new Error("Variable not found");
+			throw new Error(`Variable not found: ${variable.value}`);
 		}
 
 		const [[binder, origin, [nf, m]], ...rest] = types;

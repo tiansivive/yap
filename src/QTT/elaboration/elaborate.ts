@@ -148,6 +148,63 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 				.with({ type: "pi" }, { type: "arrow" }, EB.Pi.infer)
 				.with({ type: "lambda" }, EB.Lambda.infer)
 				.with({ type: "match" }, EB.Match.infer)
+				.with({ type: "block" }, ({ statements, return: ret }) =>
+					F.pipe(
+						M.fold<Src.Statement, [ElaboratedStmt[], Q.Usages, EB.Context]>(
+							([stmts, us, ctx], stmt) => {
+								return M.local(
+									ctx,
+									F.pipe(
+										Stmt.infer(stmt),
+										// TODO: When adding effect tracking, we need to add the current effect to the row
+										M.fmap((stmt): [ElaboratedStmt[], Q.Usages, EB.Context] => {
+											const current = stmt[0];
+
+											const _ctx = current.type === "Let" ? EB.bind(ctx, { type: "Let", variable: current.variable }, [stmt[1], Q.Many]) : ctx;
+
+											return [[...stmts, stmt], Q.add(stmt[2], us), _ctx]; // add usages for each statement
+										}),
+									),
+								);
+							},
+							[[], Q.noUsage(ctx.env.length), ctx],
+							statements,
+						),
+						M.chain(([stmts, us, blockCtx]) => {
+							if (!ret) {
+								//TODO: add effect tracking
+								const ty = NF.Constructors.Lit(Lit.Atom("Unit"));
+								const unit = EB.Constructors.Lit(Lit.Atom("unit"));
+								const tm = EB.Constructors.Block(
+									stmts.map(([stmt]) => stmt),
+									unit,
+								);
+								return M.of<EB.AST>([tm, ty, us]);
+							}
+
+							return M.local(
+								blockCtx,
+								F.pipe(
+									infer(ret),
+									M.fmap(([ret, ty, rus]): EB.AST => {
+										const stmts_ = stmts.map(([stmt]) => stmt);
+										return [EB.Constructors.Block(stmts_, ret), ty, Q.add(us, rus)];
+									}),
+									// remove all usages from variables bound in the block
+									M.fmap(([tm, ty, bus]): EB.AST => {
+										// Sanity check
+										if (blockCtx.env.length < ctx.env.length) {
+											throw new Error("Block context is not a subset of the current context");
+										}
+
+										const us = bus.slice(blockCtx.env.length - ctx.env.length);
+										return [tm, ty, us];
+									}),
+								),
+							);
+						}),
+					),
+				)
 				.otherwise(() => {
 					throw new Error("Not implemented yet");
 				});

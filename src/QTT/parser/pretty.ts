@@ -59,6 +59,10 @@ export const display = (term: Src.Term): string => {
 			const alts = alternatives.map(Alt.display).join("\n");
 			return `match ${scut}\n${alts}`;
 		})
+		.with({ type: "block" }, ({ statements, return: ret }) => {
+			const stmts = statements.map(Stmt.display).join(";\n");
+			return `{\n${stmts}\nreturn ${ret ? display(ret) : ""};\n}`;
+		})
 
 		.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
 };

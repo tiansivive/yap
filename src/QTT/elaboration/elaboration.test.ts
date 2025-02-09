@@ -654,4 +654,29 @@ describe("Elaboration", () => {
 			// the missing constraint is the one that deals with the usages
 		});
 	});
+
+	describe("blocks", () => {
+		it("should elaborate blocks", () => {
+			const src = `{ let x = 1; let y = x; return y; }`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const runReader = EB.infer(expr);
+			const runWriter = runReader(empty);
+
+			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`{ let x: ?1 = 1; let y: ?2 = v1; return v0; }`);
+			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(qs).toStrictEqual([]);
+
+			expect(cst.length).toBe(2);
+			const prettyCst = cst.map(EB.Display.Constraint);
+			expect(prettyCst).toContain("?1 ~~ Num");
+			expect(prettyCst).toContain("?2 ~~ Num");
+		});
+	});
 });

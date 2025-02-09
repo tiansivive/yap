@@ -72,6 +72,8 @@ export const of = <A>(a: A): Elaboration<A> => {
 	return R.of(w);
 };
 
+export const fold = <A, B>(f: (acc: B, a: A) => Elaboration<B>, acc: B, as: A[]): Elaboration<B> => as.reduce((rw, a) => chain(rw, acc => f(acc, a)), of(acc));
+
 export const liftW = <A>(w: Emitter<A>): Elaboration<A> => R.of(w);
 export const liftR =
 	<A>(fa: Reader<EB.Context, A>): Elaboration<A> =>

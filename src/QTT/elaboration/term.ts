@@ -21,7 +21,8 @@ export type Term =
 	| { type: "Proj"; label: string; term: Term }
 	| { type: "Inj"; label: string; value: Term; term: Term }
 	| { type: "Annotation"; term: Term; ann: Term }
-	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> };
+	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> }
+	| { type: "Block"; statements: Array<Statement>; return: Term };
 
 export type Variable = { type: "Bound"; index: number } | { type: "Free"; name: string } | { type: "Meta"; index: number };
 export type Row = R.Row<Term, Variable>;
@@ -100,6 +101,8 @@ export const Constructors = {
 
 	Match: (scrutinee: Term, alternatives: Array<Alternative>): Term => ({ type: "Match", scrutinee, alternatives }),
 	Alternative: (pattern: Pattern, term: Term): Alternative => ({ pattern, term }),
+
+	Block: (statements: Array<Statement>, term: Term): Term => ({ type: "Block", statements, return: term }),
 	Patterns: {
 		Binder: (value: string): Pattern => ({ type: "Binder", value }),
 		Var: (value: string, term: Term): Pattern => ({ type: "Var", value, term }),

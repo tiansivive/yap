@@ -31,7 +31,7 @@ export const infer = (lam: Lambda): EB.M.Elaboration<EB.AST> =>
 						const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm);
 						const pi = NF.Constructors.Pi(lam.variable, lam.icit, mva, NF.closeVal(ctx, bType));
 
-						return [tm, pi, us]; // Remove the usage M.of the bound variable
+						return [tm, pi, us]; // Remove the usage of the bound variable
 					}),
 				),
 			);
