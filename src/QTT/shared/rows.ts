@@ -5,6 +5,12 @@ export type Projection<T> = { type: "projection"; label: string; term: T };
 
 export type Row<T, V> = { type: "empty" } | { type: "extension"; label: string; value: T; row: Row<T, V> } | { type: "variable"; variable: V };
 
+export const Constructors = {
+	Extension: <T, V>(label: string, value: T, row: Row<T, V>): Row<T, V> => ({ type: "extension", label, value, row }),
+	Variable: <T, V>(variable: V): Row<T, V> => ({ type: "variable", variable }),
+	Empty: <T, V>(): Row<T, V> => ({ type: "empty" }),
+};
+
 export const display =
 	<T, V>(pretty: { term: (term: T) => string; var: (variable: V) => string }) =>
 	(row: Row<T, V>): string => {
@@ -34,15 +40,20 @@ export const display =
 		return `[ ${recurse(row)} ]`;
 	};
 
-export const Constructors = {
-	Extension: <T, V>(label: string, value: T, row: Row<T, V>): Row<T, V> => ({ type: "extension", label, value, row }),
-	Variable: <T, V>(variable: V): Row<T, V> => ({ type: "variable", variable }),
-	Empty: <T, V>(): Row<T, V> => ({ type: "empty" }),
-};
-
-export const traverse = <T, V, A, B>(row: Row<T, V>, onVal: (value: T) => A, onVar: (v: V) => Row<A, B>): Row<A, B> =>
+export const traverse = <T, V, A, B>(row: Row<T, V>, onVal: (value: T, label: string) => A, onVar: (v: V) => Row<A, B>): Row<A, B> =>
 	match(row)
 		.with({ type: "empty" }, (r): Row<A, B> => r)
-		.with({ type: "extension" }, ({ label, value, row }) => Constructors.Extension(label, onVal(value), traverse(row, onVal, onVar)))
+		.with({ type: "extension" }, ({ label, value, row }) => Constructors.Extension(label, onVal(value, label), traverse(row, onVal, onVar)))
 		.with({ type: "variable" }, ({ variable }) => onVar(variable))
 		.exhaustive();
+
+export const fold = <T, V, A>(row: Row<T, V>, onVal: (value: T, label: string, acc: A) => A, onVar: (v: V, acc: A) => A, acc: A): A => {
+	const recurse = (r: Row<T, V>, acc: A): A =>
+		match(r)
+			.with({ type: "empty" }, () => acc)
+			.with({ type: "extension" }, ({ label, value, row }) => recurse(row, onVal(value, label, acc)))
+			.with({ type: "variable" }, ({ variable }) => onVar(variable, acc))
+			.run();
+
+	return recurse(row, acc);
+};

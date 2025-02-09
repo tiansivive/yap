@@ -1,17 +1,15 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
+import _ from "lodash";
 
 import * as F from "fp-ts/lib/function";
 
-import * as EB from ".";
-import * as NF from "./normalization";
-import * as M from "./monad";
+import * as EB from "@qtt/elaboration";
+import * as NF from "@qtt/elaboration/normalization";
+import { M } from "@qtt/elaboration";
+import { Subst } from "@qtt/elaboration/substitution";
+import * as R from "@qtt/shared/rows";
 
 import * as Log from "@qtt/shared/logging";
-
-import { P } from "ts-pattern";
-
-import _ from "lodash";
-import { Subst } from "./substitution";
 
 const empty: Subst = {};
 export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaboration<Subst> => {
@@ -98,29 +96,23 @@ const bind = (ctx: EB.Context, v: NF.Variable, ty: NF.Value): Subst => {
 	}
 
 	// solution is a mu type
-
-	// solution is a mu type
 	throw new Error("Unification: Occurs check failed. Need to implement mu type");
 };
 
 const occursCheck = (ctx: EB.Context, v: NF.Variable, ty: NF.Value): boolean =>
 	match(ty)
-		.with({ type: "Neutral" }, ({ value }) => occursCheck(ctx, v, value))
 		.with(NF.Patterns.Var, ({ variable }) => _.isEqual(variable, v))
+		.with({ type: "Neutral" }, ({ value }) => occursCheck(ctx, v, value))
 		.with(NF.Patterns.Lambda, ({ closure }) => occursCheck(ctx, v, NF.apply(ctx.imports, closure, NF.Constructors.Rigid(ctx.env.length))))
 		.with(NF.Patterns.Pi, ({ closure }) => occursCheck(ctx, v, NF.apply(ctx.imports, closure, NF.Constructors.Rigid(ctx.env.length))))
-		.with(NF.Patterns.Lit, () => false)
 		.with(NF.Patterns.App, ({ func, arg }) => occursCheck(ctx, v, func) || occursCheck(ctx, v, arg))
 
-		.with(NF.Patterns.Row, ({ row }) => {
-			const _occurs = (row: NF.Row): boolean =>
-				match(row)
-					.with({ type: "empty" }, () => false)
-					.with({ type: "extension" }, ({ value, row }) => occursCheck(ctx, v, value) || _occurs(row))
-
-					.with({ type: "variable" }, v => v.variable.type === "Meta" && _.isEqual(v.variable, v))
-					.otherwise(() => false);
-
-			return _occurs(row);
-		})
+		.with(NF.Patterns.Row, ({ row }) =>
+			R.fold(
+				row,
+				(nf, _, acc) => acc || occursCheck(ctx, v, nf),
+				rv => rv.type === "Meta" && _.isEqual(rv, v),
+				false,
+			),
+		)
 		.otherwise(() => false);
