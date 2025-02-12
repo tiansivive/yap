@@ -30,6 +30,7 @@
 	"cSpell.words": [
 		"keyval",
 		"langle",
+		"lincol",
 		"lparens",
 		"mtype",
 		"multimap",
@@ -38,7 +39,8 @@
 		"Nearley",
 		"rangle",
 		"scuty",
-		"tmnf"
+		"tmnf",
+		"toks"
 	],
 	"code-runner.executorMap": {
 		"javascript": "node",

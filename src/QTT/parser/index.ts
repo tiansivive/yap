@@ -1,4 +1,4 @@
 export * from "./terms";
 export * from "./pretty";
 
-export * as Ctor from "./constructors";
+export * as Processors from "./processors";

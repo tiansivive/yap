@@ -7,12 +7,12 @@
 	import moo from "moo";
 	import * as Q from "@qtt/shared/modalities/multiplicity";
 	import * as Lit from "@qtt/shared/literals";
-	import * as Con from "./constructors";
+	import * as P from "./processors";
 
 	const lexer = moo.compile({
-	  	number: /[0-9]+/,
+	  	digit: { match: /[0-9]+/, value: s => parseInt(s) },
+	  	string: { match: /"(?:\\["bfnrt\/\\]|\\u[a-fA-F0-9]{4}|[^"\\])*"/, value: s => s.slice(1, -1) },
 	  	variable: { match: /[a-zA-Z][a-zA-Z0-9]*/, type: moo.keywords({ ret: "return", dec: "let", match: "match", Type: "Type", Unit: "Unit", Row: "Row" }) },
-	  	string: /"(?:\\["bfnrt\/\\]|\\u[a-fA-F0-9]{4}|[^"\\])*"/,
 	  	dot: /\./,
 		equals: /\=(?!>)/,
 	  	backslash: /\\/,
@@ -45,31 +45,31 @@
 # Declaration
 # Def -> "def" %ws Identifier %ws %equals %ws:? Expr %ws:? %semicolon {% d => ({ type: "def", binding: d[2], value: d[6] }) %}
 
-# Parens[X] 	-> %lparens %ws:? $X %ws:? %rparens 	{% Con.unwrapParenthesis %}
-# Angles[X] 	-> %langle %ws:? $X %ws:? %rangle 		{% Con.unwrapAngles %}
-# Curly[X] 	-> %lbrace $X %ws:? %NL:? %rbrace 		{% Con.unwrapCurlyBraces %} 
-# Square[X] 	-> %lbracket $X %ws:? %NL:? %rbracket 	{% Con.unwrapSquareBrackets %}
-# Separate[X, EndSymbol] -> %NL:? %ws:? $X %NL:? %ws:? $EndSymbol {% Con.unwrapSeparator %}
+# Parens[X] 	-> %lparens %ws:? $X %ws:? %rparens 	{% P.unwrapParenthesis %}
+# Angles[X] 	-> %langle %ws:? $X %ws:? %rangle 		{% P.unwrapAngles %}
+# Curly[X] 	-> %lbrace $X %ws:? %NL:? %rbrace 		{% P.unwrapCurlyBraces %} 
+# Square[X] 	-> %lbracket $X %ws:? %NL:? %rbracket 	{% P.unwrapSquareBrackets %}
+# Separate[X, EndSymbol] -> %NL:? %ws:? $X %NL:? %ws:? $EndSymbol {% P.unwrapSeparator %}
 
-Empty[X, Y] -> $X %NL:? %ws:? %NL:? $Y 												{% Con.none %}
-Wrap[X, L, R] -> $L $X %ws:? $R 													{% Con.unwrap %}
+Empty[X, Y] -> $X %NL:? %ws:? %NL:? $Y 												{% P.none %}
+Wrap[X, L, R] -> $L $X %ws:? $R 													{% P.unwrap %}
 
-Many[X, Separator] 	-> (%NL:? %ws:? $X %NL:? %ws:? $Separator):* %NL:? %ws:? $X 	{% Con.many %}
-Prefixed[Prefix, X] -> $Prefix %ws:? $X 											{% Con.prefix %}
-Suffixed[X, Suffix] -> $X %ws:? $Suffix 											{% Con.suffix %}
+Many[X, Separator] 	-> (%NL:? %ws:? $X %NL:? %ws:? $Separator):* %NL:? %ws:? $X 	{% P.many %}
+Prefixed[Prefix, X] -> $Prefix %ws:? $X 											{% P.prefix %}
+Suffixed[X, Suffix] -> $X %ws:? $Suffix 											{% P.suffix %}
 
-Parens[X] -> Wrap[$X, %lparens, %rparens] 		{% id %}
-Angle[X] -> Wrap[$X, %langle, %rangle] 			{% id %}
-Curly[X] -> Wrap[$X, %lbrace, %rbrace] 			{% id %}
-Square[X] -> Wrap[$X, %lbracket, %rbracket] 	{% id %}
+Parens[X] -> Wrap[$X, %lparens, %rparens] 		{% P.enclosed %}
+Angle[X] -> Wrap[$X, %langle, %rangle] 			{% P.enclosed %}
+Curly[X] -> Wrap[$X, %lbrace, %rbrace] 			{% P.enclosed %}
+Square[X] -> Wrap[$X, %lbracket, %rbracket] 	{% P.enclosed %}
 
 
 
 Script -> Statement:+ %NL:? {% d => ({ type: "script", script: d[0] }) %}
 		| Ann 				{% id %}
 
-Ann -> Ann %ws:? %colon %ws:? TypeExpr 							{% Con.Annotation %}
-     | Ann %ws:? %colon %ws:? Angle[Quantity] %ws:? TypeExpr 	{% Con.Annotation %}
+Ann -> Ann %ws:? %colon %ws:? TypeExpr 							{% P.Annotation %}
+     | Ann %ws:? %colon %ws:? Angle[Quantity] %ws:? TypeExpr 	{% P.Annotation %}
 	 | TypeExpr 												{% id %}
 
 TypeExpr -> Pi 				{% id %}
@@ -84,40 +84,40 @@ Expr -> Lambda		{% id %}
 	  | Block 		{% id %}
 	  | App 		{% id %}
 
-App -> App %ws Expr 				{% Con.Application %}
-	 | App %ws:? %op %ws:? Expr 	{% Con.Operation %}
+App -> App %ws Expr 				{% P.Application %}
+	 | App %ws:? %op %ws:? Expr 	{% P.Operation %}
      | Atom 						{% id %}
 
-Atom -> Identifier 		{% Con.Var %} 
-	  | %hole 			{% Con.Hole %}
+Atom -> Identifier 		{% P.Var %} 
+	  | %hole 			{% P.Hole %}
 	  | Projection 		{% id %}
 	  | Injection 		{% id %}
-	  | Literal 		{% Con.Lit %}
+	  | Literal 		{% P.Lit %}
 	  | Struct 			{% id %}
       | Tuple 			{% id %}
 	  | List 			{% id %}
-	  | Parens[Ann]  	{% Con.extract %}
+	  | Parens[Ann]  	{% P.extract %}
 
 # ------------------------------------
 # RECURSIVE TYPES
 # ------------------------------------
 
-Mu -> "μ" %ws:? Identifier %ws:? %arrow %ws:? TypeExpr 		{% Con.Mu %}
+Mu -> "μ" %ws:? Identifier %ws:? %arrow %ws:? TypeExpr 		{% P.Mu %}
 
 # ------------------------------------
 # FUNCTIONS
 # ------------------------------------
-Lambda -> %backslash Param %ws %arrow %ws TypeExpr 				{% Con.Lambda %}
-		| %backslash %hash Param %ws %fatArrow %ws TypeExpr 	{% Con.Lambda %}
+Lambda -> %backslash Param %ws %arrow %ws TypeExpr 				{% P.Lambda %}
+		| %backslash %hash Param %ws %fatArrow %ws TypeExpr 	{% P.Lambda %}
 		
-Param -> Identifier 													{% Con.Param %}
-	   | Identifier %ws:? %colon %ws:? TypeExpr 							{% Con.Param %}
-	   | Identifier %ws:? %colon %ws:? Angle[Quantity] %ws:? TypeExpr 		{% Con.Param %}
-	   | Parens[Param] 													{% Con.extract %}
+Param -> Identifier 													{% P.Param %}
+	   | Identifier %ws:? %colon %ws:? TypeExpr 							{% P.Param %}
+	   | Identifier %ws:? %colon %ws:? Angle[Quantity] %ws:? TypeExpr 		{% P.Param %}
+	   | Parens[Param] 													{% P.extract %}
 		 
 
-Pi -> TypeExpr %ws:? %arrow %ws PiTail 		{% Con.Pi("Explicit") %}
-	| TypeExpr %ws:? %fatArrow %ws PiTail 	{% Con.Pi("Implicit") %}
+Pi -> TypeExpr %ws:? %arrow %ws PiTail 		{% P.Pi("Explicit") %}
+	| TypeExpr %ws:? %fatArrow %ws PiTail 	{% P.Pi("Implicit") %}
 
 PiTail -> Pi {% id %}
 		| Atom {% id %}
@@ -126,52 +126,52 @@ PiTail -> Pi {% id %}
 # ------------------------------------
 # ROW TERMS
 # ------------------------------------
-Row -> Empty[%lbracket, %rbracket] 					{% Con.emptyRow %}
-	 | Square[ Many[KeyVal, %comma] RowTail:? ] 	{% Con.row %}
+Row -> Empty[%lbracket, %rbracket] 					{% P.emptyRow %}
+	 | Square[ Many[KeyVal, %comma] RowTail:? ] 	{% P.row %}
 
 RowTail -> %ws:? %bar %ws:? Identifier 				{% d => d[3] %}
 
 # Values
-Struct -> Empty[%lbrace, %rbrace] 					{% Con.emptyStruct %}
-	 	| Curly[ Many[KeyVal, %comma] ] 			{% Con.struct %}
+Struct -> Empty[%lbrace, %rbrace] 					{% P.emptyStruct %}
+	 	| Curly[ Many[KeyVal, %comma] ] 			{% P.struct %}
 
-Tuple -> Curly[ Many[TypeExpr, %comma] ] 				{% Con.tuple %}
-List -> Square[ Many[TypeExpr, %comma] ] 				{% Con.list %}
+Tuple -> Curly[ Many[TypeExpr, %comma] ] 				{% P.tuple %}
+List -> Square[ Many[TypeExpr, %comma] ] 				{% P.list %}
 
 # Types
-Schema -> Curly[ Many[SchemaPair, %comma] RowTail:? ] 	{% Con.schema %}
+Schema -> Curly[ Many[SchemaPair, %comma] RowTail:? ] 	{% P.schema %}
 
-Variant -> %bar Many[KeyVal, %bar]						{% Con.Variant %}
+Variant -> %bar Many[KeyVal, %bar]						{% P.variant %}
 
 # Fields
-KeyVal -> Identifier %ws:? %colon %ws:? TypeExpr 				{% Con.keyval %}
-SchemaPair -> Identifier %ws:? %colon %colon %ws:? TypeExpr 		{% Con.keyval %}
-Assignment -> Identifier %ws:? %equals %ws:? TypeExpr 			{% Con.keyval %}
+KeyVal -> Identifier %ws:? %colon %ws:? TypeExpr 				{% P.keyval %}
+SchemaPair -> Identifier %ws:? %colon %colon %ws:? TypeExpr 		{% P.keyval %}
+Assignment -> Identifier %ws:? %equals %ws:? TypeExpr 			{% P.keyval %}
 
-Projection -> TypeExpr %dot Identifier 									{% Con.Projection %}
-			| %dot Identifier 										{% Con.Projection %}
+Projection -> TypeExpr %dot Identifier 									{% P.Projection %}
+			| %dot Identifier 										{% P.Projection %}
 
-Injection -> Curly[ %ws:? TypeExpr %ws:? %bar Many[Assignment, %comma] ] 	{% Con.Injection %}
-		   | Curly[ %ws:? %bar Many[Assignment, %comma] ] 				{% Con.Injection %}
+Injection -> Curly[ %ws:? TypeExpr %ws:? %bar Many[Assignment, %comma] ] 	{% P.Injection %}
+		   | Curly[ %ws:? %bar Many[Assignment, %comma] ] 				{% P.Injection %}
 
 
 # ------------------------------------
 # Blocks
 # ------------------------------------
-Block -> Curly[ Many[Statement, %semicolon] %semicolon Return:? ] 		{% Con.Block %}
-	   | Curly[ Return ] 												{% Con.Block %}
+Block -> Curly[ Many[Statement, %semicolon] %semicolon Return:? ] 		{% P.Block %}
+	   | Curly[ Return ] 												{% P.Block %}
 
-Statement -> Ann 			{% Con.Expr %}
+Statement -> Ann 			{% P.Expr %}
            | Letdec			{% id %}
 
-Return    -> %NL:? %ws:? "return" %ws:+ Ann %semicolon 					{% Con.Return %}
+Return    -> %NL:? %ws:? "return" %ws:+ Ann %semicolon 					{% P.Return %}
 
-Letdec -> "let" %ws Identifier %ws:? %equals %ws:? Ann 										{% Con.LetDec %}
-		| "let" %ws Identifier %ws:? %colon %ws:? TypeExpr %ws:? %equals %ws:? TypeExpr 	{% Con.LetDec %}
+Letdec -> "let" %ws Identifier %ws:? %equals %ws:? Ann 										{% P.LetDec %}
+		| "let" %ws Identifier %ws:? %colon %ws:? TypeExpr %ws:? %equals %ws:? TypeExpr 	{% P.LetDec %}
 
 
 # VARIABLES
-Identifier -> %variable {% Con.Name %}
+Identifier -> %variable {% P.Name %}
 
 # Multiplicity
 Quantity -> "1" {% () => Q.One %}
@@ -181,30 +181,30 @@ Quantity -> "1" {% () => Q.One %}
 # ------------------------------------
 # Pattern Matching
 # ------------------------------------
-Match -> "match" %ws:+ TypeExpr Alt:+ 							{% Con.Match %} 
-Alt -> %NL:? %ws:? %bar %ws:? Pattern %ws:? %arrow %ws:? TypeExpr 	{% Con.Alternative %}
+Match -> "match" %ws:+ TypeExpr Alt:+ 								{% P.Match %} 
+Alt -> %NL:? %ws:? %bar %ws:? Pattern %ws:? %arrow %ws:? TypeExpr 	{% P.Alternative %}
 
 
-Pattern -> Identifier 									{% Con.Pattern %}
-		 | Literal 										{% Con.Pattern %}
-		 | Curly[ Many[PatKeyVal, %comma] RowTail:? ] 	{% Con.Pattern %}
-		 | Parens[Pattern] 	{% Con.extract %}
+Pattern -> Identifier 									{% P.Pattern %}
+		 | Literal 										{% P.Pattern %}
+		 | Curly[ Many[PatKeyVal, %comma] RowTail:? ] 	{% P.Pattern %}
+		 | Parens[Pattern] 								{% P.extract %}
 
-PatKeyVal -> Identifier %ws:? %colon %ws:? Pattern 		{% Con.keyvalPat %}
+PatKeyVal -> Identifier %ws:? %colon %ws:? Pattern 		{% P.keyvalPat %}
 
 # ------------------------------------
 # Literals
 # ------------------------------------
 Literal 
-	-> String {% ([s]) => Lit.String(s) %}
-	 | Number {% ([n]) => Lit.Num(n) %}
-	 | "Type" {% () => Lit.Type() %}
-	 | "Unit" {% () => Lit.Unit() %}
-	 | "Row" {% () => Lit.Row() %}
+	-> String {% P.Str %}
+	 | Number {% P.Num %}
+	 | "Type" {% P.Type %}
+	 | "Unit" {% P.Unit %}
+	 | "Row" {% P.LitRow %}
 	  
 Number 
-	-> Int %dot Int {% d => parseFloat(d.join(''))  %}
-	 | Int			{% d => parseInt(d)  %}
+	-> Int %dot Int {% id %}
+	 | Int			{% id %}
 
-Int -> %number  {% id %}
-String -> %string {% d => d[0].value.slice(1, -1) %}
+Int -> %digit  		{% P.sourceLoc %}
+String -> %string 	{% P.sourceLoc %}

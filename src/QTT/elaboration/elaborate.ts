@@ -206,8 +206,8 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 						}),
 					),
 				)
-				.otherwise(() => {
-					throw new Error("Not implemented yet");
+				.otherwise(v => {
+					throw new Error("Not implemented yet: " + JSON.stringify(v));
 				});
 		}),
 		M.discard(([tm, ty, us]) => {

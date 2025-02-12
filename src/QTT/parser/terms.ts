@@ -1,9 +1,12 @@
 import { Implicitness } from "@qtt/shared/implicitness";
 import { Literal } from "@qtt/shared/literals";
 import * as Q from "@qtt/shared/modalities/multiplicity";
+import { WithLocation } from "@qtt/shared/provenance";
 import * as R from "@qtt/shared/rows";
 
-export type Term =
+export type Term = WithLocation<Bare>;
+
+export type Bare =
 	| { type: "lit"; value: Literal }
 	| { type: "var"; variable: Variable }
 	| { type: "hole" }
@@ -37,14 +40,15 @@ export type Term =
 	| { type: "match"; scrutinee: Term; alternatives: Array<Alternative> }
 	| { type: "block"; statements: Statement[]; return?: Term };
 
-export type Alternative = { pattern: Pattern; term: Term };
+export type Alternative = WithLocation<{ pattern: Pattern; term: Term }>;
 export type Pattern =
 	| { type: "var"; value: Variable }
 	| { type: "lit"; value: Literal }
 	| { type: "row"; row: R.Row<Pattern, Variable> }
 	| { type: "struct"; row: R.Row<Pattern, Variable> };
 
-export type Statement =
+export type Statement = WithLocation<BareStatement>;
+type BareStatement =
 	| { type: "expression"; value: Term }
 	| {
 			type: "let";
@@ -54,97 +58,5 @@ export type Statement =
 			multiplicity?: Q.Multiplicity;
 	  };
 
-export type Variable = { type: "name"; value: string };
-export type Row = R.Row<Term, Variable>;
-
-export const num = (value: number) => Lit({ type: "Num", value });
-export const bool = (value: boolean) => Lit({ type: "Bool", value });
-export const str = (value: string) => Lit({ type: "String", value });
-
-export const Lit = (value: Literal): Term => ({ type: "lit", value });
-export const Var = (variable: Variable): Term => ({ type: "var", variable });
-
-export const Arrow = (lhs: Term, rhs: Term, icit: Implicitness): Term => ({
-	type: "arrow",
-	lhs,
-	rhs,
-	icit,
-});
-export const Pi = (icit: Implicitness, variable: string, annotation: Term, body: Term, multiplicity?: Q.Multiplicity): Term => ({
-	type: "pi",
-	icit,
-	variable,
-	annotation,
-	body,
-	multiplicity,
-});
-export const Lambda = (icit: Implicitness, variable: string, body: Term, annotation?: Term, multiplicity?: Q.Multiplicity): Term => ({
-	type: "lambda",
-	icit,
-	variable,
-	annotation,
-	body,
-	multiplicity,
-});
-
-export const Application = (fn: Term, arg: Term, icit: Implicitness = "Explicit"): Term => ({ type: "application", fn, arg, icit });
-
-export const Row = (row: Row): Term => ({ type: "row", row });
-export const Struct = (row: Row): Term => ({ type: "struct", row });
-export const Schema = (row: Row): Term => ({ type: "schema", row });
-export const Variant = (row: Row): Term => ({ type: "variant", row });
-export const List = (elements: Term[]): Term => ({ type: "list", elements });
-export const Tuple = (row: Term[]): Term => ({
-	type: "tuple",
-	row: row.reduceRight<Row>(
-		(r, el, i) => {
-			return {
-				type: "extension",
-				label: i.toString(),
-				value: el,
-				row: r,
-			};
-		},
-		{ type: "empty" },
-	),
-});
-
-export const Injection = (label: string, value: Term, term: Term): Term => ({ type: "injection", label, value, term });
-export const Projection = (label: string, term: Term): Term => ({ type: "projection", label, term });
-
-export const Match = (scrutinee: Term, alternatives: Array<Alternative>): Term => ({ type: "match", scrutinee, alternatives });
-export const Alternative = (pattern: Pattern, term: Term): Alternative => ({ pattern, term });
-export const Patterns = {
-	Var: (value: Variable): Pattern => ({ type: "var", value }),
-	Lit: (value: Literal): Pattern => ({ type: "lit", value }),
-	Row: (row: R.Row<Pattern, Variable>): Pattern => ({ type: "row", row }),
-	Struct: (row: R.Row<Pattern, Variable>): Pattern => ({ type: "struct", row }),
-};
-
-export const Annotation = (term: Term, ann: Term, multiplicity?: Q.Multiplicity): Term => ({
-	type: "annotation",
-	term,
-	ann,
-	multiplicity,
-});
-
-export const Block = (statements: Statement[], ret?: Term): Term => {
-	return {
-		type: "block",
-		statements,
-		return: ret,
-	};
-};
-export const Expression = (value: Term): Statement => ({
-	type: "expression",
-	value,
-});
-export const Let = (variable: string, value: Term, annotation?: Term, multiplicity?: Q.Multiplicity): Statement => ({
-	type: "let",
-	variable,
-	value,
-	annotation,
-	multiplicity,
-});
-
-export const Hole: Term = { type: "hole" };
+export type Variable = WithLocation<{ type: "name"; value: string }>;
+export type Row = WithLocation<R.Row<Term, Variable>>;
