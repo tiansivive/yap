@@ -4,12 +4,16 @@ import Nearley from "nearley";
 import * as EB from "@qtt/elaboration";
 import { M } from "@qtt/elaboration";
 import * as NF from "@qtt/elaboration/normalization";
+import * as Err from "@qtt/elaboration/errors";
 import * as Lit from "@qtt/shared/literals";
 import * as Q from "@qtt/shared/modalities/multiplicity";
 
 import Grammar from "@qtt/src/grammar";
 
 import * as Log from "@qtt/shared/logging";
+import * as E from "fp-ts/Either";
+import * as F from "fp-ts/function";
+
 import { solve } from "./solver";
 import { display } from "./substitution";
 
@@ -34,7 +38,12 @@ describe("Constraint Solver", () => {
 
 		const eqs = cst.filter((c: any) => c.type === "assign");
 
-		const [sub] = M.run(solve(eqs), empty);
+		const [either] = M.run(solve(eqs), empty);
+
+		if (E.isLeft(either)) {
+			throw new Error(`Failed solving: ${Err.display(either.left)}`);
+		}
+		const sub = either.right;
 
 		const normalize = (str: string) => str.replace(/\s+/g, "").trim();
 		expect(normalize(display(sub))).toEqual(
@@ -56,20 +65,21 @@ describe("Constraint Solver", () => {
 		const data = parser.feed(src);
 
 		expect(data.results.length).toBe(1);
-
 		const expr = data.results[0];
 
+		const actions = F.pipe(
+			EB.infer(expr),
+			M.listen(([, { constraints }]) => constraints.filter(c => c.type === "assign")),
+			M.chain(solve),
+		);
+
 		const ctx = EB.bind(empty, { type: "Lambda", variable: "x" }, [NF.Constructors.Lit(Lit.Atom("Num")), Q.Many]);
+		const [either] = M.run(actions, ctx);
 
-		const runReader = EB.infer(expr);
-		const runWriter = runReader(ctx);
+		if (E.isRight(either)) {
+			throw new Error(`Expected unification to fail`);
+		}
 
-		const [, { constraints: cst }] = runWriter();
-
-		const eqs = cst.filter((c: any) => c.type === "assign");
-
-		// const [sub] = M.run(solve(eqs), empty);
-
-		expect(M.run(solve(eqs), empty)).toThrow("hello");
+		expect(either.left).toMatchObject({ type: "UnificationFailure" });
 	});
 });

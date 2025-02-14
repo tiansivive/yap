@@ -5,6 +5,8 @@ import * as NF from "@qtt/elaboration/normalization";
 import { match } from "ts-pattern";
 import { Subst, Substitute } from "./substitution";
 
+import * as Err from "@qtt/elaboration/errors";
+
 import * as F from "fp-ts/lib/function";
 import * as A from "fp-ts/Array";
 import { entries } from "../../utils/objects";
@@ -31,25 +33,21 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboratio
 	});
 
 	const res = match(c)
-		.with({ type: "assign" }, ({ left, right }) => {
-			try {
-				return F.pipe(
-					EB.unify(left, right, _ctx.env.length),
-					M.chain(s => _solve(rest, _ctx, compose(_ctx, s, subst))),
-				);
-			} catch (e) {
-				if (e instanceof Error) {
-					console.error(e.message);
-					console.error(displayProvenance(c.provenance));
-				}
-				throw e;
-			}
-		})
+		.with({ type: "assign" }, ({ left, right }) =>
+			F.pipe(
+				EB.unify(left, right, _ctx.env.length),
+				M.chain(s => _solve(rest, _ctx, compose(_ctx, s, subst))),
+			),
+		)
 		.otherwise(() => {
 			throw new Error("Solve: Not implemented yet");
 		});
 
-	return res;
+	return M.catchError(res, e => {
+		console.error(Err.display(e));
+		console.error(displayProvenance(c.provenance));
+		return M.fail(e);
+	});
 };
 
 const compose = (ctx: EB.Context, s1: Subst, s2: Subst): Subst => {

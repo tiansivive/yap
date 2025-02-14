@@ -30,7 +30,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaborati
 		.with([P._, { type: "Neutral" }], ([v, n]) => unify(v, n.value, lvl))
 		.with([NF.Patterns.Lit, NF.Patterns.Lit], ([lit1, lit2]) => {
 			if (!_.isEqual(lit1.value, lit2.value)) {
-				throw Err.UnificationFailure(lit1, lit2);
+				return M.fail(Err.UnificationFailure(lit1, lit2));
 			}
 
 			return M.of(empty);

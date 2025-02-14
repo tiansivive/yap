@@ -5,10 +5,13 @@ import * as EB from "@qtt/elaboration";
 import * as NF from "@qtt/elaboration/normalization";
 import * as Lit from "@qtt/shared/literals";
 import * as Q from "@qtt/shared/modalities/multiplicity";
+import * as Err from "@qtt/elaboration/errors";
 
 import Grammar from "@qtt/src/grammar";
 
 import * as Log from "@qtt/shared/logging";
+
+import * as E from "fp-ts/Either";
 
 describe("Elaboration", () => {
 	let parser: Nearley.Parser;
@@ -48,10 +51,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`1`);
 			expect(NF.display(ty)).toStrictEqual(`Num`);
@@ -67,10 +73,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`true`);
 			expect(NF.display(ty)).toStrictEqual(`Bool`);
@@ -86,10 +95,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`"hello"`);
 			expect(NF.display(ty)).toStrictEqual(`String`);
@@ -105,10 +117,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`Unit`);
 			expect(NF.display(ty)).toStrictEqual(`Unit`);
@@ -126,15 +141,18 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`λx -> 1`);
 			expect(NF.display(ty)).toStrictEqual(`Π(x:<ω> ?1) -> Num`);
 			expect(qs).toStrictEqual([]);
-			expect(cst).toStrictEqual([{ type: "usage", computed: Q.Zero, expected: Q.Many }]);
+			expect(cst).toMatchObject([{ type: "usage", computed: Q.Zero, expected: Q.Many }]);
 		});
 
 		it("should elaborate implicit lambda abstractions", () => {
@@ -145,15 +163,18 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`λ#x => 1`);
 			expect(NF.display(ty)).toStrictEqual(`Π(#x:<ω> ?1) => Num`);
 			expect(qs).toStrictEqual([]);
-			expect(cst).toStrictEqual([{ type: "usage", computed: Q.Zero, expected: Q.Many }]);
+			expect(cst).toMatchObject([{ type: "usage", computed: Q.Zero, expected: Q.Many }]);
 		});
 
 		it("should elaborate arrows", () => {
@@ -164,10 +185,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`Π(t1: <ω> Num) -> Num`);
 			expect(NF.display(ty)).toStrictEqual(`Type`);
@@ -184,10 +208,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`Π(x: <ω> Num) -> Num`);
 			expect(NF.display(ty)).toStrictEqual(`Type`);
@@ -204,10 +231,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`Π(#x: <ω> Num) => Num`);
 			expect(NF.display(ty)).toStrictEqual(`Type`);
@@ -224,10 +254,14 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
 			expect(EB.Display.Term(tm)).toStrictEqual(`Π(x: <ω> Num) -> v0`);
 			expect(NF.display(ty)).toStrictEqual(`Type`);
 			expect(qs).toStrictEqual([]);
@@ -244,11 +278,13 @@ describe("Elaboration", () => {
 			expect(data.results.length).toBe(1);
 
 			const expr = data.results[0];
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
-
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`[]`);
 			expect(NF.display(ty)).toStrictEqual(`Row`);
@@ -264,10 +300,14 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
 			expect(EB.Display.Term(tm)).toStrictEqual(`[ x: String, y: Num ]`);
 			expect(NF.display(ty)).toStrictEqual(`Row`);
 			expect(qs).toStrictEqual([]);
@@ -284,10 +324,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`Struct [ x: 1, y: 2 ]`);
 			expect(NF.display(ty)).toStrictEqual(`Schema [ x: Num, y: Num ]`);
@@ -303,10 +346,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`λr -> Schema [ x: Num, y: Num | v0 ]`);
 			expect(NF.display(ty)).toStrictEqual(`Π(r:<ω> ?1) -> Type`);
@@ -327,10 +373,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`(Struct [ x: 1, y: 2 ]).x`);
 			expect(NF.display(ty)).toStrictEqual(`Num`);
@@ -347,10 +396,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`{ Struct [ x: 1, y: 2 ] | z = 3 }`);
 			// Rows don't have a fixed order. This happens because we recursively build the row from the base case (empty row)
@@ -371,10 +423,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(ctx);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, ctx);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| 1 -> 2\n| 3 -> 4`);
 			expect(NF.display(ty)).toStrictEqual(`Num`);
@@ -394,10 +449,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(ctx);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, ctx);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| 1 -> 2\n| 3 -> "hello"`);
 
@@ -421,10 +479,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(ctx);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, ctx);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| y -> 2\n| z -> 4`);
 			expect(NF.display(ty)).toStrictEqual(`Num`);
@@ -450,10 +511,13 @@ describe("Elaboration", () => {
 
 				const expr = data.results[0];
 
-				const runReader = EB.infer(expr);
-				const runWriter = runReader(ctx);
+				const m = EB.infer(expr);
+				const [either, { constraints: cst }] = EB.M.run(m, ctx);
 
-				const [[tm, ty, qs], { constraints: cst }] = runWriter();
+				if (E.isLeft(either)) {
+					throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+				}
+				const [tm, ty, qs] = either.right;
 
 				expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| Struct [ x: 1, y: 2 ] -> 11\n| Struct [ z: 3, w: 4 ] -> 22`);
 				expect(NF.display(ty)).toStrictEqual(`Num`);
@@ -478,10 +542,13 @@ describe("Elaboration", () => {
 
 				const expr = data.results[0];
 
-				const runReader = EB.infer(expr);
-				const runWriter = runReader(ctx);
+				const m = EB.infer(expr);
+				const [either, { constraints: cst }] = EB.M.run(m, ctx);
 
-				const [[tm, ty, qs], { constraints: cst }] = runWriter();
+				if (E.isLeft(either)) {
+					throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+				}
+				const [tm, ty, qs] = either.right;
 
 				expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| Struct [ x: 1, y: 2 | r ] -> v0\n| Struct [ z: 3, w: 4 | r ] -> v1`);
 				expect(NF.display(ty)).toStrictEqual(`?1`); // return type is unified, so it just picks up the type of the first branch
@@ -507,10 +574,13 @@ describe("Elaboration", () => {
 
 				const expr = data.results[0];
 
-				const runReader = EB.infer(expr);
-				const runWriter = runReader(ctx);
+				const m = EB.infer(expr);
+				const [either, { constraints: cst }] = EB.M.run(m, ctx);
 
-				const [[tm, ty, qs], { constraints: cst }] = runWriter();
+				if (E.isLeft(either)) {
+					throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+				}
+				const [tm, ty, qs] = either.right;
 
 				expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| Struct [ x: y ] -> v0\n| Struct [ z: w ] -> v0`);
 				expect(NF.display(ty)).toStrictEqual(`?1`); // return type is unified, so it just picks up the type of the first branch
@@ -536,10 +606,13 @@ describe("Elaboration", () => {
 
 				const expr = data.results[0];
 
-				const runReader = EB.infer(expr);
-				const runWriter = runReader(ctx);
+				const m = EB.infer(expr);
+				const [either, { constraints: cst }] = EB.M.run(m, ctx);
 
-				const [[tm, ty, qs], { constraints: cst }] = runWriter();
+				if (E.isLeft(either)) {
+					throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+				}
+				const [tm, ty, qs] = either.right;
 
 				// rows are elaborated from right to left, hence `f` is bound before `y`
 				expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| Struct [ foo: Struct [ y: y ], bar: f ] -> v0 v1\n| Struct [ z: Struct [ w: w ] ] -> v0`);
@@ -570,10 +643,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(ctx);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, ctx);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| Imports.Num -> 1\n| Imports.String -> "hello"`);
 			expect(NF.display(ty)).toStrictEqual(`Num`);
@@ -613,10 +689,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.Stmt.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.Stmt.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Statement(tm)).toStrictEqual(`let f: ?1 = λx -> v1 v0`);
 			expect(NF.display(ty)).toStrictEqual(`Π(x:<ω> ?2) -> ?4`);
@@ -636,10 +715,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.Stmt.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.Stmt.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Statement(tm)).toStrictEqual(`let List: ?1 = μx: ?1 -> λa -> Variant [ nil: v0, cons: v1 v0 ]`);
 			expect(NF.display(ty)).toStrictEqual(`Π(a:<ω> Type) -> Type`);
@@ -665,10 +747,13 @@ describe("Elaboration", () => {
 
 			const expr = data.results[0];
 
-			const runReader = EB.infer(expr);
-			const runWriter = runReader(empty);
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			const [[tm, ty, qs], { constraints: cst }] = runWriter();
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`{ let x: ?1 = 1; let y: ?2 = v1; return v0; }`);
 			expect(NF.display(ty)).toStrictEqual(`Num`);
