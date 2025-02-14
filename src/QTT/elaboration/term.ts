@@ -9,7 +9,6 @@ import { Literal } from "@qtt/shared/literals";
 
 import { Pattern as Pat } from "ts-pattern";
 
-export type ModalTerm = Extend<Term, Term, Q.Multiplicity>;
 export type Node = Extend<Term, Term, NF.ModalValue>;
 
 export type Term =

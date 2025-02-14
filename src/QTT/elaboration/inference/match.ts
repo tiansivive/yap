@@ -19,12 +19,26 @@ export const infer = (tm: Match): EB.M.Elaboration<EB.AST> =>
 		M.let("scrutinee", EB.infer(tm.scrutinee)),
 		M.bind("alternatives", ({ scrutinee }) => elaborate(tm.alternatives, scrutinee)),
 		M.discard(({ alternatives: [a, ...as] }) => {
-			// TODO: Also deal with Multiplicity constraints
-			type Accumulator = [EB.Constraint[], NF.Value, Q.Usages];
-			const start: Accumulator = [[], a[1], a[2]];
-			const constraints = as.reduce(([cs, common, q], [alt, ty, us]): Accumulator => [[...cs, { type: "assign", left: ty, right: common }], ty, us], start);
+			type Accumulator = [M.Elaboration<void>, NF.Value, Q.Usages];
+			const start: Accumulator = [M.of(undefined), a[1], a[2]];
 
-			return M.tell("constraint", constraints[0]);
+			// TODO: Also deal with Multiplicity constraints
+			const [m] = as.reduce(([m, common, q], [alt, ty, us], i): Accumulator => {
+				const provenance: EB.Provenance[] = [
+					[
+						"alt",
+						tm.alternatives[i + 1],
+						{
+							action: `alternative of type ${NF.display(ty)}`,
+							motive: `attempting to unify with previous alternative of type ${NF.display(common)}:\t${Src.Alt.display(tm.alternatives[i])}`,
+						},
+					],
+					["src", tm.alternatives[i + 1].term],
+				];
+				return [M.chain(m, () => M.trackMany(provenance, M.tell("constraint", { type: "assign", left: ty, right: common }))), ty, us];
+			}, start);
+
+			return m;
 		}),
 
 		M.fmap(({ alternatives, scrutinee }) => {

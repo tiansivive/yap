@@ -22,6 +22,7 @@ describe("Unification", () => {
 			String: [EB.Constructors.Lit(Lit.Atom("String")), NF.Type, []],
 			Unit: [EB.Constructors.Lit(Lit.Atom("Unit")), NF.Type, []],
 		},
+		trace: [],
 	};
 
 	it("should unify two literals", () => {

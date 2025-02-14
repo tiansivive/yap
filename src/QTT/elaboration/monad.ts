@@ -12,7 +12,7 @@ export type Elaboration<T> = Reader<EB.Context, Emitter<T>>;
 type Emitter<T> = Writer<Accumulator, T>;
 
 type Accumulator = {
-	constraints: EB.Constraint[];
+	constraints: (EB.Constraint & { provenance: EB.Provenance[] })[];
 	binders: EB.Binder[];
 };
 
@@ -72,7 +72,8 @@ export const of = <A>(a: A): Elaboration<A> => {
 	return R.of(w);
 };
 
-export const fold = <A, B>(f: (acc: B, a: A) => Elaboration<B>, acc: B, as: A[]): Elaboration<B> => as.reduce((rw, a) => chain(rw, acc => f(acc, a)), of(acc));
+export const fold = <A, B>(f: (acc: B, a: A, i: number) => Elaboration<B>, acc: B, as: A[]): Elaboration<B> =>
+	as.reduce((rw, a, i) => chain(rw, acc => f(acc, a, i)), of(acc));
 
 export const liftW = <A>(w: Emitter<A>): Elaboration<A> => R.of(w);
 export const liftR =
@@ -104,12 +105,16 @@ export const discard = <A, B>(f: (a: A) => Elaboration<B>) => chain<A, A>(val =>
 
 type Channel = "constraint" | "binder";
 type Payload<K extends Channel> = K extends "constraint" ? EB.Constraint : EB.Binder;
-export const tell = <K extends Channel>(channel: K, payload: Payload<K> | Payload<K>[]) => {
-	const many = Array.isArray(payload) ? payload : [payload];
-	const acc: Accumulator = channel === "constraint" ? { constraints: many as EB.Constraint[], binders: [] } : { constraints: [], binders: many as EB.Binder[] };
+export const tell = <K extends Channel>(channel: K, payload: Payload<K> | Payload<K>[]) =>
+	chain(ask(), ({ trace }) => {
+		const many = Array.isArray(payload) ? payload : [payload];
 
-	return liftW<void>(W.tell(acc));
-};
+		const addProvenance = (cs: EB.Constraint[]) => cs.map(c => ({ ...c, provenance: trace }));
+		const acc: Accumulator =
+			channel === "constraint" ? { constraints: addProvenance(many as EB.Constraint[]), binders: [] } : { constraints: [], binders: many as EB.Binder[] };
+
+		return liftW<void>(W.tell(acc));
+	});
 
 export const listen: <A, B>(f: (aw: [A, Accumulator]) => B) => (rw: Elaboration<A>) => Elaboration<B> = f => rw => F.pipe(rw, R.map(W.listen), fmap(f));
 
@@ -120,5 +125,14 @@ export const local: <A>(f: Local, rw: Elaboration<A>) => Elaboration<A> = (f, rw
 		return rw(_ctx);
 	};
 };
+
+export const track = <A>(provenance: EB.Provenance, rw: Elaboration<A>) =>
+	local(ctx => {
+		return { ...ctx, trace: ctx.trace.concat([provenance]) };
+	}, rw);
+export const trackMany = <A>(provenance: EB.Provenance[], rw: Elaboration<A>) =>
+	local(ctx => {
+		return { ...ctx, trace: ctx.trace.concat(provenance) };
+	}, rw);
 
 export const run = <A>(rw: Elaboration<A>, ctx: EB.Context) => rw(ctx)();

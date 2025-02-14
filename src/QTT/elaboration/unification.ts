@@ -2,13 +2,17 @@ import { match, P } from "ts-pattern";
 import _ from "lodash";
 
 import * as F from "fp-ts/lib/function";
+import * as A from "fp-ts/Array";
 
 import * as EB from "@qtt/elaboration";
 import * as NF from "@qtt/elaboration/normalization";
 import { M } from "@qtt/elaboration";
 import { Subst } from "@qtt/elaboration/substitution";
+
+import * as Err from "@qtt/elaboration/errors";
 import * as R from "@qtt/shared/rows";
 
+import * as Src from "@qtt/src/index";
 import * as Log from "@qtt/shared/logging";
 
 const empty: Subst = {};
@@ -26,7 +30,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaborati
 		.with([P._, { type: "Neutral" }], ([v, n]) => unify(v, n.value, lvl))
 		.with([NF.Patterns.Lit, NF.Patterns.Lit], ([lit1, lit2]) => {
 			if (!_.isEqual(lit1.value, lit2.value)) {
-				throw new Error("Unification: Literals are different");
+				throw Err.UnificationFailure(lit1, lit2);
 			}
 
 			return M.of(empty);

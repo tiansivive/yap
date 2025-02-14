@@ -28,6 +28,7 @@
 	"typescript.tsserver.nodePath": "node",
 	"typescript.tsserver.maxTsServerMemory": 4096,
 	"cSpell.words": [
+		"Ctaint",
 		"keyval",
 		"langle",
 		"lincol",

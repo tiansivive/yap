@@ -6,6 +6,7 @@ import * as Q from "@qtt/shared/modalities/multiplicity";
 import { M } from "@qtt/elaboration";
 
 import * as Src from "@qtt/src/index";
+import * as P from "@qtt/shared/provenance";
 
 type Origin = "inserted" | "source";
 
@@ -14,9 +15,16 @@ export type Context = {
 	env: NF.Env;
 	names: Array<Binder>;
 	imports: Record<string, AST>;
+	trace: P.Stack<Provenance>;
 };
 
 export type AST = [EB.Term, NF.Value, Q.Usages];
+
+export type Provenance = ["src", Src.Term, Metadata?] | ["eb", EB.Term, Metadata?] | ["nf", NF.Value, Metadata?] | ["alt", Src.Alternative, Metadata?];
+type Metadata = {
+	action: string;
+	motive?: string;
+} & Record<string, unknown>;
 
 export type Binder = Pick<EB.Binding, "type" | "variable">;
 
@@ -27,7 +35,9 @@ export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<AST>
 			const free = ctx.imports[variable.value];
 			if (free) {
 				const [, nf, us] = free;
-				return M.of<AST>([EB.Constructors.Var({ type: "Free", name: variable.value }), nf, Q.add(us, zeros)]);
+
+				const tm = EB.Constructors.Var({ type: "Free", name: variable.value });
+				return M.of<AST>([tm, nf, Q.add(us, zeros)]);
 			}
 
 			throw new Error(`Variable not found: ${variable.value}`);
@@ -36,7 +46,8 @@ export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<AST>
 		const [[binder, origin, [nf, m]], ...rest] = types;
 		const usages = unsafeUpdateAt(i, m, zeros);
 		if (binder.variable === variable.value && origin === "source") {
-			return M.fmap(M.tell("binder", binder), _ => [EB.Constructors.Var({ type: "Bound", index: i }), nf, usages]);
+			const tm = EB.Constructors.Var({ type: "Bound", index: i });
+			return M.fmap(M.tell("binder", binder), _ => [tm, nf, usages]);
 		}
 
 		return _lookup(i + 1, variable, rest);
