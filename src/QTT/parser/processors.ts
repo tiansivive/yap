@@ -436,6 +436,14 @@ export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]
 };
 
 /***********************************************************
+ * Script processors
+ ***********************************************************/
+
+export const script: PostProcessor<[Statement[], SemiColon, Newline], Src.Script> = ([statements]) => {
+	return { type: "script", script: statements, imports: [], exports: { type: "*" } };
+};
+
+/***********************************************************
  * Macro processors
  ***********************************************************/
 export const empty: PostProcessor<Token[], P.Location> = toks => {

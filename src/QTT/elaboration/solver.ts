@@ -39,6 +39,10 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboratio
 				M.chain(s => _solve(rest, _ctx, compose(_ctx, s, subst))),
 			),
 		)
+		.with({ type: "usage" }, ({}) => {
+			console.warn("Usage constraint not implemented yet");
+			return M.of(subst);
+		})
 		.otherwise(() => {
 			throw new Error("Solve: Not implemented yet");
 		});

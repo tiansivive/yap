@@ -45,12 +45,6 @@
 # Declaration
 # Def -> "def" %ws Identifier %ws %equals %ws:? Expr %ws:? %semicolon {% d => ({ type: "def", binding: d[2], value: d[6] }) %}
 
-# Parens[X] 	-> %lparens %ws:? $X %ws:? %rparens 	{% P.unwrapParenthesis %}
-# Angles[X] 	-> %langle %ws:? $X %ws:? %rangle 		{% P.unwrapAngles %}
-# Curly[X] 	-> %lbrace $X %ws:? %NL:? %rbrace 		{% P.unwrapCurlyBraces %} 
-# Square[X] 	-> %lbracket $X %ws:? %NL:? %rbracket 	{% P.unwrapSquareBrackets %}
-# Separate[X, EndSymbol] -> %NL:? %ws:? $X %NL:? %ws:? $EndSymbol {% P.unwrapSeparator %}
-
 Empty[X, Y] -> $X %NL:? %ws:? %NL:? $Y 												{% P.none %}
 Wrap[X, L, R] -> $L $X %ws:? $R 													{% P.unwrap %}
 
@@ -65,8 +59,8 @@ Square[X] -> Wrap[$X, %lbracket, %rbracket] 	{% P.enclosed %}
 
 
 
-Script -> Statement:+ %NL:? {% d => ({ type: "script", script: d[0] }) %}
-		| Ann 				{% id %}
+Script -> Many[Statement, %semicolon] %semicolon %NL:?  		{% P.script %}
+		#| Ann 				{% id %}
 
 Ann -> Ann %ws:? %colon %ws:? TypeExpr 							{% P.Annotation %}
      | Ann %ws:? %colon %ws:? Angle[Quantity] %ws:? TypeExpr 	{% P.Annotation %}

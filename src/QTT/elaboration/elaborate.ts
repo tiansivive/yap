@@ -336,7 +336,8 @@ export const script = ({ script }: Src.Script, ctx: EB.Context) => {
 						err => ({ ctx, results: [...results, E.left<M.Err, ElaboratedStmt>(err)] }),
 						({ term, ty, inferred }) => {
 							const ctx_: EB.Context = { ...ctx, imports: { ...ctx.imports, [stmt.variable]: [term, ty, inferred.us] } };
-							return { ctx: ctx_, results: [...results, E.right<M.Err, ElaboratedStmt>([inferred.stmt, inferred.ty, inferred.us])] };
+							const letdec = EB.Constructors.Stmt.Let(stmt.variable, term, NF.quote(ctx.imports, 0, ty));
+							return { ctx: ctx_, results: [...results, E.right<M.Err, ElaboratedStmt>([letdec, inferred.ty, inferred.us])] };
 						},
 					),
 				);

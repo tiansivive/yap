@@ -26,14 +26,10 @@ const row = Q.load("./src/QTT/__tests__/row.lama");
 
 try {
 	let data;
-	// data = parser.feed(simple)
-	// data.results.length
-	// data.results
-
-	// wipe log file
 
 	data = parser.feed(test);
-	const vals = data.results.map(s => s.script);
+
+	const val = data.results[0];
 
 	const empty: EB.Context = {
 		env: [],
@@ -43,12 +39,12 @@ try {
 		imports: Lib.Elaborated,
 	};
 
-	const results = EB.script(vals[0], empty);
+	const results = EB.script(val, empty);
 
+	console.log("----------------- Result -------------------");
+	// console.log("\n\n------------------------------------------");
+	// console.log("--------------------------------------------");
 	results.forEach(res => {
-		console.log("\n\n------------------------------------------");
-		console.log("----------------- Result -------------------");
-		console.log("--------------------------------------------");
 		if (E.isLeft(res)) {
 			console.log(Err.display(res.left));
 			res.left.provenance ? console.log(displayProvenance(res.left.provenance)) : null;
@@ -59,8 +55,8 @@ try {
 
 		console.log("\n---------------- Term ----------------");
 		console.log(EB.Display.Statement(tm));
-		console.log("\n---------------- Type ----------------");
-		console.log(NF.display(ty));
+		// console.log("\n---------------- Type ----------------");
+		// console.log(NF.display(ty));
 	});
 
 	console.log("\n\ndone");

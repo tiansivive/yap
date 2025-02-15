@@ -16,8 +16,9 @@
 			"name": "ts node",
 			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
 			"runtimeArgs": [
-				"--transpile-only",
-				// if you use esm
+				"-T",
+				"--project",
+				"${workspaceRoot}/tsconfig.json",
 			],
 			"program": "${workspaceRoot}/src/QTT/index.ts",
 			"cwd": "${workspaceRoot}",
@@ -25,7 +26,7 @@
 			"skipFiles": [
 				"<node_internals>/**",
 				"node_modules/**"
-			]
+			],
 		}
 	],
 	"version": "0.2.0"

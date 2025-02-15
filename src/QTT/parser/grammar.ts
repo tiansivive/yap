@@ -5,6 +5,7 @@
 function id(d: any[]): any {
 	return d[0];
 }
+declare var semicolon: any;
 declare var NL: any;
 declare var ws: any;
 declare var colon: any;
@@ -26,7 +27,6 @@ declare var lbrace: any;
 declare var rbrace: any;
 declare var equals: any;
 declare var dot: any;
-declare var semicolon: any;
 declare var variable: any;
 declare var digit: any;
 declare var string: any;
@@ -97,12 +97,45 @@ interface Grammar {
 const grammar: Grammar = {
 	Lexer: lexer,
 	ParserRules: [
-		{ name: "Script$ebnf$1", symbols: ["Statement"] },
-		{ name: "Script$ebnf$1", symbols: ["Script$ebnf$1", "Statement"], postprocess: d => d[0].concat([d[1]]) },
-		{ name: "Script$ebnf$2", symbols: [lexer.has("NL") ? { type: "NL" } : NL], postprocess: id },
-		{ name: "Script$ebnf$2", symbols: [], postprocess: () => null },
-		{ name: "Script", symbols: ["Script$ebnf$1", "Script$ebnf$2"], postprocess: d => ({ type: "script", script: d[0] }) },
-		{ name: "Script", symbols: ["Ann"], postprocess: id },
+		{ name: "Script$macrocall$2", symbols: ["Statement"] },
+		{ name: "Script$macrocall$3", symbols: [lexer.has("semicolon") ? { type: "semicolon" } : semicolon] },
+		{ name: "Script$macrocall$1$ebnf$1", symbols: [] },
+		{ name: "Script$macrocall$1$ebnf$1$subexpression$1$ebnf$1", symbols: [lexer.has("NL") ? { type: "NL" } : NL], postprocess: id },
+		{ name: "Script$macrocall$1$ebnf$1$subexpression$1$ebnf$1", symbols: [], postprocess: () => null },
+		{ name: "Script$macrocall$1$ebnf$1$subexpression$1$ebnf$2", symbols: [lexer.has("ws") ? { type: "ws" } : ws], postprocess: id },
+		{ name: "Script$macrocall$1$ebnf$1$subexpression$1$ebnf$2", symbols: [], postprocess: () => null },
+		{ name: "Script$macrocall$1$ebnf$1$subexpression$1$ebnf$3", symbols: [lexer.has("NL") ? { type: "NL" } : NL], postprocess: id },
+		{ name: "Script$macrocall$1$ebnf$1$subexpression$1$ebnf$3", symbols: [], postprocess: () => null },
+		{ name: "Script$macrocall$1$ebnf$1$subexpression$1$ebnf$4", symbols: [lexer.has("ws") ? { type: "ws" } : ws], postprocess: id },
+		{ name: "Script$macrocall$1$ebnf$1$subexpression$1$ebnf$4", symbols: [], postprocess: () => null },
+		{
+			name: "Script$macrocall$1$ebnf$1$subexpression$1",
+			symbols: [
+				"Script$macrocall$1$ebnf$1$subexpression$1$ebnf$1",
+				"Script$macrocall$1$ebnf$1$subexpression$1$ebnf$2",
+				"Script$macrocall$2",
+				"Script$macrocall$1$ebnf$1$subexpression$1$ebnf$3",
+				"Script$macrocall$1$ebnf$1$subexpression$1$ebnf$4",
+				"Script$macrocall$3",
+			],
+		},
+		{
+			name: "Script$macrocall$1$ebnf$1",
+			symbols: ["Script$macrocall$1$ebnf$1", "Script$macrocall$1$ebnf$1$subexpression$1"],
+			postprocess: d => d[0].concat([d[1]]),
+		},
+		{ name: "Script$macrocall$1$ebnf$2", symbols: [lexer.has("NL") ? { type: "NL" } : NL], postprocess: id },
+		{ name: "Script$macrocall$1$ebnf$2", symbols: [], postprocess: () => null },
+		{ name: "Script$macrocall$1$ebnf$3", symbols: [lexer.has("ws") ? { type: "ws" } : ws], postprocess: id },
+		{ name: "Script$macrocall$1$ebnf$3", symbols: [], postprocess: () => null },
+		{
+			name: "Script$macrocall$1",
+			symbols: ["Script$macrocall$1$ebnf$1", "Script$macrocall$1$ebnf$2", "Script$macrocall$1$ebnf$3", "Script$macrocall$2"],
+			postprocess: P.many,
+		},
+		{ name: "Script$ebnf$1", symbols: [lexer.has("NL") ? { type: "NL" } : NL], postprocess: id },
+		{ name: "Script$ebnf$1", symbols: [], postprocess: () => null },
+		{ name: "Script", symbols: ["Script$macrocall$1", lexer.has("semicolon") ? { type: "semicolon" } : semicolon, "Script$ebnf$1"], postprocess: P.script },
 		{ name: "Ann$ebnf$1", symbols: [lexer.has("ws") ? { type: "ws" } : ws], postprocess: id },
 		{ name: "Ann$ebnf$1", symbols: [], postprocess: () => null },
 		{ name: "Ann$ebnf$2", symbols: [lexer.has("ws") ? { type: "ws" } : ws], postprocess: id },

@@ -20,5 +20,8 @@
 			"@qtt/elaboration/*": ["./src/QTT/elaboration/*"]
 		}
 	},
-	"include": ["src"]
+	"include": ["src"],
+	"ts-node": {
+		"require": ["tsconfig-paths/register"]
+	}
 }
