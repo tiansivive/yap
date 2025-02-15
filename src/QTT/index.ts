@@ -11,13 +11,18 @@ import * as Lit from "@qtt/shared/literals";
 import { mkLogger } from "@qtt/shared/logging";
 import * as Log from "@qtt/shared/logging";
 
+import * as Lib from "@qtt/shared/lib/primitives";
+
+import * as E from "fp-ts/Either";
+import { displayProvenance } from "./elaboration/solver";
+
+import * as Err from "@qtt/elaboration/errors";
+
 const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar));
 
 const simple = Q.load("./src/QTT/__tests__/simple.lama");
 const test = Q.load("./src/QTT/__tests__/test.lama");
 const row = Q.load("./src/QTT/__tests__/row.lama");
-
-const logger = mkLogger();
 
 try {
 	let data;
@@ -26,80 +31,39 @@ try {
 	// data.results
 
 	// wipe log file
-	logger.open("{\n");
-	parser.grammar.start = "Ann";
-	data = parser.feed("\\x -> 1");
-	const vals = data.results.map(s => s.script[0]);
+
+	data = parser.feed(test);
+	const vals = data.results.map(s => s.script);
 
 	const empty: EB.Context = {
 		env: [],
 		types: [],
 		names: [],
-		imports: {
-			Num: [EB.Constructors.Lit(Lit.Atom("Num")), NF.Type, []],
-			Bool: [EB.Constructors.Lit(Lit.Atom("Bool")), NF.Type, []],
-			String: [EB.Constructors.Lit(Lit.Atom("String")), NF.Type, []],
-			Unit: [EB.Constructors.Lit(Lit.Atom("Unit")), NF.Type, []],
-		},
+		trace: [],
+		imports: Lib.Elaborated,
 	};
 
-	const results: Array<[EB.AST, EB.Constraint[]]> = [];
-	const [ctx] = data.results.map(x =>
-		x.script.reduce((ctx: EB.Context, stmt: Src.Statement): EB.Context => {
-			if (stmt.type !== "let") {
-				return ctx;
-			}
+	const results = EB.script(vals[0], empty);
 
-			Log.logger.debug("Elaborating statement: " + stmt.variable, { statement: stmt.type });
-			logger.log("entry", stmt.variable, { statement: stmt.type });
+	results.forEach(res => {
+		console.log("\n\n------------------------------------------");
+		console.log("----------------- Result -------------------");
+		console.log("--------------------------------------------");
+		if (E.isLeft(res)) {
+			console.log(Err.display(res.left));
+			res.left.provenance ? console.log(displayProvenance(res.left.provenance)) : null;
+			return;
+		}
 
-			const runReader = EB.infer(stmt.value);
-			const runWriter = runReader(ctx);
+		const [tm, ty, us] = res.right;
 
-			const result = runWriter();
-
-			const [ast, cst] = result;
-			const [tm, ty, us] = ast;
-
-			results.push(result);
-
-			Log.logger.debug("Result", {
-				term: EB.Display.Term(tm),
-				type: NF.display(ty),
-				constraint: cst.map(EB.Display.Constraint),
-			});
-			logger.log("exit", "result", {
-				term: EB.Display.Term(tm),
-				type: NF.display(ty),
-				constraint: cst.map(EB.Display.Constraint),
-			});
-
-			return {
-				...ctx,
-				imports: {
-					...ctx.imports,
-					[stmt.variable]: ast,
-				},
-			};
-		}, empty),
-	);
-
-	results.forEach(([[tm, ty, us], cst]) => {
-		console.log("\n\n--------------------");
-		console.log("Term:\t", EB.Display.Term(tm));
-
-		console.log("--------------------");
-		console.log("Type:\t", NF.display(ty));
-
-		console.log("--------------------");
-		console.log("Constraints:");
-		const cs = cst.map(c => "  " + EB.Display.Constraint(c)).join("\n");
-		console.log(cs);
+		console.log("\n---------------- Term ----------------");
+		console.log(EB.Display.Statement(tm));
+		console.log("\n---------------- Type ----------------");
+		console.log(NF.display(ty));
 	});
 
-	logger.close("\n}\n");
-
-	console.log("done");
+	console.log("\n\ndone");
 } catch (e) {
 	e;
 	console.error(e);

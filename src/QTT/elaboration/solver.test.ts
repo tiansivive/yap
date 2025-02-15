@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Nearley from "nearley";
 
 import * as EB from "@qtt/elaboration";
@@ -7,6 +7,7 @@ import * as NF from "@qtt/elaboration/normalization";
 import * as Err from "@qtt/elaboration/errors";
 import * as Lit from "@qtt/shared/literals";
 import * as Q from "@qtt/shared/modalities/multiplicity";
+import * as Lib from "@qtt/shared/lib/primitives";
 
 import Grammar from "@qtt/src/grammar";
 
@@ -22,12 +23,7 @@ describe("Constraint Solver", () => {
 		env: [],
 		types: [],
 		names: [],
-		imports: {
-			Num: [EB.Constructors.Lit(Lit.Atom("Num")), NF.Type, []],
-			Bool: [EB.Constructors.Lit(Lit.Atom("Bool")), NF.Type, []],
-			String: [EB.Constructors.Lit(Lit.Atom("String")), NF.Type, []],
-			Unit: [EB.Constructors.Lit(Lit.Atom("Unit")), NF.Type, []],
-		},
+		imports: Lib.Elaborated,
 		trace: [],
 	};
 
@@ -60,6 +56,8 @@ describe("Constraint Solver", () => {
 		const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar), { keepHistory: true });
 		parser.grammar.start = "Ann";
 
+		const mock = vi.spyOn(console, "error").mockImplementation(() => {});
+
 		EB.resetSupply("meta");
 		EB.resetSupply("var");
 		const data = parser.feed(src);
@@ -81,5 +79,6 @@ describe("Constraint Solver", () => {
 		}
 
 		expect(either.left).toMatchObject({ type: "UnificationFailure" });
+		expect(mock).toHaveBeenCalled();
 	});
 });

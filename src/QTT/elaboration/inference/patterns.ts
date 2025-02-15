@@ -33,6 +33,8 @@ export const infer_: Inference<Src.Pattern, "type"> = {
 			.with({ type: "Num" }, _ => Lit.Atom("Num"))
 			.with({ type: "Bool" }, _ => Lit.Atom("Bool"))
 			.with({ type: "Atom" }, _ => Lit.Atom("Type"))
+			.with({ type: "unit" }, _ => Lit.Atom("Unit"))
+
 			.exhaustive();
 
 		return M.fmap(M.ask(), (ctx): Result => [EB.Constructors.Patterns.Lit(pat.value), NF.Constructors.Lit(atom), Q.noUsage(ctx.env.length), []]);

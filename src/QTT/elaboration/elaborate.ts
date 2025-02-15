@@ -1,6 +1,7 @@
 import { match } from "ts-pattern";
 
 import * as F from "fp-ts/lib/function";
+import * as E from "fp-ts/lib/Either";
 
 import * as EB from ".";
 import * as NF from "./normalization";
@@ -312,8 +313,36 @@ export const run = (term: Src.Term, ctx: EB.Context) => {
 		M.bind("ty", ({ sub, inferred }) => zonk("nf", inferred.ty, sub)),
 	);
 
-	const runWriter = elaboration(ctx);
-	const [result] = runWriter();
+	return M.run(elaboration, ctx);
+};
 
-	return result;
+export const script = ({ script }: Src.Script, ctx: EB.Context) => {
+	const letdecs = script
+		.filter(stmt => stmt.type === "let")
+		.reduce(
+			({ ctx, results }, stmt) => {
+				const action = F.pipe(
+					Stmt.infer(stmt),
+					M.listen(([[stmt, ty, us], { constraints }]) => ({ inferred: { stmt, ty, us }, constraints })),
+					M.bind("sub", ({ constraints }) => solve(constraints)),
+					M.bind("ty", ({ sub, inferred }) => zonk("nf", inferred.ty, sub)),
+					M.bind("term", ({ sub, inferred }) => zonk("term", inferred.stmt.value, sub)),
+				);
+
+				const [result] = M.run(action, ctx);
+				return F.pipe(
+					result,
+					E.match(
+						err => ({ ctx, results: [...results, E.left<M.Err, ElaboratedStmt>(err)] }),
+						({ term, ty, inferred }) => {
+							const ctx_: EB.Context = { ...ctx, imports: { ...ctx.imports, [stmt.variable]: [term, ty, inferred.us] } };
+							return { ctx: ctx_, results: [...results, E.right<M.Err, ElaboratedStmt>([inferred.stmt, inferred.ty, inferred.us])] };
+						},
+					),
+				);
+			},
+			{ ctx, results: [] as E.Either<M.Err, ElaboratedStmt>[] },
+		);
+
+	return letdecs.results;
 };

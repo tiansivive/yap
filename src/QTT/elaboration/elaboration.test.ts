@@ -6,6 +6,7 @@ import * as NF from "@qtt/elaboration/normalization";
 import * as Lit from "@qtt/shared/literals";
 import * as Q from "@qtt/shared/modalities/multiplicity";
 import * as Err from "@qtt/elaboration/errors";
+import * as Lib from "@qtt/shared/lib/primitives";
 
 import Grammar from "@qtt/src/grammar";
 
@@ -19,12 +20,7 @@ describe("Elaboration", () => {
 		env: [],
 		types: [],
 		names: [],
-		imports: {
-			Num: [EB.Constructors.Lit(Lit.Atom("Num")), NF.Type, []],
-			Bool: [EB.Constructors.Lit(Lit.Atom("Bool")), NF.Type, []],
-			String: [EB.Constructors.Lit(Lit.Atom("String")), NF.Type, []],
-			Unit: [EB.Constructors.Lit(Lit.Atom("Unit")), NF.Type, []],
-		},
+		imports: Lib.Elaborated,
 		trace: [],
 	};
 

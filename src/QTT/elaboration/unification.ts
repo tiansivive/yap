@@ -28,53 +28,56 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaborati
 	const res = match([left, right])
 		.with([{ type: "Neutral" }, P._], ([n, v]) => unify(n.value, v, lvl))
 		.with([P._, { type: "Neutral" }], ([v, n]) => unify(v, n.value, lvl))
-		.with([NF.Patterns.Lit, NF.Patterns.Lit], ([lit1, lit2]) => {
-			if (!_.isEqual(lit1.value, lit2.value)) {
-				return M.fail(Err.UnificationFailure(lit1, lit2));
-			}
+		.otherwise(() =>
+			M.track(
+				["unify", [left, right], { action: "unification" }],
+				match([left, right])
+					.with([NF.Patterns.Lit, NF.Patterns.Lit], ([lit1, lit2]) => {
+						if (!_.isEqual(lit1.value, lit2.value)) {
+							return M.fail(Err.UnificationFailure(lit1, lit2));
+						}
+						return M.of(empty);
+					})
+					.with(
+						[NF.Patterns.Lambda, NF.Patterns.Lambda],
+						([lam1, lam2]) => lam1.binder.icit === lam2.binder.icit,
+						([lam1, lam2]) =>
+							M.chain(M.ask(), ctx => {
+								const body1 = NF.apply(ctx.imports, lam1.closure, NF.Constructors.Rigid(lvl));
+								const body2 = NF.apply(ctx.imports, lam2.closure, NF.Constructors.Rigid(lvl));
+								return unify(body1, body2, lvl + 1);
+							}),
+					)
 
-			return M.of(empty);
-		})
-		.with(
-			[NF.Patterns.Lambda, NF.Patterns.Lambda],
-			([lam1, lam2]) => lam1.binder.icit === lam2.binder.icit,
-			([lam1, lam2]) =>
-				M.chain(M.ask(), ctx => {
-					const body1 = NF.apply(ctx.imports, lam1.closure, NF.Constructors.Rigid(lvl));
-					const body2 = NF.apply(ctx.imports, lam2.closure, NF.Constructors.Rigid(lvl));
-					return unify(body1, body2, lvl + 1);
-				}),
-		)
+					.with(
+						[NF.Patterns.Pi, NF.Patterns.Pi],
+						([pi1, pi2]) => pi1.binder.icit === pi2.binder.icit,
+						([pi1, pi2]) =>
+							F.pipe(
+								unify(pi1.binder.annotation[0], pi2.binder.annotation[0], lvl),
+								M.chain(M.ask),
+								M.chain(ctx => {
+									const body1 = NF.apply(ctx.imports, pi1.closure, NF.Constructors.Rigid(lvl));
+									const body2 = NF.apply(ctx.imports, pi2.closure, NF.Constructors.Rigid(lvl));
+									return unify(body1, body2, lvl + 1);
+								}),
+							),
+					)
 
-		.with(
-			[NF.Patterns.Pi, NF.Patterns.Pi],
-			([pi1, pi2]) => pi1.binder.icit === pi2.binder.icit,
-			([pi1, pi2]) =>
-				F.pipe(
-					unify(pi1.binder.annotation[0], pi2.binder.annotation[0], lvl),
-					M.chain(M.ask),
-					M.chain(ctx => {
-						const body1 = NF.apply(ctx.imports, pi1.closure, NF.Constructors.Rigid(lvl));
-						const body2 = NF.apply(ctx.imports, pi2.closure, NF.Constructors.Rigid(lvl));
-						return unify(body1, body2, lvl + 1);
-					}),
-				),
-		)
+					.with([NF.Patterns.Flex, P._], ([meta, v]) => M.fmap(M.ask(), ctx => bind(ctx, meta.variable, v)))
+					.with([P._, NF.Patterns.Flex], ([v, meta]) => M.fmap(M.ask(), ctx => bind(ctx, meta.variable, v)))
 
-		.with([NF.Patterns.Flex, P._], ([meta, v]) => M.fmap(M.ask(), ctx => bind(ctx, meta.variable, v)))
-		.with([P._, NF.Patterns.Flex], ([v, meta]) => M.fmap(M.ask(), ctx => bind(ctx, meta.variable, v)))
+					.with([NF.Patterns.Rigid, NF.Patterns.Rigid], ([rigid1, rigid2]) => {
+						if (!_.isEqual(rigid1.variable, rigid2.variable)) {
+							return M.fail(Err.RigidVariableMismatch(rigid1, rigid2));
+						}
 
-		.with([NF.Patterns.Rigid, NF.Patterns.Rigid], ([rigid1, rigid2]) => {
-			if (_.isEqual(rigid1.variable, rigid2.variable)) {
-				return M.of(empty);
-			}
+						return M.of(empty);
+					})
 
-			throw new Error("Unification: Rigid variables are different");
-		})
-
-		.otherwise(ts => {
-			throw new Error("Unification Failure!");
-		});
+					.otherwise(ts => M.fail(Err.TypeMismatch(left, right))),
+			),
+		);
 
 	return M.fmap(res, subst => {
 		Log.logger.debug("[Result] ", subst);

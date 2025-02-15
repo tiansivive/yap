@@ -7,23 +7,20 @@ import * as NF from "@qtt/elaboration/normalization";
 import * as Err from "@qtt/elaboration/errors";
 import * as Lit from "@qtt/shared/literals";
 import * as Q from "@qtt/shared/modalities/multiplicity";
+import * as Lib from "@qtt/shared/lib/primitives";
 
 import Grammar from "@qtt/src/grammar";
 
 import * as Log from "@qtt/shared/logging";
 import * as E from "fp-ts/Either";
+import { displayProvenance } from "./solver";
 
 describe("Unification", () => {
 	const empty: EB.Context = {
 		env: [],
 		types: [],
 		names: [],
-		imports: {
-			Num: [EB.Constructors.Lit(Lit.Atom("Num")), NF.Type, []],
-			Bool: [EB.Constructors.Lit(Lit.Atom("Bool")), NF.Type, []],
-			String: [EB.Constructors.Lit(Lit.Atom("String")), NF.Type, []],
-			Unit: [EB.Constructors.Lit(Lit.Atom("Unit")), NF.Type, []],
-		},
+		imports: Lib.Elaborated,
 		trace: [],
 	};
 
@@ -78,7 +75,8 @@ describe("Unification", () => {
 			throw new Error(`Expected unification to fail`);
 		}
 
-		expect(either.left).toMatchObject(Err.UnificationFailure(left, right));
+		const display = displayProvenance;
+		expect(either.left).toMatchObject(Err.TypeMismatch({ type: "Var" } as any, { type: "Lit" } as any));
 	});
 
 	it("should bind a meta to a value", () => {

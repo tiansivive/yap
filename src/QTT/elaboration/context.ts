@@ -20,7 +20,13 @@ export type Context = {
 
 export type AST = [EB.Term, NF.Value, Q.Usages];
 
-export type Provenance = ["src", Src.Term, Metadata?] | ["eb", EB.Term, Metadata?] | ["nf", NF.Value, Metadata?] | ["alt", Src.Alternative, Metadata?];
+export type Provenance =
+	| ["src", Src.Term, Metadata?]
+	| ["eb", EB.Term, Metadata?]
+	| ["nf", NF.Value, Metadata?]
+	| ["alt", Src.Alternative, Metadata?]
+	| ["unify", [NF.Value, NF.Value], Metadata?];
+
 type Metadata = {
 	action: string;
 	motive?: string;

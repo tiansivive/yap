@@ -8,11 +8,12 @@ import * as W from "fp-ts/lib/Writer";
 import * as E from "fp-ts/lib/Either";
 
 import * as EB from ".";
-import * as Err from "./errors";
+import { Cause } from "./errors";
 import { Either } from "fp-ts/lib/Either";
 
 export type Elaboration<T> = Reader<EB.Context, Emitter<T>>;
-type Emitter<T> = Writer<Accumulator, Either<Err.Cause, T>>;
+type Emitter<T> = Writer<Accumulator, Either<Err, T>>;
+export type Err = Cause & { provenance?: EB.Provenance[] };
 
 type Accumulator = {
 	constraints: (EB.Constraint & { provenance: EB.Provenance[] })[];
@@ -90,7 +91,7 @@ export const fold = <A, B>(f: (acc: B, a: A, i: number) => Elaboration<B>, acc: 
 /************************************************************************************************************************
  * Lifting
  ************************************************************************************************************************/
-export const liftE = <A>(e: Either<Err.Cause, A>): Elaboration<A> => R.of(W.getPointed(monoid).of(e));
+export const liftE = <A>(e: Either<Cause, A>): Elaboration<A> => R.of(W.getPointed(monoid).of(e));
 export const liftW = <A>(w: Emitter<A>): Elaboration<A> => R.of(w);
 export const liftR =
 	<A>(fa: Reader<EB.Context, A>): Elaboration<A> =>
@@ -166,6 +167,7 @@ export const listen =
 /**********************************
  * Provenance combinators
  **********************************/
+
 export const track = <A>(provenance: EB.Provenance, rw: Elaboration<A>) =>
 	local(ctx => {
 		return { ...ctx, trace: ctx.trace.concat([provenance]) };
@@ -179,9 +181,14 @@ export const trackMany = <A>(provenance: EB.Provenance[], rw: Elaboration<A>) =>
  * Exception handling
  **********************************/
 
-export const fail = (cause: Err.Cause): Elaboration<never> => liftE(E.left(cause));
+export const fail = (cause: Cause): Elaboration<never> =>
+	chain(ask(), ctx => {
+		const provenance = ctx.trace;
+		return liftE(E.left({ ...cause, provenance }));
+	});
+
 export const catchError =
-	<A>(rw: Elaboration<A>, f: (e: Err.Cause) => Elaboration<A>) =>
+	<A>(rw: Elaboration<A>, f: (e: Cause) => Elaboration<A>) =>
 	(r: EB.Context): Emitter<A> => {
 		const [a, w] = rw(r)();
 		if (E.isRight(a)) {
@@ -192,7 +199,7 @@ export const catchError =
 		return W.Functor.map(W.tell(monoid.concat(w, w2)), _ => b);
 	};
 
-export const onError = <A>(rw: Elaboration<A>, f: (e: Err.Cause) => unknown) => {
+export const onError = <A>(rw: Elaboration<A>, f: (e: Cause) => unknown) => {
 	return catchError(rw, e => {
 		f(e);
 		return fail(e);
