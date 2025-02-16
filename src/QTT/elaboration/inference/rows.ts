@@ -44,7 +44,7 @@ export const elaborate = (row: Src.Row): M.Elaboration<[EB.Row, NF.Row, Q.Usages
 				F.pipe(
 					M.Do,
 					M.let("value", EB.infer(value)),
-					M.let("row", elaborate(row)),
+					M.let("row", elaborate(row as Src.Row)),
 					M.fmap(({ value, row }): [EB.Row, NF.Row, Q.Usages] => {
 						const q = Q.add(value[2], row[2]);
 						const ty = NF.Constructors.Extension(label, value[1], row[1]);

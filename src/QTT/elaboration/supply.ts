@@ -9,9 +9,9 @@ export const resetSupply = (key: keyof typeof counts) => {
 	counts[key] = 0;
 };
 
-export const freshMeta = (): EB.Variable => {
+export const freshMeta = () => {
 	counts.meta++;
-	return EB.Meta(counts.meta);
+	return { type: "Meta" as const, val: counts.meta };
 };
 
 export const getVarCount = () => {

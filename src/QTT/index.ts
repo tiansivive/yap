@@ -61,7 +61,6 @@ try {
 
 	console.log("\n\ndone");
 } catch (e) {
-	e;
 	console.error(e);
 }
 

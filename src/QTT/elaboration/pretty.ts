@@ -15,9 +15,12 @@ const display = (term: EB.Term): string => {
 	return match(term)
 		.with({ type: "Lit" }, ({ value }) => Lit.display(value))
 		.with({ type: "Var" }, ({ variable }) =>
-			variable.type === "Free" ? variable.name : variable.type === "Meta" ? `?${variable.index}` : `v${variable.index}`,
+			match(variable)
+				.with({ type: "Bound" }, ({ index }) => `i${index}`)
+				.with({ type: "Free" }, ({ name }) => name)
+				.with({ type: "Meta" }, ({ val }) => `?${val}`)
+				.otherwise(() => "Var Display: Not implemented"),
 		)
-
 		.with({ type: "Abs" }, ({ binding, body }) => {
 			const b = match(binding)
 				.with({ type: "Lambda" }, ({ variable, icit }) => `λ${Icit.display(icit)}${variable}`)

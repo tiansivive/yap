@@ -23,7 +23,7 @@ export type Term =
 	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> }
 	| { type: "Block"; statements: Array<Statement>; return: Term };
 
-export type Variable = { type: "Bound"; index: number } | { type: "Free"; name: string } | { type: "Meta"; index: number };
+export type Variable = { type: "Bound"; index: number } | { type: "Free"; name: string } | { type: "Meta"; val: number };
 export type Row = R.Row<Term, Variable>;
 
 export type Binding =
@@ -52,7 +52,7 @@ export type Statement = { type: "Expression"; value: Term } | { type: "Let"; var
 
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
 export const Free = (name: string): Variable => ({ type: "Free", name });
-export const Meta = (index: number): Variable => ({ type: "Meta", index });
+export const Meta = (val: number): Variable => ({ type: "Meta", val });
 
 export const Constructors = {
 	Abs: (binding: Binding, body: Term): Term => ({ type: "Abs", binding, body }),

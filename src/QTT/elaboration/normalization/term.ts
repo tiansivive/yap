@@ -23,7 +23,7 @@ export type Binder =
 	| { type: "Lambda"; variable: string; icit: Implicitness }
 	| { type: "Mu"; variable: string; annotation: ModalValue };
 
-export type Variable = { type: "Bound"; index: number } | { type: "Meta"; index: number } | { type: "Free"; name: string };
+export type Variable = { type: "Bound"; lvl: number } | { type: "Meta"; val: number } | { type: "Free"; name: string };
 
 export type Closure = {
 	env: Env;
@@ -49,11 +49,11 @@ export const Constructors = {
 		binder: { type: "Lambda" as const, variable, icit },
 		closure,
 	}),
-	Rigid: (lvl: number) => ({
-		type: "Neutral" as const,
+	Rigid: (lvl: number): Value => ({
+		type: "Neutral",
 		value: {
 			type: "Var" as const,
-			variable: { type: "Bound" as const, index: lvl },
+			variable: { type: "Bound", lvl },
 		},
 	}),
 	Lit: (value: Literal) => ({

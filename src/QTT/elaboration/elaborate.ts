@@ -325,8 +325,13 @@ export const script = ({ script }: Src.Script, ctx: EB.Context) => {
 					Stmt.infer(stmt),
 					M.listen(([[stmt, ty, us], { constraints }]) => ({ inferred: { stmt, ty, us }, constraints })),
 					M.bind("sub", ({ constraints }) => solve(constraints)),
-					M.bind("ty", ({ sub, inferred }) => zonk("nf", inferred.ty, sub)),
-					M.bind("term", ({ sub, inferred }) => zonk("term", inferred.stmt.value, sub)),
+					M.bind("ty", ({ sub, inferred }) =>
+						F.pipe(
+							zonk("nf", inferred.ty, sub),
+							M.fmap(nf => NF.generalize(nf, ctx)),
+						),
+					),
+					M.bind("term", ({ sub, inferred }) => F.pipe(zonk("term", inferred.stmt.value, sub), M.fmap(EB.Icit.generalize))),
 				);
 
 				const [result] = M.run(action, ctx);

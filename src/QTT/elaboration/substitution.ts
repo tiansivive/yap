@@ -19,7 +19,7 @@ export const Substitute = (ctx: EB.Context) => {
 			match(val)
 				.with(NF.Patterns.Lit, () => val)
 				.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(call.nf(subst, value)))
-				.with(NF.Patterns.Flex, ({ variable }) => subst[variable.index] ?? val)
+				.with(NF.Patterns.Flex, ({ variable }) => subst[variable.val] ?? val)
 				.with(NF.Patterns.Lambda, ({ binder, closure }) => NF.Constructors.Lambda(binder.variable, binder.icit, call.closure(subst, closure)))
 				.with(NF.Patterns.Pi, ({ closure, binder }) =>
 					NF.Constructors.Pi(binder.variable, binder.icit, [call.nf(subst, binder.annotation[0]), binder.annotation[1]], call.closure(subst, closure)),
@@ -32,7 +32,7 @@ export const Substitute = (ctx: EB.Context) => {
 						val => call.nf(subst, val),
 						v => {
 							if (v.type === "Meta") {
-								const nf = subst[v.index];
+								const nf = subst[v.val];
 
 								if (nf.type === "Row") {
 									return nf.row;
@@ -65,7 +65,7 @@ export const Substitute = (ctx: EB.Context) => {
 				.with({ type: "Lit" }, () => term)
 				.with({ type: "Var" }, ({ variable }) => {
 					if (variable.type === "Meta") {
-						return subst[variable.index] ? NF.quote(ctx.imports, ctx.env.length, subst[variable.index]) : term;
+						return subst[variable.val] ? NF.quote(ctx.imports, ctx.env.length, subst[variable.val]) : term;
 					}
 
 					return term;
@@ -87,7 +87,7 @@ export const Substitute = (ctx: EB.Context) => {
 						val => call.term(subst, val),
 						v => {
 							if (v.type === "Meta") {
-								const tm = NF.quote(ctx.imports, ctx.env.length, subst[v.index]);
+								const tm = NF.quote(ctx.imports, ctx.env.length, subst[v.val]);
 
 								if (tm.type === "Row") {
 									return tm.row;

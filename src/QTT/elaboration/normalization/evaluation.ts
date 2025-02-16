@@ -55,7 +55,7 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 					})
 					.with({ type: "variable" }, (r): NF.Row => {
 						if (r.variable.type === "Meta") {
-							return r;
+							return { type: "variable", variable: r.variable };
 						}
 
 						if (r.variable.type === "Bound") {

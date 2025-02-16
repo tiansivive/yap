@@ -99,7 +99,7 @@ const bind = (ctx: EB.Context, v: NF.Variable, ty: NF.Value): Subst => {
 	}
 
 	if (!occursCheck(ctx, v, ty)) {
-		return { [v.index]: ty };
+		return { [v.val]: ty };
 	}
 
 	// solution is a mu type

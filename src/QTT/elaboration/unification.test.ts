@@ -80,7 +80,7 @@ describe("Unification", () => {
 	});
 
 	it("should bind a meta to a value", () => {
-		const left = NF.Constructors.Neutral(NF.Constructors.Var(EB.Meta(0)));
+		const left = NF.Constructors.Neutral(NF.Constructors.Var({ type: "Meta", val: 0 }));
 		const right = NF.Constructors.Lit(Lit.Num(42));
 
 		const [either] = M.run(EB.unify(left, right, 0), empty);
