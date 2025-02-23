@@ -408,8 +408,8 @@ export const Return: PostProcessor<[Newline, Whitespace, Keyword, Whitespace, Te
 
 export const Expr: PostProcessor<[Term], Statement> = ([value]) => ({ type: "expression", value, location: value.location });
 
-type LetDec = [Keyword, Whitespace, Variable, ...Annotation, Whitespace, Equals, Whitespace, Term];
-export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]: LetDec) => {
+type LetDec = [Keyword, Whitespace, Variable, Newline, ...Annotation, Newline, Whitespace, Equals, Whitespace, Term];
+export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, , ...rest]: LetDec) => {
 	const letdec = (variable: Variable, value: Term, annotation?: Term, multiplicity?: Q.Multiplicity): Statement => ({
 		type: "let",
 		variable: variable.value,
@@ -419,19 +419,19 @@ export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]
 		location: locSpan(variable.location, value.location),
 	});
 
-	if (rest.length === 4) {
-		const [, , , value] = rest;
+	if (rest.length === 5) {
+		const [, , , , value] = rest;
 		return letdec(variable, value);
 	}
 
-	if (rest.length === 8) {
-		const [, , , ann, , , , value] = rest;
+	if (rest.length === 9) {
+		const [, , , ann, , , , , value] = rest;
 		return letdec(variable, value, ann);
 	}
 
 	const q = rest[3];
 	const ann = rest[5];
-	const value = rest[9];
+	const value = rest[10];
 	return letdec(variable, value, ann, q);
 };
 

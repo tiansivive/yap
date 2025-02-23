@@ -49,19 +49,19 @@ describe("Displaying elaborated terms", () => {
 
 		it("should display a bound variable", () => {
 			const term = EB.Constructors.Var(EB.Bound(1));
-			expect(EB.Display.Term(term)).toBe("v1");
+			expect(EB.Display.Term(term)).toBe("i1");
 		});
 	});
 
 	describe("Abstractions", () => {
 		it("should display a lambda", () => {
 			const term = EB.Constructors.Lambda("x", "Explicit", EB.Constructors.Var(EB.Bound(0)));
-			expect(EB.Display.Term(term)).toBe("λx -> v0");
+			expect(EB.Display.Term(term)).toBe("λx -> i0");
 		});
 
 		it("should display an implicit lambda", () => {
 			const term = EB.Constructors.Lambda("x", "Implicit", EB.Constructors.Var(EB.Bound(0)));
-			expect(EB.Display.Term(term)).toBe("λ#x => v0");
+			expect(EB.Display.Term(term)).toBe("λ#x => i0");
 		});
 
 		it("should display a pi", () => {
@@ -82,19 +82,19 @@ describe("Displaying elaborated terms", () => {
 	describe("Applications", () => {
 		it("should display an application", () => {
 			const term = EB.Constructors.App("Explicit", EB.Constructors.Var(EB.Bound(0)), EB.Constructors.Var(EB.Bound(1)));
-			expect(EB.Display.Term(term)).toBe("v0 v1");
+			expect(EB.Display.Term(term)).toBe("i0 i1");
 		});
 
 		it("should display an implicit application", () => {
 			const term = EB.Constructors.App("Implicit", EB.Constructors.Var(EB.Bound(0)), EB.Constructors.Var(EB.Bound(1)));
-			expect(EB.Display.Term(term)).toBe("v0 #v1");
+			expect(EB.Display.Term(term)).toBe("i0 #i1");
 		});
 	});
 
 	describe("Annotations", () => {
 		it("should display an annotation", () => {
 			const term = EB.Constructors.Annotation(EB.Constructors.Var(EB.Bound(0)), EB.Constructors.Lit(Lit.Atom("Int")));
-			expect(EB.Display.Term(term)).toBe("v0 : Int");
+			expect(EB.Display.Term(term)).toBe("i0 : Int");
 		});
 
 		it.skip("should display a nested annotation", () => {
@@ -102,7 +102,7 @@ describe("Displaying elaborated terms", () => {
 				EB.Constructors.Var(EB.Bound(0)),
 				EB.Constructors.Annotation(EB.Constructors.Var(EB.Bound(1)), EB.Constructors.Lit(Lit.Atom("Int"))),
 			);
-			expect(EB.Display.Term(term)).toBe("v0 : (v1 : Int)");
+			expect(EB.Display.Term(term)).toBe("i0 : (i1 : Int)");
 		});
 	});
 
@@ -120,7 +120,7 @@ describe("Displaying elaborated terms", () => {
 					value: EB.Constructors.Var(EB.Bound(0)),
 					row: { type: "empty" },
 				});
-				expect(EB.Display.Term(term)).toBe("[ x: v0 ]");
+				expect(EB.Display.Term(term)).toBe("[ x: i0 ]");
 			});
 
 			it("should display a row with multiple fields", () => {
@@ -135,7 +135,7 @@ describe("Displaying elaborated terms", () => {
 						row: { type: "empty" },
 					},
 				});
-				expect(EB.Display.Term(term)).toBe("[ x: v0, y: v1 ]");
+				expect(EB.Display.Term(term)).toBe("[ x: i0, y: i1 ]");
 			});
 
 			it("should display a row with a variable", () => {
@@ -150,7 +150,7 @@ describe("Displaying elaborated terms", () => {
 					value: EB.Constructors.Var(EB.Bound(0)),
 					row: { type: "variable", variable: EB.Free("r") },
 				});
-				expect(EB.Display.Term(term)).toBe("[ x: v0 | r ]");
+				expect(EB.Display.Term(term)).toBe("[ x: i0 | r ]");
 			});
 		});
 
@@ -167,7 +167,7 @@ describe("Displaying elaborated terms", () => {
 					value: EB.Constructors.Var(EB.Bound(0)),
 					row: { type: "empty" },
 				});
-				expect(EB.Display.Term(term)).toBe("Struct [ x: v0 ]");
+				expect(EB.Display.Term(term)).toBe("Struct [ x: i0 ]");
 			});
 
 			it("should display a struct with multiple fields", () => {
@@ -182,7 +182,7 @@ describe("Displaying elaborated terms", () => {
 						row: { type: "empty" },
 					},
 				});
-				expect(EB.Display.Term(term)).toBe("Struct [ x: v0, y: v1 ]");
+				expect(EB.Display.Term(term)).toBe("Struct [ x: i0, y: i1 ]");
 			});
 
 			it("should display a struct with a variable and an extension", () => {
@@ -192,7 +192,7 @@ describe("Displaying elaborated terms", () => {
 					value: EB.Constructors.Var(EB.Bound(0)),
 					row: { type: "variable", variable: EB.Free("r") },
 				});
-				expect(EB.Display.Term(term)).toBe("Struct [ x: v0 | r ]");
+				expect(EB.Display.Term(term)).toBe("Struct [ x: i0 | r ]");
 			});
 		});
 	});

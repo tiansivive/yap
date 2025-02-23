@@ -28,7 +28,7 @@ export const display = (value: NF.Value | NF.ModalValue): string => {
 			const b = match(binder)
 				.with({ type: "Lambda" }, ({ variable, icit }) => `λ${Icit.display(icit)}${variable}`)
 				.with({ type: "Pi" }, ({ icit, variable, annotation }) => `Π(${Icit.display(icit)}${variable}:${display(annotation)})`)
-				.with({ type: "Mu" }, ({ variable, annotation }) => `μ${variable}:${display(annotation)}`)
+				.with({ type: "Mu" }, ({ variable, annotation }) => `μ(${variable}:${display(annotation)})`)
 				.exhaustive();
 
 			const arr = binder.type !== "Mu" && binder.icit === "Implicit" ? "=>" : "->";

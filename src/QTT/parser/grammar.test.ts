@@ -102,6 +102,25 @@ describe("Grammar", () => {
 				expect(expr.body).toMatchObject({ type: "lit", value: two });
 			});
 
+			it("should parse nested pi types:\t(x: Int) -> (y: Int) -> 2", () => {
+				const pi = `(x: Int) -> (y: Int) -> 2`;
+				const data = parser.feed(pi);
+
+				const expr = data.results[0];
+
+				const int = { type: "name", value: "Int" };
+				const two = { type: "Num", value: 2 };
+
+				expect(data.results.length).toBe(1);
+				expect(expr.type).toBe("pi");
+				expect(expr.icit).toBe("Explicit");
+				expect(expr.variable).toBe("x");
+				expect(expr.annotation).toMatchObject({ type: "var", variable: int });
+				expect(expr.body.type).toBe("pi");
+				expect(expr.body.variable).toBe("y");
+				expect(expr.body.annotation).toMatchObject({ type: "var", variable: int });
+				expect(expr.body.body).toMatchObject({ type: "lit", value: two });
+			});
 			it("should parse implicit pi types:\t(x: Int) => 2", () => {
 				const pi = `(x: Int) => 2`;
 				const data = parser.feed(pi);
@@ -246,7 +265,7 @@ describe("Grammar", () => {
 				expect(extension.row.type).toBe("empty");
 			});
 
-			it("should parse schemas:\t\t{ x: 1, y: 2 }", () => {
+			it("should parse schemas:\t\t{ x:: 1, y:: 2 }", () => {
 				// parser.grammar.start = "TypeExpr";
 				const src = `{ x:: 1, y:: 2 }`;
 				const data = parser.feed(src);
@@ -606,6 +625,60 @@ describe("Grammar", () => {
 				expect(expr.ann.type).toBe("arrow");
 				expect(expr.ann.lhs).toMatchObject({ type: "var", variable: int });
 				expect(expr.ann.rhs).toMatchObject({ type: "var", variable: int });
+			});
+
+			it("should parse pi types with applications:\t(a:Type) -> (b:Type) -> f a -> f b", () => {
+				const src = `(a:Type) -> (b:Type) -> f a -> f b`;
+				const data = parser.feed(src);
+
+				const expr = data.results[0];
+
+				const a = { type: "name", value: "a" };
+				const b = { type: "name", value: "b" };
+				const f = { type: "name", value: "f" };
+				const type = { type: "Atom", value: "Type" };
+
+				expect(data.results.length).toBe(1);
+				expect(expr.type).toBe("pi");
+				expect(expr.variable).toBe("a");
+				expect(expr.annotation).toMatchObject({ type: "lit", value: type });
+				expect(expr.body.type).toBe("pi");
+				expect(expr.body.variable).toBe("b");
+				expect(expr.body.annotation).toMatchObject({ type: "lit", value: type });
+				expect(expr.body.body.type).toBe("arrow");
+				expect(expr.body.body.lhs).toMatchObject({ type: "application" });
+				expect(expr.body.body.lhs.fn).toMatchObject({ type: "var", variable: f });
+				expect(expr.body.body.lhs.arg).toMatchObject({ type: "var", variable: a });
+				expect(expr.body.body.rhs).toMatchObject({ type: "application" });
+				expect(expr.body.body.rhs.fn).toMatchObject({ type: "var", variable: f });
+				expect(expr.body.body.rhs.arg).toMatchObject({ type: "var", variable: b });
+			});
+
+			it("should parse pi types with row terms:\t(a:Type) -> (b:Type) -> { x:: a, y:: b }", () => {
+				const src = `(a:Type) -> (b:Type) -> { x:: a, y:: b }`;
+				const data = parser.feed(src);
+
+				const expr = data.results[0];
+
+				const a = { type: "name", value: "a" };
+				const b = { type: "name", value: "b" };
+				const type = { type: "Atom", value: "Type" };
+
+				expect(data.results.length).toBe(1);
+				expect(expr.type).toBe("pi");
+				expect(expr.variable).toBe("a");
+				expect(expr.annotation).toMatchObject({ type: "lit", value: type });
+				expect(expr.body.type).toBe("pi");
+				expect(expr.body.variable).toBe("b");
+				expect(expr.body.annotation).toMatchObject({ type: "lit", value: type });
+				expect(expr.body.body.type).toBe("schema");
+				expect(expr.body.body.row.type).toBe("extension");
+				expect(expr.body.body.row.label).toBe("x");
+				expect(expr.body.body.row.value).toMatchObject({ type: "var", variable: a });
+				expect(expr.body.body.row.row.type).toBe("extension");
+				expect(expr.body.body.row.row.label).toBe("y");
+				expect(expr.body.body.row.row.value).toMatchObject({ type: "var", variable: b });
+				expect(expr.body.body.row.row.row.type).toBe("empty");
 			});
 		});
 	});

@@ -258,7 +258,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`Π(x: <ω> Num) -> v0`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`Π(x: <ω> Num) -> i0`);
 			expect(NF.display(ty)).toStrictEqual(`Type`);
 			expect(qs).toStrictEqual([]);
 
@@ -350,7 +350,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`λr -> Schema [ x: Num, y: Num | v0 ]`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`λr -> Schema [ x: Num, y: Num | i0 ]`);
 			expect(NF.display(ty)).toStrictEqual(`Π(r:<ω> ?1) -> Type`);
 			expect(qs).toStrictEqual([]);
 
@@ -427,7 +427,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| 1 -> 2\n| 3 -> 4`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| 1 -> 2\n| 3 -> 4`);
 			expect(NF.display(ty)).toStrictEqual(`Num`);
 			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
@@ -453,7 +453,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| 1 -> 2\n| 3 -> "hello"`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| 1 -> 2\n| 3 -> "hello"`);
 
 			// 1: to unify the two branches
 			// 2: to unify each pattern with the scrutinee,
@@ -483,7 +483,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| y -> 2\n| z -> 4`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| y -> 2\n| z -> 4`);
 			expect(NF.display(ty)).toStrictEqual(`Num`);
 			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
@@ -515,7 +515,7 @@ describe("Elaboration", () => {
 				}
 				const [tm, ty, qs] = either.right;
 
-				expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| Struct [ x: 1, y: 2 ] -> 11\n| Struct [ z: 3, w: 4 ] -> 22`);
+				expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Struct [ x: 1, y: 2 ] -> 11\n| Struct [ z: 3, w: 4 ] -> 22`);
 				expect(NF.display(ty)).toStrictEqual(`Num`);
 				expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
@@ -546,7 +546,7 @@ describe("Elaboration", () => {
 				}
 				const [tm, ty, qs] = either.right;
 
-				expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| Struct [ x: 1, y: 2 | r ] -> v0\n| Struct [ z: 3, w: 4 | r ] -> v1`);
+				expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Struct [ x: 1, y: 2 | r ] -> i0\n| Struct [ z: 3, w: 4 | r ] -> i1`);
 				expect(NF.display(ty)).toStrictEqual(`?1`); // return type is unified, so it just picks up the type of the first branch
 				expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
@@ -578,7 +578,7 @@ describe("Elaboration", () => {
 				}
 				const [tm, ty, qs] = either.right;
 
-				expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| Struct [ x: y ] -> v0\n| Struct [ z: w ] -> v0`);
+				expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Struct [ x: y ] -> i0\n| Struct [ z: w ] -> i0`);
 				expect(NF.display(ty)).toStrictEqual(`?1`); // return type is unified, so it just picks up the type of the first branch
 
 				expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
@@ -611,7 +611,7 @@ describe("Elaboration", () => {
 				const [tm, ty, qs] = either.right;
 
 				// rows are elaborated from right to left, hence `f` is bound before `y`
-				expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| Struct [ foo: Struct [ y: y ], bar: f ] -> v0 v1\n| Struct [ z: Struct [ w: w ] ] -> v0`);
+				expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Struct [ foo: Struct [ y: y ], bar: f ] -> i0 i1\n| Struct [ z: Struct [ w: w ] ] -> i0`);
 				expect(NF.display(ty)).toStrictEqual(`?4`); // return type is unified, so it just picks up the type of the first branch
 
 				expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
@@ -647,7 +647,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`match v0\n| Imports.Num -> 1\n| Imports.String -> "hello"`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Imports.Num -> 1\n| Imports.String -> "hello"`);
 			expect(NF.display(ty)).toStrictEqual(`Num`);
 			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
@@ -693,7 +693,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Statement(tm)).toStrictEqual(`let f: ?1 = λx -> v1 v0`);
+			expect(EB.Display.Statement(tm)).toStrictEqual(`let f: ?1 = λx -> i1 i0`);
 			expect(NF.display(ty)).toStrictEqual(`Π(x:<ω> ?2) -> ?4`);
 
 			expect(cst.length).toBe(4);
@@ -719,7 +719,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Statement(tm)).toStrictEqual(`let List: ?1 = μx: ?1 -> λa -> Variant [ nil: v0, cons: v1 v0 ]`);
+			expect(EB.Display.Statement(tm)).toStrictEqual(`let List: ?1 = μx: ?1 -> λa -> Variant [ nil: i0, cons: i1 i0 ]`);
 			expect(NF.display(ty)).toStrictEqual(`Π(a:<ω> Type) -> Type`);
 			//expect(qs).toStrictEqual([]);
 
@@ -751,7 +751,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`{ let x: ?1 = 1; let y: ?2 = v1; return v0; }`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`{ let x: ?1 = 1; let y: ?2 = i1; return i0; }`);
 			expect(NF.display(ty)).toStrictEqual(`Num`);
 			expect(qs).toStrictEqual([]);
 

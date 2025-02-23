@@ -2,7 +2,7 @@ import Grammar from "./parser/grammar";
 
 import Nearley from "nearley";
 
-import * as Q from "../utils/quokka";
+import * as Q from "../utils/files";
 
 import * as Src from "@qtt/src/index";
 import * as EB from "@qtt/elaboration";

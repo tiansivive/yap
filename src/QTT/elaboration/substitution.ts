@@ -4,6 +4,7 @@ import * as EB from "@qtt/elaboration";
 import * as R from "@qtt/shared/rows";
 
 import { match } from "ts-pattern";
+import { entries } from "../../utils/objects";
 
 export type Subst = { [key: number]: NF.Value };
 
@@ -15,15 +16,30 @@ export const Substitute = (ctx: EB.Context) => {
 	};
 
 	return {
-		nf: (subst: Subst, val: NF.Value): NF.Value =>
-			match(val)
-				.with(NF.Patterns.Lit, () => val)
+		nf: (subst: Subst, val: NF.Value): NF.Value => {
+			return match(val)
 				.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(call.nf(subst, value)))
+				.with(NF.Patterns.Lit, () => val)
+				.with(NF.Patterns.Rigid, () => val)
 				.with(NF.Patterns.Flex, ({ variable }) => subst[variable.val] ?? val)
 				.with(NF.Patterns.Lambda, ({ binder, closure }) => NF.Constructors.Lambda(binder.variable, binder.icit, call.closure(subst, closure)))
-				.with(NF.Patterns.Pi, ({ closure, binder }) =>
-					NF.Constructors.Pi(binder.variable, binder.icit, [call.nf(subst, binder.annotation[0]), binder.annotation[1]], call.closure(subst, closure)),
-				)
+				.with(NF.Patterns.Pi, ({ closure, binder }) => {
+					const pi = NF.Constructors.Pi(
+						binder.variable,
+						binder.icit,
+						[call.nf(subst, binder.annotation[0]), binder.annotation[1]],
+						call.closure(subst, closure),
+					);
+					return pi;
+				})
+				.with(NF.Patterns.Mu, ({ closure, binder }) => {
+					const mu = NF.Constructors.Mu(binder.variable, [call.nf(subst, binder.annotation[0]), binder.annotation[1]], call.closure(subst, closure));
+					return mu;
+				})
+				.with(NF.Patterns.Lambda, ({ binder, closure }) => {
+					const lam = NF.Constructors.Lambda(binder.variable, binder.icit, call.closure(subst, closure));
+					return lam;
+				})
 
 				.with(NF.Patterns.App, ({ func, arg, icit }) => NF.Constructors.App(call.nf(subst, func), call.nf(subst, arg), icit))
 				.with(NF.Patterns.Row, ({ row }) => {
@@ -51,10 +67,10 @@ export const Substitute = (ctx: EB.Context) => {
 
 					return NF.Constructors.Row(r);
 				})
-
-				.otherwise(() => {
-					throw new Error("Substitute: Not implemented yet");
-				}),
+				.otherwise(val => {
+					throw new Error("Substitute: Not implemented yet: " + NF.display(val));
+				});
+		},
 
 		closure: (subst: Subst, closure: NF.Closure): NF.Closure => ({
 			env: closure.env,
@@ -70,7 +86,14 @@ export const Substitute = (ctx: EB.Context) => {
 
 					return term;
 				})
-				.with({ type: "Abs" }, ({ binding, body }) => EB.Constructors.Abs(binding, call.term(subst, body)))
+				.with({ type: "Abs" }, ({ binding, body }) => {
+					if (binding.type === "Lambda") {
+						return EB.Constructors.Abs(binding, call.term(subst, body));
+					}
+
+					const annotation = call.term(subst, binding.annotation);
+					return EB.Constructors.Abs({ ...binding, annotation }, call.term(subst, body));
+				})
 				.with({ type: "App" }, ({ func, arg, icit }) => EB.Constructors.App(icit, call.term(subst, func), call.term(subst, arg)))
 				.with({ type: "Proj" }, ({ label, term }) => EB.Constructors.Proj(label, call.term(subst, term)))
 				.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, call.term(subst, value), call.term(subst, term)))
@@ -111,8 +134,16 @@ export const Substitute = (ctx: EB.Context) => {
 	};
 };
 
-export const display = (subst: Subst): string => {
+export const display = (subst: Subst, separator = "\n"): string => {
+	if (Object.keys(subst).length === 0) {
+		return "empty";
+	}
 	return Object.entries(subst)
 		.map(([key, value]) => `?${key} |=> ${NF.display(value)}`)
-		.join("\n");
+		.join(separator);
+};
+
+export const compose = (ctx: EB.Context, s1: Subst, s2: Subst): Subst => {
+	const mapped = entries(s2).reduce((sub: Subst, [k, nf]) => ({ ...sub, [k]: Substitute(ctx).nf(s1, nf) }), {});
+	return { ...s1, ...mapped };
 };

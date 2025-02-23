@@ -3,12 +3,20 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "Debug Program",
-			"skipFiles": [
-				"<node_internals>/**"
+			"name": "yap",
+			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
+			"runtimeArgs": [
+				"-T",
+				"--project",
+				"${workspaceRoot}/tsconfig.json",
 			],
-			"program": "lib/index.js",
-			"preLaunchTask": "build"
+			"program": "${workspaceRoot}/src/QTT/repl.ts",
+			"cwd": "${workspaceRoot}",
+			"internalConsoleOptions": "openOnSessionStart",
+			"skipFiles": [
+				"<node_internals>/**",
+				"node_modules/**"
+			],
 		},
 		{
 			"type": "node",

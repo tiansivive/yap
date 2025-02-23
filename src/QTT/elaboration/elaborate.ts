@@ -20,11 +20,13 @@ import { solve } from "./solver";
 
 import * as Prov from "@qtt/shared/provenance";
 
+import * as Sub from "./substitution";
+
 export type Constraint =
 	| { type: "assign"; left: NF.Value; right: NF.Value; lvl?: number }
 	| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity };
 
-type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
+export type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
 export const Stmt = {
 	infer: (stmt: Src.Statement): M.Elaboration<ElaboratedStmt> => {
 		Log.push("stmt");
@@ -49,12 +51,13 @@ export const Stmt = {
 							),
 						);
 					}),
-					M.listen(([{ inferred, ann }, { binders }]): ElaboratedStmt => {
+					M.listen(([{ inferred, ann }, { binders, constraints }]): ElaboratedStmt => {
 						// TODO: This binders array is not overly useful for now
-						// In theory, all we need is to emit a flag signalling the letdec var has been used
+						// // In theory, all we need is to emit a flag signalling the letdec var has been used
 						const tm = binders.find(b => b.type === "Mu" && b.variable === letdec.variable) ? EB.Constructors.Mu("x", ann[0], inferred[0]) : inferred[0];
 
 						const def = EB.Constructors.Stmt.Let(letdec.variable, tm, ann[0]);
+						// const def = EB.Constructors.Stmt.Let(letdec.variable, inferred[0], ann[0]);
 						return [def, inferred[1], inferred[2]];
 					}),
 				);
@@ -109,17 +112,26 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 						M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Struct(row), NF.Constructors.Schema(ty), qs]),
 					)
 					.with({ type: "schema" }, ({ row }) =>
-						M.local(
-							EB.muContext,
-							M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Schema(row), NF.Type, qs]),
+						F.pipe(
+							M.local(
+								EB.muContext,
+								M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Schema(row), NF.Type, qs]),
+							),
+							// insertMu
 						),
 					)
 
 					.with({ type: "variant" }, ({ row }) =>
-						M.local(
-							EB.muContext,
-							M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Variant(row), NF.Type, qs]),
+						F.pipe(
+							M.local(
+								EB.muContext,
+								M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Variant(row), NF.Type, qs]),
+							),
+							// insertMu
 						),
+					)
+					.with({ type: "tuple" }, ({ row }) =>
+						M.fmap(EB.Rows.elaborate(row), ([row, ty, us]): EB.AST => [EB.Constructors.Struct(row), NF.Constructors.Schema(ty), us]),
 					)
 
 					.with({ type: "projection" }, ({ term, label }) =>
@@ -292,6 +304,33 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 	);
 }
 
+const insertMu = M.chain<EB.AST, EB.AST>(ast => {
+	return M.fmap(M.ask(), (ctx): EB.AST => {
+		const [tm, ty, us] = ast;
+
+		const letdecs = ctx.types.filter(([b]) => b.type === "Let");
+
+		const wrapped = letdecs.reduce((t, [, , [nf]]) => {
+			// const m = EB.freshMeta();
+			const ann = NF.quote(ctx.imports, ctx.env.length, nf);
+			const mu = EB.Constructors.Mu("x", ann, t);
+			return mu;
+		}, tm);
+
+		return [wrapped, ty, us];
+	});
+});
+
+// 	M.listen<EB.AST, EB.AST>(([ast, { binders }]): EB.AST => {
+// 	// TODO: This binders array is not overly useful for now
+// 	// In theory, all we need is to emit a flag signalling the letdec var has been used
+// 	const ann = EB.Constructors.Var(EB.freshMeta())
+// 	const ty = EB.Constructors.Lit(Lit.Atom("Type"))
+// 	const tm = binders.find(b => b.type === "Mu") ? EB.Constructors.Mu("x", ty, ast[0]) : ast[0];
+
+// 	return [tm, ast[1], ast[2]];
+// });
+
 type ZonkSwitch = {
 	term: EB.Term;
 	nf: NF.Value;
@@ -300,6 +339,7 @@ type ZonkSwitch = {
 
 export const zonk = <K extends keyof ZonkSwitch>(key: K, term: ZonkSwitch[K], subst: Subst): M.Elaboration<ZonkSwitch[K]> =>
 	M.fmap(M.ask(), ctx => {
+		const disp = Sub.display;
 		const f = Substitute(ctx)[key];
 		return f(subst, term as any) as ZonkSwitch[K];
 	});
@@ -323,31 +363,47 @@ export const script = ({ script }: Src.Script, ctx: EB.Context) => {
 			({ ctx, results }, stmt) => {
 				const action = F.pipe(
 					Stmt.infer(stmt),
-					M.listen(([[stmt, ty, us], { constraints }]) => ({ inferred: { stmt, ty, us }, constraints })),
-					M.bind("sub", ({ constraints }) => solve(constraints)),
+					M.listen(([[stmt, ty, us], { constraints }]) => {
+						return { inferred: { stmt, ty, us }, constraints };
+					}),
+					M.bind("sub", ({ constraints }) => {
+						// constraints.forEach(c => console.log("[ DEBUG ] " + EB.Display.Constraint(c)));
+						return M.fmap(solve(constraints), s => {
+							// console.log("[ DEBUG ]\n" + Sub.display(s));
+							return s;
+						});
+					}),
 					M.bind("ty", ({ sub, inferred }) =>
 						F.pipe(
 							zonk("nf", inferred.ty, sub),
-							M.fmap(nf => NF.generalize(nf, ctx)),
+							M.fmap(nf => {
+								return NF.generalize(nf, ctx);
+							}),
 						),
 					),
-					M.bind("term", ({ sub, inferred }) => F.pipe(zonk("term", inferred.stmt.value, sub), M.fmap(EB.Icit.generalize))),
+					M.bind("term", ({ sub, inferred }) => {
+						return F.pipe(zonk("term", inferred.stmt.value, sub), M.fmap(EB.Icit.generalize));
+					}),
 				);
 
 				const [result] = M.run(action, ctx);
 				return F.pipe(
 					result,
 					E.match(
-						err => ({ ctx, results: [...results, E.left<M.Err, ElaboratedStmt>(err)] }),
+						err => {
+							// markResolved("dummy.lama", stmt.variable, E.left(err));
+							return { ctx, results: [...results, E.left<[string, M.Err], ElaboratedStmt>([stmt.variable, err])] };
+						},
 						({ term, ty, inferred }) => {
 							const ctx_: EB.Context = { ...ctx, imports: { ...ctx.imports, [stmt.variable]: [term, ty, inferred.us] } };
 							const letdec = EB.Constructors.Stmt.Let(stmt.variable, term, NF.quote(ctx.imports, 0, ty));
-							return { ctx: ctx_, results: [...results, E.right<M.Err, ElaboratedStmt>([letdec, inferred.ty, inferred.us])] };
+							// markResolved("dummy.lama", stmt.variable, E.right([letdec.value, inferred.ty, inferred.us]));
+							return { ctx: ctx_, results: [...results, E.right<[string, M.Err], ElaboratedStmt>([letdec, inferred.ty, inferred.us])] };
 						},
 					),
 				);
 			},
-			{ ctx, results: [] as E.Either<M.Err, ElaboratedStmt>[] },
+			{ ctx, results: [] as E.Either<[string, M.Err], ElaboratedStmt>[] },
 		);
 
 	return letdecs.results;

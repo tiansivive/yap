@@ -31,6 +31,15 @@ export const quote = (imports: EB.Context["imports"], lvl: number, val: NF.Value
 			const body = quote(imports, lvl + 1, val);
 			return EB.Constructors.Pi(variable, icit, q, quote(imports, lvl, ann), body);
 		})
+		.with({ type: "Abs", binder: { type: "Mu" } }, ({ binder, closure }) => {
+			const {
+				variable,
+				annotation: [ann, q],
+			} = binder;
+			const val = NF.apply(imports, closure, NF.Constructors.Rigid(lvl));
+			const body = quote(imports, lvl + 1, val);
+			return EB.Constructors.Mu(variable, quote(imports, lvl, ann), body);
+		})
 		.with({ type: "Row" }, ({ row }) => {
 			const _quote = (r: NF.Row): EB.Row =>
 				match(r)

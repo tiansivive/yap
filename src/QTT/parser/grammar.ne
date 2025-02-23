@@ -66,12 +66,14 @@ Ann -> Ann %ws:? %colon %ws:? TypeExpr 							{% P.Annotation %}
      | Ann %ws:? %colon %ws:? Angle[Quantity] %ws:? TypeExpr 	{% P.Annotation %}
 	 | TypeExpr 												{% id %}
 
-TypeExpr -> Pi 				{% id %}
-		  | Mu 				{% id %}
-	  	  | Variant 		{% id %} 
-		  | Schema 			{% id %}
-		  | Row 			{% id %}	
-	  	  | Expr 			{% id %}
+TypeExpr -> Pi 			{% id %}
+		  | Type 		{% id %}
+
+Type -> Mu 				{% id %}
+	  | Variant 		{% id %} 
+	  | Schema 			{% id %}
+	  | Row 			{% id %}	
+	  | Expr 			{% id %}
 
 Expr -> Lambda		{% id %}
       | Match 		{% id %}
@@ -110,11 +112,11 @@ Param -> Identifier 													{% P.Param %}
 	   | Parens[Param] 													{% P.extract %}
 		 
 
-Pi -> TypeExpr %ws:? %arrow %ws PiTail 		{% P.Pi("Explicit") %}
-	| TypeExpr %ws:? %fatArrow %ws PiTail 	{% P.Pi("Implicit") %}
+Pi -> Type %ws:? %arrow %ws:? PiTail 		{% P.Pi("Explicit") %}
+	| Type %ws:? %fatArrow %ws:? PiTail 	{% P.Pi("Implicit") %}
 
 PiTail -> Pi {% id %}
-		| Atom {% id %}
+		| Type {% id %}
 
 
 # ------------------------------------
@@ -139,7 +141,7 @@ Variant -> %bar Many[KeyVal, %bar]						{% P.variant %}
 
 # Fields
 KeyVal -> Identifier %ws:? %colon %ws:? TypeExpr 				{% P.keyval %}
-SchemaPair -> Identifier %ws:? %colon %colon %ws:? TypeExpr 		{% P.keyval %}
+SchemaPair -> Identifier %ws:? %colon %colon %ws:? TypeExpr 	{% P.keyval %}
 Assignment -> Identifier %ws:? %equals %ws:? TypeExpr 			{% P.keyval %}
 
 Projection -> TypeExpr %dot Identifier 									{% P.Projection %}
@@ -160,8 +162,8 @@ Statement -> Ann 			{% P.Expr %}
 
 Return    -> %NL:? %ws:? "return" %ws:+ Ann %semicolon 					{% P.Return %}
 
-Letdec -> "let" %ws Identifier %ws:? %equals %ws:? Ann 										{% P.LetDec %}
-		| "let" %ws Identifier %ws:? %colon %ws:? TypeExpr %ws:? %equals %ws:? TypeExpr 	{% P.LetDec %}
+Letdec -> "let" %ws Identifier %NL:? %ws:? %equals %NL:? %ws:? Ann 										{% P.LetDec %}
+		| "let" %ws Identifier %NL:? %ws:? %colon %ws:? TypeExpr %NL:? %ws:? %equals %ws:? TypeExpr 	{% P.LetDec %}
 
 
 # VARIABLES

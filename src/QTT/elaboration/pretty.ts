@@ -28,7 +28,7 @@ const display = (term: EB.Term): string => {
 					{ type: "Pi" },
 					({ icit, variable, annotation, multiplicity }) => `Π(${Icit.display(icit)}${variable}: <${Q.display(multiplicity)}> ${display(annotation)})`,
 				)
-				.with({ type: "Mu" }, ({ variable, annotation }) => `μ${variable}: ${display(annotation)}`)
+				.with({ type: "Mu" }, ({ variable, annotation }) => `μ(${variable}: ${display(annotation)})`)
 				.otherwise(() => {
 					throw new Error("Display Term Binder: Not implemented");
 				});

@@ -21,7 +21,7 @@
 		}
 	},
 	"include": ["src"],
-	"exclude": ["src/QTT/parser/grammar.ts"],
+	// "exclude": ["src/QTT/parser/grammar.ts"],
 	"ts-node": {
 		"require": ["tsconfig-paths/register"]
 	}

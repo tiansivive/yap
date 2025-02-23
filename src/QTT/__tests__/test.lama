@@ -1,8 +1,3 @@
 
-let id = \x -> x;
 
-let the = id;
-
-let fst = \x -> \y -> x;
-
-let one = fst 1 0;
+let foo = 1 + 1;

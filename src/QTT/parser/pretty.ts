@@ -34,12 +34,26 @@ export const display = (term: Src.Term): string => {
 				var: (v: Src.Variable) => v.value,
 			})(row);
 		})
+		.with({ type: "tuple" }, ({ row }) => {
+			const r = R.display({
+				term: display,
+				var: (v: Src.Variable) => v.value,
+			})(row);
+			return `tuple ${r}`;
+		})
 		.with({ type: "struct" }, ({ row }) => {
 			const r = R.display({
 				term: display,
 				var: (v: Src.Variable) => v.value,
 			})(row);
 			return `struct ${r}`;
+		})
+		.with({ type: "schema" }, ({ row }) => {
+			const r = R.display({
+				term: display,
+				var: (v: Src.Variable) => v.value,
+			})(row);
+			return `schema ${r}`;
 		})
 		.with({ type: "variant" }, ({ row }) => {
 			const r = R.display({

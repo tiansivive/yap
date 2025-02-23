@@ -74,7 +74,8 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 				NF.Constructors.Mu(binder.variable, [sub(binder.annotation[0], lvl), binder.annotation[1]], close(closure)),
 			)
 			.with({ type: "Row" }, ({ row }) => {
-				throw new Error("Generalize Row: Not implemented yet");
+				console.error("Generalize Row: Not implemented yet");
+				return NF.Constructors.Row(row);
 			})
 			.otherwise(() => {
 				throw new Error("Generalize: Not implemented yet");

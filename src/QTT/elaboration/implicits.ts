@@ -111,7 +111,8 @@ export const replaceMeta = (tm: EB.Term, ms: Meta[], lvl: number): EB.Term => {
 			)
 			.with({ type: "App" }, ({ icit, func, arg }) => EB.Constructors.App(icit, sub(func, lvl), sub(arg, lvl)))
 			.with({ type: "Row" }, ({ row }) => {
-				throw new Error("Generalize Row: Not implemented yet");
+				console.log("Generalize Row: Not implemented yet");
+				return EB.Constructors.Row(row);
 			})
 			.with({ type: "Proj" }, ({ label, term }) => EB.Constructors.Proj(label, sub(term, lvl)))
 			.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, sub(value, lvl), sub(term, lvl)))

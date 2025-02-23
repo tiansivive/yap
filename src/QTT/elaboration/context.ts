@@ -73,12 +73,38 @@ export const bind = (context: Context, binder: Binder, annotation: NF.ModalValue
 	};
 };
 
-export const muContext = (ctx: Context): Context => ({
-	...ctx,
-	types: ctx.types.map(([b, ...rest]) => {
+export const muContext = (ctx: Context): Context => {
+	const muIdxs = ctx.types.reduce((acc, [b], i) => {
 		if (b.type === "Let") {
-			return [{ ...b, type: "Mu" }, ...rest];
+			return [...acc, i];
 		}
-		return [b, ...rest];
-	}),
-});
+		return acc;
+	}, [] as number[]);
+
+	const reorder = <T>(arr: T[], indices: number[]): T[] => {
+		const front = indices.map(i => arr[i]);
+		const rest = arr.filter((_, i) => !indices.includes(i));
+		return [...front, ...rest];
+	};
+
+	// return {
+	// 	...ctx,
+	// 	types: reorder(ctx.types, muIdxs).map(([b, ...rest]) => {
+	// 		if (b.type === "Let") return [{ ...b, type: "Mu" }, ...rest];
+
+	// 		return [b, ...rest];
+	// 	}),
+	// 	env: reorder(ctx.env, muIdxs),
+	// 	names: reorder(ctx.names, muIdxs),
+	// }
+
+	return {
+		...ctx,
+		types: ctx.types.map(([b, ...rest]) => {
+			if (b.type === "Let") {
+				return [{ ...b, type: "Mu" }, ...rest];
+			}
+			return [b, ...rest];
+		}),
+	};
+};
