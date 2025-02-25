@@ -247,6 +247,15 @@ export const schema: PostProcessor<[[KeyVal[], Variable?]], Term> = ([[pairs, v]
 	return { type: "schema", row, location: locSpan(pairs[0][1], tail.location) };
 };
 
+export const tagged: PostProcessor<[Colon, Variable, Whitespace, Term], Term> = ([tok, v, , tm]) => {
+	return {
+		type: "tagged",
+		tag: v.value,
+		term: tm,
+		location: locSpan({ from: loc(tok) }, tm.location),
+	};
+};
+
 export const variant: PostProcessor<[Bar, KeyVal[]], Term> = ([, pairs]) => {
 	if (pairs.length === 0) {
 		throw new Error("Expected at least one key-value pair in variant");
@@ -357,27 +366,41 @@ export const keyvalPat = (pair: [Variable, Whitespace, Colon, Whitespace, Src.Pa
 	const [v, , , , pat] = pair;
 	return [v.value, pat];
 };
-export const Pattern: PostProcessor<[Variable | Sourced<Literal> | [PatKeyVal[], Variable?]], Src.Pattern> = ([p]) => {
-	type RowPat = R.Row<Src.Pattern, Variable>;
 
-	if (!Array.isArray(p)) {
-		return Pats.Var(p);
-	}
-
-	if (Array.isArray(p[0])) {
-		const [pairs, v] = p as [PatKeyVal[], Variable?];
+type RowPat = R.Row<Src.Pattern, Variable>;
+export const Pattern = {
+	Var: ([value]: [Variable]): Src.Pattern => ({ type: "var", value }),
+	Lit: ([[value]]: [Sourced<Literal>]): Src.Pattern => ({ type: "lit", value }),
+	Tuple: ([[terms, v]]: [[Src.Pattern[], Variable?]]): Src.Pattern => {
+		const tail: RowPat = !v ? { type: "empty" } : { type: "variable", variable: v };
+		const row = terms.reduceRight<RowPat>((row, value, i) => ({ type: "extension", label: i.toString(), value, row }), tail);
+		return { type: "tuple", row };
+	},
+	Struct: ([[pairs, v]]: [[PatKeyVal[], Variable?]]): Src.Pattern => {
 		const tail: RowPat = !v ? { type: "empty" } : { type: "variable", variable: v };
 		const row = pairs.reduceRight<RowPat>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), tail);
-		return Pats.Struct(row);
-	}
-
-	return Pats.Lit(p[0]);
-};
-
-const Pats = {
-	Var: (value: Variable): Src.Pattern => ({ type: "var", value }),
-	Lit: (value: Literal): Src.Pattern => ({ type: "lit", value }),
-	Struct: (row: R.Row<Src.Pattern, Variable>): Src.Pattern => ({ type: "struct", row }),
+		return { type: "struct", row };
+	},
+	List: ([[elements, v]]: [[Src.Pattern[], Variable?]]): Src.Pattern => {
+		return { type: "list", elements, rest: v };
+	},
+	Row: ([[pairs, v]]: [[PatKeyVal[], Variable?]]): Src.Pattern => {
+		const tail: RowPat = !v ? { type: "empty" } : { type: "variable", variable: v };
+		const row = pairs.reduceRight<RowPat>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), tail);
+		return { type: "row", row };
+	},
+	// Tagged: ([tok, v, , tm]: [Colon, Variable, Whitespace, Src.Pattern]): Src.Pattern => {
+	// 	const row: RowPat = { type: "extension", label: v.value, value: tm, row: { type: "empty" } };
+	// 	return { type: "variant", row };
+	// },
+	Variant: ([pair, v]: [PatKeyVal, Variable?]): Src.Pattern => {
+		const tail: RowPat = !v ? { type: "empty" } : { type: "variable", variable: v };
+		//TODO: only one pair being parsed right now
+		//FIXME: Find out why Many [PatKeyVal] is ambiguous
+		const row = [pair].reduceRight<RowPat>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), tail);
+		return { type: "variant", row };
+	},
+	Wildcard: ([tok]: [Token]): Src.Pattern => ({ type: "wildcard" }),
 };
 
 /***********************************************************

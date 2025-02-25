@@ -552,6 +552,51 @@ describe("Grammar", () => {
 			});
 		});
 
+		it("should parse a match expression with variants:\tmatch x | x: 1 -> 10 | y: 2 -> 20", () => {
+			const src = `match x
+				| x: 1 -> 10
+				| y: 2 -> 20`;
+			const data = parser.feed(src);
+
+			const expr = data.results[0];
+
+			const x = { type: "name", value: "x" };
+			const one = { type: "Num", value: 1 };
+			const two = { type: "Num", value: 2 };
+
+			const variant1 = {
+				type: "variant",
+				row: {
+					type: "extension",
+					label: "x",
+					value: { type: "lit", value: one },
+					row: { type: "empty" },
+				},
+			};
+			const ten = { type: "Num", value: 10 };
+
+			const variant2 = {
+				type: "variant",
+				row: {
+					type: "extension",
+					label: "y",
+					value: { type: "lit", value: two },
+					row: { type: "empty" },
+				},
+			};
+			const twenty = { type: "Num", value: 20 };
+
+			expect(data.results.length).toBe(1);
+			expect(expr.type).toBe("match");
+			expect(expr.scrutinee).toMatchObject({ type: "var", variable: x });
+
+			expect(expr.alternatives.length).toBe(2);
+			expect(expr.alternatives[0].pattern).toMatchObject(variant1);
+			expect(expr.alternatives[0].term).toMatchObject({ type: "lit", value: ten });
+			expect(expr.alternatives[1].pattern).toMatchObject(variant2);
+			expect(expr.alternatives[1].term).toMatchObject({ type: "lit", value: twenty });
+		});
+
 		describe("Statements", () => {
 			beforeEach(() => {
 				parser.grammar.start = "Statement";

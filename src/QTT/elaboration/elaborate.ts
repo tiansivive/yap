@@ -11,6 +11,7 @@ import * as Src from "@qtt/src/index";
 import * as Lit from "@qtt/shared/literals";
 import * as Q from "@qtt/shared/modalities/multiplicity";
 import * as Log from "@qtt/shared/logging";
+import * as R from "@qtt/shared/rows";
 
 import { P } from "ts-pattern";
 
@@ -133,7 +134,13 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 					.with({ type: "tuple" }, ({ row }) =>
 						M.fmap(EB.Rows.elaborate(row), ([row, ty, us]): EB.AST => [EB.Constructors.Struct(row), NF.Constructors.Schema(ty), us]),
 					)
-
+					.with({ type: "tagged" }, ({ tag, term }) =>
+						M.fmap(infer(term), ([tm, ty, us]): EB.AST => {
+							const row: NF.Row = NF.Constructors.Extension(tag, ty, R.Constructors.Empty());
+							const variant = NF.Constructors.Variant(row);
+							return [tm, variant, us];
+						}),
+					)
 					.with({ type: "projection" }, ({ term, label }) =>
 						F.pipe(
 							M.Do,

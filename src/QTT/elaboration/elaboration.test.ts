@@ -719,7 +719,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Statement(tm)).toStrictEqual(`let List: ?1 = μx: ?1 -> λa -> Variant [ nil: i0, cons: i1 i0 ]`);
+			expect(EB.Display.Statement(tm)).toStrictEqual(`let List: ?1 = μ(x: ?1) -> λa -> Variant [ nil: i0, cons: i1 i0 ]`);
 			expect(NF.display(ty)).toStrictEqual(`Π(a:<ω> Type) -> Type`);
 			//expect(qs).toStrictEqual([]);
 

@@ -71,7 +71,7 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboratio
 	});
 };
 
-export const displayProvenance = (provenance: EB.Provenance[]): string => {
+export const displayProvenance = (provenance: EB.Provenance[] = []): string => {
 	const normalize = (str: string) => str.replace(/\n+/g, "").trim();
 	return A.reverse(provenance)
 		.map(p => {

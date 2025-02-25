@@ -92,6 +92,7 @@ Atom -> Identifier 		{% P.Var %}
 	  | Struct 			{% id %}
       | Tuple 			{% id %}
 	  | List 			{% id %}
+	  | Tagged 			{% id %}
 	  | Parens[Ann]  	{% P.extract %}
 
 # ------------------------------------
@@ -150,6 +151,8 @@ Projection -> TypeExpr %dot Identifier 									{% P.Projection %}
 Injection -> Curly[ %ws:? TypeExpr %ws:? %bar Many[Assignment, %comma] ] 	{% P.Injection %}
 		   | Curly[ %ws:? %bar Many[Assignment, %comma] ] 				{% P.Injection %}
 
+# Tagged
+Tagged -> %colon Identifier %ws:? TypeExpr 	{% P.tagged %}
 
 # ------------------------------------
 # Blocks
@@ -181,12 +184,21 @@ Match -> "match" %ws:+ TypeExpr Alt:+ 								{% P.Match %}
 Alt -> %NL:? %ws:? %bar %ws:? Pattern %ws:? %arrow %ws:? TypeExpr 	{% P.Alternative %}
 
 
-Pattern -> Identifier 									{% P.Pattern %}
-		 | Literal 										{% P.Pattern %}
-		 | Curly[ Many[PatKeyVal, %comma] RowTail:? ] 	{% P.Pattern %}
+Pattern -> PatKeyVal RowTail:?				{% P.Pattern.Variant %}
+		 | PatAtom 								{% id %}
+
+PatAtom -> Identifier 									{% P.Pattern.Var %}
+		 | Literal 										{% P.Pattern.Lit %}
+		 | Curly[ Many[PatAtom, %comma] RowTail:? ] 	{% P.Pattern.Tuple %}
+		 | Curly[ Many[PatKeyVal, %comma] RowTail:? ] 	{% P.Pattern.Struct %}
+		 | Square[ Many[PatAtom, %comma] ] RowTail:?	{% P.Pattern.List %}
+		 | Square[ Many[PatKeyVal, %comma] RowTail:? ] 	{% P.Pattern.Row %}
+		 | Wildcard 									{% P.Pattern.Wildcard %}
 		 | Parens[Pattern] 								{% P.extract %}
 
 PatKeyVal -> Identifier %ws:? %colon %ws:? Pattern 		{% P.keyvalPat %}
+
+Wildcard -> %hole 										{% P.Wildcard %}
 
 # ------------------------------------
 # Literals

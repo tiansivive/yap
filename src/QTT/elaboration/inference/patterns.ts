@@ -57,6 +57,15 @@ export const infer_: Inference<Src.Pattern, "type"> = {
 
 	Row: pat => M.fmap(elaborate(pat.row), ([tm, ty, qs, binders]): Result => [EB.Constructors.Patterns.Row(tm), NF.Constructors.Row(ty), qs, binders]),
 	Struct: pat => M.fmap(elaborate(pat.row), ([tm, ty, qs, binders]): Result => [EB.Constructors.Patterns.Struct(tm), NF.Constructors.Schema(ty), qs, binders]),
+
+	Variant: pat =>
+		M.fmap(elaborate(pat.row), ([tm, ty, qs, binders]): Result => [EB.Constructors.Patterns.Variant(tm), NF.Constructors.Variant(ty), qs, binders]),
+	Wildcard: () => M.fmap(M.ask(), (ctx): Result => [EB.Constructors.Patterns.Wildcard(), NF.Constructors.Var(EB.freshMeta()), Q.noUsage(ctx.env.length), []]),
+
+	Tuple: pat => M.fmap(elaborate(pat.row), ([tm, ty, qs, binders]): Result => [EB.Constructors.Patterns.Struct(tm), NF.Constructors.Schema(ty), qs, binders]),
+	List: () => {
+		throw new Error("Not Implemented: List Pattern elaboration");
+	},
 };
 
 const keys = Object.keys(infer_) as (keyof typeof infer_)[];

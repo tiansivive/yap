@@ -33,6 +33,7 @@ export type Bare =
 	| { type: "tuple"; row: Row }
 	| { type: "struct"; row: Row }
 	| { type: "schema"; row: Row }
+	| { type: "tagged"; tag: string; term: Term }
 	| { type: "variant"; row: Row }
 	| { type: "row"; row: Row }
 	| { type: "injection"; label: string; value: Term; term: Term }
@@ -45,7 +46,11 @@ export type Pattern =
 	| { type: "var"; value: Variable }
 	| { type: "lit"; value: Literal }
 	| { type: "row"; row: R.Row<Pattern, Variable> }
-	| { type: "struct"; row: R.Row<Pattern, Variable> };
+	| { type: "struct"; row: R.Row<Pattern, Variable> }
+	| { type: "variant"; row: R.Row<Pattern, Variable> }
+	| { type: "tuple"; row: R.Row<Pattern, Variable> }
+	| { type: "list"; elements: Pattern[]; rest?: Variable }
+	| { type: "wildcard" };
 
 export type Statement = WithLocation<BareStatement>;
 type BareStatement =

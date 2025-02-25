@@ -9,11 +9,8 @@ let List
 let mapList
     : (a: Type) => (b:Type) => (a -> b) -> List a -> List b
     = \f -> \l -> match l
-        | nil: el -> nil: f el
-        | cons: {el, ll} -> cons: { f el, mapList f ll }
-
-
-
+        | nil: el -> :nil f el
+        | cons: {el, ll} -> :cons { f el, mapList f ll }
 
 
 
