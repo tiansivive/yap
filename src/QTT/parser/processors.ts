@@ -55,7 +55,13 @@ export const Num: PostProcessor<[Sourced<number>], Sourced<Literal>> = F.flow(
 );
 
 export const Type = (tok: Token): Sourced<Literal> => [L.Type(), { from: loc(tok) }];
-export const Unit = (tok: Token): Sourced<Literal> => [L.Unit(), { from: loc(tok) }];
+export const Unit =
+	(level: "value" | "type") =>
+	(tok: Token): Sourced<Literal> => {
+		const l = { from: loc(tok) };
+		return level === "value" ? [L.unit(), l] : [L.Unit(), l];
+	};
+
 export const LitRow = (tok: Token): Sourced<Literal> => [L.Row(), { from: loc(tok) }];
 
 export const Hole: PostProcessor<[Token], Term> = tok =>

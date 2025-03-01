@@ -207,8 +207,9 @@ Literal
 	-> String {% P.Str %}
 	 | Number {% P.Num %}
 	 | "Type" {% P.Type %}
-	 | "Unit" {% P.Unit %}
-	 | "Row" {% P.LitRow %}
+	 | "Unit" {% P.Unit("type") %}
+	 | "*" 	  {% P.Unit("value") %}
+	 | "Row"  {% P.LitRow %}
 	  
 Number 
 	-> Int %dot Int {% id %}

@@ -26,7 +26,7 @@ const display = (term: EB.Term): string => {
 				.with({ type: "Lambda" }, ({ variable, icit }) => `λ${Icit.display(icit)}${variable}`)
 				.with(
 					{ type: "Pi" },
-					({ icit, variable, annotation, multiplicity }) => `Π(${Icit.display(icit)}${variable}: <${Q.display(multiplicity)}> ${display(annotation)})`,
+					({ icit, variable, annotation, multiplicity }) => `Π(<${Q.display(multiplicity)}> ${Icit.display(icit)}${variable}: ${display(annotation)})`,
 				)
 				.with({ type: "Mu" }, ({ variable, annotation }) => `μ(${variable}: ${display(annotation)})`)
 				.otherwise(() => {
@@ -61,7 +61,7 @@ const display = (term: EB.Term): string => {
 
 const displayConstraint = (constraint: Constraint): string => {
 	if (constraint.type === "assign") {
-		return `${NF.display(constraint.left)} ~~ ${NF.display(constraint.right)}`;
+		return `-| ${NF.display(constraint.left)}\n-| ${NF.display(constraint.right)}`;
 	}
 
 	if (constraint.type === "usage") {
@@ -115,6 +115,14 @@ const Pat = {
 					})(row);
 					return `Struct ${r}`;
 				})
+				.with({ type: "Variant" }, ({ row }) => {
+					const r = R.display({
+						term: Pat.display,
+						var: (v: string) => v,
+					})(row);
+					return `Variant ${r}`;
+				})
+				.with({ type: "Wildcard" }, () => "_")
 				.otherwise(() => "Pattern Display: Not implemented")
 		);
 	},
@@ -124,7 +132,7 @@ const Stmt = {
 	display: (stmt: EB.Statement): string => {
 		return match(stmt)
 			.with({ type: "Expression" }, ({ value }) => display(value))
-			.with({ type: "Let" }, ({ variable, value, annotation }) => `let ${variable}: ${display(annotation)} = ${display(value)}`)
+			.with({ type: "Let" }, ({ variable, value, annotation }) => `let ${variable}\n\t: ${display(annotation)}\n\t= ${display(value)}`)
 			.otherwise(() => "Statement Display: Not implemented");
 	},
 };

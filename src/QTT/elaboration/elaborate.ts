@@ -122,21 +122,34 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 						),
 					)
 
-					.with({ type: "variant" }, ({ row }) =>
+					.with({ type: "variant" }, variant =>
 						F.pipe(
 							M.local(
 								EB.muContext,
-								M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Variant(row), NF.Type, qs]),
+								F.pipe(
+									check(variant, NF.Type),
+									M.fmap(([tm, us]): EB.AST => [tm, NF.Type, us]),
+								),
 							),
 							// insertMu
 						),
 					)
 					.with({ type: "tuple" }, ({ row }) =>
+						// M.fmap(EB.Rows.elaborate(row), ([row, ty, us]): EB.AST => {
+						// 	const meta = freshMeta();
+
+						// 	return [
+						// 		EB.Constructors.App("Explicit", EB.Constructors.Var(meta), EB.Constructors.Row(row)),
+						// 		NF.Constructors.App(NF.Constructors.Flex(meta), NF.Constructors.Row(ty), "Explicit"),
+						// 		us
+						// 	]
+						// }),
 						M.fmap(EB.Rows.elaborate(row), ([row, ty, us]): EB.AST => [EB.Constructors.Struct(row), NF.Constructors.Schema(ty), us]),
 					)
 					.with({ type: "tagged" }, ({ tag, term }) =>
 						M.fmap(infer(term), ([tm, ty, us]): EB.AST => {
-							const row: NF.Row = NF.Constructors.Extension(tag, ty, R.Constructors.Empty());
+							const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta());
+							const row: NF.Row = NF.Constructors.Extension(tag, ty, rvar);
 							const variant = NF.Constructors.Variant(row);
 							return [tm, variant, us];
 						}),
@@ -291,7 +304,13 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 							);
 						},
 					)
-
+					.with([{ type: "variant" }, NF.Patterns.Type], ([{ row }, ty]) => {
+						return M.fmap(traverseR(row), (r): [EB.Term, Q.Usages] => [EB.Constructors.Variant(r), Q.noUsage(ctx.env.length)]);
+						//M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Variant(row), NF.Type, qs]),
+					})
+					.with([{ type: "tuple" }, NF.Patterns.Type], ([{ row }, ty]) => {
+						return M.fmap(traverseR(row), (r): [EB.Term, Q.Usages] => [EB.Constructors.Schema(r), Q.noUsage(ctx.env.length)]);
+					})
 					.otherwise(([tm, _]) =>
 						F.pipe(
 							infer(tm),
@@ -310,6 +329,26 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 		),
 	);
 }
+
+const traverseR = (row: Src.Row): M.Elaboration<EB.Row> => {
+	return match(row)
+		.with({ type: "empty" }, () => M.of<EB.Row>({ type: "empty" }))
+		.with({ type: "extension" }, ({ label, value, row }) =>
+			F.pipe(
+				M.Do,
+				M.let("value", check(value, NF.Type)),
+				M.let("row", traverseR(row as Src.Row)),
+				M.fmap(({ value: [val, _], row }) => {
+					const r = R.Constructors.Extension(label, val, row);
+					return r;
+				}),
+			),
+		)
+		.with({ type: "variable" }, ({ variable }) => {
+			throw new Error("Checking variant row variable against Type: Not implemented yet");
+		})
+		.exhaustive();
+};
 
 const insertMu = M.chain<EB.AST, EB.AST>(ast => {
 	return M.fmap(M.ask(), (ctx): EB.AST => {

@@ -59,7 +59,20 @@ export const infer_: Inference<Src.Pattern, "type"> = {
 	Struct: pat => M.fmap(elaborate(pat.row), ([tm, ty, qs, binders]): Result => [EB.Constructors.Patterns.Struct(tm), NF.Constructors.Schema(ty), qs, binders]),
 
 	Variant: pat =>
-		M.fmap(elaborate(pat.row), ([tm, ty, qs, binders]): Result => [EB.Constructors.Patterns.Variant(tm), NF.Constructors.Variant(ty), qs, binders]),
+		M.fmap(elaborate(pat.row), ([r, ty, qs, binders]): Result => {
+			const addVar = (nfr: NF.Row): NF.Row => {
+				if (nfr.type === "empty") {
+					return R.Constructors.Variable(EB.freshMeta());
+				}
+
+				if (nfr.type === "variable") {
+					return nfr;
+				}
+				return R.Constructors.Extension(nfr.label, nfr.value, addVar(nfr.row));
+			};
+
+			return [EB.Constructors.Patterns.Variant(r), NF.Constructors.Variant(addVar(ty)), qs, binders];
+		}),
 	Wildcard: () => M.fmap(M.ask(), (ctx): Result => [EB.Constructors.Patterns.Wildcard(), NF.Constructors.Var(EB.freshMeta()), Q.noUsage(ctx.env.length), []]),
 
 	Tuple: pat => M.fmap(elaborate(pat.row), ([tm, ty, qs, binders]): Result => [EB.Constructors.Patterns.Struct(tm), NF.Constructors.Schema(ty), qs, binders]),

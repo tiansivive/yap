@@ -9,6 +9,9 @@ import * as Lit from "@qtt/shared/literals";
 import * as Q from "@qtt/shared/modalities/multiplicity";
 import * as Lib from "@qtt/shared/lib/primitives";
 
+import * as R from "@qtt/shared/rows";
+import * as Sub from "@qtt/elaboration/substitution";
+
 import Grammar from "@qtt/src/grammar";
 
 import * as Log from "@qtt/shared/logging";
@@ -91,5 +94,91 @@ describe("Unification", () => {
 		const sub = either.right;
 
 		expect(sub).toEqual({ 0: right });
+	});
+
+	describe("Row Unification", () => {
+		it("should unify two empty rows", () => {
+			const left = NF.Constructors.Row(R.Constructors.Empty());
+			const right = NF.Constructors.Row(R.Constructors.Empty());
+
+			const [either] = M.run(EB.unify(left, right, 0), empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Failed solving: ${Err.display(either.left)}`);
+			}
+			const sub = either.right;
+
+			expect(sub).toEqual({});
+		});
+
+		it("should unify two extensions with the same label", () => {
+			const left = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Empty()));
+			const right = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Empty()));
+
+			const [either] = M.run(EB.unify(left, right, 0), empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Failed solving: ${Err.display(either.left)}`);
+			}
+			const sub = either.right;
+
+			expect(sub).toEqual({});
+		});
+
+		it("should fail unifying two extensions with different labels", () => {
+			const left = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Empty()));
+			const right = NF.Constructors.Row(R.Constructors.Extension("y", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Empty()));
+
+			const [either] = M.run(EB.unify(left, right, 0), empty);
+
+			if (E.isRight(either)) {
+				throw new Error(`Expected unification to fail`);
+			}
+
+			expect(either.left.type).toBe("RowMismatch");
+		});
+
+		it("should unify a polymorphic row with a concrete row", () => {
+			const left = NF.Constructors.Row(R.Constructors.Variable({ type: "Meta", val: 0 }));
+			const right = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Empty()));
+
+			const [either] = M.run(EB.unify(left, right, 0), empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Failed solving: ${Err.display(either.left)}`);
+			}
+			const sub = either.right;
+
+			expect(sub).toEqual({ 0: right });
+		});
+
+		it("should unify two polymorphic rows", () => {
+			const left = NF.Constructors.Row(R.Constructors.Variable({ type: "Meta", val: 0 }));
+			const right = NF.Constructors.Row(R.Constructors.Variable({ type: "Meta", val: 1 }));
+
+			const [either] = M.run(EB.unify(left, right, 0), empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Failed solving: ${Err.display(either.left)}`);
+			}
+			const sub = either.right;
+
+			expect(sub).toEqual({ 0: right });
+		});
+
+		it("should merge all extensions when both rows are polymorphic", () => {
+			const left = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Variable({ type: "Meta", val: 100 })));
+			const right = NF.Constructors.Row(R.Constructors.Extension("y", NF.Constructors.Lit(Lit.Num(43)), R.Constructors.Variable({ type: "Meta", val: 101 })));
+
+			const [either] = M.run(EB.unify(left, right, 0), empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Failed solving: ${Err.display(either.left)}`);
+			}
+			const sub = Sub.display(either.right);
+
+			expect(sub).toContain("?100 |=> [ y: 43 | ?2 ]");
+			expect(sub).toContain("?101 |=> [ x: 42 | ?2 ]");
+		});
 	});
 });

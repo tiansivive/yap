@@ -188,8 +188,8 @@ export const fail = (cause: Cause): Elaboration<never> =>
 	});
 
 export const catchError =
-	<A>(rw: Elaboration<A>, f: (e: Cause) => Elaboration<A>) =>
-	(r: EB.Context): Emitter<A> => {
+	<A>(rw: Elaboration<A>, f: (e: Err) => Elaboration<A>): Elaboration<A> =>
+	r => {
 		const [a, w] = rw(r)();
 		if (E.isRight(a)) {
 			return W.getPointed(monoid).of(a);

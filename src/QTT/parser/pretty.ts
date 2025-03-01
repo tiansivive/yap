@@ -62,6 +62,9 @@ export const display = (term: Src.Term): string => {
 			})(row);
 			return `variant ${r}`;
 		})
+		.with({ type: "tagged" }, ({ tag, term }) => {
+			return `(tagged ${tag}: ${display(term)})`;
+		})
 		.with({ type: "projection" }, ({ term, label }) => {
 			return `(${display(term)}).${label}`;
 		})
@@ -106,6 +109,20 @@ export const Pat = {
 						var: (v: Src.Variable) => v.value,
 					})(row);
 					return `Struct ${r}`;
+				})
+				.with({ type: "variant" }, ({ row }) => {
+					const r = R.display({
+						term: Pat.display,
+						var: (v: Src.Variable) => v.value,
+					})(row);
+					return `Variant ${r}`;
+				})
+				.with({ type: "tuple" }, ({ row }) => {
+					const r = R.display({
+						term: Pat.display,
+						var: (v: Src.Variable) => v.value,
+					})(row);
+					return `Tuple ${r}`;
 				})
 				.otherwise(() => "Pattern Display: Not implemented")
 		);

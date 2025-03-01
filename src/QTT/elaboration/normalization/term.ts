@@ -56,6 +56,10 @@ export const Constructors = {
 			variable: { type: "Bound", lvl },
 		},
 	}),
+	Flex: (variable: { type: "Meta"; val: number }): Value => ({
+		type: "Neutral",
+		value: { type: "Var", variable },
+	}),
 	Lit: (value: Literal) => ({
 		type: "Lit" as const,
 		value,

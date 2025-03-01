@@ -16,16 +16,24 @@ const empty: Subst = {};
 
 type Ctaint = EB.Constraint & { provenance: EB.Provenance[] };
 export const solve = (cs: Array<Ctaint>): M.Elaboration<Subst> =>
-	M.chain(M.ask(), ctx => {
-		if (Log.peek() !== "solver") {
-			Log.push("solver");
-		}
-		return M.fmap(_solve(cs, ctx, empty), s => {
-			Log.logger.debug("[Solution] " + Sub.display(s));
-			Log.pop();
-			return s;
-		});
-	});
+	F.pipe(
+		M.ask(),
+		M.chain(ctx => {
+			if (Log.peek() !== "solver") {
+				Log.push("solver");
+			}
+			const solution = M.catchError(_solve(cs, ctx, empty), e => {
+				console.error(Err.display(e));
+				console.error(displayProvenance(e.provenance));
+				return M.fail(e);
+			});
+			return M.fmap(solution, s => {
+				Log.logger.debug("[Solution] " + Sub.display(s));
+				Log.pop();
+				return s;
+			});
+		}),
+	);
 
 const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboration<Subst> => {
 	Log.logger.debug("[Still to solve] " + cs.length);
@@ -64,11 +72,7 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboratio
 			throw new Error("Solve: Not implemented yet");
 		});
 
-	return M.catchError(solution, e => {
-		console.error(Err.display(e));
-		console.error(displayProvenance(c.provenance));
-		return M.fail(e);
-	});
+	return solution;
 };
 
 export const displayProvenance = (provenance: EB.Provenance[] = []): string => {
@@ -77,7 +81,7 @@ export const displayProvenance = (provenance: EB.Provenance[] = []): string => {
 		.map(p => {
 			const pretty = (([type, val]) => {
 				if (type === "unify") {
-					return `${NF.display(val[0])} ~~ ${NF.display(val[1])}`;
+					return `\n\t${NF.display(val[0])}\nwith:\n\t${NF.display(val[1])}`;
 				}
 
 				if (type === "src") {
@@ -103,7 +107,7 @@ export const displayProvenance = (provenance: EB.Provenance[] = []): string => {
 			const why = metadata?.motive ? `\nWhile: ${metadata.motive}` : "";
 			const loc = id === "src" ? `@ line: ${val.location.from.line}, col: ${val.location.from.column}\n` : "";
 
-			return `${loc}${where}\t${normalize(pretty)}${why}`;
+			return `${loc}${where}\t${pretty}${why}`;
 		})
 		.join("\n\n");
 };

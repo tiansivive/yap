@@ -50,6 +50,10 @@ export const Substitute = (ctx: EB.Context) => {
 							if (v.type === "Meta") {
 								const nf = subst[v.val];
 
+								if (!nf) {
+									return R.Constructors.Variable(v);
+								}
+
 								if (nf.type === "Row") {
 									return nf.row;
 								}
@@ -109,7 +113,7 @@ export const Substitute = (ctx: EB.Context) => {
 						row,
 						val => call.term(subst, val),
 						v => {
-							if (v.type === "Meta") {
+							if (v.type === "Meta" && subst[v.val]) {
 								const tm = NF.quote(ctx.imports, ctx.env.length, subst[v.val]);
 
 								if (tm.type === "Row") {

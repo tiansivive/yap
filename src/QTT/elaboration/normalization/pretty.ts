@@ -34,7 +34,14 @@ export const display = (value: NF.Value | NF.ModalValue): string => {
 			const arr = binder.type !== "Mu" && binder.icit === "Implicit" ? "=>" : "->";
 			return `${b} ${arr} ${EB.Display.Term(closure.term)}`; // TODO: Print environment
 		})
-		.with({ type: "App" }, ({ func, arg }) => `${display(func)} ${display(arg)}`)
+		.with({ type: "App" }, ({ func, arg }) => {
+			const f = display(func);
+
+			if (func.type !== "Var" && func.type !== "Lit") {
+				return `(${f}) ${display(arg)}`;
+			}
+			return `${f} ${display(arg)}`;
+		})
 		.with({ type: "Row" }, ({ row }) =>
 			R.display({
 				term: display,

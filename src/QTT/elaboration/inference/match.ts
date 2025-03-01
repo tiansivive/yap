@@ -47,9 +47,16 @@ export const infer = (tm: Match): EB.M.Elaboration<EB.AST> =>
 				scrutinee[0],
 				alternatives.map(([alt]) => alt),
 			);
-			const ty = alternatives[0][1];
-			return [match, ty, scrutinee[2]];
+			const ty = NF.Constructors.Var(EB.freshMeta());
+
+			const ast: EB.AST = [match, ty, scrutinee[2]];
+			return { ast, alternatives };
 		}),
+		M.discard(({ ast, alternatives }) => {
+			const constraints = alternatives.map(([, ty]): EB.Constraint => ({ type: "assign", left: ty, right: ast[1] }));
+			return M.tell("constraint", constraints);
+		}),
+		M.fmap(({ ast }) => ast),
 	);
 
 /**
@@ -104,9 +111,24 @@ export const elaborate = (alts: Src.Alternative[], [scrutinee, scuty, us]: EB.AS
 		.with([{ pattern: { type: "struct" } }], ([{ pattern, term }]) => {
 			return F.pipe(
 				M.Do,
-				M.let("ctx", M.ask()),
 				M.let("pat", Patterns.infer.Struct(pattern)),
-				M.chain(({ pat: [pat, ty, qs, binders], ctx }) =>
+				M.chain(({ pat: [pat, ty, qs, binders] }) =>
+					M.local(
+						ctx_ => binders.reduce((ctx, [name, va]) => EB.bind(ctx, { type: "Lambda", variable: name }, [va, Q.Many]), ctx_),
+						F.pipe(
+							M.tell("constraint", { type: "assign", left: ty, right: scuty }),
+							M.chain(_ => EB.infer(term)),
+							M.fmap((branch): [EB.Alternative, NF.Value, Q.Usages][] => [[EB.Constructors.Alternative(pat, branch[0]), branch[1], branch[2]]]),
+						),
+					),
+				),
+			);
+		})
+		.with([{ pattern: { type: "variant" } }], ([{ pattern, term }]) => {
+			return F.pipe(
+				M.Do,
+				M.let("pat", Patterns.infer.Variant(pattern)),
+				M.chain(({ pat: [pat, ty, qs, binders] }) =>
 					M.local(
 						ctx_ => binders.reduce((ctx, [name, va]) => EB.bind(ctx, { type: "Lambda", variable: name }, [va, Q.Many]), ctx_),
 						F.pipe(

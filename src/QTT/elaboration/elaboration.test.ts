@@ -662,6 +662,38 @@ describe("Elaboration", () => {
 
 			expect(prettyCst).toContain("String ~~ Num"); // Unifying the 2 branches
 		});
+
+		it('should elaborate pattern matching on variants: "match x | nil: a -> 0 | cons: {el, rest} -> 1"', () => {
+			const src = `match x | nil: a -> 0 | cons: {el, rest} -> 1`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, ctx);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			// rows are elaborated from right to left, hence `rest` is bound before `el`
+			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Variant [ nil: a ] -> 0\n| Variant [ cons: Struct [ 0: el, 1: rest ] ] -> 1`);
+			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+			// 1: to unify the two branches
+			// 2: to unify each pattern with the scrutinee,
+			expect(cst.length).toBe(2 + 1);
+
+			const prettyCst = cst.map(EB.Display.Constraint);
+
+			expect(prettyCst).toContain("Variant [ nil: ?1 | ?2 ] ~~ Num"); // The first branch pattern is unified with the scrutinee
+			expect(prettyCst).toContain("Variant [ cons: Schema [ 0: ?3, 1: ?4 ] | ?5 ] ~~ Num"); // The second branch pattern is unified with the scrutinee
+			expect(prettyCst).toContain("Num ~~ Num"); // Unified the two branches
+		});
 	});
 
 	describe("Recursion", () => {
