@@ -23,7 +23,13 @@ export type Binder =
 	| { type: "Lambda"; variable: string; icit: Implicitness }
 	| { type: "Mu"; variable: string; annotation: ModalValue };
 
-export type Variable = { type: "Bound"; lvl: number } | { type: "Meta"; val: number; lvl: number } | { type: "Free"; name: string };
+export type Variable =
+	| { type: "Bound"; lvl: number }
+	| { type: "Free"; name: string }
+	/**
+	 * @see Unification.bind for the reason why we need to store the level
+	 */
+	| { type: "Meta"; val: number; lvl: number };
 
 export type Closure = {
 	env: Env;

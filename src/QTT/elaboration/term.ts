@@ -23,7 +23,13 @@ export type Term =
 	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> }
 	| { type: "Block"; statements: Array<Statement>; return: Term };
 
-export type Variable = { type: "Bound"; index: number } | { type: "Free"; name: string } | { type: "Meta"; val: number; lvl: number };
+export type Variable =
+	| { type: "Bound"; index: number }
+	| { type: "Free"; name: string }
+	/**
+	 * @see Unification.bind for the reason why we need to store the level
+	 */
+	| { type: "Meta"; val: number; lvl: number };
 export type Row = R.Row<Term, Variable>;
 
 export type Binding =

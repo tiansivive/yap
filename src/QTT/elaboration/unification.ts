@@ -268,6 +268,13 @@ const bind = (ctx: EB.Context, v: NF.Variable, ty: NF.Value): Subst => {
 
 	if (!occursCheck(ctx, v, ty)) {
 		if (ty.type === "Abs") {
+			// NOTE: Pruning the environment to the level of the variable
+			// Because closures capture the environment during elaboration, we ensure only the necessary variables are captured here
+			// when unifying with a meta generated at a certain, lower level.
+			// The other way around is not a problem, since the closure env already contains all the strictly necessary variables.
+
+			// This is not an ideal solution, as it demands that metas contain the level at which they were generated.
+			// An alternative would be higher-order unification, which is more complex to implement, but more powerful.
 			const _ty = { ...ty, closure: { ...ty.closure, env: ty.closure.env.slice(-v.lvl) } };
 			return { [v.val]: _ty };
 		}
