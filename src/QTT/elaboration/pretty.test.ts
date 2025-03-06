@@ -43,7 +43,7 @@ describe("Displaying elaborated terms", () => {
 		});
 
 		it("should display a meta variable", () => {
-			const term = EB.Constructors.Var(EB.Meta(1));
+			const term = EB.Constructors.Var(EB.Meta(1, 0));
 			expect(EB.Display.Term(term)).toBe("?1");
 		});
 

@@ -11,8 +11,8 @@ import * as Log from "@qtt/shared/logging";
 import * as Sub from "@qtt/elaboration/substitution";
 
 export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.Term): NF.Value {
-	Log.push("eval");
-	Log.logger.debug(EB.Display.Term(term), { env, imports, term: EB.Display.Term(term) });
+	//Log.push("eval");
+	//Log.logger.debug(EB.Display.Term(term), { env, imports, term: EB.Display.Term(term) });
 	const res = match(term)
 		.with({ type: "Lit" }, ({ value }): NF.Value => NF.Constructors.Lit(value))
 		.with({ type: "Var", variable: { type: "Free" } }, ({ variable }) => {
@@ -106,8 +106,8 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 			throw new Error("Not implemented");
 		});
 
-	Log.logger.debug("[Result] " + NF.display(res));
-	Log.pop();
+	//Log.logger.debug("[Result] " + NF.display(res));
+	//Log.pop();
 
 	return res;
 }

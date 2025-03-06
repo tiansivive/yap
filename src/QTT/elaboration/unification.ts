@@ -18,7 +18,7 @@ import * as Log from "@qtt/shared/logging";
 import { number } from "fp-ts";
 
 const empty: Subst = {};
-export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaboration<Subst> => {
+export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst): M.Elaboration<Subst> => {
 	if (Log.peek() !== "unify") {
 		Log.push("unify");
 	}
@@ -26,19 +26,20 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaborati
 	const rDisplay = NF.display(right);
 	Log.logger.debug("[left] " + rDisplay);
 	Log.logger.debug("[right] " + lDisplay);
+	Log.logger.debug("[Level] " + lvl);
 
 	const res = match([left, right])
-		.with([{ type: "Neutral" }, P._], ([n, v]) => unify(n.value, v, lvl))
-		.with([P._, { type: "Neutral" }], ([v, n]) => unify(v, n.value, lvl))
-		.otherwise(() =>
-			M.track(
+		.with([{ type: "Neutral" }, P._], ([n, v]) => unify(n.value, v, lvl, subst))
+		.with([P._, { type: "Neutral" }], ([v, n]) => unify(v, n.value, lvl, subst))
+		.otherwise(() => {
+			return M.track(
 				["unify", [left, right], { action: "unification" }],
 				match([left, right])
 					.with([NF.Patterns.Lit, NF.Patterns.Lit], ([lit1, lit2]) => {
 						if (!_.isEqual(lit1.value, lit2.value)) {
 							return M.fail(Err.UnificationFailure(lit1, lit2));
 						}
-						return M.of(empty);
+						return M.of(subst);
 					})
 					.with(
 						[NF.Patterns.Lambda, NF.Patterns.Lambda],
@@ -47,47 +48,69 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaborati
 							M.chain(M.ask(), ctx => {
 								const body1 = NF.apply(ctx.imports, lam1.closure, NF.Constructors.Rigid(lvl));
 								const body2 = NF.apply(ctx.imports, lam2.closure, NF.Constructors.Rigid(lvl));
-								return unify(body1, body2, lvl + 1);
+								return unify(body1, body2, lvl + 1, subst);
 							}),
 					)
 
 					.with(
 						[NF.Patterns.Pi, NF.Patterns.Pi],
 						([pi1, pi2]) => pi1.binder.icit === pi2.binder.icit,
-						([pi1, pi2]) =>
-							F.pipe(
+						([pi1, pi2]) => {
+							Log.push("pi");
+							Log.logger.debug("[Left] " + NF.display(pi1));
+							Log.logger.debug("[Right] " + NF.display(pi2));
+							const sol = F.pipe(
 								M.Do,
 								M.let("ctx", M.ask()),
-								M.let("sub", unify(pi1.binder.annotation[0], pi2.binder.annotation[0], lvl)),
+								M.bind("sub", ({ ctx }) => {
+									Log.push("annotation");
+									return F.pipe(
+										unify(pi1.binder.annotation[0], pi2.binder.annotation[0], lvl, subst),
+										M.fmap(sub => Sub.compose(ctx, sub, subst, lvl)),
+										M.discard(() => {
+											Log.pop();
+											return M.of(null);
+										}),
+									);
+								}),
 								M.chain(({ ctx, sub }) => {
 									const body1 = NF.apply(ctx.imports, pi1.closure, NF.Constructors.Rigid(lvl));
 									const body2 = NF.apply(ctx.imports, pi2.closure, NF.Constructors.Rigid(lvl));
-									return M.fmap(unify(body1, body2, lvl + 1), o => Sub.compose(ctx, o, sub));
+									//FIXME: Temporary fix. We shouldn't rely on the context in unification. Just work with levels.
+									const ctx_ = { ...ctx, env: Array(lvl) };
+									return unify(body1, body2, lvl + 1, sub);
+									//return M.fmap(unify(body1, body2, lvl + 1, sub), o => Sub.compose(ctx_, o, sub, lvl + 1));
 								}),
-							),
+							);
+
+							return sol;
+						},
 					)
 
 					.with([NF.Patterns.Mu, NF.Patterns.Mu], ([mu1, mu2]) =>
 						F.pipe(
 							M.Do,
 							M.let("ctx", M.ask()),
-							M.let("sub", unify(mu1.binder.annotation[0], mu2.binder.annotation[0], lvl)),
+							M.bind("sub", ({ ctx }) =>
+								M.fmap(unify(mu1.binder.annotation[0], mu2.binder.annotation[0], lvl, subst), sub => Sub.compose(ctx, sub, subst, lvl)),
+							),
 							M.chain(({ ctx, sub }) => {
 								const body1 = NF.apply(ctx.imports, mu1.closure, NF.Constructors.Rigid(lvl));
 								const body2 = NF.apply(ctx.imports, mu2.closure, NF.Constructors.Rigid(lvl));
-								return M.fmap(unify(body1, body2, lvl + 1), o => Sub.compose(ctx, o, sub));
+								//return M.fmap(unify(body1, body2, lvl + 1, sub), o => Sub.compose(ctx, o, sub, lvl + 1));
+								return unify(body1, body2, lvl + 1, sub);
 							}),
 						),
 					)
 
-					.with([NF.Patterns.Flex, P._], ([meta, v]) => M.fmap(M.ask(), ctx => bind(ctx, meta.variable, v)))
-					.with([P._, NF.Patterns.Flex], ([v, meta]) => M.fmap(M.ask(), ctx => bind(ctx, meta.variable, v)))
+					.with([NF.Patterns.Flex, P._], ([meta, v]) => M.fmap(M.ask(), ctx => Sub.compose(ctx, bind(ctx, meta.variable, v), subst, lvl)))
+					.with([P._, NF.Patterns.Flex], ([v, meta]) => M.fmap(M.ask(), ctx => Sub.compose(ctx, bind(ctx, meta.variable, v), subst, lvl)))
 
 					.with([NF.Patterns.Rigid, NF.Patterns.Rigid], ([rigid1, rigid2]) => {
 						if (!_.isEqual(rigid1.variable, rigid2.variable)) {
 							return M.fail(Err.RigidVariableMismatch(rigid1, rigid2));
 						}
-						return M.of(empty);
+						return M.of(subst);
 					})
 
 					.with([NF.Patterns.App, NF.Patterns.App], ([left, right]) => {
@@ -100,7 +123,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaborati
 									([mu, v]) => {
 										const unfolded = NF.apply(ctx.imports, mu.closure, NF.Constructors.Neutral(mu));
 										const applied = unfolded.type === "Abs" ? NF.apply(ctx.imports, unfolded.closure, left.arg) : unfolded;
-										return unify(applied, right, lvl);
+										return unify(applied, right, lvl, subst);
 									},
 								)
 								.with(
@@ -110,15 +133,15 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaborati
 									([v, mu]) => {
 										const unfolded = NF.apply(ctx.imports, mu.closure, NF.Constructors.Neutral(mu));
 										const applied = unfolded.type === "Abs" ? NF.apply(ctx.imports, unfolded.closure, right.arg) : unfolded;
-										return unify(left, applied, lvl);
+										return unify(left, applied, lvl, subst);
 									},
 								)
 								.otherwise(() =>
 									F.pipe(
 										M.Do,
-										M.let("o1", unify(left.func, right.func, lvl)),
-										M.let("o2", unify(left.arg, right.arg, lvl)),
-										M.fmap(({ o1, o2 }) => Sub.compose(ctx, o2, o1)),
+										M.let("o1", unify(left.func, right.func, lvl, subst)),
+										M.let("o2", unify(left.arg, right.arg, lvl, subst)),
+										M.fmap(({ o1, o2 }) => Sub.compose(ctx, o2, o1, lvl)),
 									),
 								);
 						});
@@ -153,7 +176,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaborati
 									}
 
 									const finalSubst = M.chain(M.ask(), ctx => {
-										const subst = Sub.Substitute(ctx);
+										const call = Sub.Substitute(ctx);
 										//const [rewritten, o1] = rewrite(r);
 
 										return F.pipe(
@@ -164,11 +187,11 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaborati
 												}
 												return M.of({ rewritten, o1 });
 											}),
-											M.bind("o2", ({ rewritten, o1 }) => unify(subst.nf(o1, value), subst.nf(o1, rewritten.value), ctx.env.length)),
+											M.bind("o2", ({ rewritten, o1 }) => unify(call.nf(o1, value, lvl), call.nf(o1, rewritten.value, lvl), lvl, subst)),
 											M.bind("o3", ({ o1, o2, rewritten }) =>
-												unify_(substRow(ctx, o2, substRow(ctx, o1, row)), substRow(ctx, o2, substRow(ctx, o1, rewritten.row)), o2),
+												unify_(substRow(ctx, o2, substRow(ctx, o1, row, lvl), lvl), substRow(ctx, o2, substRow(ctx, o1, rewritten.row, lvl), lvl), o2),
 											),
-											M.fmap(({ o1, o2, o3 }) => Sub.compose(ctx, Sub.compose(ctx, o3, o2), o1)),
+											M.fmap(({ o1, o2, o3 }) => Sub.compose(ctx, Sub.compose(ctx, o3, o2, lvl), o1, lvl)),
 										);
 									});
 
@@ -196,8 +219,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaborati
 													return M.fail(Err.Impossible("Expected meta variable"));
 												}
 
-												const tvar = NF.Constructors.Var(EB.freshMeta());
-												const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta());
+												const tvar = NF.Constructors.Var(EB.freshMeta(lvl));
+												const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta(lvl));
 												const rf = R.Constructors.Extension(label, tvar, rvar);
 												const sub = { [variable.val]: NF.Constructors.Row(rf) };
 												return M.of<[NF.Row, Subst]>([rf, sub]) as any;
@@ -218,16 +241,19 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): M.Elaborati
 					.otherwise(ts => {
 						return M.fail(Err.TypeMismatch(left, right));
 					}),
-			),
-		);
+			);
+		});
 
-	return M.fmap(res, subst => {
-		Log.logger.debug("[Result] " + Sub.display(subst, " :|: "));
+	return M.chain(M.ask(), ctx => {
+		return M.fmap(res, sub => {
+			Log.logger.debug("[Result] " + Sub.display(sub, " :|: "));
 
-		if (Log.peek() === "unify") {
-			Log.pop();
-		}
-		return subst;
+			if (Log.peek() === "unify") {
+				Log.pop();
+			}
+			return sub;
+			//return Sub.compose(ctx, sub, subst, lvl);
+		});
 	});
 };
 
@@ -241,6 +267,10 @@ const bind = (ctx: EB.Context, v: NF.Variable, ty: NF.Value): Subst => {
 	}
 
 	if (!occursCheck(ctx, v, ty)) {
+		if (ty.type === "Abs") {
+			const _ty = { ...ty, closure: { ...ty.closure, env: ty.closure.env.slice(-v.lvl) } };
+			return { [v.val]: _ty };
+		}
 		return { [v.val]: ty };
 	}
 
@@ -266,10 +296,12 @@ const occursCheck = (ctx: EB.Context, v: NF.Variable, ty: NF.Value): boolean =>
 		)
 		.otherwise(() => false);
 
-const substRow = (ctx: EB.Context, subst: Subst, row: NF.Row): NF.Row =>
+const substRow = (ctx: EB.Context, subst: Subst, row: NF.Row, lvl: number): NF.Row =>
 	match(row)
 		.with({ type: "empty" }, () => row)
-		.with({ type: "extension" }, ({ label, value, row }) => R.Constructors.Extension(label, Sub.Substitute(ctx).nf(subst, value), substRow(ctx, subst, row)))
+		.with({ type: "extension" }, ({ label, value, row }) =>
+			R.Constructors.Extension(label, Sub.Substitute(ctx).nf(subst, value, lvl), substRow(ctx, subst, row, lvl)),
+		)
 		.with({ type: "variable" }, ({ variable }): NF.Row => {
 			if (variable.type !== "Meta") {
 				return row;

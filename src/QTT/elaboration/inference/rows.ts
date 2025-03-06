@@ -34,7 +34,7 @@ export const elaborate = (row: Src.Row): M.Elaboration<[EB.Row, NF.Row, Q.Usages
 						];
 						return F.pipe(
 							M.of(ast),
-							M.discard(_ => M.tell("constraint", { type: "assign", left: _ty, right: NF.Row })),
+							M.discard(_ => M.tell("constraint", { type: "assign", left: _ty, right: NF.Row, lvl: ctx.env.length })),
 						);
 					}),
 				),

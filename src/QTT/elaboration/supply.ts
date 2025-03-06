@@ -9,12 +9,18 @@ export const resetSupply = (key: keyof typeof counts) => {
 	counts[key] = 0;
 };
 
-export const freshMeta = () => {
+export function freshMeta(): { type: "Meta"; val: number };
+export function freshMeta(lvl: number): { type: "Meta"; val: number; lvl: number };
+export function freshMeta(lvl?: number) {
 	counts.meta++;
-	return { type: "Meta" as const, val: counts.meta };
-};
 
-export const getVarCount = () => {
+	if (lvl === undefined) {
+		return { type: "Meta", val: counts.meta };
+	}
+	return { type: "Meta", val: counts.meta, lvl };
+}
+
+export const nextCount = () => {
 	counts.var++;
 	return counts.var;
 };

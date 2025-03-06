@@ -10,7 +10,7 @@ import * as Src from "@qtt/src/index";
 type Pi = Extract<Src.Term, { type: "pi" } | { type: "arrow" }>;
 
 export const infer = (pi: Pi): EB.M.Elaboration<EB.AST> => {
-	const v = pi.type === "pi" ? pi.variable : `t${EB.getVarCount()}`;
+	const v = pi.type === "pi" ? pi.variable : `t${EB.nextCount()}`;
 	const body = pi.type === "pi" ? pi.body : pi.rhs;
 	const ann = pi.type === "pi" ? pi.annotation : pi.lhs;
 	const q = pi.type === "pi" && pi.multiplicity ? pi.multiplicity : Q.Many;

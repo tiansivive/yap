@@ -27,10 +27,11 @@ export type Provenance =
 	| ["alt", Src.Alternative, Metadata?]
 	| ["unify", [NF.Value, NF.Value], Metadata?];
 
-type Metadata = {
-	action: string;
-	motive?: string;
-} & Record<string, unknown>;
+type Metadata =
+	| { action: "checking"; against: NF.Value }
+	| { action: "infer" }
+	| { action: "unification" }
+	| { action: "alternative"; type: NF.Value; motive: string };
 
 export type Binder = Pick<EB.Binding, "type" | "variable">;
 

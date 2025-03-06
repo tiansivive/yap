@@ -16,8 +16,8 @@ export const infer = ({ fn, arg, icit }: Application) =>
 		M.Do,
 		M.bind("ctx", M.ask),
 		M.let("fn", M.chain(EB.infer(fn), icit === "Explicit" ? EB.Icit.insert : M.of)),
-		M.bind("pi", ({ fn: [ft, fty], ctx }) =>
-			match(fty)
+		M.bind("pi", ({ fn: [ft, fty], ctx }) => {
+			return match(fty)
 				.with({ type: "Abs", binder: { type: "Pi" } }, pi => {
 					if (pi.binder.icit !== icit) {
 						throw new Error("Implicitness mismatch");
@@ -26,19 +26,19 @@ export const infer = ({ fn, arg, icit }: Application) =>
 					return M.of([pi.binder.annotation, pi.closure] as const);
 				})
 				.otherwise(() => {
-					const meta = EB.Constructors.Var(EB.freshMeta());
+					const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
 					const nf = NF.evaluate(ctx.env, ctx.imports, meta);
 					const mnf: NF.ModalValue = [nf, Q.Many];
-					const closure = NF.Constructors.Closure(ctx.env, EB.Constructors.Var(EB.freshMeta()));
+					const closure = NF.Constructors.Closure(ctx.env, EB.Constructors.Var(EB.freshMeta(ctx.env.length + 1)));
 
 					const pi = NF.Constructors.Pi("x", icit, mnf, closure);
 
 					return F.pipe(
 						M.of([mnf, closure] as const),
-						M.discard(() => M.tell("constraint", { type: "assign", left: fty, right: pi })),
+						M.discard(() => M.tell("constraint", { type: "assign", left: fty, right: pi, lvl: ctx.env.length })),
 					);
-				}),
-		),
+				});
+		}),
 		M.bind("arg", ({ pi: [ann] }) => EB.check(arg, ann[0])),
 		M.chain(({ fn: [ft, fty, fus], arg: [at, aus], pi, ctx }) => {
 			const [[, q], cls] = pi;

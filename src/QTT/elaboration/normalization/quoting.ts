@@ -8,7 +8,9 @@ export const quote = (imports: EB.Context["imports"], lvl: number, val: NF.Value
 		.with({ type: "Lit" }, ({ value }) => EB.Constructors.Lit(value))
 		.with({ type: "Var" }, ({ variable }) =>
 			match(variable)
-				.with({ type: "Bound" }, v => EB.Constructors.Var({ type: "Bound", index: lvl - v.lvl - 1 }))
+				.with({ type: "Bound" }, v => {
+					return EB.Constructors.Var({ type: "Bound", index: lvl - v.lvl - 1 });
+				})
 				.otherwise(v => EB.Constructors.Var(v)),
 		)
 

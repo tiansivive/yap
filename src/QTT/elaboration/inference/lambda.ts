@@ -7,14 +7,18 @@ import * as Q from "@qtt/shared/modalities/multiplicity";
 import * as NF from "@qtt/elaboration/normalization";
 import * as Src from "@qtt/src/index";
 
+import * as Log from "@qtt/shared/logging";
+
 type Lambda = Extract<Src.Term, { type: "lambda" }>;
 
-export const infer = (lam: Lambda): EB.M.Elaboration<EB.AST> =>
-	F.pipe(
+export const infer = (lam: Lambda): EB.M.Elaboration<EB.AST> => {
+	Log.push("lambda");
+	Log.logger.debug(Src.display(lam));
+	return F.pipe(
 		M.Do,
 		M.bind("ctx", M.ask),
 		M.bind("ann", ({ ctx }) => {
-			const meta = EB.Constructors.Var(EB.freshMeta());
+			const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
 			return lam.annotation ? EB.check(lam.annotation, NF.Type) : M.of([meta, Q.noUsage(ctx.env.length)] as const);
 		}),
 		M.chain(({ ann: [tm], ctx }) => {
@@ -36,4 +40,9 @@ export const infer = (lam: Lambda): EB.M.Elaboration<EB.AST> =>
 				),
 			);
 		}),
+		M.discard(() => {
+			Log.pop();
+			return M.of(null);
+		}),
 	);
+};

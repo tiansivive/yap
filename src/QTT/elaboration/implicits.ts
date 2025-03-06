@@ -20,7 +20,7 @@ export function insert(node: EB.AST): EB.M.Elaboration<EB.AST> {
 			return match(node)
 				.with([{ type: "Abs", binding: { type: "Lambda", icit: "Implicit" } }, P._, P._], () => M.of<EB.AST>(node))
 				.with([P._, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._], ([, pi]) => {
-					const meta = EB.Constructors.Var(EB.freshMeta());
+					const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
 					const vNF = NF.evaluate(ctx.env, ctx.imports, meta);
 
 					const tm = EB.Constructors.App("Implicit", term, meta);

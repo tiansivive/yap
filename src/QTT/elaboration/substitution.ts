@@ -8,44 +8,54 @@ import { entries } from "../../utils/objects";
 
 export type Subst = { [key: number]: NF.Value };
 
+//TODO: term substitution is failing. It's not adding introduced abstractions to the environment, so the lookup fails with negative indices.
+//SOLUTION: When going under an abstraction, we need to add the binder to the environment.
+//NOTE: Working with a Context is a bad idea. Substitution doesn't care about most of the context, it only cares about the environment and imports.
 export const Substitute = (ctx: EB.Context) => {
 	const call = {
-		nf: (subst: Subst, val: NF.Value): NF.Value => Substitute(ctx).nf(subst, val),
-		closure: (subst: Subst, closure: NF.Closure): NF.Closure => Substitute(ctx).closure(subst, closure),
-		term: (subst: Subst, term: EB.Term): EB.Term => Substitute(ctx).term(subst, term),
+		nf: (subst: Subst, val: NF.Value, level = ctx.env.length): NF.Value => Substitute(ctx).nf(subst, val, level),
+		closure: (subst: Subst, closure: NF.Closure, level: number): NF.Closure => Substitute(ctx).closure(subst, closure, level),
+		term: (subst: Subst, term: EB.Term, level = ctx.env.length): EB.Term => Substitute(ctx).term(subst, term, level),
 	};
 
 	return {
-		nf: (subst: Subst, val: NF.Value): NF.Value => {
+		nf: (subst: Subst, val: NF.Value, level = ctx.env.length): NF.Value => {
+			if (Object.keys(subst).length === 0) {
+				return val;
+			}
 			return match(val)
-				.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(call.nf(subst, value)))
+				.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(call.nf(subst, value, level)))
 				.with(NF.Patterns.Lit, () => val)
 				.with(NF.Patterns.Rigid, () => val)
 				.with(NF.Patterns.Flex, ({ variable }) => subst[variable.val] ?? val)
-				.with(NF.Patterns.Lambda, ({ binder, closure }) => NF.Constructors.Lambda(binder.variable, binder.icit, call.closure(subst, closure)))
+				.with(NF.Patterns.Lambda, ({ binder, closure }) => NF.Constructors.Lambda(binder.variable, binder.icit, call.closure(subst, closure, level + 1)))
 				.with(NF.Patterns.Pi, ({ closure, binder }) => {
+					const applied = NF.apply(ctx.imports, closure, NF.Constructors.Rigid(level));
+					// const body = NF.quote(ctx.imports, level + 1, call.nf(subst, applied, level + 1));
+
 					const pi = NF.Constructors.Pi(
 						binder.variable,
 						binder.icit,
-						[call.nf(subst, binder.annotation[0]), binder.annotation[1]],
-						call.closure(subst, closure),
+						[call.nf(subst, binder.annotation[0], level), binder.annotation[1]],
+						call.closure(subst, closure, level + 1),
 					);
+
 					return pi;
 				})
 				.with(NF.Patterns.Mu, ({ closure, binder }) => {
-					const mu = NF.Constructors.Mu(binder.variable, [call.nf(subst, binder.annotation[0]), binder.annotation[1]], call.closure(subst, closure));
+					const mu = NF.Constructors.Mu(
+						binder.variable,
+						[call.nf(subst, binder.annotation[0], level), binder.annotation[1]],
+						call.closure(subst, closure, level + 1),
+					);
 					return mu;
 				})
-				.with(NF.Patterns.Lambda, ({ binder, closure }) => {
-					const lam = NF.Constructors.Lambda(binder.variable, binder.icit, call.closure(subst, closure));
-					return lam;
-				})
 
-				.with(NF.Patterns.App, ({ func, arg, icit }) => NF.Constructors.App(call.nf(subst, func), call.nf(subst, arg), icit))
+				.with(NF.Patterns.App, ({ func, arg, icit }) => NF.Constructors.App(call.nf(subst, func, level), call.nf(subst, arg, level), icit))
 				.with(NF.Patterns.Row, ({ row }) => {
 					const r = R.traverse(
 						row,
-						val => call.nf(subst, val),
+						val => call.nf(subst, val, level),
 						v => {
 							if (v.type === "Meta") {
 								const nf = subst[v.val];
@@ -76,42 +86,42 @@ export const Substitute = (ctx: EB.Context) => {
 				});
 		},
 
-		closure: (subst: Subst, closure: NF.Closure): NF.Closure => ({
+		closure: (subst: Subst, closure: NF.Closure, level: number): NF.Closure => ({
 			env: closure.env,
-			term: call.term(subst, closure.term),
+			term: Substitute(ctx).term(subst, closure.term, level),
 		}),
-		term: (subst: Subst, term: EB.Term): EB.Term =>
+		term: (subst: Subst, term: EB.Term, level = ctx.env.length): EB.Term =>
 			match(term)
 				.with({ type: "Lit" }, () => term)
 				.with({ type: "Var" }, ({ variable }) => {
 					if (variable.type === "Meta") {
-						return subst[variable.val] ? NF.quote(ctx.imports, ctx.env.length, subst[variable.val]) : term;
+						return subst[variable.val] ? NF.quote(ctx.imports, level, subst[variable.val]) : term;
 					}
 
 					return term;
 				})
 				.with({ type: "Abs" }, ({ binding, body }) => {
 					if (binding.type === "Lambda") {
-						return EB.Constructors.Abs(binding, call.term(subst, body));
+						return EB.Constructors.Abs(binding, call.term(subst, body, level + 1));
 					}
 
-					const annotation = call.term(subst, binding.annotation);
-					return EB.Constructors.Abs({ ...binding, annotation }, call.term(subst, body));
+					const annotation = call.term(subst, binding.annotation, level);
+					return EB.Constructors.Abs({ ...binding, annotation }, call.term(subst, body, level + 1));
 				})
-				.with({ type: "App" }, ({ func, arg, icit }) => EB.Constructors.App(icit, call.term(subst, func), call.term(subst, arg)))
-				.with({ type: "Proj" }, ({ label, term }) => EB.Constructors.Proj(label, call.term(subst, term)))
-				.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, call.term(subst, value), call.term(subst, term)))
-				.with({ type: "Annotation" }, ({ term, ann }) => EB.Constructors.Annotation(call.term(subst, term), call.term(subst, ann)))
+				.with({ type: "App" }, ({ func, arg, icit }) => EB.Constructors.App(icit, call.term(subst, func), call.term(subst, arg, level)))
+				.with({ type: "Proj" }, ({ label, term }) => EB.Constructors.Proj(label, call.term(subst, term, level)))
+				.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, call.term(subst, value), call.term(subst, term, level)))
+				.with({ type: "Annotation" }, ({ term, ann }) => EB.Constructors.Annotation(call.term(subst, term), call.term(subst, ann, level)))
 				.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
 					EB.Constructors.Match(
-						call.term(subst, scrutinee),
-						alternatives.map(alt => ({ pattern: alt.pattern, term: call.term(subst, alt.term) })),
+						call.term(subst, scrutinee, level),
+						alternatives.map(alt => ({ pattern: alt.pattern, term: call.term(subst, alt.term, level) })),
 					),
 				)
 				.with({ type: "Row" }, ({ row }) => {
 					const r = R.traverse(
 						row,
-						val => call.term(subst, val),
+						val => call.term(subst, val, level),
 						v => {
 							if (v.type === "Meta" && subst[v.val]) {
 								const tm = NF.quote(ctx.imports, ctx.env.length, subst[v.val]);
@@ -147,7 +157,7 @@ export const display = (subst: Subst, separator = "\n"): string => {
 		.join(separator);
 };
 
-export const compose = (ctx: EB.Context, s1: Subst, s2: Subst): Subst => {
-	const mapped = entries(s2).reduce((sub: Subst, [k, nf]) => ({ ...sub, [k]: Substitute(ctx).nf(s1, nf) }), {});
+export const compose = (ctx: EB.Context, s1: Subst, s2: Subst, level = ctx.env.length): Subst => {
+	const mapped = entries(s2).reduce((sub: Subst, [k, nf]) => ({ ...sub, [k]: Substitute(ctx).nf(s1, nf, level) }), {});
 	return { ...s1, ...mapped };
 };

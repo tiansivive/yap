@@ -31,7 +31,7 @@ describe("Unification", () => {
 		const left = NF.Constructors.Lit(Lit.Num(42));
 		const right = NF.Constructors.Lit(Lit.Num(42));
 
-		const [either] = M.run(EB.unify(left, right, 0), empty);
+		const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 
 		if (E.isLeft(either)) {
 			throw new Error(`Failed solving: ${Err.display(either.left)}`);
@@ -45,7 +45,7 @@ describe("Unification", () => {
 		const left = NF.Constructors.Lit(Lit.Num(42));
 		const right = NF.Constructors.Lit(Lit.Num(43));
 
-		const [either] = M.run(EB.unify(left, right, 0), empty);
+		const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 
 		if (E.isRight(either)) {
 			throw new Error(`Expected unification to fail`);
@@ -58,7 +58,7 @@ describe("Unification", () => {
 		const left = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure([], EB.Constructors.Var(EB.Bound(0))));
 		const right = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure([], EB.Constructors.Var(EB.Bound(0))));
 
-		const [either] = M.run(EB.unify(left, right, 0), empty);
+		const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 
 		if (E.isLeft(either)) {
 			throw new Error(`Failed solving: ${Err.display(either.left)}`);
@@ -72,7 +72,7 @@ describe("Unification", () => {
 		const left = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure([], EB.Constructors.Var(EB.Bound(0))));
 		const right = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure([], EB.Constructors.Lit(Lit.Num(42))));
 
-		const [either] = M.run(EB.unify(left, right, 0), empty);
+		const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 
 		if (E.isRight(either)) {
 			throw new Error(`Expected unification to fail`);
@@ -83,10 +83,10 @@ describe("Unification", () => {
 	});
 
 	it("should bind a meta to a value", () => {
-		const left = NF.Constructors.Neutral(NF.Constructors.Var({ type: "Meta", val: 0 }));
+		const left = NF.Constructors.Neutral(NF.Constructors.Var({ type: "Meta", val: 0, lvl: 0 }));
 		const right = NF.Constructors.Lit(Lit.Num(42));
 
-		const [either] = M.run(EB.unify(left, right, 0), empty);
+		const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 
 		if (E.isLeft(either)) {
 			throw new Error(`Failed solving: ${Err.display(either.left)}`);
@@ -101,7 +101,7 @@ describe("Unification", () => {
 			const left = NF.Constructors.Row(R.Constructors.Empty());
 			const right = NF.Constructors.Row(R.Constructors.Empty());
 
-			const [either] = M.run(EB.unify(left, right, 0), empty);
+			const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 
 			if (E.isLeft(either)) {
 				throw new Error(`Failed solving: ${Err.display(either.left)}`);
@@ -115,7 +115,7 @@ describe("Unification", () => {
 			const left = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Empty()));
 			const right = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Empty()));
 
-			const [either] = M.run(EB.unify(left, right, 0), empty);
+			const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 
 			if (E.isLeft(either)) {
 				throw new Error(`Failed solving: ${Err.display(either.left)}`);
@@ -129,7 +129,7 @@ describe("Unification", () => {
 			const left = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Empty()));
 			const right = NF.Constructors.Row(R.Constructors.Extension("y", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Empty()));
 
-			const [either] = M.run(EB.unify(left, right, 0), empty);
+			const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 
 			if (E.isRight(either)) {
 				throw new Error(`Expected unification to fail`);
@@ -139,10 +139,10 @@ describe("Unification", () => {
 		});
 
 		it("should unify a polymorphic row with a concrete row", () => {
-			const left = NF.Constructors.Row(R.Constructors.Variable({ type: "Meta", val: 0 }));
+			const left = NF.Constructors.Row(R.Constructors.Variable({ type: "Meta", val: 0, lvl: 0 }));
 			const right = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Empty()));
 
-			const [either] = M.run(EB.unify(left, right, 0), empty);
+			const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 
 			if (E.isLeft(either)) {
 				throw new Error(`Failed solving: ${Err.display(either.left)}`);
@@ -153,10 +153,10 @@ describe("Unification", () => {
 		});
 
 		it("should unify two polymorphic rows", () => {
-			const left = NF.Constructors.Row(R.Constructors.Variable({ type: "Meta", val: 0 }));
-			const right = NF.Constructors.Row(R.Constructors.Variable({ type: "Meta", val: 1 }));
+			const left = NF.Constructors.Row(R.Constructors.Variable({ type: "Meta", val: 0, lvl: 0 }));
+			const right = NF.Constructors.Row(R.Constructors.Variable({ type: "Meta", val: 1, lvl: 0 }));
 
-			const [either] = M.run(EB.unify(left, right, 0), empty);
+			const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 
 			if (E.isLeft(either)) {
 				throw new Error(`Failed solving: ${Err.display(either.left)}`);
@@ -167,10 +167,14 @@ describe("Unification", () => {
 		});
 
 		it("should merge all extensions when both rows are polymorphic", () => {
-			const left = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Variable({ type: "Meta", val: 100 })));
-			const right = NF.Constructors.Row(R.Constructors.Extension("y", NF.Constructors.Lit(Lit.Num(43)), R.Constructors.Variable({ type: "Meta", val: 101 })));
+			const left = NF.Constructors.Row(
+				R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(42)), R.Constructors.Variable({ type: "Meta", val: 100, lvl: 0 })),
+			);
+			const right = NF.Constructors.Row(
+				R.Constructors.Extension("y", NF.Constructors.Lit(Lit.Num(43)), R.Constructors.Variable({ type: "Meta", val: 101, lvl: 0 })),
+			);
 
-			const [either] = M.run(EB.unify(left, right, 0), empty);
+			const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 
 			if (E.isLeft(either)) {
 				throw new Error(`Failed solving: ${Err.display(either.left)}`);

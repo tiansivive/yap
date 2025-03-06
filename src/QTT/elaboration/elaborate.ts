@@ -17,14 +17,14 @@ import { P } from "ts-pattern";
 
 import { freshMeta } from "./supply";
 import { Subst, Substitute } from "./substitution";
-import { solve } from "./solver";
+import { solve, displayProvenance } from "./solver";
 
 import * as Prov from "@qtt/shared/provenance";
 
 import * as Sub from "./substitution";
 
 export type Constraint =
-	| { type: "assign"; left: NF.Value; right: NF.Value; lvl?: number }
+	| { type: "assign"; left: NF.Value; right: NF.Value; lvl: number }
 	| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity };
 
 export type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
@@ -38,7 +38,7 @@ export const Stmt = {
 					M.Do,
 					M.let("ctx", M.ask()),
 					M.bind("ann", ({ ctx }) =>
-						letdec.annotation ? check(letdec.annotation, NF.Type) : M.of([EB.Constructors.Var(freshMeta()), Q.noUsage(ctx.env.length)] as const),
+						letdec.annotation ? check(letdec.annotation, NF.Type) : M.of([EB.Constructors.Var(freshMeta(ctx.env.length)), Q.noUsage(ctx.env.length)] as const),
 					),
 					M.bind("inferred", ({ ctx, ann }) => {
 						const va = NF.evaluate(ctx.env, ctx.imports, ann[0]);
@@ -48,13 +48,14 @@ export const Stmt = {
 							ctx_,
 							F.pipe(
 								infer(letdec.value),
-								M.discard(inferred => M.tell("constraint", { type: "assign", left: va, right: inferred[1] })),
+								M.discard(inferred => M.tell("constraint", { type: "assign", left: va, right: inferred[1], lvl: ctx_.env.length })),
 							),
 						);
 					}),
 					M.listen(([{ inferred, ann }, { binders, constraints }]): ElaboratedStmt => {
 						// TODO: This binders array is not overly useful for now
 						// // In theory, all we need is to emit a flag signalling the letdec var has been used
+						// FIXME: We should really leverage the `check` function to understand when to wrap in a mu
 						const tm = binders.find(b => b.type === "Mu" && b.variable === letdec.variable) ? EB.Constructors.Mu("x", ann[0], inferred[0]) : inferred[0];
 
 						const def = EB.Constructors.Stmt.Let(letdec.variable, tm, ann[0]);
@@ -94,7 +95,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 					})
 
 					.with({ type: "hole" }, _ => {
-						const meta = EB.Constructors.Var(freshMeta());
+						const meta = EB.Constructors.Var(freshMeta(env.length));
 						const ty = NF.evaluate(env, ctx.imports, meta);
 						// const modal = NF.infer(env, annotation);
 						return M.of<EB.AST>([meta, ty, Q.noUsage(ctx.env.length)]);
@@ -148,7 +149,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 					)
 					.with({ type: "tagged" }, ({ tag, term }) =>
 						M.fmap(infer(term), ([tm, ty, us]): EB.AST => {
-							const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta());
+							const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta(ctx.env.length));
 							const row: NF.Row = NF.Constructors.Extension(tag, ty, rvar);
 							const variant = NF.Constructors.Variant(row);
 							return [tm, variant, us];
@@ -270,7 +271,7 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				Log.logger.debug(NF.display(type));
 
 				return match([term, type])
-					.with([{ type: "hole" }, P._], () => M.of<[EB.Term, Q.Usages]>([EB.Constructors.Var(freshMeta()), []]))
+					.with([{ type: "hole" }, P._], () => M.of<[EB.Term, Q.Usages]>([EB.Constructors.Var(freshMeta(ctx.env.length)), []]))
 					.with(
 						[{ type: "lambda" }, { type: "Abs", binder: { type: "Pi" } }],
 						([tm, ty]) => tm.icit === ty.binder.icit,
@@ -315,7 +316,7 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 						F.pipe(
 							infer(tm),
 							M.chain(EB.Icit.insert),
-							M.discard(([, inferred]) => M.tell("constraint", { type: "assign", left: inferred, right: type })),
+							M.discard(([, inferred]) => M.tell("constraint", { type: "assign", left: inferred, right: type, lvl: ctx.env.length })),
 							M.fmap(([tm, , us]): [EB.Term, Q.Usages] => [tm, us]),
 						),
 					);
@@ -357,7 +358,7 @@ const insertMu = M.chain<EB.AST, EB.AST>(ast => {
 		const letdecs = ctx.types.filter(([b]) => b.type === "Let");
 
 		const wrapped = letdecs.reduce((t, [, , [nf]]) => {
-			// const m = EB.freshMeta();
+			// const m = EB.freshMeta(ctx.env.length);
 			const ann = NF.quote(ctx.imports, ctx.env.length, nf);
 			const mu = EB.Constructors.Mu("x", ann, t);
 			return mu;
@@ -370,7 +371,7 @@ const insertMu = M.chain<EB.AST, EB.AST>(ast => {
 // 	M.listen<EB.AST, EB.AST>(([ast, { binders }]): EB.AST => {
 // 	// TODO: This binders array is not overly useful for now
 // 	// In theory, all we need is to emit a flag signalling the letdec var has been used
-// 	const ann = EB.Constructors.Var(EB.freshMeta())
+// 	const ann = EB.Constructors.Var(EB.freshMeta(ctx.env.length))
 // 	const ty = EB.Constructors.Lit(Lit.Atom("Type"))
 // 	const tm = binders.find(b => b.type === "Mu") ? EB.Constructors.Mu("x", ty, ast[0]) : ast[0];
 
@@ -387,7 +388,7 @@ export const zonk = <K extends keyof ZonkSwitch>(key: K, term: ZonkSwitch[K], su
 	M.fmap(M.ask(), ctx => {
 		const disp = Sub.display;
 		const f = Substitute(ctx)[key];
-		return f(subst, term as any) as ZonkSwitch[K];
+		return f(subst, term as any, 1) as ZonkSwitch[K];
 	});
 
 export const run = (term: Src.Term, ctx: EB.Context) => {
@@ -410,6 +411,7 @@ export const script = ({ script }: Src.Script, ctx: EB.Context) => {
 				const action = F.pipe(
 					Stmt.infer(stmt),
 					M.listen(([[stmt, ty, us], { constraints }]) => {
+						//console.log("[ DEBUG ]\n", displayProvenance(constraints[11].provenance));
 						return { inferred: { stmt, ty, us }, constraints };
 					}),
 					M.bind("sub", ({ constraints }) => {
@@ -423,6 +425,8 @@ export const script = ({ script }: Src.Script, ctx: EB.Context) => {
 						F.pipe(
 							zonk("nf", inferred.ty, sub),
 							M.fmap(nf => {
+								console.log("[ DEBUG ]\n", NF.display(inferred.ty));
+								console.log("[ SUBSTITUTION ]\n", Sub.display(sub));
 								return NF.generalize(nf, ctx);
 							}),
 						),

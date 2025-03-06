@@ -18,6 +18,9 @@ import { displayProvenance } from "./elaboration/solver";
 
 import * as Err from "@qtt/elaboration/errors";
 
+import * as F from "fp-ts/function";
+import { M } from "@qtt/elaboration";
+
 const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar));
 
 const filepath = process.argv[2];

@@ -54,14 +54,18 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboratio
 	});
 
 	const solution = match(c)
-		.with({ type: "assign" }, ({ left, right }) => {
+		.with({ type: "assign" }, ({ left, right, lvl }) => {
 			Log.push("constraint");
-			Log.logger.debug("[Assign] " + NF.display(left) + " ~~ " + NF.display(right));
+			Log.logger.debug("[Left] " + NF.display(left));
+			Log.logger.debug("[Right] " + NF.display(right));
 
 			Log.pop();
 			return F.pipe(
-				EB.unify(left, right, _ctx.env.length),
-				M.chain(s => _solve(rest, _ctx, Sub.compose(_ctx, s, subst))),
+				EB.unify(left, right, lvl, subst),
+				M.chain(s => {
+					// return _solve(rest, _ctx, Sub.compose(_ctx, s, subst, lvl))
+					return _solve(rest, _ctx, s);
+				}),
 			);
 		})
 		.with({ type: "usage" }, ({}) => {
@@ -72,7 +76,11 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboratio
 			throw new Error("Solve: Not implemented yet");
 		});
 
-	return solution;
+	return M.catchError(solution, e => {
+		// console.error(displayProvenance(c.provenance));
+		const e_ = { ...e, provenance: [...c.provenance, ...(e.provenance || [])] };
+		return M.fail(e_);
+	});
 };
 
 export const displayProvenance = (provenance: EB.Provenance[] = []): string => {
@@ -103,11 +111,27 @@ export const displayProvenance = (provenance: EB.Provenance[] = []): string => {
 			})(p);
 
 			const [id, val, metadata] = p;
-			const where = metadata ? `In ${metadata.action}:` : "In:";
-			const why = metadata?.motive ? `\nWhile: ${metadata.motive}` : "";
+
 			const loc = id === "src" ? `@ line: ${val.location.from.line}, col: ${val.location.from.column}\n` : "";
 
-			return `${loc}${where}\t${pretty}${why}`;
+			if (metadata?.action === "checking") {
+				const msg = `In checking:\n\t${pretty}\nagainst:\n\t${NF.display(metadata.against)}:`;
+				return `${loc}${msg}`;
+			}
+			if (metadata?.action === "alternative") {
+				const msg = `In alternative:\n\t${pretty}\nwith type:\n\t${NF.display(metadata.type)}\nWhile: ${metadata.motive}`;
+				return `${loc}${msg}`;
+			}
+			if (metadata?.action === "infer") {
+				const msg = `In infer:\n\t${pretty}`;
+				return `${loc}${msg}`;
+			}
+			if (metadata?.action === "unification") {
+				const msg = `In unification:\n\t${pretty}`;
+				return `${loc}${msg}`;
+			}
+
+			throw new Error("displayProvenance: Not implemented yet");
 		})
 		.join("\n\n");
 };
