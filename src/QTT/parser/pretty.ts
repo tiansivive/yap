@@ -16,10 +16,10 @@ export const display = (term: Src.Term): string => {
 		})
 		.with({ type: "lambda" }, ({ icit, variable, annotation, body }) => {
 			const ann = annotation ? `: ${display(annotation)}` : "";
-			return `λ(${Icit.display(icit)}${variable}${ann}) ${arr(icit)} ${display(body)}`;
+			return `λ(${variable}${ann}) ${arr(icit)} ${display(body)}`;
 		})
 		.with({ type: "pi" }, ({ icit, variable, annotation, body }) => {
-			return `Π(${Icit.display(icit)}${variable}: ${display(annotation)}) ${arr(icit)} ${display(body)}`;
+			return `Π(${variable}: ${display(annotation)}) ${arr(icit)} ${display(body)}`;
 		})
 		.with({ type: "application" }, ({ icit, fn, arg }) => {
 			return `${display(fn)} ${display(arg)}`;

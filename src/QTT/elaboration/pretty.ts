@@ -24,12 +24,9 @@ const display = (term: EB.Term): string => {
 		.with({ type: "Abs", binding: { type: "Mu" } }, ({ binding }) => binding.source)
 		.with({ type: "Abs" }, ({ binding, body }) => {
 			const b = match(binding)
-				.with({ type: "Lambda" }, ({ variable, icit }) => `λ${Icit.display(icit)}${variable}`)
-				.with(
-					{ type: "Pi" },
-					({ icit, variable, annotation, multiplicity }) => `Π(<${Q.display(multiplicity)}> ${Icit.display(icit)}${variable}: ${display(annotation)})`,
-				)
-				.with({ type: "Mu" }, ({ variable, annotation }) => `μ(${variable}: ${display(annotation)})`)
+				.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
+				.with({ type: "Pi" }, ({ variable, annotation, multiplicity }) => `Π(<${Q.display(multiplicity)}> ${variable}: ${display(annotation)})`)
+				//.with({ type: "Mu" }, ({ variable, annotation }) => `μ(${variable}: ${display(annotation)})`)
 				.otherwise(() => {
 					throw new Error("Display Term Binder: Not implemented");
 				});
@@ -37,7 +34,16 @@ const display = (term: EB.Term): string => {
 			const arr = binding.type !== "Let" && binding.type !== "Mu" && binding.icit === "Implicit" ? "=>" : "->";
 			return `${b} ${arr} ${display(body)}`;
 		})
-		.with({ type: "App" }, ({ icit, func, arg }) => `(${display(func)}) ${Icit.display(icit)}${display(arg)}`)
+		.with({ type: "App" }, ({ icit, func, arg }) => {
+			const f = display(func);
+
+			if (func.type !== "Var" && func.type !== "Lit") {
+				return `(${f}) ${Icit.display(icit)}${display(arg)}`;
+			}
+
+			return `${f} ${Icit.display(icit)}${display(arg)}`;
+		})
+
 		.with({ type: "Annotation" }, ({ term, ann }) => `${display(term)} : ${display(ann)}`)
 		.with({ type: "Row" }, ({ row }) =>
 			R.display({

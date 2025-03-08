@@ -24,10 +24,12 @@ export const display = (value: NF.Value | NF.ModalValue): string => {
 				.exhaustive(),
 		)
 		.with({ type: "Neutral" }, ({ value }) => display(value))
+
+		.with({ type: "Abs", binder: { type: "Mu" } }, ({ binder }) => binder.source)
 		.with({ type: "Abs" }, ({ binder, closure }) => {
 			const b = match(binder)
-				.with({ type: "Lambda" }, ({ variable, icit }) => `λ${Icit.display(icit)}${variable}`)
-				.with({ type: "Pi" }, ({ icit, variable, annotation: [ty, m] }) => `Π(<${Q.display(m)}> ${Icit.display(icit)}${variable}: ${display(ty)})`)
+				.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
+				.with({ type: "Pi" }, ({ variable, annotation: [ty, m] }) => `Π(<${Q.display(m)}> ${variable}: ${display(ty)})`)
 				.with({ type: "Mu" }, ({ variable, annotation: [ty, m] }) => `μ(<${Q.display(m)}> ${variable}: ${display(ty)})`)
 				.exhaustive();
 

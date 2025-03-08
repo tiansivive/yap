@@ -10,10 +10,10 @@ let Functor
     = \f -> { map:: (a: Type) -> (b: Type) -> (a -> b) -> f a -> f b };
 
 let foo
-    : (a: Type) -> (b: Type) -> (a -> b) -> List a -> b
-    = \a -> \b -> \f -> \l -> match l
+    : (a: Type) => (b: Type) => (a -> b) -> List a -> b
+    = \f -> \l -> match l
         | nil: x            -> f x
-        | cons: { x, xs }   -> foo a b f xs;
+        | cons: { x, xs }   -> foo f xs;
 
 
 

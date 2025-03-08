@@ -15,7 +15,7 @@ export const Substitute = (ctx: EB.Context) => {
 	const call = {
 		nf: (subst: Subst, val: NF.Value, level = ctx.env.length): NF.Value => Substitute(ctx).nf(subst, val, level),
 		closure: (subst: Subst, closure: NF.Closure): NF.Closure => Substitute(ctx).closure(subst, closure),
-		term: (subst: Subst, term: EB.Term, level = ctx.env.length): EB.Term => Substitute(ctx).term(subst, term, level),
+		term: (subst: Subst, term: EB.Term, level: number): EB.Term => Substitute(ctx).term(subst, term, level),
 	};
 
 	return {
@@ -88,8 +88,8 @@ export const Substitute = (ctx: EB.Context) => {
 			env: closure.env,
 			term: Substitute(ctx).term(subst, closure.term, closure.env.length + 1),
 		}),
-		term: (subst: Subst, term: EB.Term, level = ctx.env.length): EB.Term =>
-			match(term)
+		term: (subst: Subst, term: EB.Term, level = ctx.env.length): EB.Term => {
+			return match(term)
 				.with({ type: "Lit" }, () => term)
 				.with({ type: "Var" }, ({ variable }) => {
 					if (variable.type === "Meta") {
@@ -106,16 +106,46 @@ export const Substitute = (ctx: EB.Context) => {
 					const annotation = call.term(subst, binding.annotation, level);
 					return EB.Constructors.Abs({ ...binding, annotation }, call.term(subst, body, level + 1));
 				})
-				.with({ type: "App" }, ({ func, arg, icit }) => EB.Constructors.App(icit, call.term(subst, func), call.term(subst, arg, level)))
+				.with({ type: "App" }, ({ func, arg, icit }) => EB.Constructors.App(icit, call.term(subst, func, level), call.term(subst, arg, level)))
 				.with({ type: "Proj" }, ({ label, term }) => EB.Constructors.Proj(label, call.term(subst, term, level)))
-				.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, call.term(subst, value), call.term(subst, term, level)))
-				.with({ type: "Annotation" }, ({ term, ann }) => EB.Constructors.Annotation(call.term(subst, term), call.term(subst, ann, level)))
-				.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
-					EB.Constructors.Match(
+				.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, call.term(subst, value, level), call.term(subst, term, level)))
+				.with({ type: "Annotation" }, ({ term, ann }) => EB.Constructors.Annotation(call.term(subst, term, level), call.term(subst, ann, level)))
+				.with({ type: "Match" }, ({ scrutinee, alternatives }) => {
+					const countPatBinders = (pat: EB.Pattern): number => {
+						return match(pat)
+							.with({ type: "Var" }, _ => 1)
+							.with({ type: "Binder" }, _ => 1)
+							.with({ type: "Struct" }, ({ row }) =>
+								R.fold(
+									row,
+									(val, _, tot) => countPatBinders(val) + tot,
+									(_, tot) => tot + 1,
+									0,
+								),
+							)
+							.with({ type: "Variant" }, ({ row }) =>
+								R.fold(
+									row,
+									(val, _, tot) => countPatBinders(val) + tot,
+									(_, tot) => tot + 1,
+									0,
+								),
+							)
+							.with({ type: "Row" }, ({ row }) =>
+								R.fold(
+									row,
+									(val, _, tot) => countPatBinders(val) + tot,
+									(_, tot) => tot + 1,
+									0,
+								),
+							)
+							.otherwise(() => 0);
+					};
+					return EB.Constructors.Match(
 						call.term(subst, scrutinee, level),
-						alternatives.map(alt => ({ pattern: alt.pattern, term: call.term(subst, alt.term, level) })),
-					),
-				)
+						alternatives.map(alt => ({ pattern: alt.pattern, term: call.term(subst, alt.term, level + countPatBinders(alt.pattern)) })),
+					);
+				})
 				.with({ type: "Row" }, ({ row }) => {
 					const r = R.traverse(
 						row,
@@ -142,7 +172,8 @@ export const Substitute = (ctx: EB.Context) => {
 				})
 				.otherwise(() => {
 					throw new Error("Substitute: Not implemented yet");
-				}),
+				});
+		},
 	};
 };
 

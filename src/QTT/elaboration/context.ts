@@ -52,7 +52,8 @@ export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<AST>
 
 		const [[binder, origin, [nf, m]], ...rest] = types;
 		const usages = unsafeUpdateAt(i, m, zeros);
-		if (binder.variable === variable.value && origin === "source") {
+		// do we need to check origin here? I don't think it makes a difference whether it's an inserted (implicit) or source (explicit) binder
+		if (binder.variable === variable.value) {
 			const tm = EB.Constructors.Var({ type: "Bound", index: i });
 			return M.fmap(M.tell("binder", binder), _ => [tm, nf, usages]);
 		}
@@ -69,36 +70,12 @@ export const bind = (context: Context, binder: Binder, annotation: NF.ModalValue
 	return {
 		...context,
 		env: [[NF.Constructors.Rigid(env.length), q], ...env],
-		types: [[binder, "source", annotation], ...types],
+		types: [[binder, origin, annotation], ...types],
 		names: [binder, ...context.names],
 	};
 };
 
 export const muContext = (ctx: Context): Context => {
-	const muIdxs = ctx.types.reduce((acc, [b], i) => {
-		if (b.type === "Let") {
-			return [...acc, i];
-		}
-		return acc;
-	}, [] as number[]);
-
-	const reorder = <T>(arr: T[], indices: number[]): T[] => {
-		const front = indices.map(i => arr[i]);
-		const rest = arr.filter((_, i) => !indices.includes(i));
-		return [...front, ...rest];
-	};
-
-	// return {
-	// 	...ctx,
-	// 	types: reorder(ctx.types, muIdxs).map(([b, ...rest]) => {
-	// 		if (b.type === "Let") return [{ ...b, type: "Mu" }, ...rest];
-
-	// 		return [b, ...rest];
-	// 	}),
-	// 	env: reorder(ctx.env, muIdxs),
-	// 	names: reorder(ctx.names, muIdxs),
-	// }
-
 	return {
 		...ctx,
 		types: ctx.types.map(([b, ...rest]) => {
