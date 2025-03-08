@@ -66,11 +66,12 @@ type BareStatement =
 export type Variable = WithLocation<{ type: "name"; value: string }>;
 export type Row = WithLocation<R.Row<Term, Variable>>;
 
-export type Script = { type: "script"; script: Statement[]; imports: Import[]; exports: Export };
+export type Module = { type: "module"; imports: Import[]; exports: Export; content: Script };
+export type Script = { type: "script"; script: Statement[] };
 
-type Import =
+export type Import =
 	| { type: "*"; filepath: string; hiding: string[] }
 	| { type: "qualified"; filepath: string; as: string; hiding: string[] }
 	| { type: "explicit"; filepath: string; names: string[] };
 
-type Export = { type: "*" } | { type: "explicit"; names: string[] } | { type: "partial"; hiding: string[] };
+export type Export = { type: "*" } | { type: "explicit"; names: string[] } | { type: "partial"; hiding: string[] };

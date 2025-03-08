@@ -16,31 +16,40 @@ import Nearley from "nearley";
 import Grammar from "@qtt/src/grammar";
 import * as A from "fp-ts/lib/Array";
 
+import * as Lib from "@qtt/shared/lib/primitives";
+
 type ModuleName = string;
 const globalModules: Record<ModuleName, Interface> = {};
 
 type Identifier = string;
 type Interface = Record<Identifier, Either<M.Err, EB.AST>>;
 
-export const mkInterface = (moduleName: ModuleName): Interface => {
-	if (globalModules[moduleName]) {
-		return globalModules[moduleName];
+export const BASE_URL = "./src/QTT/yap/";
+
+export const mkInterface = (moduleName: ModuleName, visited: string[] = []): Interface => {
+	const prefixed = `${BASE_URL}${moduleName}`;
+	if (globalModules[prefixed]) {
+		return globalModules[prefixed];
 	}
 
-	const str = fs.readFileSync(resolve(process.cwd(), moduleName), { encoding: "utf-8" });
+	if (visited.includes(prefixed)) {
+		throw new Error("Circular dependency detected: " + visited.join(" -> ") + " -> " + prefixed);
+	}
+
+	const str = fs.readFileSync(resolve(process.cwd(), prefixed), { encoding: "utf-8" });
 	const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar));
 
 	const data = parser.feed(str);
 	if (data.results.length !== 1) {
-		throw new Error("Failed to parse module: " + moduleName);
+		throw new Error("Failed to parse module: " + prefixed);
 	}
-	const module: Src.Script = data.results[0];
+	const mod: Src.Module = data.results[0];
 
-	const deps = module.imports.reduce(
+	const deps = mod.imports.reduce(
 		(acc, { filepath }) => {
-			const pathName = filepath.replace(/\//, ".");
+			//const pathName = filepath.replace(/\//, ".");
 			const { left, right } = F.pipe(
-				mkInterface(filepath),
+				mkInterface(filepath, [...visited, prefixed]),
 				R.toEntries,
 				//A.map(([k, v]) => F.pipe(v, E.bimap(e => [`${pathName}.${k}`, e] as const, ast => [`${pathName}.${k}`, ast] as const))),
 				// TODO:FIXME: We need to resolve the fully qualified names here. Leaving it as is for now.
@@ -69,9 +78,9 @@ export const mkInterface = (moduleName: ModuleName): Interface => {
 		types: [],
 		names: [],
 		trace: [],
-		imports: deps.imports,
+		imports: { ...Lib.Elaborated, ...deps.imports },
 	};
-	const { left, right } = F.pipe(EB.script(module, start), A.separate);
+	const { left, right } = F.pipe(EB.script(mod.content, start), A.separate);
 
 	const errs = left.reduce((acc, [k, e]) => ({ ...acc, [k]: E.left(e) }), {} as Interface);
 	const vals = right.reduce((acc, stmt) => {
@@ -84,7 +93,7 @@ export const mkInterface = (moduleName: ModuleName): Interface => {
 	}, {} as Interface);
 
 	const iface = { ...errs, ...vals };
-	globalModules[moduleName] = iface;
+	globalModules[prefixed] = iface;
 	return iface;
 };
 

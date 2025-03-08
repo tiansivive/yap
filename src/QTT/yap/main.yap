@@ -1,5 +1,7 @@
-module Main
-import "./lib";
+export *;
+import "lib.yap";
 
 
-let main = f 1;
+let main
+  : (String -> Num) -> List String -> List Num
+  = ListF.map; 

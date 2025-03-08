@@ -98,7 +98,7 @@ export const Operation: PostProcessor<[Term, Whitespace, Token, Whitespace, Term
 /***********************************************************
  * Annotation processors
  ***********************************************************/
-type Annotation = [Whitespace, Colon, Whitespace, Term] | [Whitespace, Colon, Whitespace, Q.Multiplicity, Whitespace, Term] | [];
+type Annotation = [Token, Colon, Whitespace, Term] | [Token, Colon, Whitespace, Q.Multiplicity, Whitespace, Term] | [];
 
 const Annotate = (term: Term, ann: Term, multiplicity?: Q.Multiplicity): Term => ({
 	type: "annotation",
@@ -353,10 +353,10 @@ export const Match: PostProcessor<[Keyword, Whitespace, Term, Src.Alternative[]]
 	};
 };
 
-export const Alternative: PostProcessor<[Newline, Whitespace, Bar, Whitespace, Src.Pattern, Whitespace, Arrow, Whitespace, Term], Src.Alternative> = alt => {
-	const bar = alt[2];
-	const pat = alt[4];
-	const term = alt[8];
+export const Alternative: PostProcessor<[Space, Bar, Space, Src.Pattern, Space, Arrow, Space, Term], Src.Alternative> = alt => {
+	const bar = alt[1];
+	const pat = alt[3];
+	const term = alt[7];
 	return {
 		pattern: pat,
 		term,
@@ -430,12 +430,12 @@ export const Block: PostProcessor<[[Statement[], SemiColon, Term?] | [Term]], Te
 	return block([], ret);
 };
 
-export const Return: PostProcessor<[Newline, Whitespace, Keyword, Whitespace, Term, SemiColon], Term> = d => d[4];
+export const Return: PostProcessor<[Space, Keyword, Whitespace, Term, SemiColon], Term> = d => d[3];
 
 export const Expr: PostProcessor<[Term], Statement> = ([value]) => ({ type: "expression", value, location: value.location });
 
-type LetDec = [Keyword, Whitespace, Variable, Newline, ...Annotation, Newline, Whitespace, Equals, Whitespace, Term];
-export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, , ...rest]: LetDec) => {
+type LetDec = [Keyword, Whitespace, Variable, ...Annotation, Space, Equals, Whitespace, Term];
+export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]: LetDec) => {
 	const letdec = (variable: Variable, value: Term, annotation?: Term, multiplicity?: Q.Multiplicity): Statement => ({
 		type: "let",
 		variable: variable.value,
@@ -445,28 +445,55 @@ export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, , ...res
 		location: locSpan(variable.location, value.location),
 	});
 
-	if (rest.length === 5) {
-		const [, , , , value] = rest;
+	if (rest.length === 4) {
+		const [, , , value] = rest;
 		return letdec(variable, value);
 	}
 
-	if (rest.length === 9) {
-		const [, , , ann, , , , , value] = rest;
+	if (rest.length === 8) {
+		const [, , , ann, , , , value] = rest;
 		return letdec(variable, value, ann);
 	}
 
 	const q = rest[3];
 	const ann = rest[5];
-	const value = rest[10];
+	const value = rest[9];
 	return letdec(variable, value, ann, q);
 };
 
 /***********************************************************
- * Script processors
+ * Module processors
  ***********************************************************/
 
 export const script: PostProcessor<[Statement[], SemiColon, Newline], Src.Script> = ([statements]) => {
-	return { type: "script", script: statements, imports: [], exports: { type: "*" } };
+	return { type: "script", script: statements };
+};
+
+export const module_: PostProcessor<[Space, Src.Export, Src.Import[], Newline, Src.Script], Src.Module> = ([, exports, imports, , script]) => {
+	return { type: "module", imports, exports, content: script };
+};
+
+export const exportSome: PostProcessor<[Keyword, Whitespace, Variable[], SemiColon], Src.Export> = ([, , variables]) => {
+	return { type: "explicit", names: variables.map(v => v.value) };
+};
+
+export const exportAll: PostProcessor<[Keyword, Whitespace, Token, SemiColon], Src.Export> = () => {
+	return { type: "*" };
+};
+
+export const importAll: PostProcessor<[Space, Keyword, Whitespace, Sourced<string>, SemiColon], Src.Import> = ([, , , str]) => {
+	return { type: "*", filepath: str[0], hiding: [] };
+};
+
+export const importSome: PostProcessor<[Space, Keyword, Whitespace, Sourced<string>, Whitespace, Variable[], SemiColon], Src.Import> = ([
+	,
+	,
+	,
+	str,
+	,
+	vars,
+]) => {
+	return { type: "explicit", filepath: str[0], names: vars.map(v => v.value) };
 };
 
 /***********************************************************
@@ -484,10 +511,10 @@ export const unwrap: <T>(arg: [Token, T[], Whitespace, Token]) => Sourced<T> = a
 	return [t, range(l, r)];
 };
 
-export const many: <T>(arg: [Array<[Newline, Whitespace, T[], Newline, Whitespace, Token]>, Newline, Whitespace, T]) => T[] = arg => {
-	const [arr, , , t2] = arg;
+export const many: <T>(arg: [Array<[Space, T[], Space, Token]>, Space, T]) => T[] = arg => {
+	const [arr, , t2] = arg;
 
-	const t1 = arr.flatMap(([, , t]) => t);
+	const t1 = arr.flatMap(([, t]) => t);
 	return t1.concat(t2);
 };
 
@@ -527,6 +554,7 @@ type LParens = Token;
 type RParens = Token;
 type LAngle = Token;
 type RAngle = Token;
+type Space = Token;
 type Whitespace = Token;
 type Newline = Token;
 type Comma = Token;
