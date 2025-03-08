@@ -80,8 +80,8 @@ Expr -> Lambda		{% id %}
 	  | Block 		{% id %}
 	  | App 		{% id %}
 
-App -> App %ws Expr 				{% P.Application %}
-	 | App %ws:? %op %ws:? Expr 	{% P.Operation %}
+App -> App %ws Atom 				{% P.Application %}
+	 | App %ws:? %op %ws:? Atom 	{% P.Operation %}
      | Atom 						{% id %}
 
 Atom -> Identifier 		{% P.Var %} 

@@ -22,7 +22,8 @@ export const solve = (cs: Array<Ctaint>): M.Elaboration<Subst> =>
 			if (Log.peek() !== "solver") {
 				Log.push("solver");
 			}
-			const solution = M.catchError(_solve(cs, ctx, empty), e => {
+			const filtered = cs.filter(c => c.type === "assign");
+			const solution = M.catchError(_solve(filtered, ctx, empty), e => {
 				console.error(Err.display(e));
 				console.error(displayProvenance(e.provenance));
 				return M.fail(e);
@@ -48,8 +49,8 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboratio
 		}
 		return {
 			...c,
-			left: Substitute(_ctx).nf(subst, c.left),
-			right: Substitute(_ctx).nf(subst, c.right),
+			left: Substitute(_ctx).nf(subst, c.left, c.lvl),
+			right: Substitute(_ctx).nf(subst, c.right, c.lvl),
 		};
 	});
 

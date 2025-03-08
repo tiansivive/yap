@@ -71,7 +71,7 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 				NF.Constructors.Pi(binder.variable, binder.icit, [sub(binder.annotation[0], lvl), binder.annotation[1]], close(closure)),
 			)
 			.with(NF.Patterns.Mu, ({ binder, closure }) =>
-				NF.Constructors.Mu(binder.variable, [sub(binder.annotation[0], lvl), binder.annotation[1]], close(closure)),
+				NF.Constructors.Mu(binder.variable, binder.source, [sub(binder.annotation[0], lvl), binder.annotation[1]], close(closure)),
 			)
 			.with({ type: "Row" }, ({ row }) => {
 				console.error("Generalize Row: Not implemented yet");

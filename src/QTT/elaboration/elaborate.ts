@@ -22,6 +22,7 @@ import { solve, displayProvenance } from "./solver";
 import * as Prov from "@qtt/shared/provenance";
 
 import * as Sub from "./substitution";
+import _ from "lodash";
 
 export type Constraint =
 	| { type: "assign"; left: NF.Value; right: NF.Value; lvl: number }
@@ -47,8 +48,10 @@ export const Stmt = {
 						return M.local(
 							ctx_,
 							F.pipe(
-								infer(letdec.value),
-								M.discard(inferred => M.tell("constraint", { type: "assign", left: va, right: inferred[1], lvl: ctx_.env.length })),
+								// infer(letdec.value),
+								// M.discard(inferred => M.tell("constraint", { type: "assign", left: va, right: inferred[1], lvl: ctx_.env.length })),
+								check(letdec.value, va),
+								M.fmap(([tm, us]): [EB.Term, NF.Value, Q.Usages] => [tm, va, us]),
 							),
 						);
 					}),
@@ -56,7 +59,9 @@ export const Stmt = {
 						// TODO: This binders array is not overly useful for now
 						// // In theory, all we need is to emit a flag signalling the letdec var has been used
 						// FIXME: We should really leverage the `check` function to understand when to wrap in a mu
-						const tm = binders.find(b => b.type === "Mu" && b.variable === letdec.variable) ? EB.Constructors.Mu("x", ann[0], inferred[0]) : inferred[0];
+						const tm = binders.find(b => b.type === "Mu" && b.variable === letdec.variable)
+							? EB.Constructors.Mu("x", letdec.variable, ann[0], inferred[0])
+							: inferred[0];
 
 						const def = EB.Constructors.Stmt.Let(letdec.variable, tm, ann[0]);
 						// const def = EB.Constructors.Stmt.Let(letdec.variable, inferred[0], ann[0]);
@@ -312,14 +317,17 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					.with([{ type: "tuple" }, NF.Patterns.Type], ([{ row }, ty]) => {
 						return M.fmap(traverseR(row), (r): [EB.Term, Q.Usages] => [EB.Constructors.Schema(r), Q.noUsage(ctx.env.length)]);
 					})
-					.otherwise(([tm, _]) =>
-						F.pipe(
-							infer(tm),
-							M.chain(EB.Icit.insert),
-							M.discard(([, inferred]) => M.tell("constraint", { type: "assign", left: inferred, right: type, lvl: ctx.env.length })),
-							M.fmap(([tm, , us]): [EB.Term, Q.Usages] => [tm, us]),
-						),
-					);
+					.otherwise(([tm, ty]) => {
+						return M.local(
+							_.isEqual(ty, NF.Type) ? EB.muContext : ctx,
+							F.pipe(
+								infer(tm),
+								M.chain(EB.Icit.insert),
+								M.discard(([, inferred]) => M.tell("constraint", { type: "assign", left: inferred, right: type, lvl: ctx.env.length })),
+								M.fmap(([tm, , us]): [EB.Term, Q.Usages] => [tm, us]),
+							),
+						);
+					});
 			}),
 			M.listen(([[tm, us], { constraints }]) => {
 				Log.logger.debug("[Result] " + EB.Display.Term(tm), { Usages: us, Constraints: constraints.map(EB.Display.Constraint) });
@@ -351,22 +359,22 @@ const traverseR = (row: Src.Row): M.Elaboration<EB.Row> => {
 		.exhaustive();
 };
 
-const insertMu = M.chain<EB.AST, EB.AST>(ast => {
-	return M.fmap(M.ask(), (ctx): EB.AST => {
-		const [tm, ty, us] = ast;
+// const insertMu = M.chain<EB.AST, EB.AST>(ast => {
+// 	return M.fmap(M.ask(), (ctx): EB.AST => {
+// 		const [tm, ty, us] = ast;
 
-		const letdecs = ctx.types.filter(([b]) => b.type === "Let");
+// 		const letdecs = ctx.types.filter(([b]) => b.type === "Let");
 
-		const wrapped = letdecs.reduce((t, [, , [nf]]) => {
-			// const m = EB.freshMeta(ctx.env.length);
-			const ann = NF.quote(ctx.imports, ctx.env.length, nf);
-			const mu = EB.Constructors.Mu("x", ann, t);
-			return mu;
-		}, tm);
+// 		const wrapped = letdecs.reduce((t, [, , [nf]]) => {
+// 			// const m = EB.freshMeta(ctx.env.length);
+// 			const ann = NF.quote(ctx.imports, ctx.env.length, nf);
+// 			const mu = EB.Constructors.Mu("x", ann, t);
+// 			return mu;
+// 		}, tm);
 
-		return [wrapped, ty, us];
-	});
-});
+// 		return [wrapped, ty, us];
+// 	});
+// });
 
 // 	M.listen<EB.AST, EB.AST>(([ast, { binders }]): EB.AST => {
 // 	// TODO: This binders array is not overly useful for now
@@ -425,8 +433,6 @@ export const script = ({ script }: Src.Script, ctx: EB.Context) => {
 						F.pipe(
 							zonk("nf", inferred.ty, sub),
 							M.fmap(nf => {
-								console.log("[ DEBUG ]\n", NF.display(inferred.ty));
-								console.log("[ SUBSTITUTION ]\n", Sub.display(sub));
 								return NF.generalize(nf, ctx);
 							}),
 						),
@@ -442,6 +448,7 @@ export const script = ({ script }: Src.Script, ctx: EB.Context) => {
 					E.match(
 						err => {
 							// markResolved("dummy.lama", stmt.variable, E.left(err));
+							console.log(displayProvenance(err.provenance));
 							return { ctx, results: [...results, E.left<[string, M.Err], ElaboratedStmt>([stmt.variable, err])] };
 						},
 						({ term, ty, inferred }) => {

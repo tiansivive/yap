@@ -201,6 +201,26 @@ describe("Grammar", () => {
 				expect(expr.fn).toMatchObject({ type: "var", variable: f });
 				expect(expr.arg).toMatchObject({ type: "var", variable: x });
 			});
+
+			it("should parse nested applications:\tf x y", () => {
+				const application = `f x y`;
+				const data = parser.feed(application);
+
+				const expr = data.results[0];
+
+				const f = { type: "name", value: "f" };
+				const x = { type: "name", value: "x" };
+				const y = { type: "name", value: "y" };
+
+				expect(data.results.length).toBe(1);
+				expect(expr.type).toBe("application");
+				expect(expr.icit).toBe("Explicit");
+				expect(expr.arg).toMatchObject({ type: "var", variable: y });
+
+				expect(expr.fn).toMatchObject({ type: "application" });
+				expect(expr.fn.fn).toMatchObject({ type: "var", variable: f });
+				expect(expr.fn.arg).toMatchObject({ type: "var", variable: x });
+			});
 		});
 
 		describe("Annotations", () => {

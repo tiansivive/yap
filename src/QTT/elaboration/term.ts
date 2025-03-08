@@ -35,7 +35,7 @@ export type Row = R.Row<Term, Variable>;
 export type Binding =
 	| { type: "Let"; variable: string; value: Term; annotation: Term }
 	| { type: "Lambda"; variable: string; icit: Implicitness }
-	| { type: "Mu"; variable: string; annotation: Term }
+	| { type: "Mu"; variable: string; annotation: Term; source: string }
 	| {
 			type: "Pi";
 			variable: string;
@@ -74,9 +74,9 @@ export const Constructors = {
 		binding: { type: "Pi" as const, variable, icit, annotation, multiplicity },
 		body,
 	}),
-	Mu: (variable: string, annotation: Term, body: Term): Term => ({
+	Mu: (variable: string, source: string, annotation: Term, body: Term): Term => ({
 		type: "Abs",
-		binding: { type: "Mu" as const, variable, annotation },
+		binding: { type: "Mu", variable, source, annotation },
 		body,
 	}),
 	Var: (variable: Variable): Term => ({

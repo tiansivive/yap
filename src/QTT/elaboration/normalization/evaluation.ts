@@ -39,7 +39,7 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 		.with({ type: "Abs", binding: { type: "Mu" } }, (mu): NF.Value => {
 			const annotation = evaluate(env, imports, mu.binding.annotation);
 
-			const val = NF.Constructors.Mu(mu.binding.variable, [annotation, Q.Many], NF.Constructors.Closure(env, mu.body));
+			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, [annotation, Q.Many], NF.Constructors.Closure(env, mu.body));
 			return evaluate([[val, Q.Many], ...env], imports, mu.body);
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
@@ -57,7 +57,7 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 						return apply(imports, closure, nfa);
 					})
 					.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
-					.with({ type: "Neutral" }, ({ value }) => NF.Constructors.App(value, nfa, icit))
+					.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)))
 					.otherwise(() => {
 						throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
 					});

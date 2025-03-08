@@ -21,6 +21,7 @@ const display = (term: EB.Term): string => {
 				.with({ type: "Meta" }, ({ val }) => `?${val}`)
 				.otherwise(() => "Var Display: Not implemented"),
 		)
+		.with({ type: "Abs", binding: { type: "Mu" } }, ({ binding }) => binding.source)
 		.with({ type: "Abs" }, ({ binding, body }) => {
 			const b = match(binding)
 				.with({ type: "Lambda" }, ({ variable, icit }) => `λ${Icit.display(icit)}${variable}`)
@@ -36,7 +37,7 @@ const display = (term: EB.Term): string => {
 			const arr = binding.type !== "Let" && binding.type !== "Mu" && binding.icit === "Implicit" ? "=>" : "->";
 			return `${b} ${arr} ${display(body)}`;
 		})
-		.with({ type: "App" }, ({ icit, func, arg }) => `${display(func)} ${Icit.display(icit)}${display(arg)}`)
+		.with({ type: "App" }, ({ icit, func, arg }) => `(${display(func)}) ${Icit.display(icit)}${display(arg)}`)
 		.with({ type: "Annotation" }, ({ term, ann }) => `${display(term)} : ${display(ann)}`)
 		.with({ type: "Row" }, ({ row }) =>
 			R.display({

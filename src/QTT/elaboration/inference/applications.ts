@@ -11,14 +11,15 @@ import { match } from "ts-pattern";
 
 type Application = Extract<Src.Term, { type: "application" }>;
 
-export const infer = ({ fn, arg, icit }: Application) =>
-	F.pipe(
+export const infer = ({ fn, arg, icit }: Application) => {
+	return F.pipe(
 		M.Do,
 		M.bind("ctx", M.ask),
 		M.let("fn", M.chain(EB.infer(fn), icit === "Explicit" ? EB.Icit.insert : M.of)),
 		M.bind("pi", ({ fn: [ft, fty], ctx }) => {
 			return match(fty)
 				.with({ type: "Abs", binder: { type: "Pi" } }, pi => {
+					console.log(EB.Display.Term(ft));
 					if (pi.binder.icit !== icit) {
 						throw new Error("Implicitness mismatch");
 					}
@@ -50,3 +51,4 @@ export const infer = ({ fn, arg, icit }: Application) =>
 			return M.of(ast);
 		}),
 	);
+};

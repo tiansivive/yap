@@ -14,7 +14,7 @@ export type Subst = { [key: number]: NF.Value };
 export const Substitute = (ctx: EB.Context) => {
 	const call = {
 		nf: (subst: Subst, val: NF.Value, level = ctx.env.length): NF.Value => Substitute(ctx).nf(subst, val, level),
-		closure: (subst: Subst, closure: NF.Closure, level: number): NF.Closure => Substitute(ctx).closure(subst, closure, level),
+		closure: (subst: Subst, closure: NF.Closure): NF.Closure => Substitute(ctx).closure(subst, closure),
 		term: (subst: Subst, term: EB.Term, level = ctx.env.length): EB.Term => Substitute(ctx).term(subst, term, level),
 	};
 
@@ -28,16 +28,13 @@ export const Substitute = (ctx: EB.Context) => {
 				.with(NF.Patterns.Lit, () => val)
 				.with(NF.Patterns.Rigid, () => val)
 				.with(NF.Patterns.Flex, ({ variable }) => subst[variable.val] ?? val)
-				.with(NF.Patterns.Lambda, ({ binder, closure }) => NF.Constructors.Lambda(binder.variable, binder.icit, call.closure(subst, closure, level + 1)))
+				.with(NF.Patterns.Lambda, ({ binder, closure }) => NF.Constructors.Lambda(binder.variable, binder.icit, call.closure(subst, closure)))
 				.with(NF.Patterns.Pi, ({ closure, binder }) => {
-					const applied = NF.apply(ctx.imports, closure, NF.Constructors.Rigid(level));
-					// const body = NF.quote(ctx.imports, level + 1, call.nf(subst, applied, level + 1));
-
 					const pi = NF.Constructors.Pi(
 						binder.variable,
 						binder.icit,
 						[call.nf(subst, binder.annotation[0], level), binder.annotation[1]],
-						call.closure(subst, closure, level + 1),
+						call.closure(subst, closure),
 					);
 
 					return pi;
@@ -45,8 +42,9 @@ export const Substitute = (ctx: EB.Context) => {
 				.with(NF.Patterns.Mu, ({ closure, binder }) => {
 					const mu = NF.Constructors.Mu(
 						binder.variable,
+						binder.source,
 						[call.nf(subst, binder.annotation[0], level), binder.annotation[1]],
-						call.closure(subst, closure, level + 1),
+						call.closure(subst, closure),
 					);
 					return mu;
 				})
@@ -86,9 +84,9 @@ export const Substitute = (ctx: EB.Context) => {
 				});
 		},
 
-		closure: (subst: Subst, closure: NF.Closure, level: number): NF.Closure => ({
+		closure: (subst: Subst, closure: NF.Closure): NF.Closure => ({
 			env: closure.env,
-			term: Substitute(ctx).term(subst, closure.term, level),
+			term: Substitute(ctx).term(subst, closure.term, closure.env.length + 1),
 		}),
 		term: (subst: Subst, term: EB.Term, level = ctx.env.length): EB.Term =>
 			match(term)

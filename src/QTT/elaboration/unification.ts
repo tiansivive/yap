@@ -35,6 +35,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 			return M.track(
 				["unify", [left, right], { action: "unification" }],
 				match([left, right])
+					.with([NF.Patterns.Flex, P._], ([meta, v]) => M.fmap(M.ask(), ctx => Sub.compose(ctx, bind(ctx, meta.variable, v), subst, lvl)))
+					.with([P._, NF.Patterns.Flex], ([v, meta]) => M.fmap(M.ask(), ctx => Sub.compose(ctx, bind(ctx, meta.variable, v), subst, lvl)))
 					.with([NF.Patterns.Lit, NF.Patterns.Lit], ([lit1, lit2]) => {
 						if (!_.isEqual(lit1.value, lit2.value)) {
 							return M.fail(Err.UnificationFailure(lit1, lit2));
@@ -77,7 +79,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 									const body1 = NF.apply(ctx.imports, pi1.closure, NF.Constructors.Rigid(lvl));
 									const body2 = NF.apply(ctx.imports, pi2.closure, NF.Constructors.Rigid(lvl));
 									//FIXME: Temporary fix. We shouldn't rely on the context in unification. Just work with levels.
-									const ctx_ = { ...ctx, env: Array(lvl) };
+									// const ctx_ = { ...ctx, env: Array(lvl) };
 									return unify(body1, body2, lvl + 1, sub);
 									//return M.fmap(unify(body1, body2, lvl + 1, sub), o => Sub.compose(ctx_, o, sub, lvl + 1));
 								}),
@@ -102,9 +104,6 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 							}),
 						),
 					)
-
-					.with([NF.Patterns.Flex, P._], ([meta, v]) => M.fmap(M.ask(), ctx => Sub.compose(ctx, bind(ctx, meta.variable, v), subst, lvl)))
-					.with([P._, NF.Patterns.Flex], ([v, meta]) => M.fmap(M.ask(), ctx => Sub.compose(ctx, bind(ctx, meta.variable, v), subst, lvl)))
 
 					.with([NF.Patterns.Rigid, NF.Patterns.Rigid], ([rigid1, rigid2]) => {
 						if (!_.isEqual(rigid1.variable, rigid2.variable)) {

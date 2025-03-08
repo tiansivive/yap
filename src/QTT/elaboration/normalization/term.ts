@@ -21,7 +21,7 @@ export type Row = R.Row<Value, Variable>;
 export type Binder =
 	| { type: "Pi"; variable: string; annotation: ModalValue; icit: Implicitness }
 	| { type: "Lambda"; variable: string; icit: Implicitness }
-	| { type: "Mu"; variable: string; annotation: ModalValue };
+	| { type: "Mu"; variable: string; annotation: ModalValue; source: string };
 
 export type Variable =
 	| { type: "Bound"; lvl: number }
@@ -45,9 +45,9 @@ export const Constructors = {
 		binder: { type: "Pi" as const, variable, icit, annotation },
 		closure,
 	}),
-	Mu: (variable: string, annotation: ModalValue, closure: Closure) => ({
+	Mu: (variable: string, source: string, annotation: ModalValue, closure: Closure): Value => ({
 		type: "Abs" as const,
-		binder: { type: "Mu" as const, variable, annotation },
+		binder: { type: "Mu", variable, annotation, source },
 		closure,
 	}),
 	Lambda: (variable: string, icit: Implicitness, closure: Closure) => ({

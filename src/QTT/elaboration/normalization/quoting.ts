@@ -36,11 +36,12 @@ export const quote = (imports: EB.Context["imports"], lvl: number, val: NF.Value
 		.with({ type: "Abs", binder: { type: "Mu" } }, ({ binder, closure }) => {
 			const {
 				variable,
+				source,
 				annotation: [ann, q],
 			} = binder;
 			const val = NF.apply(imports, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(imports, lvl + 1, val);
-			return EB.Constructors.Mu(variable, quote(imports, lvl, ann), body);
+			return EB.Constructors.Mu(variable, source, quote(imports, lvl, ann), body);
 		})
 		.with({ type: "Row" }, ({ row }) => {
 			const _quote = (r: NF.Row): EB.Row =>
