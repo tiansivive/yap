@@ -76,8 +76,8 @@ Type -> Mu 				{% id %}
 	  | Expr 			{% id %}
 
 Expr -> Lambda		{% id %}
-      | Match 		{% id %}
-	  | Block 		{% id %}
+  	  | Match 		{% id %}
+  	  | Block 		{% id %}
 	  | App 		{% id %}
 
 App -> App %ws Atom 				{% P.Application %}
@@ -86,11 +86,11 @@ App -> App %ws Atom 				{% P.Application %}
 
 Atom -> Identifier 		{% P.Var %} 
 	  | %hole 			{% P.Hole %}
-	  | Projection 		{% id %}
-	  | Injection 		{% id %}
 	  | Literal 		{% P.Lit %}
 	  | Struct 			{% id %}
       | Tuple 			{% id %}
+	  | Projection 		{% id %}
+	  | Injection 		{% id %}
 	  | List 			{% id %}
 	  | Tagged 			{% id %}
 	  | Parens[Ann]  	{% P.extract %}
@@ -104,13 +104,13 @@ Mu -> "μ" %ws:? Identifier %ws:? %arrow %ws:? TypeExpr 		{% P.Mu %}
 # ------------------------------------
 # FUNCTIONS
 # ------------------------------------
-Lambda -> %backslash Param %ws %arrow %ws TypeExpr 				{% P.Lambda %}
-		| %backslash %hash Param %ws %fatArrow %ws TypeExpr 	{% P.Lambda %}
+Lambda -> %backslash Param %ws:? %arrow %ws:? TypeExpr 				{% P.Lambda("Explicit") %}
+		| %backslash Param %ws:? %fatArrow %ws:? TypeExpr 			{% P.Lambda("Implicit") %}
 		
-Param -> Identifier 													{% P.Param %}
+Param -> Identifier 														{% P.Param %}
 	   | Identifier %ws:? %colon %ws:? TypeExpr 							{% P.Param %}
 	   | Identifier %ws:? %colon %ws:? Angle[Quantity] %ws:? TypeExpr 		{% P.Param %}
-	   | Parens[Param] 													{% P.extract %}
+	   | Parens[Param] 														{% P.extract %}
 		 
 
 Pi -> Type %ws:? %arrow %ws:? PiTail 		{% P.Pi("Explicit") %}
@@ -145,14 +145,14 @@ KeyVal -> Identifier %ws:? %colon %ws:? TypeExpr 				{% P.keyval %}
 SchemaPair -> Identifier %ws:? %colon %colon %ws:? TypeExpr 	{% P.keyval %}
 Assignment -> Identifier %ws:? %equals %ws:? TypeExpr 			{% P.keyval %}
 
-Projection -> TypeExpr %dot Identifier 									{% P.Projection %}
+Projection -> Atom %dot Identifier 									{% P.Projection %}
 			| %dot Identifier 										{% P.Projection %}
 
-Injection -> Curly[ %ws:? TypeExpr %ws:? %bar Many[Assignment, %comma] ] 	{% P.Injection %}
+Injection -> Curly[ %ws:? Type %ws:? %bar Many[Assignment, %comma] ] 	{% P.Injection %}
 		   | Curly[ %ws:? %bar Many[Assignment, %comma] ] 				{% P.Injection %}
 
 # Tagged
-Tagged -> %colon Identifier %ws:? TypeExpr 	{% P.tagged %}
+Tagged -> %hash Identifier %ws:? TypeExpr 	{% P.tagged %}
 
 # ------------------------------------
 # Blocks

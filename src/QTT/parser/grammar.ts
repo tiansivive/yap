@@ -18,7 +18,6 @@ declare var lparens: any;
 declare var rparens: any;
 declare var arrow: any;
 declare var backslash: any;
-declare var hash: any;
 declare var fatArrow: any;
 declare var lbracket: any;
 declare var rbracket: any;
@@ -28,6 +27,7 @@ declare var lbrace: any;
 declare var rbrace: any;
 declare var equals: any;
 declare var dot: any;
+declare var hash: any;
 declare var variable: any;
 declare var digit: any;
 declare var string: any;
@@ -186,11 +186,11 @@ const grammar: Grammar = {
 		{ name: "App", symbols: ["Atom"], postprocess: id },
 		{ name: "Atom", symbols: ["Identifier"], postprocess: P.Var },
 		{ name: "Atom", symbols: [lexer.has("hole") ? { type: "hole" } : hole], postprocess: P.Hole },
-		{ name: "Atom", symbols: ["Projection"], postprocess: id },
-		{ name: "Atom", symbols: ["Injection"], postprocess: id },
 		{ name: "Atom", symbols: ["Literal"], postprocess: P.Lit },
 		{ name: "Atom", symbols: ["Struct"], postprocess: id },
 		{ name: "Atom", symbols: ["Tuple"], postprocess: id },
+		{ name: "Atom", symbols: ["Projection"], postprocess: id },
+		{ name: "Atom", symbols: ["Injection"], postprocess: id },
 		{ name: "Atom", symbols: ["List"], postprocess: id },
 		{ name: "Atom", symbols: ["Tagged"], postprocess: id },
 		{ name: "Atom$macrocall$2", symbols: ["Ann"] },
@@ -217,30 +217,37 @@ const grammar: Grammar = {
 			symbols: [{ literal: "μ" }, "Mu$ebnf$1", "Identifier", "Mu$ebnf$2", lexer.has("arrow") ? { type: "arrow" } : arrow, "Mu$ebnf$3", "TypeExpr"],
 			postprocess: P.Mu,
 		},
+		{ name: "Lambda$ebnf$1", symbols: [lexer.has("ws") ? { type: "ws" } : ws], postprocess: id },
+		{ name: "Lambda$ebnf$1", symbols: [], postprocess: () => null },
+		{ name: "Lambda$ebnf$2", symbols: [lexer.has("ws") ? { type: "ws" } : ws], postprocess: id },
+		{ name: "Lambda$ebnf$2", symbols: [], postprocess: () => null },
 		{
 			name: "Lambda",
 			symbols: [
 				lexer.has("backslash") ? { type: "backslash" } : backslash,
 				"Param",
-				lexer.has("ws") ? { type: "ws" } : ws,
+				"Lambda$ebnf$1",
 				lexer.has("arrow") ? { type: "arrow" } : arrow,
-				lexer.has("ws") ? { type: "ws" } : ws,
+				"Lambda$ebnf$2",
 				"TypeExpr",
 			],
-			postprocess: P.Lambda,
+			postprocess: P.Lambda("Explicit"),
 		},
+		{ name: "Lambda$ebnf$3", symbols: [lexer.has("ws") ? { type: "ws" } : ws], postprocess: id },
+		{ name: "Lambda$ebnf$3", symbols: [], postprocess: () => null },
+		{ name: "Lambda$ebnf$4", symbols: [lexer.has("ws") ? { type: "ws" } : ws], postprocess: id },
+		{ name: "Lambda$ebnf$4", symbols: [], postprocess: () => null },
 		{
 			name: "Lambda",
 			symbols: [
 				lexer.has("backslash") ? { type: "backslash" } : backslash,
-				lexer.has("hash") ? { type: "hash" } : hash,
 				"Param",
-				lexer.has("ws") ? { type: "ws" } : ws,
+				"Lambda$ebnf$3",
 				lexer.has("fatArrow") ? { type: "fatArrow" } : fatArrow,
-				lexer.has("ws") ? { type: "ws" } : ws,
+				"Lambda$ebnf$4",
 				"TypeExpr",
 			],
-			postprocess: P.Lambda,
+			postprocess: P.Lambda("Implicit"),
 		},
 		{ name: "Param", symbols: ["Identifier"], postprocess: P.Param },
 		{ name: "Param$ebnf$1", symbols: [lexer.has("ws") ? { type: "ws" } : ws], postprocess: id },
@@ -682,7 +689,7 @@ const grammar: Grammar = {
 			symbols: ["Identifier", "Assignment$ebnf$1", lexer.has("equals") ? { type: "equals" } : equals, "Assignment$ebnf$2", "TypeExpr"],
 			postprocess: P.keyval,
 		},
-		{ name: "Projection", symbols: ["TypeExpr", lexer.has("dot") ? { type: "dot" } : dot, "Identifier"], postprocess: P.Projection },
+		{ name: "Projection", symbols: ["Atom", lexer.has("dot") ? { type: "dot" } : dot, "Identifier"], postprocess: P.Projection },
 		{ name: "Projection", symbols: [lexer.has("dot") ? { type: "dot" } : dot, "Identifier"], postprocess: P.Projection },
 		{ name: "Injection$macrocall$2$ebnf$1", symbols: [lexer.has("ws") ? { type: "ws" } : ws], postprocess: id },
 		{ name: "Injection$macrocall$2$ebnf$1", symbols: [], postprocess: () => null },
@@ -733,7 +740,7 @@ const grammar: Grammar = {
 			name: "Injection$macrocall$2",
 			symbols: [
 				"Injection$macrocall$2$ebnf$1",
-				"TypeExpr",
+				"Type",
 				"Injection$macrocall$2$ebnf$2",
 				lexer.has("bar") ? { type: "bar" } : bar,
 				"Injection$macrocall$2$macrocall$1",
@@ -819,7 +826,7 @@ const grammar: Grammar = {
 		{ name: "Injection", symbols: ["Injection$macrocall$3"], postprocess: P.Injection },
 		{ name: "Tagged$ebnf$1", symbols: [lexer.has("ws") ? { type: "ws" } : ws], postprocess: id },
 		{ name: "Tagged$ebnf$1", symbols: [], postprocess: () => null },
-		{ name: "Tagged", symbols: [lexer.has("colon") ? { type: "colon" } : colon, "Identifier", "Tagged$ebnf$1", "TypeExpr"], postprocess: P.tagged },
+		{ name: "Tagged", symbols: [lexer.has("hash") ? { type: "hash" } : hash, "Identifier", "Tagged$ebnf$1", "TypeExpr"], postprocess: P.tagged },
 		{ name: "Block$macrocall$2$macrocall$2", symbols: ["Statement"] },
 		{ name: "Block$macrocall$2$macrocall$3", symbols: [lexer.has("semicolon") ? { type: "semicolon" } : semicolon] },
 		{ name: "Block$macrocall$2$macrocall$1$ebnf$1", symbols: [] },

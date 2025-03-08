@@ -127,7 +127,7 @@ export const Annotation = ([term, ...rest]: [Term, ...Annotation]): Term => {
  * Lambda processors
  ***********************************************************/
 
-type Implicit = [Backslash, Hash, Param, Whitespace, Arrow, Whitespace, Term];
+type Implicit = [Backslash, Param, Whitespace, Arrow, Whitespace, Term];
 type Explicit = [Backslash, Param, Whitespace, Arrow, Whitespace, Term];
 type Param = { type: "param"; binding: Variable; annotation?: Term; multiplicity?: Q.Multiplicity };
 
@@ -141,14 +141,11 @@ const Lam = (icit: Implicitness, param: Param, body: Term): Term => ({
 	location: locSpan(param.binding.location, body.location),
 });
 
-export const Lambda: PostProcessor<Explicit, Term> | PostProcessor<Implicit, Term> = (data: Implicit | Explicit) => {
-	if (data.length === 7) {
-		const [, , param, , , , body] = data;
-		return Lam("Implicit", param, body);
-	}
-	const [, param, , , , body] = data;
-	return Lam("Explicit", param, body);
-};
+export const Lambda: (icit: Implicitness) => PostProcessor<[Backslash, Param, Whitespace, Arrow, Whitespace, Term], Term> =
+	icit =>
+	([, param, , , , body]) => {
+		return Lam(icit, param, body);
+	};
 
 export const Pi: (icit: Implicitness) => PostProcessor<[Term, Whitespace, Token, Whitespace, Term], Term> =
 	icit =>

@@ -317,6 +317,9 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					.with([{ type: "tuple" }, NF.Patterns.Type], ([{ row }, ty]) => {
 						return M.fmap(traverseR(row), (r): [EB.Term, Q.Usages] => [EB.Constructors.Schema(r), Q.noUsage(ctx.env.length)]);
 					})
+					.with([{ type: "struct" }, NF.Patterns.Type], ([{ row }, ty]) => {
+						return M.fmap(traverseR(row), (r): [EB.Term, Q.Usages] => [EB.Constructors.Schema(r), Q.noUsage(ctx.env.length)]);
+					})
 					.otherwise(([tm, ty]) => {
 						return M.local(
 							_.isEqual(ty, NF.Type) ? EB.muContext : ctx,

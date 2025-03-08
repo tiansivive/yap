@@ -153,8 +153,8 @@ describe("Grammar", () => {
 				expect(expr.body).toMatchObject({ type: "lit", value: two });
 			});
 
-			it("should parse implicit lambdas:\t\\#x => 2", () => {
-				const lambda = `\\#x => 2`;
+			it("should parse implicit lambdas:\t\\x => 2", () => {
+				const lambda = `\\x => 2`;
 				const data = parser.feed(lambda);
 
 				const expr = data.results[0];
@@ -671,6 +671,69 @@ describe("Grammar", () => {
 				expect(expr.fn.type).toBe("projection");
 				expect(expr.fn.label).toBe(y);
 				expect(expr.fn.term).toMatchObject({ type: "var", variable: x });
+			});
+
+			it("should parse a lambda with a projection:\t\\x -> x.y", () => {
+				const src = `\\x -> x.y`;
+				const data = parser.feed(src);
+
+				const expr = data.results[0];
+
+				const x = { type: "name", value: "x" };
+				const y = "y";
+
+				expect(data.results.length).toBe(1);
+				expect(expr.type).toBe("lambda");
+				expect(expr.icit).toBe("Explicit");
+				expect(expr.variable).toBe("x");
+				expect(expr.body.type).toBe("projection");
+				expect(expr.body.label).toBe(y);
+				expect(expr.body.term).toMatchObject({ type: "var", variable: x });
+			});
+
+			it("should parse a lambda with a projection and an application:\t\\x -> x.y z", () => {
+				const src = `\\x -> x.y z`;
+				const data = parser.feed(src);
+
+				const expr = data.results[0];
+
+				const x = { type: "name", value: "x" };
+				const y = "y";
+				const z = { type: "name", value: "z" };
+
+				expect(data.results.length).toBe(1);
+				expect(expr.type).toBe("lambda");
+				expect(expr.icit).toBe("Explicit");
+				expect(expr.variable).toBe("x");
+				expect(expr.body.type).toBe("application");
+				expect(expr.body.arg).toMatchObject({ type: "var", variable: z });
+				expect(expr.body.fn.type).toBe("projection");
+				expect(expr.body.fn.label).toBe(y);
+				expect(expr.body.fn.term).toMatchObject({ type: "var", variable: x });
+			});
+
+			it("should parse a lambda with a chain projection and an application:\t\\x -> x.y.z w", () => {
+				const src = `\\x -> x.y.z w`;
+				const data = parser.feed(src);
+
+				const expr = data.results[0];
+
+				const x = { type: "name", value: "x" };
+				const y = "y";
+				const z = "z";
+				const w = { type: "name", value: "w" };
+
+				expect(data.results.length).toBe(1);
+				expect(expr.type).toBe("lambda");
+				expect(expr.icit).toBe("Explicit");
+				expect(expr.variable).toBe("x");
+				expect(expr.body.type).toBe("application");
+				expect(expr.body.arg).toMatchObject({ type: "var", variable: w });
+				expect(expr.body.fn.type).toBe("projection");
+				expect(expr.body.fn.label).toBe(z);
+				expect(expr.body.fn.term.type).toBe("projection");
+				expect(expr.body.fn.term.label).toBe(y);
+				expect(expr.body.fn.term.term).toMatchObject({ type: "var", variable: x });
 			});
 
 			it("should parse a lambda with an annotation:\t\\x -> y : Int -> Int", () => {

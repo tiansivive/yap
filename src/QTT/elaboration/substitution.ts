@@ -113,25 +113,9 @@ export const Substitute = (ctx: EB.Context) => {
 				.with({ type: "Match" }, ({ scrutinee, alternatives }) => {
 					const countPatBinders = (pat: EB.Pattern): number => {
 						return match(pat)
-							.with({ type: "Var" }, _ => 1)
+							.with({ type: "Var" }, _ => 0) // NOTE: this is for defined variables, like in type patterns
 							.with({ type: "Binder" }, _ => 1)
-							.with({ type: "Struct" }, ({ row }) =>
-								R.fold(
-									row,
-									(val, _, tot) => countPatBinders(val) + tot,
-									(_, tot) => tot + 1,
-									0,
-								),
-							)
-							.with({ type: "Variant" }, ({ row }) =>
-								R.fold(
-									row,
-									(val, _, tot) => countPatBinders(val) + tot,
-									(_, tot) => tot + 1,
-									0,
-								),
-							)
-							.with({ type: "Row" }, ({ row }) =>
+							.with({ type: "Struct" }, { type: "Variant" }, { type: "Row" }, ({ row }) =>
 								R.fold(
 									row,
 									(val, _, tot) => countPatBinders(val) + tot,
