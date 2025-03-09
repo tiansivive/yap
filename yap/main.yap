@@ -11,9 +11,13 @@ let main
   = ListF.map;
 
 
-
 let implicit
   : (f: Functor List) => (Num -> String) -> List Num -> List String 
+  = f.map;
+
+
+let poly
+  : (t: Type -> Type) => (f: Functor t) => (String -> Num) -> t String -> t Num
   = f.map;
 
 
