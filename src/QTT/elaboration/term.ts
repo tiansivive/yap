@@ -26,6 +26,7 @@ export type Term =
 export type Variable =
 	| { type: "Bound"; index: number }
 	| { type: "Free"; name: string }
+	| { type: "Foreign"; name: string }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */

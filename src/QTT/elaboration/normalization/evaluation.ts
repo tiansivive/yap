@@ -28,6 +28,9 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
 			return env[variable.index][0];
 		})
+		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
+			throw new Error("Tried to evaluate foreign variable: " + variable.name);
+		})
 
 		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) =>
 			NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(env, body)),

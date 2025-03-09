@@ -62,7 +62,8 @@ type BareStatement =
 			annotation?: Term;
 			multiplicity?: Q.Multiplicity;
 	  }
-	| { type: "using"; value: Term };
+	| { type: "using"; value: Term }
+	| { type: "foreign"; variable: string; annotation: Term };
 
 export type Variable = WithLocation<{ type: "name"; value: string }>;
 export type Row = WithLocation<R.Row<Term, Variable>>;

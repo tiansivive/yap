@@ -154,6 +154,15 @@ export const Substitute = (ctx: EB.Context) => {
 					);
 					return EB.Constructors.Row(r);
 				})
+				.with({ type: "Block" }, ({ statements, return: ret }) => {
+					const stmts = statements.map(s => {
+						if (s.type === "Let") {
+							return { ...s, value: call.term(subst, s.value, level), annotation: call.term(subst, s.annotation, level) };
+						}
+						return { ...s, value: call.term(subst, s.value, level) };
+					});
+					return EB.Constructors.Block(stmts, call.term(subst, ret, level));
+				})
 				.otherwise(() => {
 					throw new Error("Substitute: Not implemented yet");
 				});

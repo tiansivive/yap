@@ -12,6 +12,7 @@ import * as Lit from "@qtt/shared/literals";
 import * as Q from "@qtt/shared/modalities/multiplicity";
 import * as Log from "@qtt/shared/logging";
 import * as R from "@qtt/shared/rows";
+import * as Icit from "@qtt/elaboration/implicits";
 
 import { P } from "ts-pattern";
 
@@ -23,7 +24,6 @@ import * as Prov from "@qtt/shared/provenance";
 
 import * as Sub from "./substitution";
 import _ from "lodash";
-import { resolve } from "path";
 
 export type Constraint =
 	| { type: "assign"; left: NF.Value; right: NF.Value; lvl: number }
@@ -440,6 +440,31 @@ export const script = ({ script }: Src.Script, startCtx: EB.Context) => {
 		if (current.type === "expression") {
 			console.warn("Expression statements are not supported yet");
 			return next(rest, acc);
+		}
+
+		if (current.type === "foreign") {
+			const [result] = M.run(check(current.annotation, NF.Type), acc.ctx);
+			const updated = F.pipe(
+				result,
+				E.match(
+					err => {
+						console.log(displayProvenance(err.provenance));
+						return { ...acc, results: [...acc.results, E.left<[string, M.Err], ElaboratedStmt>([current.variable, err])] };
+					},
+					([tm, us]) => {
+						const metas = Icit.metas(tm);
+						if (metas.length > 0) {
+							throw new Error("Foreign functions cannot have unknown terms");
+						}
+
+						const nf = NF.evaluate(acc.ctx.env, acc.ctx.imports, tm);
+						const v = EB.Constructors.Var({ type: "Foreign", name: current.variable });
+						const ctx_: EB.Context = { ...acc.ctx, imports: { ...acc.ctx.imports, [current.variable]: [v, nf, us] } };
+						return { ...acc, ctx: ctx_ };
+					},
+				),
+			);
+			return next(rest, updated);
 		}
 
 		if (current.type === "using") {

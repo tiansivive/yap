@@ -442,6 +442,11 @@ export const Using: PostProcessor<[Keyword, Space, Term], Statement> = data => {
 	return { type: "using", value: term, location: term.location };
 };
 
+export const Foreign: PostProcessor<[Keyword, Space, Variable, Space, Token, Space, Term], Statement> = data => {
+	const [, , variable, , , , term] = data;
+	return { type: "foreign", variable: variable.value, annotation: term, location: locSpan(variable.location, term.location) };
+};
+
 type LetDec = [Keyword, Whitespace, Variable, ...Annotation, Space, Equals, Whitespace, Term];
 export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]: LetDec) => {
 	const letdec = (variable: Variable, value: Term, annotation?: Term, multiplicity?: Q.Multiplicity): Statement => ({

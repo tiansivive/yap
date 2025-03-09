@@ -1,6 +1,9 @@
 export *;
 import "lib.yap";
 
+
+foreign print: String -> Unit;
+
 using ListF;
 
 let main
@@ -17,3 +20,16 @@ let implicit
 let foo
   : (Num -> String) -> List Num -> List String
   = implicit;
+
+let bar
+  : Unit
+  = print "Hello, World!";
+
+let block
+  : Unit
+  = {
+    print "1";
+    print "2";
+    print "3";
+  };
+

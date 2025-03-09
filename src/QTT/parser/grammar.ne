@@ -16,13 +16,17 @@
 			match: /[a-zA-Z][a-zA-Z0-9]*/, type: moo.keywords({ 
 				ret: "return", dec: "let", match: "match", 
 				Type: "Type", Unit: "Unit", Row: "Row", 
-				module: "module", import: "import", exports: "export", from: "from", as: "as", using: "using" 
+				module: "module", import: "import", exports: "export", 
+				from: "from", as: "as", using: "using" ,
+				foreign: "foreign", loop: "loop", repeat: "repeat",
+				if: "if", else: "else", then: "then",
 			}) 
 		},
 	  	dot: /\./,
 		equals: /\=(?!>)/,
 	  	backslash: /\\/,
 	  	arrow: /->/,
+		backarrow: /<-/,
 		fatArrow: /\=>/,
 		op: /[\+\-\*\/]/,
 		// ws: /[ \t]+/,
@@ -74,7 +78,6 @@ Imports -> %space:+ "import" %space String %semicolon 													{% P.importAl
  		 | %space:+ "import" %space String %space Parens[ Many[ Identifier, %comma ] ] %semicolon 		{% P.importSome %}
 
 Script -> Many[Statement, %semicolon] %semicolon %space:?  		{% P.script %}
-		#| Ann 				{% id %}
 
 Ann -> Ann %space:? %colon %space:? TypeExpr 							{% P.Annotation %}
      | Ann %space:? %colon %space:? Angle[Quantity] %space:? TypeExpr 	{% P.Annotation %}
@@ -177,6 +180,7 @@ Block -> Curly[ Many[Statement, %semicolon] %semicolon Return:? ] 		{% P.Block %
 Statement -> Ann 			{% P.Expr %}
            | Letdec			{% id %}
 		   | Using 			{% id %}
+		   | Foreign 		{% id %}
 
 Return    -> %space:? "return" %space Ann %semicolon 					{% P.Return %}
 
@@ -186,7 +190,12 @@ Letdec -> "let" %space Identifier %space:? %equals %space:? Ann 										{% P.L
 Using -> "using" %space Ann 								{% P.Using %}
 	   | "using" %space Ann %space "as" %space Identifier  	{% P.Using %}
 
-# VARIABLES
+Foreign -> "foreign" %space Identifier %space:? %colon %space:? TypeExpr 	{% P.Foreign %}
+
+
+# ------------------------------------
+# Variables
+# ------------------------------------
 Identifier -> %variable {% P.Name %}
 
 # Multiplicity
