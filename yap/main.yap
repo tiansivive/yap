@@ -9,11 +9,11 @@ let main
 
 
 
-let try
+let implicit
   : (f: Functor List) => (Num -> String) -> List Num -> List String 
   = f.map;
 
 
 let foo
   : (Num -> String) -> List Num -> List String
-  = try;
+  = implicit;

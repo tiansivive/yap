@@ -27,6 +27,7 @@ const empty: EB.Context = {
 	types: [],
 	names: [],
 	trace: [],
+	implicits: [],
 	imports: Lib.Elaborated,
 };
 

@@ -24,7 +24,7 @@ const globalModules: Record<ModuleName, Interface> = {};
 type Identifier = string;
 type Interface = Record<Identifier, Either<M.Err, EB.AST>>;
 
-export const BASE_URL = "./src/QTT/yap/";
+export const BASE_URL = "./yap/";
 
 export const mkInterface = (moduleName: ModuleName, visited: string[] = []): Interface => {
 	const prefixed = `${BASE_URL}${moduleName}`;
