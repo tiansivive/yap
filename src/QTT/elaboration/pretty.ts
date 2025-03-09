@@ -75,6 +75,10 @@ const displayConstraint = (constraint: Constraint): string => {
 		return `${Q.display(constraint.computed)} <= ${Q.display(constraint.expected)}`;
 	}
 
+	if (constraint.type === "resolve") {
+		return `?${constraint.meta.val}\n@ ${NF.display(constraint.annotation)}`;
+	}
+
 	return "Unknown Constraint";
 };
 

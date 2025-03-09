@@ -8,12 +8,18 @@ import { M } from "@qtt/elaboration";
 import * as Src from "@qtt/src/index";
 import * as P from "@qtt/shared/provenance";
 
+import * as U from "./unification";
+import * as Sub from "./substitution";
+
+import * as E from "fp-ts/Either";
+
 type Origin = "inserted" | "source";
 
 export type Context = {
 	types: Array<[Binder, Origin, NF.ModalValue]>;
 	env: NF.Env;
 	names: Array<Binder>;
+	implicits: Array<[EB.Term, NF.Value]>;
 	imports: Record<string, AST>;
 	trace: P.Stack<Provenance>;
 };
@@ -62,6 +68,26 @@ export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<AST>
 	};
 
 	return _lookup(0, variable, ctx.types);
+};
+
+export const resolveImplicit = (nf: NF.Value): M.Elaboration<[EB.Term, Sub.Subst] | void> => {
+	return M.fmap(M.ask(), ctx => {
+		const lookup = (implicits: Context["implicits"]): [EB.Term, Sub.Subst] | void => {
+			if (implicits.length === 0) {
+				return;
+			}
+
+			const [[term, value], ...rest] = implicits;
+			const [result] = M.run(U.unify(nf, value, ctx.env.length, {}), ctx);
+
+			if (E.isRight(result)) {
+				return [term, result.right];
+			}
+			return lookup(rest);
+		};
+
+		return lookup(ctx.implicits);
+	});
 };
 
 export const bind = (context: Context, binder: Binder, annotation: NF.ModalValue, origin: Origin = "source"): Context => {

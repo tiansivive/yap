@@ -23,10 +23,12 @@ import * as Prov from "@qtt/shared/provenance";
 
 import * as Sub from "./substitution";
 import _ from "lodash";
+import { resolve } from "path";
 
 export type Constraint =
 	| { type: "assign"; left: NF.Value; right: NF.Value; lvl: number }
-	| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity };
+	| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity }
+	| { type: "resolve"; meta: Extract<EB.Variable, { type: "Meta" }>; annotation: NF.Value };
 
 export type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
 export const Stmt = {
@@ -70,6 +72,13 @@ export const Stmt = {
 				);
 			})
 			.with({ type: "expression" }, ({ value }) => M.fmap(infer(value), (expr): ElaboratedStmt => [EB.Constructors.Stmt.Expr(expr[0]), expr[1], expr[2]]))
+
+			.with({ type: "using" }, ({ value }) => {
+				return F.pipe(
+					infer(value),
+					M.fmap(([tm, ty, us]): ElaboratedStmt => [{ type: "Using", value: tm, annotation: ty }, ty, us]),
+				);
+			})
 			.otherwise(() => {
 				throw new Error("Not implemented yet");
 			});
@@ -414,57 +423,140 @@ export const run = (term: Src.Term, ctx: EB.Context) => {
 	return M.run(elaboration, ctx);
 };
 
-export const script = ({ script }: Src.Script, ctx: EB.Context) => {
-	const letdecs = script
-		.filter(stmt => stmt.type === "let")
-		.reduce(
-			({ ctx, results }, stmt) => {
-				const action = F.pipe(
-					Stmt.infer(stmt),
-					M.listen(([[stmt, ty, us], { constraints }]) => {
-						//console.log("[ DEBUG ]\n", displayProvenance(constraints[11].provenance));
-						return { inferred: { stmt, ty, us }, constraints };
-					}),
-					M.bind("sub", ({ constraints }) => {
-						// constraints.forEach(c => console.log("[ DEBUG ] " + EB.Display.Constraint(c)));
-						return M.fmap(solve(constraints), s => {
-							// console.log("[ DEBUG ]\n" + Sub.display(s));
-							return s;
-						});
-					}),
-					M.bind("ty", ({ sub, inferred }) =>
-						F.pipe(
-							zonk("nf", inferred.ty, sub),
-							M.fmap(nf => {
-								return NF.generalize(nf, ctx);
-							}),
-						),
-					),
-					M.bind("term", ({ sub, inferred }) => {
-						return F.pipe(zonk("term", inferred.stmt.value, sub), M.fmap(EB.Icit.generalize));
-					}),
-				);
+export const script = ({ script }: Src.Script, startCtx: EB.Context) => {
+	const next = (
+		stmts: Src.Statement[],
+		acc: {
+			ctx: EB.Context;
+			results: E.Either<[string, M.Err], ElaboratedStmt>[];
+		},
+	) => {
+		if (stmts.length === 0) {
+			return acc;
+		}
 
-				const [result] = M.run(action, ctx);
-				return F.pipe(
-					result,
-					E.match(
-						err => {
-							// markResolved("dummy.lama", stmt.variable, E.left(err));
-							console.log(displayProvenance(err.provenance));
-							return { ctx, results: [...results, E.left<[string, M.Err], ElaboratedStmt>([stmt.variable, err])] };
-						},
-						({ term, ty, inferred }) => {
-							const ctx_: EB.Context = { ...ctx, imports: { ...ctx.imports, [stmt.variable]: [term, ty, inferred.us] } };
-							const letdec = EB.Constructors.Stmt.Let(stmt.variable, term, NF.quote(ctx.imports, 0, ty));
-							// markResolved("dummy.lama", stmt.variable, E.right([letdec.value, inferred.ty, inferred.us]));
-							return { ctx: ctx_, results: [...results, E.right<[string, M.Err], ElaboratedStmt>([letdec, inferred.ty, inferred.us])] };
-						},
-					),
-				);
-			},
-			{ ctx, results: [] as E.Either<[string, M.Err], ElaboratedStmt>[] },
+		const [current, ...rest] = stmts;
+
+		if (current.type === "expression") {
+			console.warn("Expression statements are not supported yet");
+			return next(rest, acc);
+		}
+
+		if (current.type === "using") {
+			const [result] = M.run(Stmt.infer(current), acc.ctx);
+			const updated = F.pipe(
+				result,
+				E.match(
+					err => {
+						console.log(displayProvenance(err.provenance));
+						return acc;
+					},
+					([tm, ty]) => {
+						const ctx_: EB.Context = { ...acc.ctx, implicits: [...acc.ctx.implicits, [tm.value, ty]] };
+						return { ...acc, ctx: ctx_ };
+					},
+				),
+			);
+			return next(rest, updated);
+		}
+
+		const action = F.pipe(
+			Stmt.infer(current),
+			M.listen(([[stmt, ty, us], { constraints }]) => {
+				//console.log("[ DEBUG ]\n", displayProvenance(constraints[11].provenance));
+				return { inferred: { stmt, ty, us }, constraints };
+			}),
+			M.bind("sub", ({ constraints }) => {
+				// constraints.forEach(c => console.log("[ DEBUG ] " + EB.Display.Constraint(c)));
+				return M.fmap(solve(constraints), s => {
+					// console.log("[ DEBUG ]\n" + Sub.display(s));
+					return s;
+				});
+			}),
+			M.bind("ty", ({ sub, inferred }) =>
+				F.pipe(
+					zonk("nf", inferred.ty, sub),
+					M.fmap(nf => {
+						return NF.generalize(nf, acc.ctx);
+					}),
+				),
+			),
+			M.bind("term", ({ sub, inferred }) => {
+				return F.pipe(zonk("term", inferred.stmt.value, sub), M.fmap(EB.Icit.generalize));
+			}),
 		);
+
+		const [result] = M.run(action, acc.ctx);
+		const updated = F.pipe(
+			result,
+			E.match(
+				err => {
+					// markResolved("dummy.lama", stmt.variable, E.left(err));
+					console.log(displayProvenance(err.provenance));
+					return { ...acc, results: [...acc.results, E.left<[string, M.Err], ElaboratedStmt>([current.variable, err])] };
+				},
+				({ term, ty, inferred }) => {
+					const ctx_: EB.Context = { ...acc.ctx, imports: { ...acc.ctx.imports, [current.variable]: [term, ty, inferred.us] } };
+					const letdec = EB.Constructors.Stmt.Let(current.variable, term, NF.quote(acc.ctx.imports, 0, ty));
+					// markResolved("dummy.lama", stmt.variable, E.right([letdec.value, inferred.ty, inferred.us]));
+					return { ctx: ctx_, results: [...acc.results, E.right<[string, M.Err], ElaboratedStmt>([letdec, inferred.ty, inferred.us])] };
+				},
+			),
+		);
+		return next(rest, updated);
+	};
+
+	// const letdecs = script
+	// 	.filter(stmt => stmt.type === "let")
+	// 	.reduce(
+	// 		({ ctx, results }, stmt) => {
+	// 			const action = F.pipe(
+	// 				Stmt.infer(stmt),
+	// 				M.listen(([[stmt, ty, us], { constraints }]) => {
+	// 					//console.log("[ DEBUG ]\n", displayProvenance(constraints[11].provenance));
+	// 					return { inferred: { stmt, ty, us }, constraints };
+	// 				}),
+	// 				M.bind("sub", ({ constraints }) => {
+	// 					// constraints.forEach(c => console.log("[ DEBUG ] " + EB.Display.Constraint(c)));
+	// 					return M.fmap(solve(constraints), s => {
+	// 						// console.log("[ DEBUG ]\n" + Sub.display(s));
+	// 						return s;
+	// 					});
+	// 				}),
+	// 				M.bind("ty", ({ sub, inferred }) =>
+	// 					F.pipe(
+	// 						zonk("nf", inferred.ty, sub),
+	// 						M.fmap(nf => {
+	// 							return NF.generalize(nf, ctx);
+	// 						}),
+	// 					),
+	// 				),
+	// 				M.bind("term", ({ sub, inferred }) => {
+	// 					return F.pipe(zonk("term", inferred.stmt.value, sub), M.fmap(EB.Icit.generalize));
+	// 				}),
+	// 			);
+
+	// 			const [result] = M.run(action, ctx);
+	// 			return F.pipe(
+	// 				result,
+	// 				E.match(
+	// 					err => {
+	// 						// markResolved("dummy.lama", stmt.variable, E.left(err));
+	// 						console.log(displayProvenance(err.provenance));
+	// 						return { ctx, results: [...results, E.left<[string, M.Err], ElaboratedStmt>([stmt.variable, err])] };
+	// 					},
+	// 					({ term, ty, inferred }) => {
+	// 						const ctx_: EB.Context = { ...ctx, imports: { ...ctx.imports, [stmt.variable]: [term, ty, inferred.us] } };
+	// 						const letdec = EB.Constructors.Stmt.Let(stmt.variable, term, NF.quote(ctx.imports, 0, ty));
+	// 						// markResolved("dummy.lama", stmt.variable, E.right([letdec.value, inferred.ty, inferred.us]));
+	// 						return { ctx: ctx_, results: [...results, E.right<[string, M.Err], ElaboratedStmt>([letdec, inferred.ty, inferred.us])] };
+	// 					},
+	// 				),
+	// 			);
+	// 		},
+	// 		{ ctx, results: [] as E.Either<[string, M.Err], ElaboratedStmt>[] },
+	// 	);
+	const letdecs = next(script, { ctx: startCtx, results: [] as E.Either<[string, M.Err], ElaboratedStmt>[] });
 
 	return letdecs.results;
 };

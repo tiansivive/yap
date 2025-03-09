@@ -16,7 +16,7 @@
 			match: /[a-zA-Z][a-zA-Z0-9]*/, type: moo.keywords({ 
 				ret: "return", dec: "let", match: "match", 
 				Type: "Type", Unit: "Unit", Row: "Row", 
-				module: "module", import: "import", exports: "export", from: "from", as: "as" 
+				module: "module", import: "import", exports: "export", from: "from", as: "as", using: "using" 
 			}) 
 		},
 	  	dot: /\./,
@@ -176,12 +176,15 @@ Block -> Curly[ Many[Statement, %semicolon] %semicolon Return:? ] 		{% P.Block %
 
 Statement -> Ann 			{% P.Expr %}
            | Letdec			{% id %}
+		   | Using 			{% id %}
 
 Return    -> %space:? "return" %space Ann %semicolon 					{% P.Return %}
 
 Letdec -> "let" %space Identifier %space:? %equals %space:? Ann 										{% P.LetDec %}
 		| "let" %space Identifier %space:? %colon %space:? TypeExpr %space:? %equals %space:? TypeExpr 	{% P.LetDec %}
 
+Using -> "using" %space Ann 								{% P.Using %}
+	   | "using" %space Ann %space "as" %space Identifier  	{% P.Using %}
 
 # VARIABLES
 Identifier -> %variable {% P.Name %}

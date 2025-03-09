@@ -56,7 +56,10 @@ export type Pattern =
 
 type Spine = Array<"Bound" | "Defined">;
 
-export type Statement = { type: "Expression"; value: Term } | { type: "Let"; variable: string; value: Term; annotation: Term };
+export type Statement =
+	| { type: "Expression"; value: Term }
+	| { type: "Let"; variable: string; value: Term; annotation: Term }
+	| { type: "Using"; value: Term; annotation: NF.Value };
 
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
 export const Free = (name: string): Variable => ({ type: "Free", name });

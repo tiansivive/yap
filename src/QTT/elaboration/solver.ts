@@ -44,7 +44,7 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboratio
 	}
 
 	const [c, ...rest] = cs.map(c => {
-		if (c.type === "usage") {
+		if (c.type === "usage" || c.type === "resolve") {
 			return c;
 		}
 		return {

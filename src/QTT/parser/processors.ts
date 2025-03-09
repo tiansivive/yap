@@ -434,6 +434,14 @@ export const Return: PostProcessor<[Space, Keyword, Whitespace, Term, SemiColon]
 
 export const Expr: PostProcessor<[Term], Statement> = ([value]) => ({ type: "expression", value, location: value.location });
 
+export const Using: PostProcessor<[Keyword, Space, Term], Statement> = data => {
+	if (data.length !== 3) {
+		throw new Error("Expected 4 elements in using statement. Renaming not yet implemented");
+	}
+	const [, , term] = data;
+	return { type: "using", value: term, location: term.location };
+};
+
 type LetDec = [Keyword, Whitespace, Variable, ...Annotation, Space, Equals, Whitespace, Term];
 export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]: LetDec) => {
 	const letdec = (variable: Variable, value: Term, annotation?: Term, multiplicity?: Q.Multiplicity): Statement => ({

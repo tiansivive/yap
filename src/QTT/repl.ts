@@ -22,15 +22,6 @@ import * as F from "fp-ts/function";
 import { M } from "@qtt/elaboration";
 import * as Mod from "./elaboration/modules";
 
-const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar));
-
-const filepath = process.argv[2];
-console.log(filepath);
-const file = File.load("./src/QTT/yap/lib.yap");
-
-const data = parser.feed(file);
-const val = data.results[0];
-
 const empty: EB.Context = {
 	env: [],
 	types: [],
@@ -40,19 +31,6 @@ const empty: EB.Context = {
 };
 
 try {
-	EB.script(val.content, empty).forEach(res => {
-		if (E.isLeft(res)) {
-			console.log(Err.display(res.left[1]));
-			res.left.provenance ? console.log(displayProvenance(res.left.provenance)) : null;
-			return;
-		}
-
-		const [tm, ty, us] = res.right;
-
-		console.log(EB.Display.Statement(tm));
-		console.log("\n");
-	});
-
 	console.log("MODULES:");
 	const res = Mod.mkInterface("main.yap");
 

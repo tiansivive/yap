@@ -38,6 +38,7 @@
 		"mtype",
 		"multimap",
 		"mval",
+		"mvar",
 		"mvnf",
 		"Nearley",
 		"rangle",

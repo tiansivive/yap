@@ -77,6 +77,7 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = []): Int
 		env: [],
 		types: [],
 		names: [],
+		implicits: [],
 		trace: [],
 		imports: { ...Lib.Elaborated, ...deps.imports },
 	};

@@ -8,6 +8,7 @@ import * as Log from "@qtt/shared/logging";
 import { match, P } from "ts-pattern";
 
 import * as R from "@qtt/shared/rows";
+import _ from "lodash";
 
 export function insert(node: EB.AST): EB.M.Elaboration<EB.AST> {
 	const [term, ty, us] = node;
@@ -20,14 +21,31 @@ export function insert(node: EB.AST): EB.M.Elaboration<EB.AST> {
 			return match(node)
 				.with([{ type: "Abs", binding: { type: "Lambda", icit: "Implicit" } }, P._, P._], () => M.of<EB.AST>(node))
 				.with([P._, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._], ([, pi]) => {
-					const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
-					const vNF = NF.evaluate(ctx.env, ctx.imports, meta);
+					return F.pipe(
+						EB.resolveImplicit(pi.binder.annotation[0]),
+						M.chain(found => {
+							if (found) {
+								if (!_.isEmpty(found[1])) {
+									throw new Error("insert: Found implicit with constraints; What to do here?");
+								}
+								const bodyNF = NF.apply(ctx.imports, pi.closure, pi.binder.annotation[0]);
+								const tm = EB.Constructors.App("Implicit", term, found[0]);
+								return M.of<EB.AST>([tm, bodyNF, us]);
+							}
 
-					const tm = EB.Constructors.App("Implicit", term, meta);
+							const meta = EB.freshMeta(ctx.env.length);
+							const mvar = EB.Constructors.Var(meta);
+							const vNF = NF.evaluate(ctx.env, ctx.imports, mvar);
 
-					const bodyNF = NF.apply(ctx.imports, pi.closure, vNF);
-
-					return insert([tm, bodyNF, us]);
+							const tm = EB.Constructors.App("Implicit", term, mvar);
+							const bodyNF = NF.apply(ctx.imports, pi.closure, vNF);
+							return F.pipe(
+								M.of<EB.AST>([tm, bodyNF, us]),
+								M.discard(_ => M.tell("constraint", { type: "resolve", meta: meta, annotation: pi.binder.annotation[0] })),
+							);
+						}),
+						M.chain(insert),
+					);
 				})
 				.otherwise(() => M.of(node));
 		}),
