@@ -18,6 +18,13 @@ let ListF
     : Functor List
     = { map: mapL };
 
+let Monad
+    : (Type -> Type) -> Type
+    = \m -> 
+      { of: (a: Type) => a -> m a
+      , bind: (a: Type) => (b: Type) => m a -> (a -> m b) -> m b 
+      };
+
 
 
 

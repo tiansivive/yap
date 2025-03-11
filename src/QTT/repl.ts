@@ -20,7 +20,7 @@ import * as Err from "@qtt/elaboration/errors";
 
 import * as F from "fp-ts/function";
 import { M } from "@qtt/elaboration";
-import * as Mod from "./elaboration/modules";
+import * as Mod from "./modules";
 
 const empty: EB.Context = {
 	env: [],

@@ -19,7 +19,7 @@ import * as A from "fp-ts/lib/Array";
 import * as Lib from "@qtt/shared/lib/primitives";
 
 type ModuleName = string;
-const globalModules: Record<ModuleName, Interface> = {};
+export const globalModules: Record<ModuleName, Interface> = {};
 
 type Identifier = string;
 type Interface = Record<Identifier, Either<M.Err, EB.AST>>;

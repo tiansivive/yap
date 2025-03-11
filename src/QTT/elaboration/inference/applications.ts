@@ -19,7 +19,6 @@ export const infer = ({ fn, arg, icit }: Application) => {
 		M.bind("pi", ({ fn: [ft, fty], ctx }) => {
 			return match(fty)
 				.with({ type: "Abs", binder: { type: "Pi" } }, pi => {
-					console.log(EB.Display.Term(ft));
 					if (pi.binder.icit !== icit) {
 						throw new Error("Implicitness mismatch");
 					}

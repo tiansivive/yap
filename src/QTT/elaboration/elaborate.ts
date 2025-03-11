@@ -25,6 +25,8 @@ import * as Prov from "@qtt/shared/provenance";
 import * as Sub from "./substitution";
 import _ from "lodash";
 
+import * as Gen from "../codegen";
+
 export type Constraint =
 	| { type: "assign"; left: NF.Value; right: NF.Value; lvl: number }
 	| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity }
@@ -166,7 +168,10 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 							const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta(ctx.env.length));
 							const row: NF.Row = NF.Constructors.Extension(tag, ty, rvar);
 							const variant = NF.Constructors.Variant(row);
-							return [tm, variant, us];
+
+							const trow = EB.Constructors.Extension(tag, tm, { type: "empty" });
+							const tagged = EB.Constructors.Struct(trow);
+							return [tagged, variant, us];
 						}),
 					)
 					.with({ type: "projection" }, ({ term, label }) =>
@@ -524,6 +529,11 @@ export const script = ({ script }: Src.Script, startCtx: EB.Context) => {
 					const ctx_: EB.Context = { ...acc.ctx, imports: { ...acc.ctx.imports, [current.variable]: [term, ty, inferred.us] } };
 					const letdec = EB.Constructors.Stmt.Let(current.variable, term, NF.quote(acc.ctx.imports, 0, ty));
 					// markResolved("dummy.lama", stmt.variable, E.right([letdec.value, inferred.ty, inferred.us]));
+					try {
+						console.log("\n--------------------------------\nGen:\n\n", Gen.codegen([], term));
+					} catch (e) {
+						console.log(e);
+					}
 					return { ctx: ctx_, results: [...acc.results, E.right<[string, M.Err], ElaboratedStmt>([letdec, inferred.ty, inferred.us])] };
 				},
 			),
@@ -531,57 +541,26 @@ export const script = ({ script }: Src.Script, startCtx: EB.Context) => {
 		return next(rest, updated);
 	};
 
-	// const letdecs = script
-	// 	.filter(stmt => stmt.type === "let")
-	// 	.reduce(
-	// 		({ ctx, results }, stmt) => {
-	// 			const action = F.pipe(
-	// 				Stmt.infer(stmt),
-	// 				M.listen(([[stmt, ty, us], { constraints }]) => {
-	// 					//console.log("[ DEBUG ]\n", displayProvenance(constraints[11].provenance));
-	// 					return { inferred: { stmt, ty, us }, constraints };
-	// 				}),
-	// 				M.bind("sub", ({ constraints }) => {
-	// 					// constraints.forEach(c => console.log("[ DEBUG ] " + EB.Display.Constraint(c)));
-	// 					return M.fmap(solve(constraints), s => {
-	// 						// console.log("[ DEBUG ]\n" + Sub.display(s));
-	// 						return s;
-	// 					});
-	// 				}),
-	// 				M.bind("ty", ({ sub, inferred }) =>
-	// 					F.pipe(
-	// 						zonk("nf", inferred.ty, sub),
-	// 						M.fmap(nf => {
-	// 							return NF.generalize(nf, ctx);
-	// 						}),
-	// 					),
-	// 				),
-	// 				M.bind("term", ({ sub, inferred }) => {
-	// 					return F.pipe(zonk("term", inferred.stmt.value, sub), M.fmap(EB.Icit.generalize));
-	// 				}),
-	// 			);
-
-	// 			const [result] = M.run(action, ctx);
-	// 			return F.pipe(
-	// 				result,
-	// 				E.match(
-	// 					err => {
-	// 						// markResolved("dummy.lama", stmt.variable, E.left(err));
-	// 						console.log(displayProvenance(err.provenance));
-	// 						return { ctx, results: [...results, E.left<[string, M.Err], ElaboratedStmt>([stmt.variable, err])] };
-	// 					},
-	// 					({ term, ty, inferred }) => {
-	// 						const ctx_: EB.Context = { ...ctx, imports: { ...ctx.imports, [stmt.variable]: [term, ty, inferred.us] } };
-	// 						const letdec = EB.Constructors.Stmt.Let(stmt.variable, term, NF.quote(ctx.imports, 0, ty));
-	// 						// markResolved("dummy.lama", stmt.variable, E.right([letdec.value, inferred.ty, inferred.us]));
-	// 						return { ctx: ctx_, results: [...results, E.right<[string, M.Err], ElaboratedStmt>([letdec, inferred.ty, inferred.us])] };
-	// 					},
-	// 				),
-	// 			);
-	// 		},
-	// 		{ ctx, results: [] as E.Either<[string, M.Err], ElaboratedStmt>[] },
-	// 	);
 	const letdecs = next(script, { ctx: startCtx, results: [] as E.Either<[string, M.Err], ElaboratedStmt>[] });
 
 	return letdecs.results;
+};
+
+const foo = a => {
+	return b => {
+		return f => {
+			return l => {
+				return (() => {
+					const $x = l;
+					if ($x["nil"] !== undefined) {
+						return { nil: "unit" };
+					} else if ($x["cons"][0] && $x["cons"][1]) {
+						const x = $x["cons"][0];
+						const xs = $x["cons"][1];
+						return { cons: { 0: f(x), 1: undefined(a)(b)(f)(xs) } };
+					}
+				})();
+			};
+		};
+	};
 };

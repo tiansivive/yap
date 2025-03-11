@@ -37,3 +37,10 @@ let block
     print "3";
   };
 
+
+let mapL
+    : (a: Type) => (b: Type) => (a -> b) -> List a -> List b
+    = \f -> \l -> match l
+        | nil: _            -> #nil *
+        | cons: { x, xs }   -> #cons { f x, mapL f xs };
+
