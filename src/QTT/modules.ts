@@ -17,6 +17,7 @@ import Grammar from "@qtt/src/grammar";
 import * as A from "fp-ts/lib/Array";
 
 import * as Lib from "@qtt/shared/lib/primitives";
+import * as Gen from "./codegen";
 
 type ModuleName = string;
 export const globalModules: Record<ModuleName, Interface> = {};
@@ -45,6 +46,7 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = []): Int
 	}
 	const mod: Src.Module = data.results[0];
 
+	let code = "";
 	const deps = mod.imports.reduce(
 		(acc, { filepath }) => {
 			//const pathName = filepath.replace(/\//, ".");
@@ -65,6 +67,7 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = []): Int
 				A.separate,
 			);
 			const imports = right.reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {} as EB.Context["imports"]);
+			code += `const { ${Object.keys(imports).join(", ")} } = require('./${filepath}.js')\n`;
 			return { errors: [...acc.errors, ...left], imports: { ...acc.imports, ...imports } };
 		},
 		{
@@ -84,24 +87,26 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = []): Int
 	const { left, right } = F.pipe(EB.script(mod.content, start), A.separate);
 
 	const errs = left.reduce((acc, [k, e]) => ({ ...acc, [k]: E.left(e) }), {} as Interface);
+
 	const vals = right.reduce((acc, stmt) => {
 		if (stmt[0].type !== "Let") {
 			return acc;
+		}
+
+		try {
+			code += "\n\n" + Gen.Statement.codegen([], stmt[0], moduleName);
+		} catch (e) {
+			console.log(e);
 		}
 
 		const ast: EB.AST = [stmt[0].value, stmt[1], stmt[2]];
 		return { ...acc, [stmt[0].variable]: E.right(ast) };
 	}, {} as Interface);
 
+	code += "\n\nmodule.exports = { " + Object.keys(vals).join(", ") + " }";
+	fs.writeFileSync(`./bin/${moduleName}.js`, code);
+
 	const iface = { ...errs, ...vals };
 	globalModules[prefixed] = iface;
 	return iface;
 };
-
-// export const markResolved = (moduleName: ModuleName, id: Identifier, ast: Either<M.Err, EB.AST>): void => {
-//     if (!globalModules[moduleName]) { throw new Error('Module not initialized: ' + moduleName) }
-//     if (!globalModules[moduleName][id]) { throw new Error(`Identifier '${id}' not found in interface for module: ${moduleName}`) }
-//     if (O.isSome(globalModules[moduleName][id])) { throw new Error(`Identifier '${id}' already resolved in module: ${moduleName}`) }
-
-//     globalModules[moduleName][id] = O.some(ast)
-// }

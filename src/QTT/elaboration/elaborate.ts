@@ -529,11 +529,6 @@ export const script = ({ script }: Src.Script, startCtx: EB.Context) => {
 					const ctx_: EB.Context = { ...acc.ctx, imports: { ...acc.ctx.imports, [current.variable]: [term, ty, inferred.us] } };
 					const letdec = EB.Constructors.Stmt.Let(current.variable, term, NF.quote(acc.ctx.imports, 0, ty));
 					// markResolved("dummy.lama", stmt.variable, E.right([letdec.value, inferred.ty, inferred.us]));
-					try {
-						console.log("\n--------------------------------\nGen:\n\n", Gen.codegen([], term));
-					} catch (e) {
-						console.log(e);
-					}
 					return { ctx: ctx_, results: [...acc.results, E.right<[string, M.Err], ElaboratedStmt>([letdec, inferred.ty, inferred.us])] };
 				},
 			),
@@ -544,23 +539,4 @@ export const script = ({ script }: Src.Script, startCtx: EB.Context) => {
 	const letdecs = next(script, { ctx: startCtx, results: [] as E.Either<[string, M.Err], ElaboratedStmt>[] });
 
 	return letdecs.results;
-};
-
-const foo = a => {
-	return b => {
-		return f => {
-			return l => {
-				return (() => {
-					const $x = l;
-					if ($x["nil"] !== undefined) {
-						return { nil: "unit" };
-					} else if ($x["cons"][0] && $x["cons"][1]) {
-						const x = $x["cons"][0];
-						const xs = $x["cons"][1];
-						return { cons: { 0: f(x), 1: undefined(a)(b)(f)(xs) } };
-					}
-				})();
-			};
-		};
-	};
 };

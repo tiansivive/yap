@@ -26,8 +26,8 @@ export const codegen = (env: string[], term: EB.Term): string => {
 		.with({ type: "Var" }, v => {
 			throw new Error("Could not compile Variable: " + JSON.stringify(v));
 		})
-		.with({ type: "Abs", binding: { type: "Mu" } }, () => {
-			throw new Error("Can not compile mu abstraction");
+		.with({ type: "Abs", binding: { type: "Mu" } }, mu => {
+			return codegen([mu.binding.source, ...env], mu.body);
 		})
 		.with({ type: "Abs" }, abs => {
 			const extended = [abs.binding.variable, ...env];
@@ -56,23 +56,40 @@ export const codegen = (env: string[], term: EB.Term): string => {
 				return `{ ${codegen(env, arg)} }`;
 			},
 		)
+		.with(
+			{
+				type: "App",
+				func: { type: "Lit", value: { type: "Atom", value: "Variant" } },
+				arg: { type: "Row" },
+			},
+			({ func, arg }) => {
+				return `/* variant */{ ${codegen(env, arg)} }`;
+			},
+		)
 		.with({ type: "App" }, app => {
 			const fn = codegen(env, app.func);
 			const arg = codegen(env, app.arg);
 
-			return `(${fn})(${arg})`;
+			return `${fn}(${arg})`;
 		})
 		.with({ type: "Block" }, block => {
-			const stmts = block.statements.reduce(codegenStmt, env);
+			const [, stmts] = block.statements.reduce(
+				([env, code], stmt) => {
+					const code_ = (code += " " + Statement.codegen(env, stmt) + ";");
+					const env_ = stmt.type === "Let" ? [stmt.variable, ...env] : env;
+					return [env_, code_];
+				},
+				[env, ""],
+			);
 			const ret = codegen(env, block.return);
-			return `((_ => { ${stmts.join("; ")}; return ${ret}; })())`;
+			return `((_ => { ${stmts} return ${ret}; })())`;
 		})
 		.with({ type: "Annotation" }, ann => {
 			return codegen(env, ann.term);
 		})
 		.with({ type: "Proj" }, proj => {
 			const label = Number.isNaN(parseInt(proj.label)) ? `"${proj.label}"` : proj.label;
-			return `(${codegen(env, proj.term)})[${label}]`;
+			return `${codegen(env, proj.term)}[${label}]`;
 		})
 		.with({ type: "Inj" }, inj => {
 			const obj = codegen(env, inj.term);
@@ -143,7 +160,7 @@ export const Patterns = {
 				}
 
 				const label = Number.isNaN(parseInt(pat.row.label)) ? `"${pat.row.label}"` : pat.row.label;
-				const [v, bs3] = Patterns.codegen(env, pat.row.value, `(${scrutinee})[${label}]`);
+				const [v, bs3] = Patterns.codegen(env, pat.row.value, `${scrutinee}[${label}]`);
 				const [r, bs4] = Patterns.codegen(env, { type: "Row", row: pat.row.row }, scrutinee);
 
 				return [[...v, ...r], bs3.concat(bs4)];
@@ -170,5 +187,20 @@ export const Alternative = {
 		const bindings = bs.map(([path, name]) => `const ${name} = ${path}`);
 		const defs = bindings.length > 0 ? bindings.join("; ") + ";" : "";
 		return `if (${pat.join(" && ")}) { ${defs} return ${body}; }`;
+	},
+};
+
+export const Statement = {
+	codegen: (env: string[], stmt: EB.Statement): string => {
+		return match(stmt)
+			.with({ type: "Expression" }, ({ value }) => codegen(env, value))
+			.with({ type: "Let" }, ({ variable, value }) => {
+				const val = codegen([variable, ...env], value);
+				return `const ${variable} = ${val}`;
+			})
+			.with({ type: "Using" }, _ => "")
+			.otherwise(() => {
+				throw new Error("Statement codegen not implemented yet");
+			});
 	},
 };

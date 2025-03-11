@@ -38,9 +38,10 @@ let block
   };
 
 
-let mapL
-    : (a: Type) => (b: Type) => (a -> b) -> List a -> List b
-    = \f -> \l -> match l
-        | nil: _            -> #nil *
-        | cons: { x, xs }   -> #cons { f x, mapL f xs };
+let empty: List Num = #nil *;
+let one: List Num = #cons { 1, empty };
 
+let tuple: { Num, String } = { 1, "one" };
+let struct: { x: Num, y: String } = { x: 1, y: "one" };
+
+let fn = .foo;
