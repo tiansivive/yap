@@ -155,7 +155,7 @@ List -> Square[ Many[TypeExpr, %comma] ] 				{% P.list %}
 # Types
 Schema -> Curly[ Many[SchemaPair, %comma] RowTail:? ] 	{% P.schema %}
 
-Variant -> %bar Many[KeyVal, %bar]						{% P.variant %}
+Variant -> %bar Many[Tagged, %bar]						{% P.variant %}
 
 # Fields
 KeyVal -> Identifier %space:? %colon %space:? TypeExpr 				{% P.keyval %}
@@ -206,21 +206,25 @@ Quantity -> "1" {% () => Q.One %}
 # ------------------------------------
 # Pattern Matching
 # ------------------------------------
-Match -> "match" %space:+ TypeExpr Alt:+ 								{% P.Match %} 
+Match -> "match" %space:+ TypeExpr Alt:+ 									{% P.Match %} 
 Alt -> %space:? %bar %space:? Pattern %space:? %arrow %space:? TypeExpr 	{% P.Alternative %}
 
 
-Pattern -> PatKeyVal RowTail:?				{% P.Pattern.Variant %}
-		 | PatAtom 								{% id %}
+Pattern -> PatAtom 								{% id %}
+# PatKeyVal RowTail:?				{% P.Pattern.Variant %}
+		 #| PatAtom 								{% id %}
 
 PatAtom -> Identifier 									{% P.Pattern.Var %}
 		 | Literal 										{% P.Pattern.Lit %}
+		 | (PatTagged %space %bar %space):* PatTagged 	{% P.Pattern.Variant %}
 		 | Curly[ Many[PatAtom, %comma] RowTail:? ] 	{% P.Pattern.Tuple %}
 		 | Curly[ Many[PatKeyVal, %comma] RowTail:? ] 	{% P.Pattern.Struct %}
 		 | Square[ Many[PatAtom, %comma] ] RowTail:?	{% P.Pattern.List %}
 		 | Square[ Many[PatKeyVal, %comma] RowTail:? ] 	{% P.Pattern.Row %}
 		 | Wildcard 									{% P.Pattern.Wildcard %}
 		 | Parens[Pattern] 								{% P.extract %}
+
+PatTagged -> %hash Identifier %space Pattern 	{% P.taggedPat %}
 
 PatKeyVal -> Identifier %space:? %colon %space:? Pattern 		{% P.keyvalPat %}
 

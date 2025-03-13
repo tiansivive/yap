@@ -3,8 +3,9 @@ import "lib.yap";
 
 
 foreign print: String -> Unit;
-
 using ListF;
+
+
 
 let main
   : (String -> Num) -> List String -> List Num
@@ -25,13 +26,11 @@ let foo
   : (Num -> String) -> List Num -> List String
   = implicit;
 
-let bar
-  : Unit
-  = print "Hello, World!";
+
 
 let block
-  : Unit
-  = {
+  : Num -> Unit
+  = \x -> {
     print "1";
     print "2";
     print "3";
@@ -41,7 +40,13 @@ let block
 let empty: List Num = #nil *;
 let one: List Num = #cons { 1, empty };
 
-let tuple: { Num, String } = { 1, "one" };
-let struct: { x: Num, y: String } = { x: 1, y: "one" };
+let tuple
+  : { Num, String } 
+  = { 1, "one" };
+let struct
+  : { x: Num, y: String } 
+  = { x: 1, y: "one" };
 
-let fn = .foo;
+let row
+  : [x: Num, y: String]
+  = [x: 1, y: "one"];

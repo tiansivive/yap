@@ -17,6 +17,7 @@ describe("Grammar", () => {
 
 	describe("Expressions", () => {
 		beforeEach(() => {
+			parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar), { keepHistory: true });
 			parser.grammar.start = "Ann";
 		});
 		describe("Literals", () => {
@@ -309,7 +310,7 @@ describe("Grammar", () => {
 			});
 
 			it("should parse variants:\t\t| x: 1 | y: 2", () => {
-				const src = `| x: 1 | y: 2`;
+				const src = `| #x 1 | #y 2`;
 				const data = parser.feed(src);
 
 				const expr = data.results[0];

@@ -259,16 +259,20 @@ export const tagged: PostProcessor<[Colon, Variable, Whitespace, Term], Term> = 
 	};
 };
 
-export const variant: PostProcessor<[Bar, KeyVal[]], Term> = ([, pairs]) => {
-	if (pairs.length === 0) {
-		throw new Error("Expected at least one key-value pair in variant");
+type Tagged = Extract<Term, { type: "tagged" }>;
+export const variant = (data: [Bar, Tagged[]] | [Tagged[]]): Term => {
+	const mkVariant = (terms: Tagged[]): Term => {
+		const last = terms[terms.length - 1];
+		const tail: Row = { type: "empty", location: last.location };
+		const row = terms.reduceRight<Row>((acc, tm) => {
+			return { type: "extension", label: tm.tag, value: tm.term, row: acc, location: tm.location };
+		}, tail);
+		return { type: "variant", row, location: locSpan(terms[0].location, tail.location) };
+	};
+	if (data.length === 1) {
+		return mkVariant(data[0]);
 	}
-
-	const last = pairs[pairs.length - 1];
-	const tail: Row = { type: "empty", location: last[1] };
-
-	const row = pairs.reduceRight<Row>((acc, [[label, value], location]) => ({ type: "extension", label, value, row: acc, location }), tail);
-	return { type: "variant", row, location: locSpan(pairs[0][1], tail.location) };
+	return mkVariant(data[1]);
 };
 
 export const tuple: PostProcessor<[[Term[]]], Term> = ([[terms]]) => {
@@ -370,6 +374,11 @@ export const keyvalPat = (pair: [Variable, Whitespace, Colon, Whitespace, Src.Pa
 	return [v.value, pat];
 };
 
+type PatTagged = [string, Src.Pattern];
+export const taggedPat = ([tok, v, , pat]: [Hash, Variable, Space, Src.Pattern]): PatTagged => {
+	return [v.value, pat];
+};
+
 type RowPat = R.Row<Src.Pattern, Variable>;
 export const Pattern = {
 	Var: ([value]: [Variable]): Src.Pattern => ({ type: "var", value }),
@@ -392,15 +401,10 @@ export const Pattern = {
 		const row = pairs.reduceRight<RowPat>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), tail);
 		return { type: "row", row };
 	},
-	// Tagged: ([tok, v, , tm]: [Colon, Variable, Whitespace, Src.Pattern]): Src.Pattern => {
-	// 	const row: RowPat = { type: "extension", label: v.value, value: tm, row: { type: "empty" } };
-	// 	return { type: "variant", row };
-	// },
-	Variant: ([pair, v]: [PatKeyVal, Variable?]): Src.Pattern => {
-		const tail: RowPat = !v ? { type: "empty" } : { type: "variable", variable: v };
-		//TODO: only one pair being parsed right now
-		//FIXME: Find out why Many [PatKeyVal] is ambiguous
-		const row = [pair].reduceRight<RowPat>((acc, [label, value]) => ({ type: "extension", label, value, row: acc }), tail);
+
+	Variant: ([pats, last]: [[PatTagged, Space, Bar, Space][], PatTagged]): Src.Pattern => {
+		const tail: RowPat = { type: "extension", label: last[0], value: last[1], row: { type: "empty" } };
+		const row = pats.reduceRight<RowPat>((acc, [[label, value]]) => ({ type: "extension", label, value, row: acc }), tail);
 		return { type: "variant", row };
 	},
 	Wildcard: ([tok]: [Token]): Src.Pattern => ({ type: "wildcard" }),
