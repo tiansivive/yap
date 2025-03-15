@@ -163,6 +163,30 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 						// }),
 						M.fmap(EB.Rows.elaborate(row), ([row, ty, us]): EB.AST => [EB.Constructors.Struct(row), NF.Constructors.Schema(ty), us]),
 					)
+					.with({ type: "list" }, ({ elements }) => {
+						const mvar = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
+						const v = NF.evaluate(env, ctx.imports, mvar);
+
+						const validate = F.flow(
+							infer,
+							M.discard(([, ty]) => M.tell("constraint", { type: "assign", left: ty, right: v, lvl: ctx.env.length })),
+						);
+						return M.fmap(M.traverse(elements, validate), (es): EB.AST => {
+							const usages = es.reduce((acc, [, , us]) => Q.add(acc, us), Q.noUsage(ctx.env.length));
+
+							const indexed = NF.Constructors.App(NF.Indexed, NF.Constructors.Lit(Lit.Atom("Num")), "Explicit");
+							const ty = NF.Constructors.App(indexed, v, "Explicit");
+
+							const tm: EB.Term = {
+								type: "Indexed",
+								pairs: es.map(([tm], i) => ({
+									index: EB.Constructors.Lit(Lit.Num(i)),
+									value: tm,
+								})),
+							};
+							return [tm, NF.Constructors.Neutral(ty), usages];
+						});
+					})
 					.with({ type: "tagged" }, ({ tag, term }) =>
 						M.fmap(infer(term), ([tm, ty, us]): EB.AST => {
 							const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta(ctx.env.length));
@@ -333,6 +357,27 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					})
 					.with([{ type: "struct" }, NF.Patterns.Type], ([{ row }, ty]) => {
 						return M.fmap(traverseR(row), (r): [EB.Term, Q.Usages] => [EB.Constructors.Schema(r), Q.noUsage(ctx.env.length)]);
+					})
+					.with([{ type: "struct" }, NF.Patterns.Map], ([{ row }, map]) => {
+						const result = R.fold(
+							row,
+							(val, lbl, acc) => {
+								return F.pipe(
+									M.Do,
+									M.let("tm", check(val, map.arg)),
+									M.let("acc", acc),
+									M.fmap(({ tm: [value, us], acc: [r, usages] }): [EB.Row, Q.Usages] => {
+										return [{ type: "extension", label: lbl, value, row: r }, Q.add(us, usages)];
+									}),
+								);
+							},
+							({ value }) => {
+								throw new Error("Not implemented yet: Cannot have row var in a map value");
+							},
+							M.of<[EB.Row, Q.Usages]>([{ type: "empty" }, Q.noUsage(ctx.env.length)]),
+						);
+
+						return M.fmap(result, ([r, us]): [EB.Term, Q.Usages] => [EB.Constructors.Struct(r), us]);
 					})
 					.otherwise(([tm, ty]) => {
 						return M.local(

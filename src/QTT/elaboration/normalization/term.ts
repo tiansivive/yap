@@ -99,6 +99,11 @@ export const Row: Value = {
 	value: { type: "Atom", value: "Row" },
 };
 
+export const Indexed: Value = {
+	type: "Lit",
+	value: { type: "Atom", value: "Indexed" },
+};
+
 export const Patterns = {
 	Var: { type: "Var" } as const,
 	Rigid: { type: "Var", variable: { type: "Bound" } } as const,
@@ -118,4 +123,21 @@ export const Patterns = {
 	Lambda: { type: "Abs", binder: { type: "Lambda" } } as const,
 	Mu: { type: "Abs", binder: { type: "Mu" } } as const,
 	Row: { type: "Row" } as const,
+
+	Map: {
+		type: "App",
+		func: {
+			type: "App",
+			func: { type: "Lit", value: { type: "Atom", value: "Indexed" } },
+			arg: { type: "Lit", value: { type: "Atom", value: "String" } },
+		},
+	} as const,
+	Array: {
+		type: "App",
+		func: {
+			type: "App",
+			func: { type: "Lit", value: { type: "Atom", value: "Indexed" } },
+			arg: { type: "Lit", value: { type: "Atom", value: "Num" } },
+		},
+	} as const,
 };

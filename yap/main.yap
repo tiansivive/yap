@@ -43,10 +43,13 @@ let one: List Num = #cons { 1, empty };
 let tuple
   : { Num, String } 
   = { 1, "one" };
+let row
+    : [x: Num, y: String]
+    = [x: 1, y: "one"];
 let struct
   : { x: Num, y: String } 
-  = { x: 1, y: "one" };
+  = { x: 1, y: "foo" };
 
-let row
-  : [x: Num, y: String]
-  = [x: 1, y: "one"];
+let map
+  : Indexed String Num
+  = { one: 1, two: 2, three: 3 };

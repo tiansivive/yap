@@ -61,6 +61,10 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 					})
 					.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
 					.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)))
+					.with({ type: "App" }, ({ func, arg }) => {
+						const nff = reduce(func, arg);
+						return NF.Constructors.App(nff, nfa, icit);
+					})
 					.otherwise(() => {
 						throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
 					});

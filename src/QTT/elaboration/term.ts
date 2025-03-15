@@ -17,6 +17,7 @@ export type Term =
 	| { type: "Abs"; binding: Binding; body: Term }
 	| { type: "App"; icit: Implicitness; func: Term; arg: Term }
 	| { type: "Row"; row: Row }
+	| { type: "Indexed"; pairs: Array<{ index: Term; value: Term }> }
 	| { type: "Proj"; label: string; term: Term }
 	| { type: "Inj"; label: string; value: Term; term: Term }
 	| { type: "Annotation"; term: Term; ann: Term }

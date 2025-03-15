@@ -229,8 +229,16 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 
 									return finalSubst;
 								})
-								.otherwise(() => {
-									throw new Error("Unification: Row unification is described in Daan Leijen's paper 'Extensible records with scoped labels'.");
+								.with([{ type: "empty" }, { type: "extension" }], ([, { label }]) => {
+									throw new Error(`Label ${label} missing in ${NF.display(left)}`);
+								})
+								.with([{ type: "extension" }, { type: "empty" }], ([{ label }]) => {
+									throw new Error(`Label ${label} missing in ${NF.display(right)}`);
+								})
+								.otherwise(r => {
+									throw new Error(
+										"Unification: Row unification is described in Daan Leijen's paper 'Extensible records with scoped labels'." + JSON.stringify(r),
+									);
 								});
 						};
 
