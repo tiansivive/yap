@@ -23,6 +23,7 @@ describe("Constraint Solver", () => {
 		env: [],
 		types: [],
 		names: [],
+		implicits: [],
 		imports: Lib.Elaborated,
 		trace: [],
 	};
@@ -32,7 +33,7 @@ describe("Constraint Solver", () => {
 			`[{"type":"assign","left":{"type":"Lit","value":{"type":"Atom","value":"Type"}},"right":{"type":"Lit","value":{"type":"Atom","value":"Type"}}},{"type":"assign","left":{"type":"Neutral","value":{"type":"Var","variable":{"type":"Meta","index":1}}},"right":{"type":"Abs","binder":{"type":"Pi","variable":"x","icit":"Explicit","annotation":[{"type":"Neutral","value":{"type":"Var","variable":{"type":"Meta","index":3}}},"Many"]},"closure":{"env":[[{"type":"Neutral","value":{"type":"Var","variable":{"type":"Bound","index":1}}},"Many"],[{"type":"Neutral","value":{"type":"Var","variable":{"type":"Bound","index":0}}},"Many"]],"term":{"type":"Var","variable":{"type":"Meta","index":4}}}}},{"type":"assign","left":{"type":"Lit","value":{"type":"Atom","value":"Type"}},"right":{"type":"Neutral","value":{"type":"Var","variable":{"type":"Meta","index":3}}}},{"type":"usage","expected":"Many","computed":"Many"},{"type":"assign","left":{"type":"Neutral","value":{"type":"Var","variable":{"type":"Meta","index":1}}},"right":{"type":"Abs","binder":{"type":"Pi","variable":"a","icit":"Explicit","annotation":[{"type":"Lit","value":{"type":"Atom","value":"Type"}},"Many"]},"closure":{"env":[[{"type":"Neutral","value":{"type":"Var","variable":{"type":"Bound","index":0}}},"Many"]],"term":{"type":"Lit","value":{"type":"Atom","value":"Type"}}}}}]`,
 		);
 
-		const eqs = cst.filter((c: any) => c.type === "assign");
+		const eqs = cst.filter((c: any) => c.type === "assign").map((c: any) => ({ ...c, provenance: [] }));
 
 		const [either] = M.run(solve(eqs), empty);
 
@@ -53,8 +54,9 @@ describe("Constraint Solver", () => {
 	it("should fail to unify", () => {
 		const src = `match x | 1 -> 2 | 3 -> "hello"`;
 
+		const g = Grammar;
+		g.ParserStart = "Ann";
 		const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar), { keepHistory: true });
-		parser.grammar.start = "Ann";
 
 		const mock = vi.spyOn(console, "error").mockImplementation(() => {});
 

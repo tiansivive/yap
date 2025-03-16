@@ -74,7 +74,6 @@ const lexer = moo.compile({
 	fatArrow: /\=>/,
 	op: /[\+\-\*\/]/,
 	concat: /<>/,
-	// ws: /[ \t]+/,
 	lparens: /\(/,
 	rparens: /\)/,
 	lbrace: /\{/,
@@ -90,7 +89,6 @@ const lexer = moo.compile({
 	hash: /#/,
 	hole: /_/,
 	space: { match: /[ \n\t]+/, lineBreaks: true },
-	// NL: { match: /\n+/, lineBreaks: true },
 });
 
 interface NearleyToken {
@@ -195,8 +193,8 @@ const grammar: Grammar = {
 			],
 			postprocess: P.exportSome,
 		},
-		{ name: "Imports$ebnf$1", symbols: [lexer.has("space") ? { type: "space" } : space] },
-		{ name: "Imports$ebnf$1", symbols: ["Imports$ebnf$1", lexer.has("space") ? { type: "space" } : space], postprocess: d => d[0].concat([d[1]]) },
+		{ name: "Imports$ebnf$1", symbols: [lexer.has("space") ? { type: "space" } : space], postprocess: id },
+		{ name: "Imports$ebnf$1", symbols: [], postprocess: () => null },
 		{
 			name: "Imports",
 			symbols: [
@@ -208,8 +206,8 @@ const grammar: Grammar = {
 			],
 			postprocess: P.importAll,
 		},
-		{ name: "Imports$ebnf$2", symbols: [lexer.has("space") ? { type: "space" } : space] },
-		{ name: "Imports$ebnf$2", symbols: ["Imports$ebnf$2", lexer.has("space") ? { type: "space" } : space], postprocess: d => d[0].concat([d[1]]) },
+		{ name: "Imports$ebnf$2", symbols: [lexer.has("space") ? { type: "space" } : space], postprocess: id },
+		{ name: "Imports$ebnf$2", symbols: [], postprocess: () => null },
 		{ name: "Imports$macrocall$2$macrocall$2", symbols: ["Identifier"] },
 		{ name: "Imports$macrocall$2$macrocall$3", symbols: [lexer.has("comma") ? { type: "comma" } : comma] },
 		{ name: "Imports$macrocall$2$macrocall$1$ebnf$1", symbols: [] },

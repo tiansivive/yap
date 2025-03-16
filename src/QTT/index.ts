@@ -18,7 +18,7 @@ import { displayProvenance } from "./elaboration/solver";
 
 import * as Err from "@qtt/elaboration/errors";
 
-const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar));
+const parser = null; //new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar));
 
 const simple = Q.load("./src/QTT/__tests__/simple.lama");
 const test = Q.load("./src/QTT/__tests__/test.lama");

@@ -20,6 +20,7 @@ describe("Elaboration", () => {
 		env: [],
 		types: [],
 		names: [],
+		implicits: [],
 		imports: Lib.Elaborated,
 		trace: [],
 	};
@@ -27,8 +28,9 @@ describe("Elaboration", () => {
 	Log.push("test");
 
 	beforeEach(() => {
+		const g = Grammar;
+		g.ParserStart = "Ann";
 		parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar), { keepHistory: true });
-		parser.grammar.start = "Ann";
 
 		EB.resetSupply("meta");
 		EB.resetSupply("var");
@@ -146,13 +148,13 @@ describe("Elaboration", () => {
 			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`λx -> 1`);
-			expect(NF.display(ty)).toStrictEqual(`Π(x:<ω> ?1) -> Num`);
+			expect(NF.display(ty)).toStrictEqual(`Π(<ω> x: ?1) -> Num`);
 			expect(qs).toStrictEqual([]);
 			expect(cst).toMatchObject([{ type: "usage", computed: Q.Zero, expected: Q.Many }]);
 		});
 
 		it("should elaborate implicit lambda abstractions", () => {
-			const row = `\\#x => 1`;
+			const row = `\\x => 1`;
 			const data = parser.feed(row);
 
 			expect(data.results.length).toBe(1);
@@ -167,8 +169,8 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`λ#x => 1`);
-			expect(NF.display(ty)).toStrictEqual(`Π(#x:<ω> ?1) => Num`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`λx => 1`);
+			expect(NF.display(ty)).toStrictEqual(`Π(<ω> x: ?1) => Num`);
 			expect(qs).toStrictEqual([]);
 			expect(cst).toMatchObject([{ type: "usage", computed: Q.Zero, expected: Q.Many }]);
 		});
@@ -189,7 +191,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`Π(t1: <ω> Num) -> Num`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`Π(<ω> t1: Num) -> Num`);
 			expect(NF.display(ty)).toStrictEqual(`Type`);
 			expect(qs).toStrictEqual([]);
 
@@ -212,7 +214,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`Π(x: <ω> Num) -> Num`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`Π(<ω> x: Num) -> Num`);
 			expect(NF.display(ty)).toStrictEqual(`Type`);
 			expect(qs).toStrictEqual([]);
 
@@ -235,7 +237,7 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`Π(#x: <ω> Num) => Num`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`Π(<ω> x: Num) => Num`);
 			expect(NF.display(ty)).toStrictEqual(`Type`);
 			expect(qs).toStrictEqual([]);
 
@@ -258,18 +260,18 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`Π(x: <ω> Num) -> i0`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`Π(<ω> x: Num) -> i0`);
 			expect(NF.display(ty)).toStrictEqual(`Type`);
 			expect(qs).toStrictEqual([]);
 
-			expect(cst.map(EB.Display.Constraint)).toContain("Num ~~ Type");
+			expect(cst.map(c => EB.Display.Constraint(c))).toContain("Num ~~ Type");
 		});
 	});
 
 	describe("Rows", () => {
-		it("should elaborate empty rows", () => {
-			const row = `[]`;
-			const data = parser.feed(row);
+		it("should elaborate empty lists", () => {
+			const list = `[]`;
+			const data = parser.feed(list);
 
 			expect(data.results.length).toBe(1);
 
@@ -282,8 +284,8 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`[]`);
-			expect(NF.display(ty)).toStrictEqual(`Row`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`[  ]`);
+			expect(NF.display(ty)).toStrictEqual(`(Indexed Num) ?1`);
 			expect(qs).toStrictEqual([]);
 			expect(cst).toStrictEqual([]);
 		});
@@ -351,7 +353,7 @@ describe("Elaboration", () => {
 			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`λr -> Schema [ x: Num, y: Num | i0 ]`);
-			expect(NF.display(ty)).toStrictEqual(`Π(r:<ω> ?1) -> Type`);
+			expect(NF.display(ty)).toStrictEqual(`Π(<ω> r: ?1) -> Type`);
 			expect(qs).toStrictEqual([]);
 
 			expect(cst.length).toBe(2);
@@ -428,7 +430,7 @@ describe("Elaboration", () => {
 			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| 1 -> 2\n| 3 -> 4`);
-			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(NF.display(ty)).toStrictEqual(`?1`);
 			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
 			// 1: to unify the two branches
@@ -624,7 +626,7 @@ describe("Elaboration", () => {
 				const prettyCst = cst.map(EB.Display.Constraint);
 
 				expect(prettyCst).toContain("Schema [ foo: Schema [ y: ?1 ], bar: ?2 ] ~~ Num"); // The first branch pattern is unified with the scrutinee
-				expect(prettyCst).toContain("?2 ~~ Π(x:<ω> ?3) -> ?4"); // Constraining the bound `f` to be a function
+				expect(prettyCst).toContain("?2 ~~ Π(<ω> x: ?3) -> ?4"); // Constraining the bound `f` to be a function
 				expect(prettyCst).toContain("?1 ~~ ?3"); // Constraining the argument of `f` to be `y`
 				expect(prettyCst).toContain("Schema [ z: Schema [ w: ?5 ] ] ~~ Num"); // The second branch pattern is unified with the scrutinee
 				expect(prettyCst).toContain("?5 ~~ ?4"); // The return type of the second branch is unified with the return type of the first branch
@@ -726,12 +728,12 @@ describe("Elaboration", () => {
 			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Statement(tm)).toStrictEqual(`let f: ?1 = λx -> i1 i0`);
-			expect(NF.display(ty)).toStrictEqual(`Π(x:<ω> ?2) -> ?4`);
+			expect(NF.display(ty)).toStrictEqual(`Π(<ω> x: ?2) -> ?4`);
 
 			expect(cst.length).toBe(4);
 			const prettyCst = cst.map(EB.Display.Constraint);
-			expect(prettyCst).toContain("?1 ~~ Π(x:<ω> ?3) -> ?4");
-			expect(prettyCst).toContain("?1 ~~ Π(x:<ω> ?2) -> ?4");
+			expect(prettyCst).toContain("?1 ~~ Π(<ω> x: ?3) -> ?4");
+			expect(prettyCst).toContain("?1 ~~ Π(<ω> x: ?2) -> ?4");
 			expect(prettyCst).toContain("?2 ~~ ?3");
 		});
 
@@ -752,15 +754,15 @@ describe("Elaboration", () => {
 			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Statement(tm)).toStrictEqual(`let List: ?1 = μ(x: ?1) -> λa -> Variant [ nil: i0, cons: i1 i0 ]`);
-			expect(NF.display(ty)).toStrictEqual(`Π(a:<ω> Type) -> Type`);
+			expect(NF.display(ty)).toStrictEqual(`Π(<ω> a: Type) -> Type`);
 			//expect(qs).toStrictEqual([]);
 
 			expect(cst.length).toBe(5);
 
 			const prettyCst = cst.map(EB.Display.Constraint);
 			expect(prettyCst).toContain("Type ~~ Type"); // from the `a: Type` binding
-			expect(prettyCst).toContain("?1 ~~ Π(x:<ω> ?3) -> ?4"); // from the application `List a`, List is a function
-			expect(prettyCst).toContain("?1 ~~ Π(a:<ω> Type) -> Type"); // the letdec annotation must unify with the inferred type
+			expect(prettyCst).toContain("?1 ~~ Π(<ω> x: ?3) -> ?4"); // from the application `List a`, List is a function
+			expect(prettyCst).toContain("?1 ~~ Π(<ω> a: Type) -> Type"); // the letdec annotation must unify with the inferred type
 			expect(prettyCst).toContain("Type ~~ ?3"); // from applying the List function to `a`, which is a type
 			// the missing constraint is the one that deals with the usages
 		});

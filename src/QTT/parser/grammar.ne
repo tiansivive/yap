@@ -30,7 +30,6 @@
 		fatArrow: /\=>/,
 		op: /[\+\-\*\/]/,
 		concat: /<>/,
-		// ws: /[ \t]+/,
 		lparens: /\(/,
 		rparens: /\)/,
 		lbrace: /\{/,
@@ -46,7 +45,7 @@
 		hash: /#/,
 		hole: /_/,
 		space: { match: /[ \n\t]+/, lineBreaks: true },
-		// NL: { match: /\n+/, lineBreaks: true },
+
 
 	});
 %}
@@ -75,14 +74,14 @@ Module -> %space:? Exports Imports:* %space:+ Script 													{% P.module_ %
 Exports -> "export" %space "*" %semicolon 																{% P.exportAll %}
 		 | "export" %space Parens[ Many[Identifier, %comma] ] %semicolon 								{% P.exportSome %}
 
-Imports -> %space:+ "import" %space String %semicolon 													{% P.importAll %}
- 		 | %space:+ "import" %space String %space Parens[ Many[ Identifier, %comma ] ] %semicolon 		{% P.importSome %}
+Imports -> %space:? "import" %space String %semicolon 													{% P.importAll %}
+ 		 | %space:? "import" %space String %space Parens[ Many[ Identifier, %comma ] ] %semicolon 		{% P.importSome %}
 
-Script -> Many[Statement, %semicolon] %semicolon %space:?  		{% P.script %}
+Script -> Many[Statement, %semicolon] %semicolon %space:?  				{% P.script %}
 
 Ann -> Ann %space:? %colon %space:? TypeExpr 							{% P.Annotation %}
      | Ann %space:? %colon %space:? Angle[Quantity] %space:? TypeExpr 	{% P.Annotation %}
-	 | TypeExpr 												{% id %}
+	 | TypeExpr 														{% id %}
 
 TypeExpr -> Pi 			{% id %}
 		  | Type 		{% id %}

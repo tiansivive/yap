@@ -61,21 +61,21 @@ describe("Displaying elaborated terms", () => {
 
 		it("should display an implicit lambda", () => {
 			const term = EB.Constructors.Lambda("x", "Implicit", EB.Constructors.Var(EB.Bound(0)));
-			expect(EB.Display.Term(term)).toBe("λ#x => i0");
+			expect(EB.Display.Term(term)).toBe("λx => i0");
 		});
 
 		it("should display a pi", () => {
 			const annotation = EB.Constructors.Lit(Lit.Atom("Int"));
 			const outType = EB.Constructors.Lit(Lit.Atom("Bool"));
 			const term = EB.Constructors.Pi("x", "Explicit", "One", annotation, outType);
-			expect(EB.Display.Term(term)).toBe("Π(x: <1> Int) -> Bool");
+			expect(EB.Display.Term(term)).toBe("Π(<1> x: Int) -> Bool");
 		});
 
 		it("should display an implicit pi", () => {
 			const annotation = EB.Constructors.Lit(Lit.Atom("Int"));
 			const outType = EB.Constructors.Lit(Lit.Atom("Bool"));
 			const term = EB.Constructors.Pi("x", "Implicit", "One", annotation, outType);
-			expect(EB.Display.Term(term)).toBe("Π(#x: <1> Int) => Bool");
+			expect(EB.Display.Term(term)).toBe("Π(<1> x: Int) => Bool");
 		});
 	});
 
@@ -87,7 +87,7 @@ describe("Displaying elaborated terms", () => {
 
 		it("should display an implicit application", () => {
 			const term = EB.Constructors.App("Implicit", EB.Constructors.Var(EB.Bound(0)), EB.Constructors.Var(EB.Bound(1)));
-			expect(EB.Display.Term(term)).toBe("i0 #i1");
+			expect(EB.Display.Term(term)).toBe("i0 @i1");
 		});
 	});
 

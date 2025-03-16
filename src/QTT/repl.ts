@@ -51,21 +51,3 @@ try {
 } catch (e) {
 	console.error(e);
 }
-// try {
-// 	const results = EB.script(val, empty);
-
-// 	results.forEach(res => {
-// 		if (E.isLeft(res)) {
-// 			console.log(Err.display(res.left[1]));
-// 			res.left.provenance ? console.log(displayProvenance(res.left.provenance)) : null;
-// 			return;
-// 		}
-
-// 		const [tm, ty, us] = res.right;
-
-// 		console.log(EB.Display.Statement(tm));
-// 		console.log("\n");
-// 	});
-// } catch (e) {
-// 	console.error(e);
-// }

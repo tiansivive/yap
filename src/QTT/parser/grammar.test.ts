@@ -2,8 +2,6 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import Nearley from "nearley";
 import Grammar from "./grammar";
 
-import * as Ctor from "./terms";
-
 describe("Grammar", () => {
 	let parser: Nearley.Parser;
 
@@ -17,8 +15,9 @@ describe("Grammar", () => {
 
 	describe("Expressions", () => {
 		beforeEach(() => {
-			parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar), { keepHistory: true });
-			parser.grammar.start = "Ann";
+			const g = Grammar;
+			g.ParserStart = "Ann";
+			parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(g), { keepHistory: true });
 		});
 		describe("Literals", () => {
 			it("should parse numbers:\t\t1", () => {
@@ -242,17 +241,6 @@ describe("Grammar", () => {
 		});
 
 		describe("Row terms", () => {
-			it("should parse empty rows:\t\t[]", () => {
-				const src = `[]`;
-				const data = parser.feed(src);
-
-				const expr = data.results[0];
-
-				expect(data.results.length).toBe(1);
-				expect(expr.type).toBe("row");
-				expect(expr.row).toMatchObject({ type: "empty" });
-			});
-
 			it("should parse empty structs:\t\t{}", () => {
 				const src = `{}`;
 				const data = parser.feed(src);
@@ -351,6 +339,17 @@ describe("Grammar", () => {
 				expect(extension.label).toBe("1");
 				expect(extension.value).toMatchObject({ type: "lit", value: two });
 				expect(extension.row.type).toBe("empty");
+			});
+
+			it("should parse empty lists:\t\t[]", () => {
+				const src = `[]`;
+				const data = parser.feed(src);
+
+				const expr = data.results[0];
+
+				expect(data.results.length).toBe(1);
+				expect(expr.type).toBe("list");
+				expect(expr.elements.length).toBe(0);
 			});
 
 			it("should parse lists:\t\t[1, 2]", () => {
@@ -573,10 +572,10 @@ describe("Grammar", () => {
 			});
 		});
 
-		it("should parse a match expression with variants:\tmatch x | x: 1 -> 10 | y: 2 -> 20", () => {
+		it("should parse a match expression with variants:\tmatch x | #x 1 -> 10 | #y 2 -> 20", () => {
 			const src = `match x
-				| x: 1 -> 10
-				| y: 2 -> 20`;
+				| #x 1 -> 10
+				| #y 2 -> 20`;
 			const data = parser.feed(src);
 
 			const expr = data.results[0];
@@ -620,7 +619,9 @@ describe("Grammar", () => {
 
 		describe("Statements", () => {
 			beforeEach(() => {
-				parser.grammar.start = "Statement";
+				const g = Grammar;
+				g.ParserStart = "Statement";
+				parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(g), { keepHistory: true });
 			});
 			it("should parse let decs:\t\tlet x = 1", () => {
 				const src = `let x = 1`;
@@ -814,7 +815,9 @@ describe("Grammar", () => {
 
 	describe("Provenance", () => {
 		beforeEach(() => {
-			parser.grammar.start = "Ann";
+			const g = Grammar;
+			g.ParserStart = "Ann";
+			parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(g), { keepHistory: true });
 		});
 
 		it("should parse a number and track the location", () => {
