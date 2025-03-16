@@ -29,6 +29,7 @@
 		backarrow: /<-/,
 		fatArrow: /\=>/,
 		op: /[\+\-\*\/]/,
+		concat: /<>/,
 		// ws: /[ \t]+/,
 		lparens: /\(/,
 		rparens: /\)/,
@@ -98,7 +99,7 @@ Expr -> Lambda		{% id %}
 	  | App 		{% id %}
 
 App -> App %space Atom 				{% P.Application %}
-	 | App %space:? %op %space:? Atom 	{% P.Operation %}
+	 | App %space:? (%op | %concat) %space:? Atom 	{% P.Operation %}
      | Atom 						{% id %}
 
 Atom -> Identifier 		{% P.Var %} 
@@ -140,17 +141,17 @@ PiTail -> Pi {% id %}
 # ------------------------------------
 # ROW TERMS
 # ------------------------------------
-Row -> Empty[%lbracket, %rbracket] 					{% P.emptyRow %}
-	 | Square[ Many[KeyVal, %comma] RowTail:? ] 	{% P.row %}
+Row -> Square[ Many[KeyVal, %comma] RowTail:? ] 	{% P.row %}
 
-RowTail -> %space:? %bar %space:? Identifier 				{% d => d[3] %}
+RowTail -> %space:? %bar %space:? Identifier 		{% d => d[3] %}
 
 # Values
 Struct -> Empty[%lbrace, %rbrace] 					{% P.emptyStruct %}
 	 	| Curly[ Many[KeyVal, %comma] ] 			{% P.struct %}
 
 Tuple -> Curly[ Many[TypeExpr, %comma] ] 				{% P.tuple %}
-List -> Square[ Many[TypeExpr, %comma] ] 				{% P.list %}
+List -> Empty[%lbracket, %rbracket] 					{% P.emptyList %}
+	  | Square[ Many[TypeExpr, %comma] ] 				{% P.list %}
 
 # Types
 Schema -> Curly[ Many[SchemaPair, %comma] RowTail:? ] 	{% P.schema %}
@@ -217,9 +218,11 @@ Pattern -> PatAtom 								{% id %}
 PatAtom -> Identifier 									{% P.Pattern.Var %}
 		 | Literal 										{% P.Pattern.Lit %}
 		 | (PatTagged %space %bar %space):* PatTagged 	{% P.Pattern.Variant %}
+		 | Empty[ %lbrace, %rbrace ] 						{% P.Pattern.Empty.Struct %}
 		 | Curly[ Many[PatAtom, %comma] RowTail:? ] 	{% P.Pattern.Tuple %}
 		 | Curly[ Many[PatKeyVal, %comma] RowTail:? ] 	{% P.Pattern.Struct %}
-		 | Square[ Many[PatAtom, %comma] ] RowTail:?	{% P.Pattern.List %}
+		 | Empty[%lbracket, %rbracket] 					{% P.Pattern.Empty.List %}
+		 | Square[ Many[PatAtom, %comma] RowTail:? ] 	{% P.Pattern.List %}
 		 | Square[ Many[PatKeyVal, %comma] RowTail:? ] 	{% P.Pattern.Row %}
 		 | Wildcard 									{% P.Pattern.Wildcard %}
 		 | Parens[Pattern] 								{% P.extract %}

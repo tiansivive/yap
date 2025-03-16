@@ -115,6 +115,7 @@ export const Substitute = (ctx: EB.Context) => {
 						return match(pat)
 							.with({ type: "Var" }, _ => 0) // NOTE: this is for defined variables, like in type patterns
 							.with({ type: "Binder" }, _ => 1)
+							.with({ type: "List" }, ({ patterns, rest }) => patterns.reduce((sum, p) => sum + countPatBinders(p), rest ? 1 : 0))
 							.with({ type: "Struct" }, { type: "Variant" }, { type: "Row" }, ({ row }) =>
 								R.fold(
 									row,
@@ -162,6 +163,13 @@ export const Substitute = (ctx: EB.Context) => {
 						return { ...s, value: call.term(subst, s.value, level) };
 					});
 					return EB.Constructors.Block(stmts, call.term(subst, ret, level));
+				})
+				.with({ type: "Indexed" }, (ixd): EB.Term => {
+					const pairs = ixd.pairs.map(p => ({
+						index: call.term(subst, p.index, level),
+						value: call.term(subst, p.value, level),
+					}));
+					return { type: "Indexed", pairs };
 				})
 				.otherwise(() => {
 					throw new Error("Substitute: Not implemented yet");

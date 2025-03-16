@@ -82,6 +82,8 @@ export const metas = (tm: EB.Term): Meta[] => {
 		.with({ type: "Annotation" }, ({ term, ann }) => [...metas(term), ...metas(ann)])
 		.with({ type: "Match" }, ({ scrutinee, alternatives }) => [...metas(scrutinee), ...alternatives.flatMap(alt => metas(alt.term))])
 		.with({ type: "Block" }, ({ return: ret, statements }) => [...metas(ret), ...statements.flatMap(s => metas(s.value))])
+
+		.with({ type: "Indexed" }, ixd => ixd.pairs.flatMap(p => [...metas(p.index), ...metas(p.value)]))
 		.otherwise(() => {
 			throw new Error("metas: Not implemented yet");
 		});
@@ -149,6 +151,13 @@ export const replaceMeta = (tm: EB.Term, ms: Meta[], lvl: number): EB.Term => {
 					return { ...s, value: sub(s.value, lvl) };
 				});
 				return EB.Constructors.Block(stmts, sub(ret, lvl));
+			})
+			.with({ type: "Indexed" }, (ixd): EB.Term => {
+				const pairs = ixd.pairs.map(p => ({
+					index: sub(p.index, lvl),
+					value: sub(p.value, lvl),
+				}));
+				return { type: "Indexed", pairs };
 			})
 			.otherwise(() => {
 				throw new Error("Generalize: Not implemented yet");

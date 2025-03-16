@@ -120,6 +120,11 @@ export const codegen = (env: string[], term: EB.Term): string => {
                 ${alts}
             })()`;
 		})
+		.with({ type: "Indexed" }, ixd => {
+			const pairs = ixd.pairs.map(p => `${codegen(env, p.index)}: ${codegen(env, p.value)}`);
+			//FIXME: we have to check if it's an array or an object
+			return `{ ${pairs.join(", ")} }`;
+		})
 		.otherwise(_ => {
 			throw new Error("Code gen not yet implemented");
 		});
@@ -144,6 +149,20 @@ export const Patterns = {
 		switch (pat.type) {
 			case "Lit":
 				return [[`(${scrutinee}) === ${Lit.codegen(pat.value)}`], []];
+			case "List":
+				if (pat.patterns.length === 0) {
+					return [[`typeof ${scrutinee} === "object" && ${scrutinee}.length === 0`], []];
+				}
+				const [elems, bindings] = pat.patterns.reduce(
+					([conditions, bs], p, i): [string[], [Path, Name][]] => {
+						const result = Patterns.codegen(env, p, `${scrutinee}[${i}]`);
+						return [conditions.concat(result[0]), bs.concat(result[1])];
+					},
+					[[], []] as [string[], [Path, Name][]],
+				);
+
+				const all: [Path, Name][] = pat.rest ? bindings.concat([[`${scrutinee}.slice(${pat.patterns.length})`, pat.rest]]) : bindings;
+				return [[`typeof ${scrutinee} === "object" && ${elems.join(" && ")}`], all];
 			case "Variant":
 				const [variant, bs] = Patterns.codegen(env, { type: "Row", row: pat.row }, scrutinee);
 				return [[`(${variant.join(" || ")})`], bs];

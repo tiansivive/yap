@@ -144,6 +144,23 @@ export const elaborate = (alts: Src.Alternative[], [scrutinee, scuty, us]: EB.AS
 				),
 			);
 		})
+		.with([{ pattern: { type: "list" } }], ([{ pattern, term }]) => {
+			return F.pipe(
+				M.Do,
+				M.let("pat", Patterns.infer.List(pattern)),
+				M.chain(({ pat: [pat, ty, qs, binders] }) =>
+					M.local(
+						ctx_ => binders.reduce((ctx, [name, va]) => EB.bind(ctx, { type: "Lambda", variable: name }, [va, Q.Many]), ctx_),
+						F.pipe(
+							M.ask(),
+							M.discard(ctx => M.tell("constraint", { type: "assign", left: ty, right: scuty, lvl: ctx.env.length })),
+							M.chain(_ => EB.infer(term)),
+							M.fmap((branch): [EB.Alternative, NF.Value, Q.Usages][] => [[EB.Constructors.Alternative(pat, branch[0]), branch[1], branch[2]]]),
+						),
+					),
+				),
+			);
+		})
 		.with(
 			[{ pattern: P._ }, ...P.array()],
 			([pat, ...pats]) =>

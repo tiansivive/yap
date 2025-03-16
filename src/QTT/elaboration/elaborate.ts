@@ -26,6 +26,7 @@ import * as Sub from "./substitution";
 import _ from "lodash";
 
 import * as Gen from "../codegen";
+import { Variable } from "../../liquids/typechecking/validation/horn-constraints";
 
 export type Constraint =
 	| { type: "assign"; left: NF.Value; right: NF.Value; lvl: number }
@@ -135,7 +136,6 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 								EB.muContext,
 								M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Schema(row), NF.Type, qs]),
 							),
-							// insertMu
 						),
 					)
 
@@ -148,19 +148,9 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 									M.fmap(([tm, us]): EB.AST => [tm, NF.Type, us]),
 								),
 							),
-							// insertMu
 						),
 					)
 					.with({ type: "tuple" }, ({ row }) =>
-						// M.fmap(EB.Rows.elaborate(row), ([row, ty, us]): EB.AST => {
-						// 	const meta = freshMeta();
-
-						// 	return [
-						// 		EB.Constructors.App("Explicit", EB.Constructors.Var(meta), EB.Constructors.Row(row)),
-						// 		NF.Constructors.App(NF.Constructors.Flex(meta), NF.Constructors.Row(ty), "Explicit"),
-						// 		us
-						// 	]
-						// }),
 						M.fmap(EB.Rows.elaborate(row), ([row, ty, us]): EB.AST => [EB.Constructors.Struct(row), NF.Constructors.Schema(ty), us]),
 					)
 					.with({ type: "list" }, ({ elements }) => {
@@ -421,33 +411,6 @@ const traverseR = (row: Src.Row): M.Elaboration<EB.Row> => {
 		.exhaustive();
 };
 
-// const insertMu = M.chain<EB.AST, EB.AST>(ast => {
-// 	return M.fmap(M.ask(), (ctx): EB.AST => {
-// 		const [tm, ty, us] = ast;
-
-// 		const letdecs = ctx.types.filter(([b]) => b.type === "Let");
-
-// 		const wrapped = letdecs.reduce((t, [, , [nf]]) => {
-// 			// const m = EB.freshMeta(ctx.env.length);
-// 			const ann = NF.quote(ctx.imports, ctx.env.length, nf);
-// 			const mu = EB.Constructors.Mu("x", ann, t);
-// 			return mu;
-// 		}, tm);
-
-// 		return [wrapped, ty, us];
-// 	});
-// });
-
-// 	M.listen<EB.AST, EB.AST>(([ast, { binders }]): EB.AST => {
-// 	// TODO: This binders array is not overly useful for now
-// 	// In theory, all we need is to emit a flag signalling the letdec var has been used
-// 	const ann = EB.Constructors.Var(EB.freshMeta(ctx.env.length))
-// 	const ty = EB.Constructors.Lit(Lit.Atom("Type"))
-// 	const tm = binders.find(b => b.type === "Mu") ? EB.Constructors.Mu("x", ty, ast[0]) : ast[0];
-
-// 	return [tm, ast[1], ast[2]];
-// });
-
 type ZonkSwitch = {
 	term: EB.Term;
 	nf: NF.Value;
@@ -557,7 +520,12 @@ export const script = ({ script }: Src.Script, startCtx: EB.Context) => {
 				),
 			),
 			M.bind("term", ({ sub, inferred }) => {
-				return F.pipe(zonk("term", inferred.stmt.value, sub), M.fmap(EB.Icit.generalize));
+				return F.pipe(
+					zonk("term", inferred.stmt.value, sub),
+					M.fmap(x => {
+						return EB.Icit.generalize(x);
+					}),
+				);
 			}),
 		);
 

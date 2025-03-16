@@ -10,6 +10,7 @@ import * as R from "@qtt/shared/rows";
 import { Constraint } from "./elaborate";
 
 import * as EB from ".";
+import { Terms } from "@qtt/shared/lib/primitives";
 
 const display = (term: EB.Term): string => {
 	return match(term)
@@ -61,6 +62,10 @@ const display = (term: EB.Term): string => {
 		.with({ type: "Block" }, ({ statements, return: ret }) => {
 			const stmts = statements.map(Stmt.display).join("; ");
 			return `{ ${stmts}; return ${display(ret)}; }`;
+		})
+		.with({ type: "Indexed" }, ({ pairs }) => {
+			const elements = pairs.map(p => `${display(p.index)}: ${display(p.value)}`);
+			return `[ ${elements.join(", ")} ]`;
 		})
 		.exhaustive();
 	//.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
@@ -132,6 +137,11 @@ const Pat = {
 						var: (v: string) => v,
 					})(row);
 					return `Variant ${r}`;
+				})
+				.with({ type: "List" }, ({ patterns, rest }) => {
+					const pats = patterns.map(Pat.display).join(", ");
+					const r = rest ? ` | ${rest}` : "";
+					return `[ ${pats}${r} ]`;
 				})
 				.with({ type: "Wildcard" }, () => "_")
 				.otherwise(() => "Pattern Display: Not implemented")

@@ -82,8 +82,33 @@ export const infer_: Inference<Src.Pattern, "type"> = {
 		M.fmap(M.ask(), (ctx): Result => [EB.Constructors.Patterns.Wildcard(), NF.Constructors.Var(EB.freshMeta(ctx.env.length)), Q.noUsage(ctx.env.length), []]),
 
 	Tuple: pat => M.fmap(elaborate(pat.row), ([tm, ty, qs, binders]): Result => [EB.Constructors.Patterns.Struct(tm), NF.Constructors.Schema(ty), qs, binders]),
-	List: () => {
-		throw new Error("Not Implemented: List Pattern elaboration");
+	List: pat => {
+		return M.chain(M.ask(), ctx => {
+			const mvar = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
+			const v = NF.evaluate(ctx.env, ctx.imports, mvar);
+
+			const validate = (val: Src.Pattern) => {
+				const key = capitalize(val.type) as Capitalize<typeof val.type>;
+				return F.pipe(
+					infer[key](val as any),
+					M.discard(([, ty]) => M.tell("constraint", { type: "assign", left: ty, right: v, lvl: ctx.env.length })),
+				);
+			};
+
+			return M.fmap(M.traverse(pat.elements, validate), (es): Result => {
+				const [pats, binders] = es.reduce(([pats, binders], [pat, , , b]) => [pats.concat(pat), binders.concat(b)], [[], []] as [EB.Pattern[], Binder[]]);
+
+				const indexed = NF.Constructors.App(NF.Indexed, NF.Constructors.Lit(Lit.Atom("Num")), "Explicit");
+				const ty = NF.Constructors.App(indexed, v, "Explicit");
+
+				return [
+					EB.Constructors.Patterns.List(pats, pat.rest?.value),
+					NF.Constructors.Neutral(ty),
+					Q.noUsage(ctx.env.length),
+					pat.rest ? binders.concat([[pat.rest.value, ty, Q.noUsage(ctx.env.length)]]) : binders,
+				];
+			});
+		});
 	},
 };
 

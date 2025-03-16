@@ -90,7 +90,8 @@ const App = (fn: Term, arg: Term): Term => ({
 });
 export const Application: PostProcessor<[Term, Whitespace, Term], Term> = ([fn, , arg]) => App(fn, arg);
 
-export const Operation: PostProcessor<[Term, Whitespace, Token, Whitespace, Term], Term> = ([lhs, , op, , rhs]) => {
+export const Operation: PostProcessor<[Term, Whitespace, [Token], Whitespace, Term], Term> = data => {
+	const [lhs, , [op], , rhs] = data;
 	const op_ = Var([Name([op])]);
 	return App(App(op_, lhs), rhs);
 };
@@ -291,6 +292,8 @@ export const tuple: PostProcessor<[[Term[]]], Term> = ([[terms]]) => {
 	};
 };
 
+export const emptyList = ([location]: [P.Location]): Term => ({ type: "list", elements: [], location });
+
 export const list: PostProcessor<[[Term[]]], Term> = ([[terms]]) => {
 	if (terms.length === 0) {
 		throw new Error("Expected at least one term in list");
@@ -408,6 +411,11 @@ export const Pattern = {
 		return { type: "variant", row };
 	},
 	Wildcard: ([tok]: [Token]): Src.Pattern => ({ type: "wildcard" }),
+
+	Empty: {
+		List: (): Src.Pattern => ({ type: "list", elements: [] }),
+		Struct: (): Src.Pattern => ({ type: "struct", row: { type: "empty" } }),
+	},
 };
 
 /***********************************************************

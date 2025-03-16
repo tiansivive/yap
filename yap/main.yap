@@ -2,54 +2,22 @@ export *;
 import "lib.yap";
 
 
-foreign print: String -> Unit;
+
 using ListF;
 
+let Array
+  : Type -> Type
+  = \a -> Indexed Num a;
 
 
-let main
-  : (String -> Num) -> List String -> List Num
-  = ListF.map;
+foreign prepend: (a: Type) => a -> Array a -> Array a;
 
+let mapA 
+  : (a: Type) => (b: Type) => (a -> b) -> Array a -> Array b
+  = \f -> \xs -> match xs
+    | [] -> []
+    | [x | xs] -> prepend (f x) (mapA f xs);
 
-let implicit
-  : (f: Functor List) => (Num -> String) -> List Num -> List String 
-  = f.map;
-
-
-let poly
-  : (t: Type -> Type) => (f: Functor t) => (String -> Num) -> t String -> t Num
-  = f.map;
-
-
-let foo
-  : (Num -> String) -> List Num -> List String
-  = implicit;
-
-
-
-let block
-  : Num -> Unit
-  = \x -> {
-    print "1";
-    print "2";
-    print "3";
-  };
-
-
-let empty: List Num = #nil *;
-let one: List Num = #cons { 1, empty };
-
-let tuple
-  : { Num, String } 
-  = { 1, "one" };
-let row
-    : [x: Num, y: String]
-    = [x: 1, y: "one"];
-let struct
-  : { x: Num, y: String } 
-  = { x: 1, y: "foo" };
-
-let map
-  : Indexed String Num
-  = { one: 1, two: 2, three: 3 };
+let ArrayF
+  : Functor Array
+  = { map: mapA };

@@ -54,6 +54,7 @@ export type Pattern =
 	| { type: "Row"; row: R.Row<Pattern, string> }
 	| { type: "Struct"; row: R.Row<Pattern, string> }
 	| { type: "Variant"; row: R.Row<Pattern, string> }
+	| { type: "List"; patterns: Pattern[]; rest?: string }
 	| { type: "Wildcard" };
 
 type Spine = Array<"Bound" | "Defined">;
@@ -124,6 +125,7 @@ export const Constructors = {
 		Struct: (row: R.Row<Pattern, string>): Pattern => ({ type: "Struct", row }),
 		Variant: (row: R.Row<Pattern, string>): Pattern => ({ type: "Variant", row }),
 		Wildcard: (): Pattern => ({ type: "Wildcard" }),
+		List: (patterns: Pattern[], rest?: string): Pattern => ({ type: "List", patterns, rest }),
 	},
 	Stmt: {
 		Let: (variable: string, value: Term, annotation: Term): Statement => ({ type: "Let", variable, value, annotation }),
