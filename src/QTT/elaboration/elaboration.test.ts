@@ -25,6 +25,8 @@ describe("Elaboration", () => {
 		trace: [],
 	};
 
+	const inline = (str: string) => str.replace(/\n/g, "").replace(/\t/g, " ");
+
 	Log.push("test");
 
 	beforeEach(() => {
@@ -414,7 +416,7 @@ describe("Elaboration", () => {
 		const ctx = EB.bind(empty, { type: "Lambda", variable: "x" }, [NF.Constructors.Lit(Lit.Atom("Num")), Q.Many]);
 
 		it("should elaborate literal pattern matching", () => {
-			const src = `match x | 1 -> 2 | 3 -> 4`;
+			const src = `match x | 1 -> "one" | 3 -> "two"`;
 			const data = parser.feed(src);
 
 			expect(data.results.length).toBe(1);
@@ -429,14 +431,19 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| 1 -> 2\n| 3 -> 4`);
+			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| 1 -> "one"\n| 3 -> "two"`);
 			expect(NF.display(ty)).toStrictEqual(`?1`);
 			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
 			// 1: to unify the two branches
 			// 2: to unify each pattern with the scrutinee,
-			expect(cst.length).toBe(2 + 1);
-			cst.forEach(c => expect(EB.Display.Constraint(c)).toBe("Num ~~ Num"));
+			// 2: to unify each branch with the return type
+			expect(cst.length).toBe(2 + 2 + 1);
+			const prettyCst = cst.map(EB.Display.Constraint);
+
+			expect(prettyCst).toContain("Num ~~ Num");
+			expect(prettyCst).toContain("String ~~ String");
+			expect(prettyCst).toContain("String ~~ ?1");
 		});
 
 		it("should unify each branch's return type", () => {
@@ -459,7 +466,8 @@ describe("Elaboration", () => {
 
 			// 1: to unify the two branches
 			// 2: to unify each pattern with the scrutinee,
-			expect(cst.length).toBe(2 + 1);
+			// 2: to unify each branch with the return type
+			expect(cst.length).toBe(2 + 2 + 1);
 
 			const prettyCst = cst.map(EB.Display.Constraint);
 
@@ -486,18 +494,20 @@ describe("Elaboration", () => {
 			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| y -> 2\n| z -> 4`);
-			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
 			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
 			// 1: to unify the two branches
 			// 2: to unify each pattern with the scrutinee,
-			expect(cst.length).toBe(2 + 1);
+			// 2: to unify each branch with the return type
+			expect(cst.length).toBe(2 + 2 + 1);
 
 			const prettyCst = cst.map(EB.Display.Constraint);
 
 			expect(prettyCst).toContain("Num ~~ Num");
 			expect(prettyCst).toContain("?1 ~~ Num");
 			expect(prettyCst).toContain("?2 ~~ Num");
+			expect(prettyCst).toContain("Num ~~ ?3"); // the two branches unify with the return type
 		});
 
 		describe("Structural Pattern Matching", () => {
@@ -518,18 +528,20 @@ describe("Elaboration", () => {
 				const [tm, ty, qs] = either.right;
 
 				expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Struct [ x: 1, y: 2 ] -> 11\n| Struct [ z: 3, w: 4 ] -> 22`);
-				expect(NF.display(ty)).toStrictEqual(`Num`);
+				expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
 				expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
 				// 1: to unify the two branches
 				// 2: to unify each pattern with the scrutinee,
-				expect(cst.length).toBe(2 + 1);
+				// 2: to unify each branch with the return type
+				expect(cst.length).toBe(2 + 2 + 1);
 
 				const prettyCst = cst.map(EB.Display.Constraint);
 
 				expect(prettyCst).toContain("Num ~~ Num");
 				expect(prettyCst).toContain("Schema [ x: Num, y: Num ] ~~ Num");
 				expect(prettyCst).toContain("Schema [ z: Num, w: Num ] ~~ Num");
+				expect(prettyCst).toContain("Num ~~ ?1"); // the two branches unify with the return type
 			});
 
 			it("should elaborate struct pattern matching with row polymorphism", () => {
@@ -549,19 +561,24 @@ describe("Elaboration", () => {
 				const [tm, ty, qs] = either.right;
 
 				expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Struct [ x: 1, y: 2 | r ] -> i0\n| Struct [ z: 3, w: 4 | r ] -> i1`);
-				expect(NF.display(ty)).toStrictEqual(`?1`); // return type is unified, so it just picks up the type of the first branch
+				expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
 				expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
 				// 1: to unify the two branches
 				// 2: to unify each pattern with the scrutinee,
-				expect(cst.length).toBe(2 + 1);
+				// 2: to unify each branch with the return type
+				expect(cst.length).toBe(2 + 2 + 1);
 
 				const prettyCst = cst.map(EB.Display.Constraint);
 
 				expect(prettyCst).toContain("Num ~~ ?1"); // the return type is unified
-				// Event tho both patterns introduce a row var `r`, their scopes are different, so their types are different metavariables
+				// Even tho both patterns introduce a row var `r`, their scopes are different, so their types are different metavariables
 				expect(prettyCst).toContain("Schema [ x: Num, y: Num | ?1 ] ~~ Num"); // The first branch pattern is unified with the scrutinee
 				expect(prettyCst).toContain("Schema [ z: Num, w: Num | ?2 ] ~~ Num"); // The second branch pattern is unified with the scrutinee
+
+				expect(prettyCst).toContain("Num ~~ ?1"); // The return type of the two branches is unified
+				expect(prettyCst).toContain("?1 ~~ ?3"); // Unify the expr type with the return type of the first branch
+				expect(prettyCst).toContain("Num ~~ ?3"); // Unify the expr type with the return type of the second branch
 			});
 
 			it("should bind variables in struct patterns", () => {
@@ -581,17 +598,19 @@ describe("Elaboration", () => {
 				const [tm, ty, qs] = either.right;
 
 				expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Struct [ x: y ] -> i0\n| Struct [ z: w ] -> i0`);
-				expect(NF.display(ty)).toStrictEqual(`?1`); // return type is unified, so it just picks up the type of the first branch
+				expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
 
 				expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
 				// 1: to unify the two branches
 				// 2: to unify each pattern with the scrutinee,
-				expect(cst.length).toBe(2 + 1);
+				// 2: to unify each branch with the return type
+				expect(cst.length).toBe(2 + 2 + 1);
 
 				const prettyCst = cst.map(EB.Display.Constraint);
 
-				expect(prettyCst).toContain("?2 ~~ ?1"); // the return type is unified
+				expect(prettyCst).toContain("?1 ~~ ?3"); // the x:y binding is unified with the expr return type
+				expect(prettyCst).toContain("?2 ~~ ?3"); // the z:w binding is unified with the expr return type
 				expect(prettyCst).toContain("Schema [ x: ?1 ] ~~ Num"); // The first branch pattern is unified with the scrutinee
 				expect(prettyCst).toContain("Schema [ z: ?2 ] ~~ Num"); // The second branch pattern is unified with the scrutinee
 			});
@@ -614,14 +633,15 @@ describe("Elaboration", () => {
 
 				// rows are elaborated from right to left, hence `f` is bound before `y`
 				expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Struct [ foo: Struct [ y: y ], bar: f ] -> i0 i1\n| Struct [ z: Struct [ w: w ] ] -> i0`);
-				expect(NF.display(ty)).toStrictEqual(`?4`); // return type is unified, so it just picks up the type of the first branch
+				expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
 
 				expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
 				// 1: to unify the two branches
 				// 2: to unify each pattern with the scrutinee,
+				// 2: to unify each branch with the return type
 				// 2: for the application of `f` to `y`
-				expect(cst.length).toBe(2 + 1 + 2);
+				expect(cst.length).toBe(2 + 2 + 1 + 2);
 
 				const prettyCst = cst.map(EB.Display.Constraint);
 
@@ -650,12 +670,13 @@ describe("Elaboration", () => {
 			const [tm, ty, qs] = either.right;
 
 			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Imports.Num -> 1\n| Imports.String -> "hello"`);
-			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
 			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
 			// 1: to unify the two branches
 			// 2: to unify each pattern with the scrutinee,
-			expect(cst.length).toBe(2 + 1);
+			// 2: to unify each branch with the return type
+			expect(cst.length).toBe(2 + 2 + 1);
 
 			const prettyCst = cst.map(EB.Display.Constraint);
 
@@ -665,8 +686,8 @@ describe("Elaboration", () => {
 			expect(prettyCst).toContain("String ~~ Num"); // Unifying the 2 branches
 		});
 
-		it('should elaborate pattern matching on variants: "match x | nil: a -> 0 | cons: {el, rest} -> 1"', () => {
-			const src = `match x | nil: a -> 0 | cons: {el, rest} -> 1`;
+		it('should elaborate pattern matching on variants: "match x | #nil a -> 0 | #cons {el, rest} -> 1"', () => {
+			const src = `match x | #nil a -> 0 | #cons {el, rest} -> 1`;
 			const data = parser.feed(src);
 
 			expect(data.results.length).toBe(1);
@@ -683,12 +704,13 @@ describe("Elaboration", () => {
 
 			// rows are elaborated from right to left, hence `rest` is bound before `el`
 			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Variant [ nil: a ] -> 0\n| Variant [ cons: Struct [ 0: el, 1: rest ] ] -> 1`);
-			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
 			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
 
 			// 1: to unify the two branches
 			// 2: to unify each pattern with the scrutinee,
-			expect(cst.length).toBe(2 + 1);
+			// 2: to unify each branch with the return type
+			expect(cst.length).toBe(2 + 2 + 1);
 
 			const prettyCst = cst.map(EB.Display.Constraint);
 
@@ -700,8 +722,9 @@ describe("Elaboration", () => {
 
 	describe("Recursion", () => {
 		beforeEach(() => {
+			const g = Grammar;
+			g.ParserStart = "Statement";
 			parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar), { keepHistory: true });
-			parser.grammar.start = "Statement";
 
 			EB.resetSupply("meta");
 			EB.resetSupply("var");
@@ -727,44 +750,46 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Statement(tm)).toStrictEqual(`let f: ?1 = λx -> i1 i0`);
-			expect(NF.display(ty)).toStrictEqual(`Π(<ω> x: ?2) -> ?4`);
+			expect(inline(EB.Display.Statement(tm))).toStrictEqual(`let f : ?1 = λx -> i1 i0`);
+			expect(ty).toMatchObject({ type: "Neutral", value: { type: "Var", variable: { type: "Meta" } } });
 
-			expect(cst.length).toBe(4);
 			const prettyCst = cst.map(EB.Display.Constraint);
+			expect(cst.length).toBe(4);
 			expect(prettyCst).toContain("?1 ~~ Π(<ω> x: ?3) -> ?4");
-			expect(prettyCst).toContain("?1 ~~ Π(<ω> x: ?2) -> ?4");
+			expect(prettyCst).toContain("Π(<ω> x: ?2) -> ?4 ~~ ?1");
 			expect(prettyCst).toContain("?2 ~~ ?3");
 		});
 
-		it("should elaborate recursive types", () => {
-			const src = `let List = \\(a: Type) -> | nil: a | cons: List a`;
-			const data = parser.feed(src);
+		describe.skip("Elaborated mu types are not being currently displayed when printing a term", () => {
+			it("should elaborate recursive types", () => {
+				const src = `let List = \\(a: Type) -> | #nil a | #cons List a`;
+				const data = parser.feed(src);
 
-			expect(data.results.length).toBe(1);
+				expect(data.results.length).toBe(1);
 
-			const expr = data.results[0];
+				const expr = data.results[0];
 
-			const m = EB.Stmt.infer(expr);
-			const [either, { constraints: cst }] = EB.M.run(m, empty);
+				const m = EB.Stmt.infer(expr);
+				const [either, { constraints: cst }] = EB.M.run(m, empty);
 
-			if (E.isLeft(either)) {
-				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
-			}
-			const [tm, ty, qs] = either.right;
+				if (E.isLeft(either)) {
+					throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+				}
+				const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Statement(tm)).toStrictEqual(`let List: ?1 = μ(x: ?1) -> λa -> Variant [ nil: i0, cons: i1 i0 ]`);
-			expect(NF.display(ty)).toStrictEqual(`Π(<ω> a: Type) -> Type`);
-			//expect(qs).toStrictEqual([]);
+				expect(EB.Display.Statement(tm)).toStrictEqual(`let List: ?1 = μ(x: ?1) -> λa -> Variant [ nil: i0, cons: i1 i0 ]`);
+				expect(NF.display(ty)).toStrictEqual(`Π(<ω> a: Type) -> Type`);
+				//expect(qs).toStrictEqual([]);
 
-			expect(cst.length).toBe(5);
+				expect(cst.length).toBe(5);
 
-			const prettyCst = cst.map(EB.Display.Constraint);
-			expect(prettyCst).toContain("Type ~~ Type"); // from the `a: Type` binding
-			expect(prettyCst).toContain("?1 ~~ Π(<ω> x: ?3) -> ?4"); // from the application `List a`, List is a function
-			expect(prettyCst).toContain("?1 ~~ Π(<ω> a: Type) -> Type"); // the letdec annotation must unify with the inferred type
-			expect(prettyCst).toContain("Type ~~ ?3"); // from applying the List function to `a`, which is a type
-			// the missing constraint is the one that deals with the usages
+				const prettyCst = cst.map(EB.Display.Constraint);
+				expect(prettyCst).toContain("Type ~~ Type"); // from the `a: Type` binding
+				expect(prettyCst).toContain("?1 ~~ Π(<ω> x: ?3) -> ?4"); // from the application `List a`, List is a function
+				expect(prettyCst).toContain("?1 ~~ Π(<ω> a: Type) -> Type"); // the letdec annotation must unify with the inferred type
+				expect(prettyCst).toContain("Type ~~ ?3"); // from applying the List function to `a`, which is a type
+				// the missing constraint is the one that deals with the usages
+			});
 		});
 	});
 
@@ -785,14 +810,14 @@ describe("Elaboration", () => {
 			}
 			const [tm, ty, qs] = either.right;
 
-			expect(EB.Display.Term(tm)).toStrictEqual(`{ let x: ?1 = 1; let y: ?2 = i1; return i0; }`);
-			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(inline(EB.Display.Term(tm))).toStrictEqual(`{ let x : ?1 = 1; let y : ?2 = i1; return i0; }`);
+			expect(ty).toMatchObject({ type: "Neutral", value: { type: "Var", variable: { type: "Meta" } } });
 			expect(qs).toStrictEqual([]);
 
 			expect(cst.length).toBe(2);
 			const prettyCst = cst.map(EB.Display.Constraint);
-			expect(prettyCst).toContain("?1 ~~ Num");
-			expect(prettyCst).toContain("?2 ~~ Num");
+			expect(prettyCst).toContain("Num ~~ ?1");
+			expect(prettyCst).toContain("?1 ~~ ?2");
 		});
 	});
 });

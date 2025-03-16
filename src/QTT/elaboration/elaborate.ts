@@ -382,7 +382,7 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					});
 			}),
 			M.listen(([[tm, us], { constraints }]) => {
-				Log.logger.debug("[Result] " + EB.Display.Term(tm), { Usages: us, Constraints: constraints.map(EB.Display.Constraint) });
+				Log.logger.debug("[Result] " + EB.Display.Term(tm), { Usages: us, Constraints: constraints.map(c => EB.Display.Constraint(c)) });
 				Log.pop();
 
 				return [tm, us];

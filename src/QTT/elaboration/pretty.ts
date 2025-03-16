@@ -71,11 +71,9 @@ const display = (term: EB.Term): string => {
 	//.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
 };
 
-const displayConstraint = (constraint: Constraint, debug = false): string => {
+const displayConstraint = (constraint: Constraint): string => {
 	if (constraint.type === "assign") {
-		return debug
-			? `-| ${NF.display(constraint.left)}\n-| ${NF.display(constraint.right)}`
-			: `${NF.display(constraint.left)} ~~ ${NF.display(constraint.right)}`;
+		return `${NF.display(constraint.left)} ~~ ${NF.display(constraint.right)}`;
 	}
 
 	if (constraint.type === "usage") {

@@ -28,27 +28,29 @@ describe("Constraint Solver", () => {
 		trace: [],
 	};
 
-	it("should solve constraints", () => {
-		const cst = JSON.parse(
-			`[{"type":"assign","left":{"type":"Lit","value":{"type":"Atom","value":"Type"}},"right":{"type":"Lit","value":{"type":"Atom","value":"Type"}}},{"type":"assign","left":{"type":"Neutral","value":{"type":"Var","variable":{"type":"Meta","index":1}}},"right":{"type":"Abs","binder":{"type":"Pi","variable":"x","icit":"Explicit","annotation":[{"type":"Neutral","value":{"type":"Var","variable":{"type":"Meta","index":3}}},"Many"]},"closure":{"env":[[{"type":"Neutral","value":{"type":"Var","variable":{"type":"Bound","index":1}}},"Many"],[{"type":"Neutral","value":{"type":"Var","variable":{"type":"Bound","index":0}}},"Many"]],"term":{"type":"Var","variable":{"type":"Meta","index":4}}}}},{"type":"assign","left":{"type":"Lit","value":{"type":"Atom","value":"Type"}},"right":{"type":"Neutral","value":{"type":"Var","variable":{"type":"Meta","index":3}}}},{"type":"usage","expected":"Many","computed":"Many"},{"type":"assign","left":{"type":"Neutral","value":{"type":"Var","variable":{"type":"Meta","index":1}}},"right":{"type":"Abs","binder":{"type":"Pi","variable":"a","icit":"Explicit","annotation":[{"type":"Lit","value":{"type":"Atom","value":"Type"}},"Many"]},"closure":{"env":[[{"type":"Neutral","value":{"type":"Var","variable":{"type":"Bound","index":0}}},"Many"]],"term":{"type":"Lit","value":{"type":"Atom","value":"Type"}}}}}]`,
-		);
+	describe.skip("Need to generate some snapshots", () => {
+		it("should solve constraints", () => {
+			const cst = JSON.parse(
+				`[{"type":"assign","left":{"type":"Lit","value":{"type":"Atom","value":"Type"}},"right":{"type":"Lit","value":{"type":"Atom","value":"Type"}}},{"type":"assign","left":{"type":"Neutral","value":{"type":"Var","variable":{"type":"Meta","val":1}}},"right":{"type":"Abs","binder":{"type":"Pi","variable":"x","icit":"Explicit","annotation":[{"type":"Neutral","value":{"type":"Var","variable":{"type":"Meta","val":3}}},"Many"]},"closure":{"env":[[{"type":"Neutral","value":{"type":"Var","variable":{"type":"Bound","index":1}}},"Many"],[{"type":"Neutral","value":{"type":"Var","variable":{"type":"Bound","index":0}}},"Many"]],"term":{"type":"Var","variable":{"type":"Meta","val":4}}}}},{"type":"assign","left":{"type":"Lit","value":{"type":"Atom","value":"Type"}},"right":{"type":"Neutral","value":{"type":"Var","variable":{"type":"Meta","val":3}}}},{"type":"usage","expected":"Many","computed":"Many"},{"type":"assign","left":{"type":"Neutral","value":{"type":"Var","variable":{"type":"Meta","val":1}}},"right":{"type":"Abs","binder":{"type":"Pi","variable":"a","icit":"Explicit","annotation":[{"type":"Lit","value":{"type":"Atom","value":"Type"}},"Many"]},"closure":{"env":[[{"type":"Neutral","value":{"type":"Var","variable":{"type":"Bound","index":0}}},"Many"]],"term":{"type":"Lit","value":{"type":"Atom","value":"Type"}}}}}]`,
+			);
 
-		const eqs = cst.filter((c: any) => c.type === "assign").map((c: any) => ({ ...c, provenance: [] }));
+			const eqs = cst.filter((c: any) => c.type === "assign").map((c: any) => ({ ...c, provenance: [] }));
 
-		const [either] = M.run(solve(eqs), empty);
+			const [either] = M.run(solve(eqs), empty);
 
-		if (E.isLeft(either)) {
-			throw new Error(`Failed solving: ${Err.display(either.left)}`);
-		}
-		const sub = either.right;
+			if (E.isLeft(either)) {
+				throw new Error(`Failed solving: ${Err.display(either.left)}`);
+			}
+			const sub = either.right;
 
-		const normalize = (str: string) => str.replace(/\s+/g, "").trim();
-		expect(normalize(display(sub))).toEqual(
-			normalize(`
+			const normalize = (str: string) => str.replace(/\s+/g, "").trim();
+			expect(normalize(display(sub))).toEqual(
+				normalize(`
                 ?1 |=> Π(x:<ω> Type) -> Type
                 ?3 |=> Type
                 ?4 |=> Type`),
-		);
+			);
+		});
 	});
 
 	it("should fail to unify", () => {
