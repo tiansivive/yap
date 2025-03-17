@@ -71,7 +71,7 @@ foreign Map: (Storage row) => row -> Type
     where row = Row Type Type;
 let array
     // desugared: Map @defaultArray [Num: String]
-    : { [Num]: String }
+    : Indexed Num String
     = ["one", "two", "three"];
 
 let dict

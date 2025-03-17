@@ -1,6 +1,6 @@
-<h1 align="center">lama</h1>
+<h1 align="center">Yap</h1>
 
-<p align="center">A small TT core lang with liquid types</p>
+<p align="center">A small TT core lang with some extra fluff</p>
 
 <p align="center">
 	<!-- prettier-ignore-start -->
@@ -15,17 +15,117 @@
 	<img alt="💪 TypeScript: Strict" src="https://img.shields.io/badge/%F0%9F%92%AA_typescript-strict-21bb42.svg" />
 </p>
 
-## Usage
+# Yap
 
-```shell
-npm i lama
-```
+Yap is a programming language. It's mine. I built it. Why? Because I got annoyed with everything else. So instead of doing something productive, I went peak software bro and made my own.  
+There's no grand vision here — just a bunch of features I like, without the stuff that sucks, keeping me from throwing my laptop out a window.
 
-```ts
-import { greet } from "lama";
+## What Even Is This?
 
-greet("Hello, world! 💖");
-```
+Yap is a **dependently typed language with first-class, structural types**, **implicits**, and **zero runtime assumptions**. The idea is to keep the core **minimal**, let types do their thing (and then nuke them!), and **make everything customizable**. If you don’t like how something works, change it — preferably without rewriting the compiler.
+
+It’s still early days, so expect **broken things, missing features, a nonsensical mess and half-baked ideas**. But hey, it already supports:
+
+- **Structural typing** - so you don’t have to fight a nominal type system for no reason
+  - Variants and Records
+  - Dependent functions
+  - Recursive types
+- **Type inference** - Momma always told me I had a short attention span
+- **Implicits** - so you don’t have to pass a million arguments manually
+- **Customizable data structures** (want to swap out how records/tuples work? Go for it, I don't care)
+- **JS codegen** (Sue me)
+
+Yap doesn't ship a runtime. It doesn’t assume anything about memory layouts or platforms. You should (eventually) be able to compile this mess to JavaScript, Erlang, Lua, C, WebAssembly, Brainf\*ck (you demented sicko) or whatever else pleases you without fighting the compiler.
+
+## Philosophy (Or Lack Thereof)
+
+Yap isn’t trying to revolutionize programming. It just does things in a way that **makes sense to me**:
+
+- **Minimal core** – Small enough that even I can remember how it works.
+- **Sugar, spice and everything nice** - This isn't an academic toy; it should actually be **nice to use**.
+- **Turing complete types** - They're first-class, but I solemnly swear you can nuke the bastards at runtime.
+- **No platform assumptions** – The compiler should let you generate whatever garbage output you want. No judging.
+- **You’re in control** – Defaults exist, but if you don’t like them, override them. No gatekeeping.
+- **Functional and imperative** - let the flame wars begin
+
+## The Plan (A.K.A. The Roadmap)
+
+Yap is a work in progress (read: broken, just like my last relationship), so here's a list of things that still need to be done:
+
+### 📝 Syntax
+
+- Auto implicit expansion (because it's obvious)
+- Infix function application (less parens = better)
+- Variadic arguments, multiple arguments, named arguments... (Yes, I like arguing)
+- Better syntax sugar for common patterns (shorthand matches, destructuring, backcalls, etc.)
+- `where` clauses (because who likes deep nesting?)
+- Data traversal (telescopes, SQL-like goodies, pipes)
+
+### 🔥 Features
+
+- Type modalities (mutability, effects, ownership, etc., without hardcoding magic into the compiler)
+  - If this sounds like wishful thinking, well... it is! but I'm still gonna do it, because YOLO.
+- Singleton types for `String` and `Num` (so the compiler actually knows what `1` is)
+- Reflection (for runtime type-driven pattern matching)
+
+### 🛠️ Tooling (This Is Important!)
+
+- **Syntax highlighting** (so we can pretend it's a real language)
+- **LSP support** (because writing a language without an LSP in 2025 is just rude)
+- **A debugger** (because I am dumb)
+- **A REPL** (because I want one, and debugging without one sucks)
+
+### 💀 Tech Debt
+
+- More tests (so I don’t break everything every other day)
+- Module system (Other than it being all but non-existent, it's so embarrassing even ChatGPT could do better)
+- Well, lowering isn't a thing yet (but hey, at least it’s not **not** a thing, right?)
+- Get rid of the monad? (swear to god, love/hate relationships should be renamed to monad relationships)
+
+## Trying It Out
+
+Yap isn’t quite "usable" yet unless you enjoy debugging the compiler. At most you can generate some JS, scream in despair, load it up in node and then break your computer because you're coding in JS.
+But if you're curious, check out the code, mess around with it, and maybe even contribute if you're brave.
+
+1. Clone the repo
+2. Build the compiler
+3. Write some broken code
+4. Complain
+
+## Contributing
+
+If you actually want to help, that's cool! Just open an issue or PR, but be warned: the language is still **changing fast**, so nothing is set in stone. Expect things to (continue to) break.
+Also, I suck at communication, so feel free to continue to pester me with notifications while I continue to ignore them. Such is life.
+
+---
+
+## What’s With the Name?
+
+“Yap” stands for “Yet Another Problem.” Because, let’s be real, that’s exactly what this is. Another problem I’ve decided to create for myself instead of just, you know, using something that works.
+Could’ve called it “Just Another Language,” but then it wouldn’t have been as honest or as snarky. So here we are.
+
+## TypeScript? You're not serious
+
+I love Haskell; it nearly drove me mad.
+I enjoy Rust and `I<Maybe<Box<Dynamic<&Result<Trait<🤯>>>>>>`
+I will never write Java
+I am too young for C/C++
+I believe Python is a snake species
+I don't know OCaml.
+I fall asleep writing Go
+
+I like building broken code, I like being able to debug, I like iterating, and I work with TS every day these days.
+Sue me.
+
+## Is this even possible?
+
+Yap exists because I was frustrated. If you share that frustration, maybe you'll like it too. Or maybe you'll hate it.  
+Maybe it’s a terrible, and terribly flawed, idea. Maybe it’s genius. Maybe it’s just a complete dumpster fire wrapped in my own personal code therapy session.
+
+Could it ever be fully usable, safe, sound, fast, feature-rich and whatever else your shiny programming language needs to be? Probably not. Maybe it’ll never turn into something functional. But do I like it? Yeah, I do. I think it’s cool.
+If you do too, cool. If you don’t, cool. Either way, it's here.
+
+And it works... kinda.
 
 ## Contributors
 
