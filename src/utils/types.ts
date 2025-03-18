@@ -20,3 +20,9 @@ export type SetProp<P extends string, V, T extends object> = (P extends `${infer
 		? { [key in P]: V }
 		: never) &
 	T;
+
+/**
+ * Type utility to force typescript to early evaluate the type.
+ * This is useful for clarifying type computations
+ */
+export type Expand<T> = T extends unknown ? { [K in keyof T]: T[K] } : never;

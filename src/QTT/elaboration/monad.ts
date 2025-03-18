@@ -188,10 +188,9 @@ export const trackMany = <A>(provenance: EB.Provenance[], rw: Elaboration<A>) =>
  * Exception handling
  **********************************/
 
-export const fail = (cause: Cause): Elaboration<never> =>
+export const fail = (cause: Err): Elaboration<never> =>
 	chain(ask(), ctx => {
-		const provenance = ctx.trace;
-		return liftE(E.left({ ...cause, provenance }));
+		return liftE(E.left({ ...cause, provenance: ctx.trace.concat(cause.provenance || []) }));
 	});
 
 export const catchError =

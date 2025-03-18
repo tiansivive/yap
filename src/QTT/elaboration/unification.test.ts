@@ -25,6 +25,7 @@ describe("Unification", () => {
 		names: [],
 		imports: Lib.Elaborated,
 		trace: [],
+		implicits: [],
 	};
 
 	it("should unify two literals", () => {

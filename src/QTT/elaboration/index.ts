@@ -11,3 +11,4 @@ export * as M from "./monad";
 export * as NF from "./normalization";
 
 export * as Icit from "./implicits";
+export * as Mod from "./module";

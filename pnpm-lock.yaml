@@ -20,6 +20,9 @@ importers:
       ts-pattern:
         specifier: ^5.3.1
         version: 5.3.1
+      type-fest:
+        specifier: ^4.37.0
+        version: 4.37.0
       winston:
         specifier: ^3.17.0
         version: 3.17.0
@@ -2943,8 +2946,8 @@ packages:
     resolution: {integrity: sha512-tLq3bSNx+xSpwvAJnzrK0Ep5CLNWjvFTOp71URMaAEWBfRb9nnJiBoUe0tF8bI4ZFO3omgBR6NvnbzVUT3Ly4g==}
     engines: {node: '>=14.16'}
 
-  type-fest@4.26.1:
-    resolution: {integrity: sha512-yOGpmOAL7CkKe/91I5O3gPICmJNLJ1G4zFYVAsRHg7M64biSnPtRj0WNQt++bRkjYOqjWXrhnUw1utzmVErAdg==}
+  type-fest@4.37.0:
+    resolution: {integrity: sha512-S/5/0kFftkq27FPNye0XM1e2NsnoD/3FS+pBmbjmmtLT6I+i344KoOf7pvXreaFsDamWeaJX55nczA1m5PsBDg==}
     engines: {node: '>=16'}
 
   typedarray-to-buffer@3.1.5:
@@ -5491,14 +5494,14 @@ snapshots:
     dependencies:
       find-up: 6.3.0
       read-pkg: 8.1.0
-      type-fest: 4.26.1
+      type-fest: 4.37.0
 
   read-pkg@8.1.0:
     dependencies:
       '@types/normalize-package-data': 2.4.4
       normalize-package-data: 6.0.2
       parse-json: 7.1.1
-      type-fest: 4.26.1
+      type-fest: 4.37.0
 
   readable-stream@3.6.2:
     dependencies:
@@ -5947,7 +5950,7 @@ snapshots:
 
   type-fest@3.13.1: {}
 
-  type-fest@4.26.1: {}
+  type-fest@4.37.0: {}
 
   typedarray-to-buffer@3.1.5:
     dependencies:

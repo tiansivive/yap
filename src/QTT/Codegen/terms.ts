@@ -1,8 +1,8 @@
 import { match } from "ts-pattern";
-import { globalModules } from "./modules";
+import { globalModules } from "../modules/loading";
 
 import * as EB from "@qtt/elaboration";
-import { Literal } from "./shared/literals";
+import { Literal } from "../shared/literals";
 
 import * as R from "@qtt/shared/rows";
 

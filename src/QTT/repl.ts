@@ -20,33 +20,30 @@ import * as Err from "@qtt/elaboration/errors";
 
 import * as F from "fp-ts/function";
 import { M } from "@qtt/elaboration";
-import * as Mod from "./modules";
+import * as Mod from "./modules/loading";
+import * as CG from "./Codegen/modules";
 
-const empty: EB.Context = {
-	env: [],
-	types: [],
-	names: [],
-	trace: [],
-	implicits: [],
-	imports: Lib.Elaborated,
-};
+import fs from "fs";
 
+export const OUT_DIR = "./bin/";
+export const BASE_URL = "./yap/";
 try {
-	console.log("MODULES:");
-	const res = Mod.mkInterface("main.yap");
+	const _ = Mod.mkInterface("main.yap");
 
-	Object.entries(res).forEach(([k, v]) => {
-		if (E.isLeft(v)) {
-			console.log(Err.display(v.left));
-			return;
+	Object.entries(Mod.globalModules).forEach(([filepath, iface]) => {
+		console.log("Loaded module: " + filepath);
+
+		const FFIfile = filepath.replace(".yap", ".ffi.js");
+
+		const path = BASE_URL + FFIfile;
+		if (fs.existsSync(path)) {
+			fs.copyFileSync(path, OUT_DIR + FFIfile.split("/").pop());
 		}
 
-		const [tm, ty, us] = v.right;
+		const code = CG.codegen(iface, filepath);
 
-		console.log(k + ":");
-		console.log(NF.display(ty));
-		console.log(EB.Display.Term(tm));
-		console.log("\n");
+		const outfile = filepath.replace(".yap", ".js");
+		fs.writeFileSync(OUT_DIR + outfile.split("/").pop(), code);
 	});
 } catch (e) {
 	console.error(e);

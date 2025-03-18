@@ -17,12 +17,12 @@
 
 # Yap
 
-Yap is a programming language. It's mine. I built it. Why? Because I got annoyed with everything else. So instead of doing something productive, I went peak software bro and made my own.  
+`Yap` is a programming language. It's mine. I built it. Why? Because I got annoyed with everything else. So instead of doing something productive, I went peak software bro and made my own.  
 There's no grand vision here — just a bunch of features I like, without the stuff that sucks, keeping me from throwing my laptop out a window.
 
 ## What Even Is This?
 
-Yap is a **dependently typed language with first-class, structural types**, **implicits**, and **zero runtime assumptions**. The idea is to keep the core **minimal**, let types do their thing (and then nuke them!), and **make everything customizable**. If you don’t like how something works, change it — preferably without rewriting the compiler.
+`Yap` is a **dependently typed language with first-class, structural types**, **implicits**, and **zero runtime assumptions**. The idea is to keep the core **minimal**, let types do their thing (and then nuke them!), and **make everything customizable**. If you don’t like how something works, change it — preferably without rewriting the compiler.
 
 It’s still early days, so expect **broken things, missing features, a nonsensical mess and half-baked ideas**. But hey, it already supports:
 
@@ -32,14 +32,21 @@ It’s still early days, so expect **broken things, missing features, a nonsensi
   - Recursive types
 - **Type inference** - Momma always told me I had a short attention span
 - **Implicits** - so you don’t have to pass a million arguments manually
-- **Customizable data structures** (want to swap out how records/tuples work? Go for it, I don't care)
-- **JS codegen** (Sue me)
+- **Module System** - because you have a file system
+- **Customizable data structures** - want to swap out how records/tuples work? Go for it, I don't care
+- **JS codegen** - sue me
 
-Yap doesn't ship a runtime. It doesn’t assume anything about memory layouts or platforms. You should (eventually) be able to compile this mess to JavaScript, Erlang, Lua, C, WebAssembly, Brainf\*ck (you demented sicko) or whatever else pleases you without fighting the compiler.
+`Yap` will never ship a runtime.  
+It doesn’t assume anything about memory layouts or platforms. You should (eventually) be able to compile this mess to JavaScript, Erlang, Lua, C, Assembly, Brainf\*ck (you demented sicko) or whatever else strokes your ego you, without fighting the compiler. `Yap` will provide the required API to soothe your sweet soul, but _you_ will implement it, not `Yap`. Leave _me_ out of it.
+
+Why? Because backends are hard. _Really_ hard. And I'm dumb, _really_ dumb.
+There's heaps of incredible runtime platforms out in the wild, and hordes of people who actually enjoy dealing with platform-specific stuff — and they’re way better at it than I ever could be. So be free! I'll make sure to deal with those nasty fundamental concepts like mutation and references at the type level, and leave it all nice and pretty with sugar on top.
+How you map that to your platform? That’s on you. You’re welcome.
+I’ll be over here, having an existential crisis about types.
 
 ## Philosophy (Or Lack Thereof)
 
-Yap isn’t trying to revolutionize programming. It just does things in a way that **makes sense to me**:
+`Yap` isn’t trying to revolutionize programming. It just does things in a way that **makes sense to me**:
 
 - **Minimal core** – Small enough that even I can remember how it works.
 - **Sugar, spice and everything nice** - This isn't an academic toy; it should actually be **nice to use**.
@@ -50,7 +57,7 @@ Yap isn’t trying to revolutionize programming. It just does things in a way th
 
 ## The Plan (A.K.A. The Roadmap)
 
-Yap is a work in progress (read: broken, just like my last relationship), so here's a list of things that still need to be done:
+`Yap` is a work in progress (read: broken, just like my last relationship), so here's a list of things that still need to be done:
 
 ### 📝 Syntax
 
@@ -79,12 +86,12 @@ Yap is a work in progress (read: broken, just like my last relationship), so her
 
 - More tests (so I don’t break everything every other day)
 - Module system (Other than it being all but non-existent, it's so embarrassing even ChatGPT could do better)
-- Well, lowering isn't a thing yet (but hey, at least it’s not **not** a thing, right?)
+- Well, lowering isn't a thing yet (but hey, at least it’s not _not_ a thing, right?)
 - Get rid of the monad? (swear to god, love/hate relationships should be renamed to monad relationships)
 
 ## Trying It Out
 
-Yap isn’t quite "usable" yet unless you enjoy debugging the compiler. At most you can generate some JS, scream in despair, load it up in node and then break your computer because you're coding in JS.
+`Yap` isn’t quite "usable" yet unless you enjoy debugging the compiler. At most you can generate some JS, scream in despair, load it up in node and then break your computer because you're coding in JS.
 But if you're curious, check out the code, mess around with it, and maybe even contribute if you're brave.
 
 1. Clone the repo
@@ -106,26 +113,26 @@ Could’ve called it “Just Another Language,” but then it wouldn’t have be
 
 ## TypeScript? You're not serious
 
-I love Haskell; it nearly drove me mad.
-I enjoy Rust and `I<Maybe<Box<Dynamic<&Result<Trait<🤯>>>>>>`
-I will never write Java
-I am too young for C/C++
-I believe Python is a snake species
-I don't know OCaml.
-I fall asleep writing Go
+I love `Haskell`; it nearly drove me mad.
+I enjoy `Rust` and `I<Maybe<Box<Dynamic<&Result<Trait<🤯>>>>>>`
+I will never write `Java`
+I am too young for `C/C++`
+I believe `Python` is a snake species
+I don't know `OCaml`.
+I fall asleep writing `Go`
 
-I like building broken code, I like being able to debug, I like iterating, and I work with TS every day these days.
+I like building broken code, I like being able to debug, I like iterating, and I work with `TS` every day these days.
 Sue me.
 
 ## Is this even possible?
 
-Yap exists because I was frustrated. If you share that frustration, maybe you'll like it too. Or maybe you'll hate it.  
-Maybe it’s a terrible, and terribly flawed, idea. Maybe it’s genius. Maybe it’s just a complete dumpster fire wrapped in my own personal code therapy session.
+`Yap` exists because I was frustrated. If you share that frustration, maybe you'll like it too. Or maybe you'll hate it.  
+Maybe it’s a terrible, and terribly flawed, idea. Maybe it’s genius. Maybe it’s just a complete dumpster fire wrapped in _my_ own personal code therapy session.
 
-Could it ever be fully usable, safe, sound, fast, feature-rich and whatever else your shiny programming language needs to be? Probably not. Maybe it’ll never turn into something functional. But do I like it? Yeah, I do. I think it’s cool.
-If you do too, cool. If you don’t, cool. Either way, it's here.
+Could it ever be fully usable, safe, sound, fast, feature-rich and whatever else your shiny programming language needs to be? Probably not. Maybe it’ll never turn into something functional. **But do I like it**? Yeah, _I_ do. I think it’s cool.
+If _you_ do too, cool. If you don’t, cool. Either way, it's here.
 
-And it works... kinda.
+And it works... _kinda_.
 
 ## Contributors
 
