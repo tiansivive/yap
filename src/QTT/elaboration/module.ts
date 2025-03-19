@@ -76,7 +76,7 @@ export const elaborate = ({ content, exports }: Src.Module, ctx: EB.Context) => 
 	return next(content.script, ctx);
 };
 
-const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context): [string, Either<M.Err, [EB.AST, EB.Context]>] => {
+export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context): [string, Either<M.Err, [EB.AST, EB.Context]>] => {
 	const check = EB.check(stmt.annotation, NF.Type);
 	const [result] = M.run(check, ctx);
 	const e = E.Functor.map(result, ([tm, us]): [EB.AST, EB.Context] => {
@@ -88,14 +88,14 @@ const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Cont
 	return [stmt.variable, e];
 };
 
-const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.Context): Either<M.Err, EB.Context> => {
+export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.Context): Either<M.Err, EB.Context> => {
 	const infer = EB.Stmt.infer(stmt);
 	const [result] = M.run(infer, ctx);
 	type Implicit = EB.Context["implicits"][0];
 	return E.Functor.map(result, ([t, ty]) => update(ctx, "implicits", A.append<Implicit>([t.value, ty])));
 };
 
-const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): [string, Either<M.Err, [EB.AST, EB.Context]>] => {
+export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): [string, Either<M.Err, [EB.AST, EB.Context]>] => {
 	const inference = F.pipe(
 		EB.Stmt.infer(stmt),
 		M.listen(([[stmt, ty, us], { constraints }]) => {
@@ -120,4 +120,29 @@ const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context):
 	});
 
 	return [stmt.variable, e];
+};
+
+export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>, ctx: EB.Context) => {
+	const infer = F.pipe(
+		EB.infer(stmt.value),
+		M.listen(([[tm, ty, us], { constraints }]) => {
+			return { inferred: { tm, ty, us }, constraints };
+		}),
+		M.bind("subst", ({ constraints }) => solve(constraints)),
+		M.bind("ty", ({ inferred, subst }) => {
+			return F.pipe(
+				EB.zonk("nf", inferred.ty, subst),
+				M.fmap(nf => NF.generalize(nf, ctx)),
+			);
+		}),
+		M.bind("term", ({ inferred, subst }) => {
+			return F.pipe(EB.zonk("term", inferred.tm, subst), M.fmap(EB.Icit.generalize));
+		}),
+	);
+
+	const [result] = M.run(infer, ctx);
+	return E.Functor.map(result, ({ term, ty, inferred: { us } }): EB.AST => {
+		const ast: EB.AST = [term, ty, us];
+		return ast;
+	});
 };

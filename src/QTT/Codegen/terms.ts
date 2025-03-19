@@ -70,7 +70,7 @@ export const codegen = (env: string[], term: EB.Term): string => {
 			const fn = codegen(env, app.func);
 			const arg = codegen(env, app.arg);
 
-			return `${fn}(${arg})`;
+			return `(${fn})(${arg})`;
 		})
 		.with({ type: "Block" }, block => {
 			const [, stmts] = block.statements.reduce(
