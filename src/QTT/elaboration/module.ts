@@ -24,7 +24,7 @@ export const elaborate = ({ content, exports }: Src.Module, ctx: EB.Context) => 
 			(exports.type === "explicit" && exports.names.includes(name)) ||
 			(exports.type === "partial" && !exports.hiding.includes(name))
 		) {
-			return update(result, "exports", es => es.concat([name]));
+			return update(result, "exports", A.append(name));
 		}
 		return result;
 	};
@@ -53,9 +53,8 @@ export const elaborate = ({ content, exports }: Src.Module, ctx: EB.Context) => 
 				result,
 				E.match(
 					e => update(next(tail, ctx), "foreign", A.prepend<Pair>([name, E.left(e)])),
-					([ast, ctx]) => update(next(tail, ctx), "foreign", A.prepend<Pair>([name, E.right(ast)])),
+					([ast, ctx]) => F.pipe(next(tail, ctx), update("foreign", A.prepend<Pair>([name, E.right(ast)])), maybeExport(name)),
 				),
-				maybeExport(name),
 			);
 		}
 
@@ -65,9 +64,8 @@ export const elaborate = ({ content, exports }: Src.Module, ctx: EB.Context) => 
 				result,
 				E.match(
 					e => update(next(tail, ctx), "letdecs", A.prepend<Pair>([name, E.left(e)])),
-					([ast, ctx]) => update(next(tail, ctx), "letdecs", A.prepend<Pair>([name, E.right(ast)])),
+					([ast, ctx]) => F.pipe(next(tail, ctx), update("letdecs", A.prepend<Pair>([name, E.right(ast)])), maybeExport(name)),
 				),
-				maybeExport(name),
 			);
 		}
 

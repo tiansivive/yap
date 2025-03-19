@@ -114,5 +114,8 @@
 	},
 	"ocaml.sandbox": {
 		"kind": "global"
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	}
 }

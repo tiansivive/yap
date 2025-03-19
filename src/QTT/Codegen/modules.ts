@@ -16,8 +16,6 @@ export const codegen = (module: Interface, filepath: string) => {
 		return code + stmt + info;
 	}, "");
 
-	const exports = `\nmodule.exports = { ${module.exports.join(", ")} };`;
-
 	const foreign = module.foreign.reduce((code, [name, result]) => {
 		const stmt = E.isLeft(result)
 			? `\n// Error importing ${name}: ${result.left}`
@@ -29,6 +27,8 @@ export const codegen = (module: Interface, filepath: string) => {
 		const stmt = E.isLeft(result) ? `\n// Error importing ${name}: ${result.left}` : `\nlet ${name} = ${CG.codegen([name], result.right[0])};`;
 		return code + stmt;
 	}, "");
+
+	const exports = `\nmodule.exports = { ${module.exports.join(", ")} };`;
 
 	return imports + foreign + letdecs + exports;
 };
