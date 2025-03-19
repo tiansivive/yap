@@ -24,7 +24,7 @@ import * as Gen from "../Codegen/terms";
 import { displayProvenance, solve } from "../elaboration/solver";
 
 import { set, setProp, update } from "../../utils/objects";
-import { BASE_URL } from "../repl";
+import { GlobalDefaults } from "../compile";
 
 type ModuleName = string;
 export const globalModules: Record<ModuleName, Interface> = {};
@@ -40,7 +40,7 @@ export type Interface = {
 
 type Separated = [Array<[string, M.Err]>, Array<[string, EB.AST]>];
 
-export const mkInterface = (moduleName: ModuleName, visited: string[] = []): Interface => {
+export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts = GlobalDefaults): Interface => {
 	if (globalModules[moduleName]) {
 		return globalModules[moduleName];
 	}
@@ -49,7 +49,7 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = []): Int
 		throw new Error("Circular dependency detected: " + visited.join(" -> ") + " -> " + moduleName);
 	}
 
-	const str = fs.readFileSync(resolve(process.cwd(), BASE_URL, moduleName), { encoding: "utf-8" });
+	const str = fs.readFileSync(resolve(process.cwd(), opts.baseUrl, moduleName), { encoding: "utf-8" });
 	const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar));
 
 	const data = parser.feed(str);

@@ -20,7 +20,7 @@
 			"@qtt/elaboration/*": ["./src/QTT/elaboration/*"]
 		}
 	},
-	"include": ["src"],
+	"include": ["src", "scripts/cli.ts"],
 	// "exclude": ["src/QTT/parser/grammar.ts"],
 	"ts-node": {
 		"require": ["tsconfig-paths/register"]

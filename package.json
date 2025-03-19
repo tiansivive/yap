@@ -12,6 +12,9 @@
 	},
 	"type": "commonjs",
 	"main": "./lib/index.js",
+	"bin": {
+		"yap": "./scripts/cli.ts"
+	},
 	"files": [
 		"lib/",
 		"package.json",
@@ -29,12 +32,14 @@
 		"railroad": "nearley-railroad src/QTT/parser/grammar.ne -o gen/QTT/grammar.html",
 		"test": "vitest",
 		"tsc": "tsc",
-		"typecheck": "tsc --noEmit -p ./tsconfig.json"
+		"typecheck": "tsc --noEmit -p ./tsconfig.json",
+		"yap": "ts-node -T ./scripts/cli.ts"
 	},
 	"lint-staged": {
 		"*": "prettier --ignore-unknown --write"
 	},
 	"dependencies": {
+		"commander": "^13.1.0",
 		"fp-ts": "^2.16.9",
 		"lodash": "^4.17.21",
 		"moo": "^0.5.2",
