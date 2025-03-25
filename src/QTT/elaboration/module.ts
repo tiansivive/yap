@@ -17,12 +17,12 @@ import { Interface } from "../modules/loading";
 import { solve } from "./solver";
 import * as A from "fp-ts/lib/Array";
 
-export const elaborate = ({ content, exports }: Src.Module, ctx: EB.Context) => {
+export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 	const maybeExport = (name: string) => (result: Omit<Interface, "imports">) => {
 		if (
-			exports.type === "*" ||
-			(exports.type === "explicit" && exports.names.includes(name)) ||
-			(exports.type === "partial" && !exports.hiding.includes(name))
+			mod.exports.type === "*" ||
+			(mod.exports.type === "explicit" && mod.exports.names.includes(name)) ||
+			(mod.exports.type === "partial" && !mod.exports.hiding.includes(name))
 		) {
 			return update(result, "exports", A.append(name));
 		}
@@ -59,7 +59,8 @@ export const elaborate = ({ content, exports }: Src.Module, ctx: EB.Context) => 
 		}
 
 		if (head.type === "let") {
-			const [name, result] = letdec(head, ctx);
+			const foo = letdec(head, ctx);
+			const [name, result] = foo;
 			return F.pipe(
 				result,
 				E.match(
@@ -73,7 +74,7 @@ export const elaborate = ({ content, exports }: Src.Module, ctx: EB.Context) => 
 		return next(tail, ctx);
 	};
 
-	return next(content.script, ctx);
+	return next(mod.content.script, ctx);
 };
 
 export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context): [string, Either<M.Err, [EB.AST, EB.Context]>] => {

@@ -3,7 +3,6 @@ import "lib.yap";
 
 
 
-using ListF;
 
 let Array
   : Type -> Type

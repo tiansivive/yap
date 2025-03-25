@@ -29,30 +29,30 @@ let ListF
     = { map: mapL };
 
 
-foreign print: String -> Unit;
 using ListF;
-
+    
 let main
-  : (String -> Num) -> List String -> List Num
-  = ListF.map;
-
-
+    : (String -> Num) -> List String -> List Num
+    = ListF.map;
+    
+    
 let implicit
-  : (f: Functor List) => (Num -> String) -> List Num -> List String 
-  = f.map;
-
-
+    : (f: Functor List) => (Num -> String) -> List Num -> List String 
+    = f.map;
+    
+    
 let poly
-  : (t: Type -> Type) => (f: Functor t) => (String -> Num) -> t String -> t Num
-  = f.map;
-
-
+    : (t: Type -> Type) => (f: Functor t) => (String -> Num) -> t String -> t Num
+    = f.map;
+    
+    
 let foo
-  : (Num -> String) -> List Num -> List String
-  = implicit;
-
-
-
+    : (Num -> String) -> List Num -> List String
+    = implicit;
+    
+    
+    
+foreign print: String -> Unit;
 let block
   : Num -> Unit
   = \x -> {

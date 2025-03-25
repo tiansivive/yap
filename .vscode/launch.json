@@ -3,14 +3,17 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "yap",
+			"name": "cli",
 			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
 			"runtimeArgs": [
 				"-T",
 				"--project",
 				"${workspaceRoot}/tsconfig.json",
 			],
-			"program": "${workspaceRoot}/src/QTT/repl.ts",
+			"program": "${workspaceRoot}/scripts/cli.ts",
+			"args": [
+				"main.yap"
+			],
 			"cwd": "${workspaceRoot}",
 			"internalConsoleOptions": "openOnSessionStart",
 			"skipFiles": [

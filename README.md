@@ -53,7 +53,7 @@ I’ll be over here, having an existential crisis about types.
 - **Turing complete types** - They're first-class, but I solemnly swear you can nuke the bastards at runtime.
 - **No platform assumptions** – The compiler should let you generate whatever garbage output you want. No judging.
 - **You’re in control** – Defaults exist, but if you don’t like them, override them. No gatekeeping.
-- **Functional and imperative** - let the flame wars begin
+- **Multi paradigm** - let the flame wars begin
 
 ## The Plan (A.K.A. The Roadmap)
 
@@ -113,7 +113,7 @@ Could’ve called it “Just Another Language,” but then it wouldn’t have be
 
 ## TypeScript? You're not serious
 
-I love `Haskell`; it nearly drove me mad.
+I love `Haskell`; it drove me mad.
 I enjoy `Rust` and `I<Maybe<Box<Dynamic<&Result<Trait<🤯>>>>>>`
 I will never write `Java`
 I am too young for `C/C++`

@@ -35,6 +35,8 @@ export const interpret = (code: string, ctx: EB.Context) => {
 	return interpretStmt(stmt, ctx);
 };
 
+const letdecs: string[] = [];
+
 const interpretStmt = (stmt: Src.Statement, ctx: EB.Context) => {
 	if (stmt.type === "let") {
 		const [name, result] = EB.Mod.letdec(stmt, ctx);
@@ -46,9 +48,9 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context) => {
 
 		const [[tm, ty, us], ctx_] = result.right;
 
-		const code = CG.codegen([name], tm);
-
-		eval(code);
+		const code = `let ${name} = ${CG.codegen([name], tm)};`;
+		letdecs.push(code);
+		console.log(`:: ${EB.NF.display(ty)}`);
 		return ctx_;
 	}
 
@@ -63,7 +65,9 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context) => {
 		const [tm, ty, us] = result.right;
 		const code = CG.codegen([], tm);
 
-		const res = eval(code);
+		const script = letdecs.join("\n") + `\n${code}`;
+		console.log(script);
+		const res = eval(script);
 		console.log(res, `:: ${EB.NF.display(ty)}`);
 
 		return ctx;
