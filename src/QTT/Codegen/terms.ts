@@ -22,7 +22,7 @@ export const codegen = (env: string[], term: EB.Term): string => {
 			{ type: "Var", variable: { type: "Foreign" } },
 			{ type: "Var", variable: { type: "Label" } },
 			({ variable }) => {
-				return variable.name;
+				return `"${variable.name}"`;
 			},
 		)
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
