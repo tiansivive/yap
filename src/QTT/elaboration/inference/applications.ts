@@ -27,7 +27,7 @@ export const infer = ({ fn, arg, icit }: Application) => {
 				})
 				.otherwise(() => {
 					const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
-					const nf = NF.evaluate(ctx.env, ctx.imports, meta);
+					const nf = NF.evaluate(ctx, meta);
 					const mnf: NF.ModalValue = [nf, Q.Many];
 					const closure = NF.Constructors.Closure(ctx.env, EB.Constructors.Var(EB.freshMeta(ctx.env.length + 1)));
 
@@ -44,7 +44,7 @@ export const infer = ({ fn, arg, icit }: Application) => {
 			const [[, q], cls] = pi;
 			const rus = Q.add(fus, Q.multiply(q, aus));
 
-			const val = NF.apply(ctx.imports, cls, NF.evaluate(ctx.env, ctx.imports, at), q);
+			const val = NF.apply(ctx, "Pi", cls, NF.evaluate(ctx, at), q);
 
 			const ast: EB.AST = [EB.Constructors.App(icit, ft, at), val, rus];
 			return M.of(ast);

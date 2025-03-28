@@ -81,7 +81,7 @@ export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: 
 	const check = EB.check(stmt.annotation, NF.Type);
 	const [result] = M.run(check, ctx);
 	const e = E.Functor.map(result, ([tm, us]): [EB.AST, EB.Context] => {
-		const nf = NF.evaluate(ctx.env, ctx.imports, tm);
+		const nf = NF.evaluate(ctx, tm);
 		const v = EB.Constructors.Var({ type: "Foreign", name: stmt.variable });
 		return [[v, nf, us], set(ctx, ["imports", stmt.variable] as const, [v, nf, us])];
 	});

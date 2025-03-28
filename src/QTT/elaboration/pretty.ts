@@ -17,9 +17,11 @@ const display = (term: EB.Term): string => {
 		.with({ type: "Lit" }, ({ value }) => Lit.display(value))
 		.with({ type: "Var" }, ({ variable }) =>
 			match(variable)
-				.with({ type: "Bound" }, ({ index }) => `i${index}`)
+				.with({ type: "Bound" }, ({ index }) => `I${index}`)
 				.with({ type: "Free" }, ({ name }) => name)
 				.with({ type: "Meta" }, ({ val }) => `?${val}`)
+				.with({ type: "Foreign" }, ({ name }) => `FFI.${name}`)
+				.with({ type: "Label" }, ({ name }) => `:${name}`)
 				.otherwise(() => "Var Display: Not implemented"),
 		)
 		.with({ type: "Abs", binding: { type: "Mu" } }, ({ binding }) => binding.source)

@@ -65,7 +65,7 @@ type BareStatement =
 	| { type: "using"; value: Term }
 	| { type: "foreign"; variable: string; annotation: Term };
 
-export type Variable = WithLocation<{ type: "name"; value: string }>;
+export type Variable = WithLocation<{ type: "name"; value: string } | { type: "label"; value: string }>;
 export type Row = WithLocation<R.Row<Term, Variable>>;
 
 export type Module = { type: "module"; imports: Import[]; exports: Export; content: Script };

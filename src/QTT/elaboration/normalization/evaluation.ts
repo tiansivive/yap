@@ -10,54 +10,64 @@ import * as NF from ".";
 import * as Log from "@qtt/shared/logging";
 import * as Sub from "@qtt/elaboration/substitution";
 
-export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.Term): NF.Value {
+export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 	//Log.push("eval");
-	//Log.logger.debug(EB.Display.Term(term), { env, imports, term: EB.Display.Term(term) });
+	//Log.logger.debug(EB.Display.Term(term), { ctx.env,  term: EB.Display.Term(term) });
 	const res = match(term)
 		.with({ type: "Lit" }, ({ value }): NF.Value => NF.Constructors.Lit(value))
+		.with({ type: "Var", variable: { type: "Label" } }, ({ variable }): NF.Value => {
+			const sig = ctx.sigma[variable.name];
+
+			if (!sig) {
+				throw new Error("Unbound label: " + variable.name);
+			}
+
+			return sig.nf;
+		})
 		.with({ type: "Var", variable: { type: "Free" } }, ({ variable }) => {
-			const val = imports[variable.name];
+			const val = ctx.imports[variable.name];
 
 			if (!val) {
 				throw new Error("Unbound free variable: " + variable.name);
 			}
 
-			return evaluate(env, imports, val[0]);
+			return evaluate(ctx, val[0]);
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => NF.Constructors.Neutral<NF.Value>({ type: "Var", variable }))
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
-			return env[variable.index][0];
+			return ctx.env[variable.index][0];
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
 			throw new Error("Tried to evaluate foreign variable: " + variable.name);
 		})
 
 		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) =>
-			NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(env, body)),
+			NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(ctx.env, body)),
 		)
 		.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }): NF.Value => {
-			const annotation = evaluate(env, imports, binding.annotation);
-			return NF.Constructors.Pi(binding.variable, binding.icit, [annotation, binding.multiplicity], NF.Constructors.Closure(env, body));
+			const annotation = evaluate(ctx, binding.annotation);
+			return NF.Constructors.Pi(binding.variable, binding.icit, [annotation, binding.multiplicity], NF.Constructors.Closure(ctx.env, body));
 		})
 		.with({ type: "Abs", binding: { type: "Mu" } }, (mu): NF.Value => {
-			const annotation = evaluate(env, imports, mu.binding.annotation);
+			const annotation = evaluate(ctx, mu.binding.annotation);
 
-			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, [annotation, Q.Many], NF.Constructors.Closure(env, mu.body));
-			return evaluate([[val, Q.Many], ...env], imports, mu.body);
+			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, [annotation, Q.Many], NF.Constructors.Closure(ctx.env, mu.body));
+			const extended = EB.bind(ctx, { type: "Mu", variable: mu.binding.variable }, [val, Q.Many]);
+			return evaluate(extended, mu.body);
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
-			const nff = evaluate(env, imports, func);
-			const nfa = evaluate(env, imports, arg);
+			const nff = evaluate(ctx, func);
+			const nfa = evaluate(ctx, arg);
 
 			const reduce = (nff: NF.Value, nfa: NF.Value): NF.Value =>
 				match(nff)
 					.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
 						// Unfold the mu
-						const body = apply(imports, mu.closure, NF.Constructors.Neutral(mu));
+						const body = apply(ctx, "Mu", mu.closure, NF.Constructors.Neutral(mu));
 						return reduce(body, nfa);
 					})
-					.with({ type: "Abs" }, ({ closure }) => {
-						return apply(imports, closure, nfa);
+					.with({ type: "Abs" }, ({ closure, binder }) => {
+						return apply(ctx, binder.type, closure, nfa);
 					})
 					.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
 					.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)))
@@ -76,7 +86,7 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 				match(row)
 					.with({ type: "empty" }, r => r)
 					.with({ type: "extension" }, ({ label, value: term, row }) => {
-						const value = evaluate(env, imports, term);
+						const value = evaluate(ctx, term);
 						const rest = _eval(row);
 						return NF.Constructors.Extension(label, value, rest);
 					})
@@ -86,7 +96,7 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 						}
 
 						if (r.variable.type === "Bound") {
-							const [_val] = env[r.variable.index];
+							const [_val] = ctx.env[r.variable.index];
 							const val = unwrapNeutral(_val);
 
 							if (val.type === "Row") {
@@ -119,9 +129,11 @@ export function evaluate(env: NF.Env, imports: EB.Context["imports"], term: El.T
 	return res;
 }
 
-export const apply = (imports: EB.Context["imports"], closure: NF.Closure, value: NF.Value, multiplicity: Q.Multiplicity = Q.Zero): NF.Value => {
+export const apply = (ctx: EB.Context, binder: EB.Binder["type"], closure: NF.Closure, value: NF.Value, multiplicity: Q.Multiplicity = Q.Zero): NF.Value => {
 	const { env, term } = closure;
-	return evaluate([[value, multiplicity], ...env], imports, term);
+
+	const extended = EB.bind(ctx, { type: binder, variable: `t${env.length}` }, [value, multiplicity]);
+	return evaluate(extended, term);
 };
 
 export const unwrapNeutral = (value: NF.Value): NF.Value => {

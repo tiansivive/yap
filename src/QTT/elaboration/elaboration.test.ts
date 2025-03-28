@@ -22,6 +22,7 @@ describe("Elaboration", () => {
 		names: [],
 		implicits: [],
 		imports: Lib.Elaborated,
+		sigma: {},
 		trace: [],
 	};
 

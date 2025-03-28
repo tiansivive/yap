@@ -12,6 +12,7 @@ import * as U from "./unification";
 import * as Sub from "./substitution";
 
 import * as E from "fp-ts/Either";
+import { set, update } from "../../utils/objects";
 
 type Origin = "inserted" | "source";
 
@@ -20,11 +21,13 @@ export type Context = {
 	env: NF.Env;
 	names: Array<Binder>;
 	implicits: Array<[EB.Term, NF.Value]>;
+	sigma: Record<string, Sigma>;
 	imports: Record<string, AST>;
 	trace: P.Stack<Provenance>;
 };
 
 export type AST = [EB.Term, NF.Value, Q.Usages];
+export type Sigma = { nf: NF.Value; ann: NF.Value; multiplicity: Q.Multiplicity };
 
 export type Provenance =
 	| ["src", Src.Term, Metadata?]
@@ -42,15 +45,28 @@ type Metadata =
 export type Binder = Pick<EB.Binding, "type" | "variable">;
 
 export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<AST> => {
+	const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
+	// labels are different syntax (:varname), so we can check them before bound variables as the latter will never shadow the former
+	if (variable.type === "label") {
+		const key = ctx.sigma[variable.value];
+		if (key) {
+			const { ann, multiplicity } = key;
+			const tm = EB.Constructors.Var({ type: "Label", name: variable.value });
+			return M.of<AST>([tm, ann, zeros]); // QUESTION: need to somehow handle multiplicity?
+		}
+		throw new Error(`Label not found: ${variable.value}`);
+	}
+
 	const _lookup = (i: number, variable: Src.Variable, types: Context["types"]): M.Elaboration<AST> => {
-		const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
+		// free vars can be shadowed by bound vars, so only if no bound vars are found do we check for free vars
+		// QUESTION: should we disallow this shadowing?
 		if (types.length === 0) {
 			const free = ctx.imports[variable.value];
 			if (free) {
 				const [, nf, us] = free;
 
 				const tm = EB.Constructors.Var({ type: "Free", name: variable.value });
-				return M.of<AST>([tm, nf, Q.add(us, zeros)]);
+				return M.of<AST>([tm, nf, Q.add(us, zeros)]); //QUESTION: is this addition correct?
 			}
 
 			throw new Error(`Variable not found: ${variable.value}`);
@@ -99,6 +115,10 @@ export const bind = (context: Context, binder: Binder, annotation: NF.ModalValue
 		types: [[binder, origin, annotation], ...types],
 		names: [binder, ...context.names],
 	};
+};
+
+export const extendSigma = (ctx: Context, variable: string, sigma: Sigma): Context => {
+	return set(ctx, ["sigma", variable] as const, sigma);
 };
 
 export const muContext = (ctx: Context): Context => {

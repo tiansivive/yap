@@ -1016,6 +1016,11 @@ const grammar: Grammar = {
 			postprocess: P.Foreign,
 		},
 		{ name: "Identifier", symbols: [lexer.has("variable") ? { type: "variable" } : variable], postprocess: P.Name },
+		{
+			name: "Identifier",
+			symbols: [lexer.has("colon") ? { type: "colon" } : colon, lexer.has("variable") ? { type: "variable" } : variable],
+			postprocess: P.Label,
+		},
 		{ name: "Quantity", symbols: [{ literal: "1" }], postprocess: () => Q.One },
 		{ name: "Quantity", symbols: [{ literal: "0" }], postprocess: () => Q.Zero },
 		{ name: "Quantity", symbols: [{ literal: "*" }], postprocess: () => Q.Many },

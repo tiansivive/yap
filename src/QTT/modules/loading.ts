@@ -87,6 +87,7 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts
 		implicits: [],
 		trace: [],
 		imports: { ...Lib.Elaborated, ...R.fromEntries(allImports) },
+		sigma: {},
 	};
 
 	const iface: Interface = F.pipe(EB.Mod.elaborate(mod, localModuleCtx), setProp("imports", importsPerFile));

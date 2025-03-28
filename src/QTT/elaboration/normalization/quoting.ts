@@ -3,7 +3,7 @@ import * as EB from "@qtt/elaboration";
 import * as NF from ".";
 import { match } from "ts-pattern";
 
-export const quote = (imports: EB.Context["imports"], lvl: number, val: NF.Value): EB.Term => {
+export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 	return match(val)
 		.with({ type: "Lit" }, ({ value }) => EB.Constructors.Lit(value))
 		.with({ type: "Var" }, ({ variable }) =>
@@ -14,13 +14,13 @@ export const quote = (imports: EB.Context["imports"], lvl: number, val: NF.Value
 				.otherwise(v => EB.Constructors.Var(v)),
 		)
 
-		.with({ type: "Neutral" }, ({ value }) => quote(imports, lvl, value))
+		.with({ type: "Neutral" }, ({ value }) => quote(ctx, lvl, value))
 
-		.with({ type: "App" }, ({ func, arg, icit }) => EB.Constructors.App(icit, quote(imports, lvl, func), quote(imports, lvl, arg)))
+		.with({ type: "App" }, ({ func, arg, icit }) => EB.Constructors.App(icit, quote(ctx, lvl, func), quote(ctx, lvl, arg)))
 		.with({ type: "Abs", binder: { type: "Lambda" } }, ({ binder, closure }) => {
 			const { variable, icit } = binder;
-			const val = NF.apply(imports, closure, NF.Constructors.Rigid(lvl));
-			const body = quote(imports, lvl + 1, val);
+			const val = NF.apply(ctx, "Lambda", closure, NF.Constructors.Rigid(lvl));
+			const body = quote(ctx, lvl + 1, val);
 			return EB.Constructors.Lambda(variable, icit, body);
 		})
 		.with({ type: "Abs", binder: { type: "Pi" } }, ({ binder, closure }) => {
@@ -29,9 +29,9 @@ export const quote = (imports: EB.Context["imports"], lvl: number, val: NF.Value
 				icit,
 				annotation: [ann, q],
 			} = binder;
-			const val = NF.apply(imports, closure, NF.Constructors.Rigid(lvl));
-			const body = quote(imports, lvl + 1, val);
-			return EB.Constructors.Pi(variable, icit, q, quote(imports, lvl, ann), body);
+			const val = NF.apply(ctx, "Pi", closure, NF.Constructors.Rigid(lvl));
+			const body = quote(ctx, lvl + 1, val);
+			return EB.Constructors.Pi(variable, icit, q, quote(ctx, lvl, ann), body);
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, ({ binder, closure }) => {
 			const {
@@ -39,15 +39,15 @@ export const quote = (imports: EB.Context["imports"], lvl: number, val: NF.Value
 				source,
 				annotation: [ann, q],
 			} = binder;
-			const val = NF.apply(imports, closure, NF.Constructors.Rigid(lvl));
-			const body = quote(imports, lvl + 1, val);
-			return EB.Constructors.Mu(variable, source, quote(imports, lvl, ann), body);
+			const val = NF.apply(ctx, "Mu", closure, NF.Constructors.Rigid(lvl));
+			const body = quote(ctx, lvl + 1, val);
+			return EB.Constructors.Mu(variable, source, quote(ctx, lvl, ann), body);
 		})
 		.with({ type: "Row" }, ({ row }) => {
 			const _quote = (r: NF.Row): EB.Row =>
 				match(r)
 					.with({ type: "empty" }, (): EB.Row => ({ type: "empty" }))
-					.with({ type: "extension" }, ({ label, value, row }) => EB.Constructors.Extension(label, quote(imports, lvl, value), _quote(row)))
+					.with({ type: "extension" }, ({ label, value, row }) => EB.Constructors.Extension(label, quote(ctx, lvl, value), _quote(row)))
 					.with({ type: "variable" }, ({ variable }): EB.Row => {
 						const v = match(variable)
 							.with({ type: "Bound" }, (v): EB.Variable => ({ type: "Bound", index: lvl - v.lvl - 1 }))
@@ -65,5 +65,5 @@ export const quote = (imports: EB.Context["imports"], lvl: number, val: NF.Value
 
 export const closeVal = (ctx: EB.Context, value: NF.Value): NF.Closure => ({
 	env: ctx.env,
-	term: NF.quote(ctx.imports, ctx.env.length + 1, value),
+	term: NF.quote(ctx, ctx.env.length + 1, value),
 });

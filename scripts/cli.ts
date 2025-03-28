@@ -38,6 +38,7 @@ program
 			types: [],
 			names: [],
 			implicits: [],
+			sigma: {},
 			trace: [],
 			imports: { ...Lib.Elaborated },
 		};

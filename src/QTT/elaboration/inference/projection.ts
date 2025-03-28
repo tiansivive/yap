@@ -11,8 +11,8 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 			.with({ type: "Neutral" }, ({ value }) => project(label, tm, value, us))
 			.with({ type: "Var" }, _ => {
 				const r: NF.Row = { type: "variable", variable: EB.freshMeta(ctx.env.length) };
-				const ctor = NF.evaluate(ctx.env, ctx.imports, EB.Constructors.Var(EB.freshMeta(ctx.env.length)));
-				const val = NF.evaluate(ctx.env, ctx.imports, EB.Constructors.Var(EB.freshMeta(ctx.env.length)));
+				const ctor = NF.evaluate(ctx, EB.Constructors.Var(EB.freshMeta(ctx.env.length)));
+				const val = NF.evaluate(ctx, EB.Constructors.Var(EB.freshMeta(ctx.env.length)));
 
 				const inferred = NF.Constructors.App(ctor, { type: "Row", row: NF.Constructors.Extension(label, val, r) }, "Explicit");
 
@@ -41,7 +41,7 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 								return [NF.Constructors.Extension(r.label, r.value, rr), vv];
 							})
 							.with({ type: "variable" }, (r): [NF.Row, NF.Value] => {
-								const val = NF.evaluate(ctx.env, ctx.imports, EB.Constructors.Var(EB.freshMeta(ctx.env.length)));
+								const val = NF.evaluate(ctx, EB.Constructors.Var(EB.freshMeta(ctx.env.length)));
 								return [NF.Constructors.Extension(l, val, r), val];
 							})
 							.exhaustive();

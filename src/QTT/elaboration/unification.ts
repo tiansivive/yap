@@ -48,8 +48,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						([lam1, lam2]) => lam1.binder.icit === lam2.binder.icit,
 						([lam1, lam2]) =>
 							M.chain(M.ask(), ctx => {
-								const body1 = NF.apply(ctx.imports, lam1.closure, NF.Constructors.Rigid(lvl));
-								const body2 = NF.apply(ctx.imports, lam2.closure, NF.Constructors.Rigid(lvl));
+								const body1 = NF.apply(ctx, "Lambda", lam1.closure, NF.Constructors.Rigid(lvl));
+								const body2 = NF.apply(ctx, "Lambda", lam2.closure, NF.Constructors.Rigid(lvl));
 								return unify(body1, body2, lvl + 1, subst);
 							}),
 					)
@@ -76,8 +76,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 									);
 								}),
 								M.chain(({ ctx, sub }) => {
-									const body1 = NF.apply(ctx.imports, pi1.closure, NF.Constructors.Rigid(lvl));
-									const body2 = NF.apply(ctx.imports, pi2.closure, NF.Constructors.Rigid(lvl));
+									const body1 = NF.apply(ctx, "Pi", pi1.closure, NF.Constructors.Rigid(lvl));
+									const body2 = NF.apply(ctx, "Pi", pi2.closure, NF.Constructors.Rigid(lvl));
 									//FIXME: Temporary fix. We shouldn't rely on the context in unification. Just work with levels.
 									// const ctx_ = { ...ctx, env: Array(lvl) };
 									return unify(body1, body2, lvl + 1, sub);
@@ -97,8 +97,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 								M.fmap(unify(mu1.binder.annotation[0], mu2.binder.annotation[0], lvl, subst), sub => Sub.compose(ctx, sub, subst, lvl)),
 							),
 							M.chain(({ ctx, sub }) => {
-								const body1 = NF.apply(ctx.imports, mu1.closure, NF.Constructors.Rigid(lvl));
-								const body2 = NF.apply(ctx.imports, mu2.closure, NF.Constructors.Rigid(lvl));
+								const body1 = NF.apply(ctx, "Mu", mu1.closure, NF.Constructors.Rigid(lvl));
+								const body2 = NF.apply(ctx, "Mu", mu2.closure, NF.Constructors.Rigid(lvl));
 								//return M.fmap(unify(body1, body2, lvl + 1, sub), o => Sub.compose(ctx, o, sub, lvl + 1));
 								return unify(body1, body2, lvl + 1, sub);
 							}),
@@ -120,8 +120,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 									([, v]) => v.type !== "Abs" || v.binder.type !== "Mu",
 
 									([mu, v]) => {
-										const unfolded = NF.apply(ctx.imports, mu.closure, NF.Constructors.Neutral(mu));
-										const applied = unfolded.type === "Abs" ? NF.apply(ctx.imports, unfolded.closure, left.arg) : unfolded;
+										const unfolded = NF.apply(ctx, "Mu", mu.closure, NF.Constructors.Neutral(mu));
+										const applied = unfolded.type === "Abs" ? NF.apply(ctx, unfolded.binder.type, unfolded.closure, left.arg) : unfolded;
 										return unify(applied, right, lvl, subst);
 									},
 								)
@@ -130,8 +130,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 									([v]) => v.type !== "Abs" || v.binder.type !== "Mu",
 
 									([v, mu]) => {
-										const unfolded = NF.apply(ctx.imports, mu.closure, NF.Constructors.Neutral(mu));
-										const applied = unfolded.type === "Abs" ? NF.apply(ctx.imports, unfolded.closure, right.arg) : unfolded;
+										const unfolded = NF.apply(ctx, "Mu", mu.closure, NF.Constructors.Neutral(mu));
+										const applied = unfolded.type === "Abs" ? NF.apply(ctx, unfolded.binder.type, unfolded.closure, right.arg) : unfolded;
 										return unify(left, applied, lvl, subst);
 									},
 								)
@@ -296,8 +296,8 @@ const occursCheck = (ctx: EB.Context, v: NF.Variable, ty: NF.Value): boolean =>
 	match(ty)
 		.with(NF.Patterns.Var, ({ variable }) => _.isEqual(variable, v))
 		.with({ type: "Neutral" }, ({ value }) => occursCheck(ctx, v, value))
-		.with(NF.Patterns.Lambda, ({ closure }) => occursCheck(ctx, v, NF.apply(ctx.imports, closure, NF.Constructors.Rigid(ctx.env.length))))
-		.with(NF.Patterns.Pi, ({ closure }) => occursCheck(ctx, v, NF.apply(ctx.imports, closure, NF.Constructors.Rigid(ctx.env.length))))
+		.with(NF.Patterns.Lambda, ({ closure }) => occursCheck(ctx, v, NF.apply(ctx, "Lambda", closure, NF.Constructors.Rigid(ctx.env.length))))
+		.with(NF.Patterns.Pi, ({ closure }) => occursCheck(ctx, v, NF.apply(ctx, "Pi", closure, NF.Constructors.Rigid(ctx.env.length))))
 		.with(NF.Patterns.App, ({ func, arg }) => occursCheck(ctx, v, func) || occursCheck(ctx, v, arg))
 
 		.with(NF.Patterns.Row, ({ row }) =>

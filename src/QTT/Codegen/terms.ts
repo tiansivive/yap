@@ -17,9 +17,14 @@ export const codegen = (env: string[], term: EB.Term): string => {
 				.with({ type: "Atom" }, ({ value }) => `"${value}"`)
 				.exhaustive();
 		})
-		.with({ type: "Var", variable: { type: "Free" } }, { type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
-			return variable.name;
-		})
+		.with(
+			{ type: "Var", variable: { type: "Free" } },
+			{ type: "Var", variable: { type: "Foreign" } },
+			{ type: "Var", variable: { type: "Label" } },
+			({ variable }) => {
+				return variable.name;
+			},
+		)
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
 			return env[variable.index];
 		})
@@ -43,7 +48,7 @@ export const codegen = (env: string[], term: EB.Term): string => {
 				arg: { type: "Row" },
 			},
 			({ func, arg }) => {
-				return `{ ${codegen(env, arg)} }`;
+				return codegen(env, arg);
 			},
 		)
 		.with(
@@ -53,7 +58,7 @@ export const codegen = (env: string[], term: EB.Term): string => {
 				arg: { type: "Row" },
 			},
 			({ func, arg }) => {
-				return `{ ${codegen(env, arg)} }`;
+				return codegen(env, arg);
 			},
 		)
 		.with(
@@ -63,7 +68,7 @@ export const codegen = (env: string[], term: EB.Term): string => {
 				arg: { type: "Row" },
 			},
 			({ func, arg }) => {
-				return `/* variant */{ ${codegen(env, arg)} }`;
+				return `/* variant */${codegen(env, arg)}`;
 			},
 		)
 		.with({ type: "App" }, app => {
@@ -97,17 +102,30 @@ export const codegen = (env: string[], term: EB.Term): string => {
 			return `{ ...${obj}, ${inj.label}: ${val} }`;
 		})
 		.with({ type: "Row" }, ({ row }) => {
+			const extract = (row: EB.Row): Array<string> => {
+				if (row.type === "empty") {
+					return [];
+				}
+
+				if (row.type === "variable") {
+					return [];
+				}
+
+				return [row.label, ...extract(row.row)];
+			};
+
+			const binders = extract(row).reverse();
 			const gen = (r: EB.Row, code: string) => {
 				if (r.type === "empty") {
-					return code;
+					return `((() => {${code}\nreturn {${binders.join(",")}};\n})())`;
 				}
 
 				if (r.type === "variable") {
 					throw new Error("Cannot compile rows with variable: " + JSON.stringify(row));
 				}
 
-				const pair = `${r.label}: ${codegen(env, r.value)},`;
-				return gen(r.row, code + pair);
+				const dec = `\nconst ${r.label} = ${codegen([...binders, ...env], r.value)};`;
+				return gen(r.row, code + dec);
 			};
 
 			return gen(row, "");

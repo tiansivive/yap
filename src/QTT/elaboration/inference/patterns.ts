@@ -49,7 +49,7 @@ export const infer_: Inference<Src.Pattern, "type"> = {
 				return [EB.Constructors.Patterns.Var(pat.value.value, tm), ty, us, []];
 			}
 			const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
-			const va = NF.evaluate(ctx.env, ctx.imports, meta);
+			const va = NF.evaluate(ctx, meta);
 			const zero = Q.noUsage(ctx.env.length);
 			const binder: Binder = [pat.value.value, va, zero];
 			return [{ type: "Binder", value: pat.value.value }, va, zero, [binder]];
@@ -85,7 +85,7 @@ export const infer_: Inference<Src.Pattern, "type"> = {
 	List: pat => {
 		return M.chain(M.ask(), ctx => {
 			const mvar = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
-			const v = NF.evaluate(ctx.env, ctx.imports, mvar);
+			const v = NF.evaluate(ctx, mvar);
 
 			const validate = (val: Src.Pattern) => {
 				const key = capitalize(val.type) as Capitalize<typeof val.type>;

@@ -28,17 +28,17 @@ export function insert(node: EB.AST): EB.M.Elaboration<EB.AST> {
 								if (!_.isEmpty(found[1])) {
 									throw new Error("insert: Found implicit with constraints; What to do here?");
 								}
-								const bodyNF = NF.apply(ctx.imports, pi.closure, pi.binder.annotation[0]);
+								const bodyNF = NF.apply(ctx, "Pi", pi.closure, pi.binder.annotation[0]);
 								const tm = EB.Constructors.App("Implicit", term, found[0]);
 								return M.of<EB.AST>([tm, bodyNF, us]);
 							}
 
 							const meta = EB.freshMeta(ctx.env.length);
 							const mvar = EB.Constructors.Var(meta);
-							const vNF = NF.evaluate(ctx.env, ctx.imports, mvar);
+							const vNF = NF.evaluate(ctx, mvar);
 
 							const tm = EB.Constructors.App("Implicit", term, mvar);
-							const bodyNF = NF.apply(ctx.imports, pi.closure, vNF);
+							const bodyNF = NF.apply(ctx, "Pi", pi.closure, vNF);
 							return F.pipe(
 								M.of<EB.AST>([tm, bodyNF, us]),
 								M.discard(_ => M.tell("constraint", { type: "resolve", meta: meta, annotation: pi.binder.annotation[0] })),

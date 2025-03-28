@@ -45,6 +45,19 @@ export const Name: PostProcessor<[Token], Variable> = tok =>
 		}),
 	);
 
+export const Label: PostProcessor<[Colon, Token], Variable> = ([, tok]) => {
+	return F.pipe(
+		[tok],
+		sourceLoc,
+		Sourced.fold<unknown, Variable>((value, location) => {
+			if (typeof value !== "string") {
+				throw new Error("Expected string value for var name");
+			}
+			return { type: "label", value, location };
+		}),
+	);
+};
+
 export const Str: PostProcessor<[Sourced<string>], Sourced<Literal>> = F.flow(
 	NEA.head,
 	Sourced.map(value => ({ type: "String", value })),

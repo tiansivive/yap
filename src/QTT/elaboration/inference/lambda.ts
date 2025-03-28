@@ -22,7 +22,7 @@ export const infer = (lam: Lambda): EB.M.Elaboration<EB.AST> => {
 			return lam.annotation ? EB.check(lam.annotation, NF.Type) : M.of([meta, Q.noUsage(ctx.env.length)] as const);
 		}),
 		M.chain(({ ann: [tm], ctx }) => {
-			const va = NF.evaluate(ctx.env, ctx.imports, tm);
+			const va = NF.evaluate(ctx, tm);
 			const mva: NF.ModalValue = [va, lam.multiplicity ? lam.multiplicity : Q.Many];
 			const ctx_ = EB.bind(ctx, { type: "Lambda", variable: lam.variable }, mva);
 			return M.local(

@@ -24,6 +24,7 @@ describe("Unification", () => {
 		types: [],
 		names: [],
 		imports: Lib.Elaborated,
+		sigma: {},
 		trace: [],
 		implicits: [],
 	};

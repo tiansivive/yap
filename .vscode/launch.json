@@ -24,6 +24,28 @@
 		{
 			"type": "node",
 			"request": "launch",
+			"name": "repl",
+			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
+			"runtimeArgs": [
+				"-T",
+				"--project",
+				"${workspaceRoot}/tsconfig.json",
+			],
+			"program": "${workspaceRoot}/scripts/cli.ts",
+			"args": [
+				"repl"
+			],
+			"cwd": "${workspaceRoot}",
+			"internalConsoleOptions": "openOnSessionStart",
+			"skipFiles": [
+				"<node_internals>/**",
+				"node_modules/**"
+			],
+			"console": "integratedTerminal"
+		},
+		{
+			"type": "node",
+			"request": "launch",
 			"name": "ts node",
 			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
 			"runtimeArgs": [

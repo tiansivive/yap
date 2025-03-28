@@ -22,7 +22,7 @@ export const infer = (pi: Pi): EB.M.Elaboration<EB.AST> => {
 			M.bind("ctx", M.ask),
 			M.let("ann", EB.check(ann, NF.Type)),
 			M.bind("body", ({ ann: [ann], ctx }) => {
-				const va = NF.evaluate(ctx.env, ctx.imports, ann);
+				const va = NF.evaluate(ctx, ann);
 				const mva: NF.ModalValue = [va, q];
 				const ctx_ = EB.bind(ctx, { type: "Pi", variable: v }, mva);
 				return M.local(ctx_, EB.check(body, NF.Type));

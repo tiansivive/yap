@@ -284,3 +284,21 @@ let infer
             return M.of { tm, ty, u2 };
         }
 
+
+
+// testing pipeline
+
+let pipeline = \x y -> y
+    |> foo
+    |> bar x
+    |> baz x
+
+let sugar = \x 
+    >> foo
+    |> bar x
+    |> baz x     
+
+let omit = 
+    \>> foo
+    |> bar
+    |> baz

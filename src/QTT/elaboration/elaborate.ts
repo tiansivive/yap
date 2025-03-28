@@ -32,6 +32,7 @@ export type Constraint =
 	| { type: "assign"; left: NF.Value; right: NF.Value; lvl: number }
 	| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity }
 	| { type: "resolve"; meta: Extract<EB.Variable, { type: "Meta" }>; annotation: NF.Value };
+// | { type: "sigma"; lvl: number; dict: Record<string, NF.Value> }
 
 export type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
 export const Stmt = {
@@ -47,7 +48,7 @@ export const Stmt = {
 						letdec.annotation ? check(letdec.annotation, NF.Type) : M.of([EB.Constructors.Var(freshMeta(ctx.env.length)), Q.noUsage(ctx.env.length)] as const),
 					),
 					M.bind("inferred", ({ ctx, ann }) => {
-						const va = NF.evaluate(ctx.env, ctx.imports, ann[0]);
+						const va = NF.evaluate(ctx, ann[0]);
 						const q = letdec.multiplicity || Q.Many;
 						const ctx_ = EB.bind(ctx, { type: "Let", variable: letdec.variable }, [va, q]);
 						return M.local(
@@ -113,20 +114,20 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 
 					.with({ type: "hole" }, _ => {
 						const meta = EB.Constructors.Var(freshMeta(env.length));
-						const ty = NF.evaluate(env, ctx.imports, meta);
+						const ty = NF.evaluate(ctx, meta);
 						// const modal = NF.infer(env, annotation);
 						return M.of<EB.AST>([meta, ty, Q.noUsage(ctx.env.length)]);
 					})
 
 					.with({ type: "var" }, ({ variable }) => EB.lookup(variable, ctx))
 
-					.with({ type: "row" }, ({ row }) =>
-						M.local(
+					.with({ type: "row" }, ({ row }) => {
+						return M.local(
 							EB.muContext,
 							// QUESTION:? can we do anything to the ty row? Should we?
 							M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Row(row), NF.Row, qs]),
-						),
-					)
+						);
+					})
 					.with({ type: "struct" }, ({ row }) =>
 						M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Struct(row), NF.Constructors.Schema(ty), qs]),
 					)
@@ -155,7 +156,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 					)
 					.with({ type: "list" }, ({ elements }) => {
 						const mvar = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
-						const v = NF.evaluate(env, ctx.imports, mvar);
+						const v = NF.evaluate(ctx, mvar);
 
 						const validate = F.flow(
 							infer,
@@ -210,7 +211,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 							M.Do,
 							M.let("ann", check(ann, NF.Type)),
 							M.bind("type", ({ ann: [type, us] }) => {
-								const val = NF.evaluate(env, ctx.imports, type);
+								const val = NF.evaluate(ctx, type);
 								return M.of([val, us] as const);
 							}),
 							M.bind("term", ({ type: [type, us] }) => check(term, type)),
@@ -309,7 +310,7 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 						[{ type: "lambda" }, { type: "Abs", binder: { type: "Pi" } }],
 						([tm, ty]) => tm.icit === ty.binder.icit,
 						([tm, ty]) => {
-							const bType = NF.apply(ctx.imports, ty.closure, NF.Constructors.Rigid(ctx.env.length));
+							const bType = NF.apply(ctx, "Lambda", ty.closure, NF.Constructors.Rigid(ctx.env.length));
 
 							const ctx_ = EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation);
 							return M.local(
@@ -326,7 +327,7 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 						[P._, { type: "Abs", binder: { type: "Pi" } }],
 						([_, ty]) => ty.binder.icit === "Implicit",
 						([tm, ty]) => {
-							const bType = NF.apply(ctx.imports, ty.closure, NF.Constructors.Rigid(ctx.env.length));
+							const bType = NF.apply(ctx, "Pi", ty.closure, NF.Constructors.Rigid(ctx.env.length));
 							const ctx_ = EB.bind(ctx, { type: "Lambda", variable: ty.binder.variable }, ty.binder.annotation, "inserted");
 							return M.local(
 								ctx_,
@@ -375,7 +376,9 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 							F.pipe(
 								infer(tm),
 								M.chain(EB.Icit.insert),
-								M.discard(([, inferred]) => M.tell("constraint", { type: "assign", left: inferred, right: type, lvl: ctx.env.length })),
+								M.discard(([, inferred]) => {
+									return M.tell("constraint", { type: "assign", left: inferred, right: ty, lvl: ctx.env.length });
+								}),
 								M.fmap(([tm, , us]): [EB.Term, Q.Usages] => [tm, us]),
 							),
 						);

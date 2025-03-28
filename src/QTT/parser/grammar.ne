@@ -197,6 +197,7 @@ Foreign -> "foreign" %space Identifier %space:? %colon %space:? TypeExpr 	{% P.F
 # Variables
 # ------------------------------------
 Identifier -> %variable {% P.Name %}
+			| %colon %variable {% P.Label %}
 
 # Multiplicity
 Quantity -> "1" {% () => Q.One %}

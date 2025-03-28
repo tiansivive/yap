@@ -28,6 +28,7 @@ export type Variable =
 	| { type: "Bound"; index: number }
 	| { type: "Free"; name: string }
 	| { type: "Foreign"; name: string }
+	| { type: "Label"; name: string }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
@@ -38,6 +39,7 @@ export type Binding =
 	| { type: "Let"; variable: string; value: Term; annotation: Term }
 	| { type: "Lambda"; variable: string; icit: Implicitness }
 	| { type: "Mu"; variable: string; annotation: Term; source: string }
+	// | { type: "Sigma"; variable: string; annotation: Term, multiplicity: Q.Multiplicity; }
 	| {
 			type: "Pi";
 			variable: string;

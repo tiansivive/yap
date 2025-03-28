@@ -26,6 +26,7 @@ export type Binder =
 export type Variable =
 	| { type: "Bound"; lvl: number }
 	| { type: "Free"; name: string }
+	| { type: "Label"; name: string }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
@@ -109,6 +110,7 @@ export const Patterns = {
 	Rigid: { type: "Var", variable: { type: "Bound" } } as const,
 	Flex: { type: "Var", variable: { type: "Meta" } } as const,
 	Free: { type: "Var", variable: { type: "Free" } } as const,
+	Label: { type: "Var", variable: { type: "Label" } } as const,
 
 	Lit: { type: "Lit" } as const,
 	Atom: { type: "Lit", value: { type: "Atom" } } as const,

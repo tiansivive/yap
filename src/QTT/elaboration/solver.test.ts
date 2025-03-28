@@ -25,6 +25,7 @@ describe("Constraint Solver", () => {
 		names: [],
 		implicits: [],
 		imports: Lib.Elaborated,
+		sigma: {},
 		trace: [],
 	};
 

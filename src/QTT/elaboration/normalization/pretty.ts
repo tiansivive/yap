@@ -18,9 +18,10 @@ export const display = (value: NF.Value | NF.ModalValue): string => {
 		.with({ type: "Lit" }, ({ value }) => Lit.display(value))
 		.with({ type: "Var" }, ({ variable }) =>
 			match(variable)
-				.with({ type: "Bound" }, ({ lvl }) => `l${lvl}`)
+				.with({ type: "Bound" }, ({ lvl }) => `L${lvl}`)
 				.with({ type: "Meta" }, ({ val }) => `?${val}`)
 				.with({ type: "Free" }, ({ name }) => name)
+				.with({ type: "Label" }, ({ name }) => `:${name}`)
 				.exhaustive(),
 		)
 		.with({ type: "Neutral" }, ({ value }) => display(value))

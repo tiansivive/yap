@@ -91,7 +91,7 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 				// We add them as rigid variables, so that their de Bruijn level points to the correct pi-binding
 				env: ms.slice(0, ms.length - i).map((m, j) => [NF.Constructors.Rigid(j), Q.Many]),
 				// We need an offset to account for the already generalized variables
-				term: NF.quote(ctx_.imports, ms.length - i, nf),
+				term: NF.quote(ctx_, ms.length - i, nf),
 			});
 		},
 		sub(val, ms.length),

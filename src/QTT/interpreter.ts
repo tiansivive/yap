@@ -67,8 +67,8 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context) => {
 
 		const script = letdecs.join("\n") + `\n${code}`;
 		console.log(script);
-		const res = eval(script);
-		console.log(res, `:: ${EB.NF.display(ty)}`);
+		//const res = eval(script);
+		console.log("code", `:: ${EB.NF.display(ty)}`);
 
 		return ctx;
 	}
