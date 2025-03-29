@@ -27,6 +27,7 @@ export type Variable =
 	| { type: "Bound"; lvl: number }
 	| { type: "Free"; name: string }
 	| { type: "Label"; name: string }
+	| { type: "Foreign"; name: string }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
@@ -101,8 +102,8 @@ export const Row: Value = {
 };
 
 export const Indexed: Value = {
-	type: "Lit",
-	value: { type: "Atom", value: "Indexed" },
+	type: "Var",
+	variable: { type: "Foreign", name: "Indexed" },
 };
 
 export const Patterns = {

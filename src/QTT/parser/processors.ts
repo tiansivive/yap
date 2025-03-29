@@ -245,6 +245,11 @@ export const struct: PostProcessor<[[KeyVal[]]], Term> = ([[pairs]]) => {
 	return { type: "struct", row, location: locSpan(pairs[0][1], tail.location) };
 };
 
+export const dict: PostProcessor<[[Space, [Space, Term], Space, Colon, Space, Term]], Term> = ([data]) => {
+	const [, [, index], , , , term] = data;
+	return { type: "dict", index, term, location: locSpan(index.location, term.location) };
+};
+
 export const tagged: PostProcessor<[Colon, Variable, Whitespace, Term], Term> = ([tok, v, , tm]) => {
 	return {
 		type: "tagged",

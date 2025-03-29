@@ -10,7 +10,6 @@ import * as R from "@qtt/shared/rows";
 import { Constraint } from "./elaborate";
 
 import * as EB from ".";
-import { Terms } from "@qtt/shared/lib/primitives";
 
 const display = (term: EB.Term): string => {
 	return match(term)
@@ -65,10 +64,7 @@ const display = (term: EB.Term): string => {
 			const stmts = statements.map(Stmt.display).join("; ");
 			return `{ ${stmts}; return ${display(ret)}; }`;
 		})
-		.with({ type: "Indexed" }, ({ pairs }) => {
-			const elements = pairs.map(p => `${display(p.index)}: ${display(p.value)}`);
-			return `[ ${elements.join(", ")} ]`;
-		})
+
 		.exhaustive();
 	//.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
 };

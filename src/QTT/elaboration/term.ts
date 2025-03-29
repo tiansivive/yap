@@ -17,7 +17,6 @@ export type Term =
 	| { type: "Abs"; binding: Binding; body: Term }
 	| { type: "App"; icit: Implicitness; func: Term; arg: Term }
 	| { type: "Row"; row: Row }
-	| { type: "Indexed"; pairs: Array<{ index: Term; value: Term }> }
 	| { type: "Proj"; label: string; term: Term }
 	| { type: "Inj"; label: string; value: Term; term: Term }
 	| { type: "Annotation"; term: Term; ann: Term }
@@ -113,6 +112,13 @@ export const Constructors = {
 	Variant: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row)),
 	Proj: (label: string, term: Term): Term => ({ type: "Proj", label, term }),
 	Inj: (label: string, value: Term, term: Term): Term => ({ type: "Inj", label, value, term }),
+
+	Indexed: (index: Term, term: Term, strategy?: Term): Term => {
+		const indexing = Constructors.App("Explicit", Constructors.Var({ type: "Foreign", name: "Indexed" }), index);
+		const values = Constructors.App("Explicit", indexing, term);
+		const strat = Constructors.App("Implicit", values, strategy ? strategy : Constructors.Var({ type: "Foreign", name: "defaultHashMap" }));
+		return strat;
+	},
 
 	Match: (scrutinee: Term, alternatives: Array<Alternative>): Term => ({ type: "Match", scrutinee, alternatives }),
 	Alternative: (pattern: Pattern, term: Term): Alternative => ({ pattern, term }),

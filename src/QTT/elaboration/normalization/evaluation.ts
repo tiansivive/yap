@@ -38,7 +38,7 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 			return ctx.env[variable.index][0];
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
-			throw new Error("Tried to evaluate foreign variable: " + variable.name);
+			return NF.Constructors.Neutral(NF.Constructors.Var(variable));
 		})
 
 		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) =>

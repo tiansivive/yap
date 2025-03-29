@@ -9,7 +9,10 @@ import * as E from "fp-ts/lib/Either";
 import * as CG from "./Codegen/terms";
 
 import fs from "fs";
+import vm from "vm";
 import { resolve } from "path";
+
+import * as Lib from "@qtt/shared/lib/primitives";
 
 export const interpret = (code: string, ctx: EB.Context) => {
 	const g = Grammar;
@@ -67,7 +70,13 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context) => {
 
 		const script = letdecs.join("\n") + `\n${code}`;
 		//console.log(script);
-		const res = eval(script);
+
+		const imported = Object.keys(ctx.imports).reduce((acc, key) => {
+			return { ...acc, [key]: key };
+		}, {});
+		const vmCtx = vm.createContext({ ...imported, ...Lib.FFI });
+		const res = vm.runInContext(script, vmCtx);
+
 		console.dir(res, { showHidden: true, depth: null });
 		// console.dir(Object.getOwnPropertyDescriptors(res), { showHidden: true, depth: null });
 		console.log(`:: ${EB.NF.display(ty)}`);

@@ -22,6 +22,7 @@ export const display = (value: NF.Value | NF.ModalValue): string => {
 				.with({ type: "Meta" }, ({ val }) => `?${val}`)
 				.with({ type: "Free" }, ({ name }) => name)
 				.with({ type: "Label" }, ({ name }) => `:${name}`)
+				.with({ type: "Foreign" }, ({ name }) => `FFI.${name}`)
 				.exhaustive(),
 		)
 		.with({ type: "Neutral" }, ({ value }) => display(value))
@@ -37,13 +38,11 @@ export const display = (value: NF.Value | NF.ModalValue): string => {
 			const arr = binder.type !== "Mu" && binder.icit === "Implicit" ? "=>" : "->";
 			return `${b} ${arr} ${EB.Display.Term(closure.term)}`; // TODO: Print environment
 		})
-		.with({ type: "App" }, ({ func, arg }) => {
+		.with({ type: "App" }, ({ func, arg, icit }) => {
 			const f = display(func);
+			const wrapped = func.type !== "Var" && func.type !== "Lit" ? `(${f})` : f;
 
-			if (func.type !== "Var" && func.type !== "Lit") {
-				return `(${f}) ${display(arg)}`;
-			}
-			return `${f} ${display(arg)}`;
+			return `${wrapped} ${Icit.display(icit)}${display(arg)}`;
 		})
 		.with({ type: "Row" }, ({ row }) =>
 			R.display({

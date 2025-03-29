@@ -153,16 +153,22 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 						return M.fmap(M.traverse(elements, validate), (es): EB.AST => {
 							const usages = es.reduce((acc, [, , us]) => Q.add(acc, us), Q.noUsage(ctx.env.length));
 
-							const indexed = NF.Constructors.App(NF.Indexed, NF.Constructors.Lit(Lit.Atom("Num")), "Explicit");
-							const ty = NF.Constructors.App(indexed, v, "Explicit");
+							const indexing = NF.Constructors.App(NF.Indexed, NF.Constructors.Lit(Lit.Atom("Num")), "Explicit");
+							const values = NF.Constructors.App(indexing, v, "Explicit");
+
+							const ty = NF.Constructors.App(values, NF.Constructors.Var({ type: "Foreign", name: "defaultArray" }), "Implicit");
 
 							const tm: EB.Term = {
-								type: "Indexed",
-								pairs: es.map(([tm], i) => ({
-									index: EB.Constructors.Lit(Lit.Num(i)),
-									value: tm,
-								})),
+								type: "Row",
+								row: es.reduceRight(
+									(r: EB.Row, [tm], i) => {
+										const label = i.toString();
+										return { type: "extension", label, value: tm, row: r };
+									},
+									{ type: "empty" },
+								),
 							};
+
 							return [tm, NF.Constructors.Neutral(ty), usages];
 						});
 					})
@@ -177,6 +183,17 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 							return [tagged, variant, us];
 						}),
 					)
+					.with({ type: "dict" }, ({ index, term }) => {
+						return F.pipe(
+							M.Do,
+							M.let("index", infer(index)),
+							M.let("term", infer(term)),
+							M.fmap(({ index: [tm, , us], term: [tm2, , us2] }): EB.AST => {
+								const indexed = EB.Constructors.Indexed(tm, tm2);
+								return [indexed, NF.Type, Q.add(us, us2)];
+							}),
+						);
+					})
 					.with({ type: "projection" }, ({ term, label }) =>
 						F.pipe(
 							M.Do,

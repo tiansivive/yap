@@ -88,6 +88,7 @@ TypeExpr -> Pi 			{% id %}
 
 Type -> Mu 				{% id %}
 	  | Variant 		{% id %} 
+	  | Dict 			{% id %}
 	  | Row 			{% id %}	
 	  | Expr 			{% id %}
 
@@ -153,6 +154,8 @@ List -> Empty[%lbracket, %rbracket] 					{% P.emptyList %}
 
 Variant -> %bar Many[Tagged, %bar]						{% P.variant %}
 
+Dict -> Curly[ %space:? Square[ %space:? TypeExpr ] %space:? %colon %space:? TypeExpr ] {% P.dict %}
+
 # Fields
 KeyVal -> Identifier %space:? %colon %space:? TypeExpr 				{% P.keyval %}
 
@@ -174,7 +177,7 @@ Tagged -> %hash Identifier %space:? TypeExpr 	{% P.tagged %}
 Block -> Curly[ Many[Statement, %semicolon] %semicolon Return:? ] 		{% P.Block %}
 	   | Curly[ Return ] 												{% P.Block %}
 
-Statement -> Ann 			{% P.Expr %}
+Statement -> TypeExpr 		{% P.Expr %}
            | Letdec			{% id %}
 		   | Using 			{% id %}
 		   | Foreign 		{% id %}

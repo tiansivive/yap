@@ -29,6 +29,7 @@ export const Substitute = (ctx: EB.Context) => {
 				.with(NF.Patterns.Label, () => val)
 				.with(NF.Patterns.Rigid, () => val)
 				.with(NF.Patterns.Flex, ({ variable }) => subst[variable.val] ?? val)
+				.with(NF.Patterns.Var, v => v)
 				.with(NF.Patterns.Lambda, ({ binder, closure }) => NF.Constructors.Lambda(binder.variable, binder.icit, call.closure(subst, closure)))
 				.with(NF.Patterns.Pi, ({ closure, binder }) => {
 					const pi = NF.Constructors.Pi(
@@ -165,13 +166,7 @@ export const Substitute = (ctx: EB.Context) => {
 					});
 					return EB.Constructors.Block(stmts, call.term(subst, ret, level));
 				})
-				.with({ type: "Indexed" }, (ixd): EB.Term => {
-					const pairs = ixd.pairs.map(p => ({
-						index: call.term(subst, p.index, level),
-						value: call.term(subst, p.value, level),
-					}));
-					return { type: "Indexed", pairs };
-				})
+
 				.otherwise(() => {
 					throw new Error("Substitute: Not implemented yet");
 				});

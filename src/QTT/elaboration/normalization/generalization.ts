@@ -14,6 +14,7 @@ export const metas = (val: NF.Value): Meta[] => {
 	const ms = match(val)
 		.with(NF.Patterns.Lit, () => [])
 		.with(NF.Patterns.Flex, ({ variable }) => [variable])
+		.with(NF.Patterns.Var, () => [])
 		.with(NF.Patterns.App, ({ func, arg }) => [...metas(func), ...metas(arg)])
 		.with(NF.Patterns.Row, ({ row }) =>
 			R.fold(

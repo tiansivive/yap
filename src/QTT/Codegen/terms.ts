@@ -4,8 +4,8 @@ import { globalModules } from "../modules/loading";
 import * as EB from "@qtt/elaboration";
 import { Literal } from "../shared/literals";
 
-import * as R from "@qtt/shared/rows";
-
+import * as Lib from "@qtt/shared/lib/primitives";
+import { get } from "lodash";
 const DEFAULT_RECORD_NAME = "rec";
 
 export const codegen = (env: string[], term: EB.Term): string => {
@@ -20,7 +20,12 @@ export const codegen = (env: string[], term: EB.Term): string => {
 				.exhaustive();
 		})
 		.with({ type: "Var", variable: { type: "Label" } }, ({ variable }) => `${DEFAULT_RECORD_NAME}.${variable.name}`)
-		.with({ type: "Var", variable: { type: "Foreign" } }, { type: "Var", variable: { type: "Free" } }, ({ variable }) => variable.name)
+		.with({ type: "Var", variable: { type: "Foreign" } }, { type: "Var", variable: { type: "Free" } }, ({ variable }) => {
+			if (Object.keys(Lib.Terms).includes(variable.name)) {
+				return codegen(env, get(Lib.Terms, variable.name));
+			}
+			return variable.name;
+		})
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
 			return env[variable.index];
 		})
@@ -132,11 +137,6 @@ export const codegen = (env: string[], term: EB.Term): string => {
                 const $x = ${scrutinee};
                 ${alts}
             })()`;
-		})
-		.with({ type: "Indexed" }, ixd => {
-			const pairs = ixd.pairs.map(p => `${codegen(env, p.index)}: ${codegen(env, p.value)}`);
-			//FIXME: we have to check if it's an array or an object
-			return `{ ${pairs.join(", ")} }`;
 		})
 		.otherwise(_ => {
 			throw new Error("Code gen not yet implemented");
