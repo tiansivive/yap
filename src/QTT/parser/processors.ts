@@ -212,13 +212,8 @@ export const Param = ([binding, ...ann]: [Variable, ...Annotation]): Param => {
  ***********************************************************/
 type KeyVal = Sourced<[string, Term]>;
 
-export const keyval = (pair: [Variable, Whitespace, Colon, Whitespace, Term] | [Variable, Whitespace, Colon, Colon, Whitespace, Term]): KeyVal => {
-	if (pair.length === 5) {
-		const [v, , , , value] = pair;
-		return Sourced.of([v.value, value], locSpan(v.location, value.location));
-	}
-
-	const [v, , , , , value] = pair;
+export const keyval = (pair: [Variable, Whitespace, Colon, Whitespace, Term]): KeyVal => {
+	const [v, , , , value] = pair;
 	return Sourced.of([v.value, value], locSpan(v.location, value.location));
 };
 
@@ -248,20 +243,6 @@ export const struct: PostProcessor<[[KeyVal[]]], Term> = ([[pairs]]) => {
 
 	const row = pairs.reduceRight<Row>((acc, [[label, value], location]) => ({ type: "extension", label, value, row: acc, location }), tail);
 	return { type: "struct", row, location: locSpan(pairs[0][1], tail.location) };
-};
-
-export const emptySchema = ([location]: [P.Location]): Term => ({ type: "schema", location, row: { ...R.Constructors.Empty(), location } });
-
-export const schema: PostProcessor<[[KeyVal[], Variable?]], Term> = ([[pairs, v]]) => {
-	if (pairs.length === 0) {
-		throw new Error("Expected at least one key-value pair in schema");
-	}
-
-	const last = pairs[pairs.length - 1];
-	const tail: Row = !v ? { type: "empty", location: last[1] } : { type: "variable", variable: v, location: v.location };
-
-	const row = pairs.reduceRight<Row>((acc, [[label, value], location]) => ({ type: "extension", label, value, row: acc, location }), tail);
-	return { type: "schema", row, location: locSpan(pairs[0][1], tail.location) };
 };
 
 export const tagged: PostProcessor<[Colon, Variable, Whitespace, Term], Term> = ([tok, v, , tm]) => {

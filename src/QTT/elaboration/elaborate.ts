@@ -54,8 +54,6 @@ export const Stmt = {
 						return M.local(
 							ctx_,
 							F.pipe(
-								// infer(letdec.value),
-								// M.discard(inferred => M.tell("constraint", { type: "assign", left: va, right: inferred[1], lvl: ctx_.env.length })),
 								check(letdec.value, va),
 								M.fmap(([tm, us]): [EB.Term, NF.Value, Q.Usages] => [tm, va, us]),
 							),
@@ -70,7 +68,6 @@ export const Stmt = {
 							: inferred[0];
 
 						const def = EB.Constructors.Stmt.Let(letdec.variable, tm, ann[0]);
-						// const def = EB.Constructors.Stmt.Let(letdec.variable, inferred[0], ann[0]);
 						return [def, inferred[1], inferred[2]];
 					}),
 				);
@@ -131,15 +128,6 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 					.with({ type: "struct" }, ({ row }) =>
 						M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Struct(row), NF.Constructors.Schema(ty), qs]),
 					)
-					.with({ type: "schema" }, ({ row }) =>
-						F.pipe(
-							M.local(
-								EB.muContext,
-								M.fmap(EB.Rows.elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Schema(row), NF.Type, qs]),
-							),
-						),
-					)
-
 					.with({ type: "variant" }, variant =>
 						F.pipe(
 							M.local(

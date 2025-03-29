@@ -88,7 +88,6 @@ TypeExpr -> Pi 			{% id %}
 
 Type -> Mu 				{% id %}
 	  | Variant 		{% id %} 
-	  | Schema 			{% id %}
 	  | Row 			{% id %}	
 	  | Expr 			{% id %}
 
@@ -152,21 +151,19 @@ Tuple -> Curly[ Many[TypeExpr, %comma] ] 				{% P.tuple %}
 List -> Empty[%lbracket, %rbracket] 					{% P.emptyList %}
 	  | Square[ Many[TypeExpr, %comma] ] 				{% P.list %}
 
-# Types
-Schema -> Curly[ Many[SchemaPair, %comma] RowTail:? ] 	{% P.schema %}
-
 Variant -> %bar Many[Tagged, %bar]						{% P.variant %}
 
 # Fields
 KeyVal -> Identifier %space:? %colon %space:? TypeExpr 				{% P.keyval %}
-SchemaPair -> Identifier %space:? %colon %colon %space:? TypeExpr 	{% P.keyval %}
-Assignment -> Identifier %space:? %equals %space:? TypeExpr 			{% P.keyval %}
+
 
 Projection -> Atom %dot Identifier 									{% P.Projection %}
 			| %dot Identifier 										{% P.Projection %}
 
 Injection -> Curly[ %space:? Type %space:? %bar Many[Assignment, %comma] ] 	{% P.Injection %}
 		   | Curly[ %space:? %bar Many[Assignment, %comma] ] 				{% P.Injection %}
+
+Assignment -> Identifier %space:? %equals %space:? TypeExpr 		{% P.keyval %}
 
 # Tagged
 Tagged -> %hash Identifier %space:? TypeExpr 	{% P.tagged %}

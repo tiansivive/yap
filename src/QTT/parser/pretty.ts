@@ -48,13 +48,6 @@ export const display = (term: Src.Term): string => {
 			})(row);
 			return `struct ${r}`;
 		})
-		.with({ type: "schema" }, ({ row }) => {
-			const r = R.display({
-				term: display,
-				var: (v: Src.Variable) => v.value,
-			})(row);
-			return `schema ${r}`;
-		})
 		.with({ type: "variant" }, ({ row }) => {
 			const r = R.display({
 				term: display,

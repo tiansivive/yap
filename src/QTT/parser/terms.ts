@@ -32,7 +32,6 @@ export type Bare =
 	| { type: "list"; elements: Term[] }
 	| { type: "tuple"; row: Row }
 	| { type: "struct"; row: Row }
-	| { type: "schema"; row: Row }
 	| { type: "tagged"; tag: string; term: Term }
 	| { type: "variant"; row: Row }
 	| { type: "row"; row: Row }
