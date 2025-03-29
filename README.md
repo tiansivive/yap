@@ -27,8 +27,9 @@ There's no grand vision here — just a bunch of features I like, without the st
 It’s still early days, so expect **broken things, missing features, a nonsensical mess and half-baked ideas**. But hey, it already supports:
 
 - **Structural typing** - so you don’t have to fight a nominal type system for no reason
-  - Variants and Records
   - Dependent functions
+  - Dependent Records
+  - Variants
   - Recursive types
 - **Type inference** - Momma always told me I had a short attention span
 - **Implicits** - so you don’t have to pass a million arguments manually
@@ -37,7 +38,7 @@ It’s still early days, so expect **broken things, missing features, a nonsensi
 - **JS codegen** - sue me
 
 `Yap` will never ship a runtime.  
-It doesn’t assume anything about memory layouts or platforms. You should (eventually) be able to compile this mess to JavaScript, Erlang, Lua, C, Assembly, Brainf\*ck (you demented sicko) or whatever else strokes your ego you, without fighting the compiler. `Yap` will provide the required API to soothe your sweet soul, but _you_ will implement it, not `Yap`. Leave _me_ out of it.
+It doesn’t assume anything about memory layouts or platforms. You should (eventually) be able to compile this mess to JavaScript, Erlang, Lua, C, Assembly, Brainf\*ck (you demented sicko) or whatever else strokes your ego, without fighting the compiler. `Yap` will provide the required API to soothe your sweet soul, but _you_ will implement it, not `Yap`. Leave _me_ out of it.
 
 Why? Because backends are hard. _Really_ hard. And I'm dumb, _really_ dumb.
 There's heaps of incredible runtime platforms out in the wild, and hordes of people who actually enjoy dealing with platform-specific stuff — and they’re way better at it than I ever could be. So be free! I'll make sure to deal with those nasty fundamental concepts like mutation and references at the type level, and leave it all nice and pretty with sugar on top.

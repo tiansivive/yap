@@ -66,10 +66,11 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context) => {
 		const code = CG.codegen([], tm);
 
 		const script = letdecs.join("\n") + `\n${code}`;
-		// console.log(script);
+		//console.log(script);
 		const res = eval(script);
-		console.log(res, `:: ${EB.NF.display(ty)}`);
-
+		console.dir(res, { showHidden: true, depth: null });
+		// console.dir(Object.getOwnPropertyDescriptors(res), { showHidden: true, depth: null });
+		console.log(`:: ${EB.NF.display(ty)}`);
 		return ctx;
 	}
 

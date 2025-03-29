@@ -6,6 +6,8 @@ import { Literal } from "../shared/literals";
 
 import * as R from "@qtt/shared/rows";
 
+const DEFAULT_RECORD_NAME = "rec";
+
 export const codegen = (env: string[], term: EB.Term): string => {
 	return match(term)
 		.with({ type: "Lit" }, ({ value }) => {
@@ -17,14 +19,8 @@ export const codegen = (env: string[], term: EB.Term): string => {
 				.with({ type: "Atom" }, ({ value }) => `"${value}"`)
 				.exhaustive();
 		})
-		.with(
-			{ type: "Var", variable: { type: "Free" } },
-			{ type: "Var", variable: { type: "Foreign" } },
-			{ type: "Var", variable: { type: "Label" } },
-			({ variable }) => {
-				return `"${variable.name}"`;
-			},
-		)
+		.with({ type: "Var", variable: { type: "Label" } }, ({ variable }) => `${DEFAULT_RECORD_NAME}.${variable.name}`)
+		.with({ type: "Var", variable: { type: "Foreign" } }, { type: "Var", variable: { type: "Free" } }, ({ variable }) => variable.name)
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
 			return env[variable.index];
 		})
@@ -114,21 +110,20 @@ export const codegen = (env: string[], term: EB.Term): string => {
 				return [row.label, ...extract(row.row)];
 			};
 
-			const binders = extract(row).reverse();
 			const gen = (r: EB.Row, code: string) => {
 				if (r.type === "empty") {
-					return `((() => {${code}\nreturn {${binders.join(",")}};\n})())`;
+					return `((() => {${code}\nreturn ${DEFAULT_RECORD_NAME};\n})())`;
 				}
 
 				if (r.type === "variable") {
 					throw new Error("Cannot compile rows with variable: " + JSON.stringify(row));
 				}
 
-				const dec = `\nconst ${r.label} = ${codegen([...binders, ...env], r.value)};`;
+				const dec = `\nObject.defineProperty(rec, "${r.label}", { get: () => ${codegen(env, r.value)} });`;
 				return gen(r.row, code + dec);
 			};
 
-			return gen(row, "");
+			return gen(row, "\nconst rec = {};");
 		})
 		.with({ type: "Match" }, patMatch => {
 			const scrutinee = codegen(env, patMatch.scrutinee);
