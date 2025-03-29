@@ -1,0 +1,33 @@
+import * as F from "fp-ts/lib/function";
+
+import * as EB from "@yap/elaboration";
+import { M } from "@yap/elaboration";
+import * as Q from "@yap/shared/modalities/multiplicity";
+
+import * as NF from "@yap/elaboration/normalization";
+import * as Src from "@yap/src/index";
+
+type Pi = Extract<Src.Term, { type: "pi" } | { type: "arrow" }>;
+
+export const infer = (pi: Pi): EB.M.Elaboration<EB.AST> => {
+	const v = pi.type === "pi" ? pi.variable : `t${EB.nextCount()}`;
+	const body = pi.type === "pi" ? pi.body : pi.rhs;
+	const ann = pi.type === "pi" ? pi.annotation : pi.lhs;
+	const q = pi.type === "pi" && pi.multiplicity ? pi.multiplicity : Q.Many;
+
+	return M.local(
+		EB.muContext,
+		F.pipe(
+			M.Do,
+			M.bind("ctx", M.ask),
+			M.let("ann", EB.check(ann, NF.Type)),
+			M.bind("body", ({ ann: [ann], ctx }) => {
+				const va = NF.evaluate(ctx, ann);
+				const mva: NF.ModalValue = [va, q];
+				const ctx_ = EB.bind(ctx, { type: "Pi", variable: v }, mva);
+				return M.local(ctx_, EB.check(body, NF.Type));
+			}),
+			M.fmap(({ ann: [ann, aus], body: [body, [, ...busTail]] }) => [EB.Constructors.Pi(v, pi.icit, q, ann, body), NF.Type, Q.add(aus, busTail)]),
+		),
+	);
+};

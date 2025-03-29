@@ -14,10 +14,11 @@
 		"target": "ESNext",
 		"noErrorTruncation": false,
 		"paths": {
-			"@qtt/shared/*": ["./src/QTT/shared/*"],
-			"@qtt/src/*": ["./src/QTT/parser/*"],
-			"@qtt/elaboration": ["./src/QTT/elaboration/index"],
-			"@qtt/elaboration/*": ["./src/QTT/elaboration/*"]
+			"@yap/shared/*": ["./src/shared/*"],
+			"@yap/src/*": ["./src/parser/*"],
+			"@yap/elaboration": ["./src/elaboration/index"],
+			"@yap/elaboration/*": ["./src/elaboration/*"],
+			"@yap/utils": ["./src/utils/index"]
 		}
 	},
 	"include": ["src", "scripts/cli.ts"],

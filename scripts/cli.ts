@@ -2,11 +2,11 @@
 import { Command } from "commander";
 
 import { createInterface } from "readline";
-import * as Compiler from "../src/QTT/compile";
-import { interpret } from "../src/QTT/interpreter";
+import * as Compiler from "../src/compile";
+import { interpret } from "../src/interpreter";
 
-import * as EB from "@qtt/elaboration";
-import * as Lib from "@qtt/shared/lib/primitives";
+import * as EB from "@yap/elaboration";
+import * as Lib from "@yap/shared/lib/primitives";
 
 const program = new Command();
 

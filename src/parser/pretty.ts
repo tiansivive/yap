@@ -1,0 +1,136 @@
+import { match } from "ts-pattern";
+
+import * as Lit from "@yap/shared/literals";
+import * as Icit from "@yap/shared/implicitness";
+
+import * as Src from "@yap/src/index";
+import * as R from "@yap/shared/rows";
+
+export const display = (term: Src.Term): string => {
+	return match(term)
+		.with({ type: "lit" }, ({ value }) => Lit.display(value))
+		.with({ type: "var" }, ({ variable }) => variable.value)
+		.with({ type: "hole" }, _ => "?")
+		.with({ type: "arrow" }, ({ lhs, rhs, icit }) => {
+			return `${Icit.display(icit)}${display(lhs)} ${arr(icit)} ${display(rhs)}`;
+		})
+		.with({ type: "lambda" }, ({ icit, variable, annotation, body }) => {
+			const ann = annotation ? `: ${display(annotation)}` : "";
+			return `λ(${variable}${ann}) ${arr(icit)} ${display(body)}`;
+		})
+		.with({ type: "pi" }, ({ icit, variable, annotation, body }) => {
+			return `Π(${variable}: ${display(annotation)}) ${arr(icit)} ${display(body)}`;
+		})
+		.with({ type: "application" }, ({ icit, fn, arg }) => {
+			return `${display(fn)} ${display(arg)}`;
+		})
+		.with({ type: "annotation" }, ({ term, ann }) => {
+			return `(${display(term)} : ${display(ann)})`;
+		})
+
+		.with({ type: "row" }, ({ row }) => {
+			return R.display({
+				term: display,
+				var: (v: Src.Variable) => v.value,
+			})(row);
+		})
+		.with({ type: "tuple" }, ({ row }) => {
+			const r = R.display({
+				term: display,
+				var: (v: Src.Variable) => v.value,
+			})(row);
+			return `tuple ${r}`;
+		})
+		.with({ type: "struct" }, ({ row }) => {
+			const r = R.display({
+				term: display,
+				var: (v: Src.Variable) => v.value,
+			})(row);
+			return `struct ${r}`;
+		})
+		.with({ type: "variant" }, ({ row }) => {
+			const r = R.display({
+				term: display,
+				var: (v: Src.Variable) => v.value,
+			})(row);
+			return `variant ${r}`;
+		})
+		.with({ type: "tagged" }, ({ tag, term }) => {
+			return `(tagged ${tag}: ${display(term)})`;
+		})
+		.with({ type: "projection" }, ({ term, label }) => {
+			return `(${display(term)}).${label}`;
+		})
+		.with({ type: "injection" }, ({ label, value, term }) => {
+			return `{ ${display(term)} | ${label} = ${display(value)} }`;
+		})
+		.with({ type: "match" }, ({ scrutinee, alternatives }) => {
+			const scut = display(scrutinee);
+			const alts = alternatives.map(Alt.display).join("\n");
+			return `match ${scut}\n${alts}`;
+		})
+		.with({ type: "block" }, ({ statements, return: ret }) => {
+			const stmts = statements.map(Stmt.display).join(";\n");
+			return `{\n${stmts}\nreturn ${ret ? display(ret) : ""};\n}`;
+		})
+
+		.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
+};
+
+const arr = (icit: string) => (icit === "Implicit" ? "=>" : "->");
+
+export const Alt = {
+	display: (alt: Src.Alternative): string => `| ${Pat.display(alt.pattern)} -> ${display(alt.term)}`,
+};
+
+export const Pat = {
+	display: (pat: Src.Pattern): string => {
+		return (
+			match(pat)
+				.with({ type: "lit" }, ({ value }) => Lit.display(value))
+				.with({ type: "var" }, ({ value }) => value.value)
+				// .with({ type: "Wildcard" }, () => "_")
+				.with({ type: "row" }, ({ row }) =>
+					R.display({
+						term: Pat.display,
+						var: (v: Src.Variable) => v.value,
+					})(row),
+				)
+				.with({ type: "struct" }, ({ row }) => {
+					const r = R.display({
+						term: Pat.display,
+						var: (v: Src.Variable) => v.value,
+					})(row);
+					return `Struct ${r}`;
+				})
+				.with({ type: "variant" }, ({ row }) => {
+					const r = R.display({
+						term: Pat.display,
+						var: (v: Src.Variable) => v.value,
+					})(row);
+					return `Variant ${r}`;
+				})
+				.with({ type: "tuple" }, ({ row }) => {
+					const r = R.display({
+						term: Pat.display,
+						var: (v: Src.Variable) => v.value,
+					})(row);
+					return `Tuple ${r}`;
+				})
+				.otherwise(() => "Pattern Display: Not implemented")
+		);
+	},
+};
+
+export const Stmt = {
+	display: (stmt: Src.Statement): string => {
+		return match(stmt)
+			.with({ type: "expression" }, ({ value }) => display(value))
+			.with({ type: "let" }, ({ variable, annotation, value, multiplicity }) => {
+				const ann = annotation ? `: ${display(annotation)}` : "";
+				const mul = multiplicity ? `${multiplicity} ` : "";
+				return `let ${mul}${variable}${ann} = ${display(value)}`;
+			})
+			.otherwise(() => "Statement Display: Not implemented");
+	},
+};

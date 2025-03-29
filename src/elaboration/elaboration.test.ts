@@ -1,0 +1,824 @@
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import Nearley from "nearley";
+
+import * as EB from "@yap/elaboration";
+import * as NF from "@yap/elaboration/normalization";
+import * as Lit from "@yap/shared/literals";
+import * as Q from "@yap/shared/modalities/multiplicity";
+import * as Err from "@yap/elaboration/errors";
+import * as Lib from "@yap/shared/lib/primitives";
+
+import Grammar from "@yap/src/grammar";
+
+import * as Log from "@yap/shared/logging";
+
+import * as E from "fp-ts/Either";
+
+describe("Elaboration", () => {
+	let parser: Nearley.Parser;
+	const empty: EB.Context = {
+		env: [],
+		types: [],
+		names: [],
+		implicits: [],
+		imports: Lib.Elaborated,
+		sigma: {},
+		trace: [],
+	};
+
+	const inline = (str: string) => str.replace(/\n/g, "").replace(/\t/g, " ");
+
+	Log.push("test");
+
+	beforeEach(() => {
+		const g = Grammar;
+		g.ParserStart = "Ann";
+		parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar), { keepHistory: true });
+
+		EB.resetSupply("meta");
+		EB.resetSupply("var");
+	});
+
+	afterEach(() => {
+		parser.finish();
+	});
+
+	describe("Literals", () => {
+		it("should elaborate numbers", () => {
+			const row = `1`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`1`);
+			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toStrictEqual([]);
+		});
+
+		it.skip("should elaborate booleans", () => {
+			const row = `true`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`true`);
+			expect(NF.display(ty)).toStrictEqual(`Bool`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toStrictEqual([]);
+		});
+
+		it("should elaborate strings", () => {
+			const row = `"hello"`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`"hello"`);
+			expect(NF.display(ty)).toStrictEqual(`String`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toStrictEqual([]);
+		});
+
+		it.skip("should elaborate units", () => {
+			const row = `unit`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`Unit`);
+			expect(NF.display(ty)).toStrictEqual(`Unit`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toStrictEqual([]);
+		});
+	});
+
+	describe("Functions", () => {
+		it("should elaborate lambda abstractions", () => {
+			const row = `\\x -> 1`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`λx -> 1`);
+			expect(NF.display(ty)).toStrictEqual(`Π(<ω> x: ?1) -> Num`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toMatchObject([{ type: "usage", computed: Q.Zero, expected: Q.Many }]);
+		});
+
+		it("should elaborate implicit lambda abstractions", () => {
+			const row = `\\x => 1`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`λx => 1`);
+			expect(NF.display(ty)).toStrictEqual(`Π(<ω> x: ?1) => Num`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toMatchObject([{ type: "usage", computed: Q.Zero, expected: Q.Many }]);
+		});
+
+		it("should elaborate arrows", () => {
+			const row = `Num -> Num`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`Π(<ω> t1: Num) -> Num`);
+			expect(NF.display(ty)).toStrictEqual(`Type`);
+			expect(qs).toStrictEqual([]);
+
+			cst.forEach(c => expect(EB.Display.Constraint(c)).toBe("Type ~~ Type"));
+		});
+
+		it("should elaborate pi types", () => {
+			const row = `(x: Num) -> Num`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`Π(<ω> x: Num) -> Num`);
+			expect(NF.display(ty)).toStrictEqual(`Type`);
+			expect(qs).toStrictEqual([]);
+
+			cst.forEach(c => expect(EB.Display.Constraint(c)).toBe("Type ~~ Type"));
+		});
+
+		it("should elaborate implicit pi types", () => {
+			const row = `(x: Num) => Num`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`Π(<ω> x: Num) => Num`);
+			expect(NF.display(ty)).toStrictEqual(`Type`);
+			expect(qs).toStrictEqual([]);
+
+			cst.forEach(c => expect(EB.Display.Constraint(c)).toBe("Type ~~ Type"));
+		});
+
+		it("should constrain the pi output to a Type", () => {
+			const row = `(x: Num) -> x`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`Π(<ω> x: Num) -> i0`);
+			expect(NF.display(ty)).toStrictEqual(`Type`);
+			expect(qs).toStrictEqual([]);
+
+			expect(cst.map(c => EB.Display.Constraint(c))).toContain("Num ~~ Type");
+		});
+	});
+
+	describe("Rows", () => {
+		it("should elaborate empty lists", () => {
+			const list = `[]`;
+			const data = parser.feed(list);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`[  ]`);
+			expect(NF.display(ty)).toStrictEqual(`(Indexed Num) ?1`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toStrictEqual([]);
+		});
+
+		it("should elaborate row extensions", () => {
+			const row = `[ x: String, y: Num ]`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`[ x: String, y: Num ]`);
+			expect(NF.display(ty)).toStrictEqual(`Row`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toStrictEqual([]);
+		});
+	});
+
+	describe("Structs", () => {
+		it("should elaborate structs with multiple fields", () => {
+			const row = `{ x: 1, y: 2 }`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`Struct [ x: 1, y: 2 ]`);
+			expect(NF.display(ty)).toStrictEqual(`Schema [ x: Num, y: Num ]`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toStrictEqual([]);
+		});
+
+		it("should elaborate row polymorphic schemas", () => {
+			const row = `\\r -> { x:: Num, y:: Num | r }`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`λr -> Schema [ x: Num, y: Num | i0 ]`);
+			expect(NF.display(ty)).toStrictEqual(`Π(<ω> r: ?1) -> Type`);
+			expect(qs).toStrictEqual([]);
+
+			expect(cst.length).toBe(2);
+			const ensuringRow = EB.Display.Constraint(cst[0]);
+			expect(ensuringRow).toBe("?1 ~~ Row");
+			const usageConstraint = EB.Display.Constraint(cst[1]);
+			expect(usageConstraint).toBe("ω <= ω"); // `r` gets assigned `ω`
+		});
+
+		it("should elaborate struct projections", () => {
+			const row = `{ x: 1, y: 2 }.x`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`(Struct [ x: 1, y: 2 ]).x`);
+			expect(NF.display(ty)).toStrictEqual(`Num`);
+			expect(qs).toStrictEqual([]);
+			expect(cst.length).toBe(1);
+			expect(EB.Display.Constraint(cst[0])).toBe("Schema [ x: Num, y: Num ] ~~ Schema [ x: Num, y: Num ]");
+		});
+
+		it("should elaborate struct injections", () => {
+			const row = `{ {x: 1, y: 2} | z = 3 }`;
+			const data = parser.feed(row);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`{ Struct [ x: 1, y: 2 ] | z = 3 }`);
+			// Rows don't have a fixed order. This happens because we recursively build the row from the base case (empty row)
+			expect(NF.display(ty)).toStrictEqual(`Schema [ z: Num, x: Num, y: Num ]`);
+			expect(qs).toStrictEqual([]);
+			expect(cst).toStrictEqual([]);
+		});
+	});
+
+	describe("Pattern matching", () => {
+		const ctx = EB.bind(empty, { type: "Lambda", variable: "x" }, [NF.Constructors.Lit(Lit.Atom("Num")), Q.Many]);
+
+		it("should elaborate literal pattern matching", () => {
+			const src = `match x | 1 -> "one" | 3 -> "two"`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, ctx);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| 1 -> "one"\n| 3 -> "two"`);
+			expect(NF.display(ty)).toStrictEqual(`?1`);
+			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+			// 1: to unify the two branches
+			// 2: to unify each pattern with the scrutinee,
+			// 2: to unify each branch with the return type
+			expect(cst.length).toBe(2 + 2 + 1);
+			const prettyCst = cst.map(EB.Display.Constraint);
+
+			expect(prettyCst).toContain("Num ~~ Num");
+			expect(prettyCst).toContain("String ~~ String");
+			expect(prettyCst).toContain("String ~~ ?1");
+		});
+
+		it("should unify each branch's return type", () => {
+			const src = `match x | 1 -> 2 | 3 -> "hello"`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, ctx);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| 1 -> 2\n| 3 -> "hello"`);
+
+			// 1: to unify the two branches
+			// 2: to unify each pattern with the scrutinee,
+			// 2: to unify each branch with the return type
+			expect(cst.length).toBe(2 + 2 + 1);
+
+			const prettyCst = cst.map(EB.Display.Constraint);
+
+			// the 2 literal patterns unify with the scrutinee
+			expect(prettyCst).toContain("Num ~~ Num");
+			// the two branches unify with each other
+			expect(prettyCst).toContain("String ~~ Num");
+		});
+
+		it("should elaborate variable pattern matching", () => {
+			const src = `match x | y -> 2 | z -> 4`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, ctx);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| y -> 2\n| z -> 4`);
+			expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
+			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+			// 1: to unify the two branches
+			// 2: to unify each pattern with the scrutinee,
+			// 2: to unify each branch with the return type
+			expect(cst.length).toBe(2 + 2 + 1);
+
+			const prettyCst = cst.map(EB.Display.Constraint);
+
+			expect(prettyCst).toContain("Num ~~ Num");
+			expect(prettyCst).toContain("?1 ~~ Num");
+			expect(prettyCst).toContain("?2 ~~ Num");
+			expect(prettyCst).toContain("Num ~~ ?3"); // the two branches unify with the return type
+		});
+
+		describe("Structural Pattern Matching", () => {
+			it("should elaborate struct pattern matching", () => {
+				const src = `match x | { x: 1, y: 2 } -> 11 | { z: 3, w: 4 } -> 22`;
+				const data = parser.feed(src);
+
+				expect(data.results.length).toBe(1);
+
+				const expr = data.results[0];
+
+				const m = EB.infer(expr);
+				const [either, { constraints: cst }] = EB.M.run(m, ctx);
+
+				if (E.isLeft(either)) {
+					throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+				}
+				const [tm, ty, qs] = either.right;
+
+				expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Struct [ x: 1, y: 2 ] -> 11\n| Struct [ z: 3, w: 4 ] -> 22`);
+				expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
+				expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+				// 1: to unify the two branches
+				// 2: to unify each pattern with the scrutinee,
+				// 2: to unify each branch with the return type
+				expect(cst.length).toBe(2 + 2 + 1);
+
+				const prettyCst = cst.map(EB.Display.Constraint);
+
+				expect(prettyCst).toContain("Num ~~ Num");
+				expect(prettyCst).toContain("Schema [ x: Num, y: Num ] ~~ Num");
+				expect(prettyCst).toContain("Schema [ z: Num, w: Num ] ~~ Num");
+				expect(prettyCst).toContain("Num ~~ ?1"); // the two branches unify with the return type
+			});
+
+			it("should elaborate struct pattern matching with row polymorphism", () => {
+				const src = `match x | { x: 1, y: 2 | r } -> r | { z: 3, w: 4 | r } -> x`;
+				const data = parser.feed(src);
+
+				expect(data.results.length).toBe(1);
+
+				const expr = data.results[0];
+
+				const m = EB.infer(expr);
+				const [either, { constraints: cst }] = EB.M.run(m, ctx);
+
+				if (E.isLeft(either)) {
+					throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+				}
+				const [tm, ty, qs] = either.right;
+
+				expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Struct [ x: 1, y: 2 | r ] -> i0\n| Struct [ z: 3, w: 4 | r ] -> i1`);
+				expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
+				expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+				// 1: to unify the two branches
+				// 2: to unify each pattern with the scrutinee,
+				// 2: to unify each branch with the return type
+				expect(cst.length).toBe(2 + 2 + 1);
+
+				const prettyCst = cst.map(EB.Display.Constraint);
+
+				expect(prettyCst).toContain("Num ~~ ?1"); // the return type is unified
+				// Even tho both patterns introduce a row var `r`, their scopes are different, so their types are different metavariables
+				expect(prettyCst).toContain("Schema [ x: Num, y: Num | ?1 ] ~~ Num"); // The first branch pattern is unified with the scrutinee
+				expect(prettyCst).toContain("Schema [ z: Num, w: Num | ?2 ] ~~ Num"); // The second branch pattern is unified with the scrutinee
+
+				expect(prettyCst).toContain("Num ~~ ?1"); // The return type of the two branches is unified
+				expect(prettyCst).toContain("?1 ~~ ?3"); // Unify the expr type with the return type of the first branch
+				expect(prettyCst).toContain("Num ~~ ?3"); // Unify the expr type with the return type of the second branch
+			});
+
+			it("should bind variables in struct patterns", () => {
+				const src = `match x | { x: y } -> y | { z: w } -> w`;
+				const data = parser.feed(src);
+
+				expect(data.results.length).toBe(1);
+
+				const expr = data.results[0];
+
+				const m = EB.infer(expr);
+				const [either, { constraints: cst }] = EB.M.run(m, ctx);
+
+				if (E.isLeft(either)) {
+					throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+				}
+				const [tm, ty, qs] = either.right;
+
+				expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Struct [ x: y ] -> i0\n| Struct [ z: w ] -> i0`);
+				expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
+
+				expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+				// 1: to unify the two branches
+				// 2: to unify each pattern with the scrutinee,
+				// 2: to unify each branch with the return type
+				expect(cst.length).toBe(2 + 2 + 1);
+
+				const prettyCst = cst.map(EB.Display.Constraint);
+
+				expect(prettyCst).toContain("?1 ~~ ?3"); // the x:y binding is unified with the expr return type
+				expect(prettyCst).toContain("?2 ~~ ?3"); // the z:w binding is unified with the expr return type
+				expect(prettyCst).toContain("Schema [ x: ?1 ] ~~ Num"); // The first branch pattern is unified with the scrutinee
+				expect(prettyCst).toContain("Schema [ z: ?2 ] ~~ Num"); // The second branch pattern is unified with the scrutinee
+			});
+
+			it("should recursively bind variables in struct patterns", () => {
+				const src = `match x | { foo: { y: y }, bar: f } -> f y | { z: { w: w } } -> w`;
+				const data = parser.feed(src);
+
+				expect(data.results.length).toBe(1);
+
+				const expr = data.results[0];
+
+				const m = EB.infer(expr);
+				const [either, { constraints: cst }] = EB.M.run(m, ctx);
+
+				if (E.isLeft(either)) {
+					throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+				}
+				const [tm, ty, qs] = either.right;
+
+				// rows are elaborated from right to left, hence `f` is bound before `y`
+				expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Struct [ foo: Struct [ y: y ], bar: f ] -> i0 i1\n| Struct [ z: Struct [ w: w ] ] -> i0`);
+				expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
+
+				expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+				// 1: to unify the two branches
+				// 2: to unify each pattern with the scrutinee,
+				// 2: to unify each branch with the return type
+				// 2: for the application of `f` to `y`
+				expect(cst.length).toBe(2 + 2 + 1 + 2);
+
+				const prettyCst = cst.map(EB.Display.Constraint);
+
+				expect(prettyCst).toContain("Schema [ foo: Schema [ y: ?1 ], bar: ?2 ] ~~ Num"); // The first branch pattern is unified with the scrutinee
+				expect(prettyCst).toContain("?2 ~~ Π(<ω> x: ?3) -> ?4"); // Constraining the bound `f` to be a function
+				expect(prettyCst).toContain("?1 ~~ ?3"); // Constraining the argument of `f` to be `y`
+				expect(prettyCst).toContain("Schema [ z: Schema [ w: ?5 ] ] ~~ Num"); // The second branch pattern is unified with the scrutinee
+				expect(prettyCst).toContain("?5 ~~ ?4"); // The return type of the second branch is unified with the return type of the first branch
+			});
+		});
+
+		it("should pattern match on types", () => {
+			const src = `match x | Num -> 1 | String -> "hello"`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, ctx);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Imports.Num -> 1\n| Imports.String -> "hello"`);
+			expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
+			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+			// 1: to unify the two branches
+			// 2: to unify each pattern with the scrutinee,
+			// 2: to unify each branch with the return type
+			expect(cst.length).toBe(2 + 2 + 1);
+
+			const prettyCst = cst.map(EB.Display.Constraint);
+
+			expect(prettyCst).toContain("Type ~~ Num");
+			expect(prettyCst.filter(c => c === "Type ~~ Num").length).toBe(2);
+
+			expect(prettyCst).toContain("String ~~ Num"); // Unifying the 2 branches
+		});
+
+		it('should elaborate pattern matching on variants: "match x | #nil a -> 0 | #cons {el, rest} -> 1"', () => {
+			const src = `match x | #nil a -> 0 | #cons {el, rest} -> 1`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, ctx);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			// rows are elaborated from right to left, hence `rest` is bound before `el`
+			expect(EB.Display.Term(tm)).toStrictEqual(`match i0\n| Variant [ nil: a ] -> 0\n| Variant [ cons: Struct [ 0: el, 1: rest ] ] -> 1`);
+			expect(ty).toMatchObject({ type: "Var", variable: { type: "Meta" } });
+			expect(qs).toStrictEqual([Q.Many]); // from the `x` binding in the context
+
+			// 1: to unify the two branches
+			// 2: to unify each pattern with the scrutinee,
+			// 2: to unify each branch with the return type
+			expect(cst.length).toBe(2 + 2 + 1);
+
+			const prettyCst = cst.map(EB.Display.Constraint);
+
+			expect(prettyCst).toContain("Variant [ nil: ?1 | ?2 ] ~~ Num"); // The first branch pattern is unified with the scrutinee
+			expect(prettyCst).toContain("Variant [ cons: Schema [ 0: ?3, 1: ?4 ] | ?5 ] ~~ Num"); // The second branch pattern is unified with the scrutinee
+			expect(prettyCst).toContain("Num ~~ Num"); // Unified the two branches
+		});
+	});
+
+	describe("Recursion", () => {
+		beforeEach(() => {
+			const g = Grammar;
+			g.ParserStart = "Statement";
+			parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar), { keepHistory: true });
+
+			EB.resetSupply("meta");
+			EB.resetSupply("var");
+		});
+
+		afterEach(() => {
+			parser.finish();
+		});
+
+		it("should elaborate recursive functions in let decs", () => {
+			const src = `let f = \\x -> f x`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.Stmt.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(inline(EB.Display.Statement(tm))).toStrictEqual(`let f : ?1 = λx -> i1 i0`);
+			expect(ty).toMatchObject({ type: "Neutral", value: { type: "Var", variable: { type: "Meta" } } });
+
+			const prettyCst = cst.map(EB.Display.Constraint);
+			expect(cst.length).toBe(4);
+			expect(prettyCst).toContain("?1 ~~ Π(<ω> x: ?3) -> ?4");
+			expect(prettyCst).toContain("Π(<ω> x: ?2) -> ?4 ~~ ?1");
+			expect(prettyCst).toContain("?2 ~~ ?3");
+		});
+
+		describe.skip("Elaborated mu types are not being currently displayed when printing a term", () => {
+			it("should elaborate recursive types", () => {
+				const src = `let List = \\(a: Type) -> | #nil a | #cons List a`;
+				const data = parser.feed(src);
+
+				expect(data.results.length).toBe(1);
+
+				const expr = data.results[0];
+
+				const m = EB.Stmt.infer(expr);
+				const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+				if (E.isLeft(either)) {
+					throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+				}
+				const [tm, ty, qs] = either.right;
+
+				expect(EB.Display.Statement(tm)).toStrictEqual(`let List: ?1 = μ(x: ?1) -> λa -> Variant [ nil: i0, cons: i1 i0 ]`);
+				expect(NF.display(ty)).toStrictEqual(`Π(<ω> a: Type) -> Type`);
+				//expect(qs).toStrictEqual([]);
+
+				expect(cst.length).toBe(5);
+
+				const prettyCst = cst.map(EB.Display.Constraint);
+				expect(prettyCst).toContain("Type ~~ Type"); // from the `a: Type` binding
+				expect(prettyCst).toContain("?1 ~~ Π(<ω> x: ?3) -> ?4"); // from the application `List a`, List is a function
+				expect(prettyCst).toContain("?1 ~~ Π(<ω> a: Type) -> Type"); // the letdec annotation must unify with the inferred type
+				expect(prettyCst).toContain("Type ~~ ?3"); // from applying the List function to `a`, which is a type
+				// the missing constraint is the one that deals with the usages
+			});
+		});
+	});
+
+	describe("blocks", () => {
+		it("should elaborate blocks", () => {
+			const src = `{ let x = 1; let y = x; return y; }`;
+			const data = parser.feed(src);
+
+			expect(data.results.length).toBe(1);
+
+			const expr = data.results[0];
+
+			const m = EB.infer(expr);
+			const [either, { constraints: cst }] = EB.M.run(m, empty);
+
+			if (E.isLeft(either)) {
+				throw new Error(`Elaboration failed: ${Err.display(either.left)}`);
+			}
+			const [tm, ty, qs] = either.right;
+
+			expect(inline(EB.Display.Term(tm))).toStrictEqual(`{ let x : ?1 = 1; let y : ?2 = i1; return i0; }`);
+			expect(ty).toMatchObject({ type: "Neutral", value: { type: "Var", variable: { type: "Meta" } } });
+			expect(qs).toStrictEqual([]);
+
+			expect(cst.length).toBe(2);
+			const prettyCst = cst.map(EB.Display.Constraint);
+			expect(prettyCst).toContain("Num ~~ ?1");
+			expect(prettyCst).toContain("?1 ~~ ?2");
+		});
+	});
+});
