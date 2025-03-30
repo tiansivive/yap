@@ -16,7 +16,9 @@ export const infer = (tm: Match): EB.M.Elaboration<EB.AST> =>
 	F.pipe(
 		M.Do,
 		M.bind("ctx", M.ask),
-		M.let("scrutinee", EB.infer(tm.scrutinee)),
+		M.bind("scrutinee", ({ ctx }) => {
+			return EB.infer(tm.scrutinee);
+		}),
 		M.bind("alternatives", ({ scrutinee }) => elaborate(tm.alternatives, scrutinee)),
 		M.discard(({ alternatives: [a, ...as], ctx }) => {
 			type Accumulator = [M.Elaboration<void>, NF.Value, Q.Usages];
@@ -122,8 +124,8 @@ export const elaborate = (alts: Src.Alternative[], [scrutinee, scuty, us]: EB.AS
 			return F.pipe(
 				M.Do,
 				M.let("pat", Patterns.infer.Variant(pattern)),
-				M.chain(({ pat: [pat, ty, qs, binders] }) =>
-					M.local(
+				M.chain(({ pat: [pat, ty, qs, binders] }) => {
+					return M.local(
 						ctx_ => binders.reduce((ctx, [name, va]) => EB.bind(ctx, { type: "Lambda", variable: name }, [va, Q.Many]), ctx_),
 						F.pipe(
 							M.ask(),
@@ -131,8 +133,8 @@ export const elaborate = (alts: Src.Alternative[], [scrutinee, scuty, us]: EB.AS
 							M.chain(_ => EB.infer(term)),
 							M.fmap((branch): [EB.Alternative, NF.Value, Q.Usages][] => [[EB.Constructors.Alternative(pat, branch[0]), branch[1], branch[2]]]),
 						),
-					),
-				),
+					);
+				}),
 			);
 		})
 		.with([{ pattern: { type: "list" } }], ([{ pattern, term }]) => {
