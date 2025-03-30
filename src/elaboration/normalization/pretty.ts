@@ -40,9 +40,12 @@ export const display = (value: NF.Value | NF.ModalValue): string => {
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
 			const f = display(func);
-			const wrapped = func.type !== "Var" && func.type !== "Lit" ? `(${f})` : f;
+			const a = display(arg);
 
-			return `${wrapped} ${Icit.display(icit)}${display(arg)}`;
+			const wrappedFn = func.type !== "Var" && func.type !== "Lit" && func.type !== "App" ? `(${f})` : f;
+			const wrappedArg = arg.type === "Abs" || arg.type === "App" ? `(${a})` : a;
+
+			return `${wrappedFn} ${Icit.display(icit)}${wrappedArg}`;
 		})
 		.with({ type: "Row" }, ({ row }) =>
 			R.display({

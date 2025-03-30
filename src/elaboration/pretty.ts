@@ -38,12 +38,12 @@ const display = (term: EB.Term): string => {
 		})
 		.with({ type: "App" }, ({ icit, func, arg }) => {
 			const f = display(func);
+			const a = display(arg);
 
-			if (func.type !== "Var" && func.type !== "Lit") {
-				return `(${f}) ${Icit.display(icit)}${display(arg)}`;
-			}
+			const wrappedFn = func.type !== "Var" && func.type !== "Lit" && func.type !== "App" ? `(${f})` : f;
+			const wrappedArg = arg.type === "Abs" || arg.type === "App" ? `(${a})` : a;
 
-			return `${f} ${Icit.display(icit)}${display(arg)}`;
+			return `${wrappedFn} ${Icit.display(icit)}${wrappedArg}`;
 		})
 
 		.with({ type: "Annotation" }, ({ term, ann }) => `${display(term)} : ${display(ann)}`)
