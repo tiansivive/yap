@@ -1,5 +1,5 @@
 coverage/
-lib/
+
 node_modules/
 gen/
 .logs/
