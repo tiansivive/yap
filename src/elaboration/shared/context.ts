@@ -11,7 +11,9 @@ import * as P from "@yap/shared/provenance";
 import * as U from "@yap/elaboration/unification/index";
 import * as Sub from "@yap/elaboration/unification/substitution";
 
+import * as F from "fp-ts/function";
 import * as E from "fp-ts/Either";
+import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
 
 type Origin = "inserted" | "source";
@@ -117,6 +119,16 @@ export const bind = (context: Context, binder: Binder, annotation: NF.ModalValue
 	};
 };
 
+export const extend = (context: Context, binder: Binder, value: NF.ModalValue, origin: Origin = "source"): Context => {
+	const { env, types } = context;
+	return {
+		...context,
+		env: [value, ...env],
+		types: [[binder, origin, new Error("Need to implemented typed metas") as any], ...types],
+		names: [binder, ...context.names],
+	};
+};
+
 export const unfoldMu = (context: Context, binder: Binder, annotation: NF.ModalValue, origin: Origin = "source"): Context => {
 	const { env, types } = context;
 	return {
@@ -142,3 +154,9 @@ export const muContext = (ctx: Context): Context => {
 		}),
 	};
 };
+
+export const prune = (ctx: Context, lvl: number): Context => {
+	return F.pipe(ctx, update("env", A.takeRight(lvl)), update("types", A.takeRight(lvl)), update("names", A.takeRight(lvl)));
+};
+
+[1, 2, 3].slice();

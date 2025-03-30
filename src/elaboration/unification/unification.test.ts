@@ -17,6 +17,7 @@ import Grammar from "@yap/src/grammar";
 import * as Log from "@yap/shared/logging";
 import * as E from "fp-ts/Either";
 import { displayProvenance } from "@yap/elaboration/solver";
+import { defaultContext } from "@yap/shared/lib/constants";
 
 describe("Unification", () => {
 	const empty: EB.Context = {
@@ -57,8 +58,8 @@ describe("Unification", () => {
 	});
 
 	it("should unify two lambdas", () => {
-		const left = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure([], EB.Constructors.Var(EB.Bound(0))));
-		const right = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure([], EB.Constructors.Var(EB.Bound(0))));
+		const left = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure(defaultContext, EB.Constructors.Var(EB.Bound(0))));
+		const right = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure(defaultContext, EB.Constructors.Var(EB.Bound(0))));
 
 		const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 
@@ -71,8 +72,8 @@ describe("Unification", () => {
 	});
 
 	it("should fail unifying two different lambdas", () => {
-		const left = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure([], EB.Constructors.Var(EB.Bound(0))));
-		const right = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure([], EB.Constructors.Lit(Lit.Num(42))));
+		const left = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure(defaultContext, EB.Constructors.Var(EB.Bound(0))));
+		const right = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure(defaultContext, EB.Constructors.Lit(Lit.Num(42))));
 
 		const [either] = M.run(EB.unify(left, right, 0, {}), empty);
 

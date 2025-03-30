@@ -39,16 +39,16 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 		})
 
 		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) =>
-			NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(ctx.env, body)),
+			NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(ctx, body)),
 		)
 		.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }): NF.Value => {
 			const annotation = evaluate(ctx, binding.annotation);
-			return NF.Constructors.Pi(binding.variable, binding.icit, [annotation, binding.multiplicity], NF.Constructors.Closure(ctx.env, body));
+			return NF.Constructors.Pi(binding.variable, binding.icit, [annotation, binding.multiplicity], NF.Constructors.Closure(ctx, body));
 		})
 		.with({ type: "Abs", binding: { type: "Mu" } }, (mu): NF.Value => {
 			const annotation = evaluate(ctx, mu.binding.annotation);
 
-			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, [annotation, Q.Many], NF.Constructors.Closure(ctx.env, mu.body));
+			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, [annotation, Q.Many], NF.Constructors.Closure(ctx, mu.body));
 			const extended = EB.unfoldMu(ctx, { type: "Mu", variable: mu.binding.variable }, [val, Q.Many]);
 			return evaluate(extended, mu.body);
 		})
@@ -60,11 +60,11 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 				match(nff)
 					.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
 						// Unfold the mu
-						const body = apply(ctx, mu.binder, mu.closure, NF.Constructors.Neutral(mu));
+						const body = apply(mu.binder, mu.closure, NF.Constructors.Neutral(mu));
 						return reduce(body, nfa);
 					})
 					.with({ type: "Abs" }, ({ closure, binder }) => {
-						return apply(ctx, binder, closure, nfa);
+						return apply(binder, closure, nfa);
 					})
 					.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
 					.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)))
@@ -126,10 +126,10 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 	return res;
 }
 
-export const apply = (ctx: EB.Context, binder: EB.Binder, closure: NF.Closure, value: NF.Value, multiplicity: Q.Multiplicity = Q.Zero): NF.Value => {
-	const { env, term } = closure;
+export const apply = (binder: EB.Binder, closure: NF.Closure, value: NF.Value, multiplicity: Q.Multiplicity = Q.Zero): NF.Value => {
+	const { ctx, term } = closure;
 
-	const extended = EB.bind(ctx, binder, [value, multiplicity]);
+	const extended = EB.extend(ctx, binder, [value, multiplicity]);
 	return evaluate(extended, term);
 };
 

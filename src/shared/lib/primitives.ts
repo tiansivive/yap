@@ -5,6 +5,7 @@ import * as EB from "@yap/elaboration"
 import * as Q from "@yap/shared/modalities/multiplicity"
 import * as Lit from "@yap/shared/literals"
 
+import { defaultContext } from "@yap/shared/lib/constants"
 
 export const Terms = {
     Type: EB.Constructors.Lit(Lit.Type()),
@@ -42,27 +43,27 @@ export const NormalForms = {
 
 
 const Num_Num_Num = NF.Constructors.Pi("x", "Explicit", [NormalForms.Num, Q.Many], {
-    env: [],
+    ctx: defaultContext,
     term: EB.Constructors.Pi("y", "Explicit", Q.Many, Terms.Num, Terms.Num)
 })
 
 const Num_Num_Bool = NF.Constructors.Pi("x", "Explicit", [NormalForms.Num, Q.Many], {
-    env: [],
+    ctx: defaultContext,
     term: EB.Constructors.Pi("y", "Explicit", Q.Many, Terms.Num, Terms.Bool)
 })
 
 const Bool_Bool_Bool = NF.Constructors.Pi("x", "Explicit", [NormalForms.Bool, Q.Many], {
-    env: [],
+    ctx: defaultContext,
     term: EB.Constructors.Pi("y", "Explicit", Q.Many, Terms.Bool, Terms.Bool)
 })
 
 const Type_Type_Type = NF.Constructors.Pi("x", "Explicit", [NF.Type, Q.Many], {
-    env: [],
+    ctx: defaultContext,
     term: EB.Constructors.Pi("y", "Explicit", Q.Many, Terms.Type, Terms.Type)
 })
 
 const BinaryOp = (ty: NF.Value, tm: EB.Term) => NF.Constructors.Pi("x", "Explicit", [ty, Q.Many], {
-    env: [],
+    ctx: defaultContext,
     term: EB.Constructors.Pi("y", "Explicit", Q.Many, tm, tm)
 })
 

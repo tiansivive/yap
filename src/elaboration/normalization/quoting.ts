@@ -19,7 +19,7 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 		.with({ type: "App" }, ({ func, arg, icit }) => EB.Constructors.App(icit, quote(ctx, lvl, func), quote(ctx, lvl, arg)))
 		.with({ type: "Abs", binder: { type: "Lambda" } }, ({ binder, closure }) => {
 			const { variable, icit } = binder;
-			const val = NF.apply(ctx, binder, closure, NF.Constructors.Rigid(lvl));
+			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
 			return EB.Constructors.Lambda(variable, icit, body);
 		})
@@ -29,7 +29,7 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 				icit,
 				annotation: [ann, q],
 			} = binder;
-			const val = NF.apply(ctx, binder, closure, NF.Constructors.Rigid(lvl));
+			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
 			return EB.Constructors.Pi(variable, icit, q, quote(ctx, lvl, ann), body);
 		})
@@ -39,7 +39,7 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 				source,
 				annotation: [ann, q],
 			} = binder;
-			const val = NF.apply(ctx, binder, closure, NF.Constructors.Rigid(lvl));
+			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
 			return EB.Constructors.Mu(variable, source, quote(ctx, lvl, ann), body);
 		})
@@ -64,6 +64,6 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 };
 
 export const closeVal = (ctx: EB.Context, value: NF.Value): NF.Closure => ({
-	env: ctx.env,
+	ctx,
 	term: NF.quote(ctx, ctx.env.length + 1, value),
 });

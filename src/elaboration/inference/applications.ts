@@ -32,7 +32,7 @@ export const infer = ({ fn, arg, icit }: Application) => {
 					const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
 					const nf = NF.evaluate(ctx, meta);
 					const mnf: NF.ModalValue = [nf, Q.Many];
-					const closure = NF.Constructors.Closure(ctx.env, EB.Constructors.Var(EB.freshMeta(ctx.env.length + 1)));
+					const closure = NF.Constructors.Closure(ctx, EB.Constructors.Var(EB.freshMeta(ctx.env.length + 1)));
 
 					const pi = NF.Constructors.Pi("x", icit, mnf, closure);
 
@@ -49,7 +49,7 @@ export const infer = ({ fn, arg, icit }: Application) => {
 			const [[, q], cls, x] = pi;
 			const rus = Q.add(fus, Q.multiply(q, aus));
 
-			const val = NF.apply(ctx, { type: "Pi", variable: x }, cls, NF.evaluate(ctx, at), q);
+			const val = NF.apply({ type: "Pi", variable: x }, cls, NF.evaluate(ctx, at), q);
 
 			const ast: EB.AST = [EB.Constructors.App(icit, ft, at), val, rus];
 			return M.of(ast);

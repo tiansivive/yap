@@ -300,7 +300,7 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					[{ type: "lambda" }, { type: "Abs", binder: { type: "Pi" } }],
 					([tm, ty]) => tm.icit === ty.binder.icit,
 					([tm, ty]) => {
-						const bType = NF.apply(ctx, ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
+						const bType = NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
 
 						const ctx_ = EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation);
 						return M.local(
@@ -317,7 +317,7 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					[P._, { type: "Abs", binder: { type: "Pi" } }],
 					([_, ty]) => ty.binder.icit === "Implicit",
 					([tm, ty]) => {
-						const bType = NF.apply(ctx, ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
+						const bType = NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
 						const ctx_ = EB.bind(ctx, { type: "Lambda", variable: ty.binder.variable }, ty.binder.annotation, "inserted");
 						return M.local(
 							ctx_,

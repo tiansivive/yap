@@ -87,8 +87,8 @@ export const Substitute = (ctx: EB.Context) => {
 		},
 
 		closure: (subst: Subst, closure: NF.Closure): NF.Closure => ({
-			env: closure.env,
-			term: Substitute(ctx).term(subst, closure.term, closure.env.length + 1),
+			ctx: closure.ctx,
+			term: Substitute(ctx).term(subst, closure.term, closure.ctx.env.length + 1),
 		}),
 		term: (subst: Subst, term: EB.Term, level = ctx.env.length): EB.Term => {
 			return match(term)

@@ -8,6 +8,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 
 import fp from "lodash/fp";
 import * as F from "fp-ts/function";
+import { set } from "@yap/utils";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
 export const metas = (val: NF.Value): Meta[] => {
@@ -51,7 +52,7 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 	}, ctx);
 
 	const sub = (nf: NF.Value, lvl: number): NF.Value => {
-		const close = (closure: NF.Closure): NF.Closure => ({ env: ctx_.env, term: EB.Icit.replaceMeta(closure.term, ms, lvl + 1) });
+		const close = (closure: NF.Closure): NF.Closure => ({ ctx: ctx_, term: EB.Icit.replaceMeta(closure.term, ms, lvl + 1) });
 
 		const t = match(nf)
 			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
@@ -87,10 +88,20 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 	// Wraps the value in a Pi type for each meta variable
 	return ms.reduce(
 		(nf, m, i) => {
+			// The environment is the meta variables that have not been generalized so far.
+			// We add them as rigid variables, so that their de Bruijn level points to the correct pi-binding
+			const extended = F.pipe(
+				ctx,
+				set(
+					"env",
+					ms.slice(0, ms.length - i).map((m, j): NF.Env[0] => [NF.Constructors.Rigid(j), Q.Many]),
+				),
+				set("types", new Error("Not yet implemented: generalization ctx") as any),
+				set("names", new Error("Not yet implemented: generalization ctx") as any),
+			);
+
 			return NF.Constructors.Pi(`${String.fromCharCode(charCode + ms.length - 1 - i)}`, "Implicit", [NF.Type, Q.Many], {
-				// The environment is the meta variables that have not been generalized so far.
-				// We add them as rigid variables, so that their de Bruijn level points to the correct pi-binding
-				env: ms.slice(0, ms.length - i).map((m, j) => [NF.Constructors.Rigid(j), Q.Many]),
+				ctx: extended,
 				// We need an offset to account for the already generalized variables
 				term: NF.quote(ctx_, ms.length - i, nf),
 			});

@@ -16,6 +16,7 @@ import * as R from "@yap/shared/rows";
 import * as Src from "@yap/src/index";
 import * as Log from "@yap/shared/logging";
 import { number } from "fp-ts";
+import { update } from "@yap/utils";
 
 const empty: Subst = {};
 export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst): M.Elaboration<Subst> => {
@@ -48,8 +49,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						([lam1, lam2]) => lam1.binder.icit === lam2.binder.icit,
 						([lam1, lam2]) =>
 							M.chain(M.ask(), ctx => {
-								const body1 = NF.apply(ctx, lam1.binder, lam1.closure, NF.Constructors.Rigid(lvl));
-								const body2 = NF.apply(ctx, lam2.binder, lam2.closure, NF.Constructors.Rigid(lvl));
+								const body1 = NF.apply(lam1.binder, lam1.closure, NF.Constructors.Rigid(lvl));
+								const body2 = NF.apply(lam2.binder, lam2.closure, NF.Constructors.Rigid(lvl));
 								return unify(body1, body2, lvl + 1, subst);
 							}),
 					)
@@ -76,8 +77,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 									);
 								}),
 								M.chain(({ ctx, sub }) => {
-									const body1 = NF.apply(ctx, pi1.binder, pi1.closure, NF.Constructors.Rigid(lvl));
-									const body2 = NF.apply(ctx, pi2.binder, pi2.closure, NF.Constructors.Rigid(lvl));
+									const body1 = NF.apply(pi1.binder, pi1.closure, NF.Constructors.Rigid(lvl));
+									const body2 = NF.apply(pi2.binder, pi2.closure, NF.Constructors.Rigid(lvl));
 									//FIXME: Temporary fix. We shouldn't rely on the context in unification. Just work with levels.
 									// const ctx_ = { ...ctx, env: Array(lvl) };
 									return unify(body1, body2, lvl + 1, sub);
@@ -97,8 +98,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 								M.fmap(unify(mu1.binder.annotation[0], mu2.binder.annotation[0], lvl, subst), sub => Sub.compose(ctx, sub, subst, lvl)),
 							),
 							M.chain(({ ctx, sub }) => {
-								const body1 = NF.apply(ctx, mu1.binder, mu1.closure, NF.Constructors.Rigid(lvl));
-								const body2 = NF.apply(ctx, mu2.binder, mu2.closure, NF.Constructors.Rigid(lvl));
+								const body1 = NF.apply(mu1.binder, mu1.closure, NF.Constructors.Rigid(lvl));
+								const body2 = NF.apply(mu2.binder, mu2.closure, NF.Constructors.Rigid(lvl));
 								//return M.fmap(unify(body1, body2, lvl + 1, sub), o => Sub.compose(ctx, o, sub, lvl + 1));
 								return unify(body1, body2, lvl + 1, sub);
 							}),
@@ -120,8 +121,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 									([, v]) => v.type !== "Abs" || v.binder.type !== "Mu",
 
 									([mu, v]) => {
-										const unfolded = NF.apply(ctx, mu.binder, mu.closure, NF.Constructors.Neutral(mu));
-										const applied = unfolded.type === "Abs" ? NF.apply(ctx, unfolded.binder, unfolded.closure, left.arg) : unfolded;
+										const unfolded = NF.apply(mu.binder, mu.closure, NF.Constructors.Neutral(mu));
+										const applied = unfolded.type === "Abs" ? NF.apply(unfolded.binder, unfolded.closure, left.arg) : unfolded;
 										return unify(applied, right, lvl, subst);
 									},
 								)
@@ -130,8 +131,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 									([v]) => v.type !== "Abs" || v.binder.type !== "Mu",
 
 									([v, mu]) => {
-										const unfolded = NF.apply(ctx, mu.binder, mu.closure, NF.Constructors.Neutral(mu));
-										const applied = unfolded.type === "Abs" ? NF.apply(ctx, unfolded.binder, unfolded.closure, right.arg) : unfolded;
+										const unfolded = NF.apply(mu.binder, mu.closure, NF.Constructors.Neutral(mu));
+										const applied = unfolded.type === "Abs" ? NF.apply(unfolded.binder, unfolded.closure, right.arg) : unfolded;
 										return unify(left, applied, lvl, subst);
 									},
 								)
@@ -282,7 +283,8 @@ const bind = (ctx: EB.Context, v: NF.Variable, ty: NF.Value): Subst => {
 
 			// This is not an ideal solution, as it demands that metas contain the level at which they were generated.
 			// An alternative would be higher-order unification, which is more complex to implement, but more powerful.
-			const _ty = { ...ty, closure: { ...ty.closure, env: ty.closure.env.slice(-v.lvl) } };
+			//const _ty = { ...ty, closure: { ...ty.closure, env: ty.closure.env.slice(-v.lvl) } };
+			const _ty = update(ty, "closure.ctx", ctx => EB.prune(ctx, v.lvl));
 			return { [v.val]: _ty };
 		}
 		return { [v.val]: ty };
@@ -296,8 +298,8 @@ const occursCheck = (ctx: EB.Context, v: NF.Variable, ty: NF.Value): boolean =>
 	match(ty)
 		.with(NF.Patterns.Var, ({ variable }) => _.isEqual(variable, v))
 		.with({ type: "Neutral" }, ({ value }) => occursCheck(ctx, v, value))
-		.with(NF.Patterns.Lambda, ({ binder, closure }) => occursCheck(ctx, v, NF.apply(ctx, binder, closure, NF.Constructors.Rigid(ctx.env.length))))
-		.with(NF.Patterns.Pi, ({ binder, closure }) => occursCheck(ctx, v, NF.apply(ctx, binder, closure, NF.Constructors.Rigid(ctx.env.length))))
+		.with(NF.Patterns.Lambda, ({ binder, closure }) => occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
+		.with(NF.Patterns.Pi, ({ binder, closure }) => occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
 		.with(NF.Patterns.App, ({ func, arg }) => occursCheck(ctx, v, func) || occursCheck(ctx, v, arg))
 
 		.with(NF.Patterns.Row, ({ row }) =>

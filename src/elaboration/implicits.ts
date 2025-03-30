@@ -28,7 +28,7 @@ export function insert(node: EB.AST): EB.M.Elaboration<EB.AST> {
 								if (!_.isEmpty(found[1])) {
 									throw new Error("insert: Found implicit with constraints; What to do here?");
 								}
-								const bodyNF = NF.apply(ctx, pi.binder, pi.closure, pi.binder.annotation[0]);
+								const bodyNF = NF.apply(pi.binder, pi.closure, pi.binder.annotation[0]);
 								const tm = EB.Constructors.App("Implicit", term, found[0]);
 								return M.of<EB.AST>([tm, bodyNF, us]);
 							}
@@ -38,7 +38,7 @@ export function insert(node: EB.AST): EB.M.Elaboration<EB.AST> {
 							const vNF = NF.evaluate(ctx, mvar);
 
 							const tm = EB.Constructors.App("Implicit", term, mvar);
-							const bodyNF = NF.apply(ctx, pi.binder, pi.closure, vNF);
+							const bodyNF = NF.apply(pi.binder, pi.closure, vNF);
 							return F.pipe(
 								M.of<EB.AST>([tm, bodyNF, us]),
 								M.discard(_ => M.tell("constraint", { type: "resolve", meta: meta, annotation: pi.binder.annotation[0] })),

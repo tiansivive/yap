@@ -34,7 +34,7 @@ export type Variable =
 	| { type: "Meta"; val: number; lvl: number };
 
 export type Closure = {
-	env: Env;
+	ctx: EB.Context;
 	term: EB.Term;
 };
 
@@ -82,7 +82,7 @@ export const Constructors = {
 		arg,
 		icit,
 	}),
-	Closure: (env: Env, term: EB.Term): Closure => ({ env, term }),
+	Closure: (ctx: EB.Context, term: EB.Term): Closure => ({ ctx, term }),
 
 	Row: (row: Row): Value => ({ type: "Row", row }),
 	Extension: (label: string, value: Value, row: Row): Row => ({ type: "extension", label, value, row }),
