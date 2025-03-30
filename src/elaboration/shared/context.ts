@@ -117,6 +117,16 @@ export const bind = (context: Context, binder: Binder, annotation: NF.ModalValue
 	};
 };
 
+export const unfoldMu = (context: Context, binder: Binder, annotation: NF.ModalValue, origin: Origin = "source"): Context => {
+	const { env, types } = context;
+	return {
+		...context,
+		env: [annotation, ...env], // NOTE: mu types are directly placed in the env
+		types: [[binder, origin, annotation], ...types],
+		names: [binder, ...context.names],
+	};
+};
+
 export const extendSigma = (ctx: Context, variable: string, sigma: Sigma): Context => {
 	return set(ctx, ["sigma", variable] as const, sigma);
 };

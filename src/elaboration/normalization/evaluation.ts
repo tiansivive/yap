@@ -49,7 +49,7 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 			const annotation = evaluate(ctx, mu.binding.annotation);
 
 			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, [annotation, Q.Many], NF.Constructors.Closure(ctx.env, mu.body));
-			const extended = EB.bind(ctx, { type: "Mu", variable: mu.binding.variable }, [val, Q.Many]);
+			const extended = EB.unfoldMu(ctx, { type: "Mu", variable: mu.binding.variable }, [val, Q.Many]);
 			return evaluate(extended, mu.body);
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
@@ -60,11 +60,11 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 				match(nff)
 					.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
 						// Unfold the mu
-						const body = apply(ctx, "Mu", mu.closure, NF.Constructors.Neutral(mu));
+						const body = apply(ctx, mu.binder, mu.closure, NF.Constructors.Neutral(mu));
 						return reduce(body, nfa);
 					})
 					.with({ type: "Abs" }, ({ closure, binder }) => {
-						return apply(ctx, binder.type, closure, nfa);
+						return apply(ctx, binder, closure, nfa);
 					})
 					.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
 					.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)))
@@ -126,10 +126,10 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 	return res;
 }
 
-export const apply = (ctx: EB.Context, binder: EB.Binder["type"], closure: NF.Closure, value: NF.Value, multiplicity: Q.Multiplicity = Q.Zero): NF.Value => {
+export const apply = (ctx: EB.Context, binder: EB.Binder, closure: NF.Closure, value: NF.Value, multiplicity: Q.Multiplicity = Q.Zero): NF.Value => {
 	const { env, term } = closure;
 
-	const extended = EB.bind(ctx, { type: binder, variable: `t${env.length}` }, [value, multiplicity]);
+	const extended = EB.bind(ctx, binder, [value, multiplicity]);
 	return evaluate(extended, term);
 };
 

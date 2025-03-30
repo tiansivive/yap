@@ -10,13 +10,13 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as Lib from "@yap/shared/lib/primitives";
 
 import * as R from "@yap/shared/rows";
-import * as Sub from "@yap/elaboration/substitution";
+import * as Sub from "@yap/elaboration/unification/substitution";
 
 import Grammar from "@yap/src/grammar";
 
 import * as Log from "@yap/shared/logging";
 import * as E from "fp-ts/Either";
-import { displayProvenance } from "./solver";
+import { displayProvenance } from "@yap/elaboration/solver";
 
 describe("Unification", () => {
 	const empty: EB.Context = {

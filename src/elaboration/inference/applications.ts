@@ -26,7 +26,7 @@ export const infer = ({ fn, arg, icit }: Application) => {
 						throw new Error("Implicitness mismatch");
 					}
 
-					return M.of([pi.binder.annotation, pi.closure] as const);
+					return M.of([pi.binder.annotation, pi.closure, pi.binder.variable] as const);
 				})
 				.otherwise(() => {
 					const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
@@ -37,7 +37,7 @@ export const infer = ({ fn, arg, icit }: Application) => {
 					const pi = NF.Constructors.Pi("x", icit, mnf, closure);
 
 					return F.pipe(
-						M.of([mnf, closure] as const),
+						M.of([mnf, closure, pi.binder.variable] as const),
 						M.discard(() => M.tell("constraint", { type: "assign", left: fty, right: pi, lvl: ctx.env.length })),
 					);
 				});
@@ -46,10 +46,10 @@ export const infer = ({ fn, arg, icit }: Application) => {
 			M.track(["src", arg, { action: "checking", against: ann[0], description: "checking fn argument arg against its annotation" }], EB.check(arg, ann[0])),
 		),
 		M.chain(({ fn: [ft, fty, fus], arg: [at, aus], pi, ctx }) => {
-			const [[, q], cls] = pi;
+			const [[, q], cls, x] = pi;
 			const rus = Q.add(fus, Q.multiply(q, aus));
 
-			const val = NF.apply(ctx, "Pi", cls, NF.evaluate(ctx, at), q);
+			const val = NF.apply(ctx, { type: "Pi", variable: x }, cls, NF.evaluate(ctx, at), q);
 
 			const ast: EB.AST = [EB.Constructors.App(icit, ft, at), val, rus];
 			return M.of(ast);
