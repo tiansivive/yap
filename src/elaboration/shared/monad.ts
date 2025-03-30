@@ -7,7 +7,7 @@ import { Writer } from "fp-ts/lib/Writer";
 import * as W from "fp-ts/lib/Writer";
 import * as E from "fp-ts/lib/Either";
 
-import * as EB from ".";
+import * as EB from "@yap/elaboration";
 import { Cause } from "./errors";
 import { Either } from "fp-ts/lib/Either";
 

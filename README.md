@@ -22,28 +22,17 @@ There's no grand vision here — just a bunch of features I like, without the st
 
 ## What Even Is This?
 
-`Yap` is a **dependently typed language with first-class, structural types**, **implicits**, and **zero runtime assumptions**. The idea is to keep the core **minimal**, let types do their thing (and then nuke them!), and **make everything customizable**. If you don’t like how something works, change it — preferably without rewriting the compiler.
+`Yap` is a **dependently typed language** with **first-class, structural types**, **implicits**, and **zero runtime assumptions**. The idea is to keep the core **minimal**, let types do their thing (and then nuke them!), and **make everything customizable**. If you don’t like how something works, change it — preferably without rewriting the compiler.
 
 It’s still early days, so expect **broken things, missing features, a nonsensical mess and half-baked ideas**. But hey, it already supports:
 
 - **Structural typing** - so you don’t have to fight a nominal type system for no reason
-  - Dependent functions
-  - Dependent Records
-  - Variants
-  - Recursive types
+  - Dependent functions, Dependent Records, Variants, Recursive types - Oooohhh yeeeaaaahhhh!
 - **Type inference** - Momma always told me I had a short attention span
 - **Implicits** - so you don’t have to pass a million arguments manually
 - **Module System** - because you have a file system
 - **Customizable data structures** - want to swap out how records/tuples work? Go for it, I don't care
 - **JS codegen** - sue me
-
-`Yap` will never ship a runtime.  
-It doesn’t assume anything about memory layouts or platforms. You should (eventually) be able to compile this mess to JavaScript, Erlang, Lua, C, Assembly, Brainf\*ck (you demented sicko) or whatever else strokes your ego, without fighting the compiler. `Yap` will provide the required API to soothe your sweet soul, but _you_ will implement it, not `Yap`. Leave _me_ out of it.
-
-Why? Because backends are hard. _Really_ hard. And I'm dumb, _really_ dumb.
-There's heaps of incredible runtime platforms out in the wild, and hordes of people who actually enjoy dealing with platform-specific stuff — and they’re way better at it than I ever could be. So be free! I'll make sure to deal with those nasty fundamental concepts like mutation and references at the type level, and leave it all nice and pretty with sugar on top.
-How you map that to your platform? That’s on you. You’re welcome.
-I’ll be over here, having an existential crisis about types.
 
 ## Philosophy (Or Lack Thereof)
 
@@ -55,6 +44,14 @@ I’ll be over here, having an existential crisis about types.
 - **No platform assumptions** – The compiler should let you generate whatever garbage output you want. No judging.
 - **You’re in control** – Defaults exist, but if you don’t like them, override them. No gatekeeping.
 - **Multi paradigm** - let the flame wars begin
+
+`Yap` will never ship a runtime.  
+It doesn’t assume anything about memory layouts or platforms. You should (eventually) be able to compile this mess to JavaScript, Erlang, Lua, C, Assembly, Brainf\*ck (you demented sicko) or whatever else strokes your ego, without fighting the compiler. `Yap` will provide the required API to soothe your sweet soul, but _you_ will implement it, not `Yap`. Leave _me_ out of it.
+
+Why? Because backends are hard. _Really_ hard. And I'm dumb, _really_ dumb.
+There's heaps of incredible runtime platforms out in the wild, and hordes of people who actually enjoy dealing with platform-specific stuff — and they’re way better at it than I ever could be. So be free! I'll make sure to deal with those nasty fundamental concepts like mutation and references at the type level, and leave it all nice and pretty with sugar on top.
+How you map that to your platform? That’s on you. You’re welcome.
+I’ll be over here, having an existential crisis about types.
 
 ## The Plan (A.K.A. The Roadmap)
 
@@ -72,7 +69,7 @@ I’ll be over here, having an existential crisis about types.
 ### 🔥 Features
 
 - Type modalities (mutability, effects, ownership, etc., without hardcoding magic into the compiler)
-  - If this sounds like wishful thinking, well... it is! but I'm still gonna do it, because YOLO.
+  - If this sounds like wishful thinking, well... it is! but I'm still gonna fail at it, because YOLO.
 - Singleton types for `String` and `Num` (so the compiler actually knows what `1` is)
 - Reflection (for runtime type-driven pattern matching)
 
@@ -83,27 +80,39 @@ I’ll be over here, having an existential crisis about types.
 - **A debugger** (because I am dumb)
 - **A REPL** (because I want one, and debugging without one sucks)
 
-### 💀 Tech Debt
+### Things That Keep Me Up at Night
 
-- More tests (so I don’t break everything every other day)
-- Module system (Other than it being all but non-existent, it's so embarrassing even ChatGPT could do better)
-- Well, lowering isn't a thing yet (but hey, at least it’s not _not_ a thing, right?)
-- Get rid of the monad? (swear to god, love/hate relationships should be renamed to monad relationships)
+- **To Any or not to Any** – Do I really want to introduce the TypeScript plague into my pristine little ecosystem?
+
+### Things I’m Embarrassed About
+
+`Yap` has some… let’s call them character-building aspects.
+
+- **The module system** - it's so embarrassing even ChatGPT could do better.
+- **The `FFI`** - Functional in the same way a car with three wheels is technically functional.
+- **The `REPL`?** - More like a suggestion than a real tool.
+- **The `CLI`** - Yeah, it exists.
+- **Testing** - because I keep breaking everything every other day
+- **Tech debt** 💀
+  - Well, **lowering** isn't a thing yet (but hey, at least it’s not _not_ a thing, right?)
+
+Improvements are coming, but for now, just squint and pretend everything is fine.
 
 ## Trying It Out
 
-`Yap` isn’t quite "usable" yet unless you enjoy debugging the compiler. At most you can generate some JS, scream in despair, load it up in node and then break your computer because you're coding in JS.
+`Yap` isn’t quite "usable" yet unless you enjoy debugging the compiler. At most you can generate some JS, scream in despair, load it up in `node` and then break your computer because you're coding in JS.
 But if you're curious, check out the code, mess around with it, and maybe even contribute if you're brave.
 
 1. Clone the repo
 2. Build the compiler
+   - You know the drill: `npm install`, `npm link`, `npm run stuff`, sacrifice a goat, etc.
 3. Write some broken code
 4. Complain
 
 ## Contributing
 
-If you actually want to help, that's cool! Just open an issue or PR, but be warned: the language is still **changing fast**, so nothing is set in stone. Expect things to (continue to) break.
-Also, I suck at communication, so feel free to continue to pester me with notifications while I continue to ignore them. Such is life.
+If you want to contribute, that’s cool! Open an issue, start a discussion, or throw a PR my way. I genuinely enjoy discussing ideas.  
+I also suck at communication, so feel free to continue to pester me with notifications while I continue to ignore them. Such is life.
 
 ---
 
@@ -127,7 +136,7 @@ Sue me.
 
 ## Is this even possible?
 
-`Yap` exists because I was frustrated. If you share that frustration, maybe you'll like it too. Or maybe you'll hate it.  
+I don't know, you're better off asking a CS PhD Nobel Laureate logician.
 Maybe it’s a terrible, and terribly flawed, idea. Maybe it’s genius. Maybe it’s just a complete dumpster fire wrapped in _my_ own personal code therapy session.
 
 Could it ever be fully usable, safe, sound, fast, feature-rich and whatever else your shiny programming language needs to be? Probably not. Maybe it’ll never turn into something functional. **But do I like it**? Yeah, _I_ do. I think it’s cool.

@@ -15,7 +15,10 @@ export const infer = ({ fn, arg, icit }: Application) => {
 	return F.pipe(
 		M.Do,
 		M.bind("ctx", M.ask),
-		M.let("fn", M.chain(EB.infer(fn), icit === "Explicit" ? EB.Icit.insert : M.of)),
+		M.let(
+			"fn",
+			M.track(["src", fn, { action: "infer", description: "inferring function type" }], M.chain(EB.infer(fn), icit === "Explicit" ? EB.Icit.insert : M.of)),
+		),
 		M.bind("pi", ({ fn: [ft, fty], ctx }) => {
 			return match(fty)
 				.with({ type: "Abs", binder: { type: "Pi" } }, pi => {
@@ -39,7 +42,9 @@ export const infer = ({ fn, arg, icit }: Application) => {
 					);
 				});
 		}),
-		M.bind("arg", ({ pi: [ann] }) => EB.check(arg, ann[0])),
+		M.bind("arg", ({ pi: [ann] }) =>
+			M.track(["src", arg, { action: "checking", against: ann[0], description: "checking fn argument arg against its annotation" }], EB.check(arg, ann[0])),
+		),
 		M.chain(({ fn: [ft, fty, fus], arg: [at, aus], pi, ctx }) => {
 			const [[, q], cls] = pi;
 			const rus = Q.add(fus, Q.multiply(q, aus));

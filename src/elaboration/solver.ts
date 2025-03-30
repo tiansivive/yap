@@ -3,10 +3,10 @@ import * as EB from "@yap/elaboration";
 import * as Src from "@yap/src/index";
 import * as NF from "@yap/elaboration/normalization";
 import { match, P } from "ts-pattern";
-import { Subst, Substitute } from "./substitution";
-import * as Sub from "./substitution";
+import { Subst, Substitute } from "./unification/substitution";
+import * as Sub from "./unification/substitution";
 
-import * as Err from "@yap/elaboration/errors";
+import * as Err from "@yap/elaboration/shared/errors";
 import * as Log from "@yap/shared/logging";
 
 import * as F from "fp-ts/lib/function";
@@ -84,8 +84,7 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboratio
 	});
 };
 
-export const displayProvenance = (provenance: EB.Provenance[] = []): string => {
-	const normalize = (str: string) => str.replace(/\n+/g, "").trim();
+export const displayProvenance = (provenance: EB.Provenance[] = [], opts = { cap: 10 }): string => {
 	return A.reverse(provenance)
 		.map(p => {
 			const pretty = (([type, val]) => {
@@ -116,7 +115,8 @@ export const displayProvenance = (provenance: EB.Provenance[] = []): string => {
 			const loc = id === "src" ? `@ line: ${val.location.from.line}, col: ${val.location.from.column}\n` : "";
 
 			if (metadata?.action === "checking") {
-				const msg = `In checking:\n\t${pretty}\nagainst:\n\t${NF.display(metadata.against)}:`;
+				const reason = metadata.description ? `\nReason: ${metadata.description}` : "";
+				const msg = `While checking:\n\t${pretty}\nagainst:\n\t${NF.display(metadata.against)}${reason}`;
 				return `${loc}${msg}`;
 			}
 			if (metadata?.action === "alternative") {
@@ -124,15 +124,17 @@ export const displayProvenance = (provenance: EB.Provenance[] = []): string => {
 				return `${loc}${msg}`;
 			}
 			if (metadata?.action === "infer") {
-				const msg = `In infer:\n\t${pretty}`;
+				const reason = metadata.description ? `\nReason: ${metadata.description}` : "";
+				const msg = `While inferring:\n\t${pretty}${reason}`;
 				return `${loc}${msg}`;
 			}
 			if (metadata?.action === "unification") {
-				const msg = `In unification:\n\t${pretty}`;
+				const msg = `While unifiying:\n\t${pretty}`;
 				return `${loc}${msg}`;
 			}
 
 			throw new Error("displayProvenance: Not implemented yet");
 		})
-		.join("\n\n");
+		.slice(0, opts.cap)
+		.join("\n--------------------------------------------------------------------------------------------");
 };

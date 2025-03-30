@@ -5,7 +5,7 @@ import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Lit from "@yap/shared/literals";
 import * as Q from "@yap/shared/modalities/multiplicity";
-import * as Err from "@yap/elaboration/errors";
+import * as Err from "@yap/elaboration/shared/errors";
 import * as Lib from "@yap/shared/lib/primitives";
 
 import Grammar from "@yap/src/grammar";

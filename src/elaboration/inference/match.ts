@@ -69,15 +69,6 @@ export const infer = (tm: Match): EB.M.Elaboration<EB.AST> =>
 
 let max = 0;
 export const elaborate = (alts: Src.Alternative[], [scrutinee, scuty, us]: EB.AST): EB.M.Elaboration<[EB.Alternative, NF.Value, Q.Usages][]> => {
-	if (alts.length > max) {
-		Log.push("alternatives");
-		max = alts.length;
-	}
-
-	if (alts.length === 1) {
-		Log.logger.debug(Src.Alt.display(alts[0]), { alts, scrutinee, scuty, us });
-	}
-
 	const result = match(alts)
 		.with([{ pattern: { type: "lit" } }], ([{ pattern, term }]) =>
 			F.pipe(
@@ -178,18 +169,5 @@ export const elaborate = (alts: Src.Alternative[], [scrutinee, scuty, us]: EB.AS
 			throw new Error(`Pattern Matching for ${alt.pattern.type}: Not implemented`);
 		});
 
-	return M.fmap(result, result => {
-		if (alts.length === 1) {
-			Log.push("result");
-			Log.logger.debug(EB.Display.Alternative(result[0][0]));
-			Log.logger.debug("[Type] " + NF.display(result[0][1]));
-			Log.pop();
-		}
-		if (alts.length === max) {
-			Log.pop();
-			max = 0;
-		}
-
-		return result;
-	});
+	return result;
 };

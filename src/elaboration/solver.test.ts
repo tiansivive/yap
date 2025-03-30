@@ -4,7 +4,7 @@ import Nearley from "nearley";
 import * as EB from "@yap/elaboration";
 import { M } from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
-import * as Err from "@yap/elaboration/errors";
+import * as Err from "@yap/elaboration/shared/errors";
 import * as Lit from "@yap/shared/literals";
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as Lib from "@yap/shared/lib/primitives";
@@ -16,7 +16,7 @@ import * as E from "fp-ts/Either";
 import * as F from "fp-ts/function";
 
 import { solve } from "./solver";
-import { display } from "./substitution";
+import { display } from "./unification/substitution";
 
 describe("Constraint Solver", () => {
 	const empty: EB.Context = {

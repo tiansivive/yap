@@ -7,9 +7,6 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as EB from "@yap/elaboration";
 import * as NF from ".";
 
-import * as Log from "@yap/shared/logging";
-import * as Sub from "@yap/elaboration/substitution";
-
 export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 	//Log.push("eval");
 	//Log.logger.debug(EB.Display.Term(term), { ctx.env,  term: EB.Display.Term(term) });

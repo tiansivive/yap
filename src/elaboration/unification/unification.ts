@@ -7,10 +7,10 @@ import * as A from "fp-ts/Array";
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import { M } from "@yap/elaboration";
-import * as Sub from "@yap/elaboration/substitution";
-import { Subst } from "@yap/elaboration/substitution";
+import * as Sub from "./substitution";
+import { Subst } from "./substitution";
 
-import * as Err from "@yap/elaboration/errors";
+import * as Err from "@yap/elaboration/shared/errors";
 import * as R from "@yap/shared/rows";
 
 import * as Src from "@yap/src/index";

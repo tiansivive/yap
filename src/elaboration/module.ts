@@ -2,7 +2,7 @@ import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
-import * as M from "@yap/elaboration/monad";
+import * as M from "@yap/elaboration/shared/monad";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
 

@@ -1,6 +1,6 @@
 import { replicate, unsafeUpdateAt } from "fp-ts/lib/Array";
-import * as NF from "./normalization";
-import * as EB from "./index";
+import * as NF from "@yap/elaboration/normalization";
+import * as EB from "@yap/elaboration";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import { M } from "@yap/elaboration";
@@ -8,8 +8,8 @@ import { M } from "@yap/elaboration";
 import * as Src from "@yap/src/index";
 import * as P from "@yap/shared/provenance";
 
-import * as U from "./unification";
-import * as Sub from "./substitution";
+import * as U from "@yap/elaboration/unification/index";
+import * as Sub from "@yap/elaboration/unification/substitution";
 
 import * as E from "fp-ts/Either";
 import { set, update } from "@yap/utils";
@@ -37,8 +37,8 @@ export type Provenance =
 	| ["unify", [NF.Value, NF.Value], Metadata?];
 
 type Metadata =
-	| { action: "checking"; against: NF.Value }
-	| { action: "infer" }
+	| { action: "checking"; against: NF.Value; description?: string }
+	| { action: "infer"; description?: string }
 	| { action: "unification" }
 	| { action: "alternative"; type: NF.Value; motive: string };
 
