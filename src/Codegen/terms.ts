@@ -164,7 +164,7 @@ export const Patterns = {
 				return [[`(${scrutinee}) === ${Lit.codegen(pat.value)}`], []];
 			case "List":
 				if (pat.patterns.length === 0) {
-					return [[`typeof ${scrutinee} === "object" && ${scrutinee}.length === 0`], []];
+					return [[`Array.isArray(${scrutinee}) && ${scrutinee}.length === 0`], []];
 				}
 				const [elems, bindings] = pat.patterns.reduce(
 					([conditions, bs], p, i): [string[], [Path, Name][]] => {
@@ -175,7 +175,7 @@ export const Patterns = {
 				);
 
 				const all: [Path, Name][] = pat.rest ? bindings.concat([[`${scrutinee}.slice(${pat.patterns.length})`, pat.rest]]) : bindings;
-				return [[`typeof ${scrutinee} === "object" && ${elems.join(" && ")}`], all];
+				return [[`Array.isArray(${scrutinee}) && ${elems.join(" && ")}`], all];
 			case "Variant":
 				const [variant, bs] = Patterns.codegen(env, { type: "Row", row: pat.row }, scrutinee);
 				return [[`(${variant.join(" || ")})`], bs];

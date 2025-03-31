@@ -93,6 +93,7 @@ I’ll be over here, having an existential crisis about types.
 - **The `REPL`?** - More like a suggestion than a real tool.
 - **The `CLI`** - Yeah, it exists.
 - **Testing** - because I keep breaking everything every other day
+- **Comments** - I forgot, ok?
 - **Tech debt** 💀
   - Well, **lowering** isn't a thing yet (but hey, at least it’s not _not_ a thing, right?)
 

@@ -95,7 +95,7 @@ export const elaborate = (_row: Src.Row): M.Elaboration<[EB.Row, NF.Row, Q.Usage
 		);
 	});
 
-export const extract = (row: Src.Row, lvl: number): Record<string, EB.Sigma> => {
+export const extract = (row: Src.Row, lvl: number, types?: NF.Row): Record<string, EB.Sigma> => {
 	if (row.type === "empty") {
 		return {};
 	}

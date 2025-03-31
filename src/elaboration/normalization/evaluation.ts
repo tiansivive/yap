@@ -68,6 +68,7 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 					})
 					.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
 					.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)))
+					.with({ type: "Var", variable: { type: "Meta" } }, _ => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
 					.with({ type: "App" }, ({ func, arg }) => {
 						const nff = reduce(func, arg);
 						return NF.Constructors.App(nff, nfa, icit);
@@ -114,6 +115,10 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 					});
 
 			return NF.Constructors.Row(_eval(row));
+		})
+		.with({ type: "Match" }, v => {
+			console.warn("Evaluating match terms not yet implemented. Returning scrutinee as Normal Form for the time being");
+			return evaluate(ctx, v.scrutinee);
 		})
 		.otherwise(tm => {
 			console.log("Eval: Not implemented yet", EB.Display.Term(tm));

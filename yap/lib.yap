@@ -78,9 +78,9 @@ let struct
   = { x: 1, y: "foo" };
 
 let map
-  : Indexed String Num
+  : { [String]: Num }
   = { one: 1, two: 2, three: 3 };
 
 let list
-  : Indexed Num Num
+  : { [Num]: Num }
   = [1, 2, 3];

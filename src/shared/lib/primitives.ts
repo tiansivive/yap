@@ -12,7 +12,6 @@ export const Terms = {
     Num: EB.Constructors.Lit(Lit.Atom("Num")),
     Bool: EB.Constructors.Lit(Lit.Atom("Bool")),
     String: EB.Constructors.Lit(Lit.Atom("String")),
-    Indexed: EB.Constructors.Lit(Lit.Atom("Indexed")),
     Unit: EB.Constructors.Lit(Lit.Atom("Unit")),
     "+": EB.Constructors.Var({ type: "Foreign", name: "$add" }),
     "-": EB.Constructors.Var({ type: "Foreign", name: "$sub" }),
@@ -38,7 +37,6 @@ export const NormalForms = {
     Bool: NF.Constructors.Lit(Lit.Atom("Bool")),
     String: NF.Constructors.Lit(Lit.Atom("String")),
     Unit: NF.Constructors.Lit(Lit.Atom("Unit")),
-    Indexed: NF.Constructors.Lit(Lit.Atom("Indexed")),
 }
 
 

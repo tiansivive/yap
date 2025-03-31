@@ -195,6 +195,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 										);
 									});
 
+									// TODO: Use `rewrite` from `rows.ts`
 									const rewrite = (r: NF.Row): M.Elaboration<[NF.Row, Subst]> => {
 										return match(r)
 											.with({ type: "empty" }, (): M.Elaboration<[NF.Row, Subst]> => M.fail(Err.RowMismatch(r1, r2, "Did not find label: " + label)))
@@ -246,6 +247,17 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						return unify_(r1, r2, empty);
 					})
 
+					.with(
+						// NOTE: Foreign variables are not strictly α-equivalent, but they get shadowed, so we can assume this is somewhat sound
+						// ideally we'll want fully qualified names, but that's not yet implemented
+						// SOLUTION: fully qualified names
+						[
+							{ type: "Var", variable: { type: "Foreign" } },
+							{ type: "Var", variable: { type: "Foreign" } },
+						],
+						([ffi1, ffi2]) => ffi1.variable.name === ffi2.variable.name,
+						() => M.of(subst),
+					)
 					.otherwise(ts => {
 						return M.fail(Err.TypeMismatch(left, right));
 					}),

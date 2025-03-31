@@ -127,12 +127,22 @@ export const Patterns = {
 	Mu: { type: "Abs", binder: { type: "Mu" } } as const,
 	Row: { type: "Row" } as const,
 
-	Map: {
-		type: "App",
-		func: {
+	HashMap: {
+		type: "Neutral",
+		value: {
 			type: "App",
-			func: { type: "Lit", value: { type: "Atom", value: "Indexed" } },
-			arg: { type: "Lit", value: { type: "Atom", value: "String" } },
+			icit: "Implicit",
+			func: {
+				type: "App",
+				func: {
+					type: "App",
+					func: {
+						type: "Var",
+						variable: { type: "Foreign", name: "Indexed" },
+					},
+					arg: { type: "Lit", value: { type: "Atom", value: "String" } },
+				},
+			},
 		},
 	} as const,
 	Array: {

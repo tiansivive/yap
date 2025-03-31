@@ -19,6 +19,7 @@ export const compile = (file: string, options: Options) => {
 
 		Object.entries(Mod.globalModules).forEach(([filepath, iface]) => {
 			console.log("Loaded module: " + filepath);
+			const code = CG.codegen(iface, filepath);
 
 			const FFIfile = filepath.replace(".yap", ".ffi.js");
 
@@ -27,10 +28,10 @@ export const compile = (file: string, options: Options) => {
 				fs.copyFileSync(path, options.outDir + FFIfile.split("/").pop());
 			}
 
-			const code = CG.codegen(iface, filepath);
-
 			const outfile = filepath.replace(".yap", ".js");
+			console.log("Writing: " + outfile);
 			fs.writeFileSync(options.outDir + outfile.split("/").pop(), code);
+			console.log("Generated: " + outfile);
 		});
 	} catch (e) {
 		console.error(e);

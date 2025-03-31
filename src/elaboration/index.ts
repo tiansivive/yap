@@ -1,4 +1,6 @@
 export * from "./elaborate";
+
+export * from "./check";
 export * from "./shared/context";
 export * from "./pretty";
 export * from "./term";

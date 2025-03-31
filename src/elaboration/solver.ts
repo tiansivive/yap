@@ -129,11 +129,11 @@ export const displayProvenance = (provenance: EB.Provenance[] = [], opts = { cap
 				return `${loc}${msg}`;
 			}
 			if (metadata?.action === "unification") {
-				const msg = `While unifiying:\n\t${pretty}`;
+				const msg = `\nWhile unifiying:\n\t${pretty}`;
 				return `${loc}${msg}`;
 			}
 
-			throw new Error("displayProvenance: Not implemented yet");
+			return "displayProvenance: Not implemented yet:\n" + JSON.stringify(p);
 		})
 		.slice(0, opts.cap)
 		.join("\n--------------------------------------------------------------------------------------------");

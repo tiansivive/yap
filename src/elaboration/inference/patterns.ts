@@ -98,8 +98,10 @@ export const infer_: Inference<Src.Pattern, "type"> = {
 			return M.fmap(M.traverse(pat.elements, validate), (es): Result => {
 				const [pats, binders] = es.reduce(([pats, binders], [pat, , , b]) => [pats.concat(pat), binders.concat(b)], [[], []] as [EB.Pattern[], Binder[]]);
 
-				const indexed = NF.Constructors.App(NF.Indexed, NF.Constructors.Lit(Lit.Atom("Num")), "Explicit");
-				const ty = NF.Constructors.App(indexed, v, "Explicit");
+				const indexing = NF.Constructors.App(NF.Indexed, NF.Constructors.Lit(Lit.Atom("Num")), "Explicit");
+				const values = NF.Constructors.App(indexing, v, "Explicit");
+
+				const ty = NF.Constructors.App(values, NF.Constructors.Var({ type: "Foreign", name: "defaultHashMap" }), "Implicit");
 
 				return [
 					EB.Constructors.Patterns.List(pats, pat.rest?.value),

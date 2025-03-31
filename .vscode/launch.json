@@ -12,7 +12,7 @@
 			],
 			"program": "${workspaceRoot}/scripts/cli.ts",
 			"args": [
-				"debug.yap"
+				"main.yap"
 			],
 			"cwd": "${workspaceRoot}",
 			"internalConsoleOptions": "openOnSessionStart",
@@ -46,14 +46,10 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "ts node",
-			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-node",
-			"runtimeArgs": [
-				"-T",
-				"--project",
-				"${workspaceRoot}/tsconfig.json",
-			],
-			"program": "${workspaceRoot}/src/QTT/index.ts",
+			"name": "test",
+			"runtimeExecutable": "node",
+			"runtimeArgs": [],
+			"program": "${workspaceRoot}/scripts/test.js",
 			"cwd": "${workspaceRoot}",
 			"internalConsoleOptions": "openOnSessionStart",
 			"skipFiles": [

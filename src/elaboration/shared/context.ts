@@ -158,5 +158,3 @@ export const muContext = (ctx: Context): Context => {
 export const prune = (ctx: Context, lvl: number): Context => {
 	return F.pipe(ctx, update("env", A.takeRight(lvl)), update("types", A.takeRight(lvl)), update("names", A.takeRight(lvl)));
 };
-
-[1, 2, 3].slice();

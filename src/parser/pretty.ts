@@ -22,7 +22,16 @@ export const display = (term: Src.Term): string => {
 			return `Π(${variable}: ${display(annotation)}) ${arr(icit)} ${display(body)}`;
 		})
 		.with({ type: "application" }, ({ icit, fn, arg }) => {
-			return `${display(fn)} ${display(arg)}`;
+			const f = display(fn);
+			const a = display(arg);
+
+			const wrappedFn = fn.type !== "var" && fn.type !== "lit" && fn.type !== "application" ? `(${f})` : f;
+			const wrappedArg =
+				arg.type === "lambda" || arg.type === "pi" || arg.type === "arrow" || arg.type === "annotation" || arg.type === "application" || arg.type === "match"
+					? `(${a})`
+					: a;
+
+			return `${wrappedFn} ${Icit.display(icit)}${wrappedArg}`;
 		})
 		.with({ type: "annotation" }, ({ term, ann }) => {
 			return `(${display(term)} : ${display(ann)})`;
@@ -57,6 +66,9 @@ export const display = (term: Src.Term): string => {
 		})
 		.with({ type: "tagged" }, ({ tag, term }) => {
 			return `(tagged ${tag}: ${display(term)})`;
+		})
+		.with({ type: "list" }, ({ elements }) => {
+			return `[ ${elements.map(display).join(", ")} ]`;
 		})
 		.with({ type: "projection" }, ({ term, label }) => {
 			return `(${display(term)}).${label}`;
@@ -116,6 +128,11 @@ export const Pat = {
 						var: (v: Src.Variable) => v.value,
 					})(row);
 					return `Tuple ${r}`;
+				})
+				.with({ type: "list" }, ({ elements, rest }) => {
+					const els = elements.map(Pat.display).join(", ");
+					const r = rest ? ` | ${rest.value}` : "";
+					return `[ ${els}${r} ]`;
 				})
 				.otherwise(() => "Pattern Display: Not implemented")
 		);

@@ -5,6 +5,7 @@ export type Cause =
 	| { type: "UnificationFailure"; left: NF.Value; right: NF.Value }
 	| { type: "RigidVariableMismatch"; left: NF.Value; right: NF.Value }
 	| { type: "RowMismatch"; left: NF.Row; right: NF.Row; reason: string }
+	| { type: "MissingLabel"; label: string }
 	| { type: "TypeMismatch"; left: NF.Value; right: NF.Value }
 	| { type: "Impossible"; message: string; extra?: any };
 
@@ -26,5 +27,7 @@ export const display = (error: Cause): string => {
 			return `Type Mismatch: Cannot unify:\n\t${NF.display(error.left)}\nwith\n\t${NF.display(error.right)}`;
 		case "Impossible":
 			return `Impossible! ${error.message}`;
+		case "MissingLabel":
+			return `Missing Label: ${error.label}`;
 	}
 };
