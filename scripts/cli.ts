@@ -56,6 +56,12 @@ program
 				return rl.close();
 			}
 
+			if ([":nf", ":normalize"].includes(input.split(" ")[0])) {
+				const [_, ...rest] = input.split(" ");
+				ctx = interpret(rest.join(" "), ctx, { nf: true });
+				return rl.prompt();
+			}
+
 			if (input.trim() === "") {
 				return rl.prompt();
 			}

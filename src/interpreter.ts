@@ -15,7 +15,7 @@ import { resolve } from "path";
 
 import * as Lib from "@yap/shared/lib/primitives";
 
-export const interpret = (code: string, ctx: EB.Context) => {
+export const interpret = (code: string, ctx: EB.Context, opts = { nf: false }) => {
 	const g = Grammar;
 	g.ParserStart = "Script";
 	const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar));
@@ -36,12 +36,11 @@ export const interpret = (code: string, ctx: EB.Context) => {
 	}
 	const [stmt] = script;
 
-	return interpretStmt(stmt, ctx);
+	return interpretStmt(stmt, ctx, opts);
 };
 
 const letdecs: string[] = [];
-
-const interpretStmt = (stmt: Src.Statement, ctx: EB.Context) => {
+const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false }) => {
 	if (stmt.type === "let") {
 		const [name, result] = EB.Mod.letdec(stmt, ctx);
 
@@ -55,6 +54,12 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context) => {
 		const code = `let ${name} = ${CG.codegen([name], tm)};`;
 		letdecs.push(code);
 		console.log(`:: ${EB.NF.display(ty)}`);
+
+		if (opts.nf) {
+			const nf = EB.NF.evaluate(ctx, tm);
+			console.log(`NF: ${EB.NF.display(nf)}`);
+		}
+
 		return ctx_;
 	}
 
@@ -82,6 +87,11 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context) => {
 		// console.dir(Object.getOwnPropertyDescriptors(res), { showHidden: true, depth: null });
 		const pretty = util.inspect(res, { showHidden: true, depth: null });
 		console.log("\n" + pretty + ` :: ${EB.NF.display(ty)}\n`);
+
+		if (opts.nf) {
+			const nf = EB.NF.evaluate(ctx, tm);
+			console.log(`NF: ${EB.NF.display(nf)}`);
+		}
 		return ctx;
 	}
 

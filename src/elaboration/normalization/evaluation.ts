@@ -1,4 +1,4 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import * as El from "../index";
 
@@ -6,6 +6,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as EB from "@yap/elaboration";
 import * as NF from ".";
+import _ from "lodash";
 
 export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 	//Log.push("eval");
@@ -117,8 +118,20 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 			return NF.Constructors.Row(_eval(row));
 		})
 		.with({ type: "Match" }, v => {
-			console.warn("Evaluating match terms not yet implemented. Returning scrutinee as Normal Form for the time being");
-			return evaluate(ctx, v.scrutinee);
+			// console.warn("Evaluating match terms not yet implemented. Returning scrutinee as Normal Form for the time being");
+			const scrutinee = evaluate(ctx, v.scrutinee);
+			if (scrutinee.type === "Neutral" || (scrutinee.type === "Var" && scrutinee.variable.type === "Meta")) {
+				const lambda = NF.Constructors.Lambda("_scrutinee", "Explicit", NF.Constructors.Closure(ctx, v));
+				const app = NF.Constructors.App(lambda, scrutinee, "Explicit");
+				return NF.Constructors.Neutral(app);
+			}
+
+			const res = meet(ctx, scrutinee, v.alternatives);
+
+			if (!res) {
+				throw new Error("Match: No alternative matched");
+			}
+			return res;
 		})
 		.otherwise(tm => {
 			console.log("Eval: Not implemented yet", EB.Display.Term(tm));
@@ -130,6 +143,48 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 
 	return res;
 }
+
+export const meet = (ctx: EB.Context, tm: NF.Value, alts: EB.Alternative[]): NF.Value | undefined => {
+	return match(alts)
+		.with([], () => undefined)
+		.with([P._, ...P.array()], ([alt, ...rest]) => {
+			return match([unwrapNeutral(tm), alt.pattern])
+				.with([P._, { type: "Wildcard" }], () => evaluate(ctx, alt.term))
+				.with([P._, { type: "Binder" }], ([v, p]) => {
+					const extended = EB.bind(ctx, { type: "Lambda", variable: p.value }, [v, Q.Many]);
+					return evaluate(extended, alt.term);
+				})
+				.with(
+					[{ type: "Lit" }, { type: "Lit" }],
+					([v, p]) => _.isEqual(v, p),
+					() => evaluate(ctx, alt.term),
+				)
+
+				.with([NF.Patterns.Schema, { type: "Struct" }], ([{ arg }, p]) => {
+					console.warn("Struct pattern matching not yet implemented");
+					return evaluate(ctx, alt.term);
+				})
+				.with([NF.Patterns.Row, { type: "Row" }], ([v, p]) => {
+					console.warn("Row pattern matching not yet implemented");
+					return evaluate(ctx, alt.term);
+				})
+				.with([NF.Patterns.Variant, { type: "Variant" }], ([v, p]) => {
+					console.warn("Variant pattern matching not yet implemented");
+					return evaluate(ctx, alt.term);
+				})
+				.with([NF.Patterns.HashMap, { type: "List" }], ([v, p]) => {
+					console.warn("List pattern matching not yet implemented");
+					return evaluate(ctx, alt.term);
+				})
+				.with(
+					[NF.Patterns.Atom, { type: "Var" }],
+					([{ value: v }, { value: p }]) => v.value === p,
+					() => evaluate(ctx, alt.term),
+				)
+				.otherwise(() => meet(ctx, tm, rest));
+		})
+		.exhaustive();
+};
 
 export const apply = (binder: EB.Binder, closure: NF.Closure, value: NF.Value, multiplicity: Q.Multiplicity = Q.Zero): NF.Value => {
 	const { ctx, term } = closure;
