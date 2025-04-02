@@ -6,9 +6,10 @@ export type Injection<T> = { type: "injection"; label: string; value: T; term: T
 export type Projection<T> = { type: "projection"; label: string; term: T };
 
 export type Row<T, V> = { type: "empty" } | { type: "extension"; label: string; value: T; row: Row<T, V> } | { type: "variable"; variable: V };
+export type Extension<T, V> = Extract<Row<T, V>, { type: "extension" }>;
 
 export const Constructors = {
-	Extension: <T, V>(label: string, value: T, row: Row<T, V>): Row<T, V> => ({ type: "extension", label, value, row }),
+	Extension: <T, V>(label: string, value: T, row: Row<T, V>): Extension<T, V> => ({ type: "extension", label, value, row }),
 	Variable: <T, V>(variable: V): Row<T, V> => ({ type: "variable", variable }),
 	Empty: <T, V>(): Row<T, V> => ({ type: "empty" }),
 };
@@ -61,6 +62,7 @@ export const fold = <T, V, A>(row: Row<T, V>, onVal: (value: T, label: string, a
 };
 
 type Err = { tag: "Mismatch"; label: string } | { tag: "ExpectedExtension" };
+
 export const rewrite = <T, V>(r: Row<T, V>, label: string, onVar?: (v: V) => [T, V]): E.Either<Err, Row<T, V>> => {
 	return match(r)
 		.with({ type: "empty" }, () => E.left({ tag: "Mismatch", label } satisfies Err))

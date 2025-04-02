@@ -91,3 +91,6 @@
 - After switching to closures containing the whole Context, some functions are no longer dependent on it (eg, quoting). Clean up those params
   - It's probably not necessary to hold the whole context, we can perhaps keep just imports and env, and adjust Context utilities
   - This helps with the "Not Implemented" Errors in some scenarios handling closures
+- Refactor row operations
+  - rewrite
+  - meet/join for pattern matching

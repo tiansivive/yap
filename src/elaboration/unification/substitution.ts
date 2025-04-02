@@ -8,8 +8,6 @@ import { entries } from "@yap/utils";
 
 export type Subst = { [key: number]: NF.Value };
 
-//TODO: term substitution is failing. It's not adding introduced abstractions to the environment, so the lookup fails with negative indices.
-//SOLUTION: When going under an abstraction, we need to add the binder to the environment.
 //NOTE: Working with a Context is a bad idea. Substitution doesn't care about most of the context, it only cares about the environment and imports.
 export const Substitute = (ctx: EB.Context) => {
 	const call = {

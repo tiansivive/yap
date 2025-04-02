@@ -302,3 +302,15 @@ let omit =
     \>> foo
     |> bar
     |> baz
+
+
+
+// backcalls
+
+let foo = \payload -> {
+    \res1 <- fetch url payload
+    \res2 <- fetch url payload
+    \res3 <- fetch url payload
+    \res4 <- fetch url payload
+    return res1 + res2 + res3 + res4
+}   err -> handle err

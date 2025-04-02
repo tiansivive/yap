@@ -1,14 +1,19 @@
 import { match, P } from "ts-pattern";
 
-import * as El from "../index";
-
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as EB from "@yap/elaboration";
 import * as NF from ".";
 import _ from "lodash";
 
-export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
+import * as E from "fp-ts/lib/Either";
+import * as F from "fp-ts/lib/function";
+
+import * as R from "@yap/shared/rows";
+import { Option } from "fp-ts/lib/Option";
+import * as O from "fp-ts/lib/Option";
+
+export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 	//Log.push("eval");
 	//Log.logger.debug(EB.Display.Term(term), { ctx.env,  term: EB.Display.Term(term) });
 	const res = match(term)
@@ -81,7 +86,7 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 			return reduce(nff, nfa);
 		})
 		.with({ type: "Row" }, ({ row }) => {
-			const _eval = (row: El.Row): NF.Row =>
+			const _eval = (row: EB.Row): NF.Row =>
 				match(row)
 					.with({ type: "empty" }, r => r)
 					.with({ type: "extension" }, ({ label, value: term, row }) => {
@@ -126,7 +131,7 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 				return NF.Constructors.Neutral(app);
 			}
 
-			const res = meet(ctx, scrutinee, v.alternatives);
+			const res = matching(ctx, scrutinee, v.alternatives);
 
 			if (!res) {
 				throw new Error("Match: No alternative matched");
@@ -144,45 +149,19 @@ export function evaluate(ctx: EB.Context, term: El.Term): NF.Value {
 	return res;
 }
 
-export const meet = (ctx: EB.Context, tm: NF.Value, alts: EB.Alternative[]): NF.Value | undefined => {
+export const matching = (ctx: EB.Context, tm: NF.Value, alts: EB.Alternative[]): NF.Value | undefined => {
 	return match(alts)
 		.with([], () => undefined)
-		.with([P._, ...P.array()], ([alt, ...rest]) => {
-			return match([unwrapNeutral(tm), alt.pattern])
-				.with([P._, { type: "Wildcard" }], () => evaluate(ctx, alt.term))
-				.with([P._, { type: "Binder" }], ([v, p]) => {
-					const extended = EB.bind(ctx, { type: "Lambda", variable: p.value }, [v, Q.Many]);
+		.with([P._, ...P.array()], ([alt, ...rest]) =>
+			F.pipe(
+				meet(alt.pattern, tm),
+				O.map(binders => {
+					const extended = binders.reduce((_ctx, { binder, q }) => EB.bind(_ctx, binder, [tm, q]), ctx);
 					return evaluate(extended, alt.term);
-				})
-				.with(
-					[{ type: "Lit" }, { type: "Lit" }],
-					([v, p]) => _.isEqual(v, p),
-					() => evaluate(ctx, alt.term),
-				)
-
-				.with([NF.Patterns.Schema, { type: "Struct" }], ([{ arg }, p]) => {
-					console.warn("Struct pattern matching not yet implemented");
-					return evaluate(ctx, alt.term);
-				})
-				.with([NF.Patterns.Row, { type: "Row" }], ([v, p]) => {
-					console.warn("Row pattern matching not yet implemented");
-					return evaluate(ctx, alt.term);
-				})
-				.with([NF.Patterns.Variant, { type: "Variant" }], ([v, p]) => {
-					console.warn("Variant pattern matching not yet implemented");
-					return evaluate(ctx, alt.term);
-				})
-				.with([NF.Patterns.HashMap, { type: "List" }], ([v, p]) => {
-					console.warn("List pattern matching not yet implemented");
-					return evaluate(ctx, alt.term);
-				})
-				.with(
-					[NF.Patterns.Atom, { type: "Var" }],
-					([{ value: v }, { value: p }]) => v.value === p,
-					() => evaluate(ctx, alt.term),
-				)
-				.otherwise(() => meet(ctx, tm, rest));
-		})
+				}),
+				O.getOrElse(() => matching(ctx, tm, rest)),
+			),
+		)
 		.exhaustive();
 };
 
@@ -200,3 +179,69 @@ export const unwrapNeutral = (value: NF.Value): NF.Value => {
 };
 
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];
+
+const meet = (pattern: EB.Pattern, nf: NF.Value): Option<{ binder: EB.Binder; q: Q.Multiplicity }[]> => {
+	return match([unwrapNeutral(nf), pattern])
+		.with([P._, { type: "Wildcard" }], () => O.some([]))
+		.with([P._, { type: "Binder" }], ([v, p]) => {
+			const binder: EB.Binder = { type: "Lambda", variable: p.value };
+			return O.some([{ binder, q: Q.Many }]);
+		})
+		.with(
+			[{ type: "Lit" }, { type: "Lit" }],
+			([v, p]) => _.isEqual(v, p),
+			() => O.some([]),
+		)
+
+		.with([NF.Patterns.Schema, { type: "Struct" }], ([{ arg }, p]) => {
+			return meetR(p.row, arg.row);
+		})
+		.with([NF.Patterns.Row, { type: "Row" }], ([v, p]) => {
+			return meetR(p.row, v.row);
+		})
+		.with([NF.Patterns.Variant, { type: "Variant" }], ([v, p]) => {
+			console.warn("Variant pattern matching not yet implemented");
+			return O.some([]);
+		})
+		.with([NF.Patterns.HashMap, { type: "List" }], ([v, p]) => {
+			console.warn("List pattern matching not yet implemented");
+			return O.some([]);
+		})
+		.with(
+			[NF.Patterns.Atom, { type: "Var" }],
+			([{ value: v }, { value: p }]) => v.value === p,
+			() => O.some([]),
+		)
+		.otherwise(() => O.none);
+};
+
+const meetR = (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<{ binder: EB.Binder; q: Q.Multiplicity }[]> => {
+	return match([pats, vals])
+		.with([{ type: "empty" }, P._], () => O.some([])) // empty row matches anything
+		.with([{ type: "variable" }, P._], ([r]) => {
+			// bind the variable
+			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
+			return O.some([{ binder, q: Q.Many }]);
+		})
+
+		.with([{ type: "extension" }, { type: "empty" }], () => O.none)
+		.with([{ type: "extension" }, { type: "variable" }], () => O.none)
+		.with([{ type: "extension" }, { type: "extension" }], ([r1, r2]) => {
+			const rewritten = R.rewrite(r2, r1.label);
+			if (E.isLeft(rewritten)) {
+				return O.none;
+			}
+
+			if (rewritten.right.type !== "extension") {
+				throw new Error("Rewritting a row extension should result in another row extension");
+			}
+			const { row } = rewritten.right;
+			return F.pipe(
+				O.Do,
+				O.apS("current", meet(r1.value, rewritten.right.value)),
+				O.apS("rest", meetR(r1.row, row)),
+				O.map(({ current, rest }) => current.concat(rest)),
+			);
+		})
+		.exhaustive();
+};

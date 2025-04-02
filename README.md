@@ -27,7 +27,7 @@ There's no grand vision here — just a bunch of features I like, without the st
 It’s still early days, so expect **broken things, missing features, a nonsensical mess and half-baked ideas**. But hey, it already supports:
 
 - **Structural typing** - so you don’t have to fight a nominal type system for no reason
-  - Dependent functions, Dependent Records, Variants, Recursive types - Oooohhh yeeeaaaahhhh!
+  - Dependent functions, Dependent Records, Variants, Recursive types (Ouroborous style!)
 - **Type inference** - Momma always told me I had a short attention span
 - **Implicits** - so you don’t have to pass a million arguments manually
 - **Module System** - because you have a file system
