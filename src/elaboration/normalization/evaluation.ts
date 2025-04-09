@@ -193,15 +193,12 @@ const meet = (pattern: EB.Pattern, nf: NF.Value): Option<{ binder: EB.Binder; q:
 			() => O.some([]),
 		)
 
-		.with([NF.Patterns.Schema, { type: "Struct" }], ([{ arg }, p]) => {
-			return meetR(p.row, arg.row);
-		})
+		.with([NF.Patterns.Schema, { type: "Struct" }], [NF.Patterns.Struct, { type: "Struct" }], ([{ arg }, p]) => meetAll(p.row, arg.row))
 		.with([NF.Patterns.Row, { type: "Row" }], ([v, p]) => {
-			return meetR(p.row, v.row);
+			return meetAll(p.row, v.row);
 		})
-		.with([NF.Patterns.Variant, { type: "Variant" }], ([v, p]) => {
-			console.warn("Variant pattern matching not yet implemented");
-			return O.some([]);
+		.with([NF.Patterns.Variant, { type: "Variant" }], [NF.Patterns.Struct, { type: "Variant" }], ([{ arg }, p]) => {
+			return meetOne(p.row, arg.row);
 		})
 		.with([NF.Patterns.HashMap, { type: "List" }], ([v, p]) => {
 			console.warn("List pattern matching not yet implemented");
@@ -215,7 +212,7 @@ const meet = (pattern: EB.Pattern, nf: NF.Value): Option<{ binder: EB.Binder; q:
 		.otherwise(() => O.none);
 };
 
-const meetR = (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<{ binder: EB.Binder; q: Q.Multiplicity }[]> => {
+const meetAll = (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<{ binder: EB.Binder; q: Q.Multiplicity }[]> => {
 	return match([pats, vals])
 		.with([{ type: "empty" }, P._], () => O.some([])) // empty row matches anything
 		.with([{ type: "variable" }, P._], ([r]) => {
@@ -239,9 +236,33 @@ const meetR = (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<{ binder: 
 			return F.pipe(
 				O.Do,
 				O.apS("current", meet(r1.value, rewritten.right.value)),
-				O.apS("rest", meetR(r1.row, row)),
+				O.apS("rest", meetAll(r1.row, row)),
 				O.map(({ current, rest }) => current.concat(rest)),
 			);
+		})
+		.exhaustive();
+};
+
+const meetOne = (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<{ binder: EB.Binder; q: Q.Multiplicity }[]> => {
+	return match([pats, vals])
+		.with([{ type: "empty" }, P._], () => O.none)
+		.with([{ type: "variable" }, P._], ([r]) => {
+			// bind the variable
+			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
+			return O.some([{ binder, q: Q.Many }]);
+		})
+		.with([{ type: "extension" }, { type: "empty" }], () => O.none)
+		.with([{ type: "extension" }, { type: "variable" }], () => O.none)
+		.with([{ type: "extension" }, { type: "extension" }], ([r1, r2]) => {
+			const rewritten = R.rewrite(r2, r1.label);
+			if (E.isLeft(rewritten)) {
+				return meetOne(r1.row, r2);
+			}
+
+			if (rewritten.right.type !== "extension") {
+				throw new Error("Rewritting a row extension should result in another row extension");
+			}
+			return meet(r1.value, rewritten.right.value);
 		})
 		.exhaustive();
 };

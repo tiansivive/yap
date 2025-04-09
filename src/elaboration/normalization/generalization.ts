@@ -55,15 +55,7 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 		const close = (closure: NF.Closure): NF.Closure => ({ ctx: ctx_, term: EB.Icit.replaceMeta(closure.term, ms, lvl + 1) });
 
 		const t = match(nf)
-			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
-				const i = ms.findIndex(m => m.val === variable.val);
-
-				if (i === -1) {
-					throw new Error("Generalize: Meta not found");
-				}
-
-				return NF.Constructors.Var({ type: "Bound", lvl: i });
-			})
+			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => NF.Constructors.Var(convertMeta(variable, ms)))
 			.with({ type: "Var" }, () => nf)
 			.with({ type: "Lit" }, () => nf)
 			.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(sub(value, lvl)))
@@ -76,8 +68,18 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 				NF.Constructors.Mu(binder.variable, binder.source, [sub(binder.annotation[0], lvl), binder.annotation[1]], close(closure)),
 			)
 			.with({ type: "Row" }, ({ row }) => {
-				console.error("Generalize Row: Not implemented yet");
-				return NF.Constructors.Row(row);
+				const r = R.traverse(
+					row,
+					val => sub(val, lvl),
+					v => {
+						if (v.type !== "Meta") {
+							return R.Constructors.Variable(v);
+						}
+						return R.Constructors.Variable(convertMeta(v, ms));
+					},
+				);
+
+				return NF.Constructors.Row(r);
 			})
 			.otherwise(() => {
 				throw new Error("Generalize: Not implemented yet");
@@ -88,17 +90,20 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 	// Wraps the value in a Pi type for each meta variable
 	return ms.reduce(
 		(nf, m, i) => {
+			const extension = ms.slice(0, ms.length - i).reduceRight<Pick<EB.Context, "env" | "names" | "types">>(
+				(_ctx, m, j) => {
+					const binder: EB.Binder = { type: "Pi", variable: `pi${j}` };
+					return {
+						env: [[NF.Constructors.Rigid(j), Q.Many], ..._ctx.env],
+						types: [[binder, "inserted", [NF.Type, Q.Many]], ..._ctx.types],
+						names: [binder, ..._ctx.names],
+					};
+				},
+				{ env: [], names: [], types: [] },
+			);
 			// The environment is the meta variables that have not been generalized so far.
 			// We add them as rigid variables, so that their de Bruijn level points to the correct pi-binding
-			const extended = F.pipe(
-				ctx,
-				set(
-					"env",
-					ms.slice(0, ms.length - i).map((m, j): NF.Env[0] => [NF.Constructors.Rigid(j), Q.Many]),
-				),
-				set("types", new Error("Not yet implemented: generalization ctx") as any),
-				set("names", new Error("Not yet implemented: generalization ctx") as any),
-			);
+			const extended = F.pipe(ctx, set("env", extension.env), set("types", extension.types), set("names", extension.names));
 
 			return NF.Constructors.Pi(`${String.fromCharCode(charCode + ms.length - 1 - i)}`, "Implicit", [NF.Type, Q.Many], {
 				ctx: extended,
@@ -108,4 +113,14 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 		},
 		sub(val, ms.length),
 	);
+};
+
+const convertMeta = (meta: Meta, ms: Meta[]): NF.Variable => {
+	const i = ms.findIndex(m => m.val === meta.val);
+
+	if (i === -1) {
+		throw new Error("Generalize: Meta not found");
+	}
+
+	return { type: "Bound", lvl: i };
 };

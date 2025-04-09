@@ -12,9 +12,17 @@ import * as Log from "@yap/shared/logging";
 import * as F from "fp-ts/lib/function";
 import * as A from "fp-ts/Array";
 
+import * as Q from "@yap/shared/modalities/multiplicity";
+
 const empty: Subst = {};
 
-type Ctaint = EB.Constraint & { provenance: EB.Provenance[] };
+export type Constraint =
+	| { type: "assign"; left: NF.Value; right: NF.Value; lvl: number }
+	| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity }
+	| { type: "resolve"; meta: Extract<EB.Variable, { type: "Meta" }>; annotation: NF.Value };
+// | { type: "sigma"; lvl: number; dict: Record<string, NF.Value> }
+
+type Ctaint = Constraint & { provenance: EB.Provenance[] };
 export const solve = (cs: Array<Ctaint>): M.Elaboration<Subst> =>
 	F.pipe(
 		M.ask(),
@@ -43,7 +51,7 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboratio
 		return M.of(subst);
 	}
 
-	const [c, ...rest] = cs.map(c => {
+	const [c, ...rest] = cs.map<Ctaint>(c => {
 		if (c.type === "usage" || c.type === "resolve") {
 			return c;
 		}

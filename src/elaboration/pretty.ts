@@ -7,8 +7,6 @@ import * as Icit from "@yap/shared/implicitness";
 import * as Lit from "@yap/shared/literals";
 import * as R from "@yap/shared/rows";
 
-import { Constraint } from "./elaborate";
-
 import * as EB from ".";
 
 const display = (term: EB.Term): string => {
@@ -69,7 +67,7 @@ const display = (term: EB.Term): string => {
 	//.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
 };
 
-const displayConstraint = (constraint: Constraint): string => {
+const displayConstraint = (constraint: EB.Constraint): string => {
 	if (constraint.type === "assign") {
 		return `${NF.display(constraint.left)} ~~ ${NF.display(constraint.right)}`;
 	}

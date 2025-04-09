@@ -60,6 +60,20 @@ export function insert(node: EB.AST): EB.M.Elaboration<EB.AST> {
 	);
 }
 
+export const wrapLambda = (term: EB.Term, ty: NF.Value): EB.Term => {
+	return match(ty)
+		.with(
+			{ type: "Abs", binder: { type: "Pi", icit: "Implicit" } },
+			_ => term.type === "Abs" && (term.binding.type === "Lambda" || term.binding.type === "Pi") && term.binding.icit === "Implicit",
+			_ => term,
+		)
+		.with({ type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, pi => {
+			const binding: EB.Binding = { type: "Lambda", variable: pi.binder.variable, icit: pi.binder.icit };
+			return EB.Constructors.Abs(binding, term);
+		})
+		.otherwise(() => term);
+};
+
 type Meta = Extract<EB.Variable, { type: "Meta" }>;
 export const metas = (tm: EB.Term): Meta[] => {
 	const ms = match(tm)
@@ -110,15 +124,8 @@ export const generalize = (tm: EB.Term): EB.Term => {
 export const replaceMeta = (tm: EB.Term, ms: Meta[], lvl: number): EB.Term => {
 	const sub = (tm: EB.Term, lvl: number): EB.Term => {
 		const t = match(tm)
-			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
-				const i = ms.findIndex(m => m.val === variable.val);
+			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => EB.Constructors.Var(convertMeta(variable, ms, lvl)))
 
-				if (i === -1) {
-					throw new Error("Generalize: Meta not found");
-				}
-
-				return EB.Constructors.Var(EB.Bound(lvl - i - 1));
-			})
 			.with({ type: "Var" }, () => tm)
 			.with({ type: "Lit" }, () => tm)
 			.with({ type: "Abs", binding: { type: "Lambda" } }, ({ binding, body }) => EB.Constructors.Abs(binding, sub(body, lvl + 1)))
@@ -130,8 +137,12 @@ export const replaceMeta = (tm: EB.Term, ms: Meta[], lvl: number): EB.Term => {
 			)
 			.with({ type: "App" }, ({ icit, func, arg }) => EB.Constructors.App(icit, sub(func, lvl), sub(arg, lvl)))
 			.with({ type: "Row" }, ({ row }) => {
-				console.log("Generalize Row: Not implemented yet");
-				return EB.Constructors.Row(row);
+				const r = R.traverse(
+					row,
+					val => sub(val, lvl),
+					v => ({ type: "variable", variable: convertMeta(v, ms, lvl) }),
+				);
+				return EB.Constructors.Row(r);
 			})
 			.with({ type: "Proj" }, ({ label, term }) => EB.Constructors.Proj(label, sub(term, lvl)))
 			.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, sub(value, lvl), sub(term, lvl)))
@@ -160,4 +171,17 @@ export const replaceMeta = (tm: EB.Term, ms: Meta[], lvl: number): EB.Term => {
 	};
 
 	return sub(tm, lvl);
+};
+
+const convertMeta = (v: EB.Variable, ms: Meta[], lvl: number): EB.Variable => {
+	if (v.type !== "Meta") {
+		return v;
+	}
+
+	const i = ms.findIndex(m => m.val === v.val);
+	if (i === -1) {
+		throw new Error("Generalize: Meta not found");
+	}
+
+	return EB.Bound(lvl - i - 1);
 };

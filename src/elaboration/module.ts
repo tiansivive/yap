@@ -109,8 +109,12 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 				M.fmap(nf => NF.generalize(nf, ctx)),
 			);
 		}),
-		M.bind("term", ({ inferred, subst }) => {
-			return F.pipe(EB.zonk("term", inferred.stmt.value, subst), M.fmap(EB.Icit.generalize));
+		M.bind("term", ({ inferred, ty, subst }) => {
+			return F.pipe(
+				EB.zonk("term", inferred.stmt.value, subst),
+				M.fmap(EB.Icit.generalize),
+				M.fmap(tm => EB.Icit.wrapLambda(tm, ty)),
+			);
 		}),
 	);
 

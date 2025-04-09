@@ -60,6 +60,8 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 			console.log(`NF: ${EB.NF.display(nf)}`);
 		}
 
+		console.log(`\n\n${code}`);
+
 		return ctx_;
 	}
 
@@ -75,7 +77,7 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		const code = CG.codegen([], tm);
 
 		const script = letdecs.join("\n") + `\n${code}`;
-		//console.log(script);
+		console.log(script);
 
 		const imported = Object.keys(ctx.imports).reduce((acc, key) => {
 			return { ...acc, [key]: key };

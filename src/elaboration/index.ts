@@ -8,6 +8,7 @@ export * from "./shared/supply";
 export * from "./unification/unification";
 
 export * from "./inference";
+export * from "./solver";
 
 export * as M from "./shared/monad";
 export * as NF from "./normalization";

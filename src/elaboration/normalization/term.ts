@@ -120,6 +120,7 @@ export const Patterns = {
 
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } } as const,
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } } as const,
+	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } } as const,
 
 	App: { type: "App" } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,

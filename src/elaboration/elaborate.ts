@@ -27,12 +27,6 @@ import _ from "lodash";
 
 import * as Gen from "../Codegen/terms";
 
-export type Constraint =
-	| { type: "assign"; left: NF.Value; right: NF.Value; lvl: number }
-	| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity }
-	| { type: "resolve"; meta: Extract<EB.Variable, { type: "Meta" }>; annotation: NF.Value };
-// | { type: "sigma"; lvl: number; dict: Record<string, NF.Value> }
-
 export type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
 export const Stmt = {
 	infer: (stmt: Src.Statement): M.Elaboration<ElaboratedStmt> => {
