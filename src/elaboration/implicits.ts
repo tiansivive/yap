@@ -33,7 +33,7 @@ export function insert(node: EB.AST): EB.M.Elaboration<EB.AST> {
 								return M.of<EB.AST>([tm, bodyNF, us]);
 							}
 
-							const meta = EB.freshMeta(ctx.env.length);
+							const meta = EB.freshMeta(ctx.env.length, pi.binder.annotation[0]);
 							const mvar = EB.Constructors.Var(meta);
 							const vNF = NF.evaluate(ctx, mvar);
 
@@ -41,7 +41,7 @@ export function insert(node: EB.AST): EB.M.Elaboration<EB.AST> {
 							const bodyNF = NF.apply(pi.binder, pi.closure, vNF);
 							return F.pipe(
 								M.of<EB.AST>([tm, bodyNF, us]),
-								M.discard(_ => M.tell("constraint", { type: "resolve", meta: meta, annotation: pi.binder.annotation[0] })),
+								// M.discard(_ => M.tell("constraint", { type: "resolve", meta: meta, annotation: pi.binder.annotation[0] })),
 							);
 						}),
 						M.chain(insert),
@@ -105,7 +105,9 @@ export const metas = (tm: EB.Term): Meta[] => {
 };
 
 export const generalize = (tm: EB.Term): EB.Term => {
-	const ms = metas(tm);
+	console.warn("HACK: Generalize: This is a hack to instantiate all unconstrained metas");
+	const instantiated = replaceMeta(tm, [], 0); // instantiate unconstrained metas
+	const ms = metas(instantiated);
 	const charCode = 97; // 'a'
 	return ms.reduce(
 		(tm, m, i) =>
@@ -117,14 +119,18 @@ export const generalize = (tm: EB.Term): EB.Term => {
 				},
 				tm,
 			),
-		replaceMeta(tm, ms, 0),
+		replaceMeta(instantiated, ms, 0),
 	);
 };
 
 export const replaceMeta = (tm: EB.Term, ms: Meta[], lvl: number): EB.Term => {
 	const sub = (tm: EB.Term, lvl: number): EB.Term => {
 		const t = match(tm)
-			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => EB.Constructors.Var(convertMeta(variable, ms, lvl)))
+			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
+				console.warn("Generalize: Found meta variable", { variable });
+				console.warn("Term generalization yet to be fully implemented");
+				return EB.Constructors.Var(convertMeta(variable, ms, lvl));
+			})
 
 			.with({ type: "Var" }, () => tm)
 			.with({ type: "Lit" }, () => tm)
@@ -135,6 +141,9 @@ export const replaceMeta = (tm: EB.Term, ms: Meta[], lvl: number): EB.Term => {
 			.with({ type: "Abs", binding: { type: "Mu" } }, ({ binding, body }) =>
 				EB.Constructors.Abs({ ...binding, annotation: sub(binding.annotation, lvl) }, sub(body, lvl + 1)),
 			)
+			.with({ type: "App", icit: "Implicit", arg: { type: "Var", variable: { type: "Meta" } } }, ({ icit, func, arg }) => {
+				return EB.Constructors.App(icit, sub(func, lvl), instantiate(arg.variable));
+			})
 			.with({ type: "App" }, ({ icit, func, arg }) => EB.Constructors.App(icit, sub(func, lvl), sub(arg, lvl)))
 			.with({ type: "Row" }, ({ row }) => {
 				const r = R.traverse(
@@ -184,4 +193,11 @@ const convertMeta = (v: EB.Variable, ms: Meta[], lvl: number): EB.Variable => {
 	}
 
 	return EB.Bound(lvl - i - 1);
+};
+
+const instantiate = (meta: Extract<EB.Variable, { type: "Meta" }>): EB.Term => {
+	return match(meta.ann)
+		.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.Constructors.Row({ type: "empty" }))
+		.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Any" }))
+		.otherwise(() => EB.Constructors.Var(meta));
 };

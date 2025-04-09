@@ -50,7 +50,8 @@ export const infer = (tm: Match): EB.M.Elaboration<EB.AST> =>
 				scrutinee[0],
 				alternatives.map(([alt]) => alt),
 			);
-			const ty = NF.Constructors.Var(EB.freshMeta(ctx.env.length));
+			const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
+			const ty = NF.Constructors.Var(EB.freshMeta(ctx.env.length, kind));
 
 			const ast: EB.AST = [match, ty, scrutinee[2]];
 			return { ast, alternatives, ctx };

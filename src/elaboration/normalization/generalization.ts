@@ -48,7 +48,7 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 
 	const ctx_ = ms.reduce((ctx, m, i) => {
 		const name = `${String.fromCharCode(charCode + i)}`;
-		return EB.bind(ctx, { type: "Pi", variable: name }, [NF.Type, Q.Many], "inserted");
+		return EB.bind(ctx, { type: "Pi", variable: name }, [m.ann, Q.Many], "inserted");
 	}, ctx);
 
 	const sub = (nf: NF.Value, lvl: number): NF.Value => {
@@ -91,11 +91,11 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 	return ms.reduce(
 		(nf, m, i) => {
 			const extension = ms.slice(0, ms.length - i).reduceRight<Pick<EB.Context, "env" | "names" | "types">>(
-				(_ctx, m, j) => {
+				(_ctx, _m, j) => {
 					const binder: EB.Binder = { type: "Pi", variable: `pi${j}` };
 					return {
 						env: [[NF.Constructors.Rigid(j), Q.Many], ..._ctx.env],
-						types: [[binder, "inserted", [NF.Type, Q.Many]], ..._ctx.types],
+						types: [[binder, "inserted", [_m.ann, Q.Many]], ..._ctx.types],
 						names: [binder, ..._ctx.names],
 					};
 				},
@@ -105,7 +105,7 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 			// We add them as rigid variables, so that their de Bruijn level points to the correct pi-binding
 			const extended = F.pipe(ctx, set("env", extension.env), set("types", extension.types), set("names", extension.names));
 
-			return NF.Constructors.Pi(`${String.fromCharCode(charCode + ms.length - 1 - i)}`, "Implicit", [NF.Type, Q.Many], {
+			return NF.Constructors.Pi(`${String.fromCharCode(charCode + ms.length - 1 - i)}`, "Implicit", [m.ann, Q.Many], {
 				ctx: extended,
 				// We need an offset to account for the already generalized variables
 				term: NF.quote(ctx_, ms.length - i, nf),

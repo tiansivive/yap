@@ -104,8 +104,11 @@ export const extract = (row: Src.Row, lvl: number, types?: NF.Row): Record<strin
 		return {};
 	}
 
-	const tm = NF.Constructors.Var(EB.freshMeta(lvl));
-	const ty = NF.Constructors.Var(EB.freshMeta(lvl));
+	const ktm = NF.Constructors.Var(EB.freshMeta(lvl, NF.Type));
+	const tm = NF.Constructors.Var(EB.freshMeta(lvl, ktm));
+
+	const kty = NF.Constructors.Var(EB.freshMeta(lvl, NF.Type));
+	const ty = NF.Constructors.Var(EB.freshMeta(lvl, kty));
 	const info: EB.Sigma = { nf: tm, ann: ty, multiplicity: Q.Many };
 
 	const rest = extract({ ...row.row, location: row.location }, lvl + 1);

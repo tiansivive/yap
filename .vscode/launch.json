@@ -33,7 +33,8 @@
 			],
 			"program": "${workspaceRoot}/scripts/cli.ts",
 			"args": [
-				"repl"
+				"repl",
+				"--verbose"
 			],
 			"cwd": "${workspaceRoot}",
 			"internalConsoleOptions": "openOnSessionStart",

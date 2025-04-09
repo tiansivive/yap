@@ -9,15 +9,10 @@ export const resetSupply = (key: keyof typeof counts) => {
 	counts[key] = 0;
 };
 
-export function freshMeta(): { type: "Meta"; val: number };
-export function freshMeta(lvl: number): { type: "Meta"; val: number; lvl: number };
-export function freshMeta(lvl?: number) {
+export function freshMeta(lvl: number, ann: EB.NF.Value): Extract<EB.Variable, { type: "Meta" }> {
 	counts.meta++;
 
-	if (lvl === undefined) {
-		return { type: "Meta", val: counts.meta };
-	}
-	return { type: "Meta", val: counts.meta, lvl };
+	return { type: "Meta", val: counts.meta, lvl, ann };
 }
 
 export const nextCount = () => {

@@ -7,6 +7,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as R from "@yap/shared/rows";
 
 import * as EB from "@yap/elaboration";
+import { options } from "@yap/shared/config/options";
 
 // TODO:  add environment to properly display variables
 export const display = (value: NF.Value | NF.ModalValue): string => {
@@ -19,7 +20,7 @@ export const display = (value: NF.Value | NF.ModalValue): string => {
 		.with({ type: "Var" }, ({ variable }) =>
 			match(variable)
 				.with({ type: "Bound" }, ({ lvl }) => `L${lvl}`)
-				.with({ type: "Meta" }, ({ val }) => `?${val}`)
+				.with({ type: "Meta" }, ({ val, ann }) => (options.verbose ? `(?${val} :: ${display(ann)})` : `?${val}`))
 				.with({ type: "Free" }, ({ name }) => name)
 				.with({ type: "Label" }, ({ name }) => `:${name}`)
 				.with({ type: "Foreign" }, ({ name }) => `FFI.${name}`)

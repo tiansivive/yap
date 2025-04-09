@@ -48,7 +48,8 @@ export const infer_: Inference<Src.Pattern, "type"> = {
 				const [tm, ty, us] = free;
 				return [EB.Constructors.Patterns.Var(pat.value.value, tm), ty, us, []];
 			}
-			const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
+			const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
+			const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length, kind));
 			const va = NF.evaluate(ctx, meta);
 			const zero = Q.noUsage(ctx.env.length);
 			const binder: Binder = [pat.value.value, va, zero];
@@ -66,7 +67,7 @@ export const infer_: Inference<Src.Pattern, "type"> = {
 			M.fmap(({ ctx, row: [r, ty, qs, binders] }): Result => {
 				const addVar = (nfr: NF.Row): NF.Row => {
 					if (nfr.type === "empty") {
-						return R.Constructors.Variable(EB.freshMeta(ctx.env.length));
+						return R.Constructors.Variable(EB.freshMeta(ctx.env.length, NF.Row));
 					}
 
 					if (nfr.type === "variable") {
@@ -79,12 +80,17 @@ export const infer_: Inference<Src.Pattern, "type"> = {
 			}),
 		),
 	Wildcard: () =>
-		M.fmap(M.ask(), (ctx): Result => [EB.Constructors.Patterns.Wildcard(), NF.Constructors.Var(EB.freshMeta(ctx.env.length)), Q.noUsage(ctx.env.length), []]),
+		M.fmap(M.ask(), (ctx): Result => {
+			const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
+			const meta = NF.Constructors.Var(EB.freshMeta(ctx.env.length, kind));
+			return [EB.Constructors.Patterns.Wildcard(), meta, Q.noUsage(ctx.env.length), []];
+		}),
 
 	Tuple: pat => M.fmap(elaborate(pat.row), ([tm, ty, qs, binders]): Result => [EB.Constructors.Patterns.Struct(tm), NF.Constructors.Schema(ty), qs, binders]),
 	List: pat => {
 		return M.chain(M.ask(), ctx => {
-			const mvar = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
+			const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
+			const mvar = EB.Constructors.Var(EB.freshMeta(ctx.env.length, kind));
 			const v = NF.evaluate(ctx, mvar);
 
 			const validate = (val: Src.Pattern) => {
@@ -147,7 +153,7 @@ const elaborate = (r: R.Row<Src.Pattern, Src.Variable>): M.Elaboration<RowResult
 		match(r)
 			.with({ type: "empty" }, r => M.of<RowResult>([r, R.Constructors.Empty(), Q.noUsage(ctx.env.length), []]))
 			.with({ type: "variable" }, ({ variable }) => {
-				const meta = EB.freshMeta(ctx.env.length);
+				const meta = EB.freshMeta(ctx.env.length, NF.Row);
 				const zero = Q.noUsage(ctx.env.length);
 				const binder: Binder = [variable.value, NF.Constructors.Var(meta), zero];
 				return M.of<RowResult>([R.Constructors.Variable(variable.value), R.Constructors.Variable(meta), zero, [binder]]);

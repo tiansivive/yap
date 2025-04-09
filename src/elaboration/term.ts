@@ -31,7 +31,7 @@ export type Variable =
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
-	| { type: "Meta"; val: number; lvl: number };
+	| { type: "Meta"; val: number; lvl: number; ann: NF.Value };
 export type Row = R.Row<Term, Variable>;
 
 export type Binding =
@@ -67,7 +67,7 @@ export type Statement =
 
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
 export const Free = (name: string): Variable => ({ type: "Free", name });
-export const Meta = (val: number, lvl: number): Variable => ({ type: "Meta", val, lvl });
+export const Meta = (val: number, lvl: number, kind: NF.Value): Variable => ({ type: "Meta", val, lvl, ann: kind });
 
 export const Constructors = {
 	Abs: (binding: Binding, body: Term): Term => ({ type: "Abs", binding, body }),

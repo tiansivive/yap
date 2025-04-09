@@ -17,7 +17,7 @@ import { freshMeta } from "./shared/supply";
 
 import _ from "lodash";
 import { extract } from "./inference/rows";
-import { entries, set, setProp } from "@yap/utils";
+import { entries, set } from "@yap/utils";
 
 export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q.Usages]> {
 	return M.track(
@@ -30,7 +30,10 @@ export function check(term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 			Log.logger.debug(NF.display(type));
 
 			return match([term, type])
-				.with([{ type: "hole" }, P._], () => M.of<[EB.Term, Q.Usages]>([EB.Constructors.Var(freshMeta(ctx.env.length)), []]))
+				.with([{ type: "hole" }, P._], () => {
+					const k = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
+					return M.of<[EB.Term, Q.Usages]>([EB.Constructors.Var(freshMeta(ctx.env.length, k)), []]);
+				})
 				.with(
 					[{ type: "lambda" }, { type: "Abs", binder: { type: "Pi" } }],
 					([tm, ty]) => tm.icit === ty.binder.icit,

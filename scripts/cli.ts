@@ -7,6 +7,7 @@ import { interpret } from "../src/interpreter";
 
 import * as EB from "@yap/elaboration";
 import * as Lib from "@yap/shared/lib/primitives";
+import { options } from "@yap/shared/config/options";
 
 const program = new Command();
 
@@ -29,8 +30,12 @@ program
 program
 	.command("repl")
 	.description("Start a Yap REPL")
-	.action(() => {
+	.option("--verbose", "Enable verbose output")
+	.action(cmd => {
 		console.log("Yap REPL started. Type :exit to quit.");
+		options.verbose = cmd.verbose || false;
+		console.log("Verbose mode:", options.verbose);
+
 		const rl = createInterface({ input: process.stdin, output: process.stdout, prompt: "λ> " });
 
 		let ctx: EB.Context = {

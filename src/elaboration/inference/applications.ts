@@ -29,10 +29,11 @@ export const infer = ({ fn, arg, icit }: Application) => {
 					return M.of([pi.binder.annotation, pi.closure, pi.binder.variable] as const);
 				})
 				.otherwise(() => {
-					const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
+					const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
 					const nf = NF.evaluate(ctx, meta);
 					const mnf: NF.ModalValue = [nf, Q.Many];
-					const closure = NF.Constructors.Closure(ctx, EB.Constructors.Var(EB.freshMeta(ctx.env.length + 1)));
+					const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
+					const closure = NF.Constructors.Closure(ctx, EB.Constructors.Var(EB.freshMeta(ctx.env.length + 1, kind)));
 
 					const pi = NF.Constructors.Pi("x", icit, mnf, closure);
 

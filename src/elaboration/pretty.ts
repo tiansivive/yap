@@ -8,6 +8,7 @@ import * as Lit from "@yap/shared/literals";
 import * as R from "@yap/shared/rows";
 
 import * as EB from ".";
+import { options } from "@yap/shared/config/options";
 
 const display = (term: EB.Term): string => {
 	return match(term)
@@ -16,7 +17,7 @@ const display = (term: EB.Term): string => {
 			match(variable)
 				.with({ type: "Bound" }, ({ index }) => `I${index}`)
 				.with({ type: "Free" }, ({ name }) => name)
-				.with({ type: "Meta" }, ({ val }) => `?${val}`)
+				.with({ type: "Meta" }, ({ val, ann }) => (options.verbose ? `(?${val} :: ${NF.display(ann)})` : `?${val}`))
 				.with({ type: "Foreign" }, ({ name }) => `FFI.${name}`)
 				.with({ type: "Label" }, ({ name }) => `:${name}`)
 				.otherwise(() => "Var Display: Not implemented"),

@@ -38,7 +38,7 @@ export const Stmt = {
 					M.bind("ann", ({ ctx }) =>
 						letdec.annotation
 							? EB.check(letdec.annotation, NF.Type)
-							: M.of([EB.Constructors.Var(freshMeta(ctx.env.length)), Q.noUsage(ctx.env.length)] as const),
+							: M.of([EB.Constructors.Var(freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const),
 					),
 					M.bind("inferred", ({ ctx, ann }) => {
 						const va = NF.evaluate(ctx, ann[0]);
@@ -97,7 +97,8 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 				})
 
 				.with({ type: "hole" }, _ => {
-					const meta = EB.Constructors.Var(freshMeta(ctx.env.length));
+					const kind = NF.Constructors.Var(freshMeta(ctx.env.length, NF.Type));
+					const meta = EB.Constructors.Var(freshMeta(ctx.env.length, kind));
 					const ty = NF.evaluate(ctx, meta);
 					// const modal = NF.infer(env, annotation);
 					return M.of<EB.AST>([meta, ty, Q.noUsage(ctx.env.length)]);
@@ -131,7 +132,8 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 					M.fmap(EB.Rows.elaborate(row), ([row, ty, us]): EB.AST => [EB.Constructors.Struct(row), NF.Constructors.Schema(ty), us]),
 				)
 				.with({ type: "list" }, ({ elements }) => {
-					const mvar = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
+					const kind = NF.Constructors.Var(freshMeta(ctx.env.length, NF.Type));
+					const mvar = EB.Constructors.Var(freshMeta(ctx.env.length, kind));
 					const v = NF.evaluate(ctx, mvar);
 
 					const validate = F.flow(
@@ -162,7 +164,7 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 				})
 				.with({ type: "tagged" }, ({ tag, term }) =>
 					M.fmap(infer(term), ([tm, ty, us]): EB.AST => {
-						const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta(ctx.env.length));
+						const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta(ctx.env.length, NF.Row));
 						const row: NF.Row = NF.Constructors.Extension(tag, ty, rvar);
 						const variant = NF.Constructors.Variant(row);
 

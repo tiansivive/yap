@@ -18,7 +18,7 @@ export const infer = (lam: Lambda): EB.M.Elaboration<EB.AST> => {
 		M.Do,
 		M.bind("ctx", M.ask),
 		M.bind("ann", ({ ctx }) => {
-			const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length));
+			const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
 			return lam.annotation ? EB.check(lam.annotation, NF.Type) : M.of([meta, Q.noUsage(ctx.env.length)] as const);
 		}),
 		M.chain(({ ann: [tm], ctx }) => {

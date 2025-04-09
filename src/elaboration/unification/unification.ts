@@ -220,8 +220,9 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 													return M.fail(Err.Impossible("Expected meta variable"));
 												}
 
-												const tvar = NF.Constructors.Var(EB.freshMeta(lvl));
-												const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta(lvl));
+												const kvar = NF.Constructors.Var(EB.freshMeta(lvl, NF.Type));
+												const tvar = NF.Constructors.Var(EB.freshMeta(lvl, kvar));
+												const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta(lvl, NF.Row));
 												const rf = R.Constructors.Extension(label, tvar, rvar);
 												const sub = { [variable.val]: NF.Constructors.Row(rf) };
 												return M.of<[NF.Row, Subst]>([rf, sub]) as any;

@@ -31,7 +31,7 @@ export type Variable =
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
-	| { type: "Meta"; val: number; lvl: number };
+	| { type: "Meta"; val: number; lvl: number; ann: Value };
 
 export type Closure = {
 	ctx: EB.Context;
@@ -64,7 +64,7 @@ export const Constructors = {
 			variable: { type: "Bound", lvl },
 		},
 	}),
-	Flex: (variable: { type: "Meta"; val: number; lvl: number }): Value => ({
+	Flex: (variable: { type: "Meta"; val: number; lvl: number; ann: Value }): Value => ({
 		type: "Neutral",
 		value: { type: "Var", variable },
 	}),
