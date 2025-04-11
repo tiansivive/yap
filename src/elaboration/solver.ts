@@ -30,8 +30,8 @@ export const solve = (cs: Array<Ctaint>): M.Elaboration<Subst> =>
 			if (Log.peek() !== "solver") {
 				Log.push("solver");
 			}
-			const filtered = cs.filter(c => c.type === "assign");
-			const solution = M.catchError(_solve(filtered, ctx, empty), e => {
+
+			const solution = M.catchError(_solve(cs, ctx, empty), e => {
 				console.error(Err.display(e));
 				console.error(displayProvenance(e.provenance));
 				return M.fail(e);
@@ -77,9 +77,10 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboratio
 				}),
 			);
 		})
-		.with({ type: "usage" }, ({}) => {
-			console.warn("Usage constraint not implemented yet");
-			return _solve(rest, _ctx, subst);
+		.with({ type: "usage" }, ({ expected, computed }) => {
+			return match([expected, computed])
+				.with(["One", "One"], ["Many", P._], ["Zero", "Zero"], () => _solve(rest, _ctx, subst))
+				.otherwise(() => M.fail(Err.MultiplicityMismatch(expected, computed)));
 		})
 		.otherwise(() => {
 			throw new Error("Solve: Not implemented yet");
