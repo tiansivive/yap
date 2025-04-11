@@ -1,4 +1,4 @@
-import { Types } from "@yap/utils";
+import { Types, update } from "@yap/utils";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as NF from "./normalization";
@@ -7,7 +7,9 @@ import * as Lit from "@yap/shared/literals";
 import { Implicitness } from "@yap/shared/implicitness";
 import { Literal } from "@yap/shared/literals";
 
-import { Pattern as Pat } from "ts-pattern";
+import { match, Pattern as Pat } from "ts-pattern";
+
+import * as F from "fp-ts/lib/function";
 
 export type Node = Types.Extend<Term, Term, NF.ModalValue>;
 
@@ -90,7 +92,13 @@ export const Constructors = {
 		type: "Var",
 		variable,
 	}),
-
+	Vars: {
+		Bound: (index: number): Variable => ({ type: "Bound", index }),
+		Free: (name: string): Variable => ({ type: "Free", name }),
+		Foreign: (name: string): Variable => ({ type: "Foreign", name }),
+		Label: (name: string): Variable => ({ type: "Label", name }),
+		Meta: (val: number, lvl: number, kind: NF.Value): Variable => ({ type: "Meta", val, lvl, ann: kind }),
+	},
 	App: (icit: Implicitness, func: Term, arg: Term): Term => ({
 		type: "App",
 		icit,
@@ -141,7 +149,7 @@ export const Constructors = {
 	},
 };
 
-export const PatternMatch: Record<string, Pat.Pattern<Term>> = {
+export const CtorPatterns = {
 	Var: { type: "Var" },
 	Lit: { type: "Lit" },
 	Lambda: { type: "Abs", binding: { type: "Lambda" } },
@@ -152,4 +160,59 @@ export const PatternMatch: Record<string, Pat.Pattern<Term>> = {
 	Proj: { type: "Proj" },
 	Inj: { type: "Inj" },
 	Annotation: { type: "Annotation" },
+} as const;
+
+export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) => Term): Term => {
+	return match(tm)
+		.with({ type: "Var" }, onVar)
+		.with({ type: "Lit" }, lit => lit)
+		.with(CtorPatterns.Lambda, ({ binding, body }) => Constructors.Abs(binding, traverse(body, onVar)))
+		.with(CtorPatterns.Pi, ({ binding, body }) =>
+			Constructors.Abs(
+				update(binding, "annotation", tm => traverse(tm, onVar)),
+				traverse(body, onVar),
+			),
+		)
+		.with(CtorPatterns.Mu, ({ binding, body }) =>
+			Constructors.Abs(
+				update(binding, "annotation", tm => traverse(tm, onVar)),
+				traverse(body, onVar),
+			),
+		)
+		.with({ type: "App" }, ({ icit, func, arg }) => Constructors.App(icit, traverse(func, onVar), traverse(arg, onVar)))
+		.with({ type: "Row" }, ({ row }) =>
+			Constructors.Row(
+				R.traverse(
+					row,
+					v => traverse(v, onVar),
+					v => R.Constructors.Variable(v),
+				),
+			),
+		)
+		.with({ type: "Proj" }, ({ label, term }) => Constructors.Proj(label, traverse(term, onVar)))
+		.with({ type: "Inj" }, ({ label, value, term }) => Constructors.Inj(label, traverse(value, onVar), traverse(term, onVar)))
+		.with({ type: "Annotation" }, ({ term, ann }) => Constructors.Annotation(traverse(term, onVar), traverse(ann, onVar)))
+		.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
+			Constructors.Match(
+				traverse(scrutinee, onVar),
+				alternatives.map(({ pattern, term }) => ({ pattern, term: traverse(term, onVar) })),
+			),
+		)
+		.with({ type: "Block" }, ({ return: ret, statements }) => {
+			const stmts = statements.map(s =>
+				match(s)
+					.with({ type: "Let" }, letdec =>
+						F.pipe(
+							letdec,
+							update("value", v => traverse(v, onVar)),
+							update("annotation", ann => traverse(ann, onVar)),
+						),
+					)
+					.otherwise(update("value", v => traverse(v, onVar))),
+			);
+			return Constructors.Block(stmts, traverse(ret, onVar));
+		})
+		.otherwise(() => {
+			throw new Error("Traverse: Not implemented yet");
+		});
 };

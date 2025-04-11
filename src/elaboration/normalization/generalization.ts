@@ -8,7 +8,9 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 
 import fp from "lodash/fp";
 import * as F from "fp-ts/function";
+import * as A from "fp-ts/Array";
 import { set } from "@yap/utils";
+import { Subst } from "../unification/substitution";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
 export const metas = (val: NF.Value): Meta[] => {
@@ -88,7 +90,9 @@ export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
 	};
 
 	// Wraps the value in a Pi type for each meta variable
-	return ms.reduce(
+	// The ms index is used as the respective meta's de Bruijn level. That means the first meta is the outermost binding.
+	// We reverse the ms array to start λ-wrapping from the innermost binding (the last meta)
+	return A.reverse(ms).reduce(
 		(nf, m, i) => {
 			const extension = ms.slice(0, ms.length - i).reduceRight<Pick<EB.Context, "env" | "names" | "types">>(
 				(_ctx, _m, j) => {
@@ -123,4 +127,25 @@ const convertMeta = (meta: Meta, ms: Meta[]): NF.Variable => {
 	}
 
 	return { type: "Bound", lvl: i };
+};
+
+export const instantiate = (nf: NF.Value, subst: Subst): NF.Value => {
+	return NF.traverse(
+		nf,
+		v => {
+			if (v.variable.type !== "Meta") {
+				return v;
+			}
+
+			if (!!subst[v.variable.val]) {
+				throw new Error("instantiate: Found solved meta while instantiating unconstrained metas");
+			}
+
+			return match(v.variable.ann)
+				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => NF.Constructors.Row({ type: "empty" }))
+				.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => NF.Constructors.Lit({ type: "Atom", value: "Any" }))
+				.otherwise(() => NF.Constructors.Var(v.variable));
+		},
+		tm => EB.Icit.instantiate(tm, subst),
+	);
 };

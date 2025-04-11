@@ -3,8 +3,8 @@ import * as EB from "@yap/elaboration";
 
 import * as R from "@yap/shared/rows";
 
-import { match } from "ts-pattern";
-import { entries } from "@yap/utils";
+import { match, P } from "ts-pattern";
+import { entries, update } from "@yap/utils";
 
 export type Subst = { [key: number]: NF.Value };
 
@@ -26,7 +26,7 @@ export const Substitute = (ctx: EB.Context) => {
 				.with(NF.Patterns.Lit, () => val)
 				.with(NF.Patterns.Label, () => val)
 				.with(NF.Patterns.Rigid, () => val)
-				.with(NF.Patterns.Flex, ({ variable }) => subst[variable.val] ?? val)
+				.with(NF.Patterns.Flex, m => subst[m.variable.val] ?? update(m, "variable.ann", ann => call.nf(subst, ann, level)))
 				.with(NF.Patterns.Var, v => v)
 				.with(NF.Patterns.Lambda, ({ binder, closure }) => NF.Constructors.Lambda(binder.variable, binder.icit, call.closure(subst, closure)))
 				.with(NF.Patterns.Pi, ({ closure, binder }) => {
@@ -53,30 +53,22 @@ export const Substitute = (ctx: EB.Context) => {
 				.with(NF.Patterns.Row, ({ row }) => {
 					const r = R.traverse(
 						row,
-						val => call.nf(subst, val, level),
+						(val): NF.Value => call.nf(subst, val, level),
 						v => {
-							if (v.type === "Meta") {
-								const nf = subst[v.val];
-
-								if (!nf) {
-									return R.Constructors.Variable(v);
-								}
-
-								if (nf.type === "Row") {
-									return nf.row;
-								}
-
-								if (nf.type === "Var") {
-									return R.Constructors.Variable(nf.variable);
-								}
-
-								throw new Error("Substitute: Row variable is not a row or a variable: " + NF.display(nf));
+							if (v.type !== "Meta") {
+								return R.Constructors.Variable(v);
 							}
+							const nf = subst[v.val];
 
-							return R.Constructors.Variable(v);
+							return match(nf)
+								.with(P.nullish, (): NF.Row => R.Constructors.Variable(v))
+								.with({ type: "Row" }, ({ row }) => row)
+								.with({ type: "Var" }, ({ variable }): NF.Row => R.Constructors.Variable(variable))
+								.otherwise(_ => {
+									throw new Error("Substitute: Row variable is not a row or a variable: " + NF.display(nf));
+								});
 						},
 					);
-
 					return NF.Constructors.Row(r);
 				})
 				.otherwise(val => {
@@ -91,13 +83,10 @@ export const Substitute = (ctx: EB.Context) => {
 		term: (subst: Subst, term: EB.Term, level = ctx.env.length): EB.Term => {
 			return match(term)
 				.with({ type: "Lit" }, () => term)
-				.with({ type: "Var" }, ({ variable }) => {
-					if (variable.type === "Meta") {
-						return subst[variable.val] ? NF.quote(ctx, level, subst[variable.val]) : term;
-					}
-
-					return term;
-				})
+				.with({ type: "Var", variable: { type: "Meta" } }, m =>
+					subst[m.variable.val] ? NF.quote(ctx, level, subst[m.variable.val]) : update(m, "variable.ann", ann => call.nf(subst, ann, level)),
+				)
+				.with({ type: "Var" }, () => term)
 				.with({ type: "Abs" }, ({ binding, body }) => {
 					if (binding.type === "Lambda") {
 						return EB.Constructors.Abs(binding, call.term(subst, body, level + 1));
@@ -136,21 +125,17 @@ export const Substitute = (ctx: EB.Context) => {
 						row,
 						val => call.term(subst, val, level),
 						v => {
-							if (v.type === "Meta" && subst[v.val]) {
-								const tm = NF.quote(ctx, ctx.env.length, subst[v.val]);
-
-								if (tm.type === "Row") {
-									return tm.row;
-								}
-
-								if (tm.type === "Var") {
-									return R.Constructors.Variable(tm.variable);
-								}
-
-								throw new Error("Substitute: Row variable is not a row or a variable: " + EB.Display.Term(tm));
+							if (v.type !== "Meta" || !subst[v.val]) {
+								return R.Constructors.Variable(v);
 							}
 
-							return R.Constructors.Variable(v);
+							const tm = NF.quote(ctx, ctx.env.length, subst[v.val]);
+							return match(tm)
+								.with({ type: "Row" }, ({ row }) => row)
+								.with({ type: "Var" }, ({ variable }): EB.Row => R.Constructors.Variable(variable))
+								.otherwise(_ => {
+									throw new Error("Substitute: Row variable is not a row or a variable: " + EB.Display.Term(tm));
+								});
 						},
 					);
 					return EB.Constructors.Row(r);

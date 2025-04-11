@@ -107,11 +107,13 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 			return F.pipe(
 				EB.zonk("nf", inferred.ty, subst),
 				M.fmap(nf => NF.generalize(nf, ctx)),
+				M.fmap(nf => NF.instantiate(nf, subst)),
 			);
 		}),
 		M.bind("term", ({ inferred, ty, subst }) => {
 			return F.pipe(
 				EB.zonk("term", inferred.stmt.value, subst),
+				M.fmap(tm => EB.Icit.instantiate(tm, subst)),
 				M.fmap(EB.Icit.generalize),
 				M.fmap(tm => EB.Icit.wrapLambda(tm, ty)),
 			);
@@ -138,11 +140,13 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 			return F.pipe(
 				EB.zonk("nf", inferred.ty, subst),
 				M.fmap(nf => NF.generalize(nf, ctx)),
+				M.fmap(nf => NF.instantiate(nf, subst)),
 			);
 		}),
 		M.bind("term", ({ inferred, ty, subst }) => {
 			return F.pipe(
 				EB.zonk("term", inferred.tm, subst),
+				M.fmap(tm => EB.Icit.instantiate(tm, subst)),
 				M.fmap(EB.Icit.generalize),
 				M.fmap(tm => EB.Icit.wrapLambda(tm, ty)),
 			);
