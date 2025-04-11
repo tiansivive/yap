@@ -48,7 +48,10 @@ export const Stmt = {
 							ctx_,
 							F.pipe(
 								EB.check(letdec.value, va),
-								M.fmap(([tm, us]): [EB.Term, NF.Value, Q.Usages] => [tm, va, us]),
+								M.fmap(([tm, us]): EB.AST => [tm, va, us]),
+								M.discard(([, , [vu]]) => M.tell("constraint", { type: "usage", expected: q, computed: vu })),
+								// remove the usage of the bound variable (same as the lambda rule)
+								M.fmap(([tm, ty, [, ...us]]): EB.AST => [tm, ty, us]),
 							),
 						);
 					}),
@@ -218,63 +221,115 @@ export function infer(ast: Src.Term): M.Elaboration<EB.AST> {
 				.with({ type: "pi" }, { type: "arrow" }, EB.Pi.infer)
 				.with({ type: "lambda" }, EB.Lambda.infer)
 				.with({ type: "match" }, EB.Match.infer)
-				.with({ type: "block" }, ({ statements, return: ret }) =>
-					F.pipe(
-						M.fold<Src.Statement, [ElaboratedStmt[], Q.Usages, EB.Context]>(
-							([stmts, us, ctx], stmt) => {
-								return M.local(
-									ctx,
-									F.pipe(
-										Stmt.infer(stmt),
-										// TODO: When adding effect tracking, we need to add the current effect to the row
-										M.fmap((stmt): [ElaboratedStmt[], Q.Usages, EB.Context] => {
-											const current = stmt[0];
-
-											const _ctx = current.type === "Let" ? EB.bind(ctx, { type: "Let", variable: current.variable }, [stmt[1], Q.Many]) : ctx;
-
-											return [[...stmts, stmt], Q.add(stmt[2], us), _ctx]; // add usages for each statement
-										}),
-									),
-								);
-							},
-							[[], Q.noUsage(ctx.env.length), ctx],
-							statements,
-						),
-						M.chain(([stmts, us, blockCtx]) => {
+				.with({ type: "block" }, ({ statements, return: ret }) => {
+					const recurse = (stmts: Src.Statement[], ctx: EB.Context, results: EB.Statement[]): M.Elaboration<EB.AST> => {
+						if (stmts.length === 0) {
 							if (!ret) {
 								//TODO: add effect tracking
 								const ty = NF.Constructors.Lit(Lit.Atom("Unit"));
 								const unit = EB.Constructors.Lit(Lit.Atom("unit"));
-								const tm = EB.Constructors.Block(
-									stmts.map(([stmt]) => stmt),
-									unit,
-								);
-								return M.of<EB.AST>([tm, ty, us]);
+								const tm = EB.Constructors.Block(results, unit);
+								return M.of<EB.AST>([tm, ty, Q.noUsage(ctx.env.length)]);
 							}
-
 							return M.local(
-								blockCtx,
+								ctx,
 								F.pipe(
 									infer(ret),
 									M.fmap(([ret, ty, rus]): EB.AST => {
-										const stmts_ = stmts.map(([stmt]) => stmt);
-										return [EB.Constructors.Block(stmts_, ret), ty, Q.add(us, rus)];
-									}),
-									// remove all usages from variables bound in the block
-									M.fmap(([tm, ty, bus]): EB.AST => {
-										// Sanity check
-										if (blockCtx.env.length < ctx.env.length) {
-											throw new Error("Block context is not a subset of the current context");
-										}
-
-										const us = bus.slice(blockCtx.env.length - ctx.env.length);
-										return [tm, ty, us];
+										return [EB.Constructors.Block(results, ret), ty, rus];
 									}),
 								),
 							);
-						}),
-					),
-				)
+						}
+
+						const [stmt, ...rest] = stmts;
+						return M.local(
+							ctx,
+							F.pipe(
+								M.Do,
+								M.let("stmt", Stmt.infer(stmt)),
+								M.bind("block", ({ stmt }) => {
+									const [s, ty, bus] = stmt;
+
+									if (s.type !== "Let") {
+										return recurse(rest, ctx, [...results, s]);
+									} // Add effect tracking here // Add effect tracking here
+
+									const extended = EB.bind(ctx, { type: "Let", variable: s.variable }, [ty, Q.Many]);
+									return F.pipe(
+										recurse(rest, extended, [...results, s]),
+										M.discard(([, , [vu]]) => M.tell("constraint", { type: "usage", expected: Q.Many, computed: vu })),
+										//M.fmap(([tm, ty, us]): EB.AST => [tm, ty, Q.multiply(Q.Many, us)]),
+										// Remove the usage of the bound variable (same as the lambda rule)
+										// Multiply the usages of the let binder by the multiplicity of the new let binding (same as the application rule)
+										M.fmap(([tm, ty, [vu, ...rus]]): EB.AST => [tm, ty, Q.add(rus, Q.multiply(Q.Many, bus))]),
+									);
+								}),
+								M.fmap(({ stmt: [, , us], block: [tm, typ, usages] }) => {
+									return [tm, typ, usages];
+								}),
+							),
+						);
+					};
+					return recurse(statements, ctx, []);
+					// return F.pipe(
+					// M.fold<Src.Statement, [ElaboratedStmt[], Q.Usages, EB.Context]>(
+					// 	([stmts, us, ctx], stmt) => {
+					// 		return M.local(
+					// 			ctx,
+					// 			F.pipe(
+					// 				Stmt.infer(stmt),
+					// 				// TODO: When adding effect tracking, we need to add the current effect to the row
+					// 				M.fmap((stmt): [ElaboratedStmt[], Q.Usages, EB.Context] => {
+					// 					const current = stmt[0];
+
+					// 					const _ctx = current.type === "Let"
+					// 						? EB.bind(ctx, { type: "Let", variable: current.variable }, [stmt[1], Q.Many])
+					// 						: ctx;
+
+					// 					return [[...stmts, stmt], Q.add(stmt[2], us), _ctx]; // add usages for each statement
+					// 				}),
+					// 			),
+					// 		);
+					// 	},
+					// 	[[], Q.noUsage(ctx.env.length), ctx],
+					// 	statements,
+					// ),
+					// M.chain(([stmts, us, blockCtx]) => {
+					// 	if (!ret) {
+					// 		//TODO: add effect tracking
+					// 		const ty = NF.Constructors.Lit(Lit.Atom("Unit"));
+					// 		const unit = EB.Constructors.Lit(Lit.Atom("unit"));
+					// 		const tm = EB.Constructors.Block(
+					// 			stmts.map(([stmt]) => stmt),
+					// 			unit,
+					// 		);
+					// 		return M.of<EB.AST>([tm, ty, us]);
+					// 	}
+
+					// 	return M.local(
+					// 		blockCtx,
+					// 		F.pipe(
+					// 			infer(ret),
+					// 			M.fmap(([ret, ty, rus]): EB.AST => {
+					// 				const stmts_ = stmts.map(([stmt]) => stmt);
+					// 				return [EB.Constructors.Block(stmts_, ret), ty, Q.add(us, rus)];
+					// 			}),
+					// 			// remove all usages from variables bound in the block
+					// 			M.fmap(([tm, ty, bus]): EB.AST => {
+					// 				// Sanity check
+					// 				if (blockCtx.env.length < ctx.env.length) {
+					// 					throw new Error("Block context is not a subset of the current context");
+					// 				}
+
+					// 				const us = bus.slice(blockCtx.env.length - ctx.env.length);
+					// 				return [tm, ty, us];
+					// 			}),
+					// 		),
+					// 	);
+					// }),
+					//)
+				})
 				.otherwise(v => {
 					throw new Error("Not implemented yet: " + JSON.stringify(v));
 				});

@@ -112,7 +112,7 @@ export const Operation: PostProcessor<[Term, Whitespace, [Token], Whitespace, Te
 /***********************************************************
  * Annotation processors
  ***********************************************************/
-type Annotation = [Token, Colon, Whitespace, Term] | [Token, Colon, Whitespace, Q.Multiplicity, Whitespace, Term] | [];
+type Annotation = [Token, Colon, Whitespace, Term] | [Token, Colon, Whitespace, [Q.Multiplicity], Whitespace, Term] | [];
 
 const Annotate = (term: Term, ann: Term, multiplicity?: Q.Multiplicity): Term => ({
 	type: "annotation",
@@ -132,7 +132,7 @@ export const Annotation = ([term, ...rest]: [Term, ...Annotation]): Term => {
 		return Annotate(term, ann);
 	}
 
-	const q = rest[3];
+	const q = rest[3][0];
 	const ann = rest[5];
 	return Annotate(term, ann, q);
 };
@@ -197,7 +197,7 @@ export const Param = ([binding, ...ann]: [Variable, ...Annotation]): Param => {
 			annotation: term,
 		};
 	}
-	const q = ann[3];
+	const q = ann[3][0];
 	const term = ann[5];
 	return {
 		type: "param",
@@ -479,7 +479,7 @@ export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]
 		return letdec(variable, value, ann);
 	}
 
-	const q = rest[3];
+	const q = rest[3][0];
 	const ann = rest[5];
 	const value = rest[9];
 	return letdec(variable, value, ann, q);
