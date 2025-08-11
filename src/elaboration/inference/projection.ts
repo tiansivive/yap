@@ -6,6 +6,17 @@ import * as NF from "@yap/elaboration/normalization";
 import { match } from "ts-pattern";
 
 import * as Lit from "@yap/shared/literals";
+import * as F from "fp-ts/function";
+
+type Projection = Extract<EB.Term, { type: "projection" }>;
+
+export const infer = ({ label, term }: Projection): M.Elaboration<EB.AST> =>
+	F.pipe(
+		M.Do,
+		M.let("term", infer(term)),
+		M.bind("inferred", ({ term: [tm, ty, us] }) => EB.Proj.project(label, tm, ty, us)),
+		M.fmap(({ term: [tm, , us], inferred }): EB.AST => [EB.Constructors.Proj(label, tm), inferred, us]), // TODO: Subtract usages?
+	);
 
 export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages): M.Elaboration<NF.Value> =>
 	M.chain(M.ask(), ctx =>

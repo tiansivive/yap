@@ -1,7 +1,7 @@
 import { Types, update } from "@yap/utils";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
-import * as NF from "./normalization";
+import * as NF from "../normalization";
 import * as R from "@yap/shared/rows";
 import * as Lit from "@yap/shared/literals";
 import { Implicitness } from "@yap/shared/implicitness";

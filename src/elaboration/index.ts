@@ -2,8 +2,8 @@ export * from "./elaborate";
 
 export * from "./check";
 export * from "./shared/context";
-export * from "./pretty";
-export * from "./term";
+export * from "./pretty/pretty";
+export * from "./syntax/term";
 export * from "./shared/supply";
 export * from "./unification/unification";
 

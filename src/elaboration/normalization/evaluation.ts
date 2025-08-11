@@ -64,6 +64,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 
 			const reduce = (nff: NF.Value, nfa: NF.Value): NF.Value =>
 				match(nff)
+					.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)))
 					.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
 						// Unfold the mu
 						const body = apply(mu.binder, mu.closure, NF.Constructors.Neutral(mu));
@@ -73,7 +74,6 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 						return apply(binder, closure, nfa);
 					})
 					.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
-					.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)))
 					.with({ type: "Var", variable: { type: "Meta" } }, _ => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
 					.with({ type: "App" }, ({ func, arg }) => {
 						const nff = reduce(func, arg);

@@ -13,6 +13,16 @@ import * as Rec from "fp-ts/Record";
 import { match } from "ts-pattern";
 import { entries, setProp } from "@yap/utils";
 
+type TRow = Extract<Src.Term, { type: "row" }>;
+
+export const infer = ({ row }: TRow): EB.M.Elaboration<EB.AST> =>
+	M.local(
+		EB.muContext,
+		// QUESTION:? can we do anything to the ty row? Should we?
+		// SOLUTION: Rely on `check` for this behaviour. Inferring a row should just returns another row, same as the struct overloaded syntax.
+		M.fmap(elaborate(row), ([row, ty, qs]): EB.AST => [EB.Constructors.Row(row), NF.Row, qs]),
+	);
+
 export const elaborate = (_row: Src.Row): M.Elaboration<[EB.Row, NF.Row, Q.Usages]> =>
 	M.chain(M.ask(), _ctx => {
 		const bindings = extract(_row, _ctx.env.length);

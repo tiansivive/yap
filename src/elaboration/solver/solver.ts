@@ -3,8 +3,8 @@ import * as EB from "@yap/elaboration";
 import * as Src from "@yap/src/index";
 import * as NF from "@yap/elaboration/normalization";
 import { match, P } from "ts-pattern";
-import { Subst, Substitute } from "./unification/substitution";
-import * as Sub from "./unification/substitution";
+import { Subst, Substitute } from "@yap/elaboration/unification/substitution";
+import * as Sub from "@yap/elaboration/unification/substitution";
 
 import * as Err from "@yap/elaboration/shared/errors";
 import * as Log from "@yap/shared/logging";

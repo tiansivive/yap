@@ -7,6 +7,19 @@ import { match } from "ts-pattern";
 import * as Lit from "@yap/shared/literals";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
+import * as F from "fp-ts/function";
+
+type Injection = Extract<EB.Term, { type: "injection" }>;
+
+export const infer = ({ label, value, term }: Injection): M.Elaboration<EB.AST> =>
+	F.pipe(
+		M.Do,
+		M.let("value", infer(value)),
+		M.let("term", infer(term)),
+		M.bind("inferred", ({ value, term }) => inject(label, value, term)),
+		M.fmap(({ term: [tm, , u1], value: [val, , u2], inferred }): EB.AST => [EB.Constructors.Inj(label, val, tm), inferred, Q.add(u1, u2)]),
+	);
+
 export const inject = (label: string, value: EB.AST, tm: EB.AST): M.Elaboration<NF.Value> =>
 	M.chain(M.ask(), ctx =>
 		match(tm[1])

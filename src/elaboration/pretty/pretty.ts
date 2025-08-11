@@ -1,4 +1,4 @@
-import * as NF from "./normalization";
+import * as NF from "../normalization";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
 
@@ -7,7 +7,7 @@ import * as Icit from "@yap/shared/implicitness";
 import * as Lit from "@yap/shared/literals";
 import * as R from "@yap/shared/rows";
 
-import * as EB from ".";
+import * as EB from "..";
 import { options } from "@yap/shared/config/options";
 
 const display = (term: EB.Term): string => {
