@@ -1,7 +1,7 @@
 import * as F from "fp-ts/lib/function";
 
 import * as EB from "@yap/elaboration";
-import { M } from "@yap/elaboration";
+import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as NF from "@yap/elaboration/normalization";
@@ -11,55 +11,51 @@ import * as Lit from "@yap/shared/literals";
 
 type Block = Extract<Src.Term, { type: "block" }>;
 
-export const infer = ({ statements, return: ret }: Block) => {
-	const recurse = (stmts: Src.Statement[], ctx: EB.Context, results: EB.Statement[]): M.Elaboration<EB.AST> => {
-		if (stmts.length === 0) {
-			if (!ret) {
-				//TODO: add effect tracking
-				const ty = NF.Constructors.Lit(Lit.Atom("Unit"));
-				const unit = EB.Constructors.Lit(Lit.Atom("unit"));
-				const tm = EB.Constructors.Block(results, unit);
-				return M.of<EB.AST>([tm, ty, Q.noUsage(ctx.env.length)]);
-			}
-			return M.local(
-				ctx,
-				F.pipe(
-					EB.infer(ret),
-					M.fmap(([ret, ty, rus]): EB.AST => {
-						return [EB.Constructors.Block(results, ret), ty, rus];
-					}),
-				),
-			);
-		}
+export const infer = (block: Block) =>
+	V2.track(
+		["src", block, { action: "infer", description: "Block statements" }],
+		(() => {
+			const { statements, return: ret } = block;
+			const recurse = (stmts: Src.Statement[], results: EB.Statement[]): V2.Elaboration<EB.AST> =>
+				V2.Do(function* () {
+					if (stmts.length === 0) {
+						return yield* inferReturn(block, results);
+					}
 
-		const [stmt, ...rest] = stmts;
-		return M.local(
-			ctx,
-			F.pipe(
-				M.Do,
-				M.let("stmt", EB.Stmt.infer(stmt)),
-				M.bind("block", ({ stmt }) => {
-					const [s, ty, bus] = stmt;
+					const [current, ...rest] = stmts;
+					const [stmt, sty, sus] = yield* EB.Stmt.infer.gen(current);
 
-					if (s.type !== "Let") {
-						return recurse(rest, ctx, [...results, s]);
-					} // Add effect tracking here // Add effect tracking here
-
-					const extended = EB.bind(ctx, { type: "Let", variable: s.variable }, [ty, Q.Many]);
-					return F.pipe(
-						recurse(rest, extended, [...results, s]),
-						M.discard(([, , [vu]]) => M.tell("constraint", { type: "usage", expected: Q.Many, computed: vu })),
-						//M.fmap(([tm, ty, us]): EB.AST => [tm, ty, Q.multiply(Q.Many, us)]),
-						// Remove the usage of the bound variable (same as the lambda rule)
-						// Multiply the usages of the let binder by the multiplicity of the new let binding (same as the application rule)
-						M.fmap(([tm, ty, [vu, ...rus]]): EB.AST => [tm, ty, Q.add(rus, Q.multiply(Q.Many, bus))]),
+					if (stmt.type !== "Let") {
+						return yield* V2.pure(recurse(rest, [...results, stmt]));
+					}
+					return yield* V2.local(
+						ctx => EB.bind(ctx, { type: "Let", variable: stmt.variable }, [sty, Q.Many]),
+						V2.Do(function* () {
+							const [tm, ty, [vu, ...rus]] = yield* V2.pure(recurse(rest, [...results, stmt]));
+							yield* V2.tell("constraint", { type: "usage", expected: Q.Many, computed: vu });
+							// Remove the usage of the bound variable (same as the lambda rule)
+							// Multiply the usages of the let binder by the multiplicity of the new let binding (same as the application rule)
+							return [tm, ty, Q.add(rus, Q.multiply(Q.Many, sus))] as EB.AST;
+						}),
 					);
-				}),
-				M.fmap(({ stmt: [, , us], block: [tm, typ, usages] }) => {
-					return [tm, typ, usages];
-				}),
-			),
-		);
-	};
-	return M.chain(M.ask(), ctx => recurse(statements, ctx, []));
+				});
+
+			return recurse(statements, []);
+		})(),
+	);
+
+const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]) {
+	if (!ret) {
+		//TODO: add effect tracking
+		const ty = NF.Constructors.Lit(Lit.Atom("Unit"));
+		const unit = EB.Constructors.Lit(Lit.Atom("unit"));
+		const tm = EB.Constructors.Block(results, unit);
+		const { env } = yield* V2.ask();
+		return [tm, ty, Q.noUsage(env.length)] satisfies EB.AST;
+	}
+
+	const [t, ty, rus] = yield* EB.infer.gen(ret);
+	return [EB.Constructors.Block(results, t), ty, rus] satisfies EB.AST;
 };
+
+infer.gen = F.flow(infer, V2.pure);

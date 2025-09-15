@@ -1,7 +1,7 @@
 import * as F from "fp-ts/lib/function";
 
 import * as EB from "@yap/elaboration";
-import { M } from "@yap/elaboration";
+import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as NF from "@yap/elaboration/normalization";
@@ -11,38 +11,34 @@ import * as Log from "@yap/shared/logging";
 
 type Lambda = Extract<Src.Term, { type: "lambda" }>;
 
-export const infer = (lam: Lambda): EB.M.Elaboration<EB.AST> => {
-	Log.push("lambda");
-	Log.logger.debug(Src.display(lam));
-	return F.pipe(
-		M.Do,
-		M.bind("ctx", M.ask),
-		M.bind("ann", ({ ctx }) => {
-			const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
-			return lam.annotation ? EB.check(lam.annotation, NF.Type) : M.of([meta, Q.noUsage(ctx.env.length)] as const);
-		}),
-		M.chain(({ ann: [tm], ctx }) => {
-			const va = NF.evaluate(ctx, tm);
-			const mva: NF.ModalValue = [va, lam.multiplicity ? lam.multiplicity : Q.Many];
-			const ctx_ = EB.bind(ctx, { type: "Lambda", variable: lam.variable }, mva);
-			return M.local(
-				ctx_,
-				F.pipe(
-					EB.infer(lam.body),
-					M.chain(EB.Icit.insert),
-					M.discard(([, , [vu]]) => M.tell("constraint", { type: "usage", expected: mva[1], computed: vu })),
-					M.fmap(([bTerm, bType, [vu, ...us]]): EB.AST => {
-						const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm);
-						const pi = NF.Constructors.Pi(lam.variable, lam.icit, mva, NF.closeVal(ctx, bType));
+export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
+	V2.track(
+		["src", lam, { action: "infer", description: "Lambda" }],
+		V2.Do<EB.AST, EB.AST>(function* () {
+			const ctx = yield* V2.ask();
 
-						return [tm, pi, us]; // Remove the usage of the bound variable
-					}),
-				),
+			const [ann, us] = lam.annotation
+				? yield* EB.check.gen(lam.annotation, NF.Type)
+				: ([EB.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
+
+			const ty = NF.evaluate(ctx, ann);
+			const mty: NF.ModalValue = [ty, lam.multiplicity ? lam.multiplicity : Q.Many];
+
+			const ast = yield* V2.local(
+				_ctx => EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, mty),
+				V2.Do(function* () {
+					const inferred = yield* EB.infer.gen(lam.body);
+					const [bTerm, bType, [vu, ...bus]] = yield* EB.Icit.insert.gen(inferred);
+					yield* V2.tell("constraint", { type: "usage", expected: mty[1], computed: vu });
+
+					const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm);
+					const pi = NF.Constructors.Pi(lam.variable, lam.icit, mty, NF.closeVal(ctx, bType));
+					return [tm, pi, us] satisfies EB.AST; // Remove the usage of the bound variable
+				}),
 			);
-		}),
-		M.discard(() => {
-			Log.pop();
-			return M.of(null);
+
+			return ast as EB.AST; // Remove the usage of the bound variable
 		}),
 	);
-};
+
+infer.gen = F.flow(infer, V2.pure);

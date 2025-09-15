@@ -5,7 +5,7 @@ export * from "./shared/context";
 export * from "./pretty/pretty";
 export * from "./syntax/term";
 export * from "./shared/supply";
-export * from "./unification/unification";
+export * as U from "./unification/unification";
 
 export * from "./inference";
 export * from "./solver";
@@ -15,3 +15,5 @@ export * as NF from "./normalization";
 
 export * as Icit from "./implicits";
 export * as Mod from "./module";
+
+export * as V2 from "./shared/monad.v2";

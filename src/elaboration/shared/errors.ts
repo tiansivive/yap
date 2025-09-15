@@ -6,7 +6,7 @@ export type Cause =
 	| { type: "UnificationFailure"; left: NF.Value; right: NF.Value }
 	| { type: "RigidVariableMismatch"; left: NF.Value; right: NF.Value }
 	| { type: "RowMismatch"; left: NF.Row; right: NF.Row; reason: string }
-	| { type: "MissingLabel"; label: string }
+	| { type: "MissingLabel"; label: string; row: NF.Row }
 	| { type: "TypeMismatch"; left: NF.Value; right: NF.Value }
 	| { type: "Impossible"; message: string; extra?: any }
 	| { type: "MultiplicityMismatch"; expected: Q.Multiplicity; right: Q.Multiplicity; reason?: string };
@@ -16,7 +16,7 @@ export const RigidVariableMismatch = (left: NF.Value, right: NF.Value): Cause =>
 export const RowMismatch = (left: NF.Row, right: NF.Row, reason: string): Cause => ({ type: "RowMismatch", left, right, reason });
 export const TypeMismatch = (left: NF.Value, right: NF.Value): Cause => ({ type: "TypeMismatch", left, right });
 export const Impossible = (message: string, extra?: any): Cause => ({ type: "Impossible", message, extra });
-export const MissingLabel = (label: string): Cause => ({ type: "MissingLabel", label });
+export const MissingLabel = (label: string, row: NF.Row): Cause => ({ type: "MissingLabel", label, row });
 export const MultiplicityMismatch = (expected: Q.Multiplicity, right: Q.Multiplicity, reason?: string): Cause => ({
 	type: "MultiplicityMismatch",
 	expected,

@@ -1,7 +1,7 @@
 import * as F from "fp-ts/lib/function";
 
 import * as EB from "@yap/elaboration";
-import { M } from "@yap/elaboration";
+import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as NF from "@yap/elaboration/normalization";
 
 import * as Log from "@yap/shared/logging";
@@ -11,55 +11,40 @@ import * as R from "@yap/shared/rows";
 import _ from "lodash";
 import { Subst } from "./unification/substitution";
 
-export function insert(node: EB.AST): EB.M.Elaboration<EB.AST> {
+export function insert(node: EB.AST): V2.Elaboration<EB.AST> {
 	const [term, ty, us] = node;
-	return F.pipe(
-		M.ask(),
-		M.chain(ctx => {
-			Log.push("insert");
-			Log.logger.debug("[Term] " + EB.Display.Term(term), { Context: EB.Display.Context(ctx) });
-			Log.logger.debug("[Type] " + NF.display(ty), { Context: EB.Display.Context(ctx) });
-			return match(node)
-				.with([{ type: "Abs", binding: { type: "Lambda", icit: "Implicit" } }, P._, P._], () => M.of<EB.AST>(node))
-				.with([P._, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._], ([, pi]) => {
-					return F.pipe(
-						EB.resolveImplicit(pi.binder.annotation[0]),
-						M.chain(found => {
-							if (found) {
-								if (!_.isEmpty(found[1])) {
-									throw new Error("insert: Found implicit with constraints; What to do here?");
-								}
-								const bodyNF = NF.apply(pi.binder, pi.closure, pi.binder.annotation[0]);
-								const tm = EB.Constructors.App("Implicit", term, found[0]);
-								return M.of<EB.AST>([tm, bodyNF, us]);
-							}
+	return V2.Do(function* () {
+		const ctx = yield* V2.ask();
+		const r = match(node)
+			.with([{ type: "Abs", binding: { type: "Lambda", icit: "Implicit" } }, P._, P._], () => V2.of<EB.AST>(node))
+			.with([P._, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._], ([, pi]) =>
+				V2.Do(function* () {
+					const found = yield* V2.pure(EB.resolveImplicit(pi.binder.annotation[0]));
 
-							const meta = EB.freshMeta(ctx.env.length, pi.binder.annotation[0]);
-							const mvar = EB.Constructors.Var(meta);
-							const vNF = NF.evaluate(ctx, mvar);
+					if (found) {
+						if (!_.isEmpty(found[1])) {
+							throw new Error("insert: Found implicit with constraints; What to do here?");
+						}
+						const bodyNF = NF.apply(pi.binder, pi.closure, pi.binder.annotation[0]);
+						const tm = EB.Constructors.App("Implicit", term, found[0]);
+						return [tm, bodyNF, us] satisfies EB.AST;
+					}
+					const meta = EB.freshMeta(ctx.env.length, pi.binder.annotation[0]);
+					const mvar = EB.Constructors.Var(meta);
+					const vNF = NF.evaluate(ctx, mvar);
 
-							const tm = EB.Constructors.App("Implicit", term, mvar);
-							const bodyNF = NF.apply(pi.binder, pi.closure, vNF);
-							return F.pipe(
-								M.of<EB.AST>([tm, bodyNF, us]),
-								// M.discard(_ => M.tell("constraint", { type: "resolve", meta: meta, annotation: pi.binder.annotation[0] })),
-							);
-						}),
-						M.chain(insert),
-					);
-				})
-				.otherwise(() => M.of(node));
-		}),
-		M.discard(([tm, ty]) => {
-			Log.push("result");
-			Log.logger.debug("[Term] " + EB.Display.Term(tm));
-			Log.logger.debug("[Type] " + NF.display(ty));
-			Log.pop();
-			Log.pop();
-			return M.of(null);
-		}),
-	);
+					const tm = EB.Constructors.App("Implicit", term, mvar);
+					const bodyNF = NF.apply(pi.binder, pi.closure, vNF);
+					const r = yield* insert.gen([tm, bodyNF, us]);
+					return r;
+				}),
+			)
+			.otherwise(() => V2.of<EB.AST>(node));
+		return yield* V2.pure(r);
+	});
 }
+
+insert.gen = F.flow(insert, V2.pure);
 
 export const wrapLambda = (term: EB.Term, ty: NF.Value): EB.Term => {
 	return match(ty)
@@ -211,10 +196,3 @@ export const instantiate = (term: EB.Term, subst: Subst): EB.Term => {
 			.otherwise(() => EB.Constructors.Var(v.variable));
 	});
 };
-// return metas.reduce((tm, m) => {
-// 	return match(m.ann)
-// 		.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.traverse(tm, ({ variable }) => replace(variable, m, EB.Constructors.Row({ type: "empty" }))))
-// 		.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => EB.traverse(tm, ({ variable }) => replace(variable, m, EB.Constructors.Lit({ type: "Atom", value: "Any" }))))
-// 		.otherwise(_ => tm)
-// }, term)
-// }

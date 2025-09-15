@@ -41,6 +41,7 @@
 	"dependencies": {
 		"commander": "^13.1.0",
 		"fp-ts": "^2.16.9",
+		"immutagen": "^1.0.9",
 		"lodash": "^4.17.21",
 		"moo": "^0.5.2",
 		"ts-pattern": "^5.3.1",

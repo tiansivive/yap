@@ -12,7 +12,7 @@ import { Cause } from "./errors";
 import { Either } from "fp-ts/lib/Either";
 
 export type Elaboration<T> = Reader<EB.Context, Emitter<T>>;
-type Emitter<T> = Writer<Accumulator, Either<Err, T>>;
+export type Emitter<T> = Writer<Accumulator, Either<Err, T>>;
 export type Err = Cause & { provenance?: EB.Provenance[] };
 
 type Accumulator = {

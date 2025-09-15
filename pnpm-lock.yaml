@@ -14,6 +14,9 @@ importers:
       fp-ts:
         specifier: ^2.16.9
         version: 2.16.9
+      immutagen:
+        specifier: ^1.0.9
+        version: 1.0.9
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -1726,6 +1729,9 @@ packages:
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
     engines: {node: '>= 4'}
+
+  immutagen@1.0.9:
+    resolution: {integrity: sha512-9jzD2EVaXxJ9+jX9QXBYL6JMIKALlEExW/ZXOnedG+cAuhp43eyPNgYbAIzPbEJL9LkyQ4Qloh7JuyVZrwaQbg==}
 
   import-fresh@3.3.0:
     resolution: {integrity: sha512-veYYhQa+D1QBKznvhUHxb8faxlrwUnxseDAbAp457E0wLNio2bOSKnjYDhMj+YiAq61xrMGhQk9iXVk5FzgQMw==}
@@ -4782,6 +4788,8 @@ snapshots:
   ieee754@1.2.1: {}
 
   ignore@5.3.2: {}
+
+  immutagen@1.0.9: {}
 
   import-fresh@3.3.0:
     dependencies:

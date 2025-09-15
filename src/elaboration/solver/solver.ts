@@ -1,5 +1,6 @@
-import { M } from "@yap/elaboration";
+import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as EB from "@yap/elaboration";
+import { U } from "@yap/elaboration";
 import * as Src from "@yap/src/index";
 import * as NF from "@yap/elaboration/normalization";
 import { match, P } from "ts-pattern";
@@ -22,33 +23,18 @@ export type Constraint =
 	| { type: "resolve"; meta: Extract<EB.Variable, { type: "Meta" }>; annotation: NF.Value };
 // | { type: "sigma"; lvl: number; dict: Record<string, NF.Value> }
 
-type Ctaint = Constraint & { provenance: EB.Provenance[] };
-export const solve = (cs: Array<Ctaint>): M.Elaboration<Subst> =>
-	F.pipe(
-		M.ask(),
-		M.chain(ctx => {
-			if (Log.peek() !== "solver") {
-				Log.push("solver");
-			}
+type Ctaint = EB.WithProvenance<Constraint>;
+export const solve = (cs: Array<Ctaint>): V2.Elaboration<Subst> =>
+	V2.Do(function* () {
+		const ctx = yield* V2.ask();
+		const solution = yield* V2.pure(_solve(cs, ctx, empty));
 
-			const solution = M.catchError(_solve(cs, ctx, empty), e => {
-				console.error(Err.display(e));
-				console.error(displayProvenance(e.provenance));
-				return M.fail(e);
-			});
-			return M.fmap(solution, s => {
-				Log.logger.debug("[Solution] " + Sub.display(s));
-				Log.pop();
-				return s;
-			});
-		}),
-	);
+		return solution;
+	});
 
-const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboration<Subst> => {
-	Log.logger.debug("[Still to solve] " + cs.length);
-
+const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): V2.Elaboration<Subst> => {
 	if (cs.length === 0) {
-		return M.of(subst);
+		return V2.of(subst);
 	}
 
 	const [c, ...rest] = cs.map<Ctaint>(c => {
@@ -62,35 +48,22 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): M.Elaboratio
 		};
 	});
 
-	const solution = match(c)
-		.with({ type: "assign" }, ({ left, right, lvl }) => {
-			Log.push("constraint");
-			Log.logger.debug("[Left] " + NF.display(left));
-			Log.logger.debug("[Right] " + NF.display(right));
-
-			Log.pop();
-			return F.pipe(
-				EB.unify(left, right, lvl, subst),
-				M.chain(s => {
-					// return _solve(rest, _ctx, Sub.compose(_ctx, s, subst, lvl))
-					return _solve(rest, _ctx, s);
-				}),
-			);
-		})
+	return match(c)
+		.with({ type: "assign" }, ({ left, right, lvl }) =>
+			V2.Do<Subst, Subst>(function* () {
+				const sub = yield U.unify(left, right, lvl, subst);
+				const sol = yield _solve(rest, _ctx, sub);
+				return sol;
+			}),
+		)
 		.with({ type: "usage" }, ({ expected, computed }) => {
 			return match([expected, computed])
 				.with(["One", "One"], ["Many", P._], ["Zero", "Zero"], () => _solve(rest, _ctx, subst))
-				.otherwise(() => M.fail(Err.MultiplicityMismatch(expected, computed)));
+				.otherwise(() => V2.Do(() => V2.fail<Subst>(Err.MultiplicityMismatch(expected, computed))));
 		})
 		.otherwise(() => {
 			throw new Error("Solve: Not implemented yet");
 		});
-
-	return M.catchError(solution, e => {
-		// console.error(displayProvenance(c.provenance));
-		const e_ = { ...e, provenance: [...c.provenance, ...(e.provenance || [])] };
-		return M.fail(e_);
-	});
 };
 
 export const displayProvenance = (provenance: EB.Provenance[] = [], opts = { cap: 10 }): string => {
@@ -98,11 +71,14 @@ export const displayProvenance = (provenance: EB.Provenance[] = [], opts = { cap
 		.map(p => {
 			const pretty = (([type, val]) => {
 				if (type === "unify") {
-					return `\n\t${NF.display(val[0])}\nwith:\n\t${NF.display(val[1])}`;
+					if (val[0].type === "empty" || val[1].type === "extension" || val[1].type === "variable") {
+						return `\n\t${JSON.stringify(val[0])}\nwith:\n\t${JSON.stringify(val[1])}`;
+					}
+					return `\n\t${NF.display(val[0] as NF.Value)}\nwith:\n\t${NF.display(val[1] as NF.Value)}`;
 				}
 
 				if (type === "src") {
-					return Src.display(val);
+					return Src.display(val as Src.Term);
 				}
 
 				if (type === "eb") {

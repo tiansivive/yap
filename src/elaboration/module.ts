@@ -3,6 +3,7 @@ import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
 import * as M from "@yap/elaboration/shared/monad";
+import * as V2 from "@yap/elaboration/shared/monad.v2";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
 
@@ -77,9 +78,9 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 	return next(mod.content.script, ctx);
 };
 
-export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context): [string, Either<M.Err, [EB.AST, EB.Context]>] => {
+export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context]>] => {
 	const check = EB.check(stmt.annotation, NF.Type);
-	const [result] = M.run(check, ctx);
+	const { result } = check(ctx);
 	const e = E.Functor.map(result, ([tm, us]): [EB.AST, EB.Context] => {
 		const nf = NF.evaluate(ctx, tm);
 		const v = EB.Constructors.Var({ type: "Foreign", name: stmt.variable });
@@ -89,73 +90,46 @@ export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: 
 	return [stmt.variable, e];
 };
 
-export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.Context): Either<M.Err, EB.Context> => {
+export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.Context): Either<V2.Err, EB.Context> => {
 	const infer = EB.Stmt.infer(stmt);
-	const [result] = M.run(infer, ctx);
+	const { result } = infer(ctx);
 	type Implicit = EB.Context["implicits"][0];
 	return E.Functor.map(result, ([t, ty]) => update(ctx, "implicits", A.append<Implicit>([t.value, ty])));
 };
 
-export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): [string, Either<M.Err, [EB.AST, EB.Context]>] => {
-	const inference = F.pipe(
-		EB.Stmt.infer(stmt),
-		M.listen(([[stmt, ty, us], { constraints }]) => {
-			return { inferred: { stmt, ty, us }, constraints };
-		}),
-		M.bind("subst", ({ constraints }) => solve(constraints)),
-		M.bind("ty", ({ inferred, subst }) => {
-			return F.pipe(
-				EB.zonk("nf", inferred.ty, subst),
-				M.fmap(nf => NF.generalize(nf, ctx)),
-				M.fmap(nf => NF.instantiate(nf, subst)),
-			);
-		}),
-		M.bind("term", ({ inferred, ty, subst }) => {
-			return F.pipe(
-				EB.zonk("term", inferred.stmt.value, subst),
-				M.fmap(tm => EB.Icit.instantiate(tm, subst)),
-				M.fmap(EB.Icit.generalize),
-				M.fmap(tm => EB.Icit.wrapLambda(tm, ty)),
-			);
-		}),
-	);
+export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context]>] => {
+	const inference = V2.Do(function* () {
+		const [elaborated, ty, us] = yield* EB.Stmt.infer.gen(stmt);
+		const { constraints } = yield* V2.listen();
+		const subst = yield* V2.pure(solve(constraints));
+		//const tyZonked = yield* EB.zonk.gen("nf", ty, subst);
+		const generalized = NF.generalize(ty, ctx, subst);
+		const instantiated = NF.instantiate(generalized, subst);
 
-	const [result] = M.run(inference, ctx);
-	const e = E.Functor.map(result, ({ term, ty, inferred: { us } }): [EB.AST, EB.Context] => {
-		const ast: EB.AST = [term, ty, us];
-		return [ast, set(ctx, ["imports", stmt.variable] as const, [term, ty, us])];
+		const wrapped = F.pipe(EB.Icit.instantiate(elaborated.value, subst), EB.Icit.generalize, tm => EB.Icit.wrapLambda(tm, ty));
+
+		const ast: EB.AST = [wrapped, instantiated, us];
+		return [ast, set(ctx, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
 	});
 
-	return [stmt.variable, e];
+	const { result } = inference(ctx);
+	return [stmt.variable, result];
 };
 
 export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>, ctx: EB.Context) => {
-	const infer = F.pipe(
-		EB.infer(stmt.value),
-		M.listen(([[tm, ty, us], { constraints }]) => {
-			return { inferred: { tm, ty, us }, constraints };
-		}),
-		M.bind("subst", ({ constraints }) => solve(constraints)),
-		M.bind("ty", ({ inferred, subst }) => {
-			return F.pipe(
-				EB.zonk("nf", inferred.ty, subst),
-				M.fmap(nf => NF.generalize(nf, ctx)),
-				M.fmap(nf => NF.instantiate(nf, subst)),
-			);
-		}),
-		M.bind("term", ({ inferred, ty, subst }) => {
-			return F.pipe(
-				EB.zonk("term", inferred.tm, subst),
-				M.fmap(tm => EB.Icit.instantiate(tm, subst)),
-				M.fmap(EB.Icit.generalize),
-				M.fmap(tm => EB.Icit.wrapLambda(tm, ty)),
-			);
-		}),
-	);
+	const inference = V2.Do(function* () {
+		const [elaborated, ty, us] = yield* EB.infer.gen(stmt.value);
+		const { constraints } = yield* V2.listen();
+		const subst = yield* V2.pure(solve(constraints));
 
-	const [result] = M.run(infer, ctx);
-	return E.Functor.map(result, ({ term, ty, inferred: { us } }): EB.AST => {
-		const ast: EB.AST = [term, ty, us];
-		return ast;
+		const generalized = NF.generalize(ty, ctx, subst);
+		const instantiated = NF.instantiate(generalized, subst);
+
+		const wrapped = F.pipe(EB.Icit.instantiate(elaborated, subst), EB.Icit.generalize, tm => EB.Icit.wrapLambda(tm, ty));
+
+		return [wrapped, instantiated, us] satisfies EB.AST;
 	});
+
+	const { result } = inference(ctx);
+	return result;
 };

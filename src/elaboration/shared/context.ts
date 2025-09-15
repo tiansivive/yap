@@ -3,7 +3,7 @@ import * as NF from "@yap/elaboration/normalization";
 import * as EB from "@yap/elaboration";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
-import { M } from "@yap/elaboration";
+import * as V2 from "@yap/elaboration/shared/monad.v2";
 
 import * as Src from "@yap/src/index";
 import * as P from "@yap/shared/provenance";
@@ -31,12 +31,13 @@ export type Context = {
 export type AST = [EB.Term, NF.Value, Q.Usages];
 export type Sigma = { nf: NF.Value; ann: NF.Value; multiplicity: Q.Multiplicity };
 
+export type WithProvenance<T extends object> = T & { trace: Provenance[] };
 export type Provenance =
-	| ["src", Src.Term, Metadata?]
+	| ["src", Src.Term | Src.Statement, Metadata?]
 	| ["eb", EB.Term, Metadata?]
 	| ["nf", NF.Value, Metadata?]
 	| ["alt", Src.Alternative, Metadata?]
-	| ["unify", [NF.Value, NF.Value], Metadata?];
+	| ["unify", [NF.Value, NF.Value] | [NF.Row, NF.Row], Metadata?];
 
 type Metadata =
 	| { action: "checking"; against: NF.Value; description?: string }
@@ -46,7 +47,7 @@ type Metadata =
 
 export type Binder = Pick<EB.Binding, "type" | "variable">;
 
-export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<AST> => {
+export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<AST> => {
 	const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
 	// labels are different syntax (:varname), so we can check them before bound variables as the latter will never shadow the former
 	if (variable.type === "label") {
@@ -54,12 +55,12 @@ export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<AST>
 		if (key) {
 			const { ann, multiplicity } = key;
 			const tm = EB.Constructors.Var({ type: "Label", name: variable.value });
-			return M.of<AST>([tm, ann, zeros]); // QUESTION: need to somehow handle multiplicity?
+			return V2.of<AST>([tm, ann, zeros]); // QUESTION: need to somehow handle multiplicity?
 		}
 		throw new Error(`Label not found: ${variable.value}`);
 	}
 
-	const _lookup = (i: number, variable: Src.Variable, types: Context["types"]): M.Elaboration<AST> => {
+	const _lookup = (i: number, variable: Src.Variable, types: Context["types"]): V2.Elaboration<AST> => {
 		// free vars can be shadowed by bound vars, so only if no bound vars are found do we check for free vars
 		// QUESTION: should we disallow this shadowing?
 		if (types.length === 0) {
@@ -68,7 +69,7 @@ export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<AST>
 				const [, nf, us] = free;
 
 				const tm = EB.Constructors.Var({ type: "Free", name: variable.value });
-				return M.of<AST>([tm, nf, Q.add(us, zeros)]); //QUESTION: is this addition correct?
+				return V2.of<AST>([tm, nf, Q.add(us, zeros)]); //QUESTION: is this addition correct?
 			}
 
 			throw new Error(`Variable not found: ${variable.value}`);
@@ -79,7 +80,10 @@ export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<AST>
 		// do we need to check origin here? I don't think it makes a difference whether it's an inserted (implicit) or source (explicit) binder
 		if (binder.variable === variable.value) {
 			const tm = EB.Constructors.Var({ type: "Bound", index: i });
-			return M.fmap(M.tell("binder", binder), _ => [tm, nf, usages]);
+			return V2.Do(function* () {
+				yield* V2.tell("binder", binder);
+				return [tm, nf, usages] as AST;
+			});
 		}
 
 		return _lookup(i + 1, variable, rest);
@@ -87,16 +91,20 @@ export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<AST>
 
 	return _lookup(0, variable, ctx.types);
 };
+lookup.gen = F.flow(lookup, V2.pure);
 
-export const resolveImplicit = (nf: NF.Value): M.Elaboration<[EB.Term, Sub.Subst] | void> => {
-	return M.fmap(M.ask(), ctx => {
+export const resolveImplicit = (nf: NF.Value): V2.Elaboration<[EB.Term, Sub.Subst] | void> =>
+	V2.Do(function* () {
+		const ctx = yield* V2.ask();
+
 		const lookup = (implicits: Context["implicits"]): [EB.Term, Sub.Subst] | void => {
 			if (implicits.length === 0) {
 				return;
 			}
 
 			const [[term, value], ...rest] = implicits;
-			const [result] = M.run(U.unify(nf, value, ctx.env.length, {}), ctx);
+			const unification = U.unify(nf, value, ctx.env.length, {});
+			const result = unification(ctx).result;
 
 			if (E.isRight(result)) {
 				return [term, result.right];
@@ -106,7 +114,7 @@ export const resolveImplicit = (nf: NF.Value): M.Elaboration<[EB.Term, Sub.Subst
 
 		return lookup(ctx.implicits);
 	});
-};
+resolveImplicit.gen = F.flow(resolveImplicit, V2.pure);
 
 export const bind = (context: Context, binder: Binder, annotation: NF.ModalValue, origin: Origin = "source"): Context => {
 	const [, q] = annotation;

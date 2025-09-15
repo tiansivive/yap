@@ -13,24 +13,26 @@ import { set } from "@yap/utils";
 import { Subst } from "../unification/substitution";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
-export const metas = (val: NF.Value): Meta[] => {
+export const metas = (val: NF.Value, zonker: Subst): Meta[] => {
+	const isUnsolved = (m: Meta) => !zonker[m.val];
+
 	const ms = match(val)
 		.with(NF.Patterns.Lit, () => [])
-		.with(NF.Patterns.Flex, ({ variable }) => [variable])
+		.with(NF.Patterns.Flex, ({ variable }) => (isUnsolved(variable) ? [variable] : []))
 		.with(NF.Patterns.Var, () => [])
-		.with(NF.Patterns.App, ({ func, arg }) => [...metas(func), ...metas(arg)])
+		.with(NF.Patterns.App, ({ func, arg }) => [...metas(func, zonker), ...metas(arg, zonker)])
 		.with(NF.Patterns.Row, ({ row }) =>
 			R.fold(
 				row,
-				(val, l, ms) => ms.concat(metas(val)),
-				(v, ms) => (v.type === "Meta" ? [...ms, v] : ms),
+				(val, l, ms) => ms.concat(metas(val, zonker)),
+				(v, ms) => (v.type === "Meta" && isUnsolved(v) ? [...ms, v] : ms),
 				[] as Meta[],
 			),
 		)
-		.with({ type: "Neutral" }, ({ value }) => metas(value))
-		.with(NF.Patterns.Lambda, ({ closure }) => EB.Icit.metas(closure.term))
-		.with(NF.Patterns.Pi, ({ closure, binder }) => [...metas(binder.annotation[0]), ...EB.Icit.metas(closure.term)])
-		.with(NF.Patterns.Mu, ({ closure, binder }) => [...metas(binder.annotation[0]), ...EB.Icit.metas(closure.term)])
+		.with({ type: "Neutral" }, ({ value }) => metas(value, zonker))
+		.with(NF.Patterns.Lambda, ({ closure }) => EB.Icit.metas(closure.term).filter(isUnsolved))
+		.with(NF.Patterns.Pi, ({ closure, binder }) => [...metas(binder.annotation[0], zonker), ...EB.Icit.metas(closure.term).filter(isUnsolved)])
+		.with(NF.Patterns.Mu, ({ closure, binder }) => [...metas(binder.annotation[0], zonker), ...EB.Icit.metas(closure.term).filter(isUnsolved)])
 		.otherwise(() => {
 			throw new Error("metas: Not implemented yet");
 		});
@@ -44,8 +46,8 @@ export const metas = (val: NF.Value): Meta[] => {
 /**
  * Generalizes a value by replacing meta variables with bound variables, which are introduced by wrapping the value in a Pi type for each meta variable.
  */
-export const generalize = (val: NF.Value, ctx: EB.Context): NF.Value => {
-	const ms = metas(val);
+export const generalize = (val: NF.Value, ctx: EB.Context, zonker: Subst): NF.Value => {
+	const ms = metas(val, zonker);
 	const charCode = "a".charCodeAt(0);
 
 	const ctx_ = ms.reduce((ctx, m, i) => {

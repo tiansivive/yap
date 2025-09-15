@@ -26,3 +26,5 @@ export type SetProp<P extends string, V, T extends object> = (P extends `${infer
  * This is useful for clarifying type computations
  */
 export type Expand<T> = T extends unknown ? { [K in keyof T]: T[K] } : never;
+
+export type Tags<T, K> = K extends string ? (T extends { [k in K]: infer U } ? U : never) : never;
