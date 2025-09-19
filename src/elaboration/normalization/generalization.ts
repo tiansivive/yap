@@ -14,25 +14,38 @@ import { Subst } from "../unification/substitution";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
 export const metas = (val: NF.Value, zonker: Subst): Meta[] => {
-	const isUnsolved = (m: Meta) => !zonker[m.val];
-
 	const ms = match(val)
 		.with(NF.Patterns.Lit, () => [])
-		.with(NF.Patterns.Flex, ({ variable }) => (isUnsolved(variable) ? [variable] : []))
+		.with(NF.Patterns.Flex, ({ variable }) => {
+			if (!zonker[variable.val]) {
+				return [variable];
+			}
+			return metas(zonker[variable.val], zonker);
+		})
 		.with(NF.Patterns.Var, () => [])
 		.with(NF.Patterns.App, ({ func, arg }) => [...metas(func, zonker), ...metas(arg, zonker)])
 		.with(NF.Patterns.Row, ({ row }) =>
 			R.fold(
 				row,
 				(val, l, ms) => ms.concat(metas(val, zonker)),
-				(v, ms) => (v.type === "Meta" && isUnsolved(v) ? [...ms, v] : ms),
+				(v, ms) => {
+					if (v.type !== "Meta") {
+						return ms;
+					}
+
+					if (!zonker[v.val]) {
+						return [v, ...ms];
+					}
+
+					return metas(zonker[v.val], zonker);
+				},
 				[] as Meta[],
 			),
 		)
 		.with({ type: "Neutral" }, ({ value }) => metas(value, zonker))
-		.with(NF.Patterns.Lambda, ({ closure }) => EB.Icit.metas(closure.term).filter(isUnsolved))
-		.with(NF.Patterns.Pi, ({ closure, binder }) => [...metas(binder.annotation[0], zonker), ...EB.Icit.metas(closure.term).filter(isUnsolved)])
-		.with(NF.Patterns.Mu, ({ closure, binder }) => [...metas(binder.annotation[0], zonker), ...EB.Icit.metas(closure.term).filter(isUnsolved)])
+		.with(NF.Patterns.Lambda, ({ closure }) => EB.Icit.metas(closure.term, zonker))
+		.with(NF.Patterns.Pi, ({ closure, binder }) => [...metas(binder.annotation[0], zonker), ...EB.Icit.metas(closure.term, zonker)])
+		.with(NF.Patterns.Mu, ({ closure, binder }) => [...metas(binder.annotation[0], zonker), ...EB.Icit.metas(closure.term, zonker)])
 		.otherwise(() => {
 			throw new Error("metas: Not implemented yet");
 		});
@@ -46,86 +59,43 @@ export const metas = (val: NF.Value, zonker: Subst): Meta[] => {
 /**
  * Generalizes a value by replacing meta variables with bound variables, which are introduced by wrapping the value in a Pi type for each meta variable.
  */
-export const generalize = (val: NF.Value, ctx: EB.Context, zonker: Subst): NF.Value => {
-	const ms = metas(val, zonker);
+export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Context] => {
+	const ms = metas(val, ctx.zonker);
+
+	if (ms.length === 0) {
+		return [val, ctx];
+	}
+
 	const charCode = "a".charCodeAt(0);
 
-	const ctx_ = ms.reduce((ctx, m, i) => {
+	// Build a single closure context that has all generalized metas mapped to the corresponding bound variables.
+	// We also pre-extend names/types/env so quoting inside closures sees the right level indices.
+	const extendedCtx = ms.reduce((acc, m, i) => {
 		const name = `${String.fromCharCode(charCode + i)}`;
-		return EB.bind(ctx, { type: "Pi", variable: name }, [m.ann, Q.Many], "inserted");
+		const boundLvl = i; // outermost binder is level 0 when quoting with lvl = ms.length
+		const withBinder = EB.bind(acc, { type: "Pi", variable: name }, [m.ann, Q.Many], "inserted");
+		return set(withBinder, ["zonker", `${m.val}`] as const, NF.Constructors.Var({ type: "Bound", lvl: boundLvl }));
 	}, ctx);
 
-	const sub = (nf: NF.Value, lvl: number): NF.Value => {
-		const close = (closure: NF.Closure): NF.Closure => ({ ctx: ctx_, term: EB.Icit.replaceMeta(closure.term, ms, lvl + 1) });
+	// Wrap from inner to outer. Each Pi body is quoted with lvl equal to the number of binders in scope.
+	const generalized = A.reverse(ms).reduce<NF.Value>((body, m, i) => {
+		const idx = ms.length - 1 - i; // the idx is the complement of i, since we're going from inner to outer
+		const variable = String.fromCharCode(charCode + idx);
+		// Quote with all binders in scope: lvl = ms.length - i
+		const term = NF.quote(extendedCtx, ms.length - i, body);
+		return NF.Constructors.Pi(variable, "Implicit", [m.ann, Q.Many], { ctx: extendedCtx, term });
+	}, val);
 
-		const t = match(nf)
-			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => NF.Constructors.Var(convertMeta(variable, ms)))
-			.with({ type: "Var" }, () => nf)
-			.with({ type: "Lit" }, () => nf)
-			.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(sub(value, lvl)))
-			.with({ type: "App" }, ({ icit, func, arg }) => NF.Constructors.App(sub(func, lvl), sub(arg, lvl), icit))
-			.with(NF.Patterns.Lambda, ({ binder, closure }) => NF.Constructors.Lambda(binder.variable, binder.icit, close(closure)))
-			.with(NF.Patterns.Pi, ({ binder, closure }) =>
-				NF.Constructors.Pi(binder.variable, binder.icit, [sub(binder.annotation[0], lvl), binder.annotation[1]], close(closure)),
-			)
-			.with(NF.Patterns.Mu, ({ binder, closure }) =>
-				NF.Constructors.Mu(binder.variable, binder.source, [sub(binder.annotation[0], lvl), binder.annotation[1]], close(closure)),
-			)
-			.with({ type: "Row" }, ({ row }) => {
-				const r = R.traverse(
-					row,
-					val => sub(val, lvl),
-					v => {
-						if (v.type !== "Meta") {
-							return R.Constructors.Variable(v);
-						}
-						return R.Constructors.Variable(convertMeta(v, ms));
-					},
-				);
-
-				return NF.Constructors.Row(r);
-			})
-			.otherwise(() => {
-				throw new Error("Generalize: Not implemented yet");
-			});
-		return t;
-	};
-
-	// Wraps the value in a Pi type for each meta variable
-	// The ms index is used as the respective meta's de Bruijn level. That means the first meta is the outermost binding.
-	// We reverse the ms array to start λ-wrapping from the innermost binding (the last meta)
-	return A.reverse(ms).reduce(
-		(nf, m, i) => {
-			const extension = ms.slice(0, ms.length - i).reduceRight<Pick<EB.Context, "env" | "names" | "types">>(
-				(_ctx, _m, j) => {
-					const binder: EB.Binder = { type: "Pi", variable: `pi${j}` };
-					return {
-						env: [[NF.Constructors.Rigid(j), Q.Many], ..._ctx.env],
-						types: [[binder, "inserted", [_m.ann, Q.Many]], ..._ctx.types],
-						names: [binder, ..._ctx.names],
-					};
-				},
-				{ env: [], names: [], types: [] },
-			);
-			// The environment is the meta variables that have not been generalized so far.
-			// We add them as rigid variables, so that their de Bruijn level points to the correct pi-binding
-			const extended = F.pipe(ctx, set("env", extension.env), set("types", extension.types), set("names", extension.names));
-
-			return NF.Constructors.Pi(`${String.fromCharCode(charCode + ms.length - 1 - i)}`, "Implicit", [m.ann, Q.Many], {
-				ctx: extended,
-				// We need an offset to account for the already generalized variables
-				term: NF.quote(ctx_, ms.length - i, nf),
-			});
-		},
-		sub(val, ms.length),
-	);
+	// Return the extended ctx so callers can keep the zonker mapping for subsequent passes (instantiate, etc.)
+	return [generalized, extendedCtx];
 };
 
 const convertMeta = (meta: Meta, ms: Meta[]): NF.Variable => {
 	const i = ms.findIndex(m => m.val === meta.val);
 
 	if (i === -1) {
-		throw new Error("Generalize: Meta not found");
+		// Not a meta that we are generalizing. If it doesn't show up in the meta list, then it must be in the zonker (solved)
+		return meta;
 	}
 
 	return { type: "Bound", lvl: i };
@@ -140,7 +110,8 @@ export const instantiate = (nf: NF.Value, subst: Subst): NF.Value => {
 			}
 
 			if (!!subst[v.variable.val]) {
-				throw new Error("instantiate: Found solved meta while instantiating unconstrained metas");
+				// Solved meta means it's in the zonker = not unconstrained, so no need to instantiate it
+				return v;
 			}
 
 			return match(v.variable.ann)

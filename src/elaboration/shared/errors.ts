@@ -1,6 +1,7 @@
 import * as NF from "@yap/elaboration/normalization";
 import * as R from "@yap/shared/rows";
 import * as Q from "@yap/shared/modalities/multiplicity";
+import * as EB from "@yap/elaboration";
 
 export type Cause =
 	| { type: "UnificationFailure"; left: NF.Value; right: NF.Value }
@@ -24,16 +25,16 @@ export const MultiplicityMismatch = (expected: Q.Multiplicity, right: Q.Multipli
 	reason,
 });
 
-export const display = (error: Cause): string => {
+export const display = (error: Cause, zonker: EB.Zonker): string => {
 	switch (error.type) {
 		case "UnificationFailure":
-			return `Unification Failure: Cannot unify ${NF.display(error.left)} with ${NF.display(error.right)}`;
+			return `Unification Failure: Cannot unify ${NF.display(error.left, zonker)} with ${NF.display(error.right, zonker)}`;
 		case "RigidVariableMismatch":
-			return `Variable Mismatch: Cannot unify ${NF.display(error.left)} with ${NF.display(error.right)}`;
+			return `Variable Mismatch: Cannot unify ${NF.display(error.left, zonker)} with ${NF.display(error.right, zonker)}`;
 		case "RowMismatch":
-			return `Row Mismatch: Cannot unify\n${R.display({ term: NF.display, var: v => JSON.stringify(v) })(error.left)}\nwith\n${R.display({ term: NF.display, var: v => JSON.stringify(v) })(error.right)}.\nReason: ${error.reason}`;
+			return `Row Mismatch: Cannot unify\n${R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, zonker), var: v => JSON.stringify(v) })(error.left)}\nwith\n${R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, zonker), var: v => JSON.stringify(v) })(error.right)}.\nReason: ${error.reason}`;
 		case "TypeMismatch":
-			return `Type Mismatch: Cannot unify:\n\t${NF.display(error.left)}\nwith\n\t${NF.display(error.right)}`;
+			return `Type Mismatch: Cannot unify:\n\t${NF.display(error.left, zonker)}\nwith\n\t${NF.display(error.right, zonker)}`;
 		case "Impossible":
 			return `Impossible! ${error.message}`;
 		case "MissingLabel":

@@ -33,8 +33,15 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 
 			const ctx = yield* V2.ask();
 			const unifier = match([left, right])
-				.with([NF.Patterns.Flex, P._], ([meta, v]) => V2.of(Sub.compose(ctx, bind(ctx, meta.variable, v), subst, lvl)))
-				.with([P._, NF.Patterns.Flex], ([v, meta]) => V2.of(Sub.compose(ctx, bind(ctx, meta.variable, v), subst, lvl)))
+				.with([NF.Patterns.Flex, NF.Patterns.Flex], ([meta1, meta2]) =>
+					V2.Do<Subst, Subst>(function* () {
+						const s = Sub.compose(bind(ctx, meta1.variable, meta2), subst);
+						const s1 = yield* unify.gen(meta1.variable.ann, meta2.variable.ann, lvl, s);
+						return s1;
+					}),
+				)
+				.with([NF.Patterns.Flex, P._], ([meta, v]) => V2.of(Sub.compose(bind(ctx, meta.variable, v), subst)))
+				.with([P._, NF.Patterns.Flex], ([v, meta]) => V2.of(Sub.compose(bind(ctx, meta.variable, v), subst)))
 				.with([NF.Patterns.Lit, NF.Patterns.Lit], ([lit1, lit2]) =>
 					V2.Do<Subst, Subst>(function* () {
 						if (!_.isEqual(lit1.value, lit2.value)) {
@@ -60,7 +67,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						V2.Do(function* () {
 							const ctx = yield* V2.ask();
 							const sub = yield* V2.pure(unify(pi1.binder.annotation[0], pi2.binder.annotation[0], lvl, subst));
-							const composed = Sub.compose(ctx, sub, subst, lvl);
+							const composed = Sub.compose(sub, subst);
 							const body1 = NF.apply(pi1.binder, pi1.closure, NF.Constructors.Rigid(lvl));
 							const body2 = NF.apply(pi2.binder, pi2.closure, NF.Constructors.Rigid(lvl));
 							return yield* V2.pure(unify(body1, body2, lvl + 1, composed));
@@ -70,7 +77,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 					V2.Do(function* () {
 						const ctx = yield* V2.ask();
 						const sub = yield* V2.pure(unify(mu1.binder.annotation[0], mu2.binder.annotation[0], lvl, subst));
-						const composed = Sub.compose(ctx, sub, subst, lvl);
+						const composed = Sub.compose(sub, subst);
 						const body1 = NF.apply(mu1.binder, mu1.closure, NF.Constructors.Rigid(lvl));
 						const body2 = NF.apply(mu2.binder, mu2.closure, NF.Constructors.Rigid(lvl));
 						return yield* V2.pure(unify(body1, body2, lvl + 1, composed));
@@ -109,7 +116,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 								V2.Do(function* () {
 									const o1 = yield* V2.pure(unify(left.func, right.func, lvl, subst));
 									const o2 = yield* V2.pure(unify(left.arg, right.arg, lvl, o1));
-									return Sub.compose(ctx, o2, o1, lvl);
+									return Sub.compose(o2, o1);
 								}),
 							);
 						return sub;
@@ -119,7 +126,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 					V2.Do(function* () {
 						const ctx = yield* V2.ask();
 						const sub = yield* Row.unify.gen(r1, r2, subst);
-						return Sub.compose(ctx, sub, subst, lvl);
+						return Sub.compose(sub, subst);
 					}),
 				)
 				.with(
@@ -138,7 +145,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				});
 
 			const sub = yield* V2.pure(unifier);
-			return Sub.compose(ctx, sub, subst, lvl);
+			return Sub.compose(sub, subst);
 		}),
 	);
 

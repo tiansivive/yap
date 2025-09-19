@@ -11,9 +11,11 @@ import * as CG from "./Codegen/terms";
 import fs from "fs";
 import vm from "vm";
 import util from "util";
-import { resolve } from "path";
+import { format, resolve } from "path";
 
 import * as Lib from "@yap/shared/lib/primitives";
+
+import beautify from "js-beautify";
 
 export const interpret = (code: string, ctx: EB.Context, opts = { nf: false }) => {
 	const g = Grammar;
@@ -53,11 +55,11 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 
 		const code = `let ${name} = ${CG.codegen([name], tm)};`;
 		letdecs.push(code);
-		console.log(`:: ${EB.NF.display(ty)}`);
+		console.log(`:: ${EB.NF.display(ty, ctx.zonker)}`);
 
 		if (opts.nf) {
 			const nf = EB.NF.evaluate(ctx, tm);
-			console.log(`NF: ${EB.NF.display(nf)}`);
+			console.log(`NF: ${EB.NF.display(nf, ctx.zonker)}`);
 		}
 
 		console.log(`\n\n${code}`);
@@ -73,11 +75,15 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 			return ctx;
 		}
 
-		const [tm, ty, us] = result.right;
+		const [tm, ty, us, zonker] = result.right;
 		const code = CG.codegen([], tm);
 
 		const script = letdecs.join("\n") + `\n${code}`;
-		console.log(script);
+
+		const formatted = beautify.js(script, { indent_size: 2 });
+		//prettier.format(script, { parser: "babel", semi: true })
+		console.log("\nTranspiled JavaScript:\n");
+		console.log(formatted);
 
 		const imported = Object.keys(ctx.imports).reduce((acc, key) => {
 			return { ...acc, [key]: key };
@@ -88,11 +94,11 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		//console.dir(res, { showHidden: true, depth: null });
 		// console.dir(Object.getOwnPropertyDescriptors(res), { showHidden: true, depth: null });
 		const pretty = util.inspect(res, { showHidden: true, depth: null });
-		console.log("\n" + pretty + ` :: ${EB.NF.display(ty)}\n`);
+		console.log("\n" + pretty + ` :: ${EB.NF.display(ty, zonker)}\n`);
 
 		if (opts.nf) {
 			const nf = EB.NF.evaluate(ctx, tm);
-			console.log(`NF: ${EB.NF.display(nf)}`);
+			console.log(`NF: ${EB.NF.display(nf, zonker)}`);
 		}
 		return ctx;
 	}

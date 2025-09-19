@@ -9,4 +9,5 @@ export const defaultContext: EB.Context = {
     sigma: {},
     trace: [],
     imports: { ...Lib.Elaborated },
+    zonker: {}
 };

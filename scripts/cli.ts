@@ -46,6 +46,7 @@ program
 			sigma: {},
 			trace: [],
 			imports: { ...Lib.Elaborated },
+			zonker: {},
 		};
 		const runCode = (input: string) => {
 			try {

@@ -111,7 +111,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 								return { type: "variable", variable: val.variable };
 							}
 
-							throw new Error("Evaluating a row variable that is not a row or a variable: " + NF.display(val));
+							throw new Error("Evaluating a row variable that is not a row or a variable: " + NF.display(val, ctx.zonker));
 						}
 
 						throw new Error(`Eval Row Variable: Not implemented yet: ${JSON.stringify(r)}`);
@@ -139,7 +139,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			return res;
 		})
 		.otherwise(tm => {
-			console.log("Eval: Not implemented yet", EB.Display.Term(tm));
+			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx.zonker));
 			throw new Error("Not implemented");
 		});
 

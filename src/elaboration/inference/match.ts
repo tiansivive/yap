@@ -30,7 +30,7 @@ export const infer = (tm: Match): V2.Elaboration<EB.AST> =>
 						{
 							action: "alternative",
 							type: ty,
-							motive: `attempting to unify with previous alternative of type ${NF.display(ty)}:\t${Src.Alt.display(tm.alternatives[i])}`,
+							motive: `attempting to unify with previous alternative of type ${NF.display(ty, ctx.zonker)}:\t${Src.Alt.display(tm.alternatives[i])}`,
 						},
 					],
 					["src", tm.alternatives[i + 1].term],

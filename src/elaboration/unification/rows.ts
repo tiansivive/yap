@@ -43,16 +43,15 @@ export const unify = (r1: NF.Row, r2: NF.Row, s: Subst): V2.Elaboration<Subst> =
 							throw new Error("Circular row type");
 						}
 
-						const call = Sub.Substitute(ctx);
-
 						const [rewritten, o1] = yield* V2.pure(rewrite(r, label));
 						if (rewritten.type !== "extension") {
 							return yield* V2.fail<Subst>(Err.Impossible("Expected extension"));
 						}
-						const o2 = yield* U.unify.gen(call.nf(o1, value, lvl), call.nf(o1, rewritten.value, lvl), lvl, s);
-						const o3 = yield* unify.gen(substRow(ctx, o2, substRow(ctx, o1, row, lvl), lvl), substRow(ctx, o2, substRow(ctx, o1, rewritten.row, lvl), lvl), o2);
 
-						return Sub.compose(ctx, Sub.compose(ctx, o3, o2, lvl), o1, lvl);
+						const o2 = yield* U.unify.gen(value, rewritten.value, lvl, Sub.compose(o1, s));
+						const o3 = yield* unify.gen(row, rewritten.row, o2);
+
+						return F.pipe(o3, Sub.compose(o2), Sub.compose(o1));
 					}),
 				)
 
@@ -79,31 +78,6 @@ const tail = (row: NF.Row): number[] =>
 		)
 		.exhaustive();
 
-const substRow = (ctx: EB.Context, subst: Subst, row: NF.Row, lvl: number): NF.Row =>
-	match(row)
-		.with({ type: "empty" }, () => row)
-		.with({ type: "extension" }, ({ label, value, row }) =>
-			R.Constructors.Extension(label, Sub.Substitute(ctx).nf(subst, value, lvl), substRow(ctx, subst, row, lvl)),
-		)
-		.with({ type: "variable" }, ({ variable }): NF.Row => {
-			if (variable.type !== "Meta") {
-				return row;
-			}
-
-			const val = subst[variable.val];
-
-			if (!val) {
-				return R.Constructors.Variable(variable);
-			}
-
-			if (val.type === "Row") {
-				return val.row;
-			}
-
-			throw new Error("Substitute: Row variable is not a row or a variable. Got: " + NF.display(val));
-		})
-		.exhaustive();
-
 // TODO: Use `rewrite` from `rows.ts`
 const rewrite = (r: NF.Row, label: string): V2.Elaboration<[NF.Row, Subst]> =>
 	V2.Do(function* () {
@@ -126,7 +100,15 @@ const rewrite = (r: NF.Row, label: string): V2.Elaboration<[NF.Row, Subst]> =>
 							.with({ type: "extension" }, ({ label: l, value: v, row: r }) =>
 								V2.of<[NF.Row, Subst]>([R.Constructors.Extension(l, v, R.Constructors.Extension(lbl, val, r)), sub]),
 							)
-							.otherwise(() => V2.Do(() => V2.fail(Err.Impossible("Expected extension: " + R.display({ term: NF.display, var: v => JSON.stringify(v) })))));
+							.otherwise(() =>
+								V2.Do(() =>
+									V2.fail(
+										Err.Impossible(
+											"Expected extension: " + R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, ctx.zonker), var: v => JSON.stringify(v) }),
+										),
+									),
+								),
+							);
 						return res;
 					}),
 			)

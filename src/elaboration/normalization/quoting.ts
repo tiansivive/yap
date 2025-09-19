@@ -11,6 +11,13 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 				.with({ type: "Bound" }, v => {
 					return EB.Constructors.Var({ type: "Bound", index: lvl - v.lvl - 1 });
 				})
+				// .with({ type: "Meta" }, v => {
+				// 	const zonked = ctx.zonker[v.val];
+				// 	if (zonked) {
+				// 		return quote(ctx, lvl, zonked);
+				// 	}
+				// 	return EB.Constructors.Var(v);
+				// })
 				.otherwise(v => EB.Constructors.Var(v)),
 		)
 
@@ -59,7 +66,7 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 			return EB.Constructors.Row(_quote(row));
 		})
 		.otherwise(nf => {
-			throw new Error("Quote: Not implemented yet: " + NF.display(nf));
+			throw new Error("Quote: Not implemented yet: " + NF.display(nf, ctx.zonker));
 		});
 };
 

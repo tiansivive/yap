@@ -4,6 +4,8 @@ import * as EB from "@yap/elaboration";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as NF from "@yap/elaboration/normalization";
 
+import * as Generalization from "@yap/elaboration/normalization/generalization";
+
 import * as Log from "@yap/shared/logging";
 import { match, P } from "ts-pattern";
 
@@ -61,37 +63,50 @@ export const wrapLambda = (term: EB.Term, ty: NF.Value): EB.Term => {
 };
 
 type Meta = Extract<EB.Variable, { type: "Meta" }>;
-export const metas = (tm: EB.Term): Meta[] => {
-	const ms = match(tm)
-		.with({ type: "Var" }, ({ variable }) => (variable.type === "Meta" ? [variable] : []))
-		.with({ type: "Lit" }, () => [])
-		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) => metas(body))
-		.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }) => [...metas(binding.annotation), ...metas(body)])
-		.with({ type: "Abs", binding: { type: "Mu" } }, ({ body, binding }) => [...metas(binding.annotation), ...metas(body)])
-		.with({ type: "App" }, ({ func, arg }) => [...metas(func), ...metas(arg)])
-		.with({ type: "Row" }, ({ row }) =>
-			R.fold(
-				row,
-				(val, l, ms) => ms.concat(metas(val)),
-				(v, ms) => (v.type === "Meta" ? [...ms, v] : ms),
-				[] as Meta[],
-			),
-		)
-		.with({ type: "Proj" }, ({ term }) => metas(term))
-		.with({ type: "Inj" }, ({ value, term }) => [...metas(value), ...metas(term)])
-		.with({ type: "Annotation" }, ({ term, ann }) => [...metas(term), ...metas(ann)])
-		.with({ type: "Match" }, ({ scrutinee, alternatives }) => [...metas(scrutinee), ...alternatives.flatMap(alt => metas(alt.term))])
-		.with({ type: "Block" }, ({ return: ret, statements }) => [...metas(ret), ...statements.flatMap(s => metas(s.value))])
+export const metas = (tm: EB.Term, zonker: Subst): Meta[] => {
+	const _metas = (tm: EB.Term): Meta[] => {
+		const ms = match(tm)
+			.with({ type: "Var" }, ({ variable }) => {
+				if (variable.type !== "Meta") {
+					return [];
+				}
 
-		.otherwise(() => {
-			throw new Error("metas: Not implemented yet");
-		});
+				if (!zonker[variable.val]) {
+					return [variable];
+				}
 
-	return ms;
+				return Generalization.metas(zonker[variable.val], zonker);
+			})
+			.with({ type: "Lit" }, () => [])
+			.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) => _metas(body))
+			.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }) => [..._metas(binding.annotation), ..._metas(body)])
+			.with({ type: "Abs", binding: { type: "Mu" } }, ({ body, binding }) => [..._metas(binding.annotation), ..._metas(body)])
+			.with({ type: "App" }, ({ func, arg }) => [..._metas(func), ..._metas(arg)])
+			.with({ type: "Row" }, ({ row }) =>
+				R.fold(
+					row,
+					(val, l, ms) => ms.concat(_metas(val)),
+					(v, ms) => (v.type === "Meta" ? [...ms, v] : ms),
+					[] as Meta[],
+				),
+			)
+			.with({ type: "Proj" }, ({ term }) => _metas(term))
+			.with({ type: "Inj" }, ({ value, term }) => [..._metas(value), ..._metas(term)])
+			.with({ type: "Annotation" }, ({ term, ann }) => [..._metas(term), ..._metas(ann)])
+			.with({ type: "Match" }, ({ scrutinee, alternatives }) => [..._metas(scrutinee), ...alternatives.flatMap(alt => _metas(alt.term))])
+			.with({ type: "Block" }, ({ return: ret, statements }) => [..._metas(ret), ...statements.flatMap(s => _metas(s.value))])
+
+			.otherwise(() => {
+				throw new Error("metas: Not implemented yet");
+			});
+
+		return ms;
+	};
+	return _metas(tm);
 };
 
-export const generalize = (tm: EB.Term): EB.Term => {
-	const ms = metas(tm);
+export const generalize = (tm: EB.Term, ctx: EB.Context): EB.Term => {
+	const ms = metas(tm, ctx.zonker);
 	const charCode = 97; // 'a'
 	return ms.reduce(
 		(tm, m, i) =>
@@ -103,17 +118,22 @@ export const generalize = (tm: EB.Term): EB.Term => {
 				},
 				tm,
 			),
-		replaceMeta(tm, ms, 0),
+		replaceMeta(tm, ms, 0, ctx),
 	);
 };
 
-export const replaceMeta = (tm: EB.Term, ms: Meta[], lvl: number): EB.Term => {
+export const replaceMeta = (tm: EB.Term, ms: Meta[], lvl: number, ctx: EB.Context): EB.Term => {
 	const sub = (tm: EB.Term, lvl: number): EB.Term => {
 		const t = match(tm)
 			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
+				if (!ctx.zonker[variable.val]) {
+					return EB.Constructors.Var(bindMeta(variable, ms, lvl));
+				}
+
+				return NF.quote(ctx, lvl, ctx.zonker[variable.val]);
 				// console.warn("Generalize: Found meta variable", { variable });
 				// console.warn("Term generalization yet to be fully implemented");
-				return EB.Constructors.Var(bindMeta(variable, ms, lvl));
+				// return EB.Constructors.Var(bindMeta(variable, ms, lvl));
 			})
 
 			.with({ type: "Var" }, () => tm)
@@ -173,7 +193,8 @@ const bindMeta = (v: EB.Variable, ms: Meta[], lvl: number): EB.Variable => {
 
 	const i = ms.findIndex(m => m.val === v.val);
 	if (i === -1) {
-		throw new Error("Generalize: Meta not found");
+		// Not a meta that we are generalizing. If it doesn't show up in the meta list, then it must be in the zonker (solved)
+		return v;
 	}
 
 	return EB.Bound(lvl - i - 1);
@@ -186,7 +207,8 @@ export const instantiate = (term: EB.Term, subst: Subst): EB.Term => {
 		}
 
 		if (!!subst[v.variable.val]) {
-			throw new Error("instantiate: Found solved meta while instantiating unconstrained metas");
+			// Solved meta means it's in the zonker = not unconstrained, so no need to instantiate it
+			return v;
 		}
 
 		return match(v.variable.ann)

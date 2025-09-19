@@ -4,8 +4,7 @@ import { U } from "@yap/elaboration";
 import * as Src from "@yap/src/index";
 import * as NF from "@yap/elaboration/normalization";
 import { match, P } from "ts-pattern";
-import { Subst, Substitute } from "@yap/elaboration/unification/substitution";
-import * as Sub from "@yap/elaboration/unification/substitution";
+import { Subst } from "@yap/elaboration/unification/substitution";
 
 import * as Err from "@yap/elaboration/shared/errors";
 import * as Log from "@yap/shared/logging";
@@ -37,16 +36,7 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): V2.Elaborati
 		return V2.of(subst);
 	}
 
-	const [c, ...rest] = cs.map<Ctaint>(c => {
-		if (c.type === "usage" || c.type === "resolve") {
-			return c;
-		}
-		return {
-			...c,
-			left: Substitute(_ctx).nf(subst, c.left, c.lvl),
-			right: Substitute(_ctx).nf(subst, c.right, c.lvl),
-		};
-	});
+	const [c, ...rest] = cs;
 
 	return match(c)
 		.with({ type: "assign" }, ({ left, right, lvl }) =>
@@ -66,7 +56,7 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): V2.Elaborati
 		});
 };
 
-export const displayProvenance = (provenance: EB.Provenance[] = [], opts = { cap: 10 }): string => {
+export const displayProvenance = (provenance: EB.Provenance[] = [], opts = { cap: 10 }, zonker: EB.Zonker): string => {
 	return A.reverse(provenance)
 		.map(p => {
 			const pretty = (([type, val]) => {
@@ -74,7 +64,7 @@ export const displayProvenance = (provenance: EB.Provenance[] = [], opts = { cap
 					if (val[0].type === "empty" || val[1].type === "extension" || val[1].type === "variable") {
 						return `\n\t${JSON.stringify(val[0])}\nwith:\n\t${JSON.stringify(val[1])}`;
 					}
-					return `\n\t${NF.display(val[0] as NF.Value)}\nwith:\n\t${NF.display(val[1] as NF.Value)}`;
+					return `\n\t${NF.display(val[0] as NF.Value, zonker)}\nwith:\n\t${NF.display(val[1] as NF.Value, zonker)}`;
 				}
 
 				if (type === "src") {
@@ -82,11 +72,11 @@ export const displayProvenance = (provenance: EB.Provenance[] = [], opts = { cap
 				}
 
 				if (type === "eb") {
-					return EB.Display.Term(val);
+					return EB.Display.Term(val, zonker);
 				}
 
 				if (type === "nf") {
-					return NF.display(val);
+					return NF.display(val, zonker);
 				}
 
 				if (type === "alt") {
@@ -101,11 +91,11 @@ export const displayProvenance = (provenance: EB.Provenance[] = [], opts = { cap
 
 			if (metadata?.action === "checking") {
 				const reason = metadata.description ? `\nReason: ${metadata.description}` : "";
-				const msg = `While checking:\n\t${pretty}\nagainst:\n\t${NF.display(metadata.against)}${reason}`;
+				const msg = `While checking:\n\t${pretty}\nagainst:\n\t${NF.display(metadata.against, zonker)}${reason}`;
 				return `${loc}${msg}`;
 			}
 			if (metadata?.action === "alternative") {
-				const msg = `In alternative:\n\t${pretty}\nwith type:\n\t${NF.display(metadata.type)}\nWhile: ${metadata.motive}`;
+				const msg = `In alternative:\n\t${pretty}\nwith type:\n\t${NF.display(metadata.type, zonker)}\nWhile: ${metadata.motive}`;
 				return `${loc}${msg}`;
 			}
 			if (metadata?.action === "infer") {

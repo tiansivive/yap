@@ -26,7 +26,10 @@ export type Context = {
 	sigma: Record<string, Sigma>;
 	imports: Record<string, AST>;
 	trace: P.Stack<Provenance>;
+	zonker: Sub.Subst;
 };
+
+export type Zonker = Context["zonker"];
 
 export type AST = [EB.Term, NF.Value, Q.Usages];
 export type Sigma = { nf: NF.Value; ann: NF.Value; multiplicity: Q.Multiplicity };

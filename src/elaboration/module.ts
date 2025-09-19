@@ -18,6 +18,8 @@ import { Interface } from "../modules/loading";
 import { solve } from "./solver";
 import * as A from "fp-ts/lib/Array";
 
+import * as Sub from "@yap/elaboration/unification/substitution";
+
 export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 	const maybeExport = (name: string) => (result: Omit<Interface, "imports">) => {
 		if (
@@ -103,13 +105,18 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 		const { constraints } = yield* V2.listen();
 		const subst = yield* V2.pure(solve(constraints));
 		//const tyZonked = yield* EB.zonk.gen("nf", ty, subst);
-		const generalized = NF.generalize(ty, ctx, subst);
-		const instantiated = NF.instantiate(generalized, subst);
+		const zonked = set(ctx, "zonker", Sub.compose(subst, ctx.zonker));
+		const [generalized, next] = NF.generalize(ty, zonked);
+		const instantiated = NF.instantiate(generalized, next);
 
-		const wrapped = F.pipe(EB.Icit.instantiate(elaborated.value, subst), EB.Icit.generalize, tm => EB.Icit.wrapLambda(tm, ty));
+		const wrapped = F.pipe(
+			EB.Icit.instantiate(elaborated.value, subst),
+			inst => EB.Icit.generalize(inst, zonked),
+			tm => EB.Icit.wrapLambda(tm, ty),
+		);
 
 		const ast: EB.AST = [wrapped, instantiated, us];
-		return [ast, set(ctx, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
+		return [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
 	});
 
 	const { result } = inference(ctx);
@@ -122,12 +129,18 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 		const { constraints } = yield* V2.listen();
 		const subst = yield* V2.pure(solve(constraints));
 
-		const generalized = NF.generalize(ty, ctx, subst);
-		const instantiated = NF.instantiate(generalized, subst);
+		console.log("Substitution:\n", Sub.display(subst));
+		const zonked = set(ctx, "zonker", Sub.compose(subst, ctx.zonker));
+		const [generalized, next] = NF.generalize(ty, zonked);
+		const instantiated = NF.instantiate(generalized, next.zonker);
 
-		const wrapped = F.pipe(EB.Icit.instantiate(elaborated, subst), EB.Icit.generalize, tm => EB.Icit.wrapLambda(tm, ty));
+		const wrapped = F.pipe(
+			EB.Icit.instantiate(elaborated, subst),
+			inst => EB.Icit.generalize(inst, zonked),
+			tm => EB.Icit.wrapLambda(tm, ty),
+		);
 
-		return [wrapped, instantiated, us] satisfies EB.AST;
+		return [wrapped, instantiated, us, subst] as const;
 	});
 
 	const { result } = inference(ctx);

@@ -10,67 +10,78 @@ import * as R from "@yap/shared/rows";
 import * as EB from "..";
 import { options } from "@yap/shared/config/options";
 
-const display = (term: EB.Term): string => {
-	return match(term)
-		.with({ type: "Lit" }, ({ value }) => Lit.display(value))
-		.with({ type: "Var" }, ({ variable }) =>
-			match(variable)
-				.with({ type: "Bound" }, ({ index }) => `I${index}`)
-				.with({ type: "Free" }, ({ name }) => name)
-				.with({ type: "Meta" }, ({ val, ann }) => (options.verbose ? `(?${val} :: ${NF.display(ann)})` : `?${val}`))
-				.with({ type: "Foreign" }, ({ name }) => `FFI.${name}`)
-				.with({ type: "Label" }, ({ name }) => `:${name}`)
-				.otherwise(() => "Var Display: Not implemented"),
-		)
-		.with({ type: "Abs", binding: { type: "Mu" } }, ({ binding }) => binding.source)
-		.with({ type: "Abs" }, ({ binding, body }) => {
-			const b = match(binding)
-				.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
-				.with({ type: "Pi" }, ({ variable, annotation, multiplicity }) => `Π(<${Q.display(multiplicity)}> ${variable}: ${display(annotation)})`)
-				//.with({ type: "Mu" }, ({ variable, annotation }) => `μ(${variable}: ${display(annotation)})`)
-				.otherwise(() => {
-					throw new Error("Display Term Binder: Not implemented");
-				});
+const display = (term: EB.Term, zonker: EB.Zonker): string => {
+	const _display = (term: EB.Term): string => {
+		return (
+			match(term)
+				.with({ type: "Lit" }, ({ value }) => Lit.display(value))
+				.with({ type: "Var" }, ({ variable }) =>
+					match(variable)
+						.with({ type: "Bound" }, ({ index }) => `I${index}`)
+						.with({ type: "Free" }, ({ name }) => name)
+						.with({ type: "Foreign" }, ({ name }) => `FFI.${name}`)
+						.with({ type: "Label" }, ({ name }) => `:${name}`)
+						.with({ type: "Meta" }, ({ val, ann }) => {
+							if (zonker[val]) {
+								return NF.display(zonker[val], zonker);
+							}
 
-			const arr = binding.type !== "Let" && binding.type !== "Mu" && binding.icit === "Implicit" ? "=>" : "->";
-			return `${b} ${arr} ${display(body)}`;
-		})
-		.with({ type: "App" }, ({ icit, func, arg }) => {
-			const f = display(func);
-			const a = display(arg);
+							return options.verbose ? `(?${val} :: ${NF.display(ann, zonker)})` : `?${val}`;
+						})
+						.otherwise(() => "Var _display: Not implemented"),
+				)
+				.with({ type: "Abs", binding: { type: "Mu" } }, ({ binding }) => binding.source)
+				.with({ type: "Abs" }, ({ binding, body }) => {
+					const b = match(binding)
+						.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
+						.with({ type: "Pi" }, ({ variable, annotation, multiplicity }) => `Π(<${Q.display(multiplicity)}> ${variable}: ${_display(annotation)})`)
+						//.with({ type: "Mu" }, ({ variable, annotation }) => `μ(${variable}: ${_display(annotation)})`)
+						.otherwise(() => {
+							throw new Error("_display Term Binder: Not implemented");
+						});
 
-			const wrappedFn = func.type !== "Var" && func.type !== "Lit" && func.type !== "App" ? `(${f})` : f;
-			const wrappedArg = arg.type === "Abs" || arg.type === "App" ? `(${a})` : a;
+					const arr = binding.type !== "Let" && binding.type !== "Mu" && binding.icit === "Implicit" ? "=>" : "->";
+					return `${b} ${arr} ${_display(body)}`;
+				})
+				.with({ type: "App" }, ({ icit, func, arg }) => {
+					const f = _display(func);
+					const a = _display(arg);
 
-			return `${wrappedFn} ${Icit.display(icit)}${wrappedArg}`;
-		})
+					const wrappedFn = func.type !== "Var" && func.type !== "Lit" && func.type !== "App" ? `(${f})` : f;
+					const wrappedArg = arg.type === "Abs" || arg.type === "App" ? `(${a})` : a;
 
-		.with({ type: "Annotation" }, ({ term, ann }) => `${display(term)} : ${display(ann)}`)
-		.with({ type: "Row" }, ({ row }) =>
-			R.display({
-				term: display,
-				var: (v: EB.Variable) => display({ type: "Var", variable: v }),
-			})(row),
-		)
-		.with({ type: "Proj" }, ({ label, term }) => `(${display(term)}).${label}`)
-		.with({ type: "Inj" }, ({ label, value, term }) => `{ ${display(term)} | ${label} = ${display(value)} }`)
-		.with({ type: "Match" }, ({ scrutinee, alternatives }) => {
-			const scut = display(scrutinee);
-			const alts = alternatives.map(Alt.display).join("\n");
-			return `match ${scut}\n${alts}`;
-		})
-		.with({ type: "Block" }, ({ statements, return: ret }) => {
-			const stmts = statements.map(Stmt.display).join("; ");
-			return `{ ${stmts}; return ${display(ret)}; }`;
-		})
+					return `${wrappedFn} ${Icit.display(icit)}${wrappedArg}`;
+				})
 
-		.exhaustive();
-	//.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
+				.with({ type: "Annotation" }, ({ term, ann }) => `${_display(term)} : ${_display(ann)}`)
+				.with({ type: "Row" }, ({ row }) =>
+					R.display({
+						term: _display,
+						var: (v: EB.Variable) => _display({ type: "Var", variable: v }),
+					})(row),
+				)
+				.with({ type: "Proj" }, ({ label, term }) => `(${_display(term)}).${label}`)
+				.with({ type: "Inj" }, ({ label, value, term }) => `{ ${_display(term)} | ${label} = ${_display(value)} }`)
+				.with({ type: "Match" }, ({ scrutinee, alternatives }) => {
+					const scut = _display(scrutinee);
+					const alts = alternatives.map(a => Alt.display(a, zonker)).join("\n");
+					return `match ${scut}\n${alts}`;
+				})
+				.with({ type: "Block" }, ({ statements, return: ret }) => {
+					const stmts = statements.map(s => Stmt.display(s, zonker)).join("; ");
+					return `{ ${stmts}; return ${_display(ret)}; }`;
+				})
+
+				//.otherwise(tm => `_display Term ${tm.type}: Not implemented`);
+				.exhaustive()
+		);
+	};
+	return _display(term);
 };
 
-const displayConstraint = (constraint: EB.Constraint): string => {
+const displayConstraint = (constraint: EB.Constraint, zonker: EB.Zonker): string => {
 	if (constraint.type === "assign") {
-		return `${NF.display(constraint.left)} ~~ ${NF.display(constraint.right)}`;
+		return `${NF.display(constraint.left, zonker)} ~~ ${NF.display(constraint.right, zonker)}`;
 	}
 
 	if (constraint.type === "usage") {
@@ -78,7 +89,7 @@ const displayConstraint = (constraint: EB.Constraint): string => {
 	}
 
 	if (constraint.type === "resolve") {
-		return `?${constraint.meta.val}\n@ ${NF.display(constraint.annotation)}`;
+		return `?${constraint.meta.val}\n@ ${NF.display(constraint.annotation, zonker)}`;
 	}
 
 	return "Unknown Constraint";
@@ -86,8 +97,8 @@ const displayConstraint = (constraint: EB.Constraint): string => {
 
 const displayContext = (context: EB.Context): object => {
 	const pretty = {
-		env: context.env.map(NF.display),
-		types: context.types.map(([binder, origin, mv]) => `${displayBinder(binder.type)} ${binder.variable} (${origin}): ${NF.display(mv)}`),
+		env: context.env.map(ty => NF.display(ty, context.zonker)),
+		types: context.types.map(([binder, origin, mv]) => `${displayBinder(binder.type)} ${binder.variable} (${origin}): ${NF.display(mv, context.zonker)}`),
 		names: context.names,
 		imports: context.imports,
 	};
@@ -104,7 +115,7 @@ const displayBinder = (binder: EB.Binder["type"]): string => {
 };
 
 const Alt = {
-	display: (alt: EB.Alternative): string => `| ${Pat.display(alt.pattern)} -> ${display(alt.term)}`,
+	display: (alt: EB.Alternative, zonker: EB.Zonker): string => `| ${Pat.display(alt.pattern)} -> ${display(alt.term, zonker)}`,
 };
 
 const Pat = {
@@ -147,10 +158,10 @@ const Pat = {
 };
 
 const Stmt = {
-	display: (stmt: EB.Statement): string => {
+	display: (stmt: EB.Statement, zonker: EB.Zonker): string => {
 		return match(stmt)
-			.with({ type: "Expression" }, ({ value }) => display(value))
-			.with({ type: "Let" }, ({ variable, value, annotation }) => `let ${variable}\n\t: ${display(annotation)}\n\t= ${display(value)}`)
+			.with({ type: "Expression" }, ({ value }) => display(value, zonker))
+			.with({ type: "Let" }, ({ variable, value, annotation }) => `let ${variable}\n\t: ${display(annotation, zonker)}\n\t= ${display(value, zonker)}`)
 			.otherwise(() => "Statement Display: Not implemented");
 	},
 };
