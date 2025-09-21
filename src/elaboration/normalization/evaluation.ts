@@ -12,6 +12,7 @@ import * as F from "fp-ts/lib/function";
 import * as R from "@yap/shared/rows";
 import { Option } from "fp-ts/lib/Option";
 import * as O from "fp-ts/lib/Option";
+import * as A from "fp-ts/lib/NonEmptyArray";
 
 export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 	//Log.push("eval");
@@ -41,7 +42,17 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			return ctx.env[variable.index][0];
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
-			return NF.Constructors.Neutral(NF.Constructors.Var(variable));
+			const val = ctx.ffi[variable.name];
+			if (!val) {
+				return NF.Constructors.Neutral(NF.Constructors.Var(variable));
+			}
+
+			if (val && val.arity === 0) {
+				return val.compute();
+			}
+
+			const external = NF.Constructors.External(variable.name, val.arity, val.compute, []);
+			return external;
 		})
 
 		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) =>
@@ -75,9 +86,22 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 					})
 					.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
 					.with({ type: "Var", variable: { type: "Meta" } }, _ => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
+					.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
+
 					.with({ type: "App" }, ({ func, arg }) => {
 						const nff = reduce(func, arg);
 						return NF.Constructors.App(nff, nfa, icit);
+					})
+					.with({ type: "External" }, ({ name, args, arity, compute }) => {
+						if (arity === 0) {
+							return compute();
+						}
+
+						const accumulated = [...args, nfa];
+						if (accumulated.length === arity) {
+							return compute(...accumulated);
+						}
+						return NF.Constructors.External(name, arity, compute, accumulated);
 					})
 					.otherwise(() => {
 						throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
@@ -167,9 +191,14 @@ export const matching = (ctx: EB.Context, tm: NF.Value, alts: EB.Alternative[]):
 
 export const apply = (binder: EB.Binder, closure: NF.Closure, value: NF.Value, multiplicity: Q.Multiplicity = Q.Zero): NF.Value => {
 	const { ctx, term } = closure;
-
 	const extended = EB.extend(ctx, binder, [value, multiplicity]);
-	return evaluate(extended, term);
+
+	if (closure.type === "Closure") {
+		return evaluate(extended, term);
+	}
+
+	const args = extended.env.slice(0, closure.arity).map(([v]) => v);
+	return closure.compute(...args);
 };
 
 export const unwrapNeutral = (value: NF.Value): NF.Value => {

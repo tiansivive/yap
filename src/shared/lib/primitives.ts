@@ -6,6 +6,7 @@ import * as Q from "@yap/shared/modalities/multiplicity"
 import * as Lit from "@yap/shared/literals"
 
 import { defaultContext } from "@yap/shared/lib/constants"
+import { isEqual } from "lodash"
 
 export const Terms = {
     Type: EB.Constructors.Lit(Lit.Type()),
@@ -41,26 +42,31 @@ export const NormalForms = {
 
 
 const Num_Num_Num = NF.Constructors.Pi("x", "Explicit", [NormalForms.Num, Q.Many], {
+    type: "Closure",
     ctx: defaultContext,
     term: EB.Constructors.Pi("y", "Explicit", Q.Many, Terms.Num, Terms.Num)
 })
 
 const Num_Num_Bool = NF.Constructors.Pi("x", "Explicit", [NormalForms.Num, Q.Many], {
+    type: "Closure",
     ctx: defaultContext,
     term: EB.Constructors.Pi("y", "Explicit", Q.Many, Terms.Num, Terms.Bool)
 })
 
 const Bool_Bool_Bool = NF.Constructors.Pi("x", "Explicit", [NormalForms.Bool, Q.Many], {
+    type: "Closure",
     ctx: defaultContext,
     term: EB.Constructors.Pi("y", "Explicit", Q.Many, Terms.Bool, Terms.Bool)
 })
 
 const Type_Type_Type = NF.Constructors.Pi("x", "Explicit", [NF.Type, Q.Many], {
+    type: "Closure",
     ctx: defaultContext,
     term: EB.Constructors.Pi("y", "Explicit", Q.Many, Terms.Type, Terms.Type)
 })
 
 const BinaryOp = (ty: NF.Value, tm: EB.Term) => NF.Constructors.Pi("x", "Explicit", [ty, Q.Many], {
+    type: "Closure",
     ctx: defaultContext,
     term: EB.Constructors.Pi("y", "Explicit", Q.Many, tm, tm)
 })
@@ -87,6 +93,30 @@ export const Elaborated: EB.Context['imports'] = {
 
 }
 
+const typecheckNum = (val: NF.Value): val is { type: "Lit", value: { type: "Num", value: number } } => val.type === "Lit" && val.value.type === "Num"
+const arithmetic = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => number): NF.Value => {
+    if (!typecheckNum(x)) throw new Error(`Expected number, got ${NF.display(x, {})}`);
+    if (!typecheckNum(y)) throw new Error(`Expected number, got ${NF.display(y, {})}`);
+    const val = fn(x.value.value, y.value.value);
+    return NF.Constructors.Lit(Lit.Num(val));
+}
+
+const typecheckBool = (val: NF.Value): val is { type: "Lit", value: { type: "Bool", value: boolean } } => val.type === "Lit" && val.value.type === "Bool"
+
+const logical = (x: NF.Value, y: NF.Value, fn: (a: boolean, b: boolean) => boolean): NF.Value => {
+    if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${NF.display(x, {})}`);
+    if (!typecheckBool(y)) throw new Error(`Expected boolean, got ${NF.display(y, {})}`);
+    const val = fn(x.value.value, y.value.value);
+    return NF.Constructors.Lit(Lit.Bool(val));
+}
+
+const comparison = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => boolean): NF.Value => {
+    if (!typecheckNum(x)) throw new Error(`Expected number, got ${NF.display(x, {})}`);
+    if (!typecheckNum(y)) throw new Error(`Expected number, got ${NF.display(y, {})}`);
+    const val = fn(x.value.value, y.value.value);
+    return NF.Constructors.Lit(Lit.Bool(val));
+}
+
 export const FFI = {
     Indexed: (index: unknown) => (value: unknown) => (strat: unknown) => ({ index, value, strat }),
     defaultHashMap: "<Placeholder> default_hash_map",
@@ -103,5 +133,21 @@ export const FFI = {
     $gt: (x: any) => (y: any) => x > y,
     $lte: (x: any) => (y: any) => x <= y,
     $gte: (x: any) => (y: any) => x >= y,
+
+}
+
+export const PrimOps: EB.Context['ffi'] = {
+    $add: { arity: 2, compute: (x: NF.Value, y: NF.Value) => arithmetic(x, y, (a, b) => a + b) },
+    $sub: { arity: 2, compute: (x: NF.Value, y: NF.Value) => arithmetic(x, y, (a, b) => a - b) },
+    $mul: { arity: 2, compute: (x: NF.Value, y: NF.Value) => arithmetic(x, y, (a, b) => a * b) },
+    $div: { arity: 2, compute: (x: NF.Value, y: NF.Value) => arithmetic(x, y, (a, b) => a / b) },
+    $and: { arity: 2, compute: (x: NF.Value, y: NF.Value) => logical(x, y, (a, b) => a && b) },
+    $or: { arity: 2, compute: (x: NF.Value, y: NF.Value) => logical(x, y, (a, b) => a || b) },
+    $eq: { arity: 2, compute: (x: NF.Value, y: NF.Value) => NF.Constructors.Lit(Lit.Bool(isEqual(x, y))) },
+    $neq: { arity: 2, compute: (x: NF.Value, y: NF.Value) => NF.Constructors.Lit(Lit.Bool(!isEqual(x, y))) },
+    $lt: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a < b) },
+    $gt: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a > b) },
+    $lte: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a <= b) },
+    $gte: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a >= b) },
 
 }

@@ -41,7 +41,7 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): V2.Elaborati
 	return match(c)
 		.with({ type: "assign" }, ({ left, right, lvl }) =>
 			V2.Do<Subst, Subst>(function* () {
-				const sub = yield U.unify(left, right, lvl, subst);
+				const sub = yield* V2.local(F.identity, V2.track(c.trace, U.unify(left, right, lvl, subst)));
 				const sol = yield _solve(rest, _ctx, sub);
 				return sol;
 			}),
@@ -57,7 +57,7 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): V2.Elaborati
 };
 
 export const displayProvenance = (provenance: EB.Provenance[] = [], opts = { cap: 10 }, zonker: EB.Zonker): string => {
-	return A.reverse(provenance)
+	return A.reverse(A.chunksOf(3)(provenance))
 		.map(p => {
 			const pretty = (([type, val]) => {
 				if (type === "unify") {
@@ -87,29 +87,29 @@ export const displayProvenance = (provenance: EB.Provenance[] = [], opts = { cap
 
 			const [id, val, metadata] = p;
 
-			const loc = id === "src" ? `@ line: ${val.location.from.line}, col: ${val.location.from.column}\n` : "";
+			const loc = id === "src" ? `\n@ line: ${val.location.from.line}, col: ${val.location.from.column}\n` : "\n";
 
 			if (metadata?.action === "checking") {
-				const reason = metadata.description ? `\nReason: ${metadata.description}` : "";
+				const reason = metadata.description ? `\n\nReason: ${metadata.description}` : "";
 				const msg = `While checking:\n\t${pretty}\nagainst:\n\t${NF.display(metadata.against, zonker)}${reason}`;
-				return `${loc}${msg}`;
+				return `${msg}\n${loc}`;
 			}
 			if (metadata?.action === "alternative") {
 				const msg = `In alternative:\n\t${pretty}\nwith type:\n\t${NF.display(metadata.type, zonker)}\nWhile: ${metadata.motive}`;
-				return `${loc}${msg}`;
+				return `${msg}\n${loc}`;
 			}
 			if (metadata?.action === "infer") {
-				const reason = metadata.description ? `\nReason: ${metadata.description}` : "";
+				const reason = metadata.description ? `\n\nReason: ${metadata.description}` : "";
 				const msg = `While inferring:\n\t${pretty}${reason}`;
-				return `${loc}${msg}`;
+				return `${msg}\n${loc}`;
 			}
 			if (metadata?.action === "unification") {
-				const msg = `\nWhile unifiying:\n\t${pretty}`;
-				return `${loc}${msg}`;
+				const msg = `\nWhile unifying:\n\t${pretty}`;
+				return `${msg}\n${loc}`;
 			}
 
 			return "displayProvenance: Not implemented yet:\n" + JSON.stringify(p);
 		})
 		.slice(0, opts.cap)
-		.join("\n--------------------------------------------------------------------------------------------");
+		.join("\n--------------------------------------------------------------------------------------------\n\n");
 };

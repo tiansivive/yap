@@ -109,6 +109,18 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 						return [EB.Constructors.Struct(r), us] satisfies Result;
 					}),
 				)
+				.with(
+					[
+						{ type: "lit", value: { type: "Num" } },
+						{ type: "Lit", value: { type: "Num" } },
+					],
+					([tm, val]) => {
+						if (tm.value.value === val.value.value) {
+							return V2.of([EB.Constructors.Lit(tm.value), Q.noUsage(ctx.env.length)] satisfies Result);
+						}
+						return V2.Do(() => V2.fail(Err.TypeMismatch(NF.Constructors.Lit(tm.value), val)));
+					},
+				)
 
 				.otherwise(([src, ty]) =>
 					V2.Do(() =>

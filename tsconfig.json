@@ -14,10 +14,10 @@
 		"target": "ESNext",
 		"noErrorTruncation": false,
 		"paths": {
-			"@yap/shared/*": ["./src/shared/*"],
-			"@yap/src/*": ["./src/parser/*"],
 			"@yap/elaboration": ["./src/elaboration/index"],
 			"@yap/elaboration/*": ["./src/elaboration/*"],
+			"@yap/src/*": ["./src/parser/*"],
+			"@yap/shared/*": ["./src/shared/*"],
 			"@yap/utils": ["./src/utils/index"]
 		}
 	},

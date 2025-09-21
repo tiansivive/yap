@@ -5,6 +5,7 @@ import * as F from "fp-ts/function";
 
 import { Either } from "fp-ts/lib/Either";
 import { Cause } from "./errors";
+import * as Errors from "./errors";
 
 import { URIS, Kind, URItoKind } from "fp-ts/HKT";
 import { Monad1 } from "fp-ts/Monad";
@@ -20,6 +21,12 @@ type Collector<A> = {
 type Accumulator = Omit<Collector<unknown>, "result">;
 
 export type Err = Cause & { provenance?: EB.Provenance[] };
+
+export const display = (err: Err, zonker: EB.Zonker): string => {
+	const cause = Errors.display(err, zonker);
+	const prov = err.provenance ? EB.displayProvenance(err.provenance, { cap: 100 }, zonker) : "";
+	return prov ? `${cause}\n\nTrace:\n${prov}` : cause;
+};
 
 /************************************************************************************************************************
  * Functor combinators
@@ -171,6 +178,13 @@ export const fail = function* <A>(cause: Err): Generator<Elaboration<any>, A, an
 	const ctx = yield* ask();
 	return yield* liftE(E.left({ ...cause, provenance: ctx.trace.concat(cause.provenance || []) }));
 };
+
+// export const catchErr = function* <A>(handler: (err: Err) => Elaboration<A>): Generator<Elaboration<A>, A, A> {
+// 	return yield* (ctx: EB.Context) => {
+// 		const result = handler(ctx);
+// 		return mkCollector(result);
+// 	};
+// };
 
 export const lift = function* <A>(a: A): Generator<Elaboration<A>, A, A> {
 	return yield _ => mkCollector(a);

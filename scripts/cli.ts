@@ -47,6 +47,7 @@ program
 			trace: [],
 			imports: { ...Lib.Elaborated },
 			zonker: {},
+			ffi: Lib.PrimOps,
 		};
 		const runCode = (input: string) => {
 			try {

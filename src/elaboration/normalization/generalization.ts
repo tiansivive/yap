@@ -83,7 +83,7 @@ export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Contex
 		const variable = String.fromCharCode(charCode + idx);
 		// Quote with all binders in scope: lvl = ms.length - i
 		const term = NF.quote(extendedCtx, ms.length - i, body);
-		return NF.Constructors.Pi(variable, "Implicit", [m.ann, Q.Many], { ctx: extendedCtx, term });
+		return NF.Constructors.Pi(variable, "Implicit", [m.ann, Q.Many], NF.Constructors.Closure(extendedCtx, term));
 	}, val);
 
 	// Return the extended ctx so callers can keep the zonker mapping for subsequent passes (instantiate, etc.)

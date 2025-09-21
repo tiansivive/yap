@@ -65,12 +65,16 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 
 			return EB.Constructors.Row(_quote(row));
 		})
+		.with({ type: "External" }, ({ name, arity, compute, args }) => {
+			return args.reduce((acc, arg) => EB.Constructors.App("Explicit", acc, quote(ctx, lvl, arg)), EB.Constructors.Var({ type: "Foreign", name }));
+		})
 		.otherwise(nf => {
 			throw new Error("Quote: Not implemented yet: " + NF.display(nf, ctx.zonker));
 		});
 };
 
 export const closeVal = (ctx: EB.Context, value: NF.Value): NF.Closure => ({
+	type: "Closure",
 	ctx,
 	term: NF.quote(ctx, ctx.env.length + 1, value),
 });

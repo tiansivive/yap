@@ -16,7 +16,8 @@ export type Value =
 	| { type: "App"; func: Value; arg: Value; icit: Implicitness }
 	| { type: "Row"; row: Row }
 	| { type: "Abs"; binder: Binder; closure: Closure }
-	| { type: "Neutral"; value: Value };
+	| { type: "Neutral"; value: Value }
+	| { type: "External"; name: string; arity: number; compute: (...args: Value[]) => Value; args: Value[] };
 
 export type Row = R.Row<Value, Variable>;
 
@@ -35,10 +36,9 @@ export type Variable =
 	 */
 	| { type: "Meta"; val: number; lvl: number; ann: Value };
 
-export type Closure = {
-	ctx: EB.Context;
-	term: EB.Term;
-};
+export type Closure =
+	| { type: "Closure"; ctx: EB.Context; term: EB.Term }
+	| { type: "PrimOp"; ctx: EB.Context; term: EB.Term; arity: number; compute: (...args: Value[]) => Value };
 
 export type Env = ModalValue[];
 
@@ -84,13 +84,16 @@ export const Constructors = {
 		arg,
 		icit,
 	}),
-	Closure: (ctx: EB.Context, term: EB.Term): Closure => ({ ctx, term }),
+	Closure: (ctx: EB.Context, term: EB.Term): Closure => ({ type: "Closure", ctx, term }),
+	Primop: (ctx: EB.Context, term: EB.Term, arity: number, compute: (...args: Value[]) => Value): Closure => ({ type: "PrimOp", ctx, term, arity, compute }),
 
 	Row: (row: Row): Value => ({ type: "Row", row }),
 	Extension: (label: string, value: Value, row: Row): Row => ({ type: "extension", label, value, row }),
 
 	Schema: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit")),
 	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),
+
+	External: (name: string, arity: number, compute: (...args: Value[]) => Value, args: Value[]): Value => ({ type: "External", name, arity, compute, args }),
 };
 
 export const Type: Value = {

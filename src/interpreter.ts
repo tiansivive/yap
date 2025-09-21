@@ -71,7 +71,8 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		const result = EB.Mod.expression(stmt, ctx);
 
 		if (E.isLeft(result)) {
-			console.error(`Error interpreting expression: ${result.left}`);
+			console.warn(EB.V2.display(result.left, ctx.zonker));
+			//console.error(`Error interpreting expression: ${result.left}`);
 			return ctx;
 		}
 
