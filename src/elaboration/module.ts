@@ -77,7 +77,18 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 		return next(tail, ctx);
 	};
 
-	return next(mod.content.script, ctx);
+	const result = next(mod.content.script, ctx);
+	console.log("\n================ Module Elaboration ================\n");
+	console.log("Exports:");
+	console.log(result.exports);
+	console.log("Foreigns:");
+	console.log(result.foreign);
+	console.log("Let Declarations:");
+	console.log(result.letdecs);
+	console.log("Errors:");
+	console.log(result.errors);
+	console.log("\n===================================================\n");
+	return result;
 };
 
 export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context]>] => {
@@ -107,7 +118,7 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 		//const tyZonked = yield* EB.zonk.gen("nf", ty, subst);
 		const zonked = set(ctx, "zonker", Sub.compose(subst, ctx.zonker));
 		const [generalized, next] = NF.generalize(ty, zonked);
-		const instantiated = NF.instantiate(generalized, next);
+		const instantiated = NF.instantiate(generalized, next.zonker);
 
 		const wrapped = F.pipe(
 			EB.Icit.instantiate(elaborated.value, subst),
@@ -117,9 +128,9 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 
 		console.log("\n-----------------------------------------------------------");
 		console.log("LETDEC");
-		console.log("Elaborated:\n", EB.Display.Statement(elaborated, ctx.zonker));
-		console.log("Wrapped:\n", EB.Display.Term(wrapped, ctx.zonker));
-		console.log("Instantiated:\n", NF.display(instantiated, ctx.zonker));
+		console.log("Elaborated:\n", EB.Display.Statement(elaborated, next.zonker));
+		console.log("Wrapped:\n", EB.Display.Term(wrapped, next.zonker));
+		console.log("Instantiated:\n", NF.display(instantiated, next.zonker));
 
 		const ast: EB.AST = [wrapped, instantiated, us];
 		return [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];

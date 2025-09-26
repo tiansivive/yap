@@ -1,5 +1,6 @@
 import * as EB from "@yap/elaboration"
 import * as Lib from "@yap/shared/lib/primitives"
+import * as Sub from "@yap/elaboration/unification/substitution";
 
 export const defaultContext: EB.Context = {
     env: [],
@@ -9,6 +10,6 @@ export const defaultContext: EB.Context = {
     sigma: {},
     trace: [],
     imports: { ...Lib.Elaborated },
-    zonker: {},
+    zonker: Sub.empty,
     ffi: {},
 };

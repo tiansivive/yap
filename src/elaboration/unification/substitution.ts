@@ -1,6 +1,11 @@
 import * as NF from "@yap/elaboration/normalization";
 
-export type Subst = Record<number, NF.Value>;
+const Substitution: unique symbol = Symbol("Substitution");
+export type Subst = Record<number, NF.Value> & { [Substitution]: void };
+
+export const empty: Subst = { [Substitution]: void 0 };
+export const of = (k: number, v: NF.Value): Subst => ({ [k]: v, [Substitution]: void 0 });
+export const from = (record: Record<number, NF.Value>): Subst => ({ ...record, [Substitution]: void 0 });
 
 export const display = (subst: Subst, separator = "\n"): string => {
 	if (Object.keys(subst).length === 0) {

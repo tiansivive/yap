@@ -45,41 +45,34 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 					return inferred;
 				}),
 			)
-			.with(
-				NF.Patterns.Schema,
-				({
-					func: {
-						value: { value },
-					},
-				}) => value === "Schema" || value === "Variant",
-				({ func, arg }) =>
-					V2.Do(function* () {
-						const from = (l: string, row: NF.Row): [NF.Row, NF.Value] =>
-							match(row)
-								.with({ type: "empty" }, _ => {
-									throw new Error("Label not found: " + l);
-								})
-								.with(
-									{ type: "extension" },
-									({ label: l_ }) => l === l_,
-									({ label, value, row }): [NF.Row, NF.Value] => [NF.Constructors.Extension(label, value, row), value],
-								)
-								.with({ type: "extension" }, (r): [NF.Row, NF.Value] => {
-									const [rr, vv] = from(l, r);
-									return [NF.Constructors.Extension(r.label, r.value, rr), vv];
-								})
-								.with({ type: "variable" }, (r): [NF.Row, NF.Value] => {
-									const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
-									const val = NF.evaluate(ctx, EB.Constructors.Var(EB.freshMeta(ctx.env.length, kind)));
-									return [NF.Constructors.Extension(l, val, r), val];
-								})
-								.exhaustive();
+			.with(NF.Patterns.Schema, ({ func, arg }) =>
+				V2.Do(function* () {
+					const from = (l: string, row: NF.Row): [NF.Row, NF.Value] =>
+						match(row)
+							.with({ type: "empty" }, _ => {
+								throw new Error("Label not found: " + l);
+							})
+							.with(
+								{ type: "extension" },
+								({ label: l_ }) => l === l_,
+								({ label, value, row }): [NF.Row, NF.Value] => [NF.Constructors.Extension(label, value, row), value],
+							)
+							.with({ type: "extension" }, (r): [NF.Row, NF.Value] => {
+								const [rr, vv] = from(l, r);
+								return [NF.Constructors.Extension(r.label, r.value, rr), vv];
+							})
+							.with({ type: "variable" }, (r): [NF.Row, NF.Value] => {
+								const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
+								const val = NF.evaluate(ctx, EB.Constructors.Var(EB.freshMeta(ctx.env.length, kind)));
+								return [NF.Constructors.Extension(l, val, r), val];
+							})
+							.exhaustive();
 
-						const [r, v] = from(label, arg.row);
-						const inferred = NF.Constructors.App(func, NF.Constructors.Row(r), "Explicit");
-						yield* V2.tell("constraint", { type: "assign", left: inferred, right: ty });
-						return v;
-					}),
+					const [r, v] = from(label, arg.row);
+					const inferred = NF.Constructors.App(func, NF.Constructors.Row(r), "Explicit");
+					yield* V2.tell("constraint", { type: "assign", left: inferred, right: ty });
+					return v;
+				}),
 			)
 			.otherwise(_ => {
 				throw new Error("Expected Row Type");

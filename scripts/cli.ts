@@ -9,6 +9,8 @@ import * as EB from "@yap/elaboration";
 import * as Lib from "@yap/shared/lib/primitives";
 import { options } from "@yap/shared/config/options";
 
+import * as Sub from "@yap/elaboration/unification/substitution";
+
 const program = new Command();
 
 program
@@ -50,7 +52,7 @@ program
 			sigma: {},
 			trace: [],
 			imports: { ...Lib.Elaborated },
-			zonker: {},
+			zonker: Sub.empty,
 			ffi: Lib.PrimOps,
 		};
 		const runCode = (input: string) => {

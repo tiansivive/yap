@@ -107,7 +107,7 @@ export const resolveImplicit = (nf: NF.Value): V2.Elaboration<[EB.Term, Sub.Subs
 			}
 
 			const [[term, value], ...rest] = implicits;
-			const unification = U.unify(nf, value, ctx.env.length, {});
+			const unification = U.unify(nf, value, ctx.env.length, Sub.empty);
 			const result = unification(ctx).result;
 
 			if (E.isRight(result)) {

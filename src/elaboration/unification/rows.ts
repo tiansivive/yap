@@ -126,7 +126,7 @@ const rewrite = (r: NF.Row, label: string, s: Subst): V2.Elaboration<[NF.Row, Su
 			.with(
 				{ type: "extension" },
 				({ label: l }) => label === l,
-				({ label: l, value, row }) => V2.of<[NF.Row, Subst]>([R.Constructors.Extension(l, value, row), {}]),
+				({ label: l, value, row }) => V2.of<[NF.Row, Subst]>([R.Constructors.Extension(l, value, row), Sub.empty]),
 			)
 			.with(
 				{ type: "extension" },
@@ -168,7 +168,7 @@ const rewrite = (r: NF.Row, label: string, s: Subst): V2.Elaboration<[NF.Row, Su
 				const tvar = NF.Constructors.Var(EB.freshMeta(lvl, kvar));
 				const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta(lvl, NF.Row));
 				const rf = R.Constructors.Extension(label, tvar, rvar);
-				const sub = { [variable.val]: NF.Constructors.Row(rf) };
+				const sub = Sub.of(variable.val, NF.Constructors.Row(rf));
 				return V2.of<[NF.Row, Subst]>([rf, sub]);
 			})
 			.exhaustive();

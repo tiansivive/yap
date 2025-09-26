@@ -4,7 +4,7 @@ import * as Src from "@yap/src/index";
 
 import * as V2 from "@yap/elaboration/shared/monad.v2";
 
-import * as Q from "@yap/shared/modalities/multiplicity";
+import * as Sub from "@yap/elaboration/unification/substitution";
 
 import { Either } from "fp-ts/lib/Either";
 import { Option } from "fp-ts/lib/Option";
@@ -88,21 +88,21 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts
 		trace: [],
 		imports: { ...Lib.Elaborated, ...R.fromEntries(allImports) },
 		sigma: {},
-		zonker: {},
+		zonker: Sub.empty,
 		ffi: {},
 	};
 
 	const iface: Interface = F.pipe(EB.Mod.elaborate(mod, localModuleCtx), setProp("imports", importsPerFile));
 	iface.errors.forEach(err => {
-		V2.display(err, {});
-		console.error(displayProvenance(err.provenance || [], { cap: 100 }, {}));
+		V2.display(err, Sub.empty);
+		console.error(displayProvenance(err.provenance || [], { cap: 100 }, Sub.empty));
 	});
 
 	iface.letdecs.forEach(([name, result]) => {
 		if (E.isLeft(result)) {
 			console.warn(`Error in module ${moduleName} for let ${name}: ${result.left}`);
-			V2.display(result.left, {});
-			console.error(displayProvenance(result.left.provenance || [], { cap: 100 }, {}));
+			V2.display(result.left, Sub.empty);
+			console.error(displayProvenance(result.left.provenance || [], { cap: 100 }, Sub.empty));
 		}
 	});
 

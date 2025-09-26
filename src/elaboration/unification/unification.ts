@@ -14,7 +14,6 @@ import { update } from "@yap/utils";
 
 import * as Row from "@yap/elaboration/unification/rows";
 
-const empty: Subst = {};
 export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst): V2.Elaboration<Subst> => {
 	if (left.type === "Neutral") {
 		return unify(left.value, right, lvl, subst);
@@ -158,7 +157,7 @@ unify.gen = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst) => V2.p
 type Meta = Extract<EB.Variable, { type: "Meta" }>;
 export const bind = (ctx: EB.Context, v: Meta, ty: NF.Value): Subst => {
 	if (ty.type === "Var" && _.isEqual(ty.variable, v)) {
-		return empty;
+		return Sub.empty;
 	}
 
 	if (!occursCheck(ctx, v, ty)) {
@@ -172,9 +171,9 @@ export const bind = (ctx: EB.Context, v: Meta, ty: NF.Value): Subst => {
 			// An alternative would be higher-order unification, which is more complex to implement, but more powerful.
 			//const _ty = { ...ty, closure: { ...ty.closure, env: ty.closure.env.slice(-v.lvl) } };
 			const _ty = update(ty, "closure.ctx", ctx => EB.prune(ctx, v.lvl));
-			return { [v.val]: _ty };
+			return Sub.of(v.val, _ty);
 		}
-		return { [v.val]: ty };
+		return Sub.of(v.val, ty);
 	}
 
 	// solution is a mu type

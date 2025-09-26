@@ -4,6 +4,7 @@ import { U } from "@yap/elaboration";
 import * as Src from "@yap/src/index";
 import * as NF from "@yap/elaboration/normalization";
 import { match, P } from "ts-pattern";
+import * as Sub from "@yap/elaboration/unification/substitution";
 import { Subst } from "@yap/elaboration/unification/substitution";
 
 import * as Err from "@yap/elaboration/shared/errors";
@@ -13,8 +14,6 @@ import * as F from "fp-ts/lib/function";
 import * as A from "fp-ts/Array";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
-
-const empty: Subst = {};
 
 export type Constraint =
 	| { type: "assign"; left: NF.Value; right: NF.Value; lvl: number }
@@ -26,7 +25,7 @@ type Ctaint = EB.WithProvenance<Constraint>;
 export const solve = (cs: Array<Ctaint>): V2.Elaboration<Subst> =>
 	V2.Do(function* () {
 		const ctx = yield* V2.ask();
-		const solution = yield* V2.pure(_solve(cs, ctx, empty));
+		const solution = yield* V2.pure(_solve(cs, ctx, Sub.empty));
 
 		return solution;
 	});
