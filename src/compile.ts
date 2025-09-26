@@ -2,6 +2,7 @@ import * as Mod from "./modules/loading";
 import * as CG from "./Codegen/modules";
 
 import fs from "fs";
+import beautify from "js-beautify";
 
 export type Options = {
 	outDir: string;
@@ -20,7 +21,7 @@ export const compile = (file: string, options: Options) => {
 		Object.entries(Mod.globalModules).forEach(([filepath, iface]) => {
 			console.log("Loaded module: " + filepath);
 			const code = CG.codegen(iface, filepath);
-
+			const formatted = beautify.js(code, { indent_size: 2 });
 			const FFIfile = filepath.replace(".yap", ".ffi.js");
 
 			const path = options.baseUrl + FFIfile;
@@ -30,7 +31,7 @@ export const compile = (file: string, options: Options) => {
 
 			const outfile = filepath.replace(".yap", ".js");
 			console.log("Writing: " + outfile);
-			fs.writeFileSync(options.outDir + outfile.split("/").pop(), code);
+			fs.writeFileSync(options.outDir + outfile.split("/").pop(), formatted);
 			console.log("Generated: " + outfile);
 		});
 	} catch (e) {

@@ -60,5 +60,6 @@ export const display = (value: NF.Value | NF.ModalValue, zonker: EB.Zonker): str
 				var: (v: NF.Variable) => display({ type: "Var", variable: v }, zonker),
 			})(row),
 		)
-		.exhaustive();
+		.run();
+	//.exhaustive();
 };

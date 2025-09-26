@@ -1,9 +1,6 @@
 import { match, P } from "ts-pattern";
 import _ from "lodash";
 
-import * as F from "fp-ts/lib/function";
-import * as A from "fp-ts/Array";
-
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
@@ -13,24 +10,23 @@ import { Subst } from "./substitution";
 import * as Err from "@yap/elaboration/shared/errors";
 import * as R from "@yap/shared/rows";
 
-import { number } from "fp-ts";
 import { update } from "@yap/utils";
 
 import * as Row from "@yap/elaboration/unification/rows";
 
 const empty: Subst = {};
-export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst): V2.Elaboration<Subst> =>
-	V2.track(
+export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst): V2.Elaboration<Subst> => {
+	if (left.type === "Neutral") {
+		return unify(left.value, right, lvl, subst);
+	}
+
+	if (right.type === "Neutral") {
+		return unify(left, right.value, lvl, subst);
+	}
+
+	return V2.track(
 		["unify", [left, right], { action: "unification" }],
 		V2.Do(function* () {
-			if (left.type === "Neutral") {
-				return yield* unify.gen(left.value, right, lvl, subst);
-			}
-
-			if (right.type === "Neutral") {
-				return yield* unify.gen(left, right.value, lvl, subst);
-			}
-
 			const ctx = yield* V2.ask();
 			const unifier = match([left, right])
 				.with([NF.Patterns.Flex, NF.Patterns.Flex], ([meta1, meta2]) =>
@@ -39,6 +35,16 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						const s1 = yield* unify.gen(meta1.variable.ann, meta2.variable.ann, lvl, s);
 						return s1;
 					}),
+				)
+				.with(
+					[NF.Patterns.Flex, P._],
+					([{ variable }]) => !!subst[variable.val],
+					([meta, v]) => unify(subst[meta.variable.val], v, lvl, subst),
+				)
+				.with(
+					[P._, NF.Patterns.Flex],
+					([v, { variable }]) => !!subst[variable.val],
+					([v, meta]) => unify(v, subst[meta.variable.val], lvl, subst),
 				)
 				.with([NF.Patterns.Flex, P._], ([meta, v]) => V2.of(Sub.compose(bind(ctx, meta.variable, v), subst)))
 				.with([P._, NF.Patterns.Flex], ([v, meta]) => V2.of(Sub.compose(bind(ctx, meta.variable, v), subst)))
@@ -65,7 +71,6 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 					([pi1, pi2]) => pi1.binder.icit === pi2.binder.icit,
 					([pi1, pi2]) =>
 						V2.Do(function* () {
-							const ctx = yield* V2.ask();
 							const sub = yield* V2.pure(unify(pi1.binder.annotation[0], pi2.binder.annotation[0], lvl, subst));
 							const composed = Sub.compose(sub, subst);
 							const body1 = NF.apply(pi1.binder, pi1.closure, NF.Constructors.Rigid(lvl));
@@ -75,7 +80,6 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				)
 				.with([NF.Patterns.Mu, NF.Patterns.Mu], ([mu1, mu2]) =>
 					V2.Do(function* () {
-						const ctx = yield* V2.ask();
 						const sub = yield* V2.pure(unify(mu1.binder.annotation[0], mu2.binder.annotation[0], lvl, subst));
 						const composed = Sub.compose(sub, subst);
 						const body1 = NF.apply(mu1.binder, mu1.closure, NF.Constructors.Rigid(lvl));
@@ -124,7 +128,6 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				)
 				.with([NF.Patterns.Row, NF.Patterns.Row], ([{ row: r1 }, { row: r2 }]) =>
 					V2.Do(function* () {
-						const ctx = yield* V2.ask();
 						const sub = yield* Row.unify.gen(r1, r2, subst);
 						return Sub.compose(sub, subst);
 					}),
@@ -148,14 +151,12 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 			return Sub.compose(sub, subst);
 		}),
 	);
+};
 
-unify.gen = F.flow(unify, V2.pure);
+unify.gen = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst) => V2.pure(unify(left, right, lvl, subst));
 
-export const bind = (ctx: EB.Context, v: NF.Variable, ty: NF.Value): Subst => {
-	if (v.type !== "Meta") {
-		throw new Error("Unification: Can only bind meta variables");
-	}
-
+type Meta = Extract<EB.Variable, { type: "Meta" }>;
+export const bind = (ctx: EB.Context, v: Meta, ty: NF.Value): Subst => {
 	if (ty.type === "Var" && _.isEqual(ty.variable, v)) {
 		return empty;
 	}
@@ -180,20 +181,62 @@ export const bind = (ctx: EB.Context, v: NF.Variable, ty: NF.Value): Subst => {
 	throw new Error("Unification: Occurs check failed. Need to implement mu type");
 };
 
-const occursCheck = (ctx: EB.Context, v: NF.Variable, ty: NF.Value): boolean =>
-	match(ty)
-		.with(NF.Patterns.Var, ({ variable }) => _.isEqual(variable, v))
-		.with({ type: "Neutral" }, ({ value }) => occursCheck(ctx, v, value))
-		.with(NF.Patterns.Lambda, ({ binder, closure }) => occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
-		.with(NF.Patterns.Pi, ({ binder, closure }) => occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
-		.with(NF.Patterns.App, ({ func, arg }) => occursCheck(ctx, v, func) || occursCheck(ctx, v, arg))
+const occursCheck = (ctx: EB.Context, v: Meta, ty: NF.Value): boolean => {
+	return (
+		match(ty)
+			.with(NF.Patterns.Var, ({ variable }) => _.isEqual(variable, v))
+			.with({ type: "Neutral" }, ({ value }) => occursCheck(ctx, v, value))
+			//occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
+			.with(NF.Patterns.Lambda, ({ binder, closure }) => occursInTerm(closure.ctx, v, closure.term))
+			//occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
+			.with(NF.Patterns.Pi, ({ binder, closure }) => occursInTerm(closure.ctx, v, closure.term))
+			.with(NF.Patterns.App, ({ func, arg }) => occursCheck(ctx, v, func) || occursCheck(ctx, v, arg))
 
-		.with(NF.Patterns.Row, ({ row }) =>
+			.with(NF.Patterns.Row, ({ row }) =>
+				R.fold(
+					row,
+					(nf, _, acc) => acc || occursCheck(ctx, v, nf),
+					rv => rv.type === "Meta" && _.isEqual(rv, v),
+					false,
+				),
+			)
+			.otherwise(() => false)
+	);
+};
+
+const occursInTerm = (ctx: EB.Context, v: Meta, tm: EB.Term): boolean => {
+	return match(tm)
+		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
+			if (ctx.zonker[variable.val]) {
+				return occursCheck(ctx, v, ctx.zonker[variable.val]);
+			}
+			return _.isEqual(variable, v);
+		})
+		.with({ type: "Abs" }, ({ binding, body }) => {
+			if (binding.type === "Lambda") {
+				return occursInTerm(ctx, v, body);
+			}
+			return occursInTerm(ctx, v, binding.annotation) || occursInTerm(ctx, v, body);
+		})
+		.with({ type: "App" }, ({ func, arg }) => occursInTerm(ctx, v, func) || occursInTerm(ctx, v, arg))
+		.with({ type: "Annotation" }, ({ term, ann }) => occursInTerm(ctx, v, term) || occursInTerm(ctx, v, ann))
+		.with({ type: "Match" }, ({ scrutinee, alternatives }) => occursInTerm(ctx, v, scrutinee) || alternatives.some(({ term }) => occursInTerm(ctx, v, term)))
+		.with({ type: "Block" }, ({ return: ret, statements }) => occursInTerm(ctx, v, ret) || statements.some(s => occursInTerm(ctx, v, s.value)))
+		.with({ type: "Row" }, ({ row }) =>
 			R.fold(
 				row,
-				(nf, _, acc) => acc || occursCheck(ctx, v, nf),
-				rv => rv.type === "Meta" && _.isEqual(rv, v),
+				(nf, _, acc) => acc || occursInTerm(ctx, v, nf),
+				rv => {
+					if (rv.type === "Meta" && ctx.zonker[rv.val]) {
+						return occursCheck(ctx, v, ctx.zonker[rv.val]);
+					}
+					return _.isEqual(rv, v);
+				},
 				false,
 			),
 		)
+		.with({ type: "Proj" }, ({ term }) => occursInTerm(ctx, v, term))
+		.with({ type: "Inj" }, ({ value, term }) => occursInTerm(ctx, v, value) || occursInTerm(ctx, v, term))
+		.with({ type: "Lit" }, () => false)
 		.otherwise(() => false);
+};

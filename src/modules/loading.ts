@@ -2,7 +2,7 @@ import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
-import * as M from "@yap/elaboration/shared/monad";
+import * as V2 from "@yap/elaboration/shared/monad.v2";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
 
@@ -33,12 +33,12 @@ export type Interface = {
 	imports: Record<string, Separated>;
 	exports: string[];
 
-	foreign: [string, Either<M.Err, EB.AST>][];
-	letdecs: [string, Either<M.Err, EB.AST>][];
-	errors: M.Err[];
+	foreign: [string, Either<V2.Err, EB.AST>][];
+	letdecs: [string, Either<V2.Err, EB.AST>][];
+	errors: V2.Err[];
 };
 
-type Separated = [Array<[string, M.Err]>, Array<[string, EB.AST]>];
+type Separated = [Array<[string, V2.Err]>, Array<[string, EB.AST]>];
 
 export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts = GlobalDefaults): Interface => {
 	if (globalModules[moduleName]) {
@@ -58,7 +58,7 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts
 	}
 	const mod: Src.Module = data.results[0];
 
-	type Separated = [Array<[string, M.Err]>, Array<[string, EB.AST]>];
+	type Separated = [Array<[string, V2.Err]>, Array<[string, EB.AST]>];
 	const importsPerFile = mod.imports.reduce(
 		(record, stmt) => {
 			const imports = F.pipe(
@@ -93,6 +93,18 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts
 	};
 
 	const iface: Interface = F.pipe(EB.Mod.elaborate(mod, localModuleCtx), setProp("imports", importsPerFile));
+	iface.errors.forEach(err => {
+		V2.display(err, {});
+		console.error(displayProvenance(err.provenance || [], { cap: 100 }, {}));
+	});
+
+	iface.letdecs.forEach(([name, result]) => {
+		if (E.isLeft(result)) {
+			console.warn(`Error in module ${moduleName} for let ${name}: ${result.left}`);
+			V2.display(result.left, {});
+			console.error(displayProvenance(result.left.provenance || [], { cap: 100 }, {}));
+		}
+	});
 
 	globalModules[moduleName] = iface;
 	return iface;

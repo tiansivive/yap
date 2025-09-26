@@ -37,7 +37,13 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 
 			return evaluate(ctx, val[0]);
 		})
-		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => NF.Constructors.Neutral<NF.Value>({ type: "Var", variable }))
+		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
+			if (!ctx.zonker[variable.val]) {
+				return NF.Constructors.Neutral<NF.Value>({ type: "Var", variable });
+			}
+
+			return ctx.zonker[variable.val];
+		})
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
 			return ctx.env[variable.index][0];
 		})

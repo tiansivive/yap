@@ -115,6 +115,12 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 			tm => EB.Icit.wrapLambda(tm, ty),
 		);
 
+		console.log("\n-----------------------------------------------------------");
+		console.log("LETDEC");
+		console.log("Elaborated:\n", EB.Display.Statement(elaborated, ctx.zonker));
+		console.log("Wrapped:\n", EB.Display.Term(wrapped, ctx.zonker));
+		console.log("Instantiated:\n", NF.display(instantiated, ctx.zonker));
+
 		const ast: EB.AST = [wrapped, instantiated, us];
 		return [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
 	});

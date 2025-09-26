@@ -124,7 +124,7 @@ export const codegen = (env: string[], term: EB.Term): string => {
 					throw new Error("Cannot compile rows with variable: " + JSON.stringify(row));
 				}
 
-				const dec = `\nObject.defineProperty(rec, "${r.label}", { get: () => ${codegen(env, r.value)} });`;
+				const dec = `\nObject.defineProperty(rec, "${r.label}", { get: () => ${codegen(env, r.value)}, enumerable: true });`;
 				return gen(r.row, code + dec);
 			};
 

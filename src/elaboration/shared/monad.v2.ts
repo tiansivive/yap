@@ -2,6 +2,7 @@ import * as EB from "@yap/elaboration";
 
 import * as E from "fp-ts/Either";
 import * as F from "fp-ts/function";
+import * as A from "fp-ts/Array";
 
 import { Either } from "fp-ts/lib/Either";
 import { Cause } from "./errors";
@@ -95,7 +96,7 @@ export const traverse = <A, B>(as: A[], f: (a: A, i: number) => Elaboration<B>):
 		(acc, a, i) =>
 			Do<B[], B>(function* () {
 				const b = yield f(a, i);
-				return acc.concat(b);
+				return A.append(b)(acc);
 			}),
 		[] as B[],
 		as,

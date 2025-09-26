@@ -12,7 +12,8 @@
 			],
 			"program": "${workspaceRoot}/scripts/cli.ts",
 			"args": [
-				"main.yap"
+				"debug.yap",
+				"--verbose"
 			],
 			"cwd": "${workspaceRoot}",
 			"internalConsoleOptions": "openOnSessionStart",
@@ -20,6 +21,7 @@
 				"<node_internals>/**",
 				"node_modules/**"
 			],
+			"console": "integratedTerminal"
 		},
 		{
 			"type": "node",

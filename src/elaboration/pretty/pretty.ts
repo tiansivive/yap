@@ -30,7 +30,13 @@ const display = (term: EB.Term, zonker: EB.Zonker): string => {
 						})
 						.otherwise(() => "Var _display: Not implemented"),
 				)
-				.with({ type: "Abs", binding: { type: "Mu" } }, ({ binding }) => binding.source)
+				.with({ type: "Abs", binding: { type: "Mu" } }, ({ binding, body }) => {
+					if (!options.verbose) {
+						return binding.source;
+					}
+
+					return `([μ = ${binding.source}](${binding.variable}: ${_display(binding.annotation)})) -> ${_display(body)}`;
+				})
 				.with({ type: "Abs" }, ({ binding, body }) => {
 					const b = match(binding)
 						.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)

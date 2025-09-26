@@ -27,6 +27,11 @@ export const infer = (list: List): V2.Elaboration<EB.AST> =>
 					return inferred;
 				});
 
+			// const validate = F.flow(
+			// 	infer,
+			// 	M.discard(([, ty]) => M.tell("constraint", { type: "assign", left: ty, right: v, lvl: ctx.env.length })),
+			// );
+
 			const es = yield* V2.pure(V2.traverse(list.elements, validate));
 			const usages = es.reduce((acc, [, , us]) => Q.add(acc, us), Q.noUsage(ctx.env.length));
 

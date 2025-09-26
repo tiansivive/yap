@@ -26,14 +26,14 @@ export const infer = (tm: Match): V2.Elaboration<EB.AST> =>
 				const provenance: EB.Provenance[] = [
 					[
 						"alt",
-						tm.alternatives[i + 1],
+						tm.alternatives[i],
 						{
 							action: "alternative",
 							type: ty,
 							motive: `attempting to unify with previous alternative of type ${NF.display(ty, ctx.zonker)}:\t${Src.Alt.display(tm.alternatives[i])}`,
 						},
 					],
-					["src", tm.alternatives[i + 1].term],
+					["src", tm.alternatives[i].term],
 				];
 				return V2.track(
 					provenance,

@@ -47,7 +47,8 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		const [name, result] = EB.Mod.letdec(stmt, ctx);
 
 		if (E.isLeft(result)) {
-			console.error(`Error interpreting ${name}: ${result.left}`);
+			console.warn(EB.V2.display(result.left, ctx.zonker));
+			//console.error(`Error interpreting ${name}: ${result.left}`);
 			return ctx;
 		}
 

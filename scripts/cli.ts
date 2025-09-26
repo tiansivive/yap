@@ -15,10 +15,14 @@ program
 	.arguments("<filepath>")
 	.option("-o, --outDir <output>", "Output directory")
 	.option("--srcDir <source>", "Source directory")
+	.option("--verbose", "Enable verbose output")
 	.description("Compile a Yap file")
 	.action((file, cmd) => {
 		console.log(`Compiling Yap file: ${file}`);
 		console.log("Options:", cmd);
+
+		options.verbose = cmd.verbose || false;
+		console.log("Verbose mode:", options.verbose);
 
 		const opts: Compiler.Options = {
 			outDir: cmd.outDir || Compiler.GlobalDefaults.outDir,
