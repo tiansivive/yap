@@ -13,7 +13,7 @@ type List = Extract<Src.Term, { type: "list" }>;
 
 export const infer = (list: List): V2.Elaboration<EB.AST> =>
 	V2.track(
-		["src", list, { action: "infer", description: "List" }],
+		{ tag: "src", type: "term", term: list, metadata: { action: "infer", description: "List" } },
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
@@ -27,11 +27,6 @@ export const infer = (list: List): V2.Elaboration<EB.AST> =>
 					return inferred;
 				});
 
-			// const validate = F.flow(
-			// 	infer,
-			// 	M.discard(([, ty]) => M.tell("constraint", { type: "assign", left: ty, right: v, lvl: ctx.env.length })),
-			// );
-
 			const es = yield* V2.pure(V2.traverse(list.elements, validate));
 			const usages = es.reduce((acc, [, , us]) => Q.add(acc, us), Q.noUsage(ctx.env.length));
 
@@ -40,18 +35,14 @@ export const infer = (list: List): V2.Elaboration<EB.AST> =>
 
 			const ty = NF.Constructors.App(values, NF.Constructors.Var({ type: "Foreign", name: "defaultList" }), "Implicit");
 
-			const tm: EB.Term = {
-				type: "Row",
-				row: es.reduceRight(
-					(r: EB.Row, [tm], i) => {
-						const label = i.toString();
-						return { type: "extension", label, value: tm, row: r };
-					},
-					{ type: "empty" },
-				),
-			};
-
-			return [tm, NF.Constructors.Neutral(ty), usages] satisfies EB.AST;
+			const row = es.reduceRight(
+				(r: EB.Row, [tm], i) => {
+					const label = i.toString();
+					return { type: "extension", label, value: tm, row: r } satisfies EB.Row;
+				},
+				{ type: "empty" },
+			);
+			return [EB.Constructors.Row(row), NF.Constructors.Neutral(ty), usages] satisfies EB.AST;
 		}),
 	);
 infer.gen = F.flow(infer, V2.pure);

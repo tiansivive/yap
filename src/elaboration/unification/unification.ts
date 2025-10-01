@@ -24,14 +24,16 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 	}
 
 	return V2.track(
-		["unify", [left, right], { action: "unification" }],
+		{ tag: "unify", type: "nf", vals: [left, right], metadata: { action: "unification" } },
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			const unifier = match([left, right])
 				.with([NF.Patterns.Flex, NF.Patterns.Flex], ([meta1, meta2]) =>
 					V2.Do<Subst, Subst>(function* () {
 						const s = Sub.compose(bind(ctx, meta1.variable, meta2), subst);
-						const s1 = yield* unify.gen(meta1.variable.ann, meta2.variable.ann, lvl, s);
+						const ann1 = ctx.metas[meta1.variable.val].ann;
+						const ann2 = ctx.metas[meta2.variable.val].ann;
+						const s1 = yield* unify.gen(ann1, ann2, lvl, s);
 						return s1;
 					}),
 				)
@@ -204,38 +206,40 @@ const occursCheck = (ctx: EB.Context, v: Meta, ty: NF.Value): boolean => {
 };
 
 const occursInTerm = (ctx: EB.Context, v: Meta, tm: EB.Term): boolean => {
-	return match(tm)
-		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
-			if (ctx.zonker[variable.val]) {
-				return occursCheck(ctx, v, ctx.zonker[variable.val]);
-			}
-			return _.isEqual(variable, v);
-		})
-		.with({ type: "Abs" }, ({ binding, body }) => {
-			if (binding.type === "Lambda") {
-				return occursInTerm(ctx, v, body);
-			}
-			return occursInTerm(ctx, v, binding.annotation) || occursInTerm(ctx, v, body);
-		})
-		.with({ type: "App" }, ({ func, arg }) => occursInTerm(ctx, v, func) || occursInTerm(ctx, v, arg))
-		.with({ type: "Annotation" }, ({ term, ann }) => occursInTerm(ctx, v, term) || occursInTerm(ctx, v, ann))
-		.with({ type: "Match" }, ({ scrutinee, alternatives }) => occursInTerm(ctx, v, scrutinee) || alternatives.some(({ term }) => occursInTerm(ctx, v, term)))
-		.with({ type: "Block" }, ({ return: ret, statements }) => occursInTerm(ctx, v, ret) || statements.some(s => occursInTerm(ctx, v, s.value)))
-		.with({ type: "Row" }, ({ row }) =>
-			R.fold(
-				row,
-				(nf, _, acc) => acc || occursInTerm(ctx, v, nf),
-				rv => {
-					if (rv.type === "Meta" && ctx.zonker[rv.val]) {
-						return occursCheck(ctx, v, ctx.zonker[rv.val]);
-					}
-					return _.isEqual(rv, v);
-				},
-				false,
-			),
-		)
-		.with({ type: "Proj" }, ({ term }) => occursInTerm(ctx, v, term))
-		.with({ type: "Inj" }, ({ value, term }) => occursInTerm(ctx, v, value) || occursInTerm(ctx, v, term))
-		.with({ type: "Lit" }, () => false)
-		.otherwise(() => false);
+	return (
+		match(tm)
+			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
+				if (ctx.zonker[variable.val]) {
+					return occursCheck(ctx, v, ctx.zonker[variable.val]);
+				}
+				return _.isEqual(variable, v);
+			})
+			.with({ type: "Abs" }, ({ binding, body }) => {
+				if (binding.type === "Lambda") {
+					return occursInTerm(ctx, v, body);
+				}
+				return occursInTerm(ctx, v, binding.annotation) || occursInTerm(ctx, v, body);
+			})
+			.with({ type: "App" }, ({ func, arg }) => occursInTerm(ctx, v, func) || occursInTerm(ctx, v, arg))
+			//.with({ type: "Annotation" }, ({ term, ann }) => occursInTerm(ctx, v, term) || occursInTerm(ctx, v, ann))
+			.with({ type: "Match" }, ({ scrutinee, alternatives }) => occursInTerm(ctx, v, scrutinee) || alternatives.some(({ term }) => occursInTerm(ctx, v, term)))
+			.with({ type: "Block" }, ({ return: ret, statements }) => occursInTerm(ctx, v, ret) || statements.some(s => occursInTerm(ctx, v, s.value)))
+			.with({ type: "Row" }, ({ row }) =>
+				R.fold(
+					row,
+					(nf, _, acc) => acc || occursInTerm(ctx, v, nf),
+					rv => {
+						if (rv.type === "Meta" && ctx.zonker[rv.val]) {
+							return occursCheck(ctx, v, ctx.zonker[rv.val]);
+						}
+						return _.isEqual(rv, v);
+					},
+					false,
+				),
+			)
+			.with({ type: "Proj" }, ({ term }) => occursInTerm(ctx, v, term))
+			.with({ type: "Inj" }, ({ value, term }) => occursInTerm(ctx, v, value) || occursInTerm(ctx, v, term))
+			.with({ type: "Lit" }, () => false)
+			.otherwise(() => false)
+	);
 };

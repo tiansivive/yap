@@ -32,7 +32,7 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 		return result;
 	};
 
-	type Pair = [string, Either<EB.M.Err, EB.AST>];
+	type Pair = [string, Either<EB.V2.Err, EB.AST>];
 	const next = (stmts: Src.Statement[], ctx: EB.Context): Omit<Interface, "imports"> => {
 		if (stmts.length === 0) {
 			return { foreign: [], exports: [], letdecs: [], errors: [] };
@@ -113,24 +113,28 @@ export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.C
 export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context]>] => {
 	const inference = V2.Do(function* () {
 		const [elaborated, ty, us] = yield* EB.Stmt.infer.gen(stmt);
-		const { constraints } = yield* V2.listen();
+		const { constraints, metas } = yield* V2.listen();
 		const subst = yield* V2.pure(solve(constraints));
 		//const tyZonked = yield* EB.zonk.gen("nf", ty, subst);
-		const zonked = set(ctx, "zonker", Sub.compose(subst, ctx.zonker));
+		const zonked = F.pipe(
+			ctx,
+			update("metas", prev => ({ ...prev, ...metas })),
+			set("zonker", Sub.compose(subst, ctx.zonker)),
+		);
 		const [generalized, next] = NF.generalize(ty, zonked);
-		const instantiated = NF.instantiate(generalized, next.zonker);
+		const instantiated = NF.instantiate(generalized, next.zonker, next);
 
 		const wrapped = F.pipe(
-			EB.Icit.instantiate(elaborated.value, subst),
+			EB.Icit.instantiate(elaborated.value, next.zonker, next.metas),
 			inst => EB.Icit.generalize(inst, zonked),
 			tm => EB.Icit.wrapLambda(tm, ty),
 		);
 
 		console.log("\n-----------------------------------------------------------");
 		console.log("LETDEC");
-		console.log("Elaborated:\n", EB.Display.Statement(elaborated, next.zonker));
-		console.log("Wrapped:\n", EB.Display.Term(wrapped, next.zonker));
-		console.log("Instantiated:\n", NF.display(instantiated, next.zonker));
+		console.log("Elaborated:\n", EB.Display.Statement(elaborated, next.zonker, next.metas));
+		console.log("Wrapped:\n", EB.Display.Term(wrapped, next.zonker, next.metas));
+		console.log("Instantiated:\n", NF.display(instantiated, next.zonker, next.metas));
 
 		const ast: EB.AST = [wrapped, instantiated, us];
 		return [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
@@ -143,16 +147,20 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>, ctx: EB.Context) => {
 	const inference = V2.Do(function* () {
 		const [elaborated, ty, us] = yield* EB.infer.gen(stmt.value);
-		const { constraints } = yield* V2.listen();
+		const { constraints, metas } = yield* V2.listen();
 		const subst = yield* V2.pure(solve(constraints));
 
-		console.log("Substitution:\n", Sub.display(subst));
-		const zonked = set(ctx, "zonker", Sub.compose(subst, ctx.zonker));
+		console.log("Substitution:\n", Sub.display(subst, metas));
+		const zonked = F.pipe(
+			ctx,
+			update("metas", prev => ({ ...prev, ...metas })),
+			set("zonker", Sub.compose(subst, ctx.zonker)),
+		);
 		const [generalized, next] = NF.generalize(ty, zonked);
-		const instantiated = NF.instantiate(generalized, next.zonker);
+		const instantiated = NF.instantiate(generalized, next.zonker, next);
 
 		const wrapped = F.pipe(
-			EB.Icit.instantiate(elaborated, subst),
+			EB.Icit.instantiate(elaborated, next.zonker, next.metas),
 			inst => EB.Icit.generalize(inst, zonked),
 			tm => EB.Icit.wrapLambda(tm, ty),
 		);

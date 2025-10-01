@@ -12,7 +12,7 @@ type Dictionary = Extract<Src.Term, { type: "dict" }>;
 
 export const infer = (dict: Dictionary): V2.Elaboration<EB.AST> =>
 	V2.track(
-		["src", dict, { action: "infer", description: "Dictionary" }],
+		{ tag: "src", type: "term", term: dict, metadata: { action: "infer", description: "Dictionary" } },
 		V2.Do<EB.AST, EB.AST>(function* () {
 			const [tm1, ty1, us1] = yield EB.infer(dict.index);
 			const [tm2, ty2, us2] = yield EB.infer(dict.term);

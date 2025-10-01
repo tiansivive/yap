@@ -13,7 +13,7 @@ import { freshMeta } from "@yap/elaboration/shared/supply";
 export type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
 export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
 	V2.track(
-		["src", stmt, { action: "infer", description: "Statement" }],
+		{ tag: "src", type: "stmt", stmt, metadata: { action: "infer", description: "Statement" } },
 		(() =>
 			match(stmt)
 				.with({ type: "let" }, letdec =>

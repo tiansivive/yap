@@ -73,7 +73,8 @@ export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Contex
 	const extendedCtx = ms.reduce((acc, m, i) => {
 		const name = `${String.fromCharCode(charCode + i)}`;
 		const boundLvl = i; // outermost binder is level 0 when quoting with lvl = ms.length
-		const withBinder = EB.bind(acc, { type: "Pi", variable: name }, [m.ann, Q.Many], "inserted");
+		const { ann } = ctx.metas[m.val];
+		const withBinder = EB.bind(acc, { type: "Pi", variable: name }, [ann, Q.Many], "inserted");
 		return set(withBinder, ["zonker", `${m.val}`] as const, NF.Constructors.Var({ type: "Bound", lvl: boundLvl }));
 	}, ctx);
 
@@ -83,7 +84,8 @@ export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Contex
 		const variable = String.fromCharCode(charCode + idx);
 		// Quote with all binders in scope: lvl = ms.length - i
 		const term = NF.quote(extendedCtx, ms.length - i, body);
-		return NF.Constructors.Pi(variable, "Implicit", [m.ann, Q.Many], NF.Constructors.Closure(extendedCtx, term));
+		const { ann } = ctx.metas[m.val];
+		return NF.Constructors.Pi(variable, "Implicit", [ann, Q.Many], NF.Constructors.Closure(extendedCtx, term));
 	}, val);
 
 	// Return the extended ctx so callers can keep the zonker mapping for subsequent passes (instantiate, etc.)
@@ -101,7 +103,7 @@ const convertMeta = (meta: Meta, ms: Meta[]): NF.Variable => {
 	return { type: "Bound", lvl: i };
 };
 
-export const instantiate = (nf: NF.Value, subst: Subst): NF.Value => {
+export const instantiate = (nf: NF.Value, subst: Subst, ctx: EB.Context): NF.Value => {
 	return NF.traverse(
 		nf,
 		v => {
@@ -113,12 +115,12 @@ export const instantiate = (nf: NF.Value, subst: Subst): NF.Value => {
 				// Solved meta means it's in the zonker = not unconstrained, so no need to instantiate it
 				return v;
 			}
-
-			return match(v.variable.ann)
+			const { ann } = ctx.metas[v.variable.val];
+			return match(ann)
 				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => NF.Constructors.Row({ type: "empty" }))
 				.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => NF.Constructors.Lit({ type: "Atom", value: "Any" }))
 				.otherwise(() => NF.Constructors.Var(v.variable));
 		},
-		tm => EB.Icit.instantiate(tm, subst),
+		tm => EB.Icit.instantiate(tm, subst, ctx.metas),
 	);
 };

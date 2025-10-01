@@ -47,7 +47,7 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		const [name, result] = EB.Mod.letdec(stmt, ctx);
 
 		if (E.isLeft(result)) {
-			console.warn(EB.V2.display(result.left, ctx.zonker));
+			console.warn(EB.V2.display(result.left, ctx.zonker, ctx.metas));
 			//console.error(`Error interpreting ${name}: ${result.left}`);
 			return ctx;
 		}
@@ -56,11 +56,11 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 
 		const code = `let ${name} = ${CG.codegen([name], tm)};`;
 		letdecs.push(code);
-		console.log(`:: ${EB.NF.display(ty, ctx.zonker)}`);
+		console.log(`:: ${EB.NF.display(ty, ctx.zonker, ctx.metas)}`);
 
 		if (opts.nf) {
 			const nf = EB.NF.evaluate(ctx, tm);
-			console.log(`NF: ${EB.NF.display(nf, ctx.zonker)}`);
+			console.log(`NF: ${EB.NF.display(nf, ctx.zonker, ctx.metas)}`);
 		}
 
 		console.log(`\n\n${code}`);
@@ -72,7 +72,7 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		const result = EB.Mod.expression(stmt, ctx);
 
 		if (E.isLeft(result)) {
-			console.warn(EB.V2.display(result.left, ctx.zonker));
+			console.warn(EB.V2.display(result.left, ctx.zonker, ctx.metas));
 			//console.error(`Error interpreting expression: ${result.left}`);
 			return ctx;
 		}
@@ -96,11 +96,11 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		//console.dir(res, { showHidden: true, depth: null });
 		// console.dir(Object.getOwnPropertyDescriptors(res), { showHidden: true, depth: null });
 		const pretty = util.inspect(res, { showHidden: true, depth: null });
-		console.log("\n" + pretty + ` :: ${EB.NF.display(ty, zonker)}\n`);
+		console.log("\n" + pretty + ` :: ${EB.NF.display(ty, zonker, ctx.metas)}\n`);
 
 		if (opts.nf) {
 			const nf = EB.NF.evaluate(ctx, tm);
-			console.log(`NF: ${EB.NF.display(nf, zonker)}`);
+			console.log(`NF: ${EB.NF.display(nf, zonker, ctx.metas)}`);
 		}
 		return ctx;
 	}

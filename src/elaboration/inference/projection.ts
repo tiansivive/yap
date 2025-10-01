@@ -14,7 +14,7 @@ type Projection = Extract<Src.Term, { type: "projection" }>;
 export const infer = V2.regen(
 	({ label, term }: Projection): V2.Elaboration<EB.AST> =>
 		V2.track(
-			["src", term, { action: "infer", description: "Projection" }],
+			{ tag: "src", type: "term", term, metadata: { action: "infer", description: "Projection" } },
 			V2.Do<EB.AST, EB.AST>(function* () {
 				const [tm, ty, us] = yield* EB.infer.gen(term);
 				const inferred = yield* project.gen(label, tm, ty, us);
@@ -38,7 +38,8 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 					const val = NF.evaluate(ctx, EB.Constructors.Var(EB.freshMeta(ctx.env.length, kind)));
 
 					const r: NF.Row = { type: "variable", variable: EB.freshMeta(ctx.env.length, NF.Row) };
-					const inferred = NF.Constructors.App(ctor, { type: "Row", row: NF.Constructors.Extension(label, val, r) }, "Explicit");
+					const xtension = NF.Constructors.Extension(label, val, r);
+					const inferred = NF.Constructors.App(ctor, NF.Constructors.Row(xtension), "Explicit");
 
 					yield* V2.tell("constraint", { type: "assign", left: inferred, right: ty });
 

@@ -13,7 +13,7 @@ type Block = Extract<Src.Term, { type: "block" }>;
 
 export const infer = (block: Block) =>
 	V2.track(
-		["src", block, { action: "infer", description: "Block statements" }],
+		{ tag: "src", type: "term", term: block, metadata: { action: "infer", description: "Block statements" } },
 		(() => {
 			const { statements, return: ret } = block;
 			const recurse = (stmts: Src.Statement[], results: EB.Statement[]): V2.Elaboration<EB.AST> =>

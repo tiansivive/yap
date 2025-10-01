@@ -7,7 +7,7 @@ import * as V2 from "./shared/monad.v2";
 
 export const infer = V2.regen((ast: Src.Term): V2.Elaboration<EB.AST> => {
 	const result = V2.track<EB.AST>(
-		["src", ast, { action: "infer" }],
+		{ tag: "src", type: "term", term: ast, metadata: { action: "infer" } },
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			const elaboration = match(ast)

@@ -8,7 +8,7 @@ type Variant = Extract<Src.Term, { type: "variant" }>;
 
 export const infer = (variant: Variant): V2.Elaboration<EB.AST> =>
 	V2.track(
-		["src", variant, { action: "infer", description: "Variant" }],
+		{ tag: "src", type: "term", term: variant, metadata: { action: "infer", description: "Variant" } },
 		V2.Do(() =>
 			V2.local(
 				EB.muContext,

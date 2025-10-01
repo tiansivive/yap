@@ -8,25 +8,23 @@ import { Either } from "fp-ts/lib/Either";
 import { Cause } from "./errors";
 import * as Errors from "./errors";
 
-import { URIS, Kind, URItoKind } from "fp-ts/HKT";
-import { Monad1 } from "fp-ts/Monad";
-import { SetOptional } from "type-fest";
+import * as P from "./provenance";
 
 export type Elaboration<A> = (ctx: EB.Context, w?: Omit<Collector<A>, "result">) => Collector<A>;
 
 type Collector<A> = {
 	constraints: EB.WithProvenance<EB.Constraint>[];
 	binders: EB.Binder[];
-	metas: Record<number, { meta: EB.Meta; ann: EB.NF.Value }>;
+	metas: EB.Context["metas"];
 	result: Either<Err, A>;
 };
 type Accumulator = Omit<Collector<unknown>, "result">;
 
-export type Err = Cause & { provenance?: EB.Provenance[] };
+export type Err = Cause & { provenance?: P.Provenance[] };
 
-export const display = (err: Err, zonker: EB.Zonker): string => {
-	const cause = Errors.display(err, zonker);
-	const prov = err.provenance ? EB.displayProvenance(err.provenance, { cap: 100 }, zonker) : "";
+export const display = (err: Err, zonker: EB.Zonker, metas: EB.Context["metas"]): string => {
+	const cause = Errors.display(err, zonker, metas);
+	const prov = err.provenance ? P.display(err.provenance, { cap: 100 }, zonker, metas) : "";
 	return prov ? `${cause}\n\nTrace:\n${prov}` : cause;
 };
 
@@ -71,7 +69,7 @@ export function chain<A, B>(...args: [(x: A) => Collector<B>] | [Collector<A>, (
 	return _chain(fa, f);
 }
 
-export const track: <A>(provenance: EB.Provenance | EB.Provenance[], fa: Elaboration<A>) => Elaboration<A> = (provenance, fa) => ctx => {
+export const track: <A>(provenance: P.Provenance | P.Provenance[], fa: Elaboration<A>) => Elaboration<A> = (provenance, fa) => ctx => {
 	const extended = { ...ctx, trace: ctx.trace.concat(provenance) };
 	return fa(extended);
 };

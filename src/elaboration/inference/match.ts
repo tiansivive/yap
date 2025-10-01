@@ -10,11 +10,13 @@ import * as F from "fp-ts/function";
 
 import { match } from "ts-pattern";
 
+import * as P from "@yap/elaboration/shared/provenance";
+
 type Match = Extract<Src.Term, { type: "match" }>;
 
 export const infer = (tm: Match): V2.Elaboration<EB.AST> =>
 	V2.track(
-		["src", tm, { action: "infer", description: "Match" }],
+		{ tag: "src", type: "term", term: tm, metadata: { action: "infer", description: "Match" } },
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			const ast = yield* EB.infer.gen(tm.scrutinee);
@@ -23,17 +25,17 @@ export const infer = (tm: Match): V2.Elaboration<EB.AST> =>
 			// Ensure all alternatives have the same type - we pick the type of the first alternative as the common type
 			const common = alternatives[0][1];
 			yield V2.traverse(alternatives, ([alt, ty, us], i) => {
-				const provenance: EB.Provenance[] = [
-					[
-						"alt",
-						tm.alternatives[i],
-						{
+				const provenance: P.Provenance[] = [
+					{
+						tag: "alt",
+						alt: tm.alternatives[i],
+						metadata: {
 							action: "alternative",
 							type: ty,
-							motive: `attempting to unify with previous alternative of type ${NF.display(ty, ctx.zonker)}:\t${Src.Alt.display(tm.alternatives[i])}`,
+							motive: `attempting to unify with previous alternative of type ${NF.display(ty, ctx.zonker, ctx.metas)}:\t${Src.Alt.display(tm.alternatives[i])}`,
 						},
-					],
-					["src", tm.alternatives[i].term],
+					},
+					{ tag: "src", type: "term", term: tm.alternatives[i].term, metadata: { action: "infer", description: "" } },
 				];
 				return V2.track(
 					provenance,
@@ -68,7 +70,7 @@ export const elaborate =
 	([scrutinee, scuty, sus]: EB.AST) =>
 	(alt: Src.Alternative): V2.Elaboration<AltNode> =>
 		V2.track(
-			["alt", alt, { action: "alternative", motive: "elaborating pattern", type: scuty }],
+			{ tag: "alt", alt, metadata: { action: "alternative", motive: "elaborating pattern", type: scuty } },
 			(() => {
 				const extend = (binders: Patterns.Binder[]) => (ctx_: EB.Context) =>
 					binders.reduce((ctx, [name, va]) => EB.bind(ctx, { type: "Lambda", variable: name }, [va, Q.Many]), ctx_);

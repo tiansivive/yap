@@ -69,7 +69,7 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 			return args.reduce((acc, arg) => EB.Constructors.App("Explicit", acc, quote(ctx, lvl, arg)), EB.Constructors.Var({ type: "Foreign", name }));
 		})
 		.otherwise(nf => {
-			throw new Error("Quote: Not implemented yet: " + NF.display(nf, ctx.zonker));
+			throw new Error("Quote: Not implemented yet: " + NF.display(nf, ctx.zonker, ctx.metas));
 		});
 };
 

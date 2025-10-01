@@ -7,12 +7,13 @@ import { match } from "ts-pattern";
 
 import * as Lit from "@yap/shared/literals";
 import * as Q from "@yap/shared/modalities/multiplicity";
+import { NF } from "@yap/elaboration";
 
 type Literal = Extract<Src.Term, { type: "lit" }>;
 
 export const infer = (lit: Literal): V2.Elaboration<EB.AST> =>
 	V2.track(
-		["src", lit, { action: "infer", description: "Literal" }],
+		{ tag: "src", type: "term", term: lit, metadata: { action: "infer", description: "Literal" } },
 		V2.Do(function* () {
 			const { value } = lit;
 			const ctx = yield* V2.ask();
@@ -24,7 +25,7 @@ export const infer = (lit: Literal): V2.Elaboration<EB.AST> =>
 				.with({ type: "Atom" }, _ => Lit.Atom("Type"))
 				.exhaustive();
 
-			return [{ type: "Lit", value }, { type: "Lit", value: atom }, Q.noUsage(ctx.env.length)] satisfies EB.AST;
+			return [EB.Constructors.Lit(value), NF.Constructors.Lit(atom), Q.noUsage(ctx.env.length)] satisfies EB.AST;
 		}),
 	);
 

@@ -1,0 +1,29 @@
+{
+	"compilerOptions": {
+		"checkJs": true,
+		"declaration": true,
+		"declarationMap": true,
+		"esModuleInterop": true,
+		"module": "CommonJS",
+		"moduleResolution": "node10",
+		"noEmit": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"target": "ESNext",
+		"noErrorTruncation": false,
+		"paths": {
+			"@yap/elaboration": ["./src/elaboration/index"],
+			"@yap/elaboration/*": ["./src/elaboration/*"],
+			"@yap/src/*": ["./src/parser/*"],
+			"@yap/shared/*": ["./src/shared/*"],
+			"@yap/utils": ["./src/utils/index"]
+		}
+	},
+	"include": ["src", "scripts/cli.ts"],
+	"exclude": ["**/*.test.ts"],
+	"ts-node": {
+		"require": ["tsconfig-paths/register"]
+	}
+}

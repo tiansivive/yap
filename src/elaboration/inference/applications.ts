@@ -14,7 +14,7 @@ type Application = Extract<Src.Term, { type: "application" }>;
 
 export const infer = (node: Application) =>
 	V2.track(
-		["src", node, { action: "infer", description: "Application node" }],
+		{ tag: "src", type: "term", term: node, metadata: { action: "infer", description: "Application node" } },
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 
@@ -33,7 +33,7 @@ infer.gen = F.flow(infer, V2.pure);
 
 const inferFn = (node: Application) =>
 	V2.track(
-		["src", node.fn, { action: "infer", description: "inferring function type" }],
+		{ tag: "src", type: "term", term: node.fn, metadata: { action: "infer", description: "inferring function type" } },
 		V2.Do(function* () {
 			const inferred = yield* EB.infer.gen(node.fn);
 
@@ -47,7 +47,10 @@ const inferFn = (node: Application) =>
 	);
 
 const checkArg = ({ arg }: Application, ann: NF.ModalValue) =>
-	V2.track(["src", arg, { action: "checking", against: ann[0], description: "checking argument type" }], EB.check(arg, ann[0]));
+	V2.track(
+		{ tag: "src", type: "term", term: arg, metadata: { action: "checking", against: ann[0], description: "checking argument type" } },
+		EB.check(arg, ann[0]),
+	);
 
 const mkPi = (fnType: NF.Value, icit: Implicitness) =>
 	match(fnType)

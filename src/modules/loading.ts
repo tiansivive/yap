@@ -19,12 +19,11 @@ import Nearley from "nearley";
 import Grammar from "@yap/src/grammar";
 import * as A from "fp-ts/lib/Array";
 
-import * as Lib from "@yap/shared/lib/primitives";
-import * as Gen from "../Codegen/terms";
-import { displayProvenance, solve } from "../elaboration/solver";
+import * as P from "@yap/elaboration/shared/provenance";
 
 import { set, setProp, update } from "@yap/utils";
 import { GlobalDefaults } from "../compile";
+import { defaultContext } from "@yap/shared/lib/constants";
 
 type ModuleName = string;
 export const globalModules: Record<ModuleName, Interface> = {};
@@ -80,29 +79,19 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts
 	);
 
 	const allImports = Object.values(importsPerFile).flatMap(([errs, defs]) => defs);
-	const localModuleCtx: EB.Context = {
-		env: [],
-		types: [],
-		names: [],
-		implicits: [],
-		trace: [],
-		imports: { ...Lib.Elaborated, ...R.fromEntries(allImports) },
-		sigma: {},
-		zonker: Sub.empty,
-		ffi: {},
-	};
+	const localModuleCtx: EB.Context = update(defaultContext, "imports", imports => ({ ...imports, ...R.fromEntries(allImports) }));
 
 	const iface: Interface = F.pipe(EB.Mod.elaborate(mod, localModuleCtx), setProp("imports", importsPerFile));
 	iface.errors.forEach(err => {
-		V2.display(err, Sub.empty);
-		console.error(displayProvenance(err.provenance || [], { cap: 100 }, Sub.empty));
+		V2.display(err, Sub.empty, {});
+		console.error(P.display(err.provenance || [], { cap: 100 }, Sub.empty, {}));
 	});
 
 	iface.letdecs.forEach(([name, result]) => {
 		if (E.isLeft(result)) {
 			console.warn(`Error in module ${moduleName} for let ${name}: ${result.left}`);
-			V2.display(result.left, Sub.empty);
-			console.error(displayProvenance(result.left.provenance || [], { cap: 100 }, Sub.empty));
+			V2.display(result.left, Sub.empty, {});
+			console.error(P.display(result.left.provenance || [], { cap: 100 }, Sub.empty, {}));
 		}
 	});
 
@@ -110,7 +99,7 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts
 	return iface;
 };
 
-const resolveImports = (stmt: Src.Import, imported: Interface): [string, Either<EB.M.Err, EB.AST>][] => {
+const resolveImports = (stmt: Src.Import, imported: Interface): [string, Either<EB.V2.Err, EB.AST>][] => {
 	const defs = imported.letdecs.concat(imported.foreign);
 
 	const publicVars = defs.filter(([id]) => imported.exports.includes(id));

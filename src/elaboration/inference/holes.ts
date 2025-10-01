@@ -12,7 +12,7 @@ type Hole = Extract<Src.Term, { type: "hole" }>;
 
 export const infer = (h: Hole): V2.Elaboration<EB.AST> =>
 	V2.track(
-		["src", h, { action: "infer", description: "Hole" }],
+		{ tag: "src", type: "term", term: h, metadata: { action: "infer", description: "Hole" } },
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));

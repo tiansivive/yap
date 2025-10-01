@@ -10,6 +10,7 @@ import * as Lib from "@yap/shared/lib/primitives";
 import { options } from "@yap/shared/config/options";
 
 import * as Sub from "@yap/elaboration/unification/substitution";
+import { defaultContext } from "@yap/shared/lib/constants";
 
 const program = new Command();
 
@@ -44,17 +45,7 @@ program
 
 		const rl = createInterface({ input: process.stdin, output: process.stdout, prompt: "λ> " });
 
-		let ctx: EB.Context = {
-			env: [],
-			types: [],
-			names: [],
-			implicits: [],
-			sigma: {},
-			trace: [],
-			imports: { ...Lib.Elaborated },
-			zonker: Sub.empty,
-			ffi: Lib.PrimOps,
-		};
+		let ctx: EB.Context = defaultContext;
 		const runCode = (input: string) => {
 			try {
 				ctx = interpret(input, ctx);

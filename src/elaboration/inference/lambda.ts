@@ -13,7 +13,7 @@ type Lambda = Extract<Src.Term, { type: "lambda" }>;
 
 export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
 	V2.track(
-		["src", lam, { action: "infer", description: "Lambda" }],
+		{ tag: "src", type: "term", term: lam, metadata: { action: "infer", description: "Lambda" } },
 		V2.Do<EB.AST, EB.AST>(function* () {
 			const ctx = yield* V2.ask();
 

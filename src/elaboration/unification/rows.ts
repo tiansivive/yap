@@ -21,7 +21,7 @@ import * as U from "@yap/elaboration/unification";
 let count = 0;
 export const unify = (r1: NF.Row, r2: NF.Row, s: Subst): V2.Elaboration<Subst> =>
 	V2.track(
-		["unify", [r1, r2], { action: "unification" }],
+		{ tag: "unify", type: "row", rows: [r1, r2], metadata: { action: "unification" } },
 		V2.Do(function* () {
 			// count++;
 			// console.log("Unify rows:", count);
@@ -142,7 +142,8 @@ const rewrite = (r: NF.Row, label: string, s: Subst): V2.Elaboration<[NF.Row, Su
 								V2.Do(() =>
 									V2.fail(
 										Err.Impossible(
-											"Expected extension: " + R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, ctx.zonker), var: v => JSON.stringify(v) }),
+											"Expected extension: " +
+												R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, ctx.zonker, ctx.metas), var: v => JSON.stringify(v) }),
 										),
 									),
 								),

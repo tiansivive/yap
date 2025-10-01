@@ -98,8 +98,8 @@ export const Elaborated: EB.Context['imports'] = {
 
 const typecheckNum = (val: NF.Value): val is Types.Brand<typeof NF.nf_tag, { type: "Lit", value: { type: "Num", value: number } }> => val.type === "Lit" && val.value.type === "Num"
 const arithmetic = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => number): NF.Value => {
-    if (!typecheckNum(x)) throw new Error(`Expected number, got ${NF.display(x, Sub.empty)}`);
-    if (!typecheckNum(y)) throw new Error(`Expected number, got ${NF.display(y, Sub.empty)}`);
+    if (!typecheckNum(x)) throw new Error(`Expected number, got ${NF.display(x, Sub.empty, {})}`);
+    if (!typecheckNum(y)) throw new Error(`Expected number, got ${NF.display(y, Sub.empty, {})}`);
     const val = fn(x.value.value, y.value.value);
     return NF.Constructors.Lit(Lit.Num(val));
 }
@@ -107,15 +107,15 @@ const arithmetic = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => numb
 const typecheckBool = (val: NF.Value): val is Types.Brand<typeof NF.nf_tag, { type: "Lit", value: { type: "Bool", value: boolean } }> => val.type === "Lit" && val.value.type === "Bool"
 
 const logical = (x: NF.Value, y: NF.Value, fn: (a: boolean, b: boolean) => boolean): NF.Value => {
-    if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${NF.display(x, Sub.empty)}`);
-    if (!typecheckBool(y)) throw new Error(`Expected boolean, got ${NF.display(y, Sub.empty)}`);
+    if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${NF.display(x, Sub.empty, {})}`);
+    if (!typecheckBool(y)) throw new Error(`Expected boolean, got ${NF.display(y, Sub.empty, {})}`);
     const val = fn(x.value.value, y.value.value);
     return NF.Constructors.Lit(Lit.Bool(val));
 }
 
 const comparison = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => boolean): NF.Value => {
-    if (!typecheckNum(x)) throw new Error(`Expected number, got ${NF.display(x, Sub.empty)}`);
-    if (!typecheckNum(y)) throw new Error(`Expected number, got ${NF.display(y, Sub.empty)}`);
+    if (!typecheckNum(x)) throw new Error(`Expected number, got ${NF.display(x, Sub.empty, {})}`);
+    if (!typecheckNum(y)) throw new Error(`Expected number, got ${NF.display(y, Sub.empty, {})}`);
     const val = fn(x.value.value, y.value.value);
     return NF.Constructors.Lit(Lit.Bool(val));
 }
@@ -154,7 +154,7 @@ export const PrimOps: EB.Context['ffi'] = {
     $gte: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a >= b) },
     $not: {
         arity: 1, compute: (x: NF.Value) => {
-            if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${NF.display(x, Sub.empty)}`);
+            if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${NF.display(x, Sub.empty, {})}`);
             return NF.Constructors.Lit(Lit.Bool(!x.value.value));
         }
     }

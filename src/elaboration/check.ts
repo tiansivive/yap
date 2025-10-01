@@ -27,7 +27,7 @@ import * as Err from "./shared/errors";
 type Result = [EB.Term, Q.Usages];
 export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, Q.Usages]> =>
 	V2.track(
-		["src", term, { action: "checking", against: type }],
+		{ tag: "src", type: "term", term, metadata: { action: "checking", against: type } },
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 

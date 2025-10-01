@@ -11,5 +11,6 @@ export const defaultContext: EB.Context = {
     trace: [],
     imports: { ...Lib.Elaborated },
     zonker: Sub.empty,
-    ffi: {},
+    ffi: Lib.PrimOps,
+    metas: {},
 };

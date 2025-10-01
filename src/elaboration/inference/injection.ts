@@ -13,7 +13,7 @@ type Injection = Extract<EB.Term, { type: "injection" }>;
 
 export const infer = (injection: Injection): V2.Elaboration<EB.AST> =>
 	V2.track(
-		["src", injection, { action: "infer", description: "Injection" }],
+		{ tag: "src", type: "term", term: injection, metadata: { action: "infer", description: "Injection" } },
 		V2.Do<EB.AST, EB.AST>(function* () {
 			const { label, value, term } = injection;
 			const val = yield* EB.infer.gen(value);

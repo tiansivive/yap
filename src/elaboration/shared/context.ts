@@ -15,6 +15,7 @@ import * as F from "fp-ts/function";
 import * as E from "fp-ts/Either";
 import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
+import { Provenance } from "./provenance";
 
 type Origin = "inserted" | "source";
 
@@ -28,7 +29,7 @@ export type Context = {
 	trace: P.Stack<Provenance>;
 	zonker: Sub.Subst;
 	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
-	metas: Record<number, NF.ModalValue>;
+	metas: Record<number, { meta: EB.Meta; ann: NF.Value }>;
 };
 
 export type Zonker = Context["zonker"];
@@ -37,18 +38,6 @@ export type AST = [EB.Term, NF.Value, Q.Usages];
 export type Sigma = { nf: NF.Value; ann: NF.Value; multiplicity: Q.Multiplicity };
 
 export type WithProvenance<T extends object> = T & { trace: Provenance[] };
-export type Provenance =
-	| ["src", Src.Term | Src.Statement, Metadata?]
-	| ["eb", EB.Term, Metadata?]
-	| ["nf", NF.Value, Metadata?]
-	| ["alt", Src.Alternative, Metadata?]
-	| ["unify", [NF.Value, NF.Value] | [NF.Row, NF.Row], Metadata?];
-
-type Metadata =
-	| { action: "checking"; against: NF.Value; description?: string }
-	| { action: "infer"; description?: string }
-	| { action: "unification" }
-	| { action: "alternative"; type: NF.Value; motive: string };
 
 export type Binder = Pick<EB.Binding, "type" | "variable">;
 

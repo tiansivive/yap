@@ -15,7 +15,7 @@ type TRow = Extract<Src.Term, { type: "row" }>;
 
 export const infer = (term: TRow): V2.Elaboration<EB.AST> =>
 	V2.track(
-		["src", term, { action: "infer", description: "Row" }],
+		{ tag: "src", type: "term", term, metadata: { action: "infer", description: "Row" } },
 		V2.Do(() =>
 			V2.local(
 				EB.muContext,

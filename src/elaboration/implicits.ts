@@ -92,7 +92,7 @@ export const metas = (tm: EB.Term, zonker: Subst): Meta[] => {
 			)
 			.with({ type: "Proj" }, ({ term }) => _metas(term))
 			.with({ type: "Inj" }, ({ value, term }) => [..._metas(value), ..._metas(term)])
-			.with({ type: "Annotation" }, ({ term, ann }) => [..._metas(term), ..._metas(ann)])
+			//.with({ type: "Annotation" }, ({ term, ann }) => [..._metas(term), ..._metas(ann)])
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => [..._metas(scrutinee), ...alternatives.flatMap(alt => _metas(alt.term))])
 			.with({ type: "Block" }, ({ return: ret, statements }) => [..._metas(ret), ...statements.flatMap(s => _metas(s.value))])
 
@@ -159,7 +159,7 @@ export const replaceMeta = (tm: EB.Term, ms: Meta[], lvl: number, ctx: EB.Contex
 			})
 			.with({ type: "Proj" }, ({ label, term }) => EB.Constructors.Proj(label, sub(term, lvl)))
 			.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, sub(value, lvl), sub(term, lvl)))
-			.with({ type: "Annotation" }, ({ term, ann }) => EB.Constructors.Annotation(sub(term, lvl), sub(ann, lvl)))
+			//.with({ type: "Annotation" }, ({ term, ann }) => EB.Constructors.Annotation(sub(term, lvl), sub(ann, lvl)))
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
 				EB.Constructors.Match(
 					sub(scrutinee, lvl),
@@ -200,7 +200,7 @@ const bindMeta = (v: EB.Variable, ms: Meta[], lvl: number): EB.Variable => {
 	return EB.Bound(lvl - i - 1);
 };
 
-export const instantiate = (term: EB.Term, subst: Subst): EB.Term => {
+export const instantiate = (term: EB.Term, subst: Subst, metas: EB.Context["metas"]): EB.Term => {
 	return EB.traverse(term, v => {
 		if (v.variable.type !== "Meta") {
 			return v;
@@ -211,7 +211,9 @@ export const instantiate = (term: EB.Term, subst: Subst): EB.Term => {
 			return v;
 		}
 
-		return match(v.variable.ann)
+		const { ann } = metas[v.variable.val];
+
+		return match(ann)
 			.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.Constructors.Row({ type: "empty" }))
 			.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Any" }))
 			.with({ type: "Lit", value: { type: "Atom", value: "Any" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Void" }))

@@ -12,7 +12,7 @@ type Tagged = Extract<Src.Term, { type: "tagged" }>;
 
 export const infer = (tagged: Tagged): V2.Elaboration<EB.AST> =>
 	V2.track(
-		["src", tagged, { action: "infer", description: "Tagged" }],
+		{ tag: "src", type: "term", term: tagged, metadata: { action: "infer", description: "Tagged" } },
 		V2.Do(function* () {
 			const { tag, term } = tagged;
 

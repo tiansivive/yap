@@ -12,7 +12,7 @@ export const resetSupply = (key: keyof typeof counts) => {
 export function freshMeta(lvl: number, ann: EB.NF.Value): Extract<EB.Variable, { type: "Meta" }> {
 	counts.meta++;
 
-	return { type: "Meta", val: counts.meta, lvl, ann };
+	return { type: "Meta", val: counts.meta, lvl };
 }
 
 export const nextCount = () => {

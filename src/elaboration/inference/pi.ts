@@ -11,7 +11,7 @@ type Pi = Extract<Src.Term, { type: "pi" } | { type: "arrow" }>;
 
 export const infer = (pi: Pi): V2.Elaboration<EB.AST> =>
 	V2.track(
-		["src", pi, { action: "infer", description: "Pi" }],
+		{ tag: "src", type: "term", term: pi, metadata: { action: "infer", description: "Pi" } },
 		V2.Do(function* () {
 			const v = pi.type === "pi" ? pi.variable : `t${EB.nextCount()}`;
 			const body = pi.type === "pi" ? pi.body : pi.rhs;

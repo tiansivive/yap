@@ -9,138 +9,140 @@ import { get } from "lodash";
 const DEFAULT_RECORD_NAME = "rec";
 
 export const codegen = (env: string[], term: EB.Term): string => {
-	return match(term)
-		.with({ type: "Lit" }, ({ value }) => {
-			return match(value)
-				.with({ type: "String" }, s => `"${s.value}"`)
-				.with({ type: "Num" }, n => `${n.value}`)
-				.with({ type: "Bool" }, b => `${b.value}`)
-				.with({ type: "unit" }, () => `"unit"`)
-				.with({ type: "Atom" }, ({ value }) => `"${value}"`)
-				.exhaustive();
-		})
-		.with({ type: "Var", variable: { type: "Label" } }, ({ variable }) => `${DEFAULT_RECORD_NAME}.${variable.name}`)
-		.with({ type: "Var", variable: { type: "Foreign" } }, { type: "Var", variable: { type: "Free" } }, ({ variable }) => {
-			if (Object.keys(Lib.Terms).includes(variable.name)) {
-				return codegen(env, get(Lib.Terms, variable.name));
-			}
-			return variable.name;
-		})
-		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
-			return env[variable.index];
-		})
-		.with({ type: "Var" }, v => {
-			throw new Error("Could not compile Variable: " + JSON.stringify(v));
-		})
-		.with({ type: "Abs", binding: { type: "Mu" } }, mu => {
-			return codegen([mu.binding.source, ...env], mu.body);
-		})
-		.with({ type: "Abs" }, abs => {
-			const extended = [abs.binding.variable, ...env];
-			const body = codegen(extended, abs.body);
-			return `(${abs.binding.variable}) => {
+	return (
+		match(term)
+			.with({ type: "Lit" }, ({ value }) => {
+				return match(value)
+					.with({ type: "String" }, s => `"${s.value}"`)
+					.with({ type: "Num" }, n => `${n.value}`)
+					.with({ type: "Bool" }, b => `${b.value}`)
+					.with({ type: "unit" }, () => `"unit"`)
+					.with({ type: "Atom" }, ({ value }) => `"${value}"`)
+					.exhaustive();
+			})
+			.with({ type: "Var", variable: { type: "Label" } }, ({ variable }) => `${DEFAULT_RECORD_NAME}.${variable.name}`)
+			.with({ type: "Var", variable: { type: "Foreign" } }, { type: "Var", variable: { type: "Free" } }, ({ variable }) => {
+				if (Object.keys(Lib.Terms).includes(variable.name)) {
+					return codegen(env, get(Lib.Terms, variable.name));
+				}
+				return variable.name;
+			})
+			.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
+				return env[variable.index];
+			})
+			.with({ type: "Var" }, v => {
+				throw new Error("Could not compile Variable: " + JSON.stringify(v));
+			})
+			.with({ type: "Abs", binding: { type: "Mu" } }, mu => {
+				return codegen([mu.binding.source, ...env], mu.body);
+			})
+			.with({ type: "Abs" }, abs => {
+				const extended = [abs.binding.variable, ...env];
+				const body = codegen(extended, abs.body);
+				return `(${abs.binding.variable}) => {
                 return ${body};
             }`;
-		})
-		.with(
-			{
-				type: "App",
-				func: { type: "Lit", value: { type: "Atom", value: "Struct" } },
-				arg: { type: "Row" },
-			},
-			({ func, arg }) => {
-				return codegen(env, arg);
-			},
-		)
-		.with(
-			{
-				type: "App",
-				func: { type: "Lit", value: { type: "Atom", value: "Schema" } },
-				arg: { type: "Row" },
-			},
-			({ func, arg }) => {
-				return codegen(env, arg);
-			},
-		)
-		.with(
-			{
-				type: "App",
-				func: { type: "Lit", value: { type: "Atom", value: "Variant" } },
-				arg: { type: "Row" },
-			},
-			({ func, arg }) => {
-				return `/* variant */${codegen(env, arg)}`;
-			},
-		)
-		.with({ type: "App" }, app => {
-			const fn = codegen(env, app.func);
-			const arg = codegen(env, app.arg);
-
-			return `(${fn})(${arg})`;
-		})
-		.with({ type: "Block" }, block => {
-			const [, stmts] = block.statements.reduce(
-				([env, code], stmt) => {
-					const code_ = (code += " " + Statement.codegen(env, stmt) + ";");
-					const env_ = stmt.type === "Let" ? [stmt.variable, ...env] : env;
-					return [env_, code_];
+			})
+			.with(
+				{
+					type: "App",
+					func: { type: "Lit", value: { type: "Atom", value: "Struct" } },
+					arg: { type: "Row" },
 				},
-				[env, ""],
-			);
-			const ret = codegen(env, block.return);
-			return `((_ => { ${stmts} return ${ret}; })())`;
-		})
-		.with({ type: "Annotation" }, ann => {
-			return codegen(env, ann.term);
-		})
-		.with({ type: "Proj" }, proj => {
-			const label = Number.isNaN(parseInt(proj.label)) ? `"${proj.label}"` : proj.label;
-			return `${codegen(env, proj.term)}[${label}]`;
-		})
-		.with({ type: "Inj" }, inj => {
-			const obj = codegen(env, inj.term);
-			const val = codegen(env, inj.value);
-			return `{ ...${obj}, ${inj.label}: ${val} }`;
-		})
-		.with({ type: "Row" }, ({ row }) => {
-			const extract = (row: EB.Row): Array<string> => {
-				if (row.type === "empty") {
-					return [];
-				}
+				({ func, arg }) => {
+					return codegen(env, arg);
+				},
+			)
+			.with(
+				{
+					type: "App",
+					func: { type: "Lit", value: { type: "Atom", value: "Schema" } },
+					arg: { type: "Row" },
+				},
+				({ func, arg }) => {
+					return codegen(env, arg);
+				},
+			)
+			.with(
+				{
+					type: "App",
+					func: { type: "Lit", value: { type: "Atom", value: "Variant" } },
+					arg: { type: "Row" },
+				},
+				({ func, arg }) => {
+					return `/* variant */${codegen(env, arg)}`;
+				},
+			)
+			.with({ type: "App" }, app => {
+				const fn = codegen(env, app.func);
+				const arg = codegen(env, app.arg);
 
-				if (row.type === "variable") {
-					return [];
-				}
+				return `(${fn})(${arg})`;
+			})
+			.with({ type: "Block" }, block => {
+				const [, stmts] = block.statements.reduce(
+					([env, code], stmt) => {
+						const code_ = (code += " " + Statement.codegen(env, stmt) + ";");
+						const env_ = stmt.type === "Let" ? [stmt.variable, ...env] : env;
+						return [env_, code_];
+					},
+					[env, ""],
+				);
+				const ret = codegen(env, block.return);
+				return `((_ => { ${stmts} return ${ret}; })())`;
+			})
+			// .with({ type: "Annotation" }, ann => {
+			// 	return codegen(env, ann.term);
+			// })
+			.with({ type: "Proj" }, proj => {
+				const label = Number.isNaN(parseInt(proj.label)) ? `"${proj.label}"` : proj.label;
+				return `${codegen(env, proj.term)}[${label}]`;
+			})
+			.with({ type: "Inj" }, inj => {
+				const obj = codegen(env, inj.term);
+				const val = codegen(env, inj.value);
+				return `{ ...${obj}, ${inj.label}: ${val} }`;
+			})
+			.with({ type: "Row" }, ({ row }) => {
+				const extract = (row: EB.Row): Array<string> => {
+					if (row.type === "empty") {
+						return [];
+					}
 
-				return [row.label, ...extract(row.row)];
-			};
+					if (row.type === "variable") {
+						return [];
+					}
 
-			const gen = (r: EB.Row, code: string) => {
-				if (r.type === "empty") {
-					return `((() => {${code}\nreturn ${DEFAULT_RECORD_NAME};\n})())`;
-				}
+					return [row.label, ...extract(row.row)];
+				};
 
-				if (r.type === "variable") {
-					throw new Error("Cannot compile rows with variable: " + JSON.stringify(row));
-				}
+				const gen = (r: EB.Row, code: string) => {
+					if (r.type === "empty") {
+						return `((() => {${code}\nreturn ${DEFAULT_RECORD_NAME};\n})())`;
+					}
 
-				const dec = `\nObject.defineProperty(rec, "${r.label}", { get: () => ${codegen(env, r.value)}, enumerable: true });`;
-				return gen(r.row, code + dec);
-			};
+					if (r.type === "variable") {
+						throw new Error("Cannot compile rows with variable: " + JSON.stringify(row));
+					}
 
-			return gen(row, "\nconst rec = {};");
-		})
-		.with({ type: "Match" }, patMatch => {
-			const scrutinee = codegen(env, patMatch.scrutinee);
-			const alts = patMatch.alternatives.map(alt => Alternative.codegen(env, alt, "$x")).join(" else ");
-			return `(() => {
+					const dec = `\nObject.defineProperty(rec, "${r.label}", { get: () => ${codegen(env, r.value)}, enumerable: true });`;
+					return gen(r.row, code + dec);
+				};
+
+				return gen(row, "\nconst rec = {};");
+			})
+			.with({ type: "Match" }, patMatch => {
+				const scrutinee = codegen(env, patMatch.scrutinee);
+				const alts = patMatch.alternatives.map(alt => Alternative.codegen(env, alt, "$x")).join(" else ");
+				return `(() => {
                 const $x = ${scrutinee};
                 ${alts}
             })()`;
-		})
-		.otherwise(_ => {
-			throw new Error("Code gen not yet implemented");
-		});
+			})
+			.otherwise(_ => {
+				throw new Error("Code gen not yet implemented");
+			})
+	);
 };
 
 export const Lit = {

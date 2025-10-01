@@ -10,7 +10,7 @@ type Struct = Extract<Src.Term, { type: "struct" }>;
 
 export const infer = (struct: Struct): V2.Elaboration<EB.AST> =>
 	V2.track(
-		["src", struct, { action: "infer", description: "Struct" }],
+		{ tag: "src", type: "term", term: struct, metadata: { action: "infer", description: "Struct" } },
 		V2.Do(function* () {
 			const [row, ty, qs] = yield* EB.Rows.resolveSigmas.gen(struct.row);
 			return [EB.Constructors.Struct(row), NF.Constructors.Schema(ty), qs];
