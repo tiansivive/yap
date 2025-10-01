@@ -18,7 +18,13 @@ type Collector<A> = {
 	metas: EB.Context["metas"];
 	result: Either<Err, A>;
 };
+
 type Accumulator = Omit<Collector<unknown>, "result">;
+const concat: (fa: Accumulator, fb: Accumulator) => Accumulator = (fa, fb) => ({
+	constraints: fa.constraints.concat(fb.constraints),
+	binders: fa.binders.concat(fb.binders),
+	metas: { ...fa.metas, ...fb.metas },
+});
 
 export type Err = Cause & { provenance?: P.Provenance[] };
 
@@ -42,12 +48,6 @@ export function fmap<A, B>(...args: [(x: A) => B] | [Collector<A>, (x: A) => B])
 	const [fa, f] = args;
 	return { ...fa, result: E.Functor.map(fa.result, f) };
 }
-
-const concat: (fa: Omit<Collector<unknown>, "result">, fb: Omit<Collector<unknown>, "result">) => Omit<Collector<unknown>, "result"> = (fa, fb) => ({
-	constraints: fa.constraints.concat(fb.constraints),
-	binders: fa.binders.concat(fb.binders),
-	metas: { ...fa.metas, ...fb.metas },
-});
 
 export function chain<A, B>(fa: Collector<A>, f: (x: A) => Collector<B>): Collector<B>;
 export function chain<A, B>(f: (x: A) => Collector<B>): (fa: Collector<A>) => Collector<B>;
@@ -247,6 +247,7 @@ export function Do<R, A>(gen: () => Generator<Elaboration<any>, R, A>): Elaborat
 		const result = mkCollector(state.value);
 		result.binders = collected.binders;
 		result.constraints = collected.constraints;
+		result.metas = collected.metas;
 		return result;
 	};
 }

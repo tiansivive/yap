@@ -31,6 +31,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				.with([NF.Patterns.Flex, NF.Patterns.Flex], ([meta1, meta2]) =>
 					V2.Do<Subst, Subst>(function* () {
 						const s = Sub.compose(bind(ctx, meta1.variable, meta2), subst);
+
 						const ann1 = ctx.metas[meta1.variable.val].ann;
 						const ann2 = ctx.metas[meta2.variable.val].ann;
 						const s1 = yield* unify.gen(ann1, ann2, lvl, s);

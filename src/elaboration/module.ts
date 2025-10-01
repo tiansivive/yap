@@ -114,7 +114,7 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 	const inference = V2.Do(function* () {
 		const [elaborated, ty, us] = yield* EB.Stmt.infer.gen(stmt);
 		const { constraints, metas } = yield* V2.listen();
-		const subst = yield* V2.pure(solve(constraints));
+		const subst = yield* V2.local(set("metas", metas), solve(constraints));
 		//const tyZonked = yield* EB.zonk.gen("nf", ty, subst);
 		const zonked = F.pipe(
 			ctx,
@@ -148,7 +148,7 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 	const inference = V2.Do(function* () {
 		const [elaborated, ty, us] = yield* EB.infer.gen(stmt.value);
 		const { constraints, metas } = yield* V2.listen();
-		const subst = yield* V2.pure(solve(constraints));
+		const subst = yield* V2.local(set("metas", metas), solve(constraints));
 
 		console.log("Substitution:\n", Sub.display(subst, metas));
 		const zonked = F.pipe(

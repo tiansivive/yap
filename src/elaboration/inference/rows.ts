@@ -116,7 +116,7 @@ export const extract = function* (row: Src.Row, lvl: number, types?: NF.Row): Ge
 	const ty = NF.Constructors.Var(yield* EB.freshMeta(lvl, kty));
 	const info: EB.Sigma = { nf: tm, ann: ty, multiplicity: Q.Many };
 
-	const rest = extract({ ...row.row, location: row.location }, lvl + 1);
+	const rest = yield* extract({ ...row.row, location: row.location }, lvl + 1);
 	return setProp(rest, row.label, info);
 	// return [[row.label, [v, Q.Many]], ...extract({ ...row.row, location: row.location }, lvl + 1)]
 };
