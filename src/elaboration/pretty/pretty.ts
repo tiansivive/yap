@@ -103,11 +103,11 @@ const displayConstraint = (constraint: EB.Constraint, zonker: EB.Zonker, metas: 
 
 const displayContext = (context: EB.Context): object => {
 	const pretty = {
-		env: context.env.map(ty => NF.display(ty, context.zonker, context.metas)),
-		types: context.types.map(
-			([binder, origin, mv]) => `${displayBinder(binder.type)} ${binder.variable} (${origin}): ${NF.display(mv, context.zonker, context.metas)}`,
-		),
-		names: context.names,
+		env: context.env.map(({ nf, type: [binder, origin, mv], name }) => ({
+			nf: NF.display(nf, context.zonker, context.metas),
+			type: `${displayBinder(binder.type)} ${binder.variable} (${origin}): ${NF.display(mv, context.zonker, context.metas)}`,
+			name,
+		})),
 		imports: context.imports,
 	};
 	return pretty;

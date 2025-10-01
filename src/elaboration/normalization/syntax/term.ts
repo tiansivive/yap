@@ -43,8 +43,6 @@ export type Closure =
 	| { type: "Closure"; ctx: EB.Context; term: EB.Term }
 	| { type: "PrimOp"; ctx: EB.Context; term: EB.Term; arity: number; compute: (...args: Value[]) => Value };
 
-export type Env = ModalValue[];
-
 export const Constructors = {
 	Var: (variable: Variable): Value => Types.make(nf_tag, { type: "Var", variable }),
 	Pi: (variable: string, icit: Implicitness, annotation: ModalValue, closure: Closure) =>

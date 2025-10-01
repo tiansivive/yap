@@ -20,16 +20,21 @@ import { Provenance } from "./provenance";
 type Origin = "inserted" | "source";
 
 export type Context = {
-	types: Array<[Binder, Origin, NF.ModalValue]>;
-	env: NF.Env;
-	names: Array<Binder>;
+	env: Array<{
+		type: [Binder, Origin, NF.ModalValue];
+		nf: NF.ModalValue;
+		name: Binder;
+	}>;
+	// types: Array<[Binder, Origin, NF.ModalValue]>;
+	// env: NF.Env;
+	// names: Array<Binder>;
 	implicits: Array<[EB.Term, NF.Value]>;
 	sigma: Record<string, Sigma>;
-	imports: Record<string, AST>;
-	trace: P.Stack<Provenance>;
 	zonker: Sub.Subst;
-	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
 	metas: Record<number, { meta: EB.Meta; ann: NF.Value }>;
+	imports: Record<string, AST>;
+	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
+	trace: P.Stack<Provenance>;
 };
 
 export type Zonker = Context["zonker"];
@@ -54,7 +59,7 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<AST
 		throw new Error(`Label not found: ${variable.value}`);
 	}
 
-	const _lookup = (i: number, variable: Src.Variable, types: Context["types"]): V2.Elaboration<AST> => {
+	const _lookup = (i: number, variable: Src.Variable, types: Array<Context["env"][number]["type"]>): V2.Elaboration<AST> => {
 		// free vars can be shadowed by bound vars, so only if no bound vars are found do we check for free vars
 		// QUESTION: should we disallow this shadowing?
 		if (types.length === 0) {
@@ -83,7 +88,11 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<AST
 		return _lookup(i + 1, variable, rest);
 	};
 
-	return _lookup(0, variable, ctx.types);
+	return _lookup(
+		0,
+		variable,
+		ctx.env.map(v => v.type),
+	);
 };
 lookup.gen = F.flow(lookup, V2.pure);
 
@@ -112,32 +121,44 @@ resolveImplicit.gen = F.flow(resolveImplicit, V2.pure);
 
 export const bind = (context: Context, binder: Binder, annotation: NF.ModalValue, origin: Origin = "source"): Context => {
 	const [, q] = annotation;
-	const { env, types } = context;
+	const { env } = context;
+
+	const entry: Context["env"][number] = {
+		nf: [NF.Constructors.Rigid(env.length), q],
+		type: [binder, origin, annotation],
+		name: binder,
+	};
+
 	return {
 		...context,
-		env: [[NF.Constructors.Rigid(env.length), q], ...env],
-		types: [[binder, origin, annotation], ...types],
-		names: [binder, ...context.names],
+		env: [entry, ...env],
 	};
 };
 
 export const extend = (context: Context, binder: Binder, value: NF.ModalValue, origin: Origin = "source"): Context => {
-	const { env, types } = context;
+	const { env } = context;
+
+	const entry: Context["env"][number] = {
+		nf: value,
+		type: [binder, origin, new Error("Need to implemented typed metas: Get the type from metas context") as any],
+		name: binder,
+	};
 	return {
 		...context,
-		env: [value, ...env],
-		types: [[binder, origin, new Error("Need to implemented typed metas") as any], ...types],
-		names: [binder, ...context.names],
+		env: [entry, ...env],
 	};
 };
 
 export const unfoldMu = (context: Context, binder: Binder, annotation: NF.ModalValue, origin: Origin = "source"): Context => {
-	const { env, types } = context;
+	const { env } = context;
+	const entry: Context["env"][number] = {
+		nf: annotation, // NOTE: mu types are directly placed in the env
+		type: [binder, origin, annotation],
+		name: binder,
+	};
 	return {
 		...context,
-		env: [annotation, ...env], // NOTE: mu types are directly placed in the env
-		types: [[binder, origin, annotation], ...types],
-		names: [binder, ...context.names],
+		env: [entry, ...env],
 	};
 };
 
@@ -148,15 +169,16 @@ export const extendSigma = (ctx: Context, variable: string, sigma: Sigma): Conte
 export const muContext = (ctx: Context): Context => {
 	return {
 		...ctx,
-		types: ctx.types.map(([b, ...rest]) => {
+		env: ctx.env.map((e): Context["env"][number] => {
+			const [b, ...rest] = e.type;
 			if (b.type === "Let") {
-				return [{ ...b, type: "Mu" }, ...rest];
+				return { ...e, type: [{ ...b, type: "Mu" }, ...rest] };
 			}
-			return [b, ...rest];
+			return e;
 		}),
 	};
 };
 
 export const prune = (ctx: Context, lvl: number): Context => {
-	return F.pipe(ctx, update("env", A.takeRight(lvl)), update("types", A.takeRight(lvl)), update("names", A.takeRight(lvl)));
+	return update(ctx, "env", A.takeRight(lvl));
 };

@@ -4,8 +4,6 @@ import * as Sub from "@yap/elaboration/unification/substitution";
 
 export const defaultContext: EB.Context = {
     env: [],
-    types: [],
-    names: [],
     implicits: [],
     sigma: {},
     trace: [],

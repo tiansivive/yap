@@ -46,7 +46,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			return ctx.zonker[variable.val];
 		})
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
-			return ctx.env[variable.index][0];
+			return ctx.env[variable.index].nf[0];
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
 			const val = ctx.ffi[variable.name];
@@ -131,7 +131,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 						}
 
 						if (r.variable.type === "Bound") {
-							const [_val] = ctx.env[r.variable.index];
+							const [_val] = ctx.env[r.variable.index].nf;
 							const val = unwrapNeutral(_val);
 
 							if (val.type === "Row") {
@@ -204,7 +204,7 @@ export const apply = (binder: EB.Binder, closure: NF.Closure, value: NF.Value, m
 		return evaluate(extended, term);
 	}
 
-	const args = extended.env.slice(0, closure.arity).map(([v]) => v);
+	const args = extended.env.slice(0, closure.arity).map(({ nf: [v] }) => v);
 	return closure.compute(...args);
 };
 
