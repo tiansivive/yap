@@ -10,10 +10,11 @@ import { Literal } from "@yap/shared/literals";
 import { match, Pattern as Pat } from "ts-pattern";
 
 import * as F from "fp-ts/lib/function";
+import { Simplify } from "type-fest";
 
+export type Term = Types.Brand<typeof tag, Constructor & { id: number }>;
 const tag: unique symbol = Symbol("Term");
-export type Term = Types.Brand<
-	typeof tag,
+type Constructor =
 	| { type: "Lit"; value: Literal }
 	| { type: "Var"; variable: Variable }
 	| { type: "Abs"; binding: Binding; body: Term }
@@ -22,8 +23,7 @@ export type Term = Types.Brand<
 	| { type: "Proj"; label: string; term: Term }
 	| { type: "Inj"; label: string; value: Term; term: Term }
 	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> }
-	| { type: "Block"; statements: Array<Statement>; return: Term } //& { id: number }
->;
+	| { type: "Block"; statements: Array<Statement>; return: Term };
 
 export type Variable =
 	| { type: "Bound"; index: number }
@@ -72,28 +72,35 @@ export const Meta = (val: number, lvl: number): Variable => ({ type: "Meta", val
 
 let currentId = 0;
 const nextId = () => ++currentId;
+export const mk = <K extends Constructor["type"]>(ctor: Extract<Constructor, { type: K }>) => {
+	const r = Types.make(tag, { ...ctor, id: nextId() });
+	return r as Simplify<typeof r>;
+};
+
+const foo = mk({ type: "Lit", value: { type: "Num", value: 42 } });
+
 export const Constructors = {
-	Abs: (binding: Binding, body: Term): Extract<Term, { type: "Abs" }> => Types.make(tag, { id: nextId(), type: "Abs", binding, body }),
+	Abs: (binding: Binding, body: Term): Extract<Term, { type: "Abs" }> => mk({ type: "Abs", binding, body }),
 	Lambda: (variable: string, icit: Implicitness, body: Term): Term =>
-		Types.make(tag, {
+		mk({
 			type: "Abs",
 			binding: { type: "Lambda" as const, variable, icit },
 			body,
 		}),
 	Pi: (variable: string, icit: Implicitness, multiplicity: Q.Multiplicity, annotation: Term, body: Term): Term =>
-		Types.make(tag, {
+		mk({
 			type: "Abs",
 			binding: { type: "Pi" as const, variable, icit, annotation, multiplicity },
 			body,
 		}),
 	Mu: (variable: string, source: string, annotation: Term, body: Term): Term =>
-		Types.make(tag, {
+		mk({
 			type: "Abs",
 			binding: { type: "Mu", variable, source, annotation },
 			body,
 		}),
 	Var: (variable: Variable): Term =>
-		Types.make(tag, {
+		mk({
 			type: "Var",
 			variable,
 		}),
@@ -105,27 +112,27 @@ export const Constructors = {
 		Meta: (val: number, lvl: number): Variable => ({ type: "Meta", val, lvl }),
 	},
 	App: (icit: Implicitness, func: Term, arg: Term): Term =>
-		Types.make(tag, {
+		mk({
 			type: "App",
 			icit,
 			func,
 			arg,
 		}),
 	Lit: (value: Literal): Term =>
-		Types.make(tag, {
+		mk({
 			type: "Lit",
 			value,
 		}),
 	// Annotation: (term: Term, ann: Term): Term => ({ type: "Annotation", term, ann }),
 
-	Row: (row: Row): Term => Types.make(tag, { type: "Row", row }),
-	Extension: (label: string, value: Term, row: Row): Row => Types.make(tag, { type: "extension", label, value, row }),
+	Row: (row: Row): Term => mk({ type: "Row", row }),
+	Extension: (label: string, value: Term, row: Row): Row => ({ type: "extension", label, value, row }),
 
 	Struct: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row)),
 	Schema: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row)),
 	Variant: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row)),
-	Proj: (label: string, term: Term): Term => Types.make(tag, { type: "Proj", label, term }),
-	Inj: (label: string, value: Term, term: Term): Term => Types.make(tag, { type: "Inj", label, value, term }),
+	Proj: (label: string, term: Term): Term => mk({ type: "Proj", label, term }),
+	Inj: (label: string, value: Term, term: Term): Term => mk({ type: "Inj", label, value, term }),
 
 	Indexed: (index: Term, term: Term, strategy?: Term): Term => {
 		const indexing = Constructors.App("Explicit", Constructors.Var({ type: "Foreign", name: "Indexed" }), index);
@@ -134,10 +141,10 @@ export const Constructors = {
 		return strat;
 	},
 
-	Match: (scrutinee: Term, alternatives: Array<Alternative>): Term => Types.make(tag, { type: "Match", scrutinee, alternatives }),
+	Match: (scrutinee: Term, alternatives: Array<Alternative>): Term => mk({ type: "Match", scrutinee, alternatives }),
 	Alternative: (pattern: Pattern, term: Term): Alternative => ({ pattern, term }),
 
-	Block: (statements: Array<Statement>, term: Term): Term => Types.make(tag, { type: "Block", statements, return: term }),
+	Block: (statements: Array<Statement>, term: Term): Term => mk({ type: "Block", statements, return: term }),
 	Patterns: {
 		Binder: (value: string): Pattern => ({ type: "Binder", value }),
 		Var: (value: string, term: Term): Pattern => ({ type: "Var", value, term }),

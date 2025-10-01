@@ -6,6 +6,7 @@ import * as Src from "@yap/src/index";
 
 import * as R from "@yap/shared/rows";
 
+export type WithProvenance<T extends object> = T & { trace: Provenance[] };
 export type Provenance = (
 	| { tag: "src"; type: "term"; term: Src.Term }
 	| { tag: "src"; type: "stmt"; stmt: Src.Statement }

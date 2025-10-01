@@ -13,7 +13,7 @@ import * as P from "./provenance";
 export type Elaboration<A> = (ctx: EB.Context, w?: Omit<Collector<A>, "result">) => Collector<A>;
 
 type Collector<A> = {
-	constraints: EB.WithProvenance<EB.Constraint>[];
+	constraints: P.WithProvenance<EB.Constraint>[];
 	binders: EB.Binder[];
 	metas: EB.Context["metas"];
 	result: Either<Err, A>;

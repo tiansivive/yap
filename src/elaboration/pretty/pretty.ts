@@ -94,9 +94,9 @@ const displayConstraint = (constraint: EB.Constraint, zonker: EB.Zonker, metas: 
 		return `${Q.display(constraint.computed)} <= ${Q.display(constraint.expected)}`;
 	}
 
-	if (constraint.type === "resolve") {
-		return `?${constraint.meta.val}\n@ ${NF.display(constraint.annotation, zonker, metas)}`;
-	}
+	// if (constraint.type === "resolve") {
+	// 	return `?${constraint.meta.val}\n@ ${NF.display(constraint.annotation, zonker, metas)}`;
+	// }
 
 	return "Unknown Constraint";
 };

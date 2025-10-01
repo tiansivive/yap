@@ -11,14 +11,15 @@ import * as Err from "@yap/elaboration/shared/errors";
 import * as F from "fp-ts/lib/function";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
+import { WithProvenance } from "../shared/provenance";
 
 export type Constraint =
 	| { type: "assign"; left: NF.Value; right: NF.Value; lvl: number }
-	| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity }
-	| { type: "resolve"; meta: Extract<EB.Variable, { type: "Meta" }>; annotation: NF.Value };
+	| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity };
+//| { type: "resolve"; meta: Extract<EB.Variable, { type: "Meta" }>; annotation: NF.Value };
 // | { type: "sigma"; lvl: number; dict: Record<string, NF.Value> }
 
-type Ctaint = EB.WithProvenance<Constraint>;
+type Ctaint = WithProvenance<Constraint>;
 export const solve = (cs: Array<Ctaint>): V2.Elaboration<Subst> =>
 	V2.Do(function* () {
 		const ctx = yield* V2.ask();

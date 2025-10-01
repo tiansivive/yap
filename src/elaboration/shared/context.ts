@@ -25,9 +25,6 @@ export type Context = {
 		nf: NF.ModalValue;
 		name: Binder;
 	}>;
-	// types: Array<[Binder, Origin, NF.ModalValue]>;
-	// env: NF.Env;
-	// names: Array<Binder>;
 	implicits: Array<[EB.Term, NF.Value]>;
 	sigma: Record<string, Sigma>;
 	zonker: Sub.Subst;
@@ -41,8 +38,6 @@ export type Zonker = Context["zonker"];
 
 export type AST = [EB.Term, NF.Value, Q.Usages];
 export type Sigma = { nf: NF.Value; ann: NF.Value; multiplicity: Q.Multiplicity };
-
-export type WithProvenance<T extends object> = T & { trace: Provenance[] };
 
 export type Binder = Pick<EB.Binding, "type" | "variable">;
 
