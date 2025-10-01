@@ -21,7 +21,7 @@ export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
 						const ctx = yield* V2.ask();
 						const ann = letdec.annotation
 							? yield* EB.check.gen(letdec.annotation, NF.Type)
-							: ([EB.Constructors.Var(freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
+							: ([EB.Constructors.Var(yield* freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
 						const va = NF.evaluate(ctx, ann[0]);
 						const q = letdec.multiplicity || Q.Many;
 

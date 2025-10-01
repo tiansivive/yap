@@ -17,7 +17,7 @@ export const infer = (dict: Dictionary): V2.Elaboration<EB.AST> =>
 			const [tm1, ty1, us1] = yield EB.infer(dict.index);
 			const [tm2, ty2, us2] = yield EB.infer(dict.term);
 			const ctx = yield* V2.ask();
-			const strategy = EB.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
+			const strategy = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 			return [EB.Constructors.Indexed(tm1, tm2, strategy), NF.Type, Q.add(us1, us2)] satisfies EB.AST;
 		}),
 	);

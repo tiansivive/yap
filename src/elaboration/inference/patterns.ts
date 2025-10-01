@@ -58,8 +58,8 @@ export const infer: Inference<Src.Pattern, "type"> = {
 				const [tm, ty, us] = free;
 				return [EB.Constructors.Patterns.Var(pat.value.value, tm), ty, us, []];
 			}
-			const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
-			const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length, kind));
+			const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+			const meta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
 			const va = NF.evaluate(ctx, meta);
 			const zero = Q.noUsage(ctx.env.length);
 			const binder: Binder = [pat.value.value, va, zero];
@@ -83,26 +83,28 @@ export const infer: Inference<Src.Pattern, "type"> = {
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			const [r, rowty, rus, binders] = yield* elaborate.gen(pat.row);
-			const addVar = (nfr: NF.Row): NF.Row => {
+			const addVar = function* (nfr: NF.Row): Generator<V2.Elaboration<any>, NF.Row, any> {
 				if (nfr.type === "empty") {
-					return R.Constructors.Variable(EB.freshMeta(ctx.env.length, NF.Row));
+					return R.Constructors.Variable(yield* EB.freshMeta(ctx.env.length, NF.Row));
 				}
 
 				if (nfr.type === "variable") {
 					return nfr;
 				}
-				return R.Constructors.Extension(nfr.label, nfr.value, addVar(nfr.row));
+				const tail = yield* addVar(nfr.row);
+				return R.Constructors.Extension(nfr.label, nfr.value, tail);
 			};
 
-			return [EB.Constructors.Patterns.Variant(r), NF.Constructors.Variant(addVar(rowty)), rus, binders] satisfies Result;
+			const tail = yield* addVar(rowty);
+			return [EB.Constructors.Patterns.Variant(r), NF.Constructors.Variant(tail), rus, binders] satisfies Result;
 		}),
 	),
 
 	Wildcard: V2.regen(_ =>
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
-			const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
-			const meta = NF.Constructors.Var(EB.freshMeta(ctx.env.length, kind));
+			const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+			const meta = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
 			return [EB.Constructors.Patterns.Wildcard(), meta, Q.noUsage(ctx.env.length), []];
 		}),
 	),
@@ -116,8 +118,8 @@ export const infer: Inference<Src.Pattern, "type"> = {
 	List: V2.regen(pat =>
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
-			const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
-			const mvar = EB.Constructors.Var(EB.freshMeta(ctx.env.length, kind));
+			const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+			const mvar = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
 
 			const v = NF.evaluate(ctx, mvar);
 
@@ -161,7 +163,7 @@ const elaborate = V2.regen(
 				.with({ type: "empty" }, r => V2.of([r, R.Constructors.Empty(), Q.noUsage(ctx.env.length), []] satisfies RowResult))
 				.with({ type: "variable" }, ({ variable }) =>
 					V2.Do(function* () {
-						const meta = EB.freshMeta(ctx.env.length, NF.Row);
+						const meta = yield* EB.freshMeta(ctx.env.length, NF.Row);
 						const zero = Q.noUsage(ctx.env.length);
 						const binder: Binder = [variable.value, NF.Constructors.Var(meta), zero];
 						return [R.Constructors.Variable(variable.value), R.Constructors.Variable(meta), zero, [binder]] satisfies RowResult;

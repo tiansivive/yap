@@ -49,8 +49,8 @@ export const infer = (tm: Match): V2.Elaboration<EB.AST> =>
 				scrutinee,
 				alternatives.map(([alt]) => alt),
 			);
-			const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
-			const matchTy = NF.Constructors.Var(EB.freshMeta(ctx.env.length, kind));
+			const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+			const matchTy = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
 
 			const constraints = alternatives.map(([, ty]): EB.Constraint => ({ type: "assign", left: ty, right: matchTy, lvl: ctx.env.length }));
 			yield* V2.tell("constraint", constraints);

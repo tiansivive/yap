@@ -151,27 +151,31 @@ const rewrite = (r: NF.Row, label: string, s: Subst): V2.Elaboration<[NF.Row, Su
 						return res;
 					}),
 			)
-			.with({ type: "variable" }, ({ variable }): V2.Elaboration<[NF.Row, Subst]> => {
-				if (variable.type !== "Meta") {
-					return V2.Do(() => V2.fail(Err.Impossible("Expected meta variable")));
-				}
+			.with(
+				{ type: "variable" },
+				({ variable }): V2.Elaboration<[NF.Row, Subst]> =>
+					V2.Do(function* () {
+						if (variable.type !== "Meta") {
+							return yield* V2.fail<[NF.Row, Subst]>(Err.Impossible("Expected meta variable"));
+						}
 
-				// If this meta variable is already solved in the current substitution, chase it first
-				const solved = s[variable.val];
-				if (solved) {
-					if (solved.type !== "Row") {
-						throw new Error("Expected row");
-					}
-					return rewrite(solved.row, label, s);
-				}
+						// If this meta variable is already solved in the current substitution, chase it first
+						const solved = s[variable.val];
+						if (solved) {
+							if (solved.type !== "Row") {
+								throw new Error("Expected row");
+							}
+							return yield* V2.pure(rewrite(solved.row, label, s));
+						}
 
-				const kvar = NF.Constructors.Var(EB.freshMeta(lvl, NF.Type));
-				const tvar = NF.Constructors.Var(EB.freshMeta(lvl, kvar));
-				const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta(lvl, NF.Row));
-				const rf = R.Constructors.Extension(label, tvar, rvar);
-				const sub = Sub.of(variable.val, NF.Constructors.Row(rf));
-				return V2.of<[NF.Row, Subst]>([rf, sub]);
-			})
+						const kvar = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
+						const tvar = NF.Constructors.Var(yield* EB.freshMeta(lvl, kvar));
+						const rvar: NF.Row = R.Constructors.Variable(yield* EB.freshMeta(lvl, NF.Row));
+						const rf = R.Constructors.Extension(label, tvar, rvar);
+						const sub = Sub.of(variable.val, NF.Constructors.Row(rf));
+						return [rf, sub] satisfies [NF.Row, Subst];
+					}),
+			)
 			.exhaustive();
 
 		return yield* V2.pure(res);

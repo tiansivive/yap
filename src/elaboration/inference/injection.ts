@@ -32,10 +32,10 @@ const inject = (label: string, value: EB.AST, tm: EB.AST): V2.Elaboration<NF.Val
 				.with({ type: "Neutral" }, ({ value: v }) => inject(label, value, [tm[0], v, tm[2]]))
 				.with({ type: "Var" }, _ =>
 					V2.Do(function* () {
-						const r: NF.Row = { type: "variable", variable: EB.freshMeta(ctx.env.length, NF.Row) };
+						const r: NF.Row = { type: "variable", variable: yield* EB.freshMeta(ctx.env.length, NF.Row) };
 						const rowTypeCtor = EB.Constructors.Pi("rx", "Explicit", Q.Many, EB.Constructors.Lit(Lit.Row()), EB.Constructors.Lit(Lit.Type()));
 						const ann = NF.evaluate(ctx, rowTypeCtor);
-						const ctor = NF.evaluate(ctx, EB.Constructors.Var(EB.freshMeta(ctx.env.length, ann)));
+						const ctor = NF.evaluate(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, ann)));
 
 						const inferred = NF.Constructors.App(ctor, NF.Constructors.Row(r), "Explicit");
 						const extended = NF.Constructors.App(ctor, NF.Constructors.Row(NF.Constructors.Extension(label, value[1], r)), "Explicit");

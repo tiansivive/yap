@@ -16,8 +16,8 @@ export const infer = (list: List): V2.Elaboration<EB.AST> =>
 		{ tag: "src", type: "term", term: list, metadata: { action: "infer", description: "List" } },
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
-			const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
-			const mvar = EB.Constructors.Var(EB.freshMeta(ctx.env.length, kind));
+			const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+			const mvar = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
 			const v = NF.evaluate(ctx, mvar);
 
 			const validate = (tm: Src.Term) =>

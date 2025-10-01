@@ -34,8 +34,8 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 			const result = match<[Src.Term, NF.Value], V2.Elaboration<[EB.Term, Q.Usages]>>([term, type])
 				.with([{ type: "hole" }, P._], () =>
 					V2.Do(function* () {
-						const k = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
-						return [EB.Constructors.Var(freshMeta(ctx.env.length, k)), []] satisfies Result;
+						const k = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+						return [EB.Constructors.Var(yield* freshMeta(ctx.env.length, k)), []] satisfies Result;
 					}),
 				)
 				.with(
@@ -100,7 +100,7 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 				)
 				.with([{ type: "struct" }, NF.Patterns.Schema], ([tm, val]) =>
 					V2.Do(function* () {
-						const bindings = extract(tm.row, ctx.env.length);
+						const bindings = yield* extract(tm.row, ctx.env.length);
 						const [r, us] = yield* V2.local(
 							ctx => entries(bindings).reduce((ctx, [label, mv]) => EB.extendSigma(ctx, label, mv), ctx),
 							Check.row.traverse(tm.row, val.arg.row, Q.noUsage(ctx.env.length), bindings),
@@ -143,7 +143,7 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.Row, Q.Usages]> =>
 	V2.Do(function* () {
 		const ctx = yield* V2.ask();
-		const bindings = extract(row, ctx.env.length);
+		const bindings = yield* extract(row, ctx.env.length);
 
 		return yield* V2.local(
 			ctx => entries(bindings).reduce((ctx, [label, mv]) => EB.extendSigma(ctx, label, mv), ctx),

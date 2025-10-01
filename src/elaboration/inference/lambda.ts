@@ -19,7 +19,7 @@ export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
 
 			const [ann, us] = lam.annotation
 				? yield* EB.check.gen(lam.annotation, NF.Type)
-				: ([EB.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
+				: ([EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
 
 			const ty = NF.evaluate(ctx, ann);
 			const mty: NF.ModalValue = [ty, lam.multiplicity ? lam.multiplicity : Q.Many];

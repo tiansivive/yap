@@ -18,7 +18,7 @@ export const infer = (tagged: Tagged): V2.Elaboration<EB.AST> =>
 
 			const [tm, ty, us] = yield* EB.infer.gen(term);
 			const ctx = yield* V2.ask();
-			const rvar: NF.Row = R.Constructors.Variable(EB.freshMeta(ctx.env.length, NF.Row));
+			const rvar: NF.Row = R.Constructors.Variable(yield* EB.freshMeta(ctx.env.length, NF.Row));
 			const row: NF.Row = NF.Constructors.Extension(tag, ty, rvar);
 			const variant = NF.Constructors.Variant(row);
 

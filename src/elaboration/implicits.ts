@@ -31,7 +31,7 @@ export function insert(node: EB.AST): V2.Elaboration<EB.AST> {
 						const tm = EB.Constructors.App("Implicit", term, found[0]);
 						return [tm, bodyNF, us] satisfies EB.AST;
 					}
-					const meta = EB.freshMeta(ctx.env.length, pi.binder.annotation[0]);
+					const meta = yield* EB.freshMeta(ctx.env.length, pi.binder.annotation[0]);
 					const mvar = EB.Constructors.Var(meta);
 					const vNF = NF.evaluate(ctx, mvar);
 

@@ -31,7 +31,7 @@ infer.gen = F.flow(infer, V2.pure);
 export const resolveSigmas = (row: Src.Row): V2.Elaboration<[EB.Row, NF.Row, Q.Usages]> =>
 	V2.Do(function* () {
 		const ctx = yield* V2.ask();
-		const bindings = extract(row, ctx.env.length);
+		const bindings = yield* extract(row, ctx.env.length);
 		const r = yield* V2.local(
 			ctx_ => entries(bindings).reduce((ctx, [label, mv]) => EB.extendSigma(ctx, label, mv), ctx_),
 			V2.Do(() => elaborate.gen(row, bindings)),
@@ -100,7 +100,7 @@ const elaborate = (row: Src.Row, bindings: Record<string, EB.Sigma>): V2.Elabora
 	});
 elaborate.gen = F.flow(elaborate, V2.pure);
 
-export const extract = (row: Src.Row, lvl: number, types?: NF.Row): Record<string, EB.Sigma> => {
+export const extract = function* (row: Src.Row, lvl: number, types?: NF.Row): Generator<V2.Elaboration<any>, Record<string, EB.Sigma>, any> {
 	if (row.type === "empty") {
 		return {};
 	}
@@ -109,11 +109,11 @@ export const extract = (row: Src.Row, lvl: number, types?: NF.Row): Record<strin
 		return {};
 	}
 
-	const ktm = NF.Constructors.Var(EB.freshMeta(lvl, NF.Type));
-	const tm = NF.Constructors.Var(EB.freshMeta(lvl, ktm));
+	const ktm = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
+	const tm = NF.Constructors.Var(yield* EB.freshMeta(lvl, ktm));
 
-	const kty = NF.Constructors.Var(EB.freshMeta(lvl, NF.Type));
-	const ty = NF.Constructors.Var(EB.freshMeta(lvl, kty));
+	const kty = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
+	const ty = NF.Constructors.Var(yield* EB.freshMeta(lvl, kty));
 	const info: EB.Sigma = { nf: tm, ann: ty, multiplicity: Q.Many };
 
 	const rest = extract({ ...row.row, location: row.location }, lvl + 1);

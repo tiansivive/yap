@@ -63,11 +63,12 @@ const mkPi = (fnType: NF.Value, icit: Implicitness) =>
 		})
 		.otherwise(function* () {
 			const ctx = yield* V2.ask();
-			const meta = EB.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
+
+			const meta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 			const nf = NF.evaluate(ctx, meta);
 			const mnf: NF.ModalValue = [nf, Q.Many];
-			const kind = NF.Constructors.Var(EB.freshMeta(ctx.env.length, NF.Type));
-			const closure = NF.Constructors.Closure(ctx, EB.Constructors.Var(EB.freshMeta(ctx.env.length + 1, kind)));
+			const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+			const closure = NF.Constructors.Closure(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length + 1, kind)));
 
 			const pi = NF.Constructors.Pi("x", icit, mnf, closure);
 
