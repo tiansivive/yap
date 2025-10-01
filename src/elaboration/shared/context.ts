@@ -28,6 +28,7 @@ export type Context = {
 	trace: P.Stack<Provenance>;
 	zonker: Sub.Subst;
 	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
+	metas: Record<number, NF.ModalValue>;
 };
 
 export type Zonker = Context["zonker"];

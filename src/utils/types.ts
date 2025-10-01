@@ -1,8 +1,8 @@
-export type Extend<T, Base, Metadata> = [RecursiveExtend<T, Base, Metadata>, Metadata];
+export type Extend<T, Brand extends symbol, Metadata> = [RecursiveExtend<T, Brand, Metadata>, Metadata];
 
-type RecursiveExtend<T, Base, Metadata> = T extends object
+type RecursiveExtend<T, Brand extends symbol, Metadata> = T extends object
 	? {
-			[K in keyof T]: T[K] extends Base ? [RecursiveExtend<T[K], Base, Metadata>, Metadata] : RecursiveExtend<T[K], Base, Metadata>;
+			[K in keyof T]: T[K] extends { [S in Brand]: void } ? [RecursiveExtend<T[K], Brand, Metadata>, Metadata] : RecursiveExtend<T[K], Brand, Metadata>;
 		}
 	: T;
 
@@ -28,3 +28,8 @@ export type SetProp<P extends string, V, T extends object> = (P extends `${infer
 export type Expand<T> = T extends unknown ? { [K in keyof T]: T[K] } : never;
 
 export type Tags<T, K> = K extends string ? (T extends { [k in K]: infer U } ? U : never) : never;
+
+export type Brand<S extends symbol, T> = T & { [K in S]: void };
+export const make = <T, S extends symbol>(s: S, a: T): Brand<S, T> => {
+	return Object.defineProperty(a, s, { value: void 0 }) as Brand<S, T>;
+};

@@ -6,11 +6,14 @@ import * as Lit from "@yap/shared/literals";
 import { Literal } from "@yap/shared/literals";
 import { Implicitness } from "@yap/shared/implicitness";
 import { match } from "ts-pattern";
-import { update } from "@yap/utils";
+import { Types, update } from "@yap/utils";
 
 export type ModalValue = [Value, Q.Multiplicity];
 
-export type Value =
+export const nf_tag: unique symbol = Symbol("NF");
+
+export type Value = Types.Brand<typeof nf_tag, Constructor>;
+type Constructor =
 	| { type: "Var"; variable: Variable }
 	| { type: "Lit"; value: Literal }
 	| { type: "App"; func: Value; arg: Value; icit: Implicitness }
@@ -34,7 +37,7 @@ export type Variable =
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
-	| { type: "Meta"; val: number; lvl: number; ann: Value };
+	| { type: "Meta"; val: number; lvl: number };
 
 export type Closure =
 	| { type: "Closure"; ctx: EB.Context; term: EB.Term }
@@ -43,73 +46,82 @@ export type Closure =
 export type Env = ModalValue[];
 
 export const Constructors = {
-	Var: (variable: Variable): Value => ({ type: "Var", variable }),
-	Pi: (variable: string, icit: Implicitness, annotation: ModalValue, closure: Closure) => ({
-		type: "Abs" as const,
-		binder: { type: "Pi" as const, variable, icit, annotation },
-		closure,
-	}),
-	Mu: (variable: string, source: string, annotation: ModalValue, closure: Closure): Value => ({
-		type: "Abs" as const,
-		binder: { type: "Mu", variable, annotation, source },
-		closure,
-	}),
-	Lambda: (variable: string, icit: Implicitness, closure: Closure) => ({
-		type: "Abs" as const,
-		binder: { type: "Lambda" as const, variable, icit },
-		closure,
-	}),
-	Rigid: (lvl: number): Value => ({
-		type: "Neutral",
-		value: {
-			type: "Var" as const,
-			variable: { type: "Bound", lvl },
-		},
-	}),
-	Flex: (variable: { type: "Meta"; val: number; lvl: number; ann: Value }): Value => ({
-		type: "Neutral",
-		value: { type: "Var", variable },
-	}),
-	Lit: (value: Literal) => ({
-		type: "Lit" as const,
-		value,
-	}),
-	Neutral: <T>(value: T) => ({
-		type: "Neutral" as const,
-		value,
-	}),
-	App: (func: Value, arg: Value, icit: Implicitness) => ({
-		type: "App" as const,
-		func,
-		arg,
-		icit,
-	}),
+	Var: (variable: Variable): Value => Types.make(nf_tag, { type: "Var", variable }),
+	Pi: (variable: string, icit: Implicitness, annotation: ModalValue, closure: Closure) =>
+		Types.make(nf_tag, {
+			type: "Abs" as const,
+			binder: { type: "Pi" as const, variable, icit, annotation },
+			closure,
+		}),
+	Mu: (variable: string, source: string, annotation: ModalValue, closure: Closure): Value =>
+		Types.make(nf_tag, {
+			type: "Abs" as const,
+			binder: { type: "Mu", variable, annotation, source },
+			closure,
+		}),
+	Lambda: (variable: string, icit: Implicitness, closure: Closure) =>
+		Types.make(nf_tag, {
+			type: "Abs" as const,
+			binder: { type: "Lambda" as const, variable, icit },
+			closure,
+		}),
+	Rigid: (lvl: number): Value =>
+		Types.make(nf_tag, {
+			type: "Neutral",
+			value: Constructors.Var({ type: "Bound", lvl }),
+		}),
+	Flex: (variable: Extract<Variable, { type: "Meta" }>): Value =>
+		Types.make(nf_tag, {
+			type: "Neutral",
+			value: Constructors.Var(variable),
+		}),
+	Lit: (value: Literal) =>
+		Types.make(nf_tag, {
+			type: "Lit" as const,
+			value,
+		}),
+	Neutral: <T>(value: T) =>
+		Types.make(nf_tag, {
+			type: "Neutral" as const,
+			value,
+		}),
+	App: (func: Value, arg: Value, icit: Implicitness) =>
+		Types.make(nf_tag, {
+			type: "App" as const,
+			func,
+			arg,
+			icit,
+		}),
 	Closure: (ctx: EB.Context, term: EB.Term): Closure => ({ type: "Closure", ctx, term }),
 	Primop: (ctx: EB.Context, term: EB.Term, arity: number, compute: (...args: Value[]) => Value): Closure => ({ type: "PrimOp", ctx, term, arity, compute }),
 
-	Row: (row: Row): Value => ({ type: "Row", row }),
+	Row: (row: Row): Value => Types.make(nf_tag, { type: "Row", row }),
 	Extension: (label: string, value: Value, row: Row): Row => ({ type: "extension", label, value, row }),
 
 	Schema: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit")),
 	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),
 
-	External: (name: string, arity: number, compute: (...args: Value[]) => Value, args: Value[]): Value => ({ type: "External", name, arity, compute, args }),
+	External: (name: string, arity: number, compute: (...args: Value[]) => Value, args: Value[]): Value =>
+		Types.make(nf_tag, { type: "External", name, arity, compute, args }),
 };
 
-export const Type: Value = {
+export const mk = (val: Constructor): Value => {
+	return Types.make(nf_tag, val);
+};
+export const Type: Value = mk({
 	type: "Lit",
 	value: { type: "Atom", value: "Type" },
-};
+});
 
-export const Row: Value = {
+export const Row: Value = mk({
 	type: "Lit",
 	value: { type: "Atom", value: "Row" },
-};
+});
 
-export const Indexed: Value = {
+export const Indexed: Value = mk({
 	type: "Var",
 	variable: { type: "Foreign", name: "Indexed" },
-};
+});
 
 export const Patterns = {
 	Var: { type: "Var" } as const,

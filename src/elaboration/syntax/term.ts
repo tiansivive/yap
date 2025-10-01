@@ -11,9 +11,9 @@ import { match, Pattern as Pat } from "ts-pattern";
 
 import * as F from "fp-ts/lib/function";
 
-export type Node = Types.Extend<Term, Term, NF.ModalValue>;
-
-export type Term =
+const tag: unique symbol = Symbol("Term");
+export type Term = Types.Brand<
+	typeof tag,
 	| { type: "Lit"; value: Literal }
 	| { type: "Var"; variable: Variable }
 	| { type: "Abs"; binding: Binding; body: Term }
@@ -21,9 +21,9 @@ export type Term =
 	| { type: "Row"; row: Row }
 	| { type: "Proj"; label: string; term: Term }
 	| { type: "Inj"; label: string; value: Term; term: Term }
-	| { type: "Annotation"; term: Term; ann: Term }
 	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> }
-	| { type: "Block"; statements: Array<Statement>; return: Term };
+	| { type: "Block"; statements: Array<Statement>; return: Term } //& { id: number }
+>;
 
 export type Variable =
 	| { type: "Bound"; index: number }
@@ -33,7 +33,8 @@ export type Variable =
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
-	| { type: "Meta"; val: number; lvl: number; ann: NF.Value };
+	| { type: "Meta"; val: number; lvl: number };
+export type Meta = Extract<Variable, { type: "Meta" }>;
 export type Row = R.Row<Term, Variable>;
 
 export type Binding =
@@ -60,8 +61,6 @@ export type Pattern =
 	| { type: "List"; patterns: Pattern[]; rest?: string }
 	| { type: "Wildcard" };
 
-type Spine = Array<"Bound" | "Defined">;
-
 export type Statement =
 	| { type: "Expression"; value: Term }
 	| { type: "Let"; variable: string; value: Term; annotation: Term }
@@ -69,57 +68,64 @@ export type Statement =
 
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
 export const Free = (name: string): Variable => ({ type: "Free", name });
-export const Meta = (val: number, lvl: number, kind: NF.Value): Variable => ({ type: "Meta", val, lvl, ann: kind });
+export const Meta = (val: number, lvl: number): Variable => ({ type: "Meta", val, lvl });
 
+let currentId = 0;
+const nextId = () => ++currentId;
 export const Constructors = {
-	Abs: (binding: Binding, body: Term): Term => ({ type: "Abs", binding, body }),
-	Lambda: (variable: string, icit: Implicitness, body: Term): Term => ({
-		type: "Abs",
-		binding: { type: "Lambda" as const, variable, icit },
-		body,
-	}),
-	Pi: (variable: string, icit: Implicitness, multiplicity: Q.Multiplicity, annotation: Term, body: Term): Term => ({
-		type: "Abs",
-		binding: { type: "Pi" as const, variable, icit, annotation, multiplicity },
-		body,
-	}),
-	Mu: (variable: string, source: string, annotation: Term, body: Term): Term => ({
-		type: "Abs",
-		binding: { type: "Mu", variable, source, annotation },
-		body,
-	}),
-	Var: (variable: Variable): Term => ({
-		type: "Var",
-		variable,
-	}),
+	Abs: (binding: Binding, body: Term): Extract<Term, { type: "Abs" }> => Types.make(tag, { id: nextId(), type: "Abs", binding, body }),
+	Lambda: (variable: string, icit: Implicitness, body: Term): Term =>
+		Types.make(tag, {
+			type: "Abs",
+			binding: { type: "Lambda" as const, variable, icit },
+			body,
+		}),
+	Pi: (variable: string, icit: Implicitness, multiplicity: Q.Multiplicity, annotation: Term, body: Term): Term =>
+		Types.make(tag, {
+			type: "Abs",
+			binding: { type: "Pi" as const, variable, icit, annotation, multiplicity },
+			body,
+		}),
+	Mu: (variable: string, source: string, annotation: Term, body: Term): Term =>
+		Types.make(tag, {
+			type: "Abs",
+			binding: { type: "Mu", variable, source, annotation },
+			body,
+		}),
+	Var: (variable: Variable): Term =>
+		Types.make(tag, {
+			type: "Var",
+			variable,
+		}),
 	Vars: {
 		Bound: (index: number): Variable => ({ type: "Bound", index }),
 		Free: (name: string): Variable => ({ type: "Free", name }),
 		Foreign: (name: string): Variable => ({ type: "Foreign", name }),
 		Label: (name: string): Variable => ({ type: "Label", name }),
-		Meta: (val: number, lvl: number, kind: NF.Value): Variable => ({ type: "Meta", val, lvl, ann: kind }),
+		Meta: (val: number, lvl: number): Variable => ({ type: "Meta", val, lvl }),
 	},
-	App: (icit: Implicitness, func: Term, arg: Term): Term => ({
-		type: "App",
-		icit,
-		func,
-		arg,
-	}),
-	Lit: (value: Literal): Term => ({
-		type: "Lit",
-		value,
-	}),
+	App: (icit: Implicitness, func: Term, arg: Term): Term =>
+		Types.make(tag, {
+			type: "App",
+			icit,
+			func,
+			arg,
+		}),
+	Lit: (value: Literal): Term =>
+		Types.make(tag, {
+			type: "Lit",
+			value,
+		}),
+	// Annotation: (term: Term, ann: Term): Term => ({ type: "Annotation", term, ann }),
 
-	Annotation: (term: Term, ann: Term): Term => ({ type: "Annotation", term, ann }),
-
-	Row: (row: Row): Term => ({ type: "Row", row }),
-	Extension: (label: string, value: Term, row: Row): Row => ({ type: "extension", label, value, row }),
+	Row: (row: Row): Term => Types.make(tag, { type: "Row", row }),
+	Extension: (label: string, value: Term, row: Row): Row => Types.make(tag, { type: "extension", label, value, row }),
 
 	Struct: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row)),
 	Schema: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row)),
 	Variant: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row)),
-	Proj: (label: string, term: Term): Term => ({ type: "Proj", label, term }),
-	Inj: (label: string, value: Term, term: Term): Term => ({ type: "Inj", label, value, term }),
+	Proj: (label: string, term: Term): Term => Types.make(tag, { type: "Proj", label, term }),
+	Inj: (label: string, value: Term, term: Term): Term => Types.make(tag, { type: "Inj", label, value, term }),
 
 	Indexed: (index: Term, term: Term, strategy?: Term): Term => {
 		const indexing = Constructors.App("Explicit", Constructors.Var({ type: "Foreign", name: "Indexed" }), index);
@@ -128,10 +134,10 @@ export const Constructors = {
 		return strat;
 	},
 
-	Match: (scrutinee: Term, alternatives: Array<Alternative>): Term => ({ type: "Match", scrutinee, alternatives }),
+	Match: (scrutinee: Term, alternatives: Array<Alternative>): Term => Types.make(tag, { type: "Match", scrutinee, alternatives }),
 	Alternative: (pattern: Pattern, term: Term): Alternative => ({ pattern, term }),
 
-	Block: (statements: Array<Statement>, term: Term): Term => ({ type: "Block", statements, return: term }),
+	Block: (statements: Array<Statement>, term: Term): Term => Types.make(tag, { type: "Block", statements, return: term }),
 	Patterns: {
 		Binder: (value: string): Pattern => ({ type: "Binder", value }),
 		Var: (value: string, term: Term): Pattern => ({ type: "Var", value, term }),
@@ -163,56 +169,58 @@ export const CtorPatterns = {
 } as const;
 
 export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) => Term): Term => {
-	return match(tm)
-		.with({ type: "Var" }, onVar)
-		.with({ type: "Lit" }, lit => lit)
-		.with(CtorPatterns.Lambda, ({ binding, body }) => Constructors.Abs(binding, traverse(body, onVar)))
-		.with(CtorPatterns.Pi, ({ binding, body }) =>
-			Constructors.Abs(
-				update(binding, "annotation", tm => traverse(tm, onVar)),
-				traverse(body, onVar),
-			),
-		)
-		.with(CtorPatterns.Mu, ({ binding, body }) =>
-			Constructors.Abs(
-				update(binding, "annotation", tm => traverse(tm, onVar)),
-				traverse(body, onVar),
-			),
-		)
-		.with({ type: "App" }, ({ icit, func, arg }) => Constructors.App(icit, traverse(func, onVar), traverse(arg, onVar)))
-		.with({ type: "Row" }, ({ row }) =>
-			Constructors.Row(
-				R.traverse(
-					row,
-					v => traverse(v, onVar),
-					v => R.Constructors.Variable(v),
+	return (
+		match(tm)
+			.with({ type: "Var" }, onVar)
+			.with({ type: "Lit" }, lit => lit)
+			.with(CtorPatterns.Lambda, ({ binding, body }) => Constructors.Abs(binding, traverse(body, onVar)))
+			.with(CtorPatterns.Pi, ({ binding, body }) =>
+				Constructors.Abs(
+					update(binding, "annotation", tm => traverse(tm, onVar)),
+					traverse(body, onVar),
 				),
-			),
-		)
-		.with({ type: "Proj" }, ({ label, term }) => Constructors.Proj(label, traverse(term, onVar)))
-		.with({ type: "Inj" }, ({ label, value, term }) => Constructors.Inj(label, traverse(value, onVar), traverse(term, onVar)))
-		.with({ type: "Annotation" }, ({ term, ann }) => Constructors.Annotation(traverse(term, onVar), traverse(ann, onVar)))
-		.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
-			Constructors.Match(
-				traverse(scrutinee, onVar),
-				alternatives.map(({ pattern, term }) => ({ pattern, term: traverse(term, onVar) })),
-			),
-		)
-		.with({ type: "Block" }, ({ return: ret, statements }) => {
-			const stmts = statements.map(s =>
-				match(s)
-					.with({ type: "Let" }, letdec =>
-						F.pipe(
-							letdec,
-							update("value", v => traverse(v, onVar)),
-							update("annotation", ann => traverse(ann, onVar)),
-						),
-					)
-					.otherwise(update("value", v => traverse(v, onVar))),
-			);
-			return Constructors.Block(stmts, traverse(ret, onVar));
-		})
-		.otherwise(() => {
-			throw new Error("Traverse: Not implemented yet");
-		});
+			)
+			.with(CtorPatterns.Mu, ({ binding, body }) =>
+				Constructors.Abs(
+					update(binding, "annotation", tm => traverse(tm, onVar)),
+					traverse(body, onVar),
+				),
+			)
+			.with({ type: "App" }, ({ icit, func, arg }) => Constructors.App(icit, traverse(func, onVar), traverse(arg, onVar)))
+			.with({ type: "Row" }, ({ row }) =>
+				Constructors.Row(
+					R.traverse(
+						row,
+						v => traverse(v, onVar),
+						v => R.Constructors.Variable(v),
+					),
+				),
+			)
+			.with({ type: "Proj" }, ({ label, term }) => Constructors.Proj(label, traverse(term, onVar)))
+			.with({ type: "Inj" }, ({ label, value, term }) => Constructors.Inj(label, traverse(value, onVar), traverse(term, onVar)))
+			//.with({ type: "Annotation" }, ({ term, ann }) => Constructors.Annotation(traverse(term, onVar), traverse(ann, onVar)))
+			.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
+				Constructors.Match(
+					traverse(scrutinee, onVar),
+					alternatives.map(({ pattern, term }) => ({ pattern, term: traverse(term, onVar) })),
+				),
+			)
+			.with({ type: "Block" }, ({ return: ret, statements }) => {
+				const stmts = statements.map(s =>
+					match(s)
+						.with({ type: "Let" }, letdec =>
+							F.pipe(
+								letdec,
+								update("value", v => traverse(v, onVar)),
+								update("annotation", ann => traverse(ann, onVar)),
+							),
+						)
+						.otherwise(update("value", v => traverse(v, onVar))),
+				);
+				return Constructors.Block(stmts, traverse(ret, onVar));
+			})
+			.otherwise(() => {
+				throw new Error("Traverse: Not implemented yet");
+			})
+	);
 };

@@ -9,6 +9,7 @@ import { defaultContext } from "@yap/shared/lib/constants"
 import { isEqual } from "lodash"
 
 import * as Sub from "@yap/elaboration/unification/substitution"
+import { Types } from "@yap/utils"
 
 export const Terms = {
     Type: EB.Constructors.Lit(Lit.Type()),
@@ -95,7 +96,7 @@ export const Elaborated: EB.Context['imports'] = {
 
 }
 
-const typecheckNum = (val: NF.Value): val is { type: "Lit", value: { type: "Num", value: number } } => val.type === "Lit" && val.value.type === "Num"
+const typecheckNum = (val: NF.Value): val is Types.Brand<typeof NF.nf_tag, { type: "Lit", value: { type: "Num", value: number } }> => val.type === "Lit" && val.value.type === "Num"
 const arithmetic = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => number): NF.Value => {
     if (!typecheckNum(x)) throw new Error(`Expected number, got ${NF.display(x, Sub.empty)}`);
     if (!typecheckNum(y)) throw new Error(`Expected number, got ${NF.display(y, Sub.empty)}`);
@@ -103,7 +104,7 @@ const arithmetic = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => numb
     return NF.Constructors.Lit(Lit.Num(val));
 }
 
-const typecheckBool = (val: NF.Value): val is { type: "Lit", value: { type: "Bool", value: boolean } } => val.type === "Lit" && val.value.type === "Bool"
+const typecheckBool = (val: NF.Value): val is Types.Brand<typeof NF.nf_tag, { type: "Lit", value: { type: "Bool", value: boolean } }> => val.type === "Lit" && val.value.type === "Bool"
 
 const logical = (x: NF.Value, y: NF.Value, fn: (a: boolean, b: boolean) => boolean): NF.Value => {
     if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${NF.display(x, Sub.empty)}`);
@@ -151,5 +152,27 @@ export const PrimOps: EB.Context['ffi'] = {
     $gt: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a > b) },
     $lte: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a <= b) },
     $gte: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a >= b) },
+    $not: {
+        arity: 1, compute: (x: NF.Value) => {
+            if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${NF.display(x, Sub.empty)}`);
+            return NF.Constructors.Lit(Lit.Bool(!x.value.value));
+        }
+    }
 
 }
+
+
+export const OP_AND = "$and" as const;
+export const OP_OR = "$or" as const;
+export const OP_EQ = "$eq" as const;
+export const OP_NEQ = "$neq" as const;
+export const OP_LT = "$lt" as const;
+export const OP_GT = "$gt" as const;
+export const OP_LTE = "$lte" as const;
+export const OP_GTE = "$gte" as const;
+export const OP_NOT = "$not" as const;
+
+export const OP_ADD = "$add" as const;
+export const OP_SUB = "$sub" as const;
+export const OP_MUL = "$mul" as const;
+export const OP_DIV = "$div" as const;
