@@ -10,12 +10,15 @@ import * as Errors from "./errors";
 
 import * as P from "./provenance";
 
+import * as Modal from "@yap/verification/modalities/shared";
+
 export type Elaboration<A> = (ctx: EB.Context, w?: Omit<Collector<A>, "result">) => Collector<A>;
 
 type Collector<A> = {
 	constraints: P.WithProvenance<EB.Constraint>[];
 	binders: EB.Binder[];
 	metas: EB.Context["metas"];
+	types: Record<EB.Term["id"], { nf: EB.NF.Value; modalities: Modal.Annotations }>;
 	result: Either<Err, A>;
 };
 
@@ -24,7 +27,9 @@ const concat: (fa: Accumulator, fb: Accumulator) => Accumulator = (fa, fb) => ({
 	constraints: fa.constraints.concat(fb.constraints),
 	binders: fa.binders.concat(fb.binders),
 	metas: { ...fa.metas, ...fb.metas },
+	types: { ...fa.types, ...fb.types },
 });
+const empty: Accumulator = { constraints: [], binders: [], metas: {}, types: {} };
 
 export type Err = Cause & { provenance?: P.Provenance[] };
 
@@ -104,9 +109,7 @@ export const traverse = <A, B>(as: A[], f: (a: A, i: number) => Elaboration<B>):
 };
 
 export const mkCollector = <A>(a: A): Collector<A> => ({
-	constraints: [],
-	binders: [],
-	metas: {},
+	...empty,
 	result: E.right(a),
 });
 
@@ -147,8 +150,16 @@ export function local<A>(...args: any[]): any {
 	})();
 }
 
-type Channel = "constraint" | "binder" | "meta";
-type Payload<K extends Channel> = K extends "constraint" ? OptionalLvl<EB.Constraint> : K extends "binder" ? EB.Binder : { meta: EB.Meta; ann: EB.NF.Value };
+type Channel = "constraint" | "binder" | "meta" | "type";
+type Payload<K extends Channel> = K extends "constraint"
+	? OptionalLvl<EB.Constraint>
+	: K extends "binder"
+		? EB.Binder
+		: K extends "meta"
+			? { meta: EB.Meta; ann: EB.NF.Value }
+			: K extends "type"
+				? { term: EB.Term; nf: EB.NF.Value; modalities: Modal.Annotations }
+				: never;
 
 type OptionalLvl<T> = T extends { type: "assign"; lvl: infer L } ? Omit<T, "lvl"> & { lvl?: L } : T;
 export const tell = function* <K extends Channel>(channel: K, payload: Payload<K> | Payload<K>[]): Generator<Elaboration<any>, void, any> {
@@ -164,25 +175,39 @@ export const tell = function* <K extends Channel>(channel: K, payload: Payload<K
 				}
 				return { ...c, lvl: ctx.env.length };
 			});
-			return { constraints: addProvenance(cs), binders: [], metas: {} };
+			return { constraints: addProvenance(cs), binders: [], metas: {}, types: {} };
 		}
 		if (channel === "binder") {
-			return { constraints: [], binders: many as Payload<"binder">[], metas: {} };
+			return { constraints: [], binders: many as Payload<"binder">[], metas: {}, types: {} };
 		}
 
 		if (channel === "meta") {
-			return { constraints: [], binders: [], metas: (many as Payload<"meta">[]).reduce((m, { meta, ann }) => ({ ...m, [meta.val]: { meta, ann } }), {}) };
+			return {
+				constraints: [],
+				binders: [],
+				metas: (many as Payload<"meta">[]).reduce((m, { meta, ann }) => ({ ...m, [meta.val]: { meta, ann } }), {}),
+				types: {},
+			};
+		}
+
+		if (channel === "type") {
+			return {
+				constraints: [],
+				binders: [],
+				metas: {},
+				types: (many as Payload<"type">[]).reduce((m, { term, nf, modalities }) => ({ ...m, [term.id]: { nf, modalities } }), {}),
+			};
 		}
 		console.warn("Tell: unknown channel:", channel);
 		console.warn("Continuing without telling anything");
-		return { constraints: [], binders: [], metas: {} };
+		return empty;
 	})();
 
 	return yield* pure(ctx => ({ ...writer, result: E.right(undefined) }));
 };
 
 export const listen = function* (): Generator<Elaboration<Accumulator>, Accumulator, Accumulator> {
-	return yield (_, w = { constraints: [], binders: [], metas: {} }) => mkCollector(w);
+	return yield (_, w = { constraints: [], binders: [], metas: {}, types: {} }) => mkCollector(w);
 };
 
 export const fail = function* <A>(cause: Err): Generator<Elaboration<any>, A, any> {
@@ -206,12 +231,7 @@ export const liftC = function* <A>(c: Collector<A>): Generator<Elaboration<A>, A
 };
 
 export const liftE = <A>(e: E.Either<Err, A>): Generator<Elaboration<A>, A, A> => {
-	return liftC({
-		constraints: [],
-		binders: [],
-		metas: {},
-		result: e,
-	});
+	return liftC({ ...empty, result: e });
 };
 
 export const pure = function* <A>(ma: Elaboration<A>): Generator<Elaboration<A>, A, A> {
@@ -227,11 +247,7 @@ export function Do<R, A>(gen: () => Generator<Elaboration<any>, R, A>): Elaborat
 	return ctx => {
 		const it = gen();
 
-		let collected: Omit<Collector<unknown>, "result"> = {
-			constraints: [],
-			binders: [],
-			metas: {},
-		};
+		let collected: Omit<Collector<unknown>, "result"> = empty;
 		let state = it.next();
 
 		while (!state.done) {
@@ -248,6 +264,7 @@ export function Do<R, A>(gen: () => Generator<Elaboration<any>, R, A>): Elaborat
 		result.binders = collected.binders;
 		result.constraints = collected.constraints;
 		result.metas = collected.metas;
+		result.types = collected.types;
 		return result;
 	};
 }

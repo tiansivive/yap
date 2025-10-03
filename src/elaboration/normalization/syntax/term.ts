@@ -1,4 +1,3 @@
-import * as Q from "@yap/shared/modalities/multiplicity";
 import * as R from "@yap/shared/rows";
 import * as EB from "@yap/elaboration";
 
@@ -8,7 +7,9 @@ import { Implicitness } from "@yap/shared/implicitness";
 import { match } from "ts-pattern";
 import { Types, update } from "@yap/utils";
 
-export type ModalValue = [Value, Q.Multiplicity];
+import * as Modal from "@yap/verification/modalities/shared";
+
+export type ModalValue = { nf: Value; modalities: Modal.Annotations };
 
 export const nf_tag: unique symbol = Symbol("NF");
 
@@ -177,12 +178,16 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 		.with({ type: "Lit" }, lit => lit)
 		.with(Patterns.Lambda, ({ binder, closure }) => Constructors.Lambda(binder.variable, binder.icit, update(closure, "term", onTerm)))
 		.with(Patterns.Pi, ({ binder, closure }) => {
-			const { annotation } = binder;
-			return Constructors.Pi(binder.variable, binder.icit, [traverse(annotation[0], onVar, onTerm), annotation[1]], update(closure, "term", onTerm));
+			const {
+				annotation: { nf, modalities },
+			} = binder;
+			return Constructors.Pi(binder.variable, binder.icit, { nf: traverse(nf, onVar, onTerm), modalities }, update(closure, "term", onTerm));
 		})
 		.with(Patterns.Mu, ({ binder, closure }) => {
-			const { annotation } = binder;
-			return Constructors.Mu(binder.variable, binder.source, [traverse(annotation[0], onVar, onTerm), annotation[1]], update(closure, "term", onTerm));
+			const {
+				annotation: { nf, modalities },
+			} = binder;
+			return Constructors.Mu(binder.variable, binder.source, { nf: traverse(nf, onVar, onTerm), modalities }, update(closure, "term", onTerm));
 		})
 		.with({ type: "App" }, ({ icit, func, arg }) => Constructors.App(traverse(func, onVar, onTerm), traverse(arg, onVar, onTerm), icit))
 		.with({ type: "Row" }, ({ row }) =>

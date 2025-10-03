@@ -12,6 +12,8 @@ import { match, Pattern as Pat } from "ts-pattern";
 import * as F from "fp-ts/lib/function";
 import { Simplify } from "type-fest";
 
+import * as Modal from "@yap/verification/modalities/shared";
+
 export type Term = Types.Brand<typeof tag, Constructor & { id: number }>;
 const tag: unique symbol = Symbol("Term");
 type Constructor =
@@ -38,7 +40,7 @@ export type Meta = Extract<Variable, { type: "Meta" }>;
 export type Row = R.Row<Term, Variable>;
 
 export type Binding =
-	| { type: "Let"; variable: string; value: Term; annotation: Term }
+	| { type: "Let"; variable: string; value: Term; annotation: Term; modalities: Modal.Annotations }
 	| { type: "Lambda"; variable: string; icit: Implicitness }
 	| { type: "Mu"; variable: string; annotation: Term; source: string }
 	// | { type: "Sigma"; variable: string; annotation: Term, multiplicity: Q.Multiplicity; }
@@ -46,7 +48,7 @@ export type Binding =
 			type: "Pi";
 			variable: string;
 			annotation: Term;
-			multiplicity: Q.Multiplicity;
+			modalities: Modal.Annotations;
 			icit: Implicitness;
 	  };
 
@@ -63,7 +65,7 @@ export type Pattern =
 
 export type Statement =
 	| { type: "Expression"; value: Term }
-	| { type: "Let"; variable: string; value: Term; annotation: Term }
+	| { type: "Let"; variable: string; value: Term; annotation: Term; modalities: Modal.Annotations }
 	| { type: "Using"; value: Term; annotation: NF.Value };
 
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
@@ -77,8 +79,6 @@ export const mk = <K extends Constructor["type"]>(ctor: Extract<Constructor, { t
 	return r as Simplify<typeof r>;
 };
 
-const foo = mk({ type: "Lit", value: { type: "Num", value: 42 } });
-
 export const Constructors = {
 	Abs: (binding: Binding, body: Term): Extract<Term, { type: "Abs" }> => mk({ type: "Abs", binding, body }),
 	Lambda: (variable: string, icit: Implicitness, body: Term): Term =>
@@ -87,10 +87,10 @@ export const Constructors = {
 			binding: { type: "Lambda" as const, variable, icit },
 			body,
 		}),
-	Pi: (variable: string, icit: Implicitness, multiplicity: Q.Multiplicity, annotation: Term, body: Term): Term =>
+	Pi: (variable: string, icit: Implicitness, modalities: Modal.Annotations, annotation: Term, body: Term): Term =>
 		mk({
 			type: "Abs",
-			binding: { type: "Pi" as const, variable, icit, annotation, multiplicity },
+			binding: { type: "Pi" as const, variable, icit, annotation, modalities },
 			body,
 		}),
 	Mu: (variable: string, source: string, annotation: Term, body: Term): Term =>
@@ -157,7 +157,13 @@ export const Constructors = {
 		List: (patterns: Pattern[], rest?: string): Pattern => ({ type: "List", patterns, rest }),
 	},
 	Stmt: {
-		Let: (variable: string, value: Term, annotation: Term): Statement => ({ type: "Let", variable, value, annotation }),
+		Let: (variable: string, value: Term, annotation: Term, modalities: Modal.Annotations): Statement => ({
+			type: "Let",
+			variable,
+			value,
+			annotation,
+			modalities,
+		}),
 		Expr: (value: Term): Statement => ({ type: "Expression", value }),
 	},
 };

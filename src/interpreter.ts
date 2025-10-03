@@ -95,7 +95,7 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 
 		//console.dir(res, { showHidden: true, depth: null });
 		// console.dir(Object.getOwnPropertyDescriptors(res), { showHidden: true, depth: null });
-		const pretty = util.inspect(res, { showHidden: true, depth: null });
+		const pretty = typeof res === "function" ? beautify.js(res.toString(), { indent_size: 2 }) : util.inspect(res, { showHidden: true, depth: null });
 		console.log("\n" + pretty + ` :: ${EB.NF.display(ty, zonker, ctx.metas)}\n`);
 
 		if (opts.nf) {

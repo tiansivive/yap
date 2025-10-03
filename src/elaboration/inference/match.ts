@@ -12,6 +12,9 @@ import { match } from "ts-pattern";
 
 import * as P from "@yap/elaboration/shared/provenance";
 
+import * as Modal from "@yap/verification/modalities/shared";
+import { Liquid } from "@yap/verification/modalities";
+
 type Match = Extract<Src.Term, { type: "match" }>;
 
 export const infer = (tm: Match): V2.Elaboration<EB.AST> =>
@@ -65,15 +68,19 @@ infer.gen = F.flow(infer, V2.pure);
 	TODO: Allow for returning a Variant type    
 	TODO: Augment the context with the scrutinee narrowed to the pattern   
  */
-type AltNode = [EB.Alternative, NF.Value, Q.Usages];
+type AltNode = [EB.Alternative, NF.Value, Q.Usages, Modal.Annotations?];
 export const elaborate =
-	([scrutinee, scuty, sus]: EB.AST) =>
+	([scrutinee, scuty, sus, modalities]: EB.AST) =>
 	(alt: Src.Alternative): V2.Elaboration<AltNode> =>
 		V2.track(
 			{ tag: "alt", alt, metadata: { action: "alternative", motive: "elaborating pattern", type: scuty } },
 			(() => {
 				const extend = (binders: Patterns.Binder[]) => (ctx_: EB.Context) =>
-					binders.reduce((ctx, [name, va]) => EB.bind(ctx, { type: "Lambda", variable: name }, [va, Q.Many]), ctx_);
+					binders.reduce(
+						(ctx, [name, va, modalities = { quantity: Q.Zero, liquid: Liquid.Predicate.NeutralNF() }]) =>
+							EB.bind(ctx, { type: "Lambda", variable: name }, { nf: va, modalities }),
+						ctx_,
+					);
 
 				const inferAltBy =
 					<K extends keyof Patterns.Inference<Src.Pattern, "type">>(key: K) =>

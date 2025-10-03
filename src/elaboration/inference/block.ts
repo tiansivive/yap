@@ -8,6 +8,7 @@ import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
 import * as Lit from "@yap/shared/literals";
+import { Liquid } from "@yap/verification/modalities";
 
 type Block = Extract<Src.Term, { type: "block" }>;
 
@@ -23,13 +24,21 @@ export const infer = (block: Block) =>
 					}
 
 					const [current, ...rest] = stmts;
-					const [stmt, sty, sus] = yield* EB.Stmt.infer.gen(current);
+					const [stmt, sty, sus, modalities] = yield* EB.Stmt.infer.gen(current);
 
 					if (stmt.type !== "Let") {
 						return yield* V2.pure(recurse(rest, [...results, stmt]));
 					}
+
+					const mv: NF.ModalValue = {
+						nf: sty,
+						modalities: {
+							quantity: modalities?.quantity ?? Q.Many,
+							liquid: modalities?.liquid ?? Liquid.Predicate.NeutralNF(),
+						},
+					};
 					return yield* V2.local(
-						ctx => EB.bind(ctx, { type: "Let", variable: stmt.variable }, [sty, Q.Many]),
+						ctx => EB.bind(ctx, { type: "Let", variable: stmt.variable }, mv),
 						V2.Do(function* () {
 							const [tm, ty, [vu, ...rus]] = yield* V2.pure(recurse(rest, [...results, stmt]));
 							yield* V2.tell("constraint", { type: "usage", expected: Q.Many, computed: vu });

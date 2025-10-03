@@ -34,21 +34,21 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 			const {
 				variable,
 				icit,
-				annotation: [ann, q],
+				annotation: { nf, modalities },
 			} = binder;
 			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
-			return EB.Constructors.Pi(variable, icit, q, quote(ctx, lvl, ann), body);
+			return EB.Constructors.Pi(variable, icit, modalities, quote(ctx, lvl, nf), body);
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, ({ binder, closure }) => {
 			const {
 				variable,
 				source,
-				annotation: [ann, q],
+				annotation: { nf, modalities },
 			} = binder;
 			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
-			return EB.Constructors.Mu(variable, source, quote(ctx, lvl, ann), body);
+			return EB.Constructors.Mu(variable, source, quote(ctx, lvl, nf), body);
 		})
 		.with({ type: "Row" }, ({ row }) => {
 			const _quote = (r: NF.Row): EB.Row =>

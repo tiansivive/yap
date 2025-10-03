@@ -7,7 +7,7 @@ export const defaultContext: EB.Context = {
     implicits: [],
     sigma: {},
     trace: [],
-    imports: { ...Lib.Elaborated },
+    imports: { ...Lib.Elaborated() },
     zonker: Sub.empty,
     ffi: Lib.PrimOps,
     metas: {},

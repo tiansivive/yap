@@ -5,8 +5,13 @@ import * as Src from "@yap/src/index";
 
 import * as V2 from "./shared/monad.v2";
 
-export const infer = V2.regen((ast: Src.Term): V2.Elaboration<EB.AST> => {
-	const result = V2.track<EB.AST>(
+import * as NF from "./normalization";
+import * as Modal from "@yap/verification/modalities/shared";
+import * as Q from "@yap/shared/modalities/multiplicity";
+
+export type AST = [EB.Term, NF.Value, Q.Usages, Modal.Annotations?];
+export const infer = V2.regen((ast: Src.Term): V2.Elaboration<AST> => {
+	const result = V2.track<AST>(
 		{ tag: "src", type: "term", term: ast, metadata: { action: "infer" } },
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
@@ -39,7 +44,10 @@ export const infer = V2.regen((ast: Src.Term): V2.Elaboration<EB.AST> => {
 					throw new Error("Not implemented yet: " + JSON.stringify(v));
 				});
 
-			return yield* V2.pure(elaboration);
+			const [tm, ty, us] = yield* V2.pure(elaboration);
+			yield* V2.tell("type", { term: tm, nf: ty, modalities: {} as any });
+
+			return [tm, ty, us] as AST;
 		}),
 	);
 	return result;

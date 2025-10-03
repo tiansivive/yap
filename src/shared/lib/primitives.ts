@@ -5,13 +5,23 @@ import * as EB from "@yap/elaboration"
 import * as Q from "@yap/shared/modalities/multiplicity"
 import * as Lit from "@yap/shared/literals"
 
-import { defaultContext } from "@yap/shared/lib/constants"
-import { isEqual } from "lodash"
-
 import * as Sub from "@yap/elaboration/unification/substitution"
 import { Types } from "@yap/utils"
 
-export const Terms = {
+import { isEqual } from "lodash"
+
+export const defaultContext = () => ({
+    env: [],
+    implicits: [],
+    sigma: {},
+    trace: [],
+    imports: Elaborated(),
+    zonker: Sub.empty,
+    ffi: PrimOps,
+    metas: {},
+} satisfies EB.Context);
+
+export const Terms = () => ({
     Type: EB.Constructors.Lit(Lit.Type()),
     Num: EB.Constructors.Lit(Lit.Atom("Num")),
     Bool: EB.Constructors.Lit(Lit.Atom("Bool")),
@@ -34,66 +44,95 @@ export const Terms = {
     "<>": EB.Constructors.Lit(Lit.Atom("<>")),
     "++": EB.Constructors.Lit(Lit.Atom("++")),
 
-}
+})
 
 export const NormalForms = {
-    Num: NF.Constructors.Lit(Lit.Atom("Num")),
-    Bool: NF.Constructors.Lit(Lit.Atom("Bool")),
-    String: NF.Constructors.Lit(Lit.Atom("String")),
-    Unit: NF.Constructors.Lit(Lit.Atom("Unit")),
+    Num: () => NF.Constructors.Lit(Lit.Atom("Num")),
+    Bool: () => NF.Constructors.Lit(Lit.Atom("Bool")),
+    String: () => NF.Constructors.Lit(Lit.Atom("String")),
+    Unit: () => NF.Constructors.Lit(Lit.Atom("Unit")),
 }
 
+// avoiding circular dependency
+const neutral = () => EB.Constructors.Lambda(
+    "$dummy",
+    "Explicit",
+    EB.Constructors.Lit({ type: "Bool", value: true })
+)
 
-const Num_Num_Num = NF.Constructors.Pi("x", "Explicit", [NormalForms.Num, Q.Many], {
-    type: "Closure",
-    ctx: defaultContext,
-    term: EB.Constructors.Pi("y", "Explicit", Q.Many, Terms.Num, Terms.Num)
-})
 
-const Num_Num_Bool = NF.Constructors.Pi("x", "Explicit", [NormalForms.Num, Q.Many], {
-    type: "Closure",
-    ctx: defaultContext,
-    term: EB.Constructors.Pi("y", "Explicit", Q.Many, Terms.Num, Terms.Bool)
-})
 
-const Bool_Bool_Bool = NF.Constructors.Pi("x", "Explicit", [NormalForms.Bool, Q.Many], {
-    type: "Closure",
-    ctx: defaultContext,
-    term: EB.Constructors.Pi("y", "Explicit", Q.Many, Terms.Bool, Terms.Bool)
-})
+// const BinaryOp = (ty: NF.Value, tm: EB.Term) => NF.Constructors.Pi("x", "Explicit", { nf: ty, modalities: modalities() }, {
+//     type: "Closure",
+//     ctx: defaultContext(),
+//     term: EB.Constructors.Pi("y", "Explicit", modalities(), tm, tm)
+// })
 
-const Type_Type_Type = NF.Constructors.Pi("x", "Explicit", [NF.Type, Q.Many], {
-    type: "Closure",
-    ctx: defaultContext,
-    term: EB.Constructors.Pi("y", "Explicit", Q.Many, Terms.Type, Terms.Type)
-})
+export const Elaborated: () => EB.Context['imports'] = () => {
 
-const BinaryOp = (ty: NF.Value, tm: EB.Term) => NF.Constructors.Pi("x", "Explicit", [ty, Q.Many], {
-    type: "Closure",
-    ctx: defaultContext,
-    term: EB.Constructors.Pi("y", "Explicit", Q.Many, tm, tm)
-})
 
-export const Elaborated: EB.Context['imports'] = {
-    Num: [Terms.Num, NF.Type, []],
-    Bool: [Terms.Bool, NF.Type, []],
-    String: [Terms.String, NF.Type, []],
-    //{ [Num]: Num }Indexed: [Terms.Indexed, Type_Type_Type, []],
-    Unit: [Terms.Unit, NF.Type, []],
-    "+": [Terms["+"], Num_Num_Num, []],
-    "-": [Terms["-"], Num_Num_Num, []],
-    "*": [Terms["*"], Num_Num_Num, []],
-    "/": [Terms["/"], Num_Num_Num, []],
-    "&&": [Terms["&&"], Bool_Bool_Bool, []],
-    "||": [Terms["||"], Bool_Bool_Bool, []],
-    "==": [Terms["=="], Num_Num_Bool, []],
-    "!=": [Terms["!="], Num_Num_Bool, []],
-    "<": [Terms["<"], Num_Num_Bool, []],
-    ">": [Terms[">"], Num_Num_Bool, []],
-    "<=": [Terms["<="], Num_Num_Bool, []],
-    ">=": [Terms[">="], Num_Num_Bool, []],
-    "%": [Terms["%"], Num_Num_Num, []],
 
+    const PrimTypes: EB.Context['imports'] = {
+        Num: [Terms().Num, NF.Type, []],
+        Bool: [Terms().Bool, NF.Type, []],
+        String: [Terms().String, NF.Type, []],
+        Unit: [Terms().Unit, NF.Type, []],
+        Type: [Terms().Type, NF.Type, []],
+    }
+
+    const dummyContext: EB.Context = {
+        env: [],
+        implicits: [],
+        sigma: {},
+        trace: [],
+        imports: PrimTypes,
+        zonker: Sub.empty,
+        ffi: {},
+        metas: {},
+    }
+    const modalities = { quantity: Q.Many, liquid: NF.evaluate(dummyContext, neutral()) }
+    const Num_Num_Num = NF.Constructors.Pi("x", "Explicit", { nf: NormalForms.Num(), modalities }, {
+        type: "Closure",
+        ctx: dummyContext,
+        term: EB.Constructors.Pi("y", "Explicit", modalities, Terms().Num, Terms().Num)
+    })
+
+    const Num_Num_Bool = NF.Constructors.Pi("x", "Explicit", { nf: NormalForms.Num(), modalities }, {
+        type: "Closure",
+        ctx: dummyContext,
+        term: EB.Constructors.Pi("y", "Explicit", modalities, Terms().Num, Terms().Bool)
+    })
+
+    const Bool_Bool_Bool = NF.Constructors.Pi("x", "Explicit", { nf: NormalForms.Bool(), modalities }, {
+        type: "Closure",
+        ctx: dummyContext,
+        term: EB.Constructors.Pi("y", "Explicit", modalities, Terms().Bool, Terms().Bool)
+    })
+
+    const Type_Type_Type = NF.Constructors.Pi("x", "Explicit", { nf: NF.Type, modalities }, {
+        type: "Closure",
+        ctx: dummyContext,
+        term: EB.Constructors.Pi("y", "Explicit", modalities, Terms().Type, Terms().Type)
+    })
+
+    return {
+        ...PrimTypes,
+        //"->": [Terms()["->"], Type_Type_Type, []],
+        "+": [Terms()["+"], Num_Num_Num, []],
+        "-": [Terms()["-"], Num_Num_Num, []],
+        "*": [Terms()["*"], Num_Num_Num, []],
+        "/": [Terms()["/"], Num_Num_Num, []],
+        "&&": [Terms()["&&"], Bool_Bool_Bool, []],
+        "||": [Terms()["||"], Bool_Bool_Bool, []],
+        "==": [Terms()["=="], Num_Num_Bool, []],
+        "!=": [Terms()["!="], Num_Num_Bool, []],
+        "<": [Terms()["<"], Num_Num_Bool, []],
+        ">": [Terms()[">"], Num_Num_Bool, []],
+        "<=": [Terms()["<="], Num_Num_Bool, []],
+        ">=": [Terms()[">="], Num_Num_Bool, []],
+        "%": [Terms()["%"], Num_Num_Num, []],
+
+    }
 }
 
 const typecheckNum = (val: NF.Value): val is Types.Brand<typeof NF.nf_tag, { type: "Lit", value: { type: "Num", value: number } }> => val.type === "Lit" && val.value.type === "Num"

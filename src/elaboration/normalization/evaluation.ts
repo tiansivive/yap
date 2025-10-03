@@ -13,6 +13,8 @@ import * as R from "@yap/shared/rows";
 import { Option } from "fp-ts/lib/Option";
 import * as O from "fp-ts/lib/Option";
 import * as A from "fp-ts/lib/NonEmptyArray";
+import { Liquid } from "@yap/verification/modalities";
+import * as Modal from "@yap/verification/modalities/shared";
 
 export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 	//Log.push("eval");
@@ -46,7 +48,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			return ctx.zonker[variable.val];
 		})
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
-			return ctx.env[variable.index].nf[0];
+			return ctx.env[variable.index].nf.nf;
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
 			const val = ctx.ffi[variable.name];
@@ -67,13 +69,17 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 		)
 		.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }): NF.Value => {
 			const annotation = evaluate(ctx, binding.annotation);
-			return NF.Constructors.Pi(binding.variable, binding.icit, [annotation, binding.multiplicity], NF.Constructors.Closure(ctx, body));
+			return NF.Constructors.Pi(binding.variable, binding.icit, { nf: annotation, modalities: binding.modalities }, NF.Constructors.Closure(ctx, body));
 		})
 		.with({ type: "Abs", binding: { type: "Mu" } }, (mu): NF.Value => {
 			const annotation = evaluate(ctx, mu.binding.annotation);
-
-			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, [annotation, Q.Many], NF.Constructors.Closure(ctx, mu.body));
-			const extended = EB.unfoldMu(ctx, { type: "Mu", variable: mu.binding.variable }, [val, Q.Many]);
+			const mv: NF.ModalValue = { nf: annotation, modalities: { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF() } };
+			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, mv, NF.Constructors.Closure(ctx, mu.body));
+			const extended = EB.unfoldMu(
+				ctx,
+				{ type: "Mu", variable: mu.binding.variable },
+				{ nf: val, modalities: { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF() } },
+			);
 			return evaluate(extended, mu.body);
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
@@ -131,8 +137,8 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 						}
 
 						if (r.variable.type === "Bound") {
-							const [_val] = ctx.env[r.variable.index].nf;
-							const val = unwrapNeutral(_val);
+							const { nf } = ctx.env[r.variable.index].nf;
+							const val = unwrapNeutral(nf);
 
 							if (val.type === "Row") {
 								return val.row;
@@ -180,31 +186,32 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 	return res;
 }
 
-export const matching = (ctx: EB.Context, tm: NF.Value, alts: EB.Alternative[]): NF.Value | undefined => {
+export const matching = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]): NF.Value | undefined => {
 	return match(alts)
 		.with([], () => undefined)
 		.with([P._, ...P.array()], ([alt, ...rest]) =>
 			F.pipe(
-				meet(alt.pattern, tm),
+				meet(ctx, alt.pattern, nf),
 				O.map(binders => {
-					const extended = binders.reduce((_ctx, { binder, q }) => EB.bind(_ctx, binder, [tm, q]), ctx);
+					const extended = binders.reduce((_ctx, { binder, quantity, liquid }) => EB.bind(_ctx, binder, { nf, modalities: { quantity, liquid } }), ctx);
 					return evaluate(extended, alt.term);
 				}),
-				O.getOrElse(() => matching(ctx, tm, rest)),
+				O.getOrElse(() => matching(ctx, nf, rest)),
 			),
 		)
 		.exhaustive();
 };
 
-export const apply = (binder: EB.Binder, closure: NF.Closure, value: NF.Value, multiplicity: Q.Multiplicity = Q.Zero): NF.Value => {
+export const apply = (binder: EB.Binder, closure: NF.Closure, value: NF.Value, modalities?: Modal.Annotations): NF.Value => {
 	const { ctx, term } = closure;
-	const extended = EB.extend(ctx, binder, [value, multiplicity]);
+	const ms = modalities ?? { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF() };
+	const extended = EB.extend(ctx, binder, { nf: value, modalities: ms });
 
 	if (closure.type === "Closure") {
 		return evaluate(extended, term);
 	}
 
-	const args = extended.env.slice(0, closure.arity).map(({ nf: [v] }) => v);
+	const args = extended.env.slice(0, closure.arity).map(({ nf: { nf } }) => nf);
 	return closure.compute(...args);
 };
 
@@ -216,12 +223,14 @@ export const unwrapNeutral = (value: NF.Value): NF.Value => {
 
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];
 
-const meet = (pattern: EB.Pattern, nf: NF.Value): Option<{ binder: EB.Binder; q: Q.Multiplicity }[]> => {
+type MeetResult = { binder: EB.Binder } & Modal.Annotations;
+const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetResult[]> => {
+	const truthy = Liquid.Predicate.NeutralNF();
 	return match([unwrapNeutral(nf), pattern])
 		.with([P._, { type: "Wildcard" }], () => O.some([]))
 		.with([P._, { type: "Binder" }], ([v, p]) => {
 			const binder: EB.Binder = { type: "Lambda", variable: p.value };
-			return O.some([{ binder, q: Q.Many }]);
+			return O.some<MeetResult[]>([{ binder, quantity: Q.Many, liquid: truthy }]);
 		})
 		.with(
 			[{ type: "Lit" }, { type: "Lit" }],
@@ -229,12 +238,12 @@ const meet = (pattern: EB.Pattern, nf: NF.Value): Option<{ binder: EB.Binder; q:
 			() => O.some([]),
 		)
 
-		.with([NF.Patterns.Schema, { type: "Struct" }], [NF.Patterns.Struct, { type: "Struct" }], ([{ arg }, p]) => meetAll(p.row, arg.row))
+		.with([NF.Patterns.Schema, { type: "Struct" }], [NF.Patterns.Struct, { type: "Struct" }], ([{ arg }, p]) => meetAll(ctx, p.row, arg.row))
 		.with([NF.Patterns.Row, { type: "Row" }], ([v, p]) => {
-			return meetAll(p.row, v.row);
+			return meetAll(ctx, p.row, v.row);
 		})
 		.with([NF.Patterns.Variant, { type: "Variant" }], [NF.Patterns.Struct, { type: "Variant" }], ([{ arg }, p]) => {
-			return meetOne(p.row, arg.row);
+			return meetOne(ctx, p.row, arg.row);
 		})
 		.with([NF.Patterns.HashMap, { type: "List" }], ([v, p]) => {
 			console.warn("List pattern matching not yet implemented");
@@ -248,13 +257,14 @@ const meet = (pattern: EB.Pattern, nf: NF.Value): Option<{ binder: EB.Binder; q:
 		.otherwise(() => O.none);
 };
 
-const meetAll = (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<{ binder: EB.Binder; q: Q.Multiplicity }[]> => {
+const meetAll = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<MeetResult[]> => {
+	const truthy = Liquid.Predicate.NeutralNF();
 	return match([pats, vals])
 		.with([{ type: "empty" }, P._], () => O.some([])) // empty row matches anything
 		.with([{ type: "variable" }, P._], ([r]) => {
 			// bind the variable
 			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
-			return O.some([{ binder, q: Q.Many }]);
+			return O.some([{ binder, quantity: Q.Many, liquid: truthy }]);
 		})
 
 		.with([{ type: "extension" }, { type: "empty" }], () => O.none)
@@ -271,34 +281,35 @@ const meetAll = (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<{ binder
 			const { row } = rewritten.right;
 			return F.pipe(
 				O.Do,
-				O.apS("current", meet(r1.value, rewritten.right.value)),
-				O.apS("rest", meetAll(r1.row, row)),
+				O.apS("current", meet(ctx, r1.value, rewritten.right.value)),
+				O.apS("rest", meetAll(ctx, r1.row, row)),
 				O.map(({ current, rest }) => current.concat(rest)),
 			);
 		})
 		.exhaustive();
 };
 
-const meetOne = (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<{ binder: EB.Binder; q: Q.Multiplicity }[]> => {
+const meetOne = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<MeetResult[]> => {
+	const truthy = Liquid.Predicate.NeutralNF();
 	return match([pats, vals])
 		.with([{ type: "empty" }, P._], () => O.none)
 		.with([{ type: "variable" }, P._], ([r]) => {
 			// bind the variable
 			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
-			return O.some([{ binder, q: Q.Many }]);
+			return O.some([{ binder, quantity: Q.Many, liquid: truthy }]);
 		})
 		.with([{ type: "extension" }, { type: "empty" }], () => O.none)
 		.with([{ type: "extension" }, { type: "variable" }], () => O.none)
 		.with([{ type: "extension" }, { type: "extension" }], ([r1, r2]) => {
 			const rewritten = R.rewrite(r2, r1.label);
 			if (E.isLeft(rewritten)) {
-				return meetOne(r1.row, r2);
+				return meetOne(ctx, r1.row, r2);
 			}
 
 			if (rewritten.right.type !== "extension") {
 				throw new Error("Rewritting a row extension should result in another row extension");
 			}
-			return meet(r1.value, rewritten.right.value);
+			return meet(ctx, r1.value, rewritten.right.value);
 		})
 		.exhaustive();
 };

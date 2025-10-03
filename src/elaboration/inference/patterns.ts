@@ -13,6 +13,8 @@ import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as Src from "@yap/src/index";
 import * as Lit from "@yap/shared/literals";
 
+import * as Modal from "@yap/verification/modalities/shared";
+
 import * as R from "@yap/shared/rows";
 import { capitalize } from "lodash";
 
@@ -29,7 +31,7 @@ export type Inference<T, Key> = Key extends string
 	: never;
 
 export type Result = [EB.Pattern, NF.Value, Q.Usages, Binder[]];
-export type Binder = [string, NF.Value, Q.Usages];
+export type Binder = [string, NF.Value, Modal.Annotations?];
 
 export const infer: Inference<Src.Pattern, "type"> = {
 	Lit: V2.regen(pat => {
@@ -62,7 +64,7 @@ export const infer: Inference<Src.Pattern, "type"> = {
 			const meta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
 			const va = NF.evaluate(ctx, meta);
 			const zero = Q.noUsage(ctx.env.length);
-			const binder: Binder = [pat.value.value, va, zero];
+			const binder: Binder = [pat.value.value, va];
 			return [{ type: "Binder", value: pat.value.value }, va, zero, [binder]];
 		}),
 	),
@@ -145,7 +147,7 @@ export const infer: Inference<Src.Pattern, "type"> = {
 				EB.Constructors.Patterns.List(pats, pat.rest?.value),
 				NF.Constructors.Neutral(ty),
 				Q.noUsage(ctx.env.length),
-				pat.rest ? binders.concat([[pat.rest.value, ty, Q.noUsage(ctx.env.length)]]) : binders,
+				pat.rest ? binders.concat([[pat.rest.value, ty /*, Q.noUsage(ctx.env.length)*/]]) : binders,
 			];
 		}),
 	),
@@ -165,7 +167,7 @@ const elaborate = V2.regen(
 					V2.Do(function* () {
 						const meta = yield* EB.freshMeta(ctx.env.length, NF.Row);
 						const zero = Q.noUsage(ctx.env.length);
-						const binder: Binder = [variable.value, NF.Constructors.Var(meta), zero];
+						const binder: Binder = [variable.value, NF.Constructors.Var(meta) /*zero*/];
 						return [R.Constructors.Variable(variable.value), R.Constructors.Variable(meta), zero, [binder]] satisfies RowResult;
 					}),
 				)

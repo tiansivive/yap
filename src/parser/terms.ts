@@ -15,16 +15,18 @@ export type Bare =
 			type: "lambda";
 			icit: Implicitness;
 			variable: string;
-			multiplicity?: Q.Multiplicity;
 			annotation?: Term;
+			multiplicity?: Q.Multiplicity;
+			liquid?: Term;
 			body: Term;
 	  }
 	| {
 			type: "pi";
 			icit: Implicitness;
 			variable: string;
-			multiplicity?: Q.Multiplicity;
 			annotation: Term;
+			multiplicity?: Q.Multiplicity;
+			liquid?: Term;
 			body: Term;
 	  }
 	| { type: "application"; fn: Term; arg: Term; icit: Implicitness }
@@ -61,6 +63,7 @@ type BareStatement =
 			value: Term;
 			annotation?: Term;
 			multiplicity?: Q.Multiplicity;
+			liquid?: Term;
 	  }
 	| { type: "using"; value: Term }
 	| { type: "foreign"; variable: string; annotation: Term };

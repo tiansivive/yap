@@ -50,7 +50,7 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 								V2.Do(function* () {
 									const [body, us] = yield* Check.val.gen(tm.body, bType);
 									const [vu] = us;
-									yield* V2.tell("constraint", { type: "usage", expected: ty.binder.annotation[1], computed: vu });
+									//yield* V2.tell("constraint", { type: "usage", expected: ty.binder.annotation.nf, computed: vu });
 									return [EB.Constructors.Lambda(tm.variable, tm.icit, body), us] satisfies Result;
 								}),
 							);
@@ -67,7 +67,7 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 									const bType = NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
 									const [_tm, us] = yield* Check.val.gen(tm, bType);
 									const [vu] = us;
-									yield* V2.tell("constraint", { type: "usage", expected: ty.binder.annotation[1], computed: vu });
+									//	yield* V2.tell("constraint", { type: "usage", expected: ty.binder.annotation[1], computed: vu });
 									return [EB.Constructors.Lambda(ty.binder.variable, "Implicit", _tm), us] satisfies Result;
 								}),
 							),
@@ -136,7 +136,10 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 					),
 				);
 
-			return yield* V2.pure(result);
+			const [tm, us] = yield* V2.pure(result);
+			yield* V2.tell("type", { term: tm, nf: type, modalities: {} as any });
+
+			return [tm, us];
 		}),
 	);
 

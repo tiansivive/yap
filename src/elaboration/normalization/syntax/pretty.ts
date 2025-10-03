@@ -36,8 +36,14 @@ export const display = (value: NF.Value | NF.ModalValue, zonker: EB.Zonker, meta
 		.with({ type: "Abs" }, ({ binder, closure }) => {
 			const b = match(binder)
 				.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
-				.with({ type: "Pi" }, ({ variable, annotation: [ty, m] }) => `Π(<${Q.display(m)}> ${variable}: ${display(ty, zonker, metas)})`)
-				.with({ type: "Mu" }, ({ variable, annotation: [ty, m] }) => `μ(<${Q.display(m)}> ${variable}: ${display(ty, zonker, metas)})`)
+				.with(
+					{ type: "Pi" },
+					({ variable, annotation: { nf, modalities } }) => `Π(<${Q.display(modalities.quantity)}> ${variable}: ${display(nf, zonker, metas)})`,
+				)
+				.with(
+					{ type: "Mu" },
+					({ variable, annotation: { nf, modalities } }) => `μ(<${Q.display(modalities.quantity)}> ${variable}: ${display(nf, zonker, metas)})`,
+				)
 				.exhaustive();
 
 			const arr = binder.type !== "Mu" && binder.icit === "Implicit" ? "=>" : "->";

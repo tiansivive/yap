@@ -11,6 +11,7 @@ import * as F from "fp-ts/function";
 import * as A from "fp-ts/Array";
 import { set } from "@yap/utils";
 import { Subst } from "../unification/substitution";
+import { Liquid } from "@yap/verification/modalities";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
 export const metas = (val: NF.Value, zonker: Subst): Meta[] => {
@@ -44,8 +45,8 @@ export const metas = (val: NF.Value, zonker: Subst): Meta[] => {
 		)
 		.with({ type: "Neutral" }, ({ value }) => metas(value, zonker))
 		.with(NF.Patterns.Lambda, ({ closure }) => EB.Icit.metas(closure.term, zonker))
-		.with(NF.Patterns.Pi, ({ closure, binder }) => [...metas(binder.annotation[0], zonker), ...EB.Icit.metas(closure.term, zonker)])
-		.with(NF.Patterns.Mu, ({ closure, binder }) => [...metas(binder.annotation[0], zonker), ...EB.Icit.metas(closure.term, zonker)])
+		.with(NF.Patterns.Pi, ({ closure, binder }) => [...metas(binder.annotation.nf, zonker), ...EB.Icit.metas(closure.term, zonker)])
+		.with(NF.Patterns.Mu, ({ closure, binder }) => [...metas(binder.annotation.nf, zonker), ...EB.Icit.metas(closure.term, zonker)])
 		.otherwise(() => {
 			throw new Error("metas: Not implemented yet");
 		});
@@ -74,7 +75,12 @@ export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Contex
 		const name = `${String.fromCharCode(charCode + i)}`;
 		const boundLvl = i; // outermost binder is level 0 when quoting with lvl = ms.length
 		const { ann } = ctx.metas[m.val];
-		const withBinder = EB.bind(acc, { type: "Pi", variable: name }, [ann, Q.Many], "inserted");
+		const withBinder = EB.bind(
+			acc,
+			{ type: "Pi", variable: name },
+			{ nf: ann, modalities: { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF() } },
+			"inserted",
+		);
 		return set(withBinder, ["zonker", `${m.val}`] as const, NF.Constructors.Var({ type: "Bound", lvl: boundLvl }));
 	}, ctx);
 
@@ -85,7 +91,12 @@ export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Contex
 		// Quote with all binders in scope: lvl = ms.length - i
 		const term = NF.quote(extendedCtx, ms.length - i, body);
 		const { ann } = ctx.metas[m.val];
-		return NF.Constructors.Pi(variable, "Implicit", [ann, Q.Many], NF.Constructors.Closure(extendedCtx, term));
+		return NF.Constructors.Pi(
+			variable,
+			"Implicit",
+			{ nf: ann, modalities: { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF() } },
+			NF.Constructors.Closure(extendedCtx, term),
+		);
 	}, val);
 
 	// Return the extended ctx so callers can keep the zonker mapping for subsequent passes (instantiate, etc.)

@@ -9,6 +9,8 @@ import * as Src from "@yap/src/index";
 
 import * as Log from "@yap/shared/logging";
 
+import { Liquid } from "@yap/verification/modalities";
+
 type Lambda = Extract<Src.Term, { type: "lambda" }>;
 
 export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
@@ -22,14 +24,22 @@ export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
 				: ([EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
 
 			const ty = NF.evaluate(ctx, ann);
-			const mty: NF.ModalValue = [ty, lam.multiplicity ? lam.multiplicity : Q.Many];
+			const quantity = lam.multiplicity ? lam.multiplicity : Q.Many;
+			const liquid = lam.liquid ? (yield* EB.check.gen(lam.liquid, Liquid.Predicate.Kind(ctx, ty)))[0] : Liquid.Predicate.Neutral();
+			const mty: NF.ModalValue = {
+				nf: ty,
+				modalities: {
+					quantity,
+					liquid: NF.evaluate(ctx, liquid),
+				},
+			};
 
 			const ast = yield* V2.local(
 				_ctx => EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, mty),
 				V2.Do(function* () {
 					const inferred = yield* EB.infer.gen(lam.body);
 					const [bTerm, bType, [vu, ...bus]] = yield* EB.Icit.insert.gen(inferred);
-					yield* V2.tell("constraint", { type: "usage", expected: mty[1], computed: vu });
+					//yield* V2.tell("constraint", { type: "usage", expected: mty[1], computed: vu });
 
 					const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm);
 					const pi = NF.Constructors.Pi(lam.variable, lam.icit, mty, NF.closeVal(ctx, bType));

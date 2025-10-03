@@ -9,6 +9,8 @@ import * as Src from "@yap/src/index";
 
 import { match } from "ts-pattern";
 import { Implicitness } from "@yap/shared/implicitness";
+import * as Modal from "@yap/verification/modalities";
+import { Liquid } from "@yap/verification/modalities";
 
 type Application = Extract<Src.Term, { type: "application" }>;
 
@@ -18,14 +20,20 @@ export const infer = (node: Application) =>
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 
-			const [ft, fty, fus] = yield* V2.pure(inferFn(node));
-			const pi = yield* mkPi(fty, node.icit);
+			const [ft, fty, fus, modalities] = yield* V2.pure(inferFn(node));
+			const pi = yield* mkPi(fty, node.icit, modalities);
 			const [at, aus] = yield* V2.pure(checkArg(node, pi[0]));
 
-			const [[, q], cls, x] = pi;
-			const rus = Q.add(fus, Q.multiply(q, aus));
+			const [
+				{
+					modalities: { quantity },
+				},
+				cls,
+				x,
+			] = pi;
+			const rus = Q.add(fus, Q.multiply(quantity, aus));
 
-			const val = NF.apply({ type: "Pi", variable: x }, cls, NF.evaluate(ctx, at), q);
+			const val = NF.apply({ type: "Pi", variable: x }, cls, NF.evaluate(ctx, at), modalities);
 			return [EB.Constructors.App(node.icit, ft, at), val, rus] satisfies EB.AST;
 		}),
 	);
@@ -48,11 +56,11 @@ const inferFn = (node: Application) =>
 
 const checkArg = ({ arg }: Application, ann: NF.ModalValue) =>
 	V2.track(
-		{ tag: "src", type: "term", term: arg, metadata: { action: "checking", against: ann[0], description: "checking argument type" } },
-		EB.check(arg, ann[0]),
+		{ tag: "src", type: "term", term: arg, metadata: { action: "checking", against: ann.nf, description: "checking argument type" } },
+		EB.check(arg, ann.nf),
 	);
 
-const mkPi = (fnType: NF.Value, icit: Implicitness) =>
+const mkPi = (fnType: NF.Value, icit: Implicitness, modalities?: Modal.Annotations) =>
 	match(fnType)
 		.with({ type: "Abs", binder: { type: "Pi" } }, pi => {
 			if (pi.binder.icit !== icit) {
@@ -66,7 +74,13 @@ const mkPi = (fnType: NF.Value, icit: Implicitness) =>
 
 			const meta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 			const nf = NF.evaluate(ctx, meta);
-			const mnf: NF.ModalValue = [nf, Q.Many];
+			const mnf: NF.ModalValue = {
+				nf,
+				modalities: {
+					quantity: modalities?.quantity ?? Q.Many,
+					liquid: modalities?.liquid ?? Liquid.Predicate.NeutralNF(),
+				},
+			};
 			const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 			const closure = NF.Constructors.Closure(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length + 1, kind)));
 

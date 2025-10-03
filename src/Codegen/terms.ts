@@ -22,8 +22,8 @@ export const codegen = (env: string[], term: EB.Term): string => {
 			})
 			.with({ type: "Var", variable: { type: "Label" } }, ({ variable }) => `${DEFAULT_RECORD_NAME}.${variable.name}`)
 			.with({ type: "Var", variable: { type: "Foreign" } }, { type: "Var", variable: { type: "Free" } }, ({ variable }) => {
-				if (Object.keys(Lib.Terms).includes(variable.name)) {
-					return codegen(env, get(Lib.Terms, variable.name));
+				if (Object.keys(Lib.Terms()).includes(variable.name)) {
+					return codegen(env, get(Lib.Terms(), variable.name));
 				}
 				return variable.name;
 			})

@@ -16,6 +16,8 @@
 		"paths": {
 			"@yap/elaboration": ["./src/elaboration/index"],
 			"@yap/elaboration/*": ["./src/elaboration/*"],
+			"@yap/verification": ["./src/verification/index"],
+			"@yap/verification/*": ["./src/verification/*"],
 			"@yap/src/*": ["./src/parser/*"],
 			"@yap/shared/*": ["./src/shared/*"],
 			"@yap/utils": ["./src/utils/index"]

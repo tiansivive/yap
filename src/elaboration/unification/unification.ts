@@ -73,7 +73,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 					([pi1, pi2]) => pi1.binder.icit === pi2.binder.icit,
 					([pi1, pi2]) =>
 						V2.Do(function* () {
-							const sub = yield* V2.pure(unify(pi1.binder.annotation[0], pi2.binder.annotation[0], lvl, subst));
+							const sub = yield* V2.pure(unify(pi1.binder.annotation.nf, pi2.binder.annotation.nf, lvl, subst));
 							const composed = Sub.compose(sub, subst);
 							const body1 = NF.apply(pi1.binder, pi1.closure, NF.Constructors.Rigid(lvl));
 							const body2 = NF.apply(pi2.binder, pi2.closure, NF.Constructors.Rigid(lvl));
@@ -82,7 +82,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				)
 				.with([NF.Patterns.Mu, NF.Patterns.Mu], ([mu1, mu2]) =>
 					V2.Do(function* () {
-						const sub = yield* V2.pure(unify(mu1.binder.annotation[0], mu2.binder.annotation[0], lvl, subst));
+						const sub = yield* V2.pure(unify(mu1.binder.annotation.nf, mu2.binder.annotation.nf, lvl, subst));
 						const composed = Sub.compose(sub, subst);
 						const body1 = NF.apply(mu1.binder, mu1.closure, NF.Constructors.Rigid(lvl));
 						const body2 = NF.apply(mu2.binder, mu2.closure, NF.Constructors.Rigid(lvl));

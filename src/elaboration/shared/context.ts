@@ -29,19 +29,18 @@ export type Context = {
 	sigma: Record<string, Sigma>;
 	zonker: Sub.Subst;
 	metas: Record<number, { meta: EB.Meta; ann: NF.Value }>;
-	imports: Record<string, AST>;
+	imports: Record<string, EB.AST>;
 	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
 	trace: P.Stack<Provenance>;
 };
 
 export type Zonker = Context["zonker"];
 
-export type AST = [EB.Term, NF.Value, Q.Usages];
 export type Sigma = { nf: NF.Value; ann: NF.Value; multiplicity: Q.Multiplicity };
 
 export type Binder = Pick<EB.Binding, "type" | "variable">;
 
-export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<AST> => {
+export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.AST> => {
 	const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
 	// labels are different syntax (:varname), so we can check them before bound variables as the latter will never shadow the former
 	if (variable.type === "label") {
@@ -49,12 +48,12 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<AST
 		if (key) {
 			const { ann, multiplicity } = key;
 			const tm = EB.Constructors.Var({ type: "Label", name: variable.value });
-			return V2.of<AST>([tm, ann, zeros]); // QUESTION: need to somehow handle multiplicity?
+			return V2.of<EB.AST>([tm, ann, zeros]); // QUESTION: need to somehow handle multiplicity?
 		}
 		throw new Error(`Label not found: ${variable.value}`);
 	}
 
-	const _lookup = (i: number, variable: Src.Variable, types: Array<Context["env"][number]["type"]>): V2.Elaboration<AST> => {
+	const _lookup = (i: number, variable: Src.Variable, types: Array<Context["env"][number]["type"]>): V2.Elaboration<EB.AST> => {
 		// free vars can be shadowed by bound vars, so only if no bound vars are found do we check for free vars
 		// QUESTION: should we disallow this shadowing?
 		if (types.length === 0) {
@@ -63,20 +62,20 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<AST
 				const [, nf, us] = free;
 
 				const tm = EB.Constructors.Var({ type: "Free", name: variable.value });
-				return V2.of<AST>([tm, nf, Q.add(us, zeros)]); //QUESTION: is this addition correct?
+				return V2.of<EB.AST>([tm, nf, Q.add(us, zeros)]); //QUESTION: is this addition correct?
 			}
 
 			throw new Error(`Variable not found: ${variable.value}`);
 		}
 
-		const [[binder, origin, [nf, m]], ...rest] = types;
-		const usages = unsafeUpdateAt(i, m, zeros);
+		const [[binder, origin, { nf, modalities }], ...rest] = types;
+		const usages = unsafeUpdateAt(i, modalities.quantity, zeros);
 		// do we need to check origin here? I don't think it makes a difference whether it's an inserted (implicit) or source (explicit) binder
 		if (binder.variable === variable.value) {
 			const tm = EB.Constructors.Var({ type: "Bound", index: i });
 			return V2.Do(function* () {
 				yield* V2.tell("binder", binder);
-				return [tm, nf, usages] as AST;
+				return [tm, nf, usages] as EB.AST;
 			});
 		}
 
@@ -115,11 +114,11 @@ export const resolveImplicit = (nf: NF.Value): V2.Elaboration<[EB.Term, Sub.Subs
 resolveImplicit.gen = F.flow(resolveImplicit, V2.pure);
 
 export const bind = (context: Context, binder: Binder, annotation: NF.ModalValue, origin: Origin = "source"): Context => {
-	const [, q] = annotation;
+	const { modalities } = annotation;
 	const { env } = context;
 
 	const entry: Context["env"][number] = {
-		nf: [NF.Constructors.Rigid(env.length), q],
+		nf: { nf: NF.Constructors.Rigid(env.length), modalities },
 		type: [binder, origin, annotation],
 		name: binder,
 	};
