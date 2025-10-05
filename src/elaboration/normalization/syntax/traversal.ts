@@ -32,7 +32,12 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 			),
 		)
 		.with({ type: "Neutral" }, ({ value }) => Constructors.Neutral(traverse(value, onVar, onTerm)))
-
+		.with(Patterns.Modal, ({ value, modalities }) =>
+			Constructors.Modal(traverse(value, onVar, onTerm), {
+				quantity: modalities.quantity,
+				liquid: traverse(modalities.liquid, onVar, onTerm),
+			}),
+		)
 		.otherwise(() => {
 			throw new Error("Traverse: Not implemented yet");
 		});

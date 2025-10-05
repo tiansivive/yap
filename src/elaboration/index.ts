@@ -4,6 +4,7 @@ export * from "./check";
 export * from "./shared/context";
 export * from "./pretty/pretty";
 export * from "./syntax/term";
+export * from "./syntax/traversal";
 export * from "./shared/supply";
 export * as U from "./unification/unification";
 

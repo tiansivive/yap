@@ -68,6 +68,12 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 		.with({ type: "External" }, ({ name, arity, compute, args }) => {
 			return args.reduce((acc, arg) => EB.Constructors.App("Explicit", acc, quote(ctx, lvl, arg)), EB.Constructors.Var({ type: "Foreign", name }));
 		})
+		.with({ type: "Modal" }, ({ value, modalities }) =>
+			EB.Constructors.Modal(quote(ctx, lvl, value), {
+				quantity: modalities.quantity,
+				liquid: modalities.liquid,
+			}),
+		)
 		.otherwise(nf => {
 			throw new Error("Quote: Not implemented yet: " + NF.display(nf, ctx.zonker, ctx.metas));
 		});

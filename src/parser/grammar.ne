@@ -79,9 +79,14 @@ Imports -> %space:? "import" %space String %semicolon 													{% P.importAl
 
 Script -> Many[Statement, %semicolon] %semicolon %space:?  				{% P.script %}
 
-Ann -> Ann %space:? %colon %space:? TypeExpr 							{% P.Annotation %}
-     | Ann %space:? %colon %space:? Angle[Quantity] %space:? TypeExpr 	{% P.Annotation %}
+Ann -> Ann %space:? %colon %space:? ModalExpr 							{% P.Annotation %}
+    #  | Ann %space:? %colon %space:? Angle[Quantity] %space:? TypeExpr 	{% P.Annotation %}
+	 | Ann %space:? %colon %space:? TypeExpr 							{% P.Annotation %}
 	 | TypeExpr 														{% id %}
+
+ModalExpr -> Angle[ Quantity ] %space:? TypeExpr 							{% P.Modal %}
+		   | Angle[ Quantity ] %space:? TypeExpr %space:? Angle[ Lambda ] 	{% P.Modal %}
+		   | TypeExpr %space:? Angle[ Lambda ] 								{% P.Modal %}
 
 TypeExpr -> Pi 			{% id %}
 		  | Type 		{% id %}
@@ -124,10 +129,10 @@ Mu -> "μ" %space:? Identifier %space:? %arrow %space:? TypeExpr 		{% P.Mu %}
 Lambda -> %backslash Param %space:? %arrow %space:? TypeExpr 				{% P.Lambda("Explicit") %}
 		| %backslash Param %space:? %fatArrow %space:? TypeExpr 			{% P.Lambda("Implicit") %}
 		
-Param -> Identifier 														{% P.Param %}
+Param -> Identifier 															{% P.Param %}
 	   | Identifier %space:? %colon %space:? TypeExpr 							{% P.Param %}
-	   | Identifier %space:? %colon %space:? Angle[Quantity] %space:? TypeExpr 		{% P.Param %}
-	   | Parens[Param] 														{% P.extract %}
+	   | Identifier %space:? %colon %space:? Angle[Quantity] %space:? TypeExpr 	{% P.Param %}
+	   | Parens[Param] 															{% P.extract %}
 		 
 
 Pi -> Type %space:? %arrow %space:? PiTail 		{% P.Pi("Explicit") %}

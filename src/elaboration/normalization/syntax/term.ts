@@ -150,6 +150,7 @@ export const Patterns = {
 	Lambda: { type: "Abs", binder: { type: "Lambda" } } as const,
 	Mu: { type: "Abs", binder: { type: "Mu" } } as const,
 	Row: { type: "Row" } as const,
+	Modal: { type: "Modal" } as const,
 
 	HashMap: {
 		type: "Neutral",
@@ -177,38 +178,4 @@ export const Patterns = {
 			arg: { type: "Lit", value: { type: "Atom", value: "Num" } },
 		},
 	} as const,
-};
-
-export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) => Value, onTerm: (tm: EB.Term) => EB.Term): Value => {
-	return match(nf)
-		.with({ type: "Var" }, onVar)
-		.with({ type: "Lit" }, lit => lit)
-		.with(Patterns.Lambda, ({ binder, closure }) => Constructors.Lambda(binder.variable, binder.icit, update(closure, "term", onTerm)))
-		.with(Patterns.Pi, ({ binder, closure }) => {
-			const {
-				annotation: { nf, modalities },
-			} = binder;
-			return Constructors.Pi(binder.variable, binder.icit, { nf: traverse(nf, onVar, onTerm), modalities }, update(closure, "term", onTerm));
-		})
-		.with(Patterns.Mu, ({ binder, closure }) => {
-			const {
-				annotation: { nf, modalities },
-			} = binder;
-			return Constructors.Mu(binder.variable, binder.source, { nf: traverse(nf, onVar, onTerm), modalities }, update(closure, "term", onTerm));
-		})
-		.with({ type: "App" }, ({ icit, func, arg }) => Constructors.App(traverse(func, onVar, onTerm), traverse(arg, onVar, onTerm), icit))
-		.with({ type: "Row" }, ({ row }) =>
-			Constructors.Row(
-				R.traverse(
-					row,
-					v => traverse(v, onVar, onTerm),
-					v => R.Constructors.Variable(v),
-				),
-			),
-		)
-		.with({ type: "Neutral" }, ({ value }) => Constructors.Neutral(traverse(value, onVar, onTerm)))
-
-		.otherwise(() => {
-			throw new Error("Traverse: Not implemented yet");
-		});
 };

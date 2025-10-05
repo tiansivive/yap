@@ -47,6 +47,7 @@ export const metas = (val: NF.Value, zonker: Subst): Meta[] => {
 		.with(NF.Patterns.Lambda, ({ closure }) => EB.Icit.metas(closure.term, zonker))
 		.with(NF.Patterns.Pi, ({ closure, binder }) => [...metas(binder.annotation.nf, zonker), ...EB.Icit.metas(closure.term, zonker)])
 		.with(NF.Patterns.Mu, ({ closure, binder }) => [...metas(binder.annotation.nf, zonker), ...EB.Icit.metas(closure.term, zonker)])
+		.with(NF.Patterns.Modal, ({ value, modalities }) => metas(value, zonker))
 		.otherwise(() => {
 			throw new Error("metas: Not implemented yet");
 		});

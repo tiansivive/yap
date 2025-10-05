@@ -112,13 +112,13 @@ export const Operation: PostProcessor<[Term, Whitespace, [Token], Whitespace, Te
 /***********************************************************
  * Annotation processors
  ***********************************************************/
-type Annotation = [Token, Colon, Whitespace, Term] | [Token, Colon, Whitespace, [Q.Multiplicity], Whitespace, Term] | [];
+type Annotation = [] | [Token, Colon, Whitespace, Term];
+//| [Token, Colon, Whitespace, [Q.Multiplicity], Whitespace, Term];
 
-const Annotate = (term: Term, ann: Term, multiplicity?: Q.Multiplicity): Term => ({
+const Annotate = (term: Term, ann: Term): Term => ({
 	type: "annotation",
 	term,
 	ann,
-	multiplicity,
 	location: span(term, ann),
 });
 
@@ -127,14 +127,12 @@ export const Annotation = ([term, ...rest]: [Term, ...Annotation]): Term => {
 		throw new Error("Expected annotation");
 	}
 
-	if (rest.length === 4) {
-		const [, , , ann] = rest;
-		return Annotate(term, ann);
-	}
+	const [, , , ann] = rest;
+	return Annotate(term, ann);
 
-	const q = rest[3][0];
-	const ann = rest[5];
-	return Annotate(term, ann, q);
+	// const q = rest[3][0];
+	// const ann = rest[5];
+	// return Annotate(term, ann, q);
 };
 
 /***********************************************************
@@ -483,6 +481,28 @@ export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]
 	const ann = rest[5];
 	const value = rest[9];
 	return letdec(variable, value, ann, q);
+};
+
+/***********************************************************
+ * Modal processors
+ ***********************************************************/
+
+type Modal = [[Q.Multiplicity], Whitespace, Term] | [[Q.Multiplicity], Whitespace, Term, Whitespace, LAngle, Term, RAngle] | [Term, Whitespace, [Term]];
+
+export const Modal: PostProcessor<Modal, Term> = (data: Modal): Term => {
+	if (data.length === 7) {
+		const [[q], , term, , , liquid] = data;
+
+		return { type: "modal", term, modalities: { quantity: q, liquid }, location: term.location };
+	}
+
+	if (Array.isArray(data[0])) {
+		const [[q], , term] = data as [[Q.Multiplicity], Whitespace, Term];
+		return { type: "modal", term, modalities: { quantity: q }, location: term.location };
+	}
+
+	const [term, , [liquid]] = data as [Term, Whitespace, [Term]];
+	return { type: "modal", term, modalities: { liquid }, location: locSpan(term.location, liquid.location) };
 };
 
 /***********************************************************

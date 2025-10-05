@@ -95,7 +95,7 @@ export const metas = (tm: EB.Term, zonker: Subst): Meta[] => {
 			//.with({ type: "Annotation" }, ({ term, ann }) => [..._metas(term), ..._metas(ann)])
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => [..._metas(scrutinee), ...alternatives.flatMap(alt => _metas(alt.term))])
 			.with({ type: "Block" }, ({ return: ret, statements }) => [..._metas(ret), ...statements.flatMap(s => _metas(s.value))])
-
+			.with({ type: "Modal" }, ({ term }) => _metas(term))
 			.otherwise(() => {
 				throw new Error("metas: Not implemented yet");
 			});
