@@ -14,6 +14,8 @@ declare var rparens: any;
 declare var colon: any;
 declare var langle: any;
 declare var rangle: any;
+declare var ldoublebracket: any;
+declare var rdoublebracket: any;
 declare var op: any;
 declare var concat: any;
 declare var hole: any;
@@ -64,16 +66,20 @@ const lexer = moo.compile({
 			if: "if",
 			else: "else",
 			then: "then",
+			true: "true",
+			false: "false",
 		}),
 	},
 	dot: /\./,
-	equals: /\=(?!>)/,
-	backslash: /\\/,
 	arrow: /->/,
 	backarrow: /<-/,
+	equals: /\=(?!>)/,
+	op: /[\+\-\*\/\<\>]|(?:==)|(?:!=)|(?:<=)|(?:>=)|(?:\|>)|(?:<\|)/,
+	backslash: /\\/,
 	fatArrow: /\=>/,
-	op: /[\+\-\*\/]/,
 	concat: /<>/,
+	ldoublebracket: /\[\|/,
+	rdoublebracket: /\|\]/,
 	lparens: /\(/,
 	rparens: /\)/,
 	lbrace: /\{/,
@@ -347,8 +353,8 @@ const grammar: Grammar = {
 		{ name: "ModalExpr$ebnf$3", symbols: [], postprocess: () => null },
 		{ name: "ModalExpr$macrocall$6", symbols: ["Lambda"] },
 		{ name: "ModalExpr$macrocall$5$macrocall$2", symbols: ["ModalExpr$macrocall$6"] },
-		{ name: "ModalExpr$macrocall$5$macrocall$3", symbols: [lexer.has("langle") ? { type: "langle" } : langle] },
-		{ name: "ModalExpr$macrocall$5$macrocall$4", symbols: [lexer.has("rangle") ? { type: "rangle" } : rangle] },
+		{ name: "ModalExpr$macrocall$5$macrocall$3", symbols: [lexer.has("ldoublebracket") ? { type: "ldoublebracket" } : ldoublebracket] },
+		{ name: "ModalExpr$macrocall$5$macrocall$4", symbols: [lexer.has("rdoublebracket") ? { type: "rdoublebracket" } : rdoublebracket] },
 		{ name: "ModalExpr$macrocall$5$macrocall$1$ebnf$1", symbols: [lexer.has("space") ? { type: "space" } : space], postprocess: id },
 		{ name: "ModalExpr$macrocall$5$macrocall$1$ebnf$1", symbols: [], postprocess: () => null },
 		{
@@ -371,8 +377,8 @@ const grammar: Grammar = {
 		{ name: "ModalExpr$ebnf$4", symbols: [], postprocess: () => null },
 		{ name: "ModalExpr$macrocall$8", symbols: ["Lambda"] },
 		{ name: "ModalExpr$macrocall$7$macrocall$2", symbols: ["ModalExpr$macrocall$8"] },
-		{ name: "ModalExpr$macrocall$7$macrocall$3", symbols: [lexer.has("langle") ? { type: "langle" } : langle] },
-		{ name: "ModalExpr$macrocall$7$macrocall$4", symbols: [lexer.has("rangle") ? { type: "rangle" } : rangle] },
+		{ name: "ModalExpr$macrocall$7$macrocall$3", symbols: [lexer.has("ldoublebracket") ? { type: "ldoublebracket" } : ldoublebracket] },
+		{ name: "ModalExpr$macrocall$7$macrocall$4", symbols: [lexer.has("rdoublebracket") ? { type: "rdoublebracket" } : rdoublebracket] },
 		{ name: "ModalExpr$macrocall$7$macrocall$1$ebnf$1", symbols: [lexer.has("space") ? { type: "space" } : space], postprocess: id },
 		{ name: "ModalExpr$macrocall$7$macrocall$1$ebnf$1", symbols: [], postprocess: () => null },
 		{
@@ -387,6 +393,7 @@ const grammar: Grammar = {
 		},
 		{ name: "ModalExpr$macrocall$7", symbols: ["ModalExpr$macrocall$7$macrocall$1"], postprocess: P.enclosed },
 		{ name: "ModalExpr", symbols: ["TypeExpr", "ModalExpr$ebnf$4", "ModalExpr$macrocall$7"], postprocess: P.Modal },
+		{ name: "ModalExpr", symbols: ["TypeExpr"], postprocess: id },
 		{ name: "TypeExpr", symbols: ["Pi"], postprocess: id },
 		{ name: "TypeExpr", symbols: ["Type"], postprocess: id },
 		{ name: "Type", symbols: ["Mu"], postprocess: id },
@@ -1030,7 +1037,7 @@ const grammar: Grammar = {
 				"Letdec$ebnf$3",
 				lexer.has("colon") ? { type: "colon" } : colon,
 				"Letdec$ebnf$4",
-				"TypeExpr",
+				"ModalExpr",
 				"Letdec$ebnf$5",
 				lexer.has("equals") ? { type: "equals" } : equals,
 				"Letdec$ebnf$6",
@@ -1360,6 +1367,7 @@ const grammar: Grammar = {
 		{ name: "Wildcard", symbols: [lexer.has("hole") ? { type: "hole" } : hole], postprocess: P.Wildcard },
 		{ name: "Literal", symbols: ["String"], postprocess: P.Str },
 		{ name: "Literal", symbols: ["Number"], postprocess: P.Num },
+		{ name: "Literal", symbols: ["Bool"], postprocess: P.Bool },
 		{ name: "Literal", symbols: [{ literal: "Type" }], postprocess: P.Type },
 		{ name: "Literal", symbols: [{ literal: "Unit" }], postprocess: P.Unit("type") },
 		{ name: "Literal", symbols: [{ literal: "*" }], postprocess: P.Unit("value") },
@@ -1368,6 +1376,8 @@ const grammar: Grammar = {
 		{ name: "Number", symbols: ["Int"], postprocess: id },
 		{ name: "Int", symbols: [lexer.has("digit") ? { type: "digit" } : digit], postprocess: P.sourceLoc },
 		{ name: "String", symbols: [lexer.has("string") ? { type: "string" } : string], postprocess: P.sourceLoc },
+		{ name: "Bool", symbols: [{ literal: "true" }], postprocess: P.sourceLoc },
+		{ name: "Bool", symbols: [{ literal: "false" }], postprocess: P.sourceLoc },
 	],
 	ParserStart: "Module",
 };

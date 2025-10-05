@@ -28,6 +28,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			const unifier = match([left, right])
+				.with([NF.Patterns.Modal, P._], ([{ value }, val]) => unify(value, val, lvl, subst))
+				.with([P._, NF.Patterns.Modal], ([val, { value }]) => unify(val, value, lvl, subst))
 				.with([NF.Patterns.Flex, NF.Patterns.Flex], ([meta1, meta2]) =>
 					V2.Do<Subst, Subst>(function* () {
 						const s = Sub.compose(bind(ctx, meta1.variable, meta2), subst);
@@ -58,6 +60,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						return subst;
 					}),
 				)
+
 				.with(
 					[NF.Patterns.Lambda, NF.Patterns.Lambda],
 					([lam1, lam2]) => lam1.binder.icit === lam2.binder.icit,
@@ -193,6 +196,7 @@ const occursCheck = (ctx: EB.Context, v: Meta, ty: NF.Value): boolean => {
 			//occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
 			.with(NF.Patterns.Pi, ({ binder, closure }) => occursInTerm(closure.ctx, v, closure.term))
 			.with(NF.Patterns.App, ({ func, arg }) => occursCheck(ctx, v, func) || occursCheck(ctx, v, arg))
+			.with(NF.Patterns.Modal, ({ value, modalities }) => occursCheck(ctx, v, value) || occursCheck(ctx, v, modalities.liquid))
 
 			.with(NF.Patterns.Row, ({ row }) =>
 				R.fold(
@@ -241,6 +245,7 @@ const occursInTerm = (ctx: EB.Context, v: Meta, tm: EB.Term): boolean => {
 			.with({ type: "Proj" }, ({ term }) => occursInTerm(ctx, v, term))
 			.with({ type: "Inj" }, ({ value, term }) => occursInTerm(ctx, v, value) || occursInTerm(ctx, v, term))
 			.with({ type: "Lit" }, () => false)
+			.with({ type: "Modal" }, ({ term }) => occursInTerm(ctx, v, term))
 			.otherwise(() => false)
 	);
 };

@@ -6,6 +6,8 @@ import * as Icit from "@yap/shared/implicitness";
 import * as Src from "@yap/src/index";
 import * as R from "@yap/shared/rows";
 
+import * as Q from "@yap/shared/modalities/multiplicity";
+
 export const display = (term: Src.Term): string => {
 	return match(term)
 		.with({ type: "lit" }, ({ value }) => Lit.display(value))
@@ -84,6 +86,12 @@ export const display = (term: Src.Term): string => {
 		.with({ type: "block" }, ({ statements, return: ret }) => {
 			const stmts = statements.map(Stmt.display).join(";\n");
 			return `{\n${stmts}\nreturn ${ret ? display(ret) : ""};\n}`;
+		})
+		.with({ type: "modal" }, ({ term, modalities }) => {
+			const tm = display(term);
+			const q = modalities.quantity ? `${Q.display(modalities.quantity)} ` : "";
+			const l = modalities.liquid ? ` [| ${display(modalities.liquid)} |]` : "";
+			return `${q}${tm}${l}`;
 		})
 
 		.otherwise(tm => `Display Term ${tm.type}: Not implemented`);

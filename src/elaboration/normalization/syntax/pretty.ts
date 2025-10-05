@@ -69,7 +69,7 @@ export const display = (value: NF.Value | NF.ModalValue, zonker: EB.Zonker, meta
 			})(row),
 		)
 		.with({ type: "Modal" }, ({ modalities, value }) => {
-			return `<${Q.display(modalities.quantity)}> ${display(value, zonker, metas)} < ${NF.display(modalities.liquid, zonker, metas)} >`;
+			return `<${Q.display(modalities.quantity)}> ${display(value, zonker, metas)} [| ${NF.display(modalities.liquid, zonker, metas)} |]`;
 		})
 		.with({ type: "External" }, external => {
 			const args = external.args.map(arg => display(arg, zonker, metas)).join(", ");

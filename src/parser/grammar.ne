@@ -20,16 +20,19 @@
 				from: "from", as: "as", using: "using" ,
 				foreign: "foreign", loop: "loop", repeat: "repeat",
 				if: "if", else: "else", then: "then",
+				true: "true", false: "false",
 			}) 
 		},
 	  	dot: /\./,
-		equals: /\=(?!>)/,
-	  	backslash: /\\/,
 	  	arrow: /->/,
 		backarrow: /<-/,
+		equals: /\=(?!>)/,
+		op: /[\+\-\*\/\<\>]|(?:==)|(?:!=)|(?:<=)|(?:>=)|(?:\|>)|(?:<\|)/,
+	  	backslash: /\\/,
 		fatArrow: /\=>/,
-		op: /[\+\-\*\/]/,
 		concat: /<>/,
+		ldoublebracket: /\[\|/,
+		rdoublebracket: /\|\]/,
 		lparens: /\(/,
 		rparens: /\)/,
 		lbrace: /\{/,
@@ -63,10 +66,11 @@ Many[X, Separator] 	-> (%space:? $X %space:? $Separator):* %space:? $X 		{% P.ma
 Prefixed[Prefix, X] -> $Prefix %space:? $X 											{% P.prefix %}
 Suffixed[X, Suffix] -> $X %space:? $Suffix 											{% P.suffix %}
 
-Parens[X] -> Wrap[$X, %lparens, %rparens] 		{% P.enclosed %}
-Angle[X] -> Wrap[$X, %langle, %rangle] 			{% P.enclosed %}
-Curly[X] -> Wrap[$X, %lbrace, %rbrace] 			{% P.enclosed %}
-Square[X] -> Wrap[$X, %lbracket, %rbracket] 	{% P.enclosed %}
+Parens[X] -> Wrap[$X, %lparens, %rparens] 						{% P.enclosed %}
+Angle[X] -> Wrap[$X, %langle, %rangle] 							{% P.enclosed %}
+DoubleBracket[X] -> Wrap[$X, %ldoublebracket, %rdoublebracket] 	{% P.enclosed %}
+Curly[X] -> Wrap[$X, %lbrace, %rbrace] 							{% P.enclosed %}
+Square[X] -> Wrap[$X, %lbracket, %rbracket] 					{% P.enclosed %}
 
 
 Module -> %space:? Exports Imports:* %space:+ Script 													{% P.module_ %}
@@ -84,9 +88,10 @@ Ann -> Ann %space:? %colon %space:? ModalExpr 							{% P.Annotation %}
 	 | Ann %space:? %colon %space:? TypeExpr 							{% P.Annotation %}
 	 | TypeExpr 														{% id %}
 
-ModalExpr -> Angle[ Quantity ] %space:? TypeExpr 							{% P.Modal %}
-		   | Angle[ Quantity ] %space:? TypeExpr %space:? Angle[ Lambda ] 	{% P.Modal %}
-		   | TypeExpr %space:? Angle[ Lambda ] 								{% P.Modal %}
+ModalExpr -> Angle[ Quantity ] %space:? TypeExpr 									{% P.Modal %}
+		   | Angle[ Quantity ] %space:? TypeExpr %space:? DoubleBracket[ Lambda ] 	{% P.Modal %}
+		   | TypeExpr %space:? DoubleBracket[ Lambda ] 								{% P.Modal %}
+		   | TypeExpr 																{% id %}
 
 TypeExpr -> Pi 			{% id %}
 		  | Type 		{% id %}
@@ -130,8 +135,8 @@ Lambda -> %backslash Param %space:? %arrow %space:? TypeExpr 				{% P.Lambda("Ex
 		| %backslash Param %space:? %fatArrow %space:? TypeExpr 			{% P.Lambda("Implicit") %}
 		
 Param -> Identifier 															{% P.Param %}
-	   | Identifier %space:? %colon %space:? TypeExpr 							{% P.Param %}
-	   | Identifier %space:? %colon %space:? Angle[Quantity] %space:? TypeExpr 	{% P.Param %}
+	   | Identifier %space:? %colon %space:? ModalExpr 							{% P.Param %}
+	#    | Identifier %space:? %colon %space:? Angle[Quantity] %space:? TypeExpr 	{% P.Param %}
 	   | Parens[Param] 															{% P.extract %}
 		 
 
@@ -189,8 +194,8 @@ Statement -> TypeExpr 		{% P.Expr %}
 
 Return    -> %space:? "return" %space Ann %semicolon 					{% P.Return %}
 
-Letdec -> "let" %space Identifier %space:? %equals %space:? Ann 										{% P.LetDec %}
-		| "let" %space Identifier %space:? %colon %space:? TypeExpr %space:? %equals %space:? TypeExpr 	{% P.LetDec %}
+Letdec -> "let" %space Identifier %space:? %equals %space:? Ann 											{% P.LetDec %}
+		| "let" %space Identifier %space:? %colon %space:? ModalExpr %space:? %equals %space:? TypeExpr 	{% P.LetDec %}
 
 Using -> "using" %space Ann 								{% P.Using %}
 	   | "using" %space Ann %space "as" %space Identifier  	{% P.Using %}
@@ -244,6 +249,7 @@ Wildcard -> %hole 										{% P.Wildcard %}
 Literal 
 	-> String {% P.Str %}
 	 | Number {% P.Num %}
+	 | Bool   {% P.Bool %}
 	 | "Type" {% P.Type %}
 	 | "Unit" {% P.Unit("type") %}
 	 | "*" 	  {% P.Unit("value") %}
@@ -255,3 +261,5 @@ Number
 
 Int -> %digit  		{% P.sourceLoc %}
 String -> %string 	{% P.sourceLoc %}
+Bool -> "true"  	{% P.sourceLoc %}
+	  | "false" 	{% P.sourceLoc %}

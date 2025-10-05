@@ -24,15 +24,21 @@ export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
 				: ([EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
 
 			const ty = NF.evaluate(ctx, ann);
-			const quantity = lam.multiplicity ? lam.multiplicity : Q.Many;
-			const liquid = lam.liquid ? yield* EB.Liquid.typecheck(lam.liquid, ty) : Liquid.Predicate.Neutral();
-			const mty: NF.ModalValue = {
-				nf: ty,
-				modalities: {
-					quantity,
-					liquid: NF.evaluate(ctx, liquid),
-				},
-			};
+			// const quantity = lam.multiplicity ? lam.multiplicity : Q.Many;
+			// const liquid = lam.liquid ? yield* EB.Liquid.typecheck(lam.liquid, ty) : Liquid.Predicate.Neutral();
+			const mty: NF.ModalValue =
+				ty.type === "Modal"
+					? {
+							nf: ty.value,
+							modalities: ty.modalities,
+						}
+					: {
+							nf: ty,
+							modalities: {
+								quantity: Q.Zero,
+								liquid: Liquid.Predicate.NeutralNF(),
+							},
+						};
 
 			const ast = yield* V2.local(
 				_ctx => EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, mty),

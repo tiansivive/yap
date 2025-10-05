@@ -66,6 +66,10 @@ export const Num: PostProcessor<[Sourced<number>], Sourced<Literal>> = F.flow(
 	NEA.head,
 	Sourced.map(value => ({ type: "Num", value })),
 );
+export const Bool: PostProcessor<[Sourced<boolean>], Sourced<Literal>> = F.flow(
+	NEA.head,
+	Sourced.map(value => ({ type: "Bool", value })),
+);
 
 export const Type = (tok: Token): Sourced<Literal> => [L.Type(), { from: loc(tok) }];
 export const Unit =
@@ -141,7 +145,7 @@ export const Annotation = ([term, ...rest]: [Term, ...Annotation]): Term => {
 
 type Implicit = [Backslash, Param, Whitespace, Arrow, Whitespace, Term];
 type Explicit = [Backslash, Param, Whitespace, Arrow, Whitespace, Term];
-type Param = { type: "param"; binding: Variable; annotation?: Term; multiplicity?: Q.Multiplicity };
+type Param = { type: "param"; binding: Variable; annotation?: Term };
 
 const Lam = (icit: Implicitness, param: Param, body: Term): Term => ({
 	type: "lambda",
@@ -149,7 +153,6 @@ const Lam = (icit: Implicitness, param: Param, body: Term): Term => ({
 	variable: param.binding.value,
 	annotation: param.annotation,
 	body,
-	multiplicity: param.multiplicity,
 	location: locSpan(param.binding.location, body.location),
 });
 
@@ -163,7 +166,7 @@ export const Pi: (icit: Implicitness) => PostProcessor<[Term, Whitespace, Token,
 	icit =>
 	([expr, , arr, , body]) => {
 		if (expr.type === "annotation") {
-			const { term, ann, multiplicity } = expr;
+			const { term, ann } = expr;
 
 			if (term.type !== "var") {
 				throw new Error("Expected variable in Pi binding");
@@ -173,7 +176,7 @@ export const Pi: (icit: Implicitness) => PostProcessor<[Term, Whitespace, Token,
 				throw new Error("No cumulative annotations in Pi bindings allowed");
 			}
 
-			return { type: "pi", icit, variable: term.variable.value, annotation: ann, body, multiplicity, location: span(expr, body) };
+			return { type: "pi", icit, variable: term.variable.value, annotation: ann, body, location: span(expr, body) };
 		}
 
 		return { type: "arrow", lhs: expr, rhs: body, icit, location: span(expr, body) };
@@ -187,21 +190,11 @@ export const Param = ([binding, ...ann]: [Variable, ...Annotation]): Param => {
 		};
 	}
 
-	if (ann.length === 4) {
-		const [, , , term] = ann;
-		return {
-			type: "param",
-			binding,
-			annotation: term,
-		};
-	}
-	const q = ann[3][0];
-	const term = ann[5];
+	const [, , , term] = ann;
 	return {
 		type: "param",
 		binding,
 		annotation: term,
-		multiplicity: q,
 	};
 };
 

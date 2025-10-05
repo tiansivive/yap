@@ -16,8 +16,6 @@ export type Bare =
 			icit: Implicitness;
 			variable: string;
 			annotation?: Term;
-			multiplicity?: Q.Multiplicity;
-			liquid?: Term;
 			body: Term;
 	  }
 	| {
@@ -25,12 +23,10 @@ export type Bare =
 			icit: Implicitness;
 			variable: string;
 			annotation: Term;
-			multiplicity?: Q.Multiplicity;
-			liquid?: Term;
 			body: Term;
 	  }
 	| { type: "application"; fn: Term; arg: Term; icit: Implicitness }
-	| { type: "annotation"; term: Term; ann: Term; multiplicity?: Q.Multiplicity }
+	| { type: "annotation"; term: Term; ann: Term }
 	| { type: "list"; elements: Term[] }
 	| { type: "tuple"; row: Row }
 	| { type: "struct"; row: Row }
