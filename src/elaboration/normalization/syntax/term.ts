@@ -21,6 +21,7 @@ type Constructor =
 	| { type: "Row"; row: Row }
 	| { type: "Abs"; binder: Binder; closure: Closure }
 	| { type: "Neutral"; value: Value }
+	| { type: "Modal"; value: Value; modalities: Modal.Annotations }
 	| { type: "External"; name: string; arity: number; compute: (...args: Value[]) => Value; args: Value[] };
 
 export type Row = R.Row<Value, Variable>;
@@ -100,6 +101,12 @@ export const Constructors = {
 	Schema: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit")),
 	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),
 
+	Modal: (value: Value, modalities: Modal.Annotations): Value =>
+		Types.make(nf_tag, {
+			type: "Modal",
+			value,
+			modalities,
+		}),
 	External: (name: string, arity: number, compute: (...args: Value[]) => Value, args: Value[]): Value =>
 		Types.make(nf_tag, { type: "External", name, arity, compute, args }),
 };

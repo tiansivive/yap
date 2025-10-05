@@ -68,9 +68,9 @@ infer.gen = F.flow(infer, V2.pure);
 	TODO: Allow for returning a Variant type    
 	TODO: Augment the context with the scrutinee narrowed to the pattern   
  */
-type AltNode = [EB.Alternative, NF.Value, Q.Usages, Modal.Annotations?];
+type AltNode = [EB.Alternative, NF.Value, Q.Usages];
 export const elaborate =
-	([scrutinee, scuty, sus, modalities]: EB.AST) =>
+	([scrutinee, scuty, sus]: EB.AST) =>
 	(alt: Src.Alternative): V2.Elaboration<AltNode> =>
 		V2.track(
 			{ tag: "alt", alt, metadata: { action: "alternative", motive: "elaborating pattern", type: scuty } },

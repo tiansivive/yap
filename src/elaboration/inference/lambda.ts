@@ -25,7 +25,7 @@ export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
 
 			const ty = NF.evaluate(ctx, ann);
 			const quantity = lam.multiplicity ? lam.multiplicity : Q.Many;
-			const liquid = lam.liquid ? (yield* EB.check.gen(lam.liquid, Liquid.Predicate.Kind(ctx, ty)))[0] : Liquid.Predicate.Neutral();
+			const liquid = lam.liquid ? yield* EB.Liquid.typecheck(lam.liquid, ty) : Liquid.Predicate.Neutral();
 			const mty: NF.ModalValue = {
 				nf: ty,
 				modalities: {

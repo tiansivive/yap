@@ -89,6 +89,15 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			const reduce = (nff: NF.Value, nfa: NF.Value): NF.Value =>
 				match(nff)
 					.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)))
+					.with({ type: "Modal" }, ({ modalities, value }) => {
+						// QUESTION: Perhaps we preserve the modalities on the result of the application?
+						// Is this related to the concept of "measures" in Liquid Haskell
+						// If we have a fn `f: (Int -> Int){ x | <refinement on an arrow type? }
+						// What could we refine f itself to be?
+						// And if we apply f to an argument, what could we refine the result to be?
+						console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
+						return reduce(value, nfa);
+					})
 					.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
 						// Unfold the mu
 						const body = apply(mu.binder, mu.closure, NF.Constructors.Neutral(mu));
@@ -175,6 +184,10 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			}
 			return res;
 		})
+		.with({ type: "Modal" }, ({ term, modalities }) => {
+			const nf = evaluate(ctx, term);
+			return NF.Constructors.Modal(nf, modalities);
+		})
 		.otherwise(tm => {
 			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx.zonker, ctx.metas));
 			throw new Error("Not implemented");
@@ -202,10 +215,10 @@ export const matching = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]):
 		.exhaustive();
 };
 
-export const apply = (binder: EB.Binder, closure: NF.Closure, value: NF.Value, modalities?: Modal.Annotations): NF.Value => {
+export const apply = (binder: EB.Binder, closure: NF.Closure, value: NF.Value): NF.Value => {
 	const { ctx, term } = closure;
-	const ms = modalities ?? { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF() };
-	const extended = EB.extend(ctx, binder, { nf: value, modalities: ms });
+	const modalities = value.type === "Modal" ? value.modalities : { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF() };
+	const extended = EB.extend(ctx, binder, { nf: value, modalities });
 
 	if (closure.type === "Closure") {
 		return evaluate(extended, term);

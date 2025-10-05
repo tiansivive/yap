@@ -23,6 +23,7 @@ import { extract } from "./inference/rows";
 import { entries, set } from "@yap/utils";
 
 import * as Err from "./shared/errors";
+import { Liquid } from "@yap/verification/modalities";
 
 type Result = [EB.Term, Q.Usages];
 export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, Q.Usages]> =>
@@ -121,6 +122,17 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 						return V2.Do(() => V2.fail(Err.TypeMismatch(NF.Constructors.Lit(tm.value), val)));
 					},
 				)
+				.with([P._, { type: "Modal" }], ([tm, val]) => Check.val(tm, val.value))
+				.with([{ type: "modal" }, P._], ([tm, val]) =>
+					V2.Do(function* () {
+						const [checked, us] = yield* Check.val.gen(tm.term, val);
+
+						const liquid = tm.modalities.liquid ? yield* EB.Liquid.typecheck(tm.modalities.liquid, val) : Liquid.Predicate.Neutral();
+						const quantity = tm.modalities.quantity ?? Q.Many;
+
+						return [EB.Constructors.Modal(checked, { liquid: NF.evaluate(ctx, liquid), quantity }), us] satisfies Result;
+					}),
+				)
 
 				.otherwise(([src, ty]) =>
 					V2.Do(() =>
@@ -137,7 +149,7 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 				);
 
 			const [tm, us] = yield* V2.pure(result);
-			yield* V2.tell("type", { term: tm, nf: type, modalities: {} as any });
+			//yield* V2.tell("type", { term: tm, nf: type, modalities: {} as any });
 
 			return [tm, us];
 		}),

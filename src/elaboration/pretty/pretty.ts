@@ -77,7 +77,9 @@ const display = (term: EB.Term, zonker: EB.Zonker, metas: EB.Context["metas"]): 
 					const stmts = statements.map(s => Stmt.display(s, zonker, metas)).join("; ");
 					return `{ ${stmts}; return ${_display(ret)}; }`;
 				})
-
+				.with({ type: "Modal" }, ({ term, modalities }) => {
+					return `<${Q.display(modalities.quantity)}> ${_display(term)} < ${NF.display(modalities.liquid, zonker, metas)} >`;
+				})
 				//.otherwise(tm => `_display Term ${tm.type}: Not implemented`);
 				.exhaustive()
 		);

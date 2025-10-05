@@ -15,11 +15,13 @@ export * as List from "./lists";
 export * as Struct from "./structs";
 export * as Tuples from "./tuples";
 
-export * as Inference from ".";
-
+export * as Modal from "./modal";
 export * as Annotation from "./annotations";
+
 export * as Stmt from "./statements";
 export * as Block from "./block";
 
 export * as Hole from "./holes";
 export * as Lit from "./literal";
+
+export * as Inference from ".";

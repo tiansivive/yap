@@ -9,7 +9,7 @@ import * as NF from "./normalization";
 import * as Modal from "@yap/verification/modalities/shared";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
-export type AST = [EB.Term, NF.Value, Q.Usages, Modal.Annotations?];
+export type AST = [EB.Term, NF.Value, Q.Usages];
 export const infer = V2.regen((ast: Src.Term): V2.Elaboration<AST> => {
 	const result = V2.track<AST>(
 		{ tag: "src", type: "term", term: ast, metadata: { action: "infer" } },
@@ -39,6 +39,7 @@ export const infer = V2.regen((ast: Src.Term): V2.Elaboration<AST> => {
 				.with({ type: "match" }, EB.Match.infer)
 
 				.with({ type: "block" }, EB.Block.infer)
+				.with({ type: "modal" }, EB.Modal.infer)
 				.with({ type: "annotation" }, EB.Annotation.infer)
 				.otherwise(v => {
 					throw new Error("Not implemented yet: " + JSON.stringify(v));

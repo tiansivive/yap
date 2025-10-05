@@ -1,6 +1,8 @@
 let empty: List Num = #nil *;
 let one: List Num = #cons { 1, empty };
 
+
+// or `] x: 1, y: "one" [` ???
 let row
   : (x: Num, y: String)
   = (x: 1, y: "one");
@@ -36,3 +38,4 @@ let update_tuple: typeof tuple = ( tuple | 1 = "uno" );
 let inject_map: typeof map = [ map | foo = 11 ];
 let inject_array: typeof array  = [ array | "four" ];
 let update_map: typeof map = [ map | two = "duo" ];
+

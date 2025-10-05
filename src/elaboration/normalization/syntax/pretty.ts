@@ -12,11 +12,13 @@ import { compose } from "../../unification";
 
 // TODO:  add environment to properly display variables
 export const display = (value: NF.Value | NF.ModalValue, zonker: EB.Zonker, metas: EB.Context["metas"]): string => {
-	if (Array.isArray(value)) {
-		const [nf, q] = value;
-		return `<${Q.display(q)}> ${display(nf, zonker, metas)}`;
+	if (Object.keys(value).includes("nf")) {
+		const { nf, modalities } = value as NF.ModalValue;
+		const pretty = display(nf, zonker, metas);
+		return `<${Q.display(modalities.quantity)}> ${pretty} < ${NF.display(modalities.liquid, zonker, metas)} >`;
 	}
-	return match(value)
+
+	return match(value as NF.Value)
 		.with({ type: "Lit" }, ({ value }) => Lit.display(value))
 		.with({ type: "Var" }, ({ variable }) =>
 			match(variable)
@@ -66,6 +68,14 @@ export const display = (value: NF.Value | NF.ModalValue, zonker: EB.Zonker, meta
 				var: (v: NF.Variable) => display(NF.mk({ type: "Var", variable: v }), zonker, metas),
 			})(row),
 		)
-		.run();
+		.with({ type: "Modal" }, ({ modalities, value }) => {
+			return `<${Q.display(modalities.quantity)}> ${display(value, zonker, metas)} < ${NF.display(modalities.liquid, zonker, metas)} >`;
+		})
+		.with({ type: "External" }, external => {
+			const args = external.args.map(arg => display(arg, zonker, metas)).join(", ");
+			return `(external ${external.name} ${args})`;
+		})
+
+		.exhaustive();
 	//.exhaustive();
 };

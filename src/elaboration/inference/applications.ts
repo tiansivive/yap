@@ -20,8 +20,8 @@ export const infer = (node: Application) =>
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 
-			const [ft, fty, fus, modalities] = yield* V2.pure(inferFn(node));
-			const pi = yield* mkPi(fty, node.icit, modalities);
+			const [ft, fty, fus] = yield* V2.pure(inferFn(node));
+			const pi = yield* mkPi(fty, node.icit);
 			const [at, aus] = yield* V2.pure(checkArg(node, pi[0]));
 
 			const [
@@ -33,7 +33,7 @@ export const infer = (node: Application) =>
 			] = pi;
 			const rus = Q.add(fus, Q.multiply(quantity, aus));
 
-			const val = NF.apply({ type: "Pi", variable: x }, cls, NF.evaluate(ctx, at), modalities);
+			const val = NF.apply({ type: "Pi", variable: x }, cls, NF.evaluate(ctx, at));
 			return [EB.Constructors.App(node.icit, ft, at), val, rus] satisfies EB.AST;
 		}),
 	);
@@ -60,14 +60,19 @@ const checkArg = ({ arg }: Application, ann: NF.ModalValue) =>
 		EB.check(arg, ann.nf),
 	);
 
-const mkPi = (fnType: NF.Value, icit: Implicitness, modalities?: Modal.Annotations) =>
+type Pi = [NF.ModalValue, NF.Closure, string];
+const mkPi = (fnType: NF.Value, icit: Implicitness, modalities?: Modal.Annotations): Generator<V2.Elaboration<any>, Pi, any> =>
 	match(fnType)
+		.with({ type: "Modal" }, ({ modalities, value }) => {
+			console.warn("Inferred fn as a modal type. This is still undefined behavior. Using the inferred modalities as the argument modalities.");
+			return mkPi(value, icit, modalities);
+		})
 		.with({ type: "Abs", binder: { type: "Pi" } }, pi => {
 			if (pi.binder.icit !== icit) {
 				throw new Error("Implicitness mismatch");
 			}
 
-			return V2.lift([pi.binder.annotation, pi.closure, pi.binder.variable] as const);
+			return V2.lift<Pi>([pi.binder.annotation, pi.closure, pi.binder.variable]);
 		})
 		.otherwise(function* () {
 			const ctx = yield* V2.ask();
@@ -87,5 +92,5 @@ const mkPi = (fnType: NF.Value, icit: Implicitness, modalities?: Modal.Annotatio
 			const pi = NF.Constructors.Pi("x", icit, mnf, closure);
 
 			yield* V2.tell("constraint", { type: "assign", left: fnType, right: pi, lvl: ctx.env.length });
-			return [mnf, closure, pi.binder.variable] as const;
+			return [mnf, closure, pi.binder.variable] satisfies Pi;
 		});
