@@ -21,17 +21,17 @@ export function insert(node: EB.AST): V2.Elaboration<EB.AST> {
 			.with([{ type: "Abs", binding: { type: "Lambda", icit: "Implicit" } }, P._, P._], () => V2.of<EB.AST>(node))
 			.with([P._, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._], ([, pi]) =>
 				V2.Do(function* () {
-					const found = yield* V2.pure(EB.resolveImplicit(pi.binder.annotation.nf));
+					const found = yield* V2.pure(EB.resolveImplicit(pi.binder.annotation));
 
 					if (found) {
 						if (!_.isEmpty(found[1])) {
 							throw new Error("insert: Found implicit with constraints; What to do here?");
 						}
-						const bodyNF = NF.apply(pi.binder, pi.closure, pi.binder.annotation.nf);
+						const bodyNF = NF.apply(pi.binder, pi.closure, pi.binder.annotation);
 						const tm = EB.Constructors.App("Implicit", term, found[0]);
 						return [tm, bodyNF, us] satisfies EB.AST;
 					}
-					const meta = yield* EB.freshMeta(ctx.env.length, pi.binder.annotation.nf);
+					const meta = yield* EB.freshMeta(ctx.env.length, pi.binder.annotation);
 					const mvar = EB.Constructors.Var(meta);
 					const vNF = NF.evaluate(ctx, mvar);
 

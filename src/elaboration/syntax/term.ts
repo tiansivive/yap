@@ -41,7 +41,7 @@ export type Meta = Extract<Variable, { type: "Meta" }>;
 export type Row = R.Row<Term, Variable>;
 
 export type Binding =
-	| { type: "Let"; variable: string; value: Term; annotation: Term; modalities: Modal.Annotations }
+	| { type: "Let"; variable: string; value: Term; annotation: Term }
 	| { type: "Lambda"; variable: string; icit: Implicitness }
 	| { type: "Mu"; variable: string; annotation: Term; source: string }
 	// | { type: "Sigma"; variable: string; annotation: Term, multiplicity: Q.Multiplicity; }
@@ -49,7 +49,6 @@ export type Binding =
 			type: "Pi";
 			variable: string;
 			annotation: Term;
-			modalities: Modal.Annotations;
 			icit: Implicitness;
 	  };
 
@@ -66,7 +65,7 @@ export type Pattern =
 
 export type Statement =
 	| { type: "Expression"; value: Term }
-	| { type: "Let"; variable: string; value: Term; annotation: Term; modalities: Modal.Annotations }
+	| { type: "Let"; variable: string; value: Term; annotation: Term }
 	| { type: "Using"; value: Term; annotation: NF.Value };
 
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
@@ -88,10 +87,10 @@ export const Constructors = {
 			binding: { type: "Lambda" as const, variable, icit },
 			body,
 		}),
-	Pi: (variable: string, icit: Implicitness, modalities: Modal.Annotations, annotation: Term, body: Term): Term =>
+	Pi: (variable: string, icit: Implicitness, annotation: Term, body: Term): Term =>
 		mk({
 			type: "Abs",
-			binding: { type: "Pi" as const, variable, icit, annotation, modalities },
+			binding: { type: "Pi" as const, variable, icit, annotation },
 			body,
 		}),
 	Mu: (variable: string, source: string, annotation: Term, body: Term): Term =>
@@ -161,12 +160,11 @@ export const Constructors = {
 		List: (patterns: Pattern[], rest?: string): Pattern => ({ type: "List", patterns, rest }),
 	},
 	Stmt: {
-		Let: (variable: string, value: Term, annotation: Term, modalities: Modal.Annotations): Statement => ({
+		Let: (variable: string, value: Term, annotation: Term): Statement => ({
 			type: "Let",
 			variable,
 			value,
 			annotation,
-			modalities,
 		}),
 		Expr: (value: Term): Statement => ({ type: "Expression", value }),
 	},

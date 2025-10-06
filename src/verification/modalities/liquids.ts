@@ -16,13 +16,7 @@ const fresh = () => {
 	return `$r${count}`;
 };
 export const Predicate = {
-	Kind: (ctx: EB.Context, arg: NF.Value) =>
-		NF.Constructors.Pi(
-			fresh(),
-			"Explicit",
-			{ nf: arg, modalities: { liquid: Predicate.NeutralNF(), quantity: Q.Many } },
-			NF.closeVal(ctx, NF.Constructors.Lit(Lit.Atom("Bool"))),
-		),
+	Kind: (ctx: EB.Context, arg: NF.Value) => NF.Constructors.Pi(fresh(), "Explicit", arg, NF.closeVal(ctx, NF.Constructors.Lit(Lit.Atom("Bool")))),
 	Neutral: () => EB.Constructors.Lambda(fresh(), "Explicit", EB.Constructors.Lit({ type: "Bool", value: true })),
 
 	NeutralNF: () => {

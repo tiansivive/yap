@@ -1,12 +1,9 @@
-import * as F from "fp-ts/lib/function";
-
 import * as EB from "@yap/elaboration";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
-import { Liquid } from "@yap/verification/modalities";
 
 type Pi = Extract<Src.Term, { type: "pi" } | { type: "arrow" }>;
 
@@ -23,14 +20,8 @@ export const infer = (pi: Pi): V2.Elaboration<EB.AST> =>
 			const [ty, us] = yield* EB.check.gen(ann, NF.Type);
 			const va = NF.evaluate(ctx, ty);
 
-			// const quantity = pi.type === "pi" && pi.multiplicity ? pi.multiplicity : Q.Many;
-			// const liquid = pi.type === "pi" && pi.liquid ? (yield* EB.check.gen(pi.liquid, Liquid.Predicate.Kind(ctx, va)))[0] : Liquid.Predicate.Neutral();
+			const [bodyTm, [, ...bus]] = yield* V2.local(_ctx => EB.bind(_ctx, { type: "Pi", variable: v }, va), EB.check(body, NF.Type));
 
-			const mva: NF.ModalValue =
-				va.type === "Modal" ? { nf: va.value, modalities: va.modalities } : { nf: va, modalities: { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF() } };
-
-			const [bodyTm, [, ...bus]] = yield* V2.local(_ctx => EB.bind(_ctx, { type: "Pi", variable: v }, mva), EB.check(body, NF.Type));
-
-			return [EB.Constructors.Pi(v, pi.icit, mva.modalities, ty, bodyTm), NF.Type, Q.add(us, bus)] satisfies EB.AST;
+			return [EB.Constructors.Pi(v, pi.icit, ty, bodyTm), NF.Type, Q.add(us, bus)] satisfies EB.AST;
 		}),
 	);

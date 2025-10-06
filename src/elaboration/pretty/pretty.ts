@@ -40,8 +40,7 @@ const display = (term: EB.Term, zonker: EB.Zonker, metas: EB.Context["metas"]): 
 				.with({ type: "Abs" }, ({ binding, body }) => {
 					const b = match(binding)
 						.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
-						.with({ type: "Pi" }, ({ variable, annotation, modalities }) => `Π(<${Q.display(modalities.quantity)}> ${variable}: ${_display(annotation)})`)
-						//.with({ type: "Mu" }, ({ variable, annotation }) => `μ(${variable}: ${_display(annotation)})`)
+						.with({ type: "Pi" }, ({ variable, annotation }) => `Π(${variable}: ${_display(annotation)})`)
 						.otherwise(() => {
 							throw new Error("_display Term Binder: Not implemented");
 						});

@@ -21,8 +21,8 @@ type Origin = "inserted" | "source";
 
 export type Context = {
 	env: Array<{
-		type: [Binder, Origin, NF.ModalValue];
-		nf: NF.ModalValue;
+		type: [Binder, Origin, NF.Value];
+		nf: NF.Value;
 		name: Binder;
 	}>;
 	implicits: Array<[EB.Term, NF.Value]>;
@@ -68,14 +68,14 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.
 			throw new Error(`Variable not found: ${variable.value}`);
 		}
 
-		const [[binder, origin, { nf, modalities }], ...rest] = types;
-		const usages = unsafeUpdateAt(i, modalities.quantity, zeros);
+		const [[binder, origin, nf], ...rest] = types;
+		//const usages = []//unsafeUpdateAt(i, modalities.quantity, zeros);
 		// do we need to check origin here? I don't think it makes a difference whether it's an inserted (implicit) or source (explicit) binder
 		if (binder.variable === variable.value) {
 			const tm = EB.Constructors.Var({ type: "Bound", index: i });
 			return V2.Do(function* () {
 				yield* V2.tell("binder", binder);
-				return [tm, nf, usages] as EB.AST;
+				return [tm, nf, zeros] as EB.AST;
 			});
 		}
 
@@ -113,12 +113,10 @@ export const resolveImplicit = (nf: NF.Value): V2.Elaboration<[EB.Term, Sub.Subs
 	});
 resolveImplicit.gen = F.flow(resolveImplicit, V2.pure);
 
-export const bind = (context: Context, binder: Binder, annotation: NF.ModalValue, origin: Origin = "source"): Context => {
-	const { modalities } = annotation;
+export const bind = (context: Context, binder: Binder, annotation: NF.Value, origin: Origin = "source"): Context => {
 	const { env } = context;
-
 	const entry: Context["env"][number] = {
-		nf: { nf: NF.Constructors.Rigid(env.length), modalities },
+		nf: NF.Constructors.Rigid(env.length),
 		type: [binder, origin, annotation],
 		name: binder,
 	};
@@ -129,7 +127,7 @@ export const bind = (context: Context, binder: Binder, annotation: NF.ModalValue
 	};
 };
 
-export const extend = (context: Context, binder: Binder, value: NF.ModalValue, origin: Origin = "source"): Context => {
+export const extend = (context: Context, binder: Binder, value: NF.Value, origin: Origin = "source"): Context => {
 	const { env } = context;
 
 	const entry: Context["env"][number] = {
@@ -143,7 +141,7 @@ export const extend = (context: Context, binder: Binder, value: NF.ModalValue, o
 	};
 };
 
-export const unfoldMu = (context: Context, binder: Binder, annotation: NF.ModalValue, origin: Origin = "source"): Context => {
+export const unfoldMu = (context: Context, binder: Binder, annotation: NF.Value, origin: Origin = "source"): Context => {
 	const { env } = context;
 	const entry: Context["env"][number] = {
 		nf: annotation, // NOTE: mu types are directly placed in the env

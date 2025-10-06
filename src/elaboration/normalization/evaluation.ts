@@ -48,7 +48,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			return ctx.zonker[variable.val];
 		})
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
-			return ctx.env[variable.index].nf.nf;
+			return ctx.env[variable.index].nf;
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
 			const val = ctx.ffi[variable.name];
@@ -69,17 +69,12 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 		)
 		.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }): NF.Value => {
 			const annotation = evaluate(ctx, binding.annotation);
-			return NF.Constructors.Pi(binding.variable, binding.icit, { nf: annotation, modalities: binding.modalities }, NF.Constructors.Closure(ctx, body));
+			return NF.Constructors.Pi(binding.variable, binding.icit, annotation, NF.Constructors.Closure(ctx, body));
 		})
 		.with({ type: "Abs", binding: { type: "Mu" } }, (mu): NF.Value => {
 			const annotation = evaluate(ctx, mu.binding.annotation);
-			const mv: NF.ModalValue = { nf: annotation, modalities: { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF() } };
-			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, mv, NF.Constructors.Closure(ctx, mu.body));
-			const extended = EB.unfoldMu(
-				ctx,
-				{ type: "Mu", variable: mu.binding.variable },
-				{ nf: val, modalities: { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF() } },
-			);
+			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, annotation, NF.Constructors.Closure(ctx, mu.body));
+			const extended = EB.unfoldMu(ctx, { type: "Mu", variable: mu.binding.variable }, val);
 			return evaluate(extended, mu.body);
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
@@ -146,7 +141,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 						}
 
 						if (r.variable.type === "Bound") {
-							const { nf } = ctx.env[r.variable.index].nf;
+							const { nf } = ctx.env[r.variable.index];
 							const val = unwrapNeutral(nf);
 
 							if (val.type === "Row") {
@@ -206,7 +201,7 @@ export const matching = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]):
 			F.pipe(
 				meet(ctx, alt.pattern, nf),
 				O.map(binders => {
-					const extended = binders.reduce((_ctx, { binder, quantity, liquid }) => EB.bind(_ctx, binder, { nf, modalities: { quantity, liquid } }), ctx);
+					const extended = binders.reduce((_ctx, { binder, quantity, liquid }) => EB.bind(_ctx, binder, NF.Constructors.Modal(nf, { quantity, liquid })), ctx);
 					return evaluate(extended, alt.term);
 				}),
 				O.getOrElse(() => matching(ctx, nf, rest)),
@@ -217,14 +212,13 @@ export const matching = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]):
 
 export const apply = (binder: EB.Binder, closure: NF.Closure, value: NF.Value): NF.Value => {
 	const { ctx, term } = closure;
-	const modalities = value.type === "Modal" ? value.modalities : { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF() };
-	const extended = EB.extend(ctx, binder, { nf: value, modalities });
+	const extended = EB.extend(ctx, binder, value);
 
 	if (closure.type === "Closure") {
 		return evaluate(extended, term);
 	}
 
-	const args = extended.env.slice(0, closure.arity).map(({ nf: { nf } }) => nf);
+	const args = extended.env.slice(0, closure.arity).map(({ nf }) => nf);
 	return closure.compute(...args);
 };
 

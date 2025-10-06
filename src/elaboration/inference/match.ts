@@ -76,11 +76,7 @@ export const elaborate =
 			{ tag: "alt", alt, metadata: { action: "alternative", motive: "elaborating pattern", type: scuty } },
 			(() => {
 				const extend = (binders: Patterns.Binder[]) => (ctx_: EB.Context) =>
-					binders.reduce(
-						(ctx, [name, va, modalities = { quantity: Q.Zero, liquid: Liquid.Predicate.NeutralNF() }]) =>
-							EB.bind(ctx, { type: "Lambda", variable: name }, { nf: va, modalities }),
-						ctx_,
-					);
+					binders.reduce((ctx, [name, va]) => EB.bind(ctx, { type: "Lambda", variable: name }, va), ctx_);
 
 				const inferAltBy =
 					<K extends keyof Patterns.Inference<Src.Pattern, "type">>(key: K) =>

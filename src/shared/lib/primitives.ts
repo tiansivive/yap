@@ -90,29 +90,29 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         ffi: {},
         metas: {},
     }
-    const modalities = { quantity: Q.Many, liquid: NF.evaluate(dummyContext, neutral()) }
-    const Num_Num_Num = NF.Constructors.Pi("x", "Explicit", { nf: NormalForms.Num(), modalities }, {
+  
+    const Num_Num_Num = NF.Constructors.Pi("x", "Explicit", NormalForms.Num(), {
         type: "Closure",
         ctx: dummyContext,
-        term: EB.Constructors.Pi("y", "Explicit", modalities, Terms().Num, Terms().Num)
+        term: EB.Constructors.Pi("y", "Explicit", Terms().Num, Terms().Num)
     })
 
-    const Num_Num_Bool = NF.Constructors.Pi("x", "Explicit", { nf: NormalForms.Num(), modalities }, {
+    const Num_Num_Bool = NF.Constructors.Pi("x", "Explicit", NormalForms.Num(), {
         type: "Closure",
         ctx: dummyContext,
-        term: EB.Constructors.Pi("y", "Explicit", modalities, Terms().Num, Terms().Bool)
+        term: EB.Constructors.Pi("y", "Explicit", Terms().Num, Terms().Bool)
     })
 
-    const Bool_Bool_Bool = NF.Constructors.Pi("x", "Explicit", { nf: NormalForms.Bool(), modalities }, {
+    const Bool_Bool_Bool = NF.Constructors.Pi("x", "Explicit", NormalForms.Bool(), {
         type: "Closure",
         ctx: dummyContext,
-        term: EB.Constructors.Pi("y", "Explicit", modalities, Terms().Bool, Terms().Bool)
+        term: EB.Constructors.Pi("y", "Explicit", Terms().Bool, Terms().Bool)
     })
 
-    const Type_Type_Type = NF.Constructors.Pi("x", "Explicit", { nf: NF.Type, modalities }, {
+    const Type_Type_Type = NF.Constructors.Pi("x", "Explicit", NF.Type, {
         type: "Closure",
         ctx: dummyContext,
-        term: EB.Constructors.Pi("y", "Explicit", modalities, Terms().Type, Terms().Type)
+        term: EB.Constructors.Pi("y", "Explicit", Terms().Type, Terms().Type)
     })
 
     return {

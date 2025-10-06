@@ -8,9 +8,6 @@ import { match } from "ts-pattern";
 
 import * as Lit from "@yap/shared/literals";
 import * as F from "fp-ts/function";
-import { Liquid } from "@yap/verification/modalities";
-
-import * as Modal from "@yap/verification/modalities/shared";
 
 type Projection = Extract<Src.Term, { type: "projection" }>;
 
@@ -33,8 +30,7 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 			.with({ type: "Neutral" }, ({ value }) => project(label, tm, value, us))
 			.with({ type: "Var" }, _ =>
 				V2.Do(function* () {
-					const modalities: Modal.Annotations = { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF() };
-					const rowTypeCtor = EB.Constructors.Pi("rx", "Explicit", modalities, EB.Constructors.Lit(Lit.Row()), EB.Constructors.Lit(Lit.Type()));
+					const rowTypeCtor = EB.Constructors.Pi("rx", "Explicit", EB.Constructors.Lit(Lit.Row()), EB.Constructors.Lit(Lit.Type()));
 					const ann = NF.evaluate(ctx, rowTypeCtor);
 					const ctor = NF.evaluate(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, ann)));
 

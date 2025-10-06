@@ -12,7 +12,7 @@ import { freshMeta } from "@yap/elaboration/shared/supply";
 import { Liquid } from "@yap/verification/modalities";
 import * as Modal from "@yap/verification/modalities";
 
-export type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages, Modal.Annotations?];
+export type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
 export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
 	V2.track(
 		{ tag: "src", type: "stmt", stmt, metadata: { action: "infer", description: "Statement" } },
@@ -26,18 +26,9 @@ export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
 							? yield* EB.check.gen(letdec.annotation, NF.Type)
 							: ([EB.Constructors.Var(yield* freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
 						const va = NF.evaluate(ctx, ann[0]);
-						const quantity = letdec.multiplicity ? letdec.multiplicity : Q.Many;
-						const liquid = letdec.liquid ? (yield* EB.check.gen(letdec.liquid, Liquid.Predicate.Kind(ctx, va)))[0] : Liquid.Predicate.Neutral();
-						const mty: NF.ModalValue = {
-							nf: va,
-							modalities: {
-								quantity,
-								liquid: NF.evaluate(ctx, liquid),
-							},
-						};
 
 						const inferred = yield* V2.local(
-							_ctx => EB.bind(_ctx, { type: "Let", variable: letdec.variable }, mty),
+							_ctx => EB.bind(_ctx, { type: "Let", variable: letdec.variable }, va),
 							V2.Do(function* () {
 								const inferred = yield* EB.check.gen(letdec.value, va);
 								const [bTerm, [vu, ...bus]] = inferred;
@@ -46,7 +37,7 @@ export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
 								return [bTerm, va, bus] satisfies EB.AST; // remove the usage of the bound variable (same as the lambda rule)
 							}),
 						);
-						const { binders, constraints } = yield* V2.listen();
+						const { binders } = yield* V2.listen();
 
 						// TODO: This binders array is not overly useful for now
 						// // In theory, all we need is to emit a flag signalling the letdec var has been used
@@ -54,7 +45,7 @@ export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
 						const tm = binders.find(b => b.type === "Mu" && b.variable === letdec.variable)
 							? EB.Constructors.Mu("x", letdec.variable, ann[0], inferred[0])
 							: inferred[0];
-						const def = EB.Constructors.Stmt.Let(letdec.variable, tm, ann[0], mty.modalities);
+						const def = EB.Constructors.Stmt.Let(letdec.variable, tm, ann[0]);
 						return [def, inferred[1], inferred[2]] satisfies ElaboratedStmt;
 					}),
 				)

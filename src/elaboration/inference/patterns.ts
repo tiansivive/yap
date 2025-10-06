@@ -31,7 +31,7 @@ export type Inference<T, Key> = Key extends string
 	: never;
 
 export type Result = [EB.Pattern, NF.Value, Q.Usages, Binder[]];
-export type Binder = [string, NF.Value, Modal.Annotations?];
+export type Binder = [string, NF.Value];
 
 export const infer: Inference<Src.Pattern, "type"> = {
 	Lit: V2.regen(pat => {

@@ -11,13 +11,7 @@ import { options } from "@yap/shared/config/options";
 import { compose } from "../../unification";
 
 // TODO:  add environment to properly display variables
-export const display = (value: NF.Value | NF.ModalValue, zonker: EB.Zonker, metas: EB.Context["metas"]): string => {
-	if (Object.keys(value).includes("nf")) {
-		const { nf, modalities } = value as NF.ModalValue;
-		const pretty = display(nf, zonker, metas);
-		return `<${Q.display(modalities.quantity)}> ${pretty} < ${NF.display(modalities.liquid, zonker, metas)} >`;
-	}
-
+export const display = (value: NF.Value, zonker: EB.Zonker, metas: EB.Context["metas"]): string => {
 	return match(value as NF.Value)
 		.with({ type: "Lit" }, ({ value }) => Lit.display(value))
 		.with({ type: "Var" }, ({ variable }) =>
@@ -38,14 +32,8 @@ export const display = (value: NF.Value | NF.ModalValue, zonker: EB.Zonker, meta
 		.with({ type: "Abs" }, ({ binder, closure }) => {
 			const b = match(binder)
 				.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
-				.with(
-					{ type: "Pi" },
-					({ variable, annotation: { nf, modalities } }) => `Π(<${Q.display(modalities.quantity)}> ${variable}: ${display(nf, zonker, metas)})`,
-				)
-				.with(
-					{ type: "Mu" },
-					({ variable, annotation: { nf, modalities } }) => `μ(<${Q.display(modalities.quantity)}> ${variable}: ${display(nf, zonker, metas)})`,
-				)
+				.with({ type: "Pi" }, ({ variable, annotation }) => `Π(${variable}: ${display(annotation, zonker, metas)})`)
+				.with({ type: "Mu" }, ({ variable, annotation }) => `μ(${variable}: ${display(annotation, zonker, metas)})`)
 				.exhaustive();
 
 			const arr = binder.type !== "Mu" && binder.icit === "Implicit" ? "=>" : "->";
@@ -64,7 +52,7 @@ export const display = (value: NF.Value | NF.ModalValue, zonker: EB.Zonker, meta
 		})
 		.with({ type: "Row" }, ({ row }) =>
 			R.display({
-				term: (term: NF.Value | NF.ModalValue) => display(term, zonker, metas),
+				term: (term: NF.Value | NF.Value) => display(term, zonker, metas),
 				var: (v: NF.Variable) => display(NF.mk({ type: "Var", variable: v }), zonker, metas),
 			})(row),
 		)

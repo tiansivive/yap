@@ -24,31 +24,16 @@ export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
 				: ([EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
 
 			const ty = NF.evaluate(ctx, ann);
-			// const quantity = lam.multiplicity ? lam.multiplicity : Q.Many;
-			// const liquid = lam.liquid ? yield* EB.Liquid.typecheck(lam.liquid, ty) : Liquid.Predicate.Neutral();
-			const mty: NF.ModalValue =
-				ty.type === "Modal"
-					? {
-							nf: ty.value,
-							modalities: ty.modalities,
-						}
-					: {
-							nf: ty,
-							modalities: {
-								quantity: Q.Zero,
-								liquid: Liquid.Predicate.NeutralNF(),
-							},
-						};
 
 			const ast = yield* V2.local(
-				_ctx => EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, mty),
+				_ctx => EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, ty),
 				V2.Do(function* () {
 					const inferred = yield* EB.infer.gen(lam.body);
 					const [bTerm, bType, [vu, ...bus]] = yield* EB.Icit.insert.gen(inferred);
 					//yield* V2.tell("constraint", { type: "usage", expected: mty[1], computed: vu });
 
 					const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm);
-					const pi = NF.Constructors.Pi(lam.variable, lam.icit, mty, NF.closeVal(ctx, bType));
+					const pi = NF.Constructors.Pi(lam.variable, lam.icit, ty, NF.closeVal(ctx, bType));
 					return [tm, pi, us] satisfies EB.AST; // Remove the usage of the bound variable
 				}),
 			);

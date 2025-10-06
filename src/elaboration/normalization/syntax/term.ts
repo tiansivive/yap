@@ -9,8 +9,6 @@ import { Types, update } from "@yap/utils";
 
 import * as Modal from "@yap/verification/modalities/shared";
 
-export type ModalValue = { nf: Value; modalities: Modal.Annotations };
-
 export const nf_tag: unique symbol = Symbol("NF");
 
 export type Value = Types.Brand<typeof nf_tag, Constructor>;
@@ -27,9 +25,9 @@ type Constructor =
 export type Row = R.Row<Value, Variable>;
 
 export type Binder =
-	| { type: "Pi"; variable: string; annotation: ModalValue; icit: Implicitness }
+	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }
 	| { type: "Lambda"; variable: string; icit: Implicitness }
-	| { type: "Mu"; variable: string; annotation: ModalValue; source: string };
+	| { type: "Mu"; variable: string; annotation: Value; source: string };
 
 export type Variable =
 	| { type: "Bound"; lvl: number }
@@ -47,13 +45,13 @@ export type Closure =
 
 export const Constructors = {
 	Var: (variable: Variable): Value => Types.make(nf_tag, { type: "Var", variable }),
-	Pi: (variable: string, icit: Implicitness, annotation: ModalValue, closure: Closure) =>
+	Pi: (variable: string, icit: Implicitness, annotation: Value, closure: Closure) =>
 		Types.make(nf_tag, {
 			type: "Abs" as const,
 			binder: { type: "Pi" as const, variable, icit, annotation },
 			closure,
 		}),
-	Mu: (variable: string, source: string, annotation: ModalValue, closure: Closure): Value =>
+	Mu: (variable: string, source: string, annotation: Value, closure: Closure): Value =>
 		Types.make(nf_tag, {
 			type: "Abs" as const,
 			binder: { type: "Mu", variable, annotation, source },
