@@ -35,12 +35,12 @@ const display = (term: EB.Term, zonker: EB.Zonker, metas: EB.Context["metas"]): 
 						return binding.source;
 					}
 
-					return `([μ = ${binding.source}](${binding.variable}: ${_display(binding.annotation)})) -> ${_display(body)}`;
+					return `([μ = ${binding.source}](${binding.variable}: ${NF.display(binding.annotation, zonker, metas)})) -> ${_display(body)}`;
 				})
 				.with({ type: "Abs" }, ({ binding, body }) => {
 					const b = match(binding)
 						.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
-						.with({ type: "Pi" }, ({ variable, annotation }) => `Π(${variable}: ${_display(annotation)})`)
+						.with({ type: "Pi" }, ({ variable, annotation }) => `Π(${variable}: ${NF.display(annotation, zonker, metas)})`)
 						.otherwise(() => {
 							throw new Error("_display Term Binder: Not implemented");
 						});
@@ -77,7 +77,7 @@ const display = (term: EB.Term, zonker: EB.Zonker, metas: EB.Context["metas"]): 
 					return `{ ${stmts}; return ${_display(ret)}; }`;
 				})
 				.with({ type: "Modal" }, ({ term, modalities }) => {
-					return `<${Q.display(modalities.quantity)}> ${_display(term)} [| ${NF.display(modalities.liquid, zonker, metas)} |]`;
+					return `<${Q.display(modalities.quantity)}> ${_display(term)} [| ${_display(modalities.liquid)} |]`;
 				})
 				//.otherwise(tm => `_display Term ${tm.type}: Not implemented`);
 				.exhaustive()
@@ -173,7 +173,7 @@ const Stmt = {
 			.with({ type: "Expression" }, ({ value }) => display(value, zonker, metas))
 			.with(
 				{ type: "Let" },
-				({ variable, value, annotation }) => `let ${variable}\n\t: ${display(annotation, zonker, metas)}\n\t= ${display(value, zonker, metas)}`,
+				({ variable, value, annotation }) => `let ${variable}\n\t: ${NF.display(annotation, zonker, metas)}\n\t= ${display(value, zonker, metas)}`,
 			)
 			.otherwise(() => "Statement Display: Not implemented");
 	},

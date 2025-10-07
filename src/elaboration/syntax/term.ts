@@ -40,17 +40,14 @@ export type Variable =
 export type Meta = Extract<Variable, { type: "Meta" }>;
 export type Row = R.Row<Term, Variable>;
 
-export type Binding =
-	| { type: "Let"; variable: string; value: Term; annotation: Term }
+export type Binding = (
+	| { type: "Let"; variable: string; value: Term }
 	| { type: "Lambda"; variable: string; icit: Implicitness }
-	| { type: "Mu"; variable: string; annotation: Term; source: string }
+	| { type: "Mu"; variable: string; source: string }
+	| { type: "Pi"; variable: string; icit: Implicitness }
+) &
 	// | { type: "Sigma"; variable: string; annotation: Term, multiplicity: Q.Multiplicity; }
-	| {
-			type: "Pi";
-			variable: string;
-			annotation: Term;
-			icit: Implicitness;
-	  };
+	{ annotation: NF.Value };
 
 export type Alternative = { pattern: Pattern; term: Term };
 export type Pattern =
@@ -65,7 +62,7 @@ export type Pattern =
 
 export type Statement =
 	| { type: "Expression"; value: Term }
-	| { type: "Let"; variable: string; value: Term; annotation: Term }
+	| { type: "Let"; variable: string; value: Term; annotation: NF.Value }
 	| { type: "Using"; value: Term; annotation: NF.Value };
 
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
@@ -81,19 +78,19 @@ export const mk = <K extends Constructor["type"]>(ctor: Extract<Constructor, { t
 
 export const Constructors = {
 	Abs: (binding: Binding, body: Term): Extract<Term, { type: "Abs" }> => mk({ type: "Abs", binding, body }),
-	Lambda: (variable: string, icit: Implicitness, body: Term): Term =>
+	Lambda: (variable: string, icit: Implicitness, body: Term, annotation: NF.Value): Term =>
 		mk({
 			type: "Abs",
-			binding: { type: "Lambda" as const, variable, icit },
+			binding: { type: "Lambda" as const, variable, icit, annotation },
 			body,
 		}),
-	Pi: (variable: string, icit: Implicitness, annotation: Term, body: Term): Term =>
+	Pi: (variable: string, icit: Implicitness, annotation: NF.Value, body: Term): Term =>
 		mk({
 			type: "Abs",
 			binding: { type: "Pi" as const, variable, icit, annotation },
 			body,
 		}),
-	Mu: (variable: string, source: string, annotation: Term, body: Term): Term =>
+	Mu: (variable: string, source: string, annotation: NF.Value, body: Term): Term =>
 		mk({
 			type: "Abs",
 			binding: { type: "Mu", variable, source, annotation },
@@ -160,7 +157,7 @@ export const Constructors = {
 		List: (patterns: Pattern[], rest?: string): Pattern => ({ type: "List", patterns, rest }),
 	},
 	Stmt: {
-		Let: (variable: string, value: Term, annotation: Term): Statement => ({
+		Let: (variable: string, value: Term, annotation: NF.Value): Statement => ({
 			type: "Let",
 			variable,
 			value,

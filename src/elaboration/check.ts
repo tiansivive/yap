@@ -46,13 +46,17 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 						V2.Do(function* () {
 							const bType = NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
 
+							if (tm.annotation) {
+								yield* EB.check.gen(tm.annotation, ty.binder.annotation);
+							}
+
 							return yield* V2.local(
 								ctx => EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation),
 								V2.Do(function* () {
 									const [body, us] = yield* Check.val.gen(tm.body, bType);
-									const [vu] = us;
+									// const [vu] = us;
 									//yield* V2.tell("constraint", { type: "usage", expected: ty.binder.annotation.nf, computed: vu });
-									return [EB.Constructors.Lambda(tm.variable, tm.icit, body), us] satisfies Result;
+									return [EB.Constructors.Lambda(tm.variable, tm.icit, body, ty.binder.annotation), us] satisfies Result;
 								}),
 							);
 						}),
@@ -69,7 +73,8 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 									const [_tm, us] = yield* Check.val.gen(tm, bType);
 									const [vu] = us;
 									//	yield* V2.tell("constraint", { type: "usage", expected: ty.binder.annotation[1], computed: vu });
-									return [EB.Constructors.Lambda(ty.binder.variable, "Implicit", _tm), us] satisfies Result;
+
+									return [EB.Constructors.Lambda(ty.binder.variable, "Implicit", _tm, ty.binder.annotation), us] satisfies Result;
 								}),
 							),
 						),
@@ -127,10 +132,10 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 					V2.Do(function* () {
 						const [checked, us] = yield* Check.val.gen(tm.term, val);
 
-						const liquid = tm.modalities.liquid ? yield* EB.Liquid.typecheck(tm.modalities.liquid, NF.evaluate(ctx, checked)) : Liquid.Predicate.Neutral();
+						const liquid = tm.modalities.liquid ? yield* EB.Liquid.typecheck(tm.modalities.liquid, NF.evaluate(ctx, checked)) : Liquid.Predicate.Neutral(val);
 						const quantity = tm.modalities.quantity ?? Q.Many;
 
-						return [EB.Constructors.Modal(checked, { liquid: NF.evaluate(ctx, liquid), quantity }), us] satisfies Result;
+						return [EB.Constructors.Modal(checked, { liquid, quantity }), us] satisfies Result;
 					}),
 				)
 

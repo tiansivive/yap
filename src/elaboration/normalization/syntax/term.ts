@@ -26,7 +26,7 @@ export type Row = R.Row<Value, Variable>;
 
 export type Binder =
 	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }
-	| { type: "Lambda"; variable: string; icit: Implicitness }
+	| { type: "Lambda"; variable: string; annotation: Value; icit: Implicitness }
 	| { type: "Mu"; variable: string; annotation: Value; source: string };
 
 export type Variable =
@@ -57,10 +57,10 @@ export const Constructors = {
 			binder: { type: "Mu", variable, annotation, source },
 			closure,
 		}),
-	Lambda: (variable: string, icit: Implicitness, closure: Closure) =>
+	Lambda: (variable: string, icit: Implicitness, closure: Closure, annotation: Value): Value =>
 		Types.make(nf_tag, {
 			type: "Abs" as const,
-			binder: { type: "Lambda" as const, variable, icit },
+			binder: { type: "Lambda" as const, variable, icit, annotation },
 			closure,
 		}),
 	Rigid: (lvl: number): Value =>
@@ -125,6 +125,11 @@ export const Row: Value = mk({
 export const Indexed: Value = mk({
 	type: "Var",
 	variable: { type: "Foreign", name: "Indexed" },
+});
+
+export const Any = mk({
+	type: "Lit",
+	value: { type: "Atom", value: "Any" },
 });
 
 export const Patterns = {

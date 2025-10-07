@@ -19,6 +19,8 @@ import { solve } from "./solver";
 import * as A from "fp-ts/lib/Array";
 
 import * as Sub from "@yap/elaboration/unification/substitution";
+import * as Verification from "@yap/verification/check";
+import { match } from "ts-pattern";
 
 export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 	const maybeExport = (name: string) => (result: Omit<Interface, "imports">) => {
@@ -165,9 +167,30 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 			tm => EB.Icit.wrapLambda(tm, ty),
 		);
 
+		const result = yield* V2.local(_ => next, Verification.synth(wrapped));
+		console.log("\n\n--------------------------DEBUG---------------------------------");
+		console.log("RESULT:");
+		console.log(result);
+		const [synthed, artefacts] = result;
+		console.log("\nSynthed:\n", NF.display(synthed, next.zonker, next.metas));
+		console.log("\nArtefacts:");
+		console.log("Usages:\n", artefacts.usages);
+		console.log("VC:\n", NF.display(artefacts.vc, next.zonker, next.metas));
+		console.log("Simplified:\n", NF.display(tmp_simplify(artefacts.vc), next.zonker, next.metas));
+
+		console.log("\n-----------------------END DEBUG------------------------------------\n");
+
 		return [wrapped, instantiated, us, subst] as const;
 	});
 
 	const { result } = inference(ctx);
 	return result;
 };
+
+const tmp_simplify = (vc: NF.Value): NF.Value =>
+	match(vc)
+		.with({ type: "App" }, ({ func, arg }) => {
+			return NF.reduce(func, arg, "Explicit");
+		})
+		.with({ type: "External" }, ({ args, arity, compute }) => (args.length === arity && compute !== undefined ? compute(...args) : vc))
+		.otherwise(() => vc);

@@ -15,6 +15,7 @@ import * as O from "fp-ts/lib/Option";
 import * as A from "fp-ts/lib/NonEmptyArray";
 import { Liquid } from "@yap/verification/modalities";
 import * as Modal from "@yap/verification/modalities/shared";
+import { Implicitness } from "@yap/shared/implicitness";
 
 export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 	//Log.push("eval");
@@ -65,109 +66,29 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 		})
 
 		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) =>
-			NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(ctx, body)),
+			NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(ctx, body), binding.annotation),
 		)
 		.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }): NF.Value => {
-			const annotation = evaluate(ctx, binding.annotation);
-			return NF.Constructors.Pi(binding.variable, binding.icit, annotation, NF.Constructors.Closure(ctx, body));
+			return NF.Constructors.Pi(binding.variable, binding.icit, binding.annotation, NF.Constructors.Closure(ctx, body));
 		})
 		.with({ type: "Abs", binding: { type: "Mu" } }, (mu): NF.Value => {
-			const annotation = evaluate(ctx, mu.binding.annotation);
-			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, annotation, NF.Constructors.Closure(ctx, mu.body));
+			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, mu.binding.annotation, NF.Constructors.Closure(ctx, mu.body));
 			const extended = EB.unfoldMu(ctx, { type: "Mu", variable: mu.binding.variable }, val);
 			return evaluate(extended, mu.body);
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
 			const nff = evaluate(ctx, func);
 			const nfa = evaluate(ctx, arg);
-
-			const reduce = (nff: NF.Value, nfa: NF.Value): NF.Value =>
-				match(nff)
-					.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)))
-					.with({ type: "Modal" }, ({ modalities, value }) => {
-						// QUESTION: Perhaps we preserve the modalities on the result of the application?
-						// Is this related to the concept of "measures" in Liquid Haskell
-						// If we have a fn `f: (Int -> Int){ x | <refinement on an arrow type? }
-						// What could we refine f itself to be?
-						// And if we apply f to an argument, what could we refine the result to be?
-						console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
-						return reduce(value, nfa);
-					})
-					.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
-						// Unfold the mu
-						const body = apply(mu.binder, mu.closure, NF.Constructors.Neutral(mu));
-						return reduce(body, nfa);
-					})
-					.with({ type: "Abs" }, ({ closure, binder }) => {
-						return apply(binder, closure, nfa);
-					})
-					.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
-					.with({ type: "Var", variable: { type: "Meta" } }, _ => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
-					.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
-
-					.with({ type: "App" }, ({ func, arg }) => {
-						const nff = reduce(func, arg);
-						return NF.Constructors.App(nff, nfa, icit);
-					})
-					.with({ type: "External" }, ({ name, args, arity, compute }) => {
-						if (arity === 0) {
-							return compute();
-						}
-
-						const accumulated = [...args, nfa];
-						if (accumulated.length === arity) {
-							return compute(...accumulated);
-						}
-						return NF.Constructors.External(name, arity, compute, accumulated);
-					})
-					.otherwise(() => {
-						throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
-					});
-
-			return reduce(nff, nfa);
+			return reduce(nff, nfa, icit);
 		})
 		.with({ type: "Row" }, ({ row }) => {
-			const _eval = (row: EB.Row): NF.Row =>
-				match(row)
-					.with({ type: "empty" }, r => r)
-					.with({ type: "extension" }, ({ label, value: term, row }) => {
-						const value = evaluate(ctx, term);
-						const rest = _eval(row);
-						return NF.Constructors.Extension(label, value, rest);
-					})
-					.with({ type: "variable" }, (r): NF.Row => {
-						if (r.variable.type === "Meta") {
-							return { type: "variable", variable: r.variable };
-						}
-
-						if (r.variable.type === "Bound") {
-							const { nf } = ctx.env[r.variable.index];
-							const val = unwrapNeutral(nf);
-
-							if (val.type === "Row") {
-								return val.row;
-							}
-
-							if (val.type === "Var") {
-								return { type: "variable", variable: val.variable };
-							}
-
-							throw new Error("Evaluating a row variable that is not a row or a variable: " + NF.display(val, ctx.zonker, ctx.metas));
-						}
-
-						throw new Error(`Eval Row Variable: Not implemented yet: ${JSON.stringify(r)}`);
-					})
-					.otherwise(() => {
-						throw new Error("Not implemented");
-					});
-
-			return NF.Constructors.Row(_eval(row));
+			return NF.Constructors.Row(evalRow(ctx, row));
 		})
 		.with({ type: "Match" }, v => {
 			// console.warn("Evaluating match terms not yet implemented. Returning scrutinee as Normal Form for the time being");
 			const scrutinee = evaluate(ctx, v.scrutinee);
 			if (scrutinee.type === "Neutral" || (scrutinee.type === "Var" && scrutinee.variable.type === "Meta")) {
-				const lambda = NF.Constructors.Lambda("_scrutinee", "Explicit", NF.Constructors.Closure(ctx, v));
+				const lambda = NF.Constructors.Lambda("_scrutinee", "Explicit", NF.Constructors.Closure(ctx, v), NF.Any);
 				const app = NF.Constructors.App(lambda, scrutinee, "Explicit");
 				return NF.Constructors.Neutral(app);
 			}
@@ -188,11 +109,51 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			throw new Error("Not implemented");
 		});
 
-	//Log.logger.debug("[Result] " + NF.display(res));
-	//Log.pop();
-
 	return res;
 }
+
+export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Value =>
+	match(nff)
+		.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)))
+		.with({ type: "Modal" }, ({ modalities, value }) => {
+			// QUESTION: Perhaps we preserve the modalities on the result of the application?
+			// Is this related to the concept of "measures" in Liquid Haskell
+			// If we have a fn `f: (Int -> Int){ x | <refinement on an arrow type? }
+			// What could we refine f itself to be?
+			// And if we apply f to an argument, what could we refine the result to be?
+			console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
+			return reduce(value, nfa, icit);
+		})
+		.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
+			// Unfold the mu
+			const body = apply(mu.binder, mu.closure, NF.Constructors.Neutral(mu));
+			return reduce(body, nfa, icit);
+		})
+		.with({ type: "Abs" }, ({ closure, binder }) => {
+			return apply(binder, closure, nfa);
+		})
+		.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
+		.with({ type: "Var", variable: { type: "Meta" } }, _ => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
+		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
+
+		.with({ type: "App" }, ({ func, arg, icit }) => {
+			const nff = reduce(func, arg, icit);
+			return NF.Constructors.App(nff, nfa, icit);
+		})
+		.with({ type: "External" }, ({ name, args, arity, compute }) => {
+			if (arity === 0) {
+				return compute();
+			}
+
+			const accumulated = [...args, nfa];
+			if (accumulated.length === arity) {
+				return compute(...accumulated);
+			}
+			return NF.Constructors.External(name, arity, compute, accumulated);
+		})
+		.otherwise(() => {
+			throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
+		});
 
 export const matching = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]): NF.Value | undefined => {
 	return match(alts)
@@ -232,12 +193,12 @@ export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">"
 
 type MeetResult = { binder: EB.Binder } & Modal.Annotations;
 const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetResult[]> => {
-	const truthy = Liquid.Predicate.NeutralNF();
+	const truthy = Liquid.Predicate.Neutral;
 	return match([unwrapNeutral(nf), pattern])
 		.with([P._, { type: "Wildcard" }], () => O.some([]))
 		.with([P._, { type: "Binder" }], ([v, p]) => {
 			const binder: EB.Binder = { type: "Lambda", variable: p.value };
-			return O.some<MeetResult[]>([{ binder, quantity: Q.Many, liquid: truthy }]);
+			return O.some<MeetResult[]>([{ binder, quantity: Q.Many, liquid: truthy(v) }]);
 		})
 		.with(
 			[{ type: "Lit" }, { type: "Lit" }],
@@ -265,13 +226,13 @@ const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetRe
 };
 
 const meetAll = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<MeetResult[]> => {
-	const truthy = Liquid.Predicate.NeutralNF();
+	const truthy = Liquid.Predicate.Neutral;
 	return match([pats, vals])
 		.with([{ type: "empty" }, P._], () => O.some([])) // empty row matches anything
 		.with([{ type: "variable" }, P._], ([r]) => {
 			// bind the variable
 			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
-			return O.some([{ binder, quantity: Q.Many, liquid: truthy }]);
+			return O.some([{ binder, quantity: Q.Many, liquid: truthy(NF.Any) }]);
 		})
 
 		.with([{ type: "extension" }, { type: "empty" }], () => O.none)
@@ -297,13 +258,13 @@ const meetAll = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row)
 };
 
 const meetOne = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<MeetResult[]> => {
-	const truthy = Liquid.Predicate.NeutralNF();
+	const truthy = Liquid.Predicate.Neutral;
 	return match([pats, vals])
 		.with([{ type: "empty" }, P._], () => O.none)
 		.with([{ type: "variable" }, P._], ([r]) => {
 			// bind the variable
 			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
-			return O.some([{ binder, quantity: Q.Many, liquid: truthy }]);
+			return O.some([{ binder, quantity: Q.Many, liquid: truthy(NF.Any) }]);
 		})
 		.with([{ type: "extension" }, { type: "empty" }], () => O.none)
 		.with([{ type: "extension" }, { type: "variable" }], () => O.none)
@@ -320,3 +281,37 @@ const meetOne = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row)
 		})
 		.exhaustive();
 };
+
+const evalRow = (ctx: EB.Context, row: EB.Row): NF.Row =>
+	match(row)
+		.with({ type: "empty" }, r => r)
+		.with({ type: "extension" }, ({ label, value: term, row }) => {
+			const value = evaluate(ctx, term);
+			const rest = evalRow(ctx, row);
+			return NF.Constructors.Extension(label, value, rest);
+		})
+		.with({ type: "variable" }, (r): NF.Row => {
+			if (r.variable.type === "Meta") {
+				return { type: "variable", variable: r.variable };
+			}
+
+			if (r.variable.type === "Bound") {
+				const { nf } = ctx.env[r.variable.index];
+				const val = unwrapNeutral(nf);
+
+				if (val.type === "Row") {
+					return val.row;
+				}
+
+				if (val.type === "Var") {
+					return { type: "variable", variable: val.variable };
+				}
+
+				throw new Error("Evaluating a row variable that is not a row or a variable: " + NF.display(val, ctx.zonker, ctx.metas));
+			}
+
+			throw new Error(`Eval Row Variable: Not implemented yet: ${JSON.stringify(r)}`);
+		})
+		.otherwise(() => {
+			throw new Error("Not implemented");
+		});

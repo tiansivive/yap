@@ -196,7 +196,7 @@ const occursCheck = (ctx: EB.Context, v: Meta, ty: NF.Value): boolean => {
 			//occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
 			.with(NF.Patterns.Pi, ({ binder, closure }) => occursInTerm(closure.ctx, v, closure.term))
 			.with(NF.Patterns.App, ({ func, arg }) => occursCheck(ctx, v, func) || occursCheck(ctx, v, arg))
-			.with(NF.Patterns.Modal, ({ value, modalities }) => occursCheck(ctx, v, value) || occursCheck(ctx, v, modalities.liquid))
+			.with(NF.Patterns.Modal, ({ value, modalities }) => occursCheck(ctx, v, value) || occursInTerm(ctx, v, modalities.liquid))
 
 			.with(NF.Patterns.Row, ({ row }) =>
 				R.fold(
@@ -223,7 +223,7 @@ const occursInTerm = (ctx: EB.Context, v: Meta, tm: EB.Term): boolean => {
 				if (binding.type === "Lambda") {
 					return occursInTerm(ctx, v, body);
 				}
-				return occursInTerm(ctx, v, binding.annotation) || occursInTerm(ctx, v, body);
+				return occursCheck(ctx, v, binding.annotation) || occursInTerm(ctx, v, body);
 			})
 			.with({ type: "App" }, ({ func, arg }) => occursInTerm(ctx, v, func) || occursInTerm(ctx, v, arg))
 			//.with({ type: "Annotation" }, ({ term, ann }) => occursInTerm(ctx, v, term) || occursInTerm(ctx, v, ann))

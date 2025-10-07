@@ -53,7 +53,7 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts
 
 	const data = parser.feed(str);
 	if (data.results.length !== 1) {
-		throw new Error("Failed to parse module: " + moduleName);
+		throw new Error("Failed to parse module: " + moduleName + ". Too many parse results: " + data.results.length);
 	}
 	const mod: Src.Module = data.results[0];
 

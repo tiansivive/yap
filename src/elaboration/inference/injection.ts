@@ -34,7 +34,7 @@ const inject = (label: string, value: EB.AST, tm: EB.AST): V2.Elaboration<NF.Val
 				.with({ type: "Var" }, _ =>
 					V2.Do(function* () {
 						const r: NF.Row = { type: "variable", variable: yield* EB.freshMeta(ctx.env.length, NF.Row) };
-						const rowTypeCtor = EB.Constructors.Pi("rx", "Explicit", EB.Constructors.Lit(Lit.Row()), EB.Constructors.Lit(Lit.Type()));
+						const rowTypeCtor = EB.Constructors.Pi("rx", "Explicit", NF.Constructors.Lit(Lit.Row()), EB.Constructors.Lit(Lit.Type()));
 						const ann = NF.evaluate(ctx, rowTypeCtor);
 						const ctor = NF.evaluate(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, ann)));
 

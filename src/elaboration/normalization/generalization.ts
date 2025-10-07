@@ -12,57 +12,15 @@ import * as A from "fp-ts/Array";
 import { set } from "@yap/utils";
 import { Subst } from "../unification/substitution";
 import { Liquid } from "@yap/verification/modalities";
+import { collectMetasNF } from "../shared/metas";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
-export const metas = (val: NF.Value, zonker: Subst): Meta[] => {
-	const ms = match(val)
-		.with(NF.Patterns.Lit, () => [])
-		.with(NF.Patterns.Flex, ({ variable }) => {
-			if (!zonker[variable.val]) {
-				return [variable];
-			}
-			return metas(zonker[variable.val], zonker);
-		})
-		.with(NF.Patterns.Var, () => [])
-		.with(NF.Patterns.App, ({ func, arg }) => [...metas(func, zonker), ...metas(arg, zonker)])
-		.with(NF.Patterns.Row, ({ row }) =>
-			R.fold(
-				row,
-				(val, l, ms) => ms.concat(metas(val, zonker)),
-				(v, ms) => {
-					if (v.type !== "Meta") {
-						return ms;
-					}
-
-					if (!zonker[v.val]) {
-						return [v, ...ms];
-					}
-
-					return metas(zonker[v.val], zonker);
-				},
-				[] as Meta[],
-			),
-		)
-		.with({ type: "Neutral" }, ({ value }) => metas(value, zonker))
-		.with(NF.Patterns.Lambda, ({ closure }) => EB.Icit.metas(closure.term, zonker))
-		.with(NF.Patterns.Pi, ({ closure, binder }) => [...metas(binder.annotation, zonker), ...EB.Icit.metas(closure.term, zonker)])
-		.with(NF.Patterns.Mu, ({ closure, binder }) => [...metas(binder.annotation, zonker), ...EB.Icit.metas(closure.term, zonker)])
-		.with(NF.Patterns.Modal, ({ value }) => metas(value, zonker))
-		.otherwise(() => {
-			throw new Error("metas: Not implemented yet");
-		});
-
-	return F.pipe(
-		ms,
-		fp.uniqBy(m => m.val),
-	);
-};
 
 /**
  * Generalizes a value by replacing meta variables with bound variables, which are introduced by wrapping the value in a Pi type for each meta variable.
  */
 export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Context] => {
-	const ms = metas(val, ctx.zonker);
+	const ms = collectMetasNF(val, ctx.zonker);
 
 	if (ms.length === 0) {
 		return [val, ctx];
@@ -92,17 +50,6 @@ export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Contex
 
 	// Return the extended ctx so callers can keep the zonker mapping for subsequent passes (instantiate, etc.)
 	return [generalized, extendedCtx];
-};
-
-const convertMeta = (meta: Meta, ms: Meta[]): NF.Variable => {
-	const i = ms.findIndex(m => m.val === meta.val);
-
-	if (i === -1) {
-		// Not a meta that we are generalizing. If it doesn't show up in the meta list, then it must be in the zonker (solved)
-		return meta;
-	}
-
-	return { type: "Bound", lvl: i };
 };
 
 export const instantiate = (nf: NF.Value, subst: Subst, ctx: EB.Context): NF.Value => {

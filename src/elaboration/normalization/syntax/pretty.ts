@@ -57,11 +57,11 @@ export const display = (value: NF.Value, zonker: EB.Zonker, metas: EB.Context["m
 			})(row),
 		)
 		.with({ type: "Modal" }, ({ modalities, value }) => {
-			return `<${Q.display(modalities.quantity)}> ${display(value, zonker, metas)} [| ${NF.display(modalities.liquid, zonker, metas)} |]`;
+			return `<${Q.display(modalities.quantity)}> ${display(value, zonker, metas)} [| ${EB.Display.Term(modalities.liquid, zonker, metas)} |]`;
 		})
 		.with({ type: "External" }, external => {
-			const args = external.args.map(arg => display(arg, zonker, metas)).join(", ");
-			return `(external ${external.name} ${args})`;
+			const args = external.args.map(arg => `(${display(arg, zonker, metas)})`).join(" ");
+			return `(${external.name}: ${args})`;
 		})
 
 		.exhaustive();

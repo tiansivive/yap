@@ -6,3 +6,5 @@ gen/
 
 .vscode/
 bin/
+
+src/parser/grammar.ts

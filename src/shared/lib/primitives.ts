@@ -53,13 +53,6 @@ export const NormalForms = {
     Unit: () => NF.Constructors.Lit(Lit.Atom("Unit")),
 }
 
-// avoiding circular dependency
-const neutral = () => EB.Constructors.Lambda(
-    "$dummy",
-    "Explicit",
-    EB.Constructors.Lit({ type: "Bool", value: true })
-)
-
 
 
 // const BinaryOp = (ty: NF.Value, tm: EB.Term) => NF.Constructors.Pi("x", "Explicit", { nf: ty, modalities: modalities() }, {
@@ -90,29 +83,29 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         ffi: {},
         metas: {},
     }
-  
+
     const Num_Num_Num = NF.Constructors.Pi("x", "Explicit", NormalForms.Num(), {
         type: "Closure",
         ctx: dummyContext,
-        term: EB.Constructors.Pi("y", "Explicit", Terms().Num, Terms().Num)
+        term: EB.Constructors.Pi("y", "Explicit", NormalForms.Num(), Terms().Num)
     })
 
     const Num_Num_Bool = NF.Constructors.Pi("x", "Explicit", NormalForms.Num(), {
         type: "Closure",
         ctx: dummyContext,
-        term: EB.Constructors.Pi("y", "Explicit", Terms().Num, Terms().Bool)
+        term: EB.Constructors.Pi("y", "Explicit", NormalForms.Num(), Terms().Bool)
     })
 
     const Bool_Bool_Bool = NF.Constructors.Pi("x", "Explicit", NormalForms.Bool(), {
         type: "Closure",
         ctx: dummyContext,
-        term: EB.Constructors.Pi("y", "Explicit", Terms().Bool, Terms().Bool)
+        term: EB.Constructors.Pi("y", "Explicit", NormalForms.Bool(), Terms().Bool)
     })
 
     const Type_Type_Type = NF.Constructors.Pi("x", "Explicit", NF.Type, {
         type: "Closure",
         ctx: dummyContext,
-        term: EB.Constructors.Pi("y", "Explicit", Terms().Type, Terms().Type)
+        term: EB.Constructors.Pi("y", "Explicit", NF.Type, Terms().Type)
     })
 
     return {

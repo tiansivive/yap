@@ -25,22 +25,22 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 
 		.with({ type: "App" }, ({ func, arg, icit }) => EB.Constructors.App(icit, quote(ctx, lvl, func), quote(ctx, lvl, arg)))
 		.with({ type: "Abs", binder: { type: "Lambda" } }, ({ binder, closure }) => {
-			const { variable, icit } = binder;
+			const { variable, icit, annotation } = binder;
 			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
-			return EB.Constructors.Lambda(variable, icit, body);
+			return EB.Constructors.Lambda(variable, icit, body, annotation);
 		})
 		.with({ type: "Abs", binder: { type: "Pi" } }, ({ binder, closure }) => {
 			const { variable, icit, annotation } = binder;
 			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
-			return EB.Constructors.Pi(variable, icit, quote(ctx, lvl, annotation), body);
+			return EB.Constructors.Pi(variable, icit, annotation, body);
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, ({ binder, closure }) => {
 			const { variable, source, annotation } = binder;
 			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
-			return EB.Constructors.Mu(variable, source, quote(ctx, lvl, annotation), body);
+			return EB.Constructors.Mu(variable, source, annotation, body);
 		})
 		.with({ type: "Row" }, ({ row }) => {
 			const _quote = (r: NF.Row): EB.Row =>

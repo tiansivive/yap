@@ -14,13 +14,13 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 			.with(CtorPatterns.Lambda, ({ binding, body }) => Constructors.Abs(binding, traverse(body, onVar)))
 			.with(CtorPatterns.Pi, ({ binding, body }) =>
 				Constructors.Abs(
-					update(binding, "annotation", tm => traverse(tm, onVar)),
+					update(binding, "annotation", tm => tm), // QUESTION: traverse type?
 					traverse(body, onVar),
 				),
 			)
 			.with(CtorPatterns.Mu, ({ binding, body }) =>
 				Constructors.Abs(
-					update(binding, "annotation", tm => traverse(tm, onVar)),
+					update(binding, "annotation", tm => tm), // QUESTION: traverse type?
 					traverse(body, onVar),
 				),
 			)
@@ -50,7 +50,7 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 							F.pipe(
 								letdec,
 								update("value", v => traverse(v, onVar)),
-								update("annotation", ann => traverse(ann, onVar)),
+								update("annotation", ann => ann), // QUESTION: traverse type?
 							),
 						)
 						.otherwise(update("value", v => traverse(v, onVar))),

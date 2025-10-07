@@ -17,9 +17,9 @@ const fresh = () => {
 };
 export const Predicate = {
 	Kind: (ctx: EB.Context, arg: NF.Value) => NF.Constructors.Pi(fresh(), "Explicit", arg, NF.closeVal(ctx, NF.Constructors.Lit(Lit.Atom("Bool")))),
-	Neutral: () => EB.Constructors.Lambda(fresh(), "Explicit", EB.Constructors.Lit({ type: "Bool", value: true })),
+	Neutral: (ty: NF.Value) => EB.Constructors.Lambda(fresh(), "Explicit", EB.Constructors.Lit({ type: "Bool", value: true }), ty),
 
-	NeutralNF: () => {
+	NeutralNF: (ty: NF.Value) => {
 		const dummyContext: EB.Context = {
 			env: [],
 			implicits: [],
@@ -30,6 +30,6 @@ export const Predicate = {
 			ffi: {},
 			metas: {},
 		};
-		return NF.evaluate(dummyContext, Predicate.Neutral());
+		return NF.evaluate(dummyContext, Predicate.Neutral(ty));
 	},
 };
