@@ -5,6 +5,15 @@
 			"label": "build",
 			"script": "build",
 			"type": "npm"
+		},
+		{
+			"detail": "Generate the parser grammar",
+			"label": "grammar",
+			"script": "nearley",
+			"type": "npm",
+			"problemMatcher": [
+				"$tsc"
+			]
 		}
 	],
 	"version": "2.0.0"

@@ -85,7 +85,6 @@ Script -> Many[Statement, %semicolon] %semicolon %space:?  				{% P.script %}
 
 Ann -> Ann %space:? %colon %space:? ModalExpr 							{% P.Annotation %}
     #  | Ann %space:? %colon %space:? Angle[Quantity] %space:? TypeExpr 	{% P.Annotation %}
-	 | Ann %space:? %colon %space:? TypeExpr 							{% P.Annotation %}
 	 | TypeExpr 														{% id %}
 
 ModalExpr -> Angle[ Quantity ] %space:? TypeExpr 									{% P.Modal %}
