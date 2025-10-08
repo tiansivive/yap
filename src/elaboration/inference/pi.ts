@@ -11,13 +11,12 @@ export const infer = (pi: Pi): V2.Elaboration<EB.AST> =>
 	V2.track(
 		{ tag: "src", type: "term", term: pi, metadata: { action: "infer", description: "Pi" } },
 		V2.Do(function* () {
-			const ctx = yield* V2.ask();
-
 			const v = pi.type === "pi" ? pi.variable : `t${EB.nextCount()}`;
 			const body = pi.type === "pi" ? pi.body : pi.rhs;
 
 			const ann = pi.type === "pi" ? pi.annotation : pi.lhs;
 			const [ty, us] = yield* EB.check.gen(ann, NF.Type);
+			const ctx = yield* V2.ask();
 			const va = NF.evaluate(ctx, ty);
 
 			const [bodyTm, [, ...bus]] = yield* V2.local(_ctx => EB.bind(_ctx, { type: "Pi", variable: v }, va), EB.check(body, NF.Type));
