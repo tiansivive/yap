@@ -14,6 +14,8 @@ import { match, P } from "ts-pattern";
 import { Liquid } from "./modalities";
 import { isEqual } from "lodash";
 
+import { init } from "z3-solver";
+
 export const check = (tm: EB.Term, ty: NF.Value): V2.Elaboration<Modal.Artefacts> => {
 	const r = match([tm, ty])
 		.with([{ type: "Abs" }, { type: "Abs", binder: { type: "Pi" } }], ([tm, ty]) =>
@@ -300,3 +302,13 @@ export const subtype = (a: NF.Value, b: NF.Value): V2.Elaboration<Modal.Artefact
 		return r;
 	});
 subtype.gen = (a: NF.Value, b: NF.Value) => V2.pure(subtype(a, b));
+
+const translate = async (tm: EB.Term) => {
+	const { Z3, Context } = await init();
+
+	const z3 = Context("main");
+
+	z3.Sort.declare("List Int");
+
+	z3.Int.sort;
+};
