@@ -47,7 +47,7 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		const [name, result] = EB.Mod.letdec(stmt, ctx);
 
 		if (E.isLeft(result)) {
-			console.warn(EB.V2.display(result.left, ctx.zonker, ctx.metas));
+			console.warn(EB.V2.display(result.left));
 			//console.error(`Error interpreting ${name}: ${result.left}`);
 			return ctx;
 		}
@@ -72,7 +72,7 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		const result = EB.Mod.expression(stmt, ctx);
 
 		if (E.isLeft(result)) {
-			console.warn(EB.V2.display(result.left, ctx.zonker, ctx.metas));
+			console.warn(EB.V2.display(result.left));
 			//console.error(`Error interpreting expression: ${result.left}`);
 			return ctx;
 		}

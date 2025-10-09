@@ -83,14 +83,14 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts
 
 	const iface: Interface = F.pipe(EB.Mod.elaborate(mod, localModuleCtx), setProp("imports", importsPerFile));
 	iface.errors.forEach(err => {
-		V2.display(err, Sub.empty, {});
+		V2.display(err);
 		console.error(P.display(err.provenance || [], { cap: 100 }, Sub.empty, {}));
 	});
 
 	iface.letdecs.forEach(([name, result]) => {
 		if (E.isLeft(result)) {
 			console.warn(`Error in module ${moduleName} for let ${name}: ${result.left}`);
-			V2.display(result.left, Sub.empty, {});
+			V2.display(result.left);
 			console.error(P.display(result.left.provenance || [], { cap: 100 }, Sub.empty, {}));
 		}
 	});

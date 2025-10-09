@@ -31,11 +31,11 @@ const concat: (fa: Accumulator, fb: Accumulator) => Accumulator = (fa, fb) => ({
 });
 const empty: Accumulator = { constraints: [], binders: [], metas: {}, types: {} };
 
-export type Err = Cause & { provenance?: P.Provenance[] };
+export type Err = Cause & { provenance?: P.Provenance[]; ctx: EB.Context };
 
-export const display = (err: Err, zonker: EB.Zonker, metas: EB.Context["metas"]): string => {
-	const cause = Errors.display(err, zonker, metas);
-	const prov = err.provenance ? P.display(err.provenance, { cap: 100 }, zonker, metas) : "";
+export const display = (err: Err): string => {
+	const cause = Errors.display(err, err.ctx.zonker, err.ctx.metas);
+	const prov = err.provenance ? P.display(err.provenance, { cap: 100 }, err.ctx.zonker, err.ctx.metas) : "";
 	return prov ? `${cause}\n\nTrace:\n${prov}` : cause;
 };
 
@@ -210,9 +210,9 @@ export const listen = function* (): Generator<Elaboration<Accumulator>, Accumula
 	return yield (_, w = { constraints: [], binders: [], metas: {}, types: {} }) => mkCollector(w);
 };
 
-export const fail = function* <A>(cause: Err): Generator<Elaboration<any>, A, any> {
+export const fail = function* <A>(cause: Cause): Generator<Elaboration<any>, A, any> {
 	const ctx = yield* ask();
-	return yield* liftE(E.left({ ...cause, provenance: ctx.trace.concat(cause.provenance || []) }));
+	return yield* liftE(E.left({ ...cause, provenance: ctx.trace, ctx }));
 };
 
 // export const catchErr = function* <A>(handler: (err: Err) => Elaboration<A>): Generator<Elaboration<A>, A, A> {
