@@ -7,12 +7,11 @@ import * as Lit from "@yap/shared/literals";
 import { Implicitness } from "@yap/shared/implicitness";
 import { Literal } from "@yap/shared/literals";
 
-import { match, Pattern as Pat } from "ts-pattern";
-
 import * as F from "fp-ts/lib/function";
 import { Simplify } from "type-fest";
 
 import * as Modal from "@yap/verification/modalities/shared";
+import * as Pat from "@yap/elaboration/inference/patterns";
 
 export type Term = Types.Brand<typeof tag, Constructor & { id: number }>;
 const tag: unique symbol = Symbol("Term");
@@ -47,9 +46,9 @@ export type Binding = (
 	| { type: "Pi"; variable: string; icit: Implicitness }
 ) &
 	// | { type: "Sigma"; variable: string; annotation: Term, multiplicity: Q.Multiplicity; }
-	{ annotation: NF.Value };
+	{ annotation: Term };
 
-export type Alternative = { pattern: Pattern; term: Term };
+export type Alternative = { pattern: Pattern; term: Term; binders: Pat.Binder[] };
 export type Pattern =
 	| { type: "Binder"; value: string }
 	| { type: "Var"; value: string; term: Term }
@@ -78,19 +77,19 @@ export const mk = <K extends Constructor["type"]>(ctor: Extract<Constructor, { t
 
 export const Constructors = {
 	Abs: (binding: Binding, body: Term): Extract<Term, { type: "Abs" }> => mk({ type: "Abs", binding, body }),
-	Lambda: (variable: string, icit: Implicitness, body: Term, annotation: NF.Value): Term =>
+	Lambda: (variable: string, icit: Implicitness, body: Term, annotation: Term): Term =>
 		mk({
 			type: "Abs",
 			binding: { type: "Lambda" as const, variable, icit, annotation },
 			body,
 		}),
-	Pi: (variable: string, icit: Implicitness, annotation: NF.Value, body: Term): Term =>
+	Pi: (variable: string, icit: Implicitness, annotation: Term, body: Term): Term =>
 		mk({
 			type: "Abs",
 			binding: { type: "Pi" as const, variable, icit, annotation },
 			body,
 		}),
-	Mu: (variable: string, source: string, annotation: NF.Value, body: Term): Term =>
+	Mu: (variable: string, source: string, annotation: Term, body: Term): Term =>
 		mk({
 			type: "Abs",
 			binding: { type: "Mu", variable, source, annotation },
@@ -139,7 +138,7 @@ export const Constructors = {
 	},
 
 	Match: (scrutinee: Term, alternatives: Array<Alternative>): Term => mk({ type: "Match", scrutinee, alternatives }),
-	Alternative: (pattern: Pattern, term: Term): Alternative => ({ pattern, term }),
+	Alternative: (pattern: Pattern, term: Term, binders: Pat.Binder[]): Alternative => ({ pattern, term, binders }),
 
 	Block: (statements: Array<Statement>, term: Term): Term => mk({ type: "Block", statements, return: term }),
 

@@ -28,19 +28,22 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 			const { variable, icit, annotation } = binder;
 			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
-			return EB.Constructors.Lambda(variable, icit, body, annotation);
+			const ann = NF.quote(ctx, ctx.env.length, annotation);
+			return EB.Constructors.Lambda(variable, icit, body, ann);
 		})
 		.with({ type: "Abs", binder: { type: "Pi" } }, ({ binder, closure }) => {
 			const { variable, icit, annotation } = binder;
 			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
-			return EB.Constructors.Pi(variable, icit, annotation, body);
+			const ann = NF.quote(ctx, ctx.env.length, annotation);
+			return EB.Constructors.Pi(variable, icit, ann, body);
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, ({ binder, closure }) => {
 			const { variable, source, annotation } = binder;
 			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
-			return EB.Constructors.Mu(variable, source, annotation, body);
+			const ann = NF.quote(ctx, ctx.env.length, annotation);
+			return EB.Constructors.Mu(variable, source, ann, body);
 		})
 		.with({ type: "Row" }, ({ row }) => {
 			const _quote = (r: NF.Row): EB.Row =>
@@ -67,7 +70,7 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 			}),
 		)
 		.otherwise(nf => {
-			throw new Error("Quote: Not implemented yet: " + NF.display(nf, ctx.zonker, ctx.metas));
+			throw new Error("Quote: Not implemented yet: " + NF.display(nf, ctx));
 		});
 };
 

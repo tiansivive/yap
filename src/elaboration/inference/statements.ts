@@ -43,7 +43,7 @@ export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
 						// // In theory, all we need is to emit a flag signalling the letdec var has been used
 						// FIXME: We should really leverage the `check` function to understand when to wrap in a mu
 						const tm = binders.find(b => b.type === "Mu" && b.variable === letdec.variable)
-							? EB.Constructors.Mu("x", letdec.variable, va, inferred[0])
+							? EB.Constructors.Mu("x", letdec.variable, ann[0], inferred[0])
 							: inferred[0];
 						const def = EB.Constructors.Stmt.Let(letdec.variable, tm, va);
 						return [def, inferred[1], inferred[2]] satisfies ElaboratedStmt;

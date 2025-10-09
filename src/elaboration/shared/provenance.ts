@@ -24,17 +24,18 @@ type Metadata =
 	| { action: "alternative"; type: NF.Value; motive: string };
 
 export const display = (provenance: Provenance[] = [], opts = { cap: 10 }, zonker: EB.Zonker, metas: EB.Context["metas"]): string => {
+	const displayCtx = { zonker, metas, env: [] };
 	return A.reverse(provenance)
 		.map(p => {
 			const pretty = (prov => {
 				if (prov.tag === "unify" && prov.type === "nf") {
-					return `\n\t${NF.display(prov.vals[0] as NF.Value, zonker, metas)}\nwith:\n\t${NF.display(prov.vals[1] as NF.Value, zonker, metas)}`;
+					return `\n\t${NF.display(prov.vals[0] as NF.Value, displayCtx)}\nwith:\n\t${NF.display(prov.vals[1] as NF.Value, displayCtx)}`;
 				}
 
 				if (prov.tag === "unify" && prov.type === "row") {
 					const display = R.display<NF.Value, NF.Variable>({
-						term: tm => NF.display(tm, zonker, metas),
-						var: v => NF.display(NF.Constructors.Var(v), zonker, metas),
+						term: tm => NF.display(tm, displayCtx),
+						var: v => NF.display(NF.Constructors.Var(v), displayCtx),
 					});
 					return `\n\t${display(prov.rows[0])}\nwith:\n\t${display(prov.rows[1])}`;
 				}
@@ -48,11 +49,11 @@ export const display = (provenance: Provenance[] = [], opts = { cap: 10 }, zonke
 				}
 
 				if (prov.tag === "eb") {
-					return EB.Display.Term(prov.term, zonker, metas);
+					return EB.Display.Term(prov.term, displayCtx);
 				}
 
 				if (prov.tag === "nf") {
-					return NF.display(prov.val, zonker, metas);
+					return NF.display(prov.val, displayCtx);
 				}
 
 				if (prov.tag === "alt") {
@@ -72,11 +73,11 @@ export const display = (provenance: Provenance[] = [], opts = { cap: 10 }, zonke
 
 			if (metadata?.action === "checking") {
 				const reason = metadata.description ? `\n\nReason: ${metadata.description}` : "";
-				const msg = `While checking:\n\t${pretty}\nagainst:\n\t${NF.display(metadata.against, zonker, metas)}${reason}`;
+				const msg = `While checking:\n\t${pretty}\nagainst:\n\t${NF.display(metadata.against, displayCtx)}${reason}`;
 				return `${msg}\n${loc}`;
 			}
 			if (metadata?.action === "alternative") {
-				const msg = `In alternative:\n\t${pretty}\nwith type:\n\t${NF.display(metadata.type, zonker, metas)}\nWhile: ${metadata.motive}`;
+				const msg = `In alternative:\n\t${pretty}\nwith type:\n\t${NF.display(metadata.type, displayCtx)}\nWhile: ${metadata.motive}`;
 				return `${msg}\n${loc}`;
 			}
 			if (metadata?.action === "infer") {

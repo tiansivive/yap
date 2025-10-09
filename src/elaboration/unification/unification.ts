@@ -219,12 +219,7 @@ const occursInTerm = (ctx: EB.Context, v: Meta, tm: EB.Term): boolean => {
 				}
 				return _.isEqual(variable, v);
 			})
-			.with({ type: "Abs" }, ({ binding, body }) => {
-				if (binding.type === "Lambda") {
-					return occursInTerm(ctx, v, body);
-				}
-				return occursCheck(ctx, v, binding.annotation) || occursInTerm(ctx, v, body);
-			})
+			.with({ type: "Abs" }, ({ binding, body }) => occursInTerm(ctx, v, binding.annotation) || occursInTerm(ctx, v, body))
 			.with({ type: "App" }, ({ func, arg }) => occursInTerm(ctx, v, func) || occursInTerm(ctx, v, arg))
 			//.with({ type: "Annotation" }, ({ term, ann }) => occursInTerm(ctx, v, term) || occursInTerm(ctx, v, ann))
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => occursInTerm(ctx, v, scrutinee) || alternatives.some(({ term }) => occursInTerm(ctx, v, term)))

@@ -30,7 +30,7 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 			.with({ type: "Neutral" }, ({ value }) => project(label, tm, value, us))
 			.with({ type: "Var" }, _ =>
 				V2.Do(function* () {
-					const rowTypeCtor = EB.Constructors.Pi("rx", "Explicit", NF.Constructors.Lit(Lit.Row()), EB.Constructors.Lit(Lit.Type()));
+					const rowTypeCtor = EB.Constructors.Pi("rx", "Explicit", EB.Constructors.Lit(Lit.Row()), EB.Constructors.Lit(Lit.Type()));
 					const ann = NF.evaluate(ctx, rowTypeCtor);
 					const ctor = NF.evaluate(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, ann)));
 

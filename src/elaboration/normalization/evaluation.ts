@@ -65,14 +65,17 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			return external;
 		})
 
-		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) =>
-			NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(ctx, body), binding.annotation),
-		)
+		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) => {
+			const ann = evaluate(ctx, binding.annotation);
+			return NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(ctx, body), ann);
+		})
 		.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }): NF.Value => {
-			return NF.Constructors.Pi(binding.variable, binding.icit, binding.annotation, NF.Constructors.Closure(ctx, body));
+			const ann = evaluate(ctx, binding.annotation);
+			return NF.Constructors.Pi(binding.variable, binding.icit, ann, NF.Constructors.Closure(ctx, body));
 		})
 		.with({ type: "Abs", binding: { type: "Mu" } }, (mu): NF.Value => {
-			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, mu.binding.annotation, NF.Constructors.Closure(ctx, mu.body));
+			const ann = evaluate(ctx, mu.binding.annotation);
+			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, ann, NF.Constructors.Closure(ctx, mu.body));
 			const extended = EB.unfoldMu(ctx, { type: "Mu", variable: mu.binding.variable }, val);
 			return evaluate(extended, mu.body);
 		})
@@ -105,7 +108,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			return NF.Constructors.Modal(nf, modalities);
 		})
 		.otherwise(tm => {
-			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx.zonker, ctx.metas));
+			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx));
 			throw new Error("Not implemented");
 		});
 
@@ -307,7 +310,7 @@ const evalRow = (ctx: EB.Context, row: EB.Row): NF.Row =>
 					return { type: "variable", variable: val.variable };
 				}
 
-				throw new Error("Evaluating a row variable that is not a row or a variable: " + NF.display(val, ctx.zonker, ctx.metas));
+				throw new Error("Evaluating a row variable that is not a row or a variable: " + NF.display(val, ctx));
 			}
 
 			throw new Error(`Eval Row Variable: Not implemented yet: ${JSON.stringify(r)}`);

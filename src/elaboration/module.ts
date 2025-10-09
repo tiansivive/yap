@@ -127,19 +127,20 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 			set("zonker", Sub.compose(subst, ctx.zonker)),
 		);
 		const [generalized, next] = NF.generalize(ty, zonked);
-		const instantiated = NF.instantiate(generalized, next.zonker, next);
+		const instantiated = NF.instantiate(generalized, next);
 
+		const xtended = EB.bind(next, { type: "Let", variable: stmt.variable }, instantiated);
 		const wrapped = F.pipe(
-			EB.Icit.instantiate(elaborated.value, next.zonker, next.metas),
-			inst => EB.Icit.generalize(inst, zonked),
-			tm => EB.Icit.wrapLambda(tm, ty),
+			EB.Icit.instantiate(elaborated.value, xtended),
+			inst => EB.Icit.generalize(inst, xtended),
+			tm => EB.Icit.wrapLambda(tm, ty, xtended),
 		);
 
 		console.log("\n-----------------------------------------------------------");
 		console.log("LETDEC");
-		console.log("Elaborated:\n", EB.Display.Statement(elaborated, next.zonker, next.metas));
-		console.log("Wrapped:\n", EB.Display.Term(wrapped, next.zonker, next.metas));
-		console.log("Instantiated:\n", NF.display(instantiated, next.zonker, next.metas));
+		console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
+		console.log("Wrapped:\n", EB.Display.Term(wrapped, xtended));
+		console.log("Instantiated:\n", NF.display(instantiated, xtended));
 
 		const ast: EB.AST = [wrapped, instantiated, us];
 		return [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
@@ -165,26 +166,26 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 			set("zonker", Sub.compose(subst, ctx.zonker)),
 		);
 		const [generalized, next] = NF.generalize(ty, zonked);
-		const instantiated = NF.instantiate(generalized, next.zonker, next);
+		const instantiated = NF.instantiate(generalized, next);
 
 		const wrapped = F.pipe(
-			EB.Icit.instantiate(elaborated, next.zonker, next.metas),
-			inst => EB.Icit.generalize(inst, zonked),
-			tm => EB.Icit.wrapLambda(tm, ty),
+			EB.Icit.instantiate(elaborated, next),
+			inst => EB.Icit.generalize(inst, next),
+			tm => EB.Icit.wrapLambda(tm, ty, next),
 		);
 
-		const result = yield* V2.local(_ => next, Verification.synth(wrapped));
-		console.log("\n\n--------------------------DEBUG---------------------------------");
-		console.log("RESULT:");
-		console.log(result);
-		const [synthed, artefacts] = result;
-		console.log("\nSynthed:\n", NF.display(synthed, next.zonker, next.metas));
-		console.log("\nArtefacts:");
-		console.log("Usages:\n", artefacts.usages);
-		console.log("VC:\n", NF.display(artefacts.vc, next.zonker, next.metas));
-		console.log("Simplified:\n", NF.display(tmp_simplify(artefacts.vc), next.zonker, next.metas));
+		// // const result = yield* V2.local(_ => next, Verification.synth(wrapped));
+		// // console.log("\n\n--------------------------DEBUG---------------------------------");
+		// // console.log("RESULT:");
+		// // console.log(result);
+		// // const [synthed, artefacts] = result;
+		// console.log("\nSynthed:\n", NF.display(synthed, next.zonker, next.metas));
+		// console.log("\nArtefacts:");
+		// console.log("Usages:\n", artefacts.usages);
+		// console.log("VC:\n", NF.display(artefacts.vc, next.zonker, next.metas));
+		// console.log("Simplified:\n", NF.display(tmp_simplify(artefacts.vc), next.zonker, next.metas));
 
-		console.log("\n-----------------------END DEBUG------------------------------------\n");
+		// console.log("\n-----------------------END DEBUG------------------------------------\n");
 
 		return [wrapped, instantiated, us, subst] as const;
 	});

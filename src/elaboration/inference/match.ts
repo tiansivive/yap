@@ -35,7 +35,7 @@ export const infer = (tm: Match): V2.Elaboration<EB.AST> =>
 						metadata: {
 							action: "alternative",
 							type: ty,
-							motive: `attempting to unify with previous alternative of type ${NF.display(ty, ctx.zonker, ctx.metas)}:\t${Src.Alt.display(tm.alternatives[i])}`,
+							motive: `attempting to unify with previous alternative of type ${NF.display(ty, ctx)}:\t${Src.Alt.display(tm.alternatives[i])}`,
 						},
 					},
 					{ tag: "src", type: "term", term: tm.alternatives[i].term, metadata: { action: "infer", description: "" } },
@@ -89,7 +89,7 @@ export const elaborate =
 								extend(binders),
 								V2.Do(function* () {
 									const [branch, branty, brus] = yield* EB.infer.gen(alt.term);
-									return [EB.Constructors.Alternative(pat, branch), branty, brus] satisfies AltNode;
+									return [EB.Constructors.Alternative(pat, branch, binders), branty, brus] satisfies AltNode;
 								}),
 							);
 							return node;

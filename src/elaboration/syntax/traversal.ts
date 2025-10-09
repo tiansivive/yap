@@ -40,7 +40,7 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
 				Constructors.Match(
 					traverse(scrutinee, onVar),
-					alternatives.map(({ pattern, term }) => ({ pattern, term: traverse(term, onVar) })),
+					alternatives.map(({ pattern, term, binders }) => ({ pattern, term: traverse(term, onVar), binders })),
 				),
 			)
 			.with({ type: "Block" }, ({ return: ret, statements }) => {

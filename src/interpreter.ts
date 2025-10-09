@@ -56,11 +56,11 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 
 		const code = `let ${name} = ${CG.codegen([name], tm)};`;
 		letdecs.push(code);
-		console.log(`:: ${EB.NF.display(ty, ctx.zonker, ctx.metas)}`);
+		console.log(`:: ${EB.NF.display(ty, ctx)}`);
 
 		if (opts.nf) {
 			const nf = EB.NF.evaluate(ctx, tm);
-			console.log(`NF: ${EB.NF.display(nf, ctx.zonker, ctx.metas)}`);
+			console.log(`NF: ${EB.NF.display(nf, ctx)}`);
 		}
 
 		console.log(`\n\n${code}`);
@@ -96,11 +96,11 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		//console.dir(res, { showHidden: true, depth: null });
 		// console.dir(Object.getOwnPropertyDescriptors(res), { showHidden: true, depth: null });
 		const pretty = typeof res === "function" ? beautify.js(res.toString(), { indent_size: 2 }) : util.inspect(res, { showHidden: true, depth: null });
-		console.log("\n" + pretty + ` :: ${EB.NF.display(ty, zonker, ctx.metas)}\n`);
+		console.log("\n" + pretty + ` :: ${EB.NF.display(ty, { zonker, metas: ctx.metas, env: ctx.env })}\n`);
 
 		if (opts.nf) {
 			const nf = EB.NF.evaluate(ctx, tm);
-			console.log(`NF: ${EB.NF.display(nf, zonker, ctx.metas)}`);
+			console.log(`NF: ${EB.NF.display(nf, { zonker, metas: ctx.metas, env: ctx.env })}`);
 		}
 		return ctx;
 	}

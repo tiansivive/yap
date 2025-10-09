@@ -10,23 +10,29 @@ import * as R from "@yap/shared/rows";
 import * as EB from "..";
 import { options } from "@yap/shared/config/options";
 
-const display = (term: EB.Term, zonker: EB.Zonker, metas: EB.Context["metas"]): string => {
+const display = (term: EB.Term, ctx: Pick<EB.Context, "env" | "zonker" | "metas">, opts = { deBruijn: false }): string => {
+	const bind = (name: string) => {
+		return { ...ctx, env: [{ name: { variable: name } }, ...ctx.env] } as Pick<EB.Context, "env" | "zonker" | "metas">;
+	};
 	const _display = (term: EB.Term): string => {
 		return (
 			match(term)
 				.with({ type: "Lit" }, ({ value }) => Lit.display(value))
 				.with({ type: "Var" }, ({ variable }) =>
 					match(variable)
-						.with({ type: "Bound" }, ({ index }) => `I${index}`)
+						.with({ type: "Bound" }, ({ index }) => {
+							const name = ctx.env[index]?.name.variable ?? `I${index}`;
+							return name + (opts.deBruijn ? `#I${index}` : "");
+						})
 						.with({ type: "Free" }, ({ name }) => name)
 						.with({ type: "Foreign" }, ({ name }) => `FFI.${name}`)
 						.with({ type: "Label" }, ({ name }) => `:${name}`)
 						.with({ type: "Meta" }, ({ val }) => {
-							if (zonker[val]) {
-								return NF.display(zonker[val], zonker, metas);
+							if (ctx.zonker[val]) {
+								return NF.display(ctx.zonker[val], ctx, opts);
 							}
-							const { ann } = metas[val];
-							return options.verbose ? `(?${val} :: ${NF.display(ann, zonker, metas)})` : `?${val}`;
+							const { ann } = ctx.metas[val];
+							return options.verbose ? `(?${val} :: ${NF.display(ann, ctx, opts)})` : `?${val}`;
 						})
 						.otherwise(() => "Var _display: Not implemented"),
 				)
@@ -35,18 +41,18 @@ const display = (term: EB.Term, zonker: EB.Zonker, metas: EB.Context["metas"]): 
 						return binding.source;
 					}
 
-					return `([μ = ${binding.source}](${binding.variable}: ${NF.display(binding.annotation, zonker, metas)})) -> ${_display(body)}`;
+					return `([μ = ${binding.source}](${binding.variable}: ${_display(binding.annotation)})) -> ${display(body, bind(binding.variable), opts)}`;
 				})
 				.with({ type: "Abs" }, ({ binding, body }) => {
 					const b = match(binding)
 						.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
-						.with({ type: "Pi" }, ({ variable, annotation }) => `Π(${variable}: ${NF.display(annotation, zonker, metas)})`)
+						.with({ type: "Pi" }, ({ variable, annotation }) => `Π(${variable}: ${_display(annotation)})`)
 						.otherwise(() => {
 							throw new Error("_display Term Binder: Not implemented");
 						});
 
 					const arr = binding.type !== "Let" && binding.type !== "Mu" && binding.icit === "Implicit" ? "=>" : "->";
-					return `${b} ${arr} ${_display(body)}`;
+					return `${b} ${arr} ${display(body, bind(binding.variable), opts)}`; // TODO: Print environment
 				})
 				.with({ type: "App" }, ({ icit, func, arg }) => {
 					const f = _display(func);
@@ -69,11 +75,11 @@ const display = (term: EB.Term, zonker: EB.Zonker, metas: EB.Context["metas"]): 
 				.with({ type: "Inj" }, ({ label, value, term }) => `{ ${_display(term)} | ${label} = ${_display(value)} }`)
 				.with({ type: "Match" }, ({ scrutinee, alternatives }) => {
 					const scut = _display(scrutinee);
-					const alts = alternatives.map(a => Alt.display(a, zonker, metas)).join("\n");
+					const alts = alternatives.map(a => Alt.display(a, ctx, opts)).join("\n");
 					return `match ${scut}\n${alts}`;
 				})
 				.with({ type: "Block" }, ({ statements, return: ret }) => {
-					const stmts = statements.map(s => Stmt.display(s, zonker, metas)).join("; ");
+					const stmts = statements.map(s => Stmt.display(s, ctx, opts)).join("; ");
 					return `{ ${stmts}; return ${_display(ret)}; }`;
 				})
 				.with({ type: "Modal" }, ({ term, modalities }) => {
@@ -86,9 +92,9 @@ const display = (term: EB.Term, zonker: EB.Zonker, metas: EB.Context["metas"]): 
 	return _display(term);
 };
 
-const displayConstraint = (constraint: EB.Constraint, zonker: EB.Zonker, metas: EB.Context["metas"]): string => {
+const displayConstraint = (constraint: EB.Constraint, ctx: Pick<EB.Context, "zonker" | "metas" | "env">, opts = { deBruijn: false }): string => {
 	if (constraint.type === "assign") {
-		return `${NF.display(constraint.left, zonker, metas)} ~~ ${NF.display(constraint.right, zonker, metas)}`;
+		return `${NF.display(constraint.left, ctx, opts)} ~~ ${NF.display(constraint.right, ctx, opts)}`;
 	}
 
 	if (constraint.type === "usage") {
@@ -102,11 +108,11 @@ const displayConstraint = (constraint: EB.Constraint, zonker: EB.Zonker, metas: 
 	return "Unknown Constraint";
 };
 
-const displayContext = (context: EB.Context): object => {
+const displayContext = (context: EB.Context, opts = { deBruijn: false }): object => {
 	const pretty = {
 		env: context.env.map(({ nf, type: [binder, origin, mv], name }) => ({
-			nf: NF.display(nf, context.zonker, context.metas),
-			type: `${displayBinder(binder.type)} ${binder.variable} (${origin}): ${NF.display(mv, context.zonker, context.metas)}`,
+			nf: NF.display(nf, context, opts),
+			type: `${displayBinder(binder.type)} ${binder.variable} (${origin}): ${NF.display(mv, context, opts)}`,
 			name,
 		})),
 		imports: context.imports,
@@ -124,8 +130,10 @@ const displayBinder = (binder: EB.Binder["type"]): string => {
 };
 
 const Alt = {
-	display: (alt: EB.Alternative, zonker: EB.Zonker, metas: EB.Context["metas"]): string =>
-		`| ${Pat.display(alt.pattern)} -> ${display(alt.term, zonker, metas)}`,
+	display: (alt: EB.Alternative, ctx: Pick<EB.Context, "zonker" | "metas" | "env">, opts = { deBruijn: false }): string => {
+		const xtended = alt.binders.reduce((acc, [b]) => ({ ...acc, env: [{ name: { variable: b } }, ...acc.env] }) as typeof ctx, ctx);
+		return `| ${Pat.display(alt.pattern)} -> ${display(alt.term, xtended, opts)}`;
+	},
 };
 
 const Pat = {
@@ -168,13 +176,10 @@ const Pat = {
 };
 
 const Stmt = {
-	display: (stmt: EB.Statement, zonker: EB.Zonker, metas: EB.Context["metas"]): string => {
+	display: (stmt: EB.Statement, ctx: Pick<EB.Context, "zonker" | "metas" | "env">, opts = { deBruijn: false }): string => {
 		return match(stmt)
-			.with({ type: "Expression" }, ({ value }) => display(value, zonker, metas))
-			.with(
-				{ type: "Let" },
-				({ variable, value, annotation }) => `let ${variable}\n\t: ${NF.display(annotation, zonker, metas)}\n\t= ${display(value, zonker, metas)}`,
-			)
+			.with({ type: "Expression" }, ({ value }) => display(value, ctx, opts))
+			.with({ type: "Let" }, ({ variable, value, annotation }) => `let ${variable}\n\t: ${NF.display(annotation, ctx, opts)}\n\t= ${display(value, ctx, opts)}`)
 			.otherwise(() => "Statement Display: Not implemented");
 	},
 };

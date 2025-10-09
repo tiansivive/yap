@@ -141,10 +141,7 @@ const rewrite = (r: NF.Row, label: string, s: Subst): V2.Elaboration<[NF.Row, Su
 							.otherwise(() =>
 								V2.Do(() =>
 									V2.fail(
-										Err.Impossible(
-											"Expected extension: " +
-												R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, ctx.zonker, ctx.metas), var: v => JSON.stringify(v) }),
-										),
+										Err.Impossible("Expected extension: " + R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, ctx), var: v => JSON.stringify(v) })),
 									),
 								),
 							);

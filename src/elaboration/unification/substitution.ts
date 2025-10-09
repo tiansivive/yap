@@ -13,7 +13,7 @@ export const display = (subst: Subst, metas: EB.Context["metas"], separator = "\
 		return "empty";
 	}
 	return Object.entries(subst)
-		.map(([key, value]) => `?${key} |=> ${NF.display(value, subst, metas)}`)
+		.map(([key, value]) => `?${key} |=> ${NF.display(value, { zonker: subst, metas, env: [] })}`)
 		.join(separator);
 };
 

@@ -10,6 +10,7 @@ import _ from "lodash";
 import { Subst } from "./unification/substitution";
 
 import * as Metas from "@yap/elaboration/shared/metas";
+import * as R from "@yap/shared/rows";
 
 export function insert(node: EB.AST): V2.Elaboration<EB.AST> {
 	const [term, ty, us] = node;
@@ -46,7 +47,7 @@ export function insert(node: EB.AST): V2.Elaboration<EB.AST> {
 
 insert.gen = F.flow(insert, V2.pure);
 
-export const wrapLambda = (term: EB.Term, ty: NF.Value): EB.Term => {
+export const wrapLambda = (term: EB.Term, ty: NF.Value, ctx: EB.Context): EB.Term => {
 	return match(ty)
 		.with(
 			{ type: "Abs", binder: { type: "Pi", icit: "Implicit" } },
@@ -54,8 +55,9 @@ export const wrapLambda = (term: EB.Term, ty: NF.Value): EB.Term => {
 			_ => term,
 		)
 		.with({ type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, pi => {
-			const binding: EB.Binding = { type: "Lambda", variable: pi.binder.variable, icit: pi.binder.icit, annotation: pi.binder.annotation };
-			return EB.Constructors.Abs(binding, wrapLambda(term, NF.apply(pi.binder, pi.closure, NF.Constructors.Rigid(0))));
+			const ann = NF.quote(ctx, ctx.env.length, pi.binder.annotation);
+			const binding: EB.Binding = { type: "Lambda", variable: pi.binder.variable, icit: pi.binder.icit, annotation: ann };
+			return EB.Constructors.Abs(binding, wrapLambda(term, NF.apply(pi.binder, pi.closure, NF.Constructors.Rigid(0)), ctx));
 		})
 		.otherwise(() => term);
 };
@@ -70,7 +72,7 @@ export const generalize = (tm: EB.Term, ctx: EB.Context): EB.Term => {
 					type: "Lambda",
 					icit: "Implicit",
 					variable: `${String.fromCharCode(charCode + i)}`,
-					annotation: ctx.metas[m.val].ann,
+					annotation: NF.quote(ctx, ctx.env.length, ctx.metas[m.val].ann),
 				},
 				tm,
 			);
@@ -158,23 +160,91 @@ export const generalize = (tm: EB.Term, ctx: EB.Context): EB.Term => {
 // 	return EB.Bound(lvl - i - 1);
 // };
 
-export const instantiate = (term: EB.Term, subst: Subst, metas: EB.Context["metas"]): EB.Term => {
-	return EB.traverse(term, v => {
-		if (v.variable.type !== "Meta") {
-			return v;
-		}
+// TODO: We might want to remove this pass altogether in the future. Perhaps merge it with a lowering pass.
+/**
+ * Instantiates unconstrained meta variables in a Term to default values based on their annotations.
+ * Constrained metas (those that have been unified to some value) are quoted from the zonker.
+ * NOTE: this is more zonking than instantiation, but the name is kept for legacy reasons.
+ */
+export const instantiate = (term: EB.Term, ctx: EB.Context): EB.Term => {
+	return (
+		match(term)
+			.with({ type: "Var", variable: { type: "Meta" } }, v => {
+				if (!!ctx.zonker[v.variable.val]) {
+					// Solved meta means it's in the zonker = not unconstrained, so no need to instantiate it
+					return NF.quote(ctx, ctx.env.length, ctx.zonker[v.variable.val]);
+				}
 
-		if (!!subst[v.variable.val]) {
-			// Solved meta means it's in the zonker = not unconstrained, so no need to instantiate it
-			return v;
-		}
+				const { ann } = ctx.metas[v.variable.val];
 
-		const { ann } = metas[v.variable.val];
+				return match(ann)
+					.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.Constructors.Row({ type: "empty" }))
+					.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Any" }))
+					.with({ type: "Lit", value: { type: "Atom", value: "Any" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Void" }))
+					.otherwise(() => EB.Constructors.Var(v.variable));
+			})
+			.with({ type: "Abs" }, abs => {
+				const annotation = instantiate(abs.binding.annotation, ctx);
+				const extended = EB.bind(ctx, abs.binding, NF.evaluate(ctx, annotation));
+				return EB.Constructors.Abs({ ...abs.binding, annotation }, instantiate(abs.body, extended));
+			})
+			.with({ type: "App" }, app => EB.Constructors.App(app.icit, instantiate(app.func, ctx), instantiate(app.arg, ctx)))
+			.with({ type: "Row" }, ({ row }) => {
+				const r = R.traverse(
+					row,
+					val => instantiate(val, ctx),
+					v => R.Constructors.Variable(v),
+				);
+				return EB.Constructors.Row(r);
+			})
+			.with({ type: "Proj" }, ({ label, term }) => EB.Constructors.Proj(label, instantiate(term, ctx)))
+			.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, instantiate(value, ctx), instantiate(term, ctx)))
+			//.with({ type: "Annotation" }, ({ term, ann }) => EB.Constructors.Annotation(instantiate(term, ctx), instantiate(ann, ctx)))
+			.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
+				EB.Constructors.Match(
+					instantiate(scrutinee, ctx),
+					alternatives.map(alt => {
+						const xtended = alt.binders.reduce((acc, [bv, bty]) => EB.bind(acc, { type: "Let", variable: bv }, bty), ctx);
+						return { pattern: alt.pattern, term: instantiate(alt.term, xtended), binders: alt.binders };
+					}),
+				),
+			)
+			.with({ type: "Block" }, ({ return: ret, statements }) => {
+				const { stmts, ctx: xtended } = statements.reduce(
+					(acc, s) => {
+						const { stmts, ctx } = acc;
+						const instantiated = { ...s, value: instantiate(s.value, ctx) };
+						if (s.type === "Let") {
+							const extended = EB.bind(ctx, { type: "Let", variable: s.variable }, s.annotation);
+							return { stmts: [...stmts, instantiated], ctx: extended };
+						}
+						return { stmts: [...stmts, instantiated], ctx };
+					},
+					{ stmts: [] as EB.Statement[], ctx },
+				);
 
-		return match(ann)
-			.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.Constructors.Row({ type: "empty" }))
-			.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Any" }))
-			.with({ type: "Lit", value: { type: "Atom", value: "Any" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Void" }))
-			.otherwise(() => EB.Constructors.Var(v.variable));
-	});
+				return EB.Constructors.Block(stmts, instantiate(ret, xtended));
+			})
+			.with({ type: "Modal" }, ({ term, modalities }) => EB.Constructors.Modal(instantiate(term, ctx), modalities))
+			.otherwise(t => t)
+	);
+
+	// return EB.traverse(term, v => {
+	// 	if (v.variable.type !== "Meta") {
+	// 		return v;
+	// 	}
+
+	// 	if (!!ctx.zonker[v.variable.val]) {
+	// 		// Solved meta means it's in the zonker = not unconstrained, so no need to instantiate it
+	// 		return NF.quote(ctx, ctx.env.length, ctx.zonker[v.variable.val]);
+	// 	}
+
+	// 	const { ann } = ctx.metas[v.variable.val];
+
+	// 	return match(ann)
+	// 		.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.Constructors.Row({ type: "empty" }))
+	// 		.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Any" }))
+	// 		.with({ type: "Lit", value: { type: "Atom", value: "Any" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Void" }))
+	// 		.otherwise(() => EB.Constructors.Var(v.variable));
+	// });
 };

@@ -21,6 +21,6 @@ export const infer = (pi: Pi): V2.Elaboration<EB.AST> =>
 
 			const [bodyTm, [, ...bus]] = yield* V2.local(_ctx => EB.bind(_ctx, { type: "Pi", variable: v }, va), EB.check(body, NF.Type));
 
-			return [EB.Constructors.Pi(v, pi.icit, va, bodyTm), NF.Type, Q.add(us, bus)] satisfies EB.AST;
+			return [EB.Constructors.Pi(v, pi.icit, ty, bodyTm), NF.Type, Q.add(us, bus)] satisfies EB.AST;
 		}),
 	);

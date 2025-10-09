@@ -46,9 +46,7 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 						V2.Do(function* () {
 							const bType = NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
 
-							if (tm.annotation) {
-								yield* EB.check.gen(tm.annotation, ty.binder.annotation);
-							}
+							const ann = tm.annotation ? (yield* EB.check.gen(tm.annotation, ty.binder.annotation))[0] : NF.quote(ctx, ctx.env.length, ty.binder.annotation);
 
 							return yield* V2.local(
 								ctx => EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation),
@@ -56,7 +54,7 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 									const [body, us] = yield* Check.val.gen(tm.body, bType);
 									// const [vu] = us;
 									//yield* V2.tell("constraint", { type: "usage", expected: ty.binder.annotation.nf, computed: vu });
-									return [EB.Constructors.Lambda(tm.variable, tm.icit, body, ty.binder.annotation), us] satisfies Result;
+									return [EB.Constructors.Lambda(tm.variable, tm.icit, body, ann), us] satisfies Result;
 								}),
 							);
 						}),
@@ -65,19 +63,19 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 					[P._, { type: "Abs", binder: { type: "Pi" } }],
 					([_, ty]) => ty.binder.icit === "Implicit",
 					([tm, ty]) =>
-						V2.Do(() =>
-							V2.local(
+						V2.Do(() => {
+							const ann = NF.quote(ctx, ctx.env.length, ty.binder.annotation);
+							return V2.local(
 								ctx => EB.bind(ctx, { type: "Lambda", variable: ty.binder.variable }, ty.binder.annotation, "inserted"),
 								V2.Do(function* () {
 									const bType = NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
 									const [_tm, us] = yield* Check.val.gen(tm, bType);
 									const [vu] = us;
 									//	yield* V2.tell("constraint", { type: "usage", expected: ty.binder.annotation[1], computed: vu });
-
-									return [EB.Constructors.Lambda(ty.binder.variable, "Implicit", _tm, ty.binder.annotation), us] satisfies Result;
+									return [EB.Constructors.Lambda(ty.binder.variable, "Implicit", _tm, ann), us] satisfies Result;
 								}),
-							),
-						),
+							);
+						}),
 				)
 
 				.with([{ type: "variant" }, NF.Patterns.Type], ([{ row }]) =>

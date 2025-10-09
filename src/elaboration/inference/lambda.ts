@@ -32,7 +32,7 @@ export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
 					const [bTerm, bType, [vu, ...bus]] = yield* EB.Icit.insert.gen(inferred);
 					//yield* V2.tell("constraint", { type: "usage", expected: mty[1], computed: vu });
 
-					const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm, ty);
+					const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm, ann);
 					const pi = NF.Constructors.Pi(lam.variable, lam.icit, ty, NF.closeVal(ctx, bType));
 					return [tm, pi, bus] satisfies EB.AST; // Remove the usage of the bound variable
 				}),

@@ -26,15 +26,16 @@ export const MultiplicityMismatch = (expected: Q.Multiplicity, right: Q.Multipli
 });
 
 export const display = (error: Cause, zonker: EB.Zonker, metas: EB.Context["metas"]): string => {
+	const ctx = { zonker, metas, env: [] };
 	switch (error.type) {
 		case "UnificationFailure":
-			return `Unification Failure: Cannot unify ${NF.display(error.left, zonker, metas)} with ${NF.display(error.right, zonker, metas)}`;
+			return `Unification Failure: Cannot unify ${NF.display(error.left, ctx)} with ${NF.display(error.right, ctx)}`;
 		case "RigidVariableMismatch":
-			return `Variable Mismatch: Cannot unify ${NF.display(error.left, zonker, metas)} with ${NF.display(error.right, zonker, metas)}`;
+			return `Variable Mismatch: Cannot unify ${NF.display(error.left, ctx)} with ${NF.display(error.right, ctx)}`;
 		case "RowMismatch":
-			return `Row Mismatch: Cannot unify\n${R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, zonker, metas), var: v => JSON.stringify(v) })(error.left)}\nwith\n${R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, zonker, metas), var: v => JSON.stringify(v) })(error.right)}.\nReason: ${error.reason}`;
+			return `Row Mismatch: Cannot unify\n${R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, ctx), var: v => JSON.stringify(v) })(error.left)}\nwith\n${R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, ctx), var: v => JSON.stringify(v) })(error.right)}.\nReason: ${error.reason}`;
 		case "TypeMismatch":
-			return `Type Mismatch: Cannot unify:\n\t${NF.display(error.left, zonker, metas)}\nwith\n\t${NF.display(error.right, zonker, metas)}`;
+			return `Type Mismatch: Cannot unify:\n\t${NF.display(error.left, ctx)}\nwith\n\t${NF.display(error.right, ctx)}`;
 		case "Impossible":
 			return `Impossible! ${error.message}`;
 		case "MissingLabel":
