@@ -174,18 +174,18 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 			tm => EB.Icit.wrapLambda(tm, ty, next),
 		);
 
-		// // const result = yield* V2.local(_ => next, Verification.synth(wrapped));
-		// // console.log("\n\n--------------------------DEBUG---------------------------------");
-		// // console.log("RESULT:");
-		// // console.log(result);
-		// // const [synthed, artefacts] = result;
-		// console.log("\nSynthed:\n", NF.display(synthed, next.zonker, next.metas));
-		// console.log("\nArtefacts:");
-		// console.log("Usages:\n", artefacts.usages);
-		// console.log("VC:\n", NF.display(artefacts.vc, next.zonker, next.metas));
-		// console.log("Simplified:\n", NF.display(tmp_simplify(artefacts.vc), next.zonker, next.metas));
+		const result = yield* V2.local(_ => next, Verification.synth(wrapped));
+		console.log("\n\n--------------------------DEBUG---------------------------------");
+		console.log("RESULT:");
+		console.log(result);
+		const [synthed, artefacts] = result;
+		console.log("\nSynthed:\n", NF.display(synthed, next));
+		console.log("\nArtefacts:");
+		console.log("Usages:\n", artefacts.usages);
+		console.log("VC:\n", NF.display(artefacts.vc, next));
+		console.log("Simplified:\n", NF.display(tmp_simplify(artefacts.vc), next));
 
-		// console.log("\n-----------------------END DEBUG------------------------------------\n");
+		console.log("\n-----------------------END DEBUG------------------------------------\n");
 
 		return [wrapped, instantiated, us, subst] as const;
 	});

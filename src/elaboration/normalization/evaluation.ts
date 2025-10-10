@@ -196,7 +196,7 @@ export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">"
 
 type MeetResult = { binder: EB.Binder } & Modal.Annotations;
 const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetResult[]> => {
-	const truthy = Liquid.Predicate.Neutral;
+	const truthy = (v: NF.Value) => Liquid.Predicate.Neutral(NF.quote(ctx, ctx.env.length, v));
 	return match([unwrapNeutral(nf), pattern])
 		.with([P._, { type: "Wildcard" }], () => O.some([]))
 		.with([P._, { type: "Binder" }], ([v, p]) => {
@@ -229,7 +229,7 @@ const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetRe
 };
 
 const meetAll = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<MeetResult[]> => {
-	const truthy = Liquid.Predicate.Neutral;
+	const truthy = (v: NF.Value) => Liquid.Predicate.Neutral(NF.quote(ctx, ctx.env.length, v));
 	return match([pats, vals])
 		.with([{ type: "empty" }, P._], () => O.some([])) // empty row matches anything
 		.with([{ type: "variable" }, P._], ([r]) => {
@@ -261,7 +261,7 @@ const meetAll = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row)
 };
 
 const meetOne = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<MeetResult[]> => {
-	const truthy = Liquid.Predicate.Neutral;
+	const truthy = (v: NF.Value) => Liquid.Predicate.Neutral(NF.quote(ctx, ctx.env.length, v));
 	return match([pats, vals])
 		.with([{ type: "empty" }, P._], () => O.none)
 		.with([{ type: "variable" }, P._], ([r]) => {

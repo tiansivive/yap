@@ -136,7 +136,9 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 					V2.Do(function* () {
 						const [checked, us] = yield* Check.val.gen(tm.term, val);
 
-						const liquid = tm.modalities.liquid ? yield* EB.Liquid.typecheck(tm.modalities.liquid, NF.evaluate(ctx, checked)) : Liquid.Predicate.Neutral(val);
+						const liquid = tm.modalities.liquid
+							? yield* EB.Liquid.typecheck(tm.modalities.liquid, NF.evaluate(ctx, checked))
+							: Liquid.Predicate.Neutral(checked);
 						const quantity = tm.modalities.quantity ?? Q.Many;
 
 						return [EB.Constructors.Modal(checked, { liquid, quantity }), us] satisfies Result;
