@@ -3,6 +3,10 @@ import * as EB from "@yap/elaboration";
 import * as NF from ".";
 import { match } from "ts-pattern";
 
+/**
+ * Quotes a value in the given context and level.
+ * We explicitly pass the level to avoid extending the context when quoting under binders.
+ */
 export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 	return match(val)
 		.with({ type: "Lit" }, ({ value }) => EB.Constructors.Lit(value))
@@ -28,21 +32,21 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 			const { variable, icit, annotation } = binder;
 			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
-			const ann = NF.quote(ctx, ctx.env.length, annotation);
+			const ann = NF.quote(ctx, lvl, annotation);
 			return EB.Constructors.Lambda(variable, icit, body, ann);
 		})
 		.with({ type: "Abs", binder: { type: "Pi" } }, ({ binder, closure }) => {
 			const { variable, icit, annotation } = binder;
 			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
-			const ann = NF.quote(ctx, ctx.env.length, annotation);
+			const ann = NF.quote(ctx, lvl, annotation);
 			return EB.Constructors.Pi(variable, icit, ann, body);
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, ({ binder, closure }) => {
 			const { variable, source, annotation } = binder;
 			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = quote(ctx, lvl + 1, val);
-			const ann = NF.quote(ctx, ctx.env.length, annotation);
+			const ann = NF.quote(ctx, lvl, annotation);
 			return EB.Constructors.Mu(variable, source, ann, body);
 		})
 		.with({ type: "Row" }, ({ row }) => {
