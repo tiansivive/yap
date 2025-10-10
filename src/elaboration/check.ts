@@ -99,6 +99,12 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 				.with([{ type: "struct" }, NF.Patterns.HashMap], ([struct, hashmap]) =>
 					V2.Do(function* () {
 						const [r, us] = yield* Check.row.gen(struct.row, hashmap.value.func.arg, ctx.env.length);
+						yield* V2.tell("constraint", {
+							type: "assign",
+							left: hashmap.value.arg,
+							right: NF.Constructors.Var({ type: "Foreign", name: "defaultHashMap" }),
+							lvl: ctx.env.length,
+						});
 						return [EB.Constructors.Struct(r), us] satisfies Result;
 					}),
 				)
