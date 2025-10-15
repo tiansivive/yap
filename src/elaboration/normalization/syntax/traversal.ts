@@ -35,7 +35,7 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 		.with(Patterns.Modal, ({ value, modalities }) =>
 			Constructors.Modal(traverse(value, onVar, onTerm), {
 				quantity: modalities.quantity,
-				liquid: onTerm(modalities.liquid),
+				liquid: traverse(modalities.liquid, onVar, onTerm),
 			}),
 		)
 		.otherwise(() => {

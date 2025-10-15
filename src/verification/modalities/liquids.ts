@@ -5,6 +5,10 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as Lit from "@yap/shared/literals";
 import * as Sub from "@yap/elaboration/unification/substitution";
 
+import * as Modal from "@yap/verification/modalities/shared";
+import { Context } from "z3-solver";
+import { defaultContext } from "@yap/shared/lib/primitives";
+
 const tru = () => NF.Constructors.Lit({ type: "Bool", value: true });
 const fls = () => NF.Constructors.Lit({ type: "Bool", value: false });
 
@@ -21,17 +25,10 @@ export const Predicate = {
 		return EB.Constructors.Lambda(fresh(), "Explicit", EB.Constructors.Lit({ type: "Bool", value: true }), ann);
 	},
 
-	NeutralNF: (ann: EB.Term) => {
-		const dummyContext: EB.Context = {
-			env: [],
-			implicits: [],
-			sigma: {},
-			trace: [],
-			imports: {},
-			zonker: Sub.empty,
-			ffi: {},
-			metas: {},
-		};
-		return NF.evaluate(dummyContext, Predicate.Neutral(ann));
+	NeutralNF: (ann: NF.Value, ctx: EB.Context) => {
+		const closure = NF.Constructors.Closure(ctx, EB.Constructors.Lit(Lit.Bool(true)));
+		return NF.Constructors.Lambda(fresh(), "Explicit", closure, ann);
 	},
+
+	True: (Z3: Context<"main">) => Z3.Bool.val(true),
 };

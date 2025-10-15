@@ -8,6 +8,7 @@ import { match } from "ts-pattern";
 import { Types, update } from "@yap/utils";
 
 import * as Modal from "@yap/verification/modalities/shared";
+import { SetFieldType } from "type-fest";
 
 export const nf_tag: unique symbol = Symbol("NF");
 
@@ -19,7 +20,7 @@ type Constructor =
 	| { type: "Row"; row: Row }
 	| { type: "Abs"; binder: Binder; closure: Closure }
 	| { type: "Neutral"; value: Value }
-	| { type: "Modal"; value: Value; modalities: Modal.Annotations }
+	| { type: "Modal"; value: Value; modalities: Modalities }
 	| { type: "External"; name: string; arity: number; compute: (...args: Value[]) => Value; args: Value[] };
 
 export type Row = R.Row<Value, Variable>;
@@ -42,6 +43,8 @@ export type Variable =
 export type Closure =
 	| { type: "Closure"; ctx: EB.Context; term: EB.Term }
 	| { type: "PrimOp"; ctx: EB.Context; term: EB.Term; arity: number; compute: (...args: Value[]) => Value };
+
+export type Modalities = SetFieldType<Modal.Annotations, "liquid", Value>;
 
 export const Constructors = {
 	Var: (variable: Variable): Value => Types.make(nf_tag, { type: "Var", variable }),
@@ -99,7 +102,7 @@ export const Constructors = {
 	Schema: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit")),
 	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),
 
-	Modal: (value: Value, modalities: Modal.Annotations): Value =>
+	Modal: (value: Value, modalities: Modalities): Value =>
 		Types.make(nf_tag, {
 			type: "Modal",
 			value,

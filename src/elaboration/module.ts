@@ -19,8 +19,9 @@ import { solve } from "./solver";
 import * as A from "fp-ts/lib/Array";
 
 import * as Sub from "@yap/elaboration/unification/substitution";
-import * as Verification from "@yap/verification/check";
+import { VerificationService } from "@yap/verification/service";
 import { match } from "ts-pattern";
+import { Bool, init } from "z3-solver";
 
 export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 	const maybeExport = (name: string) => (result: Omit<Interface, "imports">) => {
@@ -136,12 +137,45 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 			tm => EB.Icit.wrapLambda(tm, ty, xtended),
 		);
 
-		console.log("\n-----------------------------------------------------------");
-		console.log("LETDEC");
-		console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
-		console.log("Wrapped:\n", EB.Display.Term(wrapped, xtended));
-		console.log("Instantiated:\n", NF.display(instantiated, xtended));
+		init().then(z3 => {
+			const zCtx = z3.Context("main");
+			z3.enableTrace("main");
 
+			const Verification = VerificationService(zCtx);
+
+			const { result: res } = V2.Do(() => V2.local(_ => next, Verification.check(wrapped, instantiated)))(next);
+			if (res._tag === "Left") {
+				console.log("Verification failure");
+				console.log(res.left);
+				return;
+			}
+			const result = res.right;
+			const artefacts = result;
+
+			const solver = new zCtx.Solver();
+
+			solver.add(artefacts.vc.eq(true));
+			solver.check().then(res => {
+				console.log("\n------------------ LETDEC --------------------------------");
+				console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
+				console.log("Wrapped:\n", EB.Display.Term(wrapped, xtended));
+				console.log("Instantiated:\n", NF.display(instantiated, xtended));
+
+				console.log("\n\n--------------------DEBUG VERIFICATION--------------------");
+				// console.log("RESULT:");
+				// console.log(result);
+
+				//console.log("\nSynthed:\n", NF.display(synthed, next));
+				console.log("\nArtefacts:");
+				console.log("Usages:\n", artefacts.usages);
+
+				console.log("\n--------------------FORMULA----------------------");
+				console.log("Z3 Sat:", res);
+				console.log("VC (Z3):\n", artefacts.vc.sexpr());
+
+				console.log("------------------- END LETDEC --------------------------------\n");
+			});
+		});
 		const ast: EB.AST = [wrapped, instantiated, us];
 		return [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
 	});
@@ -174,19 +208,36 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 			tm => EB.Icit.wrapLambda(tm, ty, next),
 		);
 
-		const result = yield* V2.local(_ => next, Verification.synth(wrapped));
-		console.log("\n\n--------------------------DEBUG---------------------------------");
-		console.log("RESULT:");
-		console.log(result);
-		const [synthed, artefacts] = result;
-		console.log("\nSynthed:\n", NF.display(synthed, next));
-		console.log("\nArtefacts:");
-		console.log("Usages:\n", artefacts.usages);
-		console.log("VC:\n", NF.display(artefacts.vc, next));
-		console.log("Simplified:\n", NF.display(tmp_simplify(artefacts.vc), next));
+		init().then(z3 => {
+			const zCtx = z3.Context("main");
+			z3.enableTrace("main");
 
-		console.log("\n-----------------------END DEBUG------------------------------------\n");
+			const Verification = VerificationService(zCtx);
+			const { result: res } = V2.Do(() => V2.local(_ => next, Verification.synth(wrapped)))(next);
+			if (res._tag === "Left") {
+				console.log("Verification failure");
+				console.log(res.left);
+				return;
+			}
+			const result = res.right;
+			console.log("\n\n--------------------------DEBUG---------------------------------");
+			console.log("RESULT:");
+			console.log(result);
+			const [synthed, artefacts] = result;
+			console.log("\nSynthed:\n", NF.display(synthed, next));
+			console.log("\nArtefacts:");
+			console.log("Usages:\n", artefacts.usages);
 
+			// console.log("VC:\n", NF.display(artefacts.vc., next));
+			//console.log("Simplified:\n", NF.display(tmp_simplify(artefacts.vc), next));
+			console.log("VC (Z3):\n", artefacts.vc);
+			const solver = new zCtx.Solver();
+			solver.add(artefacts.vc as Bool);
+			const check = solver.check();
+			console.log("Z3 Sat:", check);
+
+			console.log("\n-----------------------END DEBUG------------------------------------\n");
+		});
 		return [wrapped, instantiated, us, subst] as const;
 	});
 
@@ -194,10 +245,10 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 	return result;
 };
 
-const tmp_simplify = (vc: NF.Value): NF.Value =>
-	match(vc)
-		.with({ type: "App" }, ({ func, arg }) => {
-			return NF.reduce(func, arg, "Explicit");
-		})
-		.with({ type: "External" }, ({ args, arity, compute }) => (args.length === arity && compute !== undefined ? compute(...args) : vc))
-		.otherwise(() => vc);
+// const tmp_simplify = (vc: NF.Value): NF.Value =>
+// 	match(vc)
+// 		.with({ type: "App" }, ({ func, arg }) => {
+// 			return NF.reduce(func, arg, "Explicit");
+// 		})
+// 		.with({ type: "External" }, ({ args, arity, compute }) => (args.length === arity && compute !== undefined ? compute(...args) : vc))
+// 		.otherwise(() => vc);

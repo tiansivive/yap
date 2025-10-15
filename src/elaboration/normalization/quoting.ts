@@ -70,7 +70,7 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 		.with({ type: "Modal" }, ({ value, modalities }) =>
 			EB.Constructors.Modal(quote(ctx, lvl, value), {
 				quantity: modalities.quantity,
-				liquid: modalities.liquid,
+				liquid: quote(ctx, lvl, modalities.liquid),
 			}),
 		)
 		.otherwise(nf => {

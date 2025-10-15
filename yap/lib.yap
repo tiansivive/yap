@@ -11,20 +11,18 @@ let mapL
     = \f -> \l -> match l
         | #nil _            -> #nil *
         | #cons { x, xs }   -> #cons { f x, mapL f xs };
-     
+
 
 let Functor
     : (Type -> Type) -> Type
     = \f -> { map: (a: Type) => (b: Type) => (a -> b) -> f a -> f b };
-    
+
 let Monad
     : (Type -> Type) -> Type
     = \m -> 
       { of: (a: Type) => a -> m a
       , bind: (a: Type) => (b: Type) => m a -> (a -> m b) -> m b 
       };
-
-
 
 let ListF
     : Functor List
@@ -36,8 +34,7 @@ using ListF;
 let main
     : (String -> Num) -> List String -> List Num
     = ListF.map;
-    
-    
+
 let implicit
     : (f: Functor List) => (Num -> String) -> List Num -> List String 
     = f.map;
@@ -68,9 +65,9 @@ let empty: List Num = #nil *;
 let one: List Num = #cons { 1, empty };
 
 let row
-  : Row
+  : Row 
   = [x: 1, y: "one"];
-  
+
 let tuple
   : { Num, String } 
   = { 1, "one" };
@@ -86,4 +83,3 @@ let array
   : { [Num]: Num }
   = [1, 2, 3];
 
-  

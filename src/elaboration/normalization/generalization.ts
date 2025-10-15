@@ -118,7 +118,7 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 		.with(NF.Patterns.Modal, ({ value, modalities }) =>
 			NF.Constructors.Modal(instantiate(value, ctx), {
 				quantity: modalities.quantity,
-				liquid: EB.Icit.instantiate(modalities.liquid, ctx),
+				liquid: instantiate(modalities.liquid, ctx),
 			}),
 		)
 		.otherwise(() => {

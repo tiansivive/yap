@@ -80,14 +80,23 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         trace: [],
         imports: PrimTypes,
         zonker: Sub.empty,
-        ffi: {},
+        ffi: PrimOps,
         metas: {},
     }
 
-    const Num_Num_Num = NF.Constructors.Pi("x", "Explicit", NormalForms.Num(), {
+    const reflectLiquid = (f: (p: EB.Term, q: EB.Term) => EB.Term) => {
+        const i0 = EB.Constructors.Var({ type: "Bound", index: 0 });
+        const i1 = EB.Constructors.Var({ type: "Bound", index: 1 });
+        const i2 = EB.Constructors.Var({ type: "Bound", index: 2 });
+        return EB.Constructors.Lambda("r", "Explicit", EB.DSL.eq(i0, f(i1, i2)), Terms().Num)
+    }
+
+    const mkModal = (base: EB.Term, liquid?: EB.Term) => liquid ? EB.Constructors.Modal(base, { quantity: Q.Many, liquid }) : base;
+
+    const Num_Num_Num = ([r1, r2, r3]: [EB.Term?, EB.Term?, EB.Term?]) => NF.Constructors.Pi("x", "Explicit", NormalForms.Num(), {
         type: "Closure",
         ctx: dummyContext,
-        term: EB.Constructors.Pi("y", "Explicit", Terms().Num, Terms().Num)
+        term: EB.Constructors.Pi("y", "Explicit", mkModal(Terms().Num, r2), mkModal(Terms().Num, r3))
     })
 
     const Num_Num_Bool = NF.Constructors.Pi("x", "Explicit", NormalForms.Num(), {
@@ -111,10 +120,10 @@ export const Elaborated: () => EB.Context['imports'] = () => {
     return {
         ...PrimTypes,
         //"->": [Terms()["->"], Type_Type_Type, []],
-        "+": [Terms()["+"], Num_Num_Num, []],
-        "-": [Terms()["-"], Num_Num_Num, []],
-        "*": [Terms()["*"], Num_Num_Num, []],
-        "/": [Terms()["/"], Num_Num_Num, []],
+        "+": [Terms()["+"], Num_Num_Num([, , reflectLiquid(EB.DSL.add)]), []],
+        "-": [Terms()["-"], Num_Num_Num([, , reflectLiquid(EB.DSL.sub)]), []],
+        "*": [Terms()["*"], Num_Num_Num([, , reflectLiquid(EB.DSL.mul)]), []],
+        "/": [Terms()["/"], Num_Num_Num([, , reflectLiquid(EB.DSL.div)]), []],
         "&&": [Terms()["&&"], Bool_Bool_Bool, []],
         "||": [Terms()["||"], Bool_Bool_Bool, []],
         "==": [Terms()["=="], Num_Num_Bool, []],
@@ -123,7 +132,7 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         ">": [Terms()[">"], Num_Num_Bool, []],
         "<=": [Terms()["<="], Num_Num_Bool, []],
         ">=": [Terms()[">="], Num_Num_Bool, []],
-        "%": [Terms()["%"], Num_Num_Num, []],
+        "%": [Terms()["%"], Num_Num_Num([]), []],
 
     }
 }
@@ -208,3 +217,22 @@ export const OP_ADD = "$add" as const;
 export const OP_SUB = "$sub" as const;
 export const OP_MUL = "$mul" as const;
 export const OP_DIV = "$div" as const;
+
+
+export const operatorMap: Record<string, string> = {
+    [OP_AND]: "&&",
+    [OP_OR]: "||",
+    [OP_EQ]: "==",
+    [OP_NEQ]: "!=",
+    [OP_LT]: "<",
+    [OP_GT]: ">",
+    [OP_LTE]: "<=",
+    [OP_GTE]: ">=",
+    [OP_NOT]: "!",
+
+    [OP_ADD]: "+",
+    [OP_SUB]: "-",
+    [OP_MUL]: "*",
+    [OP_DIV]: "/",
+
+}

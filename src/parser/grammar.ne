@@ -24,12 +24,12 @@
 			}) 
 		},
 	  	dot: /\./,
-		equals: /\=(?!>)/,
 	  	backslash: /\\/,
 	  	arrow: /->/,
 		backarrow: /<-/,
 		fatArrow: /\=>/,
 		op: /[\+\-\*\/\<\>]|(?:==)|(?:!=)|(?:<=)|(?:>=)|(?:\|>)|(?:<\|)/,
+		equals: /\=(?!>)/,
 		concat: /<>/,
 		ldoublebracket: /\[\|/,
 		rdoublebracket: /\|\]/,
@@ -83,17 +83,22 @@ Imports -> %space:? "import" %space String %semicolon 													{% P.importAl
 
 Script -> Many[Statement, %semicolon] %semicolon %space:?  				{% P.script %}
 
-Ann -> Ann %space:? %colon %space:? ModalExpr 							{% P.Annotation %}
+Ann -> Ann %space:? %colon %space:? TypeExpr 							{% P.Annotation %}
     #  | Ann %space:? %colon %space:? Angle[Quantity] %space:? TypeExpr 	{% P.Annotation %}
 	 | TypeExpr 														{% id %}
 
-ModalExpr -> Angle[ Quantity ] %space:? TypeExpr 									{% P.Modal %}
-		   | Angle[ Quantity ] %space:? TypeExpr %space:? DoubleBracket[ Lambda ] 	{% P.Modal %}
-		   | TypeExpr %space:? DoubleBracket[ Lambda ] 								{% P.Modal %}
-		   | TypeExpr 																{% id %}
+# ModalExpr -> Angle[ Quantity ] %space:? TypeExpr 									{% P.Modal %}
+# 		   | Angle[ Quantity ] %space:? TypeExpr %space:? DoubleBracket[ Lambda ] 	{% P.Modal %}
+# 		   | TypeExpr %space:? DoubleBracket[ Lambda ] 								{% P.Modal %}
+# 		   | TypeExpr 																{% id %}
 
-TypeExpr -> Pi 			{% id %}
-		  | Type 		{% id %}
+TypeExpr -> Pi 				{% id %}
+		  | ModalType 		{% id %}
+
+ModalType -> Angle[ Quantity ] %space:? Type 									{% P.Modal %}
+		   | Angle[ Quantity ] %space:? Type %space:? DoubleBracket[ Lambda ] 	{% P.Modal %}
+		   | Type %space:? DoubleBracket[ Lambda ] 								{% P.Modal %}
+		   | Type 																{% id %}
 
 Type -> Mu 				{% id %}
 	  | Variant 		{% id %} 
@@ -134,16 +139,16 @@ Lambda -> %backslash Param %space:? %arrow %space:? TypeExpr 				{% P.Lambda("Ex
 		| %backslash Param %space:? %fatArrow %space:? TypeExpr 			{% P.Lambda("Implicit") %}
 		
 Param -> Identifier 															{% P.Param %}
-	   | Identifier %space:? %colon %space:? ModalExpr 							{% P.Param %}
+	   | Identifier %space:? %colon %space:? TypeExpr 							{% P.Param %}
 	#    | Identifier %space:? %colon %space:? Angle[Quantity] %space:? TypeExpr 	{% P.Param %}
 	   | Parens[Param] 															{% P.extract %}
 		 
 
-Pi -> Type %space:? %arrow %space:? PiTail 		{% P.Pi("Explicit") %}
-	| Type %space:? %fatArrow %space:? PiTail 	{% P.Pi("Implicit") %}
+Pi -> ModalType %space:? %arrow %space:? PiTail 		{% P.Pi("Explicit") %}
+	| ModalType %space:? %fatArrow %space:? PiTail 		{% P.Pi("Implicit") %}
 
 PiTail -> Pi {% id %}
-		| Type {% id %}
+		| ModalType {% id %}
 
 
 # ------------------------------------
@@ -194,7 +199,7 @@ Statement -> TypeExpr 		{% P.Expr %}
 Return    -> %space:? "return" %space Ann %semicolon 					{% P.Return %}
 
 Letdec -> "let" %space Identifier %space:? %equals %space:? Ann 											{% P.LetDec %}
-		| "let" %space Identifier %space:? %colon %space:? ModalExpr %space:? %equals %space:? TypeExpr 	{% P.LetDec %}
+		| "let" %space Identifier %space:? %colon %space:? TypeExpr %space:? %equals %space:? TypeExpr 	{% P.LetDec %}
 
 Using -> "using" %space Ann 								{% P.Using %}
 	   | "using" %space Ann %space "as" %space Identifier  	{% P.Using %}

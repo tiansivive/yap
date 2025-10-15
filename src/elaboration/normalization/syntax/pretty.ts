@@ -65,7 +65,7 @@ export const display = (value: NF.Value, ctx: Pick<EB.Context, "zonker" | "metas
 			})(row),
 		)
 		.with({ type: "Modal" }, ({ modalities, value }) => {
-			return `<${Q.display(modalities.quantity)}> ${display(value, ctx, opts)} [| ${EB.Display.Term(modalities.liquid, ctx, opts)} |]`;
+			return `<${Q.display(modalities.quantity)}> ${display(value, ctx, opts)} [| ${display(modalities.liquid, ctx, opts)} |]`;
 		})
 		.with({ type: "External" }, external => {
 			const args = external.args.map(arg => `(${display(arg, ctx, opts)})`).join(" ");

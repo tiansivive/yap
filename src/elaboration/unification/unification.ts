@@ -196,7 +196,7 @@ const occursCheck = (ctx: EB.Context, v: Meta, ty: NF.Value): boolean => {
 			//occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
 			.with(NF.Patterns.Pi, ({ binder, closure }) => occursInTerm(closure.ctx, v, closure.term))
 			.with(NF.Patterns.App, ({ func, arg }) => occursCheck(ctx, v, func) || occursCheck(ctx, v, arg))
-			.with(NF.Patterns.Modal, ({ value, modalities }) => occursCheck(ctx, v, value) || occursInTerm(ctx, v, modalities.liquid))
+			.with(NF.Patterns.Modal, ({ value, modalities }) => occursCheck(ctx, v, value) || occursCheck(ctx, v, modalities.liquid))
 
 			.with(NF.Patterns.Row, ({ row }) =>
 				R.fold(

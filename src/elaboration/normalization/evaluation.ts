@@ -105,7 +105,11 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 		})
 		.with({ type: "Modal" }, ({ term, modalities }) => {
 			const nf = evaluate(ctx, term);
-			return NF.Constructors.Modal(nf, modalities);
+
+			return NF.Constructors.Modal(nf, {
+				quantity: modalities.quantity,
+				liquid: NF.evaluate(ctx, modalities.liquid),
+			});
 		})
 		.otherwise(tm => {
 			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx));
@@ -149,7 +153,7 @@ export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Val
 			}
 
 			const accumulated = [...args, nfa];
-			if (accumulated.length === arity) {
+			if (accumulated.length === arity && accumulated.every(a => a.type !== "Neutral")) {
 				return compute(...accumulated);
 			}
 			return NF.Constructors.External(name, arity, compute, accumulated);
@@ -194,9 +198,9 @@ export const unwrapNeutral = (value: NF.Value): NF.Value => {
 
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];
 
-type MeetResult = { binder: EB.Binder } & Modal.Annotations;
+type MeetResult = { binder: EB.Binder } & NF.Modalities;
 const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetResult[]> => {
-	const truthy = (v: NF.Value) => Liquid.Predicate.Neutral(NF.quote(ctx, ctx.env.length, v));
+	const truthy = (v: NF.Value) => Liquid.Predicate.NeutralNF(v, ctx);
 	return match([unwrapNeutral(nf), pattern])
 		.with([P._, { type: "Wildcard" }], () => O.some([]))
 		.with([P._, { type: "Binder" }], ([v, p]) => {
@@ -229,7 +233,7 @@ const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetRe
 };
 
 const meetAll = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<MeetResult[]> => {
-	const truthy = (v: NF.Value) => Liquid.Predicate.Neutral(NF.quote(ctx, ctx.env.length, v));
+	const truthy = (v: NF.Value) => Liquid.Predicate.NeutralNF(v, ctx);
 	return match([pats, vals])
 		.with([{ type: "empty" }, P._], () => O.some([])) // empty row matches anything
 		.with([{ type: "variable" }, P._], ([r]) => {
@@ -261,7 +265,7 @@ const meetAll = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row)
 };
 
 const meetOne = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<MeetResult[]> => {
-	const truthy = (v: NF.Value) => Liquid.Predicate.Neutral(NF.quote(ctx, ctx.env.length, v));
+	const truthy = (v: NF.Value) => Liquid.Predicate.NeutralNF(v, ctx);
 	return match([pats, vals])
 		.with([{ type: "empty" }, P._], () => O.none)
 		.with([{ type: "variable" }, P._], ([r]) => {

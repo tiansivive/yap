@@ -141,6 +141,20 @@ export const extend = (context: Context, binder: Binder, value: NF.Value, origin
 	};
 };
 
+export const augment = (context: Context, binder: Binder, annotation: NF.Value, origin: Origin = "inserted") => {
+	const { env } = context;
+	const entry: Context["env"][number] = {
+		nf: NF.Constructors.Rigid(env.length),
+		type: [binder, origin, annotation],
+		name: binder,
+	};
+
+	return {
+		...context,
+		env: [...env, entry],
+	};
+};
+
 export const unfoldMu = (context: Context, binder: Binder, annotation: NF.Value, origin: Origin = "source"): Context => {
 	const { env } = context;
 	const entry: Context["env"][number] = {
@@ -173,4 +187,8 @@ export const muContext = (ctx: Context): Context => {
 
 export const prune = (ctx: Context, lvl: number): Context => {
 	return update(ctx, "env", A.takeRight(lvl));
+};
+
+export const lvl2idx = (ctx: Context, lvl: number): number => {
+	return ctx.env.length - 1 - lvl;
 };

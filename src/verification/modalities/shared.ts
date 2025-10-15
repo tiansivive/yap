@@ -1,6 +1,7 @@
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
+import { Solver, Expr } from "z3-solver";
 
 export type Annotations = {
 	quantity: Q.Multiplicity;
@@ -11,7 +12,7 @@ export type Artefacts = {
 	/** Usage information for each variable in the context */
 	usages: Q.Usages;
 	/** Verification Condition */
-	vc: NF.Value;
+	vc: Expr;
 };
 
 export const Verification = {
