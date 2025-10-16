@@ -196,6 +196,18 @@ export const unwrapNeutral = (value: NF.Value): NF.Value => {
 		.otherwise(() => value);
 };
 
+export const force = (ctx: EB.Context, value: NF.Value): NF.Value => {
+	return match(value)
+		.with({ type: "Neutral" }, v => force(ctx, unwrapNeutral(v)))
+		.with(NF.Patterns.Flex, ({ variable }) => {
+			if (ctx.zonker[variable.val]) {
+				return force(ctx, ctx.zonker[variable.val]);
+			}
+			return value;
+		})
+		.otherwise(() => value);
+};
+
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];
 
 type MeetResult = { binder: EB.Binder } & NF.Modalities;

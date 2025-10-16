@@ -28,8 +28,6 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			const unifier = match([left, right])
-				.with([NF.Patterns.Modal, P._], ([{ value }, val]) => unify(value, val, lvl, subst))
-				.with([P._, NF.Patterns.Modal], ([val, { value }]) => unify(val, value, lvl, subst))
 				.with([NF.Patterns.Flex, NF.Patterns.Flex], ([meta1, meta2]) =>
 					V2.Do<Subst, Subst>(function* () {
 						const s = Sub.compose(bind(ctx, meta1.variable, meta2), subst);
@@ -60,7 +58,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						return subst;
 					}),
 				)
-
+				.with([NF.Patterns.Modal, P._], ([{ value }, val]) => unify(value, val, lvl, subst))
+				.with([P._, NF.Patterns.Modal], ([val, { value }]) => unify(val, value, lvl, subst))
 				.with(
 					[NF.Patterns.Lambda, NF.Patterns.Lambda],
 					([lam1, lam2]) => lam1.binder.icit === lam2.binder.icit,

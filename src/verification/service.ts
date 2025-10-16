@@ -64,6 +64,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 	};
 
 	// Replace the naive 'count++' with an alphabetic sequence incrementer.
+	// TODO: simplify this algorithm and make it more understandable
 	const bumpAlpha = (s: string): string => {
 		// assumes s is non-empty and only contains [a-z]
 		let carry = 1;
@@ -95,7 +96,8 @@ export const VerificationService = (Z3: Context<"main">) => {
 	const check = (tm: EB.Term, ty: NF.Value): V2.Elaboration<Modal.Artefacts> =>
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
-			const r = match([tm, ty])
+			console.log(`Checking: ${EB.Display.Term(tm, ctx)}\nAgainst: ${NF.display(ty, ctx)}`);
+			const r = match([tm, NF.force(ctx, ty)])
 				.with([{ type: "Modal" }, NF.Patterns.Type], ([tm, ty]) => check.gen(tm.term, ty))
 				.with([{ type: "Abs" }, { type: "Abs", binder: { type: "Pi" } }], ([tm, ty]) =>
 					V2.local(
@@ -239,12 +241,13 @@ export const VerificationService = (Z3: Context<"main">) => {
 						const fn = yield* synth.gen(tm.func);
 						const [fnTy, fnArtefacts] = fn;
 
+						const forced = NF.force(ctx, fnTy);
+						const modalities = extract(forced, ctx);
 						const [out, usages, vc] = yield* V2.pure(
-							match(fnTy)
+							match(forced)
 								.with({ type: "Abs", binder: { type: "Pi" } }, ty =>
 									V2.Do(function* () {
 										const checked = yield* check.gen(tm.arg, ty.binder.annotation);
-										const modalities = extract(ty, ctx);
 										const us = Q.add(fnArtefacts.usages, Q.multiply(modalities.quantity, checked.usages));
 
 										// const applied = NF.reduce(checked.vc, NF.evaluate(ctx, tm.arg), "Explicit");
@@ -294,6 +297,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 				//         ),
 				//     ),
 				// )
+
 				.otherwise(() => {
 					console.warn("synth: Not implemented yet");
 					return V2.of<Synthed>([NF.Any, { usages: Q.noUsage(0), vc: Z3.Bool.val(true) }]);
@@ -490,7 +494,11 @@ export const VerificationService = (Z3: Context<"main">) => {
 						return { name: variable.name, type };
 					}
 					if (variable.type === "Meta") {
-						throw new Error("MKFunc: Meta variables should not appear in logical formulas");
+						const m = ctx.metas[variable.val];
+						if (!m) {
+							throw new Error("MKFunc: Meta variables should not appear in logical formulas");
+						}
+						return { name: `?${variable.val}`, type: m.ann };
 					}
 					throw new Error("MKFunc: Unknown variable type");
 				};
@@ -709,7 +717,11 @@ export const VerificationService = (Z3: Context<"main">) => {
 				}
 
 				if (type === "Meta") {
-					return { Prim: Z3.Sort.declare(`?${v.variable.val}`) };
+					const ty = ctx.zonker[v.variable.val];
+					if (!ty) {
+						throw new Error("Unconstrained meta variable in verification");
+					}
+					return mkSort(ty, ctx);
 				}
 
 				if (type === "Free") {

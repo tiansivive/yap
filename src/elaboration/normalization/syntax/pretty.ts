@@ -47,7 +47,18 @@ export const display = (value: NF.Value, ctx: Pick<EB.Context, "zonker" | "metas
 				EB.Context,
 				"env" | "zonker" | "metas"
 			>;
-			return `${b} ${arr} ${EB.Display.Term(closure.term, extended)}`; // TODO: Print environment
+			const printedEnv = extended.env
+				.map(({ nf, name }) => {
+					if (nf) {
+						return `${name.variable} = ${NF.display(nf, extended, opts)}`;
+					}
+					return name.variable;
+				})
+				.slice(1); // remove the bound variable itself
+
+			let prettyEnv = printedEnv.length > 0 ? `Γ: ${printedEnv.join("; ")}` : "·";
+
+			return `${b} ${arr} (closure: ${EB.Display.Term(closure.term, extended, opts)} -| ${prettyEnv})`;
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
 			const f = display(func, ctx, opts);

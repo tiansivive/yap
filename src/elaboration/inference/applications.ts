@@ -21,7 +21,7 @@ export const infer = (node: Application) =>
 			const ctx = yield* V2.ask();
 
 			const [ft, fty, fus] = yield* V2.pure(inferFn(node));
-			const pi = yield* mkPi(fty, node.icit);
+			const pi = yield* mkPi(NF.force(ctx, fty), node.icit);
 			const [at, aus] = yield* V2.pure(checkArg(node, pi[0]));
 
 			const [nf, cls, x] = pi;

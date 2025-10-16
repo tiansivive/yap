@@ -10,7 +10,11 @@ import * as R from "@yap/shared/rows";
 import * as EB from "..";
 import { options } from "@yap/shared/config/options";
 
-const display = (term: EB.Term, ctx: Pick<EB.Context, "env" | "zonker" | "metas">, opts = { deBruijn: false }): string => {
+const display = (
+	term: EB.Term,
+	ctx: Pick<EB.Context, "env" | "zonker" | "metas">,
+	opts: { deBruijn: boolean; printEnv?: boolean } = { deBruijn: false, printEnv: false },
+): string => {
 	const bind = (name: string) => {
 		return { ...ctx, env: [{ name: { variable: name } }, ...ctx.env] } as Pick<EB.Context, "env" | "zonker" | "metas">;
 	};
@@ -52,7 +56,22 @@ const display = (term: EB.Term, ctx: Pick<EB.Context, "env" | "zonker" | "metas"
 						});
 
 					const arr = binding.type !== "Let" && binding.type !== "Mu" && binding.icit === "Implicit" ? "=>" : "->";
-					return `${b} ${arr} ${display(body, bind(binding.variable), opts)}`; // TODO: Print environment
+
+					const xtended = bind(binding.variable);
+					const printedEnv = xtended.env
+						.map(({ nf, name }) => {
+							if (nf) {
+								return `${name.variable} = ${NF.display(nf, xtended, opts)}`;
+							}
+							return name.variable;
+						})
+						.join("; ");
+
+					//TODO:QUESTION: should we print the environment here?
+					if (opts.printEnv) {
+						return `(${b} ${arr} ${display(body, bind(binding.variable), opts)} -| Γ = ${printedEnv})`;
+					}
+					return `${b} ${arr} ${display(body, bind(binding.variable), opts)}`;
 				})
 				.with({ type: "App" }, ({ icit, func, arg }) => {
 					const f = _display(func);
