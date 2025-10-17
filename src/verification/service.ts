@@ -297,7 +297,36 @@ export const VerificationService = (Z3: Context<"main">) => {
 				//         ),
 				//     ),
 				// )
+				.with({ type: "Block" }, block => {
+					const recurse = (stmts: EB.Statement[], results: Modal.Artefacts[]): V2.Elaboration<Synthed> =>
+						V2.Do(function* () {
+							if (stmts.length === 0) {
+								return yield* synth.gen(block.return);
+							}
 
+							const [current, ...rest] = stmts;
+							if (current.type === "Expression") {
+								const synthed = yield* synth.gen(current.value);
+								const r = yield* V2.pure(recurse(rest, [...results, synthed[1]]));
+								return r;
+							}
+							if (current.type !== "Let") {
+								return yield* V2.pure(recurse(rest, [...results]));
+							}
+							const artefacts = yield* check.gen(current.value, current.annotation);
+
+							return yield* V2.local(
+								ctx => EB.bind(ctx, { type: "Let", variable: current.variable }, current.annotation),
+								V2.Do(function* () {
+									const [ty, conj] = yield* V2.pure(recurse(rest, [...results, artefacts]));
+
+									return [ty, { usages: conj.usages, vc: Z3.And(artefacts.vc as Bool, conj.vc as Bool) }] satisfies Synthed;
+								}),
+							);
+						});
+
+					return recurse(block.statements, []);
+				})
 				.otherwise(() => {
 					console.warn("synth: Not implemented yet");
 					return V2.of<Synthed>([NF.Any, { usages: Q.noUsage(0), vc: Z3.Bool.val(true) }]);
@@ -450,24 +479,6 @@ export const VerificationService = (Z3: Context<"main">) => {
 	subtype.gen = (a: NF.Value, b: NF.Value) => V2.pure(subtype(a, b));
 
 	const mkFunction = (val: NF.Value, ctx: EB.Context): FuncDecl<"main", Sort<"main">[], Sort<"main">> => {
-		const build = (s: SortMap): Sort[] =>
-			match(s)
-				.with({ Prim: P.select() }, p => [p])
-				.with({ App: P.select() }, App => {
-					const [f, a] = App;
-					const fs = build(f).map(s => s.name);
-					const as = build(a).map(s => s.name);
-
-					const sort = Z3.Sort.declare(`App(${fs.join(",")}, ${as.join(",")})`);
-					return [sort];
-				})
-				.with({ Func: P.select() }, Func => {
-					const [a, body] = Func;
-					const as = build(a);
-					const bs = build(body);
-					return as.concat(bs);
-				})
-				.exhaustive();
 		return match(val)
 			.with(NF.Patterns.Var, ({ variable }) => {
 				const getNameAndType = (variable: NF.Variable) => {
@@ -525,6 +536,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 				throw new Error("Not a function");
 			});
 	};
+
 	const translate = (nf: NF.Value, ctx: EB.Context, rigids: Record<number, Expr> = {}): Expr => {
 		const collectArgs = (value: NF.Value, ctx: EB.Context): Expr[] => {
 			return match(value)
@@ -741,6 +753,25 @@ export const VerificationService = (Z3: Context<"main">) => {
 			.exhaustive();
 		return s;
 	};
+
+	const build = (s: SortMap): Sort[] =>
+		match(s)
+			.with({ Prim: P.select() }, p => [p])
+			.with({ App: P.select() }, App => {
+				const [f, a] = App;
+				const fs = build(f).map(s => s.name);
+				const as = build(a).map(s => s.name);
+
+				const sort = Z3.Sort.declare(`App(${fs.join(",")}, ${as.join(",")})`);
+				return [sort];
+			})
+			.with({ Func: P.select() }, Func => {
+				const [a, body] = Func;
+				const as = build(a);
+				const bs = build(body);
+				return as.concat(bs);
+			})
+			.exhaustive();
 
 	return { check, synth, subtype };
 };

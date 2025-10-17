@@ -1,24 +1,28 @@
 
-let inc
-    : (x:Int [| x > 10 |]) -> (y: Int [| y == x + 1 |])
-    = \x -> x + 1;
-
-
-let n: Int [| n > 0 |] = 100;
-
-let result = inc n; 
-
-
 
 let Nat
     : Type
-    = Num [|\n -> n > 0|];
+    = Num [|\n -> n > 0 |];
 
-let z: Nat = 0;
+let Pos
+    : Type
+    = Num [|\p -> p > 1 |];
 
 let inc
-    : (x:Nat) -> Num [|\v -> v == (x + 1)|]
+    : (x: Num) -> Num [|\v -> v == (x + 1) |]
     = \x -> x + 1;
 
+let n: Int [| n > 0 |] = 100;
+let result = inc n; 
 
+let z: Nat = 0;
 let r: Nat = inc 0;
+
+let incf
+    : (x: Nat) -> Pos
+    = \x -> {
+        let tmp
+            : (f: Nat -> Nat) -> Pos
+            = \f -> (f x) + 1;
+        return tmp inc;
+    };
