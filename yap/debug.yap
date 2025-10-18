@@ -9,7 +9,7 @@ let Pos
     = Num [|\p -> p > 1 |];
 
 let hof2
-    : (Num -> Num) -> Pos
+    : (Num -> Nat) -> Pos
     = \f -> (f 1) + 1;
 
 

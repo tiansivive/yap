@@ -6,16 +6,13 @@ import * as A from "fp-ts/Array";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
 
-import * as R from "@yap/shared/rows";
-
 import * as Modal from "@yap/verification/modalities/shared";
 
 import { match, P } from "ts-pattern";
 import { Liquid } from "./modalities";
 import { isEqual } from "lodash";
 
-import { init, Sort, Context, Expr, FuncDecl, IntNum, Bool, SMTArray } from "z3-solver";
-import { stringify } from "querystring";
+import { Sort, Context, Expr, IntNum, Bool, SMTArray } from "z3-solver";
 import {
 	OP_ADD,
 	OP_AND,
@@ -121,18 +118,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 								})
 								.exhaustive();
 
-							// const f = Z3.Function.declare(name, ...all);
-							// const sort = match(mkSort(ty.binder.annotation, ctx))
-							// 	.with({ Prim: P.select() }, p => p)
-							// 	.otherwise(() => {
-							// 		throw new Error("Only primitive types can be used in logical formulas");
-							// 	});
-							// const sort = all.length === 1 ? all[0] : Z3.Sort.declare(all.join(" -> "));
-
-							// const x = Z3.Const(tm.binding.variable, sort);
-							// Apply the predicate with a fresh rigid at the current level, without extending the context
 							const p = modalities.liquid;
-
 							if (p.type !== "Abs") {
 								throw new Error("Liquid refinement must be a unary function");
 							}
@@ -182,10 +168,9 @@ export const VerificationService = (Z3: Context<"main">) => {
 						const zeros = A.replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
 						const usages = A.unsafeUpdateAt(tm.variable.index, modalities.quantity, zeros);
 
-						// const predicate = EB.Constructors.App("Explicit", modalities.liquid, EB.Constructors.Var({ type: "Bound", index: tm.variable.index }));
 						const v = NF.evaluate(ctx, tm);
 						const p = NF.reduce(modalities.liquid, v, "Explicit");
-						//const vc =
+
 						return [ty, { usages, vc: translate(p, ctx) }] satisfies Synthed; // TODO: probably need to strengthen the refinement with the literal here
 					}),
 				)
