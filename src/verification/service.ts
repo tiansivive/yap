@@ -14,7 +14,7 @@ import { match, P } from "ts-pattern";
 import { Liquid } from "./modalities";
 import { isEqual } from "lodash";
 
-import { init, Sort, Context, Expr, FuncDecl, IntNum, Bool } from "z3-solver";
+import { init, Sort, Context, Expr, FuncDecl, IntNum, Bool, SMTArray } from "z3-solver";
 import { stringify } from "querystring";
 import {
 	OP_ADD,
@@ -111,13 +111,25 @@ export const VerificationService = (Z3: Context<"main">) => {
 							const [vu, ...usages] = artefacts.usages;
 							yield* V2.tell("constraint", { type: "usage", expected: modalities.quantity, computed: vu });
 
-							const sort = match(mkSort(ty.binder.annotation, ctx))
-								.with({ Prim: P.select() }, p => p)
-								.otherwise(() => {
-									throw new Error("Only primitive types can be used in logical formulas");
-								});
+							const sMap = mkSort(ty.binder.annotation, ctx);
+							const x = match(sMap)
+								.with({ Prim: P.select() }, sort => Z3.Const(tm.binding.variable, sort))
+								.with({ Func: P._ }, fn => Z3.Array.const(tm.binding.variable, ...(build(fn) as [Sort, ...Sort[], Sort])))
+								.with({ App: P._ }, app => {
+									const sort = Z3.Sort.declare(build(app).join(" "));
+									return Z3.Const(tm.binding.variable, sort);
+								})
+								.exhaustive();
 
-							const x = Z3.Const(tm.binding.variable, sort);
+							// const f = Z3.Function.declare(name, ...all);
+							// const sort = match(mkSort(ty.binder.annotation, ctx))
+							// 	.with({ Prim: P.select() }, p => p)
+							// 	.otherwise(() => {
+							// 		throw new Error("Only primitive types can be used in logical formulas");
+							// 	});
+							// const sort = all.length === 1 ? all[0] : Z3.Sort.declare(all.join(" -> "));
+
+							// const x = Z3.Const(tm.binding.variable, sort);
 							// Apply the predicate with a fresh rigid at the current level, without extending the context
 							const p = modalities.liquid;
 
@@ -158,8 +170,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 			const r = match(term)
 				.with({ type: "Var", variable: { type: "Bound" } }, tm =>
 					V2.Do(function* () {
-						const lvl = ctx.env.length - 1 - tm.variable.index;
-						const entry = ctx.env[lvl];
+						const entry = ctx.env[tm.variable.index];
 
 						if (!entry) {
 							throw new Error("Unbound variable in synth");
@@ -169,7 +180,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 
 						const modalities = extract(ty, ctx);
 						const zeros = A.replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
-						const usages = A.unsafeUpdateAt(lvl, modalities.quantity, zeros);
+						const usages = A.unsafeUpdateAt(tm.variable.index, modalities.quantity, zeros);
 
 						// const predicate = EB.Constructors.App("Explicit", modalities.liquid, EB.Constructors.Var({ type: "Bound", index: tm.variable.index }));
 						const v = NF.evaluate(ctx, tm);
@@ -313,11 +324,11 @@ export const VerificationService = (Z3: Context<"main">) => {
 							if (current.type !== "Let") {
 								return yield* V2.pure(recurse(rest, [...results]));
 							}
-							const artefacts = yield* check.gen(current.value, current.annotation);
 
 							return yield* V2.local(
 								ctx => EB.bind(ctx, { type: "Let", variable: current.variable }, current.annotation),
 								V2.Do(function* () {
+									const artefacts = yield* check.gen(current.value, current.annotation);
 									const [ty, conj] = yield* V2.pure(recurse(rest, [...results, artefacts]));
 
 									return [ty, { usages: conj.usages, vc: Z3.And(artefacts.vc as Bool, conj.vc as Bool) }] satisfies Synthed;
@@ -478,7 +489,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 		});
 	subtype.gen = (a: NF.Value, b: NF.Value) => V2.pure(subtype(a, b));
 
-	const mkFunction = (val: NF.Value, ctx: EB.Context): FuncDecl<"main", Sort<"main">[], Sort<"main">> => {
+	const mkFunction = (val: NF.Value, ctx: EB.Context): SMTArray<"main", [Sort<"main">, ...Sort<"main">[]], Sort<"main">> => {
 		return match(val)
 			.with(NF.Patterns.Var, ({ variable }) => {
 				const getNameAndType = (variable: NF.Variable) => {
@@ -516,8 +527,8 @@ export const VerificationService = (Z3: Context<"main">) => {
 
 				const { name, type } = getNameAndType(variable);
 				const sort = mkSort(type, ctx);
-				const all = build(sort) as [...Sort[], Sort];
-				const f = Z3.Function.declare(name, ...all);
+				const all = build(sort) as [Sort, ...Sort[], Sort];
+				const f = Z3.Array.const(name, ...all);
 				return f;
 			})
 			.with(NF.Patterns.App, a => mkFunction(a.func, ctx))
@@ -525,8 +536,9 @@ export const VerificationService = (Z3: Context<"main">) => {
 				if (e.args.length !== e.arity) {
 					throw new Error("External with wrong arity in logical formulas");
 				}
-				const args = e.args.flatMap(arg => build(mkSort(arg, ctx))) as [...Sort[], Sort];
-				const f = Z3.Function.declare(e.name, ...args);
+				const args = e.args.flatMap(arg => build(mkSort(arg, ctx))) as [Sort, ...Sort[], Sort];
+
+				const f = Z3.Array.const(e.name, ...args);
 				return f;
 			})
 			.with({ type: "Abs" }, a => {
@@ -573,7 +585,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 				const f = mkFunction(fn.func, ctx);
 				const [, ...args] = collectArgs(fn, ctx);
 
-				const call = f.call(...args);
+				const call = f.select(args[0], ...args.slice(1));
 				return call;
 			})
 			.with(NF.Patterns.Var, v => {
@@ -590,14 +602,9 @@ export const VerificationService = (Z3: Context<"main">) => {
 						name,
 						type: [, , type],
 					} = ctx.env[EB.lvl2idx(ctx, v.variable.lvl)];
-					const sort = mkSort(type, ctx);
-					return match(sort)
-						.with({ Prim: P.select() }, p => {
-							return Z3.Const(name.variable, p);
-						})
-						.otherwise(() => {
-							throw new Error("Only primitive types can be used in logical formulas");
-						});
+					const all = build(mkSort(type, ctx));
+					const sort = all.length === 1 ? all[0] : Z3.Sort.declare(all.join(" -> "));
+					return Z3.Const(name.variable, sort);
 				}
 				if (v.variable.type === "Free") {
 					const [a] = ctx.imports[v.variable.name];
@@ -695,6 +702,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 	};
 
 	type SortMap = { Prim: Sort } | { Func: SortMap[] } | { App: SortMap[] };
+	// TODO: get rid of SortMap and return a Sort directly from mkSort. Update all callsites accordingly
 	const mkSort = (nf: NF.Value, ctx: EB.Context): SortMap => {
 		const s = match(nf)
 			.with({ type: "Neutral" }, n => mkSort(n.value, ctx))
