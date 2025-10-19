@@ -61,9 +61,10 @@ export const fold = <T, V, A>(row: Row<T, V>, onVal: (value: T, label: string, a
 	return recurse(row, acc);
 };
 
-type Err = { tag: "Mismatch"; label: string } | { tag: "ExpectedExtension" };
+// FIXME:TODO: Improve Error handling. Most likely need to parameterize `rewrite` over the error type.
+type Err = { tag: "Mismatch"; label: string } | { tag: "ExpectedExtension" } | { tag: "Other"; message: string };
 
-export const rewrite = <T, V>(r: Row<T, V>, label: string, onVar?: (v: V) => [T, V]): E.Either<Err, Row<T, V>> => {
+export const rewrite = <T, V>(r: Row<T, V>, label: string, onVar?: (v: V) => E.Either<Err, [T, V]>): E.Either<Err, Row<T, V>> => {
 	return match(r)
 		.with({ type: "empty" }, () => E.left({ tag: "Mismatch", label } satisfies Err))
 		.with(
@@ -82,12 +83,11 @@ export const rewrite = <T, V>(r: Row<T, V>, label: string, onVar?: (v: V) => [T,
 			if (!onVar) {
 				return E.right(r);
 			}
-			const [val, v] = onVar(r.variable);
-
-			const rvar = Constructors.Variable<T, V>(v);
-			const rf = Constructors.Extension<T, V>(label, val, rvar);
-
-			return E.right(rf);
+			return E.Functor.map(onVar(r.variable), ([val, v]) => {
+				const rvar = Constructors.Variable<T, V>(v);
+				const rf = Constructors.Extension<T, V>(label, val, rvar);
+				return rf;
+			});
 		})
 		.exhaustive();
 };

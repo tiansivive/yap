@@ -3,10 +3,13 @@ import * as NF from "@yap/elaboration/normalization";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
 
 import * as A from "fp-ts/Array";
+import * as E from "fp-ts/Either";
+import * as F from "fp-ts/function";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as Modal from "@yap/verification/modalities/shared";
+import * as Row from "@yap/shared/rows";
 
 import { match, P } from "ts-pattern";
 import { Liquid } from "./modalities";
@@ -60,7 +63,6 @@ export const VerificationService = (Z3: Context<"main">) => {
 				.exhaustive(),
 	};
 
-	// Replace the naive 'count++' with an alphabetic sequence incrementer.
 	// TODO: simplify this algorithm and make it more understandable
 	const bumpAlpha = (s: string): string => {
 		// assumes s is non-empty and only contains [a-z]
@@ -390,6 +392,13 @@ export const VerificationService = (Z3: Context<"main">) => {
 							return yield* subtype.gen(at, ty.nf);
 						}),
 				)
+
+				.with([NF.Patterns.Schema, NF.Patterns.Schema], ([{ arg: a }, { arg: b }]) => {
+					return contains(b.row, a.row);
+				})
+				.with([NF.Patterns.Variant, NF.Patterns.Variant], ([{ arg: a }, { arg: b }]) => {
+					return contains(a.row, b.row);
+				})
 				.with([{ type: "Modal" }, { type: "Modal" }], ([at, bt]) =>
 					V2.Do(function* () {
 						const ctx = yield* V2.ask();
@@ -474,6 +483,29 @@ export const VerificationService = (Z3: Context<"main">) => {
 		});
 	subtype.gen = (a: NF.Value, b: NF.Value) => V2.pure(subtype(a, b));
 
+	const contains = (a: NF.Row, b: NF.Row) => {
+		const onVal = (v: NF.Value, lbl: string, conj: V2.Elaboration<Modal.Artefacts["vc"]>): V2.Elaboration<Modal.Artefacts["vc"]> => {
+			const ra = Row.rewrite(a, lbl, v => E.left({ tag: "Other", message: `Could not rewrite row. Label ${lbl} not found.` }));
+			return F.pipe(
+				ra,
+				E.fold(
+					err => V2.Do<Modal.Artefacts["vc"], any>(() => V2.fail({ type: "MissingLabel", label: lbl, row: a })),
+					rewritten => {
+						if (rewritten.type !== "extension") {
+							throw new Error("Verification Subtyping: Expected extension after rewriting row");
+						}
+
+						return V2.Do(function* () {
+							const accumulated = yield* V2.pure(conj);
+							const vc = yield* subtype.gen(v, rewritten.value);
+							return Z3.And(accumulated as Bool, vc as Bool);
+						});
+					},
+				),
+			);
+		};
+		return Row.fold(b, onVal, (rv, acc) => acc, V2.of(Z3.Bool.val(true) satisfies Modal.Artefacts["vc"]));
+	};
 	const mkFunction = (val: NF.Value, ctx: EB.Context): SMTArray<"main", [Sort<"main">, ...Sort<"main">[]], Sort<"main">> => {
 		return match(val)
 			.with(NF.Patterns.Var, ({ variable }) => {
