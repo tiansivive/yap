@@ -14,7 +14,7 @@ type Projection = Extract<Src.Term, { type: "projection" }>;
 export const infer = V2.regen(
 	({ label, term }: Projection): V2.Elaboration<EB.AST> =>
 		V2.track(
-			{ tag: "src", type: "term", term, metadata: { action: "infer", description: "Projection" } },
+			{ tag: "src", type: "term", term, metadata: { action: "infer", description: "Projection of label: " + label } },
 			V2.Do<EB.AST, EB.AST>(function* () {
 				const [tm, ty, us] = yield* EB.infer.gen(term);
 				const inferred = yield* project.gen(label, tm, ty, us);
@@ -51,7 +51,8 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 					const from = (l: string, row: NF.Row): V2.Elaboration<[NF.Row, NF.Value]> => {
 						return match(row)
 							.with({ type: "empty" }, _ => {
-								throw new Error("Label not found: " + l);
+								return V2.Do(() => V2.fail<[NF.Row, NF.Value]>({ type: "MissingLabel", label: l, row }));
+								//throw new Error("Label not found: " + l);
 							})
 							.with(
 								{ type: "extension" },
@@ -60,7 +61,7 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 							)
 							.with({ type: "extension" }, r =>
 								V2.Do(function* () {
-									const [rr, vv]: [NF.Row, NF.Value] = yield from(l, r);
+									const [rr, vv]: [NF.Row, NF.Value] = yield from(l, r.row);
 									return [NF.Constructors.Extension(r.label, r.value, rr), vv] satisfies [NF.Row, NF.Value];
 								}),
 							)

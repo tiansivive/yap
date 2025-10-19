@@ -103,6 +103,51 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			}
 			return res;
 		})
+		.with({ type: "Proj" }, ({ term, label }) => {
+			const base = evaluate(ctx, term);
+
+			type ProjectAttempt = { tag: "found"; value: NF.Value } | { tag: "blocked" } | { tag: "missing" } | { tag: "not-applicable" };
+
+			const lookupRow = (row: NF.Row): ProjectAttempt => {
+				switch (row.type) {
+					case "empty":
+						return { tag: "missing" };
+					case "variable":
+						return { tag: "blocked" };
+					case "extension":
+						if (row.label === label) {
+							return { tag: "found", value: row.value };
+						}
+						return lookupRow(row.row);
+				}
+			};
+
+			const attemptProject = (value: NF.Value): ProjectAttempt => {
+				const target = unwrapNeutral(value);
+
+				return match(target)
+					.with({ type: "Neutral" }, (): ProjectAttempt => ({ tag: "blocked" }))
+					.with(NF.Patterns.Row, ({ row }) => lookupRow(row))
+					.with(NF.Patterns.Struct, NF.Patterns.Schema, NF.Patterns.Variant, ({ arg }) => lookupRow(arg.row))
+					.otherwise((): ProjectAttempt => ({ tag: "not-applicable" }));
+			};
+
+			const attempt = attemptProject(base);
+
+			if (attempt.tag === "found") {
+				return attempt.value;
+			}
+
+			if (attempt.tag === "missing") {
+				throw new Error(`Projection: label ${label} not found`);
+			}
+
+			const binder = `$proj_${label}`;
+			const body = EB.Constructors.Proj(label, EB.Constructors.Var({ type: "Bound", index: 0 }));
+			const lambda = NF.Constructors.Lambda(binder, "Explicit", NF.Constructors.Closure(ctx, body), NF.Any); //QUESTION: Is the Any here ok? This is a dummy type anyways...
+			const app = NF.Constructors.App(lambda, base, "Explicit");
+			return NF.Constructors.Neutral(app);
+		})
 		.with({ type: "Modal" }, ({ term, modalities }) => {
 			const nf = evaluate(ctx, term);
 
