@@ -96,6 +96,19 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 						return [EB.Constructors.Schema(r), us] satisfies Result;
 					}),
 				)
+				.with([{ type: "injection" }, NF.Patterns.Type], ([inj, ty]) =>
+					V2.Do(function* () {
+						const [tm, us] = yield* Check.val.gen(inj.value, ty);
+						const [checked] = yield* Check.val.gen(inj.term, ty);
+
+						return [EB.Constructors.Inj(inj.label, tm, checked), us] satisfies Result;
+					}),
+				)
+				// QUESTION: How to check the resulting proj type is a NF.Type? Should we?
+				// .with([{ type: "projection"}, NF.Patterns.Type], ([proj, ty]) => V2.Do(function* () {
+				// 	const [tm, inferred, us] = yield* EB.infer.gen(proj);
+				// 	return [EB.Constructors.Proj(proj.label, tm), us] satisfies Result;
+				// }))
 				.with([{ type: "struct" }, NF.Patterns.HashMap], ([struct, hashmap]) =>
 					V2.Do(function* () {
 						const [r, us] = yield* Check.row.gen(struct.row, hashmap.value.func.arg, ctx.env.length);
@@ -131,6 +144,9 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 						return V2.Do(() => V2.fail(Err.TypeMismatch(NF.Constructors.Lit(tm.value), val)));
 					},
 				)
+				.with([{ type: "lit", value: { type: "Num" } }, NF.Patterns.Type], ([tm, _]) => {
+					return V2.of([EB.Constructors.Lit(tm.value), Q.noUsage(ctx.env.length)] satisfies Result);
+				})
 				.with([P._, { type: "Modal" }], ([tm, val]) => Check.val(tm, val.value))
 				.with([{ type: "modal" }, P._], ([tm, val]) =>
 					V2.Do(function* () {

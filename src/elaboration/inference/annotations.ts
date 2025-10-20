@@ -22,9 +22,9 @@ export const infer = (node: Annotation): V2.Elaboration<EB.AST> =>
 			const ctx = yield* V2.ask();
 
 			// FIXME:TODO: This was a fix for allowing singleton numbers as annotations. The correct was is to pattern match on check(Lit.Num, Type), and allow that check to succeed
-			const ast = yield* EB.infer.gen(ann);
-			const [_ann, kind]: EB.AST = yield* EB.Icit.insert.gen(ast);
-			const nf = NF.evaluate(ctx, _ann);
+			const ast = yield* EB.check.gen(ann, NF.Type);
+			//const [_ann, kind]: EB.AST = yield* EB.Icit.insert.gen(ast[0]);
+			const nf = NF.evaluate(ctx, ast[0]);
 
 			//const [_ann, us] = yield* EB.check.gen(ann, nf);
 			//const _ty = NF.evaluate(ctx, _ann);
