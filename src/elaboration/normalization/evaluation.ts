@@ -148,6 +148,58 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			const app = NF.Constructors.App(lambda, base, "Explicit");
 			return NF.Constructors.Neutral(app);
 		})
+		.with({ type: "Inj" }, ({ term, label, value: valueTerm }) => {
+			const base = evaluate(ctx, term);
+			const injected = evaluate(ctx, valueTerm);
+
+			type InjectAttempt = { tag: "updated"; value: NF.Value } | { tag: "blocked" } | { tag: "not-applicable" };
+
+			const setRowValue = (row: NF.Row): NF.Row => {
+				switch (row.type) {
+					case "empty":
+						return NF.Constructors.Extension(label, injected, row);
+					case "variable":
+						return NF.Constructors.Extension(label, injected, row);
+					case "extension": {
+						if (row.label === label) {
+							return NF.Constructors.Extension(label, injected, row.row);
+						}
+						const rest = setRowValue(row.row);
+						return NF.Constructors.Extension(row.label, row.value, rest);
+					}
+				}
+			};
+
+			const attemptInject = (value: NF.Value): InjectAttempt => {
+				const target = unwrapNeutral(value);
+
+				return match(target)
+					.with({ type: "Neutral" }, (): InjectAttempt => ({ tag: "blocked" }))
+					.with(NF.Patterns.Row, ({ row }): InjectAttempt => {
+						const updated = setRowValue(row);
+						return { tag: "updated", value: NF.Constructors.Row(updated) };
+					})
+					.with(NF.Patterns.Struct, NF.Patterns.Schema, NF.Patterns.Variant, matched => {
+						const updated = setRowValue(matched.arg.row);
+
+						const updatedRow = NF.Constructors.Row(updated);
+						return { tag: "updated", value: NF.Constructors.App(matched.func, updatedRow, matched.icit) } satisfies InjectAttempt;
+					})
+					.otherwise((): InjectAttempt => ({ tag: "not-applicable" }));
+			};
+
+			const attempt = attemptInject(base);
+
+			if (attempt.tag === "updated") {
+				return attempt.value;
+			}
+
+			const binder = `$inj_${label}`;
+			const body = EB.Constructors.Inj(label, valueTerm, EB.Constructors.Var({ type: "Bound", index: 0 }));
+			const lambda = NF.Constructors.Lambda(binder, "Explicit", NF.Constructors.Closure(ctx, body), NF.Any);
+			const app = NF.Constructors.App(lambda, base, "Explicit");
+			return NF.Constructors.Neutral(app);
+		})
 		.with({ type: "Modal" }, ({ term, modalities }) => {
 			const nf = evaluate(ctx, term);
 
