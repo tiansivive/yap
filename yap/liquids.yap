@@ -1,12 +1,13 @@
 
 
-
 let Nat
     : Type
     = Num [|\n -> n > 0 |];
+
 let Pos
     : Type
-    = Num [|\n -> n > 1 |];
+    = Num [|\p -> p > 1 |];
+
 
 
 let block
@@ -42,6 +43,8 @@ let hof
     = \f -> f 1;
 
 let hof2
-    : (Num -> Num) -> Num
+    : (Num -> Nat) -> Pos
     = \f -> (f 1) + 1;
+
+
 
