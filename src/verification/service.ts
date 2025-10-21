@@ -234,6 +234,12 @@ export const VerificationService = (Z3: Context<"main">) => {
 						return [type, { usages: bArtefacts.usages, vc: Z3.Bool.val(true) }] satisfies Synthed;
 					}),
 				)
+				.with(EB.CtorPatterns.Struct, EB.CtorPatterns.Variant, EB.CtorPatterns.Schema, rowtype => {
+					// TODO: Need to rework sigma env + row terms
+					// We should cache types during elaboration by adding a new field `type` to each label in the row
+					// QUESTION: Is there any advantage in optimizing row terms by adding specific term constructor instead of the App one?
+					throw new Error("synth: Row based verification not implemented yet");
+				})
 				.with({ type: "App" }, tm =>
 					V2.Do(function* () {
 						const fn = yield* synth.gen(tm.func);
@@ -265,6 +271,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 						return [out, { usages, vc }] satisfies Synthed;
 					}),
 				)
+
 				// .with({ type: "Row" }, tm =>
 				//     V2.Do(
 				//         R.fold(

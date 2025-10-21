@@ -12,6 +12,7 @@ import { Simplify } from "type-fest";
 
 import * as Modal from "@yap/verification/modalities/shared";
 import * as Pat from "@yap/elaboration/inference/patterns";
+import { Struct } from "../inference";
 
 export type Term = Types.Brand<typeof tag, Constructor & { id: number }>;
 const tag: unique symbol = Symbol("Term");
@@ -177,4 +178,7 @@ export const CtorPatterns = {
 	Proj: { type: "Proj" },
 	Inj: { type: "Inj" },
 	Annotation: { type: "Annotation" },
+	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } },
+	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } },
+	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } },
 } as const;
