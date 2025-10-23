@@ -33,4 +33,8 @@ describe("Inference: type-level rows", () => {
 		expect({ displays }).toMatchSnapshot();
 		expect({ structure }).toMatchSnapshot();
 	});
+
+	it("Row literal with tail is unsupported", () => {
+		expect(() => elaborateFrom("\\r -> [ x: Num | r ]")).toThrow(/Row literals with tails are not supported/);
+	});
 });
