@@ -1,0 +1,97 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`inference: annotations > 1 : Num 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Num ~~ Num",
+    ],
+    "term": "1",
+    "type": "Num",
+  },
+}
+`;
+
+exports[`inference: annotations > 1 : Num 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {},
+    "term": {
+      "id": 814,
+      "type": "Lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Num",
+      },
+    },
+    "typedTerms": {
+      "813": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+      "814": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+    },
+  },
+}
+`;

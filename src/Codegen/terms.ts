@@ -122,7 +122,8 @@ export const codegen = (env: string[], term: EB.Term): string => {
 					}
 
 					if (r.type === "variable") {
-						throw new Error("Cannot compile rows with variable: " + JSON.stringify(row));
+						console.warn("Cannot compile rows with variable: " + JSON.stringify(row));
+						return `((() => {${code}\nreturn ${DEFAULT_RECORD_NAME};\n})())`;
 					}
 
 					const dec = `\nObject.defineProperty(rec, "${r.label}", { get: () => ${codegen(env, r.value)}, enumerable: true });`;

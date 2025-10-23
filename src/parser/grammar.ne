@@ -159,12 +159,12 @@ Row -> Square[ Many[KeyVal, %comma] RowTail:? ] 	{% P.row %}
 RowTail -> %space:? %bar %space:? Identifier 		{% d => d[3] %}
 
 # Values
-Struct -> Empty[%lbrace, %rbrace] 					{% P.emptyStruct %}
-	 	| Curly[ Many[KeyVal, %comma] ] 			{% P.struct %}
+Struct -> Empty[%lbrace, %rbrace] 						{% P.emptyStruct %}
+	 	| Curly[ Many[KeyVal, %comma] RowTail:? ] 		{% P.struct %}
 
-Tuple -> Curly[ Many[TypeExpr, %comma] ] 				{% P.tuple %}
-List -> Empty[%lbracket, %rbracket] 					{% P.emptyList %}
-	  | Square[ Many[TypeExpr, %comma] ] 				{% P.list %}
+Tuple -> Curly[ Many[TypeExpr, %comma] RowTail:? ] 				{% P.tuple %}
+List -> Empty[%lbracket, %rbracket] 							{% P.emptyList %}
+	  | Square[ Many[TypeExpr, %comma] RowTail:? ] 				{% P.list %}
 
 Variant -> %bar Many[Tagged, %bar]						{% P.variant %}
 

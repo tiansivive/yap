@@ -1,0 +1,86 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`inference: hole > _ 1`] = `
+{
+  "displays": {
+    "constraints": [],
+    "term": "?2",
+    "type": "?2",
+  },
+}
+`;
+
+exports[`inference: hole > _ 2`] = `
+{
+  "structure": {
+    "constraints": [],
+    "metas": {
+      "1": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 1,
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+    },
+    "term": {
+      "id": 813,
+      "type": "Var",
+      "variable": {
+        "lvl": 0,
+        "type": "Meta",
+        "val": 2,
+      },
+    },
+    "type": {
+      "type": "Neutral",
+      "value": {
+        "type": "Var",
+        "variable": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+    },
+    "typedTerms": {
+      "813": {
+        "modalities": {},
+        "nf": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+      },
+    },
+  },
+}
+`;

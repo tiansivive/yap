@@ -1,0 +1,162 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parser: literals > Row 1`] = `
+{
+  "location": {
+    "from": {
+      "column": undefined,
+      "line": undefined,
+      "token": [
+        {
+          "col": 1,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 0,
+          "text": "Row",
+          "toString": [Function],
+          "type": "Row",
+          "value": "Row",
+        },
+      ],
+    },
+  },
+  "type": "lit",
+  "value": {
+    "type": "Atom",
+    "value": "Row",
+  },
+}
+`;
+
+exports[`parser: literals > Type 1`] = `
+{
+  "location": {
+    "from": {
+      "column": undefined,
+      "line": undefined,
+      "token": [
+        {
+          "col": 1,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 0,
+          "text": "Type",
+          "toString": [Function],
+          "type": "Type",
+          "value": "Type",
+        },
+      ],
+    },
+  },
+  "type": "lit",
+  "value": {
+    "type": "Atom",
+    "value": "Type",
+  },
+}
+`;
+
+exports[`parser: literals > boolean: true 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "true",
+        "toString": [Function],
+        "type": "true",
+        "value": "true",
+      },
+    },
+  },
+  "type": "lit",
+  "value": {
+    "type": "Bool",
+    "value": "true",
+  },
+}
+`;
+
+exports[`parser: literals > number: 1 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "1",
+        "toString": [Function],
+        "type": "digit",
+        "value": 1,
+      },
+    },
+  },
+  "type": "lit",
+  "value": {
+    "type": "Num",
+    "value": 1,
+  },
+}
+`;
+
+exports[`parser: literals > string: "hello" 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": ""hello"",
+        "toString": [Function],
+        "type": "string",
+        "value": "hello",
+      },
+    },
+  },
+  "type": "lit",
+  "value": {
+    "type": "String",
+    "value": "hello",
+  },
+}
+`;
+
+exports[`parser: literals > unit: * 1`] = `
+{
+  "location": {
+    "from": {
+      "column": undefined,
+      "line": undefined,
+      "token": [
+        {
+          "col": 1,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 0,
+          "text": "*",
+          "toString": [Function],
+          "type": "op",
+          "value": "*",
+        },
+      ],
+    },
+  },
+  "type": "lit",
+  "value": {
+    "type": "unit",
+  },
+}
+`;

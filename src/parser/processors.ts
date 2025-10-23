@@ -224,13 +224,13 @@ export const row: PostProcessor<[[KeyVal[], Variable?]], Term> = ([[pairs, v]]):
 
 export const emptyStruct = ([location]: [P.Location]): Term => ({ type: "struct", location, row: { ...R.Constructors.Empty(), location } });
 
-export const struct: PostProcessor<[[KeyVal[]]], Term> = ([[pairs]]) => {
+export const struct: PostProcessor<[[KeyVal[], Variable?]], Term> = ([[pairs, v]]) => {
 	if (pairs.length === 0) {
 		throw new Error("Expected at least one key-value pair in struct");
 	}
 
 	const last = pairs[pairs.length - 1];
-	const tail: Row = { type: "empty", location: last[1] };
+	const tail: Row = v ? { type: "variable", variable: v, location: v.location } : { type: "empty", location: last[1] };
 
 	const row = pairs.reduceRight<Row>((acc, [[label, value], location]) => ({ type: "extension", label, value, row: acc, location }), tail);
 	return { type: "struct", row, location: locSpan(pairs[0][1], tail.location) };
@@ -266,25 +266,22 @@ export const variant = (data: [Bar, Tagged[]] | [Tagged[]]): Term => {
 	return mkVariant(data[1]);
 };
 
-export const tuple: PostProcessor<[[Term[]]], Term> = ([[terms]]) => {
+export const tuple: PostProcessor<[[Term[], Variable?]], Term> = ([[terms, v]]) => {
 	if (terms.length === 0) {
 		throw new Error("Expected at least one term in tuple");
 	}
 	const last = terms[terms.length - 1];
-
+	const tail: Row = v ? { type: "variable", variable: v, location: v.location } : { type: "empty", location: last.location };
 	return {
 		type: "tuple",
-		row: terms.reduceRight<Row>((row, value, i) => ({ type: "extension", label: i.toString(), value, row, location: value.location }), {
-			type: "empty",
-			location: last.location,
-		}),
+		row: terms.reduceRight<Row>((row, value, i) => ({ type: "extension", label: i.toString(), value, row, location: value.location }), tail),
 		location: locSpan(terms[0].location, last.location),
 	};
 };
 
 export const emptyList = ([location]: [P.Location]): Term => ({ type: "list", elements: [], location });
 
-export const list: PostProcessor<[[Term[]]], Term> = ([[terms]]) => {
+export const list: PostProcessor<[[Term[], Variable?]], Term> = ([[terms, v]]) => {
 	if (terms.length === 0) {
 		throw new Error("Expected at least one term in list");
 	}
@@ -293,6 +290,7 @@ export const list: PostProcessor<[[Term[]]], Term> = ([[terms]]) => {
 	return {
 		type: "list",
 		elements: terms,
+		rest: v,
 		location: locSpan(terms[0].location, last.location),
 	};
 };

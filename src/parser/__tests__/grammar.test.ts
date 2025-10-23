@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import Nearley from "nearley";
-import Grammar from "./grammar";
+import Grammar from "../grammar";
 
 describe("Grammar", () => {
 	let parser: Nearley.Parser;
@@ -186,8 +186,8 @@ describe("Grammar", () => {
 				expect(expr.arg).toMatchObject({ type: "var", variable: x });
 			});
 
-			it.skip("should parse implicit applications:\tf #x", () => {
-				const application = `f #x`;
+			it.skip("should parse implicit applications:\tf @x", () => {
+				const application = `f @x`;
 				const data = parser.feed(application);
 
 				const expr = data.results[0];
@@ -274,35 +274,12 @@ describe("Grammar", () => {
 				expect(extension.row.type).toBe("empty");
 			});
 
-			it("should parse schemas:\t\t{ x:: 1, y:: 2 }", () => {
-				// parser.grammar.start = "TypeExpr";
-				const src = `{ x:: 1, y:: 2 }`;
-				const data = parser.feed(src);
-
-				const expr = data.results[0];
-
-				const xVal = { type: "Num", value: 1 };
-				const yVal = { type: "Num", value: 2 };
-
-				expect(data.results.length).toBe(1);
-				expect(expr.type).toBe("schema");
-				expect(expr.row.type).toBe("extension");
-				expect(expr.row.label).toBe("x");
-				expect(expr.row.value).toMatchObject({ type: "lit", value: xVal });
-
-				const extension = expr.row.row;
-				expect(extension.type).toBe("extension");
-				expect(extension.label).toBe("y");
-				expect(extension.value).toMatchObject({ type: "lit", value: yVal });
-				expect(extension.row.type).toBe("empty");
-			});
-
-			it("should parse variants:\t\t| x: 1 | y: 2", () => {
+			it("should parse variants:\t\t| #x 1 | #y 2", () => {
 				const src = `| #x 1 | #y 2`;
 				const data = parser.feed(src);
 
 				const expr = data.results[0];
-
+				``;
 				const xVal = { type: "Num", value: 1 };
 				const yVal = { type: "Num", value: 2 };
 
@@ -318,8 +295,22 @@ describe("Grammar", () => {
 				expect(extension.value).toMatchObject({ type: "lit", value: yVal });
 				expect(extension.row.type).toBe("empty");
 			});
+			it("should parse tagged:\t\t\t#x 1", () => {
+				const src = `#x 1`;
+				const data = parser.feed(src);
 
-			it("should parse tuples:\t\t{1, 2}", () => {
+				const expr = data.results[0];
+
+				const xVal = { type: "Num", value: 1 };
+				const yVal = { type: "Num", value: 2 };
+
+				expect(data.results.length).toBe(1);
+				expect(expr.type).toBe("tagged");
+				expect(expr.tag).toBe("x");
+				expect(expr.term).toMatchObject({ type: "lit", value: xVal });
+			});
+
+			it("should parse tuples:\t\t\t{1, 2}", () => {
 				const src = `{1, 2}`;
 				const data = parser.feed(src);
 
@@ -339,34 +330,6 @@ describe("Grammar", () => {
 				expect(extension.label).toBe("1");
 				expect(extension.value).toMatchObject({ type: "lit", value: two });
 				expect(extension.row.type).toBe("empty");
-			});
-
-			it("should parse empty lists:\t\t[]", () => {
-				const src = `[]`;
-				const data = parser.feed(src);
-
-				const expr = data.results[0];
-
-				expect(data.results.length).toBe(1);
-				expect(expr.type).toBe("list");
-				expect(expr.elements.length).toBe(0);
-			});
-
-			it("should parse lists:\t\t[1, 2]", () => {
-				const src = `[1, 2]`;
-				const data = parser.feed(src);
-
-				const expr = data.results[0];
-
-				const one = { type: "Num", value: 1 };
-				const two = { type: "Num", value: 2 };
-
-				expect(data.results.length).toBe(1);
-				expect(expr.type).toBe("list");
-				expect(expr.elements.length).toBe(2);
-
-				expect(expr.elements[0]).toMatchObject({ type: "lit", value: one });
-				expect(expr.elements[1]).toMatchObject({ type: "lit", value: two });
 			});
 
 			it("should parse projections:\t\tx.y", () => {
@@ -441,8 +404,37 @@ describe("Grammar", () => {
 			});
 		});
 
+		describe("Indexed", () => {
+			it("should parse empty lists:\t\t[]", () => {
+				const src = `[]`;
+				const data = parser.feed(src);
+
+				const expr = data.results[0];
+
+				expect(data.results.length).toBe(1);
+				expect(expr.type).toBe("list");
+				expect(expr.elements.length).toBe(0);
+			});
+
+			it("should parse lists:\t\t\t[1, 2]", () => {
+				const src = `[1, 2]`;
+				const data = parser.feed(src);
+
+				const expr = data.results[0];
+
+				const one = { type: "Num", value: 1 };
+				const two = { type: "Num", value: 2 };
+
+				expect(data.results.length).toBe(1);
+				expect(expr.type).toBe("list");
+				expect(expr.elements.length).toBe(2);
+
+				expect(expr.elements[0]).toMatchObject({ type: "lit", value: one });
+				expect(expr.elements[1]).toMatchObject({ type: "lit", value: two });
+			});
+		});
 		describe("Blocks", () => {
-			it("should parse expression in a block:\t\t{ 1; x; }", () => {
+			it("should parse expression in a block:\t\t\t{ 1; x; }", () => {
 				const src = `{ 1; x; }`;
 				const data = parser.feed(src);
 
@@ -463,7 +455,7 @@ describe("Grammar", () => {
 				expect(expr.return).toBeUndefined();
 			});
 
-			it("should parse block with a return value:\t{ x; return 2; }", () => {
+			it("should parse block with a return value:\t\t{ x; return 2; }", () => {
 				const src = `{ x; return 2; }`;
 				const data = parser.feed(src);
 
@@ -498,7 +490,7 @@ describe("Grammar", () => {
 		});
 
 		describe("Pattern matching", () => {
-			it('should parse a match expression:\t\tmatch x | 1 -> 10 | y -> "hello"', () => {
+			it('should parse a match expression:\t\t\tmatch x | 1 -> 10 | y -> "hello"', () => {
 				const src = `match x
 					| 1 -> 10
 					| y -> "hello"`;
@@ -526,7 +518,7 @@ describe("Grammar", () => {
 				expect(expr.alternatives[1].term).toMatchObject({ type: "lit", value: hello });
 			});
 
-			it("should parse a match expression for structs:\tmatch x | { x: 1, y: 2 } -> 10 | { x: 2, y: 1 } -> 20", () => {
+			it("should parse a match expression for structs:\t\tmatch x | { x: 1, y: 2 } -> 10 | { x: 2, y: 1 } -> 20", () => {
 				const src = `match x
 					| { x: 1, y: 2 } -> 10
 					| { x: 2, y: 1 } -> 20`;
@@ -572,7 +564,7 @@ describe("Grammar", () => {
 			});
 		});
 
-		it("should parse a match expression with variants:\tmatch x | #x 1 -> 10 | #y 2 -> 20", () => {
+		it("should parse a match expression with variants:\t\tmatch x | #x 1 -> 10 | #y 2 -> 20", () => {
 			const src = `match x
 				| #x 1 -> 10
 				| #y 2 -> 20`;
@@ -640,24 +632,7 @@ describe("Grammar", () => {
 		});
 
 		describe("Precedence", () => {
-			it("should parse a lambda with an application:\t\\x -> f x", () => {
-				const src = `\\x -> f x`;
-				const data = parser.feed(src);
-				const expr = data.results[0];
-
-				const x = { type: "name", value: "x" };
-				const f = { type: "name", value: "f" };
-
-				expect(data.results.length).toBe(1);
-				expect(expr.type).toBe("lambda");
-				expect(expr.icit).toBe("Explicit");
-				expect(expr.variable).toBe("x");
-				expect(expr.body.type).toBe("application");
-				expect(expr.body.fn).toMatchObject({ type: "var", variable: f });
-				expect(expr.body.arg).toMatchObject({ type: "var", variable: x });
-			});
-
-			it("should parse a projection with an application:\tx.y z", () => {
+			it("should parse a projection with an application:\t\t\t\tx.y z", () => {
 				const src = `x.y z`;
 				const data = parser.feed(src);
 
@@ -675,7 +650,24 @@ describe("Grammar", () => {
 				expect(expr.fn.term).toMatchObject({ type: "var", variable: x });
 			});
 
-			it("should parse a lambda with a projection:\t\\x -> x.y", () => {
+			it("should parse a lambda with an application:\t\t\t\t\t\\x -> f x", () => {
+				const src = `\\x -> f x`;
+				const data = parser.feed(src);
+				const expr = data.results[0];
+
+				const x = { type: "name", value: "x" };
+				const f = { type: "name", value: "f" };
+
+				expect(data.results.length).toBe(1);
+				expect(expr.type).toBe("lambda");
+				expect(expr.icit).toBe("Explicit");
+				expect(expr.variable).toBe("x");
+				expect(expr.body.type).toBe("application");
+				expect(expr.body.fn).toMatchObject({ type: "var", variable: f });
+				expect(expr.body.arg).toMatchObject({ type: "var", variable: x });
+			});
+
+			it("should parse a lambda with a projection:\t\t\t\t\t\\x -> x.y", () => {
 				const src = `\\x -> x.y`;
 				const data = parser.feed(src);
 
@@ -693,7 +685,7 @@ describe("Grammar", () => {
 				expect(expr.body.term).toMatchObject({ type: "var", variable: x });
 			});
 
-			it("should parse a lambda with a projection and an application:\t\\x -> x.y z", () => {
+			it("should parse a lambda with a projection and an application:\t\t\t\\x -> x.y z", () => {
 				const src = `\\x -> x.y z`;
 				const data = parser.feed(src);
 
@@ -714,7 +706,7 @@ describe("Grammar", () => {
 				expect(expr.body.fn.term).toMatchObject({ type: "var", variable: x });
 			});
 
-			it("should parse a lambda with a chain projection and an application:\t\\x -> x.y.z w", () => {
+			it("should parse a lambda with a chain projection and an application:\t\t\\x -> x.y.z w", () => {
 				const src = `\\x -> x.y.z w`;
 				const data = parser.feed(src);
 
@@ -738,7 +730,7 @@ describe("Grammar", () => {
 				expect(expr.body.fn.term.term).toMatchObject({ type: "var", variable: x });
 			});
 
-			it("should parse a lambda with an annotation:\t\\x -> y : Int -> Int", () => {
+			it("should parse a lambda with an annotation:\t\t\t\t\t\\x -> y : Int -> Int", () => {
 				const src = `\\x -> y : Int -> Int`;
 				const data = parser.feed(src);
 
@@ -757,7 +749,7 @@ describe("Grammar", () => {
 				expect(expr.ann.rhs).toMatchObject({ type: "var", variable: int });
 			});
 
-			it("should parse pi types with applications:\t(a:Type) -> (b:Type) -> f a -> f b", () => {
+			it("should parse pi types with applications:\t\t\t\t\t(a:Type) -> (b:Type) -> f a -> f b", () => {
 				const src = `(a:Type) -> (b:Type) -> f a -> f b`;
 				const data = parser.feed(src);
 
@@ -784,8 +776,8 @@ describe("Grammar", () => {
 				expect(expr.body.body.rhs.arg).toMatchObject({ type: "var", variable: b });
 			});
 
-			it("should parse pi types with row terms:\t(a:Type) -> (b:Type) -> { x:: a, y:: b }", () => {
-				const src = `(a:Type) -> (b:Type) -> { x:: a, y:: b }`;
+			it("should parse pi types with row terms:\t\t\t\t\t(a:Type) -> (b:Type) -> { x: a, y: b }", () => {
+				const src = `(a:Type) -> (b:Type) -> { x: a, y: b }`;
 				const data = parser.feed(src);
 
 				const expr = data.results[0];
@@ -801,7 +793,7 @@ describe("Grammar", () => {
 				expect(expr.body.type).toBe("pi");
 				expect(expr.body.variable).toBe("b");
 				expect(expr.body.annotation).toMatchObject({ type: "lit", value: type });
-				expect(expr.body.body.type).toBe("schema");
+				expect(expr.body.body.type).toBe("struct");
 				expect(expr.body.body.row.type).toBe("extension");
 				expect(expr.body.body.row.label).toBe("x");
 				expect(expr.body.body.row.value).toMatchObject({ type: "var", variable: a });

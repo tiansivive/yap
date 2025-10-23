@@ -1,0 +1,154 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`inference: tagged > #x 1 1`] = `
+{
+  "displays": {
+    "constraints": [],
+    "term": "Struct [ x: 1 ]",
+    "type": "Variant [ x: Num | ?1 ]",
+  },
+}
+`;
+
+exports[`inference: tagged > #x 1 2`] = `
+{
+  "structure": {
+    "constraints": [],
+    "metas": {
+      "1": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Row",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "id": 815,
+        "row": {
+          "label": "x",
+          "row": {
+            "type": "empty",
+          },
+          "type": "extension",
+          "value": {
+            "id": 813,
+            "type": "Lit",
+            "value": {
+              "type": "Num",
+              "value": 1,
+            },
+          },
+        },
+        "type": "Row",
+      },
+      "func": {
+        "id": 814,
+        "type": "Lit",
+        "value": {
+          "type": "Atom",
+          "value": "Struct",
+        },
+      },
+      "icit": "Explicit",
+      "id": 816,
+      "type": "App",
+    },
+    "type": {
+      "type": "Neutral",
+      "value": {
+        "arg": {
+          "row": {
+            "label": "x",
+            "row": {
+              "type": "variable",
+              "variable": {
+                "lvl": 0,
+                "type": "Meta",
+                "val": 1,
+              },
+            },
+            "type": "extension",
+            "value": {
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Num",
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "func": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Variant",
+          },
+        },
+        "icit": "Explicit",
+        "type": "App",
+      },
+    },
+    "typedTerms": {
+      "813": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+      "816": {
+        "modalities": {},
+        "nf": {
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "row": {
+                "label": "x",
+                "row": {
+                  "type": "variable",
+                  "variable": {
+                    "lvl": 0,
+                    "type": "Meta",
+                    "val": 1,
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Variant",
+              },
+            },
+            "icit": "Explicit",
+            "type": "App",
+          },
+        },
+      },
+    },
+  },
+}
+`;

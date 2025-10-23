@@ -1,0 +1,1756 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parser: precedence > lambda with annotation: \\x -> y : Int -> Int 1`] = `
+{
+  "ann": {
+    "icit": "Explicit",
+    "lhs": {
+      "location": {
+        "from": {
+          "column": 11,
+          "line": 1,
+          "token": {
+            "col": 11,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 10,
+            "text": "Int",
+            "toString": [Function],
+            "type": "variable",
+            "value": "Int",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 11,
+            "line": 1,
+            "token": {
+              "col": 11,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 10,
+              "text": "Int",
+              "toString": [Function],
+              "type": "variable",
+              "value": "Int",
+            },
+          },
+        },
+        "type": "name",
+        "value": "Int",
+      },
+    },
+    "location": {
+      "from": {
+        "column": 11,
+        "line": 1,
+        "token": {
+          "col": 11,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 10,
+          "text": "Int",
+          "toString": [Function],
+          "type": "variable",
+          "value": "Int",
+        },
+      },
+      "to": {
+        "column": 18,
+        "line": 1,
+        "token": {
+          "col": 18,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 17,
+          "text": "Int",
+          "toString": [Function],
+          "type": "variable",
+          "value": "Int",
+        },
+      },
+    },
+    "rhs": {
+      "location": {
+        "from": {
+          "column": 18,
+          "line": 1,
+          "token": {
+            "col": 18,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 17,
+            "text": "Int",
+            "toString": [Function],
+            "type": "variable",
+            "value": "Int",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 18,
+            "line": 1,
+            "token": {
+              "col": 18,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 17,
+              "text": "Int",
+              "toString": [Function],
+              "type": "variable",
+              "value": "Int",
+            },
+          },
+        },
+        "type": "name",
+        "value": "Int",
+      },
+    },
+    "type": "arrow",
+  },
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 18,
+      "line": 1,
+      "token": {
+        "col": 18,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 17,
+        "text": "Int",
+        "toString": [Function],
+        "type": "variable",
+        "value": "Int",
+      },
+    },
+  },
+  "term": {
+    "annotation": undefined,
+    "body": {
+      "location": {
+        "from": {
+          "column": 7,
+          "line": 1,
+          "token": {
+            "col": 7,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 6,
+            "text": "y",
+            "toString": [Function],
+            "type": "variable",
+            "value": "y",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 7,
+            "line": 1,
+            "token": {
+              "col": 7,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 6,
+              "text": "y",
+              "toString": [Function],
+              "type": "variable",
+              "value": "y",
+            },
+          },
+        },
+        "type": "name",
+        "value": "y",
+      },
+    },
+    "icit": "Explicit",
+    "location": {
+      "from": {
+        "column": 2,
+        "line": 1,
+        "token": {
+          "col": 2,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 1,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+      "to": {
+        "column": 7,
+        "line": 1,
+        "token": {
+          "col": 7,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 6,
+          "text": "y",
+          "toString": [Function],
+          "type": "variable",
+          "value": "y",
+        },
+      },
+    },
+    "type": "lambda",
+    "variable": "x",
+  },
+  "type": "annotation",
+}
+`;
+
+exports[`parser: precedence > lambda with application: \\x -> f x 1`] = `
+{
+  "annotation": undefined,
+  "body": {
+    "arg": {
+      "location": {
+        "from": {
+          "column": 9,
+          "line": 1,
+          "token": {
+            "col": 9,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 8,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 9,
+            "line": 1,
+            "token": {
+              "col": 9,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 8,
+              "text": "x",
+              "toString": [Function],
+              "type": "variable",
+              "value": "x",
+            },
+          },
+        },
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "fn": {
+      "location": {
+        "from": {
+          "column": 7,
+          "line": 1,
+          "token": {
+            "col": 7,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 6,
+            "text": "f",
+            "toString": [Function],
+            "type": "variable",
+            "value": "f",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 7,
+            "line": 1,
+            "token": {
+              "col": 7,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 6,
+              "text": "f",
+              "toString": [Function],
+              "type": "variable",
+              "value": "f",
+            },
+          },
+        },
+        "type": "name",
+        "value": "f",
+      },
+    },
+    "icit": "Explicit",
+    "location": {
+      "from": {
+        "column": 7,
+        "line": 1,
+        "token": {
+          "col": 7,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 6,
+          "text": "f",
+          "toString": [Function],
+          "type": "variable",
+          "value": "f",
+        },
+      },
+      "to": {
+        "column": 9,
+        "line": 1,
+        "token": {
+          "col": 9,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 8,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+    },
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 9,
+      "line": 1,
+      "token": {
+        "col": 9,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 8,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+  },
+  "type": "lambda",
+  "variable": "x",
+}
+`;
+
+exports[`parser: precedence > lambda with chained projection and application: \\x -> x.y.z w 1`] = `
+{
+  "annotation": undefined,
+  "body": {
+    "arg": {
+      "location": {
+        "from": {
+          "column": 13,
+          "line": 1,
+          "token": {
+            "col": 13,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 12,
+            "text": "w",
+            "toString": [Function],
+            "type": "variable",
+            "value": "w",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 13,
+            "line": 1,
+            "token": {
+              "col": 13,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 12,
+              "text": "w",
+              "toString": [Function],
+              "type": "variable",
+              "value": "w",
+            },
+          },
+        },
+        "type": "name",
+        "value": "w",
+      },
+    },
+    "fn": {
+      "label": "z",
+      "location": {
+        "from": {
+          "column": 11,
+          "line": 1,
+          "token": {
+            "col": 11,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 10,
+            "text": "z",
+            "toString": [Function],
+            "type": "variable",
+            "value": "z",
+          },
+        },
+        "to": {
+          "column": 7,
+          "line": 1,
+          "token": {
+            "col": 7,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 6,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "term": {
+        "label": "y",
+        "location": {
+          "from": {
+            "column": 9,
+            "line": 1,
+            "token": {
+              "col": 9,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 8,
+              "text": "y",
+              "toString": [Function],
+              "type": "variable",
+              "value": "y",
+            },
+          },
+          "to": {
+            "column": 7,
+            "line": 1,
+            "token": {
+              "col": 7,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 6,
+              "text": "x",
+              "toString": [Function],
+              "type": "variable",
+              "value": "x",
+            },
+          },
+        },
+        "term": {
+          "location": {
+            "from": {
+              "column": 7,
+              "line": 1,
+              "token": {
+                "col": 7,
+                "line": 1,
+                "lineBreaks": 0,
+                "offset": 6,
+                "text": "x",
+                "toString": [Function],
+                "type": "variable",
+                "value": "x",
+              },
+            },
+          },
+          "type": "var",
+          "variable": {
+            "location": {
+              "from": {
+                "column": 7,
+                "line": 1,
+                "token": {
+                  "col": 7,
+                  "line": 1,
+                  "lineBreaks": 0,
+                  "offset": 6,
+                  "text": "x",
+                  "toString": [Function],
+                  "type": "variable",
+                  "value": "x",
+                },
+              },
+            },
+            "type": "name",
+            "value": "x",
+          },
+        },
+        "type": "projection",
+      },
+      "type": "projection",
+    },
+    "icit": "Explicit",
+    "location": {
+      "from": {
+        "column": 11,
+        "line": 1,
+        "token": {
+          "col": 11,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 10,
+          "text": "z",
+          "toString": [Function],
+          "type": "variable",
+          "value": "z",
+        },
+      },
+      "to": {
+        "column": 13,
+        "line": 1,
+        "token": {
+          "col": 13,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 12,
+          "text": "w",
+          "toString": [Function],
+          "type": "variable",
+          "value": "w",
+        },
+      },
+    },
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 13,
+      "line": 1,
+      "token": {
+        "col": 13,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 12,
+        "text": "w",
+        "toString": [Function],
+        "type": "variable",
+        "value": "w",
+      },
+    },
+  },
+  "type": "lambda",
+  "variable": "x",
+}
+`;
+
+exports[`parser: precedence > lambda with projection and application: \\x -> x.y z 1`] = `
+{
+  "annotation": undefined,
+  "body": {
+    "arg": {
+      "location": {
+        "from": {
+          "column": 11,
+          "line": 1,
+          "token": {
+            "col": 11,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 10,
+            "text": "z",
+            "toString": [Function],
+            "type": "variable",
+            "value": "z",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 11,
+            "line": 1,
+            "token": {
+              "col": 11,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 10,
+              "text": "z",
+              "toString": [Function],
+              "type": "variable",
+              "value": "z",
+            },
+          },
+        },
+        "type": "name",
+        "value": "z",
+      },
+    },
+    "fn": {
+      "label": "y",
+      "location": {
+        "from": {
+          "column": 9,
+          "line": 1,
+          "token": {
+            "col": 9,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 8,
+            "text": "y",
+            "toString": [Function],
+            "type": "variable",
+            "value": "y",
+          },
+        },
+        "to": {
+          "column": 7,
+          "line": 1,
+          "token": {
+            "col": 7,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 6,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "term": {
+        "location": {
+          "from": {
+            "column": 7,
+            "line": 1,
+            "token": {
+              "col": 7,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 6,
+              "text": "x",
+              "toString": [Function],
+              "type": "variable",
+              "value": "x",
+            },
+          },
+        },
+        "type": "var",
+        "variable": {
+          "location": {
+            "from": {
+              "column": 7,
+              "line": 1,
+              "token": {
+                "col": 7,
+                "line": 1,
+                "lineBreaks": 0,
+                "offset": 6,
+                "text": "x",
+                "toString": [Function],
+                "type": "variable",
+                "value": "x",
+              },
+            },
+          },
+          "type": "name",
+          "value": "x",
+        },
+      },
+      "type": "projection",
+    },
+    "icit": "Explicit",
+    "location": {
+      "from": {
+        "column": 9,
+        "line": 1,
+        "token": {
+          "col": 9,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 8,
+          "text": "y",
+          "toString": [Function],
+          "type": "variable",
+          "value": "y",
+        },
+      },
+      "to": {
+        "column": 11,
+        "line": 1,
+        "token": {
+          "col": 11,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 10,
+          "text": "z",
+          "toString": [Function],
+          "type": "variable",
+          "value": "z",
+        },
+      },
+    },
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 11,
+      "line": 1,
+      "token": {
+        "col": 11,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 10,
+        "text": "z",
+        "toString": [Function],
+        "type": "variable",
+        "value": "z",
+      },
+    },
+  },
+  "type": "lambda",
+  "variable": "x",
+}
+`;
+
+exports[`parser: precedence > lambda with projection: \\x -> x.y 1`] = `
+{
+  "annotation": undefined,
+  "body": {
+    "label": "y",
+    "location": {
+      "from": {
+        "column": 9,
+        "line": 1,
+        "token": {
+          "col": 9,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 8,
+          "text": "y",
+          "toString": [Function],
+          "type": "variable",
+          "value": "y",
+        },
+      },
+      "to": {
+        "column": 7,
+        "line": 1,
+        "token": {
+          "col": 7,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 6,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+    },
+    "term": {
+      "location": {
+        "from": {
+          "column": 7,
+          "line": 1,
+          "token": {
+            "col": 7,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 6,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 7,
+            "line": 1,
+            "token": {
+              "col": 7,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 6,
+              "text": "x",
+              "toString": [Function],
+              "type": "variable",
+              "value": "x",
+            },
+          },
+        },
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "type": "projection",
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 7,
+      "line": 1,
+      "token": {
+        "col": 7,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 6,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+  },
+  "type": "lambda",
+  "variable": "x",
+}
+`;
+
+exports[`parser: precedence > pi with applications: (a:Type) -> (b:Type) -> f a -> f b 1`] = `
+{
+  "annotation": {
+    "location": {
+      "from": {
+        "column": undefined,
+        "line": undefined,
+        "token": [
+          {
+            "col": 4,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 3,
+            "text": "Type",
+            "toString": [Function],
+            "type": "Type",
+            "value": "Type",
+          },
+        ],
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Atom",
+      "value": "Type",
+    },
+  },
+  "body": {
+    "annotation": {
+      "location": {
+        "from": {
+          "column": undefined,
+          "line": undefined,
+          "token": [
+            {
+              "col": 16,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 15,
+              "text": "Type",
+              "toString": [Function],
+              "type": "Type",
+              "value": "Type",
+            },
+          ],
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Atom",
+        "value": "Type",
+      },
+    },
+    "body": {
+      "icit": "Explicit",
+      "lhs": {
+        "arg": {
+          "location": {
+            "from": {
+              "column": 27,
+              "line": 1,
+              "token": {
+                "col": 27,
+                "line": 1,
+                "lineBreaks": 0,
+                "offset": 26,
+                "text": "a",
+                "toString": [Function],
+                "type": "variable",
+                "value": "a",
+              },
+            },
+          },
+          "type": "var",
+          "variable": {
+            "location": {
+              "from": {
+                "column": 27,
+                "line": 1,
+                "token": {
+                  "col": 27,
+                  "line": 1,
+                  "lineBreaks": 0,
+                  "offset": 26,
+                  "text": "a",
+                  "toString": [Function],
+                  "type": "variable",
+                  "value": "a",
+                },
+              },
+            },
+            "type": "name",
+            "value": "a",
+          },
+        },
+        "fn": {
+          "location": {
+            "from": {
+              "column": 25,
+              "line": 1,
+              "token": {
+                "col": 25,
+                "line": 1,
+                "lineBreaks": 0,
+                "offset": 24,
+                "text": "f",
+                "toString": [Function],
+                "type": "variable",
+                "value": "f",
+              },
+            },
+          },
+          "type": "var",
+          "variable": {
+            "location": {
+              "from": {
+                "column": 25,
+                "line": 1,
+                "token": {
+                  "col": 25,
+                  "line": 1,
+                  "lineBreaks": 0,
+                  "offset": 24,
+                  "text": "f",
+                  "toString": [Function],
+                  "type": "variable",
+                  "value": "f",
+                },
+              },
+            },
+            "type": "name",
+            "value": "f",
+          },
+        },
+        "icit": "Explicit",
+        "location": {
+          "from": {
+            "column": 25,
+            "line": 1,
+            "token": {
+              "col": 25,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 24,
+              "text": "f",
+              "toString": [Function],
+              "type": "variable",
+              "value": "f",
+            },
+          },
+          "to": {
+            "column": 27,
+            "line": 1,
+            "token": {
+              "col": 27,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 26,
+              "text": "a",
+              "toString": [Function],
+              "type": "variable",
+              "value": "a",
+            },
+          },
+        },
+        "type": "application",
+      },
+      "location": {
+        "from": {
+          "column": 25,
+          "line": 1,
+          "token": {
+            "col": 25,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 24,
+            "text": "f",
+            "toString": [Function],
+            "type": "variable",
+            "value": "f",
+          },
+        },
+        "to": {
+          "column": 34,
+          "line": 1,
+          "token": {
+            "col": 34,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 33,
+            "text": "b",
+            "toString": [Function],
+            "type": "variable",
+            "value": "b",
+          },
+        },
+      },
+      "rhs": {
+        "arg": {
+          "location": {
+            "from": {
+              "column": 34,
+              "line": 1,
+              "token": {
+                "col": 34,
+                "line": 1,
+                "lineBreaks": 0,
+                "offset": 33,
+                "text": "b",
+                "toString": [Function],
+                "type": "variable",
+                "value": "b",
+              },
+            },
+          },
+          "type": "var",
+          "variable": {
+            "location": {
+              "from": {
+                "column": 34,
+                "line": 1,
+                "token": {
+                  "col": 34,
+                  "line": 1,
+                  "lineBreaks": 0,
+                  "offset": 33,
+                  "text": "b",
+                  "toString": [Function],
+                  "type": "variable",
+                  "value": "b",
+                },
+              },
+            },
+            "type": "name",
+            "value": "b",
+          },
+        },
+        "fn": {
+          "location": {
+            "from": {
+              "column": 32,
+              "line": 1,
+              "token": {
+                "col": 32,
+                "line": 1,
+                "lineBreaks": 0,
+                "offset": 31,
+                "text": "f",
+                "toString": [Function],
+                "type": "variable",
+                "value": "f",
+              },
+            },
+          },
+          "type": "var",
+          "variable": {
+            "location": {
+              "from": {
+                "column": 32,
+                "line": 1,
+                "token": {
+                  "col": 32,
+                  "line": 1,
+                  "lineBreaks": 0,
+                  "offset": 31,
+                  "text": "f",
+                  "toString": [Function],
+                  "type": "variable",
+                  "value": "f",
+                },
+              },
+            },
+            "type": "name",
+            "value": "f",
+          },
+        },
+        "icit": "Explicit",
+        "location": {
+          "from": {
+            "column": 32,
+            "line": 1,
+            "token": {
+              "col": 32,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 31,
+              "text": "f",
+              "toString": [Function],
+              "type": "variable",
+              "value": "f",
+            },
+          },
+          "to": {
+            "column": 34,
+            "line": 1,
+            "token": {
+              "col": 34,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 33,
+              "text": "b",
+              "toString": [Function],
+              "type": "variable",
+              "value": "b",
+            },
+          },
+        },
+        "type": "application",
+      },
+      "type": "arrow",
+    },
+    "icit": "Explicit",
+    "location": {
+      "from": {
+        "column": 14,
+        "line": 1,
+        "token": {
+          "col": 14,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 13,
+          "text": "b",
+          "toString": [Function],
+          "type": "variable",
+          "value": "b",
+        },
+      },
+      "to": {
+        "column": 34,
+        "line": 1,
+        "token": {
+          "col": 34,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 33,
+          "text": "b",
+          "toString": [Function],
+          "type": "variable",
+          "value": "b",
+        },
+      },
+    },
+    "type": "pi",
+    "variable": "b",
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "a",
+        "toString": [Function],
+        "type": "variable",
+        "value": "a",
+      },
+    },
+    "to": {
+      "column": 34,
+      "line": 1,
+      "token": {
+        "col": 34,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 33,
+        "text": "b",
+        "toString": [Function],
+        "type": "variable",
+        "value": "b",
+      },
+    },
+  },
+  "type": "pi",
+  "variable": "a",
+}
+`;
+
+exports[`parser: precedence > pi with row terms: (a:Type) -> (b:Type) -> { x: a, y: b } 1`] = `
+{
+  "annotation": {
+    "location": {
+      "from": {
+        "column": undefined,
+        "line": undefined,
+        "token": [
+          {
+            "col": 4,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 3,
+            "text": "Type",
+            "toString": [Function],
+            "type": "Type",
+            "value": "Type",
+          },
+        ],
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Atom",
+      "value": "Type",
+    },
+  },
+  "body": {
+    "annotation": {
+      "location": {
+        "from": {
+          "column": undefined,
+          "line": undefined,
+          "token": [
+            {
+              "col": 16,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 15,
+              "text": "Type",
+              "toString": [Function],
+              "type": "Type",
+              "value": "Type",
+            },
+          ],
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Atom",
+        "value": "Type",
+      },
+    },
+    "body": {
+      "location": {
+        "from": {
+          "column": 27,
+          "line": 1,
+          "token": {
+            "col": 27,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 26,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+        "to": {
+          "column": 36,
+          "line": 1,
+          "token": {
+            "col": 36,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 35,
+            "text": "b",
+            "toString": [Function],
+            "type": "variable",
+            "value": "b",
+          },
+        },
+      },
+      "row": {
+        "label": "x",
+        "location": {
+          "from": {
+            "column": 27,
+            "line": 1,
+            "token": {
+              "col": 27,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 26,
+              "text": "x",
+              "toString": [Function],
+              "type": "variable",
+              "value": "x",
+            },
+          },
+          "to": {
+            "column": 30,
+            "line": 1,
+            "token": {
+              "col": 30,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 29,
+              "text": "a",
+              "toString": [Function],
+              "type": "variable",
+              "value": "a",
+            },
+          },
+        },
+        "row": {
+          "label": "y",
+          "location": {
+            "from": {
+              "column": 33,
+              "line": 1,
+              "token": {
+                "col": 33,
+                "line": 1,
+                "lineBreaks": 0,
+                "offset": 32,
+                "text": "y",
+                "toString": [Function],
+                "type": "variable",
+                "value": "y",
+              },
+            },
+            "to": {
+              "column": 36,
+              "line": 1,
+              "token": {
+                "col": 36,
+                "line": 1,
+                "lineBreaks": 0,
+                "offset": 35,
+                "text": "b",
+                "toString": [Function],
+                "type": "variable",
+                "value": "b",
+              },
+            },
+          },
+          "row": {
+            "location": {
+              "from": {
+                "column": 33,
+                "line": 1,
+                "token": {
+                  "col": 33,
+                  "line": 1,
+                  "lineBreaks": 0,
+                  "offset": 32,
+                  "text": "y",
+                  "toString": [Function],
+                  "type": "variable",
+                  "value": "y",
+                },
+              },
+              "to": {
+                "column": 36,
+                "line": 1,
+                "token": {
+                  "col": 36,
+                  "line": 1,
+                  "lineBreaks": 0,
+                  "offset": 35,
+                  "text": "b",
+                  "toString": [Function],
+                  "type": "variable",
+                  "value": "b",
+                },
+              },
+            },
+            "type": "empty",
+          },
+          "type": "extension",
+          "value": {
+            "location": {
+              "from": {
+                "column": 36,
+                "line": 1,
+                "token": {
+                  "col": 36,
+                  "line": 1,
+                  "lineBreaks": 0,
+                  "offset": 35,
+                  "text": "b",
+                  "toString": [Function],
+                  "type": "variable",
+                  "value": "b",
+                },
+              },
+            },
+            "type": "var",
+            "variable": {
+              "location": {
+                "from": {
+                  "column": 36,
+                  "line": 1,
+                  "token": {
+                    "col": 36,
+                    "line": 1,
+                    "lineBreaks": 0,
+                    "offset": 35,
+                    "text": "b",
+                    "toString": [Function],
+                    "type": "variable",
+                    "value": "b",
+                  },
+                },
+              },
+              "type": "name",
+              "value": "b",
+            },
+          },
+        },
+        "type": "extension",
+        "value": {
+          "location": {
+            "from": {
+              "column": 30,
+              "line": 1,
+              "token": {
+                "col": 30,
+                "line": 1,
+                "lineBreaks": 0,
+                "offset": 29,
+                "text": "a",
+                "toString": [Function],
+                "type": "variable",
+                "value": "a",
+              },
+            },
+          },
+          "type": "var",
+          "variable": {
+            "location": {
+              "from": {
+                "column": 30,
+                "line": 1,
+                "token": {
+                  "col": 30,
+                  "line": 1,
+                  "lineBreaks": 0,
+                  "offset": 29,
+                  "text": "a",
+                  "toString": [Function],
+                  "type": "variable",
+                  "value": "a",
+                },
+              },
+            },
+            "type": "name",
+            "value": "a",
+          },
+        },
+      },
+      "type": "struct",
+    },
+    "icit": "Explicit",
+    "location": {
+      "from": {
+        "column": 14,
+        "line": 1,
+        "token": {
+          "col": 14,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 13,
+          "text": "b",
+          "toString": [Function],
+          "type": "variable",
+          "value": "b",
+        },
+      },
+      "to": {
+        "column": 36,
+        "line": 1,
+        "token": {
+          "col": 36,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 35,
+          "text": "b",
+          "toString": [Function],
+          "type": "variable",
+          "value": "b",
+        },
+      },
+    },
+    "type": "pi",
+    "variable": "b",
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "a",
+        "toString": [Function],
+        "type": "variable",
+        "value": "a",
+      },
+    },
+    "to": {
+      "column": 36,
+      "line": 1,
+      "token": {
+        "col": 36,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 35,
+        "text": "b",
+        "toString": [Function],
+        "type": "variable",
+        "value": "b",
+      },
+    },
+  },
+  "type": "pi",
+  "variable": "a",
+}
+`;
+
+exports[`parser: precedence > projection with application: x.y z 1`] = `
+{
+  "arg": {
+    "location": {
+      "from": {
+        "column": 5,
+        "line": 1,
+        "token": {
+          "col": 5,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 4,
+          "text": "z",
+          "toString": [Function],
+          "type": "variable",
+          "value": "z",
+        },
+      },
+    },
+    "type": "var",
+    "variable": {
+      "location": {
+        "from": {
+          "column": 5,
+          "line": 1,
+          "token": {
+            "col": 5,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 4,
+            "text": "z",
+            "toString": [Function],
+            "type": "variable",
+            "value": "z",
+          },
+        },
+      },
+      "type": "name",
+      "value": "z",
+    },
+  },
+  "fn": {
+    "label": "y",
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "y",
+          "toString": [Function],
+          "type": "variable",
+          "value": "y",
+        },
+      },
+      "to": {
+        "column": 1,
+        "line": 1,
+        "token": {
+          "col": 1,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 0,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+    },
+    "term": {
+      "location": {
+        "from": {
+          "column": 1,
+          "line": 1,
+          "token": {
+            "col": 1,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 0,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 1,
+            "line": 1,
+            "token": {
+              "col": 1,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 0,
+              "text": "x",
+              "toString": [Function],
+              "type": "variable",
+              "value": "x",
+            },
+          },
+        },
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "type": "projection",
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "y",
+        "toString": [Function],
+        "type": "variable",
+        "value": "y",
+      },
+    },
+    "to": {
+      "column": 5,
+      "line": 1,
+      "token": {
+        "col": 5,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 4,
+        "text": "z",
+        "toString": [Function],
+        "type": "variable",
+        "value": "z",
+      },
+    },
+  },
+  "type": "application",
+}
+`;

@@ -43,7 +43,7 @@ export const display = (value: NF.Value, ctx: Pick<EB.Context, "zonker" | "metas
 
 			const z = compose(ctx.zonker, closure.ctx.zonker);
 
-			const extended = { ...closure.ctx, zonker: z, env: [{ name: { variable: binder.variable } }, ...closure.ctx.env] } as Pick<
+			const extended = { ...closure.ctx, metas: ctx.metas, zonker: z, env: [{ name: { variable: binder.variable } }, ...closure.ctx.env] } as Pick<
 				EB.Context,
 				"env" | "zonker" | "metas"
 			>;

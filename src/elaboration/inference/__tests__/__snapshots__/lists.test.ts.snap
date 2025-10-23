@@ -1,0 +1,293 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`inference: list > [1, 2, 3] 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Num ~~ ?2",
+      "Num ~~ ?2",
+      "Num ~~ ?2",
+    ],
+    "term": "[ 0: 1, 1: 2, 2: 3 ]",
+    "type": "FFI.Indexed Num ?2 @FFI.defaultList",
+  },
+}
+`;
+
+exports[`inference: list > [1, 2, 3] 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 1,
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+    },
+    "term": {
+      "id": 817,
+      "row": {
+        "label": "0",
+        "row": {
+          "label": "1",
+          "row": {
+            "label": "2",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "id": 816,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 3,
+              },
+            },
+          },
+          "type": "extension",
+          "value": {
+            "id": 815,
+            "type": "Lit",
+            "value": {
+              "type": "Num",
+              "value": 2,
+            },
+          },
+        },
+        "type": "extension",
+        "value": {
+          "id": 814,
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+      },
+      "type": "Row",
+    },
+    "type": {
+      "type": "Neutral",
+      "value": {
+        "arg": {
+          "type": "Var",
+          "variable": {
+            "name": "defaultList",
+            "type": "Foreign",
+          },
+        },
+        "func": {
+          "arg": {
+            "type": "Neutral",
+            "value": {
+              "type": "Var",
+              "variable": {
+                "lvl": 0,
+                "type": "Meta",
+                "val": 2,
+              },
+            },
+          },
+          "func": {
+            "arg": {
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Num",
+              },
+            },
+            "func": {
+              "type": "Var",
+              "variable": {
+                "name": "Indexed",
+                "type": "Foreign",
+              },
+            },
+            "icit": "Explicit",
+            "type": "App",
+          },
+          "icit": "Explicit",
+          "type": "App",
+        },
+        "icit": "Implicit",
+        "type": "App",
+      },
+    },
+    "typedTerms": {
+      "814": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+      "815": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+      "816": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+      "817": {
+        "modalities": {},
+        "nf": {
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "type": "Var",
+              "variable": {
+                "name": "defaultList",
+                "type": "Foreign",
+              },
+            },
+            "func": {
+              "arg": {
+                "type": "Neutral",
+                "value": {
+                  "type": "Var",
+                  "variable": {
+                    "lvl": 0,
+                    "type": "Meta",
+                    "val": 2,
+                  },
+                },
+              },
+              "func": {
+                "arg": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+                "func": {
+                  "type": "Var",
+                  "variable": {
+                    "name": "Indexed",
+                    "type": "Foreign",
+                  },
+                },
+                "icit": "Explicit",
+                "type": "App",
+              },
+              "icit": "Explicit",
+              "type": "App",
+            },
+            "icit": "Implicit",
+            "type": "App",
+          },
+        },
+      },
+    },
+  },
+}
+`;

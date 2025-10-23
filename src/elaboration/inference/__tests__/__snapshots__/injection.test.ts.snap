@@ -1,0 +1,303 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`inference: injection > { { x: 1 } | y = 2 } 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "1 ~~ ?2",
+      "Num ~~ ?4",
+    ],
+    "term": "{ Struct [ x: 1 ] | y = 2 }",
+    "type": "Schema [ y: Num, x: Num ]",
+  },
+}
+`;
+
+exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 2,
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 4,
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 1,
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 3,
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+    },
+    "term": {
+      "id": 818,
+      "label": "y",
+      "term": {
+        "arg": {
+          "id": 816,
+          "row": {
+            "label": "x",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "id": 814,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 1,
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "func": {
+          "id": 815,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Struct",
+          },
+        },
+        "icit": "Explicit",
+        "id": 817,
+        "type": "App",
+      },
+      "type": "Inj",
+      "value": {
+        "id": 813,
+        "type": "Lit",
+        "value": {
+          "type": "Num",
+          "value": 2,
+        },
+      },
+    },
+    "type": {
+      "arg": {
+        "row": {
+          "label": "y",
+          "row": {
+            "label": "x",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Num",
+              },
+            },
+          },
+          "type": "extension",
+          "value": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
+          },
+        },
+        "type": "Row",
+      },
+      "func": {
+        "type": "Lit",
+        "value": {
+          "type": "Atom",
+          "value": "Schema",
+        },
+      },
+      "icit": "Explicit",
+      "type": "App",
+    },
+    "typedTerms": {
+      "813": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+      "814": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+      "817": {
+        "modalities": {},
+        "nf": {
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "row": {
+                "label": "x",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Schema",
+              },
+            },
+            "icit": "Explicit",
+            "type": "App",
+          },
+        },
+      },
+      "818": {
+        "modalities": {},
+        "nf": {
+          "arg": {
+            "row": {
+              "label": "y",
+              "row": {
+                "label": "x",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "extension",
+              "value": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "type": "App",
+        },
+      },
+    },
+  },
+}
+`;

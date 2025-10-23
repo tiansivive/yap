@@ -27,9 +27,9 @@ export type Bare =
 	  }
 	| { type: "application"; fn: Term; arg: Term; icit: Implicitness }
 	| { type: "annotation"; term: Term; ann: Term }
-	| { type: "list"; elements: Term[] }
+	| { type: "list"; elements: Term[]; rest?: Variable }
 	| { type: "tuple"; row: Row }
-	| { type: "struct"; row: Row }
+	| { type: "struct"; row: Row; tail?: Variable }
 	| { type: "dict"; index: Term; term: Term }
 	| { type: "tagged"; tag: string; term: Term }
 	| { type: "variant"; row: Row }

@@ -1,0 +1,642 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`inference: match > match { x: 1 } | { x: a } -> a 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "1 ~~ ?2",
+      "Num ~~ ?4",
+      "Schema [ x: ?6 ] ~~ Schema [ x: Num ]",
+      "?6 ~~ ?6",
+      "?6 ~~ ?8",
+    ],
+    "term": "match Struct [ x: 1 ]
+| Struct [ x: a ] -> a",
+    "type": "?8",
+  },
+}
+`;
+
+exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 2,
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 4,
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "row": {
+                "label": "x",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "type": "Neutral",
+                  "value": {
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 0,
+                      "type": "Meta",
+                      "val": 6,
+                    },
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Schema",
+              },
+            },
+            "icit": "Explicit",
+            "type": "App",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "row": {
+                "label": "x",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Schema",
+              },
+            },
+            "icit": "Explicit",
+            "type": "App",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 8,
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 1,
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 3,
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
+        "ann": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 5,
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 6,
+        },
+      },
+      "7": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 7,
+        },
+      },
+      "8": {
+        "ann": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 7,
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 8,
+        },
+      },
+    },
+    "term": {
+      "alternatives": [
+        {
+          "binders": [
+            [
+              "a",
+              {
+                "type": "Neutral",
+                "value": {
+                  "type": "Var",
+                  "variable": {
+                    "lvl": 0,
+                    "type": "Meta",
+                    "val": 6,
+                  },
+                },
+              },
+            ],
+          ],
+          "pattern": {
+            "row": {
+              "label": "x",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "type": "Binder",
+                "value": "a",
+              },
+            },
+            "type": "Struct",
+          },
+          "term": {
+            "id": 1633,
+            "type": "Var",
+            "variable": {
+              "index": 0,
+              "type": "Bound",
+            },
+          },
+        },
+      ],
+      "id": 1634,
+      "scrutinee": {
+        "arg": {
+          "id": 1630,
+          "row": {
+            "label": "x",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "id": 1628,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 1,
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "func": {
+          "id": 1629,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Struct",
+          },
+        },
+        "icit": "Explicit",
+        "id": 1631,
+        "type": "App",
+      },
+      "type": "Match",
+    },
+    "type": {
+      "type": "Var",
+      "variable": {
+        "lvl": 0,
+        "type": "Meta",
+        "val": 8,
+      },
+    },
+    "typedTerms": {
+      "1628": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+      "1631": {
+        "modalities": {},
+        "nf": {
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "row": {
+                "label": "x",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Schema",
+              },
+            },
+            "icit": "Explicit",
+            "type": "App",
+          },
+        },
+      },
+      "1633": {
+        "modalities": {},
+        "nf": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+      },
+      "1634": {
+        "modalities": {},
+        "nf": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 8,
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`inference: match > match 1 | 1 -> 2 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Num ~~ Num",
+      "Num ~~ Num",
+      "Num ~~ ?2",
+    ],
+    "term": "match 1
+| 1 -> 2",
+    "type": "?2",
+  },
+}
+`;
+
+exports[`inference: match > match 1 | 1 -> 2 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 2,
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 1,
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+    },
+    "term": {
+      "alternatives": [
+        {
+          "binders": [],
+          "pattern": {
+            "type": "Lit",
+            "value": {
+              "type": "Num",
+              "value": 1,
+            },
+          },
+          "term": {
+            "id": 814,
+            "type": "Lit",
+            "value": {
+              "type": "Num",
+              "value": 2,
+            },
+          },
+        },
+      ],
+      "id": 815,
+      "scrutinee": {
+        "id": 813,
+        "type": "Lit",
+        "value": {
+          "type": "Num",
+          "value": 1,
+        },
+      },
+      "type": "Match",
+    },
+    "type": {
+      "type": "Var",
+      "variable": {
+        "lvl": 0,
+        "type": "Meta",
+        "val": 2,
+      },
+    },
+    "typedTerms": {
+      "813": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+      "814": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+      "815": {
+        "modalities": {},
+        "nf": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 2,
+          },
+        },
+      },
+    },
+  },
+}
+`;

@@ -1,0 +1,3527 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parser: indexed > empty list: [] 1`] = `
+{
+  "elements": [],
+  "location": [
+    [
+      {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "[",
+        "toString": [Function],
+        "type": "lbracket",
+        "value": "[",
+      },
+    ],
+    null,
+    [
+      {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "]",
+        "toString": [Function],
+        "type": "rbracket",
+        "value": "]",
+      },
+    ],
+  ],
+  "type": "list",
+}
+`;
+
+exports[`parser: indexed > injection: { x | y = 1 } 1`] = `
+{
+  "label": "y",
+  "location": {
+    "from": {
+      "column": 7,
+      "line": 1,
+      "token": {
+        "col": 7,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 6,
+        "text": "y",
+        "toString": [Function],
+        "type": "variable",
+        "value": "y",
+      },
+    },
+    "to": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+  },
+  "term": {
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+    },
+    "type": "var",
+    "variable": {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 1,
+          "token": {
+            "col": 3,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 2,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "type": "name",
+      "value": "x",
+    },
+  },
+  "type": "injection",
+  "value": {
+    "location": {
+      "from": {
+        "column": 11,
+        "line": 1,
+        "token": {
+          "col": 11,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 10,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 1,
+    },
+  },
+}
+`;
+
+exports[`parser: indexed > list with tail: [1, 2 | r] 1`] = `
+{
+  "elements": [
+    {
+      "location": {
+        "from": {
+          "column": 2,
+          "line": 1,
+          "token": {
+            "col": 2,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 1,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+    {
+      "location": {
+        "from": {
+          "column": 5,
+          "line": 1,
+          "token": {
+            "col": 5,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 4,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 2,
+      },
+    },
+  ],
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "1",
+        "toString": [Function],
+        "type": "digit",
+        "value": 1,
+      },
+    },
+    "to": {
+      "column": 5,
+      "line": 1,
+      "token": {
+        "col": 5,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 4,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "rest": {
+    "location": {
+      "from": {
+        "column": 9,
+        "line": 1,
+        "token": {
+          "col": 9,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 8,
+          "text": "r",
+          "toString": [Function],
+          "type": "variable",
+          "value": "r",
+        },
+      },
+    },
+    "type": "name",
+    "value": "r",
+  },
+  "type": "list",
+}
+`;
+
+exports[`parser: indexed > list: [1, 2] 1`] = `
+{
+  "elements": [
+    {
+      "location": {
+        "from": {
+          "column": 2,
+          "line": 1,
+          "token": {
+            "col": 2,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 1,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+    {
+      "location": {
+        "from": {
+          "column": 5,
+          "line": 1,
+          "token": {
+            "col": 5,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 4,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 2,
+      },
+    },
+  ],
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "1",
+        "toString": [Function],
+        "type": "digit",
+        "value": 1,
+      },
+    },
+    "to": {
+      "column": 5,
+      "line": 1,
+      "token": {
+        "col": 5,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 4,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "rest": null,
+  "type": "list",
+}
+`;
+
+exports[`parser: indexed > projection: x.y 1`] = `
+{
+  "label": "y",
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "y",
+        "toString": [Function],
+        "type": "variable",
+        "value": "y",
+      },
+    },
+    "to": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+  },
+  "term": {
+    "location": {
+      "from": {
+        "column": 1,
+        "line": 1,
+        "token": {
+          "col": 1,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 0,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+    },
+    "type": "var",
+    "variable": {
+      "location": {
+        "from": {
+          "column": 1,
+          "line": 1,
+          "token": {
+            "col": 1,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 0,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "type": "name",
+      "value": "x",
+    },
+  },
+  "type": "projection",
+}
+`;
+
+exports[`parser: indexed > row extension: [ x: 2 ] 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 6,
+      "line": 1,
+      "token": {
+        "col": 6,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 5,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "row": {
+    "label": "x",
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+      "to": {
+        "column": 6,
+        "line": 1,
+        "token": {
+          "col": 6,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 5,
+          "text": "2",
+          "toString": [Function],
+          "type": "digit",
+          "value": 2,
+        },
+      },
+    },
+    "row": {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 1,
+          "token": {
+            "col": 3,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 2,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+        "to": {
+          "column": 6,
+          "line": 1,
+          "token": {
+            "col": 6,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 5,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "type": "empty",
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 6,
+          "line": 1,
+          "token": {
+            "col": 6,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 5,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 2,
+      },
+    },
+  },
+  "type": "row",
+}
+`;
+
+exports[`parser: indexed > row polymorphic: [ x: 1 | r ] 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 10,
+      "line": 1,
+      "token": {
+        "col": 10,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 9,
+        "text": "r",
+        "toString": [Function],
+        "type": "variable",
+        "value": "r",
+      },
+    },
+  },
+  "row": {
+    "label": "x",
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+      "to": {
+        "column": 6,
+        "line": 1,
+        "token": {
+          "col": 6,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 5,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "row": {
+      "location": {
+        "from": {
+          "column": 10,
+          "line": 1,
+          "token": {
+            "col": 10,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 9,
+            "text": "r",
+            "toString": [Function],
+            "type": "variable",
+            "value": "r",
+          },
+        },
+      },
+      "type": "variable",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 10,
+            "line": 1,
+            "token": {
+              "col": 10,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 9,
+              "text": "r",
+              "toString": [Function],
+              "type": "variable",
+              "value": "r",
+            },
+          },
+        },
+        "type": "name",
+        "value": "r",
+      },
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 6,
+          "line": 1,
+          "token": {
+            "col": 6,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 5,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "row",
+}
+`;
+
+exports[`parser: indexed > shorthand injection: { | y = 1 } 1`] = `
+{
+  "annotation": undefined,
+  "body": {
+    "label": "y",
+    "location": {
+      "from": {
+        "column": 5,
+        "line": 1,
+        "token": {
+          "col": 5,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 4,
+          "text": "y",
+          "toString": [Function],
+          "type": "variable",
+          "value": "y",
+        },
+      },
+      "to": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "|",
+          "toString": [Function],
+          "type": "bar",
+          "value": "|",
+        },
+      },
+    },
+    "term": {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 1,
+          "token": {
+            "col": 3,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 2,
+            "text": "|",
+            "toString": [Function],
+            "type": "bar",
+            "value": "|",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 3,
+            "line": 1,
+            "token": {
+              "col": 3,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 2,
+              "text": "|",
+              "toString": [Function],
+              "type": "bar",
+              "value": "|",
+            },
+          },
+        },
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "type": "injection",
+    "value": {
+      "location": {
+        "from": {
+          "column": 9,
+          "line": 1,
+          "token": {
+            "col": 9,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 8,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "|",
+        "toString": [Function],
+        "type": "bar",
+        "value": "|",
+      },
+    },
+    "to": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "|",
+        "toString": [Function],
+        "type": "bar",
+        "value": "|",
+      },
+    },
+  },
+  "type": "lambda",
+  "variable": "x",
+}
+`;
+
+exports[`parser: indexed > shorthand projection: .x 1`] = `
+{
+  "annotation": undefined,
+  "body": {
+    "label": "x",
+    "location": {
+      "from": {
+        "column": 2,
+        "line": 1,
+        "token": {
+          "col": 2,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 1,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+      "to": {
+        "column": 1,
+        "line": 1,
+        "token": {
+          "col": 1,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 0,
+          "text": ".",
+          "toString": [Function],
+          "type": "dot",
+          "value": ".",
+        },
+      },
+    },
+    "term": {
+      "location": {
+        "from": {
+          "column": 1,
+          "line": 1,
+          "token": {
+            "col": 1,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 0,
+            "text": ".",
+            "toString": [Function],
+            "type": "dot",
+            "value": ".",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 1,
+            "line": 1,
+            "token": {
+              "col": 1,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 0,
+              "text": ".",
+              "toString": [Function],
+              "type": "dot",
+              "value": ".",
+            },
+          },
+        },
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "type": "projection",
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": ".",
+        "toString": [Function],
+        "type": "dot",
+        "value": ".",
+      },
+    },
+    "to": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": ".",
+        "toString": [Function],
+        "type": "dot",
+        "value": ".",
+      },
+    },
+  },
+  "type": "lambda",
+  "variable": "x",
+}
+`;
+
+exports[`parser: indexed > struct polymorphic: { x: 1 | r } 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 10,
+      "line": 1,
+      "token": {
+        "col": 10,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 9,
+        "text": "r",
+        "toString": [Function],
+        "type": "variable",
+        "value": "r",
+      },
+    },
+  },
+  "row": {
+    "label": "x",
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+      "to": {
+        "column": 6,
+        "line": 1,
+        "token": {
+          "col": 6,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 5,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "row": {
+      "location": {
+        "from": {
+          "column": 10,
+          "line": 1,
+          "token": {
+            "col": 10,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 9,
+            "text": "r",
+            "toString": [Function],
+            "type": "variable",
+            "value": "r",
+          },
+        },
+      },
+      "type": "variable",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 10,
+            "line": 1,
+            "token": {
+              "col": 10,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 9,
+              "text": "r",
+              "toString": [Function],
+              "type": "variable",
+              "value": "r",
+            },
+          },
+        },
+        "type": "name",
+        "value": "r",
+      },
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 6,
+          "line": 1,
+          "token": {
+            "col": 6,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 5,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "struct",
+}
+`;
+
+exports[`parser: indexed > struct: { x: 1, y: 2 } 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 12,
+      "line": 1,
+      "token": {
+        "col": 12,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 11,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "row": {
+    "label": "x",
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+      "to": {
+        "column": 6,
+        "line": 1,
+        "token": {
+          "col": 6,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 5,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "row": {
+      "label": "y",
+      "location": {
+        "from": {
+          "column": 9,
+          "line": 1,
+          "token": {
+            "col": 9,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 8,
+            "text": "y",
+            "toString": [Function],
+            "type": "variable",
+            "value": "y",
+          },
+        },
+        "to": {
+          "column": 12,
+          "line": 1,
+          "token": {
+            "col": 12,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 11,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "row": {
+        "location": {
+          "from": {
+            "column": 9,
+            "line": 1,
+            "token": {
+              "col": 9,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 8,
+              "text": "y",
+              "toString": [Function],
+              "type": "variable",
+              "value": "y",
+            },
+          },
+          "to": {
+            "column": 12,
+            "line": 1,
+            "token": {
+              "col": 12,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 11,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "empty",
+      },
+      "type": "extension",
+      "value": {
+        "location": {
+          "from": {
+            "column": 12,
+            "line": 1,
+            "token": {
+              "col": 12,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 11,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 2,
+        },
+      },
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 6,
+          "line": 1,
+          "token": {
+            "col": 6,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 5,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "struct",
+}
+`;
+
+exports[`parser: indexed > tagged: #x 1 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "#",
+        "toString": [Function],
+        "type": "hash",
+        "value": "#",
+      },
+    },
+    "to": {
+      "column": 4,
+      "line": 1,
+      "token": {
+        "col": 4,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 3,
+        "text": "1",
+        "toString": [Function],
+        "type": "digit",
+        "value": 1,
+      },
+    },
+  },
+  "tag": "x",
+  "term": {
+    "location": {
+      "from": {
+        "column": 4,
+        "line": 1,
+        "token": {
+          "col": 4,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 3,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 1,
+    },
+  },
+  "type": "tagged",
+}
+`;
+
+exports[`parser: indexed > tuple with tail: {1, 2 | r} 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "1",
+        "toString": [Function],
+        "type": "digit",
+        "value": 1,
+      },
+    },
+    "to": {
+      "column": 5,
+      "line": 1,
+      "token": {
+        "col": 5,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 4,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "row": {
+    "label": "0",
+    "location": {
+      "from": {
+        "column": 2,
+        "line": 1,
+        "token": {
+          "col": 2,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 1,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "row": {
+      "label": "1",
+      "location": {
+        "from": {
+          "column": 5,
+          "line": 1,
+          "token": {
+            "col": 5,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 4,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "row": {
+        "location": {
+          "from": {
+            "column": 9,
+            "line": 1,
+            "token": {
+              "col": 9,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 8,
+              "text": "r",
+              "toString": [Function],
+              "type": "variable",
+              "value": "r",
+            },
+          },
+        },
+        "type": "variable",
+        "variable": {
+          "location": {
+            "from": {
+              "column": 9,
+              "line": 1,
+              "token": {
+                "col": 9,
+                "line": 1,
+                "lineBreaks": 0,
+                "offset": 8,
+                "text": "r",
+                "toString": [Function],
+                "type": "variable",
+                "value": "r",
+              },
+            },
+          },
+          "type": "name",
+          "value": "r",
+        },
+      },
+      "type": "extension",
+      "value": {
+        "location": {
+          "from": {
+            "column": 5,
+            "line": 1,
+            "token": {
+              "col": 5,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 4,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 2,
+        },
+      },
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 2,
+          "line": 1,
+          "token": {
+            "col": 2,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 1,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "tuple",
+}
+`;
+
+exports[`parser: indexed > tuple: {1, 2} 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "1",
+        "toString": [Function],
+        "type": "digit",
+        "value": 1,
+      },
+    },
+    "to": {
+      "column": 5,
+      "line": 1,
+      "token": {
+        "col": 5,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 4,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "row": {
+    "label": "0",
+    "location": {
+      "from": {
+        "column": 2,
+        "line": 1,
+        "token": {
+          "col": 2,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 1,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "row": {
+      "label": "1",
+      "location": {
+        "from": {
+          "column": 5,
+          "line": 1,
+          "token": {
+            "col": 5,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 4,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "row": {
+        "location": {
+          "from": {
+            "column": 5,
+            "line": 1,
+            "token": {
+              "col": 5,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 4,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "empty",
+      },
+      "type": "extension",
+      "value": {
+        "location": {
+          "from": {
+            "column": 5,
+            "line": 1,
+            "token": {
+              "col": 5,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 4,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 2,
+        },
+      },
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 2,
+          "line": 1,
+          "token": {
+            "col": 2,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 1,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "tuple",
+}
+`;
+
+exports[`parser: indexed > variant: | #x 1 | #y 2 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "#",
+        "toString": [Function],
+        "type": "hash",
+        "value": "#",
+      },
+    },
+    "to": {
+      "column": 13,
+      "line": 1,
+      "token": {
+        "col": 13,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 12,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "row": {
+    "label": "x",
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "#",
+          "toString": [Function],
+          "type": "hash",
+          "value": "#",
+        },
+      },
+      "to": {
+        "column": 6,
+        "line": 1,
+        "token": {
+          "col": 6,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 5,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "row": {
+      "label": "y",
+      "location": {
+        "from": {
+          "column": 10,
+          "line": 1,
+          "token": {
+            "col": 10,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 9,
+            "text": "#",
+            "toString": [Function],
+            "type": "hash",
+            "value": "#",
+          },
+        },
+        "to": {
+          "column": 13,
+          "line": 1,
+          "token": {
+            "col": 13,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 12,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "row": {
+        "location": {
+          "from": {
+            "column": 10,
+            "line": 1,
+            "token": {
+              "col": 10,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 9,
+              "text": "#",
+              "toString": [Function],
+              "type": "hash",
+              "value": "#",
+            },
+          },
+          "to": {
+            "column": 13,
+            "line": 1,
+            "token": {
+              "col": 13,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 12,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "empty",
+      },
+      "type": "extension",
+      "value": {
+        "location": {
+          "from": {
+            "column": 13,
+            "line": 1,
+            "token": {
+              "col": 13,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 12,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 2,
+        },
+      },
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 6,
+          "line": 1,
+          "token": {
+            "col": 6,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 5,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "variant",
+}
+`;
+
+exports[`parser: rows > empty list: [] 1`] = `
+{
+  "elements": [],
+  "location": [
+    [
+      {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "[",
+        "toString": [Function],
+        "type": "lbracket",
+        "value": "[",
+      },
+    ],
+    null,
+    [
+      {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "]",
+        "toString": [Function],
+        "type": "rbracket",
+        "value": "]",
+      },
+    ],
+  ],
+  "type": "list",
+}
+`;
+
+exports[`parser: rows > injection: { x | y = 1 } 1`] = `
+{
+  "label": "y",
+  "location": {
+    "from": {
+      "column": 7,
+      "line": 1,
+      "token": {
+        "col": 7,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 6,
+        "text": "y",
+        "toString": [Function],
+        "type": "variable",
+        "value": "y",
+      },
+    },
+    "to": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+  },
+  "term": {
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+    },
+    "type": "var",
+    "variable": {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 1,
+          "token": {
+            "col": 3,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 2,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "type": "name",
+      "value": "x",
+    },
+  },
+  "type": "injection",
+  "value": {
+    "location": {
+      "from": {
+        "column": 11,
+        "line": 1,
+        "token": {
+          "col": 11,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 10,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 1,
+    },
+  },
+}
+`;
+
+exports[`parser: rows > list with tail: [1, 2 | r] 1`] = `
+{
+  "elements": [
+    {
+      "location": {
+        "from": {
+          "column": 2,
+          "line": 1,
+          "token": {
+            "col": 2,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 1,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+    {
+      "location": {
+        "from": {
+          "column": 5,
+          "line": 1,
+          "token": {
+            "col": 5,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 4,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 2,
+      },
+    },
+  ],
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "1",
+        "toString": [Function],
+        "type": "digit",
+        "value": 1,
+      },
+    },
+    "to": {
+      "column": 5,
+      "line": 1,
+      "token": {
+        "col": 5,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 4,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "rest": {
+    "location": {
+      "from": {
+        "column": 9,
+        "line": 1,
+        "token": {
+          "col": 9,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 8,
+          "text": "r",
+          "toString": [Function],
+          "type": "variable",
+          "value": "r",
+        },
+      },
+    },
+    "type": "name",
+    "value": "r",
+  },
+  "type": "list",
+}
+`;
+
+exports[`parser: rows > list: [1, 2] 1`] = `
+{
+  "elements": [
+    {
+      "location": {
+        "from": {
+          "column": 2,
+          "line": 1,
+          "token": {
+            "col": 2,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 1,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+    {
+      "location": {
+        "from": {
+          "column": 5,
+          "line": 1,
+          "token": {
+            "col": 5,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 4,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 2,
+      },
+    },
+  ],
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "1",
+        "toString": [Function],
+        "type": "digit",
+        "value": 1,
+      },
+    },
+    "to": {
+      "column": 5,
+      "line": 1,
+      "token": {
+        "col": 5,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 4,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "rest": null,
+  "type": "list",
+}
+`;
+
+exports[`parser: rows > projection: x.y 1`] = `
+{
+  "label": "y",
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "y",
+        "toString": [Function],
+        "type": "variable",
+        "value": "y",
+      },
+    },
+    "to": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+  },
+  "term": {
+    "location": {
+      "from": {
+        "column": 1,
+        "line": 1,
+        "token": {
+          "col": 1,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 0,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+    },
+    "type": "var",
+    "variable": {
+      "location": {
+        "from": {
+          "column": 1,
+          "line": 1,
+          "token": {
+            "col": 1,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 0,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "type": "name",
+      "value": "x",
+    },
+  },
+  "type": "projection",
+}
+`;
+
+exports[`parser: rows > row extension: [ x: 2 ] 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 6,
+      "line": 1,
+      "token": {
+        "col": 6,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 5,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "row": {
+    "label": "x",
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+      "to": {
+        "column": 6,
+        "line": 1,
+        "token": {
+          "col": 6,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 5,
+          "text": "2",
+          "toString": [Function],
+          "type": "digit",
+          "value": 2,
+        },
+      },
+    },
+    "row": {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 1,
+          "token": {
+            "col": 3,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 2,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+        "to": {
+          "column": 6,
+          "line": 1,
+          "token": {
+            "col": 6,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 5,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "type": "empty",
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 6,
+          "line": 1,
+          "token": {
+            "col": 6,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 5,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 2,
+      },
+    },
+  },
+  "type": "row",
+}
+`;
+
+exports[`parser: rows > row polymorphic: [ x: 1 | r ] 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 10,
+      "line": 1,
+      "token": {
+        "col": 10,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 9,
+        "text": "r",
+        "toString": [Function],
+        "type": "variable",
+        "value": "r",
+      },
+    },
+  },
+  "row": {
+    "label": "x",
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+      "to": {
+        "column": 6,
+        "line": 1,
+        "token": {
+          "col": 6,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 5,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "row": {
+      "location": {
+        "from": {
+          "column": 10,
+          "line": 1,
+          "token": {
+            "col": 10,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 9,
+            "text": "r",
+            "toString": [Function],
+            "type": "variable",
+            "value": "r",
+          },
+        },
+      },
+      "type": "variable",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 10,
+            "line": 1,
+            "token": {
+              "col": 10,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 9,
+              "text": "r",
+              "toString": [Function],
+              "type": "variable",
+              "value": "r",
+            },
+          },
+        },
+        "type": "name",
+        "value": "r",
+      },
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 6,
+          "line": 1,
+          "token": {
+            "col": 6,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 5,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "row",
+}
+`;
+
+exports[`parser: rows > shorthand injection: { | y = 1 } 1`] = `
+{
+  "annotation": undefined,
+  "body": {
+    "label": "y",
+    "location": {
+      "from": {
+        "column": 5,
+        "line": 1,
+        "token": {
+          "col": 5,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 4,
+          "text": "y",
+          "toString": [Function],
+          "type": "variable",
+          "value": "y",
+        },
+      },
+      "to": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "|",
+          "toString": [Function],
+          "type": "bar",
+          "value": "|",
+        },
+      },
+    },
+    "term": {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 1,
+          "token": {
+            "col": 3,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 2,
+            "text": "|",
+            "toString": [Function],
+            "type": "bar",
+            "value": "|",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 3,
+            "line": 1,
+            "token": {
+              "col": 3,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 2,
+              "text": "|",
+              "toString": [Function],
+              "type": "bar",
+              "value": "|",
+            },
+          },
+        },
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "type": "injection",
+    "value": {
+      "location": {
+        "from": {
+          "column": 9,
+          "line": 1,
+          "token": {
+            "col": 9,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 8,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "|",
+        "toString": [Function],
+        "type": "bar",
+        "value": "|",
+      },
+    },
+    "to": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "|",
+        "toString": [Function],
+        "type": "bar",
+        "value": "|",
+      },
+    },
+  },
+  "type": "lambda",
+  "variable": "x",
+}
+`;
+
+exports[`parser: rows > shorthand projection: .x 1`] = `
+{
+  "annotation": undefined,
+  "body": {
+    "label": "x",
+    "location": {
+      "from": {
+        "column": 2,
+        "line": 1,
+        "token": {
+          "col": 2,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 1,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+      "to": {
+        "column": 1,
+        "line": 1,
+        "token": {
+          "col": 1,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 0,
+          "text": ".",
+          "toString": [Function],
+          "type": "dot",
+          "value": ".",
+        },
+      },
+    },
+    "term": {
+      "location": {
+        "from": {
+          "column": 1,
+          "line": 1,
+          "token": {
+            "col": 1,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 0,
+            "text": ".",
+            "toString": [Function],
+            "type": "dot",
+            "value": ".",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 1,
+            "line": 1,
+            "token": {
+              "col": 1,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 0,
+              "text": ".",
+              "toString": [Function],
+              "type": "dot",
+              "value": ".",
+            },
+          },
+        },
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "type": "projection",
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": ".",
+        "toString": [Function],
+        "type": "dot",
+        "value": ".",
+      },
+    },
+    "to": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": ".",
+        "toString": [Function],
+        "type": "dot",
+        "value": ".",
+      },
+    },
+  },
+  "type": "lambda",
+  "variable": "x",
+}
+`;
+
+exports[`parser: rows > struct polymorphic: { x: 1 | r } 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 10,
+      "line": 1,
+      "token": {
+        "col": 10,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 9,
+        "text": "r",
+        "toString": [Function],
+        "type": "variable",
+        "value": "r",
+      },
+    },
+  },
+  "row": {
+    "label": "x",
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+      "to": {
+        "column": 6,
+        "line": 1,
+        "token": {
+          "col": 6,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 5,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "row": {
+      "location": {
+        "from": {
+          "column": 10,
+          "line": 1,
+          "token": {
+            "col": 10,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 9,
+            "text": "r",
+            "toString": [Function],
+            "type": "variable",
+            "value": "r",
+          },
+        },
+      },
+      "type": "variable",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 10,
+            "line": 1,
+            "token": {
+              "col": 10,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 9,
+              "text": "r",
+              "toString": [Function],
+              "type": "variable",
+              "value": "r",
+            },
+          },
+        },
+        "type": "name",
+        "value": "r",
+      },
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 6,
+          "line": 1,
+          "token": {
+            "col": 6,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 5,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "struct",
+}
+`;
+
+exports[`parser: rows > struct: { x: 1, y: 2 } 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 12,
+      "line": 1,
+      "token": {
+        "col": 12,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 11,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "row": {
+    "label": "x",
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+      "to": {
+        "column": 6,
+        "line": 1,
+        "token": {
+          "col": 6,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 5,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "row": {
+      "label": "y",
+      "location": {
+        "from": {
+          "column": 9,
+          "line": 1,
+          "token": {
+            "col": 9,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 8,
+            "text": "y",
+            "toString": [Function],
+            "type": "variable",
+            "value": "y",
+          },
+        },
+        "to": {
+          "column": 12,
+          "line": 1,
+          "token": {
+            "col": 12,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 11,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "row": {
+        "location": {
+          "from": {
+            "column": 9,
+            "line": 1,
+            "token": {
+              "col": 9,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 8,
+              "text": "y",
+              "toString": [Function],
+              "type": "variable",
+              "value": "y",
+            },
+          },
+          "to": {
+            "column": 12,
+            "line": 1,
+            "token": {
+              "col": 12,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 11,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "empty",
+      },
+      "type": "extension",
+      "value": {
+        "location": {
+          "from": {
+            "column": 12,
+            "line": 1,
+            "token": {
+              "col": 12,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 11,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 2,
+        },
+      },
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 6,
+          "line": 1,
+          "token": {
+            "col": 6,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 5,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "struct",
+}
+`;
+
+exports[`parser: rows > tagged: #x 1 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "#",
+        "toString": [Function],
+        "type": "hash",
+        "value": "#",
+      },
+    },
+    "to": {
+      "column": 4,
+      "line": 1,
+      "token": {
+        "col": 4,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 3,
+        "text": "1",
+        "toString": [Function],
+        "type": "digit",
+        "value": 1,
+      },
+    },
+  },
+  "tag": "x",
+  "term": {
+    "location": {
+      "from": {
+        "column": 4,
+        "line": 1,
+        "token": {
+          "col": 4,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 3,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 1,
+    },
+  },
+  "type": "tagged",
+}
+`;
+
+exports[`parser: rows > tuple with tail: {1, 2 | r} 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "1",
+        "toString": [Function],
+        "type": "digit",
+        "value": 1,
+      },
+    },
+    "to": {
+      "column": 5,
+      "line": 1,
+      "token": {
+        "col": 5,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 4,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "row": {
+    "label": "0",
+    "location": {
+      "from": {
+        "column": 2,
+        "line": 1,
+        "token": {
+          "col": 2,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 1,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "row": {
+      "label": "1",
+      "location": {
+        "from": {
+          "column": 5,
+          "line": 1,
+          "token": {
+            "col": 5,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 4,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "row": {
+        "location": {
+          "from": {
+            "column": 9,
+            "line": 1,
+            "token": {
+              "col": 9,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 8,
+              "text": "r",
+              "toString": [Function],
+              "type": "variable",
+              "value": "r",
+            },
+          },
+        },
+        "type": "variable",
+        "variable": {
+          "location": {
+            "from": {
+              "column": 9,
+              "line": 1,
+              "token": {
+                "col": 9,
+                "line": 1,
+                "lineBreaks": 0,
+                "offset": 8,
+                "text": "r",
+                "toString": [Function],
+                "type": "variable",
+                "value": "r",
+              },
+            },
+          },
+          "type": "name",
+          "value": "r",
+        },
+      },
+      "type": "extension",
+      "value": {
+        "location": {
+          "from": {
+            "column": 5,
+            "line": 1,
+            "token": {
+              "col": 5,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 4,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 2,
+        },
+      },
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 2,
+          "line": 1,
+          "token": {
+            "col": 2,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 1,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "tuple",
+}
+`;
+
+exports[`parser: rows > tuple: {1, 2} 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "1",
+        "toString": [Function],
+        "type": "digit",
+        "value": 1,
+      },
+    },
+    "to": {
+      "column": 5,
+      "line": 1,
+      "token": {
+        "col": 5,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 4,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "row": {
+    "label": "0",
+    "location": {
+      "from": {
+        "column": 2,
+        "line": 1,
+        "token": {
+          "col": 2,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 1,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "row": {
+      "label": "1",
+      "location": {
+        "from": {
+          "column": 5,
+          "line": 1,
+          "token": {
+            "col": 5,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 4,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "row": {
+        "location": {
+          "from": {
+            "column": 5,
+            "line": 1,
+            "token": {
+              "col": 5,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 4,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "empty",
+      },
+      "type": "extension",
+      "value": {
+        "location": {
+          "from": {
+            "column": 5,
+            "line": 1,
+            "token": {
+              "col": 5,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 4,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 2,
+        },
+      },
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 2,
+          "line": 1,
+          "token": {
+            "col": 2,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 1,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "tuple",
+}
+`;
+
+exports[`parser: rows > variant: | #x 1 | #y 2 1`] = `
+{
+  "location": {
+    "from": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "#",
+        "toString": [Function],
+        "type": "hash",
+        "value": "#",
+      },
+    },
+    "to": {
+      "column": 13,
+      "line": 1,
+      "token": {
+        "col": 13,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 12,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "row": {
+    "label": "x",
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "#",
+          "toString": [Function],
+          "type": "hash",
+          "value": "#",
+        },
+      },
+      "to": {
+        "column": 6,
+        "line": 1,
+        "token": {
+          "col": 6,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 5,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "row": {
+      "label": "y",
+      "location": {
+        "from": {
+          "column": 10,
+          "line": 1,
+          "token": {
+            "col": 10,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 9,
+            "text": "#",
+            "toString": [Function],
+            "type": "hash",
+            "value": "#",
+          },
+        },
+        "to": {
+          "column": 13,
+          "line": 1,
+          "token": {
+            "col": 13,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 12,
+            "text": "2",
+            "toString": [Function],
+            "type": "digit",
+            "value": 2,
+          },
+        },
+      },
+      "row": {
+        "location": {
+          "from": {
+            "column": 10,
+            "line": 1,
+            "token": {
+              "col": 10,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 9,
+              "text": "#",
+              "toString": [Function],
+              "type": "hash",
+              "value": "#",
+            },
+          },
+          "to": {
+            "column": 13,
+            "line": 1,
+            "token": {
+              "col": 13,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 12,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "empty",
+      },
+      "type": "extension",
+      "value": {
+        "location": {
+          "from": {
+            "column": 13,
+            "line": 1,
+            "token": {
+              "col": 13,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 12,
+              "text": "2",
+              "toString": [Function],
+              "type": "digit",
+              "value": 2,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 2,
+        },
+      },
+    },
+    "type": "extension",
+    "value": {
+      "location": {
+        "from": {
+          "column": 6,
+          "line": 1,
+          "token": {
+            "col": 6,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 5,
+            "text": "1",
+            "toString": [Function],
+            "type": "digit",
+            "value": 1,
+          },
+        },
+      },
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "variant",
+}
+`;

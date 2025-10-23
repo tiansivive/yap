@@ -1,0 +1,682 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parser: pattern matching > match with literals and variable branches 1`] = `
+{
+  "alternatives": [
+    {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 2,
+          "token": {
+            "col": 3,
+            "line": 2,
+            "lineBreaks": 0,
+            "offset": 10,
+            "text": "|",
+            "toString": [Function],
+            "type": "bar",
+            "value": "|",
+          },
+        },
+        "to": {
+          "column": 10,
+          "line": 2,
+          "token": {
+            "col": 10,
+            "line": 2,
+            "lineBreaks": 0,
+            "offset": 17,
+            "text": "10",
+            "toString": [Function],
+            "type": "digit",
+            "value": 10,
+          },
+        },
+      },
+      "pattern": {
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 1,
+        },
+      },
+      "term": {
+        "location": {
+          "from": {
+            "column": 10,
+            "line": 2,
+            "token": {
+              "col": 10,
+              "line": 2,
+              "lineBreaks": 0,
+              "offset": 17,
+              "text": "10",
+              "toString": [Function],
+              "type": "digit",
+              "value": 10,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 10,
+        },
+      },
+    },
+    {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 3,
+          "token": {
+            "col": 3,
+            "line": 3,
+            "lineBreaks": 0,
+            "offset": 22,
+            "text": "|",
+            "toString": [Function],
+            "type": "bar",
+            "value": "|",
+          },
+        },
+        "to": {
+          "column": 10,
+          "line": 3,
+          "token": {
+            "col": 10,
+            "line": 3,
+            "lineBreaks": 0,
+            "offset": 29,
+            "text": ""hello"",
+            "toString": [Function],
+            "type": "string",
+            "value": "hello",
+          },
+        },
+      },
+      "pattern": {
+        "type": "var",
+        "value": {
+          "location": {
+            "from": {
+              "column": 5,
+              "line": 3,
+              "token": {
+                "col": 5,
+                "line": 3,
+                "lineBreaks": 0,
+                "offset": 24,
+                "text": "y",
+                "toString": [Function],
+                "type": "variable",
+                "value": "y",
+              },
+            },
+          },
+          "type": "name",
+          "value": "y",
+        },
+      },
+      "term": {
+        "location": {
+          "from": {
+            "column": 10,
+            "line": 3,
+            "token": {
+              "col": 10,
+              "line": 3,
+              "lineBreaks": 0,
+              "offset": 29,
+              "text": ""hello"",
+              "toString": [Function],
+              "type": "string",
+              "value": "hello",
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "String",
+          "value": "hello",
+        },
+      },
+    },
+  ],
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "match",
+        "toString": [Function],
+        "type": "match",
+        "value": "match",
+      },
+    },
+    "to": {
+      "column": 10,
+      "line": 3,
+      "token": {
+        "col": 10,
+        "line": 3,
+        "lineBreaks": 0,
+        "offset": 29,
+        "text": ""hello"",
+        "toString": [Function],
+        "type": "string",
+        "value": "hello",
+      },
+    },
+  },
+  "scrutinee": {
+    "location": {
+      "from": {
+        "column": 7,
+        "line": 1,
+        "token": {
+          "col": 7,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 6,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+    },
+    "type": "var",
+    "variable": {
+      "location": {
+        "from": {
+          "column": 7,
+          "line": 1,
+          "token": {
+            "col": 7,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 6,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "type": "name",
+      "value": "x",
+    },
+  },
+  "type": "match",
+}
+`;
+
+exports[`parser: pattern matching > match with structs 1`] = `
+{
+  "alternatives": [
+    {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 2,
+          "token": {
+            "col": 3,
+            "line": 2,
+            "lineBreaks": 0,
+            "offset": 10,
+            "text": "|",
+            "toString": [Function],
+            "type": "bar",
+            "value": "|",
+          },
+        },
+        "to": {
+          "column": 23,
+          "line": 2,
+          "token": {
+            "col": 23,
+            "line": 2,
+            "lineBreaks": 0,
+            "offset": 30,
+            "text": "10",
+            "toString": [Function],
+            "type": "digit",
+            "value": 10,
+          },
+        },
+      },
+      "pattern": {
+        "row": {
+          "label": "x",
+          "row": {
+            "label": "y",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "type": "lit",
+              "value": {
+                "type": "Num",
+                "value": 2,
+              },
+            },
+          },
+          "type": "extension",
+          "value": {
+            "type": "lit",
+            "value": {
+              "type": "Num",
+              "value": 1,
+            },
+          },
+        },
+        "type": "struct",
+      },
+      "term": {
+        "location": {
+          "from": {
+            "column": 23,
+            "line": 2,
+            "token": {
+              "col": 23,
+              "line": 2,
+              "lineBreaks": 0,
+              "offset": 30,
+              "text": "10",
+              "toString": [Function],
+              "type": "digit",
+              "value": 10,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 10,
+        },
+      },
+    },
+    {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 3,
+          "token": {
+            "col": 3,
+            "line": 3,
+            "lineBreaks": 0,
+            "offset": 35,
+            "text": "|",
+            "toString": [Function],
+            "type": "bar",
+            "value": "|",
+          },
+        },
+        "to": {
+          "column": 23,
+          "line": 3,
+          "token": {
+            "col": 23,
+            "line": 3,
+            "lineBreaks": 0,
+            "offset": 55,
+            "text": "20",
+            "toString": [Function],
+            "type": "digit",
+            "value": 20,
+          },
+        },
+      },
+      "pattern": {
+        "row": {
+          "label": "x",
+          "row": {
+            "label": "y",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "type": "lit",
+              "value": {
+                "type": "Num",
+                "value": 1,
+              },
+            },
+          },
+          "type": "extension",
+          "value": {
+            "type": "lit",
+            "value": {
+              "type": "Num",
+              "value": 2,
+            },
+          },
+        },
+        "type": "struct",
+      },
+      "term": {
+        "location": {
+          "from": {
+            "column": 23,
+            "line": 3,
+            "token": {
+              "col": 23,
+              "line": 3,
+              "lineBreaks": 0,
+              "offset": 55,
+              "text": "20",
+              "toString": [Function],
+              "type": "digit",
+              "value": 20,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 20,
+        },
+      },
+    },
+  ],
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "match",
+        "toString": [Function],
+        "type": "match",
+        "value": "match",
+      },
+    },
+    "to": {
+      "column": 23,
+      "line": 3,
+      "token": {
+        "col": 23,
+        "line": 3,
+        "lineBreaks": 0,
+        "offset": 55,
+        "text": "20",
+        "toString": [Function],
+        "type": "digit",
+        "value": 20,
+      },
+    },
+  },
+  "scrutinee": {
+    "location": {
+      "from": {
+        "column": 7,
+        "line": 1,
+        "token": {
+          "col": 7,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 6,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+    },
+    "type": "var",
+    "variable": {
+      "location": {
+        "from": {
+          "column": 7,
+          "line": 1,
+          "token": {
+            "col": 7,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 6,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "type": "name",
+      "value": "x",
+    },
+  },
+  "type": "match",
+}
+`;
+
+exports[`parser: pattern matching > match with variants 1`] = `
+{
+  "alternatives": [
+    {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 2,
+          "token": {
+            "col": 3,
+            "line": 2,
+            "lineBreaks": 0,
+            "offset": 10,
+            "text": "|",
+            "toString": [Function],
+            "type": "bar",
+            "value": "|",
+          },
+        },
+        "to": {
+          "column": 13,
+          "line": 2,
+          "token": {
+            "col": 13,
+            "line": 2,
+            "lineBreaks": 0,
+            "offset": 20,
+            "text": "10",
+            "toString": [Function],
+            "type": "digit",
+            "value": 10,
+          },
+        },
+      },
+      "pattern": {
+        "row": {
+          "label": "x",
+          "row": {
+            "type": "empty",
+          },
+          "type": "extension",
+          "value": {
+            "type": "lit",
+            "value": {
+              "type": "Num",
+              "value": 1,
+            },
+          },
+        },
+        "type": "variant",
+      },
+      "term": {
+        "location": {
+          "from": {
+            "column": 13,
+            "line": 2,
+            "token": {
+              "col": 13,
+              "line": 2,
+              "lineBreaks": 0,
+              "offset": 20,
+              "text": "10",
+              "toString": [Function],
+              "type": "digit",
+              "value": 10,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 10,
+        },
+      },
+    },
+    {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 3,
+          "token": {
+            "col": 3,
+            "line": 3,
+            "lineBreaks": 0,
+            "offset": 25,
+            "text": "|",
+            "toString": [Function],
+            "type": "bar",
+            "value": "|",
+          },
+        },
+        "to": {
+          "column": 13,
+          "line": 3,
+          "token": {
+            "col": 13,
+            "line": 3,
+            "lineBreaks": 0,
+            "offset": 35,
+            "text": "20",
+            "toString": [Function],
+            "type": "digit",
+            "value": 20,
+          },
+        },
+      },
+      "pattern": {
+        "row": {
+          "label": "y",
+          "row": {
+            "type": "empty",
+          },
+          "type": "extension",
+          "value": {
+            "type": "lit",
+            "value": {
+              "type": "Num",
+              "value": 2,
+            },
+          },
+        },
+        "type": "variant",
+      },
+      "term": {
+        "location": {
+          "from": {
+            "column": 13,
+            "line": 3,
+            "token": {
+              "col": 13,
+              "line": 3,
+              "lineBreaks": 0,
+              "offset": 35,
+              "text": "20",
+              "toString": [Function],
+              "type": "digit",
+              "value": 20,
+            },
+          },
+        },
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 20,
+        },
+      },
+    },
+  ],
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "match",
+        "toString": [Function],
+        "type": "match",
+        "value": "match",
+      },
+    },
+    "to": {
+      "column": 13,
+      "line": 3,
+      "token": {
+        "col": 13,
+        "line": 3,
+        "lineBreaks": 0,
+        "offset": 35,
+        "text": "20",
+        "toString": [Function],
+        "type": "digit",
+        "value": 20,
+      },
+    },
+  },
+  "scrutinee": {
+    "location": {
+      "from": {
+        "column": 7,
+        "line": 1,
+        "token": {
+          "col": 7,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 6,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+    },
+    "type": "var",
+    "variable": {
+      "location": {
+        "from": {
+          "column": 7,
+          "line": 1,
+          "token": {
+            "col": 7,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 6,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "type": "name",
+      "value": "x",
+    },
+  },
+  "type": "match",
+}
+`;

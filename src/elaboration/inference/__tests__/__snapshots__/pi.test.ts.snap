@@ -1,0 +1,493 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`inference: pi/arrow > arrow type: Num -> Num 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+    ],
+    "term": "Π(t1: Num) -> Num",
+    "type": "Type",
+  },
+}
+`;
+
+exports[`inference: pi/arrow > arrow type: Num -> Num 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {},
+    "term": {
+      "binding": {
+        "annotation": {
+          "id": 813,
+          "type": "Var",
+          "variable": {
+            "name": "Num",
+            "type": "Free",
+          },
+        },
+        "icit": "Explicit",
+        "type": "Pi",
+        "variable": "t1",
+      },
+      "body": {
+        "id": 814,
+        "type": "Var",
+        "variable": {
+          "name": "Num",
+          "type": "Free",
+        },
+      },
+      "id": 815,
+      "type": "Abs",
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Type",
+      },
+    },
+    "typedTerms": {
+      "813": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+      "814": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+      "815": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Num ~~ Type",
+    ],
+    "term": "Π(x: Num) -> x",
+    "type": "Type",
+  },
+}
+`;
+
+exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {},
+    "term": {
+      "binding": {
+        "annotation": {
+          "id": 3258,
+          "type": "Var",
+          "variable": {
+            "name": "Num",
+            "type": "Free",
+          },
+        },
+        "icit": "Explicit",
+        "type": "Pi",
+        "variable": "x",
+      },
+      "body": {
+        "id": 3259,
+        "type": "Var",
+        "variable": {
+          "index": 0,
+          "type": "Bound",
+        },
+      },
+      "id": 3260,
+      "type": "Abs",
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Type",
+      },
+    },
+    "typedTerms": {
+      "3258": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+      "3259": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+      "3260": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+    ],
+    "term": "Π(x: Num) -> Num",
+    "type": "Type",
+  },
+}
+`;
+
+exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {},
+    "term": {
+      "binding": {
+        "annotation": {
+          "id": 1628,
+          "type": "Var",
+          "variable": {
+            "name": "Num",
+            "type": "Free",
+          },
+        },
+        "icit": "Explicit",
+        "type": "Pi",
+        "variable": "x",
+      },
+      "body": {
+        "id": 1629,
+        "type": "Var",
+        "variable": {
+          "name": "Num",
+          "type": "Free",
+        },
+      },
+      "id": 1630,
+      "type": "Abs",
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Type",
+      },
+    },
+    "typedTerms": {
+      "1628": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+      "1629": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+      "1630": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+    ],
+    "term": "Π(x: Num) => Num",
+    "type": "Type",
+  },
+}
+`;
+
+exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {},
+    "term": {
+      "binding": {
+        "annotation": {
+          "id": 2443,
+          "type": "Var",
+          "variable": {
+            "name": "Num",
+            "type": "Free",
+          },
+        },
+        "icit": "Implicit",
+        "type": "Pi",
+        "variable": "x",
+      },
+      "body": {
+        "id": 2444,
+        "type": "Var",
+        "variable": {
+          "name": "Num",
+          "type": "Free",
+        },
+      },
+      "id": 2445,
+      "type": "Abs",
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Type",
+      },
+    },
+    "typedTerms": {
+      "2443": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+      "2444": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+      "2445": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+    },
+  },
+}
+`;

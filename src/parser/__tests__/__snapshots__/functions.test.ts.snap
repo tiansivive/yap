@@ -1,0 +1,679 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parser: functions (lambdas, pis, applications) > application: f x 1`] = `
+{
+  "arg": {
+    "location": {
+      "from": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+    },
+    "type": "var",
+    "variable": {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 1,
+          "token": {
+            "col": 3,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 2,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "type": "name",
+      "value": "x",
+    },
+  },
+  "fn": {
+    "location": {
+      "from": {
+        "column": 1,
+        "line": 1,
+        "token": {
+          "col": 1,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 0,
+          "text": "f",
+          "toString": [Function],
+          "type": "variable",
+          "value": "f",
+        },
+      },
+    },
+    "type": "var",
+    "variable": {
+      "location": {
+        "from": {
+          "column": 1,
+          "line": 1,
+          "token": {
+            "col": 1,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 0,
+            "text": "f",
+            "toString": [Function],
+            "type": "variable",
+            "value": "f",
+          },
+        },
+      },
+      "type": "name",
+      "value": "f",
+    },
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "f",
+        "toString": [Function],
+        "type": "variable",
+        "value": "f",
+      },
+    },
+    "to": {
+      "column": 3,
+      "line": 1,
+      "token": {
+        "col": 3,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 2,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+  },
+  "type": "application",
+}
+`;
+
+exports[`parser: functions (lambdas, pis, applications) > arrow: 1 -> 2 1`] = `
+{
+  "icit": "Explicit",
+  "lhs": {
+    "location": {
+      "from": {
+        "column": 1,
+        "line": 1,
+        "token": {
+          "col": 1,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 0,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 1,
+    },
+  },
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "1",
+        "toString": [Function],
+        "type": "digit",
+        "value": 1,
+      },
+    },
+    "to": {
+      "column": 6,
+      "line": 1,
+      "token": {
+        "col": 6,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 5,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "rhs": {
+    "location": {
+      "from": {
+        "column": 6,
+        "line": 1,
+        "token": {
+          "col": 6,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 5,
+          "text": "2",
+          "toString": [Function],
+          "type": "digit",
+          "value": 2,
+        },
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 2,
+    },
+  },
+  "type": "arrow",
+}
+`;
+
+exports[`parser: functions (lambdas, pis, applications) > implicit lambda: \\x => 2 1`] = `
+{
+  "annotation": undefined,
+  "body": {
+    "location": {
+      "from": {
+        "column": 7,
+        "line": 1,
+        "token": {
+          "col": 7,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 6,
+          "text": "2",
+          "toString": [Function],
+          "type": "digit",
+          "value": 2,
+        },
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 2,
+    },
+  },
+  "icit": "Implicit",
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 7,
+      "line": 1,
+      "token": {
+        "col": 7,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 6,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "type": "lambda",
+  "variable": "x",
+}
+`;
+
+exports[`parser: functions (lambdas, pis, applications) > implicit pi: (x: 1) => 2 1`] = `
+{
+  "annotation": {
+    "location": {
+      "from": {
+        "column": 5,
+        "line": 1,
+        "token": {
+          "col": 5,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 4,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 1,
+    },
+  },
+  "body": {
+    "location": {
+      "from": {
+        "column": 11,
+        "line": 1,
+        "token": {
+          "col": 11,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 10,
+          "text": "2",
+          "toString": [Function],
+          "type": "digit",
+          "value": 2,
+        },
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 2,
+    },
+  },
+  "icit": "Implicit",
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 11,
+      "line": 1,
+      "token": {
+        "col": 11,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 10,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "type": "pi",
+  "variable": "x",
+}
+`;
+
+exports[`parser: functions (lambdas, pis, applications) > lambda: \\x -> 2 1`] = `
+{
+  "annotation": undefined,
+  "body": {
+    "location": {
+      "from": {
+        "column": 7,
+        "line": 1,
+        "token": {
+          "col": 7,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 6,
+          "text": "2",
+          "toString": [Function],
+          "type": "digit",
+          "value": 2,
+        },
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 2,
+    },
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 7,
+      "line": 1,
+      "token": {
+        "col": 7,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 6,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "type": "lambda",
+  "variable": "x",
+}
+`;
+
+exports[`parser: functions (lambdas, pis, applications) > nested application: f x y 1`] = `
+{
+  "arg": {
+    "location": {
+      "from": {
+        "column": 5,
+        "line": 1,
+        "token": {
+          "col": 5,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 4,
+          "text": "y",
+          "toString": [Function],
+          "type": "variable",
+          "value": "y",
+        },
+      },
+    },
+    "type": "var",
+    "variable": {
+      "location": {
+        "from": {
+          "column": 5,
+          "line": 1,
+          "token": {
+            "col": 5,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 4,
+            "text": "y",
+            "toString": [Function],
+            "type": "variable",
+            "value": "y",
+          },
+        },
+      },
+      "type": "name",
+      "value": "y",
+    },
+  },
+  "fn": {
+    "arg": {
+      "location": {
+        "from": {
+          "column": 3,
+          "line": 1,
+          "token": {
+            "col": 3,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 2,
+            "text": "x",
+            "toString": [Function],
+            "type": "variable",
+            "value": "x",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 3,
+            "line": 1,
+            "token": {
+              "col": 3,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 2,
+              "text": "x",
+              "toString": [Function],
+              "type": "variable",
+              "value": "x",
+            },
+          },
+        },
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "fn": {
+      "location": {
+        "from": {
+          "column": 1,
+          "line": 1,
+          "token": {
+            "col": 1,
+            "line": 1,
+            "lineBreaks": 0,
+            "offset": 0,
+            "text": "f",
+            "toString": [Function],
+            "type": "variable",
+            "value": "f",
+          },
+        },
+      },
+      "type": "var",
+      "variable": {
+        "location": {
+          "from": {
+            "column": 1,
+            "line": 1,
+            "token": {
+              "col": 1,
+              "line": 1,
+              "lineBreaks": 0,
+              "offset": 0,
+              "text": "f",
+              "toString": [Function],
+              "type": "variable",
+              "value": "f",
+            },
+          },
+        },
+        "type": "name",
+        "value": "f",
+      },
+    },
+    "icit": "Explicit",
+    "location": {
+      "from": {
+        "column": 1,
+        "line": 1,
+        "token": {
+          "col": 1,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 0,
+          "text": "f",
+          "toString": [Function],
+          "type": "variable",
+          "value": "f",
+        },
+      },
+      "to": {
+        "column": 3,
+        "line": 1,
+        "token": {
+          "col": 3,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 2,
+          "text": "x",
+          "toString": [Function],
+          "type": "variable",
+          "value": "x",
+        },
+      },
+    },
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 1,
+      "line": 1,
+      "token": {
+        "col": 1,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 0,
+        "text": "f",
+        "toString": [Function],
+        "type": "variable",
+        "value": "f",
+      },
+    },
+    "to": {
+      "column": 5,
+      "line": 1,
+      "token": {
+        "col": 5,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 4,
+        "text": "y",
+        "toString": [Function],
+        "type": "variable",
+        "value": "y",
+      },
+    },
+  },
+  "type": "application",
+}
+`;
+
+exports[`parser: functions (lambdas, pis, applications) > pi: (x: 1) -> 2 1`] = `
+{
+  "annotation": {
+    "location": {
+      "from": {
+        "column": 5,
+        "line": 1,
+        "token": {
+          "col": 5,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 4,
+          "text": "1",
+          "toString": [Function],
+          "type": "digit",
+          "value": 1,
+        },
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 1,
+    },
+  },
+  "body": {
+    "location": {
+      "from": {
+        "column": 11,
+        "line": 1,
+        "token": {
+          "col": 11,
+          "line": 1,
+          "lineBreaks": 0,
+          "offset": 10,
+          "text": "2",
+          "toString": [Function],
+          "type": "digit",
+          "value": 2,
+        },
+      },
+    },
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 2,
+    },
+  },
+  "icit": "Explicit",
+  "location": {
+    "from": {
+      "column": 2,
+      "line": 1,
+      "token": {
+        "col": 2,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 1,
+        "text": "x",
+        "toString": [Function],
+        "type": "variable",
+        "value": "x",
+      },
+    },
+    "to": {
+      "column": 11,
+      "line": 1,
+      "token": {
+        "col": 11,
+        "line": 1,
+        "lineBreaks": 0,
+        "offset": 10,
+        "text": "2",
+        "toString": [Function],
+        "type": "digit",
+        "value": 2,
+      },
+    },
+  },
+  "type": "pi",
+  "variable": "x",
+}
+`;

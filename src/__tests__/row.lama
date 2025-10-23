@@ -9,3 +9,31 @@ let val
     : poly { bar: String }
     = { foo: 1, bar: "one" }
 
+
+
+
+let row
+    : Row
+    = [ foo: Num ]
+
+let RecordType
+    : Type
+    = Schema [ foo: Num | r ] // r: Row
+
+let record
+    : Schema [ foo: Num, bar: String ]
+    = { foo: 42 | r } // r: Record [bar: String]
+
+
+let fn = \r -> { foo: 1 | r } 
+
+inference:
+Π(r: ?1) -> { foo: Num | (?2: Row) } // ?1 ~~ { | ?2 }; ?1:Type, ?2:Row
+Π(r: { | ?2 }) -> { foo: Num | ?2 } 
+
+generalized:
+Π(a: Row) -> Π(r: { | a }) -> { foo: Num | a } // ?2 ~~ a
+
+
+// ?1 ~~ { | rr }, ?2 ~~ rr
+let inferred = Π(rr: Row) -> Π(r: { | rr }) -> { foo: Num | rr } 

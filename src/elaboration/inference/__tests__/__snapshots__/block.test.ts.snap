@@ -1,0 +1,500 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`inference: block > { let x = 1; return x; } 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Num ~~ ?1",
+      "0 <= ω",
+    ],
+    "term": "{ let x
+	: ?1
+	= 1; return I0; }",
+    "type": "?1",
+  },
+}
+`;
+
+exports[`inference: block > { let x = 1; return x; } 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "computed": "Zero",
+        "expected": "Many",
+        "trace": [
+          {
+            "metadata": {
+              "action": "infer",
+            },
+            "tag": "src",
+            "term": {
+              "location": {
+                "from": {
+                  "column": 7,
+                  "line": 1,
+                  "token": {
+                    "col": 7,
+                    "line": 1,
+                    "lineBreaks": 0,
+                    "offset": 6,
+                    "text": "x",
+                    "toString": [Function],
+                    "type": "variable",
+                    "value": "x",
+                  },
+                },
+                "to": {
+                  "column": 21,
+                  "line": 1,
+                  "token": {
+                    "col": 21,
+                    "line": 1,
+                    "lineBreaks": 0,
+                    "offset": 20,
+                    "text": "x",
+                    "toString": [Function],
+                    "type": "variable",
+                    "value": "x",
+                  },
+                },
+              },
+              "return": {
+                "location": {
+                  "from": {
+                    "column": 21,
+                    "line": 1,
+                    "token": {
+                      "col": 21,
+                      "line": 1,
+                      "lineBreaks": 0,
+                      "offset": 20,
+                      "text": "x",
+                      "toString": [Function],
+                      "type": "variable",
+                      "value": "x",
+                    },
+                  },
+                },
+                "type": "var",
+                "variable": {
+                  "location": {
+                    "from": {
+                      "column": 21,
+                      "line": 1,
+                      "token": {
+                        "col": 21,
+                        "line": 1,
+                        "lineBreaks": 0,
+                        "offset": 20,
+                        "text": "x",
+                        "toString": [Function],
+                        "type": "variable",
+                        "value": "x",
+                      },
+                    },
+                  },
+                  "type": "name",
+                  "value": "x",
+                },
+              },
+              "statements": [
+                {
+                  "annotation": undefined,
+                  "location": {
+                    "from": {
+                      "column": 7,
+                      "line": 1,
+                      "token": {
+                        "col": 7,
+                        "line": 1,
+                        "lineBreaks": 0,
+                        "offset": 6,
+                        "text": "x",
+                        "toString": [Function],
+                        "type": "variable",
+                        "value": "x",
+                      },
+                    },
+                    "to": {
+                      "column": 11,
+                      "line": 1,
+                      "token": {
+                        "col": 11,
+                        "line": 1,
+                        "lineBreaks": 0,
+                        "offset": 10,
+                        "text": "1",
+                        "toString": [Function],
+                        "type": "digit",
+                        "value": 1,
+                      },
+                    },
+                  },
+                  "multiplicity": undefined,
+                  "type": "let",
+                  "value": {
+                    "location": {
+                      "from": {
+                        "column": 11,
+                        "line": 1,
+                        "token": {
+                          "col": 11,
+                          "line": 1,
+                          "lineBreaks": 0,
+                          "offset": 10,
+                          "text": "1",
+                          "toString": [Function],
+                          "type": "digit",
+                          "value": 1,
+                        },
+                      },
+                    },
+                    "type": "lit",
+                    "value": {
+                      "type": "Num",
+                      "value": 1,
+                    },
+                  },
+                  "variable": "x",
+                },
+              ],
+              "type": "block",
+            },
+            "type": "term",
+          },
+          {
+            "metadata": {
+              "action": "infer",
+              "description": "Block statements",
+            },
+            "tag": "src",
+            "term": {
+              "location": {
+                "from": {
+                  "column": 7,
+                  "line": 1,
+                  "token": {
+                    "col": 7,
+                    "line": 1,
+                    "lineBreaks": 0,
+                    "offset": 6,
+                    "text": "x",
+                    "toString": [Function],
+                    "type": "variable",
+                    "value": "x",
+                  },
+                },
+                "to": {
+                  "column": 21,
+                  "line": 1,
+                  "token": {
+                    "col": 21,
+                    "line": 1,
+                    "lineBreaks": 0,
+                    "offset": 20,
+                    "text": "x",
+                    "toString": [Function],
+                    "type": "variable",
+                    "value": "x",
+                  },
+                },
+              },
+              "return": {
+                "location": {
+                  "from": {
+                    "column": 21,
+                    "line": 1,
+                    "token": {
+                      "col": 21,
+                      "line": 1,
+                      "lineBreaks": 0,
+                      "offset": 20,
+                      "text": "x",
+                      "toString": [Function],
+                      "type": "variable",
+                      "value": "x",
+                    },
+                  },
+                },
+                "type": "var",
+                "variable": {
+                  "location": {
+                    "from": {
+                      "column": 21,
+                      "line": 1,
+                      "token": {
+                        "col": 21,
+                        "line": 1,
+                        "lineBreaks": 0,
+                        "offset": 20,
+                        "text": "x",
+                        "toString": [Function],
+                        "type": "variable",
+                        "value": "x",
+                      },
+                    },
+                  },
+                  "type": "name",
+                  "value": "x",
+                },
+              },
+              "statements": [
+                {
+                  "annotation": undefined,
+                  "location": {
+                    "from": {
+                      "column": 7,
+                      "line": 1,
+                      "token": {
+                        "col": 7,
+                        "line": 1,
+                        "lineBreaks": 0,
+                        "offset": 6,
+                        "text": "x",
+                        "toString": [Function],
+                        "type": "variable",
+                        "value": "x",
+                      },
+                    },
+                    "to": {
+                      "column": 11,
+                      "line": 1,
+                      "token": {
+                        "col": 11,
+                        "line": 1,
+                        "lineBreaks": 0,
+                        "offset": 10,
+                        "text": "1",
+                        "toString": [Function],
+                        "type": "digit",
+                        "value": 1,
+                      },
+                    },
+                  },
+                  "multiplicity": undefined,
+                  "type": "let",
+                  "value": {
+                    "location": {
+                      "from": {
+                        "column": 11,
+                        "line": 1,
+                        "token": {
+                          "col": 11,
+                          "line": 1,
+                          "lineBreaks": 0,
+                          "offset": 10,
+                          "text": "1",
+                          "toString": [Function],
+                          "type": "digit",
+                          "value": 1,
+                        },
+                      },
+                    },
+                    "type": "lit",
+                    "value": {
+                      "type": "Num",
+                      "value": 1,
+                    },
+                  },
+                  "variable": "x",
+                },
+              ],
+              "type": "block",
+            },
+            "type": "term",
+          },
+        ],
+        "type": "usage",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+    },
+    "term": {
+      "id": 1630,
+      "return": {
+        "id": 1629,
+        "type": "Var",
+        "variable": {
+          "index": 0,
+          "type": "Bound",
+        },
+      },
+      "statements": [
+        {
+          "annotation": {
+            "type": "Neutral",
+            "value": {
+              "type": "Var",
+              "variable": {
+                "lvl": 0,
+                "type": "Meta",
+                "val": 1,
+              },
+            },
+          },
+          "type": "Let",
+          "value": {
+            "id": 1628,
+            "type": "Lit",
+            "value": {
+              "type": "Num",
+              "value": 1,
+            },
+          },
+          "variable": "x",
+        },
+      ],
+      "type": "Block",
+    },
+    "type": {
+      "type": "Neutral",
+      "value": {
+        "type": "Var",
+        "variable": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+    },
+    "typedTerms": {
+      "1628": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+      "1629": {
+        "modalities": {},
+        "nf": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+      },
+      "1630": {
+        "modalities": {},
+        "nf": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`inference: block > { return 1; } 1`] = `
+{
+  "displays": {
+    "constraints": [],
+    "term": "{ ; return 1; }",
+    "type": "Num",
+  },
+}
+`;
+
+exports[`inference: block > { return 1; } 2`] = `
+{
+  "structure": {
+    "constraints": [],
+    "metas": {},
+    "term": {
+      "id": 814,
+      "return": {
+        "id": 813,
+        "type": "Lit",
+        "value": {
+          "type": "Num",
+          "value": 1,
+        },
+      },
+      "statements": [],
+      "type": "Block",
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Num",
+      },
+    },
+    "typedTerms": {
+      "813": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+      "814": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+    },
+  },
+}
+`;

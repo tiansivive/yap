@@ -1,0 +1,276 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Inference: Literals > Boolean: true >=> Boolean 1`] = `
+{
+  "displays": {
+    "constraints": [],
+    "term": "true",
+    "type": "Bool",
+  },
+}
+`;
+
+exports[`Inference: Literals > Boolean: true >=> Boolean 2`] = `
+{
+  "structure": {
+    "constraints": [],
+    "metas": {},
+    "term": {
+      "id": 1626,
+      "type": "Lit",
+      "value": {
+        "type": "Bool",
+        "value": "true",
+      },
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Bool",
+      },
+    },
+    "typedTerms": {
+      "1626": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Bool",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`Inference: Literals > Row: Row >=> Type 1`] = `
+{
+  "displays": {
+    "constraints": [],
+    "term": "Row",
+    "type": "Type",
+  },
+}
+`;
+
+exports[`Inference: Literals > Row: Row >=> Type 2`] = `
+{
+  "structure": {
+    "constraints": [],
+    "metas": {},
+    "term": {
+      "id": 4878,
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Row",
+      },
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Type",
+      },
+    },
+    "typedTerms": {
+      "4878": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`Inference: Literals > String: "hello" >=> String 1`] = `
+{
+  "displays": {
+    "constraints": [],
+    "term": ""hello"",
+    "type": "String",
+  },
+}
+`;
+
+exports[`Inference: Literals > String: "hello" >=> String 2`] = `
+{
+  "structure": {
+    "constraints": [],
+    "metas": {},
+    "term": {
+      "id": 2439,
+      "type": "Lit",
+      "value": {
+        "type": "String",
+        "value": "hello",
+      },
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "String",
+      },
+    },
+    "typedTerms": {
+      "2439": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`Inference: Literals > Type: Type >=> Type 1`] = `
+{
+  "displays": {
+    "constraints": [],
+    "term": "Type",
+    "type": "Type",
+  },
+}
+`;
+
+exports[`Inference: Literals > Type: Type >=> Type 2`] = `
+{
+  "structure": {
+    "constraints": [],
+    "metas": {},
+    "term": {
+      "id": 4065,
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Type",
+      },
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Type",
+      },
+    },
+    "typedTerms": {
+      "4065": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`Inference: Literals > Unit: * >=> Unit 1`] = `
+{
+  "displays": {
+    "constraints": [],
+    "term": "unit",
+    "type": "Unit",
+  },
+}
+`;
+
+exports[`Inference: Literals > Unit: * >=> Unit 2`] = `
+{
+  "structure": {
+    "constraints": [],
+    "metas": {},
+    "term": {
+      "id": 3252,
+      "type": "Lit",
+      "value": {
+        "type": "unit",
+      },
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Unit",
+      },
+    },
+    "typedTerms": {
+      "3252": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Unit",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`Inference: Literals > numbers: 1 >=> Num 1`] = `
+{
+  "displays": {
+    "constraints": [],
+    "term": "1",
+    "type": "Num",
+  },
+}
+`;
+
+exports[`Inference: Literals > numbers: 1 >=> Num 2`] = `
+{
+  "structure": {
+    "constraints": [],
+    "metas": {},
+    "term": {
+      "id": 813,
+      "type": "Lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Num",
+      },
+    },
+    "typedTerms": {
+      "813": {
+        "modalities": {},
+        "nf": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+      },
+    },
+  },
+}
+`;
