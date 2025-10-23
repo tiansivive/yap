@@ -91,6 +91,18 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						return yield* V2.pure(unify(body1, body2, lvl + 1, composed));
 					}),
 				)
+				.with([P._, NF.Patterns.Mu], ([v, mu]) =>
+					V2.Do(function* () {
+						const unfolded = NF.apply(mu.binder, mu.closure, mu);
+						return yield* V2.local(ctx => EB.unfoldMu(ctx, { type: "Mu", variable: mu.binder.variable }, mu), unify(v, unfolded, lvl + 1, subst));
+					}),
+				)
+				.with([NF.Patterns.Mu, P._], ([mu, v]) =>
+					V2.Do(function* () {
+						const unfolded = NF.apply(mu.binder, mu.closure, mu);
+						return yield* V2.local(ctx => EB.unfoldMu(ctx, { type: "Mu", variable: mu.binder.variable }, mu), unify(unfolded, v, lvl + 1, subst));
+					}),
+				)
 				.with([NF.Patterns.Rigid, NF.Patterns.Rigid], ([rigid1, rigid2]) =>
 					V2.Do<Subst, Subst>(function* () {
 						if (!_.isEqual(rigid1.variable, rigid2.variable)) {
