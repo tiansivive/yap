@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../src/parser/nearley.d.ts"],"sourcesContent":["import { ParserRule } from \"nearley\";\n\ndeclare module \"nearley\" {\n\texport type PostProcessor<Data, T = void, W = {}> = Data extends Array<any> ? (data: Data, loc?: number, reject?: W) => T : never;\n}\n"],"mappings":";;;AAAA;AAAA;AAAA;AAAA;","names":[]}

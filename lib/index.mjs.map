@@ -1,0 +1,1 @@
+{"version":3,"sources":["../src/index.ts"],"sourcesContent":["import * as V2 from \"@yap/elaboration/shared/monad.v2\";\n"],"mappings":";;;AAAA;AAAA;AAAA;AAAA;","names":[]}

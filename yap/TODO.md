@@ -11,16 +11,16 @@
 - shorthand match expression
 - Symbol for inferring in-scope implicit when no type is specified:
   - `let foo = fn $myImplicitArg` => `let foo: (myImplicitArg: ?0) => ?1 = fn $myImplicitArg
-- Separate records/tuples syntax from indexed types and rows
-  - `{ foo: 1 }` => record
-  - `{ 1, "hello" } => string
-  - `[1,2,3]` => Array Num, sugar for `[0: 1, 1: 2, 2: 3]`
-  - `[foo: "foo", bar: "bar"]` => Map Num String
-  - `[foo: String, bar: Num]` => Row, overloaded syntax is differentiated by checking the row term against `Type`
+    ~~- Separate records/tuples syntax from indexed types and rows~~
+  - ~~`{ foo: 1 }` => record~~
+  - ~~`{ 1, "hello" } => string`~~
+  - ~~`[1,2,3]` => Array Num, sugar for `[0: 1, 1: 2, 2: 3]`~~
+  - ~~`[foo: "foo", bar: "bar"]` => Map Num String~~
+  - ~~`[foo: String, bar: Num]` => Row, overloaded syntax is differentiated by checking the row term against `Type`~~
   - multimap?
   - table?
 - Telescope?
-  - Allow `.foo.bar.baz` syntax
+  - ~~Allow `.foo.bar.baz` syntax~~
 - Indexing operator syntax `foo[0] || foo['bar']`
   - QUESTION: possibility of unifying rows and indexed types under 1 syntax and more generic/flexible type?
 - Type operators for row manipulation
@@ -41,7 +41,7 @@
   - Source maps?
 - Modalities
   - Usage semantics overhaul
-  - Refinements?
+  - ~~Refinements?~~
     - Implementing CAS instead of SMT?
   - Effect system
   - Mutation

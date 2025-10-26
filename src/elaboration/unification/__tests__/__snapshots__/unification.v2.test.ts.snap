@@ -1,0 +1,91 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Unification (V2) > Foreign variables > fails for different foreign symbols 1`] = `
+{
+  "message": "Type Mismatch: Cannot unify:
+	FFI.Indexed
+with
+	FFI.Other
+
+Trace:
+
+While unifying:
+	
+	FFI.Indexed
+with:
+	FFI.Other
+",
+}
+`;
+
+exports[`Unification (V2) > Row Unification > fails on missing label 1`] = `
+{
+  "message": "Missing Label: x
+
+Trace:
+
+While unifying:
+	
+	[ x: 1 ]
+with:
+	[]
+
+--------------------------------------------------------------------------------------------
+
+
+While unifying:
+	
+	[ x: 1 ]
+with:
+	[]
+",
+}
+`;
+
+exports[`Unification (V2) > fails on different literals 1`] = `
+{
+  "message": "Unification Failure: Cannot unify 1 with 2
+
+Trace:
+
+While unifying:
+	
+	1
+with:
+	2
+",
+}
+`;
+
+exports[`Unification (V2) > fails on lambda icit mismatch 1`] = `
+{
+  "message": "Type Mismatch: Cannot unify:
+	λx -> (closure: x -| ·)
+with
+	λx => (closure: x -| ·)
+
+Trace:
+
+While unifying:
+	
+	λx -> (closure: x -| ·)
+with:
+	λx => (closure: x -| ·)
+",
+}
+`;
+
+exports[`Unification (V2) > rigid variable mismatch 1`] = `
+{
+  "message": "Variable Mismatch: Cannot unify L0 with L1
+
+Trace:
+
+While unifying:
+	
+	L0
+with:
+	L1
+",
+}
+`;
