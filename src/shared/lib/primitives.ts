@@ -137,15 +137,16 @@ export const Elaborated: () => EB.Context['imports'] = () => {
     }
 }
 
-const typecheckNum = (val: NF.Value): val is Types.Brand<typeof NF.nf_tag, { type: "Lit", value: { type: "Num", value: number } }> => val.type === "Lit" && val.value.type === "Num"
+const typecheckNum = (val: NF.Value): val is NF.Value & { type: "Lit", value: { type: "Num", value: number } } => val.type === "Lit" && val.value.type === "Num"
 const arithmetic = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => number): NF.Value => {
+
     if (!typecheckNum(x)) throw new Error(`Expected number, got ${NF.display(x, { zonker: Sub.empty, metas: {}, env: [] })}`);
     if (!typecheckNum(y)) throw new Error(`Expected number, got ${NF.display(y, { zonker: Sub.empty, metas: {}, env: [] })}`);
     const val = fn(x.value.value, y.value.value);
     return NF.Constructors.Lit(Lit.Num(val));
 }
 
-const typecheckBool = (val: NF.Value): val is Types.Brand<typeof NF.nf_tag, { type: "Lit", value: { type: "Bool", value: boolean } }> => val.type === "Lit" && val.value.type === "Bool"
+const typecheckBool = (val: NF.Value): val is NF.Value & { type: "Lit", value: { type: "Bool", value: boolean } } => val.type === "Lit" && val.value.type === "Bool"
 
 const logical = (x: NF.Value, y: NF.Value, fn: (a: boolean, b: boolean) => boolean): NF.Value => {
     if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${NF.display(x, { zonker: Sub.empty, metas: {}, env: [] })}`);

@@ -8,9 +8,9 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 1`] = `
       "Num ~~ ?8",
       "1 ~~ ?2",
       "Num ~~ ?4",
-      "Schema [ y: Num, x: Num ] ~~ Schema [ y: Num, x: Num ]",
+      "Schema [ x: Num, y: Num ] ~~ Schema [ x: Num, y: Num ]",
     ],
-    "term": "(Struct [ y: 2, x: 1 ]).x",
+    "term": "(Struct [ x: 1, y: 2 ]).x",
     "type": "Num",
   },
 }
@@ -22,6 +22,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
     "constraints": [
       {
         "left": {
+          "id": 29,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -30,6 +31,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 25,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -41,6 +43,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       {
         "left": {
+          "id": 28,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -49,6 +52,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 27,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -60,6 +64,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       {
         "left": {
+          "id": 31,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -68,6 +73,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 21,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -79,6 +85,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       {
         "left": {
+          "id": 30,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -87,6 +94,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 23,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -99,15 +107,17 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       {
         "left": {
           "arg": {
+            "id": 36,
             "row": {
-              "label": "y",
+              "label": "x",
               "row": {
-                "label": "x",
+                "label": "y",
                 "row": {
                   "type": "empty",
                 },
                 "type": "extension",
                 "value": {
+                  "id": 28,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -117,6 +127,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
               },
               "type": "extension",
               "value": {
+                "id": 30,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -127,6 +138,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
             "type": "Row",
           },
           "func": {
+            "id": 32,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -134,20 +146,23 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
             },
           },
           "icit": "Explicit",
+          "id": 37,
           "type": "App",
         },
         "lvl": 0,
         "right": {
           "arg": {
+            "id": 33,
             "row": {
-              "label": "y",
+              "label": "x",
               "row": {
-                "label": "x",
+                "label": "y",
                 "row": {
                   "type": "empty",
                 },
                 "type": "extension",
                 "value": {
+                  "id": 28,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -157,6 +172,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
               },
               "type": "extension",
               "value": {
+                "id": 30,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -167,6 +183,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
             "type": "Row",
           },
           "func": {
+            "id": 32,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -174,6 +191,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
             },
           },
           "icit": "Explicit",
+          "id": 34,
           "type": "App",
         },
         "type": "assign",
@@ -182,6 +200,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
     "metas": {
       "1": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -196,6 +215,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "2": {
         "ann": {
+          "id": 20,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -211,6 +231,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "3": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -225,6 +246,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "4": {
         "ann": {
+          "id": 22,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -240,6 +262,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "5": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -254,6 +277,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "6": {
         "ann": {
+          "id": 24,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -269,6 +293,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "7": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -283,6 +308,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "8": {
         "ann": {
+          "id": 26,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -304,29 +330,29 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
         "arg": {
           "id": 816,
           "row": {
-            "label": "y",
+            "label": "x",
             "row": {
-              "label": "x",
+              "label": "y",
               "row": {
                 "type": "empty",
               },
               "type": "extension",
               "value": {
-                "id": 814,
+                "id": 813,
                 "type": "Lit",
                 "value": {
                   "type": "Num",
-                  "value": 1,
+                  "value": 2,
                 },
               },
             },
             "type": "extension",
             "value": {
-              "id": 813,
+              "id": 814,
               "type": "Lit",
               "value": {
                 "type": "Num",
-                "value": 2,
+                "value": 1,
               },
             },
           },
@@ -347,6 +373,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       "type": "Proj",
     },
     "type": {
+      "id": 30,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -357,6 +384,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       "813": {
         "modalities": {},
         "nf": {
+          "id": 28,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -367,6 +395,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       "814": {
         "modalities": {},
         "nf": {
+          "id": 30,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -377,18 +406,21 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       "817": {
         "modalities": {},
         "nf": {
+          "id": 35,
           "type": "Neutral",
           "value": {
             "arg": {
+              "id": 33,
               "row": {
-                "label": "y",
+                "label": "x",
                 "row": {
-                  "label": "x",
+                  "label": "y",
                   "row": {
                     "type": "empty",
                   },
                   "type": "extension",
                   "value": {
+                    "id": 28,
                     "type": "Lit",
                     "value": {
                       "type": "Atom",
@@ -398,6 +430,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
                 },
                 "type": "extension",
                 "value": {
+                  "id": 30,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -408,6 +441,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
               "type": "Row",
             },
             "func": {
+              "id": 32,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -415,6 +449,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
               },
             },
             "icit": "Explicit",
+            "id": 34,
             "type": "App",
           },
         },
@@ -422,6 +457,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       "818": {
         "modalities": {},
         "nf": {
+          "id": 30,
           "type": "Lit",
           "value": {
             "type": "Atom",

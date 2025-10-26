@@ -9,8 +9,8 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 1`] = `
       "1 ~~ ?2",
       "Num ~~ ?4",
     ],
-    "term": "Struct [ y: "hello", x: 1 ]",
-    "type": "Schema [ y: String, x: Num ]",
+    "term": "Struct [ x: 1, y: "hello" ]",
+    "type": "Schema [ x: Num, y: String ]",
   },
 }
 `;
@@ -21,6 +21,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
     "constraints": [
       {
         "left": {
+          "id": 29,
           "type": "Lit",
           "value": {
             "type": "String",
@@ -29,6 +30,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 25,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -40,6 +42,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       },
       {
         "left": {
+          "id": 28,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -48,6 +51,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 27,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -59,6 +63,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       },
       {
         "left": {
+          "id": 31,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -67,6 +72,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 21,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -78,6 +84,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       },
       {
         "left": {
+          "id": 30,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -86,6 +93,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 23,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -99,6 +107,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
     "metas": {
       "1": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -113,6 +122,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       },
       "2": {
         "ann": {
+          "id": 20,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -128,6 +138,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       },
       "3": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -142,6 +153,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       },
       "4": {
         "ann": {
+          "id": 22,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -157,6 +169,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       },
       "5": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -171,6 +184,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       },
       "6": {
         "ann": {
+          "id": 24,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -186,6 +200,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       },
       "7": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -200,6 +215,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       },
       "8": {
         "ann": {
+          "id": 26,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -218,29 +234,29 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       "arg": {
         "id": 816,
         "row": {
-          "label": "y",
+          "label": "x",
           "row": {
-            "label": "x",
+            "label": "y",
             "row": {
               "type": "empty",
             },
             "type": "extension",
             "value": {
-              "id": 814,
+              "id": 813,
               "type": "Lit",
               "value": {
-                "type": "Num",
-                "value": 1,
+                "type": "String",
+                "value": "hello",
               },
             },
           },
           "type": "extension",
           "value": {
-            "id": 813,
+            "id": 814,
             "type": "Lit",
             "value": {
-              "type": "String",
-              "value": "hello",
+              "type": "Num",
+              "value": 1,
             },
           },
         },
@@ -259,37 +275,42 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       "type": "App",
     },
     "type": {
+      "id": 35,
       "type": "Neutral",
       "value": {
         "arg": {
+          "id": 33,
           "row": {
-            "label": "y",
+            "label": "x",
             "row": {
-              "label": "x",
+              "label": "y",
               "row": {
                 "type": "empty",
               },
               "type": "extension",
               "value": {
+                "id": 28,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
-                  "value": "Num",
+                  "value": "String",
                 },
               },
             },
             "type": "extension",
             "value": {
+              "id": 30,
               "type": "Lit",
               "value": {
                 "type": "Atom",
-                "value": "String",
+                "value": "Num",
               },
             },
           },
           "type": "Row",
         },
         "func": {
+          "id": 32,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -297,6 +318,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
           },
         },
         "icit": "Explicit",
+        "id": 34,
         "type": "App",
       },
     },
@@ -304,6 +326,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       "813": {
         "modalities": {},
         "nf": {
+          "id": 28,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -314,6 +337,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       "814": {
         "modalities": {},
         "nf": {
+          "id": 30,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -324,37 +348,42 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       "817": {
         "modalities": {},
         "nf": {
+          "id": 35,
           "type": "Neutral",
           "value": {
             "arg": {
+              "id": 33,
               "row": {
-                "label": "y",
+                "label": "x",
                 "row": {
-                  "label": "x",
+                  "label": "y",
                   "row": {
                     "type": "empty",
                   },
                   "type": "extension",
                   "value": {
+                    "id": 28,
                     "type": "Lit",
                     "value": {
                       "type": "Atom",
-                      "value": "Num",
+                      "value": "String",
                     },
                   },
                 },
                 "type": "extension",
                 "value": {
+                  "id": 30,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
-                    "value": "String",
+                    "value": "Num",
                   },
                 },
               },
               "type": "Row",
             },
             "func": {
+              "id": 32,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -362,6 +391,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
               },
             },
             "icit": "Explicit",
+            "id": 34,
             "type": "App",
           },
         },

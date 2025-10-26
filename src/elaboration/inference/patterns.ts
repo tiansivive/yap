@@ -141,7 +141,7 @@ export const infer: Inference<Src.Pattern, "type"> = {
 			const indexing = NF.Constructors.App(NF.Indexed, NF.Constructors.Lit(Lit.Atom("Num")), "Explicit");
 			const values = NF.Constructors.App(indexing, v, "Explicit");
 
-			const ty = NF.Constructors.App(values, NF.Constructors.Var({ type: "Foreign", name: "defaultHashMap" }), "Implicit");
+			const ty = NF.Constructors.App(values, NF.Constructors.Var({ type: "Foreign", name: "defaultArray" }), "Implicit");
 
 			return [
 				EB.Constructors.Patterns.List(pats, pat.rest?.value),

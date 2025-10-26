@@ -4,7 +4,7 @@ exports[`inference: dictionaries > {[ Num ]: Num} 1`] = `
 {
   "displays": {
     "constraints": [],
-    "term": "FFI.Indexed Num Num @?1",
+    "term": "FFI.Indexed Num Num @FFI.defaultArray",
     "type": "Type",
   },
 }
@@ -17,6 +17,7 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
     "metas": {
       "1": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -35,9 +36,8 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
         "id": 815,
         "type": "Var",
         "variable": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 1,
+          "name": "defaultArray",
+          "type": "Foreign",
         },
       },
       "func": {
@@ -79,6 +79,7 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
       "type": "App",
     },
     "type": {
+      "id": 1,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -89,6 +90,7 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
       "813": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -99,6 +101,7 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
       "814": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -109,6 +112,7 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
       "819": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",

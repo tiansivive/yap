@@ -23,7 +23,7 @@ export const infer = (tm: Match): V2.Elaboration<EB.AST> =>
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			const ast = yield* EB.infer.gen(tm.scrutinee);
-			const alternatives: AltNode[] = yield V2.traverse(tm.alternatives, elaborate(ast));
+			const alternatives: AltNode[] = yield V2.traverse(tm.alternatives, elaborate(ast, EB.infer));
 
 			// Ensure all alternatives have the same type - we pick the type of the first alternative as the common type
 			const common = alternatives[0][1];
@@ -68,9 +68,9 @@ infer.gen = F.flow(infer, V2.pure);
 	TODO: Allow for returning a Variant type    
 	TODO: Augment the context with the scrutinee narrowed to the pattern   
  */
-type AltNode = [EB.Alternative, NF.Value, Q.Usages];
+export type AltNode = [EB.Alternative, NF.Value, Q.Usages];
 export const elaborate =
-	([scrutinee, scuty, sus]: EB.AST) =>
+	([scrutinee, scuty, sus]: EB.AST, action: (alt: Src.Term) => V2.Elaboration<EB.AST>) =>
 	(alt: Src.Alternative): V2.Elaboration<AltNode> =>
 		V2.track(
 			{ tag: "alt", alt, metadata: { action: "alternative", motive: "elaborating pattern", type: scuty } },
@@ -88,7 +88,7 @@ export const elaborate =
 							const node = yield* V2.local(
 								extend(binders),
 								V2.Do(function* () {
-									const [branch, branty, brus] = yield* EB.infer.gen(alt.term);
+									const [branch, branty, brus]: EB.AST = yield action(alt.term);
 									return [EB.Constructors.Alternative(pat, branch, binders), branty, brus] satisfies AltNode;
 								}),
 							);

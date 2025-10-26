@@ -19,6 +19,7 @@ exports[`inference: pi/arrow > arrow type: Num -> Num 2`] = `
     "constraints": [
       {
         "left": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -27,6 +28,7 @@ exports[`inference: pi/arrow > arrow type: Num -> Num 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -37,6 +39,7 @@ exports[`inference: pi/arrow > arrow type: Num -> Num 2`] = `
       },
       {
         "left": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -45,6 +48,7 @@ exports[`inference: pi/arrow > arrow type: Num -> Num 2`] = `
         },
         "lvl": 1,
         "right": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -81,6 +85,7 @@ exports[`inference: pi/arrow > arrow type: Num -> Num 2`] = `
       "type": "Abs",
     },
     "type": {
+      "id": 1,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -91,6 +96,7 @@ exports[`inference: pi/arrow > arrow type: Num -> Num 2`] = `
       "813": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -101,6 +107,7 @@ exports[`inference: pi/arrow > arrow type: Num -> Num 2`] = `
       "814": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -111,6 +118,7 @@ exports[`inference: pi/arrow > arrow type: Num -> Num 2`] = `
       "815": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -142,6 +150,7 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
     "constraints": [
       {
         "left": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -150,6 +159,7 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -160,6 +170,7 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
       },
       {
         "left": {
+          "id": 74,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -168,6 +179,7 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
         },
         "lvl": 1,
         "right": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -204,6 +216,7 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
       "type": "Abs",
     },
     "type": {
+      "id": 1,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -214,6 +227,7 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
       "3258": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -224,6 +238,7 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
       "3259": {
         "modalities": {},
         "nf": {
+          "id": 74,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -234,6 +249,7 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
       "3260": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -265,6 +281,7 @@ exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
     "constraints": [
       {
         "left": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -273,6 +290,7 @@ exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -283,6 +301,7 @@ exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
       },
       {
         "left": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -291,6 +310,7 @@ exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
         },
         "lvl": 1,
         "right": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -327,6 +347,7 @@ exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
       "type": "Abs",
     },
     "type": {
+      "id": 1,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -337,6 +358,7 @@ exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
       "1628": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -347,6 +369,7 @@ exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
       "1629": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -357,6 +380,7 @@ exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
       "1630": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -388,6 +412,7 @@ exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
     "constraints": [
       {
         "left": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -396,6 +421,7 @@ exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -406,6 +432,7 @@ exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
       },
       {
         "left": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -414,6 +441,7 @@ exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
         },
         "lvl": 1,
         "right": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -450,6 +478,7 @@ exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
       "type": "Abs",
     },
     "type": {
+      "id": 1,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -460,6 +489,7 @@ exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
       "2443": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -470,6 +500,7 @@ exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
       "2444": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -480,6 +511,7 @@ exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
       "2445": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",

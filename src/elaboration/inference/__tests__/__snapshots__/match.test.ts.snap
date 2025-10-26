@@ -23,6 +23,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
     "constraints": [
       {
         "left": {
+          "id": 45,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -31,6 +32,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 41,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -42,6 +44,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       {
         "left": {
+          "id": 44,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -50,6 +53,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 43,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -61,9 +65,11 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       {
         "left": {
+          "id": 56,
           "type": "Neutral",
           "value": {
             "arg": {
+              "id": 54,
               "row": {
                 "label": "x",
                 "row": {
@@ -71,8 +77,10 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
                 },
                 "type": "extension",
                 "value": {
+                  "id": 52,
                   "type": "Neutral",
                   "value": {
+                    "id": 51,
                     "type": "Var",
                     "variable": {
                       "lvl": 0,
@@ -85,6 +93,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
               "type": "Row",
             },
             "func": {
+              "id": 53,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -92,14 +101,17 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
               },
             },
             "icit": "Explicit",
+            "id": 55,
             "type": "App",
           },
         },
         "lvl": 0,
         "right": {
+          "id": 49,
           "type": "Neutral",
           "value": {
             "arg": {
+              "id": 47,
               "row": {
                 "label": "x",
                 "row": {
@@ -107,6 +119,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
                 },
                 "type": "extension",
                 "value": {
+                  "id": 44,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -117,6 +130,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
               "type": "Row",
             },
             "func": {
+              "id": 46,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -124,6 +138,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
               },
             },
             "icit": "Explicit",
+            "id": 48,
             "type": "App",
           },
         },
@@ -131,8 +146,10 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       {
         "left": {
+          "id": 52,
           "type": "Neutral",
           "value": {
+            "id": 51,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -143,8 +160,10 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 52,
           "type": "Neutral",
           "value": {
+            "id": 51,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -157,8 +176,10 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       {
         "left": {
+          "id": 52,
           "type": "Neutral",
           "value": {
+            "id": 51,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -169,6 +190,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 60,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -182,6 +204,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
     "metas": {
       "1": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -196,6 +219,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       "2": {
         "ann": {
+          "id": 40,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -211,6 +235,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       "3": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -225,6 +250,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       "4": {
         "ann": {
+          "id": 42,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -240,6 +266,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       "5": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -254,6 +281,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       "6": {
         "ann": {
+          "id": 50,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -269,6 +297,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       "7": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -283,6 +312,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       "8": {
         "ann": {
+          "id": 59,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -304,8 +334,10 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
             [
               "a",
               {
+                "id": 52,
                 "type": "Neutral",
                 "value": {
+                  "id": 51,
                   "type": "Var",
                   "variable": {
                     "lvl": 0,
@@ -376,6 +408,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       "type": "Match",
     },
     "type": {
+      "id": 60,
       "type": "Var",
       "variable": {
         "lvl": 0,
@@ -387,6 +420,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       "1628": {
         "modalities": {},
         "nf": {
+          "id": 44,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -397,9 +431,11 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       "1631": {
         "modalities": {},
         "nf": {
+          "id": 49,
           "type": "Neutral",
           "value": {
             "arg": {
+              "id": 47,
               "row": {
                 "label": "x",
                 "row": {
@@ -407,6 +443,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
                 },
                 "type": "extension",
                 "value": {
+                  "id": 44,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -417,6 +454,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
               "type": "Row",
             },
             "func": {
+              "id": 46,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -424,6 +462,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
               },
             },
             "icit": "Explicit",
+            "id": 48,
             "type": "App",
           },
         },
@@ -431,8 +470,10 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       "1633": {
         "modalities": {},
         "nf": {
+          "id": 52,
           "type": "Neutral",
           "value": {
+            "id": 51,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -445,6 +486,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       "1634": {
         "modalities": {},
         "nf": {
+          "id": 60,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -479,6 +521,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
     "constraints": [
       {
         "left": {
+          "id": 21,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -487,6 +530,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 20,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -497,6 +541,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
       },
       {
         "left": {
+          "id": 22,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -505,6 +550,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 22,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -515,6 +561,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
       },
       {
         "left": {
+          "id": 22,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -523,6 +570,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 24,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -536,6 +584,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
     "metas": {
       "1": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -550,6 +599,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
       },
       "2": {
         "ann": {
+          "id": 23,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -597,6 +647,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
       "type": "Match",
     },
     "type": {
+      "id": 24,
       "type": "Var",
       "variable": {
         "lvl": 0,
@@ -608,6 +659,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
       "813": {
         "modalities": {},
         "nf": {
+          "id": 20,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -618,6 +670,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
       "814": {
         "modalities": {},
         "nf": {
+          "id": 22,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -628,6 +681,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
       "815": {
         "modalities": {},
         "nf": {
+          "id": 24,
           "type": "Var",
           "variable": {
             "lvl": 0,

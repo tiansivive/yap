@@ -43,13 +43,17 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
 			if (!ctx.zonker[variable.val]) {
 				const v = NF.Constructors.Var(variable);
-				return NF.Constructors.Neutral<NF.Value>(v);
+				return NF.Constructors.Neutral(v);
 			}
 
 			return ctx.zonker[variable.val];
 		})
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
-			return ctx.env[variable.index].nf;
+			const entry = ctx.env[variable.index];
+			if (entry.type[0].type === "Mu") {
+				return NF.Constructors.Neutral(entry.nf);
+			}
+			return entry.nf;
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
 			const val = ctx.ffi[variable.name];
@@ -76,8 +80,10 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 		.with({ type: "Abs", binding: { type: "Mu" } }, (mu): NF.Value => {
 			const ann = evaluate(ctx, mu.binding.annotation);
 			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, ann, NF.Constructors.Closure(ctx, mu.body));
-			const extended = EB.unfoldMu(ctx, { type: "Mu", variable: mu.binding.variable }, val);
-			return evaluate(extended, mu.body);
+			return val;
+			// NOTE: This is commented out because we want to defer unfolding of mu types to unification. This has the benefit of displaying the recursive type more closely to the source
+			// const extended = EB.unfoldMu(ctx, { type: "Mu", variable: mu.binding.variable }, val);
+			// return evaluate(extended, mu.body);
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
 			const nff = evaluate(ctx, func);
@@ -230,8 +236,11 @@ export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Val
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
 			// Unfold the mu
-			const body = apply(mu.binder, mu.closure, NF.Constructors.Neutral(mu));
-			return reduce(body, nfa, icit);
+			// const body = apply(mu.binder, mu.closure, mu);
+			// return reduce(body, nfa, icit);
+
+			// NOTE: Do not unfold the mu during normalization/evaluation. Defer that to unification as that's where we actually need to see the structure inside recursive types
+			return NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit));
 		})
 		.with({ type: "Abs" }, ({ closure, binder }) => {
 			return apply(binder, closure, nfa);
@@ -251,7 +260,7 @@ export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Val
 
 			const accumulated = [...args, nfa];
 			if (accumulated.length === arity && accumulated.every(a => a.type !== "Neutral")) {
-				return compute(...accumulated);
+				return compute(...accumulated.map(ignoraModal));
 			}
 			return NF.Constructors.External(name, arity, compute, accumulated);
 		})
@@ -266,7 +275,10 @@ export const matching = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]):
 			F.pipe(
 				meet(ctx, alt.pattern, nf),
 				O.map(binders => {
-					const extended = binders.reduce((_ctx, { binder, quantity, liquid }) => EB.bind(_ctx, binder, NF.Constructors.Modal(nf, { quantity, liquid })), ctx);
+					const extended = binders.reduce(
+						(_ctx, { binder, quantity, liquid }) => EB.extend(_ctx, binder, NF.Constructors.Modal(nf, { quantity, liquid })),
+						ctx,
+					);
 					return evaluate(extended, alt.term);
 				}),
 				O.getOrElse(() => matching(ctx, nf, rest)),
@@ -305,6 +317,12 @@ export const force = (ctx: EB.Context, value: NF.Value): NF.Value => {
 		.otherwise(() => value);
 };
 
+export const ignoraModal = (value: NF.Value): NF.Value => {
+	return match(value)
+		.with({ type: "Modal" }, ({ value }) => ignoraModal(value))
+		.otherwise(() => value);
+};
+
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];
 
 type MeetResult = { binder: EB.Binder } & NF.Modalities;
@@ -318,7 +336,7 @@ const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetRe
 		})
 		.with(
 			[{ type: "Lit" }, { type: "Lit" }],
-			([v, p]) => _.isEqual(v, p),
+			([v, p]) => _.isEqual(v.value, p.value),
 			() => O.some([]),
 		)
 

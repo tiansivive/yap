@@ -33,7 +33,7 @@ export const infer = (list: List): V2.Elaboration<EB.AST> =>
 			const indexing = NF.Constructors.App(NF.Indexed, NF.Constructors.Lit(Lit.Atom("Num")), "Explicit");
 			const values = NF.Constructors.App(indexing, v, "Explicit");
 
-			const ty = NF.Constructors.App(values, NF.Constructors.Var({ type: "Foreign", name: "defaultList" }), "Implicit");
+			const ty = NF.Constructors.App(values, NF.Constructors.Var({ type: "Foreign", name: "defaultArray" }), "Implicit");
 
 			const row = es.reduceRight(
 				(r: EB.Row, [tm], i) => {

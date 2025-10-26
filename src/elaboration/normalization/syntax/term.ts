@@ -12,7 +12,7 @@ import { SetFieldType } from "type-fest";
 
 export const nf_tag: unique symbol = Symbol("NF");
 
-export type Value = Types.Brand<typeof nf_tag, Constructor>;
+export type Value = Types.Brand<typeof nf_tag, Constructor> & { id: number };
 type Constructor =
 	| { type: "Var"; variable: Variable }
 	| { type: "Lit"; value: Literal }
@@ -46,48 +46,55 @@ export type Closure =
 
 export type Modalities = SetFieldType<Modal.Annotations, "liquid", Value>;
 
+let currentId = 0;
+const nextId = () => ++currentId;
+export const mk = (val: Constructor): Value => {
+	return { ...Types.make(nf_tag, val), id: nextId() };
+};
+
 export const Constructors = {
-	Var: (variable: Variable): Value => Types.make(nf_tag, { type: "Var", variable }),
+	Var: (variable: Variable): Value => mk({ type: "Var", variable }),
 	Pi: (variable: string, icit: Implicitness, annotation: Value, closure: Closure) =>
-		Types.make(nf_tag, {
+		mk({
 			type: "Abs" as const,
 			binder: { type: "Pi" as const, variable, icit, annotation },
 			closure,
-		}),
+		}) as Value & { type: "Abs"; binder: { type: "Pi" } },
 	Mu: (variable: string, source: string, annotation: Value, closure: Closure): Value =>
-		Types.make(nf_tag, {
+		mk({
 			type: "Abs" as const,
 			binder: { type: "Mu", variable, annotation, source },
 			closure,
 		}),
 	Lambda: (variable: string, icit: Implicitness, closure: Closure, annotation: Value): Value =>
-		Types.make(nf_tag, {
+		mk({
 			type: "Abs" as const,
 			binder: { type: "Lambda" as const, variable, icit, annotation },
 			closure,
 		}),
 	Rigid: (lvl: number): Value =>
-		Types.make(nf_tag, {
+		mk({
 			type: "Neutral",
 			value: Constructors.Var({ type: "Bound", lvl }),
 		}),
 	Flex: (variable: Extract<Variable, { type: "Meta" }>): Value =>
-		Types.make(nf_tag, {
+		mk({
 			type: "Neutral",
 			value: Constructors.Var(variable),
 		}),
 	Lit: (value: Literal) =>
-		Types.make(nf_tag, {
+		mk({
 			type: "Lit" as const,
 			value,
 		}),
-	Neutral: <T>(value: T) =>
-		Types.make(nf_tag, {
+	Atom: (value: string) => mk(Constructors.Lit(Lit.Atom(value))),
+	Neutral: (value: Value) =>
+		mk({
 			type: "Neutral" as const,
 			value,
 		}),
 	App: (func: Value, arg: Value, icit: Implicitness) =>
-		Types.make(nf_tag, {
+		mk({
 			type: "App" as const,
 			func,
 			arg,
@@ -96,25 +103,21 @@ export const Constructors = {
 	Closure: (ctx: EB.Context, term: EB.Term): Closure => ({ type: "Closure", ctx, term }),
 	Primop: (ctx: EB.Context, term: EB.Term, arity: number, compute: (...args: Value[]) => Value): Closure => ({ type: "PrimOp", ctx, term, arity, compute }),
 
-	Row: (row: Row): Value => Types.make(nf_tag, { type: "Row", row }),
+	Row: (row: Row): Value => mk({ type: "Row", row }),
 	Extension: (label: string, value: Value, row: Row): Row => ({ type: "extension", label, value, row }),
 
 	Schema: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit")),
 	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),
 
 	Modal: (value: Value, modalities: Modalities): Value =>
-		Types.make(nf_tag, {
+		mk({
 			type: "Modal",
 			value,
 			modalities,
 		}),
-	External: (name: string, arity: number, compute: (...args: Value[]) => Value, args: Value[]): Value =>
-		Types.make(nf_tag, { type: "External", name, arity, compute, args }),
+	External: (name: string, arity: number, compute: (...args: Value[]) => Value, args: Value[]): Value => mk({ type: "External", name, arity, compute, args }),
 };
 
-export const mk = (val: Constructor): Value => {
-	return Types.make(nf_tag, val);
-};
 export const Type: Value = mk({
 	type: "Lit",
 	value: { type: "Atom", value: "Type" },
@@ -157,6 +160,29 @@ export const Patterns = {
 	Mu: { type: "Abs", binder: { type: "Mu" } } as const,
 	Row: { type: "Row" } as const,
 	Modal: { type: "Modal" } as const,
+
+	Recursive: {
+		type: "App",
+		func: {
+			type: "Abs",
+			binder: { type: "Mu" },
+		},
+	} as const,
+
+	Indexed: {
+		type: "App",
+		icit: "Implicit",
+		func: {
+			type: "App",
+			func: {
+				type: "App",
+				func: {
+					type: "Var",
+					variable: { type: "Foreign", name: "Indexed" },
+				},
+			},
+		},
+	} as const,
 
 	HashMap: {
 		type: "Neutral",

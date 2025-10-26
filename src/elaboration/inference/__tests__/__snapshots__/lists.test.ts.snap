@@ -9,7 +9,7 @@ exports[`inference: list > [1, 2, 3] 1`] = `
       "Num ~~ ?2",
     ],
     "term": "[ 0: 1, 1: 2, 2: 3 ]",
-    "type": "FFI.Indexed Num ?2 @FFI.defaultList",
+    "type": "FFI.Indexed Num ?2 @FFI.defaultArray",
   },
 }
 `;
@@ -20,6 +20,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
     "constraints": [
       {
         "left": {
+          "id": 23,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -28,8 +29,10 @@ exports[`inference: list > [1, 2, 3] 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 22,
           "type": "Neutral",
           "value": {
+            "id": 21,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -42,6 +45,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       },
       {
         "left": {
+          "id": 24,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -50,8 +54,10 @@ exports[`inference: list > [1, 2, 3] 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 22,
           "type": "Neutral",
           "value": {
+            "id": 21,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -64,6 +70,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       },
       {
         "left": {
+          "id": 25,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -72,8 +79,10 @@ exports[`inference: list > [1, 2, 3] 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 22,
           "type": "Neutral",
           "value": {
+            "id": 21,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -88,6 +97,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
     "metas": {
       "1": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -102,6 +112,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       },
       "2": {
         "ann": {
+          "id": 20,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -160,19 +171,23 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       "type": "Row",
     },
     "type": {
+      "id": 31,
       "type": "Neutral",
       "value": {
         "arg": {
+          "id": 29,
           "type": "Var",
           "variable": {
-            "name": "defaultList",
+            "name": "defaultArray",
             "type": "Foreign",
           },
         },
         "func": {
           "arg": {
+            "id": 22,
             "type": "Neutral",
             "value": {
+              "id": 21,
               "type": "Var",
               "variable": {
                 "lvl": 0,
@@ -183,6 +198,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
           },
           "func": {
             "arg": {
+              "id": 26,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -190,6 +206,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
               },
             },
             "func": {
+              "id": 3,
               "type": "Var",
               "variable": {
                 "name": "Indexed",
@@ -197,12 +214,15 @@ exports[`inference: list > [1, 2, 3] 2`] = `
               },
             },
             "icit": "Explicit",
+            "id": 27,
             "type": "App",
           },
           "icit": "Explicit",
+          "id": 28,
           "type": "App",
         },
         "icit": "Implicit",
+        "id": 30,
         "type": "App",
       },
     },
@@ -210,6 +230,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       "814": {
         "modalities": {},
         "nf": {
+          "id": 23,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -220,6 +241,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       "815": {
         "modalities": {},
         "nf": {
+          "id": 24,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -230,6 +252,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       "816": {
         "modalities": {},
         "nf": {
+          "id": 25,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -240,19 +263,23 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       "817": {
         "modalities": {},
         "nf": {
+          "id": 31,
           "type": "Neutral",
           "value": {
             "arg": {
+              "id": 29,
               "type": "Var",
               "variable": {
-                "name": "defaultList",
+                "name": "defaultArray",
                 "type": "Foreign",
               },
             },
             "func": {
               "arg": {
+                "id": 22,
                 "type": "Neutral",
                 "value": {
+                  "id": 21,
                   "type": "Var",
                   "variable": {
                     "lvl": 0,
@@ -263,6 +290,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
               },
               "func": {
                 "arg": {
+                  "id": 26,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -270,6 +298,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
                   },
                 },
                 "func": {
+                  "id": 3,
                   "type": "Var",
                   "variable": {
                     "name": "Indexed",
@@ -277,12 +306,15 @@ exports[`inference: list > [1, 2, 3] 2`] = `
                   },
                 },
                 "icit": "Explicit",
+                "id": 27,
                 "type": "App",
               },
               "icit": "Explicit",
+              "id": 28,
               "type": "App",
             },
             "icit": "Implicit",
+            "id": 30,
             "type": "App",
           },
         },

@@ -9,8 +9,8 @@ exports[`inference: tuple > {1, 2} 1`] = `
       "1 ~~ ?2",
       "Num ~~ ?4",
     ],
-    "term": "Struct [ 1: 2, 0: 1 ]",
-    "type": "Schema [ 1: Num, 0: Num ]",
+    "term": "Struct [ 0: 1, 1: 2 ]",
+    "type": "Schema [ 0: Num, 1: Num ]",
   },
 }
 `;
@@ -21,6 +21,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
     "constraints": [
       {
         "left": {
+          "id": 29,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -29,6 +30,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 25,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -40,6 +42,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       {
         "left": {
+          "id": 28,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -48,6 +51,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 27,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -59,6 +63,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       {
         "left": {
+          "id": 31,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -67,6 +72,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 21,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -78,6 +84,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       {
         "left": {
+          "id": 30,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -86,6 +93,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 23,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -99,6 +107,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
     "metas": {
       "1": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -113,6 +122,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       "2": {
         "ann": {
+          "id": 20,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -128,6 +138,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       "3": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -142,6 +153,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       "4": {
         "ann": {
+          "id": 22,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -157,6 +169,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       "5": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -171,6 +184,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       "6": {
         "ann": {
+          "id": 24,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -186,6 +200,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       "7": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -200,6 +215,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       "8": {
         "ann": {
+          "id": 26,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -218,29 +234,29 @@ exports[`inference: tuple > {1, 2} 2`] = `
       "arg": {
         "id": 816,
         "row": {
-          "label": "1",
+          "label": "0",
           "row": {
-            "label": "0",
+            "label": "1",
             "row": {
               "type": "empty",
             },
             "type": "extension",
             "value": {
-              "id": 814,
+              "id": 813,
               "type": "Lit",
               "value": {
                 "type": "Num",
-                "value": 1,
+                "value": 2,
               },
             },
           },
           "type": "extension",
           "value": {
-            "id": 813,
+            "id": 814,
             "type": "Lit",
             "value": {
               "type": "Num",
-              "value": 2,
+              "value": 1,
             },
           },
         },
@@ -259,18 +275,21 @@ exports[`inference: tuple > {1, 2} 2`] = `
       "type": "App",
     },
     "type": {
+      "id": 35,
       "type": "Neutral",
       "value": {
         "arg": {
+          "id": 33,
           "row": {
-            "label": "1",
+            "label": "0",
             "row": {
-              "label": "0",
+              "label": "1",
               "row": {
                 "type": "empty",
               },
               "type": "extension",
               "value": {
+                "id": 28,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -280,6 +299,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
             },
             "type": "extension",
             "value": {
+              "id": 30,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -290,6 +310,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
           "type": "Row",
         },
         "func": {
+          "id": 32,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -297,6 +318,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
           },
         },
         "icit": "Explicit",
+        "id": 34,
         "type": "App",
       },
     },
@@ -304,6 +326,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       "813": {
         "modalities": {},
         "nf": {
+          "id": 28,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -314,6 +337,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       "814": {
         "modalities": {},
         "nf": {
+          "id": 30,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -324,18 +348,21 @@ exports[`inference: tuple > {1, 2} 2`] = `
       "817": {
         "modalities": {},
         "nf": {
+          "id": 35,
           "type": "Neutral",
           "value": {
             "arg": {
+              "id": 33,
               "row": {
-                "label": "1",
+                "label": "0",
                 "row": {
-                  "label": "0",
+                  "label": "1",
                   "row": {
                     "type": "empty",
                   },
                   "type": "extension",
                   "value": {
+                    "id": 28,
                     "type": "Lit",
                     "value": {
                       "type": "Atom",
@@ -345,6 +372,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
                 },
                 "type": "extension",
                 "value": {
+                  "id": 30,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -355,6 +383,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
               "type": "Row",
             },
             "func": {
+              "id": 32,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -362,6 +391,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
               },
             },
             "icit": "Explicit",
+            "id": 34,
             "type": "App",
           },
         },

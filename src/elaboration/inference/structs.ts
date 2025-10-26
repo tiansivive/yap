@@ -23,7 +23,7 @@ export const commonStructInference = (row: Src.Row): V2.Elaboration<EB.AST> =>
 		const { fields, tail } = yield* EB.Rows.inSigmaContext.gen(row, EB.Rows.collect(row));
 
 		const mkRows = (start: [EB.Row, NF.Row]) =>
-			fields.reduce<[EB.Row, NF.Row]>(
+			fields.reduceRight<[EB.Row, NF.Row]>(
 				([rtm, rty], { label, term, value }) => [R.Constructors.Extension(label, term, rtm), R.Constructors.Extension(label, value, rty)],
 				start,
 			);
@@ -37,7 +37,7 @@ export const commonStructInference = (row: Src.Row): V2.Elaboration<EB.AST> =>
 		const [tm, ty] = yield* match(tail.ty)
 			.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, function* () {
 				// If tail is a var of type Row, then our term is a schema, which is of type Type. We can safely ignore the per-label inferred values (types)
-				const rtm = fields.reduce<EB.Row>((r, { label, term }) => R.Constructors.Extension(label, term, r), R.Constructors.Variable(tail.variable));
+				const rtm = fields.reduceRight<EB.Row>((r, { label, term }) => R.Constructors.Extension(label, term, r), R.Constructors.Variable(tail.variable));
 				return [EB.Constructors.Schema(rtm), NF.Type] as const;
 			})
 			.with(NF.Patterns.Schema, function* (s) {

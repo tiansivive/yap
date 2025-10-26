@@ -23,6 +23,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
     "constraints": [
       {
         "left": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -31,6 +32,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -41,6 +43,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       {
         "left": {
+          "id": 28,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -49,6 +52,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 25,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -60,6 +64,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       {
         "left": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -68,6 +73,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 27,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -79,6 +85,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       {
         "left": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -87,6 +94,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -97,6 +105,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       {
         "left": {
+          "id": 29,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -105,6 +114,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 21,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -116,6 +126,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       {
         "left": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -124,6 +135,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 23,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -137,6 +149,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
     "metas": {
       "1": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -151,6 +164,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "2": {
         "ann": {
+          "id": 20,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -166,6 +180,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "3": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -180,6 +195,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "4": {
         "ann": {
+          "id": 22,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -195,6 +211,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "5": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -209,6 +226,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "6": {
         "ann": {
+          "id": 24,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -224,6 +242,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "7": {
         "ann": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -238,6 +257,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "8": {
         "ann": {
+          "id": 26,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -297,6 +317,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       "type": "App",
     },
     "type": {
+      "id": 1,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -307,6 +328,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       "813": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -317,6 +339,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       "814": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -327,6 +350,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       "817": {
         "modalities": {},
         "nf": {
+          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",

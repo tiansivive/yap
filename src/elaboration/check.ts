@@ -132,6 +132,30 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 						return [EB.Constructors.Struct(r), us] satisfies Result;
 					}),
 				)
+				.with([{ type: "match" }, NF.Patterns.Type], ([match, ty]) => {
+					return V2.Do(function* () {
+						const ast = yield* EB.infer.gen(match.scrutinee);
+						const alternatives = yield* V2.pure(
+							V2.traverse(
+								match.alternatives,
+								EB.Inference.Match.elaborate(ast, src =>
+									V2.Do(function* () {
+										const [tm, us] = yield* EB.check.gen(src, ty);
+										return [tm, ty, us];
+									}),
+								),
+							),
+						);
+
+						const [scrutinee, , sus] = ast;
+						const tm = EB.Constructors.Match(
+							scrutinee,
+							alternatives.map(([alt]) => alt),
+						);
+
+						return [tm, sus] satisfies Result;
+					});
+				})
 				.with(
 					[
 						{ type: "lit", value: { type: "Num" } },
@@ -183,40 +207,34 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 	);
 
 const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.Row, Q.Usages]> =>
-	V2.Do(function* () {
-		const ctx = yield* V2.ask();
-		const bindings = yield* extract(row, ctx.env.length);
+	EB.Rows.inSigmaContext(
+		row,
+		R.fold(
+			row,
+			(val, lbl, acc) =>
+				V2.Do(function* () {
+					const ctx = yield* V2.ask();
+					const [tm, us] = yield* Check.val.gen(val, ty);
+					const sigma = ctx.sigma[lbl];
+					if (!sigma) {
+						throw new Error("Elaborating Row Extension: Label not found");
+					}
 
-		return yield* V2.local(
-			ctx => entries(bindings).reduce((ctx, [label, mv]) => EB.extendSigma(ctx, label, mv), ctx),
-			V2.Do(
-				R.fold(
-					row,
-					(val, lbl, acc) =>
-						function* () {
-							const [tm, us] = yield* Check.val.gen(val, ty);
-							const sigma = bindings[lbl];
-							if (!sigma) {
-								throw new Error("Elaborating Row Extension: Label not found");
-							}
+					const nf = NF.evaluate(ctx, tm);
+					yield* V2.tell("constraint", [
+						{ type: "assign", left: nf, right: sigma.nf, lvl: ctx.env.length },
+						{ type: "assign", left: ty, right: sigma.ann, lvl: ctx.env.length },
+					]);
+					const [r, usages]: [EB.Row, Q.Usages] = yield acc;
 
-							const nf = NF.evaluate(ctx, tm);
-							yield* V2.tell("constraint", [
-								{ type: "assign", left: nf, right: sigma.nf, lvl: ctx.env.length },
-								{ type: "assign", left: ty, right: sigma.ann, lvl: ctx.env.length },
-							]);
-							const [r, usages] = yield* acc();
-
-							return [{ type: "extension", label: lbl, value: tm, row: r }, Q.add(us, usages)] satisfies [EB.Row, Q.Usages];
-						},
-					({ value }) => {
-						throw new Error("Not implemented yet: Cannot have row var in a map value");
-					},
-					() => V2.lift<[EB.Row, Q.Usages]>([{ type: "empty" }, Q.noUsage(lvl)]),
-				),
-			),
-		);
-	});
+					return [{ type: "extension", label: lbl, value: tm, row: r }, Q.add(us, usages)] satisfies [EB.Row, Q.Usages];
+				}),
+			({ value }) => {
+				throw new Error("Not implemented yet: Cannot have row var in a map value");
+			},
+			V2.of<[EB.Row, Q.Usages]>([{ type: "empty" }, Q.noUsage(lvl)]),
+		),
+	);
 
 const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<string, EB.Sigma>): V2.Elaboration<[EB.Row, Q.Usages]> =>
 	V2.Do(function* () {

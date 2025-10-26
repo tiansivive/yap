@@ -17,6 +17,7 @@ exports[`inference: tagged > #x 1 2`] = `
     "metas": {
       "1": {
         "ann": {
+          "id": 2,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -63,9 +64,11 @@ exports[`inference: tagged > #x 1 2`] = `
       "type": "App",
     },
     "type": {
+      "id": 24,
       "type": "Neutral",
       "value": {
         "arg": {
+          "id": 22,
           "row": {
             "label": "x",
             "row": {
@@ -78,6 +81,7 @@ exports[`inference: tagged > #x 1 2`] = `
             },
             "type": "extension",
             "value": {
+              "id": 20,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -88,6 +92,7 @@ exports[`inference: tagged > #x 1 2`] = `
           "type": "Row",
         },
         "func": {
+          "id": 21,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -95,6 +100,7 @@ exports[`inference: tagged > #x 1 2`] = `
           },
         },
         "icit": "Explicit",
+        "id": 23,
         "type": "App",
       },
     },
@@ -102,6 +108,7 @@ exports[`inference: tagged > #x 1 2`] = `
       "813": {
         "modalities": {},
         "nf": {
+          "id": 20,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -112,9 +119,11 @@ exports[`inference: tagged > #x 1 2`] = `
       "816": {
         "modalities": {},
         "nf": {
+          "id": 24,
           "type": "Neutral",
           "value": {
             "arg": {
+              "id": 22,
               "row": {
                 "label": "x",
                 "row": {
@@ -127,6 +136,7 @@ exports[`inference: tagged > #x 1 2`] = `
                 },
                 "type": "extension",
                 "value": {
+                  "id": 20,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -137,6 +147,7 @@ exports[`inference: tagged > #x 1 2`] = `
               "type": "Row",
             },
             "func": {
+              "id": 21,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -144,6 +155,7 @@ exports[`inference: tagged > #x 1 2`] = `
               },
             },
             "icit": "Explicit",
+            "id": 23,
             "type": "App",
           },
         },

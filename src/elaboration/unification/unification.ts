@@ -111,37 +111,79 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						return subst;
 					}),
 				)
-				.with([NF.Patterns.App, NF.Patterns.App], ([left, right]) =>
+				.with(
+					[NF.Patterns.Schema, NF.Patterns.Schema],
+					[NF.Patterns.Struct, NF.Patterns.Struct],
+					[NF.Patterns.Variant, NF.Patterns.Variant],
+					([left, right]) => {
+						return unify(left.arg, right.arg, lvl, subst);
+					},
+				)
+				.with([NF.Patterns.Indexed, NF.Patterns.Indexed], ([left, right]) =>
 					V2.Do<Subst, Subst>(function* () {
-						const sub = yield match([left.func, right.func])
-							.with(
-								[NF.Patterns.Mu, P._],
-								([, v]) => v.type !== "Abs" || v.binder.type !== "Mu",
-								([mu, v]) => {
-									const unfolded = NF.apply(mu.binder, mu.closure, NF.Constructors.Neutral(mu));
-									const applied = unfolded.type === "Abs" ? NF.apply(unfolded.binder, unfolded.closure, left.arg) : unfolded;
-									return unify(applied, right, lvl, subst);
-								},
-							)
-							.with(
-								[P._, NF.Patterns.Mu],
-								([v]) => v.type !== "Abs" || v.binder.type !== "Mu",
-								([v, mu]) => {
-									const unfolded = NF.apply(mu.binder, mu.closure, NF.Constructors.Neutral(mu));
-									const applied = unfolded.type === "Abs" ? NF.apply(unfolded.binder, unfolded.closure, right.arg) : unfolded;
-									return unify(left, applied, lvl, subst);
-								},
-							)
-							.otherwise(() =>
-								V2.Do(function* () {
-									const o1 = yield* V2.pure(unify(left.func, right.func, lvl, subst));
-									const o2 = yield* V2.pure(unify(left.arg, right.arg, lvl, o1));
-									return Sub.compose(o2, o1);
-								}),
-							);
-						return sub;
+						const o1 = yield unify(left.func.func.arg, right.func.func.arg, lvl, subst);
+						const o2 = yield unify(left.func.arg, right.func.arg, lvl, o1);
+						const o3 = yield unify(left.arg, right.arg, lvl, o2);
+						return o3;
 					}),
 				)
+				.with([NF.Patterns.Recursive, NF.Patterns.Recursive], ([left, right]) =>
+					V2.Do<Subst, Subst>(function* () {
+						const o1 = yield unify(left.func, right.func, lvl, subst);
+						const o2 = yield unify(left.arg, right.arg, lvl, o1);
+						return o2;
+					}),
+				)
+				.with([NF.Patterns.App, NF.Patterns.App], ([left, right]) =>
+					V2.Do<Subst, Subst>(function* () {
+						const unfoldedL = unfoldMu(left);
+						const unfoldedR = unfoldMu(right);
+
+						// NOTE: Using reference equality to check if unfolding made a change. Unfolding returns the same object if no unfolding was done.
+						if (unfoldedL === left && unfoldedR === right) {
+							const o1 = yield unify(left.func, right.func, lvl, subst);
+							const o2 = yield unify(left.arg, right.arg, lvl, o1);
+							return o2;
+						}
+
+						const sub = yield unify(unfoldedL, unfoldedR, lvl, subst);
+						return sub;
+						// 	.with(
+						// 		[NF.Patterns.Mu, P._],
+						// 		([, v]) => v.type !== "Abs" || v.binder.type !== "Mu",
+						// 		([mu, v]) => {
+						// 			const unfolded = NF.apply(mu.binder, mu.closure, mu);
+						// 			const applied = NF.reduce(unfolded, left.arg, "Explicit");
+						// 			return unify(applied, right, lvl, subst);
+						// 		},
+						// 	)
+						// 	.with(
+						// 		[P._, NF.Patterns.Mu],
+						// 		([v]) => v.type !== "Abs" || v.binder.type !== "Mu",
+						// 		([v, mu]) => {
+						// 			const unfolded = NF.apply(mu.binder, mu.closure, mu);
+						// 			const applied = NF.reduce(unfolded, right.arg, "Explicit");
+						// 			return unify(left, applied, lvl, subst);
+						// 		},
+						// 	)
+						// 	.otherwise(() =>
+						// 		V2.Do(function* () {
+						// 			const o1 = yield* V2.pure(unify(left.func, right.func, lvl, subst));
+						// 			const o2 = yield* V2.pure(unify(left.arg, right.arg, lvl, o1));
+						// 			return Sub.compose(o2, o1);
+						// 		}),
+						// 	);
+					}),
+				)
+				.with([NF.Patterns.App, P._], ([app, v]) => {
+					const unfolded = unfoldMu(app);
+					return unify(unfolded, v, lvl, subst);
+				})
+				.with([P._, NF.Patterns.App], ([v, app]) => {
+					const unfolded = unfoldMu(app);
+					return unify(v, unfolded, lvl, subst);
+				})
+
 				.with([NF.Patterns.Row, NF.Patterns.Row], ([{ row: r1 }, { row: r2 }]) =>
 					V2.Do(function* () {
 						const sub = yield* Row.unify.gen(r1, r2, subst);
@@ -170,6 +212,24 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 };
 
 unify.gen = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst) => V2.pure(unify(left, right, lvl, subst));
+
+const unfoldMu = (app: Extract<NF.Value, { type: "App" }>): NF.Value => {
+	const { func, arg, icit } = app;
+	return match(func)
+		.with({ type: "App" }, fn => {
+			const unfolded = unfoldMu(fn);
+			return NF.reduce(unfolded, arg, icit);
+		})
+		.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
+			const body = NF.apply(mu.binder, mu.closure, mu);
+			const unfolded = NF.reduce(body, arg, icit);
+			return unfolded;
+		})
+
+		.otherwise(() => {
+			return app;
+		});
+};
 
 type Meta = Extract<EB.Variable, { type: "Meta" }>;
 export const bind = (ctx: EB.Context, v: Meta, ty: NF.Value): Subst => {
