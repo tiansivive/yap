@@ -1,6 +1,9 @@
 import { match, P } from "ts-pattern";
 import _ from "lodash";
 
+import * as O from "fp-ts/Option";
+import * as F from "fp-ts/function";
+
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
@@ -140,13 +143,24 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						const unfoldedR = unfoldMu(right);
 
 						// NOTE: Using reference equality to check if unfolding made a change. Unfolding returns the same object if no unfolding was done.
-						if (unfoldedL === left && unfoldedR === right) {
+						if (O.isNone(unfoldedL) && O.isNone(unfoldedR)) {
 							const o1 = yield unify(left.func, right.func, lvl, subst);
 							const o2 = yield unify(left.arg, right.arg, lvl, o1);
 							return o2;
 						}
 
-						const sub = yield unify(unfoldedL, unfoldedR, lvl, subst);
+						const sub = yield unify(
+							F.pipe(
+								unfoldedL,
+								O.getOrElse<NF.Value>(() => left),
+							),
+							F.pipe(
+								unfoldedR,
+								O.getOrElse<NF.Value>(() => right),
+							),
+							lvl,
+							subst,
+						);
 						return sub;
 						// 	.with(
 						// 		[NF.Patterns.Mu, P._],
@@ -177,11 +191,27 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				)
 				.with([NF.Patterns.App, P._], ([app, v]) => {
 					const unfolded = unfoldMu(app);
-					return unify(unfolded, v, lvl, subst);
+					return unify(
+						F.pipe(
+							unfolded,
+							O.getOrElse<NF.Value>(() => app),
+						),
+						v,
+						lvl,
+						subst,
+					);
 				})
 				.with([P._, NF.Patterns.App], ([v, app]) => {
 					const unfolded = unfoldMu(app);
-					return unify(v, unfolded, lvl, subst);
+					return unify(
+						v,
+						F.pipe(
+							unfolded,
+							O.getOrElse<NF.Value>(() => app),
+						),
+						lvl,
+						subst,
+					);
 				})
 
 				.with([NF.Patterns.Row, NF.Patterns.Row], ([{ row: r1 }, { row: r2 }]) =>
@@ -213,22 +243,27 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 
 unify.gen = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst) => V2.pure(unify(left, right, lvl, subst));
 
-const unfoldMu = (app: Extract<NF.Value, { type: "App" }>): NF.Value => {
+const unfoldMu = (app: Extract<NF.Value, { type: "App" }>): O.Option<NF.Value> => {
 	const { func, arg, icit } = app;
-	return match(func)
-		.with({ type: "App" }, fn => {
-			const unfolded = unfoldMu(fn);
-			return NF.reduce(unfolded, arg, icit);
-		})
-		.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
-			const body = NF.apply(mu.binder, mu.closure, mu);
-			const unfolded = NF.reduce(body, arg, icit);
-			return unfolded;
-		})
-
-		.otherwise(() => {
-			return app;
-		});
+	return (
+		match(func)
+			.with({ type: "App" }, fn =>
+				F.pipe(
+					unfoldMu(fn),
+					O.map(f => NF.reduce(f, arg, icit)),
+				),
+			)
+			// 	const unfolded = unfoldMu(fn);
+			// 	return O.Functor.map(unfolded, f => NF.reduce(f, arg, icit));
+			// 	//return NF.reduce(unfolded, arg, icit);
+			// })
+			.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
+				const body = NF.apply(mu.binder, mu.closure, mu);
+				const unfolded = NF.reduce(body, arg, icit);
+				return O.some(unfolded);
+			})
+			.otherwise(() => O.none)
+	);
 };
 
 type Meta = Extract<EB.Variable, { type: "Meta" }>;
