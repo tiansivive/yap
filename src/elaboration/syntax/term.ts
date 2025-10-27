@@ -67,7 +67,7 @@ export type Statement =
 
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
 export const Free = (name: string): Variable => ({ type: "Free", name });
-export const Meta = (val: number, lvl: number): Variable => ({ type: "Meta", val, lvl });
+export const Meta = (val: number, lvl: number): Extract<Variable, { type: "Meta" }> => ({ type: "Meta", val, lvl });
 
 let currentId = 0;
 const nextId = () => ++currentId;

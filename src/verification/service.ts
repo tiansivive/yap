@@ -33,6 +33,7 @@ import {
 	operatorMap,
 	PrimOps,
 } from "@yap/shared/lib/primitives";
+import { S } from "vitest/dist/chunks/config.DCnyCTbs";
 
 export const VerificationService = (Z3: Context<"main">) => {
 	const Sorts = {
@@ -190,7 +191,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 
 					const p = NF.reduce(modalities.liquid, NF.evaluate(ctx, tm), "Explicit");
 
-					return V2.of([ty, { usages: us, vc: translate(p, ctx) }] satisfies Synthed);
+					return V2.of<Synthed>([ty, { usages: us, vc: translate(p, ctx) }]);
 				})
 
 				.with({ type: "Var" }, tm => {
@@ -234,12 +235,60 @@ export const VerificationService = (Z3: Context<"main">) => {
 						return [type, { usages: bArtefacts.usages, vc: Z3.Bool.val(true) }] satisfies Synthed;
 					}),
 				)
-				.with(EB.CtorPatterns.Struct, EB.CtorPatterns.Variant, EB.CtorPatterns.Schema, rowtype => {
-					// TODO: Need to rework sigma env + row terms
-					// We should cache types during elaboration by adding a new field `type` to each label in the row
-					// QUESTION: Is there any advantage in optimizing row terms by adding specific term constructor instead of the App one?
-					throw new Error("synth: Row based verification not implemented yet");
-				})
+				.with(EB.CtorPatterns.Variant, EB.CtorPatterns.Schema, rowtype =>
+					V2.of<Synthed>([NF.Type, { usages: Q.noUsage(ctx.env.length), vc: Z3.Bool.val(true) }]),
+				)
+				.with(EB.CtorPatterns.Struct, rowtype =>
+					V2.Do(function* () {
+						const ctx = yield* V2.ask();
+
+						const toNFVar = (v: EB.Variable): NF.Variable =>
+							match(v)
+								.with({ type: "Bound" }, ({ index }) => ({ type: "Bound", lvl: ctx.env.length - 1 - index }) as NF.Variable)
+								.otherwise(v => v satisfies NF.Variable);
+
+						type Folder = {
+							usages: Q.Multiplicity[];
+							vc: Expr;
+							fields: Array<{ label: string; ty: NF.Value }>;
+							tail?: NF.Variable;
+						};
+
+						const folder = Row.fold<EB.Term, EB.Variable, V2.Elaboration<Folder>>(
+							rowtype.arg.row,
+							(value, label, r) =>
+								V2.Do(function* () {
+									const [ty, art] = yield* synth.gen(value);
+									const acc = yield* V2.pure(r);
+									const vc = Z3.And(acc.vc as Bool, art.vc as Bool);
+
+									return {
+										vc,
+										usages: Q.add(acc.usages, art.usages),
+										fields: [...acc.fields, { label, ty }],
+										tail: acc.tail,
+									} satisfies Folder;
+								}),
+							(v, r) =>
+								V2.Do(function* () {
+									const acc = yield* V2.pure(r);
+									return { ...acc, tail: toNFVar(v) } satisfies Folder;
+								}),
+							V2.of<Folder>({ usages: Q.noUsage(ctx.env.length), vc: Z3.Bool.val(true), fields: [] }),
+						);
+
+						const final = yield* V2.pure(folder);
+
+						const row: NF.Row = final.fields.reduceRight(
+							(r: NF.Row, f: { label: string; ty: NF.Value }) => Row.Constructors.Extension(f.label, f.ty, r),
+							final.tail ? Row.Constructors.Variable(final.tail) : Row.Constructors.Empty(),
+						) satisfies NF.Row;
+
+						return [NF.Constructors.Schema(row), { usages: final.usages, vc: final.vc }] satisfies Synthed;
+						// QUESTION in comment about optimizing row terms via specific constructors is orthogonal to verification VC accumulation.
+						// We leave that optimization for elaboration/codegen.
+					}),
+				)
 				.with({ type: "App" }, tm =>
 					V2.Do(function* () {
 						const fn = yield* synth.gen(tm.func);

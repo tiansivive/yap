@@ -1,0 +1,49 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Displaying elaborated terms > Abstractions > should display a lambda 1`] = `"λx -> x"`;
+
+exports[`Displaying elaborated terms > Abstractions > should display a pi 1`] = `"Π(x: Int) -> Bool"`;
+
+exports[`Displaying elaborated terms > Abstractions > should display an implicit lambda 1`] = `"λx => x"`;
+
+exports[`Displaying elaborated terms > Abstractions > should display an implicit pi 1`] = `"Π(x: Int) => Bool"`;
+
+exports[`Displaying elaborated terms > Applications > should display an application 1`] = `"I0 I1"`;
+
+exports[`Displaying elaborated terms > Applications > should display an implicit application 1`] = `"I0 @I1"`;
+
+exports[`Displaying elaborated terms > Literals > should display a Type 1`] = `"Type"`;
+
+exports[`Displaying elaborated terms > Literals > should display a boolean 1`] = `"true"`;
+
+exports[`Displaying elaborated terms > Literals > should display a number 1`] = `"1"`;
+
+exports[`Displaying elaborated terms > Literals > should display a string 1`] = `""hello""`;
+
+exports[`Displaying elaborated terms > Literals > should display a unit 1`] = `"Unit"`;
+
+exports[`Displaying elaborated terms > Literals > should display an atom 1`] = `"TestAtom"`;
+
+exports[`Displaying elaborated terms > Row terms > Literal rows > should display a row with a single field 1`] = `"[ x: I0 ]"`;
+
+exports[`Displaying elaborated terms > Row terms > Literal rows > should display a row with a variable 1`] = `"[ | r ]"`;
+
+exports[`Displaying elaborated terms > Row terms > Literal rows > should display a row with a variable and an extension 1`] = `"[ x: I0 | r ]"`;
+
+exports[`Displaying elaborated terms > Row terms > Literal rows > should display a row with multiple fields 1`] = `"[ x: I0, y: I1 ]"`;
+
+exports[`Displaying elaborated terms > Row terms > Literal rows > should display an empty row 1`] = `"[]"`;
+
+exports[`Displaying elaborated terms > Row terms > Structs > should display a struct with a single field 1`] = `"Struct [ x: I0 ]"`;
+
+exports[`Displaying elaborated terms > Row terms > Structs > should display a struct with a variable and an extension 1`] = `"Struct [ x: I0 | r ]"`;
+
+exports[`Displaying elaborated terms > Row terms > Structs > should display a struct with multiple fields 1`] = `"Struct [ x: I0, y: I1 ]"`;
+
+exports[`Displaying elaborated terms > Row terms > Structs > should display an empty struct 1`] = `"Struct []"`;
+
+exports[`Displaying elaborated terms > Variables > should display a bound variable 1`] = `"I1"`;
+
+exports[`Displaying elaborated terms > Variables > should display a free variable 1`] = `"x"`;
+
+exports[`Displaying elaborated terms > Variables > should display a meta variable 1`] = `"?1"`;

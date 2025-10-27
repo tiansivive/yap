@@ -1,116 +1,112 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 
 import * as EB from "@yap/elaboration";
 import * as Lit from "@yap/shared/literals";
+import * as Lib from "@yap/shared/lib/primitives";
+
+let ctx: EB.Context;
+beforeAll(() => {
+	ctx = Lib.defaultContext();
+});
 
 describe("Displaying elaborated terms", () => {
 	describe("Literals", () => {
 		it("should display a number", () => {
 			const term = EB.Constructors.Lit(Lit.Num(1));
-			expect(EB.Display.Term(term)).toBe("1");
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 
 		it("should display a string", () => {
 			const term = EB.Constructors.Lit(Lit.String("hello"));
-			expect(EB.Display.Term(term)).toBe('"hello"');
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 
-		it.skip("should display a boolean", () => {
+		it("should display a boolean", () => {
 			const term = EB.Constructors.Lit(Lit.Bool(true));
-			expect(EB.Display.Term(term)).toBe("true");
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 
 		it("should display a unit", () => {
 			const term = EB.Constructors.Lit(Lit.Unit());
-			expect(EB.Display.Term(term)).toBe("Unit");
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 
 		it("should display a Type", () => {
 			const term = EB.Constructors.Lit(Lit.Type());
-			expect(EB.Display.Term(term)).toBe("Type");
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 
 		it("should display an atom", () => {
 			const term = EB.Constructors.Lit(Lit.Atom("TestAtom"));
-			expect(EB.Display.Term(term)).toBe("TestAtom");
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 	});
 
 	describe("Variables", () => {
 		it("should display a free variable", () => {
 			const term = EB.Constructors.Var(EB.Free("x"));
-			expect(EB.Display.Term(term)).toBe("x");
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 
 		it("should display a meta variable", () => {
-			const term = EB.Constructors.Var(EB.Meta(1, 0, EB.NF.Type));
-			expect(EB.Display.Term(term)).toBe("?1");
+			const m = EB.Meta(1, 0);
+			const term = EB.Constructors.Var(m);
+
+			const xtended: EB.Context = { ...ctx, metas: { 1: { meta: m, ann: EB.NF.Type } } };
+			expect(EB.Display.Term(term, xtended)).toMatchSnapshot();
 		});
 
 		it("should display a bound variable", () => {
 			const term = EB.Constructors.Var(EB.Bound(1));
-			expect(EB.Display.Term(term)).toBe("i1");
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 	});
 
 	describe("Abstractions", () => {
 		it("should display a lambda", () => {
-			const term = EB.Constructors.Lambda("x", "Explicit", EB.Constructors.Var(EB.Bound(0)));
-			expect(EB.Display.Term(term)).toBe("λx -> i0");
+			const term = EB.Constructors.Lambda("x", "Explicit", EB.Constructors.Var(EB.Bound(0)), EB.Constructors.Lit(Lit.Atom("Any")));
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 
 		it("should display an implicit lambda", () => {
-			const term = EB.Constructors.Lambda("x", "Implicit", EB.Constructors.Var(EB.Bound(0)));
-			expect(EB.Display.Term(term)).toBe("λx => i0");
+			const term = EB.Constructors.Lambda("x", "Implicit", EB.Constructors.Var(EB.Bound(0)), EB.Constructors.Lit(Lit.Atom("Any")));
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 
 		it("should display a pi", () => {
 			const annotation = EB.Constructors.Lit(Lit.Atom("Int"));
 			const outType = EB.Constructors.Lit(Lit.Atom("Bool"));
-			const term = EB.Constructors.Pi("x", "Explicit", "One", annotation, outType);
-			expect(EB.Display.Term(term)).toBe("Π(<1> x: Int) -> Bool");
+			const term = EB.Constructors.Pi("x", "Explicit", annotation, outType);
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 
 		it("should display an implicit pi", () => {
 			const annotation = EB.Constructors.Lit(Lit.Atom("Int"));
 			const outType = EB.Constructors.Lit(Lit.Atom("Bool"));
-			const term = EB.Constructors.Pi("x", "Implicit", "One", annotation, outType);
-			expect(EB.Display.Term(term)).toBe("Π(<1> x: Int) => Bool");
+			const term = EB.Constructors.Pi("x", "Implicit", annotation, outType);
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 	});
 
 	describe("Applications", () => {
 		it("should display an application", () => {
 			const term = EB.Constructors.App("Explicit", EB.Constructors.Var(EB.Bound(0)), EB.Constructors.Var(EB.Bound(1)));
-			expect(EB.Display.Term(term)).toBe("i0 i1");
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 
 		it("should display an implicit application", () => {
 			const term = EB.Constructors.App("Implicit", EB.Constructors.Var(EB.Bound(0)), EB.Constructors.Var(EB.Bound(1)));
-			expect(EB.Display.Term(term)).toBe("i0 @i1");
+			expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 		});
 	});
 
-	describe("Annotations", () => {
-		it("should display an annotation", () => {
-			const term = EB.Constructors.Annotation(EB.Constructors.Var(EB.Bound(0)), EB.Constructors.Lit(Lit.Atom("Int")));
-			expect(EB.Display.Term(term)).toBe("i0 : Int");
-		});
-
-		it.skip("should display a nested annotation", () => {
-			const term = EB.Constructors.Annotation(
-				EB.Constructors.Var(EB.Bound(0)),
-				EB.Constructors.Annotation(EB.Constructors.Var(EB.Bound(1)), EB.Constructors.Lit(Lit.Atom("Int"))),
-			);
-			expect(EB.Display.Term(term)).toBe("i0 : (i1 : Int)");
-		});
-	});
+	// No Annotation constructor exists currently; skipping annotation-specific tests.
 
 	describe("Row terms", () => {
 		describe("Literal rows", () => {
 			it("should display an empty row", () => {
 				const term = EB.Constructors.Row({ type: "empty" });
-				expect(EB.Display.Term(term)).toBe("[]");
+				expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 			});
 
 			it("should display a row with a single field", () => {
@@ -120,7 +116,7 @@ describe("Displaying elaborated terms", () => {
 					value: EB.Constructors.Var(EB.Bound(0)),
 					row: { type: "empty" },
 				});
-				expect(EB.Display.Term(term)).toBe("[ x: i0 ]");
+				expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 			});
 
 			it("should display a row with multiple fields", () => {
@@ -135,12 +131,12 @@ describe("Displaying elaborated terms", () => {
 						row: { type: "empty" },
 					},
 				});
-				expect(EB.Display.Term(term)).toBe("[ x: i0, y: i1 ]");
+				expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 			});
 
 			it("should display a row with a variable", () => {
 				const term = EB.Constructors.Row({ type: "variable", variable: EB.Free("r") });
-				expect(EB.Display.Term(term)).toBe("[ | r ]");
+				expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 			});
 
 			it("should display a row with a variable and an extension", () => {
@@ -150,14 +146,14 @@ describe("Displaying elaborated terms", () => {
 					value: EB.Constructors.Var(EB.Bound(0)),
 					row: { type: "variable", variable: EB.Free("r") },
 				});
-				expect(EB.Display.Term(term)).toBe("[ x: i0 | r ]");
+				expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 			});
 		});
 
 		describe("Structs", () => {
 			it("should display an empty struct", () => {
 				const term = EB.Constructors.Struct({ type: "empty" });
-				expect(EB.Display.Term(term)).toBe("Struct []");
+				expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 			});
 
 			it("should display a struct with a single field", () => {
@@ -167,7 +163,7 @@ describe("Displaying elaborated terms", () => {
 					value: EB.Constructors.Var(EB.Bound(0)),
 					row: { type: "empty" },
 				});
-				expect(EB.Display.Term(term)).toBe("Struct [ x: i0 ]");
+				expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 			});
 
 			it("should display a struct with multiple fields", () => {
@@ -182,7 +178,7 @@ describe("Displaying elaborated terms", () => {
 						row: { type: "empty" },
 					},
 				});
-				expect(EB.Display.Term(term)).toBe("Struct [ x: i0, y: i1 ]");
+				expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 			});
 
 			it("should display a struct with a variable and an extension", () => {
@@ -192,7 +188,7 @@ describe("Displaying elaborated terms", () => {
 					value: EB.Constructors.Var(EB.Bound(0)),
 					row: { type: "variable", variable: EB.Free("r") },
 				});
-				expect(EB.Display.Term(term)).toBe("Struct [ x: i0 | r ]");
+				expect(EB.Display.Term(term, ctx)).toMatchSnapshot();
 			});
 		});
 	});

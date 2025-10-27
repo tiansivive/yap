@@ -1,11 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Normalization: evaluation / reduce / matching > direct reduce on an NF lambda 1`] = `
-{
-  "pretty": "42",
-}
-`;
-
 exports[`Normalization: evaluation / reduce / matching > evaluates lambda application via reduce to WHNF 1`] = `
 {
   "pretty": "1",

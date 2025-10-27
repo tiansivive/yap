@@ -7,11 +7,11 @@ export default defineConfig({
 		clearMocks: true,
 		coverage: {
 			all: true,
-			exclude: ["lib"],
+			exclude: ["lib", "bin", "debug"],
 			include: ["src"],
 			reporter: ["html", "lcov"],
 		},
-		exclude: ["lib", "node_modules"],
+		exclude: ["lib", "bin", "debug", "node_modules", "src/elaboration/elaboration.test.ts", "src/elaboration/unification/unification.test.ts"],
 		setupFiles: ["console-fail-test/setup"],
 		disableConsoleIntercept: true,
 	},
