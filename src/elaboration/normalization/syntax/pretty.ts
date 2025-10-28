@@ -82,6 +82,9 @@ export const display = (value: NF.Value, ctx: Pick<EB.Context, "zonker" | "metas
 			const args = external.args.map(arg => `(${display(arg, ctx, opts)})`).join(" ");
 			return `(${external.name}: ${args})`;
 		})
+		.with({ type: "Existential" }, existential => {
+			return `Σ(${existential.variable}: ${display(existential.annotation, ctx, opts)}). ${NF.display(existential.body, ctx, opts)}`;
+		})
 
 		.exhaustive();
 	//.exhaustive();

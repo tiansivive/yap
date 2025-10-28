@@ -21,7 +21,8 @@ type Constructor =
 	| { type: "Abs"; binder: Binder; closure: Closure }
 	| { type: "Neutral"; value: Value }
 	| { type: "Modal"; value: Value; modalities: Modalities }
-	| { type: "External"; name: string; arity: number; compute: (...args: Value[]) => Value; args: Value[] };
+	| { type: "External"; name: string; arity: number; compute: (...args: Value[]) => Value; args: Value[] }
+	| { type: "Existential"; variable: string; annotation: Value; body: Value }; // Used during verification only
 
 export type Row = R.Row<Value, Variable>;
 
@@ -65,6 +66,13 @@ export const Constructors = {
 			type: "Abs" as const,
 			binder: { type: "Mu", variable, annotation, source },
 			closure,
+		}),
+	Exists: (variable: string, annotation: Value, body: Value): Value =>
+		mk({
+			type: "Existential",
+			variable,
+			annotation,
+			body,
 		}),
 	Lambda: (variable: string, icit: Implicitness, closure: Closure, annotation: Value): Value =>
 		mk({
