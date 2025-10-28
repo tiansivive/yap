@@ -99,46 +99,41 @@ export const VerificationService = (Z3: Context<"main">) => {
 			// console.log(`Checking: ${EB.Display.Term(tm, ctx)}\nAgainst: ${NF.display(ty, ctx)}`);
 			const r = match([tm, NF.force(ctx, ty)])
 				.with([{ type: "Modal" }, NF.Patterns.Type], ([tm, ty]) => check.gen(tm.term, ty))
-				.with(
-					[
-						{ type: "Abs", binder: { type: "Lambda" } },
-						{ type: "Abs", binder: { type: "Pi" } },
-					],
-					([tm, ty]) =>
-						V2.local(
-							ctx => EB.bind(ctx, { type: "Lambda", variable: tm.binding.variable }, ty.binder.annotation),
-							V2.Do(function* () {
-								const tyBody = NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
-								const artefacts = yield* check.gen(tm.body, tyBody);
+				.with([{ type: "Abs" }, { type: "Abs", binder: { type: "Pi" } }], ([tm, ty]) =>
+					V2.local(
+						ctx => EB.bind(ctx, { type: "Lambda", variable: tm.binding.variable }, ty.binder.annotation),
+						V2.Do(function* () {
+							const tyBody = NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
+							const artefacts = yield* check.gen(tm.body, tyBody);
 
-								const modalities = extract(ty.binder.annotation, yield* V2.ask());
+							const modalities = extract(ty.binder.annotation, yield* V2.ask());
 
-								const [vu, ...usages] = artefacts.usages;
-								yield* V2.tell("constraint", { type: "usage", expected: modalities.quantity, computed: vu });
+							const [vu, ...usages] = artefacts.usages;
+							yield* V2.tell("constraint", { type: "usage", expected: modalities.quantity, computed: vu });
 
-								const sMap = mkSort(ty.binder.annotation, ctx);
-								const x = match(sMap)
-									.with({ Prim: P.select() }, sort => Z3.Const(tm.binding.variable, sort))
-									.with({ Func: P._ }, fn => Z3.Array.const(tm.binding.variable, ...(build(fn) as [Sort, ...Sort[], Sort])))
-									.with({ App: P._ }, app => {
-										const sort = Z3.Sort.declare(build(app).join(" "));
-										return Z3.Const(tm.binding.variable, sort);
-									})
-									.exhaustive();
+							const sMap = mkSort(ty.binder.annotation, ctx);
+							const x = match(sMap)
+								.with({ Prim: P.select() }, sort => Z3.Const(tm.binding.variable, sort))
+								.with({ Func: P._ }, fn => Z3.Array.const(tm.binding.variable, ...(build(fn) as [Sort, ...Sort[], Sort])))
+								.with({ App: P._ }, app => {
+									const sort = Z3.Sort.declare(build(app).join(" "));
+									return Z3.Const(tm.binding.variable, sort);
+								})
+								.exhaustive();
 
-								const p = modalities.liquid;
-								if (p.type !== "Abs") {
-									throw new Error("Liquid refinement must be a unary function");
-								}
-								const lvl = ctx.env.length;
-								const applied = NF.apply(p.binder, p.closure, NF.Constructors.Rigid(lvl));
-								const phi = translate(applied, ctx, { [lvl]: x }) as Bool;
+							const p = modalities.liquid;
+							if (p.type !== "Abs") {
+								throw new Error("Liquid refinement must be a unary function");
+							}
+							const lvl = ctx.env.length;
+							const applied = NF.apply(p.binder, p.closure, NF.Constructors.Rigid(lvl));
+							const phi = translate(applied, ctx, { [lvl]: x }) as Bool;
 
-								const imp = Z3.ForAll([x], Z3.Implies(phi, artefacts.vc as Bool));
+							const imp = Z3.ForAll([x], Z3.Implies(phi, artefacts.vc as Bool));
 
-								return { usages, vc: imp };
-							}),
-						),
+							return { usages, vc: imp };
+						}),
+					),
 				)
 				// .with([{ type: "Abs" }, P._], ([abs, ty]) => {
 				// 	const ann = NF.evaluate(ctx, abs.binding.annotation);
@@ -522,25 +517,25 @@ export const VerificationService = (Z3: Context<"main">) => {
 				)
 				.with([{ type: "Modal" }, P._], ([at, bt]) => subtype(at, NF.Constructors.Modal(bt, { quantity: Q.Zero, liquid: Liquid.Predicate.NeutralNF(bt, ctx) })))
 				.with([P._, { type: "Modal" }], ([at, bt]) => subtype(NF.Constructors.Modal(at, { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF(at, ctx) }), bt))
-				.with(
-					[{ type: "Abs", binder: { type: "Pi" } }, P._],
-					([abs]) => abs.binder.sigma,
-					([sig, ty]) =>
-						V2.Do(function* () {
-							// const ann = NF.evaluate(ctx, abs.binder.annotation);
-							const r = V2.local(
-								ctx => EB.bind(ctx, { type: "Lambda", variable: sig.binder.variable }, sig.binder.annotation),
-								V2.Do(function* () {
-									const xtended = yield* V2.ask();
-									const body = NF.apply(sig.binder, sig.closure, NF.Constructors.Rigid(xtended.env.length));
-									// const body = NF.evaluate(xtended, abs.body);
-									const vc = yield* subtype.gen(body, ty);
-									return vc;
-								}),
-							);
-							return yield* r;
-						}),
-				)
+				// .with(
+				// 	[{ type: "Abs", binder: { type: "Pi" } }, P._],
+				// 	([abs]) => abs.binder.sigma,
+				// 	([sig, ty]) =>
+				// 		V2.Do(function* () {
+				// 			// const ann = NF.evaluate(ctx, abs.binder.annotation);
+				// 			const r = V2.local(
+				// 				ctx => EB.bind(ctx, { type: "Lambda", variable: sig.binder.variable }, sig.binder.annotation),
+				// 				V2.Do(function* () {
+				// 					const xtended = yield* V2.ask();
+				// 					const body = NF.apply(sig.binder, sig.closure, NF.Constructors.Rigid(xtended.env.length));
+				// 					// const body = NF.evaluate(xtended, abs.body);
+				// 					const vc = yield* subtype.gen(body, ty);
+				// 					return vc;
+				// 				}),
+				// 			);
+				// 			return yield* r;
+				// 		}),
+				// )
 				.with(
 					[
 						{ type: "Abs", binder: { type: "Pi" } },
