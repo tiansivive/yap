@@ -48,3 +48,19 @@ let hof2
     = \f -> (f 1) + 1;
 
 
+let record
+    : { a: Nat, b: Pos }
+    = { a: 10, b: 2 };
+
+let liquidInc
+    : (x: Num) -> Num [|\v -> v == (x + 1) |]
+    = \x -> x + 1;    
+
+let liquidIncf
+    : (x: Nat) -> Nat
+    = \x -> {
+        let tmp
+            : (Nat -> Nat) -> Nat
+            = \f -> (f x);
+        return tmp liquidInc;
+    };

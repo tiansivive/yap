@@ -6,11 +6,10 @@ import * as Compiler from "../src/compile";
 import { interpret } from "../src/interpreter";
 
 import * as EB from "@yap/elaboration";
-import * as Lib from "@yap/shared/lib/primitives";
-import { options } from "@yap/shared/config/options";
+import { getZ3Context, options, setZ3Context } from "@yap/shared/config/options";
 
-import * as Sub from "@yap/elaboration/unification/substitution";
 import { defaultContext } from "@yap/shared/lib/constants";
+import { init } from "z3-solver";
 
 const program = new Command();
 
@@ -31,21 +30,41 @@ program
 			outDir: cmd.outDir || Compiler.GlobalDefaults.outDir,
 			baseUrl: cmd.srcDir || Compiler.GlobalDefaults.baseUrl,
 		};
-		Compiler.compile(file, opts);
+
+		const z3Ctx = getZ3Context();
+		if (z3Ctx) {
+			Compiler.compile(file, opts);
+			return;
+		}
+		init().then(z3 => {
+			z3.enableTrace("main");
+			const z3Ctx = z3.Context("main");
+			setZ3Context(z3Ctx);
+			Compiler.compile(file, opts);
+		});
 	});
 
 program
 	.command("repl")
 	.description("Start a Yap REPL")
 	.option("--verbose", "Enable verbose output")
-	.action(cmd => {
+	.action(async cmd => {
 		console.log("Yap REPL started. Type :exit to quit.");
 		options.verbose = cmd.verbose || false;
 		console.log("Verbose mode:", options.verbose);
 
 		const rl = createInterface({ input: process.stdin, output: process.stdout, prompt: "λ> " });
 
+		let z3Ctx = getZ3Context();
+		if (!z3Ctx) {
+			const z3 = await init();
+			z3.enableTrace("main");
+			z3Ctx = z3.Context("main");
+			setZ3Context(z3Ctx);
+		}
+
 		let ctx: EB.Context = defaultContext;
+
 		const runCode = (input: string) => {
 			try {
 				ctx = interpret(input, ctx);

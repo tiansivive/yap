@@ -22,6 +22,7 @@ import * as Sub from "@yap/elaboration/unification/substitution";
 import { VerificationService } from "@yap/verification/service";
 import { match } from "ts-pattern";
 import { Bool, init } from "z3-solver";
+import { getZ3Context } from "@yap/shared/config/options";
 
 export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 	const maybeExport = (name: string) => (result: Omit<Interface, "imports">) => {
@@ -141,46 +142,46 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 		// console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
 		// console.log("Wrapped:\n", EB.Display.Term(wrapped, xtended));
 		// console.log("Instantiated:\n", NF.display(instantiated, xtended));
+		const zCtx = getZ3Context();
+		if (!zCtx) {
+			throw new Error("Z3 context not set");
+		}
 
-		init().then(z3 => {
-			const zCtx = z3.Context("main");
-			z3.enableTrace("main");
+		const Verification = VerificationService(zCtx);
 
-			const Verification = VerificationService(zCtx);
+		const { result: res } = V2.Do(() => V2.local(_ => next, Verification.check(wrapped, instantiated)))(next);
+		if (res._tag === "Left") {
+			console.log("Verification failure");
+			console.log(res.left);
+			throw new Error("Verification failure");
+		}
+		const result = res.right;
+		const artefacts = result;
 
-			const { result: res } = V2.Do(() => V2.local(_ => next, Verification.check(wrapped, instantiated)))(next);
-			if (res._tag === "Left") {
-				console.log("Verification failure");
-				console.log(res.left);
-				return;
-			}
-			const result = res.right;
-			const artefacts = result;
+		const solver = new zCtx.Solver();
 
-			const solver = new zCtx.Solver();
+		solver.add(artefacts.vc.eq(true));
+		solver.check().then(res => {
+			console.log("\n------------------ LETDEC --------------------------------");
+			console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
+			console.log("Wrapped:\n", EB.Display.Term(wrapped, xtended));
+			console.log("Instantiated:\n", NF.display(instantiated, xtended));
 
-			solver.add(artefacts.vc.eq(true));
-			solver.check().then(res => {
-				console.log("\n------------------ LETDEC --------------------------------");
-				console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
-				console.log("Wrapped:\n", EB.Display.Term(wrapped, xtended));
-				console.log("Instantiated:\n", NF.display(instantiated, xtended));
+			console.log("\n\n--------------------DEBUG VERIFICATION--------------------");
+			// console.log("RESULT:");
+			// console.log(result);
 
-				console.log("\n\n--------------------DEBUG VERIFICATION--------------------");
-				// console.log("RESULT:");
-				// console.log(result);
+			//console.log("\nSynthed:\n", NF.display(synthed, next));
+			console.log("\nArtefacts:");
+			console.log("Usages:\n", artefacts.usages);
 
-				//console.log("\nSynthed:\n", NF.display(synthed, next));
-				console.log("\nArtefacts:");
-				console.log("Usages:\n", artefacts.usages);
+			console.log("\n--------------------FORMULA----------------------");
+			console.log("Z3 Sat:", res);
+			console.log("VC (Z3):\n", artefacts.vc.sexpr());
 
-				console.log("\n--------------------FORMULA----------------------");
-				console.log("Z3 Sat:", res);
-				console.log("VC (Z3):\n", artefacts.vc.sexpr());
-
-				console.log("------------------- END LETDEC --------------------------------\n");
-			});
+			console.log("------------------- END LETDEC --------------------------------\n");
 		});
+
 		const ast: EB.AST = [wrapped, instantiated, us];
 		return [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
 	});
