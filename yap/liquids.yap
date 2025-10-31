@@ -46,5 +46,3 @@ let hof2
     : (Num -> Nat) -> Pos
     = \f -> (f 1) + 1;
 
-
-

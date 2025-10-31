@@ -10,13 +10,11 @@ import * as R from "@yap/shared/rows";
 import * as EB from "..";
 import { options } from "@yap/shared/config/options";
 
-const display = (
-	term: EB.Term,
-	ctx: Pick<EB.Context, "env" | "zonker" | "metas">,
-	opts: { deBruijn: boolean; printEnv?: boolean } = { deBruijn: false, printEnv: false },
-): string => {
+import * as Null from "@yap/utils";
+
+const display = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; printEnv?: boolean } = { deBruijn: false, printEnv: false }): string => {
 	const bind = (name: string) => {
-		return { ...ctx, env: [{ name: { variable: name } }, ...ctx.env] } as Pick<EB.Context, "env" | "zonker" | "metas">;
+		return { ...ctx, env: [{ name: { variable: name } }, ...ctx.env] } as DisplayContext;
 	};
 	const _display = (term: EB.Term): string => {
 		return (
@@ -139,6 +137,19 @@ const displayContext = (context: EB.Context, opts = { deBruijn: false }): object
 	return pretty;
 };
 
+const displayEnv = (ctx: EB.Context, opts = { deBruijn: false }): string => {
+	const printedEnv = ctx.env
+		.map(({ nf, name }) => {
+			if (nf) {
+				return `${name.variable} = ${NF.display(nf, ctx, opts)}`;
+			}
+			return name.variable;
+		})
+		.slice(0); // remove the bound variable itself
+
+	return printedEnv.length > 0 ? `Γ: ${printedEnv.join("; ")}` : "·";
+};
+
 const displayBinder = (binder: EB.Binder["type"]): string => {
 	return match(binder)
 		.with("Let", () => "def")
@@ -207,7 +218,10 @@ export const Display = {
 	Term: display,
 	Constraint: displayConstraint,
 	Context: displayContext,
+	Env: displayEnv,
 	Alternative: Alt.display,
 	Pattern: Pat.display,
 	Statement: Stmt.display,
 };
+
+export type DisplayContext = Pick<EB.Context, "env" | "zonker" | "metas"> & { ambient?: EB.Context["env"] };

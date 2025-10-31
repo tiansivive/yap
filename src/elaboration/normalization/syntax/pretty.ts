@@ -11,13 +11,17 @@ import { options } from "@yap/shared/config/options";
 import { compose } from "../../unification";
 
 // TODO:  add environment to properly display variables
-export const display = (value: NF.Value, ctx: Pick<EB.Context, "zonker" | "metas" | "env">, opts = { deBruijn: false }): string => {
+import * as Null from "@yap/utils";
+
+export const display = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBruijn: false }): string => {
 	return match(value as NF.Value)
 		.with({ type: "Lit" }, ({ value }) => Lit.display(value))
 		.with({ type: "Var" }, ({ variable }) =>
 			match(variable)
 				.with({ type: "Bound" }, ({ lvl }) => {
-					const name = ctx.env[ctx.env.length - 1 - lvl]?.name.variable ?? `L${lvl}`;
+					const idx = ctx.env.length - 1 - lvl;
+
+					const name = ctx.env[idx]?.name.variable ?? `L${lvl}`;
 					return name + (opts.deBruijn ? `#L${lvl}` : "");
 				})
 				.with({ type: "Free" }, ({ name }) => name)
@@ -40,25 +44,28 @@ export const display = (value: NF.Value, ctx: Pick<EB.Context, "zonker" | "metas
 				.exhaustive();
 
 			const arr = binder.type !== "Mu" && binder.icit === "Implicit" ? "=>" : "->";
+			const xtended = { ...ctx, env: [{ name: { variable: binder.variable } }, ...ctx.env] } as EB.DisplayContext;
+			const prettyCls = displayClosure(closure, xtended, opts);
 
-			const z = compose(ctx.zonker, closure.ctx.zonker);
+			// const z = compose(ctx.zonker, closure.ctx.zonker);
 
-			const extended = { ...closure.ctx, metas: ctx.metas, zonker: z, env: [{ name: { variable: binder.variable } }, ...closure.ctx.env] } as Pick<
-				EB.Context,
-				"env" | "zonker" | "metas"
-			>;
-			const printedEnv = extended.env
-				.map(({ nf, name }) => {
-					if (nf) {
-						return `${name.variable} = ${NF.display(nf, extended, opts)}`;
-					}
-					return name.variable;
-				})
-				.slice(1); // remove the bound variable itself
+			// const extended = { ...closure.ctx, metas: ctx.metas, zonker: z, env: [{ name: { variable: binder.variable } }, ...closure.ctx.env] } as Pick<
+			// 	EB.Context,
+			// 	"env" | "zonker" | "metas"
+			// >;
+			// const printedEnv = extended.env
+			// 	.map(({ nf, name }) => {
+			// 		if (nf) {
+			// 			return `${name.variable} = ${NF.display(nf, extended, opts)}`;
+			// 		}
+			// 		return name.variable;
+			// 	})
+			// 	.slice(1); // remove the bound variable itself
 
-			let prettyEnv = printedEnv.length > 0 ? `Γ: ${printedEnv.join("; ")}` : "·";
+			// let prettyEnv = printedEnv.length > 0 ? `Γ: ${printedEnv.join("; ")}` : "·";
 
-			return `${b} ${arr} (closure: ${EB.Display.Term(closure.term, extended, opts)} -| ${prettyEnv})`;
+			// return `${b} ${arr} (closure: ${EB.Display.Term(closure.term, extended, opts)} -| ${prettyEnv})`;
+			return `${b} ${arr} ${prettyCls}`;
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
 			const f = display(func, ctx, opts);
@@ -83,9 +90,33 @@ export const display = (value: NF.Value, ctx: Pick<EB.Context, "zonker" | "metas
 			return `(${external.name}: ${args})`;
 		})
 		.with({ type: "Existential" }, existential => {
-			return `Σ(${existential.variable}: ${display(existential.annotation, ctx, opts)}). ${NF.display(existential.body, ctx, opts)}`;
+			const xtended = { ...ctx, env: [{ name: { variable: existential.variable } }, ...ctx.env] } as EB.DisplayContext;
+			return `Σ(${existential.variable}: ${display(existential.annotation, ctx, opts)}). ${NF.display(existential.body, xtended, opts)}`;
 		})
 
 		.exhaustive();
 	//.exhaustive();
+};
+
+const displayClosure = (closure: NF.Closure, ctx: EB.DisplayContext, opts = { deBruijn: false }): string => {
+	const z = compose(ctx.zonker, closure.ctx.zonker);
+
+	const extended: EB.DisplayContext = {
+		...closure.ctx,
+		metas: ctx.metas,
+		zonker: z,
+		env: [...ctx.env, ...closure.ctx.env],
+	};
+
+	const printedEnv = closure.ctx.env.map(({ nf, name }) => {
+		if (nf) {
+			return `${name.variable} = ${NF.display(nf, extended, opts)}`;
+		}
+		return name.variable;
+	});
+	//.slice(0); // remove the bound variable itself
+
+	let prettyEnv = printedEnv.length > 0 ? `Γ: ${printedEnv.join("; ")}` : "·";
+
+	return `(closure: ${EB.Display.Term(closure.term, extended, opts)} -| ${prettyEnv})`;
 };

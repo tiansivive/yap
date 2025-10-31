@@ -39,3 +39,23 @@ let inject_map: typeof map = [ map | foo = 11 ];
 let inject_array: typeof array  = [ array | "four" ];
 let update_map: typeof map = [ map | two = "duo" ];
 
+
+-*>
+~>
+->
+>-
+->>
+>>-
+
+
+Sql.From "blah"
+    |> where (fun x -> x > 10)
+    |> rename "key" "id"
+    |> sort "date" Asc
+    |> limit 100
+
+Sql.From "blah"
+    >- where (fun x -> x > 10) 
+    >- rename "key" "id"
+    >- sort "date" Asc
+    >- limit 100

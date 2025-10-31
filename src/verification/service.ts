@@ -321,6 +321,9 @@ export const VerificationService = (Z3: Context<"main">) => {
 						const incorporate = (argTy: NF.Value, fnTy: NF.Value): V2.Elaboration<Synthed> =>
 							V2.Do(function* () {
 								const ctx = yield* V2.ask();
+
+								log("Incorporating argument type", NF.display(argTy, ctx), "into function type", NF.display(fnTy, ctx), "Env:", EB.Display.Env(ctx));
+
 								const synthed = match(fnTy)
 									.with({ type: "Existential" }, ex =>
 										V2.Do(() =>
@@ -336,11 +339,12 @@ export const VerificationService = (Z3: Context<"main">) => {
 									.with(NF.Patterns.Pi, pi =>
 										V2.Do(function* () {
 											const vc = yield* subtype.gen(argTy, pi.binder.annotation);
-											const out = NF.apply(pi.binder, pi.closure, NF.evaluate(ctx, tm.arg));
-											return [
-												NF.Constructors.Exists(pi.binder.variable, pi.binder.annotation, out),
-												{ usages: Q.noUsage(ctx.env.length), vc },
-											] satisfies Synthed;
+											//const nf = NF.evaluate(ctx, tm.arg)
+											//const out = NF.apply(pi.binder, pi.closure, nf);
+											console.log("\nIn Synth App Incorporate:");
+											const out = NF.evaluate(pi.closure.ctx, pi.closure.term);
+											console.log("output type:", NF.display(out, EB.bind(ctx, pi.binder, NF.evaluate(ctx, tm.arg))));
+											return [NF.Constructors.Exists(pi.binder.variable, argTy, out), { usages: Q.noUsage(ctx.env.length), vc }] satisfies Synthed;
 										}),
 									)
 									.otherwise(() => {
@@ -352,62 +356,62 @@ export const VerificationService = (Z3: Context<"main">) => {
 
 						const fn = yield* synth.gen(tm.func);
 						const [fnTy, fnArtefacts] = fn;
-						// const arg = yield* synth.gen(tm.arg);
-						// const [argTy, argArtefacts] = arg;
+						const arg = yield* synth.gen(tm.arg);
+						const [argTy, argArtefacts] = arg;
 
 						const forced = NF.force(ctx, fnTy);
 						const modalities = extract(forced, ctx);
-						const [out, usages, vc] = yield* V2.pure(
-							match(forced)
-								.with({ type: "Abs", binder: { type: "Pi" } }, ty =>
-									V2.Do(function* () {
-										const checked = yield* check.gen(tm.arg, ty.binder.annotation);
-										const us = Q.add(fnArtefacts.usages, Q.multiply(modalities.quantity, checked.usages));
+						// const [out, usages, vc] = yield* V2.pure(
+						// 	match(forced)
+						// 		.with({ type: "Abs", binder: { type: "Pi" } }, ty =>
+						// 			V2.Do(function* () {
+						// 				const checked = yield* check.gen(tm.arg, ty.binder.annotation);
+						// 				const us = Q.add(fnArtefacts.usages, Q.multiply(modalities.quantity, checked.usages));
 
-										// const applied = NF.reduce(checked.vc, NF.evaluate(ctx, tm.arg), "Explicit");
-										// const vc = NF.DSL.Binop.and(fnArtefacts.vc, applied);
-										const vc = Z3.And(fnArtefacts.vc as Bool, checked.vc as Bool);
-										const nf = NF.evaluate(ctx, tm.arg);
+						// 				// const applied = NF.reduce(checked.vc, NF.evaluate(ctx, tm.arg), "Explicit");
+						// 				// const vc = NF.DSL.Binop.and(fnArtefacts.vc, applied);
+						// 				const vc = Z3.And(fnArtefacts.vc as Bool, checked.vc as Bool);
+						// 				const nf = NF.evaluate(ctx, tm.arg);
 
-										// NOTE: This is the is Jhala and Vazou's Syn-App rule, which relies on ANF
-										const out = NF.apply(ty.binder, ty.closure, nf);
+						// 				// NOTE: This is the is Jhala and Vazou's Syn-App rule, which relies on ANF
+						// 				const out = NF.apply(ty.binder, ty.closure, nf);
 
-										// // NOTE: trying out the alternative existential-based rule (Syn-App-Ex) mentioned in their paper, but which originates from Knowles and Flanagan, 2009 (Contract types)
+						// 				// // NOTE: trying out the alternative existential-based rule (Syn-App-Ex) mentioned in their paper, but which originates from Knowles and Flanagan, 2009 (Contract types)
 
-										// const existential = NF.Constructors.Exists(
-										// 	ty.binder.variable,
-										// 	ty.binder.annotation,
-										// 	out
-										// )
-										return [out, us, vc] as const;
-									}),
-								)
-								// .with({ type: "Existential" }, exists => V2.Do(function* () {
-								// 	V2.local(
-								// 		ctx => EB.bind(ctx, { type: "Pi", variable: exists.variable }, exists.annotation),
-								// 		V2.Do(function* () {
+						// 				// const existential = NF.Constructors.Exists(
+						// 				// 	ty.binder.variable,
+						// 				// 	ty.binder.annotation,
+						// 				// 	out
+						// 				// )
+						// 				return [out, us, vc] as const;
+						// 			}),
+						// 		)
+						// 		// .with({ type: "Existential" }, exists => V2.Do(function* () {
+						// 		// 	V2.local(
+						// 		// 		ctx => EB.bind(ctx, { type: "Pi", variable: exists.variable }, exists.annotation),
+						// 		// 		V2.Do(function* () {
 
-								// 			//const [t, as] = yield* synth.gen(app);
-								// 			return [NF.Constructors.Exists(exists.variable, exists.annotation, exists), fnArtefacts.usages, fnArtefacts.vc] as const;
-								// 		})
-								// 	)
-								// 	return 1 as any
-								// }))
-								.otherwise(ty => {
-									console.error("Got: ", NF.display(ty, ctx));
-									throw new Error("Impossible: Function type expected in application");
-								}),
-						);
+						// 		// 			//const [t, as] = yield* synth.gen(app);
+						// 		// 			return [NF.Constructors.Exists(exists.variable, exists.annotation, exists), fnArtefacts.usages, fnArtefacts.vc] as const;
+						// 		// 		})
+						// 		// 	)
+						// 		// 	return 1 as any
+						// 		// }))
+						// 		.otherwise(ty => {
+						// 			console.error("Got: ", NF.display(ty, ctx));
+						// 			throw new Error("Impossible: Function type expected in application");
+						// 		}),
+						// );
 
-						//const result = yield* V2.pure(incorporate(NF.force(ctx, argTy), NF.force(ctx, fnTy)));
+						const result = yield* V2.pure(incorporate(NF.force(ctx, argTy), NF.force(ctx, fnTy)));
 
 						// console.log("\nSynth App Term:", EB.Display.Term(tm, ctx));
 						// console.log("Function type:", NF.display(fnTy, ctx));
 						// console.log("Argument type:", NF.display(argTy, ctx));
 						// console.log("App Output Type:", NF.display(result[0], ctx));
 
-						//return result satisfies Synthed;
-						return [out, { usages, vc }] satisfies Synthed;
+						return result satisfies Synthed;
+						//return [out, { usages, vc }] satisfies Synthed;
 					}),
 				)
 
@@ -497,7 +501,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			indentation++;
-			log(`Subtyping:`, NF.display(a, ctx), `<:`, NF.display(b, ctx));
+			log(`Subtyping:`, EB.Display.Env(ctx), NF.display(a, ctx), `<:`, NF.display(b, ctx));
 			const s = match([NF.unwrapNeutral(a), NF.unwrapNeutral(b)])
 				.with([NF.Patterns.Flex, P._], ([meta, t]) => {
 					const ty = ctx.zonker[meta.variable.val];
@@ -565,8 +569,11 @@ export const VerificationService = (Z3: Context<"main">) => {
 							const ctx = yield* V2.ask();
 							const anf = NF.apply(at.binder, at.closure, NF.Constructors.Rigid(ctx.env.length));
 							const bnf = NF.apply(bt.binder, bt.closure, NF.Constructors.Rigid(ctx.env.length));
+							// const xtended = EB.bind(ctx, bt.binder, bt.binder.annotation);
+							// const anf = NF.evaluate(xtended, at.closure.term)
+							// const bnf = NF.evaluate(xtended, bt.closure.term)
 
-							const vcBody = yield* subtype.gen(anf, bnf); // covariant position
+							const vcBody = yield* V2.local(ctx => EB.bind(ctx, bt.binder, bt.binder.annotation), subtype(anf, bnf)); // covariant position
 
 							const vc = Z3.Implies(vcArg as Bool, vcBody as Bool);
 							return vc;
@@ -588,8 +595,20 @@ export const VerificationService = (Z3: Context<"main">) => {
 								// console.log("Type:", NF.display(ty, xtended));
 								// console.log("---------------------------");
 								// const body = NF.evaluate(xtended, abs.body);
-								const vc = yield* subtype.gen(body, ty);
-								return vc;
+								const vc = yield* subtype.gen(sig.body, ty);
+
+								const sortMap = mkSort(sig.annotation, xtended);
+								const xSort = match(sortMap)
+									.with({ Prim: P.select() }, p => p)
+									.otherwise(() => {
+										console.log("Sigma Subtype SortMap:", sortMap);
+										throw new Error("Only primitive types can be used in logical formulas");
+									});
+								const x = Z3.Const(sig.variable, xSort);
+
+								// Forall x. vc
+								const forall: Bool = Z3.ForAll([x], vc as Bool);
+								return forall;
 							}),
 						);
 						return yield* r;
@@ -639,9 +658,21 @@ export const VerificationService = (Z3: Context<"main">) => {
 
 						// 3) Apply both to a fresh rigid at the current level (no context extension)
 						const lvl = ctx.env.length;
-						const appliedAt = NF.apply(pAt.binder, pAt.closure, NF.Constructors.Rigid(lvl));
-						const appliedBt = NF.apply(pBt.binder, pBt.closure, NF.Constructors.Rigid(lvl));
+						log("Subtype Modal Liquid Predicates:");
+						log(EB.Display.Env(ctx));
+						log("Liquid at type A:", NF.display(pAt, ctx));
+						log("Liquid at type B:", NF.display(pBt, ctx));
 
+						const xa = EB.bind(ctx, pAt.binder, NF.Constructors.Rigid(lvl));
+						const appliedAt = NF.evaluate(xa, pAt.closure.term);
+						const xb = EB.bind(ctx, pBt.binder, NF.Constructors.Rigid(lvl));
+						const appliedBt = NF.evaluate(xb, pBt.closure.term);
+						// const appliedBt = NF.apply(pBt.binder, pBt.closure, NF.Constructors.Rigid(lvl));
+
+						log("Applied liquid at type A1:", NF.display(appliedAt, pAt.closure.ctx));
+						log("Applied liquid at type A2:", NF.display(appliedAt, xa));
+						log("Applied liquid at type B1:", NF.display(appliedBt, pBt.closure.ctx));
+						log("Applied liquid at type B2:", NF.display(appliedBt, xb));
 						// 4) Create the Z3 quantified variable with the primitive sort of the base type
 						const sortMap = mkSort(at.value, ctx);
 						const xSort = match(sortMap)
@@ -827,6 +858,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 						name,
 						type: [, , type],
 					} = ctx.env[EB.lvl2idx(ctx, v.variable.lvl)];
+					console.log("Name:", name.variable);
 					const all = build(mkSort(type, ctx));
 					const sort = all.length === 1 ? all[0] : Z3.Sort.declare(all.join(" -> "));
 					return Z3.Const(name.variable, sort);
