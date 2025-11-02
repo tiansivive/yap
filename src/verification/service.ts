@@ -33,8 +33,6 @@ import {
 	operatorMap,
 	PrimOps,
 } from "@yap/shared/lib/primitives";
-import { S } from "vitest/dist/chunks/config.DCnyCTbs";
-import { cons } from "fp-ts/lib/ReadonlyNonEmptyArray";
 
 export const VerificationService = (Z3: Context<"main">) => {
 	const Sorts = {
