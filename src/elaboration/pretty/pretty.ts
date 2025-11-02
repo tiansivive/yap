@@ -67,9 +67,9 @@ const display = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; 
 
 					//TODO:QUESTION: should we print the environment here?
 					if (opts.printEnv) {
-						return `(${b} ${arr} ${display(body, bind(binding.variable), opts)} -| Γ = ${printedEnv})`;
+						return `(${b} ${arr} ${display(body, xtended, opts)} -| Γ = ${printedEnv})`;
 					}
-					return `${b} ${arr} ${display(body, bind(binding.variable), opts)}`;
+					return `${b} ${arr} ${display(body, xtended, opts)}`;
 				})
 				.with({ type: "App" }, ({ icit, func, arg }) => {
 					const f = _display(func);

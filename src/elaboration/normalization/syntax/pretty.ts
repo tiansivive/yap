@@ -103,12 +103,10 @@ const displayClosure = (closure: NF.Closure, ctx: EB.DisplayContext, opts = { de
 
 	const extended: EB.DisplayContext = {
 		...closure.ctx,
-		metas: ctx.metas,
 		zonker: z,
-		env: [...ctx.env, ...closure.ctx.env],
 	};
 
-	const printedEnv = closure.ctx.env.map(({ nf, name }) => {
+	const printedEnv = extended.env.map(({ nf, name }) => {
 		if (nf) {
 			return `${name.variable} = ${NF.display(nf, extended, opts)}`;
 		}

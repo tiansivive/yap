@@ -46,3 +46,31 @@ let hof2
     : (Num -> Nat) -> Pos
     = \f -> (f 1) + 1;
 
+let hof3
+    : Num -> (Num -> Num) -> Num
+    = \x -> \f -> (f x) + 1;
+
+
+           (and 
+            (forall (($b Real)) (=> (= $b 1.0) true)) 
+            (forall ((x Real))              
+                (=> (> x 0.0) 
+                    (forall ((y Real)) 
+                        (=> (= y 1.0) 
+                            (forall (($c Real)) (=> (= $c (+ y x)) (< y $c)))) 
+                    )
+                )
+            )
+        )
+    
+
+(and 
+    (forall (($a Real)) (=> (= $a 1.0) true)) 
+    (forall ((x Real))
+        (forall ((y Real))
+            (=> (= y 1.0)  
+                (forall ((r Real)) (=> (= r (+ y x)) (= r (+ y 1.0))))
+            )
+        )
+    )
+)
