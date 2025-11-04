@@ -6,21 +6,39 @@ const run = async () => {
 
 	const Z3 = Context("main");
 
-	const A = Z3.Sort.declare("A");
-	const a = Z3.Const("a", A);
-
 	const x = Z3.Int.const("x");
-	const implication = Z3.Implies(x.gt(1), x.gt(0));
-	const lambda = Z3.Lambda([x], Z3.Or(Z3.Not(x.gt(5)), x.lt(10)));
 
-	const formula = Z3.And(Z3.ForAll([x], implication), Z3.Bool.val(false));
+	// Test model extraction
+	const negSolver = new Z3.Solver();
+	negSolver.add(x.gt(5).eq(false));
+	const negResult = await negSolver.check();
+	console.log("Negation result:", negResult);
+	if (negResult === "sat") {
+		const model = negSolver.model();
+		console.log("\nModel type:", typeof model);
+		console.log("Model proto:", Object.getPrototypeOf(model));
+		console.log("Model own keys:", Object.getOwnPropertyNames(model));
+		console.log("Model toString:", String(model));
 
-	const solver = new Z3.Solver();
+		// Try common methods
+		console.log("\nTrying common methods:");
+		console.log("  sexpr():", model.sexpr?.());
+		console.log("  length():", model.length?.());
+		console.log("  entries():", model.entries?.());
 
-	console.log("Solving...");
-	solver.add(formula.eq(true));
-	const result = await solver.check();
-	console.log("Result:", result);
+		// Try getting declarations
+		const decls = model.decls?.();
+		if (decls && decls.length > 0) {
+			console.log("\nModel has", decls.length, "declarations");
+			for (let i = 0; i < decls.length; i++) {
+				const decl = decls[i];
+				console.log(`  [${i}] decl:`, decl, "value:", model.get?.(decl));
+			}
+		}
+
+		// Try eval directly
+		console.log("\nDirect eval of x:", model.eval(x));
+	}
 };
 
 run();

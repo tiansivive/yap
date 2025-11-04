@@ -64,9 +64,18 @@ export const VerificationService = (Z3: Context<"main">) => {
 	};
 
 	// Lightweight reporter for local, closed obligations
-	let obligations: { label: string; expr: Expr }[] = [];
-	const record = (label: string, expr: Expr): Expr => {
-		obligations.push({ label, expr });
+	type Obligation = {
+		label: string;
+		expr: Expr;
+		context?: {
+			term?: string;
+			type?: string;
+			description?: string;
+		};
+	};
+	let obligations: Obligation[] = [];
+	const record = (label: string, expr: Expr, context?: Obligation["context"]): Expr => {
+		obligations.push({ label, expr, context });
 		return expr;
 	};
 
@@ -108,8 +117,6 @@ export const VerificationService = (Z3: Context<"main">) => {
 	};
 	const check = (tm: EB.Term, ty: NF.Value): V2.Elaboration<Modal.Artefacts> =>
 		V2.Do(function* () {
-			// Reset obligations for each top-level check
-
 			const ctx = yield* V2.ask();
 			indentation++;
 			log(`Checking`, EB.Display.Term(tm, ctx), `Against:`, NF.display(ty, ctx), "Env:", EB.Display.Env(ctx));
@@ -150,7 +157,11 @@ export const VerificationService = (Z3: Context<"main">) => {
 							const applied = NF.apply(p.binder, p.closure, NF.Constructors.Rigid(lvl));
 							const phi = translate(applied, xtended, { [lvl]: x }) as Bool;
 
-							const imp = record("check.abs.pre", Z3.ForAll([x], Z3.Implies(phi, artefacts.vc as Bool)) as Bool) as Bool;
+							const imp = record("check.abs.pre", Z3.ForAll([x], Z3.Implies(phi, artefacts.vc as Bool)) as Bool, {
+								term: EB.Display.Term(tm, ctx),
+								type: NF.display(ty, ctx),
+								description: `Lambda ${tm.binding.variable} must satisfy precondition from parameter type`,
+							}) as Bool;
 
 							return { usages, vc: imp };
 						}),
@@ -644,9 +655,17 @@ export const VerificationService = (Z3: Context<"main">) => {
 							const phiX = translate(applied, ctx, { [lvl]: x }) as Bool;
 
 							// Combine: global arg-subtyping vc AND per-argument precondition => body
-							const guarded = record("subtype.pi.body", Z3.ForAll([x], Z3.Implies(phiX, vcBody as Bool)) as Bool) as Bool;
+							const guarded = record("subtype.pi.body", Z3.ForAll([x], Z3.Implies(phiX, vcBody as Bool)) as Bool, {
+								term: `Pi subtyping body`,
+								type: `${NF.display(at, ctx)} <: ${NF.display(bt, ctx)}`,
+								description: `Function result must be subtype under parameter ${bt.binder.variable} assumption`,
+							}) as Bool;
 							// Note: vcArg may itself be a conjunction of sub-obligations; record it too for locality
-							record("subtype.pi.param", vcArg as Bool);
+							record("subtype.pi.param", vcArg as Bool, {
+								term: `Pi subtyping param`,
+								type: `${NF.display(bt.binder.annotation, ctx)} <: ${NF.display(at.binder.annotation, ctx)}`,
+								description: `Function parameter types (contravariant)`,
+							});
 							return Z3.And(vcArg as Bool, guarded as Bool);
 						}),
 				)
@@ -1163,7 +1182,10 @@ export const VerificationService = (Z3: Context<"main">) => {
 
 				if (annotation.type !== "Modal") {
 					const forall: Bool = Z3.ForAll([x], vc as Bool);
-					record(`quantify:${variable}`, forall);
+					record(`quantify:${variable}`, forall, {
+						type: NF.display(annotation, ctx),
+						description: `Quantifying over ${variable} with type ${NF.display(annotation, ctx)}`,
+					});
 					return forall;
 				}
 
@@ -1182,7 +1204,10 @@ export const VerificationService = (Z3: Context<"main">) => {
 				const phiAt = translate(appliedAt, ctx, rigids) as Bool;
 
 				const forall: Bool = Z3.ForAll([x], Z3.Implies(phiAt, vc as Bool));
-				record(`quantify:${variable}`, forall);
+				record(`quantify:${variable}`, forall, {
+					type: NF.display(annotation, ctx),
+					description: `Quantifying over ${variable}: ${NF.display(annotation, ctx)} with refinement`,
+				});
 				return forall;
 			});
 	};

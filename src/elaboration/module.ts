@@ -21,7 +21,7 @@ import * as A from "fp-ts/lib/Array";
 import * as Sub from "@yap/elaboration/unification/substitution";
 import { VerificationService } from "@yap/verification/service";
 import { match } from "ts-pattern";
-import { Bool, init } from "z3-solver";
+import { Bool, init, Model } from "z3-solver";
 import { getZ3Context } from "@yap/shared/config/options";
 
 export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
@@ -168,17 +168,24 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 				console.log("\nLocal obligations (closed subformulas):");
 			}
 			return Promise.all(
-				obligations.map(async ({ label, expr }) => {
+				obligations.map(async ({ label, expr, context }) => {
 					const s = new zCtx.Solver();
 					s.add(expr.eq(true));
 					const r = await s.check();
-					return { label, result: r, expr };
-					// if (r === "unsat") {
-					// 	console.log(` - [${r}] ${label}`);
-					// 	console.log("   expr:", expr.sexpr());
-					// }
+					let model: Model | undefined;
+					if (r === "unsat") {
+						// Try to extract a counterexample by solving the negation
+						const neg = new zCtx.Solver();
+						// Negate obligation by equating it to false to obtain a witness
+						neg.add(expr.eq(false));
+						const rn = await neg.check();
+						if (rn === "sat") {
+							model = neg.model();
+						}
+					}
+					return { label, result: r, expr, model, context };
 				}),
-			).then(rs => {
+			).then(async rs => {
 				console.log("\n------------------ LETDEC --------------------------------");
 				console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
 				console.log("Wrapped:\n", EB.Display.Term(wrapped, xtended));
@@ -196,10 +203,38 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 				console.log("Z3 Sat:", res);
 				console.log("VC (Z3):\n", artefacts.vc.sexpr());
 				console.log("\n-------------------- SUBFORMULAS ----------------------");
-				rs.forEach(({ label, result, expr }, i) => {
+				rs.forEach(({ label, result, expr, model, context }, i) => {
 					console.log(` - [${result}] ${label}`);
+					if (context) {
+						if (context.description) {
+							console.log(`   ${context.description}`);
+						}
+
+						if (context.term) {
+							console.log(`   term: ${context.term}`);
+						}
+
+						if (context.type) {
+							console.log(`   type: ${context.type}`);
+						}
+					}
 					if (result === "unsat") {
-						console.log("   expr:", expr.sexpr());
+						//console.log("   expr:", expr.sexpr());
+						if (model) {
+							// Try to extract variable values from the model
+							console.log("   counterexample:");
+							const decls = model.decls();
+							if (decls && decls.length > 0) {
+								for (const decl of decls) {
+									const name = decl.name();
+									const value = model.get(decl);
+									console.log(`     ${name} = ${value}`);
+								}
+							} else {
+								// Fallback: print the entire model
+								console.log("     ", model.sexpr());
+							}
+						}
 					}
 				});
 
