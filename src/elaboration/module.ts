@@ -179,7 +179,24 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 			console.log("Z3 Sat:", res);
 			console.log("VC (Z3):\n", artefacts.vc.sexpr());
 
-			console.log("------------------- END LETDEC --------------------------------\n");
+			// Eager local obligation checks
+			const obligations = Verification.getObligations?.() ?? [];
+			if (obligations.length) {
+				console.log("\nLocal obligations (closed subformulas):");
+			}
+			Promise.all(
+				obligations.map(async ({ label, expr }) => {
+					const s = new zCtx.Solver();
+					s.add(expr.eq(true));
+					const r = await s.check();
+					console.log(` - [${r}] ${label}`);
+					if (r === "unsat") {
+						console.log("   expr:", expr.sexpr());
+					}
+				}),
+			).then(() => {
+				console.log("------------------- END LETDEC --------------------------------\n");
+			});
 		});
 
 		const ast: EB.AST = [wrapped, instantiated, us];

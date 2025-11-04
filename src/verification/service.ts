@@ -63,6 +63,13 @@ export const VerificationService = (Z3: Context<"main">) => {
 				.exhaustive(),
 	};
 
+	// Lightweight reporter for local, closed obligations
+	let obligations: { label: string; expr: Expr }[] = [];
+	const record = (label: string, expr: Expr): Expr => {
+		obligations.push({ label, expr });
+		return expr;
+	};
+
 	// TODO: simplify this algorithm and make it more understandable
 	const bumpAlpha = (s: string): string => {
 		// assumes s is non-empty and only contains [a-z]
@@ -101,6 +108,8 @@ export const VerificationService = (Z3: Context<"main">) => {
 	};
 	const check = (tm: EB.Term, ty: NF.Value): V2.Elaboration<Modal.Artefacts> =>
 		V2.Do(function* () {
+			// Reset obligations for each top-level check
+			obligations = [];
 			const ctx = yield* V2.ask();
 			indentation++;
 			log(`Checking`, EB.Display.Term(tm, ctx), `Against:`, NF.display(ty, ctx), "Env:", EB.Display.Env(ctx));
@@ -141,7 +150,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 							const applied = NF.apply(p.binder, p.closure, NF.Constructors.Rigid(lvl));
 							const phi = translate(applied, xtended, { [lvl]: x }) as Bool;
 
-							const imp = Z3.ForAll([x], Z3.Implies(phi, artefacts.vc as Bool));
+							const imp = record("check.abs.pre", Z3.ForAll([x], Z3.Implies(phi, artefacts.vc as Bool)) as Bool) as Bool;
 
 							return { usages, vc: imp };
 						}),
@@ -635,7 +644,9 @@ export const VerificationService = (Z3: Context<"main">) => {
 							const phiX = translate(applied, ctx, { [lvl]: x }) as Bool;
 
 							// Combine: global arg-subtyping vc AND per-argument precondition => body
-							const guarded = Z3.ForAll([x], Z3.Implies(phiX, vcBody as Bool));
+							const guarded = record("subtype.pi.body", Z3.ForAll([x], Z3.Implies(phiX, vcBody as Bool)) as Bool) as Bool;
+							// Note: vcArg may itself be a conjunction of sub-obligations; record it too for locality
+							record("subtype.pi.param", vcArg as Bool);
 							return Z3.And(vcArg as Bool, guarded as Bool);
 						}),
 				)
@@ -1152,6 +1163,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 
 				if (annotation.type !== "Modal") {
 					const forall: Bool = Z3.ForAll([x], vc as Bool);
+					record(`quantify:${variable}`, forall);
 					return forall;
 				}
 
@@ -1170,6 +1182,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 				const phiAt = translate(appliedAt, ctx, rigids) as Bool;
 
 				const forall: Bool = Z3.ForAll([x], Z3.Implies(phiAt, vc as Bool));
+				record(`quantify:${variable}`, forall);
 				return forall;
 			});
 	};
@@ -1198,7 +1211,8 @@ export const VerificationService = (Z3: Context<"main">) => {
 			env: [entry, ...env],
 		};
 	};
-	return { check, synth, subtype };
+	const getObligations = () => obligations.slice();
+	return { check, synth, subtype, getObligations };
 };
 
 const noCapture = (ctx: EB.Context) => ({ ...ctx, env: [] });
