@@ -109,7 +109,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 	const check = (tm: EB.Term, ty: NF.Value): V2.Elaboration<Modal.Artefacts> =>
 		V2.Do(function* () {
 			// Reset obligations for each top-level check
-			obligations = [];
+
 			const ctx = yield* V2.ask();
 			indentation++;
 			log(`Checking`, EB.Display.Term(tm, ctx), `Against:`, NF.display(ty, ctx), "Env:", EB.Display.Env(ctx));
