@@ -62,15 +62,63 @@ let hof3
                 )
             )
         )
-    
+    let posTestCheckLiteral
+    : Num [|\v -> v == 1 |]
+    = 1;
 
-(and 
-    (forall (($a Real)) (=> (= $a 1.0) true)) 
-    (forall ((x Real))
-        (forall ((y Real))
-            (=> (= y 1.0)  
-                (forall ((r Real)) (=> (= r (+ y x)) (= r (+ y 1.0))))
-            )
-        )
-    )
-)
+let negTestCheckLiteral
+    : Num [|\v -> v == 1 |]
+    = 2;
+
+
+let negFnApp
+    : Num [|\v -> v == 0 |]
+    = 1 + 2;
+
+let posTestCheckLambdaPostCondition
+    : Num -> Num [|\v -> v == 1 |] 
+    = \x -> 1;
+
+let negTestCheckLambdaPostCondition
+    : Num -> Nat
+    = \x -> x;
+
+let posTestCheckLambdaPreCondition
+    : (n: Nat) -> Num
+    = \x -> x;
+
+let posTestCheckLambdaPreAndPostCondition
+    : (n: Nat) -> Nat
+    = \x -> x;
+
+let negTestCheckLambdaPreAndPostCondition
+    : (n: Nat) -> Nat
+    = \x -> 0;
+
+let posTestCheckRefinedResultLambda
+    : (n: Num) -> Num [|\o -> o == (n + 1) |]
+    = \x -> x + 1;
+
+
+
+
+let inc
+    : (n: Num) -> Num [|\o -> o == (n + 1) |]
+    = \x -> x + 1;    
+
+
+ 
+ 
+let hof
+    : (f: Num -> Num) -> Num
+    = \f -> f 1;
+
+let nonANF
+    : Num
+    = (inc 1) + 1;
+
+let hof2
+    : (Num -> Num) -> Num
+    = \f -> f 1 + 1;
+
+

@@ -44,28 +44,27 @@ export const display = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBrui
 				.exhaustive();
 
 			const arr = binder.type !== "Mu" && binder.icit === "Implicit" ? "=>" : "->";
-			const xtended = { ...ctx, env: [{ name: { variable: binder.variable } }, ...ctx.env] } as EB.DisplayContext;
-			const prettyCls = displayClosure(closure, xtended, opts);
+			// const xtended = { ...ctx, env: [{ name: { variable: binder.variable } }, ...ctx.env] } as EB.DisplayContext;
+			// const prettyCls = displayClosure(closure, xtended, opts);
 
-			// const z = compose(ctx.zonker, closure.ctx.zonker);
+			const z = compose(ctx.zonker, closure.ctx.zonker);
 
-			// const extended = { ...closure.ctx, metas: ctx.metas, zonker: z, env: [{ name: { variable: binder.variable } }, ...closure.ctx.env] } as Pick<
-			// 	EB.Context,
-			// 	"env" | "zonker" | "metas"
-			// >;
-			// const printedEnv = extended.env
-			// 	.map(({ nf, name }) => {
-			// 		if (nf) {
-			// 			return `${name.variable} = ${NF.display(nf, extended, opts)}`;
-			// 		}
-			// 		return name.variable;
-			// 	})
-			// 	.slice(1); // remove the bound variable itself
+			const extended = { ...closure.ctx, metas: ctx.metas, zonker: z, env: [{ name: { variable: binder.variable } }, ...closure.ctx.env] } as Pick<
+				EB.Context,
+				"env" | "zonker" | "metas"
+			>;
+			const printedEnv = extended.env.map(({ nf, name }) => {
+				if (nf) {
+					return `${name.variable} = ${NF.display(nf, ctx, opts)}`;
+				}
+				return name.variable;
+			});
+			//.slice(1); // remove the bound variable itself
 
-			// let prettyEnv = printedEnv.length > 0 ? `Γ: ${printedEnv.join("; ")}` : "·";
+			let prettyEnv = printedEnv.length > 0 ? `Γ: ${printedEnv.join("; ")}` : "·";
 
-			// return `${b} ${arr} (closure: ${EB.Display.Term(closure.term, extended, opts)} -| ${prettyEnv})`;
-			return `${b} ${arr} ${prettyCls}`;
+			return `${b} ${arr} (closure: ${EB.Display.Term(closure.term, extended, opts)} -| ${prettyEnv})`;
+			//return `${b} ${arr} ${prettyCls}`;
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
 			const f = display(func, ctx, opts);
@@ -90,8 +89,9 @@ export const display = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBrui
 			return `(${external.name}: ${args})`;
 		})
 		.with({ type: "Existential" }, existential => {
-			const xtended = { ...ctx, env: [{ name: { variable: existential.variable } }, ...ctx.env] } as EB.DisplayContext;
-			return `Σ(${existential.variable}: ${display(existential.annotation, ctx, opts)}). ${NF.display(existential.body, xtended, opts)}`;
+			const xtended = { ...ctx, env: [{ name: { variable: existential.variable } }, ...ctx.env] } as EB.Context;
+			const prettyEnv = EB.Display.Env(xtended, opts);
+			return `Σ(${existential.variable}: ${display(existential.annotation, ctx, opts)}). <packed: ${display(existential.body.value, xtended, opts)} -| ${prettyEnv}>`;
 		})
 
 		.exhaustive();
