@@ -162,39 +162,47 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 
 		solver.add(artefacts.vc.eq(true));
 		solver.check().then(res => {
-			console.log("\n------------------ LETDEC --------------------------------");
-			console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
-			console.log("Wrapped:\n", EB.Display.Term(wrapped, xtended));
-			console.log("Instantiated:\n", NF.display(instantiated, xtended));
-
-			console.log("\n\n--------------------DEBUG VERIFICATION--------------------");
-			// console.log("RESULT:");
-			// console.log(result);
-
-			//console.log("\nSynthed:\n", NF.display(synthed, next));
-			console.log("\nArtefacts:");
-			console.log("Usages:\n", artefacts.usages);
-
-			console.log("\n--------------------FORMULA----------------------");
-			console.log("Z3 Sat:", res);
-			console.log("VC (Z3):\n", artefacts.vc.sexpr());
-
 			// Eager local obligation checks
 			const obligations = Verification.getObligations?.() ?? [];
 			if (obligations.length) {
 				console.log("\nLocal obligations (closed subformulas):");
 			}
-			Promise.all(
+			return Promise.all(
 				obligations.map(async ({ label, expr }) => {
 					const s = new zCtx.Solver();
 					s.add(expr.eq(true));
 					const r = await s.check();
-					console.log(` - [${r}] ${label}`);
-					if (r === "unsat") {
+					return { label, result: r, expr };
+					// if (r === "unsat") {
+					// 	console.log(` - [${r}] ${label}`);
+					// 	console.log("   expr:", expr.sexpr());
+					// }
+				}),
+			).then(rs => {
+				console.log("\n------------------ LETDEC --------------------------------");
+				console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
+				console.log("Wrapped:\n", EB.Display.Term(wrapped, xtended));
+				console.log("Instantiated:\n", NF.display(instantiated, xtended));
+
+				console.log("\n\n--------------------DEBUG VERIFICATION--------------------");
+				// console.log("RESULT:");
+				// console.log(result);
+
+				//console.log("\nSynthed:\n", NF.display(synthed, next));
+				console.log("\nArtefacts:");
+				console.log("Usages:\n", artefacts.usages);
+
+				console.log("\n--------------------FORMULA----------------------");
+				console.log("Z3 Sat:", res);
+				console.log("VC (Z3):\n", artefacts.vc.sexpr());
+				console.log("\n-------------------- SUBFORMULAS ----------------------");
+				rs.forEach(({ label, result, expr }, i) => {
+					console.log(` - [${result}] ${label}`);
+					if (result === "unsat") {
 						console.log("   expr:", expr.sexpr());
 					}
-				}),
-			).then(() => {
+				});
+
 				console.log("------------------- END LETDEC --------------------------------\n");
 			});
 		});
