@@ -1,5 +1,30 @@
 export *;
 
+let Nat
+    : Type
+    = Num [|\n -> n > 0 |];
+
+let Pos
+    : Type
+    = Num [|\p -> p > 1 |];
+
+
+let inc
+    : (n: Num) -> Num [|\o -> o == (n + 1) |]
+    = \x -> x + 1;    
+
+
+let incf
+    : (x: Nat) -> Pos
+    = \x -> {
+        let tmp
+            : (Num -> Nat) -> Pos
+            = \f -> (f x) + 1;
+        return tmp inc;
+    };
+
+
+
 let List
     : Type -> Type
     = \a -> | #nil Unit | #cons { a, List a };

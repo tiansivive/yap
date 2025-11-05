@@ -7,6 +7,7 @@ import * as E from "fp-ts/lib/Either";
 import * as CG from "./terms";
 
 export const codegen = (module: Interface, filepath: string) => {
+	const prelude = `const { $add, $sub, $mul, $div, $and, $or, $eq, $neq, $lt, $gt, $lte, $gte } = require("./prelude.js");\n`;
 	const imports = entries(module.imports).reduce((code, [filepath, [errs, values]]) => {
 		const info = errs.map(([name, err]) => `\n// Error importing ${name}: ${err.type}`);
 
@@ -30,5 +31,5 @@ export const codegen = (module: Interface, filepath: string) => {
 
 	const exports = `\nmodule.exports = { ${module.exports.join(", ")} };`;
 
-	return imports + foreign + letdecs + exports;
+	return prelude + imports + foreign + letdecs + exports;
 };

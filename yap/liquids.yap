@@ -10,26 +10,6 @@ let Pos
 
 
 
-let block
-    : Nat
-    = { 
-        let f: Nat -> Pos
-            = \o -> o + 1;
-        return (f 1); 
-    };
-
-let inc
-    : (x: Num) -> Num [|\v -> v == (x + 1) |]
-    = \x -> x + 1;
-
-let incf
-    : (x: Nat) -> Pos
-    = \x -> {
-        let tmp
-            : (Nat -> Nat) -> Pos
-            = \f -> (f x) + 1;
-        return tmp inc;
-    };
 
 
 let n: Int [| n > 0 |] = 100;
@@ -37,6 +17,11 @@ let result = inc n;
 
 let z: Nat = 0;
 let r: Nat = inc 0;
+
+
+let fn
+    : Num -> Num
+    = \x -> 2;
 
 let hof
     : (f: Nat -> Nat) -> Nat
@@ -51,18 +36,7 @@ let hof3
     = \x -> \f -> (f x) + 1;
 
 
-           (and 
-            (forall (($b Real)) (=> (= $b 1.0) true)) 
-            (forall ((x Real))              
-                (=> (> x 0.0) 
-                    (forall ((y Real)) 
-                        (=> (= y 1.0) 
-                            (forall (($c Real)) (=> (= $c (+ y x)) (< y $c)))) 
-                    )
-                )
-            )
-        )
-    let posTestCheckLiteral
+let posTestCheckLiteral
     : Num [|\v -> v == 1 |]
     = 1;
 
@@ -71,9 +45,17 @@ let negTestCheckLiteral
     = 2;
 
 
+let posFnApp
+    : Nat 
+    = 1 + 2;
+
 let negFnApp
     : Num [|\v -> v == 0 |]
     = 1 + 2;
+
+let nested
+    : Num
+    = (fn 1) + 5;
 
 let posTestCheckLambdaPostCondition
     : Num -> Num [|\v -> v == 1 |] 
@@ -101,24 +83,26 @@ let posTestCheckRefinedResultLambda
 
 
 
-
 let inc
-    : (n: Num) -> Num [|\o -> o == (n + 1) |]
-    = \x -> x + 1;    
+    : (x: Num) -> Num [|\v -> v == (x + 1) |]
+    = \x -> x + 1;
 
+let block
+    : Nat
+    = { 
+        let f: Nat -> Pos
+            = \o -> o + 1;
+        return (f 1); 
+    };
 
- 
- 
-let hof
-    : (f: Num -> Num) -> Num
-    = \f -> f 1;
+let incf
+    : (x: Nat) -> Pos
+    = \x -> {
+        let tmp
+            : (Num -> Nat) -> Pos
+            = \f -> (f x) + 1;
+        return tmp inc;
+    };
 
-let nonANF
-    : Num
-    = (inc 1) + 1;
-
-let hof2
-    : (Num -> Num) -> Num
-    = \f -> f 1 + 1;
 
 

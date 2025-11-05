@@ -635,10 +635,6 @@ export const VerificationService = (Z3: Context<"main">) => {
 						log("Liquid at type A:", NF.display(pAt, ctx));
 						log("Liquid at type B:", NF.display(pBt, ctx));
 
-						console.log(JSON.stringify(ctx.env.length));
-						console.log(JSON.stringify(pAt.closure.ctx.env.length));
-						console.log(JSON.stringify(pBt.closure.ctx.env.length));
-
 						const appliedAt = NF.apply(pAt.binder, pAt.closure, NF.Constructors.Rigid(lvl));
 						const appliedBt = NF.apply(pBt.binder, pBt.closure, NF.Constructors.Rigid(lvl));
 
@@ -835,9 +831,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 						name,
 						type: [, , type],
 					} = ctx.env[EB.lvl2idx(ctx, v.variable.lvl)];
-					console.log(EB.Display.Env(ctx));
-					console.log("Name:", name.variable);
-					console.log("Neutral?", String(nf.type === "Neutral"), "\n", NF.display(nf, ctx));
+
 					const all = build(mkSort(type, ctx));
 					const sort = all.length === 1 ? all[0] : Z3.Sort.declare(all.join(" -> "));
 					return Z3.Const(name.variable, sort);

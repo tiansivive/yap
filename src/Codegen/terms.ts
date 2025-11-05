@@ -2,6 +2,7 @@ import { match } from "ts-pattern";
 import { globalModules } from "../modules/loading";
 
 import * as EB from "@yap/elaboration";
+import * as Sub from "@yap/elaboration/unification/substitution";
 import { Literal } from "../shared/literals";
 
 import * as Lib from "@yap/shared/lib/primitives";
@@ -140,7 +141,11 @@ export const codegen = (env: string[], term: EB.Term): string => {
                 ${alts}
             })()`;
 			})
-			.otherwise(_ => {
+			.with({ type: "Modal" }, modal => {
+				return codegen(env, modal.term);
+			})
+			.otherwise(t => {
+				console.log("No codegen match for term: ", EB.Display.Term(t, { env: [], zonker: Sub.empty, metas: {} }));
 				throw new Error("Code gen not yet implemented");
 			})
 	);
