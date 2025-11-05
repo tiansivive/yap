@@ -1078,19 +1078,19 @@ exports[`inference: application > simple application f x 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 430,
+                                    "id": 429,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 429,
+                                      "id": 430,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -1379,19 +1379,19 @@ exports[`inference: application > simple application f x 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 246,
+                                    "id": 245,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 245,
+                                      "id": 246,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -1680,19 +1680,19 @@ exports[`inference: application > simple application f x 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 338,
+                                    "id": 337,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 337,
+                                      "id": 338,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -1981,19 +1981,19 @@ exports[`inference: application > simple application f x 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 522,
+                                    "id": 521,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 521,
+                                      "id": 522,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },

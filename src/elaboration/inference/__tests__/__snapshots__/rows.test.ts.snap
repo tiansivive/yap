@@ -9,7 +9,7 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
       "Type ~~ ?4",
     ],
     "term": "λr -> Schema [ foo: Num | r ]",
-    "type": "Π(r: Row) -> (closure: Type -| ·)",
+    "type": "Π(r: Row) -> (closure: Type -| Γ: r)",
   },
 }
 `;
@@ -1141,19 +1141,19 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 2070,
+                                "id": 2069,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 2069,
+                                  "id": 2070,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -1442,19 +1442,19 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 1886,
+                                "id": 1885,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 1885,
+                                  "id": 1886,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -1743,19 +1743,19 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 1978,
+                                "id": 1977,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 1977,
+                                  "id": 1978,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -2044,19 +2044,19 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 2162,
+                                "id": 2161,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 2161,
+                                  "id": 2162,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -4949,19 +4949,19 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 2070,
+                                    "id": 2069,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 2069,
+                                      "id": 2070,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -5250,19 +5250,19 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 1886,
+                                    "id": 1885,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 1885,
+                                      "id": 1886,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -5551,19 +5551,19 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 1978,
+                                    "id": 1977,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 1977,
+                                      "id": 1978,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -5852,19 +5852,19 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 2162,
+                                    "id": 2161,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 2161,
+                                      "id": 2162,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -7793,7 +7793,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       "?1 ~~ Schema [ | ?6 ]",
     ],
     "term": "λr -> Struct [ foo: Num | r ]",
-    "type": "Π(r: ?1) -> (closure: Schema [ foo: Type | ?6 ] -| ·)",
+    "type": "Π(r: ?1) -> (closure: Schema [ foo: Type | ?6 ] -| Γ: r)",
   },
 }
 `;
@@ -8983,19 +8983,19 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 1245,
+                                "id": 1244,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 1244,
+                                  "id": 1245,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -9284,19 +9284,19 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 1061,
+                                "id": 1060,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 1060,
+                                  "id": 1061,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -9585,19 +9585,19 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 1153,
+                                "id": 1152,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 1152,
+                                  "id": 1153,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -9886,19 +9886,19 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 1337,
+                                "id": 1336,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 1336,
+                                  "id": 1337,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -12799,19 +12799,19 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 1245,
+                                    "id": 1244,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 1244,
+                                      "id": 1245,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -13100,19 +13100,19 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 1061,
+                                    "id": 1060,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 1060,
+                                      "id": 1061,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -13401,19 +13401,19 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 1153,
+                                    "id": 1152,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 1152,
+                                      "id": 1153,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -13702,19 +13702,19 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 1337,
+                                    "id": 1336,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 1336,
+                                      "id": 1337,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },

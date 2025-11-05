@@ -18,6 +18,54 @@ with:
 }
 `;
 
+exports[`Unification (V2) > Mu Types > fails when unfolding Mu without application hits mismatch (non-function body) 1`] = `
+{
+  "message": "Unification Failure: Cannot unify 1 with 0
+
+Trace:
+
+While unifying:
+	
+	1
+with:
+	0
+
+--------------------------------------------------------------------------------------------
+
+
+While unifying:
+	
+	one
+with:
+	0
+",
+}
+`;
+
+exports[`Unification (V2) > Mu Types > unfolds Mu in application context during unification (negative) 1`] = `
+{
+  "message": "Unification Failure: Cannot unify 0 with 1
+
+Trace:
+
+While unifying:
+	
+	0
+with:
+	1
+
+--------------------------------------------------------------------------------------------
+
+
+While unifying:
+	
+	(test) 5
+with:
+	1
+",
+}
+`;
+
 exports[`Unification (V2) > Row Unification > fails on missing label 1`] = `
 {
   "message": "Missing Label: x
@@ -60,17 +108,17 @@ with:
 exports[`Unification (V2) > fails on lambda icit mismatch 1`] = `
 {
   "message": "Type Mismatch: Cannot unify:
-	λx -> (closure: x -| ·)
+	λx -> (closure: x -| Γ: x)
 with
-	λx => (closure: x -| ·)
+	λx => (closure: x -| Γ: x)
 
 Trace:
 
 While unifying:
 	
-	λx -> (closure: x -| ·)
+	λx -> (closure: x -| Γ: x)
 with:
-	λx => (closure: x -| ·)
+	λx => (closure: x -| Γ: x)
 ",
 }
 `;

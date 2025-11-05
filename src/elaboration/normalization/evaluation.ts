@@ -307,12 +307,12 @@ export const unwrapNeutral = (value: NF.Value): NF.Value => {
 
 export const force = (ctx: EB.Context, value: NF.Value): NF.Value => {
 	return match(value)
-		.with({ type: "Neutral" }, v => force(ctx, unwrapNeutral(v)))
+		.with({ type: "Neutral" }, ({ value }) => force(ctx, value))
 		.with(NF.Patterns.Flex, ({ variable }) => {
 			if (ctx.zonker[variable.val]) {
 				return force(ctx, ctx.zonker[variable.val]);
 			}
-			return value;
+			return NF.Constructors.Neutral(value);
 		})
 		.otherwise(() => value);
 };

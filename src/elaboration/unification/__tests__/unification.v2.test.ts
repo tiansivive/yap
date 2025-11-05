@@ -148,36 +148,62 @@ describe("Unification (V2)", () => {
 	});
 
 	describe("Mu Types", () => {
-		const mkIdMuAbs = () => {
+		// Use a contractive body to avoid infinite unfolding: µ T. 0
+		// This ignores its parameter and always unfolds to the constant 0.
+		const mkConstMuAbs = () => {
 			const ctx = Lib.defaultContext();
-			// body is just the bound variable; unfolding (apply) returns the argument unchanged
-			const body = EB.Constructors.Var({ type: "Bound", index: 0 });
+			const ann = EB.Constructors.Lit(Lit.Atom("Num"));
+			const body = EB.Constructors.Lambda("x", "Explicit", EB.Constructors.Lit(Lit.Num(0)), ann);
 			return NF.Constructors.Mu("T", "test", NF.Type, NF.Constructors.Closure(ctx, body));
 		};
 
-		it("unifies Mu with Mu (same body under rigid)", () => {
-			const mu1 = mkIdMuAbs();
-			const mu2 = mkIdMuAbs();
+		it("unifies Mu with Mu when body references binder (non-function body)", () => {
+			// µT. T  vs  µT. T  should unify by substituting Rigid(lvl) for T in the body
+			const ctx = Lib.defaultContext();
+			const body = EB.Constructors.Var({ type: "Bound", index: 0 });
+			const mu1 = NF.Constructors.Mu("T", "id", NF.Type, NF.Constructors.Closure(ctx, body));
+			const mu2 = NF.Constructors.Mu("T", "id", NF.Type, NF.Constructors.Closure(ctx, body));
 			const out = runUnify(mu1, mu2);
 			const sub = expectRight<Sub.Subst>(out);
 			expect(Sub.display(sub, out.metas)).toBe("empty");
 		});
 
 		it("unfolds Mu in application context during unification (positive)", () => {
-			const mu = mkIdMuAbs();
-			const arg = NF.Constructors.Lit(Lit.Num(5));
+			const mu = mkConstMuAbs();
+			const arg = NF.Constructors.Lit(Lit.Num(1));
 			const app = NF.Constructors.App(mu, arg, "Explicit");
-			const out = runUnify(app, arg);
+			// Since the body is constant 0, App(mu, arg) should unify with 0
+			const out = runUnify(app, NF.Constructors.Lit(Lit.Num(0)));
 			const sub = expectRight<Sub.Subst>(out);
 			expect(Sub.display(sub, out.metas)).toBe("empty");
 		});
 
 		it("unfolds Mu in application context during unification (negative)", () => {
-			const mu = mkIdMuAbs();
+			const mu = mkConstMuAbs();
 			const argL = NF.Constructors.Lit(Lit.Num(5));
-			const argR = NF.Constructors.Lit(Lit.Num(6));
 			const app = NF.Constructors.App(mu, argL, "Explicit");
-			const out = runUnify(app, argR);
+			// App(mu, arg) unfolds to 0, so unifying with 1 must fail
+			const out = runUnify(app, NF.Constructors.Lit(Lit.Num(1)));
+			const err = expectLeft(out);
+			expect(err.type).toBe("UnificationFailure");
+			expect({ message: EB.V2.display(err) }).toMatchSnapshot();
+		});
+
+		it("unfolds Mu without application when comparing against value (non-function body)", () => {
+			// Body is NOT a function; unification should unfold Mu on either side
+			const ctx = Lib.defaultContext();
+			const body = EB.Constructors.Lit(Lit.Num(1));
+			const mu = NF.Constructors.Mu("T", "one", NF.Type, NF.Constructors.Closure(ctx, body));
+			const out = runUnify(mu, NF.Constructors.Lit(Lit.Num(1)));
+			const sub = expectRight<Sub.Subst>(out);
+			expect(Sub.display(sub, out.metas)).toBe("empty");
+		});
+
+		it("fails when unfolding Mu without application hits mismatch (non-function body)", () => {
+			const ctx = Lib.defaultContext();
+			const body = EB.Constructors.Lit(Lit.Num(1));
+			const mu = NF.Constructors.Mu("T", "one", NF.Type, NF.Constructors.Closure(ctx, body));
+			const out = runUnify(mu, NF.Constructors.Lit(Lit.Num(0)));
 			const err = expectLeft(out);
 			expect(err.type).toBe("UnificationFailure");
 			expect({ message: EB.V2.display(err) }).toMatchSnapshot();

@@ -13,7 +13,7 @@ describe("Normalization: force() and apply()", () => {
 		// meta ?1 at level 0
 		const flex = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 		// zonk it to a concrete literal
-		ctx.zonker[1] = NF.Constructors.Lit(Lit.Num(7));
+		ctx.zonker[1] = NF.Constructors.Lit(Lit.Num(1));
 
 		const res = NF.force(ctx, flex);
 		expect(res.type).toBe("Lit");

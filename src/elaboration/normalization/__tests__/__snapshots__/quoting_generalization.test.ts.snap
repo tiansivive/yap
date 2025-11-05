@@ -2,7 +2,7 @@
 
 exports[`Normalization: quoting and generalization > generalizes metas into implicit Pis and preserves zonker in extended ctx 1`] = `
 {
-  "nf": "Π(a: Type) => (closure: a -| Γ: a = a)",
+  "nf": "Π(a: Type) => (closure: a -| Γ: a; a = a)",
 }
 `;
 

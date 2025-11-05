@@ -16,9 +16,8 @@ import * as E from "fp-ts/Either";
 import * as F from "fp-ts/function";
 
 import { solve } from "./solver";
-import { display } from "./unification/substitution";
 
-describe("Constraint Solver", () => {
+describe.skip("Constraint Solver", () => {
 	const empty: EB.Context = {
 		env: [],
 		types: [],

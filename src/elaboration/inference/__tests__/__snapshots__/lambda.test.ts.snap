@@ -7,7 +7,7 @@ exports[`Inference: lambdas > explicit lambda with param annotation 1`] = `
       "Type ~~ Type",
     ],
     "term": "λx -> 1",
-    "type": "Π(x: String) -> (closure: Num -| ·)",
+    "type": "Π(x: String) -> (closure: Num -| Γ: x)",
   },
 }
 `;
@@ -1006,19 +1006,19 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 2062,
+                                "id": 2061,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 2061,
+                                  "id": 2062,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -1307,19 +1307,19 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 1878,
+                                "id": 1877,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 1877,
+                                  "id": 1878,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -1608,19 +1608,19 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 1970,
+                                "id": 1969,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 1969,
+                                  "id": 1970,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -1909,19 +1909,19 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 2154,
+                                "id": 2153,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 2153,
+                                  "id": 2154,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -4587,19 +4587,19 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 2062,
+                                    "id": 2061,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 2061,
+                                      "id": 2062,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -4888,19 +4888,19 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 1878,
+                                    "id": 1877,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 1877,
+                                      "id": 1878,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -5189,19 +5189,19 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 1970,
+                                    "id": 1969,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 1969,
+                                      "id": 1970,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -5490,19 +5490,19 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 2154,
+                                    "id": 2153,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 2153,
+                                      "id": 2154,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -7211,7 +7211,7 @@ exports[`Inference: lambdas > explicit lambda without annotation 1`] = `
   "displays": {
     "constraints": [],
     "term": "λx -> 1",
-    "type": "Π(x: ?1) -> (closure: Num -| ·)",
+    "type": "Π(x: ?1) -> (closure: Num -| Γ: x)",
   },
 }
 `;
@@ -8211,19 +8211,19 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 430,
+                                "id": 429,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 429,
+                                  "id": 430,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -8512,19 +8512,19 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 246,
+                                "id": 245,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 245,
+                                  "id": 246,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -8813,19 +8813,19 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 338,
+                                "id": 337,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 337,
+                                  "id": 338,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -9114,19 +9114,19 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 522,
+                                "id": 521,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 521,
+                                  "id": 522,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -11710,19 +11710,19 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 430,
+                                    "id": 429,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 429,
+                                      "id": 430,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -12011,19 +12011,19 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 246,
+                                    "id": 245,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 245,
+                                      "id": 246,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -12312,19 +12312,19 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 338,
+                                    "id": 337,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 337,
+                                      "id": 338,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -12613,19 +12613,19 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 522,
+                                    "id": 521,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 521,
+                                      "id": 522,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -14258,7 +14258,7 @@ exports[`Inference: lambdas > implicit lambda without annotation 1`] = `
   "displays": {
     "constraints": [],
     "term": "λx => 1",
-    "type": "Π(x: ?1) => (closure: Num -| ·)",
+    "type": "Π(x: ?1) => (closure: Num -| Γ: x)",
   },
 }
 `;
@@ -15258,19 +15258,19 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 1246,
+                                "id": 1245,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 1245,
+                                  "id": 1246,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -15559,19 +15559,19 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 1062,
+                                "id": 1061,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 1061,
+                                  "id": 1062,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -15860,19 +15860,19 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 1154,
+                                "id": 1153,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 1153,
+                                  "id": 1154,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -16161,19 +16161,19 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
                           "body": {
                             "arg": {
                               "arg": {
-                                "id": 1338,
+                                "id": 1337,
                                 "type": "Var",
                                 "variable": {
-                                  "index": 2,
+                                  "index": 1,
                                   "type": "Bound",
                                 },
                               },
                               "func": {
                                 "arg": {
-                                  "id": 1337,
+                                  "id": 1338,
                                   "type": "Var",
                                   "variable": {
-                                    "index": 1,
+                                    "index": 2,
                                     "type": "Bound",
                                   },
                                 },
@@ -18757,19 +18757,19 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 1246,
+                                    "id": 1245,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 1245,
+                                      "id": 1246,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -19058,19 +19058,19 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 1062,
+                                    "id": 1061,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 1061,
+                                      "id": 1062,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -19359,19 +19359,19 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 1154,
+                                    "id": 1153,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 1153,
+                                      "id": 1154,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },
@@ -19660,19 +19660,19 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
                               "body": {
                                 "arg": {
                                   "arg": {
-                                    "id": 1338,
+                                    "id": 1337,
                                     "type": "Var",
                                     "variable": {
-                                      "index": 2,
+                                      "index": 1,
                                       "type": "Bound",
                                     },
                                   },
                                   "func": {
                                     "arg": {
-                                      "id": 1337,
+                                      "id": 1338,
                                       "type": "Var",
                                       "variable": {
-                                        "index": 1,
+                                        "index": 2,
                                         "type": "Bound",
                                       },
                                     },

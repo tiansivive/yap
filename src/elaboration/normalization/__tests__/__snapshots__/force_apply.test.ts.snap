@@ -12,8 +12,14 @@ exports[`Normalization: force() and apply() > apply substitutes value into closu
 }
 `;
 
+exports[`Normalization: force() and apply() > force leaves unsolved metas untouched (neutral) 1`] = `
+{
+  "pretty": "?2",
+}
+`;
+
 exports[`Normalization: force() and apply() > force resolves flexible metas via zonker mapping 1`] = `
 {
-  "pretty": "7",
+  "pretty": "1",
 }
 `;
