@@ -207,7 +207,14 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 					console.log(` - [${result}] ${label}`);
 					if (context) {
 						if (context.description) {
-							console.log(`   ${context.description}`);
+							if (Array.isArray(context.description)) {
+								console.log(`   description:`);
+								for (const line of context.description) {
+									console.log(`     ${line}`);
+								}
+							} else {
+								console.log(`   description: ${context.description}`);
+							}
 						}
 
 						if (context.term) {

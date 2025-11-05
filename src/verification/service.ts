@@ -70,7 +70,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 		context?: {
 			term?: string;
 			type?: string;
-			description?: string;
+			description?: string | string[];
 		};
 	};
 	let obligations: Obligation[] = [];
@@ -157,10 +157,10 @@ export const VerificationService = (Z3: Context<"main">) => {
 							const applied = NF.apply(p.binder, p.closure, NF.Constructors.Rigid(lvl));
 							const phi = translate(applied, xtended, { [lvl]: x }) as Bool;
 
-							const imp = record("check.abs.pre", Z3.ForAll([x], Z3.Implies(phi, artefacts.vc as Bool)) as Bool, {
-								term: EB.Display.Term(tm, ctx),
+							const implicationDesc = `Forall ${ty.binder.variable}. ${NF.display(ty.binder.annotation, ctx)} ==>  ${NF.display(tyBody, xtended)} }`;
+							const imp = record("check.abs.quantification", Z3.ForAll([x], Z3.Implies(phi, artefacts.vc as Bool)) as Bool, {
 								type: NF.display(ty, ctx),
-								description: `Lambda ${tm.binding.variable} must satisfy precondition from parameter type`,
+								description: [`Function term must satisfy body's postcondition under the precondition on ${tm.binding.variable}`, implicationDesc],
 							}) as Bool;
 
 							return { usages, vc: imp };
@@ -1053,7 +1053,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 				const phiAt = translate(appliedAt, ctx, rigids) as Bool;
 
 				const forall: Bool = Z3.ForAll([x], Z3.Implies(phiAt, vc as Bool));
-				record(`quantify:${variable}`, forall, {
+				record(`quantify: ${variable}`, forall, {
 					type: NF.display(annotation, ctx),
 					description: `Quantifying over ${variable}: ${NF.display(annotation, ctx)} with refinement`,
 				});
