@@ -219,7 +219,7 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 						}
 					}
 					if (result === "unsat") {
-						console.log("   expr:", expr.sexpr());
+						//console.log("   expr:", expr.sexpr());
 						if (model) {
 							// Try to extract variable values from the model
 							console.log("   counterexample:");
