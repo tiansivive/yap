@@ -169,15 +169,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 
 					return vc;
 				})
-				// .with([{ type: "Abs" }, P._], ([abs, ty]) => {
-				// 	const ann = NF.evaluate(ctx, abs.binding.annotation);
-				// 	return V2.local(ctx => EB.bind(ctx, { type: "Lambda", variable: abs.binding.variable }, ann), V2.Do(function* () {
-				// 		const xtended = yield* V2.ask();
-				// 		const body = NF.evaluate(xtended, abs.body);
-				// 		const vc = yield* subtype.gen(body, ty);
-				// 		return { usages: Q.noUsage(xtended.env.length), vc };
-				// 	 }));
-				// })
+
 				.otherwise(function* ([tm, ty]) {
 					const [synthed, artefacts] = yield* synth.gen(tm);
 					// Since verification runs after typechecking, we can assume that the term has at least the type we are checking against
@@ -383,67 +375,6 @@ export const VerificationService = (Z3: Context<"main">) => {
 						const arg = yield* synth.gen(tm.arg);
 						const [argTy, argArtefacts] = arg;
 
-						const forced = NF.force(ctx, fnTy);
-						const modalities = extract(forced, ctx);
-						// const [out, usages, vc] = yield* V2.pure(
-						// 	match(forced)
-						// 		.with({ type: "Abs", binder: { type: "Pi" } }, ty =>
-						// 			V2.Do(function* () {
-						// 				const checked = yield* check.gen(tm.arg, ty.binder.annotation);
-						// 				const us = Q.add(fnArtefacts.usages, Q.multiply(modalities.quantity, checked.usages));
-
-						// 				// const applied = NF.reduce(checked.vc, NF.evaluate(ctx, tm.arg), "Explicit");
-						// 				// const vc = NF.DSL.Binop.and(fnArtefacts.vc, applied);
-						// 				const vc = Z3.And(fnArtefacts.vc as Bool, checked.vc as Bool);
-						// 				const nf = NF.evaluate(ctx, tm.arg);
-
-						// 				console.log("Function application argument type:", NF.display(nf, ctx));
-						// 				console.log("Neutral?", String(nf.type === "Neutral"));
-
-						// 				const out = apply(ty.binder, ty.closure, nf, ty.binder.annotation);
-						// 				if (nf.type !== "Neutral") {
-						// 					// NOTE: This is the is Jhala and Vazou's Syn-App rule, which relies on ANF
-						// 					return [out, us, vc] as const;
-						// 				}
-
-						// 				const fresh = freshName();
-
-						// 				// const out = apply(ty.binder, ty.closure, nf, ty.binder.annotation);
-
-						// 				// // NOTE: trying out the alternative existential-based rule (Syn-App-Ex) mentioned in their paper, but which originates from Knowles and Flanagan, 2009 (Contract types)
-
-						// 				// const existential = NF.Constructors.Exists(
-						// 				// 	ty.binder.variable,
-						// 				// 	ty.binder.annotation,
-						// 				// 	out
-						// 				// )
-						// 				const sortMap = mkSort(ty.binder.annotation, ctx);
-						// 				const xSort = match(sortMap)
-						// 					.with({ Prim: P.select() }, p => p)
-						// 					.otherwise(() => {
-						// 						throw new Error("Only primitive types can be used in logical formulas");
-						// 					});
-						// 				const x = Z3.Const(ty.binder.variable, xSort);
-						// 				return [out, us, Z3.ForAll([x], vc)] as const;
-						// 			}),
-						// 		)
-						// 		// .with({ type: "Existential" }, exists => V2.Do(function* () {
-						// 		// 	V2.local(
-						// 		// 		ctx => EB.bind(ctx, { type: "Pi", variable: exists.variable }, exists.annotation),
-						// 		// 		V2.Do(function* () {
-
-						// 		// 			//const [t, as] = yield* synth.gen(app);
-						// 		// 			return [NF.Constructors.Exists(exists.variable, exists.annotation, exists), fnArtefacts.usages, fnArtefacts.vc] as const;
-						// 		// 		})
-						// 		// 	)
-						// 		// 	return 1 as any
-						// 		// }))
-						// 		.otherwise(ty => {
-						// 			console.error("Got: ", NF.display(ty, ctx));
-						// 			throw new Error("Impossible: Function type expected in application");
-						// 		}),
-						// );
-
 						const result = yield* V2.pure(incorporate(NF.force(ctx, argTy), NF.force(ctx, fnTy)));
 						// Merge artefacts from function, argument, and the application rule itself
 						const [outTy, outArt] = result;
@@ -609,24 +540,6 @@ export const VerificationService = (Z3: Context<"main">) => {
 					],
 					([at, bt]) =>
 						V2.Do(function* () {
-							// const vcArg = yield* subtype.gen(bt.binder.annotation, at.binder.annotation); // contravariant position
-
-							// const ctx = yield* V2.ask();
-							// const anf = NF.apply(at.binder, at.closure, NF.Constructors.Rigid(ctx.env.length));
-							// const bnf = NF.apply(bt.binder, bt.closure, NF.Constructors.Rigid(ctx.env.length));
-
-							// const vcBody = yield* V2.local(ctx => EB.bind(ctx, bt.binder, bt.binder.annotation), subtype(anf, bnf)); // covariant position
-
-							// const sortMap = mkSort(bt.binder.annotation, ctx);
-							// const xSort = match(sortMap)
-							// 	.with({ Prim: P.select() }, p => p)
-							// 	.otherwise(() => {
-							// 		throw new Error("Only primitive types can be used in logical formulas");
-							// 	});
-							// const x = Z3.Const(bt.binder.variable, xSort);
-
-							// const vc = Z3.ForAll([x], Z3.Implies(vcArg as Bool, vcBody as Bool));
-							// return vc;
 							// 1) Ensure parameter types are in a subtype relation (contravariant)
 							const vcArg = yield* subtype.gen(bt.binder.annotation, at.binder.annotation);
 
@@ -656,13 +569,11 @@ export const VerificationService = (Z3: Context<"main">) => {
 
 							// Combine: global arg-subtyping vc AND per-argument precondition => body
 							const guarded = record("subtype.pi.body", Z3.ForAll([x], Z3.Implies(phiX, vcBody as Bool)) as Bool, {
-								term: `Pi subtyping body`,
 								type: `${NF.display(at, ctx)} <: ${NF.display(bt, ctx)}`,
 								description: `Function result must be subtype under parameter ${bt.binder.variable} assumption`,
 							}) as Bool;
 							// Note: vcArg may itself be a conjunction of sub-obligations; record it too for locality
 							record("subtype.pi.param", vcArg as Bool, {
-								term: `Pi subtyping param`,
 								type: `${NF.display(bt.binder.annotation, ctx)} <: ${NF.display(at.binder.annotation, ctx)}`,
 								description: `Function parameter types (contravariant)`,
 							});
@@ -675,48 +586,9 @@ export const VerificationService = (Z3: Context<"main">) => {
 							ctx => EB.bind(ctx, { type: "Pi", variable: sig.variable }, sig.annotation),
 							V2.Do(function* () {
 								const xtended = yield* V2.ask();
-								const body = sig.body;
 
-								// console.log("-------SIGMA SUBTYPE-------");
-								// console.log("Sigma:", NF.display(sig, ctx));
-								// console.log("Body:", NF.display(body, xtended));
-								// console.log("Type:", NF.display(ty, xtended));
-								// console.log("---------------------------");
-								// const body = NF.evaluate(xtended, abs.body);
 								const vc = yield* subtype.gen(sig.body.value, ty);
 								return quantify(sig.variable, sig.annotation, vc, xtended);
-								// const sortMap = mkSort(sig.annotation, xtended);
-								// const xSort = match(sortMap)
-								// 	.with({ Prim: P.select() }, p => p)
-								// 	.otherwise(() => {
-								// 		console.log("Sigma Subtype SortMap:", sortMap);
-								// 		throw new Error("Only primitive types can be used in logical formulas");
-								// 	});
-								// const x = Z3.Const(sig.variable, xSort);
-
-								// if (sig.annotation.type !== "Modal") {
-								// 	const forall: Bool = Z3.ForAll([x], vc as Bool);
-								// 	return forall;
-								// }
-
-								// const pAt = extract(sig.annotation, xtended).liquid;
-
-								// if (pAt.type !== "Abs") {
-								// 	throw new Error("Liquid refinements must be unary functions");
-								// }
-
-								// const lvl = xtended.env.length;
-								// const appliedAt = NF.apply(pAt.binder, pAt.closure, NF.Constructors.Rigid(lvl));
-								// log("Sigma Subtype Liquid Predicate:", NF.display(appliedAt, xtended));
-
-								// // const inner = EB.bind(xtended, pAt.binder, NF.Constructors.Rigid(lvl));
-								// // const appliedAt = NF.evaluate(inner, pAt.closure.term);
-
-								// const rigids = { [lvl]: x } as Record<number, Expr>;
-								// const phiAt = translate(appliedAt, ctx, rigids) as Bool;
-
-								// const forall: Bool = Z3.ForAll([x], Z3.Implies(phiAt, vc as Bool));
-								// return forall;
 							}),
 						);
 						return res;
@@ -725,19 +597,10 @@ export const VerificationService = (Z3: Context<"main">) => {
 
 				.with([P._, { type: "Existential" }], ([ty, sig]) =>
 					V2.Do(function* () {
-						//console.log("Sigma subtype invoked (right)");
-						// const ann = NF.evaluate(ctx, abs.binder.annotation);
 						const r = V2.local(
 							ctx => EB.bind(ctx, { type: "Pi", variable: sig.variable }, sig.annotation),
 							V2.Do(function* () {
-								const xtended = yield* V2.ask();
 								const body = sig.body;
-
-								// console.log("-------SIGMA SUBTYPE-------");
-								// console.log("Type:", NF.display(ty, xtended));
-								// console.log("Sigma:", NF.display(sig, ctx));
-								// console.log("Body:", NF.display(body, xtended));
-								// console.log("---------------------------");
 
 								// const body = NF.evaluate(xtended, abs.body);
 								const vc = yield* subtype.gen(ty, body.value);
@@ -776,10 +639,6 @@ export const VerificationService = (Z3: Context<"main">) => {
 						console.log(JSON.stringify(pAt.closure.ctx.env.length));
 						console.log(JSON.stringify(pBt.closure.ctx.env.length));
 
-						// const xa = EB.bind(ctx, pAt.binder, NF.Constructors.Rigid(lvl));
-						// const appliedAt = NF.evaluate(xa, pAt.closure.term);
-						// const xb = EB.bind(ctx, pBt.binder, NF.Constructors.Rigid(lvl));
-						// const appliedBt = NF.evaluate(xb, pBt.closure.term);
 						const appliedAt = NF.apply(pAt.binder, pAt.closure, NF.Constructors.Rigid(lvl));
 						const appliedBt = NF.apply(pBt.binder, pBt.closure, NF.Constructors.Rigid(lvl));
 
@@ -1066,16 +925,6 @@ export const VerificationService = (Z3: Context<"main">) => {
 			});
 
 		return r;
-
-		// const a = Z3.Datatype("String")
-		// a.declare("mkString");
-		// a.create()
-
-		// const x = Z3.Int.const('x');
-		// const A = Z3.Sort.declare("A")
-
-		// const implication = Z3.Implies(x.ge(5), x.gt(10));
-		// Z3.solve(Z3.And(x.ge(10), x.le(9)));
 	};
 
 	type SortMap = { Prim: Sort } | { Func: SortMap[] } | { App: SortMap[] };
@@ -1182,7 +1031,7 @@ export const VerificationService = (Z3: Context<"main">) => {
 
 				if (annotation.type !== "Modal") {
 					const forall: Bool = Z3.ForAll([x], vc as Bool);
-					record(`quantify:${variable}`, forall, {
+					record(`quantify: ${variable}`, forall, {
 						type: NF.display(annotation, ctx),
 						description: `Quantifying over ${variable} with type ${NF.display(annotation, ctx)}`,
 					});
