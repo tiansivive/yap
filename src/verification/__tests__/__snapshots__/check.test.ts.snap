@@ -1,0 +1,165 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VerificationService > checks Nat type alias definition 1`] = `"(and true true)"`;
+
+exports[`VerificationService > checks Pos type alias definition 1`] = `"(and true true)"`;
+
+exports[`VerificationService > checks a literal against a simple refinement 1`] = `"(and true true (forall (($a Real)) (=> (= $a 42.0) (= $a 42.0))))"`;
+
+exports[`VerificationService > checks block expression with refined result 1`] = `
+"(and (forall ((o Real))
+       (let ((a!1 (forall ((x Real))
+                    (=> (> x 0.0)
+                        (forall ((y Real))
+                          (let ((a!1 (forall ((r Real))
+                                       (=> (= r (+ x 1.0)) (> r 1.0)))))
+                            (=> (= y 1.0) (and true a!1))))))))
+       (let ((a!2 (and true
+                       (> o 0.0)
+                       true
+                       (forall ((n Real)) (=> (> n 0.0) true))
+                       true
+                       true
+                       (forall (($b Real)) (=> (= $b 1.0) true))
+                       a!1)))
+         (=> (> o 0.0) a!2))))
+     true
+     true
+     true
+     (forall (($e Real)) (=> (= $e 1.0) (> $e 0.0)))
+     (forall ((t1 Real))
+       (let ((a!1 (and true (forall ((p Real)) (=> (> p 1.0) (> p 0.0))))))
+         (=> (= t1 1.0) a!1))))"
+`;
+
+exports[`VerificationService > checks function definition fn 1`] = `
+"(forall ((x Real))
+  (let ((a!1 (and true true (forall (($a Real)) (=> (= $a 2.0) true)))))
+    (=> true a!1)))"
+`;
+
+exports[`VerificationService > checks higher-order function hof 1`] = `
+"(and true
+     true
+     true
+     (forall (($a Real)) (=> (= $a 1.0) (> $a 0.0)))
+     (forall ((t1 Real))
+       (let ((a!1 (and true (forall ((n Real)) (=> (> n 0.0) (> n 0.0))))))
+         (=> (= t1 1.0) a!1))))"
+`;
+
+exports[`VerificationService > checks higher-order function hof2 1`] = `
+"(and true
+     true
+     true
+     true
+     (forall (($a Real)) (=> (= $a 1.0) true))
+     (forall ((t2 Real))
+       (let ((a!1 (and true (forall ((n Real)) (=> (> n 0.0) true)))))
+         (=> (= t2 1.0) a!1)))
+     true
+     true
+     (forall (($d Real)) (=> (= $d 1.0) true))
+     (forall ((t2 Real))
+       (let ((a!1 (forall ((x Real))
+                    (=> (> x 0.0)
+                        (forall ((y Real))
+                          (let ((a!1 (forall ((r Real))
+                                       (=> (= r (+ x 1.0)) (> r 1.0)))))
+                            (=> (= y 1.0) (and true a!1))))))))
+         (=> (= t2 1.0) a!1))))"
+`;
+
+exports[`VerificationService > checks higher-order function hof3 1`] = `
+"(forall ((x Real))
+  (let ((a!1 (forall ((t3 Real))
+               (forall ((x!1 Real))
+                 (forall ((y Real))
+                   (let ((a!1 (forall ((r Real)) (=> (= r (+ x!1 1.0)) true))))
+                     (=> (= y 1.0) (and true a!1))))))))
+  (let ((a!2 (and true
+                  true
+                  true
+                  true
+                  (forall ((t3 Real)) true)
+                  true
+                  true
+                  (forall (($a Real)) (=> (= $a 1.0) true))
+                  a!1)))
+    (=> true a!2))))"
+`;
+
+exports[`VerificationService > checks inc function definition 1`] = `
+"(forall ((x Real))
+  (let ((a!1 (forall ((x!1 Real))
+               (forall ((y Real))
+                 (let ((a!1 (forall ((r Real))
+                              (=> (= r (+ x!1 1.0)) (= r (+ x!1 1.0))))))
+                   (=> (= y 1.0) (and true a!1)))))))
+  (let ((a!2 (and true
+                  true
+                  true
+                  true
+                  true
+                  (forall (($a Real)) (=> (= $a 1.0) true))
+                  a!1)))
+    (=> true a!2))))"
+`;
+
+exports[`VerificationService > checks lambda with Nat pre and postcondition - identity works 1`] = `
+"(forall ((x Real))
+  (let ((a!1 (and (> x 0.0) true (forall ((n Real)) (=> (> n 0.0) (> n 0.0))))))
+    (=> (> x 0.0) a!1)))"
+`;
+
+exports[`VerificationService > checks lambda with Nat precondition - identity preserves property 1`] = `
+"(forall ((x Real))
+  (let ((a!1 (and (> x 0.0) true (forall ((n Real)) (=> (> n 0.0) true)))))
+    (=> (> x 0.0) a!1)))"
+`;
+
+exports[`VerificationService > checks lambda with dependent refinement on result 1`] = `
+"(forall ((x Real))
+  (let ((a!1 (forall ((x!1 Real))
+               (forall ((y Real))
+                 (let ((a!1 (forall ((r Real))
+                              (=> (= r (+ x!1 1.0)) (= r (+ x!1 1.0))))))
+                   (=> (= y 1.0) (and true a!1)))))))
+  (let ((a!2 (and true
+                  true
+                  true
+                  true
+                  true
+                  (forall (($a Real)) (=> (= $a 1.0) true))
+                  a!1)))
+    (=> true a!2))))"
+`;
+
+exports[`VerificationService > checks lambda with postcondition returning constant 1 1`] = `
+"(forall ((x Real))
+  (let ((a!1 (and true true (forall (($a Real)) (=> (= $a 1.0) (= $a 1.0))))))
+    (=> true a!1)))"
+`;
+
+exports[`VerificationService > checks positive function application 1 + 2 as Nat 1`] = `
+"(let ((a!1 (forall ((x Real))
+             (=> (= x 1.0)
+                 (forall ((y Real))
+                   (let ((a!1 (and true
+                                   (forall ((r Real)) (=> (= r 3.0) (> r 0.0))))))
+                     (=> (= y 2.0) a!1)))))))
+  (and true
+       true
+       true
+       (forall (($a Real)) (=> (= $a 1.0) true))
+       true
+       true
+       (forall (($c Real)) (=> (= $c 2.0) true))
+       a!1))"
+`;
+
+exports[`VerificationService > checks positive integer literal with refinement 1`] = `"(and true true (forall (($a Real)) (=> (= $a 100.0) (> $a 0.0))))"`;
+
+exports[`VerificationService > checks positive test - literal equals 1 1`] = `"(and true true (forall (($a Real)) (=> (= $a 1.0) (= $a 1.0))))"`;
+
+exports[`VerificationService.check > checks a literal against a simple refinement 1`] = `"(and true true (forall (($a Real)) (=> (= $a 42.0) (= $a 42.0))))"`;

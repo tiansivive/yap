@@ -138,10 +138,6 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 			tm => EB.Icit.wrapLambda(tm, ty, xtended),
 		);
 
-		// console.log("\n------------------ LETDEC --------------------------------");
-		// console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
-		// console.log("Wrapped:\n", EB.Display.Term(wrapped, xtended));
-		// console.log("Instantiated:\n", NF.display(instantiated, xtended));
 		const zCtx = getZ3Context();
 		if (!zCtx) {
 			throw new Error("Z3 context not set");
@@ -149,7 +145,7 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 
 		// const Verification = VerificationService(zCtx);
 
-		// const { result: res } = V2.Do(() => V2.local(_ => next, Verification.check(wrapped, instantiated)))(next);
+		// const { result: res } = V2.Do(() => V2.local(_ => xtended, Verification.check(wrapped, instantiated)))(xtended);
 		// if (res._tag === "Left") {
 		// 	console.log("Verification failure");
 		// 	console.log(res.left);

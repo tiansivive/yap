@@ -13,9 +13,6 @@ import { options } from "@yap/shared/config/options";
 import * as Null from "@yap/utils";
 
 const display = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; printEnv?: boolean } = { deBruijn: false, printEnv: false }): string => {
-	const bind = (name: string) => {
-		return { ...ctx, env: [{ name: { variable: name } }, ...ctx.env] } as DisplayContext;
-	};
 	const _display = (term: EB.Term): string => {
 		return (
 			match(term)
@@ -43,7 +40,7 @@ const display = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; 
 						return binding.source;
 					}
 
-					return `([μ = ${binding.source}](${binding.variable}: ${_display(binding.annotation)})) -> ${display(body, bind(binding.variable), opts)}`;
+					return `([μ = ${binding.source}](${binding.variable}: ${_display(binding.annotation)})) -> ${display(body, bind(binding.variable, ctx), opts)}`;
 				})
 				.with({ type: "Abs" }, ({ binding, body }) => {
 					const b = match(binding)
@@ -55,19 +52,19 @@ const display = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; 
 
 					const arr = binding.type !== "Let" && binding.type !== "Mu" && binding.icit === "Implicit" ? "=>" : "->";
 
-					const xtended = bind(binding.variable);
-					const printedEnv = xtended.env
-						.map(({ nf, name }) => {
-							if (nf) {
-								return `${name.variable} = ${NF.display(nf, xtended, opts)}`;
-							}
-							return name.variable;
-						})
-						.join("; ");
+					const xtended = bind(binding.variable, ctx);
+					// const printedEnv = xtended.env
+					// 	.map(({ nf, name }) => {
+					// 		if (nf) {
+					// 			return `${name.variable} = ${NF.display(nf, xtended, opts)}`;
+					// 		}
+					// 		return name.variable;
+					// 	})
+					// 	.join("; ");
 
 					//TODO:QUESTION: should we print the environment here?
 					if (opts.printEnv) {
-						return `(${b} ${arr} ${display(body, xtended, opts)} -| Γ = ${printedEnv})`;
+						return `(${b} ${arr} ${display(body, xtended, opts)}`; // -| Γ = ${printedEnv})`;
 					}
 					return `${b} ${arr} ${display(body, xtended, opts)}`;
 				})
@@ -96,8 +93,18 @@ const display = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; 
 					return `match ${scut}\n${alts}`;
 				})
 				.with({ type: "Block" }, ({ statements, return: ret }) => {
-					const stmts = statements.map(s => Stmt.display(s, ctx, opts)).join("; ");
-					return `{ ${stmts}; return ${_display(ret)}; }`;
+					const { code, next } = statements.reduce<{ code: string; next: DisplayContext }>(
+						({ code, next }, stmt) => {
+							if (stmt.type === "Let") {
+								return { next: bind(stmt.variable, ctx), code: code + "\n\t" + Stmt.display(stmt, ctx, opts) + ";" };
+							}
+							return { next: ctx, code: code + "\n\t" + Stmt.display(stmt, ctx, opts) + ";" };
+						},
+						{ code: "", next: ctx },
+					);
+
+					const _return = display(ret, next, opts);
+					return `{${code}\n\treturn ${_return};\n\t}`;
 				})
 				.with({ type: "Modal" }, ({ term, modalities }) => {
 					return `<${Q.display(modalities.quantity)}> ${_display(term)} [| ${_display(modalities.liquid)} |]`;
@@ -205,11 +212,17 @@ const Pat = {
 	},
 };
 
+const bind = (name: string, ctx: DisplayContext) => {
+	return { ...ctx, env: [{ name: { variable: name } }, ...ctx.env] } as DisplayContext;
+};
 const Stmt = {
 	display: (stmt: EB.Statement, ctx: Pick<EB.Context, "zonker" | "metas" | "env">, opts = { deBruijn: false }): string => {
 		return match(stmt)
 			.with({ type: "Expression" }, ({ value }) => display(value, ctx, opts))
-			.with({ type: "Let" }, ({ variable, value, annotation }) => `let ${variable}\n\t: ${NF.display(annotation, ctx, opts)}\n\t= ${display(value, ctx, opts)}`)
+			.with(
+				{ type: "Let" },
+				({ variable, value, annotation }) => `let ${variable}\n\t: ${NF.display(annotation, ctx, opts)}\n\t= ${display(value, bind(variable, ctx), opts)}`,
+			)
 			.otherwise(() => "Statement Display: Not implemented");
 	},
 };

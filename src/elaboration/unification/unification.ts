@@ -189,30 +189,38 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						// 	);
 					}),
 				)
-				.with([NF.Patterns.App, P._], ([app, v]) => {
-					const unfolded = unfoldMu(app);
-					return unify(
-						F.pipe(
-							unfolded,
-							O.getOrElse<NF.Value>(() => app),
-						),
-						v,
-						lvl,
-						subst,
-					);
-				})
-				.with([P._, NF.Patterns.App], ([v, app]) => {
-					const unfolded = unfoldMu(app);
-					return unify(
-						v,
-						F.pipe(
-							unfolded,
-							O.getOrElse<NF.Value>(() => app),
-						),
-						lvl,
-						subst,
-					);
-				})
+				.with(
+					[NF.Patterns.App, P._],
+					([app]) => O.isSome(unfoldMu(app)),
+					([app, v]) => {
+						const unfolded = unfoldMu(app);
+						return unify(
+							F.pipe(
+								unfolded,
+								O.getOrElse<NF.Value>(() => app),
+							),
+							v,
+							lvl,
+							subst,
+						);
+					},
+				)
+				.with(
+					[P._, NF.Patterns.App],
+					([, app]) => O.isSome(unfoldMu(app)),
+					([v, app]) => {
+						const unfolded = unfoldMu(app);
+						return unify(
+							v,
+							F.pipe(
+								unfolded,
+								O.getOrElse<NF.Value>(() => app),
+							),
+							lvl,
+							subst,
+						);
+					},
+				)
 
 				.with([NF.Patterns.Row, NF.Patterns.Row], ([{ row: r1 }, { row: r2 }]) =>
 					V2.Do(function* () {
