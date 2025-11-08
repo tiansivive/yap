@@ -10,7 +10,7 @@ import fp from "lodash/fp";
 import * as F from "fp-ts/function";
 import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
-import { Subst } from "../unification/substitution";
+import * as Sub from "../unification/substitution";
 import { Liquid } from "@yap/verification/modalities";
 import { collectMetasNF } from "../shared/metas";
 
@@ -76,7 +76,11 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 		.with({ type: "Lit" }, lit => lit)
 		.with(NF.Patterns.Lambda, ({ binder, closure }) => {
 			const ann = instantiate(binder.annotation, ctx);
-			const xtended = EB.bind(closure.ctx, binder, ann);
+			const xtended = F.pipe(
+				EB.bind(closure.ctx, binder, ann),
+				update("zonker", z => Sub.compose(ctx.zonker, z)),
+				update("metas", m => ({ ...ctx.metas, ...m })),
+			);
 			return NF.Constructors.Lambda(
 				binder.variable,
 				binder.icit,
@@ -86,7 +90,11 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 		})
 		.with(NF.Patterns.Pi, ({ binder, closure }) => {
 			const ann = instantiate(binder.annotation, ctx);
-			const xtended = EB.bind(closure.ctx, binder, ann);
+			const xtended = F.pipe(
+				EB.bind(closure.ctx, binder, ann),
+				update("zonker", z => Sub.compose(ctx.zonker, z)),
+				update("metas", m => ({ ...ctx.metas, ...m })),
+			);
 			return NF.Constructors.Pi(
 				binder.variable,
 				binder.icit,
@@ -96,7 +104,11 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 		})
 		.with(NF.Patterns.Mu, ({ binder, closure }) => {
 			const ann = instantiate(binder.annotation, ctx);
-			const xtended = EB.bind(closure.ctx, binder, ann);
+			const xtended = F.pipe(
+				EB.bind(closure.ctx, binder, ann),
+				update("zonker", z => Sub.compose(ctx.zonker, z)),
+				update("metas", m => ({ ...ctx.metas, ...m })),
+			);
 			return NF.Constructors.Mu(
 				binder.variable,
 				binder.source,

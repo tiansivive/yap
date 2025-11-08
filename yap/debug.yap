@@ -8,7 +8,8 @@ let inc
 let incf
     : (x: Num) -> Num
     = \x -> {
-        let tmp = \f -> (f x) + 1;
+        let tmp
+            = \f -> (f x) + 1;
         return tmp inc;
     };
 

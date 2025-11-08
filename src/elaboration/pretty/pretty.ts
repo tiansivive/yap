@@ -221,7 +221,8 @@ const Stmt = {
 			.with({ type: "Expression" }, ({ value }) => display(value, ctx, opts))
 			.with(
 				{ type: "Let" },
-				({ variable, value, annotation }) => `let ${variable}\n\t: ${NF.display(annotation, ctx, opts)}\n\t= ${display(value, bind(variable, ctx), opts)}`,
+				({ variable, value, annotation }) =>
+					`let ${variable}\n\t: ${NF.display(annotation, bind(variable, ctx), opts)}\n\t= ${display(value, bind(variable, ctx), opts)}`,
 			)
 			.otherwise(() => "Statement Display: Not implemented");
 	},
