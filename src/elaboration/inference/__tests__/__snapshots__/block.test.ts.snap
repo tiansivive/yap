@@ -7,9 +7,12 @@ exports[`inference: block > { let x = 1; return x; } 1`] = `
       "Num ~~ ?1",
       "0 <= ω",
     ],
-    "term": "{ let x
+    "term": "{
+	let x
 	: ?1
-	= 1; return I0; }",
+	= 1;
+	return x;
+	}",
     "type": "?1",
   },
 }
@@ -455,7 +458,9 @@ exports[`inference: block > { return 1; } 1`] = `
 {
   "displays": {
     "constraints": [],
-    "term": "{ ; return 1; }",
+    "term": "{
+	return 1;
+	}",
     "type": "Num",
   },
 }

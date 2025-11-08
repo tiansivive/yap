@@ -161,5 +161,3 @@ exports[`VerificationService > checks positive function application 1 + 2 as Nat
 exports[`VerificationService > checks positive integer literal with refinement 1`] = `"(and true true (forall (($a Real)) (=> (= $a 100.0) (> $a 0.0))))"`;
 
 exports[`VerificationService > checks positive test - literal equals 1 1`] = `"(and true true (forall (($a Real)) (=> (= $a 1.0) (= $a 1.0))))"`;
-
-exports[`VerificationService.check > checks a literal against a simple refinement 1`] = `"(and true true (forall (($a Real)) (=> (= $a 42.0) (= $a 42.0))))"`;

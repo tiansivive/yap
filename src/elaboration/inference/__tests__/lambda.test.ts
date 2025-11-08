@@ -41,4 +41,22 @@ describe("Inference: lambdas", () => {
 		expect({ displays }).toMatchSnapshot();
 		expect({ structure }).toMatchSnapshot();
 	});
+
+	describe("higher order functions", () => {
+		it("simple higher order function", () => {
+			const { displays, structure } = elaborateFrom("\\f -> f 1");
+
+			expect(structure.type).toMatchObject({ type: "Abs", binder: { type: "Pi", icit: "Explicit" } });
+			expect({ displays }).toMatchSnapshot();
+			expect({ structure }).toMatchSnapshot();
+		});
+
+		it("higher order function with implicit param", () => {
+			const { displays, structure } = elaborateFrom("\\f => f 1");
+
+			expect(structure.type).toMatchObject({ type: "Abs", binder: { type: "Pi", icit: "Implicit" } });
+			expect({ displays }).toMatchSnapshot();
+			expect({ structure }).toMatchSnapshot();
+		});
+	});
 });
