@@ -30,7 +30,10 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 		{ tag: "unify", type: "nf", vals: [left, right], metadata: { action: "unification" } },
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
-			const unifier = match([left, right])
+			const [l, r] = [NF.force(ctx, left), NF.force(ctx, right)];
+			// Force wraps unsolved metas in a Neutral, so we need to unwrap them again.
+			// TODO: check if we can remove the wrapping in Force.
+			const unifier = match([NF.unwrapNeutral(l), NF.unwrapNeutral(r)])
 				.with([NF.Patterns.Flex, NF.Patterns.Flex], ([meta1, meta2]) =>
 					V2.Do<Subst, Subst>(function* () {
 						const s = Sub.compose(bind(ctx, meta1.variable, meta2), subst);

@@ -324,26 +324,3 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 	const { result } = inference(ctx);
 	return result;
 };
-
-// const tmp_simplify = (vc: NF.Value): NF.Value =>
-// 	match(vc)
-// 		.with({ type: "App" }, ({ func, arg }) => {
-// 			return NF.reduce(func, arg, "Explicit");
-// 		})
-// 		.with({ type: "External" }, ({ args, arity, compute }) => (args.length === arity && compute !== undefined ? compute(...args) : vc))
-// 		.otherwise(() => vc);
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-function foo() {
-	sleep(1000).then(_ => {
-		console.log("Slept for 1 second");
-	});
-
-	console.log("Begin");
-}
-
-async function bar() {
-	console.log("Begin");
-	await sleep(1000);
-	console.log("Slept for 1 second");
-}

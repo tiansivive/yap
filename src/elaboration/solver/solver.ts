@@ -29,6 +29,8 @@ export const solve = (cs: Array<Ctaint>): V2.Elaboration<Subst> =>
 	});
 
 const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): V2.Elaboration<Subst> => {
+	console.log("CONSTRAINTS");
+	console.log("\n" + cs.map(c => EB.Display.Constraint(c, _ctx).replace(" ~~ ", "\n")).join("\n--------------------------\n"));
 	if (cs.length === 0) {
 		return V2.of(subst);
 	}

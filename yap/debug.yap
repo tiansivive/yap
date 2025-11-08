@@ -1,9 +1,9 @@
 export *;
 
 
-let inc
-    : (n: Num) -> Num
-    = \x -> x + 1;
+let inc = \x -> x + 1;
+
+let x: Num [|\v -> v == 2 |] = inc 1;
 
 let incf
     : (x: Num) -> Num
