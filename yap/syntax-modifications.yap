@@ -59,3 +59,49 @@ Sql.From "blah"
     >- rename "key" "id"
     >- sort "date" Asc
     >- limit 100
+
+
+/*************** IDEAS *****************/
+let ex
+    : Type
+    = Nat %1 <!Async>
+
+
+let Async : Effect
+  
+
+let await: (t: Type) => (t <Async>) -> t
+    = \t -> \op -> {
+        k v <- reset op;    // handling the effect. `Reset` takes a callback with the continuation k and the value v produced by the effect. `<-` is sugar for unnesting the callback.
+        <???>               // async handling logic here. In this case, perform that before calling the continuation k. 
+        k v;                // calling the continuation with the value v
+    }
+
+let fire: (t: Type) => (t <Async>) -> (t -> Unit) -> Unit
+    = \t -> \op -> \cb -> {
+        k v <- reset op;    // handling the effect. `Reset` takes a callback with the continuation k and the value v produced by the effect. `<-` is sugar for unnesting the callback.
+        k v;                // calling the continuation with the value v
+        <???>               // async handling logic here, which will call `cb` with v. In this case, we perform that after calling the continuation k.
+    }
+
+let foo 
+    : () -> Unit
+    = () -> {
+        print("Begin")
+        await (sleep 1000) // instantiate `t` to `Unit`. we discard the result
+        print("Slept for 1 second");
+    }
+
+let bar 
+    : () -> Unit 
+    = () -> {
+        fire (sleep 1000) None
+        print("Begin");
+    }
+
+let baz 
+    : () -> Unit 
+    = () -> {
+        fire (sleep 1000) (Some \_ -> print("Slept for 1 second"))
+        print("Begin");
+    }

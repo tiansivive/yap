@@ -23,6 +23,7 @@ import { VerificationService } from "@yap/verification/service";
 import { match } from "ts-pattern";
 import { Bool, init, Model } from "z3-solver";
 import { getZ3Context } from "@yap/shared/config/options";
+import { PPretty } from "./pretty";
 
 export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 	const maybeExport = (name: string) => (result: Omit<Interface, "imports">) => {
@@ -247,6 +248,11 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 
 		console.log("\n------------------ LETDEC --------------------------------");
 		console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
+
+		PPretty.Term(elaborated.value, xtended).then(pretty => {
+			console.log("Pretty Elaborated:\n", pretty);
+		});
+
 		console.log("Wrapped:\n", EB.Display.Term(wrapped, xtended));
 		console.log("Instantiated:\n", NF.display(instantiated, xtended));
 
@@ -326,3 +332,18 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 // 		})
 // 		.with({ type: "External" }, ({ args, arity, compute }) => (args.length === arity && compute !== undefined ? compute(...args) : vc))
 // 		.otherwise(() => vc);
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+function foo() {
+	sleep(1000).then(_ => {
+		console.log("Slept for 1 second");
+	});
+
+	console.log("Begin");
+}
+
+async function bar() {
+	console.log("Begin");
+	await sleep(1000);
+	console.log("Slept for 1 second");
+}
