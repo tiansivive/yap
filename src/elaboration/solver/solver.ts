@@ -29,8 +29,6 @@ export const solve = (cs: Array<Ctaint>): V2.Elaboration<Subst> =>
 	});
 
 const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): V2.Elaboration<Subst> => {
-	console.log("CONSTRAINTS");
-	console.log("\n" + cs.map(c => EB.Display.Constraint(c, _ctx).replace(" ~~ ", "\n")).join("\n--------------------------\n"));
 	if (cs.length === 0) {
 		return V2.of(subst);
 	}
@@ -40,7 +38,8 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): V2.Elaborati
 	return match(c)
 		.with({ type: "assign" }, ({ left, right, lvl }) =>
 			V2.Do<Subst, Subst>(function* () {
-				const sub = yield* V2.local(F.identity, V2.track(c.trace, U.unify(left, right, lvl, subst)));
+				// Update context zonker with accumulated substitution so unify can force/zonk with current solutions
+				const sub = yield* V2.local(ctx => ({ ...ctx, zonker: Sub.compose(subst, ctx.zonker) }), V2.track(c.trace, U.unify(left, right, lvl, subst)));
 				const sol = yield _solve(rest, _ctx, sub);
 				return sol;
 			}),

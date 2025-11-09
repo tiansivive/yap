@@ -67,8 +67,8 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 		}
 
 		if (head.type === "let") {
-			const foo = letdec(head, ctx);
-			const [name, result] = foo;
+			const [name, result] = letdec(head, ctx);
+
 			return F.pipe(
 				result,
 				E.match(
@@ -136,118 +136,119 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 		const wrapped = F.pipe(
 			EB.Icit.instantiate(elaborated.value, xtended),
 			inst => EB.Icit.generalize(inst, xtended),
-			tm => EB.Icit.wrapLambda(tm, ty, xtended),
+			tm => EB.Icit.wrapLambda(tm, instantiated, xtended),
 		);
 
-		const zCtx = getZ3Context();
-		if (!zCtx) {
-			throw new Error("Z3 context not set");
-		}
+		// const zCtx = getZ3Context();
+		// if (!zCtx) {
+		// 	throw new Error("Z3 context not set");
+		// }
 
-		const Verification = VerificationService(zCtx);
+		// const Verification = VerificationService(zCtx);
 
-		const { result: res } = V2.Do(() => V2.local(_ => xtended, Verification.check(wrapped, instantiated)))(xtended);
-		if (res._tag === "Left") {
-			console.log("Verification failure");
-			console.log(res.left);
-			throw new Error("Verification failure");
-		}
-		const result = res.right;
-		const artefacts = result;
+		// const { result: res } = V2.Do(() => V2.local(_ => xtended, Verification.check(wrapped, instantiated)))(xtended);
+		// if (res._tag === "Left") {
+		// 	console.log("Verification failure");
+		// 	console.log(res.left);
+		// 	throw new Error("Verification failure");
+		// }
+		// const result = res.right;
+		// const artefacts = result;
 
-		const solver = new zCtx.Solver();
+		// const solver = new zCtx.Solver();
 
-		solver.add(artefacts.vc.eq(true));
-		solver.check().then(res => {
-			// Eager local obligation checks
-			const obligations = Verification.getObligations?.() ?? [];
-			if (obligations.length) {
-				console.log("\nLocal obligations (closed subformulas):");
-			}
-			return Promise.all(
-				obligations.map(async ({ label, expr, context }) => {
-					const s = new zCtx.Solver();
-					s.add(expr.eq(true));
-					const r = await s.check();
-					let model: Model | undefined;
-					if (r === "unsat") {
-						// Try to extract a counterexample by solving the negation
-						const neg = new zCtx.Solver();
-						// Negate obligation by equating it to false to obtain a witness
-						neg.add(expr.eq(false));
-						const rn = await neg.check();
-						if (rn === "sat") {
-							model = neg.model();
-						}
-					}
-					return { label, result: r, expr, model, context };
-				}),
-			).then(async rs => {
-				console.log("\n------------------ LETDEC --------------------------------");
-				console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
-				console.log("Wrapped:\n", await PPretty.Term(wrapped, xtended));
-				console.log("Instantiated:\n", await NF.PPretty.Value(instantiated, xtended));
+		// solver.add(artefacts.vc.eq(true));
+		// solver.check().then(res => {
+		// 	// Eager local obligation checks
+		// 	const obligations = Verification.getObligations?.() ?? [];
+		// 	if (obligations.length) {
+		// 		console.log("\nLocal obligations (closed subformulas):");
+		// 	}
+		// 	return Promise.all(
+		// 		obligations.map(async ({ label, expr, context }) => {
+		// 			const s = new zCtx.Solver();
+		// 			s.add(expr.eq(true));
+		// 			const r = await s.check();
+		// 			let model: Model | undefined;
+		// 			if (r === "unsat") {
+		// 				// Try to extract a counterexample by solving the negation
+		// 				const neg = new zCtx.Solver();
+		// 				// Negate obligation by equating it to false to obtain a witness
+		// 				neg.add(expr.eq(false));
+		// 				const rn = await neg.check();
+		// 				if (rn === "sat") {
+		// 					model = neg.model();
+		// 				}
+		// 			}
+		// 			return { label, result: r, expr, model, context };
+		// 		}),
+		// 	).then(async rs => {
+		// 		console.log("\n------------------ LETDEC --------------------------------");
+		// 		console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
+		// 		console.log("Wrapped:\n", await PPretty.Term(wrapped, xtended));
+		// 		console.log("Instantiated:\n", await NF.PPretty.Value(instantiated, xtended));
 
-				console.log("\n\n--------------------DEBUG VERIFICATION--------------------");
-				// console.log("RESULT:");
-				// console.log(result);
+		// 		console.log("\n\n--------------------DEBUG VERIFICATION--------------------");
+		// 		// console.log("RESULT:");
+		// 		// console.log(result);
 
-				//console.log("\nSynthed:\n", NF.display(synthed, next));
-				console.log("\nArtefacts:");
-				console.log("Usages:\n", artefacts.usages);
+		// 		//console.log("\nSynthed:\n", NF.display(synthed, next));
+		// 		console.log("\nArtefacts:");
+		// 		console.log("Usages:\n", artefacts.usages);
 
-				console.log("\n--------------------FORMULA----------------------");
-				console.log("Z3 Sat:", res);
-				console.log("VC (Z3):\n", artefacts.vc.sexpr());
-				console.log("\n-------------------- SUBFORMULAS ----------------------");
-				rs.forEach(({ label, result, expr, model, context }, i) => {
-					console.log(` - [${result}] ${label}`);
-					if (context) {
-						if (context.description) {
-							if (Array.isArray(context.description)) {
-								console.log(`   description:`);
-								for (const line of context.description) {
-									console.log(`     ${line}`);
-								}
-							} else {
-								console.log(`   description: ${context.description}`);
-							}
-						}
+		// 		console.log("\n--------------------FORMULA----------------------");
+		// 		console.log("Z3 Sat:", res);
+		// 		console.log("VC (Z3):\n", artefacts.vc.sexpr());
+		// 		console.log("\n-------------------- SUBFORMULAS ----------------------");
+		// 		rs.forEach(({ label, result, expr, model, context }, i) => {
+		// 			console.log(` - [${result}] ${label}`);
+		// 			if (context) {
+		// 				if (context.description) {
+		// 					if (Array.isArray(context.description)) {
+		// 						console.log(`   description:`);
+		// 						for (const line of context.description) {
+		// 							console.log(`     ${line}`);
+		// 						}
+		// 					} else {
+		// 						console.log(`   description: ${context.description}`);
+		// 					}
+		// 				}
 
-						if (context.term) {
-							console.log(`   term: ${context.term}`);
-						}
+		// 				if (context.term) {
+		// 					console.log(`   term: ${context.term}`);
+		// 				}
 
-						if (context.type) {
-							console.log(`   type: ${context.type}`);
-						}
-					}
-					if (result === "unsat") {
-						//console.log("   expr:", expr.sexpr());
-						if (model) {
-							// Try to extract variable values from the model
-							console.log("   counterexample:");
-							const decls = model.decls();
-							if (decls && decls.length > 0) {
-								for (const decl of decls) {
-									const name = decl.name();
-									const value = model.get(decl);
-									console.log(`     ${name} = ${value}`);
-								}
-							} else {
-								// Fallback: print the entire model
-								console.log("     ", model.sexpr());
-							}
-						}
-					}
-				});
+		// 				if (context.type) {
+		// 					console.log(`   type: ${context.type}`);
+		// 				}
+		// 			}
+		// 			if (result === "unsat") {
+		// 				//console.log("   expr:", expr.sexpr());
+		// 				if (model) {
+		// 					// Try to extract variable values from the model
+		// 					console.log("   counterexample:");
+		// 					const decls = model.decls();
+		// 					if (decls && decls.length > 0) {
+		// 						for (const decl of decls) {
+		// 							const name = decl.name();
+		// 							const value = model.get(decl);
+		// 							console.log(`     ${name} = ${value}`);
+		// 						}
+		// 					} else {
+		// 						// Fallback: print the entire model
+		// 						console.log("     ", model.sexpr());
+		// 					}
+		// 				}
+		// 			}
+		// 		});
 
-				console.log("------------------- END LETDEC --------------------------------\n");
-			});
-		});
+		// 		console.log("------------------- END LETDEC --------------------------------\n");
+		// 	});
+		// });
 
-		// console.log("\n------------------ LETDEC --------------------------------");
-		// console.log("Elaborated:\n", EB.Display.Statement(elaborated, xtended));
+		console.log("\n------------------ LETDEC --------------------------------");
+		const statement = EB.Constructors.Stmt.Let(stmt.variable, wrapped, instantiated);
+		console.log("Elaborated:\n", EB.Display.Statement(statement, xtended));
 
 		// PPretty.Term(elaborated.value, xtended).then(pretty => {
 		// 	console.log("Pretty Elaborated:\n", pretty);
