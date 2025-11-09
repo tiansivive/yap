@@ -221,3 +221,7 @@ let record
     = { a: 10, b: 2 }; // works! 10 > 0 and 2 > 1, every field must satisfy its refinement. NOTE: refinements on the record type itself are not currently supported
 
 
+let id = \x -> x;
+
+let s: String = id "hello";
+let n = id 42; 

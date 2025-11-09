@@ -46,11 +46,29 @@ export const infer = V2.regen((ast: Src.Term): V2.Elaboration<AST> => {
 				});
 
 			const [tm, ty, us] = yield* V2.pure(elaboration);
-			yield* V2.tell("type", { term: tm, nf: ty, modalities: {} as any });
 
-			return [tm, ty, us] as AST;
+			const noModal = stripModalities(ty);
+			//yield* V2.tell("type", { term: tm, nf: ty, modalities: {} as any });
+
+			return [tm, stripModalities(ty), us] as AST;
 		}),
 	);
 	return result;
 });
 // infer.gen = F.flow(infer, V2.pure)
+
+/**
+ * Strip all modalities from a type.
+ * We do this because modality verification is done separately, and we want to avoid typechecking interference
+ * However, we still need to typecheck the modalities themselves, so we don't strip here, after inference and emitting constraints
+ * In addition, we only strip from inferred types, not from annotated types!
+ * Annotated types are assumed to be fully specified by the user, including modalities, so we preserve those
+ *
+ * TODO: When we implement refinement inference, we will need to turn this into a refinement template/hole.
+ * This will allow us to recover the stripped modalities later, during verification.
+ */
+export const stripModalities = (ty: NF.Value): NF.Value => {
+	return match(ty)
+		.with(NF.Patterns.Modal, ({ value }) => stripModalities(value))
+		.otherwise(() => ty);
+};

@@ -36,6 +36,7 @@ export function insert(node: EB.AST): V2.Elaboration<EB.AST> {
 
 					const tm = EB.Constructors.App("Implicit", term, mvar);
 					const bodyNF = NF.apply(pi.binder, pi.closure, vNF);
+
 					const r = yield* insert.gen([tm, bodyNF, us]);
 					return r;
 				}),

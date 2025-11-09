@@ -46,7 +46,10 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 				return NF.Constructors.Neutral(v);
 			}
 
-			return ctx.zonker[variable.val];
+			// NOTE: little trick to force re-evaluation of the zonker value in case it is a rigid
+			const quoted = NF.quote(ctx, ctx.env.length, ctx.zonker[variable.val]);
+			return evaluate(ctx, quoted);
+			// return ctx.zonker[variable.val];
 		})
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
 			const entry = ctx.env[variable.index];

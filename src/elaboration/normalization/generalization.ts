@@ -137,3 +137,72 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 			throw new Error("Traverse: Not implemented yet");
 		});
 };
+
+/**
+ * Trims the first entry from the env of all closures in a value.
+ * This is used when moving top-level recursive letdecs from env to imports.
+ *
+ * For top-level letdecs, we add the variable to env at level 0 to allow recursion during elaboration.
+ * Any closures created during elaboration capture this env.
+ * After elaboration, we move the variable to imports, so we need to trim it from the captured envs
+ * to avoid env length mismatches. Lookups will then correctly fall through to imports.
+ */
+export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
+	return match(nf)
+		.with({ type: "Var" }, v => v)
+		.with({ type: "Lit" }, lit => lit)
+		.with(NF.Patterns.Lambda, ({ binder, closure }) => {
+			const ann = trimClosureEnvs(binder.annotation);
+			const trimmedClosure = {
+				...closure,
+				ctx: {
+					...closure.ctx,
+					env: closure.ctx.env.slice(-1), // Remove first entry (the recursive variable at level 0)
+				},
+			};
+			return NF.Constructors.Lambda(binder.variable, binder.icit, trimmedClosure, ann);
+		})
+		.with(NF.Patterns.Pi, ({ binder, closure }) => {
+			const ann = trimClosureEnvs(binder.annotation);
+			const trimmedClosure = {
+				...closure,
+				ctx: {
+					...closure.ctx,
+					env: closure.ctx.env.slice(-1), // Remove first entry (the recursive variable at level 0)
+				},
+			};
+			return NF.Constructors.Pi(binder.variable, binder.icit, ann, trimmedClosure);
+		})
+		.with(NF.Patterns.Mu, ({ binder, closure }) => {
+			const ann = trimClosureEnvs(binder.annotation);
+			const trimmedClosure = {
+				...closure,
+				ctx: {
+					...closure.ctx,
+					env: closure.ctx.env.slice(-1), // Remove first entry (the recursive variable at level 0)
+				},
+			};
+			return NF.Constructors.Mu(binder.variable, binder.source, ann, trimmedClosure);
+		})
+		.with({ type: "App" }, ({ icit, func, arg }) => NF.Constructors.App(trimClosureEnvs(func), trimClosureEnvs(arg), icit))
+		.with({ type: "Row" }, ({ row }) =>
+			NF.Constructors.Row(
+				R.traverse(
+					row,
+					v => trimClosureEnvs(v),
+					v => R.Constructors.Variable(v),
+				),
+			),
+		)
+		.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(trimClosureEnvs(value)))
+		.with(NF.Patterns.Modal, ({ value, modalities }) =>
+			NF.Constructors.Modal(trimClosureEnvs(value), {
+				quantity: modalities.quantity,
+				liquid: trimClosureEnvs(modalities.liquid),
+			}),
+		)
+		.with({ type: "External" }, ext => ext) // External values don't have closures to trim
+		.otherwise(() => {
+			throw new Error("trimClosureEnvs: Not implemented yet");
+		});
+};
