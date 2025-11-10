@@ -104,63 +104,7 @@ exports[`inference: tagged > #x 1 2`] = `
         "type": "App",
       },
     },
-    "typedTerms": {
-      "813": {
-        "modalities": {},
-        "nf": {
-          "id": 20,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-      },
-      "816": {
-        "modalities": {},
-        "nf": {
-          "id": 24,
-          "type": "Neutral",
-          "value": {
-            "arg": {
-              "id": 22,
-              "row": {
-                "label": "x",
-                "row": {
-                  "type": "variable",
-                  "variable": {
-                    "lvl": 0,
-                    "type": "Meta",
-                    "val": 1,
-                  },
-                },
-                "type": "extension",
-                "value": {
-                  "id": 20,
-                  "type": "Lit",
-                  "value": {
-                    "type": "Atom",
-                    "value": "Num",
-                  },
-                },
-              },
-              "type": "Row",
-            },
-            "func": {
-              "id": 21,
-              "type": "Lit",
-              "value": {
-                "type": "Atom",
-                "value": "Variant",
-              },
-            },
-            "icit": "Explicit",
-            "id": 23,
-            "type": "App",
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;

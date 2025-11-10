@@ -416,86 +416,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
         "val": 8,
       },
     },
-    "typedTerms": {
-      "1628": {
-        "modalities": {},
-        "nf": {
-          "id": 44,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-      },
-      "1631": {
-        "modalities": {},
-        "nf": {
-          "id": 49,
-          "type": "Neutral",
-          "value": {
-            "arg": {
-              "id": 47,
-              "row": {
-                "label": "x",
-                "row": {
-                  "type": "empty",
-                },
-                "type": "extension",
-                "value": {
-                  "id": 44,
-                  "type": "Lit",
-                  "value": {
-                    "type": "Atom",
-                    "value": "Num",
-                  },
-                },
-              },
-              "type": "Row",
-            },
-            "func": {
-              "id": 46,
-              "type": "Lit",
-              "value": {
-                "type": "Atom",
-                "value": "Schema",
-              },
-            },
-            "icit": "Explicit",
-            "id": 48,
-            "type": "App",
-          },
-        },
-      },
-      "1633": {
-        "modalities": {},
-        "nf": {
-          "id": 52,
-          "type": "Neutral",
-          "value": {
-            "id": 51,
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-        },
-      },
-      "1634": {
-        "modalities": {},
-        "nf": {
-          "id": 60,
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 8,
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;
@@ -655,42 +576,7 @@ exports[`inference: match > match 1 | 1 -> 2 2`] = `
         "val": 2,
       },
     },
-    "typedTerms": {
-      "813": {
-        "modalities": {},
-        "nf": {
-          "id": 20,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-      },
-      "814": {
-        "modalities": {},
-        "nf": {
-          "id": 22,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-      },
-      "815": {
-        "modalities": {},
-        "nf": {
-          "id": 24,
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 2,
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;

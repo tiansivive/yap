@@ -15,5 +15,16 @@ let incf
         return tmp inc;
     };
 
+let i = (\n:Num => \x:String -> x) "hello";
 
+let id = \x -> x;
 
+let n = id 42;
+let s = id "hello";
+
+let test = {
+    let id2 = \y -> y;
+    id2 5;
+    id2 "world";
+    return 1;
+};

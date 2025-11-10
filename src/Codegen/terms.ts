@@ -32,7 +32,8 @@ export const codegen = (env: string[], term: EB.Term): string => {
 				return env[variable.index];
 			})
 			.with({ type: "Var" }, v => {
-				throw new Error("Could not compile Variable: " + JSON.stringify(v));
+				return "(() => { throw new Error('Unresolved meta variable during codegen: " + JSON.stringify(v) + "'); })()";
+				//throw new Error("Could not compile Variable: " + JSON.stringify(v));
 			})
 			.with({ type: "Abs", binding: { type: "Mu" } }, mu => {
 				return codegen([mu.binding.source, ...env], mu.body);

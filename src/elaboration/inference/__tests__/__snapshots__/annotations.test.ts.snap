@@ -75,30 +75,7 @@ exports[`inference: annotations > 1 : Num 2`] = `
         "value": "Num",
       },
     },
-    "typedTerms": {
-      "813": {
-        "modalities": {},
-        "nf": {
-          "id": 1,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-      },
-      "814": {
-        "modalities": {},
-        "nf": {
-          "id": 20,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;

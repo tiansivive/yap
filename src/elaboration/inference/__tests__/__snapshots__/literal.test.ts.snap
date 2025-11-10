@@ -31,19 +31,7 @@ exports[`Inference: Literals > Boolean: true >=> Boolean 2`] = `
         "value": "Bool",
       },
     },
-    "typedTerms": {
-      "1626": {
-        "modalities": {},
-        "nf": {
-          "id": 36,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Bool",
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;
@@ -79,19 +67,7 @@ exports[`Inference: Literals > Row: Row >=> Type 2`] = `
         "value": "Type",
       },
     },
-    "typedTerms": {
-      "4878": {
-        "modalities": {},
-        "nf": {
-          "id": 100,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;
@@ -127,19 +103,7 @@ exports[`Inference: Literals > String: "hello" >=> String 2`] = `
         "value": "String",
       },
     },
-    "typedTerms": {
-      "2439": {
-        "modalities": {},
-        "nf": {
-          "id": 52,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "String",
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;
@@ -175,19 +139,7 @@ exports[`Inference: Literals > Type: Type >=> Type 2`] = `
         "value": "Type",
       },
     },
-    "typedTerms": {
-      "4065": {
-        "modalities": {},
-        "nf": {
-          "id": 84,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;
@@ -222,19 +174,7 @@ exports[`Inference: Literals > Unit: * >=> Unit 2`] = `
         "value": "Unit",
       },
     },
-    "typedTerms": {
-      "3252": {
-        "modalities": {},
-        "nf": {
-          "id": 68,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Unit",
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;
@@ -270,19 +210,7 @@ exports[`Inference: Literals > numbers: 1 >=> Num 2`] = `
         "value": "Num",
       },
     },
-    "typedTerms": {
-      "813": {
-        "modalities": {},
-        "nf": {
-          "id": 20,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;

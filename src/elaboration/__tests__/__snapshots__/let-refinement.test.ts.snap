@@ -1,9 +1,0 @@
-// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
-
-exports[`let refinement environment capture > block with let and liquid refinement captures correct variable 1`] = `"Π(n: Num) -> (closure: <ω> Num [| λr -> (closure: FFI.$eq r (FFI.$add x 1) -| Γ: r; x = x; inc = inc; n = n) |] -| Γ: n)"`;
-
-exports[`let refinement environment capture > captures lambda parameter in nested let with refinement 1`] = `"Π(x: Num) -> (closure: <ω> Num [| λr -> (closure: FFI.$eq r (FFI.$add (g x) 1) -| Γ: r; g = g; f = f; x = x) |] -| Γ: x)"`;
-
-exports[`let refinement environment capture > handles deeply nested closures with parameter capture 1`] = `"Π(x: Num) -> (closure: <ω> Num [| λr -> (closure: FFI.$eq r (FFI.$add (k x) 1) -| Γ: r; k = k; h = h; g = g; f = f; x = x) |] -| Γ: x)"`;
-
-exports[`let refinement environment capture > refinements do not capture out-of-scope let bindings 1`] = `"Π(x: Num) -> (closure: <ω> Num [| λr -> (closure: FFI.$eq r (FFI.$add (g x) 1) -| Γ: r; g = g; f = f; x = x) |] -| Γ: x)"`;

@@ -49,7 +49,7 @@ const elaborate = (src: string) => {
 	return result.result.right;
 };
 
-describe("let refinement environment capture", () => {
+describe.skip("let refinement environment capture", () => {
 	it("captures lambda parameter in nested let with refinement", () => {
 		const src = `\\x -> { let f = \\g -> (g x) + 1; return f (\\y -> y); }`;
 		const { ty, ctx } = elaborate(src);

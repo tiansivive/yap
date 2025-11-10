@@ -324,41 +324,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         "value": "Type",
       },
     },
-    "typedTerms": {
-      "813": {
-        "modalities": {},
-        "nf": {
-          "id": 1,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-      },
-      "814": {
-        "modalities": {},
-        "nf": {
-          "id": 1,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-      },
-      "817": {
-        "modalities": {},
-        "nf": {
-          "id": 1,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;

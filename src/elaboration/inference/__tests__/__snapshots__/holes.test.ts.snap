@@ -69,24 +69,7 @@ exports[`inference: hole > _ 2`] = `
         },
       },
     },
-    "typedTerms": {
-      "813": {
-        "modalities": {},
-        "nf": {
-          "id": 22,
-          "type": "Neutral",
-          "value": {
-            "id": 21,
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 2,
-            },
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;

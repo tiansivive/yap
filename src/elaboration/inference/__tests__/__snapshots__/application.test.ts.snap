@@ -1,5 +1,606 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`inference: application > implicit insertion > inserts implicit argument when applying explicit arg to fn with implicit param 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "String ~~ String",
+    ],
+    "term": "(λx => λy -> y) @?2 "hello"",
+    "type": "String",
+  },
+}
+`;
+
+exports[`inference: application > implicit insertion > inserts implicit argument when applying explicit arg to fn with implicit param 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 60,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 58,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 45,
+          "type": "Neutral",
+          "value": {
+            "id": 44,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "id": 1642,
+        "type": "Lit",
+        "value": {
+          "type": "String",
+          "value": "hello",
+        },
+      },
+      "func": {
+        "arg": {
+          "id": 1640,
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 2,
+          },
+        },
+        "func": {
+          "binding": {
+            "annotation": {
+              "id": 1631,
+              "type": "Var",
+              "variable": {
+                "lvl": 0,
+                "type": "Meta",
+                "val": 1,
+              },
+            },
+            "icit": "Implicit",
+            "type": "Lambda",
+            "variable": "x",
+          },
+          "body": {
+            "binding": {
+              "annotation": {
+                "id": 1632,
+                "type": "Var",
+                "variable": {
+                  "name": "String",
+                  "type": "Free",
+                },
+              },
+              "icit": "Explicit",
+              "type": "Lambda",
+              "variable": "y",
+            },
+            "body": {
+              "id": 1633,
+              "type": "Var",
+              "variable": {
+                "index": 0,
+                "type": "Bound",
+              },
+            },
+            "id": 1634,
+            "type": "Abs",
+          },
+          "id": 1636,
+          "type": "Abs",
+        },
+        "icit": "Implicit",
+        "id": 1641,
+        "type": "App",
+      },
+      "icit": "Explicit",
+      "id": 1643,
+      "type": "App",
+    },
+    "type": {
+      "id": 62,
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "String",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`inference: application > implicit insertion > inserts implicit argument with correct type 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "String ~~ String",
+    ],
+    "term": "(λx => λy -> y) @?1 "hello"",
+    "type": "String",
+  },
+}
+`;
+
+exports[`inference: application > implicit insertion > inserts implicit argument with correct type 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 93,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 91,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 78,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "id": 2467,
+        "type": "Lit",
+        "value": {
+          "type": "String",
+          "value": "hello",
+        },
+      },
+      "func": {
+        "arg": {
+          "id": 2465,
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 1,
+          },
+        },
+        "func": {
+          "binding": {
+            "annotation": {
+              "id": 2456,
+              "type": "Var",
+              "variable": {
+                "name": "Num",
+                "type": "Free",
+              },
+            },
+            "icit": "Implicit",
+            "type": "Lambda",
+            "variable": "x",
+          },
+          "body": {
+            "binding": {
+              "annotation": {
+                "id": 2457,
+                "type": "Var",
+                "variable": {
+                  "name": "String",
+                  "type": "Free",
+                },
+              },
+              "icit": "Explicit",
+              "type": "Lambda",
+              "variable": "y",
+            },
+            "body": {
+              "id": 2458,
+              "type": "Var",
+              "variable": {
+                "index": 0,
+                "type": "Bound",
+              },
+            },
+            "id": 2459,
+            "type": "Abs",
+          },
+          "id": 2461,
+          "type": "Abs",
+        },
+        "icit": "Implicit",
+        "id": 2466,
+        "type": "App",
+      },
+      "icit": "Explicit",
+      "id": 2468,
+      "type": "App",
+    },
+    "type": {
+      "id": 95,
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "String",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`inference: application > implicit insertion > inserts multiple implicit arguments when needed 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "String ~~ String",
+    ],
+    "term": "(λa => (λb => λc -> c) @?3) @?4 "hello"",
+    "type": "String",
+  },
+}
+`;
+
+exports[`inference: application > implicit insertion > inserts multiple implicit arguments when needed 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 139,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 137,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 116,
+          "type": "Neutral",
+          "value": {
+            "id": 115,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "id": 112,
+          "type": "Neutral",
+          "value": {
+            "id": 111,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "id": 3299,
+        "type": "Lit",
+        "value": {
+          "type": "String",
+          "value": "hello",
+        },
+      },
+      "func": {
+        "arg": {
+          "id": 3297,
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 4,
+          },
+        },
+        "func": {
+          "binding": {
+            "annotation": {
+              "id": 3281,
+              "type": "Var",
+              "variable": {
+                "lvl": 0,
+                "type": "Meta",
+                "val": 1,
+              },
+            },
+            "icit": "Implicit",
+            "type": "Lambda",
+            "variable": "a",
+          },
+          "body": {
+            "arg": {
+              "id": 3291,
+              "type": "Var",
+              "variable": {
+                "lvl": 1,
+                "type": "Meta",
+                "val": 3,
+              },
+            },
+            "func": {
+              "binding": {
+                "annotation": {
+                  "id": 3282,
+                  "type": "Var",
+                  "variable": {
+                    "lvl": 1,
+                    "type": "Meta",
+                    "val": 2,
+                  },
+                },
+                "icit": "Implicit",
+                "type": "Lambda",
+                "variable": "b",
+              },
+              "body": {
+                "binding": {
+                  "annotation": {
+                    "id": 3283,
+                    "type": "Var",
+                    "variable": {
+                      "name": "String",
+                      "type": "Free",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "type": "Lambda",
+                  "variable": "c",
+                },
+                "body": {
+                  "id": 3284,
+                  "type": "Var",
+                  "variable": {
+                    "index": 0,
+                    "type": "Bound",
+                  },
+                },
+                "id": 3285,
+                "type": "Abs",
+              },
+              "id": 3287,
+              "type": "Abs",
+            },
+            "icit": "Implicit",
+            "id": 3292,
+            "type": "App",
+          },
+          "id": 3293,
+          "type": "Abs",
+        },
+        "icit": "Implicit",
+        "id": 3298,
+        "type": "App",
+      },
+      "icit": "Explicit",
+      "id": 3300,
+      "type": "App",
+    },
+    "type": {
+      "id": 141,
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "String",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
 exports[`inference: application > simple application f x 1`] = `
 {
   "displays": {
@@ -111,3934 +712,7 @@ exports[`inference: application > simple application f x 2`] = `
         },
       },
     },
-    "typedTerms": {
-      "814": {
-        "modalities": {},
-        "nf": {
-          "id": 21,
-          "type": "Neutral",
-          "value": {
-            "id": 20,
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 1,
-            },
-          },
-        },
-      },
-      "815": {
-        "modalities": {},
-        "nf": {
-          "binder": {
-            "annotation": {
-              "id": 21,
-              "type": "Neutral",
-              "value": {
-                "id": 20,
-                "type": "Var",
-                "variable": {
-                  "lvl": 0,
-                  "type": "Meta",
-                  "val": 1,
-                },
-              },
-            },
-            "icit": "Explicit",
-            "type": "Pi",
-            "variable": "x",
-          },
-          "closure": {
-            "ctx": {
-              "env": [],
-              "ffi": {
-                "$add": {
-                  "arity": 2,
-                  "compute": [Function],
-                },
-                "$and": {
-                  "arity": 2,
-                  "compute": [Function],
-                },
-                "$div": {
-                  "arity": 2,
-                  "compute": [Function],
-                },
-                "$eq": {
-                  "arity": 2,
-                  "compute": [Function],
-                },
-                "$gt": {
-                  "arity": 2,
-                  "compute": [Function],
-                },
-                "$gte": {
-                  "arity": 2,
-                  "compute": [Function],
-                },
-                "$lt": {
-                  "arity": 2,
-                  "compute": [Function],
-                },
-                "$lte": {
-                  "arity": 2,
-                  "compute": [Function],
-                },
-                "$mul": {
-                  "arity": 2,
-                  "compute": [Function],
-                },
-                "$neq": {
-                  "arity": 2,
-                  "compute": [Function],
-                },
-                "$not": {
-                  "arity": 1,
-                  "compute": [Function],
-                },
-                "$or": {
-                  "arity": 2,
-                  "compute": [Function],
-                },
-                "$sub": {
-                  "arity": 2,
-                  "compute": [Function],
-                },
-              },
-              "implicits": [],
-              "imports": {
-                "!=": [
-                  {
-                    "id": 664,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$neq",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 5,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Num",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 102,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 123,
-                          "type": "Lit",
-                          "value": {
-                            "type": "Atom",
-                            "value": "Bool",
-                          },
-                        },
-                        "id": 141,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 6,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-                "%": [
-                  {
-                    "id": 769,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$mod",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 18,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Num",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 773,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 793,
-                          "type": "Lit",
-                          "value": {
-                            "type": "Atom",
-                            "value": "Num",
-                          },
-                        },
-                        "id": 812,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 19,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-                "&&": [
-                  {
-                    "id": 601,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$and",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 7,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Bool",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 144,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Bool",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 164,
-                          "type": "Lit",
-                          "value": {
-                            "type": "Atom",
-                            "value": "Bool",
-                          },
-                        },
-                        "id": 182,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 8,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-                "*": [
-                  {
-                    "id": 415,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$mul",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 14,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Num",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 459,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 498,
-                          "modalities": {
-                            "liquid": {
-                              "binding": {
-                                "annotation": {
-                                  "id": 438,
-                                  "type": "Lit",
-                                  "value": {
-                                    "type": "Atom",
-                                    "value": "Num",
-                                  },
-                                },
-                                "icit": "Explicit",
-                                "type": "Lambda",
-                                "variable": "r",
-                              },
-                              "body": {
-                                "arg": {
-                                  "arg": {
-                                    "id": 429,
-                                    "type": "Var",
-                                    "variable": {
-                                      "index": 1,
-                                      "type": "Bound",
-                                    },
-                                  },
-                                  "func": {
-                                    "arg": {
-                                      "id": 430,
-                                      "type": "Var",
-                                      "variable": {
-                                        "index": 2,
-                                        "type": "Bound",
-                                      },
-                                    },
-                                    "func": {
-                                      "id": 431,
-                                      "type": "Var",
-                                      "variable": {
-                                        "name": "$mul",
-                                        "type": "Foreign",
-                                      },
-                                    },
-                                    "icit": "Explicit",
-                                    "id": 432,
-                                    "type": "App",
-                                  },
-                                  "icit": "Explicit",
-                                  "id": 433,
-                                  "type": "App",
-                                },
-                                "func": {
-                                  "arg": {
-                                    "id": 428,
-                                    "type": "Var",
-                                    "variable": {
-                                      "index": 0,
-                                      "type": "Bound",
-                                    },
-                                  },
-                                  "func": {
-                                    "id": 434,
-                                    "type": "Var",
-                                    "variable": {
-                                      "name": "$eq",
-                                      "type": "Foreign",
-                                    },
-                                  },
-                                  "icit": "Explicit",
-                                  "id": 435,
-                                  "type": "App",
-                                },
-                                "icit": "Explicit",
-                                "id": 436,
-                                "type": "App",
-                              },
-                              "id": 457,
-                              "type": "Abs",
-                            },
-                            "quantity": "Many",
-                          },
-                          "term": {
-                            "id": 479,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "type": "Modal",
-                        },
-                        "id": 499,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 15,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-                "+": [
-                  {
-                    "id": 229,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$add",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 10,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Num",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 275,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 314,
-                          "modalities": {
-                            "liquid": {
-                              "binding": {
-                                "annotation": {
-                                  "id": 254,
-                                  "type": "Lit",
-                                  "value": {
-                                    "type": "Atom",
-                                    "value": "Num",
-                                  },
-                                },
-                                "icit": "Explicit",
-                                "type": "Lambda",
-                                "variable": "r",
-                              },
-                              "body": {
-                                "arg": {
-                                  "arg": {
-                                    "id": 245,
-                                    "type": "Var",
-                                    "variable": {
-                                      "index": 1,
-                                      "type": "Bound",
-                                    },
-                                  },
-                                  "func": {
-                                    "arg": {
-                                      "id": 246,
-                                      "type": "Var",
-                                      "variable": {
-                                        "index": 2,
-                                        "type": "Bound",
-                                      },
-                                    },
-                                    "func": {
-                                      "id": 247,
-                                      "type": "Var",
-                                      "variable": {
-                                        "name": "$add",
-                                        "type": "Foreign",
-                                      },
-                                    },
-                                    "icit": "Explicit",
-                                    "id": 248,
-                                    "type": "App",
-                                  },
-                                  "icit": "Explicit",
-                                  "id": 249,
-                                  "type": "App",
-                                },
-                                "func": {
-                                  "arg": {
-                                    "id": 244,
-                                    "type": "Var",
-                                    "variable": {
-                                      "index": 0,
-                                      "type": "Bound",
-                                    },
-                                  },
-                                  "func": {
-                                    "id": 250,
-                                    "type": "Var",
-                                    "variable": {
-                                      "name": "$eq",
-                                      "type": "Foreign",
-                                    },
-                                  },
-                                  "icit": "Explicit",
-                                  "id": 251,
-                                  "type": "App",
-                                },
-                                "icit": "Explicit",
-                                "id": 252,
-                                "type": "App",
-                              },
-                              "id": 273,
-                              "type": "Abs",
-                            },
-                            "quantity": "Many",
-                          },
-                          "term": {
-                            "id": 295,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "type": "Modal",
-                        },
-                        "id": 315,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 11,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-                "-": [
-                  {
-                    "id": 322,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$sub",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 12,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Num",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 367,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 406,
-                          "modalities": {
-                            "liquid": {
-                              "binding": {
-                                "annotation": {
-                                  "id": 346,
-                                  "type": "Lit",
-                                  "value": {
-                                    "type": "Atom",
-                                    "value": "Num",
-                                  },
-                                },
-                                "icit": "Explicit",
-                                "type": "Lambda",
-                                "variable": "r",
-                              },
-                              "body": {
-                                "arg": {
-                                  "arg": {
-                                    "id": 337,
-                                    "type": "Var",
-                                    "variable": {
-                                      "index": 1,
-                                      "type": "Bound",
-                                    },
-                                  },
-                                  "func": {
-                                    "arg": {
-                                      "id": 338,
-                                      "type": "Var",
-                                      "variable": {
-                                        "index": 2,
-                                        "type": "Bound",
-                                      },
-                                    },
-                                    "func": {
-                                      "id": 339,
-                                      "type": "Var",
-                                      "variable": {
-                                        "name": "$sub",
-                                        "type": "Foreign",
-                                      },
-                                    },
-                                    "icit": "Explicit",
-                                    "id": 340,
-                                    "type": "App",
-                                  },
-                                  "icit": "Explicit",
-                                  "id": 341,
-                                  "type": "App",
-                                },
-                                "func": {
-                                  "arg": {
-                                    "id": 336,
-                                    "type": "Var",
-                                    "variable": {
-                                      "index": 0,
-                                      "type": "Bound",
-                                    },
-                                  },
-                                  "func": {
-                                    "id": 342,
-                                    "type": "Var",
-                                    "variable": {
-                                      "name": "$eq",
-                                      "type": "Foreign",
-                                    },
-                                  },
-                                  "icit": "Explicit",
-                                  "id": 343,
-                                  "type": "App",
-                                },
-                                "icit": "Explicit",
-                                "id": 344,
-                                "type": "App",
-                              },
-                              "id": 365,
-                              "type": "Abs",
-                            },
-                            "quantity": "Many",
-                          },
-                          "term": {
-                            "id": 387,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "type": "Modal",
-                        },
-                        "id": 407,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 13,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-                "/": [
-                  {
-                    "id": 508,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$div",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 16,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Num",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 551,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 590,
-                          "modalities": {
-                            "liquid": {
-                              "binding": {
-                                "annotation": {
-                                  "id": 530,
-                                  "type": "Lit",
-                                  "value": {
-                                    "type": "Atom",
-                                    "value": "Num",
-                                  },
-                                },
-                                "icit": "Explicit",
-                                "type": "Lambda",
-                                "variable": "r",
-                              },
-                              "body": {
-                                "arg": {
-                                  "arg": {
-                                    "id": 521,
-                                    "type": "Var",
-                                    "variable": {
-                                      "index": 1,
-                                      "type": "Bound",
-                                    },
-                                  },
-                                  "func": {
-                                    "arg": {
-                                      "id": 522,
-                                      "type": "Var",
-                                      "variable": {
-                                        "index": 2,
-                                        "type": "Bound",
-                                      },
-                                    },
-                                    "func": {
-                                      "id": 523,
-                                      "type": "Var",
-                                      "variable": {
-                                        "name": "$div",
-                                        "type": "Foreign",
-                                      },
-                                    },
-                                    "icit": "Explicit",
-                                    "id": 524,
-                                    "type": "App",
-                                  },
-                                  "icit": "Explicit",
-                                  "id": 525,
-                                  "type": "App",
-                                },
-                                "func": {
-                                  "arg": {
-                                    "id": 520,
-                                    "type": "Var",
-                                    "variable": {
-                                      "index": 0,
-                                      "type": "Bound",
-                                    },
-                                  },
-                                  "func": {
-                                    "id": 526,
-                                    "type": "Var",
-                                    "variable": {
-                                      "name": "$eq",
-                                      "type": "Foreign",
-                                    },
-                                  },
-                                  "icit": "Explicit",
-                                  "id": 527,
-                                  "type": "App",
-                                },
-                                "icit": "Explicit",
-                                "id": 528,
-                                "type": "App",
-                              },
-                              "id": 549,
-                              "type": "Abs",
-                            },
-                            "quantity": "Many",
-                          },
-                          "term": {
-                            "id": 571,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "type": "Modal",
-                        },
-                        "id": 591,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 17,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-                "<": [
-                  {
-                    "id": 685,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$lt",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 5,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Num",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 102,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 123,
-                          "type": "Lit",
-                          "value": {
-                            "type": "Atom",
-                            "value": "Bool",
-                          },
-                        },
-                        "id": 141,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 6,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-                "<=": [
-                  {
-                    "id": 727,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$lte",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 5,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Num",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 102,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 123,
-                          "type": "Lit",
-                          "value": {
-                            "type": "Atom",
-                            "value": "Bool",
-                          },
-                        },
-                        "id": 141,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 6,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-                "==": [
-                  {
-                    "id": 643,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$eq",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 5,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Num",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 102,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 123,
-                          "type": "Lit",
-                          "value": {
-                            "type": "Atom",
-                            "value": "Bool",
-                          },
-                        },
-                        "id": 141,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 6,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-                ">": [
-                  {
-                    "id": 706,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$gt",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 5,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Num",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 102,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 123,
-                          "type": "Lit",
-                          "value": {
-                            "type": "Atom",
-                            "value": "Bool",
-                          },
-                        },
-                        "id": 141,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 6,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-                ">=": [
-                  {
-                    "id": 748,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$gte",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 5,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Num",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 102,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 123,
-                          "type": "Lit",
-                          "value": {
-                            "type": "Atom",
-                            "value": "Bool",
-                          },
-                        },
-                        "id": 141,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 6,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-                "Bool": [
-                  {
-                    "id": 23,
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "Bool",
-                    },
-                  },
-                  {
-                    "id": 1,
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "Type",
-                    },
-                  },
-                  [],
-                ],
-                "Num": [
-                  {
-                    "id": 2,
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "Num",
-                    },
-                  },
-                  {
-                    "id": 1,
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "Type",
-                    },
-                  },
-                  [],
-                ],
-                "String": [
-                  {
-                    "id": 44,
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "String",
-                    },
-                  },
-                  {
-                    "id": 1,
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "Type",
-                    },
-                  },
-                  [],
-                ],
-                "Type": [
-                  {
-                    "id": 81,
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "Type",
-                    },
-                  },
-                  {
-                    "id": 1,
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "Type",
-                    },
-                  },
-                  [],
-                ],
-                "Unit": [
-                  {
-                    "id": 65,
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "Unit",
-                    },
-                  },
-                  {
-                    "id": 1,
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "Type",
-                    },
-                  },
-                  [],
-                ],
-                "||": [
-                  {
-                    "id": 622,
-                    "type": "Var",
-                    "variable": {
-                      "name": "$or",
-                      "type": "Foreign",
-                    },
-                  },
-                  {
-                    "binder": {
-                      "annotation": {
-                        "id": 7,
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Bool",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Pi",
-                      "variable": "x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "ffi": {
-                          "$add": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$and": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$div": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$eq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$gte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lt": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$lte": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$mul": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$neq": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$not": {
-                            "arity": 1,
-                            "compute": [Function],
-                          },
-                          "$or": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                          "$sub": {
-                            "arity": 2,
-                            "compute": [Function],
-                          },
-                        },
-                        "implicits": [],
-                        "imports": {
-                          "Bool": [
-                            {
-                              "id": 23,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Bool",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Num": [
-                            {
-                              "id": 2,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Num",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "String": [
-                            {
-                              "id": 44,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "String",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Type": [
-                            {
-                              "id": 81,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                          "Unit": [
-                            {
-                              "id": 65,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Unit",
-                              },
-                            },
-                            {
-                              "id": 1,
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Type",
-                              },
-                            },
-                            [],
-                          ],
-                        },
-                        "metas": {},
-                        "sigma": {},
-                        "trace": [],
-                        "zonker": {
-                          Symbol(Substitution): undefined,
-                        },
-                      },
-                      "term": {
-                        "binding": {
-                          "annotation": {
-                            "id": 144,
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Bool",
-                            },
-                          },
-                          "icit": "Explicit",
-                          "type": "Pi",
-                          "variable": "y",
-                        },
-                        "body": {
-                          "id": 164,
-                          "type": "Lit",
-                          "value": {
-                            "type": "Atom",
-                            "value": "Bool",
-                          },
-                        },
-                        "id": 182,
-                        "type": "Abs",
-                      },
-                      "type": "Closure",
-                    },
-                    "id": 8,
-                    "type": "Abs",
-                  },
-                  [],
-                ],
-              },
-              "metas": {},
-              "sigma": {},
-              "trace": [
-                {
-                  "metadata": {
-                    "action": "infer",
-                  },
-                  "tag": "src",
-                  "term": {
-                    "arg": {
-                      "location": {
-                        "from": {
-                          "column": 11,
-                          "line": 1,
-                          "token": {
-                            "col": 11,
-                            "line": 1,
-                            "lineBreaks": 0,
-                            "offset": 10,
-                            "text": "1",
-                            "toString": [Function],
-                            "type": "digit",
-                            "value": 1,
-                          },
-                        },
-                      },
-                      "type": "lit",
-                      "value": {
-                        "type": "Num",
-                        "value": 1,
-                      },
-                    },
-                    "fn": {
-                      "annotation": undefined,
-                      "body": {
-                        "location": {
-                          "from": {
-                            "column": 8,
-                            "line": 1,
-                            "token": {
-                              "col": 8,
-                              "line": 1,
-                              "lineBreaks": 0,
-                              "offset": 7,
-                              "text": "x",
-                              "toString": [Function],
-                              "type": "variable",
-                              "value": "x",
-                            },
-                          },
-                        },
-                        "type": "var",
-                        "variable": {
-                          "location": {
-                            "from": {
-                              "column": 8,
-                              "line": 1,
-                              "token": {
-                                "col": 8,
-                                "line": 1,
-                                "lineBreaks": 0,
-                                "offset": 7,
-                                "text": "x",
-                                "toString": [Function],
-                                "type": "variable",
-                                "value": "x",
-                              },
-                            },
-                          },
-                          "type": "name",
-                          "value": "x",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "location": {
-                        "from": {
-                          "column": 3,
-                          "line": 1,
-                          "token": {
-                            "col": 3,
-                            "line": 1,
-                            "lineBreaks": 0,
-                            "offset": 2,
-                            "text": "x",
-                            "toString": [Function],
-                            "type": "variable",
-                            "value": "x",
-                          },
-                        },
-                        "to": {
-                          "column": 8,
-                          "line": 1,
-                          "token": {
-                            "col": 8,
-                            "line": 1,
-                            "lineBreaks": 0,
-                            "offset": 7,
-                            "text": "x",
-                            "toString": [Function],
-                            "type": "variable",
-                            "value": "x",
-                          },
-                        },
-                      },
-                      "type": "lambda",
-                      "variable": "x",
-                    },
-                    "icit": "Explicit",
-                    "location": {
-                      "from": {
-                        "column": 3,
-                        "line": 1,
-                        "token": {
-                          "col": 3,
-                          "line": 1,
-                          "lineBreaks": 0,
-                          "offset": 2,
-                          "text": "x",
-                          "toString": [Function],
-                          "type": "variable",
-                          "value": "x",
-                        },
-                      },
-                      "to": {
-                        "column": 11,
-                        "line": 1,
-                        "token": {
-                          "col": 11,
-                          "line": 1,
-                          "lineBreaks": 0,
-                          "offset": 10,
-                          "text": "1",
-                          "toString": [Function],
-                          "type": "digit",
-                          "value": 1,
-                        },
-                      },
-                    },
-                    "type": "application",
-                  },
-                  "type": "term",
-                },
-                {
-                  "metadata": {
-                    "action": "infer",
-                    "description": "Application node",
-                  },
-                  "tag": "src",
-                  "term": {
-                    "arg": {
-                      "location": {
-                        "from": {
-                          "column": 11,
-                          "line": 1,
-                          "token": {
-                            "col": 11,
-                            "line": 1,
-                            "lineBreaks": 0,
-                            "offset": 10,
-                            "text": "1",
-                            "toString": [Function],
-                            "type": "digit",
-                            "value": 1,
-                          },
-                        },
-                      },
-                      "type": "lit",
-                      "value": {
-                        "type": "Num",
-                        "value": 1,
-                      },
-                    },
-                    "fn": {
-                      "annotation": undefined,
-                      "body": {
-                        "location": {
-                          "from": {
-                            "column": 8,
-                            "line": 1,
-                            "token": {
-                              "col": 8,
-                              "line": 1,
-                              "lineBreaks": 0,
-                              "offset": 7,
-                              "text": "x",
-                              "toString": [Function],
-                              "type": "variable",
-                              "value": "x",
-                            },
-                          },
-                        },
-                        "type": "var",
-                        "variable": {
-                          "location": {
-                            "from": {
-                              "column": 8,
-                              "line": 1,
-                              "token": {
-                                "col": 8,
-                                "line": 1,
-                                "lineBreaks": 0,
-                                "offset": 7,
-                                "text": "x",
-                                "toString": [Function],
-                                "type": "variable",
-                                "value": "x",
-                              },
-                            },
-                          },
-                          "type": "name",
-                          "value": "x",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "location": {
-                        "from": {
-                          "column": 3,
-                          "line": 1,
-                          "token": {
-                            "col": 3,
-                            "line": 1,
-                            "lineBreaks": 0,
-                            "offset": 2,
-                            "text": "x",
-                            "toString": [Function],
-                            "type": "variable",
-                            "value": "x",
-                          },
-                        },
-                        "to": {
-                          "column": 8,
-                          "line": 1,
-                          "token": {
-                            "col": 8,
-                            "line": 1,
-                            "lineBreaks": 0,
-                            "offset": 7,
-                            "text": "x",
-                            "toString": [Function],
-                            "type": "variable",
-                            "value": "x",
-                          },
-                        },
-                      },
-                      "type": "lambda",
-                      "variable": "x",
-                    },
-                    "icit": "Explicit",
-                    "location": {
-                      "from": {
-                        "column": 3,
-                        "line": 1,
-                        "token": {
-                          "col": 3,
-                          "line": 1,
-                          "lineBreaks": 0,
-                          "offset": 2,
-                          "text": "x",
-                          "toString": [Function],
-                          "type": "variable",
-                          "value": "x",
-                        },
-                      },
-                      "to": {
-                        "column": 11,
-                        "line": 1,
-                        "token": {
-                          "col": 11,
-                          "line": 1,
-                          "lineBreaks": 0,
-                          "offset": 10,
-                          "text": "1",
-                          "toString": [Function],
-                          "type": "digit",
-                          "value": 1,
-                        },
-                      },
-                    },
-                    "type": "application",
-                  },
-                  "type": "term",
-                },
-                {
-                  "metadata": {
-                    "action": "infer",
-                    "description": "inferring function type",
-                  },
-                  "tag": "src",
-                  "term": {
-                    "annotation": undefined,
-                    "body": {
-                      "location": {
-                        "from": {
-                          "column": 8,
-                          "line": 1,
-                          "token": {
-                            "col": 8,
-                            "line": 1,
-                            "lineBreaks": 0,
-                            "offset": 7,
-                            "text": "x",
-                            "toString": [Function],
-                            "type": "variable",
-                            "value": "x",
-                          },
-                        },
-                      },
-                      "type": "var",
-                      "variable": {
-                        "location": {
-                          "from": {
-                            "column": 8,
-                            "line": 1,
-                            "token": {
-                              "col": 8,
-                              "line": 1,
-                              "lineBreaks": 0,
-                              "offset": 7,
-                              "text": "x",
-                              "toString": [Function],
-                              "type": "variable",
-                              "value": "x",
-                            },
-                          },
-                        },
-                        "type": "name",
-                        "value": "x",
-                      },
-                    },
-                    "icit": "Explicit",
-                    "location": {
-                      "from": {
-                        "column": 3,
-                        "line": 1,
-                        "token": {
-                          "col": 3,
-                          "line": 1,
-                          "lineBreaks": 0,
-                          "offset": 2,
-                          "text": "x",
-                          "toString": [Function],
-                          "type": "variable",
-                          "value": "x",
-                        },
-                      },
-                      "to": {
-                        "column": 8,
-                        "line": 1,
-                        "token": {
-                          "col": 8,
-                          "line": 1,
-                          "lineBreaks": 0,
-                          "offset": 7,
-                          "text": "x",
-                          "toString": [Function],
-                          "type": "variable",
-                          "value": "x",
-                        },
-                      },
-                    },
-                    "type": "lambda",
-                    "variable": "x",
-                  },
-                  "type": "term",
-                },
-                {
-                  "metadata": {
-                    "action": "infer",
-                  },
-                  "tag": "src",
-                  "term": {
-                    "annotation": undefined,
-                    "body": {
-                      "location": {
-                        "from": {
-                          "column": 8,
-                          "line": 1,
-                          "token": {
-                            "col": 8,
-                            "line": 1,
-                            "lineBreaks": 0,
-                            "offset": 7,
-                            "text": "x",
-                            "toString": [Function],
-                            "type": "variable",
-                            "value": "x",
-                          },
-                        },
-                      },
-                      "type": "var",
-                      "variable": {
-                        "location": {
-                          "from": {
-                            "column": 8,
-                            "line": 1,
-                            "token": {
-                              "col": 8,
-                              "line": 1,
-                              "lineBreaks": 0,
-                              "offset": 7,
-                              "text": "x",
-                              "toString": [Function],
-                              "type": "variable",
-                              "value": "x",
-                            },
-                          },
-                        },
-                        "type": "name",
-                        "value": "x",
-                      },
-                    },
-                    "icit": "Explicit",
-                    "location": {
-                      "from": {
-                        "column": 3,
-                        "line": 1,
-                        "token": {
-                          "col": 3,
-                          "line": 1,
-                          "lineBreaks": 0,
-                          "offset": 2,
-                          "text": "x",
-                          "toString": [Function],
-                          "type": "variable",
-                          "value": "x",
-                        },
-                      },
-                      "to": {
-                        "column": 8,
-                        "line": 1,
-                        "token": {
-                          "col": 8,
-                          "line": 1,
-                          "lineBreaks": 0,
-                          "offset": 7,
-                          "text": "x",
-                          "toString": [Function],
-                          "type": "variable",
-                          "value": "x",
-                        },
-                      },
-                    },
-                    "type": "lambda",
-                    "variable": "x",
-                  },
-                  "type": "term",
-                },
-                {
-                  "metadata": {
-                    "action": "infer",
-                    "description": "Lambda",
-                  },
-                  "tag": "src",
-                  "term": {
-                    "annotation": undefined,
-                    "body": {
-                      "location": {
-                        "from": {
-                          "column": 8,
-                          "line": 1,
-                          "token": {
-                            "col": 8,
-                            "line": 1,
-                            "lineBreaks": 0,
-                            "offset": 7,
-                            "text": "x",
-                            "toString": [Function],
-                            "type": "variable",
-                            "value": "x",
-                          },
-                        },
-                      },
-                      "type": "var",
-                      "variable": {
-                        "location": {
-                          "from": {
-                            "column": 8,
-                            "line": 1,
-                            "token": {
-                              "col": 8,
-                              "line": 1,
-                              "lineBreaks": 0,
-                              "offset": 7,
-                              "text": "x",
-                              "toString": [Function],
-                              "type": "variable",
-                              "value": "x",
-                            },
-                          },
-                        },
-                        "type": "name",
-                        "value": "x",
-                      },
-                    },
-                    "icit": "Explicit",
-                    "location": {
-                      "from": {
-                        "column": 3,
-                        "line": 1,
-                        "token": {
-                          "col": 3,
-                          "line": 1,
-                          "lineBreaks": 0,
-                          "offset": 2,
-                          "text": "x",
-                          "toString": [Function],
-                          "type": "variable",
-                          "value": "x",
-                        },
-                      },
-                      "to": {
-                        "column": 8,
-                        "line": 1,
-                        "token": {
-                          "col": 8,
-                          "line": 1,
-                          "lineBreaks": 0,
-                          "offset": 7,
-                          "text": "x",
-                          "toString": [Function],
-                          "type": "variable",
-                          "value": "x",
-                        },
-                      },
-                    },
-                    "type": "lambda",
-                    "variable": "x",
-                  },
-                  "type": "term",
-                },
-              ],
-              "zonker": {
-                Symbol(Substitution): undefined,
-              },
-            },
-            "term": {
-              "id": 816,
-              "type": "Var",
-              "variable": {
-                "lvl": 0,
-                "type": "Meta",
-                "val": 1,
-              },
-            },
-            "type": "Closure",
-          },
-          "id": 24,
-          "type": "Abs",
-        },
-      },
-      "817": {
-        "modalities": {},
-        "nf": {
-          "id": 25,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-      },
-      "818": {
-        "modalities": {},
-        "nf": {
-          "id": 28,
-          "type": "Neutral",
-          "value": {
-            "id": 27,
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 1,
-            },
-          },
-        },
-      },
-    },
+    "typedTerms": {},
   },
 }
 `;

@@ -17,7 +17,7 @@ export function insert(node: EB.AST): V2.Elaboration<EB.AST> {
 	return V2.Do(function* () {
 		const ctx = yield* V2.ask();
 		const r = match(node)
-			.with([{ type: "Abs", binding: { type: "Lambda", icit: "Implicit" } }, P._, P._], () => V2.of<EB.AST>(node))
+			//.with([{ type: "Abs", binding: { type: "Lambda", icit: "Implicit" } }, P._, P._], () => V2.of<EB.AST>(node))
 			.with([P._, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._], ([, pi]) =>
 				V2.Do(function* () {
 					const found = yield* V2.pure(EB.resolveImplicit(pi.binder.annotation));
@@ -81,85 +81,6 @@ export const generalize = (tm: EB.Term, ctx: EB.Context): EB.Term => {
 		tm, //replaceMeta(tm, ms, 0, ctx),
 	);
 };
-
-// type Meta = Extract<EB.Variable, { type: "Meta" }>;
-// export const replaceMeta = (tm: EB.Term, ms: Meta[], lvl: number, ctx: EB.Context): EB.Term => {
-// 	const sub = (tm: EB.Term, lvl: number): EB.Term => {
-// 		const t = match(tm)
-// 			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
-// 				if (!ctx.zonker[variable.val]) {
-// 					return EB.Constructors.Var(bindMeta(variable, ms, lvl));
-// 				}
-
-// 				return NF.quote(ctx, lvl, ctx.zonker[variable.val]);
-// 				// console.warn("Generalize: Found meta variable", { variable });
-// 				// console.warn("Term generalization yet to be fully implemented");
-// 				// return EB.Constructors.Var(bindMeta(variable, ms, lvl));
-// 			})
-
-// 			.with({ type: "Var" }, () => tm)
-// 			.with({ type: "Lit" }, () => tm)
-// 			.with({ type: "Abs", binding: { type: "Lambda" } }, ({ binding, body }) => EB.Constructors.Abs(binding, sub(body, lvl + 1)))
-// 			.with({ type: "Abs", binding: { type: "Pi" } }, ({ binding, body }) =>
-// 				EB.Constructors.Abs({ ...binding, annotation: sub(binding.annotation, lvl) }, sub(body, lvl + 1)),
-// 			)
-// 			.with({ type: "Abs", binding: { type: "Mu" } }, ({ binding, body }) =>
-// 				EB.Constructors.Abs({ ...binding, annotation: sub(binding.annotation, lvl) }, sub(body, lvl + 1)),
-// 			)
-// 			// .with({ type: "App", icit: "Implicit", arg: { type: "Var", variable: { type: "Meta" } } }, ({ icit, func, arg }) => {
-// 			// 	return EB.Constructors.App(icit, sub(func, lvl), sub(arg, lvl));
-// 			// })
-// 			.with({ type: "App" }, ({ icit, func, arg }) => EB.Constructors.App(icit, sub(func, lvl), sub(arg, lvl)))
-// 			.with({ type: "Row" }, ({ row }) => {
-// 				const r = R.traverse(
-// 					row,
-// 					val => sub(val, lvl),
-// 					v => ({ type: "variable", variable: bindMeta(v, ms, lvl) }),
-// 				);
-// 				return EB.Constructors.Row(r);
-// 			})
-// 			.with({ type: "Proj" }, ({ label, term }) => EB.Constructors.Proj(label, sub(term, lvl)))
-// 			.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, sub(value, lvl), sub(term, lvl)))
-// 			//.with({ type: "Annotation" }, ({ term, ann }) => EB.Constructors.Annotation(sub(term, lvl), sub(ann, lvl)))
-// 			.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
-// 				EB.Constructors.Match(
-// 					sub(scrutinee, lvl),
-// 					alternatives.map(alt => ({ pattern: alt.pattern, term: sub(alt.term, lvl) })),
-// 				),
-// 			)
-// 			.with({ type: "Block" }, ({ return: ret, statements }) => {
-// 				const stmts = statements.map(s => {
-// 					if (s.type === "Let") {
-// 						return { ...s, value: sub(s.value, lvl), annotation: sub(s.annotation, lvl) };
-// 					}
-// 					return { ...s, value: sub(s.value, lvl) };
-// 				});
-// 				return EB.Constructors.Block(stmts, sub(ret, lvl));
-// 			})
-
-// 			.otherwise(() => {
-// 				throw new Error("Generalize: Not implemented yet");
-// 			});
-
-// 		return t;
-// 	};
-
-// 	return sub(tm, lvl);
-// };
-
-// const bindMeta = (v: EB.Variable, ms: Meta[], lvl: number): EB.Variable => {
-// 	if (v.type !== "Meta") {
-// 		return v;
-// 	}
-
-// 	const i = ms.findIndex(m => m.val === v.val);
-// 	if (i === -1) {
-// 		// Not a meta that we are generalizing. If it doesn't show up in the meta list, then it must be in the zonker (solved)
-// 		return v;
-// 	}
-
-// 	return EB.Bound(lvl - i - 1);
-// };
 
 // TODO: We might want to remove this pass altogether in the future. Perhaps merge it with a lowering pass.
 /**
