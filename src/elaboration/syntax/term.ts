@@ -106,7 +106,7 @@ export const Constructors = {
 		Free: (name: string): Variable => ({ type: "Free", name }),
 		Foreign: (name: string): Variable => ({ type: "Foreign", name }),
 		Label: (name: string): Variable => ({ type: "Label", name }),
-		Meta: (val: number, lvl: number): Variable => ({ type: "Meta", val, lvl }),
+		Meta: (val: number, lvl: number): Extract<Variable, { type: "Meta" }> => ({ type: "Meta", val, lvl }),
 	},
 	App: (icit: Implicitness, func: Term, arg: Term): Term =>
 		mk({

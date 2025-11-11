@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Normalization: force() and apply() > force leaves unsolved metas untouched (neutral) 1`] = `
+{
+  "pretty": "?2",
+}
+`;
+
+exports[`Normalization: force() and apply() > force resolves flexible metas via zonker mapping 1`] = `
+{
+  "pretty": "1",
+}
+`;

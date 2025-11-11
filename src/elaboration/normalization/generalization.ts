@@ -32,7 +32,7 @@ export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Contex
 	// We also pre-extend names/types/env so quoting inside closures sees the right level indices.
 	const extendedCtx = ms.reduce((acc, m, i) => {
 		const name = `${String.fromCharCode(charCode + i)}`;
-		const boundLvl = i; // outermost binder is level 0 when quoting with lvl = ms.length
+		const boundLvl = i + ctx.env.length; // outermost binder is the first one after the existing env
 		const { ann } = ctx.metas[m.val];
 		const withBinder = EB.bind(acc, { type: "Pi", variable: name }, ann, "inserted");
 		return set(withBinder, ["zonker", `${m.val}`] as const, NF.Constructors.Var({ type: "Bound", lvl: boundLvl }));
@@ -43,10 +43,12 @@ export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Contex
 		const idx = ms.length - 1 - i; // the idx is the complement of i, since we're going from inner to outer
 		const variable = String.fromCharCode(charCode + idx);
 		// Quote with all binders in scope: lvl = ms.length - i
-		const term = NF.quote(extendedCtx, ms.length - i, body);
+		const trimmed = update(extendedCtx, "env", e => e.slice(i)); // trim the already introduced binders from the env for quoting
+		const term = NF.quote(trimmed, ctx.env.length + ms.length - i, body);
 		const { ann } = ctx.metas[m.val];
-		const trimmed = { ...extendedCtx, env: extendedCtx.env.slice(i + 1) }; // trim the bound variables from the closure captured env
-		return NF.Constructors.Pi(variable, "Implicit", ann, NF.Constructors.Closure(trimmed, term));
+
+		const closureCtx = update(trimmed, "env", e => e.slice(1)); // drop the binder we are introducing now so it doesn't get captured in the closure
+		return NF.Constructors.Pi(variable, "Implicit", ann, NF.Constructors.Closure(closureCtx, term));
 	}, val);
 
 	// Return the context with updated zonker
@@ -152,39 +154,18 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 	return match(nf)
 		.with({ type: "Var" }, v => v)
 		.with({ type: "Lit" }, lit => lit)
-		.with(NF.Patterns.Lambda, ({ binder, closure }) => {
-			const ann = trimClosureEnvs(binder.annotation);
+		.with({ type: "Abs" }, abs => {
+			const ann = trimClosureEnvs(abs.binder.annotation);
 			const trimmedClosure = {
-				...closure,
+				...abs.closure,
 				ctx: {
-					...closure.ctx,
-					env: closure.ctx.env.slice(-1), // Remove first entry (the recursive variable at level 0)
+					...abs.closure.ctx,
+					env: abs.closure.ctx.env.slice(0, abs.closure.ctx.env.length - 1), // Remove first entry (the recursive variable at level 0)
 				},
 			};
-			return NF.Constructors.Lambda(binder.variable, binder.icit, trimmedClosure, ann);
+			return { ...abs, annotation: ann, closure: trimmedClosure };
 		})
-		.with(NF.Patterns.Pi, ({ binder, closure }) => {
-			const ann = trimClosureEnvs(binder.annotation);
-			const trimmedClosure = {
-				...closure,
-				ctx: {
-					...closure.ctx,
-					env: closure.ctx.env.slice(-1), // Remove first entry (the recursive variable at level 0)
-				},
-			};
-			return NF.Constructors.Pi(binder.variable, binder.icit, ann, trimmedClosure);
-		})
-		.with(NF.Patterns.Mu, ({ binder, closure }) => {
-			const ann = trimClosureEnvs(binder.annotation);
-			const trimmedClosure = {
-				...closure,
-				ctx: {
-					...closure.ctx,
-					env: closure.ctx.env.slice(-1), // Remove first entry (the recursive variable at level 0)
-				},
-			};
-			return NF.Constructors.Mu(binder.variable, binder.source, ann, trimmedClosure);
-		})
+
 		.with({ type: "App" }, ({ icit, func, arg }) => NF.Constructors.App(trimClosureEnvs(func), trimClosureEnvs(arg), icit))
 		.with({ type: "Row" }, ({ row }) =>
 			NF.Constructors.Row(

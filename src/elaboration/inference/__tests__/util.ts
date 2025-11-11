@@ -21,7 +21,7 @@ export const parseExpr = (src: string) => {
 	return data.results[0];
 };
 
-export const mkCtx = () => Lib.defaultContext();
+export const mkCtx = (): EB.Context => Lib.defaultContext();
 
 // Run elaboration/inference for a source string; returns elaborated term, type, usages, constraints and displays.
 export const elaborateFrom = (src: string) => {

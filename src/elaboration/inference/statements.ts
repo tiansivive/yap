@@ -93,8 +93,9 @@ export const letdec = function* (
 	// During inference, the recursive variable is added to env at level 0, and any closures
 	// created during inference capture this env. We need to trim it before generalization
 	// since we'll be moving the variable to imports instead of keeping it in env.
-	const trimmedTy = NF.trimClosureEnvs(dec.annotation);
-	const [generalized] = NF.generalize(trimmedTy, EB.bind(zonked, { type: "Let", variable: dec.variable }, trimmedTy));
+	//const trimmedTy = NF.trimClosureEnvs(NF.force(zonked, dec.annotation));
+
+	const [generalized] = NF.generalize(NF.force(zonked, dec.annotation), EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation));
 
 	//const [generalized, next] = NF.generalize(trimmedTy, zonked);
 	const instantiated = NF.instantiate(generalized, zonked);

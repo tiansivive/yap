@@ -105,13 +105,47 @@ Run `pnpm test` to run the tests. You can update snapshots with `pnpm test -u` a
 
 ## Testing patterns that matter here
 
-- Parser tests (now split under `src/parser/__tests__`):
-  - Create a parser with `const g = { ...Grammar, ParserStart: "Ann" }; new Nearley.Parser(...)`.
-  - Always assert `data.results.length === 1`; then snapshot `data.results[0]`.
-- Elaboration tests (under `src/elaboration/inference/__tests__`):
-  - Determinism: call `EB.resetSupply("meta")` and `EB.resetSupply("var")` before inference.
-  - Use `Lib.defaultContext()`; run `EB.infer(term)` inside the V2 monad and read back `{ constraints, metas, types }` via `V2.listen()`.
-  - Prefer structural assertions on `structure` (e.g., type node is `Pi`) and keep pretty-printed strings for snapshots only.
+### Parser tests (under `src/parser/__tests__`)
+
+- Create a parser with `const g = { ...Grammar, ParserStart: "Ann" }; new Nearley.Parser(...)`.
+- Always assert `data.results.length === 1`; then snapshot `data.results[0]`.
+- Test different grammar entry points by changing `ParserStart` (e.g., `"Ann"`, `"Statement"`, `"Module"`).
+
+### Elaboration tests (under `src/elaboration/inference/__tests__`)
+
+- **Setup**: Use the `elaborateFrom(src)` helper from `util.ts` which:
+  - Resets supplies for determinism: `EB.resetSupply("meta")` and `EB.resetSupply("var")`
+  - Parses source string with `ParserStart = "Ann"`
+  - Creates default context via `Lib.defaultContext()`
+  - Runs `EB.infer(term)` inside V2 monad
+  - Collects and returns `{ src, displays, structure }` where:
+    - `displays`: pretty-printed term, type, and constraints
+    - `structure`: raw AST nodes (term, type, constraints, metas, typedTerms)
+
+- **Assertions**:
+  - **Structural checks first**: Assert on `structure` properties (e.g., `expect(res.structure.term.type).toBe("Block")`)
+  - **Snapshots for full output**: Use `expect({ displays: res.displays }).toMatchSnapshot()` and `expect({ structure: res.structure }).toMatchSnapshot()`
+  - **Avoid string equality on pretty output**: Snapshots are preferred over exact string matches
+  - **Check constraints**: `expect(res.displays.constraints).toHaveLength(...)` or check specific constraint patterns
+  - **Check metas**: `Object.keys(res.structure.metas).length` to verify meta generation
+
+- **Test organization**:
+  - Group related tests with `describe()` blocks
+  - Use descriptive test names that explain the scenario
+  - Include both positive (success) and negative (expected failure) cases where applicable
+  - Test edge cases separately
+
+- **Common test patterns**:
+  - **Type inference**: Check that types are inferred correctly without annotations
+  - **Polymorphism**: Test generalization/instantiation (see `let-polymorphism.test.ts`)
+  - **Constraints**: Verify unification constraints are generated correctly
+  - **Scoping**: Test variable binding, shadowing, and closure capture
+  - **Recursion**: Test recursive definitions with Mu terms
+
+### Module-level tests (under `src/elaboration/__tests__`)
+
+- Tests for full module elaboration (top-level let declarations, exports, foreign imports)
+- Use similar patterns as inference tests but at module granularity
 
 ## Conventions & tips
 
