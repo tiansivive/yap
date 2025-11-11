@@ -30,10 +30,11 @@ export const infer = (block: Block) =>
 						return yield* V2.pure(recurse(rest, [...results, stmt]));
 					}
 
+					const [r, next] = yield* EB.Stmt.letdec(stmt);
 					return yield* V2.local(
-						ctx => EB.bind(ctx, { type: "Let", variable: stmt.variable }, sty),
+						_ => EB.bind(next, { type: "Let", variable: stmt.variable }, r.annotation),
 						V2.Do(function* () {
-							const [tm, ty, [vu, ...rus]] = yield* V2.pure(recurse(rest, [...results, stmt]));
+							const [tm, ty, [vu, ...rus]] = yield* V2.pure(recurse(rest, [...results, r]));
 							yield* V2.tell("constraint", { type: "usage", expected: Q.Many, computed: vu });
 							// Remove the usage of the bound variable (same as the lambda rule)
 							// Multiply the usages of the let binder by the multiplicity of the new let binding (same as the application rule)

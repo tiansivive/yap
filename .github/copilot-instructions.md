@@ -36,6 +36,34 @@ It contains a Nearley-based parser and an elaboration/inference pipeline which u
     - Based on Quantitative Type Theory by Atkey, and inspired by Idris2
     - Currently outdated. Usage inference and collection in Elaboration is deprecated. Will need to be moved to Verification.
 
+## How to build and test
+
+We use `pnpm` and `vitest`.
+
+`package.json` scripts:
+
+```json
+	  "build": "tsup",
+		"format": "prettier .",
+		"lint": "eslint . --max-warnings 0",
+		"lint:knip": "knip",
+		"nearley": "nearleyc src/parser/grammar.ne -o src/parser/grammar.ts && echo '// @ts-nocheck' | cat - src/parser/grammar.ts > temp && mv temp src/parser/grammar.ts",
+		"parse": "tsc src/parser/grammar.ts --skipLibCheck --noEmitOnError --allowJs && nearley-test bin/grammar.js",
+		"prepare": "husky",
+		"railroad": "nearley-railroad src/parser/grammar.ne -o gen/parser/grammar.html",
+		"test": "vitest",
+		"tsc": "tsc -p ./tsc.tsconfig.json",
+		"typecheck": "tsc --noEmit -p ./tsc.tsconfig.json",
+		"yap": "ts-node -T ./scripts/cli.ts"
+```
+
+We should NOT use `build` while debugging.
+Simply run `pnpm yap <file>.yap` to parse, elaborate and verify a yap source file.
+Passing `repl` to `yap` will launch an interactive REPL.
+
+If you edit the grammar, run `pnpm run nearley` to regenerate the parser.
+Run `pnpm test` to run the tests. You can update snapshots with `pnpm test -u` and run specific tests with `pnpm test <path/to/test/file>`.
+
 ## Coding guidelines
 
 ### Patterns and abstraction

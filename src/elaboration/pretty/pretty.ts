@@ -96,9 +96,10 @@ const display = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; 
 					const { code, next } = statements.reduce<{ code: string; next: DisplayContext }>(
 						({ code, next }, stmt) => {
 							if (stmt.type === "Let") {
-								return { next: bind(stmt.variable, ctx), code: code + "\n\t" + Stmt.display(stmt, ctx, opts) + ";" };
+								const xtended = bind(stmt.variable, next);
+								return { next: xtended, code: code + "\n\t" + Stmt.display(stmt, next, opts) + ";" };
 							}
-							return { next: ctx, code: code + "\n\t" + Stmt.display(stmt, ctx, opts) + ";" };
+							return { next, code: code + "\n\t" + Stmt.display(stmt, next, opts) + ";" };
 						},
 						{ code: "", next: ctx },
 					);

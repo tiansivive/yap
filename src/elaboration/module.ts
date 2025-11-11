@@ -118,33 +118,37 @@ export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.C
 export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context]>] => {
 	const inference = V2.Do(function* () {
 		const [elaborated, ty, us] = yield* EB.Stmt.infer.gen(stmt);
-		const { constraints, metas } = yield* V2.listen();
-		const subst = yield* V2.local(
-			update("metas", ms => ({ ...ms, ...metas })),
-			solve(constraints),
-		);
-		//const tyZonked = yield* EB.zonk.gen("nf", ty, subst);
-		const zonked = F.pipe(
-			ctx,
-			update("metas", prev => ({ ...prev, ...metas })),
-			set("zonker", Sub.compose(subst, ctx.zonker)),
-		);
+		console.log("\n------------------ LETDEC --------------------------------");
+		const [r, next] = yield* EB.Stmt.letdec(elaborated as Extract<EB.Statement, { type: "Let" }>);
+		//const [r, next] = yield* V2.liftE(result)
+		console.log("Elaborated:\n", EB.Display.Statement(r, next));
+		// const { constraints, metas } = yield* V2.listen();
+		// const subst = yield* V2.local(
+		// 	update("metas", ms => ({ ...ms, ...metas })),
+		// 	solve(constraints),
+		// );
+		// //const tyZonked = yield* EB.zonk.gen("nf", ty, subst);
+		// const zonked = F.pipe(
+		// 	ctx,
+		// 	update("metas", prev => ({ ...prev, ...metas })),
+		// 	set("zonker", Sub.compose(subst, ctx.zonker)),
+		// );
 
-		// Trim the recursive variable from closures in the type before generalizing.
-		// During inference, the recursive variable is added to env at level 0, and any closures
-		// created during inference capture this env. We need to trim it before generalization
-		// since we'll be moving the variable to imports instead of keeping it in env.
-		const trimmedTy = NF.trimClosureEnvs(ty);
+		// // Trim the recursive variable from closures in the type before generalizing.
+		// // During inference, the recursive variable is added to env at level 0, and any closures
+		// // created during inference capture this env. We need to trim it before generalization
+		// // since we'll be moving the variable to imports instead of keeping it in env.
+		// const trimmedTy = NF.trimClosureEnvs(ty);
 
-		const [generalized, next] = NF.generalize(trimmedTy, zonked);
-		const instantiated = NF.instantiate(generalized, next);
+		// const [generalized, next] = NF.generalize(trimmedTy, zonked);
+		// const instantiated = NF.instantiate(generalized, next);
 
-		const xtended = EB.bind(next, { type: "Let", variable: stmt.variable }, instantiated);
-		const wrapped = F.pipe(
-			EB.Icit.instantiate(elaborated.value, xtended),
-			// inst => EB.Icit.generalize(inst, xtended),
-			tm => EB.Icit.wrapLambda(tm, instantiated, xtended),
-		);
+		// const xtended = EB.bind(next, { type: "Let", variable: stmt.variable }, instantiated);
+		// const wrapped = F.pipe(
+		// 	EB.Icit.instantiate(elaborated.value, xtended),
+		// 	// inst => EB.Icit.generalize(inst, xtended),
+		// 	tm => EB.Icit.wrapLambda(tm, instantiated, xtended),
+		// );
 
 		// const zCtx = getZ3Context();
 		// if (!zCtx) {
@@ -253,9 +257,9 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 		// 	});
 		// });
 
-		console.log("\n------------------ LETDEC --------------------------------");
-		const statement = EB.Constructors.Stmt.Let(stmt.variable, wrapped, instantiated);
-		console.log("Elaborated:\n", EB.Display.Statement(statement, xtended));
+		// console.log("\n------------------ LETDEC --------------------------------");
+		// const statement = EB.Constructors.Stmt.Let(stmt.variable, wrapped, instantiated);
+		// console.log("Elaborated:\n", EB.Display.Statement(statement, xtended));
 
 		// PPretty.Term(elaborated.value, xtended).then(pretty => {
 		// 	console.log("Pretty Elaborated:\n", pretty);
@@ -264,7 +268,7 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 		// console.log("Wrapped:\n", EB.Display.Term(wrapped, xtended));
 		// console.log("Instantiated:\n", NF.display(instantiated, xtended));
 
-		const ast: EB.AST = [wrapped, instantiated, us];
+		const ast: EB.AST = [r.value, r.annotation, us];
 		return [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
 	});
 

@@ -34,7 +34,7 @@ import {
 	PrimOps,
 } from "@yap/shared/lib/primitives";
 
-export const VerificationService = (Z3: Context<"main">) => {
+export const VerificationService = (Z3: Context<"main">, { logging } = { logging: false }) => {
 	const Sorts = {
 		Int: Z3.Int.sort(),
 		Num: Z3.Real.sort(),
@@ -113,6 +113,9 @@ export const VerificationService = (Z3: Context<"main">) => {
 	let indentation = 0;
 	const prefix = (track: boolean = true) => `${track ? "|" : " "}\t`.repeat(indentation);
 	const log = (...msgs: string[]) => {
+		if (!logging) {
+			return;
+		}
 		console.log(prefix() + msgs.join("\n" + prefix(false)));
 	};
 	const check = (tm: EB.Term, ty: NF.Value): V2.Elaboration<Modal.Artefacts> =>

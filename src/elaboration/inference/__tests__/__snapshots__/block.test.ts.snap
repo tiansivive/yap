@@ -366,7 +366,7 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
       "statements": [
         {
           "annotation": {
-            "id": 37,
+            "id": 45,
             "type": "Neutral",
             "value": {
               "id": 36,
@@ -393,7 +393,7 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
       "type": "Block",
     },
     "type": {
-      "id": 37,
+      "id": 45,
       "type": "Neutral",
       "value": {
         "id": 36,
