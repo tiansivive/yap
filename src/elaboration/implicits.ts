@@ -92,9 +92,16 @@ export const instantiate = (term: EB.Term, ctx: EB.Context): EB.Term => {
 	return (
 		match(term)
 			.with({ type: "Var", variable: { type: "Meta" } }, v => {
+				// Don't instantiate metas from outer scopes - they should remain unsolved
+				// and will be handled at their original scope level
+				if (v.variable.lvl < ctx.env.length) {
+					return v;
+				}
+
 				if (!!ctx.zonker[v.variable.val]) {
-					// Solved meta means it's in the zonker = not unconstrained, so no need to instantiate it
-					return NF.quote(ctx, ctx.env.length, ctx.zonker[v.variable.val]);
+					const quoted = NF.quote(ctx, ctx.env.length, ctx.zonker[v.variable.val]);
+					// we still need to instantiate in case the quoted term has metas itself
+					return instantiate(quoted, ctx);
 				}
 
 				const { ann } = ctx.metas[v.variable.val];
@@ -135,11 +142,13 @@ export const instantiate = (term: EB.Term, ctx: EB.Context): EB.Term => {
 				const { stmts, ctx: xtended } = statements.reduce(
 					(acc, s) => {
 						const { stmts, ctx } = acc;
-						const instantiated = { ...s, value: instantiate(s.value, ctx) };
+
 						if (s.type === "Let") {
 							const extended = EB.bind(ctx, { type: "Let", variable: s.variable }, s.annotation);
+							const instantiated = { ...s, value: instantiate(s.value, ctx) };
 							return { stmts: [...stmts, instantiated], ctx: extended };
 						}
+						const instantiated = { ...s, value: instantiate(s.value, ctx) };
 						return { stmts: [...stmts, instantiated], ctx };
 					},
 					{ stmts: [] as EB.Statement[], ctx },

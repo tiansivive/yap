@@ -18,12 +18,19 @@ type Meta = Extract<NF.Variable, { type: "Meta" }>;
 
 /**
  * Generalizes a value by replacing meta variables with bound variables, which are introduced by wrapping the value in a Pi type for each meta variable.
+ * Only generalizes metas created at a deeper level than the current context (i.e., local to this let-binding).
+ * Metas from outer scopes (with lvl < ctx.env.length) are NOT generalized, implementing proper let-polymorphism scoping.
  */
-export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Context] => {
-	const ms = collectMetasNF(val, ctx.zonker);
+export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Context["zonker"]] => {
+	const allMetas = collectMetasNF(val, ctx.zonker);
+
+	// Filter out metas from outer scopes - only generalize metas created in the current scope
+	// A meta's lvl indicates the context depth when it was created
+	// If lvl < ctx.env.length, it was created in an outer scope and should NOT be generalized
+	const ms = allMetas.filter(m => m.lvl >= ctx.env.length);
 
 	if (ms.length === 0) {
-		return [val, ctx];
+		return [val, ctx.zonker];
 	}
 
 	const charCode = "a".charCodeAt(0);
@@ -52,12 +59,13 @@ export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Contex
 	}, val);
 
 	// Return the context with updated zonker
-	return [generalized, { ...ctx, zonker: extendedCtx.zonker }];
+	return [generalized, extendedCtx.zonker];
 };
 
 /**
  * Instantiates unconstrained meta variables in a Normal Form (NF) to default values based on their annotations.
  * Constrained metas (those that have been unified to some value) are left alone.
+ * Metas from outer scopes (lvl < ctx.env.length) are also left alone - they will be solved at their original scope.
  */
 export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 	return match(nf)
@@ -70,6 +78,13 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 				// Solved meta means it's in the zonker = not unconstrained, so no need to instantiate it
 				return v;
 			}
+
+			// Don't instantiate metas from outer scopes - they should remain unsolved
+			// and will be handled at their original scope level
+			if (v.variable.lvl < ctx.env.length) {
+				return v;
+			}
+
 			const { ann } = ctx.metas[v.variable.val];
 			return match(ann)
 				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => NF.Constructors.Row({ type: "empty" }))

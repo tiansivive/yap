@@ -10,6 +10,7 @@ import * as Src from "@yap/src/index";
 import * as Log from "@yap/shared/logging";
 
 import { Liquid } from "@yap/verification/modalities";
+import { update } from "@yap/utils";
 
 type Lambda = Extract<Src.Term, { type: "lambda" }>;
 
@@ -24,9 +25,13 @@ export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
 				: ([EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
 
 			const ty = NF.evaluate(ctx, ann);
+			const { metas } = yield* V2.listen();
 
 			const ast = yield* V2.local(
-				_ctx => EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, ty),
+				_ctx => {
+					const xtended = EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, ty);
+					return update(xtended, "metas", ms => ({ ...ms, ...metas }));
+				},
 				V2.Do(function* () {
 					const inferred = yield* EB.infer.gen(lam.body);
 					const [bTerm, bType, [vu, ...bus]] = yield* EB.Icit.insert.gen(inferred);

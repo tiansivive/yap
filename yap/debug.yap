@@ -1,5 +1,9 @@
 export *;
 
+let Pair
+    : (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
+    = \a -> b -> p -> { fst: a, snd: b[|\v -> p :fst v |] };
+
 
 let List
     : Type -> Type

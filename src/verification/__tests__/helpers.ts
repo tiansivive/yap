@@ -54,7 +54,8 @@ export const elaborate = (src: string) => {
 			update("metas", prev => ({ ...prev, ...metas })),
 			set("zonker", Sub.compose(subst, ctx.zonker)),
 		);
-		const [generalized, next] = NF.generalize(ty, zonked);
+		const [generalized, zonker] = NF.generalize(ty, zonked);
+		const next = update(zonked, "zonker", z => ({ ...z, ...zonker }));
 		const instantiated = NF.instantiate(generalized, next);
 
 		const xtended = EB.bind(next, { type: "Let", variable: stmt.variable }, instantiated);

@@ -106,6 +106,32 @@ let incf
 
 
 
-        let id = \y -> y;
-    let a = id 5;
-    let b = id "world";
+let id = \y -> y;
+let a = id 5;
+let b = id "world";
+
+
+let Pair
+    : (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
+    = \a        -> b         -> p                    -> { fst: a, snd: b[| \v -> p :fst v |] }
+
+let pair
+    : Pair Num Num (\x y -> x < y )
+    = { fst: 3, snd: 5 };
+
+
+let OrderedList
+    : Type -> Type
+    = \t -> | #nil Unit 
+            | #cons { head: t, tail: OrderedList (t[| \v -> v > :head |]) };
+
+            
+let orderedList
+    : OrderedList Num
+    = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil () } } };
+
+let List
+    : (a: Type) -> (a -> a -> Bool) -> Type
+    = \t -> \p -> 
+        | #nil Unit 
+        | #cons { head: t, tail: List t[|\v -> p :head v |] (\y z -> p y z) };

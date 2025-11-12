@@ -89,25 +89,20 @@ export const letdec = function* (
 	const subst = yield* V2.local(_ => withMetas, EB.solve(constraints));
 	const zonked = update(withMetas, "zonker", z => compose(subst, z));
 
-	// Trim the recursive variable from closures in the type before generalizing.
-	// During inference, the recursive variable is added to env at level 0, and any closures
-	// created during inference capture this env. We need to trim it before generalization
-	// since we'll be moving the variable to imports instead of keeping it in env.
-	//const trimmedTy = NF.trimClosureEnvs(NF.force(zonked, dec.annotation));
+	const [generalized, zonker] = NF.generalize(NF.force(zonked, dec.annotation), EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation));
+	const next = update(zonked, "zonker", z => ({ ...z, ...zonker }));
 
-	const [generalized] = NF.generalize(NF.force(zonked, dec.annotation), EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation));
-
-	//const [generalized, next] = NF.generalize(trimmedTy, zonked);
-	const instantiated = NF.instantiate(generalized, zonked);
+	const instantiated = NF.instantiate(generalized, EB.bind(next, { type: "Let", variable: dec.variable }, generalized));
 
 	// Extend again now that we have the generalized type
-	const xtended = EB.bind(zonked, { type: "Let", variable: dec.variable }, instantiated);
+	// Use the zonked context to avoid issues with the already generalized metas
+	const xtended = EB.bind(next, { type: "Let", variable: dec.variable }, instantiated);
 	const wrapped = F.pipe(
-		EB.Icit.instantiate(dec.value, xtended),
+		EB.Icit.wrapLambda(dec.value, instantiated, xtended),
+		tm => EB.Icit.instantiate(tm, xtended),
 		// inst => EB.Icit.generalize(inst, xtended),
-		tm => EB.Icit.wrapLambda(tm, instantiated, xtended),
 	);
 
 	const statement = EB.Constructors.Stmt.Let(dec.variable, wrapped, instantiated);
-	return [statement, zonked] as [Extract<EB.Statement, { type: "Let" }>, EB.Context];
+	return [statement, next] as [Extract<EB.Statement, { type: "Let" }>, EB.Context];
 };
