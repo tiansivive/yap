@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { elaborateFrom } from "./util";
+import { stripKeys } from "../../../__tests__/setup";
 
 describe("Inference: Literals", () => {
 	it("numbers: 1 >=> Num", () => {
@@ -9,6 +10,7 @@ describe("Inference: Literals", () => {
 		expect(displays.constraints.length).toBe(0);
 		expect(Object.entries(structure.metas)).toHaveLength(0);
 
+		//const stripped = stripKeys({ structure }, ["ffi", "imports"])
 		expect({ displays }).toMatchSnapshot();
 		expect({ structure }).toMatchSnapshot();
 	});

@@ -9,8 +9,8 @@ exports[`Normalization: generalization > generalize > correctly types metas: (?1
 
 exports[`Normalization: generalization > generalize > handles pi types under existing environment entries 1`] = `
 {
-  "eb": "Π(a: Type) => Π(x: a) -> Num",
-  "nf": "Π(a: Type) => (closure: Π(x: a) -> Num -| Γ: a; two = two; one = one)",
+  "eb": "Π(x: ?1) -> Num",
+  "nf": "Π(x: ?1) -> (closure: Num -| Γ: x; two = two; one = one)",
 }
 `;
 
@@ -23,15 +23,15 @@ exports[`Normalization: generalization > generalize > handles pi types: ?1 -> ?2
 
 exports[`Normalization: generalization > generalize > introduces binder under existing environment entries 1`] = `
 {
-  "eb": "Π(a: Type) => a",
-  "nf": "Π(a: Type) => (closure: a -| Γ: a; x = x)",
+  "eb": "?1",
+  "nf": "?1",
 }
 `;
 
 exports[`Normalization: generalization > generalize > introduces multiple binders under existing environment entries 1`] = `
 {
-  "eb": "Π(a: Type) => a Num",
-  "nf": "Π(a: Type) => (closure: a Num -| Γ: a; y = y; x = x)",
+  "eb": "?1 Num",
+  "nf": "(?1) Num",
 }
 `;
 

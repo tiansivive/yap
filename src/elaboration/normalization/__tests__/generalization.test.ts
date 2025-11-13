@@ -14,8 +14,8 @@ describe("Normalization: generalization", () => {
 			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
 
 			const meta = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
-			const [generalized, extendedCtx] = NF.generalize(meta, ctx);
-
+			const [generalized, z] = NF.generalize(meta, ctx);
+			const extendedCtx = { ...ctx, zonker: z };
 			// Should be wrapped in an implicit Pi
 			const nf = NF.display(generalized, extendedCtx);
 			expect(nf).toContain("=>");
@@ -41,7 +41,8 @@ describe("Normalization: generalization", () => {
 			const meta2 = NF.Constructors.Flex({ type: "Meta", val: 2, lvl: 0 });
 			const piType = NF.Constructors.App(meta1, meta2, "Explicit");
 
-			const [generalized, extendedCtx] = NF.generalize(piType, ctx);
+			const [generalized, z] = NF.generalize(piType, ctx);
+			const extendedCtx = { ...ctx, zonker: z };
 
 			// Should be double-wrapped in implicit Pis
 			const nf = NF.display(generalized, extendedCtx);
@@ -76,7 +77,8 @@ describe("Normalization: generalization", () => {
 			const app1 = NF.Constructors.App(meta1, meta2, "Explicit");
 			const app2 = NF.Constructors.App(app1, meta3, "Explicit");
 
-			const [generalized, extendedCtx] = NF.generalize(app2, ctx);
+			const [generalized, z] = NF.generalize(app2, ctx);
+			const extendedCtx = { ...ctx, zonker: z };
 			const display = NF.display(generalized, extendedCtx);
 
 			// Should contain variable names a, b, c
@@ -104,7 +106,8 @@ describe("Normalization: generalization", () => {
 			const inner = EB.Constructors.Pi("y", "Explicit", meta2, meta3);
 			const outer = NF.Constructors.Pi("x", "Explicit", meta1, NF.Constructors.Closure(ctx, inner));
 
-			const [generalized, extendedCtx] = NF.generalize(outer, ctx);
+			const [generalized, z] = NF.generalize(outer, ctx);
+			const extendedCtx = { ...ctx, zonker: z };
 
 			const display = NF.display(generalized, extendedCtx);
 			const quoted = NF.quote(extendedCtx, 0, generalized);
@@ -120,7 +123,8 @@ describe("Normalization: generalization", () => {
 			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
 			const piType = NF.Constructors.Pi("x", "Explicit", meta1, NF.Constructors.Closure(ctx, meta2));
 
-			const [generalized, extendedCtx] = NF.generalize(piType, ctx);
+			const [generalized, z] = NF.generalize(piType, ctx);
+			const extendedCtx = { ...ctx, zonker: z };
 
 			const nf = NF.display(generalized, extendedCtx);
 			expect(nf).toContain("a: Type");
@@ -143,8 +147,8 @@ describe("Normalization: generalization", () => {
 			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
 			const piType = NF.Constructors.Pi("x", "Explicit", meta1, NF.Constructors.Closure(ctx, meta2));
 
-			const [generalized, extendedCtx] = NF.generalize(piType, ctx);
-
+			const [generalized, z] = NF.generalize(piType, ctx);
+			const extendedCtx = { ...ctx, zonker: z };
 			// Only ?1 should be generalized
 			const nf = NF.display(generalized, extendedCtx);
 			expect(nf).toContain("a: Type");
@@ -164,11 +168,12 @@ describe("Normalization: generalization", () => {
 			const ctx = mkCtx();
 			const numType = NF.Constructors.Lit(Lit.Atom("Num"));
 
-			const [generalized, extendedCtx] = NF.generalize(numType, ctx);
+			const [generalized, z] = NF.generalize(numType, ctx);
+			const extendedCtx = { ...ctx, zonker: z };
 
 			// Should be unchanged
 			expect(generalized).toBe(numType);
-			expect(extendedCtx).toBe(ctx);
+			expect(extendedCtx).toStrictEqual(ctx);
 
 			expect({ nf: NF.display(generalized, ctx) }).toMatchSnapshot();
 		});
@@ -179,7 +184,8 @@ describe("Normalization: generalization", () => {
 			const xtended = EB.bind(ctx, { type: "Let", variable: "x" }, NF.Any);
 
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
-			const [generalized, extendedCtx] = NF.generalize(meta1, xtended);
+			const [generalized, z] = NF.generalize(meta1, xtended);
+			const extendedCtx = { ...xtended, zonker: z };
 
 			const quoted = NF.quote(extendedCtx, xtended.env.length, generalized);
 
@@ -200,7 +206,8 @@ describe("Normalization: generalization", () => {
 			const meta2 = NF.Constructors.Flex({ type: "Meta", val: 2, lvl: 0 });
 			const app = NF.Constructors.App(meta1, meta2, "Explicit");
 
-			const [generalized, extendedCtx] = NF.generalize(app, xtended);
+			const [generalized, z] = NF.generalize(app, xtended);
+			const extendedCtx = { ...xtended, zonker: z };
 
 			const quoted = NF.quote(extendedCtx, xtended.env.length, generalized);
 
@@ -225,7 +232,8 @@ describe("Normalization: generalization", () => {
 
 			// ?1 -> ?2
 			const pi = NF.Constructors.Pi("x", "Explicit", meta1, NF.Constructors.Closure(xtended, meta2));
-			const [generalized, extendedCtx] = NF.generalize(pi, xtended);
+			const [generalized, z] = NF.generalize(pi, xtended);
+			const extendedCtx = { ...xtended, zonker: z };
 
 			const quoted = NF.quote(extendedCtx, xtended.env.length, generalized);
 			expect({ nf: NF.display(generalized, extendedCtx), eb: EB.Display.Term(quoted, extendedCtx) }).toMatchSnapshot();
@@ -319,7 +327,8 @@ describe("Normalization: generalization", () => {
 
 			const meta = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 
-			const [generalized, extendedCtx] = NF.generalize(meta, ctx);
+			const [generalized, z] = NF.generalize(meta, ctx);
+			const extendedCtx = { ...ctx, zonker: z };
 			const instantiated = NF.instantiate(generalized, extendedCtx);
 
 			expect({
@@ -337,7 +346,8 @@ describe("Normalization: generalization", () => {
 			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
 			const piType = NF.Constructors.Pi("x", "Explicit", meta1, NF.Constructors.Closure(ctx, meta2));
 
-			const [generalized, extendedCtx] = NF.generalize(piType, ctx);
+			const [generalized, z] = NF.generalize(piType, ctx);
+			const extendedCtx = { ...ctx, zonker: z };
 			const instantiated = NF.instantiate(generalized, extendedCtx);
 
 			expect({

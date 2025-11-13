@@ -3,34 +3,8 @@
 exports[`parser: indexed > empty list: [] 1`] = `
 {
   "elements": [],
-  "location": [
-    [
-      {
-        "col": 1,
-        "line": 1,
-        "lineBreaks": 0,
-        "offset": 0,
-        "text": "[",
-        "toString": [Function],
-        "type": "lbracket",
-        "value": "[",
-      },
-    ],
-    null,
-    [
-      {
-        "col": 2,
-        "line": 1,
-        "lineBreaks": 0,
-        "offset": 1,
-        "text": "]",
-        "toString": [Function],
-        "type": "rbracket",
-        "value": "]",
-      },
-    ],
-  ],
   "type": "list",
+  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -38,22 +12,6 @@ exports[`parser: indexed > list with tail: [1, 2 | r] 1`] = `
 {
   "elements": [
     {
-      "location": {
-        "from": {
-          "column": 2,
-          "line": 1,
-          "token": {
-            "col": 2,
-            "line": 1,
-            "lineBreaks": 0,
-            "offset": 1,
-            "text": "1",
-            "toString": [Function],
-            "type": "digit",
-            "value": 1,
-          },
-        },
-      },
       "type": "lit",
       "value": {
         "type": "Num",
@@ -61,22 +19,6 @@ exports[`parser: indexed > list with tail: [1, 2 | r] 1`] = `
       },
     },
     {
-      "location": {
-        "from": {
-          "column": 5,
-          "line": 1,
-          "token": {
-            "col": 5,
-            "line": 1,
-            "lineBreaks": 0,
-            "offset": 4,
-            "text": "2",
-            "toString": [Function],
-            "type": "digit",
-            "value": 2,
-          },
-        },
-      },
       "type": "lit",
       "value": {
         "type": "Num",
@@ -84,57 +26,12 @@ exports[`parser: indexed > list with tail: [1, 2 | r] 1`] = `
       },
     },
   ],
-  "location": {
-    "from": {
-      "column": 2,
-      "line": 1,
-      "token": {
-        "col": 2,
-        "line": 1,
-        "lineBreaks": 0,
-        "offset": 1,
-        "text": "1",
-        "toString": [Function],
-        "type": "digit",
-        "value": 1,
-      },
-    },
-    "to": {
-      "column": 5,
-      "line": 1,
-      "token": {
-        "col": 5,
-        "line": 1,
-        "lineBreaks": 0,
-        "offset": 4,
-        "text": "2",
-        "toString": [Function],
-        "type": "digit",
-        "value": 2,
-      },
-    },
-  },
   "rest": {
-    "location": {
-      "from": {
-        "column": 9,
-        "line": 1,
-        "token": {
-          "col": 9,
-          "line": 1,
-          "lineBreaks": 0,
-          "offset": 8,
-          "text": "r",
-          "toString": [Function],
-          "type": "variable",
-          "value": "r",
-        },
-      },
-    },
     "type": "name",
     "value": "r",
   },
   "type": "list",
+  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -142,22 +39,6 @@ exports[`parser: indexed > list: [1, 2] 1`] = `
 {
   "elements": [
     {
-      "location": {
-        "from": {
-          "column": 2,
-          "line": 1,
-          "token": {
-            "col": 2,
-            "line": 1,
-            "lineBreaks": 0,
-            "offset": 1,
-            "text": "1",
-            "toString": [Function],
-            "type": "digit",
-            "value": 1,
-          },
-        },
-      },
       "type": "lit",
       "value": {
         "type": "Num",
@@ -165,22 +46,6 @@ exports[`parser: indexed > list: [1, 2] 1`] = `
       },
     },
     {
-      "location": {
-        "from": {
-          "column": 5,
-          "line": 1,
-          "token": {
-            "col": 5,
-            "line": 1,
-            "lineBreaks": 0,
-            "offset": 4,
-            "text": "2",
-            "toString": [Function],
-            "type": "digit",
-            "value": 2,
-          },
-        },
-      },
       "type": "lit",
       "value": {
         "type": "Num",
@@ -188,37 +53,8 @@ exports[`parser: indexed > list: [1, 2] 1`] = `
       },
     },
   ],
-  "location": {
-    "from": {
-      "column": 2,
-      "line": 1,
-      "token": {
-        "col": 2,
-        "line": 1,
-        "lineBreaks": 0,
-        "offset": 1,
-        "text": "1",
-        "toString": [Function],
-        "type": "digit",
-        "value": 1,
-      },
-    },
-    "to": {
-      "column": 5,
-      "line": 1,
-      "token": {
-        "col": 5,
-        "line": 1,
-        "lineBreaks": 0,
-        "offset": 4,
-        "text": "2",
-        "toString": [Function],
-        "type": "digit",
-        "value": 2,
-      },
-    },
-  },
   "rest": null,
   "type": "list",
+  Symbol(snapshot:stripped): true,
 }
 `;

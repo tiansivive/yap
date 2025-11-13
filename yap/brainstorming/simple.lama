@@ -1,0 +1,66 @@
+
+
+let app = f g h;
+let app = f (g 1);
+
+let op = f + g;
+
+let ann = x : Int;
+
+let lambda = \y -> \x -> f x y;
+let pi = (x:Int) -> (f x);
+let arrow = Int -> Bool;
+
+let param = \(f:Int -> Bool) -> f 1;
+let hole = _;
+
+let fst = \#(a:Type) => \#(b:Type) => a;
+let foo = 1 : (fst);
+
+let block = {
+  let v = f 1;
+  v + 1;
+  return v;
+};
+
+let patterns = match 1
+  | x -> \f -> f x
+  | y -> y
+  ;
+
+let struct = { x: 1, a: "hello" };
+let variant = { foo: 1 } | { bar: 2 };
+
+let row = [x: 1, a: "hello"];
+let row = [foo: 1, bar: 2];
+
+let tuple = {1,2,3,4};
+let list = [5,6,7,8];
+
+let array:  { [Num]: String }    = ["hello", "world", "!"];
+let array': Struct [Num: String] = ["hello", "world", "!"];
+
+let record:  { foo: Num, bar: String }          = { foo: 1, bar: "one" };
+let record': Struct ["foo": Num, "bar": String] = { foo: 1, bar: "one" };
+
+let table:  { [String]: Num, required: "String" }       = { foo: 1, bar: 2, baz: 3, required: "THIS ONE IS DIFFERENT" };
+let table': Struct [String: Num, "required": "String"]  = { foo: 1, bar: 2, baz: 3, required: "THIS ONE IS DIFFERENT" };
+
+let multimap: { [Num, String]: String }       = { [0, "foo"]: "foo", [0, "bar"]: "bar" };
+let multimap': Struct [{Num, String}: String] = { [0, "foo"]: "foo", [0, "bar"]: "bar" };
+
+multimap.0 // => ["foo", "bar"]
+multimap.foo // => "foo" 
+multimap.bar // => "bar"
+
+let relation: { [Num, Num, Num] } = { [1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1] };
+
+relation[1]   // => [[2,3], [3,2]]
+relation[1,2] // => 3
+
+relation[3]  // => [[1,2], [2,1]]
+
+
+
+
+

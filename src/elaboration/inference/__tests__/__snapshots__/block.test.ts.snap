@@ -1,5 +1,123 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`inference: block > { let x = 1; return x; } 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Num ~~ ?1",
+      "0 <= ω",
+    ],
+    "term": "{
+	let x
+	: Num
+	= 1;
+	return x;
+	}",
+    "type": "Num",
+  },
+}
+`;
+
+exports[`inference: block > { let x = 1; return x; } 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 40,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 37,
+          "type": "Neutral",
+          "value": {
+            "id": 36,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "computed": "Zero",
+        "expected": "Many",
+        "type": "usage",
+        Symbol(snapshot:stripped): true,
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+    },
+    "term": {
+      "id": 1630,
+      "return": {
+        "id": 1629,
+        "type": "Var",
+        "variable": {
+          "index": 0,
+          "type": "Bound",
+        },
+      },
+      "statements": [
+        {
+          "annotation": {
+            "id": 40,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
+          },
+          "type": "Let",
+          "value": {
+            "id": 1628,
+            "type": "Lit",
+            "value": {
+              "type": "Num",
+              "value": 1,
+            },
+          },
+          "variable": "x",
+        },
+      ],
+      "type": "Block",
+    },
+    "type": {
+      "id": 40,
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Num",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
 exports[`inference: block > { return 1; } 1`] = `
 {
   "displays": {
