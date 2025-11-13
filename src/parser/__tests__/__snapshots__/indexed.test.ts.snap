@@ -4,7 +4,6 @@ exports[`parser: indexed > empty list: [] 1`] = `
 {
   "elements": [],
   "type": "list",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -31,7 +30,6 @@ exports[`parser: indexed > list with tail: [1, 2 | r] 1`] = `
     "value": "r",
   },
   "type": "list",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -55,6 +53,5 @@ exports[`parser: indexed > list: [1, 2] 1`] = `
   ],
   "rest": null,
   "type": "list",
-  Symbol(snapshot:stripped): true,
 }
 `;

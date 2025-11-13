@@ -51,7 +51,6 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
         "computed": "Zero",
         "expected": "Many",
         "type": "usage",
-        Symbol(snapshot:stripped): true,
       },
     ],
     "metas": {

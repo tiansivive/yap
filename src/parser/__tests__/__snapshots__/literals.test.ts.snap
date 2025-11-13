@@ -7,7 +7,6 @@ exports[`parser: literals > Row 1`] = `
     "type": "Atom",
     "value": "Row",
   },
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -18,7 +17,6 @@ exports[`parser: literals > Type 1`] = `
     "type": "Atom",
     "value": "Type",
   },
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -29,7 +27,6 @@ exports[`parser: literals > boolean: true 1`] = `
     "type": "Bool",
     "value": "true",
   },
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -40,7 +37,6 @@ exports[`parser: literals > number: 1 1`] = `
     "type": "Num",
     "value": 1,
   },
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -51,7 +47,6 @@ exports[`parser: literals > string: "hello" 1`] = `
     "type": "String",
     "value": "hello",
   },
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -61,6 +56,5 @@ exports[`parser: literals > unit: * 1`] = `
   "value": {
     "type": "unit",
   },
-  Symbol(snapshot:stripped): true,
 }
 `;

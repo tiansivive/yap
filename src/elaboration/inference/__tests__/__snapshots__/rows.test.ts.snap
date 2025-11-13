@@ -219,7 +219,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
           "metas": {},
           "sigma": {},
           "zonker": {},
-          Symbol(snapshot:stripped): true,
         },
         "term": {
           "id": 2460,
@@ -516,7 +515,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
           "metas": {},
           "sigma": {},
           "zonker": {},
-          Symbol(snapshot:stripped): true,
         },
         "term": {
           "arg": {

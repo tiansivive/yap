@@ -44,7 +44,6 @@ exports[`parser: pattern matching > match with literals and variable branches 1`
     },
   },
   "type": "match",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -134,7 +133,6 @@ exports[`parser: pattern matching > match with structs 1`] = `
     },
   },
   "type": "match",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -202,6 +200,5 @@ exports[`parser: pattern matching > match with variants 1`] = `
     },
   },
   "type": "match",
-  Symbol(snapshot:stripped): true,
 }
 `;

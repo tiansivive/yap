@@ -26,7 +26,6 @@ exports[`parser: blocks > block with expressions: { 1; x; } 1`] = `
     },
   ],
   "type": "block",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -41,7 +40,6 @@ exports[`parser: blocks > block with only return: { return 2; } 1`] = `
   },
   "statements": [],
   "type": "block",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -67,6 +65,5 @@ exports[`parser: blocks > block with return: { x; return 2; } 1`] = `
     },
   ],
   "type": "block",
-  Symbol(snapshot:stripped): true,
 }
 `;

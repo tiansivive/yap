@@ -34,7 +34,6 @@ exports[`parser: precedence > lambda with annotation: \\x -> y : Int -> Int 1`] 
     "variable": "x",
   },
   "type": "annotation",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -62,7 +61,6 @@ exports[`parser: precedence > lambda with application: \\x -> f x 1`] = `
   "icit": "Explicit",
   "type": "lambda",
   "variable": "x",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -98,7 +96,6 @@ exports[`parser: precedence > lambda with chained projection and application: \\
   "icit": "Explicit",
   "type": "lambda",
   "variable": "x",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -130,7 +127,6 @@ exports[`parser: precedence > lambda with projection and application: \\x -> x.y
   "icit": "Explicit",
   "type": "lambda",
   "variable": "x",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -151,7 +147,6 @@ exports[`parser: precedence > lambda with projection: \\x -> x.y 1`] = `
   "icit": "Explicit",
   "type": "lambda",
   "variable": "x",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -219,7 +214,6 @@ exports[`parser: precedence > pi with applications: (a:Type) -> (b:Type) -> f a 
   "icit": "Explicit",
   "type": "pi",
   "variable": "a",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -275,7 +269,6 @@ exports[`parser: precedence > pi with row terms: (a:Type) -> (b:Type) -> { x: a,
   "icit": "Explicit",
   "type": "pi",
   "variable": "a",
-  Symbol(snapshot:stripped): true,
 }
 `;
 
@@ -301,6 +294,5 @@ exports[`parser: precedence > projection with application: x.y z 1`] = `
   },
   "icit": "Explicit",
   "type": "application",
-  Symbol(snapshot:stripped): true,
 }
 `;

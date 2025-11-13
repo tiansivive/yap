@@ -84,7 +84,6 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
           "metas": {},
           "sigma": {},
           "zonker": {},
-          Symbol(snapshot:stripped): true,
         },
         "term": {
           "id": 2448,
@@ -187,7 +186,6 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
           "metas": {},
           "sigma": {},
           "zonker": {},
-          Symbol(snapshot:stripped): true,
         },
         "term": {
           "id": 816,
@@ -320,7 +318,6 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
               },
               "sigma": {},
               "zonker": {},
-              Symbol(snapshot:stripped): true,
             },
             "term": {
               "id": 4084,
@@ -492,7 +489,6 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
           "metas": {},
           "sigma": {},
           "zonker": {},
-          Symbol(snapshot:stripped): true,
         },
         "term": {
           "id": 4088,
@@ -626,7 +622,6 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
               },
               "sigma": {},
               "zonker": {},
-              Symbol(snapshot:stripped): true,
             },
             "term": {
               "id": 3264,
@@ -798,7 +793,6 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
           "metas": {},
           "sigma": {},
           "zonker": {},
-          Symbol(snapshot:stripped): true,
         },
         "term": {
           "id": 3268,
@@ -902,7 +896,6 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
           "metas": {},
           "sigma": {},
           "zonker": {},
-          Symbol(snapshot:stripped): true,
         },
         "term": {
           "id": 1632,

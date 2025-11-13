@@ -7,6 +7,5 @@ exports[`parser: variables > variable: x 1`] = `
     "type": "name",
     "value": "x",
   },
-  Symbol(snapshot:stripped): true,
 }
 `;

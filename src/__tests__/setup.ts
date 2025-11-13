@@ -39,7 +39,6 @@ const KEYS_TO_STRIP: string[] = [
 	"trace",
 ];
 
-const STRIPPED_MARKER = Symbol.for("snapshot:stripped");
 /**
  * Snapshot serializer that removes specified keys from all snapshots.
  * This runs automatically for all snapshot tests in the elaboration suite.
@@ -47,7 +46,7 @@ const STRIPPED_MARKER = Symbol.for("snapshot:stripped");
 expect.addSnapshotSerializer({
 	serialize(val, config, indentation, depth, refs, printer) {
 		const stripped = stripKeys(val, KEYS_TO_STRIP);
-		return printer({ ...stripped, [STRIPPED_MARKER]: true }, config, indentation, depth, refs);
+		return printer(stripped, config, indentation, depth, refs);
 	},
 
 	test: (val: any) => !!val && typeof val === "object" && !Array.isArray(val) && Object.keys(val).some(k => KEYS_TO_STRIP.includes(k)),
