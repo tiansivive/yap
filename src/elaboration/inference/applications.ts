@@ -12,6 +12,8 @@ import { Implicitness } from "@yap/shared/implicitness";
 import * as Modal from "@yap/verification/modalities";
 import { Liquid } from "@yap/verification/modalities";
 
+import * as Sub from "@yap/elaboration/unification/substitution";
+
 type Application = Extract<Src.Term, { type: "application" }>;
 
 export const infer = (node: Application) =>
@@ -74,7 +76,7 @@ const mkPi = (fnType: NF.Value, icit: Implicitness): Generator<V2.Elaboration<an
 			const nf = NF.evaluate(ctx, meta);
 
 			const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
-			const closure = NF.Constructors.Closure(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length + 1, kind)));
+			const closure = NF.Constructors.Closure(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length + 1, NF.Type)));
 
 			const pi = NF.Constructors.Pi("x", icit, nf, closure);
 

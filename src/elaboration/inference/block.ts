@@ -10,6 +10,8 @@ import * as Src from "@yap/src/index";
 import * as Lit from "@yap/shared/literals";
 import { Liquid } from "@yap/verification/modalities";
 
+import * as Sub from "@yap/elaboration/unification/substitution";
+
 type Block = Extract<Src.Term, { type: "block" }>;
 
 export const infer = (block: Block) =>
@@ -32,6 +34,22 @@ export const infer = (block: Block) =>
 
 					const [r, next] = yield* EB.Stmt.letdec(stmt);
 					yield* V2.tell("zonker", next.zonker);
+
+					// const ctx = yield* V2.ask();
+					// const { zonker, metas, constraints } = yield* V2.listen();
+
+					// Debugging info
+					// console.log("LET BINDING");
+					// console.log("ZONKER:\n", Sub.display(zonker, metas));
+					// console.log("\n\nTERM:\n", EB.Display.Statement(r, { ...ctx, zonker: Sub.empty, metas }));
+					// console.log("\nInferred type:\n", NF.display(sty, { ...ctx, zonker: Sub.empty, metas }));
+
+					// console.log("\n\nCONSTRAINTS:");
+					// constraints.forEach(c => {
+					// 	console.log("--------------------");
+					// 	console.log(EB.Display.Constraint(c, { ...ctx, zonker: Sub.empty, metas}).replace(" ~~ ", "\n"));
+					// });
+
 					return yield* V2.local(
 						_ => EB.bind(next, { type: "Let", variable: stmt.variable }, r.annotation),
 						V2.Do(function* () {

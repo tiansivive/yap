@@ -28,13 +28,16 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 		const ctx = yield* V2.ask();
 		const nf = match(ty)
 			.with({ type: "Neutral" }, ({ value }) => project(label, tm, value, us))
-			.with({ type: "Var" }, _ =>
+			.with(NF.Patterns.Flex, _ =>
 				V2.Do(function* () {
-					const rowTypeCtor = EB.Constructors.Pi("rx", "Explicit", EB.Constructors.Lit(Lit.Row()), EB.Constructors.Lit(Lit.Type()));
-					const ann = NF.evaluate(ctx, rowTypeCtor);
-					const ctor = NF.evaluate(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, ann)));
+					// const rowTypeCtor = EB.Constructors.Pi("rx", "Explicit", EB.Constructors.Lit(Lit.Row()), EB.Constructors.Lit(Lit.Type()));
+					// const ann = NF.evaluate(ctx, rowTypeCtor);
+					// const ctor = NF.evaluate(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, ann)));
 
-					const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+					const ctor = NF.Constructors.Atom("Schema");
+
+					//const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+					const kind = NF.Type;
 					const val = NF.evaluate(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind)));
 
 					const r: NF.Row = { type: "variable", variable: yield* EB.freshMeta(ctx.env.length, NF.Row) };
@@ -43,7 +46,7 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 
 					yield* V2.tell("constraint", { type: "assign", left: inferred, right: ty });
 
-					return inferred;
+					return val;
 				}),
 			)
 			.with(NF.Patterns.Schema, ({ func, arg }) =>

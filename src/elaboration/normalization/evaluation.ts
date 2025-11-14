@@ -429,7 +429,24 @@ const evalRow = (ctx: EB.Context, row: EB.Row): NF.Row =>
 		})
 		.with({ type: "variable" }, (r): NF.Row => {
 			if (r.variable.type === "Meta") {
-				return { type: "variable", variable: r.variable };
+				// Check if the meta is solved in the zonker
+				const zonked = ctx.zonker[r.variable.val];
+				if (!zonked) {
+					return { type: "variable", variable: r.variable };
+				}
+
+				// Force the zonked value - it might be a Bound variable or another row
+				// If it's a row, return it directly
+				if (zonked.type === "Row") {
+					return zonked.row;
+				}
+
+				// If it's a variable (Bound, Meta, etc.), return it as the row variable
+				if (zonked.type === "Var") {
+					return { type: "variable", variable: zonked.variable };
+				}
+
+				throw new Error("Zonked meta in row position is not a row or variable: " + NF.display(zonked, ctx));
 			}
 
 			if (r.variable.type === "Bound") {

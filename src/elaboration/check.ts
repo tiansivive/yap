@@ -281,6 +281,21 @@ const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<str
 					}),
 				);
 			})
+			.with([{ type: "extension" }, { type: "variable" }], function* ([r, v]) {
+				const collected = yield* EB.Rows.collect.gen(r);
+				if (collected.tail) {
+					throw new Error("Cannot have row variables in struct values");
+				}
+				const inferred = collected.fields.reduce<{ tm: EB.Row; ty: NF.Row }>(
+					(acc, { label, value, term }) => ({
+						tm: EB.Constructors.Extension(label, term, acc.tm),
+						ty: NF.Constructors.Extension(label, value, acc.ty),
+					}),
+					{ tm: { type: "empty" }, ty: { type: "empty" } },
+				);
+				yield* V2.tell("constraint", { type: "assign", left: NF.Constructors.Row(inferred.ty), right: NF.Constructors.Row(v) });
+				return [inferred.tm, us] satisfies [EB.Row, Q.Usages];
+			})
 			.with([{ type: "extension" }, P._], ([{ label }, r]) => V2.fail<[EB.Row, Q.Usages]>(Err.MissingLabel(label, r)))
 			.otherwise(r => {
 				throw new Error("Unknown row action");

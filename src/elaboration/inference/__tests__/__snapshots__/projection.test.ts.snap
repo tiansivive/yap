@@ -384,3 +384,874 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
   },
 }
 `;
+
+exports[`inference: projection > \\obj -> obj.x 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Schema [ x: ?2 | ?3 ] ~~ ?1",
+    ],
+    "term": "λobj -> (obj).x",
+    "type": "Π(obj: ?1) -> (closure: ?2 -| Γ: obj)",
+  },
+}
+`;
+
+exports[`inference: projection > \\obj -> obj.x 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "arg": {
+            "id": 24,
+            "row": {
+              "label": "x",
+              "row": {
+                "type": "variable",
+                "variable": {
+                  "lvl": 1,
+                  "type": "Meta",
+                  "val": 3,
+                },
+              },
+              "type": "extension",
+              "value": {
+                "id": 23,
+                "type": "Neutral",
+                "value": {
+                  "id": 22,
+                  "type": "Var",
+                  "variable": {
+                    "lvl": 1,
+                    "type": "Meta",
+                    "val": 2,
+                  },
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 21,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "id": 25,
+          "type": "App",
+        },
+        "lvl": 1,
+        "right": {
+          "id": 16,
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 1,
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 2,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Row",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+    },
+    "term": {
+      "binding": {
+        "annotation": {
+          "id": 813,
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 1,
+          },
+        },
+        "icit": "Explicit",
+        "type": "Lambda",
+        "variable": "obj",
+      },
+      "body": {
+        "id": 816,
+        "label": "x",
+        "term": {
+          "id": 814,
+          "type": "Var",
+          "variable": {
+            "index": 0,
+            "type": "Bound",
+          },
+        },
+        "type": "Proj",
+      },
+      "id": 817,
+      "type": "Abs",
+    },
+    "type": {
+      "binder": {
+        "annotation": {
+          "id": 17,
+          "type": "Neutral",
+          "value": {
+            "id": 16,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "icit": "Explicit",
+        "type": "Pi",
+        "variable": "obj",
+      },
+      "closure": {
+        "ctx": {
+          "env": [],
+          "implicits": [],
+          "metas": {},
+          "sigma": {},
+          "zonker": {},
+        },
+        "term": {
+          "id": 818,
+          "type": "Var",
+          "variable": {
+            "lvl": 1,
+            "type": "Meta",
+            "val": 2,
+          },
+        },
+        "type": "Closure",
+      },
+      "id": 26,
+      "type": "Abs",
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`inference: projection > { let proj = \\obj -> obj.x; } 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Schema [ x: ?3 | ?4 ] ~~ ?2",
+      "Π(obj: ?2) -> (closure: ?3 -| Γ: obj; proj = proj) ~~ ?1",
+      "0 <= ω",
+    ],
+    "term": "{
+	let proj
+	: Π(a: Row) => (closure: Π(b: Type) => Π(obj: Schema [ x: b | a ]) -> b -| Γ: a; proj = proj)
+	= λa => λb => λobj -> (obj).x;
+	return unit;
+	}",
+    "type": "Unit",
+  },
+}
+`;
+
+exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "arg": {
+            "id": 28,
+            "row": {
+              "label": "x",
+              "row": {
+                "type": "variable",
+                "variable": {
+                  "lvl": 2,
+                  "type": "Meta",
+                  "val": 4,
+                },
+              },
+              "type": "extension",
+              "value": {
+                "id": 27,
+                "type": "Neutral",
+                "value": {
+                  "id": 26,
+                  "type": "Var",
+                  "variable": {
+                    "lvl": 2,
+                    "type": "Meta",
+                    "val": 3,
+                  },
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 25,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "id": 29,
+          "type": "App",
+        },
+        "lvl": 2,
+        "right": {
+          "id": 20,
+          "type": "Var",
+          "variable": {
+            "lvl": 1,
+            "type": "Meta",
+            "val": 2,
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "binder": {
+            "annotation": {
+              "id": 21,
+              "type": "Neutral",
+              "value": {
+                "id": 20,
+                "type": "Var",
+                "variable": {
+                  "lvl": 1,
+                  "type": "Meta",
+                  "val": 2,
+                },
+              },
+            },
+            "icit": "Explicit",
+            "type": "Pi",
+            "variable": "obj",
+          },
+          "closure": {
+            "ctx": {
+              "env": [
+                {
+                  "name": {
+                    "type": "Let",
+                    "variable": "proj",
+                  },
+                  "nf": {
+                    "id": 19,
+                    "type": "Neutral",
+                    "value": {
+                      "id": 18,
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 0,
+                        "type": "Bound",
+                      },
+                    },
+                  },
+                  "type": [
+                    {
+                      "type": "Let",
+                      "variable": "proj",
+                    },
+                    "source",
+                    {
+                      "id": 17,
+                      "type": "Neutral",
+                      "value": {
+                        "id": 16,
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 0,
+                          "type": "Meta",
+                          "val": 1,
+                        },
+                      },
+                    },
+                  ],
+                },
+              ],
+              "implicits": [],
+              "metas": {},
+              "sigma": {},
+              "zonker": {},
+            },
+            "term": {
+              "id": 819,
+              "type": "Var",
+              "variable": {
+                "lvl": 2,
+                "type": "Meta",
+                "val": 3,
+              },
+            },
+            "type": "Closure",
+          },
+          "id": 30,
+          "type": "Abs",
+        },
+        "lvl": 1,
+        "right": {
+          "id": 17,
+          "type": "Neutral",
+          "value": {
+            "id": 16,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "computed": "Zero",
+        "expected": "Many",
+        "type": "usage",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "id": 2,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Row",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+    },
+    "term": {
+      "id": 851,
+      "return": {
+        "id": 850,
+        "type": "Lit",
+        "value": {
+          "type": "Atom",
+          "value": "unit",
+        },
+      },
+      "statements": [
+        {
+          "annotation": {
+            "binder": {
+              "annotation": {
+                "id": 2,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Row",
+                },
+              },
+              "icit": "Implicit",
+              "type": "Pi",
+              "variable": "a",
+            },
+            "closure": {
+              "ctx": {
+                "env": [
+                  {
+                    "name": {
+                      "type": "Let",
+                      "variable": "proj",
+                    },
+                    "nf": {
+                      "id": 34,
+                      "type": "Neutral",
+                      "value": {
+                        "id": 33,
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 0,
+                          "type": "Bound",
+                        },
+                      },
+                    },
+                    "type": [
+                      {
+                        "type": "Let",
+                        "variable": "proj",
+                      },
+                      "source",
+                      {
+                        "id": 17,
+                        "type": "Neutral",
+                        "value": {
+                          "id": 16,
+                          "type": "Var",
+                          "variable": {
+                            "lvl": 0,
+                            "type": "Meta",
+                            "val": 1,
+                          },
+                        },
+                      },
+                    ],
+                  },
+                ],
+                "implicits": [],
+                "metas": {
+                  "1": {
+                    "ann": {
+                      "id": 1,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 0,
+                      "type": "Meta",
+                      "val": 1,
+                    },
+                  },
+                  "2": {
+                    "ann": {
+                      "id": 1,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 2,
+                    },
+                  },
+                  "3": {
+                    "ann": {
+                      "id": 1,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 2,
+                      "type": "Meta",
+                      "val": 3,
+                    },
+                  },
+                  "4": {
+                    "ann": {
+                      "id": 2,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Row",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 2,
+                      "type": "Meta",
+                      "val": 4,
+                    },
+                  },
+                },
+                "sigma": {},
+                "zonker": {
+                  "1": {
+                    "binder": {
+                      "annotation": {
+                        "id": 21,
+                        "type": "Neutral",
+                        "value": {
+                          "id": 20,
+                          "type": "Var",
+                          "variable": {
+                            "lvl": 1,
+                            "type": "Meta",
+                            "val": 2,
+                          },
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "Pi",
+                      "variable": "obj",
+                    },
+                    "closure": {
+                      "ctx": {
+                        "env": [
+                          {
+                            "name": {
+                              "type": "Let",
+                              "variable": "proj",
+                            },
+                            "nf": {
+                              "id": 19,
+                              "type": "Neutral",
+                              "value": {
+                                "id": 18,
+                                "type": "Var",
+                                "variable": {
+                                  "lvl": 0,
+                                  "type": "Bound",
+                                },
+                              },
+                            },
+                            "type": [
+                              {
+                                "type": "Let",
+                                "variable": "proj",
+                              },
+                              "source",
+                              {
+                                "id": 17,
+                                "type": "Neutral",
+                                "value": {
+                                  "id": 16,
+                                  "type": "Var",
+                                  "variable": {
+                                    "lvl": 0,
+                                    "type": "Meta",
+                                    "val": 1,
+                                  },
+                                },
+                              },
+                            ],
+                          },
+                        ],
+                        "implicits": [],
+                        "metas": {},
+                        "sigma": {},
+                        "zonker": {},
+                      },
+                      "term": {
+                        "id": 819,
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 2,
+                          "type": "Meta",
+                          "val": 3,
+                        },
+                      },
+                      "type": "Closure",
+                    },
+                    "id": 30,
+                    "type": "Abs",
+                  },
+                  "2": {
+                    "arg": {
+                      "id": 28,
+                      "row": {
+                        "label": "x",
+                        "row": {
+                          "type": "variable",
+                          "variable": {
+                            "lvl": 2,
+                            "type": "Meta",
+                            "val": 4,
+                          },
+                        },
+                        "type": "extension",
+                        "value": {
+                          "id": 27,
+                          "type": "Neutral",
+                          "value": {
+                            "id": 26,
+                            "type": "Var",
+                            "variable": {
+                              "lvl": 2,
+                              "type": "Meta",
+                              "val": 3,
+                            },
+                          },
+                        },
+                      },
+                      "type": "Row",
+                    },
+                    "func": {
+                      "id": 25,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Schema",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "id": 29,
+                    "type": "App",
+                  },
+                  "3": {
+                    "id": 40,
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 2,
+                      "type": "Bound",
+                    },
+                  },
+                  "4": {
+                    "id": 37,
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 1,
+                      "type": "Bound",
+                    },
+                  },
+                },
+              },
+              "term": {
+                "binding": {
+                  "annotation": {
+                    "id": 832,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "Type",
+                    },
+                  },
+                  "icit": "Implicit",
+                  "type": "Pi",
+                  "variable": "b",
+                },
+                "body": {
+                  "binding": {
+                    "annotation": {
+                      "arg": {
+                        "id": 834,
+                        "row": {
+                          "label": "x",
+                          "row": {
+                            "type": "variable",
+                            "variable": {
+                              "index": 1,
+                              "type": "Bound",
+                            },
+                          },
+                          "type": "extension",
+                          "value": {
+                            "id": 828,
+                            "type": "Var",
+                            "variable": {
+                              "index": 0,
+                              "type": "Bound",
+                            },
+                          },
+                        },
+                        "type": "Row",
+                      },
+                      "func": {
+                        "id": 827,
+                        "type": "Lit",
+                        "value": {
+                          "type": "Atom",
+                          "value": "Schema",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "id": 835,
+                      "type": "App",
+                    },
+                    "icit": "Explicit",
+                    "type": "Pi",
+                    "variable": "obj",
+                  },
+                  "body": {
+                    "id": 826,
+                    "type": "Var",
+                    "variable": {
+                      "index": 1,
+                      "type": "Bound",
+                    },
+                  },
+                  "id": 836,
+                  "type": "Abs",
+                },
+                "id": 837,
+                "type": "Abs",
+              },
+              "type": "Closure",
+            },
+            "id": 69,
+            "type": "Abs",
+          },
+          "type": "Let",
+          "value": {
+            "binding": {
+              "annotation": {
+                "id": 838,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Row",
+                },
+              },
+              "icit": "Implicit",
+              "type": "Lambda",
+              "variable": "a",
+            },
+            "body": {
+              "binding": {
+                "annotation": {
+                  "id": 839,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Type",
+                  },
+                },
+                "icit": "Implicit",
+                "type": "Lambda",
+                "variable": "b",
+              },
+              "body": {
+                "binding": {
+                  "annotation": {
+                    "id": 814,
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 2,
+                    },
+                  },
+                  "icit": "Explicit",
+                  "type": "Lambda",
+                  "variable": "obj",
+                },
+                "body": {
+                  "id": 846,
+                  "label": "x",
+                  "term": {
+                    "id": 815,
+                    "type": "Var",
+                    "variable": {
+                      "index": 0,
+                      "type": "Bound",
+                    },
+                  },
+                  "type": "Proj",
+                },
+                "id": 847,
+                "type": "Abs",
+              },
+              "id": 848,
+              "type": "Abs",
+            },
+            "id": 849,
+            "type": "Abs",
+          },
+          "variable": "proj",
+        },
+      ],
+      "type": "Block",
+    },
+    "type": {
+      "id": 97,
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Unit",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;

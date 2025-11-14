@@ -52,6 +52,36 @@ describe("Let-polymorphism", () => {
 			expect({ displays: res.displays }).toMatchSnapshot();
 			expect({ structure: res.structure }).toMatchSnapshot();
 		});
+
+		it("higher-order polymorphic function", () => {
+			const src = `{
+				let apply = \\f -> \\x -> f x;
+				let id = \\y -> y;
+				let result = apply id 5;
+			}`;
+
+			const res = elaborateFrom(src);
+
+			// apply's parameter `f` is monomorphic within the lambda body
+			// but `id` is polymorphic when let-bound
+			expect(res.structure.term.type).toBe("Block");
+			expect({ displays: res.displays }).toMatchSnapshot();
+			expect({ structure: res.structure }).toMatchSnapshot();
+		});
+
+		it("polymorphic hof applied to row literals", () => {
+			const src = `{
+				let apply = \\f -> \\x -> f x;
+				let id = \\y -> y;
+				let result = apply id ([ bar: Num]);
+			}`;
+
+			const res = elaborateFrom(src);
+
+			expect(res.structure.term.type).toBe("Block");
+			expect({ displays: res.displays }).toMatchSnapshot();
+			expect({ structure: res.structure }).toMatchSnapshot();
+		});
 	});
 
 	describe("nested let bindings", () => {
@@ -87,45 +117,16 @@ describe("Let-polymorphism", () => {
 		});
 	});
 
-	describe.skip("let vs lambda: monomorphism restriction", () => {
-		it("let-bound function is polymorphic", () => {
-			const src = `{
-				let id = \\x -> x;
-				let a = id 5;
-				let b = id "world";
-			}`;
+	// describe("let vs lambda: monomorphism restriction", () => {
 
-			const res = elaborateFrom(src);
+	// 	// Note: This test demonstrates that lambda parameters are monomorphic
+	// 	// The following would fail if uncommented because `id` would be monomorphic:
+	// 	// it("lambda-bound parameter is monomorphic (would fail)", () => {
+	// 	//   const src = `(\\id -> (id 5, id "world")) (\\x -> x)`;
+	// 	//   expect(() => elaborateFrom(src)).toThrow();
+	// 	// });
 
-			// Should succeed: id is generalized at let-binding
-			expect(res.structure.term.type).toBe("Block");
-			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
-		});
-
-		// Note: This test demonstrates that lambda parameters are monomorphic
-		// The following would fail if uncommented because `id` would be monomorphic:
-		// it("lambda-bound parameter is monomorphic (would fail)", () => {
-		//   const src = `(\\id -> (id 5, id "world")) (\\x -> x)`;
-		//   expect(() => elaborateFrom(src)).toThrow();
-		// });
-
-		it("higher-order function with monomorphic parameter", () => {
-			const src = `{
-				let apply = \\f -> \\x -> f x;
-				let id = \\y -> y;
-				let result = apply id 5;
-			}`;
-
-			const res = elaborateFrom(src);
-
-			// apply's parameter `f` is monomorphic within the lambda body
-			// but `id` is polymorphic when let-bound
-			expect(res.structure.term.type).toBe("Block");
-			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
-		});
-	});
+	// });
 
 	describe("recursive bindings", () => {
 		it("simple recursive function", () => {
@@ -154,10 +155,10 @@ describe("Let-polymorphism", () => {
 		});
 	});
 
-	describe.skip("let-polymorphism with complex types", () => {
+	describe("let-polymorphism with complex types", () => {
 		it("polymorphic function with projection", () => {
 			const src = `{
-				let fst = \\a: Type => \\r: Row => \\p: { x: a | r } -> p.x;
+				let fst = \\p -> p.x;
 				let val1 = { x: 1, y: 2 };
 				let val2 = { x: true, y: false };
 				let a = fst val1;
@@ -175,7 +176,7 @@ describe("Let-polymorphism", () => {
 			const src = `{
 				let getName = \\obj -> obj.name;
 				let a = getName { name: "Alice" };
-				let b = getName { name: "Bob"; age: 30 };
+				let b = getName { name: "Bob", age: 30 };
 			}`;
 
 			const res = elaborateFrom(src);

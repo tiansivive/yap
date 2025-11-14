@@ -30,7 +30,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 		{ tag: "unify", type: "nf", vals: [left, right], metadata: { action: "unification" } },
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
-			const [l, r] = [NF.force(ctx, left), NF.force(ctx, right)];
+			const zonked = { ...ctx, zonker: Sub.compose(subst, ctx.zonker) };
+			const [l, r] = [NF.force(zonked, left), NF.force(zonked, right)];
 			// Force wraps unsolved metas in a Neutral, so we need to unwrap them again.
 			// TODO: check if we can remove the wrapping in Force.
 			const unifier = match([NF.unwrapNeutral(l), NF.unwrapNeutral(r)])
@@ -85,6 +86,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 							const composed = Sub.compose(sub, subst);
 							const body1 = NF.apply(pi1.binder, pi1.closure, NF.Constructors.Rigid(lvl));
 							const body2 = NF.apply(pi2.binder, pi2.closure, NF.Constructors.Rigid(lvl));
+							//V2.local(ctx => ({ ...ctx, zonker: Sub.compose(composed, ctx.zonker) }), unify(body1, body2, lvl + 1, composed))
 							return yield* V2.pure(unify(body1, body2, lvl + 1, composed));
 						}),
 				)

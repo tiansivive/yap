@@ -4,6 +4,8 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
 	plugins: [tsconfigPaths()],
 	test: {
+		fileParallelism: true,
+		maxWorkers: 10,
 		clearMocks: true,
 		coverage: {
 			all: true,
