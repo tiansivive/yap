@@ -136,7 +136,7 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
       },
       {
         "left": {
-          "id": 74,
+          "id": 16,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -159,7 +159,7 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
     "term": {
       "binding": {
         "annotation": {
-          "id": 3258,
+          "id": 813,
           "type": "Var",
           "variable": {
             "name": "Num",
@@ -171,14 +171,14 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
         "variable": "x",
       },
       "body": {
-        "id": 3259,
+        "id": 814,
         "type": "Var",
         "variable": {
           "index": 0,
           "type": "Bound",
         },
       },
-      "id": 3260,
+      "id": 815,
       "type": "Abs",
     },
     "type": {
@@ -256,7 +256,7 @@ exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
     "term": {
       "binding": {
         "annotation": {
-          "id": 1628,
+          "id": 813,
           "type": "Var",
           "variable": {
             "name": "Num",
@@ -268,14 +268,14 @@ exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
         "variable": "x",
       },
       "body": {
-        "id": 1629,
+        "id": 814,
         "type": "Var",
         "variable": {
           "name": "Num",
           "type": "Free",
         },
       },
-      "id": 1630,
+      "id": 815,
       "type": "Abs",
     },
     "type": {
@@ -353,7 +353,7 @@ exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
     "term": {
       "binding": {
         "annotation": {
-          "id": 2443,
+          "id": 813,
           "type": "Var",
           "variable": {
             "name": "Num",
@@ -365,14 +365,14 @@ exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
         "variable": "x",
       },
       "body": {
-        "id": 2444,
+        "id": 814,
         "type": "Var",
         "variable": {
           "name": "Num",
           "type": "Free",
         },
       },
-      "id": 2445,
+      "id": 815,
       "type": "Abs",
     },
     "type": {

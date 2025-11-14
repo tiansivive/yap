@@ -1,5 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { elaborateFrom } from "../inference/__tests__/util";
+
+import * as NF from "@yap/elaboration/normalization";
+import * as EB from "@yap/elaboration";
 
 describe("Let-polymorphism", () => {
 	describe("basic polymorphic let bindings", () => {
@@ -151,73 +154,12 @@ describe("Let-polymorphism", () => {
 		});
 	});
 
-	describe.skip("generalization and instantiation", () => {
-		it("explicit type annotation on polymorphic let", () => {
-			const src = `{
-				let id: (Num -> Num) = \\x -> x;
-				let a = id 5;
-			}`;
-
-			const res = elaborateFrom(src);
-
-			// With explicit annotation, id should only work on Num
-			expect(res.structure.term.type).toBe("Block");
-			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
-		});
-
-		it("let without annotation infers polymorphic type", () => {
-			const src = `{
-				let id = \\x -> x;
-			}`;
-
-			const res = elaborateFrom(src);
-
-			expect(res.structure.term.type).toBe("Block");
-
-			// Should have metas representing the polymorphic type variables
-			const metaCount = Object.keys(res.structure.metas).length;
-			expect(metaCount).toBeGreaterThan(0);
-
-			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
-		});
-
-		it("multiple instantiations create fresh type variables", () => {
-			const src = `{
-				let pair = \\x -> \\y -> x;
-				let a = pair 1 2;
-				let b = pair true false;
-			}`;
-
-			const res = elaborateFrom(src);
-
-			expect(res.structure.term.type).toBe("Block");
-			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
-		});
-	});
-
 	describe.skip("let-polymorphism with complex types", () => {
-		it("polymorphic function returning a value", () => {
-			const src = `{
-				let dup = \\x -> x;
-				let a = dup 5;
-				let b = dup true;
-			}`;
-
-			const res = elaborateFrom(src);
-
-			expect(res.structure.term.type).toBe("Block");
-			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
-		});
-
 		it("polymorphic function with projection", () => {
 			const src = `{
-				let fst = \\p -> p.x;
-				let val1 = { x = 1; y = 2 };
-				let val2 = { x = true; y = false };
+				let fst = \\a: Type => \\r: Row => \\p: { x: a | r } -> p.x;
+				let val1 = { x: 1, y: 2 };
+				let val2 = { x: true, y: false };
 				let a = fst val1;
 				let b = fst val2;
 			}`;
@@ -244,7 +186,7 @@ describe("Let-polymorphism", () => {
 		});
 	});
 
-	describe.skip("let-polymorphism scope and capture", () => {
+	describe("let-polymorphism scope and capture", () => {
 		it("polymorphic let in nested scope", () => {
 			const src = `{
 				let outer = 42;
@@ -279,7 +221,7 @@ describe("Let-polymorphism", () => {
 		});
 	});
 
-	describe.skip("edge cases", () => {
+	describe("edge cases", () => {
 		it("let with unused polymorphic binding", () => {
 			const src = `{
 				let id = \\x -> x;
@@ -315,8 +257,8 @@ describe("Let-polymorphism", () => {
 				let makeId = \\u -> \\x -> x;
 				let id1 = makeId 1;
 				let id2 = makeId true;
-				let a = id1 5;
-				let b = id2 false;
+				let a = id1 "hello";
+				let b = id2 "world";
 			}`;
 
 			const res = elaborateFrom(src);

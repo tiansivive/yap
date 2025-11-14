@@ -16,7 +16,7 @@ exports[`Inference: Literals > Boolean: true >=> Boolean 2`] = `
     "constraints": [],
     "metas": {},
     "term": {
-      "id": 1626,
+      "id": 813,
       "type": "Lit",
       "value": {
         "type": "Bool",
@@ -24,7 +24,7 @@ exports[`Inference: Literals > Boolean: true >=> Boolean 2`] = `
       },
     },
     "type": {
-      "id": 36,
+      "id": 16,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -52,7 +52,7 @@ exports[`Inference: Literals > Row: Row >=> Type 2`] = `
     "constraints": [],
     "metas": {},
     "term": {
-      "id": 4878,
+      "id": 813,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -60,7 +60,7 @@ exports[`Inference: Literals > Row: Row >=> Type 2`] = `
       },
     },
     "type": {
-      "id": 100,
+      "id": 16,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -88,7 +88,7 @@ exports[`Inference: Literals > String: "hello" >=> String 2`] = `
     "constraints": [],
     "metas": {},
     "term": {
-      "id": 2439,
+      "id": 813,
       "type": "Lit",
       "value": {
         "type": "String",
@@ -96,7 +96,7 @@ exports[`Inference: Literals > String: "hello" >=> String 2`] = `
       },
     },
     "type": {
-      "id": 52,
+      "id": 16,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -124,7 +124,7 @@ exports[`Inference: Literals > Type: Type >=> Type 2`] = `
     "constraints": [],
     "metas": {},
     "term": {
-      "id": 4065,
+      "id": 813,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -132,7 +132,7 @@ exports[`Inference: Literals > Type: Type >=> Type 2`] = `
       },
     },
     "type": {
-      "id": 84,
+      "id": 16,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -160,14 +160,14 @@ exports[`Inference: Literals > Unit: * >=> Unit 2`] = `
     "constraints": [],
     "metas": {},
     "term": {
-      "id": 3252,
+      "id": 813,
       "type": "Lit",
       "value": {
         "type": "unit",
       },
     },
     "type": {
-      "id": 68,
+      "id": 16,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -203,7 +203,7 @@ exports[`Inference: Literals > numbers: 1 >=> Num 2`] = `
       },
     },
     "type": {
-      "id": 20,
+      "id": 16,
       "type": "Lit",
       "value": {
         "type": "Atom",

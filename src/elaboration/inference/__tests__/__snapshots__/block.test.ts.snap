@@ -24,7 +24,7 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
     "constraints": [
       {
         "left": {
-          "id": 40,
+          "id": 20,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -33,10 +33,10 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
         },
         "lvl": 1,
         "right": {
-          "id": 37,
+          "id": 17,
           "type": "Neutral",
           "value": {
-            "id": 36,
+            "id": 16,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -71,9 +71,9 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
       },
     },
     "term": {
-      "id": 1630,
+      "id": 816,
       "return": {
-        "id": 1629,
+        "id": 815,
         "type": "Var",
         "variable": {
           "index": 0,
@@ -83,7 +83,7 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
       "statements": [
         {
           "annotation": {
-            "id": 40,
+            "id": 20,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -92,7 +92,7 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
           },
           "type": "Let",
           "value": {
-            "id": 1628,
+            "id": 814,
             "type": "Lit",
             "value": {
               "type": "Num",
@@ -105,7 +105,7 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
       "type": "Block",
     },
     "type": {
-      "id": 40,
+      "id": 20,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -148,7 +148,7 @@ exports[`inference: block > { return 1; } 2`] = `
       "type": "Block",
     },
     "type": {
-      "id": 20,
+      "id": 16,
       "type": "Lit",
       "value": {
         "type": "Atom",

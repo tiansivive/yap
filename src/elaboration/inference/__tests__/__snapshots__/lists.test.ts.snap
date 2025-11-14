@@ -20,7 +20,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
     "constraints": [
       {
         "left": {
-          "id": 23,
+          "id": 19,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -29,10 +29,10 @@ exports[`inference: list > [1, 2, 3] 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 22,
+          "id": 18,
           "type": "Neutral",
           "value": {
-            "id": 21,
+            "id": 17,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -45,7 +45,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       },
       {
         "left": {
-          "id": 24,
+          "id": 20,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -54,10 +54,10 @@ exports[`inference: list > [1, 2, 3] 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 22,
+          "id": 18,
           "type": "Neutral",
           "value": {
-            "id": 21,
+            "id": 17,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -70,7 +70,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       },
       {
         "left": {
-          "id": 25,
+          "id": 21,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -79,10 +79,10 @@ exports[`inference: list > [1, 2, 3] 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 22,
+          "id": 18,
           "type": "Neutral",
           "value": {
-            "id": 21,
+            "id": 17,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -112,7 +112,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       },
       "2": {
         "ann": {
-          "id": 20,
+          "id": 16,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -171,11 +171,11 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       "type": "Row",
     },
     "type": {
-      "id": 31,
+      "id": 27,
       "type": "Neutral",
       "value": {
         "arg": {
-          "id": 29,
+          "id": 25,
           "type": "Var",
           "variable": {
             "name": "defaultArray",
@@ -184,10 +184,10 @@ exports[`inference: list > [1, 2, 3] 2`] = `
         },
         "func": {
           "arg": {
-            "id": 22,
+            "id": 18,
             "type": "Neutral",
             "value": {
-              "id": 21,
+              "id": 17,
               "type": "Var",
               "variable": {
                 "lvl": 0,
@@ -198,7 +198,7 @@ exports[`inference: list > [1, 2, 3] 2`] = `
           },
           "func": {
             "arg": {
-              "id": 26,
+              "id": 22,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -214,15 +214,15 @@ exports[`inference: list > [1, 2, 3] 2`] = `
               },
             },
             "icit": "Explicit",
-            "id": 27,
+            "id": 23,
             "type": "App",
           },
           "icit": "Explicit",
-          "id": 28,
+          "id": 24,
           "type": "App",
         },
         "icit": "Implicit",
-        "id": 30,
+        "id": 26,
         "type": "App",
       },
     },

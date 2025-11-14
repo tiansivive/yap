@@ -32,7 +32,7 @@ exports[`inference: hole > _ 2`] = `
       },
       "2": {
         "ann": {
-          "id": 20,
+          "id": 16,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -57,10 +57,10 @@ exports[`inference: hole > _ 2`] = `
       },
     },
     "type": {
-      "id": 22,
+      "id": 18,
       "type": "Neutral",
       "value": {
-        "id": 21,
+        "id": 17,
         "type": "Var",
         "variable": {
           "lvl": 0,

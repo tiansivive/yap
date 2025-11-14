@@ -41,7 +41,7 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
     "term": {
       "binding": {
         "annotation": {
-          "id": 2445,
+          "id": 813,
           "type": "Var",
           "variable": {
             "name": "String",
@@ -53,20 +53,20 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
         "variable": "x",
       },
       "body": {
-        "id": 2446,
+        "id": 814,
         "type": "Lit",
         "value": {
           "type": "Num",
           "value": 1,
         },
       },
-      "id": 2447,
+      "id": 815,
       "type": "Abs",
     },
     "type": {
       "binder": {
         "annotation": {
-          "id": 62,
+          "id": 16,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -86,7 +86,7 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
           "zonker": {},
         },
         "term": {
-          "id": 2448,
+          "id": 816,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -95,7 +95,7 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
         },
         "type": "Closure",
       },
-      "id": 66,
+      "id": 20,
       "type": "Abs",
     },
     "typedTerms": {},
@@ -163,10 +163,10 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
     "type": {
       "binder": {
         "annotation": {
-          "id": 21,
+          "id": 17,
           "type": "Neutral",
           "value": {
-            "id": 20,
+            "id": 16,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -197,7 +197,7 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
         },
         "type": "Closure",
       },
-      "id": 25,
+      "id": 21,
       "type": "Abs",
     },
     "typedTerms": {},
@@ -224,10 +224,10 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
     "constraints": [
       {
         "left": {
-          "id": 115,
+          "id": 20,
           "type": "Neutral",
           "value": {
-            "id": 111,
+            "id": 16,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -240,10 +240,10 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
         "right": {
           "binder": {
             "annotation": {
-              "id": 117,
+              "id": 22,
               "type": "Neutral",
               "value": {
-                "id": 116,
+                "id": 21,
                 "type": "Var",
                 "variable": {
                   "lvl": 1,
@@ -265,10 +265,10 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
                     "variable": "f",
                   },
                   "nf": {
-                    "id": 114,
+                    "id": 19,
                     "type": "Neutral",
                     "value": {
-                      "id": 113,
+                      "id": 18,
                       "type": "Var",
                       "variable": {
                         "lvl": 0,
@@ -283,10 +283,10 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
                     },
                     "source",
                     {
-                      "id": 112,
+                      "id": 17,
                       "type": "Neutral",
                       "value": {
-                        "id": 111,
+                        "id": 16,
                         "type": "Var",
                         "variable": {
                           "lvl": 0,
@@ -320,7 +320,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
               "zonker": {},
             },
             "term": {
-              "id": 4084,
+              "id": 816,
               "type": "Var",
               "variable": {
                 "lvl": 2,
@@ -330,14 +330,14 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
             },
             "type": "Closure",
           },
-          "id": 119,
+          "id": 24,
           "type": "Abs",
         },
         "type": "assign",
       },
       {
         "left": {
-          "id": 120,
+          "id": 25,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -346,10 +346,10 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
         },
         "lvl": 1,
         "right": {
-          "id": 117,
+          "id": 22,
           "type": "Neutral",
           "value": {
-            "id": 116,
+            "id": 21,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -409,7 +409,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
       },
       "4": {
         "ann": {
-          "id": 118,
+          "id": 23,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -427,7 +427,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
     "term": {
       "binding": {
         "annotation": {
-          "id": 4081,
+          "id": 813,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -441,7 +441,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
       },
       "body": {
         "arg": {
-          "id": 4085,
+          "id": 817,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -449,7 +449,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
           },
         },
         "func": {
-          "id": 4082,
+          "id": 814,
           "type": "Var",
           "variable": {
             "index": 0,
@@ -457,19 +457,19 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
           },
         },
         "icit": "Explicit",
-        "id": 4086,
+        "id": 818,
         "type": "App",
       },
-      "id": 4087,
+      "id": 819,
       "type": "Abs",
     },
     "type": {
       "binder": {
         "annotation": {
-          "id": 112,
+          "id": 17,
           "type": "Neutral",
           "value": {
-            "id": 111,
+            "id": 16,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -491,7 +491,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
           "zonker": {},
         },
         "term": {
-          "id": 4088,
+          "id": 820,
           "type": "Var",
           "variable": {
             "lvl": 2,
@@ -501,7 +501,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
         },
         "type": "Closure",
       },
-      "id": 124,
+      "id": 29,
       "type": "Abs",
     },
     "typedTerms": {},
@@ -528,10 +528,10 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
     "constraints": [
       {
         "left": {
-          "id": 86,
+          "id": 20,
           "type": "Neutral",
           "value": {
-            "id": 82,
+            "id": 16,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -544,10 +544,10 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
         "right": {
           "binder": {
             "annotation": {
-              "id": 88,
+              "id": 22,
               "type": "Neutral",
               "value": {
-                "id": 87,
+                "id": 21,
                 "type": "Var",
                 "variable": {
                   "lvl": 1,
@@ -569,10 +569,10 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
                     "variable": "f",
                   },
                   "nf": {
-                    "id": 85,
+                    "id": 19,
                     "type": "Neutral",
                     "value": {
-                      "id": 84,
+                      "id": 18,
                       "type": "Var",
                       "variable": {
                         "lvl": 0,
@@ -587,10 +587,10 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
                     },
                     "source",
                     {
-                      "id": 83,
+                      "id": 17,
                       "type": "Neutral",
                       "value": {
-                        "id": 82,
+                        "id": 16,
                         "type": "Var",
                         "variable": {
                           "lvl": 0,
@@ -624,7 +624,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
               "zonker": {},
             },
             "term": {
-              "id": 3264,
+              "id": 816,
               "type": "Var",
               "variable": {
                 "lvl": 2,
@@ -634,14 +634,14 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
             },
             "type": "Closure",
           },
-          "id": 90,
+          "id": 24,
           "type": "Abs",
         },
         "type": "assign",
       },
       {
         "left": {
-          "id": 91,
+          "id": 25,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -650,10 +650,10 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
         },
         "lvl": 1,
         "right": {
-          "id": 88,
+          "id": 22,
           "type": "Neutral",
           "value": {
-            "id": 87,
+            "id": 21,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -713,7 +713,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
       },
       "4": {
         "ann": {
-          "id": 89,
+          "id": 23,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -731,7 +731,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
     "term": {
       "binding": {
         "annotation": {
-          "id": 3261,
+          "id": 813,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -745,7 +745,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
       },
       "body": {
         "arg": {
-          "id": 3265,
+          "id": 817,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -753,7 +753,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
           },
         },
         "func": {
-          "id": 3262,
+          "id": 814,
           "type": "Var",
           "variable": {
             "index": 0,
@@ -761,19 +761,19 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
           },
         },
         "icit": "Explicit",
-        "id": 3266,
+        "id": 818,
         "type": "App",
       },
-      "id": 3267,
+      "id": 819,
       "type": "Abs",
     },
     "type": {
       "binder": {
         "annotation": {
-          "id": 83,
+          "id": 17,
           "type": "Neutral",
           "value": {
-            "id": 82,
+            "id": 16,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -795,7 +795,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
           "zonker": {},
         },
         "term": {
-          "id": 3268,
+          "id": 820,
           "type": "Var",
           "variable": {
             "lvl": 2,
@@ -805,7 +805,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
         },
         "type": "Closure",
       },
-      "id": 95,
+      "id": 29,
       "type": "Abs",
     },
     "typedTerms": {},
@@ -847,7 +847,7 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
     "term": {
       "binding": {
         "annotation": {
-          "id": 1629,
+          "id": 813,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -860,23 +860,23 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
         "variable": "x",
       },
       "body": {
-        "id": 1630,
+        "id": 814,
         "type": "Lit",
         "value": {
           "type": "Num",
           "value": 1,
         },
       },
-      "id": 1631,
+      "id": 815,
       "type": "Abs",
     },
     "type": {
       "binder": {
         "annotation": {
-          "id": 42,
+          "id": 17,
           "type": "Neutral",
           "value": {
-            "id": 41,
+            "id": 16,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -898,7 +898,7 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
           "zonker": {},
         },
         "term": {
-          "id": 1632,
+          "id": 816,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -907,7 +907,7 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
         },
         "type": "Closure",
       },
-      "id": 46,
+      "id": 21,
       "type": "Abs",
     },
     "typedTerms": {},

@@ -71,6 +71,9 @@ export const Meta = (val: number, lvl: number): Extract<Variable, { type: "Meta"
 
 let currentId = 0;
 const nextId = () => ++currentId;
+export const resetId = () => {
+	currentId = 0;
+};
 export const mk = <K extends Constructor["type"]>(ctor: Extract<Constructor, { type: K }>) => {
 	const r = Types.make(tag, { ...ctor, id: nextId() });
 	return r as Simplify<typeof r>;

@@ -31,6 +31,7 @@ export const infer = (block: Block) =>
 					}
 
 					const [r, next] = yield* EB.Stmt.letdec(stmt);
+					yield* V2.tell("zonker", next.zonker);
 					return yield* V2.local(
 						_ => EB.bind(next, { type: "Let", variable: stmt.variable }, r.annotation),
 						V2.Do(function* () {

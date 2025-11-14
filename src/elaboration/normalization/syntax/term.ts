@@ -57,6 +57,9 @@ export type Modalities = SetFieldType<Modal.Annotations, "liquid", Value>;
 
 let currentId = 0;
 const nextId = () => ++currentId;
+export const resetId = () => {
+	currentId = 0;
+};
 export const mk = (val: Constructor): Value => {
 	return { ...Types.make(nf_tag, val), id: nextId() };
 };

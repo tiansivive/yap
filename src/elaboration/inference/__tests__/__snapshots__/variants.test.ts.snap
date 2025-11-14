@@ -43,7 +43,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       {
         "left": {
-          "id": 28,
+          "id": 24,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -52,7 +52,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 25,
+          "id": 21,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -73,7 +73,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 27,
+          "id": 23,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -105,7 +105,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       {
         "left": {
-          "id": 29,
+          "id": 25,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -114,7 +114,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 21,
+          "id": 17,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -135,7 +135,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 23,
+          "id": 19,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -164,7 +164,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "2": {
         "ann": {
-          "id": 20,
+          "id": 16,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -195,7 +195,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "4": {
         "ann": {
-          "id": 22,
+          "id": 18,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -226,7 +226,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "6": {
         "ann": {
-          "id": 24,
+          "id": 20,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -257,7 +257,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "8": {
         "ann": {
-          "id": 26,
+          "id": 22,
           "type": "Var",
           "variable": {
             "lvl": 1,

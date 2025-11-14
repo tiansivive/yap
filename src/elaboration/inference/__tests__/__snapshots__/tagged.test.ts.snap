@@ -64,11 +64,11 @@ exports[`inference: tagged > #x 1 2`] = `
       "type": "App",
     },
     "type": {
-      "id": 24,
+      "id": 20,
       "type": "Neutral",
       "value": {
         "arg": {
-          "id": 22,
+          "id": 18,
           "row": {
             "label": "x",
             "row": {
@@ -81,7 +81,7 @@ exports[`inference: tagged > #x 1 2`] = `
             },
             "type": "extension",
             "value": {
-              "id": 20,
+              "id": 16,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -92,7 +92,7 @@ exports[`inference: tagged > #x 1 2`] = `
           "type": "Row",
         },
         "func": {
-          "id": 21,
+          "id": 17,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -100,7 +100,7 @@ exports[`inference: tagged > #x 1 2`] = `
           },
         },
         "icit": "Explicit",
-        "id": 23,
+        "id": 19,
         "type": "App",
       },
     },

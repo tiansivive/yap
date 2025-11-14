@@ -19,7 +19,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
     "constraints": [
       {
         "left": {
-          "id": 26,
+          "id": 22,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -28,7 +28,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 22,
+          "id": 18,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -40,7 +40,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
       },
       {
         "left": {
-          "id": 25,
+          "id": 21,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -49,7 +49,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 24,
+          "id": 20,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -78,7 +78,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
       },
       "2": {
         "ann": {
-          "id": 21,
+          "id": 17,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -109,7 +109,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
       },
       "4": {
         "ann": {
-          "id": 23,
+          "id": 19,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -171,7 +171,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
     },
     "type": {
       "arg": {
-        "id": 31,
+        "id": 27,
         "row": {
           "label": "y",
           "row": {
@@ -181,7 +181,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
             },
             "type": "extension",
             "value": {
-              "id": 25,
+              "id": 21,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -191,7 +191,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
           },
           "type": "extension",
           "value": {
-            "id": 20,
+            "id": 16,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -202,7 +202,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
         "type": "Row",
       },
       "func": {
-        "id": 27,
+        "id": 23,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -210,7 +210,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
         },
       },
       "icit": "Explicit",
-      "id": 32,
+      "id": 28,
       "type": "App",
     },
     "typedTerms": {},

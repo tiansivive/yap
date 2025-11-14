@@ -27,26 +27,29 @@ export const mkCtx = (): EB.Context => Lib.defaultContext();
 export const elaborateFrom = (src: string) => {
 	EB.resetSupply("meta");
 	EB.resetSupply("var");
+	EB.resetId();
+	NF.resetId();
 
 	const term = parseExpr(src);
 	const ctx = mkCtx();
 
 	const result = EB.V2.Do(function* () {
 		const [tm, ty] = yield* EB.infer.gen(term);
-		const { constraints: csts, metas, types } = yield* EB.V2.listen();
+		const { constraints: csts, metas, types, zonker } = yield* EB.V2.listen();
 		const constraints = csts.map(c => (c.type === "assign" ? omit("trace", c) : c));
-		return { tm, ty, constraints, metas, types } as const;
+		return { tm, ty, constraints, metas, types, zonker } as const;
 	});
 
 	const out = result(ctx);
 	if (out.result._tag === "Left") {
 		throw new Error(EB.V2.display(out.result.left));
 	}
-	const { tm, ty, constraints, metas, types } = out.result.right;
+	const { tm, ty, constraints, metas, types, zonker } = out.result.right;
 
 	const pretty = {
-		term: EB.Display.Term(tm, { env: ctx.env, zonker: ctx.zonker, metas: { ...ctx.metas, ...metas } }),
-		type: NF.display(ty, { env: ctx.env, zonker: ctx.zonker, metas: { ...ctx.metas, ...metas } }),
+		term: EB.Display.Term(tm, { env: ctx.env, zonker, metas: { ...ctx.metas, ...metas } }),
+		type: NF.display(ty, { env: ctx.env, zonker, metas: { ...ctx.metas, ...metas } }),
+		// use context zonker to display metas in constraints
 		constraints: constraints.map((c: any) => EB.Display.Constraint(c, { env: ctx.env, zonker: ctx.zonker, metas: { ...ctx.metas, ...metas } })),
 	};
 

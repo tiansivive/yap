@@ -11,6 +11,7 @@ import * as Errors from "./errors";
 import * as P from "./provenance";
 
 import * as Modal from "@yap/verification/modalities/shared";
+import * as Sub from "@yap/elaboration/unification/substitution";
 
 export type Elaboration<A> = (ctx: EB.Context, w?: Omit<Collector<A>, "result">) => Collector<A>;
 
@@ -18,6 +19,7 @@ type Collector<A> = {
 	constraints: P.WithProvenance<EB.Constraint>[];
 	binders: EB.Binder[];
 	metas: EB.Context["metas"];
+	zonker: EB.Zonker;
 	types: Record<EB.Term["id"], { nf: EB.NF.Value; modalities: Modal.Annotations }>;
 	result: Either<Err, A>;
 };
@@ -28,8 +30,9 @@ const concat: (fa: Accumulator, fb: Accumulator) => Accumulator = (fa, fb) => ({
 	binders: fa.binders.concat(fb.binders),
 	metas: { ...fa.metas, ...fb.metas },
 	types: { ...fa.types, ...fb.types },
+	zonker: Sub.compose(fb.zonker, fa.zonker),
 });
-const empty: Accumulator = { constraints: [], binders: [], metas: {}, types: {} };
+const empty: Accumulator = { constraints: [], binders: [], metas: {}, types: {}, zonker: Sub.empty };
 
 export type Err = Cause & { provenance?: P.Provenance[]; ctx: EB.Context };
 
@@ -150,7 +153,7 @@ export function local<A>(...args: any[]): any {
 	})();
 }
 
-type Channel = "constraint" | "binder" | "meta" | "type";
+type Channel = "constraint" | "binder" | "meta" | "type" | "zonker";
 type Payload<K extends Channel> = K extends "constraint"
 	? OptionalLvl<EB.Constraint>
 	: K extends "binder"
@@ -159,7 +162,9 @@ type Payload<K extends Channel> = K extends "constraint"
 			? { meta: EB.Meta; ann: EB.NF.Value }
 			: K extends "type"
 				? { term: EB.Term; nf: EB.NF.Value; modalities: Modal.Annotations }
-				: never;
+				: K extends "zonker"
+					? EB.Zonker
+					: never;
 
 type OptionalLvl<T> = T extends { type: "assign"; lvl: infer L } ? Omit<T, "lvl"> & { lvl?: L } : T;
 export const tell = function* <K extends Channel>(channel: K, payload: Payload<K> | Payload<K>[]): Generator<Elaboration<any>, void, any> {
@@ -175,10 +180,10 @@ export const tell = function* <K extends Channel>(channel: K, payload: Payload<K
 				}
 				return { ...c, lvl: ctx.env.length };
 			});
-			return { constraints: addProvenance(cs), binders: [], metas: {}, types: {} };
+			return { constraints: addProvenance(cs), binders: [], metas: {}, types: {}, zonker: empty.zonker };
 		}
 		if (channel === "binder") {
-			return { constraints: [], binders: many as Payload<"binder">[], metas: {}, types: {} };
+			return { constraints: [], binders: many as Payload<"binder">[], metas: {}, types: {}, zonker: empty.zonker };
 		}
 
 		if (channel === "meta") {
@@ -187,6 +192,7 @@ export const tell = function* <K extends Channel>(channel: K, payload: Payload<K
 				binders: [],
 				metas: (many as Payload<"meta">[]).reduce((m, { meta, ann }) => ({ ...m, [meta.val]: { meta, ann } }), {}),
 				types: {},
+				zonker: empty.zonker,
 			};
 		}
 
@@ -195,7 +201,18 @@ export const tell = function* <K extends Channel>(channel: K, payload: Payload<K
 				constraints: [],
 				binders: [],
 				metas: {},
+				zonker: empty.zonker,
 				types: (many as Payload<"type">[]).reduce((m, { term, nf, modalities }) => ({ ...m, [term.id]: { nf, modalities } }), {}),
+			};
+		}
+
+		if (channel === "zonker") {
+			return {
+				constraints: [],
+				binders: [],
+				metas: {},
+				types: {},
+				zonker: (many as Payload<"zonker">[]).reduce((z, zk) => Sub.compose(zk, z), ctx.zonker),
 			};
 		}
 		console.warn("Tell: unknown channel:", channel);
@@ -207,7 +224,7 @@ export const tell = function* <K extends Channel>(channel: K, payload: Payload<K
 };
 
 export const listen = function* (): Generator<Elaboration<Accumulator>, Accumulator, Accumulator> {
-	return yield (_, w = { constraints: [], binders: [], metas: {}, types: {} }) => mkCollector(w);
+	return yield (_, w = empty) => mkCollector(w);
 };
 
 export const fail = function* <A>(cause: Cause): Generator<Elaboration<any>, A, any> {
@@ -265,6 +282,7 @@ export function Do<R, A>(gen: () => Generator<Elaboration<any>, R, A>): Elaborat
 		result.constraints = collected.constraints;
 		result.metas = collected.metas;
 		result.types = collected.types;
+		result.zonker = collected.zonker;
 		return result;
 	};
 }
