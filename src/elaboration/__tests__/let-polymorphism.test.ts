@@ -39,12 +39,12 @@ describe("Let-polymorphism", () => {
 			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
-		it.skip("polymorphic composition (B combinator)", () => {
+		it("polymorphic composition (B combinator)", () => {
 			const src = `{
-				let compose = \\f -> \\g -> \\x -> f (g x);
-				let inc = \\n -> n;
-				let result = compose inc inc;
-			}`;
+			let compose = \\f -> \\g -> \\x -> f (g x);
+			let id = \\n -> n;
+			let result = compose id id;
+		}`;
 
 			const res = elaborateFrom(src);
 
@@ -52,6 +52,77 @@ describe("Let-polymorphism", () => {
 			expect({ displays: res.displays }).toMatchSnapshot();
 			expect({ structure: res.structure }).toMatchSnapshot();
 		});
+
+		it("polymorphic flip (C combinator)", () => {
+			const src = `{
+			let flip = \\f -> \\x -> \\y -> f y x;
+			let const = \\a -> \\b -> a;
+			let result = flip const 5 "hello";
+		}`;
+
+			const res = elaborateFrom(src);
+
+			expect(res.structure.term.type).toBe("Block");
+			expect({ displays: res.displays }).toMatchSnapshot();
+			expect({ structure: res.structure }).toMatchSnapshot();
+		});
+
+		it("polymorphic S combinator", () => {
+			const src = `{
+			let s = \\f -> \\g -> \\x -> f x (g x);
+			let const = \\a -> \\b -> a;
+			let id = \\n -> n;
+			let result = s const id 42;
+		}`;
+
+			const res = elaborateFrom(src);
+
+			expect(res.structure.term.type).toBe("Block");
+			expect({ displays: res.displays }).toMatchSnapshot();
+			expect({ structure: res.structure }).toMatchSnapshot();
+		});
+
+		it("polymorphic thrush (T combinator)", () => {
+			const src = `{
+			let thrush = \\x -> \\f -> f x;
+			let id = \\n -> n;
+			let result = thrush 5 id;
+		}`;
+
+			const res = elaborateFrom(src);
+
+			expect(res.structure.term.type).toBe("Block");
+			expect({ displays: res.displays }).toMatchSnapshot();
+			expect({ structure: res.structure }).toMatchSnapshot();
+		});
+
+		it("polymorphic warbler (W combinator)", () => {
+			const src = `{
+			let warbler = \\f -> \\x -> f x x;
+			let const = \\a -> \\b -> a;
+			let result = warbler const 42;
+		}`;
+
+			const res = elaborateFrom(src);
+
+			expect(res.structure.term.type).toBe("Block");
+			expect({ displays: res.displays }).toMatchSnapshot();
+			expect({ structure: res.structure }).toMatchSnapshot();
+		});
+
+		// it("polymorphic Y combinator (fixed-point)", () => {
+		// 	const src = `{
+		// 	let y = \\f -> (\\x -> f (x x)) (\\x -> f (x x));
+		// 	let const = \\a -> \\b -> a;
+		// 	let result = y const;
+		// }`;
+
+		// 	const res = elaborateFrom(src);
+
+		// 	expect(res.structure.term.type).toBe("Block");
+		// 	expect({ displays: res.displays }).toMatchSnapshot();
+		// 	expect({ structure: res.structure }).toMatchSnapshot();
+		// });
 
 		it("higher-order polymorphic function", () => {
 			const src = `{
