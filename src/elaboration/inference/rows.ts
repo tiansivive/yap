@@ -96,11 +96,11 @@ export const extract = function* (row: Src.Row, lvl: number, types?: NF.Row): Ge
 		return {};
 	}
 
-	const ktm = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
-	const tm = NF.Constructors.Var(yield* EB.freshMeta(lvl, ktm));
+	const ktm = NF.Constructors.Flex(yield* EB.freshMeta(lvl, NF.Type));
+	const tm = NF.Constructors.Flex(yield* EB.freshMeta(lvl, ktm));
 
-	const kty = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
-	const ty = NF.Constructors.Var(yield* EB.freshMeta(lvl, kty));
+	//const kty = NF.Constructors.Flex(yield* EB.freshMeta(lvl, NF.Type));
+	const ty = NF.Constructors.Flex(yield* EB.freshMeta(lvl, NF.Type));
 	const info: EB.Sigma = { nf: tm, ann: ty, multiplicity: Q.Many };
 
 	const rest = yield* extract({ ...row.row, location: row.location }, lvl + 1);

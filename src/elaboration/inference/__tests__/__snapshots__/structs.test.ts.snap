@@ -1,69 +1,29 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 1`] = `
+exports[`Inference: Structs > dependent structs > dependent field referring to later field: { y: :x + 2, x: 1 } 1`] = `
 {
   "displays": {
     "constraints": [
-      ""hello" ~~ ?6",
-      "String ~~ ?8",
-      "1 ~~ ?2",
-      "Num ~~ ?4",
+      "1 ~~ ?5",
+      "Num ~~ ?6",
+      "?6 ~~ Num",
+      "Num ~~ Num",
+      "($add: (?5) (2)) ~~ ?2",
+      "Num ~~ ?3",
     ],
-    "term": "Struct [ x: 1, y: "hello" ]",
-    "type": "Schema [ x: Num, y: String ]",
+    "term": "Struct [ y: + :x 2, x: 1 ]",
+    "type": "Schema [ y: Num, x: Num ]",
   },
 }
 `;
 
-exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
+exports[`Inference: Structs > dependent structs > dependent field referring to later field: { y: :x + 2, x: 1 } 2`] = `
 {
   "structure": {
     "constraints": [
       {
         "left": {
-          "id": 25,
-          "type": "Lit",
-          "value": {
-            "type": "String",
-            "value": "hello",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "id": 21,
-          "type": "Var",
-          "variable": {
-            "lvl": 1,
-            "type": "Meta",
-            "val": 6,
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "id": 24,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "String",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "id": 23,
-          "type": "Var",
-          "variable": {
-            "lvl": 1,
-            "type": "Meta",
-            "val": 8,
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "id": 27,
+          "id": 29,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -72,19 +32,23 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 17,
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 2,
+          "id": 25,
+          "type": "Neutral",
+          "value": {
+            "id": 24,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 5,
+            },
           },
         },
         "type": "assign",
       },
       {
         "left": {
-          "id": 26,
+          "id": 28,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -93,12 +57,133 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
         },
         "lvl": 0,
         "right": {
+          "id": 27,
+          "type": "Neutral",
+          "value": {
+            "id": 26,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 27,
+          "type": "Neutral",
+          "value": {
+            "id": 26,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 6,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 32,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 30,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "args": [
+            {
+              "id": 25,
+              "type": "Neutral",
+              "value": {
+                "id": 24,
+                "type": "Var",
+                "variable": {
+                  "lvl": 1,
+                  "type": "Meta",
+                  "val": 5,
+                },
+              },
+            },
+            {
+              "id": 40,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 2,
+              },
+            },
+          ],
+          "arity": 2,
+          "compute": [Function],
+          "id": 41,
+          "name": "$add",
+          "type": "External",
+        },
+        "lvl": 0,
+        "right": {
           "id": 19,
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 4,
+          "type": "Neutral",
+          "value": {
+            "id": 18,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 34,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
           },
         },
         "type": "assign",
@@ -122,12 +207,16 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       },
       "2": {
         "ann": {
-          "id": 16,
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 1,
+          "id": 17,
+          "type": "Neutral",
+          "value": {
+            "id": 16,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
           },
         },
         "meta": {
@@ -153,21 +242,40 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       },
       "4": {
         "ann": {
-          "id": 18,
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 3,
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
-          "lvl": 0,
+          "lvl": 1,
           "type": "Meta",
           "val": 4,
         },
       },
       "5": {
+        "ann": {
+          "id": 23,
+          "type": "Neutral",
+          "value": {
+            "id": 22,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
         "ann": {
           "id": 1,
           "type": "Lit",
@@ -179,17 +287,2681 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
         "meta": {
           "lvl": 1,
           "type": "Meta",
+          "val": 6,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "id": 820,
+        "row": {
+          "label": "y",
+          "row": {
+            "label": "x",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "id": 813,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 1,
+              },
+            },
+          },
+          "type": "extension",
+          "value": {
+            "arg": {
+              "id": 817,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 2,
+              },
+            },
+            "func": {
+              "arg": {
+                "id": 815,
+                "type": "Var",
+                "variable": {
+                  "name": "x",
+                  "type": "Label",
+                },
+              },
+              "func": {
+                "id": 814,
+                "type": "Var",
+                "variable": {
+                  "name": "+",
+                  "type": "Free",
+                },
+              },
+              "icit": "Explicit",
+              "id": 816,
+              "type": "App",
+            },
+            "icit": "Explicit",
+            "id": 818,
+            "type": "App",
+          },
+        },
+        "type": "Row",
+      },
+      "func": {
+        "id": 819,
+        "type": "Lit",
+        "value": {
+          "type": "Atom",
+          "value": "Struct",
+        },
+      },
+      "icit": "Explicit",
+      "id": 821,
+      "type": "App",
+    },
+    "type": {
+      "id": 45,
+      "type": "Neutral",
+      "value": {
+        "arg": {
+          "id": 43,
+          "row": {
+            "label": "y",
+            "row": {
+              "label": "x",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "id": 28,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
+              },
+            },
+            "type": "extension",
+            "value": {
+              "id": 34,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Num",
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "func": {
+          "id": 42,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Schema",
+          },
+        },
+        "icit": "Explicit",
+        "id": 44,
+        "type": "App",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`Inference: Structs > dependent structs > fields depending on previous fields: { x: 1, y: :x + 2 } 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "?3 ~~ Num",
+      "Num ~~ Num",
+      "($add: (?2) (2)) ~~ ?5",
+      "Num ~~ ?6",
+      "1 ~~ ?2",
+      "Num ~~ ?3",
+    ],
+    "term": "Struct [ x: 1, y: + :x 2 ]",
+    "type": "Schema [ x: Num, y: Num ]",
+  },
+}
+`;
+
+exports[`Inference: Structs > dependent structs > fields depending on previous fields: { x: 1, y: :x + 2 } 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 6,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 30,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 28,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "args": [
+            {
+              "id": 19,
+              "type": "Neutral",
+              "value": {
+                "id": 18,
+                "type": "Var",
+                "variable": {
+                  "lvl": 0,
+                  "type": "Meta",
+                  "val": 2,
+                },
+              },
+            },
+            {
+              "id": 38,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 2,
+              },
+            },
+          ],
+          "arity": 2,
+          "compute": [Function],
+          "id": 39,
+          "name": "$add",
+          "type": "External",
+        },
+        "lvl": 0,
+        "right": {
+          "id": 25,
+          "type": "Neutral",
+          "value": {
+            "id": 24,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 5,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 32,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 27,
+          "type": "Neutral",
+          "value": {
+            "id": 26,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 41,
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 19,
+          "type": "Neutral",
+          "value": {
+            "id": 18,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 40,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 17,
+          "type": "Neutral",
+          "value": {
+            "id": 16,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "id": 23,
+          "type": "Neutral",
+          "value": {
+            "id": 22,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
           "val": 5,
         },
       },
       "6": {
         "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 6,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "id": 820,
+        "row": {
+          "label": "x",
+          "row": {
+            "label": "y",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "arg": {
+                "id": 816,
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 2,
+                },
+              },
+              "func": {
+                "arg": {
+                  "id": 814,
+                  "type": "Var",
+                  "variable": {
+                    "name": "x",
+                    "type": "Label",
+                  },
+                },
+                "func": {
+                  "id": 813,
+                  "type": "Var",
+                  "variable": {
+                    "name": "+",
+                    "type": "Free",
+                  },
+                },
+                "icit": "Explicit",
+                "id": 815,
+                "type": "App",
+              },
+              "icit": "Explicit",
+              "id": 817,
+              "type": "App",
+            },
+          },
+          "type": "extension",
+          "value": {
+            "id": 818,
+            "type": "Lit",
+            "value": {
+              "type": "Num",
+              "value": 1,
+            },
+          },
+        },
+        "type": "Row",
+      },
+      "func": {
+        "id": 819,
+        "type": "Lit",
+        "value": {
+          "type": "Atom",
+          "value": "Struct",
+        },
+      },
+      "icit": "Explicit",
+      "id": 821,
+      "type": "App",
+    },
+    "type": {
+      "id": 45,
+      "type": "Neutral",
+      "value": {
+        "arg": {
+          "id": 43,
+          "row": {
+            "label": "x",
+            "row": {
+              "label": "y",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "id": 32,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
+              },
+            },
+            "type": "extension",
+            "value": {
+              "id": 40,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Num",
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "func": {
+          "id": 42,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Schema",
+          },
+        },
+        "icit": "Explicit",
+        "id": 44,
+        "type": "App",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`Inference: Structs > dependent structs > mutually dependent fields: { a: :b + 1, b: :a + 1 } 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "?3 ~~ Num",
+      "Num ~~ Num",
+      "($add: (?2) (1)) ~~ ?5",
+      "Num ~~ ?6",
+      "?6 ~~ Num",
+      "Num ~~ Num",
+      "($add: (?5) (1)) ~~ ?2",
+      "Num ~~ ?3",
+    ],
+    "term": "Struct [ a: + :b 1, b: + :a 1 ]",
+    "type": "Schema [ a: Num, b: Num ]",
+  },
+}
+`;
+
+exports[`Inference: Structs > dependent structs > mutually dependent fields: { a: :b + 1, b: :a + 1 } 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 6,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 30,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 28,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "args": [
+            {
+              "id": 19,
+              "type": "Neutral",
+              "value": {
+                "id": 18,
+                "type": "Var",
+                "variable": {
+                  "lvl": 0,
+                  "type": "Meta",
+                  "val": 2,
+                },
+              },
+            },
+            {
+              "id": 38,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 1,
+              },
+            },
+          ],
+          "arity": 2,
+          "compute": [Function],
+          "id": 39,
+          "name": "$add",
+          "type": "External",
+        },
+        "lvl": 0,
+        "right": {
+          "id": 25,
+          "type": "Neutral",
+          "value": {
+            "id": 24,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 5,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 32,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 27,
+          "type": "Neutral",
+          "value": {
+            "id": 26,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 27,
+          "type": "Neutral",
+          "value": {
+            "id": 26,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 6,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 42,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 40,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "args": [
+            {
+              "id": 25,
+              "type": "Neutral",
+              "value": {
+                "id": 24,
+                "type": "Var",
+                "variable": {
+                  "lvl": 1,
+                  "type": "Meta",
+                  "val": 5,
+                },
+              },
+            },
+            {
+              "id": 50,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 1,
+              },
+            },
+          ],
+          "arity": 2,
+          "compute": [Function],
+          "id": 51,
+          "name": "$add",
+          "type": "External",
+        },
+        "lvl": 0,
+        "right": {
+          "id": 19,
+          "type": "Neutral",
+          "value": {
+            "id": 18,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 44,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 17,
+          "type": "Neutral",
+          "value": {
+            "id": 16,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "id": 23,
+          "type": "Neutral",
+          "value": {
+            "id": 22,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 6,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "id": 824,
+        "row": {
+          "label": "a",
+          "row": {
+            "label": "b",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "arg": {
+                "id": 816,
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 1,
+                },
+              },
+              "func": {
+                "arg": {
+                  "id": 814,
+                  "type": "Var",
+                  "variable": {
+                    "name": "a",
+                    "type": "Label",
+                  },
+                },
+                "func": {
+                  "id": 813,
+                  "type": "Var",
+                  "variable": {
+                    "name": "+",
+                    "type": "Free",
+                  },
+                },
+                "icit": "Explicit",
+                "id": 815,
+                "type": "App",
+              },
+              "icit": "Explicit",
+              "id": 817,
+              "type": "App",
+            },
+          },
+          "type": "extension",
+          "value": {
+            "arg": {
+              "id": 821,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 1,
+              },
+            },
+            "func": {
+              "arg": {
+                "id": 819,
+                "type": "Var",
+                "variable": {
+                  "name": "b",
+                  "type": "Label",
+                },
+              },
+              "func": {
+                "id": 818,
+                "type": "Var",
+                "variable": {
+                  "name": "+",
+                  "type": "Free",
+                },
+              },
+              "icit": "Explicit",
+              "id": 820,
+              "type": "App",
+            },
+            "icit": "Explicit",
+            "id": 822,
+            "type": "App",
+          },
+        },
+        "type": "Row",
+      },
+      "func": {
+        "id": 823,
+        "type": "Lit",
+        "value": {
+          "type": "Atom",
+          "value": "Struct",
+        },
+      },
+      "icit": "Explicit",
+      "id": 825,
+      "type": "App",
+    },
+    "type": {
+      "id": 55,
+      "type": "Neutral",
+      "value": {
+        "arg": {
+          "id": 53,
+          "row": {
+            "label": "a",
+            "row": {
+              "label": "b",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "id": 32,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
+              },
+            },
+            "type": "extension",
+            "value": {
+              "id": 44,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Num",
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "func": {
+          "id": 52,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Schema",
+          },
+        },
+        "icit": "Explicit",
+        "id": 54,
+        "type": "App",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`Inference: Structs > dependent structs > nested dependent fields: { point: { x: 1, y: 2 }, halved: { a: :point.x / 2, b: :point.y / 2 } } 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Schema [ y: ?13 | ?14 ] ~~ ?3",
+      "?13 ~~ Num",
+      "Num ~~ Num",
+      "($div: ((λ$proj_y -> (closure: ($proj_y).y -| Γ: $proj_y)) ?2) (2)) ~~ ?11",
+      "Num ~~ ?12",
+      "Schema [ x: ?15 | ?16 ] ~~ ?3",
+      "?15 ~~ Num",
+      "Num ~~ Num",
+      "($div: ((λ$proj_x -> (closure: ($proj_x).x -| Γ: $proj_x)) ?2) (2)) ~~ ?8",
+      "Num ~~ ?9",
+      "Struct [ a: ($div: ((λ$proj_x -> (closure: ($proj_x).x -| Γ: $proj_x)) ?2) (2)), b: ($div: ((λ$proj_y -> (closure: ($proj_y).y -| Γ: $proj_y)) ?2) (2)) ] ~~ ?5",
+      "Schema [ a: Num, b: Num ] ~~ ?6",
+      "2 ~~ ?21",
+      "Num ~~ ?22",
+      "1 ~~ ?18",
+      "Num ~~ ?19",
+      "Struct [ x: 1, y: 2 ] ~~ ?2",
+      "Schema [ x: Num, y: Num ] ~~ ?3",
+    ],
+    "term": "Struct [ point: Struct [ x: 1, y: 2 ], halved: Struct [ a: / (:point).x 2, b: / (:point).y 2 ] ]",
+    "type": "Schema [ point: Schema [ x: Num, y: Num ], halved: Schema [ a: Num, b: Num ] ]",
+  },
+}
+`;
+
+exports[`Inference: Structs > dependent structs > nested dependent fields: { point: { x: 1, y: 2 }, halved: { a: :point.x / 2, b: :point.y / 2 } } 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "arg": {
+            "id": 44,
+            "row": {
+              "label": "y",
+              "row": {
+                "type": "variable",
+                "variable": {
+                  "lvl": 0,
+                  "type": "Meta",
+                  "val": 14,
+                },
+              },
+              "type": "extension",
+              "value": {
+                "id": 43,
+                "type": "Neutral",
+                "value": {
+                  "id": 42,
+                  "type": "Var",
+                  "variable": {
+                    "lvl": 0,
+                    "type": "Meta",
+                    "val": 13,
+                  },
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 41,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "id": 45,
+          "type": "App",
+        },
+        "lvl": 0,
+        "right": {
           "id": 20,
           "type": "Var",
           "variable": {
-            "lvl": 1,
+            "lvl": 0,
             "type": "Meta",
-            "val": 5,
+            "val": 3,
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 43,
+          "type": "Neutral",
+          "value": {
+            "id": 42,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 13,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 12,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 51,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 49,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "args": [
+            {
+              "id": 60,
+              "type": "Neutral",
+              "value": {
+                "arg": {
+                  "id": 19,
+                  "type": "Neutral",
+                  "value": {
+                    "id": 18,
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 0,
+                      "type": "Meta",
+                      "val": 2,
+                    },
+                  },
+                },
+                "func": {
+                  "binder": {
+                    "annotation": {
+                      "id": 4,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Any",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "Lambda",
+                    "variable": "$proj_y",
+                  },
+                  "closure": {
+                    "ctx": {
+                      "env": [],
+                      "implicits": [],
+                      "metas": {},
+                      "sigma": {
+                        "a": {
+                          "ann": {
+                            "id": 33,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 32,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 0,
+                                "type": "Meta",
+                                "val": 9,
+                              },
+                            },
+                          },
+                          "multiplicity": "Many",
+                          "nf": {
+                            "id": 31,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 30,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 0,
+                                "type": "Meta",
+                                "val": 8,
+                              },
+                            },
+                          },
+                        },
+                        "b": {
+                          "ann": {
+                            "id": 39,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 38,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 1,
+                                "type": "Meta",
+                                "val": 12,
+                              },
+                            },
+                          },
+                          "multiplicity": "Many",
+                          "nf": {
+                            "id": 37,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 36,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 1,
+                                "type": "Meta",
+                                "val": 11,
+                              },
+                            },
+                          },
+                        },
+                        "halved": {
+                          "ann": {
+                            "id": 27,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 26,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 1,
+                                "type": "Meta",
+                                "val": 6,
+                              },
+                            },
+                          },
+                          "multiplicity": "Many",
+                          "nf": {
+                            "id": 25,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 24,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 1,
+                                "type": "Meta",
+                                "val": 5,
+                              },
+                            },
+                          },
+                        },
+                        "point": {
+                          "ann": {
+                            "id": 21,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 20,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 0,
+                                "type": "Meta",
+                                "val": 3,
+                              },
+                            },
+                          },
+                          "multiplicity": "Many",
+                          "nf": {
+                            "id": 19,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 18,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 0,
+                                "type": "Meta",
+                                "val": 2,
+                              },
+                            },
+                          },
+                        },
+                      },
+                      "zonker": {},
+                    },
+                    "term": {
+                      "id": 823,
+                      "label": "y",
+                      "term": {
+                        "id": 822,
+                        "type": "Var",
+                        "variable": {
+                          "index": 0,
+                          "type": "Bound",
+                        },
+                      },
+                      "type": "Proj",
+                    },
+                    "type": "Closure",
+                  },
+                  "id": 58,
+                  "type": "Abs",
+                },
+                "icit": "Explicit",
+                "id": 59,
+                "type": "App",
+              },
+            },
+            {
+              "id": 62,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 2,
+              },
+            },
+          ],
+          "arity": 2,
+          "compute": [Function],
+          "id": 63,
+          "name": "$div",
+          "type": "External",
+        },
+        "lvl": 0,
+        "right": {
+          "id": 37,
+          "type": "Neutral",
+          "value": {
+            "id": 36,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 11,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 53,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 39,
+          "type": "Neutral",
+          "value": {
+            "id": 38,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 12,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "arg": {
+            "id": 68,
+            "row": {
+              "label": "x",
+              "row": {
+                "type": "variable",
+                "variable": {
+                  "lvl": 0,
+                  "type": "Meta",
+                  "val": 16,
+                },
+              },
+              "type": "extension",
+              "value": {
+                "id": 67,
+                "type": "Neutral",
+                "value": {
+                  "id": 66,
+                  "type": "Var",
+                  "variable": {
+                    "lvl": 0,
+                    "type": "Meta",
+                    "val": 15,
+                  },
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 65,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "id": 69,
+          "type": "App",
+        },
+        "lvl": 0,
+        "right": {
+          "id": 20,
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 3,
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 67,
+          "type": "Neutral",
+          "value": {
+            "id": 66,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 15,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 12,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 75,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 73,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "args": [
+            {
+              "id": 84,
+              "type": "Neutral",
+              "value": {
+                "arg": {
+                  "id": 19,
+                  "type": "Neutral",
+                  "value": {
+                    "id": 18,
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 0,
+                      "type": "Meta",
+                      "val": 2,
+                    },
+                  },
+                },
+                "func": {
+                  "binder": {
+                    "annotation": {
+                      "id": 4,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Any",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "Lambda",
+                    "variable": "$proj_x",
+                  },
+                  "closure": {
+                    "ctx": {
+                      "env": [],
+                      "implicits": [],
+                      "metas": {},
+                      "sigma": {
+                        "a": {
+                          "ann": {
+                            "id": 33,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 32,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 0,
+                                "type": "Meta",
+                                "val": 9,
+                              },
+                            },
+                          },
+                          "multiplicity": "Many",
+                          "nf": {
+                            "id": 31,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 30,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 0,
+                                "type": "Meta",
+                                "val": 8,
+                              },
+                            },
+                          },
+                        },
+                        "b": {
+                          "ann": {
+                            "id": 39,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 38,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 1,
+                                "type": "Meta",
+                                "val": 12,
+                              },
+                            },
+                          },
+                          "multiplicity": "Many",
+                          "nf": {
+                            "id": 37,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 36,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 1,
+                                "type": "Meta",
+                                "val": 11,
+                              },
+                            },
+                          },
+                        },
+                        "halved": {
+                          "ann": {
+                            "id": 27,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 26,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 1,
+                                "type": "Meta",
+                                "val": 6,
+                              },
+                            },
+                          },
+                          "multiplicity": "Many",
+                          "nf": {
+                            "id": 25,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 24,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 1,
+                                "type": "Meta",
+                                "val": 5,
+                              },
+                            },
+                          },
+                        },
+                        "point": {
+                          "ann": {
+                            "id": 21,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 20,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 0,
+                                "type": "Meta",
+                                "val": 3,
+                              },
+                            },
+                          },
+                          "multiplicity": "Many",
+                          "nf": {
+                            "id": 19,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 18,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 0,
+                                "type": "Meta",
+                                "val": 2,
+                              },
+                            },
+                          },
+                        },
+                      },
+                      "zonker": {},
+                    },
+                    "term": {
+                      "id": 834,
+                      "label": "x",
+                      "term": {
+                        "id": 833,
+                        "type": "Var",
+                        "variable": {
+                          "index": 0,
+                          "type": "Bound",
+                        },
+                      },
+                      "type": "Proj",
+                    },
+                    "type": "Closure",
+                  },
+                  "id": 82,
+                  "type": "Abs",
+                },
+                "icit": "Explicit",
+                "id": 83,
+                "type": "App",
+              },
+            },
+            {
+              "id": 86,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 2,
+              },
+            },
+          ],
+          "arity": 2,
+          "compute": [Function],
+          "id": 87,
+          "name": "$div",
+          "type": "External",
+        },
+        "lvl": 0,
+        "right": {
+          "id": 31,
+          "type": "Neutral",
+          "value": {
+            "id": 30,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 8,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 77,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 33,
+          "type": "Neutral",
+          "value": {
+            "id": 32,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 9,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "arg": {
+            "id": 107,
+            "row": {
+              "label": "a",
+              "row": {
+                "label": "b",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "args": [
+                    {
+                      "id": 103,
+                      "type": "Neutral",
+                      "value": {
+                        "arg": {
+                          "id": 19,
+                          "type": "Neutral",
+                          "value": {
+                            "id": 18,
+                            "type": "Var",
+                            "variable": {
+                              "lvl": 0,
+                              "type": "Meta",
+                              "val": 2,
+                            },
+                          },
+                        },
+                        "func": {
+                          "binder": {
+                            "annotation": {
+                              "id": 4,
+                              "type": "Lit",
+                              "value": {
+                                "type": "Atom",
+                                "value": "Any",
+                              },
+                            },
+                            "icit": "Explicit",
+                            "type": "Lambda",
+                            "variable": "$proj_y",
+                          },
+                          "closure": {
+                            "ctx": {
+                              "env": [],
+                              "implicits": [],
+                              "metas": {},
+                              "sigma": {
+                                "halved": {
+                                  "ann": {
+                                    "id": 27,
+                                    "type": "Neutral",
+                                    "value": {
+                                      "id": 26,
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 1,
+                                        "type": "Meta",
+                                        "val": 6,
+                                      },
+                                    },
+                                  },
+                                  "multiplicity": "Many",
+                                  "nf": {
+                                    "id": 25,
+                                    "type": "Neutral",
+                                    "value": {
+                                      "id": 24,
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 1,
+                                        "type": "Meta",
+                                        "val": 5,
+                                      },
+                                    },
+                                  },
+                                },
+                                "point": {
+                                  "ann": {
+                                    "id": 21,
+                                    "type": "Neutral",
+                                    "value": {
+                                      "id": 20,
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 0,
+                                        "type": "Meta",
+                                        "val": 3,
+                                      },
+                                    },
+                                  },
+                                  "multiplicity": "Many",
+                                  "nf": {
+                                    "id": 19,
+                                    "type": "Neutral",
+                                    "value": {
+                                      "id": 18,
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 0,
+                                        "type": "Meta",
+                                        "val": 2,
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                              "zonker": {},
+                            },
+                            "term": {
+                              "id": 841,
+                              "label": "y",
+                              "term": {
+                                "id": 840,
+                                "type": "Var",
+                                "variable": {
+                                  "index": 0,
+                                  "type": "Bound",
+                                },
+                              },
+                              "type": "Proj",
+                            },
+                            "type": "Closure",
+                          },
+                          "id": 101,
+                          "type": "Abs",
+                        },
+                        "icit": "Explicit",
+                        "id": 102,
+                        "type": "App",
+                      },
+                    },
+                    {
+                      "id": 105,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Num",
+                        "value": 2,
+                      },
+                    },
+                  ],
+                  "arity": 2,
+                  "compute": [Function],
+                  "id": 106,
+                  "name": "$div",
+                  "type": "External",
+                },
+              },
+              "type": "extension",
+              "value": {
+                "args": [
+                  {
+                    "id": 96,
+                    "type": "Neutral",
+                    "value": {
+                      "arg": {
+                        "id": 19,
+                        "type": "Neutral",
+                        "value": {
+                          "id": 18,
+                          "type": "Var",
+                          "variable": {
+                            "lvl": 0,
+                            "type": "Meta",
+                            "val": 2,
+                          },
+                        },
+                      },
+                      "func": {
+                        "binder": {
+                          "annotation": {
+                            "id": 4,
+                            "type": "Lit",
+                            "value": {
+                              "type": "Atom",
+                              "value": "Any",
+                            },
+                          },
+                          "icit": "Explicit",
+                          "type": "Lambda",
+                          "variable": "$proj_x",
+                        },
+                        "closure": {
+                          "ctx": {
+                            "env": [],
+                            "implicits": [],
+                            "metas": {},
+                            "sigma": {
+                              "halved": {
+                                "ann": {
+                                  "id": 27,
+                                  "type": "Neutral",
+                                  "value": {
+                                    "id": 26,
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 1,
+                                      "type": "Meta",
+                                      "val": 6,
+                                    },
+                                  },
+                                },
+                                "multiplicity": "Many",
+                                "nf": {
+                                  "id": 25,
+                                  "type": "Neutral",
+                                  "value": {
+                                    "id": 24,
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 1,
+                                      "type": "Meta",
+                                      "val": 5,
+                                    },
+                                  },
+                                },
+                              },
+                              "point": {
+                                "ann": {
+                                  "id": 21,
+                                  "type": "Neutral",
+                                  "value": {
+                                    "id": 20,
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 0,
+                                      "type": "Meta",
+                                      "val": 3,
+                                    },
+                                  },
+                                },
+                                "multiplicity": "Many",
+                                "nf": {
+                                  "id": 19,
+                                  "type": "Neutral",
+                                  "value": {
+                                    "id": 18,
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 0,
+                                      "type": "Meta",
+                                      "val": 2,
+                                    },
+                                  },
+                                },
+                              },
+                            },
+                            "zonker": {},
+                          },
+                          "term": {
+                            "id": 839,
+                            "label": "x",
+                            "term": {
+                              "id": 838,
+                              "type": "Var",
+                              "variable": {
+                                "index": 0,
+                                "type": "Bound",
+                              },
+                            },
+                            "type": "Proj",
+                          },
+                          "type": "Closure",
+                        },
+                        "id": 94,
+                        "type": "Abs",
+                      },
+                      "icit": "Explicit",
+                      "id": 95,
+                      "type": "App",
+                    },
+                  },
+                  {
+                    "id": 98,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Num",
+                      "value": 2,
+                    },
+                  },
+                ],
+                "arity": 2,
+                "compute": [Function],
+                "id": 99,
+                "name": "$div",
+                "type": "External",
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 108,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Struct",
+            },
+          },
+          "icit": "Explicit",
+          "id": 109,
+          "type": "App",
+        },
+        "lvl": 0,
+        "right": {
+          "id": 25,
+          "type": "Neutral",
+          "value": {
+            "id": 24,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 5,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 91,
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "id": 89,
+              "row": {
+                "label": "a",
+                "row": {
+                  "label": "b",
+                  "row": {
+                    "type": "empty",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 53,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "Num",
+                    },
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "id": 77,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "id": 88,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Schema",
+              },
+            },
+            "icit": "Explicit",
+            "id": 90,
+            "type": "App",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 27,
+          "type": "Neutral",
+          "value": {
+            "id": 26,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 123,
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 2,
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 119,
+          "type": "Neutral",
+          "value": {
+            "id": 118,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 21,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 122,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 121,
+          "type": "Neutral",
+          "value": {
+            "id": 120,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 22,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 125,
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 113,
+          "type": "Neutral",
+          "value": {
+            "id": 112,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 18,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 124,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 115,
+          "type": "Neutral",
+          "value": {
+            "id": 114,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 19,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "arg": {
+            "id": 133,
+            "row": {
+              "label": "x",
+              "row": {
+                "label": "y",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "id": 132,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Num",
+                    "value": 2,
+                  },
+                },
+              },
+              "type": "extension",
+              "value": {
+                "id": 131,
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 1,
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 134,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Struct",
+            },
+          },
+          "icit": "Explicit",
+          "id": 135,
+          "type": "App",
+        },
+        "lvl": 0,
+        "right": {
+          "id": 19,
+          "type": "Neutral",
+          "value": {
+            "id": 18,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 129,
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "id": 127,
+              "row": {
+                "label": "x",
+                "row": {
+                  "label": "y",
+                  "row": {
+                    "type": "empty",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 122,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "Num",
+                    },
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "id": 124,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "id": 126,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Schema",
+              },
+            },
+            "icit": "Explicit",
+            "id": 128,
+            "type": "App",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "10": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 10,
+        },
+      },
+      "11": {
+        "ann": {
+          "id": 35,
+          "type": "Neutral",
+          "value": {
+            "id": 34,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 10,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 11,
+        },
+      },
+      "12": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 12,
+        },
+      },
+      "13": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 13,
+        },
+      },
+      "14": {
+        "ann": {
+          "id": 2,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Row",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 14,
+        },
+      },
+      "15": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 15,
+        },
+      },
+      "16": {
+        "ann": {
+          "id": 2,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Row",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 16,
+        },
+      },
+      "17": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 17,
+        },
+      },
+      "18": {
+        "ann": {
+          "id": 111,
+          "type": "Neutral",
+          "value": {
+            "id": 110,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 17,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 18,
+        },
+      },
+      "19": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 19,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 17,
+          "type": "Neutral",
+          "value": {
+            "id": 16,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "20": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 20,
+        },
+      },
+      "21": {
+        "ann": {
+          "id": 117,
+          "type": "Neutral",
+          "value": {
+            "id": 116,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 20,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 21,
+        },
+      },
+      "22": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 22,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "id": 23,
+          "type": "Neutral",
+          "value": {
+            "id": 22,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
@@ -208,25 +2980,1634 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 7,
         },
       },
       "8": {
         "ann": {
-          "id": 22,
-          "type": "Var",
-          "variable": {
-            "lvl": 1,
-            "type": "Meta",
-            "val": 7,
+          "id": 29,
+          "type": "Neutral",
+          "value": {
+            "id": 28,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 7,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 8,
+        },
+      },
+      "9": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 9,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "id": 848,
+        "row": {
+          "label": "point",
+          "row": {
+            "label": "halved",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "arg": {
+                "id": 836,
+                "row": {
+                  "label": "a",
+                  "row": {
+                    "label": "b",
+                    "row": {
+                      "type": "empty",
+                    },
+                    "type": "extension",
+                    "value": {
+                      "arg": {
+                        "id": 820,
+                        "type": "Lit",
+                        "value": {
+                          "type": "Num",
+                          "value": 2,
+                        },
+                      },
+                      "func": {
+                        "arg": {
+                          "id": 816,
+                          "label": "y",
+                          "term": {
+                            "id": 814,
+                            "type": "Var",
+                            "variable": {
+                              "name": "point",
+                              "type": "Label",
+                            },
+                          },
+                          "type": "Proj",
+                        },
+                        "func": {
+                          "id": 813,
+                          "type": "Var",
+                          "variable": {
+                            "name": "/",
+                            "type": "Free",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "id": 819,
+                        "type": "App",
+                      },
+                      "icit": "Explicit",
+                      "id": 821,
+                      "type": "App",
+                    },
+                  },
+                  "type": "extension",
+                  "value": {
+                    "arg": {
+                      "id": 831,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Num",
+                        "value": 2,
+                      },
+                    },
+                    "func": {
+                      "arg": {
+                        "id": 827,
+                        "label": "x",
+                        "term": {
+                          "id": 825,
+                          "type": "Var",
+                          "variable": {
+                            "name": "point",
+                            "type": "Label",
+                          },
+                        },
+                        "type": "Proj",
+                      },
+                      "func": {
+                        "id": 824,
+                        "type": "Var",
+                        "variable": {
+                          "name": "/",
+                          "type": "Free",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "id": 830,
+                      "type": "App",
+                    },
+                    "icit": "Explicit",
+                    "id": 832,
+                    "type": "App",
+                  },
+                },
+                "type": "Row",
+              },
+              "func": {
+                "id": 835,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Struct",
+                },
+              },
+              "icit": "Explicit",
+              "id": 837,
+              "type": "App",
+            },
+          },
+          "type": "extension",
+          "value": {
+            "arg": {
+              "id": 845,
+              "row": {
+                "label": "x",
+                "row": {
+                  "label": "y",
+                  "row": {
+                    "type": "empty",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 842,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Num",
+                      "value": 2,
+                    },
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "id": 843,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Num",
+                    "value": 1,
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "id": 844,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Struct",
+              },
+            },
+            "icit": "Explicit",
+            "id": 846,
+            "type": "App",
+          },
+        },
+        "type": "Row",
+      },
+      "func": {
+        "id": 847,
+        "type": "Lit",
+        "value": {
+          "type": "Atom",
+          "value": "Struct",
+        },
+      },
+      "icit": "Explicit",
+      "id": 849,
+      "type": "App",
+    },
+    "type": {
+      "id": 139,
+      "type": "Neutral",
+      "value": {
+        "arg": {
+          "id": 137,
+          "row": {
+            "label": "point",
+            "row": {
+              "label": "halved",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "id": 91,
+                "type": "Neutral",
+                "value": {
+                  "arg": {
+                    "id": 89,
+                    "row": {
+                      "label": "a",
+                      "row": {
+                        "label": "b",
+                        "row": {
+                          "type": "empty",
+                        },
+                        "type": "extension",
+                        "value": {
+                          "id": 53,
+                          "type": "Lit",
+                          "value": {
+                            "type": "Atom",
+                            "value": "Num",
+                          },
+                        },
+                      },
+                      "type": "extension",
+                      "value": {
+                        "id": 77,
+                        "type": "Lit",
+                        "value": {
+                          "type": "Atom",
+                          "value": "Num",
+                        },
+                      },
+                    },
+                    "type": "Row",
+                  },
+                  "func": {
+                    "id": 88,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "Schema",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "id": 90,
+                  "type": "App",
+                },
+              },
+            },
+            "type": "extension",
+            "value": {
+              "id": 129,
+              "type": "Neutral",
+              "value": {
+                "arg": {
+                  "id": 127,
+                  "row": {
+                    "label": "x",
+                    "row": {
+                      "label": "y",
+                      "row": {
+                        "type": "empty",
+                      },
+                      "type": "extension",
+                      "value": {
+                        "id": 122,
+                        "type": "Lit",
+                        "value": {
+                          "type": "Atom",
+                          "value": "Num",
+                        },
+                      },
+                    },
+                    "type": "extension",
+                    "value": {
+                      "id": 124,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Num",
+                      },
+                    },
+                  },
+                  "type": "Row",
+                },
+                "func": {
+                  "id": 126,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Schema",
+                  },
+                },
+                "icit": "Explicit",
+                "id": 128,
+                "type": "App",
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "func": {
+          "id": 136,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Schema",
+          },
+        },
+        "icit": "Explicit",
+        "id": 138,
+        "type": "App",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`Inference: Structs > dependent structs > nested shadowing dependencies: { overriden: 1, foo: { inner: :overriden }, bar: { overriden: "hello", inner: :overriden } 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "?11 ~~ ?14",
+      "?12 ~~ ?15",
+      ""hello" ~~ ?11",
+      "String ~~ ?12",
+      "Struct [ overriden: "hello", inner: ?2 ] ~~ ?8",
+      "Schema [ overriden: String, inner: ?12 ] ~~ ?9",
+      "?2 ~~ ?17",
+      "?3 ~~ ?18",
+      "Struct [ inner: ?2 ] ~~ ?5",
+      "Schema [ inner: ?3 ] ~~ ?6",
+      "1 ~~ ?2",
+      "Num ~~ ?3",
+    ],
+    "term": "Struct [ overriden: 1, foo: Struct [ inner: :overriden ], bar: Struct [ overriden: "hello", inner: :overriden ] ]",
+    "type": "Schema [ overriden: Num, foo: Schema [ inner: ?3 ], bar: Schema [ overriden: String, inner: ?12 ] ]",
+  },
+}
+`;
+
+exports[`Inference: Structs > dependent structs > nested shadowing dependencies: { overriden: 1, foo: { inner: :overriden }, bar: { overriden: "hello", inner: :overriden } 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 37,
+          "type": "Neutral",
+          "value": {
+            "id": 36,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 11,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 43,
+          "type": "Neutral",
+          "value": {
+            "id": 42,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 14,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 39,
+          "type": "Neutral",
+          "value": {
+            "id": 38,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 12,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 45,
+          "type": "Neutral",
+          "value": {
+            "id": 44,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 15,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 47,
+          "type": "Lit",
+          "value": {
+            "type": "String",
+            "value": "hello",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 37,
+          "type": "Neutral",
+          "value": {
+            "id": 36,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 11,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 46,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 39,
+          "type": "Neutral",
+          "value": {
+            "id": 38,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 12,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "arg": {
+            "id": 54,
+            "row": {
+              "label": "overriden",
+              "row": {
+                "label": "inner",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "id": 19,
+                  "type": "Neutral",
+                  "value": {
+                    "id": 18,
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 0,
+                      "type": "Meta",
+                      "val": 2,
+                    },
+                  },
+                },
+              },
+              "type": "extension",
+              "value": {
+                "id": 53,
+                "type": "Lit",
+                "value": {
+                  "type": "String",
+                  "value": "hello",
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 55,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Struct",
+            },
+          },
+          "icit": "Explicit",
+          "id": 56,
+          "type": "App",
+        },
+        "lvl": 0,
+        "right": {
+          "id": 31,
+          "type": "Neutral",
+          "value": {
+            "id": 30,
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 8,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 51,
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "id": 49,
+              "row": {
+                "label": "overriden",
+                "row": {
+                  "label": "inner",
+                  "row": {
+                    "type": "empty",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 39,
+                    "type": "Neutral",
+                    "value": {
+                      "id": 38,
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 0,
+                        "type": "Meta",
+                        "val": 12,
+                      },
+                    },
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "id": 46,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "String",
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "id": 48,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Schema",
+              },
+            },
+            "icit": "Explicit",
+            "id": 50,
+            "type": "App",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 33,
+          "type": "Neutral",
+          "value": {
+            "id": 32,
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 9,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 19,
+          "type": "Neutral",
+          "value": {
+            "id": 18,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 60,
+          "type": "Neutral",
+          "value": {
+            "id": 59,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 17,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 62,
+          "type": "Neutral",
+          "value": {
+            "id": 61,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 18,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "arg": {
+            "id": 68,
+            "row": {
+              "label": "inner",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "id": 19,
+                "type": "Neutral",
+                "value": {
+                  "id": 18,
+                  "type": "Var",
+                  "variable": {
+                    "lvl": 0,
+                    "type": "Meta",
+                    "val": 2,
+                  },
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 69,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Struct",
+            },
+          },
+          "icit": "Explicit",
+          "id": 70,
+          "type": "App",
+        },
+        "lvl": 0,
+        "right": {
+          "id": 25,
+          "type": "Neutral",
+          "value": {
+            "id": 24,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 5,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 66,
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "id": 64,
+              "row": {
+                "label": "inner",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "id": 21,
+                  "type": "Neutral",
+                  "value": {
+                    "id": 20,
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 0,
+                      "type": "Meta",
+                      "val": 3,
+                    },
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "id": 63,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Schema",
+              },
+            },
+            "icit": "Explicit",
+            "id": 65,
+            "type": "App",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 27,
+          "type": "Neutral",
+          "value": {
+            "id": 26,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 72,
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 19,
+          "type": "Neutral",
+          "value": {
+            "id": 18,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 71,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "10": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 10,
+        },
+      },
+      "11": {
+        "ann": {
+          "id": 35,
+          "type": "Neutral",
+          "value": {
+            "id": 34,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 10,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 11,
+        },
+      },
+      "12": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 12,
+        },
+      },
+      "13": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
           "lvl": 1,
           "type": "Meta",
+          "val": 13,
+        },
+      },
+      "14": {
+        "ann": {
+          "id": 41,
+          "type": "Neutral",
+          "value": {
+            "id": 40,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 13,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 14,
+        },
+      },
+      "15": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 15,
+        },
+      },
+      "16": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 16,
+        },
+      },
+      "17": {
+        "ann": {
+          "id": 58,
+          "type": "Neutral",
+          "value": {
+            "id": 57,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 16,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 17,
+        },
+      },
+      "18": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 18,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 17,
+          "type": "Neutral",
+          "value": {
+            "id": 16,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "id": 23,
+          "type": "Neutral",
+          "value": {
+            "id": 22,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 6,
+        },
+      },
+      "7": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 7,
+        },
+      },
+      "8": {
+        "ann": {
+          "id": 29,
+          "type": "Neutral",
+          "value": {
+            "id": 28,
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 7,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
           "val": 8,
+        },
+      },
+      "9": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 9,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "id": 824,
+        "row": {
+          "label": "overriden",
+          "row": {
+            "label": "foo",
+            "row": {
+              "label": "bar",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "arg": {
+                  "id": 816,
+                  "row": {
+                    "label": "overriden",
+                    "row": {
+                      "label": "inner",
+                      "row": {
+                        "type": "empty",
+                      },
+                      "type": "extension",
+                      "value": {
+                        "id": 813,
+                        "type": "Var",
+                        "variable": {
+                          "name": "overriden",
+                          "type": "Label",
+                        },
+                      },
+                    },
+                    "type": "extension",
+                    "value": {
+                      "id": 814,
+                      "type": "Lit",
+                      "value": {
+                        "type": "String",
+                        "value": "hello",
+                      },
+                    },
+                  },
+                  "type": "Row",
+                },
+                "func": {
+                  "id": 815,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Struct",
+                  },
+                },
+                "icit": "Explicit",
+                "id": 817,
+                "type": "App",
+              },
+            },
+            "type": "extension",
+            "value": {
+              "arg": {
+                "id": 820,
+                "row": {
+                  "label": "inner",
+                  "row": {
+                    "type": "empty",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 818,
+                    "type": "Var",
+                    "variable": {
+                      "name": "overriden",
+                      "type": "Label",
+                    },
+                  },
+                },
+                "type": "Row",
+              },
+              "func": {
+                "id": 819,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Struct",
+                },
+              },
+              "icit": "Explicit",
+              "id": 821,
+              "type": "App",
+            },
+          },
+          "type": "extension",
+          "value": {
+            "id": 822,
+            "type": "Lit",
+            "value": {
+              "type": "Num",
+              "value": 1,
+            },
+          },
+        },
+        "type": "Row",
+      },
+      "func": {
+        "id": 823,
+        "type": "Lit",
+        "value": {
+          "type": "Atom",
+          "value": "Struct",
+        },
+      },
+      "icit": "Explicit",
+      "id": 825,
+      "type": "App",
+    },
+    "type": {
+      "id": 76,
+      "type": "Neutral",
+      "value": {
+        "arg": {
+          "id": 74,
+          "row": {
+            "label": "overriden",
+            "row": {
+              "label": "foo",
+              "row": {
+                "label": "bar",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "id": 51,
+                  "type": "Neutral",
+                  "value": {
+                    "arg": {
+                      "id": 49,
+                      "row": {
+                        "label": "overriden",
+                        "row": {
+                          "label": "inner",
+                          "row": {
+                            "type": "empty",
+                          },
+                          "type": "extension",
+                          "value": {
+                            "id": 39,
+                            "type": "Neutral",
+                            "value": {
+                              "id": 38,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 0,
+                                "type": "Meta",
+                                "val": 12,
+                              },
+                            },
+                          },
+                        },
+                        "type": "extension",
+                        "value": {
+                          "id": 46,
+                          "type": "Lit",
+                          "value": {
+                            "type": "Atom",
+                            "value": "String",
+                          },
+                        },
+                      },
+                      "type": "Row",
+                    },
+                    "func": {
+                      "id": 48,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Schema",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "id": 50,
+                    "type": "App",
+                  },
+                },
+              },
+              "type": "extension",
+              "value": {
+                "id": 66,
+                "type": "Neutral",
+                "value": {
+                  "arg": {
+                    "id": 64,
+                    "row": {
+                      "label": "inner",
+                      "row": {
+                        "type": "empty",
+                      },
+                      "type": "extension",
+                      "value": {
+                        "id": 21,
+                        "type": "Neutral",
+                        "value": {
+                          "id": 20,
+                          "type": "Var",
+                          "variable": {
+                            "lvl": 0,
+                            "type": "Meta",
+                            "val": 3,
+                          },
+                        },
+                      },
+                    },
+                    "type": "Row",
+                  },
+                  "func": {
+                    "id": 63,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "Schema",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "id": 65,
+                  "type": "App",
+                },
+              },
+            },
+            "type": "extension",
+            "value": {
+              "id": 71,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Num",
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "func": {
+          "id": 73,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Schema",
+          },
+        },
+        "icit": "Explicit",
+        "id": 75,
+        "type": "App",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 1`] = `
+{
+  "displays": {
+    "constraints": [
+      ""hello" ~~ ?5",
+      "String ~~ ?6",
+      "1 ~~ ?2",
+      "Num ~~ ?3",
+    ],
+    "term": "Struct [ x: 1, y: "hello" ]",
+    "type": "Schema [ x: Num, y: String ]",
+  },
+}
+`;
+
+exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 29,
+          "type": "Lit",
+          "value": {
+            "type": "String",
+            "value": "hello",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 25,
+          "type": "Neutral",
+          "value": {
+            "id": 24,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 5,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 28,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 27,
+          "type": "Neutral",
+          "value": {
+            "id": 26,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 31,
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 19,
+          "type": "Neutral",
+          "value": {
+            "id": 18,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 30,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 17,
+          "type": "Neutral",
+          "value": {
+            "id": 16,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "id": 23,
+          "type": "Neutral",
+          "value": {
+            "id": 22,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 6,
         },
       },
     },
@@ -275,11 +4656,11 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
       "type": "App",
     },
     "type": {
-      "id": 31,
+      "id": 35,
       "type": "Neutral",
       "value": {
         "arg": {
-          "id": 29,
+          "id": 33,
           "row": {
             "label": "x",
             "row": {
@@ -289,7 +4670,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
               },
               "type": "extension",
               "value": {
-                "id": 24,
+                "id": 28,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -299,7 +4680,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
             },
             "type": "extension",
             "value": {
-              "id": 26,
+              "id": 30,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -310,7 +4691,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
           "type": "Row",
         },
         "func": {
-          "id": 28,
+          "id": 32,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -318,7 +4699,1069 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
           },
         },
         "icit": "Explicit",
-        "id": 30,
+        "id": 34,
+        "type": "App",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A" } 1`] = `
+{
+  "displays": {
+    "constraints": [
+      ""A" ~~ ?5",
+      "String ~~ ?6",
+      "2 ~~ ?11",
+      "Num ~~ ?12",
+      "1 ~~ ?8",
+      "Num ~~ ?9",
+      "Struct [ x: 1, y: 2 ] ~~ ?2",
+      "Schema [ x: Num, y: Num ] ~~ ?3",
+    ],
+    "term": "Struct [ point: Struct [ x: 1, y: 2 ], label: "A" ]",
+    "type": "Schema [ point: Schema [ x: Num, y: Num ], label: String ]",
+  },
+}
+`;
+
+exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A" } 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 29,
+          "type": "Lit",
+          "value": {
+            "type": "String",
+            "value": "A",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 25,
+          "type": "Neutral",
+          "value": {
+            "id": 24,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 5,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 28,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 27,
+          "type": "Neutral",
+          "value": {
+            "id": 26,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 43,
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 2,
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 39,
+          "type": "Neutral",
+          "value": {
+            "id": 38,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 11,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 42,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 41,
+          "type": "Neutral",
+          "value": {
+            "id": 40,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 12,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 45,
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 33,
+          "type": "Neutral",
+          "value": {
+            "id": 32,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 8,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 44,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 35,
+          "type": "Neutral",
+          "value": {
+            "id": 34,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 9,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "arg": {
+            "id": 53,
+            "row": {
+              "label": "x",
+              "row": {
+                "label": "y",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "id": 52,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Num",
+                    "value": 2,
+                  },
+                },
+              },
+              "type": "extension",
+              "value": {
+                "id": 51,
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 1,
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 54,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Struct",
+            },
+          },
+          "icit": "Explicit",
+          "id": 55,
+          "type": "App",
+        },
+        "lvl": 0,
+        "right": {
+          "id": 19,
+          "type": "Neutral",
+          "value": {
+            "id": 18,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 49,
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "id": 47,
+              "row": {
+                "label": "x",
+                "row": {
+                  "label": "y",
+                  "row": {
+                    "type": "empty",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 42,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "Num",
+                    },
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "id": 44,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "id": 46,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Schema",
+              },
+            },
+            "icit": "Explicit",
+            "id": 48,
+            "type": "App",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "10": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 10,
+        },
+      },
+      "11": {
+        "ann": {
+          "id": 37,
+          "type": "Neutral",
+          "value": {
+            "id": 36,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 10,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 11,
+        },
+      },
+      "12": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 12,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 17,
+          "type": "Neutral",
+          "value": {
+            "id": 16,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "id": 23,
+          "type": "Neutral",
+          "value": {
+            "id": 22,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 6,
+        },
+      },
+      "7": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 7,
+        },
+      },
+      "8": {
+        "ann": {
+          "id": 31,
+          "type": "Neutral",
+          "value": {
+            "id": 30,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 7,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 8,
+        },
+      },
+      "9": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 9,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "id": 820,
+        "row": {
+          "label": "point",
+          "row": {
+            "label": "label",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "id": 813,
+              "type": "Lit",
+              "value": {
+                "type": "String",
+                "value": "A",
+              },
+            },
+          },
+          "type": "extension",
+          "value": {
+            "arg": {
+              "id": 817,
+              "row": {
+                "label": "x",
+                "row": {
+                  "label": "y",
+                  "row": {
+                    "type": "empty",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 814,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Num",
+                      "value": 2,
+                    },
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "id": 815,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Num",
+                    "value": 1,
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "id": 816,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Struct",
+              },
+            },
+            "icit": "Explicit",
+            "id": 818,
+            "type": "App",
+          },
+        },
+        "type": "Row",
+      },
+      "func": {
+        "id": 819,
+        "type": "Lit",
+        "value": {
+          "type": "Atom",
+          "value": "Struct",
+        },
+      },
+      "icit": "Explicit",
+      "id": 821,
+      "type": "App",
+    },
+    "type": {
+      "id": 59,
+      "type": "Neutral",
+      "value": {
+        "arg": {
+          "id": 57,
+          "row": {
+            "label": "point",
+            "row": {
+              "label": "label",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "id": 28,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "String",
+                },
+              },
+            },
+            "type": "extension",
+            "value": {
+              "id": 49,
+              "type": "Neutral",
+              "value": {
+                "arg": {
+                  "id": 47,
+                  "row": {
+                    "label": "x",
+                    "row": {
+                      "label": "y",
+                      "row": {
+                        "type": "empty",
+                      },
+                      "type": "extension",
+                      "value": {
+                        "id": 42,
+                        "type": "Lit",
+                        "value": {
+                          "type": "Atom",
+                          "value": "Num",
+                        },
+                      },
+                    },
+                    "type": "extension",
+                    "value": {
+                      "id": 44,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Num",
+                      },
+                    },
+                  },
+                  "type": "Row",
+                },
+                "func": {
+                  "id": 46,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Schema",
+                  },
+                },
+                "icit": "Explicit",
+                "id": 48,
+                "type": "App",
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "func": {
+          "id": 56,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Schema",
+          },
+        },
+        "icit": "Explicit",
+        "id": 58,
+        "type": "App",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello" } 1`] = `
+{
+  "displays": {
+    "constraints": [
+      ""hello" ~~ ?5",
+      "String ~~ ?6",
+      "Num ~~ Num",
+      "Num ~~ Num",
+      "3 ~~ ?2",
+      "Num ~~ ?3",
+    ],
+    "term": "Struct [ x: + 1 2, y: "hello" ]",
+    "type": "Schema [ x: Num, y: String ]",
+  },
+}
+`;
+
+exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello" } 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 29,
+          "type": "Lit",
+          "value": {
+            "type": "String",
+            "value": "hello",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 25,
+          "type": "Neutral",
+          "value": {
+            "id": 24,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 5,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 28,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 27,
+          "type": "Neutral",
+          "value": {
+            "id": 26,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 30,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 6,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 34,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 32,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 44,
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 3,
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 19,
+          "type": "Neutral",
+          "value": {
+            "id": 18,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 36,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 17,
+          "type": "Neutral",
+          "value": {
+            "id": 16,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "id": 23,
+          "type": "Neutral",
+          "value": {
+            "id": 22,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 6,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "id": 820,
+        "row": {
+          "label": "x",
+          "row": {
+            "label": "y",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "id": 813,
+              "type": "Lit",
+              "value": {
+                "type": "String",
+                "value": "hello",
+              },
+            },
+          },
+          "type": "extension",
+          "value": {
+            "arg": {
+              "id": 817,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 2,
+              },
+            },
+            "func": {
+              "arg": {
+                "id": 815,
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 1,
+                },
+              },
+              "func": {
+                "id": 814,
+                "type": "Var",
+                "variable": {
+                  "name": "+",
+                  "type": "Free",
+                },
+              },
+              "icit": "Explicit",
+              "id": 816,
+              "type": "App",
+            },
+            "icit": "Explicit",
+            "id": 818,
+            "type": "App",
+          },
+        },
+        "type": "Row",
+      },
+      "func": {
+        "id": 819,
+        "type": "Lit",
+        "value": {
+          "type": "Atom",
+          "value": "Struct",
+        },
+      },
+      "icit": "Explicit",
+      "id": 821,
+      "type": "App",
+    },
+    "type": {
+      "id": 48,
+      "type": "Neutral",
+      "value": {
+        "arg": {
+          "id": 46,
+          "row": {
+            "label": "x",
+            "row": {
+              "label": "y",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "id": 28,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "String",
+                },
+              },
+            },
+            "type": "extension",
+            "value": {
+              "id": 36,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Num",
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "func": {
+          "id": 45,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Schema",
+          },
+        },
+        "icit": "Explicit",
+        "id": 47,
         "type": "App",
       },
     },

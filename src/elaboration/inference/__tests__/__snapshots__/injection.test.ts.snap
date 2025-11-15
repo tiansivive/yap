@@ -5,7 +5,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 1`] = `
   "displays": {
     "constraints": [
       "1 ~~ ?2",
-      "Num ~~ ?4",
+      "Num ~~ ?3",
     ],
     "term": "{ Struct [ x: 1 ] | y = 2 }",
     "type": "Schema [ y: Num, x: Num ]",
@@ -19,7 +19,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
     "constraints": [
       {
         "left": {
-          "id": 22,
+          "id": 24,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -28,19 +28,23 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 18,
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 2,
+          "id": 20,
+          "type": "Neutral",
+          "value": {
+            "id": 19,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
           },
         },
         "type": "assign",
       },
       {
         "left": {
-          "id": 21,
+          "id": 23,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -49,12 +53,16 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 20,
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 4,
+          "id": 22,
+          "type": "Neutral",
+          "value": {
+            "id": 21,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
           },
         },
         "type": "assign",
@@ -78,12 +86,16 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
       },
       "2": {
         "ann": {
-          "id": 17,
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 1,
+          "id": 18,
+          "type": "Neutral",
+          "value": {
+            "id": 17,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
           },
         },
         "meta": {
@@ -105,22 +117,6 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
           "lvl": 0,
           "type": "Meta",
           "val": 3,
-        },
-      },
-      "4": {
-        "ann": {
-          "id": 19,
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 3,
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 4,
         },
       },
     },
@@ -171,7 +167,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
     },
     "type": {
       "arg": {
-        "id": 27,
+        "id": 29,
         "row": {
           "label": "y",
           "row": {
@@ -181,7 +177,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
             },
             "type": "extension",
             "value": {
-              "id": 21,
+              "id": 23,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -202,7 +198,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
         "type": "Row",
       },
       "func": {
-        "id": 23,
+        "id": 25,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -210,7 +206,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
         },
       },
       "icit": "Explicit",
-      "id": 28,
+      "id": 30,
       "type": "App",
     },
     "typedTerms": {},
