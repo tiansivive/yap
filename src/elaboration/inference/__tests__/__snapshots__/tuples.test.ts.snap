@@ -224,7 +224,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
     },
     "term": {
       "arg": {
-        "id": 816,
+        "id": 818,
         "row": {
           "label": "0",
           "row": {
@@ -234,7 +234,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
             },
             "type": "extension",
             "value": {
-              "id": 813,
+              "id": 815,
               "type": "Lit",
               "value": {
                 "type": "Num",
@@ -244,7 +244,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
           },
           "type": "extension",
           "value": {
-            "id": 814,
+            "id": 816,
             "type": "Lit",
             "value": {
               "type": "Num",
@@ -255,7 +255,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
         "type": "Row",
       },
       "func": {
-        "id": 815,
+        "id": 817,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -263,7 +263,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
         },
       },
       "icit": "Explicit",
-      "id": 817,
+      "id": 819,
       "type": "App",
     },
     "type": {

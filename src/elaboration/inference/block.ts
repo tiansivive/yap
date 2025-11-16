@@ -11,6 +11,7 @@ import * as Lit from "@yap/shared/literals";
 import { Liquid } from "@yap/verification/modalities";
 
 import * as Sub from "@yap/elaboration/unification/substitution";
+import { update } from "@yap/utils";
 
 type Block = Extract<Src.Term, { type: "block" }>;
 
@@ -38,7 +39,7 @@ export const infer = (block: Block) =>
 					// const ctx = yield* V2.ask();
 					// const { zonker, metas, constraints } = yield* V2.listen();
 
-					// Debugging info
+					// // Debugging info
 					// console.log("LET BINDING");
 					// console.log("ZONKER:\n", Sub.display(zonker, metas));
 					// console.log("\n\nTERM:\n", EB.Display.Statement(r, { ...ctx, zonker: Sub.empty, metas }));
@@ -47,11 +48,21 @@ export const infer = (block: Block) =>
 					// console.log("\n\nCONSTRAINTS:");
 					// constraints.forEach(c => {
 					// 	console.log("--------------------");
-					// 	console.log(EB.Display.Constraint(c, { ...ctx, zonker: Sub.empty, metas}).replace(" ~~ ", "\n"));
+					// 	console.log(EB.Display.Constraint(c, { ...ctx, zonker: Sub.empty, metas }).replace(" ~~ ", "\n"));
 					// });
 
 					return yield* V2.local(
-						_ => EB.bind(next, { type: "Let", variable: stmt.variable }, r.annotation),
+						_ => {
+							// First evaluate the current let body in a context extended with itself, allowing for recursion
+							// Then extend the context for the remaining statements with the evaluated let binding
+							const recursiveCtx = EB.bind(next, { type: "Let", variable: stmt.variable }, r.annotation);
+							const entry: EB.Context["env"][number] = {
+								nf: NF.evaluate(recursiveCtx, r.value),
+								type: [{ type: "Let", variable: stmt.variable }, "source", r.annotation],
+								name: { type: "Let", variable: stmt.variable },
+							};
+							return update(next, "env", env => [entry, ...env]);
+						},
 						V2.Do(function* () {
 							const [tm, ty, [vu, ...rus]] = yield* V2.pure(recurse(rest, [...results, r]));
 							yield* V2.tell("constraint", { type: "usage", expected: Q.Many, computed: vu });

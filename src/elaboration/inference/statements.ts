@@ -70,15 +70,6 @@ export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
 
 infer.gen = F.flow(infer, V2.pure);
 
-// return V2.Do(function* () {
-// 	const ctx = yield* V2.ask();
-// 	const { result, binders, metas, constraints, types } = V2.Do(() => letdec(dec))(ctx);
-
-// 	const stmt = yield* V2.liftE(result)
-
-// 	return [stmt, stmt.annotation, Q.noUsage(ctx.env.length)] satisfies ElaboratedStmt;
-// })
-
 export const letdec = function* (
 	dec: Extract<EB.Statement, { type: "Let" }>,
 ): Generator<V2.Elaboration<any>, [Extract<EB.Statement, { type: "Let" }>, EB.Context], any> {

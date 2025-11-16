@@ -293,7 +293,7 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
     },
     "term": {
       "arg": {
-        "id": 820,
+        "id": 822,
         "row": {
           "label": "y",
           "row": {
@@ -303,7 +303,7 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
             },
             "type": "extension",
             "value": {
-              "id": 813,
+              "id": 815,
               "type": "Lit",
               "value": {
                 "type": "Num",
@@ -314,7 +314,7 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
           "type": "extension",
           "value": {
             "arg": {
-              "id": 817,
+              "id": 819,
               "type": "Lit",
               "value": {
                 "type": "Num",
@@ -323,7 +323,7 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
             },
             "func": {
               "arg": {
-                "id": 815,
+                "id": 817,
                 "type": "Var",
                 "variable": {
                   "name": "x",
@@ -331,7 +331,7 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
                 },
               },
               "func": {
-                "id": 814,
+                "id": 816,
                 "type": "Var",
                 "variable": {
                   "name": "+",
@@ -339,18 +339,18 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
                 },
               },
               "icit": "Explicit",
-              "id": 816,
+              "id": 818,
               "type": "App",
             },
             "icit": "Explicit",
-            "id": 818,
+            "id": 820,
             "type": "App",
           },
         },
         "type": "Row",
       },
       "func": {
-        "id": 819,
+        "id": 821,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -358,7 +358,7 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
         },
       },
       "icit": "Explicit",
-      "id": 821,
+      "id": 823,
       "type": "App",
     },
     "type": {
@@ -707,7 +707,7 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
     },
     "term": {
       "arg": {
-        "id": 820,
+        "id": 822,
         "row": {
           "label": "x",
           "row": {
@@ -718,7 +718,7 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
             "type": "extension",
             "value": {
               "arg": {
-                "id": 816,
+                "id": 818,
                 "type": "Lit",
                 "value": {
                   "type": "Num",
@@ -727,7 +727,7 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
               },
               "func": {
                 "arg": {
-                  "id": 814,
+                  "id": 816,
                   "type": "Var",
                   "variable": {
                     "name": "x",
@@ -735,7 +735,7 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
                   },
                 },
                 "func": {
-                  "id": 813,
+                  "id": 815,
                   "type": "Var",
                   "variable": {
                     "name": "+",
@@ -743,17 +743,17 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
                   },
                 },
                 "icit": "Explicit",
-                "id": 815,
+                "id": 817,
                 "type": "App",
               },
               "icit": "Explicit",
-              "id": 817,
+              "id": 819,
               "type": "App",
             },
           },
           "type": "extension",
           "value": {
-            "id": 818,
+            "id": 820,
             "type": "Lit",
             "value": {
               "type": "Num",
@@ -764,7 +764,7 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
         "type": "Row",
       },
       "func": {
-        "id": 819,
+        "id": 821,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -772,7 +772,7 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
         },
       },
       "icit": "Explicit",
-      "id": 821,
+      "id": 823,
       "type": "App",
     },
     "type": {
@@ -1190,7 +1190,7 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
     },
     "term": {
       "arg": {
-        "id": 824,
+        "id": 826,
         "row": {
           "label": "a",
           "row": {
@@ -1201,7 +1201,7 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
             "type": "extension",
             "value": {
               "arg": {
-                "id": 816,
+                "id": 818,
                 "type": "Lit",
                 "value": {
                   "type": "Num",
@@ -1210,7 +1210,7 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
               },
               "func": {
                 "arg": {
-                  "id": 814,
+                  "id": 816,
                   "type": "Var",
                   "variable": {
                     "name": "a",
@@ -1218,7 +1218,7 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
                   },
                 },
                 "func": {
-                  "id": 813,
+                  "id": 815,
                   "type": "Var",
                   "variable": {
                     "name": "+",
@@ -1226,18 +1226,18 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
                   },
                 },
                 "icit": "Explicit",
-                "id": 815,
+                "id": 817,
                 "type": "App",
               },
               "icit": "Explicit",
-              "id": 817,
+              "id": 819,
               "type": "App",
             },
           },
           "type": "extension",
           "value": {
             "arg": {
-              "id": 821,
+              "id": 823,
               "type": "Lit",
               "value": {
                 "type": "Num",
@@ -1246,7 +1246,7 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
             },
             "func": {
               "arg": {
-                "id": 819,
+                "id": 821,
                 "type": "Var",
                 "variable": {
                   "name": "b",
@@ -1254,7 +1254,7 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
                 },
               },
               "func": {
-                "id": 818,
+                "id": 820,
                 "type": "Var",
                 "variable": {
                   "name": "+",
@@ -1262,18 +1262,18 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
                 },
               },
               "icit": "Explicit",
-              "id": 820,
+              "id": 822,
               "type": "App",
             },
             "icit": "Explicit",
-            "id": 822,
+            "id": 824,
             "type": "App",
           },
         },
         "type": "Row",
       },
       "func": {
-        "id": 823,
+        "id": 825,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -1281,7 +1281,7 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
         },
       },
       "icit": "Explicit",
-      "id": 825,
+      "id": 827,
       "type": "App",
     },
     "type": {
@@ -1524,6 +1524,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                               },
                             },
                           },
+                          "isAnnotation": false,
                           "multiplicity": "Many",
                           "nf": {
                             "id": 31,
@@ -1536,6 +1537,15 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                 "type": "Meta",
                                 "val": 8,
                               },
+                            },
+                          },
+                          "term": {
+                            "id": 815,
+                            "type": "Var",
+                            "variable": {
+                              "lvl": 0,
+                              "type": "Meta",
+                              "val": 8,
                             },
                           },
                         },
@@ -1553,6 +1563,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                               },
                             },
                           },
+                          "isAnnotation": false,
                           "multiplicity": "Many",
                           "nf": {
                             "id": 37,
@@ -1565,6 +1576,15 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                 "type": "Meta",
                                 "val": 11,
                               },
+                            },
+                          },
+                          "term": {
+                            "id": 816,
+                            "type": "Var",
+                            "variable": {
+                              "lvl": 1,
+                              "type": "Meta",
+                              "val": 11,
                             },
                           },
                         },
@@ -1582,6 +1602,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                               },
                             },
                           },
+                          "isAnnotation": false,
                           "multiplicity": "Many",
                           "nf": {
                             "id": 25,
@@ -1594,6 +1615,15 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                 "type": "Meta",
                                 "val": 5,
                               },
+                            },
+                          },
+                          "term": {
+                            "id": 814,
+                            "type": "Var",
+                            "variable": {
+                              "lvl": 1,
+                              "type": "Meta",
+                              "val": 5,
                             },
                           },
                         },
@@ -1611,6 +1641,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                               },
                             },
                           },
+                          "isAnnotation": false,
                           "multiplicity": "Many",
                           "nf": {
                             "id": 19,
@@ -1625,15 +1656,24 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                               },
                             },
                           },
+                          "term": {
+                            "id": 813,
+                            "type": "Var",
+                            "variable": {
+                              "lvl": 0,
+                              "type": "Meta",
+                              "val": 2,
+                            },
+                          },
                         },
                       },
                       "zonker": {},
                     },
                     "term": {
-                      "id": 823,
+                      "id": 827,
                       "label": "y",
                       "term": {
-                        "id": 822,
+                        "id": 826,
                         "type": "Var",
                         "variable": {
                           "index": 0,
@@ -1862,6 +1902,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                               },
                             },
                           },
+                          "isAnnotation": false,
                           "multiplicity": "Many",
                           "nf": {
                             "id": 31,
@@ -1874,6 +1915,15 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                 "type": "Meta",
                                 "val": 8,
                               },
+                            },
+                          },
+                          "term": {
+                            "id": 815,
+                            "type": "Var",
+                            "variable": {
+                              "lvl": 0,
+                              "type": "Meta",
+                              "val": 8,
                             },
                           },
                         },
@@ -1891,6 +1941,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                               },
                             },
                           },
+                          "isAnnotation": false,
                           "multiplicity": "Many",
                           "nf": {
                             "id": 37,
@@ -1903,6 +1954,15 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                 "type": "Meta",
                                 "val": 11,
                               },
+                            },
+                          },
+                          "term": {
+                            "id": 816,
+                            "type": "Var",
+                            "variable": {
+                              "lvl": 1,
+                              "type": "Meta",
+                              "val": 11,
                             },
                           },
                         },
@@ -1920,6 +1980,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                               },
                             },
                           },
+                          "isAnnotation": false,
                           "multiplicity": "Many",
                           "nf": {
                             "id": 25,
@@ -1932,6 +1993,15 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                 "type": "Meta",
                                 "val": 5,
                               },
+                            },
+                          },
+                          "term": {
+                            "id": 814,
+                            "type": "Var",
+                            "variable": {
+                              "lvl": 1,
+                              "type": "Meta",
+                              "val": 5,
                             },
                           },
                         },
@@ -1949,6 +2019,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                               },
                             },
                           },
+                          "isAnnotation": false,
                           "multiplicity": "Many",
                           "nf": {
                             "id": 19,
@@ -1963,15 +2034,24 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                               },
                             },
                           },
+                          "term": {
+                            "id": 813,
+                            "type": "Var",
+                            "variable": {
+                              "lvl": 0,
+                              "type": "Meta",
+                              "val": 2,
+                            },
+                          },
                         },
                       },
                       "zonker": {},
                     },
                     "term": {
-                      "id": 834,
+                      "id": 838,
                       "label": "x",
                       "term": {
-                        "id": 833,
+                        "id": 837,
                         "type": "Var",
                         "variable": {
                           "index": 0,
@@ -2111,6 +2191,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                       },
                                     },
                                   },
+                                  "isAnnotation": false,
                                   "multiplicity": "Many",
                                   "nf": {
                                     "id": 25,
@@ -2123,6 +2204,15 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                         "type": "Meta",
                                         "val": 5,
                                       },
+                                    },
+                                  },
+                                  "term": {
+                                    "id": 814,
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 1,
+                                      "type": "Meta",
+                                      "val": 5,
                                     },
                                   },
                                 },
@@ -2140,6 +2230,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                       },
                                     },
                                   },
+                                  "isAnnotation": false,
                                   "multiplicity": "Many",
                                   "nf": {
                                     "id": 19,
@@ -2154,15 +2245,24 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                       },
                                     },
                                   },
+                                  "term": {
+                                    "id": 813,
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 0,
+                                      "type": "Meta",
+                                      "val": 2,
+                                    },
+                                  },
                                 },
                               },
                               "zonker": {},
                             },
                             "term": {
-                              "id": 841,
+                              "id": 845,
                               "label": "y",
                               "term": {
-                                "id": 840,
+                                "id": 844,
                                 "type": "Var",
                                 "variable": {
                                   "index": 0,
@@ -2251,6 +2351,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                     },
                                   },
                                 },
+                                "isAnnotation": false,
                                 "multiplicity": "Many",
                                 "nf": {
                                   "id": 25,
@@ -2263,6 +2364,15 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                       "type": "Meta",
                                       "val": 5,
                                     },
+                                  },
+                                },
+                                "term": {
+                                  "id": 814,
+                                  "type": "Var",
+                                  "variable": {
+                                    "lvl": 1,
+                                    "type": "Meta",
+                                    "val": 5,
                                   },
                                 },
                               },
@@ -2280,6 +2390,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                     },
                                   },
                                 },
+                                "isAnnotation": false,
                                 "multiplicity": "Many",
                                 "nf": {
                                   "id": 19,
@@ -2294,15 +2405,24 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                                     },
                                   },
                                 },
+                                "term": {
+                                  "id": 813,
+                                  "type": "Var",
+                                  "variable": {
+                                    "lvl": 0,
+                                    "type": "Meta",
+                                    "val": 2,
+                                  },
+                                },
                               },
                             },
                             "zonker": {},
                           },
                           "term": {
-                            "id": 839,
+                            "id": 843,
                             "label": "x",
                             "term": {
-                              "id": 838,
+                              "id": 842,
                               "type": "Var",
                               "variable": {
                                 "index": 0,
@@ -3023,7 +3143,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
     },
     "term": {
       "arg": {
-        "id": 848,
+        "id": 854,
         "row": {
           "label": "point",
           "row": {
@@ -3034,7 +3154,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
             "type": "extension",
             "value": {
               "arg": {
-                "id": 836,
+                "id": 840,
                 "row": {
                   "label": "a",
                   "row": {
@@ -3045,7 +3165,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                     "type": "extension",
                     "value": {
                       "arg": {
-                        "id": 820,
+                        "id": 824,
                         "type": "Lit",
                         "value": {
                           "type": "Num",
@@ -3054,10 +3174,10 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                       },
                       "func": {
                         "arg": {
-                          "id": 816,
+                          "id": 820,
                           "label": "y",
                           "term": {
-                            "id": 814,
+                            "id": 818,
                             "type": "Var",
                             "variable": {
                               "name": "point",
@@ -3067,7 +3187,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                           "type": "Proj",
                         },
                         "func": {
-                          "id": 813,
+                          "id": 817,
                           "type": "Var",
                           "variable": {
                             "name": "/",
@@ -3075,18 +3195,18 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                           },
                         },
                         "icit": "Explicit",
-                        "id": 819,
+                        "id": 823,
                         "type": "App",
                       },
                       "icit": "Explicit",
-                      "id": 821,
+                      "id": 825,
                       "type": "App",
                     },
                   },
                   "type": "extension",
                   "value": {
                     "arg": {
-                      "id": 831,
+                      "id": 835,
                       "type": "Lit",
                       "value": {
                         "type": "Num",
@@ -3095,10 +3215,10 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                     },
                     "func": {
                       "arg": {
-                        "id": 827,
+                        "id": 831,
                         "label": "x",
                         "term": {
-                          "id": 825,
+                          "id": 829,
                           "type": "Var",
                           "variable": {
                             "name": "point",
@@ -3108,7 +3228,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                         "type": "Proj",
                       },
                       "func": {
-                        "id": 824,
+                        "id": 828,
                         "type": "Var",
                         "variable": {
                           "name": "/",
@@ -3116,18 +3236,18 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                         },
                       },
                       "icit": "Explicit",
-                      "id": 830,
+                      "id": 834,
                       "type": "App",
                     },
                     "icit": "Explicit",
-                    "id": 832,
+                    "id": 836,
                     "type": "App",
                   },
                 },
                 "type": "Row",
               },
               "func": {
-                "id": 835,
+                "id": 839,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -3135,14 +3255,14 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                 },
               },
               "icit": "Explicit",
-              "id": 837,
+              "id": 841,
               "type": "App",
             },
           },
           "type": "extension",
           "value": {
             "arg": {
-              "id": 845,
+              "id": 851,
               "row": {
                 "label": "x",
                 "row": {
@@ -3152,7 +3272,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                   },
                   "type": "extension",
                   "value": {
-                    "id": 842,
+                    "id": 848,
                     "type": "Lit",
                     "value": {
                       "type": "Num",
@@ -3162,7 +3282,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                 },
                 "type": "extension",
                 "value": {
-                  "id": 843,
+                  "id": 849,
                   "type": "Lit",
                   "value": {
                     "type": "Num",
@@ -3173,7 +3293,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
               "type": "Row",
             },
             "func": {
-              "id": 844,
+              "id": 850,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -3181,14 +3301,14 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
               },
             },
             "icit": "Explicit",
-            "id": 846,
+            "id": 852,
             "type": "App",
           },
         },
         "type": "Row",
       },
       "func": {
-        "id": 847,
+        "id": 853,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -3196,7 +3316,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
         },
       },
       "icit": "Explicit",
-      "id": 849,
+      "id": 855,
       "type": "App",
     },
     "type": {
@@ -4132,7 +4252,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
     },
     "term": {
       "arg": {
-        "id": 824,
+        "id": 830,
         "row": {
           "label": "overriden",
           "row": {
@@ -4145,7 +4265,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
               "type": "extension",
               "value": {
                 "arg": {
-                  "id": 816,
+                  "id": 821,
                   "row": {
                     "label": "overriden",
                     "row": {
@@ -4155,7 +4275,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
                       },
                       "type": "extension",
                       "value": {
-                        "id": 813,
+                        "id": 818,
                         "type": "Var",
                         "variable": {
                           "name": "overriden",
@@ -4165,7 +4285,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
                     },
                     "type": "extension",
                     "value": {
-                      "id": 814,
+                      "id": 819,
                       "type": "Lit",
                       "value": {
                         "type": "String",
@@ -4176,7 +4296,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
                   "type": "Row",
                 },
                 "func": {
-                  "id": 815,
+                  "id": 820,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -4184,14 +4304,14 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
                   },
                 },
                 "icit": "Explicit",
-                "id": 817,
+                "id": 822,
                 "type": "App",
               },
             },
             "type": "extension",
             "value": {
               "arg": {
-                "id": 820,
+                "id": 826,
                 "row": {
                   "label": "inner",
                   "row": {
@@ -4199,7 +4319,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
                   },
                   "type": "extension",
                   "value": {
-                    "id": 818,
+                    "id": 824,
                     "type": "Var",
                     "variable": {
                       "name": "overriden",
@@ -4210,7 +4330,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
                 "type": "Row",
               },
               "func": {
-                "id": 819,
+                "id": 825,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -4218,13 +4338,13 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
                 },
               },
               "icit": "Explicit",
-              "id": 821,
+              "id": 827,
               "type": "App",
             },
           },
           "type": "extension",
           "value": {
-            "id": 822,
+            "id": 828,
             "type": "Lit",
             "value": {
               "type": "Num",
@@ -4235,7 +4355,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
         "type": "Row",
       },
       "func": {
-        "id": 823,
+        "id": 829,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -4243,7 +4363,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
         },
       },
       "icit": "Explicit",
-      "id": 825,
+      "id": 831,
       "type": "App",
     },
     "type": {
@@ -4613,7 +4733,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
     },
     "term": {
       "arg": {
-        "id": 816,
+        "id": 818,
         "row": {
           "label": "x",
           "row": {
@@ -4623,7 +4743,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
             },
             "type": "extension",
             "value": {
-              "id": 813,
+              "id": 815,
               "type": "Lit",
               "value": {
                 "type": "String",
@@ -4633,7 +4753,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
           },
           "type": "extension",
           "value": {
-            "id": 814,
+            "id": 816,
             "type": "Lit",
             "value": {
               "type": "Num",
@@ -4644,7 +4764,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
         "type": "Row",
       },
       "func": {
-        "id": 815,
+        "id": 817,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -4652,7 +4772,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
         },
       },
       "icit": "Explicit",
-      "id": 817,
+      "id": 819,
       "type": "App",
     },
     "type": {
@@ -5212,7 +5332,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
     },
     "term": {
       "arg": {
-        "id": 820,
+        "id": 824,
         "row": {
           "label": "point",
           "row": {
@@ -5222,7 +5342,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
             },
             "type": "extension",
             "value": {
-              "id": 813,
+              "id": 815,
               "type": "Lit",
               "value": {
                 "type": "String",
@@ -5233,7 +5353,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
           "type": "extension",
           "value": {
             "arg": {
-              "id": 817,
+              "id": 821,
               "row": {
                 "label": "x",
                 "row": {
@@ -5243,7 +5363,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
                   },
                   "type": "extension",
                   "value": {
-                    "id": 814,
+                    "id": 818,
                     "type": "Lit",
                     "value": {
                       "type": "Num",
@@ -5253,7 +5373,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
                 },
                 "type": "extension",
                 "value": {
-                  "id": 815,
+                  "id": 819,
                   "type": "Lit",
                   "value": {
                     "type": "Num",
@@ -5264,7 +5384,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
               "type": "Row",
             },
             "func": {
-              "id": 816,
+              "id": 820,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -5272,14 +5392,14 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
               },
             },
             "icit": "Explicit",
-            "id": 818,
+            "id": 822,
             "type": "App",
           },
         },
         "type": "Row",
       },
       "func": {
-        "id": 819,
+        "id": 823,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -5287,7 +5407,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
         },
       },
       "icit": "Explicit",
-      "id": 821,
+      "id": 825,
       "type": "App",
     },
     "type": {
@@ -5649,7 +5769,7 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
     },
     "term": {
       "arg": {
-        "id": 820,
+        "id": 822,
         "row": {
           "label": "x",
           "row": {
@@ -5659,7 +5779,7 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
             },
             "type": "extension",
             "value": {
-              "id": 813,
+              "id": 815,
               "type": "Lit",
               "value": {
                 "type": "String",
@@ -5670,7 +5790,7 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
           "type": "extension",
           "value": {
             "arg": {
-              "id": 817,
+              "id": 819,
               "type": "Lit",
               "value": {
                 "type": "Num",
@@ -5679,7 +5799,7 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
             },
             "func": {
               "arg": {
-                "id": 815,
+                "id": 817,
                 "type": "Lit",
                 "value": {
                   "type": "Num",
@@ -5687,7 +5807,7 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
                 },
               },
               "func": {
-                "id": 814,
+                "id": 816,
                 "type": "Var",
                 "variable": {
                   "name": "+",
@@ -5695,18 +5815,18 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
                 },
               },
               "icit": "Explicit",
-              "id": 816,
+              "id": 818,
               "type": "App",
             },
             "icit": "Explicit",
-            "id": 818,
+            "id": 820,
             "type": "App",
           },
         },
         "type": "Row",
       },
       "func": {
-        "id": 819,
+        "id": 821,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -5714,7 +5834,7 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
         },
       },
       "icit": "Explicit",
-      "id": 821,
+      "id": 823,
       "type": "App",
     },
     "type": {

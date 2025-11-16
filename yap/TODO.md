@@ -137,6 +137,9 @@
   - Remove `zonker` and `metas`.
     - These are an evolving record so should under a mutable State `MetaContext`
     - Will fix a lot of the hacks where metas/zonkers are propagated everywhere
+- Rework let binding "sequencing" (multiple decs in a block)
+  - Recursion currently demands a lot of ctx entending in different places.
+  - Maybe better to have only a `fix` abstraction, perhpas unifying with `mu`.
 - After switching to closures containing the whole Context, some functions are no longer dependent on it (eg, quoting). Clean up those params
   - It's probably not necessary to hold the whole context, we can perhaps keep just imports and env, and adjust Context utilities
   - This helps with the "Not Implemented" Errors in some scenarios handling closures

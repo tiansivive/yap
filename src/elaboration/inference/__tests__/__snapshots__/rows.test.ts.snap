@@ -157,7 +157,7 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
       },
       "body": {
         "arg": {
-          "id": 817,
+          "id": 818,
           "row": {
             "label": "foo",
             "row": {
@@ -169,7 +169,7 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
             },
             "type": "extension",
             "value": {
-              "id": 815,
+              "id": 816,
               "type": "Var",
               "variable": {
                 "name": "Num",
@@ -180,7 +180,7 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
           "type": "Row",
         },
         "func": {
-          "id": 816,
+          "id": 817,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -188,10 +188,10 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
           },
         },
         "icit": "Explicit",
-        "id": 818,
+        "id": 819,
         "type": "App",
       },
-      "id": 819,
+      "id": 820,
       "type": "Abs",
     },
     "type": {
@@ -217,7 +217,7 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
           "zonker": {},
         },
         "term": {
-          "id": 820,
+          "id": 821,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -444,7 +444,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       },
       "body": {
         "arg": {
-          "id": 817,
+          "id": 818,
           "row": {
             "label": "foo",
             "row": {
@@ -456,7 +456,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
             },
             "type": "extension",
             "value": {
-              "id": 815,
+              "id": 816,
               "type": "Var",
               "variable": {
                 "name": "Num",
@@ -467,7 +467,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
           "type": "Row",
         },
         "func": {
-          "id": 816,
+          "id": 817,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -475,10 +475,10 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
           },
         },
         "icit": "Explicit",
-        "id": 818,
+        "id": 819,
         "type": "App",
       },
-      "id": 819,
+      "id": 820,
       "type": "Abs",
     },
     "type": {
@@ -510,7 +510,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
         },
         "term": {
           "arg": {
-            "id": 822,
+            "id": 823,
             "row": {
               "label": "foo",
               "row": {
@@ -523,7 +523,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
               },
               "type": "extension",
               "value": {
-                "id": 821,
+                "id": 822,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -534,7 +534,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
             "type": "Row",
           },
           "func": {
-            "id": 820,
+            "id": 821,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -542,7 +542,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
             },
           },
           "icit": "Explicit",
-          "id": 823,
+          "id": 824,
           "type": "App",
         },
         "type": "Closure",
@@ -778,7 +778,7 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       },
     },
     "term": {
-      "id": 815,
+      "id": 817,
       "row": {
         "label": "y",
         "row": {
@@ -788,7 +788,7 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
           },
           "type": "extension",
           "value": {
-            "id": 814,
+            "id": 816,
             "type": "Var",
             "variable": {
               "name": "Num",
@@ -798,7 +798,7 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
         },
         "type": "extension",
         "value": {
-          "id": 813,
+          "id": 815,
           "type": "Var",
           "variable": {
             "name": "String",
