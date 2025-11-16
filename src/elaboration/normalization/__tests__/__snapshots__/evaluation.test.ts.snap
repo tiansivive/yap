@@ -1,5 +1,460 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Normalization: evaluation / reduce / matching > evaluates dependent record projection 1`] = `
+{
+  "pretty": "2",
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 6,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 30,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 28,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "args": [
+            {
+              "id": 19,
+              "type": "Neutral",
+              "value": {
+                "id": 18,
+                "type": "Var",
+                "variable": {
+                  "lvl": 0,
+                  "type": "Meta",
+                  "val": 2,
+                },
+              },
+            },
+            {
+              "id": 38,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 1,
+              },
+            },
+          ],
+          "arity": 2,
+          "compute": [Function],
+          "id": 39,
+          "name": "$add",
+          "type": "External",
+        },
+        "lvl": 0,
+        "right": {
+          "id": 25,
+          "type": "Neutral",
+          "value": {
+            "id": 24,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 5,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 32,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 27,
+          "type": "Neutral",
+          "value": {
+            "id": 26,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 41,
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 19,
+          "type": "Neutral",
+          "value": {
+            "id": 18,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 40,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 21,
+          "type": "Neutral",
+          "value": {
+            "id": 20,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 3,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "arg": {
+            "id": 46,
+            "row": {
+              "label": "x",
+              "row": {
+                "label": "y",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "id": 32,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "extension",
+              "value": {
+                "id": 40,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 42,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "id": 47,
+          "type": "App",
+        },
+        "lvl": 0,
+        "right": {
+          "arg": {
+            "id": 43,
+            "row": {
+              "label": "x",
+              "row": {
+                "label": "y",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "id": 32,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "extension",
+              "value": {
+                "id": 40,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 42,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "id": 44,
+          "type": "App",
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 17,
+          "type": "Neutral",
+          "value": {
+            "id": 16,
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "id": 23,
+          "type": "Neutral",
+          "value": {
+            "id": 22,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 6,
+        },
+      },
+    },
+    "term": {
+      "id": 824,
+      "label": "y",
+      "term": {
+        "arg": {
+          "id": 822,
+          "row": {
+            "label": "x",
+            "row": {
+              "label": "y",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "arg": {
+                  "id": 818,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Num",
+                    "value": 1,
+                  },
+                },
+                "func": {
+                  "arg": {
+                    "id": 816,
+                    "type": "Var",
+                    "variable": {
+                      "name": "x",
+                      "type": "Label",
+                    },
+                  },
+                  "func": {
+                    "id": 815,
+                    "type": "Var",
+                    "variable": {
+                      "name": "+",
+                      "type": "Free",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "id": 817,
+                  "type": "App",
+                },
+                "icit": "Explicit",
+                "id": 819,
+                "type": "App",
+              },
+            },
+            "type": "extension",
+            "value": {
+              "id": 820,
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 1,
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "func": {
+          "id": 821,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Struct",
+          },
+        },
+        "icit": "Explicit",
+        "id": 823,
+        "type": "App",
+      },
+      "type": "Proj",
+    },
+    "type": {
+      "id": 32,
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Num",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
 exports[`Normalization: evaluation / reduce / matching > evaluates lambda application via reduce to WHNF 1`] = `
 {
   "pretty": "1",

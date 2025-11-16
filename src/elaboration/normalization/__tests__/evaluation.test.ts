@@ -53,4 +53,14 @@ describe("Normalization: evaluation / reduce / matching", () => {
 		expect(nf.type).toBe("Lit");
 		expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
 	});
+
+	it("evaluates dependent record projection", () => {
+		const src = "{ x: 1, y: :x + 1 }.y";
+		const { structure } = elaborateFrom(src);
+		const ctx = ctxFor(mkCtx(), structure.metas);
+
+		const nf = NF.evaluate(ctx, structure.term);
+		expect(nf.type).toBe("Lit");
+		expect({ structure, pretty: show(nf, ctx) }).toMatchSnapshot();
+	});
 });
