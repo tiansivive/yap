@@ -244,8 +244,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 					([ffi1, ffi2]) => ffi1.variable.name === ffi2.variable.name,
 					() => V2.of(subst),
 				)
-				.otherwise(ts => {
-					return V2.Do<Subst, unknown>(() => V2.fail(Err.TypeMismatch(left, right)));
+				.otherwise(([l, r]) => {
+					return V2.Do<Subst, unknown>(() => V2.fail(Err.TypeMismatch(l, r)));
 				});
 
 			const sub = yield* V2.pure(unifier);

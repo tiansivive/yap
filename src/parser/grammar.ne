@@ -95,10 +95,10 @@ Ann -> Ann %space:? %colon %space:? TypeExpr 							{% P.Annotation %}
 TypeExpr -> Pi 				{% id %}
 		  | ModalType 		{% id %}
 
-ModalType -> Angle[ Quantity ] %space:? Type 									{% P.Modal %}
-		   | Angle[ Quantity ] %space:? Type %space:? DoubleBracket[ Lambda ] 	{% P.Modal %}
-		   | Type %space:? DoubleBracket[ Lambda ] 								{% P.Modal %}
-		   | Type 																{% id %}
+ModalType -> Angle[ Quantity ] %space:? Type 												{% P.Modal %}
+		   | Angle[ Quantity ] %space:? Type %space:? DoubleBracket[ %space:? Lambda ] 		{% P.Modal %}
+		   | Type %space:? DoubleBracket[ %space:? Lambda ] 								{% P.Modal %}
+		   | Type 																			{% id %}
 
 Type -> Mu 				{% id %}
 	  | Variant 		{% id %} 
@@ -111,9 +111,9 @@ Expr -> Lambda		{% id %}
   	  | Block 		{% id %}
 	  | App 		{% id %}
 
-App -> App %space Atom 				{% P.Application %}
+App -> App %space Atom 								{% P.Application %}
 	 | App %space:? (%op | %concat) %space:? Atom 	{% P.Operation %}
-     | Atom 						{% id %}
+     | Atom 										{% id %}
 
 Atom -> Identifier 		{% P.Var %} 
 	  | %hole 			{% P.Hole %}

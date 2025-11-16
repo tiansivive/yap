@@ -17,15 +17,23 @@ import { Liquid } from "@yap/verification/modalities";
 import * as Modal from "@yap/verification/modalities/shared";
 import { Implicitness } from "@yap/shared/implicitness";
 
-export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
+export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: string]: EB.Term } = {}, fuel = 0): NF.Value {
 	//Log.push("eval");
 	//Log.logger.debug(EB.Display.Term(term), { ctx.env,  term: EB.Display.Term(term) });
+	fuel++;
+	if (fuel > 1000) {
+		throw new Error("Evaluation ran out of fuel. Possible infinite loop in term evaluation: " + EB.Display.Term(term, ctx));
+	}
 	const res = match(term)
 		.with({ type: "Lit" }, ({ value }): NF.Value => NF.Constructors.Lit(value))
 		.with({ type: "Var", variable: { type: "Label" } }, ({ variable }): NF.Value => {
 			const sig = ctx.sigma[variable.name];
 
 			if (!sig) {
+				const local = bindings[variable.name];
+				if (local) {
+					return evaluate(ctx, local, bindings, fuel);
+				}
 				throw new Error("Unbound label: " + variable.name);
 			}
 
@@ -38,7 +46,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 				throw new Error("Unbound free variable: " + variable.name);
 			}
 
-			return evaluate(ctx, val[0]);
+			return evaluate(ctx, val[0], bindings, fuel);
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
 			if (!ctx.zonker[variable.val]) {
@@ -48,7 +56,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 
 			// NOTE: little trick to force re-evaluation of the zonker value in case it is a rigid
 			const quoted = NF.quote(ctx, ctx.env.length, ctx.zonker[variable.val]);
-			return evaluate(ctx, quoted);
+			return evaluate(ctx, quoted, bindings, fuel);
 			// return ctx.zonker[variable.val];
 		})
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
@@ -73,15 +81,15 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 		})
 
 		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) => {
-			const ann = evaluate(ctx, binding.annotation);
+			const ann = evaluate(ctx, binding.annotation, bindings, fuel);
 			return NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(ctx, body), ann);
 		})
 		.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }): NF.Value => {
-			const ann = evaluate(ctx, binding.annotation);
+			const ann = evaluate(ctx, binding.annotation, bindings, fuel);
 			return NF.Constructors.Pi(binding.variable, binding.icit, ann, NF.Constructors.Closure(ctx, body));
 		})
 		.with({ type: "Abs", binding: { type: "Mu" } }, (mu): NF.Value => {
-			const ann = evaluate(ctx, mu.binding.annotation);
+			const ann = evaluate(ctx, mu.binding.annotation, bindings, fuel);
 			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, ann, NF.Constructors.Closure(ctx, mu.body));
 			return val;
 			// NOTE: This is commented out because we want to defer unfolding of mu types to unification. This has the benefit of displaying the recursive type more closely to the source
@@ -89,16 +97,25 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			// return evaluate(extended, mu.body);
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) => {
-			const nff = evaluate(ctx, func);
-			const nfa = evaluate(ctx, arg);
+			const nff = evaluate(ctx, func, bindings, fuel);
+			const nfa = evaluate(ctx, arg, bindings, fuel);
 			return reduce(nff, nfa, icit);
 		})
 		.with({ type: "Row" }, ({ row }) => {
-			return NF.Constructors.Row(evalRow(ctx, row));
+			const extract = (r: EB.Row): { [key: string]: EB.Term } => {
+				if (r.type === "empty" || r.type === "variable") {
+					return {};
+				}
+
+				const { label, value, row } = r;
+				return { [label]: value, ...extract(row) };
+			};
+			const bindings = extract(row);
+			return NF.Constructors.Row(evalRow(ctx, row, bindings));
 		})
 		.with({ type: "Match" }, v => {
 			// console.warn("Evaluating match terms not yet implemented. Returning scrutinee as Normal Form for the time being");
-			const scrutinee = evaluate(ctx, v.scrutinee);
+			const scrutinee = evaluate(ctx, v.scrutinee, bindings, fuel);
 			if (scrutinee.type === "Neutral" || (scrutinee.type === "Var" && scrutinee.variable.type === "Meta")) {
 				const lambda = NF.Constructors.Lambda("_scrutinee", "Explicit", NF.Constructors.Closure(ctx, v), NF.Any);
 				const app = NF.Constructors.App(lambda, scrutinee, "Explicit");
@@ -113,7 +130,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			return res;
 		})
 		.with({ type: "Proj" }, ({ term, label }) => {
-			const base = evaluate(ctx, term);
+			const base = evaluate(ctx, term, bindings, fuel);
 
 			type ProjectAttempt = { tag: "found"; value: NF.Value } | { tag: "blocked" } | { tag: "missing" } | { tag: "not-applicable" };
 
@@ -158,8 +175,8 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			return NF.Constructors.Neutral(app);
 		})
 		.with({ type: "Inj" }, ({ term, label, value: valueTerm }) => {
-			const base = evaluate(ctx, term);
-			const injected = evaluate(ctx, valueTerm);
+			const base = evaluate(ctx, term, bindings, fuel);
+			const injected = evaluate(ctx, valueTerm, bindings, fuel);
 
 			type InjectAttempt = { tag: "updated"; value: NF.Value } | { tag: "blocked" } | { tag: "not-applicable" };
 
@@ -210,11 +227,11 @@ export function evaluate(ctx: EB.Context, term: EB.Term): NF.Value {
 			return NF.Constructors.Neutral(app);
 		})
 		.with({ type: "Modal" }, ({ term, modalities }) => {
-			const nf = evaluate(ctx, term);
+			const nf = evaluate(ctx, term, bindings, fuel);
 
 			return NF.Constructors.Modal(nf, {
 				quantity: modalities.quantity,
-				liquid: NF.evaluate(ctx, modalities.liquid),
+				liquid: NF.evaluate(ctx, modalities.liquid, bindings, fuel),
 			});
 		})
 		.otherwise(tm => {
@@ -419,12 +436,12 @@ const meetOne = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row)
 		.exhaustive();
 };
 
-const evalRow = (ctx: EB.Context, row: EB.Row): NF.Row =>
+const evalRow = (ctx: EB.Context, row: EB.Row, bindings: { [key: string]: EB.Term }): NF.Row =>
 	match(row)
 		.with({ type: "empty" }, r => r)
 		.with({ type: "extension" }, ({ label, value: term, row }) => {
-			const value = evaluate(ctx, term);
-			const rest = evalRow(ctx, row);
+			const value = evaluate(ctx, term, bindings);
+			const rest = evalRow(ctx, row, bindings);
 			return NF.Constructors.Extension(label, value, rest);
 		})
 		.with({ type: "variable" }, (r): NF.Row => {

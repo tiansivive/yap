@@ -36,7 +36,7 @@ export type Context = {
 
 export type Zonker = Context["zonker"];
 
-export type Sigma = { nf: NF.Value; ann: NF.Value; multiplicity: Q.Multiplicity };
+export type Sigma = { term: EB.Term; nf: NF.Value; ann: NF.Value; multiplicity: Q.Multiplicity; isAnnotation?: boolean };
 
 export type Binder = Pick<EB.Binding, "type" | "variable">;
 
@@ -46,9 +46,12 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.
 	if (variable.type === "label") {
 		const key = ctx.sigma[variable.value];
 		if (key) {
-			const { ann, multiplicity } = key;
+			const { ann, multiplicity, isAnnotation, nf } = key;
 			const tm = EB.Constructors.Var({ type: "Label", name: variable.value });
-			return V2.of<EB.AST>([tm, ann, zeros]); // QUESTION: need to somehow handle multiplicity?
+			// if it's an annotation, then the field value describes the type of the field
+			// if it's a value, the the field's type is given by the stored ann
+			const ty = isAnnotation ? nf : ann;
+			return V2.of<EB.AST>([tm, ty, zeros]); // QUESTION: need to somehow handle multiplicity?
 		}
 		throw new Error(`Label not found: ${variable.value}`);
 	}
@@ -168,8 +171,8 @@ export const unfoldMu = (context: Context, binder: Binder, annotation: NF.Value,
 	};
 };
 
-export const extendSigma = (ctx: Context, variable: string, sigma: Sigma): Context => {
-	return set(ctx, ["sigma", variable] as const, sigma);
+export const extendSigma = (ctx: Context, variable: string, sigma: Sigma, isAnnotation = false): Context => {
+	return set(ctx, ["sigma", variable] as const, { ...sigma, isAnnotation });
 };
 
 export const muContext = (ctx: Context): Context => {

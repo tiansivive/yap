@@ -35,13 +35,13 @@ export const infer = (term: TRow): V2.Elaboration<EB.AST> =>
 infer.gen = F.flow(infer, V2.pure);
 
 // TODO:FIXME update the sigma env to a stack of sigma records to properly handle nested row types
-export const inSigmaContext = <A>(row: Src.Row, f: V2.Elaboration<A>): V2.Elaboration<A> =>
+export const inSigmaContext = <A>(row: Src.Row, f: V2.Elaboration<A>, isAnnotation = false): V2.Elaboration<A> =>
 	V2.Do(function* () {
 		const ctx = yield* V2.ask();
 		const bindings = yield* extract(row, ctx.env.length);
-		return yield* V2.local(ctx_ => entries(bindings).reduce((ctx, [label, mv]) => EB.extendSigma(ctx, label, mv), ctx_), f);
+		return yield* V2.local(ctx_ => entries(bindings).reduce((ctx, [label, mv]) => EB.extendSigma(ctx, label, mv, isAnnotation), ctx_), f);
 	});
-inSigmaContext.gen = <A>(row: Src.Row, f: V2.Elaboration<A>) => V2.pure(inSigmaContext(row, f));
+inSigmaContext.gen = <A>(row: Src.Row, f: V2.Elaboration<A>, isAnnotation = false) => V2.pure(inSigmaContext(row, f, isAnnotation));
 
 type Collected = { fields: { label: string; term: EB.Term; value: NF.Value }[]; tail?: { variable: EB.Variable; ty: NF.Value } };
 export const collect = (row: Src.Row): V2.Elaboration<Collected> =>
@@ -101,7 +101,9 @@ export const extract = function* (row: Src.Row, lvl: number, types?: NF.Row): Ge
 
 	//const kty = NF.Constructors.Flex(yield* EB.freshMeta(lvl, NF.Type));
 	const ty = NF.Constructors.Flex(yield* EB.freshMeta(lvl, NF.Type));
-	const info: EB.Sigma = { nf: tm, ann: ty, multiplicity: Q.Many };
+
+	const ctx = yield* V2.ask();
+	const info: EB.Sigma = { term: NF.quote(ctx, ctx.env.length, tm), nf: tm, ann: ty, multiplicity: Q.Many };
 
 	const rest = yield* extract({ ...row.row, location: row.location }, lvl + 1);
 	return setProp(rest, row.label, info);

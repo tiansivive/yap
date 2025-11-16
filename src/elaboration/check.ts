@@ -206,6 +206,9 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 		}),
 	);
 
+/**
+ * Checks that the given row values all conform to the given type.
+ */
 const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.Row, Q.Usages]> =>
 	EB.Rows.inSigmaContext(
 		row,
@@ -215,6 +218,8 @@ const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.R
 				V2.Do(function* () {
 					const ctx = yield* V2.ask();
 					const [tm, us] = yield* Check.val.gen(val, ty);
+					// const { constraints:cs, metas:ms } = yield* V2.listen();
+					// console.log("Row Check Constraints:", cs);
 					const sigma = ctx.sigma[lbl];
 					if (!sigma) {
 						throw new Error("Elaborating Row Extension: Label not found");
@@ -225,6 +230,9 @@ const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.R
 						{ type: "assign", left: nf, right: sigma.nf, lvl: ctx.env.length },
 						{ type: "assign", left: ty, right: sigma.ann, lvl: ctx.env.length },
 					]);
+					// const { constraints, metas } = yield* V2.listen();
+					// console.log("Row Check Constraints:", constraints);
+					// console.log("Sigma:", sigma)
 					const [r, usages]: [EB.Row, Q.Usages] = yield acc;
 
 					return [{ type: "extension", label: lbl, value: tm, row: r }, Q.add(us, usages)] satisfies [EB.Row, Q.Usages];
@@ -234,6 +242,9 @@ const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.R
 			},
 			V2.of<[EB.Row, Q.Usages]>([{ type: "empty" }, Q.noUsage(lvl)]),
 		),
+		match(ty)
+			.with(NF.Patterns.Type, () => true)
+			.otherwise(() => false),
 	);
 
 const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<string, EB.Sigma>): V2.Elaboration<[EB.Row, Q.Usages]> =>

@@ -478,11 +478,14 @@ export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]
  * Modal processors
  ***********************************************************/
 
-type Modal = [[Q.Multiplicity], Whitespace, Term] | [[Q.Multiplicity], Whitespace, Term, Whitespace, LAngle, Term, RAngle] | [Term, Whitespace, [Term]];
+type Modal =
+	| [[Q.Multiplicity], Whitespace, Term]
+	| [[Q.Multiplicity], Whitespace, Term, Whitespace, LAngle, Whitespace, Term, RAngle]
+	| [Term, Whitespace, [Whitespace, Term]];
 
 export const Modal: PostProcessor<Modal, Term> = (data: Modal): Term => {
-	if (data.length === 7) {
-		const [[q], , term, , , liquid] = data;
+	if (data.length === 8) {
+		const [[q], , term, , , , liquid] = data;
 
 		return { type: "modal", term, modalities: { quantity: q, liquid }, location: term.location };
 	}
@@ -492,7 +495,7 @@ export const Modal: PostProcessor<Modal, Term> = (data: Modal): Term => {
 		return { type: "modal", term, modalities: { quantity: q }, location: term.location };
 	}
 
-	const [term, , [liquid]] = data as [Term, Whitespace, [Term]];
+	const [term, , [, liquid]] = data as [Term, Whitespace, [Whitespace, Term]];
 	return { type: "modal", term, modalities: { liquid }, location: locSpan(term.location, liquid.location) };
 };
 
