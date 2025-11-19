@@ -17,3 +17,5 @@ let PairR
 let pair
     : PairR Num Num (\x -> \y -> x < y )
     = { fst: 3, snd: 5 };
+
+∑r: [fst: Num, snd: String]. Schema r

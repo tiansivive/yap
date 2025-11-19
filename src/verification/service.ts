@@ -15,6 +15,9 @@ import { match, P } from "ts-pattern";
 import { Liquid } from "./modalities";
 import { isEqual } from "lodash";
 
+import * as R from "@yap/shared/rows";
+import * as Err from "@yap/elaboration/shared/errors";
+
 import { Sort, Context, Expr, IntNum, Bool, SMTArray } from "z3-solver";
 import {
 	OP_ADD,
@@ -33,6 +36,8 @@ import {
 	operatorMap,
 	PrimOps,
 } from "@yap/shared/lib/primitives";
+import { update } from "@yap/utils";
+import assert from "assert";
 
 export const VerificationService = (Z3: Context<"main">, { logging } = { logging: false }) => {
 	const Sorts = {
@@ -173,6 +178,103 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 					return vc;
 				})
 
+				.with([EB.CtorPatterns.Struct, NF.Patterns.Sigma], ([tm, ty]) => {
+					const rv = NF.evaluate(ctx, tm);
+					assert(rv.type === "App" && rv.arg.type === "Row", "Expected struct term to evaluate to an application of a row");
+					const schema = NF.apply(ty.binder, ty.closure, NF.Constructors.Row(rv.arg.row));
+					return check.gen(tm, schema);
+				})
+				.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], ([tm, ty]) => {
+					//trick to evaluate dependent fields
+					const nf = NF.evaluate(ctx, tm);
+
+					const collect = (r1: NF.Row, r2: NF.Row): V2.Elaboration<EB.Context["sigma"]> => {
+						const res = match([r1, r2])
+							.with([{ type: "empty" }, { type: "empty" }], () => V2.of<EB.Context["sigma"]>({}))
+							.with([{ type: "empty" }, { type: "variable" }], () => V2.of<EB.Context["sigma"]>({}))
+							.with([{ type: "extension" }, { type: "extension" }], ([{ label, value, row }, r]) =>
+								V2.Do(function* () {
+									const rewritten = R.rewrite(r, label);
+									if (E.isLeft(rewritten)) {
+										return yield* V2.fail<EB.Context["sigma"]>(Err.MissingLabel(label, r));
+									}
+									if (rewritten.right.type !== "extension") {
+										return yield* V2.fail<EB.Context["sigma"]>({
+											type: "Impossible",
+											message: "Rewritting a row extension should result in another row extension",
+										});
+									}
+
+									const { value: rv, row: rr } = rewritten.right;
+									const acc = yield* V2.pure(collect(row, rr));
+
+									return { ...acc, [label]: { nf: value, ann: rv, term: NF.quote(ctx, ctx.env.length, value), multiplicity: Q.Many } };
+								}),
+							)
+							.otherwise(_ => {
+								throw new Error("Schema verification: incompatible rows");
+							});
+
+						return res;
+					};
+
+					//Might be missing sigma env information here
+					const traverse = (r1: NF.Row, r2: NF.Row): V2.Elaboration<Modal.Artefacts> => {
+						const res = match([r1, r2])
+							.with([{ type: "empty" }, { type: "empty" }], () => V2.of<Modal.Artefacts>({ usages: Q.noUsage(ctx.env.length), vc: Z3.Bool.val(true) }))
+							.with([{ type: "empty" }, { type: "variable" }], () => V2.of<Modal.Artefacts>({ usages: Q.noUsage(ctx.env.length), vc: Z3.Bool.val(true) }))
+							.with([{ type: "extension" }, { type: "extension" }], ([{ label, value, row }, r]) =>
+								V2.Do(function* () {
+									const rewritten = R.rewrite(r, label);
+									if (E.isLeft(rewritten)) {
+										return yield* V2.fail<Modal.Artefacts>(Err.MissingLabel(label, r));
+									}
+
+									if (rewritten.right.type !== "extension") {
+										return yield* V2.fail<Modal.Artefacts>({
+											type: "Impossible",
+											message: "Rewritting a row extension should result in another row extension",
+										});
+									}
+
+									const { value: rv, row: rr } = rewritten.right;
+									// const quoted = NF.quote(ctx, ctx.env.length, rv);
+									// const xtended = yield* V2.ask();
+									// const re_eval = NF.evaluate(xtended, quoted);
+
+									const artefacts = yield* check.gen(NF.quote(ctx, ctx.env.length, value), rv);
+									const rest = yield* V2.pure(traverse(row, rr));
+
+									const combinedVc = Z3.And(artefacts.vc as Bool, rest.vc as Bool);
+									const combinedUsages = Q.add(artefacts.usages, rest.usages);
+									return { usages: combinedUsages, vc: combinedVc } satisfies Modal.Artefacts;
+								}),
+							)
+							.otherwise(_ => {
+								throw new Error("Schema verification: incompatible rows");
+							});
+						return res;
+					};
+
+					const result = match(nf)
+						.with(NF.Patterns.Struct, struct =>
+							V2.Do(function* () {
+								const bindings = yield* V2.pure(collect(struct.arg.row, ty.arg.row));
+								return yield* V2.local(
+									update("sigma", sig => ({ ...sig, ...bindings })),
+									traverse(struct.arg.row, ty.arg.row),
+								);
+							}),
+						)
+						.otherwise(() => {
+							throw new Error("Schema verification: expected struct term");
+						});
+
+					return V2.pure(result) as any;
+
+					//return 1 as any
+				})
+
 				.otherwise(function* ([tm, ty]) {
 					const [synthed, artefacts] = yield* synth.gen(tm);
 					// Since verification runs after typechecking, we can assume that the term has at least the type we are checking against
@@ -263,7 +365,10 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 						return [NF.Constructors.Modal(nf, modalities), { usages: Q.noUsage(ctx.env.length), vc: Z3.Bool.val(true) }] satisfies Synthed;
 					}),
 				)
-				.with({ type: "Abs" }, tm =>
+				.with(EB.CtorPatterns.Pi, EB.CtorPatterns.Mu, EB.CtorPatterns.Sigma, abs =>
+					V2.of<Synthed>([NF.Type, { usages: Q.noUsage(ctx.env.length), vc: Z3.Bool.val(true) }]),
+				)
+				.with(EB.CtorPatterns.Lambda, tm =>
 					V2.Do(function* () {
 						// const modalities = extract(tm.binding.annotation);
 
@@ -583,6 +688,7 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 							return Z3.And(vcArg as Bool, guarded as Bool);
 						}),
 				)
+
 				.with([{ type: "Existential" }, P._], ([sig, ty]) =>
 					V2.Do(function* () {
 						const res = yield* V2.local(
@@ -1083,6 +1189,28 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 		};
 	};
 	const getObligations = () => obligations.slice();
+
+	const collect = function* (r: EB.Row, lvl: number): Generator<V2.Elaboration<any>, Record<string, EB.Sigma>, any> {
+		if (r.type === "empty") {
+			return {};
+		}
+
+		if (r.type === "variable") {
+			return {};
+		}
+
+		const ctx = yield* V2.ask();
+		const { label, value, row } = r;
+		const [ann, vc] = yield* synth.gen(value);
+		const nf = NF.evaluate(ctx, value);
+
+		const info: EB.Sigma = { term: value, nf, ann, multiplicity: Q.Many };
+
+		const rest = yield* collect(row, lvl);
+		return setProp(rest, row.label, info);
+		// return [[row.label, [v, Q.Many]], ...extract({ ...row.row, location: row.location }, lvl + 1)]
+	};
+
 	return { check, synth, subtype, getObligations };
 };
 

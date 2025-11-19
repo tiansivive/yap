@@ -134,6 +134,19 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 				update(closure, "term", t => EB.Icit.instantiate(t, xtended)),
 			);
 		})
+		.with(NF.Patterns.Sigma, ({ binder, closure }) => {
+			const ann = instantiate(binder.annotation, ctx);
+			const xtended = F.pipe(
+				EB.bind(closure.ctx, binder, ann),
+				update("zonker", z => Sub.compose(ctx.zonker, z)),
+				update("metas", m => ({ ...ctx.metas, ...m })),
+			);
+			return NF.Constructors.Sigma(
+				binder.variable,
+				ann,
+				update(closure, "term", t => EB.Icit.instantiate(t, xtended)),
+			);
+		})
 		.with({ type: "App" }, ({ icit, func, arg }) => NF.Constructors.App(instantiate(func, ctx), instantiate(arg, ctx), icit))
 		.with({ type: "Row" }, ({ row }) =>
 			NF.Constructors.Row(

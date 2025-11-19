@@ -41,18 +41,25 @@ export const display = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBrui
 				.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
 				.with({ type: "Pi" }, ({ variable, annotation }) => `Π(${variable}: ${display(annotation, ctx, opts)})`)
 				.with({ type: "Mu" }, ({ variable, annotation }) => `μ(${variable}: ${display(annotation, ctx, opts)})`)
+				.with({ type: "Sigma" }, ({ variable }) => `Σ(${variable}: ${display(binder.annotation, ctx, opts)})`)
 				.exhaustive();
 
-			const arr = binder.type !== "Mu" && binder.icit === "Implicit" ? "=>" : "->";
+			const arr = match(binder)
+				.with({ type: "Sigma" }, () => ".")
+				.with({ icit: "Implicit" }, () => "=>")
+				.otherwise(() => "->");
 			// const xtended = { ...ctx, env: [{ name: { variable: binder.variable } }, ...ctx.env] } as EB.DisplayContext;
 			// const prettyCls = displayClosure(closure, xtended, opts);
 
 			const z = compose(ctx.zonker, closure.ctx.zonker);
 
-			const extended = { ...closure.ctx, metas: ctx.metas, zonker: z, env: [{ name: { variable: binder.variable } }, ...closure.ctx.env] } as Pick<
-				EB.Context,
-				"env" | "zonker" | "metas"
-			>;
+			const extended =
+				binder.type === "Sigma"
+					? closure.ctx
+					: ({ ...closure.ctx, metas: ctx.metas, zonker: z, env: [{ name: { variable: binder.variable } }, ...closure.ctx.env] } as Pick<
+							EB.Context,
+							"env" | "zonker" | "metas"
+						>);
 			const printedEnv = extended.env.map(({ nf, name }) => {
 				if (nf) {
 					// Use the closure's extended context to render bound names correctly.
@@ -93,7 +100,7 @@ export const display = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBrui
 		.with({ type: "Existential" }, existential => {
 			const xtended = { ...ctx, env: [{ name: { variable: existential.variable } }, ...ctx.env] } as EB.Context;
 			const prettyEnv = EB.Display.Env(xtended, opts);
-			return `Σ(${existential.variable}: ${display(existential.annotation, ctx, opts)}). <packed: ${display(existential.body.value, xtended, opts)} -| ${prettyEnv}>`;
+			return `∃(${existential.variable}: ${display(existential.annotation, ctx, opts)}). <packed: ${display(existential.body.value, xtended, opts)} -| ${prettyEnv}>`;
 		})
 
 		.exhaustive();

@@ -37,7 +37,8 @@ export type Row = R.Row<Value, Variable>;
 export type Binder =
 	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }
 	| { type: "Lambda"; variable: string; annotation: Value; icit: Implicitness }
-	| { type: "Mu"; variable: string; annotation: Value; source: string };
+	| { type: "Mu"; variable: string; annotation: Value; source: string }
+	| { type: "Sigma"; variable: string; annotation: Value };
 
 export type Variable =
 	| { type: "Bound"; lvl: number }
@@ -72,6 +73,7 @@ export const Constructors = {
 			binder: { type: "Pi" as const, variable, icit, annotation },
 			closure,
 		}) as Value & { type: "Abs"; binder: { type: "Pi" } },
+	Sigma: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Sigma", variable, annotation }, closure }),
 	Mu: (variable: string, source: string, annotation: Value, closure: Closure): Value =>
 		mk({
 			type: "Abs" as const,
@@ -175,6 +177,7 @@ export const Patterns = {
 
 	App: { type: "App" } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,
+	Sigma: { type: "Abs", binder: { type: "Sigma" } } as const,
 	Lambda: { type: "Abs", binder: { type: "Lambda" } } as const,
 	Mu: { type: "Abs", binder: { type: "Mu" } } as const,
 	Row: { type: "Row" } as const,

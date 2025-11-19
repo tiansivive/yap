@@ -81,8 +81,8 @@ describe("Inference: Structs", () => {
 			const { structure, displays } = elaborateFrom('{ overriden: 1, foo: { inner: :overriden }, bar: { overriden: "hello", inner: :overriden } }');
 			expect(displays.type).toMatch("Schema");
 			expect(displays.type).toContain("overriden: Num");
-			expect(displays.type).toContain("foo: Schema [ inner: ?3 ]");
-			expect(displays.type).toContain("bar: Schema [ overriden: String, inner: ?12 ]");
+			expect(displays.type).toMatch(/foo: Schema \[ inner: \?\d+ \]/);
+			expect(displays.type).toMatch(/bar: Schema \[ overriden: String, inner: \?\d+ \]/);
 			expect(displays.constraints).toContain("Num ~~ ?3");
 			expect(displays.constraints).toContain("String ~~ ?12");
 

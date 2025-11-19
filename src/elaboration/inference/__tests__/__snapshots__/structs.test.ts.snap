@@ -6,7 +6,7 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
     "constraints": [
       "1 ~~ ?5",
       "Num ~~ ?6",
-      "?6 ~~ Num",
+      "?5 ~~ Num",
       "Num ~~ Num",
       "($add: (?5) (2)) ~~ ?2",
       "Num ~~ ?3",
@@ -73,15 +73,15 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
       },
       {
         "left": {
-          "id": 27,
+          "id": 25,
           "type": "Neutral",
           "value": {
-            "id": 26,
+            "id": 24,
             "type": "Var",
             "variable": {
               "lvl": 1,
               "type": "Meta",
-              "val": 6,
+              "val": 5,
             },
           },
         },
@@ -418,7 +418,7 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
 {
   "displays": {
     "constraints": [
-      "?3 ~~ Num",
+      "?2 ~~ Num",
       "Num ~~ Num",
       "($add: (?2) (2)) ~~ ?5",
       "Num ~~ ?6",
@@ -437,15 +437,15 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
     "constraints": [
       {
         "left": {
-          "id": 21,
+          "id": 19,
           "type": "Neutral",
           "value": {
-            "id": 20,
+            "id": 18,
             "type": "Var",
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },
@@ -832,11 +832,11 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
 {
   "displays": {
     "constraints": [
-      "?3 ~~ Num",
+      "?2 ~~ Num",
       "Num ~~ Num",
       "($add: (?2) (1)) ~~ ?5",
       "Num ~~ ?6",
-      "?6 ~~ Num",
+      "?5 ~~ Num",
       "Num ~~ Num",
       "($add: (?5) (1)) ~~ ?2",
       "Num ~~ ?3",
@@ -853,15 +853,15 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
     "constraints": [
       {
         "left": {
-          "id": 21,
+          "id": 19,
           "type": "Neutral",
           "value": {
-            "id": 20,
+            "id": 18,
             "type": "Var",
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },
@@ -970,15 +970,15 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
       },
       {
         "left": {
-          "id": 27,
+          "id": 25,
           "type": "Neutral",
           "value": {
-            "id": 26,
+            "id": 24,
             "type": "Var",
             "variable": {
               "lvl": 1,
               "type": "Meta",
-              "val": 6,
+              "val": 5,
             },
           },
         },
@@ -1341,12 +1341,12 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
 {
   "displays": {
     "constraints": [
-      "Schema [ y: ?13 | ?14 ] ~~ ?3",
+      "Schema [ y: ?13 | ?14 ] ~~ ?2",
       "?13 ~~ Num",
       "Num ~~ Num",
       "($div: ((λ$proj_y -> (closure: ($proj_y).y -| Γ: $proj_y)) ?2) (2)) ~~ ?11",
       "Num ~~ ?12",
-      "Schema [ x: ?15 | ?16 ] ~~ ?3",
+      "Schema [ x: ?15 | ?16 ] ~~ ?2",
       "?15 ~~ Num",
       "Num ~~ Num",
       "($div: ((λ$proj_x -> (closure: ($proj_x).x -| Γ: $proj_x)) ?2) (2)) ~~ ?8",
@@ -1415,12 +1415,12 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
         },
         "lvl": 0,
         "right": {
-          "id": 20,
+          "id": 18,
           "type": "Var",
           "variable": {
             "lvl": 0,
             "type": "Meta",
-            "val": 3,
+            "val": 2,
           },
         },
         "type": "assign",
@@ -1793,12 +1793,12 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
         },
         "lvl": 0,
         "right": {
-          "id": 20,
+          "id": 18,
           "type": "Var",
           "variable": {
             "lvl": 0,
             "type": "Meta",
-            "val": 3,
+            "val": 2,
           },
         },
         "type": "assign",
@@ -2177,6 +2177,90 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                               "implicits": [],
                               "metas": {},
                               "sigma": {
+                                "a": {
+                                  "multiplicity": "Many",
+                                  "term": {
+                                    "arg": {
+                                      "id": 835,
+                                      "type": "Lit",
+                                      "value": {
+                                        "type": "Num",
+                                        "value": 2,
+                                      },
+                                    },
+                                    "func": {
+                                      "arg": {
+                                        "id": 831,
+                                        "label": "x",
+                                        "term": {
+                                          "id": 829,
+                                          "type": "Var",
+                                          "variable": {
+                                            "name": "point",
+                                            "type": "Label",
+                                          },
+                                        },
+                                        "type": "Proj",
+                                      },
+                                      "func": {
+                                        "id": 828,
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "/",
+                                          "type": "Free",
+                                        },
+                                      },
+                                      "icit": "Explicit",
+                                      "id": 834,
+                                      "type": "App",
+                                    },
+                                    "icit": "Explicit",
+                                    "id": 836,
+                                    "type": "App",
+                                  },
+                                },
+                                "b": {
+                                  "multiplicity": "Many",
+                                  "term": {
+                                    "arg": {
+                                      "id": 824,
+                                      "type": "Lit",
+                                      "value": {
+                                        "type": "Num",
+                                        "value": 2,
+                                      },
+                                    },
+                                    "func": {
+                                      "arg": {
+                                        "id": 820,
+                                        "label": "y",
+                                        "term": {
+                                          "id": 818,
+                                          "type": "Var",
+                                          "variable": {
+                                            "name": "point",
+                                            "type": "Label",
+                                          },
+                                        },
+                                        "type": "Proj",
+                                      },
+                                      "func": {
+                                        "id": 817,
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "/",
+                                          "type": "Free",
+                                        },
+                                      },
+                                      "icit": "Explicit",
+                                      "id": 823,
+                                      "type": "App",
+                                    },
+                                    "icit": "Explicit",
+                                    "id": 825,
+                                    "type": "App",
+                                  },
+                                },
                                 "halved": {
                                   "ann": {
                                     "id": 27,
@@ -2337,6 +2421,90 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                             "implicits": [],
                             "metas": {},
                             "sigma": {
+                              "a": {
+                                "multiplicity": "Many",
+                                "term": {
+                                  "arg": {
+                                    "id": 835,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Num",
+                                      "value": 2,
+                                    },
+                                  },
+                                  "func": {
+                                    "arg": {
+                                      "id": 831,
+                                      "label": "x",
+                                      "term": {
+                                        "id": 829,
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "point",
+                                          "type": "Label",
+                                        },
+                                      },
+                                      "type": "Proj",
+                                    },
+                                    "func": {
+                                      "id": 828,
+                                      "type": "Var",
+                                      "variable": {
+                                        "name": "/",
+                                        "type": "Free",
+                                      },
+                                    },
+                                    "icit": "Explicit",
+                                    "id": 834,
+                                    "type": "App",
+                                  },
+                                  "icit": "Explicit",
+                                  "id": 836,
+                                  "type": "App",
+                                },
+                              },
+                              "b": {
+                                "multiplicity": "Many",
+                                "term": {
+                                  "arg": {
+                                    "id": 824,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Num",
+                                      "value": 2,
+                                    },
+                                  },
+                                  "func": {
+                                    "arg": {
+                                      "id": 820,
+                                      "label": "y",
+                                      "term": {
+                                        "id": 818,
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "point",
+                                          "type": "Label",
+                                        },
+                                      },
+                                      "type": "Proj",
+                                    },
+                                    "func": {
+                                      "id": 817,
+                                      "type": "Var",
+                                      "variable": {
+                                        "name": "/",
+                                        "type": "Free",
+                                      },
+                                    },
+                                    "icit": "Explicit",
+                                    "id": 823,
+                                    "type": "App",
+                                  },
+                                  "icit": "Explicit",
+                                  "id": 825,
+                                  "type": "App",
+                                },
+                              },
                               "halved": {
                                 "ann": {
                                   "id": 27,
@@ -3457,20 +3625,20 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
   "displays": {
     "constraints": [
       "?11 ~~ ?14",
-      "?12 ~~ ?15",
+      "?11 ~~ ?15",
       ""hello" ~~ ?11",
       "String ~~ ?12",
       "Struct [ overriden: "hello", inner: ?2 ] ~~ ?8",
-      "Schema [ overriden: String, inner: ?12 ] ~~ ?9",
+      "Schema [ overriden: String, inner: ?11 ] ~~ ?9",
       "?2 ~~ ?17",
-      "?3 ~~ ?18",
+      "?2 ~~ ?18",
       "Struct [ inner: ?2 ] ~~ ?5",
-      "Schema [ inner: ?3 ] ~~ ?6",
+      "Schema [ inner: ?2 ] ~~ ?6",
       "1 ~~ ?2",
       "Num ~~ ?3",
     ],
     "term": "Struct [ overriden: 1, foo: Struct [ inner: :overriden ], bar: Struct [ overriden: "hello", inner: :overriden ] ]",
-    "type": "Schema [ overriden: Num, foo: Schema [ inner: ?3 ], bar: Schema [ overriden: String, inner: ?12 ] ]",
+    "type": "Schema [ overriden: Num, foo: Schema [ inner: ?2 ], bar: Schema [ overriden: String, inner: ?11 ] ]",
   },
 }
 `;
@@ -3511,15 +3679,15 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
       },
       {
         "left": {
-          "id": 39,
+          "id": 37,
           "type": "Neutral",
           "value": {
-            "id": 38,
+            "id": 36,
             "type": "Var",
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 12,
+              "val": 11,
             },
           },
         },
@@ -3671,15 +3839,15 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
                   },
                   "type": "extension",
                   "value": {
-                    "id": 39,
+                    "id": 37,
                     "type": "Neutral",
                     "value": {
-                      "id": 38,
+                      "id": 36,
                       "type": "Var",
                       "variable": {
                         "lvl": 0,
                         "type": "Meta",
-                        "val": 12,
+                        "val": 11,
                       },
                     },
                   },
@@ -3757,15 +3925,15 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
       },
       {
         "left": {
-          "id": 21,
+          "id": 19,
           "type": "Neutral",
           "value": {
-            "id": 20,
+            "id": 18,
             "type": "Var",
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },
@@ -3853,15 +4021,15 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
                 },
                 "type": "extension",
                 "value": {
-                  "id": 21,
+                  "id": 19,
                   "type": "Neutral",
                   "value": {
-                    "id": 20,
+                    "id": 18,
                     "type": "Var",
                     "variable": {
                       "lvl": 0,
                       "type": "Meta",
-                      "val": 3,
+                      "val": 2,
                     },
                   },
                 },
@@ -4397,15 +4565,15 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
                           },
                           "type": "extension",
                           "value": {
-                            "id": 39,
+                            "id": 37,
                             "type": "Neutral",
                             "value": {
-                              "id": 38,
+                              "id": 36,
                               "type": "Var",
                               "variable": {
                                 "lvl": 0,
                                 "type": "Meta",
-                                "val": 12,
+                                "val": 11,
                               },
                             },
                           },
@@ -4450,15 +4618,15 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
                       },
                       "type": "extension",
                       "value": {
-                        "id": 21,
+                        "id": 19,
                         "type": "Neutral",
                         "value": {
-                          "id": 20,
+                          "id": 18,
                           "type": "Var",
                           "variable": {
                             "lvl": 0,
                             "type": "Meta",
-                            "val": 3,
+                            "val": 2,
                           },
                         },
                       },

@@ -44,6 +44,7 @@ export const collectMetasNF = (val: NF.Value, zonker: Subst): MetaNF[] => {
 		.with(NF.Patterns.Lambda, ({ closure }) => collectMetasEB(closure.term, zonker))
 		.with(NF.Patterns.Pi, ({ closure, binder }) => [...collectMetasNF(binder.annotation, zonker), ...collectMetasEB(closure.term, zonker)])
 		.with(NF.Patterns.Mu, ({ closure, binder }) => [...collectMetasNF(binder.annotation, zonker), ...collectMetasEB(closure.term, zonker)])
+		.with(NF.Patterns.Sigma, ({ closure, binder }) => [...collectMetasNF(binder.annotation, zonker), ...collectMetasEB(closure.term, zonker)])
 		.with(NF.Patterns.Modal, ({ value }) => collectMetasNF(value, zonker))
 		.otherwise(() => {
 			throw new Error("metas: Not implemented yet");
@@ -74,6 +75,7 @@ export const collectMetasEB = (tm: EB.Term, zonker: Subst): MetaEB[] => {
 			.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) => _metas(body))
 			.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }) => [..._metas(binding.annotation), ..._metas(body)])
 			.with({ type: "Abs", binding: { type: "Mu" } }, ({ body, binding }) => [..._metas(binding.annotation), ..._metas(body)])
+			.with({ type: "Abs", binding: { type: "Sigma" } }, ({ body, binding }) => [..._metas(binding.annotation), ..._metas(body)])
 			.with({ type: "App" }, ({ func, arg }) => [..._metas(func), ..._metas(arg)])
 			.with({ type: "Row" }, ({ row }) =>
 				R.fold(

@@ -45,9 +45,8 @@ export type Binding = (
 	| { type: "Lambda"; variable: string; icit: Implicitness }
 	| { type: "Mu"; variable: string; source: string }
 	| { type: "Pi"; variable: string; icit: Implicitness }
-) &
-	// | { type: "Sigma"; variable: string; annotation: Term, multiplicity: Q.Multiplicity; }
-	{ annotation: Term };
+	| { type: "Sigma"; variable: string }
+) & { annotation: Term };
 
 export type Alternative = { pattern: Pattern; term: Term; binders: Pat.Binder[] };
 export type Pattern =
@@ -91,6 +90,12 @@ export const Constructors = {
 		mk({
 			type: "Abs",
 			binding: { type: "Pi" as const, variable, icit, annotation },
+			body,
+		}),
+	Sigma: (variable: string, annotation: Term, body: Term): Term =>
+		mk({
+			type: "Abs",
+			binding: { type: "Sigma" as const, variable, annotation },
 			body,
 		}),
 	Mu: (variable: string, source: string, annotation: Term, body: Term): Term =>
@@ -176,6 +181,7 @@ export const CtorPatterns = {
 	Lambda: { type: "Abs", binding: { type: "Lambda" } },
 	Pi: { type: "Abs", binding: { type: "Pi" } },
 	Mu: { type: "Abs", binding: { type: "Mu" } },
+	Sigma: { type: "Abs", binding: { type: "Sigma" } },
 	Match: { type: "Match" },
 	Row: { type: "Row" },
 	Proj: { type: "Proj" },

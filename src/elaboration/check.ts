@@ -24,6 +24,8 @@ import { entries, set } from "@yap/utils";
 
 import * as Err from "./shared/errors";
 import { Liquid } from "@yap/verification/modalities";
+import * as Lit from "@yap/shared/literals";
+import { assert } from "vitest";
 
 type Result = [EB.Term, Q.Usages];
 export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, Q.Usages]> =>
@@ -93,9 +95,15 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 				.with([{ type: "struct" }, NF.Patterns.Type], ([{ row }]) =>
 					V2.Do(function* () {
 						const [r, us] = yield* Check.row.gen(row, NF.Type, ctx.env.length);
-						return [EB.Constructors.Schema(r), us] satisfies Result;
+
+						// const v = EB.Constructors.Vars.Bound(0)
+						// const body = EB.Constructors.App("Explicit", EB.Constructors.Lit(Lit.Atom("Schema")), EB.Constructors.Var(v));
+						const sigma = EB.Constructors.Sigma("$sig", EB.Constructors.Row(r), EB.Constructors.Schema(r));
+						return [sigma, us] satisfies Result;
+						//return [EB.Constructors.Schema(r), us] satisfies Result;
 					}),
 				)
+
 				.with([{ type: "injection" }, NF.Patterns.Type], ([inj, ty]) =>
 					V2.Do(function* () {
 						const [tm, us] = yield* Check.val.gen(inj.value, ty);
@@ -130,6 +138,19 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 						);
 
 						return [EB.Constructors.Struct(r), us] satisfies Result;
+					}),
+				)
+				.with([{ type: "struct" }, NF.Patterns.Sigma], ([tm, sig]) =>
+					V2.Do(function* () {
+						const [rtm, rty, rus] = yield* EB.infer.gen(tm);
+
+						const rv = NF.evaluate(ctx, rtm);
+						assert(rv.type === "App" && rv.arg.type === "Row", "Expected struct term to evaluate to an application of a Row");
+						const ty = NF.apply(sig.binder, sig.closure, NF.Constructors.Row(rv.arg.row));
+
+						yield* V2.tell("constraint", { type: "assign", left: ty, right: rty });
+
+						return [rtm, rus] satisfies Result;
 					}),
 				)
 				.with([{ type: "match" }, NF.Patterns.Type], ([match, ty]) => {
@@ -220,16 +241,16 @@ const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.R
 					const [tm, us] = yield* Check.val.gen(val, ty);
 					// const { constraints:cs, metas:ms } = yield* V2.listen();
 					// console.log("Row Check Constraints:", cs);
-					const sigma = ctx.sigma[lbl];
-					if (!sigma) {
-						throw new Error("Elaborating Row Extension: Label not found");
-					}
+					// const sigma = ctx.sigma[lbl];
+					// if (!sigma) {
+					// 	throw new Error("Elaborating Row Extension: Label not found");
+					// }
 
-					const nf = NF.evaluate(ctx, tm);
-					yield* V2.tell("constraint", [
-						{ type: "assign", left: nf, right: sigma.nf, lvl: ctx.env.length },
-						{ type: "assign", left: ty, right: sigma.ann, lvl: ctx.env.length },
-					]);
+					// const nf = NF.evaluate(ctx, tm);
+					// yield* V2.tell("constraint", [
+					// 	{ type: "assign", left: nf, right: sigma.nf, lvl: ctx.env.length },
+					// 	{ type: "assign", left: ty, right: sigma.ann, lvl: ctx.env.length },
+					// ]);
 					// const { constraints, metas } = yield* V2.listen();
 					// console.log("Row Check Constraints:", constraints);
 					// console.log("Sigma:", sigma)

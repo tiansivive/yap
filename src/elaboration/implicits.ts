@@ -11,6 +11,7 @@ import { Subst } from "./unification/substitution";
 
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as R from "@yap/shared/rows";
+import assert from "assert";
 
 export function insert(node: EB.AST): V2.Elaboration<EB.AST> {
 	const [term, ty, us] = node;
@@ -111,6 +112,13 @@ export const instantiate = (term: EB.Term, ctx: EB.Context): EB.Term => {
 					.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Any" }))
 					.with({ type: "Lit", value: { type: "Atom", value: "Any" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Void" }))
 					.otherwise(() => EB.Constructors.Var(v.variable));
+			})
+			.with({ type: "Abs", binding: { type: "Sigma" } }, sig => {
+				const annotation = instantiate(sig.binding.annotation, ctx);
+				const nf = NF.evaluate(ctx, annotation);
+				assert(nf.type === "Row", "Sigma binder annotation must be a Row");
+				const xtended = EB.extendSigmaEnv(ctx, nf.row);
+				return EB.Constructors.Abs({ ...sig.binding, annotation }, instantiate(sig.body, xtended));
 			})
 			.with({ type: "Abs" }, abs => {
 				const annotation = instantiate(abs.binding.annotation, ctx);

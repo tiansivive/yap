@@ -7,15 +7,15 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
     "constraints": [
       {
         "left": {
-          "id": 21,
+          "id": 19,
           "type": "Neutral",
           "value": {
-            "id": 20,
+            "id": 18,
             "type": "Var",
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },

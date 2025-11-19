@@ -31,7 +31,7 @@ describe("VerificationService", () => {
 	afterEach(() => {
 		vi.resetAllMocks();
 	});
-	it("checks a literal against a simple refinement", async () => {
+	it("verifies a literal against a simple refinement", async () => {
 		const src = `let x: Num [| \\n -> n == 42|] = 42`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -49,7 +49,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks Nat type alias definition", async () => {
+	it("verifies Nat type alias definition", async () => {
 		const src = `let Nat: Type = Num [| \\n -> n > 0 |]`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -67,7 +67,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks Pos type alias definition", async () => {
+	it("verifies Pos type alias definition", async () => {
 		const src = `let Pos: Type = Num [| \\p -> p > 1 |]`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -85,7 +85,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks positive integer literal with refinement", async () => {
+	it("verifies positive integer literal with refinement", async () => {
 		const src = `let n: Num [| \\n -> n > 0 |] = 100`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -103,7 +103,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks function definition fn", async () => {
+	it("verifies function definition fn", async () => {
 		const src = `let fn: Num -> Num = \\x -> 2`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -121,7 +121,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks higher-order function hof", async () => {
+	it("verifies higher-order function hof", async () => {
 		const src = `let hof: (f: Num [| \\n -> n > 0|] -> Num [| \\n -> n > 0|]) -> Num [| \\n -> n > 0|] = \\f -> f 1`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -139,7 +139,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks higher-order function hof2", async () => {
+	it("verifies higher-order function hof2", async () => {
 		const src = `let hof2: (Num -> Num [| \\n -> n > 0 |]) -> Num [| \\p -> p > 1 |] = \\f -> (f 1) + 1`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -157,7 +157,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks higher-order function hof3", async () => {
+	it("verifies higher-order function hof3", async () => {
 		const src = `let hof3: Num -> (Num -> Num) -> Num = \\x -> \\f -> (f x) + 1`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -175,7 +175,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks positive test - literal equals 1", async () => {
+	it("verifies positive test - literal equals 1", async () => {
 		const src = `let posTestCheckLiteral: Num [| \\v -> v == 1 |] = 1`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -193,7 +193,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks negative test - literal does not equal 1", async () => {
+	it("verifies negative test - literal does not equal 1", async () => {
 		const src = `let negTestCheckLiteral: Num [| \\v -> v == 1 |] = 2`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -210,7 +210,7 @@ describe("VerificationService", () => {
 		expect(sat).toBe("unsat");
 	});
 
-	it("checks positive function application 1 + 2 as Nat", async () => {
+	it("verifies positive function application 1 + 2 as Nat", async () => {
 		const src = `let posFnApp: Num [| \\n -> n > 0|] = 1 + 2`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -228,7 +228,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks negative function application - result does not equal 0", async () => {
+	it("verifies negative function application - result does not equal 0", async () => {
 		const src = `let negFnApp: Num [| \\v -> v == 0 |] = 1 + 2`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -245,7 +245,7 @@ describe("VerificationService", () => {
 		expect(sat).toBe("unsat");
 	});
 
-	it("checks lambda with postcondition returning constant 1", async () => {
+	it("verifies lambda with postcondition returning constant 1", async () => {
 		const src = `let posTestCheckLambdaPostCondition: Num -> Num [| \\v -> v == 1 |] = \\x -> 1`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -263,7 +263,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks negative lambda postcondition - identity does not guarantee Nat", async () => {
+	it("verifies negative lambda postcondition - identity does not guarantee Nat", async () => {
 		const src = `let negTestCheckLambdaPostCondition: Num -> Num [| \\n -> n > 0|] = \\x -> x`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -280,7 +280,7 @@ describe("VerificationService", () => {
 		expect(sat).toBe("unsat");
 	});
 
-	it("checks lambda with Nat precondition - identity preserves property", async () => {
+	it("verifies lambda with Nat precondition - identity preserves property", async () => {
 		const src = `let posTestCheckLambdaPreCondition: (n: Num [| \\n -> n > 0|]) -> Num = \\x -> x`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -298,7 +298,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks lambda with Nat pre and postcondition - identity works", async () => {
+	it("verifies lambda with Nat pre and postcondition - identity works", async () => {
 		const src = `let posTestCheckLambdaPreAndPostCondition: (n: Num [| \\n -> n > 0|]) -> Num [| \\n -> n > 0|] = \\x -> x`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -316,7 +316,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks negative lambda pre and postcondition - constant 0 fails", async () => {
+	it("verifies negative lambda pre and postcondition - constant 0 fails", async () => {
 		const src = `let negTestCheckLambdaPreAndPostCondition: (n: Num [| \\n -> n > 0|]) -> Num [| \\n -> n > 0|] = \\x -> 0`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -333,7 +333,7 @@ describe("VerificationService", () => {
 		expect(sat).toBe("unsat");
 	});
 
-	it("checks lambda with dependent refinement on result", async () => {
+	it("verifies lambda with dependent refinement on result", async () => {
 		const src = `let posTestCheckRefinedResultLambda: (n: Num) -> Num [| \\o -> o == (n + 1) |] = \\x -> x + 1`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -351,7 +351,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks inc function definition", async () => {
+	it("verifies inc function definition", async () => {
 		const src = `let inc: (x: Num) -> Num [| \\v -> v == (x + 1) |] = \\x -> x + 1`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -369,7 +369,7 @@ describe("VerificationService", () => {
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
 	});
 
-	it("checks block expression with refined result", async () => {
+	it("verifies block expression with refined result", async () => {
 		const src = `let block: Num [| \\n -> n > 0|] = { let f: Num [| \\n -> n > 0|] -> Num [| \\p -> p > 1|] = \\o -> o + 1; return (f 1); }`;
 		const [tm, ty, ctx] = elaborate(src);
 
@@ -385,5 +385,60 @@ describe("VerificationService", () => {
 		const sat = await solver.check();
 		expect(sat).toBe("sat");
 		expect(artefacts.vc.sexpr()).toMatchSnapshot();
+	});
+
+	it("verifies dependent record construction", async () => {
+		const src = `let test = {
+			let Pair
+				: (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
+				= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p :fst v |] };
+		
+			let p
+				: Pair Num Num (\\x -> \\y -> x < y )
+				= { fst: 1, snd: 2 };
+
+			return 1;
+		}`;
+
+		const [tm, ty, ctx] = elaborate(src);
+
+		const Verification = VerificationService(Z3);
+		const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+		if (result._tag === "Left") {
+			throw new Error(EB.V2.display(result.left));
+		}
+
+		const artefacts = result.right;
+		const solver = new Z3.Solver();
+		solver.add(artefacts.vc.eq(true));
+		const sat = await solver.check();
+		expect(sat).toBe("sat");
+		expect(artefacts.vc.sexpr()).toMatchSnapshot();
+
+		const src2 = `let testFail = {
+			let Pair
+				: (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
+				= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p :fst v |] };
+		
+			let p
+				: Pair Num Num (\\x -> \\y -> x < y )
+				= { fst: 2, snd: 1 };
+
+			return 1;
+		}`;
+
+		const [tm2, ty2, ctx2] = elaborate(src2);
+
+		const { result: result2 } = V2.Do(() => V2.local(_ => ctx2, Verification.check(tm2, ty2)))(ctx2);
+		if (result2._tag === "Left") {
+			throw new Error(EB.V2.display(result2.left));
+		}
+
+		const artefacts2 = result2.right;
+		const solver2 = new Z3.Solver();
+		solver2.add(artefacts2.vc.eq(true));
+		const sat2 = await solver2.check();
+		expect(sat2).toBe("unsat");
+		expect(artefacts2.vc.sexpr()).toMatchSnapshot();
 	});
 });

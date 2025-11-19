@@ -16,6 +16,7 @@ import * as A from "fp-ts/lib/NonEmptyArray";
 import { Liquid } from "@yap/verification/modalities";
 import * as Modal from "@yap/verification/modalities/shared";
 import { Implicitness } from "@yap/shared/implicitness";
+import assert from "assert";
 
 export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: string]: EB.Term } = {}, fuel = 0): NF.Value {
 	//Log.push("eval");
@@ -28,16 +29,18 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 		.with({ type: "Lit" }, ({ value }): NF.Value => NF.Constructors.Lit(value))
 		.with({ type: "Var", variable: { type: "Label" } }, ({ variable }): NF.Value => {
 			const sig = ctx.sigma[variable.name];
-
 			if (!sig) {
-				const local = bindings[variable.name];
-				if (local) {
-					return evaluate(ctx, local, bindings, fuel);
-				}
 				throw new Error("Unbound label: " + variable.name);
 			}
 
-			return sig.nf;
+			if (sig.nf) {
+				return sig.nf;
+			}
+			if (!sig.term) {
+				throw new Error("Label has no term or normal form: " + variable.name);
+			}
+
+			return evaluate(ctx, sig.term, bindings, fuel);
 		})
 		.with({ type: "Var", variable: { type: "Free" } }, ({ variable }) => {
 			const val = ctx.imports[variable.name];
@@ -88,6 +91,11 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 			const ann = evaluate(ctx, binding.annotation, bindings, fuel);
 			return NF.Constructors.Pi(binding.variable, binding.icit, ann, NF.Constructors.Closure(ctx, body));
 		})
+		.with({ type: "Abs", binding: { type: "Sigma" } }, ({ body, binding }) => {
+			// assert(binding.annotation.type === "Row", "Sigma binder annotation must be a Row");
+			const ann = evaluate(ctx, binding.annotation, bindings, fuel);
+			return NF.Constructors.Sigma(binding.variable, ann, NF.Constructors.Closure(ctx, body));
+		})
 		.with({ type: "Abs", binding: { type: "Mu" } }, (mu): NF.Value => {
 			const ann = evaluate(ctx, mu.binding.annotation, bindings, fuel);
 			const val = NF.Constructors.Mu(mu.binding.variable, mu.binding.source, ann, NF.Constructors.Closure(ctx, mu.body));
@@ -96,6 +104,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 			// const extended = EB.unfoldMu(ctx, { type: "Mu", variable: mu.binding.variable }, val);
 			// return evaluate(extended, mu.body);
 		})
+
 		.with({ type: "App" }, ({ func, arg, icit }) => {
 			const nff = evaluate(ctx, func, bindings, fuel);
 			const nfa = evaluate(ctx, arg, bindings, fuel);
@@ -111,7 +120,19 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 				return { [label]: value, ...extract(row) };
 			};
 			const bindings = extract(row);
-			return NF.Constructors.Row(evalRow(ctx, row, bindings));
+
+			const sigma = Object.entries(bindings).reduce<EB.Context["sigma"]>((sig, b) => {
+				const [label, term] = b;
+
+				if (sig[label]) {
+					return sig;
+				}
+
+				return { ...sig, [label]: { term, multiplicity: Q.Many } as EB.Sigma };
+			}, ctx.sigma);
+			const xtended = { ...ctx, sigma };
+			return NF.Constructors.Row(evalRow(xtended, row, {}));
+			//return NF.Constructors.Row(evalRow(ctx, row, bindings));
 		})
 		.with({ type: "Match" }, v => {
 			// console.warn("Evaluating match terms not yet implemented. Returning scrutinee as Normal Form for the time being");
@@ -307,9 +328,16 @@ export const matching = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]):
 		.exhaustive();
 };
 
-export const apply = (binder: EB.Binder, closure: NF.Closure, value: NF.Value): NF.Value => {
-	const { ctx, term } = closure;
-	const extended = EB.extend(ctx, binder, value);
+export function apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): NF.Value {
+	let { ctx, term } = closure;
+
+	const extended = (() => {
+		if (binder.type !== "Sigma") {
+			return EB.extend(ctx, binder, value);
+		}
+		assert(value.type === "Row", "Sigma binder should be applied to a Row");
+		return EB.extendSigmaEnv(ctx, value.row);
+	})();
 
 	if (closure.type === "Closure") {
 		return evaluate(extended, term);
@@ -317,7 +345,7 @@ export const apply = (binder: EB.Binder, closure: NF.Closure, value: NF.Value): 
 
 	const args = extended.env.slice(0, closure.arity).map(({ nf }) => nf);
 	return closure.compute(...args);
-};
+}
 
 export const unwrapNeutral = (value: NF.Value): NF.Value => {
 	return match(value)

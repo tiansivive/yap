@@ -5,11 +5,7 @@ exports[`inference: variant type > | #x Num | #y Num 1`] = `
   "displays": {
     "constraints": [
       "Type ~~ Type",
-      "Num ~~ ?5",
-      "Type ~~ ?6",
       "Type ~~ Type",
-      "Num ~~ ?2",
-      "Type ~~ ?3",
     ],
     "term": "Variant [ y: Num, x: Num ]",
     "type": "Type",
@@ -43,56 +39,6 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       {
         "left": {
-          "id": 28,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "id": 25,
-          "type": "Neutral",
-          "value": {
-            "id": 24,
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 5,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "id": 1,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "id": 27,
-          "type": "Neutral",
-          "value": {
-            "id": 26,
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
           "id": 1,
           "type": "Lit",
           "value": {
@@ -107,56 +53,6 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
           "value": {
             "type": "Atom",
             "value": "Type",
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "id": 29,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "id": 19,
-          "type": "Neutral",
-          "value": {
-            "id": 18,
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 2,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "id": 1,
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "id": 21,
-          "type": "Neutral",
-          "value": {
-            "id": 20,
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 3,
-            },
           },
         },
         "type": "assign",

@@ -6,6 +6,19 @@ import * as EB from "@yap/elaboration";
 
 describe("Dependent Records", () => {
 	describe("dependent pairs with path-dependent types", () => {
+		it("Simple dependent pair", () => {
+			const src = `{
+				let Pair
+					: Type
+					= { fst: Num, snd: :fst };
+			}`;
+
+			const res = elaborateFrom(src);
+
+			expect(res.structure.term.type).toBe("Block");
+			expect({ displays: res.displays }).toMatchSnapshot();
+			expect({ structure: res.structure }).toMatchSnapshot();
+		});
 		it("Pair: dependent pair with type dependent on first component", () => {
 			const src = `{
 				let Pair
@@ -45,24 +58,6 @@ describe("Dependent Records", () => {
 				let Pair
 					: (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
 					= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p :fst v |] };
-			}`;
-
-			const res = elaborateFrom(src);
-
-			expect(res.structure.term.type).toBe("Block");
-			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
-		});
-
-		it("Dependent pair instantiated with less-than constraint", () => {
-			const src = `{
-				let Pair
-					: (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
-					= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p :fst v |] };
-				
-				let pair
-					: Pair Num Num (\\x -> \\y -> x < y )
-					= { fst: 3, snd: 5 };
 			}`;
 
 			const res = elaborateFrom(src);

@@ -27,6 +27,7 @@ export type Context = {
 	}>;
 	implicits: Array<[EB.Term, NF.Value]>;
 	sigma: Record<string, Sigma>;
+
 	zonker: Sub.Subst;
 	metas: Record<number, { meta: EB.Meta; ann: NF.Value }>;
 	imports: Record<string, EB.AST>;
@@ -48,10 +49,10 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.
 		if (key) {
 			const { ann, multiplicity, isAnnotation, nf } = key;
 			const tm = EB.Constructors.Var({ type: "Label", name: variable.value });
-			// if it's an annotation, then the field value describes the type of the field
-			// if it's a value, the the field's type is given by the stored ann
-			const ty = isAnnotation ? nf : ann;
-			return V2.of<EB.AST>([tm, ty, zeros]); // QUESTION: need to somehow handle multiplicity?
+			// // if it's an annotation, then the field value describes the type of the field
+			// // if it's a value, the the field's type is given by the stored ann
+			// const ty = isAnnotation ? nf : ann;
+			return V2.of<EB.AST>([tm, nf, zeros]); // QUESTION: need to somehow handle multiplicity?
 		}
 		throw new Error(`Label not found: ${variable.value}`);
 	}
@@ -142,6 +143,35 @@ export const extend = (context: Context, binder: Binder, value: NF.Value, origin
 		...context,
 		env: [entry, ...env],
 	};
+};
+
+export const extendSigmaEnv = (ctx: Context, row: NF.Row): Context => {
+	const collect = (r: NF.Row): Context["sigma"] => {
+		if (r.type === "empty") {
+			return {};
+		}
+
+		if (r.type === "variable") {
+			return {};
+		}
+
+		const fieldSigma: Context["sigma"] = {
+			[r.label]: {
+				term: new Error("Dont think I need this") as any,
+				nf: r.value,
+				ann: new Error("Same problem as normal extend above. Must pass val annotation in apply/extend to fix this") as any,
+				multiplicity: Q.Many,
+			},
+			...collect(r.row),
+		};
+
+		return fieldSigma;
+	};
+
+	return update(ctx, "sigma", s => ({
+		...s,
+		...collect(row),
+	}));
 };
 
 export const augment = (context: Context, binder: Binder, annotation: NF.Value, origin: Origin = "inserted") => {

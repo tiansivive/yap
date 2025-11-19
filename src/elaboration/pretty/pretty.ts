@@ -45,14 +45,18 @@ const display = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; 
 				.with({ type: "Abs" }, ({ binding, body }) => {
 					const b = match(binding)
 						.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
+						.with({ type: "Sigma" }, ({ variable }) => `Σ(${variable}: ${_display(binding.annotation)})`)
 						.with({ type: "Pi" }, ({ variable, annotation }) => `Π(${variable}: ${_display(annotation)})`)
 						.otherwise(() => {
 							throw new Error("_display Term Binder: Not implemented");
 						});
 
-					const arr = binding.type !== "Let" && binding.type !== "Mu" && binding.icit === "Implicit" ? "=>" : "->";
+					const arr = match(binding)
+						.with({ type: "Sigma" }, () => ".")
+						.with({ icit: "Implicit" }, () => "=>")
+						.otherwise(() => "->");
 
-					const xtended = bind(binding.variable, ctx);
+					const xtended = binding.type === "Sigma" ? ctx : bind(binding.variable, ctx);
 					// const printedEnv = xtended.env
 					// 	.map(({ nf, name }) => {
 					// 		if (nf) {
