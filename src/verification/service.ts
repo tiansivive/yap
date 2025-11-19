@@ -36,7 +36,7 @@ import {
 	operatorMap,
 	PrimOps,
 } from "@yap/shared/lib/primitives";
-import { update } from "@yap/utils";
+import { setProp, update } from "@yap/utils";
 import assert from "assert";
 
 export const VerificationService = (Z3: Context<"main">, { logging } = { logging: false }) => {
@@ -1189,27 +1189,6 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 		};
 	};
 	const getObligations = () => obligations.slice();
-
-	const collect = function* (r: EB.Row, lvl: number): Generator<V2.Elaboration<any>, Record<string, EB.Sigma>, any> {
-		if (r.type === "empty") {
-			return {};
-		}
-
-		if (r.type === "variable") {
-			return {};
-		}
-
-		const ctx = yield* V2.ask();
-		const { label, value, row } = r;
-		const [ann, vc] = yield* synth.gen(value);
-		const nf = NF.evaluate(ctx, value);
-
-		const info: EB.Sigma = { term: value, nf, ann, multiplicity: Q.Many };
-
-		const rest = yield* collect(row, lvl);
-		return setProp(rest, row.label, info);
-		// return [[row.label, [v, Q.Many]], ...extract({ ...row.row, location: row.location }, lvl + 1)]
-	};
 
 	return { check, synth, subtype, getObligations };
 };
