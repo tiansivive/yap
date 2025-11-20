@@ -6,3 +6,5 @@ export * as PPretty from "./syntax/ppretty";
 export * from "./syntax/traversal";
 export * from "./generalization";
 export * as DSL from "./syntax/dsl";
+
+export * from "./recursion";

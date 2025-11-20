@@ -40,7 +40,7 @@
     - ~~implications for interop with rows and indexed types?~~
 - Fix sigma contexts (dependent records)
   - Must be a stack
-  - unify evaluation and elaboration sigmas so we don't need the extract bindings trick in evaluation
+  - ~~unify evaluation and elaboration sigmas so we don't need the extract bindings trick in evaluation~~
 - Delimited continuations
   - shift/reset
 - Exclusion/Not type operator

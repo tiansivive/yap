@@ -441,4 +441,61 @@ describe("VerificationService", () => {
 		expect(sat2).toBe("unsat");
 		expect(artefacts2.vc.sexpr()).toMatchSnapshot();
 	});
+
+	it("verifies ordered list construction", async () => {
+		const src = `let orderedListTest = {
+			let List
+				: (a: Type) -> (p: a -> a -> Bool) -> Type
+				= \\t -> \\p -> | #nil Unit
+								| #cons { head: t, tail: List (t[| \\v -> p :head v |]) p };
+
+			let ol
+				: List Num (\\x -> \\y -> x < y )
+				= #cons { head: 1, tail: #cons { head: 2, tail: #nil * } };
+
+			return 1;	
+		}`;
+
+		const [tm, ty, ctx] = elaborate(src);
+
+		const Verification = VerificationService(Z3);
+		const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+		if (result._tag === "Left") {
+			throw new Error(EB.V2.display(result.left));
+		}
+
+		const artefacts = result.right;
+		const solver = new Z3.Solver();
+		solver.add(artefacts.vc.eq(true));
+		const sat = await solver.check();
+		expect(sat).toBe("sat");
+		expect(artefacts.vc.sexpr()).toMatchSnapshot();
+
+		const src2 = `let orderedListTestFail = {
+			let List
+				: (a: Type) -> (p: a -> a -> Bool) -> Type
+				= \\t -> \\p -> | #nil Unit
+								| #cons { head: t, tail: List (t[| \\v -> p :head v |]) p };
+
+			let ol
+				: List Num (\\x -> \\y -> x < y )
+				= #cons { head: 2, tail: #cons { head: 1, tail: #nil * } };
+
+			return 1;	
+		}`;
+
+		const [tm2, ty2, ctx2] = elaborate(src2);
+
+		const { result: result2 } = V2.Do(() => V2.local(_ => ctx2, Verification.check(tm2, ty2)))(ctx2);
+		if (result2._tag === "Left") {
+			throw new Error(EB.V2.display(result2.left));
+		}
+
+		const artefacts2 = result2.right;
+		const solver2 = new Z3.Solver();
+		solver2.add(artefacts2.vc.eq(true));
+		const sat2 = await solver2.check();
+		expect(sat2).toBe("unsat");
+		expect(artefacts2.vc.sexpr()).toMatchSnapshot();
+	});
 });

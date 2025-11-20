@@ -5,6 +5,7 @@ import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as A from "fp-ts/Array";
 import * as E from "fp-ts/Either";
 import * as F from "fp-ts/function";
+import * as O from "fp-ts/Option";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
 
@@ -128,8 +129,24 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 			const ctx = yield* V2.ask();
 			indentation++;
 			log(`Checking`, EB.Display.Term(tm, ctx), `Against:`, NF.display(ty, ctx), "Env:", EB.Display.Env(ctx));
+
 			const r = yield* match([tm, NF.force(ctx, ty)])
 				.with([{ type: "Modal" }, NF.Patterns.Type], ([tm, ty]) => check.gen(tm.term, ty))
+				.with([EB.CtorPatterns.Mu, P._], function* ([tm, ty]) {
+					// TODO subtype mu annotation against ty?
+					const r = yield* V2.local(ctx => EB.bind(ctx, { type: "Mu", variable: tm.binding.variable }, ty), check(tm.body, ty));
+					return r;
+					///return check.gen(tm.body, ty);
+				})
+				.with(
+					[P._, NF.Patterns.App],
+					([, ty]) => O.isSome(NF.unfoldMu(ty)),
+					function* ([tm, ty]) {
+						const unfolded = NF.unfoldMu(ty);
+						assert(unfolded._tag === "Some");
+						return yield* check.gen(tm, unfolded.value);
+					},
+				)
 				.with([{ type: "Abs" }, { type: "Abs", binder: { type: "Pi" } }], function* ([tm, ty]) {
 					const vc = yield* V2.local(
 						ctx => EB.bind(ctx, { type: "Lambda", variable: tm.binding.variable }, ty.binder.annotation),
@@ -184,40 +201,55 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 					const schema = NF.apply(ty.binder, ty.closure, NF.Constructors.Row(rv.arg.row));
 					return check.gen(tm, schema);
 				})
+				.with([EB.CtorPatterns.Struct, NF.Patterns.Variant], function* ([tm, ty]) {
+					// const [schema, artefacts] = yield* synth.gen(tm);
+					// const forced = NF.force(ctx, schema);
+					// assert(forced.type === "App" && forced.arg.type === "Row", "Expected struct term to synth an app over a row");
+					// const vc = yield* V2.pure(contains(ty.arg.row, forced.arg.row)) // the variant row contains all the schema fields in the struct (should be only one field here)
+					// return { usages: artefacts.usages, vc: Z3.And(artefacts.vc as Bool, vc as Bool)}
+					const nf = NF.evaluate(ctx, tm);
+					assert(nf.type === "App" && nf.arg.type === "Row", "Expected struct term to evaluate to an application of a row");
+					const contains = (a: NF.Row, b: EB.Row) => {
+						const onVal = (t: EB.Term, lbl: string, conj: V2.Elaboration<Modal.Artefacts["vc"]>): V2.Elaboration<Modal.Artefacts["vc"]> => {
+							const ra = Row.rewrite(a, lbl, v => E.left({ tag: "Other", message: `Could not rewrite row. Label ${lbl} not found.` }));
+							return F.pipe(
+								ra,
+								E.fold(
+									err => V2.Do<Modal.Artefacts["vc"], any>(() => V2.fail({ type: "MissingLabel", label: lbl, row: a })),
+									rewritten =>
+										V2.Do(function* () {
+											assert(rewritten.type === "extension", "Verification Subtyping: Expected extension after rewriting row");
+											const accumulated = yield* V2.pure(conj);
+											const { vc } = yield* check.gen(t, rewritten.value);
+											return Z3.And(accumulated as Bool, vc as Bool);
+										}),
+								),
+							);
+						};
+						return Row.fold(b, onVal, (rv, acc) => acc, V2.of(Z3.Bool.val(true) satisfies Modal.Artefacts["vc"]));
+					};
+
+					const result = yield* V2.pure(contains(ty.arg.row, tm.arg.row));
+					// match(nf)
+					// 	.with(NF.Patterns.Struct, function* (struct) {
+					// 		const bindings = yield* V2.pure(collect(struct.arg.row, ty.arg.row));
+					// 		return yield* V2.local(
+					// 			update("sigma", sig => ({ ...sig, ...bindings })),
+					// 			contains(ty.arg.row, tm.arg.row),
+					// 		);
+					// 	})
+
+					// 	.otherwise(() => {
+					// 		throw new Error("Schema verification: expected struct term");
+					// 	});
+
+					return { usages: Q.noUsage(ctx.env.length), vc: result };
+
+					// return 1 as Modal.Artefacts
+				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], ([tm, ty]) => {
 					//trick to evaluate dependent fields
 					const nf = NF.evaluate(ctx, tm);
-
-					const collect = (r1: NF.Row, r2: NF.Row): V2.Elaboration<EB.Context["sigma"]> => {
-						const res = match([r1, r2])
-							.with([{ type: "empty" }, { type: "empty" }], () => V2.of<EB.Context["sigma"]>({}))
-							.with([{ type: "empty" }, { type: "variable" }], () => V2.of<EB.Context["sigma"]>({}))
-							.with([{ type: "extension" }, { type: "extension" }], ([{ label, value, row }, r]) =>
-								V2.Do(function* () {
-									const rewritten = R.rewrite(r, label);
-									if (E.isLeft(rewritten)) {
-										return yield* V2.fail<EB.Context["sigma"]>(Err.MissingLabel(label, r));
-									}
-									if (rewritten.right.type !== "extension") {
-										return yield* V2.fail<EB.Context["sigma"]>({
-											type: "Impossible",
-											message: "Rewritting a row extension should result in another row extension",
-										});
-									}
-
-									const { value: rv, row: rr } = rewritten.right;
-									const acc = yield* V2.pure(collect(row, rr));
-
-									return { ...acc, [label]: { nf: value, ann: rv, term: NF.quote(ctx, ctx.env.length, value), multiplicity: Q.Many } };
-								}),
-							)
-							.otherwise(_ => {
-								throw new Error("Schema verification: incompatible rows");
-							});
-
-						return res;
-					};
-
 					//Might be missing sigma env information here
 					const traverse = (r1: NF.Row, r2: NF.Row): V2.Elaboration<Modal.Artefacts> => {
 						const res = match([r1, r2])
@@ -633,13 +665,67 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 							return yield* subtype.gen(at, ty.nf);
 						}),
 				)
+				.with([NF.Patterns.Mu, NF.Patterns.Mu], ([mu1, mu2]) =>
+					V2.Do(function* () {
+						// Unfold both recursive types and compare their bodies
+						const arg = yield* subtype.gen(mu1.binder.annotation, mu2.binder.annotation);
+						const body1 = NF.apply(mu1.binder, mu1.closure, NF.Constructors.Rigid(ctx.env.length));
+						const body2 = NF.apply(mu2.binder, mu2.closure, NF.Constructors.Rigid(ctx.env.length));
+						const body = yield* subtype.gen(body1, body2);
+						return Z3.And(arg as Bool, body as Bool);
+					}),
+				)
+				.with([NF.Patterns.Mu, P._], ([mu, ty]) =>
+					V2.Do(function* () {
+						// Unfold the mu type with itself and check subtyping
+						const unfolded = NF.apply(mu.binder, mu.closure, mu);
+						const vc = yield* subtype.gen(unfolded, ty);
+						return vc;
+					}),
+				)
+				.with([P._, NF.Patterns.Mu], ([ty, mu]) =>
+					V2.Do(function* () {
+						// Unfold the mu type with itself and check subtyping
+						const unfolded = NF.apply(mu.binder, mu.closure, mu);
+						const vc = yield* subtype.gen(ty, unfolded);
+						return vc;
+					}),
+				)
+				.with([NF.Patterns.Schema, NF.Patterns.Sigma], ([schema, sig]) => {
+					const body = NF.apply(sig.binder, sig.closure, NF.Constructors.Row(schema.arg.row));
+					return subtype(schema, body);
+				})
 
 				.with([NF.Patterns.Schema, NF.Patterns.Schema], ([{ arg: a }, { arg: b }]) => {
-					return contains(b.row, a.row);
-				})
-				.with([NF.Patterns.Variant, NF.Patterns.Variant], ([{ arg: a }, { arg: b }]) => {
 					return contains(a.row, b.row);
 				})
+				.with([NF.Patterns.Schema, NF.Patterns.Variant], ([sig, variant]) => {
+					return contains(sig.arg.row, variant.arg.row);
+				})
+				.with([NF.Patterns.Variant, NF.Patterns.Schema], ([variant, sig]) => {
+					return contains(variant.arg.row, sig.arg.row);
+				})
+				.with([NF.Patterns.Variant, NF.Patterns.Variant], ([{ arg: a }, { arg: b }]) => {
+					return contains(b.row, a.row);
+				})
+				.with(
+					[P._, NF.Patterns.App],
+					([, ty]) => O.isSome(NF.unfoldMu(ty)),
+					([ty, folded]) => {
+						const unfolded = NF.unfoldMu(folded);
+						assert(unfolded._tag === "Some");
+						return subtype(ty, unfolded.value);
+					},
+				)
+				.with(
+					[NF.Patterns.App, P._],
+					([ty]) => O.isSome(NF.unfoldMu(ty)),
+					([folded, ty]) => {
+						const unfolded = NF.unfoldMu(folded);
+						assert(unfolded._tag === "Some");
+						return subtype(unfolded.value, ty);
+					},
+				)
 
 				.with(
 					[
@@ -1163,6 +1249,38 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 				return forall;
 			});
 	};
+
+	const collect = (r1: NF.Row, r2: NF.Row): V2.Elaboration<EB.Context["sigma"]> => {
+		const res = match([r1, r2])
+			.with([{ type: "empty" }, { type: "empty" }], () => V2.of<EB.Context["sigma"]>({}))
+			.with([{ type: "empty" }, { type: "variable" }], () => V2.of<EB.Context["sigma"]>({}))
+			.with([{ type: "extension" }, { type: "extension" }], ([{ label, value, row }, r]) =>
+				V2.Do(function* () {
+					const rewritten = R.rewrite(r, label);
+					if (E.isLeft(rewritten)) {
+						return yield* V2.fail<EB.Context["sigma"]>(Err.MissingLabel(label, r));
+					}
+					if (rewritten.right.type !== "extension") {
+						return yield* V2.fail<EB.Context["sigma"]>({
+							type: "Impossible",
+							message: "Rewritting a row extension should result in another row extension",
+						});
+					}
+
+					const { value: rv, row: rr } = rewritten.right;
+					const acc = yield* V2.pure(collect(row, rr));
+					const ctx = yield* V2.ask();
+					return { ...acc, [label]: { nf: value, ann: rv, term: NF.quote(ctx, ctx.env.length, value), multiplicity: Q.Many } };
+				}),
+			)
+
+			.otherwise(_ => {
+				throw new Error("Schema verification: incompatible rows");
+			});
+
+		return res;
+	};
+
 	const apply = (binder: EB.Binder, closure: NF.Closure, value: NF.Value, ann: NF.Value): NF.Value => {
 		const { ctx, term } = closure;
 		const extended = extend(ctx, binder, value, ann);

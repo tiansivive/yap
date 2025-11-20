@@ -13,6 +13,7 @@ import { Liquid } from "@yap/verification/modalities";
 import * as Sub from "@yap/elaboration/unification/substitution";
 import { update } from "@yap/utils";
 
+import { options } from "@yap/shared/config/options";
 type Block = Extract<Src.Term, { type: "block" }>;
 
 export const infer = (block: Block) =>
@@ -33,16 +34,16 @@ export const infer = (block: Block) =>
 						return yield* V2.pure(recurse(rest, [...results, stmt]));
 					}
 
+					options.verbose = true;
+					const ctx = yield* V2.ask();
+					const { zonker, metas, constraints } = yield* V2.listen();
+					console.log("\n\nTERM:\n", EB.Display.Statement(stmt, { ...ctx, zonker: Sub.empty, metas }));
 					const [r, next] = yield* EB.Stmt.letdec(stmt);
 					yield* V2.tell("zonker", next.zonker);
-
-					// const ctx = yield* V2.ask();
-					// const { zonker, metas, constraints } = yield* V2.listen();
 
 					// // Debugging info
 					// console.log("LET BINDING");
 					// console.log("ZONKER:\n", Sub.display(zonker, metas));
-					// console.log("\n\nTERM:\n", EB.Display.Statement(r, { ...ctx, zonker: Sub.empty, metas }));
 					// console.log("\nInferred type:\n", NF.display(sty, { ...ctx, zonker: Sub.empty, metas }));
 
 					// console.log("\n\nCONSTRAINTS:");

@@ -99,6 +99,15 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						return yield* V2.pure(unify(body1, body2, lvl + 1, composed));
 					}),
 				)
+				.with([NF.Patterns.Sigma, NF.Patterns.Sigma], ([sig1, sig2]) =>
+					V2.Do(function* () {
+						const sub = yield* V2.pure(unify(sig1.binder.annotation, sig2.binder.annotation, lvl, subst));
+						const composed = Sub.compose(sub, subst);
+						const body1 = NF.apply(sig1.binder, sig1.closure, NF.Constructors.Rigid(lvl));
+						const body2 = NF.apply(sig2.binder, sig2.closure, NF.Constructors.Rigid(lvl));
+						return yield* V2.pure(unify(body1, body2, lvl + 1, composed));
+					}),
+				)
 				.with([P._, NF.Patterns.Mu], ([v, mu]) =>
 					V2.Do(function* () {
 						const unfolded = NF.apply(mu.binder, mu.closure, mu);
@@ -119,6 +128,15 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						return subst;
 					}),
 				)
+				.with([NF.Patterns.Schema, NF.Patterns.Sigma], ([schema, sig]) => {
+					const applied = NF.apply(sig.binder, sig.closure, schema.arg);
+					return unify(schema, applied, lvl, subst);
+				})
+
+				.with([NF.Patterns.Sigma, NF.Patterns.Schema], ([sig, schema]) => {
+					const applied = NF.apply(sig.binder, sig.closure, schema.arg);
+					return unify(applied, schema, lvl, subst);
+				})
 				.with(
 					[NF.Patterns.Schema, NF.Patterns.Schema],
 					[NF.Patterns.Struct, NF.Patterns.Struct],
@@ -144,8 +162,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				)
 				.with([NF.Patterns.App, NF.Patterns.App], ([left, right]) =>
 					V2.Do<Subst, Subst>(function* () {
-						const unfoldedL = unfoldMu(left);
-						const unfoldedR = unfoldMu(right);
+						const unfoldedL = NF.unfoldMu(left);
+						const unfoldedR = NF.unfoldMu(right);
 
 						// NOTE: Using reference equality to check if unfolding made a change. Unfolding returns the same object if no unfolding was done.
 						if (O.isNone(unfoldedL) && O.isNone(unfoldedR)) {
@@ -196,9 +214,9 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				)
 				.with(
 					[NF.Patterns.App, P._],
-					([app]) => O.isSome(unfoldMu(app)),
+					([app]) => O.isSome(NF.unfoldMu(app)),
 					([app, v]) => {
-						const unfolded = unfoldMu(app);
+						const unfolded = NF.unfoldMu(app);
 						return unify(
 							F.pipe(
 								unfolded,
@@ -212,9 +230,9 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				)
 				.with(
 					[P._, NF.Patterns.App],
-					([, app]) => O.isSome(unfoldMu(app)),
+					([, app]) => O.isSome(NF.unfoldMu(app)),
 					([v, app]) => {
-						const unfolded = unfoldMu(app);
+						const unfolded = NF.unfoldMu(app);
 						return unify(
 							v,
 							F.pipe(
@@ -255,29 +273,6 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 };
 
 unify.gen = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst) => V2.pure(unify(left, right, lvl, subst));
-
-const unfoldMu = (app: Extract<NF.Value, { type: "App" }>): O.Option<NF.Value> => {
-	const { func, arg, icit } = app;
-	return (
-		match(func)
-			.with({ type: "App" }, fn =>
-				F.pipe(
-					unfoldMu(fn),
-					O.map(f => NF.reduce(f, arg, icit)),
-				),
-			)
-			// 	const unfolded = unfoldMu(fn);
-			// 	return O.Functor.map(unfolded, f => NF.reduce(f, arg, icit));
-			// 	//return NF.reduce(unfolded, arg, icit);
-			// })
-			.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
-				const body = NF.apply(mu.binder, mu.closure, mu);
-				const unfolded = NF.reduce(body, arg, icit);
-				return O.some(unfolded);
-			})
-			.otherwise(() => O.none)
-	);
-};
 
 type Meta = Extract<EB.Variable, { type: "Meta" }>;
 export const bind = (ctx: EB.Context, v: Meta, ty: NF.Value): Subst => {
@@ -324,6 +319,7 @@ const occursCheck = (ctx: EB.Context, v: Meta, ty: NF.Value): boolean => {
 			.with(NF.Patterns.Lambda, ({ binder, closure }) => occursInTerm(closure.ctx, v, closure.term))
 			//occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
 			.with(NF.Patterns.Pi, ({ binder, closure }) => occursInTerm(closure.ctx, v, closure.term))
+			.with(NF.Patterns.Sigma, ({ binder, closure }) => occursInTerm(closure.ctx, v, closure.term))
 			.with(NF.Patterns.App, ({ func, arg }) => occursCheck(ctx, v, func) || occursCheck(ctx, v, arg))
 			.with(NF.Patterns.Modal, ({ value, modalities }) => occursCheck(ctx, v, value) || occursCheck(ctx, v, modalities.liquid))
 
