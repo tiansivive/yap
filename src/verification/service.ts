@@ -150,8 +150,6 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 		}
 
 		// Create the self-equality term: v == tm
-
-		// Create the self-equality term: v == tm
 		const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
 		const eqTerm = EB.DSL.eq(bound, tm);
 
@@ -185,11 +183,9 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 
 			const r = yield* match([tm, NF.force(ctx, ty)])
 				.with([{ type: "Modal" }, NF.Patterns.Type], ([tm, ty]) => check.gen(tm.term, ty))
-				.with([EB.CtorPatterns.Mu, P._], function* ([tm, ty]) {
+				.with([EB.CtorPatterns.Mu, P._], ([tm, ty]) => {
 					// TODO subtype mu annotation against ty?
-					const r = yield* V2.local(ctx => EB.bind(ctx, { type: "Mu", variable: tm.binding.variable }, ty), check(tm.body, ty));
-					return r;
-					///return check.gen(tm.body, ty);
+					return V2.local(ctx => EB.bind(ctx, { type: "Mu", variable: tm.binding.variable }, ty), check(tm.body, ty));
 				})
 				.with(
 					[P._, NF.Patterns.App],
@@ -255,11 +251,6 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 					return check.gen(tm, schema);
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Variant], function* ([tm, ty]) {
-					// const [schema, artefacts] = yield* synth.gen(tm);
-					// const forced = NF.force(ctx, schema);
-					// assert(forced.type === "App" && forced.arg.type === "Row", "Expected struct term to synth an app over a row");
-					// const vc = yield* V2.pure(contains(ty.arg.row, forced.arg.row)) // the variant row contains all the schema fields in the struct (should be only one field here)
-					// return { usages: artefacts.usages, vc: Z3.And(artefacts.vc as Bool, vc as Bool)}
 					const nf = NF.evaluate(ctx, tm);
 					assert(nf.type === "App" && nf.arg.type === "Row", "Expected struct term to evaluate to an application of a row");
 					const contains = (a: NF.Row, b: EB.Row) => {
@@ -285,8 +276,6 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 					const result = yield* V2.pure(contains(ty.arg.row, tm.arg.row));
 
 					return { usages: Q.noUsage(ctx.env.length), vc: result };
-
-					// return 1 as Modal.Artefacts
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], ([tm, ty]) => {
 					//trick to evaluate dependent fields
@@ -311,9 +300,6 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 									}
 
 									const { value: rv, row: rr } = rewritten.right;
-									// const quoted = NF.quote(ctx, ctx.env.length, rv);
-									// const xtended = yield* V2.ask();
-									// const re_eval = NF.evaluate(xtended, quoted);
 
 									const artefacts = yield* check.gen(NF.quote(ctx, ctx.env.length, value), rv);
 									const rest = yield* V2.pure(traverse(row, rr));
@@ -580,36 +566,6 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 					}),
 				)
 
-				// .with({ type: "Row" }, tm =>
-				//     V2.Do(
-				//         R.fold(
-				//             tm.row,
-				//             (val, lbl, artefacts) =>
-				//                 function* () {
-				//                     const { usages, vc } = yield* synth.gen(val);
-				//                     const accumulated = yield* artefacts();
-
-				//                     return { usages: Q.add(accumulated.usages, usages), vc: NF.DSL.Binop.and(accumulated.vc, vc) } satisfies Modal.Artefacts;
-				//                 },
-				//             v => {
-				//                 if (v.type === "Bound") {
-				//                     const zeros = A.replicate<Q.Multiplicity>(v.index + 1, Q.Zero);
-				//                     const usages = A.unsafeUpdateAt(v.index, ty.modalities.quantity, zeros);
-				//                     return () => V2.lift<Modal.Artefacts>({ usages, vc: Liquid.Constants.tru });
-				//                 }
-
-				//                 if (v.type === "Meta") {
-				//                     // metavariables are always zero in usage, as they will be substituted by some term later on
-				//                     // TODO:FIXME: HAve zonker also hold modalities
-				//                     return () => V2.lift<Modal.Artefacts>({ usages: [Q.Zero], vc: Liquid.Constants.tru });
-				//                 }
-
-				//                 throw new Error("Row variable not implemented yet");
-				//             },
-				//             () => V2.lift<Modal.Artefacts>({ usages: [Q.Zero], vc: Liquid.Constants.tru }),
-				//         ),
-				//     ),
-				// )
 				.with({ type: "Block" }, block => {
 					const recurse = (stmts: EB.Statement[], results: Modal.Artefacts[]): V2.Elaboration<Synthed> =>
 						V2.Do(function* () {
