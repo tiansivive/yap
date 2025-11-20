@@ -35,9 +35,9 @@ export const infer = (block: Block) =>
 					}
 
 					options.verbose = true;
-					const ctx = yield* V2.ask();
-					const { zonker, metas, constraints } = yield* V2.listen();
-					console.log("\n\nTERM:\n", EB.Display.Statement(stmt, { ...ctx, zonker: Sub.empty, metas }));
+					// const ctx = yield* V2.ask();
+					// const { zonker, metas, constraints } = yield* V2.listen();
+					// console.log("\n\nTERM:\n", EB.Display.Statement(stmt, { ...ctx, zonker: Sub.empty, metas }));
 					const [r, next] = yield* EB.Stmt.letdec(stmt);
 					yield* V2.tell("zonker", next.zonker);
 

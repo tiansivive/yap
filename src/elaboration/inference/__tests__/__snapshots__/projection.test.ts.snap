@@ -578,7 +578,7 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 1`] = `
   "displays": {
     "constraints": [
       "Schema [ x: ?3 | ?4 ] ~~ ?2",
-      "Π(obj: ?2) -> (closure: ?3 -| Γ: obj; proj = proj) ~~ ?1",
+      "Π(obj: ?2) -> (closure: (?3 :: Type) -| Γ: obj; proj = proj) ~~ ?1",
       "0 <= ω",
     ],
     "term": "{

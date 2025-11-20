@@ -124,6 +124,59 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 		}
 		console.log(prefix() + msgs.join("\n" + prefix(false)));
 	};
+
+	/**
+	 * Selfify: Strengthen a variable's type with self-equality refinement.
+	 * Given a variable `x` of type `T`, return `T [| λv -> v == x |]`.
+	 *
+	 * If T already has a liquid refinement, conjoin the equality.
+	 * If T does not admit refinements (variants, schemas, sigmas, functions, mu), return T unchanged.
+	 */
+	const selfify = (tm: EB.Term, ty: NF.Value, ctx: EB.Context): NF.Value => {
+		const admitsRefinement = match(ty)
+			.with(NF.Patterns.Type, () => false)
+			.with(NF.Patterns.Unit, () => false)
+			.with(NF.Patterns.Variant, () => false)
+			.with(NF.Patterns.Schema, () => false)
+			.with(NF.Patterns.Sigma, () => false)
+			.with(NF.Patterns.Pi, () => false)
+			.with(NF.Patterns.Lambda, () => false)
+			.with(NF.Patterns.Mu, () => false)
+			.with({ type: "Abs" }, () => false)
+			.otherwise(() => true);
+
+		if (!admitsRefinement) {
+			return ty;
+		}
+
+		// Create the self-equality term: v == tm
+
+		// Create the self-equality term: v == tm
+		const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
+		const eqTerm = EB.DSL.eq(bound, tm);
+
+		return match(ty)
+			.with({ type: "Modal" }, modal => {
+				const { liquid } = modal.modalities;
+				assert(liquid.type === "Abs" && liquid.binder.type === "Lambda", "Liquid refinement must be an abstraction");
+
+				return NF.Constructors.Modal(modal.value, {
+					quantity: modal.modalities.quantity,
+					liquid: update(liquid, "closure.term", tm => EB.DSL.and(tm, eqTerm)),
+				});
+			})
+			.otherwise(() => {
+				const fresh = freshName();
+				const closure = NF.Constructors.Closure(noCapture(ctx), eqTerm);
+				const liquid = NF.Constructors.Lambda(fresh, "Explicit", closure, ty);
+
+				return NF.Constructors.Modal(ty, {
+					quantity: Q.Many,
+					liquid,
+				});
+			});
+	};
+
 	const check = (tm: EB.Term, ty: NF.Value): V2.Elaboration<Modal.Artefacts> =>
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
@@ -230,18 +283,6 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 					};
 
 					const result = yield* V2.pure(contains(ty.arg.row, tm.arg.row));
-					// match(nf)
-					// 	.with(NF.Patterns.Struct, function* (struct) {
-					// 		const bindings = yield* V2.pure(collect(struct.arg.row, ty.arg.row));
-					// 		return yield* V2.local(
-					// 			update("sigma", sig => ({ ...sig, ...bindings })),
-					// 			contains(ty.arg.row, tm.arg.row),
-					// 		);
-					// 	})
-
-					// 	.otherwise(() => {
-					// 		throw new Error("Schema verification: expected struct term");
-					// 	});
 
 					return { usages: Q.noUsage(ctx.env.length), vc: result };
 
@@ -307,6 +348,11 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 					//return 1 as any
 				})
 
+				.with([EB.CtorPatterns.Match, P._], function* ([tm, ty]) {
+					const { alternatives, scrutinee } = tm;
+					const checkAlt = (alt: EB.Alternative, ty: NF.Value): V2.Elaboration<Modal.Artefacts> => {};
+					return 1 as Modal.Artefacts;
+				})
 				.otherwise(function* ([tm, ty]) {
 					const [synthed, artefacts] = yield* synth.gen(tm);
 					// Since verification runs after typechecking, we can assume that the term has at least the type we are checking against
@@ -344,6 +390,9 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 
 						const [binder, , ty] = entry.type;
 
+						// Apply selfify rule: strengthen type with self-equality
+						//const selfified = selfify(tm, ty, ctx);
+
 						const modalities = extract(ty, ctx);
 						const zeros = A.replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
 						const usages = A.unsafeUpdateAt(tm.variable.index, modalities.quantity, zeros);
@@ -351,7 +400,7 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 						const v = NF.evaluate(ctx, tm);
 						const p = NF.reduce(modalities.liquid, v, "Explicit");
 
-						return [ty, { usages, vc: translate(p, ctx) }] satisfies Synthed; // TODO: probably need to strengthen the refinement with the literal here
+						return [ty, { usages, vc: translate(p, ctx) }] satisfies Synthed;
 					}),
 				)
 				.with({ type: "Var", variable: { type: "Free" } }, tm => {
@@ -695,15 +744,13 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 					const body = NF.apply(sig.binder, sig.closure, NF.Constructors.Row(schema.arg.row));
 					return subtype(schema, body);
 				})
+				.with([NF.Patterns.Sigma, NF.Patterns.Schema], ([sig, schema]) => {
+					const body = NF.apply(sig.binder, sig.closure, NF.Constructors.Row(schema.arg.row));
+					return subtype(body, schema);
+				})
 
 				.with([NF.Patterns.Schema, NF.Patterns.Schema], ([{ arg: a }, { arg: b }]) => {
 					return contains(a.row, b.row);
-				})
-				.with([NF.Patterns.Schema, NF.Patterns.Variant], ([sig, variant]) => {
-					return contains(sig.arg.row, variant.arg.row);
-				})
-				.with([NF.Patterns.Variant, NF.Patterns.Schema], ([variant, sig]) => {
-					return contains(variant.arg.row, sig.arg.row);
 				})
 				.with([NF.Patterns.Variant, NF.Patterns.Variant], ([{ arg: a }, { arg: b }]) => {
 					return contains(b.row, a.row);

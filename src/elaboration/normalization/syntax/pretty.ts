@@ -64,7 +64,7 @@ export const display = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBrui
 				if (nf) {
 					// Use the closure's extended context to render bound names correctly.
 					// Using the outer ctx here can alias to unrelated binders (e.g., inc = incf).
-					return `${name.variable}`; // = ${NF.display(nf, extended, opts)}`;
+					return `${name.variable} = ${NF.display(nf, extended, opts)}`;
 				}
 				return name.variable;
 			});
