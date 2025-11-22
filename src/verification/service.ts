@@ -1380,7 +1380,7 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 				return { Row: Sorts.Schema };
 			})
 			.with(NF.Patterns.Mu, mu => {
-				const name = `Mu_(${mu.binder.source})`;
+				const name = `Mu_${mu.binder.source}`;
 				return { Recursive: Z3.Sort.declare(name) };
 			})
 			.with(NF.Patterns.Lambda, _ => {
@@ -1438,11 +1438,11 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 			.with({ Prim: P.select() }, p => [p])
 			.with({ App: P.select() }, App => {
 				const [f, a] = App;
-				const fs = build(f).map(s => s.name);
-				const as = build(a).map(s => s.name);
+				const fs = build(f);
+				const as = build(a);
 
-				const sort = Z3.Sort.declare(`App(${fs.join(",")}, ${as.join(",")})`);
-				return [sort];
+				//const sort = Z3.Sort.declare(`App(${fs.join(",")}, ${as.join(",")})`);
+				return fs.concat(as);
 			})
 			.with({ Func: P.select() }, Func => {
 				const [a, body] = Func;
@@ -1465,10 +1465,17 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 				const sortMap = mkSort(annotation, ctx);
 				const xSort = match(sortMap)
 					.with({ Prim: P.select() }, p => p)
+					.with({ Recursive: P.select() }, r => r)
+					.with({ Row: P.select() }, r => r)
+					.with({ App: P._ }, app => {
+						const sorts = build(app);
+						const name = `App_${sorts.map(s => s.name()).join("_")}`;
+						return Z3.Sort.declare(name);
+					})
 					.otherwise(() => {
-						return;
+						throw new Error("Uknown sort in logical formulas");
+
 						// console.log("Sigma Subtype SortMap:", sortMap);
-						// throw new Error("Only primitive types can be used in logical formulas");
 					});
 
 				if (!xSort) {
