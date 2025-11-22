@@ -76,10 +76,10 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "2": {
         "ann": {
-          "id": 17,
+          "id": 27,
           "type": "Neutral",
           "value": {
-            "id": 16,
+            "id": 26,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -126,10 +126,10 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "5": {
         "ann": {
-          "id": 23,
+          "id": 33,
           "type": "Neutral",
           "value": {
-            "id": 22,
+            "id": 32,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -162,7 +162,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
     },
     "term": {
       "arg": {
-        "id": 818,
+        "id": 1209,
         "row": {
           "label": "y",
           "row": {
@@ -172,7 +172,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
             },
             "type": "extension",
             "value": {
-              "id": 816,
+              "id": 1207,
               "type": "Var",
               "variable": {
                 "name": "Num",
@@ -182,7 +182,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
           },
           "type": "extension",
           "value": {
-            "id": 815,
+            "id": 1206,
             "type": "Var",
             "variable": {
               "name": "Num",
@@ -193,7 +193,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         "type": "Row",
       },
       "func": {
-        "id": 817,
+        "id": 1208,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -201,7 +201,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
         },
       },
       "icit": "Explicit",
-      "id": 819,
+      "id": 1210,
       "type": "App",
     },
     "type": {

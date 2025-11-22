@@ -300,10 +300,17 @@ export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Val
 			}
 
 			const accumulated = [...args, nfa];
-			if (accumulated.length === arity && accumulated.every(a => a.type !== "Neutral")) {
-				return compute(...accumulated.map(ignoraModal));
+
+			if (accumulated.length < arity) {
+				return NF.Constructors.External(name, arity, compute, accumulated);
 			}
-			return NF.Constructors.External(name, arity, compute, accumulated);
+
+			if (accumulated.some(a => a.type === "Neutral")) {
+				const external = NF.Constructors.External(name, arity, compute, accumulated);
+				return NF.Constructors.Neutral(external);
+			}
+
+			return compute(...accumulated.map(ignoraModal));
 		})
 		.otherwise(() => {
 			throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
@@ -373,8 +380,8 @@ export const ignoraModal = (value: NF.Value): NF.Value => {
 
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];
 
-type MeetResult = { binder: EB.Binder } & NF.Modalities;
-const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetResult[]> => {
+export type MeetResult = { binder: EB.Binder } & NF.Modalities;
+export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetResult[]> => {
 	const truthy = (v: NF.Value) => Liquid.Predicate.NeutralNF(v, ctx);
 	return match([unwrapNeutral(nf), pattern])
 		.with([P._, { type: "Wildcard" }], () => O.some([]))

@@ -84,11 +84,11 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         metas: {},
     }
 
-    const reflectLiquid = (f: (p: EB.Term, q: EB.Term) => EB.Term) => {
+    const reflectLiquid = (returnType: EB.Term) => (f: (p: EB.Term, q: EB.Term) => EB.Term) => {
         const i0 = EB.Constructors.Var({ type: "Bound", index: 0 });
         const i1 = EB.Constructors.Var({ type: "Bound", index: 1 });
         const i2 = EB.Constructors.Var({ type: "Bound", index: 2 });
-        return EB.Constructors.Lambda("r", "Explicit", EB.DSL.eq(i0, f(i2, i1)), Terms().Num)
+        return EB.Constructors.Lambda("r", "Explicit", EB.DSL.eq(i0, f(i2, i1)), returnType)
     }
 
     const mkModal = (base: EB.Term, liquid?: EB.Term) => liquid ? EB.Constructors.Modal(base, { quantity: Q.Many, liquid }) : base;
@@ -99,10 +99,10 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         term: EB.Constructors.Pi("y", "Explicit", mkModal(Terms().Num, r2), mkModal(Terms().Num, r3))
     })
 
-    const Num_Num_Bool = NF.Constructors.Pi("x", "Explicit", NormalForms.Num(), {
+    const Num_Num_Bool = ([r1, r2, r3]: [EB.Term?, EB.Term?, EB.Term?]) => NF.Constructors.Pi("x", "Explicit", NormalForms.Num(), {
         type: "Closure",
         ctx: dummyContext,
-        term: EB.Constructors.Pi("y", "Explicit", Terms().Num, Terms().Bool)
+        term: EB.Constructors.Pi("y", "Explicit", mkModal(Terms().Num, r2), mkModal(Terms().Bool, r3))
     })
 
     const Bool_Bool_Bool = NF.Constructors.Pi("x", "Explicit", NormalForms.Bool(), {
@@ -120,18 +120,18 @@ export const Elaborated: () => EB.Context['imports'] = () => {
     return {
         ...PrimTypes,
         //"->": [Terms()["->"], Type_Type_Type, []],
-        "+": [Terms()["+"], Num_Num_Num([, , reflectLiquid(EB.DSL.add)]), []],
-        "-": [Terms()["-"], Num_Num_Num([, , reflectLiquid(EB.DSL.sub)]), []],
-        "*": [Terms()["*"], Num_Num_Num([, , reflectLiquid(EB.DSL.mul)]), []],
-        "/": [Terms()["/"], Num_Num_Num([, , reflectLiquid(EB.DSL.div)]), []],
+        "+": [Terms()["+"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.add)]), []],
+        "-": [Terms()["-"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.sub)]), []],
+        "*": [Terms()["*"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.mul)]), []],
+        "/": [Terms()["/"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.div)]), []],
         "&&": [Terms()["&&"], Bool_Bool_Bool, []],
         "||": [Terms()["||"], Bool_Bool_Bool, []],
-        "==": [Terms()["=="], Num_Num_Bool, []],
-        "!=": [Terms()["!="], Num_Num_Bool, []],
-        "<": [Terms()["<"], Num_Num_Bool, []],
-        ">": [Terms()[">"], Num_Num_Bool, []],
-        "<=": [Terms()["<="], Num_Num_Bool, []],
-        ">=": [Terms()[">="], Num_Num_Bool, []],
+        "==": [Terms()["=="], Num_Num_Bool([, , reflectLiquid(Terms().Bool)(EB.DSL.eq)]), []],
+        "!=": [Terms()["!="], Num_Num_Bool([, , reflectLiquid(Terms().Bool)(EB.DSL.neq)]), []],
+        "<": [Terms()["<"], Num_Num_Bool([, , reflectLiquid(Terms().Bool)(EB.DSL.lt)]), []],
+        ">": [Terms()[">"], Num_Num_Bool([, , reflectLiquid(Terms().Bool)(EB.DSL.gt)]), []],
+        "<=": [Terms()["<="], Num_Num_Bool([, , reflectLiquid(Terms().Bool)(EB.DSL.lte)]), []],
+        ">=": [Terms()[">="], Num_Num_Bool([, , reflectLiquid(Terms().Bool)(EB.DSL.gte)]), []],
         "%": [Terms()["%"], Num_Num_Num([]), []],
 
     }

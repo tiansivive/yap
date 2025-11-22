@@ -402,7 +402,7 @@ describe("VerificationService", () => {
 
 		const [tm, ty, ctx] = elaborate(src);
 
-		const Verification = VerificationService(Z3);
+		const Verification = VerificationService(Z3, { logging: true });
 		const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 		if (result._tag === "Left") {
 			throw new Error(EB.V2.display(result.left));
@@ -497,5 +497,39 @@ describe("VerificationService", () => {
 		const sat2 = await solver2.check();
 		expect(sat2).toBe("unsat");
 		expect(artefacts2.vc.sexpr()).toMatchSnapshot();
+	});
+
+	describe("Flow-sensitive type refinement", () => {
+		it("refines type in if-then-else branches", async () => {
+			const src = `let test = {
+				let a = 1;
+				let b: Num[| \\n -> n > 0 |] = match (a > 0)
+					| true  -> a
+					| false -> 42;
+
+				return 1;
+			}`;
+
+			/*
+				Seems like b is shifting the indices incorrectly.
+				the VC ends up with (= x b) when it should be (= x a)
+				There's probably a bug with the block verification
+				We also need to run entailment on block letdecs to quantify over introduced variables.
+			*/
+			const [tm, ty, ctx] = elaborate(src);
+
+			const Verification = VerificationService(Z3);
+			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			if (result._tag === "Left") {
+				throw new Error(EB.V2.display(result.left));
+			}
+			const artefacts = result.right;
+			const solver = new Z3.Solver();
+			solver.add(artefacts.vc.eq(true));
+			const sat = await solver.check();
+
+			expect(sat).toBe("sat");
+			expect(artefacts.vc.sexpr()).toMatchSnapshot();
+		});
 	});
 });

@@ -39,7 +39,7 @@ exports[`inference: annotations > 1 : Num 2`] = `
       },
       {
         "left": {
-          "id": 17,
+          "id": 27,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -48,7 +48,7 @@ exports[`inference: annotations > 1 : Num 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 16,
+          "id": 26,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -60,7 +60,7 @@ exports[`inference: annotations > 1 : Num 2`] = `
     ],
     "metas": {},
     "term": {
-      "id": 814,
+      "id": 1205,
       "type": "Lit",
       "value": {
         "type": "Num",
@@ -68,7 +68,7 @@ exports[`inference: annotations > 1 : Num 2`] = `
       },
     },
     "type": {
-      "id": 16,
+      "id": 26,
       "type": "Lit",
       "value": {
         "type": "Atom",

@@ -1,5 +1,54 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`VerificationService > Flow-sensitive type refinement > refines type in if-then-else branches 1`] = `
+"(let ((a!1 (forall ((a Real))
+             (and true
+                  true
+                  (forall (($a Real)) (=> (= $a 1.0) true))
+                  (forall ((b Real))
+                    (let ((a!1 (and true
+                                    (= a a)
+                                    true
+                                    (forall ((v Real)) (=> (= v a) true))
+                                    true
+                                    true
+                                    (forall (($d Real)) (=> (= $d 0.0) true))))
+                          (a!2 (forall ((x Real))
+                                 (=> (= x a)
+                                     (forall ((y Real))
+                                       (let ((a!1 (forall (($fresh1 Bool))
+                                                    (let ((a!1 (and (= a a)
+                                                                    true
+                                                                    (forall ((v Real))
+                                                                      (=> (= v
+                                                                             a)
+                                                                          (> v
+                                                                             0.0))))))
+                                                      (=> (and (= $fresh1
+                                                                  (> x 0.0))
+                                                               (= $fresh1 true))
+                                                          a!1)))))
+                                         (=> (= y 0.0) a!1))))))
+                          (a!3 (forall ((x Real))
+                                 (=> (= x a)
+                                     (forall ((y Real))
+                                       (let ((a!1 (forall (($fresh2 Bool))
+                                                    (let ((a!1 (and true
+                                                                    true
+                                                                    (forall (($i Real))
+                                                                      (=> (= $i
+                                                                             42.0)
+                                                                          (> $i
+                                                                             0.0))))))
+                                                      (=> (and (= $fresh2
+                                                                  (> x 0.0))
+                                                               (= $fresh2 false))
+                                                          a!1)))))
+                                         (=> (= y 0.0) a!1)))))))
+                      (=> (> b 0.0) (and true a!1 true a!2 a!1 true a!3 true))))))))
+  (and a!1 true (forall (($k Real)) (=> (= $k 1.0) true))))"
+`;
+
 exports[`VerificationService > verifies Nat type alias definition 1`] = `"(and true true)"`;
 
 exports[`VerificationService > verifies Pos type alias definition 1`] = `"(and true true)"`;
@@ -8,21 +57,22 @@ exports[`VerificationService > verifies a literal against a simple refinement 1`
 
 exports[`VerificationService > verifies block expression with refined result 1`] = `
 "(and (forall ((o Real))
-       (let ((a!1 (forall ((x Real))
-                    (=> (> x 0.0)
+       (let ((a!1 (forall ((n Real)) (=> (and (> n 0.0) (= n n)) true)))
+             (a!2 (forall ((x Real))
+                    (=> (and (> x 0.0) (= x x))
                         (forall ((y Real))
                           (let ((a!1 (forall ((r Real))
                                        (=> (= r (+ x 1.0)) (> r 1.0)))))
                             (=> (= y 1.0) (and true a!1))))))))
-       (let ((a!2 (and true
-                       (> o 0.0)
+       (let ((a!3 (and true
+                       (and (> o 0.0) (= o o))
                        true
-                       (forall ((n Real)) (=> (> n 0.0) true))
+                       a!1
                        true
                        true
                        (forall (($b Real)) (=> (= $b 1.0) true))
-                       a!1)))
-         (=> (> o 0.0) a!2))))
+                       a!2)))
+         (=> (> o 0.0) a!3))))
      true
      true
      true
@@ -104,65 +154,71 @@ exports[`VerificationService > verifies higher-order function hof2 1`] = `
 
 exports[`VerificationService > verifies higher-order function hof3 1`] = `
 "(forall ((x Real))
-  (let ((a!1 (forall ((t3 Real))
-               (forall ((x!1 Real))
-                 (forall ((y Real))
-                   (let ((a!1 (forall ((r Real)) (=> (= r (+ x!1 1.0)) true))))
-                     (=> (= y 1.0) (and true a!1))))))))
-  (let ((a!2 (and true
+  (let ((a!1 (and true
+                  true
+                  (= x x)
+                  true
+                  (forall ((v Real)) (=> (= v x) true))
+                  (forall ((t3 Real)) (=> (= t3 x) true))
                   true
                   true
-                  true
-                  (forall ((t3 Real)) true)
-                  true
-                  true
-                  (forall (($a Real)) (=> (= $a 1.0) true))
-                  a!1)))
-    (=> true a!2))))"
+                  (forall (($b Real)) (=> (= $b 1.0) true))
+                  (forall ((t3 Real))
+                    (let ((a!1 (forall ((x!1 Real))
+                                 (forall ((y Real))
+                                   (let ((a!1 (forall ((r Real))
+                                                (=> (= r (+ x!1 1.0)) true))))
+                                     (=> (= y 1.0) (and true a!1)))))))
+                      (=> (= t3 x) a!1))))))
+    (=> true a!1)))"
 `;
 
 exports[`VerificationService > verifies inc function definition 1`] = `
 "(forall ((x Real))
   (let ((a!1 (forall ((x!1 Real))
-               (forall ((y Real))
-                 (let ((a!1 (forall ((r Real))
-                              (=> (= r (+ x!1 1.0)) (= r (+ x!1 1.0))))))
-                   (=> (= y 1.0) (and true a!1)))))))
+               (=> (= x!1 x!1)
+                   (forall ((y Real))
+                     (let ((a!1 (forall ((r Real))
+                                  (=> (= r (+ x!1 1.0)) (= r (+ x!1 1.0))))))
+                       (=> (= y 1.0) (and true a!1))))))))
   (let ((a!2 (and true
+                  (= x x)
+                  true
+                  (forall ((v Real)) (=> (= v x) true))
                   true
                   true
-                  true
-                  true
-                  (forall (($a Real)) (=> (= $a 1.0) true))
+                  (forall (($b Real)) (=> (= $b 1.0) true))
                   a!1)))
     (=> true a!2))))"
 `;
 
 exports[`VerificationService > verifies lambda with Nat pre and postcondition - identity works 1`] = `
 "(forall ((x Real))
-  (let ((a!1 (and (> x 0.0) true (forall ((n Real)) (=> (> n 0.0) (> n 0.0))))))
-    (=> (> x 0.0) a!1)))"
+  (let ((a!1 (forall ((n Real)) (=> (and (> n 0.0) (= n n)) (> n 0.0)))))
+    (=> (> x 0.0) (and (and (> x 0.0) (= x x)) true a!1))))"
 `;
 
 exports[`VerificationService > verifies lambda with Nat precondition - identity preserves property 1`] = `
 "(forall ((x Real))
-  (let ((a!1 (and (> x 0.0) true (forall ((n Real)) (=> (> n 0.0) true)))))
-    (=> (> x 0.0) a!1)))"
+  (let ((a!1 (forall ((n Real)) (=> (and (> n 0.0) (= n n)) true))))
+    (=> (> x 0.0) (and (and (> x 0.0) (= x x)) true a!1))))"
 `;
 
 exports[`VerificationService > verifies lambda with dependent refinement on result 1`] = `
 "(forall ((x Real))
   (let ((a!1 (forall ((x!1 Real))
-               (forall ((y Real))
-                 (let ((a!1 (forall ((r Real))
-                              (=> (= r (+ x!1 1.0)) (= r (+ x!1 1.0))))))
-                   (=> (= y 1.0) (and true a!1)))))))
+               (=> (= x!1 x!1)
+                   (forall ((y Real))
+                     (let ((a!1 (forall ((r Real))
+                                  (=> (= r (+ x!1 1.0)) (= r (+ x!1 1.0))))))
+                       (=> (= y 1.0) (and true a!1))))))))
   (let ((a!2 (and true
+                  (= x x)
+                  true
+                  (forall ((v Real)) (=> (= v x) true))
                   true
                   true
-                  true
-                  true
-                  (forall (($a Real)) (=> (= $a 1.0) true))
+                  (forall (($b Real)) (=> (= $b 1.0) true))
                   a!1)))
     (=> true a!2))))"
 `;

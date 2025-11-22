@@ -1,6 +1,8 @@
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
+import * as Sub from "@yap/elaboration/unification/substitution";
+import { nextCount } from "@yap/elaboration/shared/supply";
 
 import * as A from "fp-ts/Array";
 import * as E from "fp-ts/Either";
@@ -48,8 +50,14 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 		String: Z3.Sort.declare("String"),
 		Unit: Z3.Sort.declare("Unit"),
 		Row: Z3.Sort.declare("Row"),
+		/**
+		 *  Schema is a placeholder for record types
+		 *  // QUESTION: Do we need to encode the row structure here?
+		 */
+		Schema: Z3.Sort.declare("Schema"),
 		Atom: Z3.Sort.declare("Atom"),
 		Type: Z3.Sort.declare("Type"),
+		Function: Z3.Sort.declare("Function"),
 
 		stringify: (sm: SortMap): string =>
 			match(sm)
@@ -131,27 +139,13 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 	 *
 	 * If T already has a liquid refinement, conjoin the equality.
 	 * If T does not admit refinements (variants, schemas, sigmas, functions, mu), return T unchanged.
+	 * FIXME: the indexes for the tm get out of sync because of the added liquid binder. Need to fix that.
 	 */
 	const selfify = (tm: EB.Term, ty: NF.Value, ctx: EB.Context): NF.Value => {
-		const admitsRefinement = match(ty)
-			.with(NF.Patterns.Type, () => false)
-			.with(NF.Patterns.Unit, () => false)
-			.with(NF.Patterns.Variant, () => false)
-			.with(NF.Patterns.Schema, () => false)
-			.with(NF.Patterns.Sigma, () => false)
-			.with(NF.Patterns.Pi, () => false)
-			.with(NF.Patterns.Lambda, () => false)
-			.with(NF.Patterns.Mu, () => false)
-			.with({ type: "Abs" }, () => false)
-			.otherwise(() => true);
-
-		if (!admitsRefinement) {
-			return ty;
-		}
-
 		// Create the self-equality term: v == tm
 		const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
-		const eqTerm = EB.DSL.eq(bound, tm);
+		const nf = NF.evaluate(ctx, tm);
+		const eqTerm = (ctx: EB.Context) => EB.DSL.eq(bound, NF.quote(ctx, ctx.env.length + 1, nf));
 
 		return match(ty)
 			.with({ type: "Modal" }, modal => {
@@ -160,21 +154,148 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 
 				return NF.Constructors.Modal(modal.value, {
 					quantity: modal.modalities.quantity,
-					liquid: update(liquid, "closure.term", tm => EB.DSL.and(tm, eqTerm)),
+					liquid: update(liquid, "closure.term", tm => EB.DSL.and(tm, eqTerm(liquid.closure.ctx))),
 				});
 			})
-			.otherwise(() => {
-				const fresh = freshName();
-				const closure = NF.Constructors.Closure(noCapture(ctx), eqTerm);
-				const liquid = NF.Constructors.Lambda(fresh, "Explicit", closure, ty);
-
+			.with({ type: "Abs" }, _ => ty) // Functions cannot be selfified
+			.otherwise(ty => {
+				const liquid = NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, eqTerm(ctx)), ty);
 				return NF.Constructors.Modal(ty, {
-					quantity: Q.Many,
+					quantity: Q.One,
 					liquid,
 				});
 			});
 	};
 
+	/**
+	 * Verification meet: Combine scrutinee type with pattern type to get refined type.
+	 *
+	 * This is different from NF.meet which extracts bindings from pattern matching.
+	 * Here we're combining two TYPES to produce a more refined type that incorporates
+	 * constraints from both.
+	 *
+	 * Based on Core.hs meet function.
+	 */
+	const meet = (ctx: EB.Context, scrutineeTy: NF.Value, patternTy: NF.Value): NF.Value => {
+		const s = NF.unwrapNeutral(scrutineeTy);
+		const p = NF.unwrapNeutral(patternTy);
+
+		return (
+			match([s, p])
+				// Existential in scrutinee type: unpack and meet body with pattern type
+				// Use the existential's stored context for the body
+				.with([{ type: "Existential" }, P._], ([ex]) => {
+					const xtended = EB.bind(ex.body.ctx, { type: "Pi", variable: ex.variable }, ex.annotation);
+					const met = meet(xtended, ex.body.value, patternTy);
+					return NF.Constructors.Exists(ex.variable, ex.annotation, { ctx: ex.body.ctx, value: met });
+				})
+
+				// Both refined: conjoin predicates
+				.with([{ type: "Modal" }, { type: "Modal" }], ([sm, pm]) => {
+					const sl = sm.modalities.liquid;
+					const pl = pm.modalities.liquid;
+
+					assert(sl.type === "Abs" && sl.binder.type === "Lambda", "Scrutinee liquid must be lambda");
+					assert(pl.type === "Abs" && pl.binder.type === "Lambda", "Pattern liquid must be lambda");
+
+					// Conjoin the two predicates
+					assert(sl.closure.type === "Closure" && pl.closure.type === "Closure", "Liquid closures must be Closure type");
+					const conjoined = NF.Constructors.Lambda(
+						sl.binder.variable,
+						"Explicit",
+						NF.Constructors.Closure(sl.closure.ctx, EB.DSL.and(sl.closure.term, pl.closure.term)),
+						sl.binder.annotation,
+					);
+
+					return NF.Constructors.Modal(sm.value, {
+						quantity: sm.modalities.quantity, // Use scrutinee's quantity
+						liquid: conjoined,
+					});
+				})
+
+				// Scrutinee Modal, pattern not: meet underlying types and keep scrutinee's refinement
+				.with([{ type: "Modal" }, P._], ([sm]) => {
+					const metBase = meet(ctx, sm.value, patternTy);
+					return NF.Constructors.Modal(metBase, sm.modalities);
+				})
+
+				// Pattern Modal, scrutinee not: meet underlying types and keep pattern's refinement
+				.with([P._, { type: "Modal" }], ([, pm]) => {
+					const metBase = meet(ctx, scrutineeTy, pm.value);
+					return NF.Constructors.Modal(metBase, pm.modalities);
+				})
+
+				// Pi types: meet domains and codomains
+				.with(
+					[
+						{ type: "Abs", binder: { type: "Pi" } },
+						{ type: "Abs", binder: { type: "Pi" } },
+					],
+					([st, pt]) => {
+						const metDomain = meet(ctx, st.binder.annotation, pt.binder.annotation);
+						const xtended = EB.bind(ctx, st.binder, st.binder.annotation);
+
+						const stBody = NF.apply(st.binder, st.closure, NF.Constructors.Rigid(ctx.env.length));
+						const ptBody = NF.apply(pt.binder, pt.closure, NF.Constructors.Rigid(ctx.env.length));
+						const metCodomain = meet(xtended, stBody, ptBody);
+
+						return NF.Constructors.Pi(
+							st.binder.variable,
+							st.binder.icit,
+							metDomain,
+							NF.Constructors.Closure(xtended, NF.quote(xtended, xtended.env.length, metCodomain)),
+						);
+					},
+				)
+
+				// Row types: meet row contents
+				.with(
+					[
+						{ type: "App", arg: { type: "Row" } },
+						{ type: "App", arg: { type: "Row" } },
+					],
+					([sApp, pApp]) => {
+						// Both are row applications (schemas/variants/records)
+						// Meet the row contents field-by-field
+						const metRow = meetRow(ctx, sApp.arg.row, pApp.arg.row);
+						return NF.Constructors.App(sApp.func, NF.Constructors.Row(metRow), sApp.icit);
+					},
+				)
+
+				.otherwise(() => patternTy)
+		);
+	};
+
+	/**
+	 * Meet two rows field-by-field, conjoining refinements where fields overlap
+	 */
+	const meetRow = (ctx: EB.Context, sRow: NF.Row, pRow: NF.Row): NF.Row => {
+		return match([sRow, pRow])
+			.with([{ type: "empty" }, P._], () => pRow)
+			.with([P._, { type: "empty" }], () => sRow)
+			.with([{ type: "variable" }, P._], () => pRow)
+			.with([P._, { type: "variable" }], () => sRow)
+			.with([{ type: "extension" }, { type: "extension" }], ([sr, pr]): NF.Row => {
+				// Try to find matching field in pattern row
+				const rewritten = R.rewrite(pRow, sr.label);
+
+				if (E.isLeft(rewritten)) {
+					// Field not in pattern, keep scrutinee field and continue
+					return { type: "extension" as const, label: sr.label, value: sr.value, row: meetRow(ctx, sr.row, pRow) };
+				}
+
+				if (rewritten.right.type !== "extension") {
+					throw new Error("Rewriting row extension should yield extension");
+				}
+
+				// Field found in both: meet the values
+				const metValue = meet(ctx, sr.value, rewritten.right.value);
+				const metRest = meetRow(ctx, sr.row, rewritten.right.row);
+
+				return { type: "extension" as const, label: sr.label, value: metValue, row: metRest };
+			})
+			.exhaustive();
+	};
 	const check = (tm: EB.Term, ty: NF.Value): V2.Elaboration<Modal.Artefacts> =>
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
@@ -336,8 +457,60 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 
 				.with([EB.CtorPatterns.Match, P._], function* ([tm, ty]) {
 					const { alternatives, scrutinee } = tm;
-					const checkAlt = (alt: EB.Alternative, ty: NF.Value): V2.Elaboration<Modal.Artefacts> => {};
-					return 1 as Modal.Artefacts;
+
+					log("-------------------------------------------");
+					log("Match: Scrutinee");
+					log("-------------------------------------------");
+
+					const [scrutineeTy, scrutineeArtefacts] = yield* synth.gen(scrutinee);
+
+					log("-------------------------------------------");
+					log("Match: Alternatives");
+					log("-------------------------------------------");
+
+					const checkAlt = (alt: EB.Alternative): V2.Elaboration<Modal.Artefacts> =>
+						V2.Do(function* () {
+							const ctx = yield* V2.ask();
+							const { pattern, term: branch, binders } = alt;
+
+							log("Checking alternative:", EB.Display.Pattern(pattern), "=>", EB.Display.Term(branch, ctx));
+
+							const [patternTy, patternArtefacts] = yield* synthPattern.gen(pattern, scrutineeTy);
+							// Meet the scrutinee type with the pattern type to get refined type
+							const met = meet(ctx, scrutineeTy, patternTy);
+
+							log("Met type:", NF.display(met, ctx));
+
+							// Extend context with pattern binders
+							const extend: (ctx: EB.Context) => EB.Context = ctx => binders.reduce((c, [name, ty]) => EB.bind(c, { type: "Lambda", variable: name }, ty), ctx);
+
+							const branchArtefacts = yield* V2.local(extend, check(branch, ty));
+
+							// Quantify over pattern binders in reverse order
+							const quantifyBinders = (vc: Expr) =>
+								binders
+									.slice()
+									.reverse()
+									.reduce((vc, [name, ty]) => quantify(name, ty, vc, ctx), vc);
+
+							// Generate a fresh variable to quantify over the met type
+							// This creates the implication: ∀fresh. met(fresh) => vc
+							// The met type contains the conjoined refinements from scrutinee and pattern
+							const freshVar = `$fresh${nextCount()}`;
+							const vc = quantify(freshVar, met, quantifyBinders(branchArtefacts.vc), ctx);
+							const combinedVc = Z3.And(scrutineeArtefacts.vc as Bool, patternArtefacts.vc as Bool, vc as Bool);
+							const us = Q.add(scrutineeArtefacts.usages, Q.add(patternArtefacts.usages, branchArtefacts.usages));
+
+							return { usages: us, vc: combinedVc } satisfies Modal.Artefacts;
+						});
+
+					const alts = yield* V2.pure(V2.traverse(alternatives, checkAlt));
+					const vc = alts.reduce((v, a) => Z3.And(v, a.vc as Bool), Z3.Bool.val(true) as Bool);
+					const us = alts.reduce((acc, a) => Q.add(acc, a.usages), scrutineeArtefacts.usages);
+
+					// const fresh = `$fresh${nextCount()}`;
+					// const quantifiedVc = quantify(fresh, scrutineeTy, vc, ctx);
+					return { usages: us, vc } satisfies Modal.Artefacts;
 				})
 				.otherwise(function* ([tm, ty]) {
 					const [synthed, artefacts] = yield* synth.gen(tm);
@@ -377,16 +550,16 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 						const [binder, , ty] = entry.type;
 
 						// Apply selfify rule: strengthen type with self-equality
-						//const selfified = selfify(tm, ty, ctx);
+						const selfified = selfify(tm, ty, ctx);
 
-						const modalities = extract(ty, ctx);
+						const modalities = extract(selfified, ctx);
 						const zeros = A.replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
 						const usages = A.unsafeUpdateAt(tm.variable.index, modalities.quantity, zeros);
 
 						const v = NF.evaluate(ctx, tm);
 						const p = NF.reduce(modalities.liquid, v, "Explicit");
 
-						return [ty, { usages, vc: translate(p, ctx) }] satisfies Synthed;
+						return [selfified, { usages, vc: translate(p, ctx) }] satisfies Synthed;
 					}),
 				)
 				.with({ type: "Var", variable: { type: "Free" } }, tm => {
@@ -587,9 +760,11 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 								ctx => EB.bind(ctx, { type: "Let", variable: current.variable }, current.annotation),
 								V2.Do(function* () {
 									const artefacts = yield* check.gen(current.value, current.annotation);
-									const [ty, conj] = yield* V2.pure(recurse(rest, [...results, artefacts]));
+									const [ty, { usages, vc }] = yield* V2.pure(recurse(rest, [...results, artefacts]));
+									const conj = Z3.And(artefacts.vc as Bool, vc as Bool);
 
-									return [ty, { usages: conj.usages, vc: Z3.And(artefacts.vc as Bool, conj.vc as Bool) }] satisfies Synthed;
+									const quantified = quantify(current.variable, current.annotation, conj, ctx);
+									return [ty, { usages, vc: quantified }] satisfies Synthed;
 								}),
 							);
 						});
@@ -609,6 +784,69 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 			return ret;
 		});
 	synth.gen = (tm: EB.Term) => V2.pure(synth(tm));
+
+	/**
+	 * Synthesize a pattern's type.
+	 * Patterns synthesize to their matched type with potential refinements.
+	 */
+	const synthPattern = (pattern: EB.Pattern, scrutineeTy: NF.Value): V2.Elaboration<Synthed> =>
+		V2.Do(function* () {
+			const ctx = yield* V2.ask();
+
+			const r = match(pattern)
+				.with({ type: "Binder" }, p => {
+					// Binder pattern just inherits scrutinee type
+					return [scrutineeTy, { usages: Q.noUsage(ctx.env.length), vc: Z3.Bool.val(true) }] satisfies Synthed;
+				})
+				.with({ type: "Wildcard" }, () => {
+					// Wildcard matches anything
+					return [scrutineeTy, { usages: Q.noUsage(ctx.env.length), vc: Z3.Bool.val(true) }] satisfies Synthed;
+				})
+				.with({ type: "Lit" }, p => {
+					// Literal pattern creates singleton type
+					const ann = match(p.value)
+						.with({ type: "Atom" }, l => EB.Constructors.Lit(l))
+						.with({ type: "Num" }, l => EB.Constructors.Lit({ type: "Atom", value: "Num" }))
+						.with({ type: "String" }, l => EB.Constructors.Lit({ type: "Atom", value: "String" }))
+						.with({ type: "Bool" }, l => EB.Constructors.Lit({ type: "Atom", value: "Bool" }))
+						.with({ type: "unit" }, l => EB.Constructors.Lit({ type: "Atom", value: "Unit" }))
+						.exhaustive();
+					const nf = NF.evaluate(ctx, ann);
+
+					const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
+					const litTerm = EB.Constructors.Lit(p.value);
+					const closure = NF.Constructors.Closure(noCapture(ctx), EB.DSL.eq(bound, litTerm));
+					const fresh = freshName();
+					const modalities = {
+						quantity: Q.Many,
+						liquid: NF.Constructors.Lambda(fresh, "Explicit", closure, nf),
+					};
+
+					return [NF.Constructors.Modal(nf, modalities), { usages: Q.noUsage(ctx.env.length), vc: Z3.Bool.val(true) }] satisfies Synthed;
+				})
+				.with({ type: "Struct" }, { type: "Variant" }, { type: "Row" }, () => {
+					// For structural patterns, just use scrutinee type
+					// The meet operation will handle refinement
+					return [scrutineeTy, { usages: Q.noUsage(ctx.env.length), vc: Z3.Bool.val(true) }] satisfies Synthed;
+				})
+				.with({ type: "Var" }, p => {
+					throw new Error("synthPattern: Var pattern not yet implemented");
+				})
+				.with({ type: "List" }, () => {
+					console.warn("List pattern synthesis not yet implemented");
+					return [scrutineeTy, { usages: Q.noUsage(ctx.env.length), vc: Z3.Bool.val(true) }] satisfies Synthed;
+				})
+				.exhaustive();
+
+			// if (r === null) {
+			// 	// Handle Var pattern case with generator
+			// 	const p = pattern as Extract<EB.Pattern, { type: "Var" }>;
+			// 	return yield* synth.gen(p.term);
+			// }
+
+			return r;
+		});
+	synthPattern.gen = (pattern: EB.Pattern, scrutineeTy: NF.Value) => V2.pure(synthPattern(pattern, scrutineeTy));
 
 	const extract = (nf: NF.Value, ctx: EB.Context): NF.Modalities =>
 		match(nf)
@@ -1119,7 +1357,7 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 		return r;
 	};
 
-	type SortMap = { Prim: Sort } | { Func: SortMap[] } | { App: SortMap[] };
+	type SortMap = { Prim: Sort } | { Func: SortMap[] } | { App: SortMap[] } | { Row: Sort } | { Recursive: Sort };
 	// TODO: get rid of SortMap and return a Sort directly from mkSort. Update all callsites accordingly
 	const mkSort = (nf: NF.Value, ctx: EB.Context): SortMap => {
 		const s = match(nf)
@@ -1138,6 +1376,16 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 			)
 			.with(NF.Patterns.Row, r => ({ Prim: Sorts.Row }))
 			.with(NF.Patterns.App, ({ func, arg }) => ({ App: [mkSort(func, ctx), mkSort(arg, ctx)] }))
+			.with(NF.Patterns.Sigma, _ => {
+				return { Row: Sorts.Schema };
+			})
+			.with(NF.Patterns.Mu, mu => {
+				const name = `Mu_(${mu.binder.source})`;
+				return { Recursive: Z3.Sort.declare(name) };
+			})
+			.with(NF.Patterns.Lambda, _ => {
+				return { Prim: Sorts.Function };
+			})
 			.with({ type: "Abs" }, ({ binder, closure }) => {
 				const body = NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length));
 				const argSort = mkSort(binder.annotation, ctx);
@@ -1202,6 +1450,8 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 				const bs = build(body);
 				return as.concat(bs);
 			})
+			.with({ Row: P.select() }, r => [r])
+			.with({ Recursive: P.select() }, r => [r])
 			.exhaustive();
 
 	const quantify = (variable: string, annotation: NF.Value, vc: Expr, ctx: EB.Context): Expr => {
@@ -1216,9 +1466,15 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 				const xSort = match(sortMap)
 					.with({ Prim: P.select() }, p => p)
 					.otherwise(() => {
-						console.log("Sigma Subtype SortMap:", sortMap);
-						throw new Error("Only primitive types can be used in logical formulas");
+						return;
+						// console.log("Sigma Subtype SortMap:", sortMap);
+						// throw new Error("Only primitive types can be used in logical formulas");
 					});
+
+				if (!xSort) {
+					return vc;
+				}
+
 				const x = Z3.Const(variable, xSort);
 
 				if (annotation.type !== "Modal") {
@@ -1252,6 +1508,7 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 				return forall;
 			});
 	};
+	quantify.gen = (variable: string, annotation: NF.Value, vc: Expr, ctx: EB.Context) => V2.of(quantify(variable, annotation, vc, ctx));
 
 	const collect = (r1: NF.Row, r2: NF.Row): V2.Elaboration<EB.Context["sigma"]> => {
 		const res = match([r1, r2])

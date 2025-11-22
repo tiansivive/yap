@@ -60,8 +60,9 @@
 		"@types/moo": "^0.5.9",
 		"@types/nearley": "^2.11.5",
 		"@types/node": "^22.5.4",
-		"@vitest/coverage-v8": "^2.0.5",
+		"@vitest/coverage-v8": "^4.0.13",
 		"@vitest/eslint-plugin": "^1.1.0",
+		"@vitest/ui": "^4.0.13",
 		"console-fail-test": "^0.5.0",
 		"eslint": "^9.10.0",
 		"eslint-plugin-n": "^17.10.2",
@@ -79,7 +80,7 @@
 		"typescript": "^5.7.3",
 		"typescript-eslint": "^8.4.0",
 		"vite-tsconfig-paths": "^5.1.4",
-		"vitest": "^2.0.5"
+		"vitest": "^4.0.13"
 	},
 	"engines": {
 		"node": ">=18.3.0"

@@ -78,7 +78,8 @@ Run `pnpm test` to run the tests. You can update snapshots with `pnpm test -u` a
 - Prefer immutable code.
 - Prefer simple, linear flow by virtue of V2 Do notation.
 - Avoid long `fp-ts` function pipelines as they make debugging harder and more annoying.
-- Prefer function composition/pipelines when interstitial variables do not add semantic value.
+- Prefer function composition/pipelines to interstitial variables that do not add semantic value.
+- Prefer iterators and built-in higher order functions (map, filter, reduce, etc) over manual loops.
 - Avoid wrapping in unecessary callbacks. e.g. `Array.map(doStuff)` instead of `Array.map(v => doStuff(v))`
 - Clean, Clear and Terse code:
   - One letter var names are fine in ML-like fashin. e.g. `Array.map(x =>...)` or `const [x, ...xs] = [1,2,3,4]`.

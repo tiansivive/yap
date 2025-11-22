@@ -25,7 +25,7 @@ exports[`parser: literals > boolean: true 1`] = `
   "type": "lit",
   "value": {
     "type": "Bool",
-    "value": "true",
+    "value": true,
   },
 }
 `;

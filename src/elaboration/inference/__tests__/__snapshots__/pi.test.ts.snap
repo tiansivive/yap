@@ -62,7 +62,7 @@ exports[`inference: pi/arrow > arrow type: Num -> Num 2`] = `
     "term": {
       "binding": {
         "annotation": {
-          "id": 813,
+          "id": 1204,
           "type": "Var",
           "variable": {
             "name": "Num",
@@ -74,14 +74,14 @@ exports[`inference: pi/arrow > arrow type: Num -> Num 2`] = `
         "variable": "t1",
       },
       "body": {
-        "id": 814,
+        "id": 1205,
         "type": "Var",
         "variable": {
           "name": "Num",
           "type": "Free",
         },
       },
-      "id": 815,
+      "id": 1206,
       "type": "Abs",
     },
     "type": {
@@ -136,7 +136,7 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
       },
       {
         "left": {
-          "id": 16,
+          "id": 26,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -159,7 +159,7 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
     "term": {
       "binding": {
         "annotation": {
-          "id": 813,
+          "id": 1204,
           "type": "Var",
           "variable": {
             "name": "Num",
@@ -171,14 +171,14 @@ exports[`inference: pi/arrow > output type must be a Type: (x: Num) -> x 2`] = `
         "variable": "x",
       },
       "body": {
-        "id": 814,
+        "id": 1205,
         "type": "Var",
         "variable": {
           "index": 0,
           "type": "Bound",
         },
       },
-      "id": 815,
+      "id": 1206,
       "type": "Abs",
     },
     "type": {
@@ -256,7 +256,7 @@ exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
     "term": {
       "binding": {
         "annotation": {
-          "id": 813,
+          "id": 1204,
           "type": "Var",
           "variable": {
             "name": "Num",
@@ -268,14 +268,14 @@ exports[`inference: pi/arrow > pi explicit: (x: Num) -> Num 2`] = `
         "variable": "x",
       },
       "body": {
-        "id": 814,
+        "id": 1205,
         "type": "Var",
         "variable": {
           "name": "Num",
           "type": "Free",
         },
       },
-      "id": 815,
+      "id": 1206,
       "type": "Abs",
     },
     "type": {
@@ -353,7 +353,7 @@ exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
     "term": {
       "binding": {
         "annotation": {
-          "id": 813,
+          "id": 1204,
           "type": "Var",
           "variable": {
             "name": "Num",
@@ -365,14 +365,14 @@ exports[`inference: pi/arrow > pi implicit: (x: Num) => Num 2`] = `
         "variable": "x",
       },
       "body": {
-        "id": 814,
+        "id": 1205,
         "type": "Var",
         "variable": {
           "name": "Num",
           "type": "Free",
         },
       },
-      "id": 815,
+      "id": 1206,
       "type": "Abs",
     },
     "type": {

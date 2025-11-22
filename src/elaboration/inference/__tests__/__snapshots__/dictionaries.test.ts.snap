@@ -33,7 +33,7 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
     },
     "term": {
       "arg": {
-        "id": 815,
+        "id": 1206,
         "type": "Var",
         "variable": {
           "name": "defaultArray",
@@ -42,7 +42,7 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
       },
       "func": {
         "arg": {
-          "id": 814,
+          "id": 1205,
           "type": "Var",
           "variable": {
             "name": "Num",
@@ -51,7 +51,7 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
         },
         "func": {
           "arg": {
-            "id": 813,
+            "id": 1204,
             "type": "Var",
             "variable": {
               "name": "Num",
@@ -59,7 +59,7 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
             },
           },
           "func": {
-            "id": 816,
+            "id": 1207,
             "type": "Var",
             "variable": {
               "name": "Indexed",
@@ -67,15 +67,15 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
             },
           },
           "icit": "Explicit",
-          "id": 817,
+          "id": 1208,
           "type": "App",
         },
         "icit": "Explicit",
-        "id": 818,
+        "id": 1209,
         "type": "App",
       },
       "icit": "Implicit",
-      "id": 819,
+      "id": 1210,
       "type": "App",
     },
     "type": {

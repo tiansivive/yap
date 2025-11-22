@@ -265,5 +265,5 @@ Number
 
 Int -> %digit  		{% P.sourceLoc %}
 String -> %string 	{% P.sourceLoc %}
-Bool -> "true"  	{% P.sourceLoc %}
-	  | "false" 	{% P.sourceLoc %}
+Bool -> "true"  	{% P.True %}
+	  | "false" 	{% P.False %}

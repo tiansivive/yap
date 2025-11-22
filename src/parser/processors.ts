@@ -64,12 +64,19 @@ export const Str: PostProcessor<[Sourced<string>], Sourced<Literal>> = F.flow(
 );
 export const Num: PostProcessor<[Sourced<number>], Sourced<Literal>> = F.flow(
 	NEA.head,
-	Sourced.map(value => ({ type: "Num", value })),
+	Sourced.map(value => {
+		return { type: "Num", value };
+	}),
 );
 export const Bool: PostProcessor<[Sourced<boolean>], Sourced<Literal>> = F.flow(
 	NEA.head,
-	Sourced.map(value => ({ type: "Bool", value })),
+	Sourced.map(value => {
+		return { type: "Bool", value };
+	}),
 );
+
+export const True = (tok: Token): Sourced<boolean> => [true, { from: loc(tok) }];
+export const False = (tok: Token): Sourced<boolean> => [false, { from: loc(tok) }];
 
 export const Type = (tok: Token): Sourced<Literal> => [L.Type(), { from: loc(tok) }];
 export const Unit =

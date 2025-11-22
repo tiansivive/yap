@@ -21,7 +21,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
     "constraints": [
       {
         "left": {
-          "id": 29,
+          "id": 39,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -30,10 +30,10 @@ exports[`inference: tuple > {1, 2} 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 25,
+          "id": 35,
           "type": "Neutral",
           "value": {
-            "id": 24,
+            "id": 34,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -46,7 +46,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       {
         "left": {
-          "id": 28,
+          "id": 38,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -55,10 +55,10 @@ exports[`inference: tuple > {1, 2} 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 27,
+          "id": 37,
           "type": "Neutral",
           "value": {
-            "id": 26,
+            "id": 36,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -71,7 +71,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       {
         "left": {
-          "id": 31,
+          "id": 41,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -80,10 +80,10 @@ exports[`inference: tuple > {1, 2} 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 19,
+          "id": 29,
           "type": "Neutral",
           "value": {
-            "id": 18,
+            "id": 28,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -96,7 +96,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       {
         "left": {
-          "id": 30,
+          "id": 40,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -105,10 +105,10 @@ exports[`inference: tuple > {1, 2} 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 21,
+          "id": 31,
           "type": "Neutral",
           "value": {
-            "id": 20,
+            "id": 30,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -138,10 +138,10 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       "2": {
         "ann": {
-          "id": 17,
+          "id": 27,
           "type": "Neutral",
           "value": {
-            "id": 16,
+            "id": 26,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -188,10 +188,10 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       "5": {
         "ann": {
-          "id": 23,
+          "id": 33,
           "type": "Neutral",
           "value": {
-            "id": 22,
+            "id": 32,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -224,7 +224,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
     },
     "term": {
       "arg": {
-        "id": 818,
+        "id": 1209,
         "row": {
           "label": "0",
           "row": {
@@ -234,7 +234,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
             },
             "type": "extension",
             "value": {
-              "id": 815,
+              "id": 1206,
               "type": "Lit",
               "value": {
                 "type": "Num",
@@ -244,7 +244,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
           },
           "type": "extension",
           "value": {
-            "id": 816,
+            "id": 1207,
             "type": "Lit",
             "value": {
               "type": "Num",
@@ -255,7 +255,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
         "type": "Row",
       },
       "func": {
-        "id": 817,
+        "id": 1208,
         "type": "Lit",
         "value": {
           "type": "Atom",
@@ -263,15 +263,15 @@ exports[`inference: tuple > {1, 2} 2`] = `
         },
       },
       "icit": "Explicit",
-      "id": 819,
+      "id": 1210,
       "type": "App",
     },
     "type": {
-      "id": 35,
+      "id": 45,
       "type": "Neutral",
       "value": {
         "arg": {
-          "id": 33,
+          "id": 43,
           "row": {
             "label": "0",
             "row": {
@@ -281,7 +281,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
               },
               "type": "extension",
               "value": {
-                "id": 28,
+                "id": 38,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -291,7 +291,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
             },
             "type": "extension",
             "value": {
-              "id": 30,
+              "id": 40,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -302,7 +302,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
           "type": "Row",
         },
         "func": {
-          "id": 32,
+          "id": 42,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -310,7 +310,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
           },
         },
         "icit": "Explicit",
-        "id": 34,
+        "id": 44,
         "type": "App",
       },
     },
