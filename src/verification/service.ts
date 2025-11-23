@@ -342,9 +342,14 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 								.with({ Prim: P.select() }, sort => Z3.Const(tm.binding.variable, sort))
 								.with({ Func: P._ }, fn => Z3.Array.const(tm.binding.variable, ...(build(fn) as [Sort, ...Sort[], Sort])))
 								.with({ App: P._ }, app => {
-									const sort = Z3.Sort.declare(build(app).join(" "));
+									const sorts = build(app);
+									const name = `App_${sorts.map(s => s.name()).join("_")}`;
+									const sort = Z3.Sort.declare(name);
 									return Z3.Const(tm.binding.variable, sort);
 								})
+								.with({ Recursive: P.select() }, r => Z3.Const(tm.binding.variable, r))
+								.with({ Row: P.select() }, r => Z3.Const(tm.binding.variable, r))
+
 								.exhaustive();
 
 							if (p.type !== "Abs") {
@@ -1085,9 +1090,9 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 						const xSort = match(sortMap)
 							.with({ Prim: P.select() }, p => p)
 							.otherwise(() => {
-								console.log("Subtype Modal A Type:\n", NF.display(at, ctx));
-								console.log("Subtype Modal B Type:\n", NF.display(bt, ctx));
-								console.log("Subtype Modal Liquid SortMap:", sortMap);
+								log("Subtype Modal A Type:\n", NF.display(at, ctx));
+								log("Subtype Modal B Type:\n", NF.display(bt, ctx));
+								// log("Subtype Modal Liquid SortMap:", sortMap);
 								throw new Error("Only primitive types can be used in logical formulas");
 							});
 						const fresh = freshName();
