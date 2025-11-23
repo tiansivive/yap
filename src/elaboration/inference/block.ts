@@ -82,7 +82,7 @@ const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]) 
 	if (!ret) {
 		//TODO: add effect tracking
 		const ty = NF.Constructors.Lit(Lit.Atom("Unit"));
-		const unit = EB.Constructors.Lit(Lit.Atom("unit"));
+		const unit = EB.Constructors.Lit(Lit.unit());
 		const tm = EB.Constructors.Block(results, unit);
 		const { env } = yield* V2.ask();
 		return [tm, ty, Q.noUsage(env.length)] satisfies EB.AST;

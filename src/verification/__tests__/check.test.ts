@@ -397,12 +397,12 @@ describe("VerificationService", () => {
 				: Pair Num Num (\\x -> \\y -> x < y )
 				= { fst: 1, snd: 2 };
 
-			return 1;
+			
 		}`;
 
 		const [tm, ty, ctx] = elaborate(src);
 
-		const Verification = VerificationService(Z3, { logging: true });
+		const Verification = VerificationService(Z3);
 		const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 		if (result._tag === "Left") {
 			throw new Error(EB.V2.display(result.left));
@@ -410,6 +410,7 @@ describe("VerificationService", () => {
 
 		const artefacts = result.right;
 		const solver = new Z3.Solver();
+
 		solver.add(artefacts.vc.eq(true));
 		const sat = await solver.check();
 		expect(sat).toBe("sat");

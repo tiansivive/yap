@@ -727,8 +727,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
         "id": 1258,
         "type": "Lit",
         "value": {
-          "type": "Atom",
-          "value": "unit",
+          "type": "unit",
         },
       },
       "statements": [
@@ -2913,8 +2912,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
         "id": 1239,
         "type": "Lit",
         "value": {
-          "type": "Atom",
-          "value": "unit",
+          "type": "unit",
         },
       },
       "statements": [
@@ -3370,8 +3368,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Simple 
         "id": 1218,
         "type": "Lit",
         "value": {
-          "type": "Atom",
-          "value": "unit",
+          "type": "unit",
         },
       },
       "statements": [
@@ -3974,8 +3971,7 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
         "id": 1258,
         "type": "Lit",
         "value": {
-          "type": "Atom",
-          "value": "unit",
+          "type": "unit",
         },
       },
       "statements": [

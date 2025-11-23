@@ -822,8 +822,7 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
         "id": 1241,
         "type": "Lit",
         "value": {
-          "type": "Atom",
-          "value": "unit",
+          "type": "unit",
         },
       },
       "statements": [

@@ -55,7 +55,7 @@
       - Still no re-binding!
       - Ref counting? Perceus?
   - ~~Refinements?~~
-    - Implementing CAS instead of SMT?
+    - ~~Implementing CAS instead of SMT?~~
     - Early VC check to discharge obligations
       - Better error reporting!
       - Needs moving each `letdec` to `async/await`
@@ -137,6 +137,11 @@
   - Remove `zonker` and `metas`.
     - These are an evolving record so should under a mutable State `MetaContext`
     - Will fix a lot of the hacks where metas/zonkers are propagated everywhere
+- Introduce an IVL
+  - Instead of directly building z3 expr, build an AST representing the formula
+  - use smtlib2
+  - Allows caching and serializing. Easier testing.
+  - Portable across SMT backends
 - Rework let binding "sequencing" (multiple decs in a block)
   - Recursion currently demands a lot of ctx entending in different places.
   - Maybe better to have only a `fix` abstraction, perhpas unifying with `mu`.

@@ -74,6 +74,8 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 					const bs = Sorts.stringify(body);
 					return `(${as} -> ${bs})` as any;
 				})
+				.with({ Row: P._ }, _ => "Row")
+				.with({ Recursive: P._ }, r => "Mu")
 				.exhaustive(),
 	};
 
@@ -122,7 +124,7 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 		return name;
 	};
 
-	console.log("\n\n---------------- Verification Service ----------------");
+	// console.log("\n\n---------------- Verification Service ----------------");
 
 	let indentation = 0;
 	const prefix = (track: boolean = true) => `${track ? "|" : " "}\t`.repeat(indentation);
@@ -1237,7 +1239,11 @@ export const VerificationService = (Z3: Context<"main">, { logging } = { logging
 					})
 					.with({ type: "unit" }, l => Z3.Const("unit", Sorts.Unit))
 
-					.with({ type: "Atom" }, atom => Z3.Const(atom.value, Sorts.Atom))
+					.with({ type: "Atom", value: "Unit" }, atom => Z3.Const(atom.value, Sorts.Unit))
+					.with({ type: "Atom", value: "Type" }, atom => Z3.Const(atom.value, Sorts.Type))
+					.with({ type: "Atom" }, atom => {
+						return Z3.Const(atom.value, Sorts.Atom);
+					})
 					.exhaustive(),
 			)
 			.with(NF.Patterns.Row, r => {

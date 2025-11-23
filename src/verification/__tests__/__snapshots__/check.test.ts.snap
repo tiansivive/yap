@@ -94,7 +94,7 @@ exports[`VerificationService > verifies dependent record construction 1`] = `
                   (forall (($c Real)) (=> (= $c 2.0) (< 1.0 $c)))
                   true
                   true))))
-  (and a!1 a!2 true (forall (($e Real)) (=> (= $e 1.0) true))))"
+  (and a!1 a!2 true (forall (($e Unit)) (=> (= $e unit) true))))"
 `;
 
 exports[`VerificationService > verifies dependent record construction 2`] = `
