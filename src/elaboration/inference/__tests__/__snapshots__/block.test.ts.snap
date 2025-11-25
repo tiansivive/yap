@@ -24,7 +24,6 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
     "constraints": [
       {
         "left": {
-          "id": 30,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -33,10 +32,8 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
         },
         "lvl": 1,
         "right": {
-          "id": 27,
           "type": "Neutral",
           "value": {
-            "id": 26,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -56,7 +53,6 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -71,9 +67,7 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
       },
     },
     "term": {
-      "id": 1207,
       "return": {
-        "id": 1206,
         "type": "Var",
         "variable": {
           "index": 0,
@@ -83,7 +77,6 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
       "statements": [
         {
           "annotation": {
-            "id": 30,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -92,7 +85,6 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
           },
           "type": "Let",
           "value": {
-            "id": 1205,
             "type": "Lit",
             "value": {
               "type": "Num",
@@ -105,7 +97,6 @@ exports[`inference: block > { let x = 1; return x; } 2`] = `
       "type": "Block",
     },
     "type": {
-      "id": 30,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -135,9 +126,7 @@ exports[`inference: block > { return 1; } 2`] = `
     "constraints": [],
     "metas": {},
     "term": {
-      "id": 1205,
       "return": {
-        "id": 1204,
         "type": "Lit",
         "value": {
           "type": "Num",
@@ -148,7 +137,6 @@ exports[`inference: block > { return 1; } 2`] = `
       "type": "Block",
     },
     "type": {
-      "id": 26,
       "type": "Lit",
       "value": {
         "type": "Atom",

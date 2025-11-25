@@ -20,7 +20,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
     "constraints": [
       {
         "left": {
-          "id": 26,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -29,7 +28,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
         },
         "lvl": 0,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -40,7 +38,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
       },
       {
         "left": {
-          "id": 38,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -49,10 +46,8 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
         },
         "lvl": 1,
         "right": {
-          "id": 33,
           "type": "Neutral",
           "value": {
-            "id": 32,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -65,7 +60,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
       },
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -74,10 +68,8 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
         },
         "lvl": 1,
         "right": {
-          "id": 35,
           "type": "Neutral",
           "value": {
-            "id": 34,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -92,7 +84,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -107,10 +98,8 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
       },
       "2": {
         "ann": {
-          "id": 31,
           "type": "Neutral",
           "value": {
-            "id": 30,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -127,7 +116,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
       },
       "3": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -144,7 +132,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
     "term": {
       "binding": {
         "annotation": {
-          "id": 1204,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -157,7 +144,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
       },
       "body": {
         "arg": {
-          "id": 1209,
           "row": {
             "label": "foo",
             "row": {
@@ -169,7 +155,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
             },
             "type": "extension",
             "value": {
-              "id": 1207,
               "type": "Var",
               "variable": {
                 "name": "Num",
@@ -180,7 +165,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
           "type": "Row",
         },
         "func": {
-          "id": 1208,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -188,16 +172,13 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
           },
         },
         "icit": "Explicit",
-        "id": 1210,
         "type": "App",
       },
-      "id": 1211,
       "type": "Abs",
     },
     "type": {
       "binder": {
         "annotation": {
-          "id": 27,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -217,7 +198,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
           "zonker": {},
         },
         "term": {
-          "id": 1212,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -226,7 +206,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
         },
         "type": "Closure",
       },
-      "id": 39,
       "type": "Abs",
     },
     "typedTerms": {},
@@ -254,7 +233,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
     "constraints": [
       {
         "left": {
-          "id": 38,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -263,10 +241,8 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
         },
         "lvl": 1,
         "right": {
-          "id": 33,
           "type": "Neutral",
           "value": {
-            "id": 32,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -279,7 +255,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       },
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -288,10 +263,8 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
         },
         "lvl": 1,
         "right": {
-          "id": 35,
           "type": "Neutral",
           "value": {
-            "id": 34,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -304,7 +277,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       },
       {
         "left": {
-          "id": 26,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -314,11 +286,9 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
         },
         "lvl": 1,
         "right": {
-          "id": 42,
           "type": "Neutral",
           "value": {
             "arg": {
-              "id": 40,
               "row": {
                 "type": "variable",
                 "variable": {
@@ -330,7 +300,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
               "type": "Row",
             },
             "func": {
-              "id": 39,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -338,7 +307,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
               },
             },
             "icit": "Explicit",
-            "id": 41,
             "type": "App",
           },
         },
@@ -348,7 +316,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -363,7 +330,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       },
       "2": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -378,10 +344,8 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       },
       "3": {
         "ann": {
-          "id": 31,
           "type": "Neutral",
           "value": {
-            "id": 30,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -398,7 +362,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       },
       "4": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -413,7 +376,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       },
       "5": {
         "ann": {
-          "id": 2,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -430,7 +392,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
     "term": {
       "binding": {
         "annotation": {
-          "id": 1204,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -444,7 +405,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       },
       "body": {
         "arg": {
-          "id": 1209,
           "row": {
             "label": "foo",
             "row": {
@@ -456,7 +416,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
             },
             "type": "extension",
             "value": {
-              "id": 1207,
               "type": "Var",
               "variable": {
                 "name": "Num",
@@ -467,7 +426,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
           "type": "Row",
         },
         "func": {
-          "id": 1208,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -475,19 +433,15 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
           },
         },
         "icit": "Explicit",
-        "id": 1210,
         "type": "App",
       },
-      "id": 1211,
       "type": "Abs",
     },
     "type": {
       "binder": {
         "annotation": {
-          "id": 27,
           "type": "Neutral",
           "value": {
-            "id": 26,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -510,7 +464,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
         },
         "term": {
           "arg": {
-            "id": 1214,
             "row": {
               "label": "foo",
               "row": {
@@ -523,7 +476,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
               },
               "type": "extension",
               "value": {
-                "id": 1213,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -534,7 +486,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
             "type": "Row",
           },
           "func": {
-            "id": 1212,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -542,12 +493,10 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
             },
           },
           "icit": "Explicit",
-          "id": 1215,
           "type": "App",
         },
         "type": "Closure",
       },
-      "id": 47,
       "type": "Abs",
     },
     "typedTerms": {},
@@ -576,7 +525,6 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
     "constraints": [
       {
         "left": {
-          "id": 40,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -585,10 +533,8 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 35,
           "type": "Neutral",
           "value": {
-            "id": 34,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -601,7 +547,6 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       },
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -610,10 +555,8 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 37,
           "type": "Neutral",
           "value": {
-            "id": 36,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -626,7 +569,6 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       },
       {
         "left": {
-          "id": 43,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -635,10 +577,8 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 29,
           "type": "Neutral",
           "value": {
-            "id": 28,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -651,7 +591,6 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       },
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -660,10 +599,8 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 31,
           "type": "Neutral",
           "value": {
-            "id": 30,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -678,7 +615,6 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -693,10 +629,8 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       },
       "2": {
         "ann": {
-          "id": 27,
           "type": "Neutral",
           "value": {
-            "id": 26,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -713,7 +647,6 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       },
       "3": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -728,7 +661,6 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       },
       "4": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -743,10 +675,8 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       },
       "5": {
         "ann": {
-          "id": 33,
           "type": "Neutral",
           "value": {
-            "id": 32,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -763,7 +693,6 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       },
       "6": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -778,7 +707,6 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       },
     },
     "term": {
-      "id": 1208,
       "row": {
         "label": "y",
         "row": {
@@ -788,7 +716,6 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
           },
           "type": "extension",
           "value": {
-            "id": 1207,
             "type": "Var",
             "variable": {
               "name": "Num",
@@ -798,7 +725,6 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
         },
         "type": "extension",
         "value": {
-          "id": 1206,
           "type": "Var",
           "variable": {
             "name": "String",
@@ -809,7 +735,6 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       "type": "Row",
     },
     "type": {
-      "id": 2,
       "type": "Lit",
       "value": {
         "type": "Atom",

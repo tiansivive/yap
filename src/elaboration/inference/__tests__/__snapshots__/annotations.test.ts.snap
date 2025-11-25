@@ -19,7 +19,6 @@ exports[`inference: annotations > 1 : Num 2`] = `
     "constraints": [
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -28,7 +27,6 @@ exports[`inference: annotations > 1 : Num 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -39,7 +37,6 @@ exports[`inference: annotations > 1 : Num 2`] = `
       },
       {
         "left": {
-          "id": 29,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -48,7 +45,6 @@ exports[`inference: annotations > 1 : Num 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 28,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -60,7 +56,6 @@ exports[`inference: annotations > 1 : Num 2`] = `
     ],
     "metas": {},
     "term": {
-      "id": 1205,
       "type": "Lit",
       "value": {
         "type": "Num",
@@ -68,7 +63,6 @@ exports[`inference: annotations > 1 : Num 2`] = `
       },
     },
     "type": {
-      "id": 28,
       "type": "Lit",
       "value": {
         "type": "Atom",

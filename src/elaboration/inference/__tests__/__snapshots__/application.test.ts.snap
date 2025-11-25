@@ -19,7 +19,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
     "constraints": [
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -28,7 +27,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
         },
         "lvl": 1,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -39,7 +37,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       },
       {
         "left": {
-          "id": 44,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -48,7 +45,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
         },
         "lvl": 0,
         "right": {
-          "id": 42,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -61,7 +57,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -76,10 +71,8 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       },
       "2": {
         "ann": {
-          "id": 27,
           "type": "Neutral",
           "value": {
-            "id": 26,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -97,7 +90,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
     },
     "term": {
       "arg": {
-        "id": 1215,
         "type": "Lit",
         "value": {
           "type": "String",
@@ -106,7 +98,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       },
       "func": {
         "arg": {
-          "id": 1213,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -117,7 +108,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
         "func": {
           "binding": {
             "annotation": {
-              "id": 1204,
               "type": "Var",
               "variable": {
                 "lvl": 0,
@@ -132,7 +122,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
           "body": {
             "binding": {
               "annotation": {
-                "id": 1205,
                 "type": "Var",
                 "variable": {
                   "name": "String",
@@ -144,29 +133,23 @@ exports[`inference: application > implicit insertion > inserts implicit argument
               "variable": "y",
             },
             "body": {
-              "id": 1206,
               "type": "Var",
               "variable": {
                 "index": 0,
                 "type": "Bound",
               },
             },
-            "id": 1207,
             "type": "Abs",
           },
-          "id": 1209,
           "type": "Abs",
         },
         "icit": "Implicit",
-        "id": 1214,
         "type": "App",
       },
       "icit": "Explicit",
-      "id": 1216,
       "type": "App",
     },
     "type": {
-      "id": 46,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -198,7 +181,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
     "constraints": [
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -207,7 +189,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
         },
         "lvl": 0,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -218,7 +199,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       },
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -227,7 +207,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
         },
         "lvl": 1,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -238,7 +217,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       },
       {
         "left": {
-          "id": 45,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -247,7 +225,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
         },
         "lvl": 0,
         "right": {
-          "id": 43,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -260,7 +237,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
     "metas": {
       "1": {
         "ann": {
-          "id": 28,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -276,7 +252,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
     },
     "term": {
       "arg": {
-        "id": 1215,
         "type": "Lit",
         "value": {
           "type": "String",
@@ -285,7 +260,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       },
       "func": {
         "arg": {
-          "id": 1213,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -296,7 +270,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
         "func": {
           "binding": {
             "annotation": {
-              "id": 1204,
               "type": "Var",
               "variable": {
                 "name": "Num",
@@ -310,7 +283,6 @@ exports[`inference: application > implicit insertion > inserts implicit argument
           "body": {
             "binding": {
               "annotation": {
-                "id": 1205,
                 "type": "Var",
                 "variable": {
                   "name": "String",
@@ -322,29 +294,23 @@ exports[`inference: application > implicit insertion > inserts implicit argument
               "variable": "y",
             },
             "body": {
-              "id": 1206,
               "type": "Var",
               "variable": {
                 "index": 0,
                 "type": "Bound",
               },
             },
-            "id": 1207,
             "type": "Abs",
           },
-          "id": 1209,
           "type": "Abs",
         },
         "icit": "Implicit",
-        "id": 1214,
         "type": "App",
       },
       "icit": "Explicit",
-      "id": 1216,
       "type": "App",
     },
     "type": {
-      "id": 47,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -375,7 +341,6 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
     "constraints": [
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -384,7 +349,6 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
         },
         "lvl": 2,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -395,7 +359,6 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
       },
       {
         "left": {
-          "id": 56,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -404,7 +367,6 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
         },
         "lvl": 0,
         "right": {
-          "id": 54,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -417,7 +379,6 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -432,7 +393,6 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
       },
       "2": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -447,10 +407,8 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
       },
       "3": {
         "ann": {
-          "id": 31,
           "type": "Neutral",
           "value": {
-            "id": 30,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -467,10 +425,8 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
       },
       "4": {
         "ann": {
-          "id": 27,
           "type": "Neutral",
           "value": {
-            "id": 26,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -488,7 +444,6 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
     },
     "term": {
       "arg": {
-        "id": 1222,
         "type": "Lit",
         "value": {
           "type": "String",
@@ -497,7 +452,6 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
       },
       "func": {
         "arg": {
-          "id": 1220,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -508,7 +462,6 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
         "func": {
           "binding": {
             "annotation": {
-              "id": 1204,
               "type": "Var",
               "variable": {
                 "lvl": 0,
@@ -522,7 +475,6 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
           },
           "body": {
             "arg": {
-              "id": 1214,
               "type": "Var",
               "variable": {
                 "lvl": 1,
@@ -533,7 +485,6 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
             "func": {
               "binding": {
                 "annotation": {
-                  "id": 1205,
                   "type": "Var",
                   "variable": {
                     "lvl": 1,
@@ -548,7 +499,6 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
               "body": {
                 "binding": {
                   "annotation": {
-                    "id": 1206,
                     "type": "Var",
                     "variable": {
                       "name": "String",
@@ -560,36 +510,28 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
                   "variable": "c",
                 },
                 "body": {
-                  "id": 1207,
                   "type": "Var",
                   "variable": {
                     "index": 0,
                     "type": "Bound",
                   },
                 },
-                "id": 1208,
                 "type": "Abs",
               },
-              "id": 1210,
               "type": "Abs",
             },
             "icit": "Implicit",
-            "id": 1215,
             "type": "App",
           },
-          "id": 1216,
           "type": "Abs",
         },
         "icit": "Implicit",
-        "id": 1221,
         "type": "App",
       },
       "icit": "Explicit",
-      "id": 1223,
       "type": "App",
     },
     "type": {
-      "id": 58,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -619,7 +561,6 @@ exports[`inference: application > simple application f x 2`] = `
     "constraints": [
       {
         "left": {
-          "id": 31,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -628,10 +569,8 @@ exports[`inference: application > simple application f x 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 27,
           "type": "Neutral",
           "value": {
-            "id": 26,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -646,7 +585,6 @@ exports[`inference: application > simple application f x 2`] = `
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -662,7 +600,6 @@ exports[`inference: application > simple application f x 2`] = `
     },
     "term": {
       "arg": {
-        "id": 1208,
         "type": "Lit",
         "value": {
           "type": "Num",
@@ -672,7 +609,6 @@ exports[`inference: application > simple application f x 2`] = `
       "func": {
         "binding": {
           "annotation": {
-            "id": 1204,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -685,25 +621,20 @@ exports[`inference: application > simple application f x 2`] = `
           "variable": "x",
         },
         "body": {
-          "id": 1205,
           "type": "Var",
           "variable": {
             "index": 0,
             "type": "Bound",
           },
         },
-        "id": 1206,
         "type": "Abs",
       },
       "icit": "Explicit",
-      "id": 1209,
       "type": "App",
     },
     "type": {
-      "id": 34,
       "type": "Neutral",
       "value": {
-        "id": 33,
         "type": "Var",
         "variable": {
           "lvl": 0,

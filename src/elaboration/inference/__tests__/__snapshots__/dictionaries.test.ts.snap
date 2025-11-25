@@ -17,7 +17,6 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -33,7 +32,6 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
     },
     "term": {
       "arg": {
-        "id": 1206,
         "type": "Var",
         "variable": {
           "name": "defaultArray",
@@ -42,7 +40,6 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
       },
       "func": {
         "arg": {
-          "id": 1205,
           "type": "Var",
           "variable": {
             "name": "Num",
@@ -51,7 +48,6 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
         },
         "func": {
           "arg": {
-            "id": 1204,
             "type": "Var",
             "variable": {
               "name": "Num",
@@ -59,7 +55,6 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
             },
           },
           "func": {
-            "id": 1207,
             "type": "Var",
             "variable": {
               "name": "Indexed",
@@ -67,19 +62,15 @@ exports[`inference: dictionaries > {[ Num ]: Num} 2`] = `
             },
           },
           "icit": "Explicit",
-          "id": 1208,
           "type": "App",
         },
         "icit": "Explicit",
-        "id": 1209,
         "type": "App",
       },
       "icit": "Implicit",
-      "id": 1210,
       "type": "App",
     },
     "type": {
-      "id": 1,
       "type": "Lit",
       "value": {
         "type": "Atom",

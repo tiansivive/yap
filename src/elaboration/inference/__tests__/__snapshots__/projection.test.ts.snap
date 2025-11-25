@@ -22,7 +22,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
     "constraints": [
       {
         "left": {
-          "id": 39,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -31,10 +30,8 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 35,
           "type": "Neutral",
           "value": {
-            "id": 34,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -47,7 +44,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       {
         "left": {
-          "id": 38,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -56,10 +52,8 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 37,
           "type": "Neutral",
           "value": {
-            "id": 36,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -72,7 +66,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       {
         "left": {
-          "id": 41,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -81,10 +74,8 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 29,
           "type": "Neutral",
           "value": {
-            "id": 28,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -97,7 +88,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       {
         "left": {
-          "id": 40,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -106,10 +96,8 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 31,
           "type": "Neutral",
           "value": {
-            "id": 30,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -123,7 +111,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       {
         "left": {
           "arg": {
-            "id": 46,
             "row": {
               "label": "x",
               "row": {
@@ -133,7 +120,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
                 },
                 "type": "extension",
                 "value": {
-                  "id": 38,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -143,7 +129,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
               },
               "type": "extension",
               "value": {
-                "id": 40,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -154,7 +139,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
             "type": "Row",
           },
           "func": {
-            "id": 42,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -162,13 +146,11 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
             },
           },
           "icit": "Explicit",
-          "id": 47,
           "type": "App",
         },
         "lvl": 0,
         "right": {
           "arg": {
-            "id": 43,
             "row": {
               "label": "x",
               "row": {
@@ -178,7 +160,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
                 },
                 "type": "extension",
                 "value": {
-                  "id": 38,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -188,7 +169,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
               },
               "type": "extension",
               "value": {
-                "id": 40,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -199,7 +179,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
             "type": "Row",
           },
           "func": {
-            "id": 42,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -207,7 +186,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
             },
           },
           "icit": "Explicit",
-          "id": 44,
           "type": "App",
         },
         "type": "assign",
@@ -216,7 +194,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -231,10 +208,8 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "2": {
         "ann": {
-          "id": 27,
           "type": "Neutral",
           "value": {
-            "id": 26,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -251,7 +226,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "3": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -266,7 +240,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "4": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -281,10 +254,8 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "5": {
         "ann": {
-          "id": 33,
           "type": "Neutral",
           "value": {
-            "id": 32,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -301,7 +272,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "6": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -316,11 +286,9 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
     },
     "term": {
-      "id": 1211,
       "label": "x",
       "term": {
         "arg": {
-          "id": 1209,
           "row": {
             "label": "x",
             "row": {
@@ -330,7 +298,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
               },
               "type": "extension",
               "value": {
-                "id": 1206,
                 "type": "Lit",
                 "value": {
                   "type": "Num",
@@ -340,7 +307,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
             },
             "type": "extension",
             "value": {
-              "id": 1207,
               "type": "Lit",
               "value": {
                 "type": "Num",
@@ -351,7 +317,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
           "type": "Row",
         },
         "func": {
-          "id": 1208,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -359,13 +324,11 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
           },
         },
         "icit": "Explicit",
-        "id": 1210,
         "type": "App",
       },
       "type": "Proj",
     },
     "type": {
-      "id": 40,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -396,7 +359,6 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
       {
         "left": {
           "arg": {
-            "id": 34,
             "row": {
               "label": "x",
               "row": {
@@ -409,10 +371,8 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
               },
               "type": "extension",
               "value": {
-                "id": 33,
                 "type": "Neutral",
                 "value": {
-                  "id": 32,
                   "type": "Var",
                   "variable": {
                     "lvl": 1,
@@ -425,7 +385,6 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
             "type": "Row",
           },
           "func": {
-            "id": 31,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -433,12 +392,10 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
             },
           },
           "icit": "Explicit",
-          "id": 35,
           "type": "App",
         },
         "lvl": 1,
         "right": {
-          "id": 26,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -452,7 +409,6 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -467,7 +423,6 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
       },
       "2": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -482,7 +437,6 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
       },
       "3": {
         "ann": {
-          "id": 2,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -499,7 +453,6 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
     "term": {
       "binding": {
         "annotation": {
-          "id": 1204,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -512,10 +465,8 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
         "variable": "obj",
       },
       "body": {
-        "id": 1207,
         "label": "x",
         "term": {
-          "id": 1205,
           "type": "Var",
           "variable": {
             "index": 0,
@@ -524,16 +475,13 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
         },
         "type": "Proj",
       },
-      "id": 1208,
       "type": "Abs",
     },
     "type": {
       "binder": {
         "annotation": {
-          "id": 27,
           "type": "Neutral",
           "value": {
-            "id": 26,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -555,7 +503,6 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
           "zonker": {},
         },
         "term": {
-          "id": 1209,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -565,7 +512,6 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
         },
         "type": "Closure",
       },
-      "id": 36,
       "type": "Abs",
     },
     "typedTerms": {},
@@ -599,7 +545,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
       {
         "left": {
           "arg": {
-            "id": 38,
             "row": {
               "label": "x",
               "row": {
@@ -612,10 +557,8 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
               },
               "type": "extension",
               "value": {
-                "id": 37,
                 "type": "Neutral",
                 "value": {
-                  "id": 36,
                   "type": "Var",
                   "variable": {
                     "lvl": 2,
@@ -628,7 +571,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
             "type": "Row",
           },
           "func": {
-            "id": 35,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -636,12 +578,10 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
             },
           },
           "icit": "Explicit",
-          "id": 39,
           "type": "App",
         },
         "lvl": 2,
         "right": {
-          "id": 30,
           "type": "Var",
           "variable": {
             "lvl": 1,
@@ -655,10 +595,8 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
         "left": {
           "binder": {
             "annotation": {
-              "id": 31,
               "type": "Neutral",
               "value": {
-                "id": 30,
                 "type": "Var",
                 "variable": {
                   "lvl": 1,
@@ -680,10 +618,8 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                     "variable": "proj",
                   },
                   "nf": {
-                    "id": 29,
                     "type": "Neutral",
                     "value": {
-                      "id": 28,
                       "type": "Var",
                       "variable": {
                         "lvl": 0,
@@ -698,10 +634,8 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                     },
                     "source",
                     {
-                      "id": 27,
                       "type": "Neutral",
                       "value": {
-                        "id": 26,
                         "type": "Var",
                         "variable": {
                           "lvl": 0,
@@ -719,7 +653,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
               "zonker": {},
             },
             "term": {
-              "id": 1210,
               "type": "Var",
               "variable": {
                 "lvl": 2,
@@ -729,15 +662,12 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
             },
             "type": "Closure",
           },
-          "id": 40,
           "type": "Abs",
         },
         "lvl": 1,
         "right": {
-          "id": 27,
           "type": "Neutral",
           "value": {
-            "id": 26,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -757,7 +687,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -772,7 +701,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
       },
       "2": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -787,7 +715,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
       },
       "3": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -802,7 +729,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
       },
       "4": {
         "ann": {
-          "id": 2,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -817,9 +743,7 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
       },
     },
     "term": {
-      "id": 1242,
       "return": {
-        "id": 1241,
         "type": "Lit",
         "value": {
           "type": "unit",
@@ -830,7 +754,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
           "annotation": {
             "binder": {
               "annotation": {
-                "id": 2,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -850,10 +773,8 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                       "variable": "proj",
                     },
                     "nf": {
-                      "id": 44,
                       "type": "Neutral",
                       "value": {
-                        "id": 43,
                         "type": "Var",
                         "variable": {
                           "lvl": 0,
@@ -868,10 +789,8 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                       },
                       "source",
                       {
-                        "id": 27,
                         "type": "Neutral",
                         "value": {
-                          "id": 26,
                           "type": "Var",
                           "variable": {
                             "lvl": 0,
@@ -887,7 +806,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                 "metas": {
                   "1": {
                     "ann": {
-                      "id": 1,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -902,7 +820,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                   },
                   "2": {
                     "ann": {
-                      "id": 1,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -917,7 +834,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                   },
                   "3": {
                     "ann": {
-                      "id": 1,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -932,7 +848,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                   },
                   "4": {
                     "ann": {
-                      "id": 2,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -951,10 +866,8 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                   "1": {
                     "binder": {
                       "annotation": {
-                        "id": 31,
                         "type": "Neutral",
                         "value": {
-                          "id": 30,
                           "type": "Var",
                           "variable": {
                             "lvl": 1,
@@ -976,10 +889,8 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                               "variable": "proj",
                             },
                             "nf": {
-                              "id": 29,
                               "type": "Neutral",
                               "value": {
-                                "id": 28,
                                 "type": "Var",
                                 "variable": {
                                   "lvl": 0,
@@ -994,10 +905,8 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                               },
                               "source",
                               {
-                                "id": 27,
                                 "type": "Neutral",
                                 "value": {
-                                  "id": 26,
                                   "type": "Var",
                                   "variable": {
                                     "lvl": 0,
@@ -1015,7 +924,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                         "zonker": {},
                       },
                       "term": {
-                        "id": 1210,
                         "type": "Var",
                         "variable": {
                           "lvl": 2,
@@ -1025,12 +933,10 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                       },
                       "type": "Closure",
                     },
-                    "id": 40,
                     "type": "Abs",
                   },
                   "2": {
                     "arg": {
-                      "id": 38,
                       "row": {
                         "label": "x",
                         "row": {
@@ -1043,10 +949,8 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                         },
                         "type": "extension",
                         "value": {
-                          "id": 37,
                           "type": "Neutral",
                           "value": {
-                            "id": 36,
                             "type": "Var",
                             "variable": {
                               "lvl": 2,
@@ -1059,7 +963,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                       "type": "Row",
                     },
                     "func": {
-                      "id": 35,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -1067,11 +970,9 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                       },
                     },
                     "icit": "Explicit",
-                    "id": 39,
                     "type": "App",
                   },
                   "3": {
-                    "id": 50,
                     "type": "Var",
                     "variable": {
                       "lvl": 2,
@@ -1079,7 +980,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                     },
                   },
                   "4": {
-                    "id": 47,
                     "type": "Var",
                     "variable": {
                       "lvl": 1,
@@ -1091,7 +991,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
               "term": {
                 "binding": {
                   "annotation": {
-                    "id": 1223,
                     "type": "Lit",
                     "value": {
                       "type": "Atom",
@@ -1106,7 +1005,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                   "binding": {
                     "annotation": {
                       "arg": {
-                        "id": 1225,
                         "row": {
                           "label": "x",
                           "row": {
@@ -1118,7 +1016,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                           },
                           "type": "extension",
                           "value": {
-                            "id": 1219,
                             "type": "Var",
                             "variable": {
                               "index": 0,
@@ -1129,7 +1026,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                         "type": "Row",
                       },
                       "func": {
-                        "id": 1218,
                         "type": "Lit",
                         "value": {
                           "type": "Atom",
@@ -1137,7 +1033,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                         },
                       },
                       "icit": "Explicit",
-                      "id": 1226,
                       "type": "App",
                     },
                     "icit": "Explicit",
@@ -1145,29 +1040,24 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                     "variable": "obj",
                   },
                   "body": {
-                    "id": 1217,
                     "type": "Var",
                     "variable": {
                       "index": 1,
                       "type": "Bound",
                     },
                   },
-                  "id": 1227,
                   "type": "Abs",
                 },
-                "id": 1228,
                 "type": "Abs",
               },
               "type": "Closure",
             },
-            "id": 79,
             "type": "Abs",
           },
           "type": "Let",
           "value": {
             "binding": {
               "annotation": {
-                "id": 1229,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -1181,7 +1071,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
             "body": {
               "binding": {
                 "annotation": {
-                  "id": 1230,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -1195,7 +1084,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
               "body": {
                 "binding": {
                   "annotation": {
-                    "id": 1205,
                     "type": "Var",
                     "variable": {
                       "lvl": 1,
@@ -1208,10 +1096,8 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                   "variable": "obj",
                 },
                 "body": {
-                  "id": 1237,
                   "label": "x",
                   "term": {
-                    "id": 1206,
                     "type": "Var",
                     "variable": {
                       "index": 0,
@@ -1220,13 +1106,10 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                   },
                   "type": "Proj",
                 },
-                "id": 1238,
                 "type": "Abs",
               },
-              "id": 1239,
               "type": "Abs",
             },
-            "id": 1240,
             "type": "Abs",
           },
           "variable": "proj",
@@ -1235,7 +1118,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
       "type": "Block",
     },
     "type": {
-      "id": 109,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -1292,7 +1174,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
     "constraints": [
       {
         "left": {
-          "id": 26,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1301,7 +1182,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 0,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1312,7 +1192,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 27,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1321,7 +1200,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 1,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1332,7 +1210,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 32,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1341,7 +1218,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 2,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1352,7 +1228,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1361,7 +1236,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 1,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1372,7 +1246,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 36,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1381,7 +1254,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 2,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1392,7 +1264,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1401,7 +1272,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 1,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1412,7 +1282,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1421,7 +1290,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 0,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1432,10 +1300,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 58,
           "type": "Neutral",
           "value": {
-            "id": 57,
             "type": "Var",
             "variable": {
               "lvl": 3,
@@ -1446,10 +1312,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 3,
         "right": {
-          "id": 42,
           "type": "Neutral",
           "value": {
-            "id": 41,
             "type": "Var",
             "variable": {
               "lvl": 1,
@@ -1461,7 +1325,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 67,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1470,7 +1333,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 3,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1481,7 +1343,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 37,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1490,7 +1351,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 3,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1501,7 +1361,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1510,7 +1369,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 1,
         "right": {
-          "id": 37,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1521,7 +1379,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1530,7 +1387,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 2,
         "right": {
-          "id": 105,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1541,7 +1397,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 110,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1550,7 +1405,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 1,
         "right": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1561,7 +1415,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 138,
           "type": "Lit",
           "value": {
             "type": "String",
@@ -1570,10 +1423,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 2,
         "right": {
-          "id": 134,
           "type": "Neutral",
           "value": {
-            "id": 133,
             "type": "Var",
             "variable": {
               "lvl": 3,
@@ -1586,7 +1437,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 137,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1595,10 +1445,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 2,
         "right": {
-          "id": 136,
           "type": "Neutral",
           "value": {
-            "id": 135,
             "type": "Var",
             "variable": {
               "lvl": 3,
@@ -1611,7 +1459,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 140,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -1620,10 +1467,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 2,
         "right": {
-          "id": 128,
           "type": "Neutral",
           "value": {
-            "id": 127,
             "type": "Var",
             "variable": {
               "lvl": 2,
@@ -1636,7 +1481,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "id": 139,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1645,10 +1489,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         },
         "lvl": 2,
         "right": {
-          "id": 130,
           "type": "Neutral",
           "value": {
-            "id": 129,
             "type": "Var",
             "variable": {
               "lvl": 2,
@@ -1662,7 +1504,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       {
         "left": {
           "arg": {
-            "id": 156,
             "row": {
               "label": "snd",
               "row": {
@@ -1672,7 +1513,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                 },
                 "type": "extension",
                 "value": {
-                  "id": 113,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -1682,7 +1522,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
               },
               "type": "extension",
               "value": {
-                "id": 155,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -1693,7 +1532,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
             "type": "Row",
           },
           "func": {
-            "id": 157,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -1701,16 +1539,13 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
             },
           },
           "icit": "Explicit",
-          "id": 158,
           "type": "App",
         },
         "lvl": 2,
         "right": {
-          "id": 144,
           "type": "Neutral",
           "value": {
             "arg": {
-              "id": 142,
               "row": {
                 "label": "fst",
                 "row": {
@@ -1720,7 +1555,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   },
                   "type": "extension",
                   "value": {
-                    "id": 137,
                     "type": "Lit",
                     "value": {
                       "type": "Atom",
@@ -1730,7 +1564,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                 },
                 "type": "extension",
                 "value": {
-                  "id": 139,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -1741,7 +1574,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
               "type": "Row",
             },
             "func": {
-              "id": 141,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -1749,7 +1581,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
               },
             },
             "icit": "Explicit",
-            "id": 143,
             "type": "App",
           },
         },
@@ -1769,7 +1600,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1784,7 +1614,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       "10": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1799,10 +1628,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       "11": {
         "ann": {
-          "id": 132,
           "type": "Neutral",
           "value": {
-            "id": 131,
             "type": "Var",
             "variable": {
               "lvl": 3,
@@ -1819,7 +1646,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       "12": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1834,10 +1660,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       "2": {
         "ann": {
-          "id": 56,
           "type": "Neutral",
           "value": {
-            "id": 55,
             "type": "Var",
             "variable": {
               "lvl": 3,
@@ -1854,7 +1678,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       "3": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1869,7 +1692,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       "4": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1884,10 +1706,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       "5": {
         "ann": {
-          "id": 62,
           "type": "Neutral",
           "value": {
-            "id": 61,
             "type": "Var",
             "variable": {
               "lvl": 4,
@@ -1904,7 +1724,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       "6": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1919,7 +1738,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       "7": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1934,10 +1752,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       "8": {
         "ann": {
-          "id": 126,
           "type": "Neutral",
           "value": {
-            "id": 125,
             "type": "Var",
             "variable": {
               "lvl": 2,
@@ -1954,7 +1770,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       "9": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1969,12 +1784,9 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
     },
     "term": {
-      "id": 1260,
       "return": {
-        "id": 1259,
         "label": "snd",
         "term": {
-          "id": 1258,
           "type": "Var",
           "variable": {
             "index": 0,
@@ -1988,7 +1800,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           "annotation": {
             "binder": {
               "annotation": {
-                "id": 37,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -2012,7 +1823,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   "annotation": {
                     "binding": {
                       "annotation": {
-                        "id": 1205,
                         "type": "Var",
                         "variable": {
                           "index": 0,
@@ -2024,14 +1834,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                       "variable": "t1",
                     },
                     "body": {
-                      "id": 1206,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
                         "value": "Type",
                       },
                     },
-                    "id": 1228,
                     "type": "Abs",
                   },
                   "icit": "Explicit",
@@ -2039,26 +1847,22 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   "variable": "p",
                 },
                 "body": {
-                  "id": 1208,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
                     "value": "Type",
                   },
                 },
-                "id": 1229,
                 "type": "Abs",
               },
               "type": "Closure",
             },
-            "id": 80,
             "type": "Abs",
           },
           "type": "Let",
           "value": {
             "binding": {
               "annotation": {
-                "id": 1211,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -2074,7 +1878,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                 "annotation": {
                   "binding": {
                     "annotation": {
-                      "id": 1213,
                       "type": "Var",
                       "variable": {
                         "index": 0,
@@ -2086,14 +1889,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                     "variable": "t1",
                   },
                   "body": {
-                    "id": 1212,
                     "type": "Lit",
                     "value": {
                       "type": "Atom",
                       "value": "Type",
                     },
                   },
-                  "id": 1230,
                   "type": "Abs",
                 },
                 "icit": "Explicit",
@@ -2103,7 +1904,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
               "body": {
                 "binding": {
                   "annotation": {
-                    "id": 1232,
                     "row": {
                       "label": "snd",
                       "row": {
@@ -2113,7 +1913,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                         },
                         "type": "extension",
                         "value": {
-                          "id": 1220,
                           "type": "Var",
                           "variable": {
                             "index": 1,
@@ -2124,7 +1923,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                       "type": "extension",
                       "value": {
                         "arg": {
-                          "id": 1218,
                           "type": "Var",
                           "variable": {
                             "name": "fst",
@@ -2132,7 +1930,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                           },
                         },
                         "func": {
-                          "id": 1217,
                           "type": "Var",
                           "variable": {
                             "index": 0,
@@ -2140,7 +1937,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                           },
                         },
                         "icit": "Explicit",
-                        "id": 1231,
                         "type": "App",
                       },
                     },
@@ -2151,7 +1947,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                 },
                 "body": {
                   "arg": {
-                    "id": 1234,
                     "row": {
                       "label": "snd",
                       "row": {
@@ -2161,7 +1956,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                         },
                         "type": "extension",
                         "value": {
-                          "id": 1220,
                           "type": "Var",
                           "variable": {
                             "index": 1,
@@ -2172,7 +1966,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                       "type": "extension",
                       "value": {
                         "arg": {
-                          "id": 1218,
                           "type": "Var",
                           "variable": {
                             "name": "fst",
@@ -2180,7 +1973,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                           },
                         },
                         "func": {
-                          "id": 1217,
                           "type": "Var",
                           "variable": {
                             "index": 0,
@@ -2188,14 +1980,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                           },
                         },
                         "icit": "Explicit",
-                        "id": 1233,
                         "type": "App",
                       },
                     },
                     "type": "Row",
                   },
                   "func": {
-                    "id": 1222,
                     "type": "Lit",
                     "value": {
                       "type": "Atom",
@@ -2203,16 +1993,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                     },
                   },
                   "icit": "Explicit",
-                  "id": 1235,
                   "type": "App",
                 },
-                "id": 1236,
                 "type": "Abs",
               },
-              "id": 1237,
               "type": "Abs",
             },
-            "id": 1238,
             "type": "Abs",
           },
           "variable": "Pair",
@@ -2221,7 +2007,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           "annotation": {
             "binder": {
               "annotation": {
-                "id": 167,
                 "row": {
                   "label": "snd",
                   "row": {
@@ -2231,7 +2016,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                     },
                     "type": "extension",
                     "value": {
-                      "id": 113,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -2241,7 +2025,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   },
                   "type": "extension",
                   "value": {
-                    "id": 120,
                     "type": "Lit",
                     "value": {
                       "type": "Atom",
@@ -2262,7 +2045,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                       "annotation": {
                         "binder": {
                           "annotation": {
-                            "id": 113,
                             "type": "Lit",
                             "value": {
                               "type": "Atom",
@@ -2279,7 +2061,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               {
                                 "name": {
                                   "annotation": {
-                                    "id": 96,
                                     "type": "Lit",
                                     "value": {
                                       "type": "Atom",
@@ -2291,7 +2072,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                   "variable": "a",
                                 },
                                 "nf": {
-                                  "id": 113,
                                   "type": "Lit",
                                   "value": {
                                     "type": "Atom",
@@ -2301,7 +2081,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 "type": [
                                   {
                                     "annotation": {
-                                      "id": 96,
                                       "type": "Lit",
                                       "value": {
                                         "type": "Atom",
@@ -2322,10 +2101,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                   "variable": "Pair",
                                 },
                                 "nf": {
-                                  "id": 95,
                                   "type": "Neutral",
                                   "value": {
-                                    "id": 94,
                                     "type": "Var",
                                     "variable": {
                                       "lvl": 0,
@@ -2342,7 +2119,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                   {
                                     "binder": {
                                       "annotation": {
-                                        "id": 37,
                                         "type": "Lit",
                                         "value": {
                                           "type": "Atom",
@@ -2366,7 +2142,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                           "annotation": {
                                             "binding": {
                                               "annotation": {
-                                                "id": 1205,
                                                 "type": "Var",
                                                 "variable": {
                                                   "index": 0,
@@ -2378,14 +2153,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                               "variable": "t1",
                                             },
                                             "body": {
-                                              "id": 1206,
                                               "type": "Lit",
                                               "value": {
                                                 "type": "Atom",
                                                 "value": "Type",
                                               },
                                             },
-                                            "id": 1228,
                                             "type": "Abs",
                                           },
                                           "icit": "Explicit",
@@ -2393,19 +2166,16 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                           "variable": "p",
                                         },
                                         "body": {
-                                          "id": 1208,
                                           "type": "Lit",
                                           "value": {
                                             "type": "Atom",
                                             "value": "Type",
                                           },
                                         },
-                                        "id": 1229,
                                         "type": "Abs",
                                       },
                                       "type": "Closure",
                                     },
-                                    "id": 80,
                                     "type": "Abs",
                                   },
                                 ],
@@ -2415,7 +2185,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                             "metas": {
                               "1": {
                                 "ann": {
-                                  "id": 1,
                                   "type": "Lit",
                                   "value": {
                                     "type": "Atom",
@@ -2430,10 +2199,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               },
                               "2": {
                                 "ann": {
-                                  "id": 56,
                                   "type": "Neutral",
                                   "value": {
-                                    "id": 55,
                                     "type": "Var",
                                     "variable": {
                                       "lvl": 3,
@@ -2450,7 +2217,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               },
                               "3": {
                                 "ann": {
-                                  "id": 1,
                                   "type": "Lit",
                                   "value": {
                                     "type": "Atom",
@@ -2465,7 +2231,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               },
                               "4": {
                                 "ann": {
-                                  "id": 1,
                                   "type": "Lit",
                                   "value": {
                                     "type": "Atom",
@@ -2480,10 +2245,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               },
                               "5": {
                                 "ann": {
-                                  "id": 62,
                                   "type": "Neutral",
                                   "value": {
-                                    "id": 61,
                                     "type": "Var",
                                     "variable": {
                                       "lvl": 4,
@@ -2500,7 +2263,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               },
                               "6": {
                                 "ann": {
-                                  "id": 1,
                                   "type": "Lit",
                                   "value": {
                                     "type": "Atom",
@@ -2517,7 +2279,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                             "sigma": {},
                             "zonker": {
                               "2": {
-                                "id": 41,
                                 "type": "Var",
                                 "variable": {
                                   "lvl": 1,
@@ -2527,7 +2288,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                             },
                           },
                           "term": {
-                            "id": 1212,
                             "type": "Lit",
                             "value": {
                               "type": "Atom",
@@ -2536,7 +2296,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                           },
                           "type": "Closure",
                         },
-                        "id": 114,
                         "type": "Abs",
                       },
                       "icit": "Explicit",
@@ -2546,7 +2305,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                     "nf": {
                       "binder": {
                         "annotation": {
-                          "id": 116,
                           "type": "Lit",
                           "value": {
                             "type": "Atom",
@@ -2568,7 +2326,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               "nf": {
                                 "binder": {
                                   "annotation": {
-                                    "id": 96,
                                     "type": "Lit",
                                     "value": {
                                       "type": "Atom",
@@ -2588,10 +2345,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                           "variable": "Pair",
                                         },
                                         "nf": {
-                                          "id": 95,
                                           "type": "Neutral",
                                           "value": {
-                                            "id": 94,
                                             "type": "Var",
                                             "variable": {
                                               "lvl": 0,
@@ -2608,7 +2363,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                           {
                                             "binder": {
                                               "annotation": {
-                                                "id": 37,
                                                 "type": "Lit",
                                                 "value": {
                                                   "type": "Atom",
@@ -2632,7 +2386,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                                   "annotation": {
                                                     "binding": {
                                                       "annotation": {
-                                                        "id": 1205,
                                                         "type": "Var",
                                                         "variable": {
                                                           "index": 0,
@@ -2644,14 +2397,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                                       "variable": "t1",
                                                     },
                                                     "body": {
-                                                      "id": 1206,
                                                       "type": "Lit",
                                                       "value": {
                                                         "type": "Atom",
                                                         "value": "Type",
                                                       },
                                                     },
-                                                    "id": 1228,
                                                     "type": "Abs",
                                                   },
                                                   "icit": "Explicit",
@@ -2659,19 +2410,16 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                                   "variable": "p",
                                                 },
                                                 "body": {
-                                                  "id": 1208,
                                                   "type": "Lit",
                                                   "value": {
                                                     "type": "Atom",
                                                     "value": "Type",
                                                   },
                                                 },
-                                                "id": 1229,
                                                 "type": "Abs",
                                               },
                                               "type": "Closure",
                                             },
-                                            "id": 80,
                                             "type": "Abs",
                                           },
                                         ],
@@ -2681,7 +2429,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                     "metas": {
                                       "1": {
                                         "ann": {
-                                          "id": 1,
                                           "type": "Lit",
                                           "value": {
                                             "type": "Atom",
@@ -2696,10 +2443,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                       },
                                       "2": {
                                         "ann": {
-                                          "id": 56,
                                           "type": "Neutral",
                                           "value": {
-                                            "id": 55,
                                             "type": "Var",
                                             "variable": {
                                               "lvl": 3,
@@ -2716,7 +2461,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                       },
                                       "3": {
                                         "ann": {
-                                          "id": 1,
                                           "type": "Lit",
                                           "value": {
                                             "type": "Atom",
@@ -2731,7 +2475,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                       },
                                       "4": {
                                         "ann": {
-                                          "id": 1,
                                           "type": "Lit",
                                           "value": {
                                             "type": "Atom",
@@ -2746,10 +2489,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                       },
                                       "5": {
                                         "ann": {
-                                          "id": 62,
                                           "type": "Neutral",
                                           "value": {
-                                            "id": 61,
                                             "type": "Var",
                                             "variable": {
                                               "lvl": 4,
@@ -2766,7 +2507,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                       },
                                       "6": {
                                         "ann": {
-                                          "id": 1,
                                           "type": "Lit",
                                           "value": {
                                             "type": "Atom",
@@ -2783,7 +2523,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                     "sigma": {},
                                     "zonker": {
                                       "2": {
-                                        "id": 41,
                                         "type": "Var",
                                         "variable": {
                                           "lvl": 1,
@@ -2797,7 +2536,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                       "annotation": {
                                         "binding": {
                                           "annotation": {
-                                            "id": 1213,
                                             "type": "Var",
                                             "variable": {
                                               "index": 0,
@@ -2809,14 +2547,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                           "variable": "t1",
                                         },
                                         "body": {
-                                          "id": 1212,
                                           "type": "Lit",
                                           "value": {
                                             "type": "Atom",
                                             "value": "Type",
                                           },
                                         },
-                                        "id": 1230,
                                         "type": "Abs",
                                       },
                                       "icit": "Explicit",
@@ -2826,7 +2562,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                     "body": {
                                       "binding": {
                                         "annotation": {
-                                          "id": 1232,
                                           "row": {
                                             "label": "snd",
                                             "row": {
@@ -2836,7 +2571,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                               },
                                               "type": "extension",
                                               "value": {
-                                                "id": 1220,
                                                 "type": "Var",
                                                 "variable": {
                                                   "index": 1,
@@ -2847,7 +2581,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                             "type": "extension",
                                             "value": {
                                               "arg": {
-                                                "id": 1218,
                                                 "type": "Var",
                                                 "variable": {
                                                   "name": "fst",
@@ -2855,7 +2588,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                                 },
                                               },
                                               "func": {
-                                                "id": 1217,
                                                 "type": "Var",
                                                 "variable": {
                                                   "index": 0,
@@ -2863,7 +2595,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                                 },
                                               },
                                               "icit": "Explicit",
-                                              "id": 1231,
                                               "type": "App",
                                             },
                                           },
@@ -2874,7 +2605,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                       },
                                       "body": {
                                         "arg": {
-                                          "id": 1234,
                                           "row": {
                                             "label": "snd",
                                             "row": {
@@ -2884,7 +2614,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                               },
                                               "type": "extension",
                                               "value": {
-                                                "id": 1220,
                                                 "type": "Var",
                                                 "variable": {
                                                   "index": 1,
@@ -2895,7 +2624,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                             "type": "extension",
                                             "value": {
                                               "arg": {
-                                                "id": 1218,
                                                 "type": "Var",
                                                 "variable": {
                                                   "name": "fst",
@@ -2903,7 +2631,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                                 },
                                               },
                                               "func": {
-                                                "id": 1217,
                                                 "type": "Var",
                                                 "variable": {
                                                   "index": 0,
@@ -2911,14 +2638,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                                 },
                                               },
                                               "icit": "Explicit",
-                                              "id": 1233,
                                               "type": "App",
                                             },
                                           },
                                           "type": "Row",
                                         },
                                         "func": {
-                                          "id": 1222,
                                           "type": "Lit",
                                           "value": {
                                             "type": "Atom",
@@ -2926,18 +2651,14 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                           },
                                         },
                                         "icit": "Explicit",
-                                        "id": 1235,
                                         "type": "App",
                                       },
-                                      "id": 1236,
                                       "type": "Abs",
                                     },
-                                    "id": 1237,
                                     "type": "Abs",
                                   },
                                   "type": "Closure",
                                 },
-                                "id": 97,
                                 "type": "Abs",
                               },
                               "type": [
@@ -2949,7 +2670,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 {
                                   "binder": {
                                     "annotation": {
-                                      "id": 37,
                                       "type": "Lit",
                                       "value": {
                                         "type": "Atom",
@@ -2973,7 +2693,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                         "annotation": {
                                           "binding": {
                                             "annotation": {
-                                              "id": 1205,
                                               "type": "Var",
                                               "variable": {
                                                 "index": 0,
@@ -2985,14 +2704,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                             "variable": "t1",
                                           },
                                           "body": {
-                                            "id": 1206,
                                             "type": "Lit",
                                             "value": {
                                               "type": "Atom",
                                               "value": "Type",
                                             },
                                           },
-                                          "id": 1228,
                                           "type": "Abs",
                                         },
                                         "icit": "Explicit",
@@ -3000,19 +2717,16 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                         "variable": "p",
                                       },
                                       "body": {
-                                        "id": 1208,
                                         "type": "Lit",
                                         "value": {
                                           "type": "Atom",
                                           "value": "Type",
                                         },
                                       },
-                                      "id": 1229,
                                       "type": "Abs",
                                     },
                                     "type": "Closure",
                                   },
-                                  "id": 80,
                                   "type": "Abs",
                                 },
                               ],
@@ -3022,7 +2736,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                           "metas": {
                             "1": {
                               "ann": {
-                                "id": 1,
                                 "type": "Lit",
                                 "value": {
                                   "type": "Atom",
@@ -3037,10 +2750,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                             },
                             "2": {
                               "ann": {
-                                "id": 56,
                                 "type": "Neutral",
                                 "value": {
-                                  "id": 55,
                                   "type": "Var",
                                   "variable": {
                                     "lvl": 3,
@@ -3057,7 +2768,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                             },
                             "3": {
                               "ann": {
-                                "id": 1,
                                 "type": "Lit",
                                 "value": {
                                   "type": "Atom",
@@ -3072,7 +2782,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                             },
                             "4": {
                               "ann": {
-                                "id": 1,
                                 "type": "Lit",
                                 "value": {
                                   "type": "Atom",
@@ -3087,10 +2796,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                             },
                             "5": {
                               "ann": {
-                                "id": 62,
                                 "type": "Neutral",
                                 "value": {
-                                  "id": 61,
                                   "type": "Var",
                                   "variable": {
                                     "lvl": 4,
@@ -3107,7 +2814,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                             },
                             "6": {
                               "ann": {
-                                "id": 1,
                                 "type": "Lit",
                                 "value": {
                                   "type": "Atom",
@@ -3124,7 +2830,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                           "sigma": {},
                           "zonker": {
                             "2": {
-                              "id": 41,
                               "type": "Var",
                               "variable": {
                                 "lvl": 1,
@@ -3134,7 +2839,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                           },
                         },
                         "term": {
-                          "id": 1243,
                           "type": "Var",
                           "variable": {
                             "name": "String",
@@ -3143,7 +2847,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                         },
                         "type": "Closure",
                       },
-                      "id": 117,
                       "type": "Abs",
                     },
                     "type": [
@@ -3151,7 +2854,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                         "annotation": {
                           "binder": {
                             "annotation": {
-                              "id": 113,
                               "type": "Lit",
                               "value": {
                                 "type": "Atom",
@@ -3168,7 +2870,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 {
                                   "name": {
                                     "annotation": {
-                                      "id": 96,
                                       "type": "Lit",
                                       "value": {
                                         "type": "Atom",
@@ -3180,7 +2881,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                     "variable": "a",
                                   },
                                   "nf": {
-                                    "id": 113,
                                     "type": "Lit",
                                     "value": {
                                       "type": "Atom",
@@ -3190,7 +2890,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                   "type": [
                                     {
                                       "annotation": {
-                                        "id": 96,
                                         "type": "Lit",
                                         "value": {
                                           "type": "Atom",
@@ -3211,10 +2910,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                     "variable": "Pair",
                                   },
                                   "nf": {
-                                    "id": 95,
                                     "type": "Neutral",
                                     "value": {
-                                      "id": 94,
                                       "type": "Var",
                                       "variable": {
                                         "lvl": 0,
@@ -3231,7 +2928,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                     {
                                       "binder": {
                                         "annotation": {
-                                          "id": 37,
                                           "type": "Lit",
                                           "value": {
                                             "type": "Atom",
@@ -3255,7 +2951,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                             "annotation": {
                                               "binding": {
                                                 "annotation": {
-                                                  "id": 1205,
                                                   "type": "Var",
                                                   "variable": {
                                                     "index": 0,
@@ -3267,14 +2962,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                                 "variable": "t1",
                                               },
                                               "body": {
-                                                "id": 1206,
                                                 "type": "Lit",
                                                 "value": {
                                                   "type": "Atom",
                                                   "value": "Type",
                                                 },
                                               },
-                                              "id": 1228,
                                               "type": "Abs",
                                             },
                                             "icit": "Explicit",
@@ -3282,19 +2975,16 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                             "variable": "p",
                                           },
                                           "body": {
-                                            "id": 1208,
                                             "type": "Lit",
                                             "value": {
                                               "type": "Atom",
                                               "value": "Type",
                                             },
                                           },
-                                          "id": 1229,
                                           "type": "Abs",
                                         },
                                         "type": "Closure",
                                       },
-                                      "id": 80,
                                       "type": "Abs",
                                     },
                                   ],
@@ -3304,7 +2994,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               "metas": {
                                 "1": {
                                   "ann": {
-                                    "id": 1,
                                     "type": "Lit",
                                     "value": {
                                       "type": "Atom",
@@ -3319,10 +3008,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 },
                                 "2": {
                                   "ann": {
-                                    "id": 56,
                                     "type": "Neutral",
                                     "value": {
-                                      "id": 55,
                                       "type": "Var",
                                       "variable": {
                                         "lvl": 3,
@@ -3339,7 +3026,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 },
                                 "3": {
                                   "ann": {
-                                    "id": 1,
                                     "type": "Lit",
                                     "value": {
                                       "type": "Atom",
@@ -3354,7 +3040,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 },
                                 "4": {
                                   "ann": {
-                                    "id": 1,
                                     "type": "Lit",
                                     "value": {
                                       "type": "Atom",
@@ -3369,10 +3054,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 },
                                 "5": {
                                   "ann": {
-                                    "id": 62,
                                     "type": "Neutral",
                                     "value": {
-                                      "id": 61,
                                       "type": "Var",
                                       "variable": {
                                         "lvl": 4,
@@ -3389,7 +3072,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 },
                                 "6": {
                                   "ann": {
-                                    "id": 1,
                                     "type": "Lit",
                                     "value": {
                                       "type": "Atom",
@@ -3406,7 +3088,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               "sigma": {},
                               "zonker": {
                                 "2": {
-                                  "id": 41,
                                   "type": "Var",
                                   "variable": {
                                     "lvl": 1,
@@ -3416,7 +3097,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               },
                             },
                             "term": {
-                              "id": 1212,
                               "type": "Lit",
                               "value": {
                                 "type": "Atom",
@@ -3425,7 +3105,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                             },
                             "type": "Closure",
                           },
-                          "id": 114,
                           "type": "Abs",
                         },
                         "icit": "Explicit",
@@ -3439,7 +3118,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   {
                     "name": {
                       "annotation": {
-                        "id": 96,
                         "type": "Lit",
                         "value": {
                           "type": "Atom",
@@ -3451,7 +3129,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                       "variable": "a",
                     },
                     "nf": {
-                      "id": 113,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -3461,7 +3138,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                     "type": [
                       {
                         "annotation": {
-                          "id": 96,
                           "type": "Lit",
                           "value": {
                             "type": "Atom",
@@ -3482,10 +3158,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                       "variable": "Pair",
                     },
                     "nf": {
-                      "id": 95,
                       "type": "Neutral",
                       "value": {
-                        "id": 94,
                         "type": "Var",
                         "variable": {
                           "lvl": 0,
@@ -3502,7 +3176,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                       {
                         "binder": {
                           "annotation": {
-                            "id": 37,
                             "type": "Lit",
                             "value": {
                               "type": "Atom",
@@ -3526,7 +3199,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               "annotation": {
                                 "binding": {
                                   "annotation": {
-                                    "id": 1205,
                                     "type": "Var",
                                     "variable": {
                                       "index": 0,
@@ -3538,14 +3210,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                   "variable": "t1",
                                 },
                                 "body": {
-                                  "id": 1206,
                                   "type": "Lit",
                                   "value": {
                                     "type": "Atom",
                                     "value": "Type",
                                   },
                                 },
-                                "id": 1228,
                                 "type": "Abs",
                               },
                               "icit": "Explicit",
@@ -3553,19 +3223,16 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               "variable": "p",
                             },
                             "body": {
-                              "id": 1208,
                               "type": "Lit",
                               "value": {
                                 "type": "Atom",
                                 "value": "Type",
                               },
                             },
-                            "id": 1229,
                             "type": "Abs",
                           },
                           "type": "Closure",
                         },
-                        "id": 80,
                         "type": "Abs",
                       },
                     ],
@@ -3575,7 +3242,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                 "metas": {
                   "1": {
                     "ann": {
-                      "id": 1,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -3590,10 +3256,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   },
                   "2": {
                     "ann": {
-                      "id": 56,
                       "type": "Neutral",
                       "value": {
-                        "id": 55,
                         "type": "Var",
                         "variable": {
                           "lvl": 3,
@@ -3610,7 +3274,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   },
                   "3": {
                     "ann": {
-                      "id": 1,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -3625,7 +3288,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   },
                   "4": {
                     "ann": {
-                      "id": 1,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -3640,10 +3302,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   },
                   "5": {
                     "ann": {
-                      "id": 62,
                       "type": "Neutral",
                       "value": {
-                        "id": 61,
                         "type": "Var",
                         "variable": {
                           "lvl": 4,
@@ -3660,7 +3320,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   },
                   "6": {
                     "ann": {
-                      "id": 1,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -3677,7 +3336,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                 "sigma": {},
                 "zonker": {
                   "2": {
-                    "id": 41,
                     "type": "Var",
                     "variable": {
                       "lvl": 1,
@@ -3688,7 +3346,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
               },
               "term": {
                 "arg": {
-                  "id": 1254,
                   "row": {
                     "label": "snd",
                     "row": {
@@ -3698,7 +3355,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                       },
                       "type": "extension",
                       "value": {
-                        "id": 1220,
                         "type": "Var",
                         "variable": {
                           "index": 1,
@@ -3709,7 +3365,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                     "type": "extension",
                     "value": {
                       "arg": {
-                        "id": 1218,
                         "type": "Var",
                         "variable": {
                           "name": "fst",
@@ -3717,7 +3372,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                         },
                       },
                       "func": {
-                        "id": 1217,
                         "type": "Var",
                         "variable": {
                           "index": 0,
@@ -3725,14 +3379,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                         },
                       },
                       "icit": "Explicit",
-                      "id": 1253,
                       "type": "App",
                     },
                   },
                   "type": "Row",
                 },
                 "func": {
-                  "id": 1222,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -3740,18 +3392,15 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   },
                 },
                 "icit": "Explicit",
-                "id": 1255,
                 "type": "App",
               },
               "type": "Closure",
             },
-            "id": 170,
             "type": "Abs",
           },
           "type": "Let",
           "value": {
             "arg": {
-              "id": 1256,
               "row": {
                 "label": "fst",
                 "row": {
@@ -3761,7 +3410,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   },
                   "type": "extension",
                   "value": {
-                    "id": 1248,
                     "type": "Lit",
                     "value": {
                       "type": "String",
@@ -3771,7 +3419,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                 },
                 "type": "extension",
                 "value": {
-                  "id": 1249,
                   "type": "Lit",
                   "value": {
                     "type": "Num",
@@ -3782,7 +3429,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
               "type": "Row",
             },
             "func": {
-              "id": 1250,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -3790,7 +3436,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
               },
             },
             "icit": "Explicit",
-            "id": 1257,
             "type": "App",
           },
           "variable": "p",
@@ -3799,7 +3444,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       "type": "Block",
     },
     "type": {
-      "id": 120,
       "type": "Lit",
       "value": {
         "type": "Atom",

@@ -37,6 +37,7 @@ const KEYS_TO_STRIP: string[] = [
 	"imports",
 	"location",
 	"trace",
+	"id",
 ];
 
 /**

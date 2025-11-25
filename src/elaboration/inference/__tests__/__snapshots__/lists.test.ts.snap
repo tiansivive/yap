@@ -20,7 +20,6 @@ exports[`inference: list > [1, 2, 3] 2`] = `
     "constraints": [
       {
         "left": {
-          "id": 29,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -29,10 +28,8 @@ exports[`inference: list > [1, 2, 3] 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 28,
           "type": "Neutral",
           "value": {
-            "id": 27,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -45,7 +42,6 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       },
       {
         "left": {
-          "id": 30,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -54,10 +50,8 @@ exports[`inference: list > [1, 2, 3] 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 28,
           "type": "Neutral",
           "value": {
-            "id": 27,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -70,7 +64,6 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       },
       {
         "left": {
-          "id": 31,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -79,10 +72,8 @@ exports[`inference: list > [1, 2, 3] 2`] = `
         },
         "lvl": 0,
         "right": {
-          "id": 28,
           "type": "Neutral",
           "value": {
-            "id": 27,
             "type": "Var",
             "variable": {
               "lvl": 0,
@@ -97,7 +88,6 @@ exports[`inference: list > [1, 2, 3] 2`] = `
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -112,7 +102,6 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       },
       "2": {
         "ann": {
-          "id": 26,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -128,7 +117,6 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       },
     },
     "term": {
-      "id": 1208,
       "row": {
         "label": "0",
         "row": {
@@ -140,7 +128,6 @@ exports[`inference: list > [1, 2, 3] 2`] = `
             },
             "type": "extension",
             "value": {
-              "id": 1207,
               "type": "Lit",
               "value": {
                 "type": "Num",
@@ -150,7 +137,6 @@ exports[`inference: list > [1, 2, 3] 2`] = `
           },
           "type": "extension",
           "value": {
-            "id": 1206,
             "type": "Lit",
             "value": {
               "type": "Num",
@@ -160,7 +146,6 @@ exports[`inference: list > [1, 2, 3] 2`] = `
         },
         "type": "extension",
         "value": {
-          "id": 1205,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -171,11 +156,9 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       "type": "Row",
     },
     "type": {
-      "id": 37,
       "type": "Neutral",
       "value": {
         "arg": {
-          "id": 35,
           "type": "Var",
           "variable": {
             "name": "defaultArray",
@@ -184,10 +167,8 @@ exports[`inference: list > [1, 2, 3] 2`] = `
         },
         "func": {
           "arg": {
-            "id": 28,
             "type": "Neutral",
             "value": {
-              "id": 27,
               "type": "Var",
               "variable": {
                 "lvl": 0,
@@ -198,7 +179,6 @@ exports[`inference: list > [1, 2, 3] 2`] = `
           },
           "func": {
             "arg": {
-              "id": 32,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -206,7 +186,6 @@ exports[`inference: list > [1, 2, 3] 2`] = `
               },
             },
             "func": {
-              "id": 3,
               "type": "Var",
               "variable": {
                 "name": "Indexed",
@@ -214,15 +193,12 @@ exports[`inference: list > [1, 2, 3] 2`] = `
               },
             },
             "icit": "Explicit",
-            "id": 33,
             "type": "App",
           },
           "icit": "Explicit",
-          "id": 34,
           "type": "App",
         },
         "icit": "Implicit",
-        "id": 36,
         "type": "App",
       },
     },

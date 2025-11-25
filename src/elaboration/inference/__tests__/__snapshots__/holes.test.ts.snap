@@ -17,7 +17,6 @@ exports[`inference: hole > _ 2`] = `
     "metas": {
       "1": {
         "ann": {
-          "id": 1,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -32,7 +31,6 @@ exports[`inference: hole > _ 2`] = `
       },
       "2": {
         "ann": {
-          "id": 26,
           "type": "Var",
           "variable": {
             "lvl": 0,
@@ -48,7 +46,6 @@ exports[`inference: hole > _ 2`] = `
       },
     },
     "term": {
-      "id": 1204,
       "type": "Var",
       "variable": {
         "lvl": 0,
@@ -57,10 +54,8 @@ exports[`inference: hole > _ 2`] = `
       },
     },
     "type": {
-      "id": 28,
       "type": "Neutral",
       "value": {
-        "id": 27,
         "type": "Var",
         "variable": {
           "lvl": 0,
