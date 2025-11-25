@@ -4,8 +4,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 1`] = `
 {
   "displays": {
     "constraints": [
-      "1 ~~ ?2",
-      "Num ~~ ?3",
+      "Num ~~ ?2",
       "Schema [ x: ?5 ] ~~ Schema [ x: Num ]",
       "?5 ~~ ?5",
       "?5 ~~ ?7",
@@ -25,28 +24,6 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
         "left": {
           "type": "Lit",
           "value": {
-            "type": "Num",
-            "value": 1,
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 2,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
             "type": "Atom",
             "value": "Num",
           },
@@ -59,7 +36,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },

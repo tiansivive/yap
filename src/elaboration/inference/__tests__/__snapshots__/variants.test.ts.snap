@@ -110,7 +110,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 4,
         },
@@ -121,14 +121,14 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 5,
         },
@@ -142,7 +142,7 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 6,
         },

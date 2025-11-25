@@ -47,32 +47,10 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
       },
       {
         "left": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "args": [
-              {
-                "type": "Neutral",
-                "value": {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 0,
-                    "type": "Meta",
-                    "val": 2,
-                  },
-                },
-              },
-              {
-                "type": "Lit",
-                "value": {
-                  "type": "Num",
-                  "value": 1,
-                },
-              },
-            ],
-            "arity": 2,
-            "compute": [Function],
-            "name": "$add",
-            "type": "External",
+            "type": "Atom",
+            "value": "Num",
           },
         },
         "lvl": 0,
@@ -81,7 +59,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 5,
             },
@@ -103,53 +81,9 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Num",
-            "value": 1,
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
               "lvl": 0,
               "type": "Meta",
               "val": 2,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 3,
             },
           },
         },
@@ -294,7 +228,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 4,
         },
@@ -305,14 +239,14 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 5,
         },
@@ -326,7 +260,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 6,
         },

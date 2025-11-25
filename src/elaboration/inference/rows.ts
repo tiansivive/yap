@@ -61,8 +61,8 @@ export const collect = (row: Src.Row): V2.Elaboration<Collected> =>
 
 					const nf = NF.evaluate(ctx, vtm);
 					yield* V2.tell("constraint", [
-						{ type: "assign", left: nf, right: sigma.nf },
-						{ type: "assign", left: vty, right: sigma.ann },
+						//{ type: "assign", left: nf, right: sigma.nf },
+						{ type: "assign", left: vty, right: sigma.nf },
 					]);
 
 					const accumulated: Collected = yield acc;
@@ -105,7 +105,7 @@ export const extract = function* (row: Src.Row, lvl: number, types?: NF.Row): Ge
 	const ctx = yield* V2.ask();
 	const info: EB.Sigma = { term: NF.quote(ctx, ctx.env.length, tm), nf: tm, ann: ty, multiplicity: Q.Many };
 
-	const rest = yield* extract({ ...row.row, location: row.location }, lvl + 1);
+	const rest = yield* extract({ ...row.row, location: row.location }, lvl);
 	return setProp(rest, row.label, info);
 	// return [[row.label, [v, Q.Many]], ...extract({ ...row.row, location: row.location }, lvl + 1)]
 };

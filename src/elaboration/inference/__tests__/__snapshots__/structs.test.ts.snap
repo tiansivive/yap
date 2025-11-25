@@ -4,12 +4,10 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
 {
   "displays": {
     "constraints": [
-      "1 ~~ ?5",
-      "Num ~~ ?6",
+      "Num ~~ ?5",
       "?5 ~~ Num",
       "Num ~~ Num",
-      "($add: (?5) (2)) ~~ ?2",
-      "Num ~~ ?3",
+      "Num ~~ ?2",
     ],
     "term": "Struct [ y: + :x 2, x: 1 ]",
     "type": "Schema [ y: Num, x: Num ]",
@@ -25,114 +23,8 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
         "left": {
           "type": "Lit",
           "value": {
-            "type": "Num",
-            "value": 1,
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 5,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
             "type": "Atom",
             "value": "Num",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 5,
-            },
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Neutral",
-          "value": {
-            "args": [
-              {
-                "type": "Neutral",
-                "value": {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 5,
-                  },
-                },
-              },
-              {
-                "type": "Lit",
-                "value": {
-                  "type": "Num",
-                  "value": 2,
-                },
-              },
-            ],
-            "arity": 2,
-            "compute": [Function],
-            "name": "$add",
-            "type": "External",
           },
         },
         "lvl": 0,
@@ -143,8 +35,48 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 2,
+              "val": 5,
             },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 5,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
           },
         },
         "type": "assign",
@@ -165,7 +97,7 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },
@@ -228,7 +160,7 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 4,
         },
@@ -239,14 +171,14 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 5,
         },
@@ -260,7 +192,7 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 6,
         },
@@ -380,10 +312,8 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
     "constraints": [
       "?2 ~~ Num",
       "Num ~~ Num",
-      "($add: (?2) (2)) ~~ ?5",
-      "Num ~~ ?6",
-      "1 ~~ ?2",
-      "Num ~~ ?3",
+      "Num ~~ ?5",
+      "Num ~~ ?2",
     ],
     "term": "Struct [ x: 1, y: + :x 2 ]",
     "type": "Schema [ x: Num, y: Num ]",
@@ -437,32 +367,10 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
       },
       {
         "left": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "args": [
-              {
-                "type": "Neutral",
-                "value": {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 0,
-                    "type": "Meta",
-                    "val": 2,
-                  },
-                },
-              },
-              {
-                "type": "Lit",
-                "value": {
-                  "type": "Num",
-                  "value": 2,
-                },
-              },
-            ],
-            "arity": 2,
-            "compute": [Function],
-            "name": "$add",
-            "type": "External",
+            "type": "Atom",
+            "value": "Num",
           },
         },
         "lvl": 0,
@@ -471,7 +379,7 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 5,
             },
@@ -493,53 +401,9 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Num",
-            "value": 1,
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
               "lvl": 0,
               "type": "Meta",
               "val": 2,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 3,
             },
           },
         },
@@ -602,7 +466,7 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 4,
         },
@@ -613,14 +477,14 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 5,
         },
@@ -634,7 +498,7 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 6,
         },
@@ -754,12 +618,10 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
     "constraints": [
       "?2 ~~ Num",
       "Num ~~ Num",
-      "($add: (?2) (1)) ~~ ?5",
-      "Num ~~ ?6",
+      "Num ~~ ?5",
       "?5 ~~ Num",
       "Num ~~ Num",
-      "($add: (?5) (1)) ~~ ?2",
-      "Num ~~ ?3",
+      "Num ~~ ?2",
     ],
     "term": "Struct [ a: + :b 1, b: + :a 1 ]",
     "type": "Schema [ a: Num, b: Num ]",
@@ -813,138 +675,10 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
       },
       {
         "left": {
-          "type": "Neutral",
-          "value": {
-            "args": [
-              {
-                "type": "Neutral",
-                "value": {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 0,
-                    "type": "Meta",
-                    "val": 2,
-                  },
-                },
-              },
-              {
-                "type": "Lit",
-                "value": {
-                  "type": "Num",
-                  "value": 1,
-                },
-              },
-            ],
-            "arity": 2,
-            "compute": [Function],
-            "name": "$add",
-            "type": "External",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 5,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
           "type": "Lit",
           "value": {
             "type": "Atom",
             "value": "Num",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 5,
-            },
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Neutral",
-          "value": {
-            "args": [
-              {
-                "type": "Neutral",
-                "value": {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 5,
-                  },
-                },
-              },
-              {
-                "type": "Lit",
-                "value": {
-                  "type": "Num",
-                  "value": 1,
-                },
-              },
-            ],
-            "arity": 2,
-            "compute": [Function],
-            "name": "$add",
-            "type": "External",
           },
         },
         "lvl": 0,
@@ -955,8 +689,48 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 2,
+              "val": 5,
             },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 5,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
           },
         },
         "type": "assign",
@@ -977,7 +751,7 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },
@@ -1040,7 +814,7 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 4,
         },
@@ -1051,14 +825,14 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 5,
         },
@@ -1072,7 +846,7 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 6,
         },
@@ -1215,21 +989,15 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
       "Schema [ y: ?13 | ?14 ] ~~ ?2",
       "?13 ~~ Num",
       "Num ~~ Num",
-      "($div: ((λ$proj_y -> (closure: ($proj_y).y -| Γ: $proj_y)) ?2) (2)) ~~ ?11",
-      "Num ~~ ?12",
+      "Num ~~ ?11",
       "Schema [ x: ?15 | ?16 ] ~~ ?2",
       "?15 ~~ Num",
       "Num ~~ Num",
-      "($div: ((λ$proj_x -> (closure: ($proj_x).x -| Γ: $proj_x)) ?2) (2)) ~~ ?8",
-      "Num ~~ ?9",
-      "Struct [ a: ($div: ((λ$proj_x -> (closure: ($proj_x).x -| Γ: $proj_x)) ?2) (2)), b: ($div: ((λ$proj_y -> (closure: ($proj_y).y -| Γ: $proj_y)) ?2) (2)) ] ~~ ?5",
-      "Schema [ a: Num, b: Num ] ~~ ?6",
-      "2 ~~ ?21",
-      "Num ~~ ?22",
-      "1 ~~ ?18",
-      "Num ~~ ?19",
-      "Struct [ x: 1, y: 2 ] ~~ ?2",
-      "Schema [ x: Num, y: Num ] ~~ ?3",
+      "Num ~~ ?8",
+      "Schema [ a: Num, b: Num ] ~~ ?5",
+      "Num ~~ ?21",
+      "Num ~~ ?18",
+      "Schema [ x: Num, y: Num ] ~~ ?2",
     ],
     "term": "Struct [ point: Struct [ x: 1, y: 2 ], halved: Struct [ a: / (:point).x 2, b: / (:point).y 2 ] ]",
     "type": "Schema [ point: Schema [ x: Num, y: Num ], halved: Schema [ a: Num, b: Num ] ]",
@@ -1332,230 +1100,6 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
       },
       {
         "left": {
-          "type": "Neutral",
-          "value": {
-            "args": [
-              {
-                "type": "Neutral",
-                "value": {
-                  "arg": {
-                    "type": "Neutral",
-                    "value": {
-                      "type": "Var",
-                      "variable": {
-                        "lvl": 0,
-                        "type": "Meta",
-                        "val": 2,
-                      },
-                    },
-                  },
-                  "func": {
-                    "binder": {
-                      "annotation": {
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Any",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Lambda",
-                      "variable": "$proj_y",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "implicits": [],
-                        "metas": {},
-                        "sigma": {
-                          "a": {
-                            "ann": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 0,
-                                  "type": "Meta",
-                                  "val": 9,
-                                },
-                              },
-                            },
-                            "isAnnotation": false,
-                            "multiplicity": "Many",
-                            "nf": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 0,
-                                  "type": "Meta",
-                                  "val": 8,
-                                },
-                              },
-                            },
-                            "term": {
-                              "type": "Var",
-                              "variable": {
-                                "lvl": 0,
-                                "type": "Meta",
-                                "val": 8,
-                              },
-                            },
-                          },
-                          "b": {
-                            "ann": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 1,
-                                  "type": "Meta",
-                                  "val": 12,
-                                },
-                              },
-                            },
-                            "isAnnotation": false,
-                            "multiplicity": "Many",
-                            "nf": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 1,
-                                  "type": "Meta",
-                                  "val": 11,
-                                },
-                              },
-                            },
-                            "term": {
-                              "type": "Var",
-                              "variable": {
-                                "lvl": 1,
-                                "type": "Meta",
-                                "val": 11,
-                              },
-                            },
-                          },
-                          "halved": {
-                            "ann": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 1,
-                                  "type": "Meta",
-                                  "val": 6,
-                                },
-                              },
-                            },
-                            "isAnnotation": false,
-                            "multiplicity": "Many",
-                            "nf": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 1,
-                                  "type": "Meta",
-                                  "val": 5,
-                                },
-                              },
-                            },
-                            "term": {
-                              "type": "Var",
-                              "variable": {
-                                "lvl": 1,
-                                "type": "Meta",
-                                "val": 5,
-                              },
-                            },
-                          },
-                          "point": {
-                            "ann": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 0,
-                                  "type": "Meta",
-                                  "val": 3,
-                                },
-                              },
-                            },
-                            "isAnnotation": false,
-                            "multiplicity": "Many",
-                            "nf": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 0,
-                                  "type": "Meta",
-                                  "val": 2,
-                                },
-                              },
-                            },
-                            "term": {
-                              "type": "Var",
-                              "variable": {
-                                "lvl": 0,
-                                "type": "Meta",
-                                "val": 2,
-                              },
-                            },
-                          },
-                        },
-                        "zonker": {},
-                      },
-                      "term": {
-                        "label": "y",
-                        "term": {
-                          "type": "Var",
-                          "variable": {
-                            "index": 0,
-                            "type": "Bound",
-                          },
-                        },
-                        "type": "Proj",
-                      },
-                      "type": "Closure",
-                    },
-                    "type": "Abs",
-                  },
-                  "icit": "Explicit",
-                  "type": "App",
-                },
-              },
-              {
-                "type": "Lit",
-                "value": {
-                  "type": "Num",
-                  "value": 2,
-                },
-              },
-            ],
-            "arity": 2,
-            "compute": [Function],
-            "name": "$div",
-            "type": "External",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 11,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1568,9 +1112,9 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
-              "val": 12,
+              "val": 11,
             },
           },
         },
@@ -1667,230 +1211,6 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
       },
       {
         "left": {
-          "type": "Neutral",
-          "value": {
-            "args": [
-              {
-                "type": "Neutral",
-                "value": {
-                  "arg": {
-                    "type": "Neutral",
-                    "value": {
-                      "type": "Var",
-                      "variable": {
-                        "lvl": 0,
-                        "type": "Meta",
-                        "val": 2,
-                      },
-                    },
-                  },
-                  "func": {
-                    "binder": {
-                      "annotation": {
-                        "type": "Lit",
-                        "value": {
-                          "type": "Atom",
-                          "value": "Any",
-                        },
-                      },
-                      "icit": "Explicit",
-                      "type": "Lambda",
-                      "variable": "$proj_x",
-                    },
-                    "closure": {
-                      "ctx": {
-                        "env": [],
-                        "implicits": [],
-                        "metas": {},
-                        "sigma": {
-                          "a": {
-                            "ann": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 0,
-                                  "type": "Meta",
-                                  "val": 9,
-                                },
-                              },
-                            },
-                            "isAnnotation": false,
-                            "multiplicity": "Many",
-                            "nf": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 0,
-                                  "type": "Meta",
-                                  "val": 8,
-                                },
-                              },
-                            },
-                            "term": {
-                              "type": "Var",
-                              "variable": {
-                                "lvl": 0,
-                                "type": "Meta",
-                                "val": 8,
-                              },
-                            },
-                          },
-                          "b": {
-                            "ann": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 1,
-                                  "type": "Meta",
-                                  "val": 12,
-                                },
-                              },
-                            },
-                            "isAnnotation": false,
-                            "multiplicity": "Many",
-                            "nf": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 1,
-                                  "type": "Meta",
-                                  "val": 11,
-                                },
-                              },
-                            },
-                            "term": {
-                              "type": "Var",
-                              "variable": {
-                                "lvl": 1,
-                                "type": "Meta",
-                                "val": 11,
-                              },
-                            },
-                          },
-                          "halved": {
-                            "ann": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 1,
-                                  "type": "Meta",
-                                  "val": 6,
-                                },
-                              },
-                            },
-                            "isAnnotation": false,
-                            "multiplicity": "Many",
-                            "nf": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 1,
-                                  "type": "Meta",
-                                  "val": 5,
-                                },
-                              },
-                            },
-                            "term": {
-                              "type": "Var",
-                              "variable": {
-                                "lvl": 1,
-                                "type": "Meta",
-                                "val": 5,
-                              },
-                            },
-                          },
-                          "point": {
-                            "ann": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 0,
-                                  "type": "Meta",
-                                  "val": 3,
-                                },
-                              },
-                            },
-                            "isAnnotation": false,
-                            "multiplicity": "Many",
-                            "nf": {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 0,
-                                  "type": "Meta",
-                                  "val": 2,
-                                },
-                              },
-                            },
-                            "term": {
-                              "type": "Var",
-                              "variable": {
-                                "lvl": 0,
-                                "type": "Meta",
-                                "val": 2,
-                              },
-                            },
-                          },
-                        },
-                        "zonker": {},
-                      },
-                      "term": {
-                        "label": "x",
-                        "term": {
-                          "type": "Var",
-                          "variable": {
-                            "index": 0,
-                            "type": "Bound",
-                          },
-                        },
-                        "type": "Proj",
-                      },
-                      "type": "Closure",
-                    },
-                    "type": "Abs",
-                  },
-                  "icit": "Explicit",
-                  "type": "App",
-                },
-              },
-              {
-                "type": "Lit",
-                "value": {
-                  "type": "Num",
-                  "value": 2,
-                },
-              },
-            ],
-            "arity": 2,
-            "compute": [Function],
-            "name": "$div",
-            "type": "External",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 8,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -1905,473 +1225,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 9,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "arg": {
-            "row": {
-              "label": "a",
-              "row": {
-                "label": "b",
-                "row": {
-                  "type": "empty",
-                },
-                "type": "extension",
-                "value": {
-                  "type": "Neutral",
-                  "value": {
-                    "args": [
-                      {
-                        "type": "Neutral",
-                        "value": {
-                          "arg": {
-                            "type": "Neutral",
-                            "value": {
-                              "type": "Var",
-                              "variable": {
-                                "lvl": 0,
-                                "type": "Meta",
-                                "val": 2,
-                              },
-                            },
-                          },
-                          "func": {
-                            "binder": {
-                              "annotation": {
-                                "type": "Lit",
-                                "value": {
-                                  "type": "Atom",
-                                  "value": "Any",
-                                },
-                              },
-                              "icit": "Explicit",
-                              "type": "Lambda",
-                              "variable": "$proj_y",
-                            },
-                            "closure": {
-                              "ctx": {
-                                "env": [],
-                                "implicits": [],
-                                "metas": {},
-                                "sigma": {
-                                  "a": {
-                                    "multiplicity": "Many",
-                                    "term": {
-                                      "arg": {
-                                        "type": "Lit",
-                                        "value": {
-                                          "type": "Num",
-                                          "value": 2,
-                                        },
-                                      },
-                                      "func": {
-                                        "arg": {
-                                          "label": "x",
-                                          "term": {
-                                            "type": "Var",
-                                            "variable": {
-                                              "name": "point",
-                                              "type": "Label",
-                                            },
-                                          },
-                                          "type": "Proj",
-                                        },
-                                        "func": {
-                                          "type": "Var",
-                                          "variable": {
-                                            "name": "/",
-                                            "type": "Free",
-                                          },
-                                        },
-                                        "icit": "Explicit",
-                                        "type": "App",
-                                      },
-                                      "icit": "Explicit",
-                                      "type": "App",
-                                    },
-                                  },
-                                  "b": {
-                                    "multiplicity": "Many",
-                                    "term": {
-                                      "arg": {
-                                        "type": "Lit",
-                                        "value": {
-                                          "type": "Num",
-                                          "value": 2,
-                                        },
-                                      },
-                                      "func": {
-                                        "arg": {
-                                          "label": "y",
-                                          "term": {
-                                            "type": "Var",
-                                            "variable": {
-                                              "name": "point",
-                                              "type": "Label",
-                                            },
-                                          },
-                                          "type": "Proj",
-                                        },
-                                        "func": {
-                                          "type": "Var",
-                                          "variable": {
-                                            "name": "/",
-                                            "type": "Free",
-                                          },
-                                        },
-                                        "icit": "Explicit",
-                                        "type": "App",
-                                      },
-                                      "icit": "Explicit",
-                                      "type": "App",
-                                    },
-                                  },
-                                  "halved": {
-                                    "ann": {
-                                      "type": "Neutral",
-                                      "value": {
-                                        "type": "Var",
-                                        "variable": {
-                                          "lvl": 1,
-                                          "type": "Meta",
-                                          "val": 6,
-                                        },
-                                      },
-                                    },
-                                    "isAnnotation": false,
-                                    "multiplicity": "Many",
-                                    "nf": {
-                                      "type": "Neutral",
-                                      "value": {
-                                        "type": "Var",
-                                        "variable": {
-                                          "lvl": 1,
-                                          "type": "Meta",
-                                          "val": 5,
-                                        },
-                                      },
-                                    },
-                                    "term": {
-                                      "type": "Var",
-                                      "variable": {
-                                        "lvl": 1,
-                                        "type": "Meta",
-                                        "val": 5,
-                                      },
-                                    },
-                                  },
-                                  "point": {
-                                    "ann": {
-                                      "type": "Neutral",
-                                      "value": {
-                                        "type": "Var",
-                                        "variable": {
-                                          "lvl": 0,
-                                          "type": "Meta",
-                                          "val": 3,
-                                        },
-                                      },
-                                    },
-                                    "isAnnotation": false,
-                                    "multiplicity": "Many",
-                                    "nf": {
-                                      "type": "Neutral",
-                                      "value": {
-                                        "type": "Var",
-                                        "variable": {
-                                          "lvl": 0,
-                                          "type": "Meta",
-                                          "val": 2,
-                                        },
-                                      },
-                                    },
-                                    "term": {
-                                      "type": "Var",
-                                      "variable": {
-                                        "lvl": 0,
-                                        "type": "Meta",
-                                        "val": 2,
-                                      },
-                                    },
-                                  },
-                                },
-                                "zonker": {},
-                              },
-                              "term": {
-                                "label": "y",
-                                "term": {
-                                  "type": "Var",
-                                  "variable": {
-                                    "index": 0,
-                                    "type": "Bound",
-                                  },
-                                },
-                                "type": "Proj",
-                              },
-                              "type": "Closure",
-                            },
-                            "type": "Abs",
-                          },
-                          "icit": "Explicit",
-                          "type": "App",
-                        },
-                      },
-                      {
-                        "type": "Lit",
-                        "value": {
-                          "type": "Num",
-                          "value": 2,
-                        },
-                      },
-                    ],
-                    "arity": 2,
-                    "compute": [Function],
-                    "name": "$div",
-                    "type": "External",
-                  },
-                },
-              },
-              "type": "extension",
-              "value": {
-                "type": "Neutral",
-                "value": {
-                  "args": [
-                    {
-                      "type": "Neutral",
-                      "value": {
-                        "arg": {
-                          "type": "Neutral",
-                          "value": {
-                            "type": "Var",
-                            "variable": {
-                              "lvl": 0,
-                              "type": "Meta",
-                              "val": 2,
-                            },
-                          },
-                        },
-                        "func": {
-                          "binder": {
-                            "annotation": {
-                              "type": "Lit",
-                              "value": {
-                                "type": "Atom",
-                                "value": "Any",
-                              },
-                            },
-                            "icit": "Explicit",
-                            "type": "Lambda",
-                            "variable": "$proj_x",
-                          },
-                          "closure": {
-                            "ctx": {
-                              "env": [],
-                              "implicits": [],
-                              "metas": {},
-                              "sigma": {
-                                "a": {
-                                  "multiplicity": "Many",
-                                  "term": {
-                                    "arg": {
-                                      "type": "Lit",
-                                      "value": {
-                                        "type": "Num",
-                                        "value": 2,
-                                      },
-                                    },
-                                    "func": {
-                                      "arg": {
-                                        "label": "x",
-                                        "term": {
-                                          "type": "Var",
-                                          "variable": {
-                                            "name": "point",
-                                            "type": "Label",
-                                          },
-                                        },
-                                        "type": "Proj",
-                                      },
-                                      "func": {
-                                        "type": "Var",
-                                        "variable": {
-                                          "name": "/",
-                                          "type": "Free",
-                                        },
-                                      },
-                                      "icit": "Explicit",
-                                      "type": "App",
-                                    },
-                                    "icit": "Explicit",
-                                    "type": "App",
-                                  },
-                                },
-                                "b": {
-                                  "multiplicity": "Many",
-                                  "term": {
-                                    "arg": {
-                                      "type": "Lit",
-                                      "value": {
-                                        "type": "Num",
-                                        "value": 2,
-                                      },
-                                    },
-                                    "func": {
-                                      "arg": {
-                                        "label": "y",
-                                        "term": {
-                                          "type": "Var",
-                                          "variable": {
-                                            "name": "point",
-                                            "type": "Label",
-                                          },
-                                        },
-                                        "type": "Proj",
-                                      },
-                                      "func": {
-                                        "type": "Var",
-                                        "variable": {
-                                          "name": "/",
-                                          "type": "Free",
-                                        },
-                                      },
-                                      "icit": "Explicit",
-                                      "type": "App",
-                                    },
-                                    "icit": "Explicit",
-                                    "type": "App",
-                                  },
-                                },
-                                "halved": {
-                                  "ann": {
-                                    "type": "Neutral",
-                                    "value": {
-                                      "type": "Var",
-                                      "variable": {
-                                        "lvl": 1,
-                                        "type": "Meta",
-                                        "val": 6,
-                                      },
-                                    },
-                                  },
-                                  "isAnnotation": false,
-                                  "multiplicity": "Many",
-                                  "nf": {
-                                    "type": "Neutral",
-                                    "value": {
-                                      "type": "Var",
-                                      "variable": {
-                                        "lvl": 1,
-                                        "type": "Meta",
-                                        "val": 5,
-                                      },
-                                    },
-                                  },
-                                  "term": {
-                                    "type": "Var",
-                                    "variable": {
-                                      "lvl": 1,
-                                      "type": "Meta",
-                                      "val": 5,
-                                    },
-                                  },
-                                },
-                                "point": {
-                                  "ann": {
-                                    "type": "Neutral",
-                                    "value": {
-                                      "type": "Var",
-                                      "variable": {
-                                        "lvl": 0,
-                                        "type": "Meta",
-                                        "val": 3,
-                                      },
-                                    },
-                                  },
-                                  "isAnnotation": false,
-                                  "multiplicity": "Many",
-                                  "nf": {
-                                    "type": "Neutral",
-                                    "value": {
-                                      "type": "Var",
-                                      "variable": {
-                                        "lvl": 0,
-                                        "type": "Meta",
-                                        "val": 2,
-                                      },
-                                    },
-                                  },
-                                  "term": {
-                                    "type": "Var",
-                                    "variable": {
-                                      "lvl": 0,
-                                      "type": "Meta",
-                                      "val": 2,
-                                    },
-                                  },
-                                },
-                              },
-                              "zonker": {},
-                            },
-                            "term": {
-                              "label": "x",
-                              "term": {
-                                "type": "Var",
-                                "variable": {
-                                  "index": 0,
-                                  "type": "Bound",
-                                },
-                              },
-                              "type": "Proj",
-                            },
-                            "type": "Closure",
-                          },
-                          "type": "Abs",
-                        },
-                        "icit": "Explicit",
-                        "type": "App",
-                      },
-                    },
-                    {
-                      "type": "Lit",
-                      "value": {
-                        "type": "Num",
-                        "value": 2,
-                      },
-                    },
-                  ],
-                  "arity": 2,
-                  "compute": [Function],
-                  "name": "$div",
-                  "type": "External",
-                },
-              },
-            },
-            "type": "Row",
-          },
-          "func": {
-            "type": "Lit",
-            "value": {
-              "type": "Atom",
-              "value": "Struct",
-            },
-          },
-          "icit": "Explicit",
-          "type": "App",
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 5,
+              "val": 8,
             },
           },
         },
@@ -2426,9 +1280,9 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
-              "val": 6,
+              "val": 5,
             },
           },
         },
@@ -2438,8 +1292,8 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
         "left": {
           "type": "Lit",
           "value": {
-            "type": "Num",
-            "value": 2,
+            "type": "Atom",
+            "value": "Num",
           },
         },
         "lvl": 0,
@@ -2448,7 +1302,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 21,
             },
@@ -2470,107 +1324,9 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 22,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Num",
-            "value": 1,
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
               "lvl": 0,
               "type": "Meta",
               "val": 18,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 19,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "arg": {
-            "row": {
-              "label": "x",
-              "row": {
-                "label": "y",
-                "row": {
-                  "type": "empty",
-                },
-                "type": "extension",
-                "value": {
-                  "type": "Lit",
-                  "value": {
-                    "type": "Num",
-                    "value": 2,
-                  },
-                },
-              },
-              "type": "extension",
-              "value": {
-                "type": "Lit",
-                "value": {
-                  "type": "Num",
-                  "value": 1,
-                },
-              },
-            },
-            "type": "Row",
-          },
-          "func": {
-            "type": "Lit",
-            "value": {
-              "type": "Atom",
-              "value": "Struct",
-            },
-          },
-          "icit": "Explicit",
-          "type": "App",
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 2,
             },
           },
         },
@@ -2627,7 +1383,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },
@@ -2658,7 +1414,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 10,
         },
@@ -2669,14 +1425,14 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 10,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 11,
         },
@@ -2690,7 +1446,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 12,
         },
@@ -2824,7 +1580,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 20,
         },
@@ -2835,14 +1591,14 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 20,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 21,
         },
@@ -2856,7 +1612,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 22,
         },
@@ -2884,7 +1640,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 4,
         },
@@ -2895,14 +1651,14 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 5,
         },
@@ -2916,7 +1672,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 6,
         },
@@ -3245,17 +2001,11 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
   "displays": {
     "constraints": [
       "?11 ~~ ?14",
-      "?11 ~~ ?15",
-      ""hello" ~~ ?11",
-      "String ~~ ?12",
-      "Struct [ overriden: "hello", inner: ?2 ] ~~ ?8",
-      "Schema [ overriden: String, inner: ?11 ] ~~ ?9",
+      "String ~~ ?11",
+      "Schema [ overriden: String, inner: ?11 ] ~~ ?8",
       "?2 ~~ ?17",
-      "?2 ~~ ?18",
-      "Struct [ inner: ?2 ] ~~ ?5",
-      "Schema [ inner: ?2 ] ~~ ?6",
-      "1 ~~ ?2",
-      "Num ~~ ?3",
+      "Schema [ inner: ?2 ] ~~ ?5",
+      "Num ~~ ?2",
     ],
     "term": "Struct [ overriden: 1, foo: Struct [ inner: :overriden ], bar: Struct [ overriden: "hello", inner: :overriden ] ]",
     "type": "Schema [ overriden: Num, foo: Schema [ inner: ?2 ], bar: Schema [ overriden: String, inner: ?11 ] ]",
@@ -3285,57 +2035,9 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 14,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 11,
-            },
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 15,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "String",
-            "value": "hello",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 11,
             },
           },
         },
@@ -3357,65 +2059,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 12,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "arg": {
-            "row": {
-              "label": "overriden",
-              "row": {
-                "label": "inner",
-                "row": {
-                  "type": "empty",
-                },
-                "type": "extension",
-                "value": {
-                  "type": "Neutral",
-                  "value": {
-                    "type": "Var",
-                    "variable": {
-                      "lvl": 0,
-                      "type": "Meta",
-                      "val": 2,
-                    },
-                  },
-                },
-              },
-              "type": "extension",
-              "value": {
-                "type": "Lit",
-                "value": {
-                  "type": "String",
-                  "value": "hello",
-                },
-              },
-            },
-            "type": "Row",
-          },
-          "func": {
-            "type": "Lit",
-            "value": {
-              "type": "Atom",
-              "value": "Struct",
-            },
-          },
-          "icit": "Explicit",
-          "type": "App",
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 8,
+              "val": 11,
             },
           },
         },
@@ -3474,9 +2118,9 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 2,
+              "lvl": 0,
               "type": "Meta",
-              "val": 9,
+              "val": 8,
             },
           },
         },
@@ -3503,79 +2147,6 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
               "lvl": 0,
               "type": "Meta",
               "val": 17,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 2,
-            },
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 18,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "arg": {
-            "row": {
-              "label": "inner",
-              "row": {
-                "type": "empty",
-              },
-              "type": "extension",
-              "value": {
-                "type": "Neutral",
-                "value": {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 0,
-                    "type": "Meta",
-                    "val": 2,
-                  },
-                },
-              },
-            },
-            "type": "Row",
-          },
-          "func": {
-            "type": "Lit",
-            "value": {
-              "type": "Atom",
-              "value": "Struct",
-            },
-          },
-          "icit": "Explicit",
-          "type": "App",
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 5,
             },
           },
         },
@@ -3623,31 +2194,9 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Num",
-            "value": 1,
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 2,
+              "val": 5,
             },
           },
         },
@@ -3669,7 +2218,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },
@@ -3746,7 +2295,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 13,
         },
@@ -3757,14 +2306,14 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 13,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 14,
         },
@@ -3778,7 +2327,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 15,
         },
@@ -3870,7 +2419,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 4,
         },
@@ -3881,14 +2430,14 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 5,
         },
@@ -3902,7 +2451,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 6,
         },
@@ -3916,7 +2465,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
           },
         },
         "meta": {
-          "lvl": 2,
+          "lvl": 0,
           "type": "Meta",
           "val": 7,
         },
@@ -3927,14 +2476,14 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 2,
+              "lvl": 0,
               "type": "Meta",
               "val": 7,
             },
           },
         },
         "meta": {
-          "lvl": 2,
+          "lvl": 0,
           "type": "Meta",
           "val": 8,
         },
@@ -3948,7 +2497,7 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
           },
         },
         "meta": {
-          "lvl": 2,
+          "lvl": 0,
           "type": "Meta",
           "val": 9,
         },
@@ -4186,10 +2735,8 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 1`] = `
 {
   "displays": {
     "constraints": [
-      ""hello" ~~ ?5",
-      "String ~~ ?6",
-      "1 ~~ ?2",
-      "Num ~~ ?3",
+      "String ~~ ?5",
+      "Num ~~ ?2",
     ],
     "term": "Struct [ x: 1, y: "hello" ]",
     "type": "Schema [ x: Num, y: String ]",
@@ -4205,28 +2752,6 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
         "left": {
           "type": "Lit",
           "value": {
-            "type": "String",
-            "value": "hello",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 5,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
             "type": "Atom",
             "value": "String",
           },
@@ -4237,31 +2762,9 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Num",
-            "value": 1,
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 2,
+              "val": 5,
             },
           },
         },
@@ -4283,7 +2786,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },
@@ -4346,7 +2849,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 4,
         },
@@ -4357,14 +2860,14 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 5,
         },
@@ -4378,7 +2881,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 2`] = `
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 6,
         },
@@ -4474,14 +2977,10 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
 {
   "displays": {
     "constraints": [
-      ""A" ~~ ?5",
-      "String ~~ ?6",
-      "2 ~~ ?11",
-      "Num ~~ ?12",
-      "1 ~~ ?8",
-      "Num ~~ ?9",
-      "Struct [ x: 1, y: 2 ] ~~ ?2",
-      "Schema [ x: Num, y: Num ] ~~ ?3",
+      "String ~~ ?5",
+      "Num ~~ ?11",
+      "Num ~~ ?8",
+      "Schema [ x: Num, y: Num ] ~~ ?2",
     ],
     "term": "Struct [ point: Struct [ x: 1, y: 2 ], label: "A" ]",
     "type": "Schema [ point: Schema [ x: Num, y: Num ], label: String ]",
@@ -4497,8 +2996,8 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
         "left": {
           "type": "Lit",
           "value": {
-            "type": "String",
-            "value": "A",
+            "type": "Atom",
+            "value": "String",
           },
         },
         "lvl": 0,
@@ -4507,7 +3006,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 5,
             },
@@ -4520,7 +3019,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
           "type": "Lit",
           "value": {
             "type": "Atom",
-            "value": "String",
+            "value": "Num",
           },
         },
         "lvl": 0,
@@ -4529,29 +3028,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Num",
-            "value": 2,
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 11,
             },
@@ -4573,107 +3050,9 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 12,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Num",
-            "value": 1,
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
               "lvl": 0,
               "type": "Meta",
               "val": 8,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 9,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "arg": {
-            "row": {
-              "label": "x",
-              "row": {
-                "label": "y",
-                "row": {
-                  "type": "empty",
-                },
-                "type": "extension",
-                "value": {
-                  "type": "Lit",
-                  "value": {
-                    "type": "Num",
-                    "value": 2,
-                  },
-                },
-              },
-              "type": "extension",
-              "value": {
-                "type": "Lit",
-                "value": {
-                  "type": "Num",
-                  "value": 1,
-                },
-              },
-            },
-            "type": "Row",
-          },
-          "func": {
-            "type": "Lit",
-            "value": {
-              "type": "Atom",
-              "value": "Struct",
-            },
-          },
-          "icit": "Explicit",
-          "type": "App",
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 2,
             },
           },
         },
@@ -4730,7 +3109,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },
@@ -4761,7 +3140,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 10,
         },
@@ -4772,14 +3151,14 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 10,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 11,
         },
@@ -4793,7 +3172,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 12,
         },
@@ -4839,7 +3218,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 4,
         },
@@ -4850,14 +3229,14 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 5,
         },
@@ -4871,7 +3250,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 6,
         },
@@ -5080,12 +3459,10 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
 {
   "displays": {
     "constraints": [
-      ""hello" ~~ ?5",
-      "String ~~ ?6",
+      "String ~~ ?5",
       "Num ~~ Num",
       "Num ~~ Num",
-      "3 ~~ ?2",
-      "Num ~~ ?3",
+      "Num ~~ ?2",
     ],
     "term": "Struct [ x: + 1 2, y: "hello" ]",
     "type": "Schema [ x: Num, y: String ]",
@@ -5101,8 +3478,8 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
         "left": {
           "type": "Lit",
           "value": {
-            "type": "String",
-            "value": "hello",
+            "type": "Atom",
+            "value": "String",
           },
         },
         "lvl": 0,
@@ -5111,7 +3488,7 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 5,
             },
@@ -5124,28 +3501,6 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
           "type": "Lit",
           "value": {
             "type": "Atom",
-            "value": "String",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
             "value": "Num",
           },
         },
@@ -5173,28 +3528,6 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
           "value": {
             "type": "Atom",
             "value": "Num",
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Num",
-            "value": 3,
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 2,
-            },
           },
         },
         "type": "assign",
@@ -5215,7 +3548,7 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },
@@ -5278,7 +3611,7 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 4,
         },
@@ -5289,14 +3622,14 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 5,
         },
@@ -5310,7 +3643,7 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 6,
         },

@@ -17,10 +17,8 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      ""hello" ~~ ?11",
-      "String ~~ ?12",
-      "1 ~~ ?8",
-      "Num ~~ ?9",
+      "String ~~ ?11",
+      "Num ~~ ?8",
       "Schema [ snd: String, fst: Num ] ~~ Schema [ fst: Num, snd: String ]",
       "0 <= ω",
       "0 <= ω",
@@ -288,28 +286,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
         "left": {
           "type": "Lit",
           "value": {
-            "type": "String",
-            "value": "hello",
-          },
-        },
-        "lvl": 2,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 3,
-              "type": "Meta",
-              "val": 11,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
             "type": "Atom",
             "value": "String",
           },
@@ -320,31 +296,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 3,
-              "type": "Meta",
-              "val": 12,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Num",
-            "value": 1,
-          },
-        },
-        "lvl": 2,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 8,
+              "val": 11,
             },
           },
         },
@@ -366,7 +320,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 9,
+              "val": 8,
             },
           },
         },
@@ -492,7 +446,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 10,
         },
@@ -503,14 +457,14 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 3,
+              "lvl": 2,
               "type": "Meta",
               "val": 10,
             },
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 11,
         },
@@ -524,7 +478,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 12,
         },
@@ -570,7 +524,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           },
         },
         "meta": {
-          "lvl": 4,
+          "lvl": 3,
           "type": "Meta",
           "val": 4,
         },
@@ -581,14 +535,14 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 4,
+              "lvl": 3,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 4,
+          "lvl": 3,
           "type": "Meta",
           "val": 5,
         },
@@ -602,7 +556,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           },
         },
         "meta": {
-          "lvl": 4,
+          "lvl": 3,
           "type": "Meta",
           "val": 6,
         },
@@ -1104,7 +1058,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                   },
                                 },
                                 "meta": {
-                                  "lvl": 4,
+                                  "lvl": 3,
                                   "type": "Meta",
                                   "val": 4,
                                 },
@@ -1115,14 +1069,14 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                   "value": {
                                     "type": "Var",
                                     "variable": {
-                                      "lvl": 4,
+                                      "lvl": 3,
                                       "type": "Meta",
                                       "val": 4,
                                     },
                                   },
                                 },
                                 "meta": {
-                                  "lvl": 4,
+                                  "lvl": 3,
                                   "type": "Meta",
                                   "val": 5,
                                 },
@@ -1136,7 +1090,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                   },
                                 },
                                 "meta": {
-                                  "lvl": 4,
+                                  "lvl": 3,
                                   "type": "Meta",
                                   "val": 6,
                                 },
@@ -1348,7 +1302,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                           },
                                         },
                                         "meta": {
-                                          "lvl": 4,
+                                          "lvl": 3,
                                           "type": "Meta",
                                           "val": 4,
                                         },
@@ -1359,14 +1313,14 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                           "value": {
                                             "type": "Var",
                                             "variable": {
-                                              "lvl": 4,
+                                              "lvl": 3,
                                               "type": "Meta",
                                               "val": 4,
                                             },
                                           },
                                         },
                                         "meta": {
-                                          "lvl": 4,
+                                          "lvl": 3,
                                           "type": "Meta",
                                           "val": 5,
                                         },
@@ -1380,7 +1334,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                           },
                                         },
                                         "meta": {
-                                          "lvl": 4,
+                                          "lvl": 3,
                                           "type": "Meta",
                                           "val": 6,
                                         },
@@ -1655,7 +1609,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                 },
                               },
                               "meta": {
-                                "lvl": 4,
+                                "lvl": 3,
                                 "type": "Meta",
                                 "val": 4,
                               },
@@ -1666,14 +1620,14 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                 "value": {
                                   "type": "Var",
                                   "variable": {
-                                    "lvl": 4,
+                                    "lvl": 3,
                                     "type": "Meta",
                                     "val": 4,
                                   },
                                 },
                               },
                               "meta": {
-                                "lvl": 4,
+                                "lvl": 3,
                                 "type": "Meta",
                                 "val": 5,
                               },
@@ -1687,7 +1641,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                 },
                               },
                               "meta": {
-                                "lvl": 4,
+                                "lvl": 3,
                                 "type": "Meta",
                                 "val": 6,
                               },
@@ -1913,7 +1867,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                     },
                                   },
                                   "meta": {
-                                    "lvl": 4,
+                                    "lvl": 3,
                                     "type": "Meta",
                                     "val": 4,
                                   },
@@ -1924,14 +1878,14 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                     "value": {
                                       "type": "Var",
                                       "variable": {
-                                        "lvl": 4,
+                                        "lvl": 3,
                                         "type": "Meta",
                                         "val": 4,
                                       },
                                     },
                                   },
                                   "meta": {
-                                    "lvl": 4,
+                                    "lvl": 3,
                                     "type": "Meta",
                                     "val": 5,
                                   },
@@ -1945,7 +1899,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                     },
                                   },
                                   "meta": {
-                                    "lvl": 4,
+                                    "lvl": 3,
                                     "type": "Meta",
                                     "val": 6,
                                   },
@@ -2161,7 +2115,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                       },
                     },
                     "meta": {
-                      "lvl": 4,
+                      "lvl": 3,
                       "type": "Meta",
                       "val": 4,
                     },
@@ -2172,14 +2126,14 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                       "value": {
                         "type": "Var",
                         "variable": {
-                          "lvl": 4,
+                          "lvl": 3,
                           "type": "Meta",
                           "val": 4,
                         },
                       },
                     },
                     "meta": {
-                      "lvl": 4,
+                      "lvl": 3,
                       "type": "Meta",
                       "val": 5,
                     },
@@ -2193,7 +2147,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                       },
                     },
                     "meta": {
-                      "lvl": 4,
+                      "lvl": 3,
                       "type": "Meta",
                       "val": 6,
                     },
@@ -2601,7 +2555,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
           },
         },
         "meta": {
-          "lvl": 4,
+          "lvl": 3,
           "type": "Meta",
           "val": 4,
         },
@@ -2612,14 +2566,14 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 4,
+              "lvl": 3,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 4,
+          "lvl": 3,
           "type": "Meta",
           "val": 5,
         },
@@ -2633,7 +2587,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
           },
         },
         "meta": {
-          "lvl": 4,
+          "lvl": 3,
           "type": "Meta",
           "val": 6,
         },
@@ -3013,7 +2967,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Simple 
           },
         },
         "meta": {
-          "lvl": 2,
+          "lvl": 1,
           "type": "Meta",
           "val": 4,
         },
@@ -3024,14 +2978,14 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Simple 
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 2,
+              "lvl": 1,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 2,
+          "lvl": 1,
           "type": "Meta",
           "val": 5,
         },
@@ -3045,7 +2999,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Simple 
           },
         },
         "meta": {
-          "lvl": 2,
+          "lvl": 1,
           "type": "Meta",
           "val": 6,
         },
@@ -3559,7 +3513,7 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
           },
         },
         "meta": {
-          "lvl": 5,
+          "lvl": 4,
           "type": "Meta",
           "val": 4,
         },
@@ -3570,14 +3524,14 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 5,
+              "lvl": 4,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 5,
+          "lvl": 4,
           "type": "Meta",
           "val": 5,
         },
@@ -3591,7 +3545,7 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
           },
         },
         "meta": {
-          "lvl": 5,
+          "lvl": 4,
           "type": "Meta",
           "val": 6,
         },

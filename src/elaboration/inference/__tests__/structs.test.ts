@@ -83,8 +83,8 @@ describe("Inference: Structs", () => {
 			expect(displays.type).toContain("overriden: Num");
 			expect(displays.type).toMatch(/foo: Schema \[ inner: \?\d+ \]/);
 			expect(displays.type).toMatch(/bar: Schema \[ overriden: String, inner: \?\d+ \]/);
-			expect(displays.constraints).toContain("Num ~~ ?3");
-			expect(displays.constraints).toContain("String ~~ ?12");
+			expect(displays.constraints).toContain("Num ~~ ?2");
+			expect(displays.constraints).toContain("String ~~ ?11");
 
 			expect({ displays }).toMatchSnapshot();
 			expect({ structure }).toMatchSnapshot();

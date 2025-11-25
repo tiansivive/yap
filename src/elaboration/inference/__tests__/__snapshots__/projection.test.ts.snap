@@ -4,10 +4,8 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 1`] = `
 {
   "displays": {
     "constraints": [
-      "2 ~~ ?5",
-      "Num ~~ ?6",
-      "1 ~~ ?2",
-      "Num ~~ ?3",
+      "Num ~~ ?5",
+      "Num ~~ ?2",
       "Schema [ x: Num, y: Num ] ~~ Schema [ x: Num, y: Num ]",
     ],
     "term": "(Struct [ x: 1, y: 2 ]).x",
@@ -24,8 +22,8 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
         "left": {
           "type": "Lit",
           "value": {
-            "type": "Num",
-            "value": 2,
+            "type": "Atom",
+            "value": "Num",
           },
         },
         "lvl": 0,
@@ -34,7 +32,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 5,
             },
@@ -56,53 +54,9 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Num",
-            "value": 1,
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
               "lvl": 0,
               "type": "Meta",
               "val": 2,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Num",
-          },
-        },
-        "lvl": 0,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 3,
             },
           },
         },
@@ -247,7 +201,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 4,
         },
@@ -258,14 +212,14 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 1,
+              "lvl": 0,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 5,
         },
@@ -279,7 +233,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 0,
           "type": "Meta",
           "val": 6,
         },
@@ -1146,10 +1100,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      ""hello" ~~ ?11",
-      "String ~~ ?12",
-      "1 ~~ ?8",
-      "Num ~~ ?9",
+      "String ~~ ?11",
+      "Num ~~ ?8",
       "Schema [ snd: String, fst: Num ] ~~ Schema [ fst: Num, snd: String ]",
       "0 <= ω",
       "0 <= ω",
@@ -1417,28 +1369,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
         "left": {
           "type": "Lit",
           "value": {
-            "type": "String",
-            "value": "hello",
-          },
-        },
-        "lvl": 2,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 3,
-              "type": "Meta",
-              "val": 11,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
             "type": "Atom",
             "value": "String",
           },
@@ -1449,31 +1379,9 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 3,
-              "type": "Meta",
-              "val": 12,
-            },
-          },
-        },
-        "type": "assign",
-      },
-      {
-        "left": {
-          "type": "Lit",
-          "value": {
-            "type": "Num",
-            "value": 1,
-          },
-        },
-        "lvl": 2,
-        "right": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 8,
+              "val": 11,
             },
           },
         },
@@ -1495,7 +1403,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 9,
+              "val": 8,
             },
           },
         },
@@ -1621,7 +1529,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 10,
         },
@@ -1632,14 +1540,14 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 3,
+              "lvl": 2,
               "type": "Meta",
               "val": 10,
             },
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 11,
         },
@@ -1653,7 +1561,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 12,
         },
@@ -1699,7 +1607,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           },
         },
         "meta": {
-          "lvl": 4,
+          "lvl": 3,
           "type": "Meta",
           "val": 4,
         },
@@ -1710,14 +1618,14 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           "value": {
             "type": "Var",
             "variable": {
-              "lvl": 4,
+              "lvl": 3,
               "type": "Meta",
               "val": 4,
             },
           },
         },
         "meta": {
-          "lvl": 4,
+          "lvl": 3,
           "type": "Meta",
           "val": 5,
         },
@@ -1731,7 +1639,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           },
         },
         "meta": {
-          "lvl": 4,
+          "lvl": 3,
           "type": "Meta",
           "val": 6,
         },
@@ -2238,7 +2146,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                   },
                                 },
                                 "meta": {
-                                  "lvl": 4,
+                                  "lvl": 3,
                                   "type": "Meta",
                                   "val": 4,
                                 },
@@ -2249,14 +2157,14 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                   "value": {
                                     "type": "Var",
                                     "variable": {
-                                      "lvl": 4,
+                                      "lvl": 3,
                                       "type": "Meta",
                                       "val": 4,
                                     },
                                   },
                                 },
                                 "meta": {
-                                  "lvl": 4,
+                                  "lvl": 3,
                                   "type": "Meta",
                                   "val": 5,
                                 },
@@ -2270,7 +2178,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                   },
                                 },
                                 "meta": {
-                                  "lvl": 4,
+                                  "lvl": 3,
                                   "type": "Meta",
                                   "val": 6,
                                 },
@@ -2482,7 +2390,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                           },
                                         },
                                         "meta": {
-                                          "lvl": 4,
+                                          "lvl": 3,
                                           "type": "Meta",
                                           "val": 4,
                                         },
@@ -2493,14 +2401,14 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                           "value": {
                                             "type": "Var",
                                             "variable": {
-                                              "lvl": 4,
+                                              "lvl": 3,
                                               "type": "Meta",
                                               "val": 4,
                                             },
                                           },
                                         },
                                         "meta": {
-                                          "lvl": 4,
+                                          "lvl": 3,
                                           "type": "Meta",
                                           "val": 5,
                                         },
@@ -2514,7 +2422,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                           },
                                         },
                                         "meta": {
-                                          "lvl": 4,
+                                          "lvl": 3,
                                           "type": "Meta",
                                           "val": 6,
                                         },
@@ -2789,7 +2697,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 },
                               },
                               "meta": {
-                                "lvl": 4,
+                                "lvl": 3,
                                 "type": "Meta",
                                 "val": 4,
                               },
@@ -2800,14 +2708,14 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 "value": {
                                   "type": "Var",
                                   "variable": {
-                                    "lvl": 4,
+                                    "lvl": 3,
                                     "type": "Meta",
                                     "val": 4,
                                   },
                                 },
                               },
                               "meta": {
-                                "lvl": 4,
+                                "lvl": 3,
                                 "type": "Meta",
                                 "val": 5,
                               },
@@ -2821,7 +2729,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 },
                               },
                               "meta": {
-                                "lvl": 4,
+                                "lvl": 3,
                                 "type": "Meta",
                                 "val": 6,
                               },
@@ -3047,7 +2955,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                     },
                                   },
                                   "meta": {
-                                    "lvl": 4,
+                                    "lvl": 3,
                                     "type": "Meta",
                                     "val": 4,
                                   },
@@ -3058,14 +2966,14 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                     "value": {
                                       "type": "Var",
                                       "variable": {
-                                        "lvl": 4,
+                                        "lvl": 3,
                                         "type": "Meta",
                                         "val": 4,
                                       },
                                     },
                                   },
                                   "meta": {
-                                    "lvl": 4,
+                                    "lvl": 3,
                                     "type": "Meta",
                                     "val": 5,
                                   },
@@ -3079,7 +2987,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                     },
                                   },
                                   "meta": {
-                                    "lvl": 4,
+                                    "lvl": 3,
                                     "type": "Meta",
                                     "val": 6,
                                   },
@@ -3295,7 +3203,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                       },
                     },
                     "meta": {
-                      "lvl": 4,
+                      "lvl": 3,
                       "type": "Meta",
                       "val": 4,
                     },
@@ -3306,14 +3214,14 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                       "value": {
                         "type": "Var",
                         "variable": {
-                          "lvl": 4,
+                          "lvl": 3,
                           "type": "Meta",
                           "val": 4,
                         },
                       },
                     },
                     "meta": {
-                      "lvl": 4,
+                      "lvl": 3,
                       "type": "Meta",
                       "val": 5,
                     },
@@ -3327,7 +3235,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                       },
                     },
                     "meta": {
-                      "lvl": 4,
+                      "lvl": 3,
                       "type": "Meta",
                       "val": 6,
                     },
