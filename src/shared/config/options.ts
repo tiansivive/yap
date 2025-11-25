@@ -2,6 +2,7 @@ import { Context } from "z3-solver";
 
 export const options = {
 	verbose: false,
+	showJS: false,
 };
 
 let Z3: Context<"main"> | undefined = undefined;

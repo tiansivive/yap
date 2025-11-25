@@ -30,7 +30,7 @@ Yap has a small set of primitive types and values:
 let n: Num = 42;           // Numbers (integers and floats)
 let s: String = "hello";   // Strings
 let b: Bool = true;        // Booleans (true, false)
-let u: Unit = *;           // Unit type (like void, but a value)
+let u: Unit = !;           // Unit type (like void, but a value)
 ```
 
 ---
@@ -96,7 +96,7 @@ let compose: (Num -> Num) -> (Num -> Num) -> Num -> Num
     = \f -> \g -> \x -> f (g x);
 
 let addOne: Num -> Num = \x -> x + 1;
-let double: Num -> Num = \x -> x * 2;
+let add5: Num -> Num = \x -> x + 5;
 
 let addOneThenDouble = compose double addOne;
 // addOneThenDouble 5 == 12
@@ -197,10 +197,10 @@ Variants represent a choice between different alternatives. Create variant value
 let TrafficLight: Type
     = | #red Unit | #yellow Unit | #green Unit;
 
-let light: TrafficLight = #red *;
+let light: TrafficLight = #red !;
 ```
 
-Each variant alternative (tag) carries a value. Here we use `Unit` (the `*` value) for simple flags.
+Each variant alternative (tag) carries a value. Here we use `Unit` (the `!` value) for simple flags.
 
 ### Variants with Data
 
@@ -358,7 +358,7 @@ let Maybe: Type -> Type
 
 // Now we can create Maybe Num, Maybe String, etc.
 let maybeNum: Maybe Num = #just 42;
-let maybeStr: Maybe String = #nothing *;
+let maybeStr: Maybe String = #nothing !;
 ```
 
 The syntax `Type -> Type` means "a function from types to types".
@@ -559,7 +559,7 @@ let Functor: (Type -> Type) -> Type
 // Implement map for List
 let mapList: (a: Type) => (b: Type) => (a -> b) -> List a -> List b
     = \f -> \list -> match list
-        | #nil _           -> #nil *
+        | #nil _           -> #nil !
         | #cons { x, xs }  -> #cons { f x, mapList f xs };
 
 // Create a Functor instance for List
@@ -576,7 +576,7 @@ let polymorphicMap: (functor: Functor f) => (a: Type) => (b: Type) =>
 
 using ListFunctor;
 
-let someList = #cons { 1, #cons { 2, #cons { 3, #nil * } } };
+let someList = #cons { 1, #cons { 2, #cons { 3, #nil ! } } };
 let result = polymorphicMap (\x -> x + 1) someList;
 ```
 
@@ -696,7 +696,7 @@ let handleNone: (r: Row) => (| #none Unit | r) -> String
         | other   -> "Something else";
 
 // Works with any variant that includes a #none tag
-let opt: | #none Unit | #some Num = #none *;
+let opt: | #none Unit | #some Num = #none !;
 let result1 = handleNone opt;  // "Nothing here"
 ```
 
@@ -716,11 +716,11 @@ let Option: Type -> Type
 
 let safeDivide: Num -> Num -> Option Num
     = \x -> \y -> match y
-        | 0 -> #none *
+        | 0 -> #none !
         | _ -> #some (x / y);
 
 let result = safeDivide 10 2;  // #some 5
-let bad = safeDivide 10 0;     // #none *
+let bad = safeDivide 10 0;     // #none !
 ```
 
 ### The Result Type
@@ -785,7 +785,7 @@ let Vec: Num -> Type -> Type
         | 0 -> Unit
         | l -> { t, Vec (l - 1) t };
 
-let vec0: Vec 0 Num = *;
+let vec0: Vec 0 Num = !;
 let vec1: Vec 1 Num = { 10, vec0 };
 let vec2: Vec 2 Num = { 20, vec1 };
 let vec3: Vec 3 Num = { 30, vec2 };
@@ -863,7 +863,7 @@ Now that we understand polymorphism and type constructors, we can define recursi
 let List: Type -> Type
     = \a -> | #nil Unit | #cons { a, List a };
 
-let empty: List Num = #nil *;
+let empty: List Num = #nil !;
 let oneItem: List Num = #cons { 1, empty };
 let twoItems: List Num = #cons { 2, oneItem };
 ```
@@ -874,7 +874,7 @@ let twoItems: List Num = #cons { 2, oneItem };
 let Nat: Type
     = | #zero Unit | #succ Nat;
 
-let zero: Nat = #zero *;
+let zero: Nat = #zero !;
 let one: Nat = #succ zero;
 let two: Nat = #succ one;
 ```
@@ -1098,7 +1098,7 @@ let OrderedList: Type -> Type
             | #cons { head: t, tail: OrderedList (t[|\v -> v > :head |]) };
 
 let orderedList: OrderedList Num
-    = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil * } } };
+    = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
 ```
 
 Each tail element must be greater than the current head! This uses dependent types (`:head` reference) but hardcodes the `>` predicate.
@@ -1115,13 +1115,13 @@ let OrderedListPoly: (t: Type) -> (p: t -> t -> Bool) -> Type
 
 // Now we can create lists with ANY ordering relationship!
 let ascending: OrderedListPoly Num (\x y -> x < y)
-    = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil * } } };
+    = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
 
 let descending: OrderedListPoly Num (\x y -> x > y)
-    = #cons { head: 3, tail: #cons { head: 2, tail: #cons { head: 1, tail: #nil * } } };
+    = #cons { head: 3, tail: #cons { head: 2, tail: #cons { head: 1, tail: #nil ! } } };
 
 let nonDecreasing: OrderedListPoly Num (\x y -> x <= y)
-    = #cons { head: 1, tail: #cons { head: 1, tail: #cons { head: 2, tail: #nil * } } };
+    = #cons { head: 1, tail: #cons { head: 1, tail: #cons { head: 2, tail: #nil ! } } };
 ```
 
 This combines:
@@ -1158,7 +1158,7 @@ foreign stringify: (a: Type) => a -> String;
 let greet: String -> Unit
     = \name -> {
         print ("Hello, " ++ name);
-        return *;
+        return !;
     };
 ```
 

@@ -39,7 +39,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       },
       {
         "left": {
-          "id": 42,
+          "id": 44,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -48,7 +48,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
         },
         "lvl": 0,
         "right": {
-          "id": 40,
+          "id": 42,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -166,7 +166,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       "type": "App",
     },
     "type": {
-      "id": 44,
+      "id": 46,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -238,7 +238,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       },
       {
         "left": {
-          "id": 41,
+          "id": 45,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -247,7 +247,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
         },
         "lvl": 0,
         "right": {
-          "id": 39,
+          "id": 43,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -260,7 +260,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
     "metas": {
       "1": {
         "ann": {
-          "id": 26,
+          "id": 28,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -344,7 +344,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       "type": "App",
     },
     "type": {
-      "id": 43,
+      "id": 47,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -395,7 +395,7 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
       },
       {
         "left": {
-          "id": 54,
+          "id": 56,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -404,7 +404,7 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
         },
         "lvl": 0,
         "right": {
-          "id": 52,
+          "id": 54,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -589,7 +589,7 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
       "type": "App",
     },
     "type": {
-      "id": 56,
+      "id": 58,
       "type": "Lit",
       "value": {
         "type": "Atom",

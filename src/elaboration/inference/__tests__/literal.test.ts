@@ -37,8 +37,8 @@ describe("Inference: Literals", () => {
 		expect({ structure }).toMatchSnapshot();
 	});
 
-	it("Unit: * >=> Unit", () => {
-		const { displays, structure } = elaborateFrom("*");
+	it("Unit: ! >=> Unit", () => {
+		const { displays, structure } = elaborateFrom("!");
 		expect(displays.type).toBe("Unit");
 
 		expect(displays.constraints.length).toBe(0);

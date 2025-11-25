@@ -16,6 +16,7 @@ import { format, resolve } from "path";
 import * as Lib from "@yap/shared/lib/primitives";
 
 import beautify from "js-beautify";
+import { options } from "./shared/config/options";
 
 export const interpret = (code: string, ctx: EB.Context, opts = { nf: false }) => {
 	const g = Grammar;
@@ -54,16 +55,15 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 
 		const [[tm, ty, us], ctx_] = result.right;
 
-		const code = `let ${name} = ${CG.codegen([name], tm)};`;
-		letdecs.push(code);
-		console.log(`:: ${EB.NF.display(ty, ctx)}`);
+		// const code = `let ${name} = ${CG.codegen([name], tm)};`;
+		// letdecs.push(code);
 
 		if (opts.nf) {
 			const nf = EB.NF.evaluate(ctx, tm);
 			console.log(`NF: ${EB.NF.display(nf, ctx)}`);
 		}
 
-		console.log(`\n\n${code}`);
+		// console.log(`\n\n${code}`);
 
 		return ctx_;
 	}
@@ -78,28 +78,31 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		}
 
 		const [tm, ty, us, zonker] = result.right;
-		const code = CG.codegen([], tm);
+		// const code = CG.codegen([], tm);
 
-		const script = letdecs.join("\n") + `\n${code}`;
+		// const script = letdecs.join("\n") + `\n${code}`;
 
-		const formatted = beautify.js(script, { indent_size: 2 });
 		//prettier.format(script, { parser: "babel", semi: true })
-		console.log("\nTranspiled JavaScript:\n");
-		console.log(formatted);
+		// if (options.showJS) {
+		// 	const formatted = beautify.js(script, { indent_size: 2 });
+		// 	console.log("\nTranspiled JavaScript:\n");
+		// 	console.log(formatted);
+		// }
 
-		const imported = Object.keys(ctx.imports).reduce((acc, key) => {
-			return { ...acc, [key]: key };
-		}, {});
-		const vmCtx = vm.createContext({ ...imported, ...Lib.FFI });
-		const res = vm.runInContext(script, vmCtx);
+		// const imported = Object.keys(ctx.imports).reduce((acc, key) => {
+		// 	return { ...acc, [key]: key };
+		// }, {});
+		// const vmCtx = vm.createContext({ ...imported, ...Lib.FFI });
+		// const res = vm.runInContext(script, vmCtx);
 
 		//console.dir(res, { showHidden: true, depth: null });
 		// console.dir(Object.getOwnPropertyDescriptors(res), { showHidden: true, depth: null });
-		const pretty = typeof res === "function" ? beautify.js(res.toString(), { indent_size: 2 }) : util.inspect(res, { showHidden: true, depth: null });
-		console.log("\n" + pretty + ` :: ${EB.NF.display(ty, { zonker, metas: ctx.metas, env: ctx.env })}\n`);
+		// const pretty = typeof res === "function" ? beautify.js(res.toString(), { indent_size: 2 }) : util.inspect(res, { showHidden: true, depth: null });
+		// console.log("\n" + pretty + ` :: ${EB.NF.display(ty, { zonker, metas: ctx.metas, env: ctx.env })}\n`);
 
+		const nf = EB.NF.evaluate(ctx, tm);
+		console.log("\n", EB.NF.display(nf, { zonker, metas: ctx.metas, env: ctx.env }), "::", EB.NF.display(ty, { zonker, metas: ctx.metas, env: ctx.env }), "\n");
 		if (opts.nf) {
-			const nf = EB.NF.evaluate(ctx, tm);
 			console.log(`NF: ${EB.NF.display(nf, { zonker, metas: ctx.metas, env: ctx.env })}`);
 		}
 		return ctx;

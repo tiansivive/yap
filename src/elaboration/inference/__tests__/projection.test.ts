@@ -31,4 +31,23 @@ describe("inference: projection", () => {
 		expect({ displays: res.displays }).toMatchSnapshot();
 		expect({ structure: res.structure }).toMatchSnapshot();
 	});
+
+	describe("Projection from Sigma types", () => {
+		it("projects from a simple dependent pair", () => {
+			const src = `{
+			let Pair
+					: (a: Type) -> (p: a -> Type) -> Type
+					= \\a -> \\p -> { fst: a, snd: p :fst };
+
+		let p: Pair Num (\\n -> String) = { fst: 1, snd: "hello" };
+			return p.snd;
+		}`;
+
+			const res = elaborateFrom(src);
+			expect(res.structure.term.type).toBe("Block");
+			expect(res.displays.type).toBe("String");
+			expect({ displays: res.displays }).toMatchSnapshot();
+			expect({ structure: res.structure }).toMatchSnapshot();
+		});
+	});
 });

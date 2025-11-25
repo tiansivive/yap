@@ -1,0 +1,5129 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Projection from Sigma types > projects from a simple dependent pair 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "?2 ~~ L1",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      ""hello" ~~ ?11",
+      "String ~~ ?12",
+      "1 ~~ ?8",
+      "Num ~~ ?9",
+      "Schema [ snd: String, fst: Num ] ~~ Schema [ fst: Num, snd: String ]",
+      "0 <= ω",
+      "0 <= ω",
+    ],
+    "term": "{
+	let Pair
+	: Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
+	= λa -> λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
+	let p
+	: Σ($sig: [ snd: String, fst: Num ]) . (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p = λn -> (closure: String -| Γ: n; Pair = λa -> (closure: λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ] -| Γ: a; Pair = Pair)); a = Num; Pair = Pair)
+	= Struct [ fst: 1, snd: "hello" ];
+	return (p).snd;
+	}",
+    "type": "String",
+  },
+}
+`;
+
+exports[`Projection from Sigma types > projects from a simple dependent pair 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 26,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 27,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 32,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 36,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 58,
+          "type": "Neutral",
+          "value": {
+            "id": 57,
+            "type": "Var",
+            "variable": {
+              "lvl": 3,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "lvl": 3,
+        "right": {
+          "id": 42,
+          "type": "Neutral",
+          "value": {
+            "id": 41,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Bound",
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 67,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 3,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 37,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 3,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 37,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 105,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 110,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 138,
+          "type": "Lit",
+          "value": {
+            "type": "String",
+            "value": "hello",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 134,
+          "type": "Neutral",
+          "value": {
+            "id": 133,
+            "type": "Var",
+            "variable": {
+              "lvl": 3,
+              "type": "Meta",
+              "val": 11,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 137,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 136,
+          "type": "Neutral",
+          "value": {
+            "id": 135,
+            "type": "Var",
+            "variable": {
+              "lvl": 3,
+              "type": "Meta",
+              "val": 12,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 140,
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 128,
+          "type": "Neutral",
+          "value": {
+            "id": 127,
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 8,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 139,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 130,
+          "type": "Neutral",
+          "value": {
+            "id": 129,
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 9,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "arg": {
+            "id": 156,
+            "row": {
+              "label": "snd",
+              "row": {
+                "label": "fst",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "id": 113,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "extension",
+              "value": {
+                "id": 155,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "String",
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 157,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "id": 158,
+          "type": "App",
+        },
+        "lvl": 2,
+        "right": {
+          "id": 144,
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "id": 142,
+              "row": {
+                "label": "fst",
+                "row": {
+                  "label": "snd",
+                  "row": {
+                    "type": "empty",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 137,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "String",
+                    },
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "id": 139,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "id": 141,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Schema",
+              },
+            },
+            "icit": "Explicit",
+            "id": 143,
+            "type": "App",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "computed": "Zero",
+        "expected": "Many",
+        "type": "usage",
+      },
+      {
+        "computed": "Zero",
+        "expected": "Many",
+        "type": "usage",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 3,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "10": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 3,
+          "type": "Meta",
+          "val": 10,
+        },
+      },
+      "11": {
+        "ann": {
+          "id": 132,
+          "type": "Neutral",
+          "value": {
+            "id": 131,
+            "type": "Var",
+            "variable": {
+              "lvl": 3,
+              "type": "Meta",
+              "val": 10,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 3,
+          "type": "Meta",
+          "val": 11,
+        },
+      },
+      "12": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 3,
+          "type": "Meta",
+          "val": 12,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 56,
+          "type": "Neutral",
+          "value": {
+            "id": 55,
+            "type": "Var",
+            "variable": {
+              "lvl": 3,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 3,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 3,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 4,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "id": 62,
+          "type": "Neutral",
+          "value": {
+            "id": 61,
+            "type": "Var",
+            "variable": {
+              "lvl": 4,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 4,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 4,
+          "type": "Meta",
+          "val": 6,
+        },
+      },
+      "7": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 7,
+        },
+      },
+      "8": {
+        "ann": {
+          "id": 126,
+          "type": "Neutral",
+          "value": {
+            "id": 125,
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 7,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 8,
+        },
+      },
+      "9": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 9,
+        },
+      },
+    },
+    "term": {
+      "id": 1260,
+      "return": {
+        "id": 1259,
+        "label": "snd",
+        "term": {
+          "id": 1258,
+          "type": "Var",
+          "variable": {
+            "index": 0,
+            "type": "Bound",
+          },
+        },
+        "type": "Proj",
+      },
+      "statements": [
+        {
+          "annotation": {
+            "binder": {
+              "annotation": {
+                "id": 37,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Type",
+                },
+              },
+              "icit": "Explicit",
+              "type": "Pi",
+              "variable": "a",
+            },
+            "closure": {
+              "ctx": {
+                "env": [],
+                "implicits": [],
+                "metas": {},
+                "sigma": {},
+                "zonker": {},
+              },
+              "term": {
+                "binding": {
+                  "annotation": {
+                    "binding": {
+                      "annotation": {
+                        "id": 1205,
+                        "type": "Var",
+                        "variable": {
+                          "index": 0,
+                          "type": "Bound",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "Pi",
+                      "variable": "t1",
+                    },
+                    "body": {
+                      "id": 1206,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "id": 1228,
+                    "type": "Abs",
+                  },
+                  "icit": "Explicit",
+                  "type": "Pi",
+                  "variable": "p",
+                },
+                "body": {
+                  "id": 1208,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Type",
+                  },
+                },
+                "id": 1229,
+                "type": "Abs",
+              },
+              "type": "Closure",
+            },
+            "id": 80,
+            "type": "Abs",
+          },
+          "type": "Let",
+          "value": {
+            "binding": {
+              "annotation": {
+                "id": 1211,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Type",
+                },
+              },
+              "icit": "Explicit",
+              "type": "Lambda",
+              "variable": "a",
+            },
+            "body": {
+              "binding": {
+                "annotation": {
+                  "binding": {
+                    "annotation": {
+                      "id": 1213,
+                      "type": "Var",
+                      "variable": {
+                        "index": 0,
+                        "type": "Bound",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "Pi",
+                    "variable": "t1",
+                  },
+                  "body": {
+                    "id": 1212,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "Type",
+                    },
+                  },
+                  "id": 1230,
+                  "type": "Abs",
+                },
+                "icit": "Explicit",
+                "type": "Lambda",
+                "variable": "p",
+              },
+              "body": {
+                "binding": {
+                  "annotation": {
+                    "id": 1232,
+                    "row": {
+                      "label": "snd",
+                      "row": {
+                        "label": "fst",
+                        "row": {
+                          "type": "empty",
+                        },
+                        "type": "extension",
+                        "value": {
+                          "id": 1220,
+                          "type": "Var",
+                          "variable": {
+                            "index": 1,
+                            "type": "Bound",
+                          },
+                        },
+                      },
+                      "type": "extension",
+                      "value": {
+                        "arg": {
+                          "id": 1218,
+                          "type": "Var",
+                          "variable": {
+                            "name": "fst",
+                            "type": "Label",
+                          },
+                        },
+                        "func": {
+                          "id": 1217,
+                          "type": "Var",
+                          "variable": {
+                            "index": 0,
+                            "type": "Bound",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "id": 1231,
+                        "type": "App",
+                      },
+                    },
+                    "type": "Row",
+                  },
+                  "type": "Sigma",
+                  "variable": "$sig",
+                },
+                "body": {
+                  "arg": {
+                    "id": 1234,
+                    "row": {
+                      "label": "snd",
+                      "row": {
+                        "label": "fst",
+                        "row": {
+                          "type": "empty",
+                        },
+                        "type": "extension",
+                        "value": {
+                          "id": 1220,
+                          "type": "Var",
+                          "variable": {
+                            "index": 1,
+                            "type": "Bound",
+                          },
+                        },
+                      },
+                      "type": "extension",
+                      "value": {
+                        "arg": {
+                          "id": 1218,
+                          "type": "Var",
+                          "variable": {
+                            "name": "fst",
+                            "type": "Label",
+                          },
+                        },
+                        "func": {
+                          "id": 1217,
+                          "type": "Var",
+                          "variable": {
+                            "index": 0,
+                            "type": "Bound",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "id": 1233,
+                        "type": "App",
+                      },
+                    },
+                    "type": "Row",
+                  },
+                  "func": {
+                    "id": 1222,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "Schema",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "id": 1235,
+                  "type": "App",
+                },
+                "id": 1236,
+                "type": "Abs",
+              },
+              "id": 1237,
+              "type": "Abs",
+            },
+            "id": 1238,
+            "type": "Abs",
+          },
+          "variable": "Pair",
+        },
+        {
+          "annotation": {
+            "binder": {
+              "annotation": {
+                "id": 167,
+                "row": {
+                  "label": "snd",
+                  "row": {
+                    "label": "fst",
+                    "row": {
+                      "type": "empty",
+                    },
+                    "type": "extension",
+                    "value": {
+                      "id": 113,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Num",
+                      },
+                    },
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 120,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "String",
+                    },
+                  },
+                },
+                "type": "Row",
+              },
+              "type": "Sigma",
+              "variable": "$sig",
+            },
+            "closure": {
+              "ctx": {
+                "env": [
+                  {
+                    "name": {
+                      "annotation": {
+                        "binder": {
+                          "annotation": {
+                            "id": 113,
+                            "type": "Lit",
+                            "value": {
+                              "type": "Atom",
+                              "value": "Num",
+                            },
+                          },
+                          "icit": "Explicit",
+                          "type": "Pi",
+                          "variable": "t1",
+                        },
+                        "closure": {
+                          "ctx": {
+                            "env": [
+                              {
+                                "name": {
+                                  "annotation": {
+                                    "id": 96,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Type",
+                                    },
+                                  },
+                                  "icit": "Explicit",
+                                  "type": "Lambda",
+                                  "variable": "a",
+                                },
+                                "nf": {
+                                  "id": 113,
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Num",
+                                  },
+                                },
+                                "type": [
+                                  {
+                                    "annotation": {
+                                      "id": 96,
+                                      "type": "Lit",
+                                      "value": {
+                                        "type": "Atom",
+                                        "value": "Type",
+                                      },
+                                    },
+                                    "icit": "Explicit",
+                                    "type": "Lambda",
+                                    "variable": "a",
+                                  },
+                                  "source",
+                                  {},
+                                ],
+                              },
+                              {
+                                "name": {
+                                  "type": "Let",
+                                  "variable": "Pair",
+                                },
+                                "nf": {
+                                  "id": 95,
+                                  "type": "Neutral",
+                                  "value": {
+                                    "id": 94,
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 0,
+                                      "type": "Bound",
+                                    },
+                                  },
+                                },
+                                "type": [
+                                  {
+                                    "type": "Let",
+                                    "variable": "Pair",
+                                  },
+                                  "source",
+                                  {
+                                    "binder": {
+                                      "annotation": {
+                                        "id": 37,
+                                        "type": "Lit",
+                                        "value": {
+                                          "type": "Atom",
+                                          "value": "Type",
+                                        },
+                                      },
+                                      "icit": "Explicit",
+                                      "type": "Pi",
+                                      "variable": "a",
+                                    },
+                                    "closure": {
+                                      "ctx": {
+                                        "env": [],
+                                        "implicits": [],
+                                        "metas": {},
+                                        "sigma": {},
+                                        "zonker": {},
+                                      },
+                                      "term": {
+                                        "binding": {
+                                          "annotation": {
+                                            "binding": {
+                                              "annotation": {
+                                                "id": 1205,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "index": 0,
+                                                  "type": "Bound",
+                                                },
+                                              },
+                                              "icit": "Explicit",
+                                              "type": "Pi",
+                                              "variable": "t1",
+                                            },
+                                            "body": {
+                                              "id": 1206,
+                                              "type": "Lit",
+                                              "value": {
+                                                "type": "Atom",
+                                                "value": "Type",
+                                              },
+                                            },
+                                            "id": 1228,
+                                            "type": "Abs",
+                                          },
+                                          "icit": "Explicit",
+                                          "type": "Pi",
+                                          "variable": "p",
+                                        },
+                                        "body": {
+                                          "id": 1208,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "id": 1229,
+                                        "type": "Abs",
+                                      },
+                                      "type": "Closure",
+                                    },
+                                    "id": 80,
+                                    "type": "Abs",
+                                  },
+                                ],
+                              },
+                            ],
+                            "implicits": [],
+                            "metas": {
+                              "1": {
+                                "ann": {
+                                  "id": 1,
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Type",
+                                  },
+                                },
+                                "meta": {
+                                  "lvl": 3,
+                                  "type": "Meta",
+                                  "val": 1,
+                                },
+                              },
+                              "2": {
+                                "ann": {
+                                  "id": 56,
+                                  "type": "Neutral",
+                                  "value": {
+                                    "id": 55,
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 3,
+                                      "type": "Meta",
+                                      "val": 1,
+                                    },
+                                  },
+                                },
+                                "meta": {
+                                  "lvl": 3,
+                                  "type": "Meta",
+                                  "val": 2,
+                                },
+                              },
+                              "3": {
+                                "ann": {
+                                  "id": 1,
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Type",
+                                  },
+                                },
+                                "meta": {
+                                  "lvl": 3,
+                                  "type": "Meta",
+                                  "val": 3,
+                                },
+                              },
+                              "4": {
+                                "ann": {
+                                  "id": 1,
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Type",
+                                  },
+                                },
+                                "meta": {
+                                  "lvl": 4,
+                                  "type": "Meta",
+                                  "val": 4,
+                                },
+                              },
+                              "5": {
+                                "ann": {
+                                  "id": 62,
+                                  "type": "Neutral",
+                                  "value": {
+                                    "id": 61,
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 4,
+                                      "type": "Meta",
+                                      "val": 4,
+                                    },
+                                  },
+                                },
+                                "meta": {
+                                  "lvl": 4,
+                                  "type": "Meta",
+                                  "val": 5,
+                                },
+                              },
+                              "6": {
+                                "ann": {
+                                  "id": 1,
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Type",
+                                  },
+                                },
+                                "meta": {
+                                  "lvl": 4,
+                                  "type": "Meta",
+                                  "val": 6,
+                                },
+                              },
+                            },
+                            "sigma": {},
+                            "zonker": {
+                              "2": {
+                                "id": 41,
+                                "type": "Var",
+                                "variable": {
+                                  "lvl": 1,
+                                  "type": "Bound",
+                                },
+                              },
+                            },
+                          },
+                          "term": {
+                            "id": 1212,
+                            "type": "Lit",
+                            "value": {
+                              "type": "Atom",
+                              "value": "Type",
+                            },
+                          },
+                          "type": "Closure",
+                        },
+                        "id": 114,
+                        "type": "Abs",
+                      },
+                      "icit": "Explicit",
+                      "type": "Lambda",
+                      "variable": "p",
+                    },
+                    "nf": {
+                      "binder": {
+                        "annotation": {
+                          "id": 116,
+                          "type": "Lit",
+                          "value": {
+                            "type": "Atom",
+                            "value": "Num",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "type": "Lambda",
+                        "variable": "n",
+                      },
+                      "closure": {
+                        "ctx": {
+                          "env": [
+                            {
+                              "name": {
+                                "type": "Let",
+                                "variable": "Pair",
+                              },
+                              "nf": {
+                                "binder": {
+                                  "annotation": {
+                                    "id": 96,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Type",
+                                    },
+                                  },
+                                  "icit": "Explicit",
+                                  "type": "Lambda",
+                                  "variable": "a",
+                                },
+                                "closure": {
+                                  "ctx": {
+                                    "env": [
+                                      {
+                                        "name": {
+                                          "type": "Let",
+                                          "variable": "Pair",
+                                        },
+                                        "nf": {
+                                          "id": 95,
+                                          "type": "Neutral",
+                                          "value": {
+                                            "id": 94,
+                                            "type": "Var",
+                                            "variable": {
+                                              "lvl": 0,
+                                              "type": "Bound",
+                                            },
+                                          },
+                                        },
+                                        "type": [
+                                          {
+                                            "type": "Let",
+                                            "variable": "Pair",
+                                          },
+                                          "source",
+                                          {
+                                            "binder": {
+                                              "annotation": {
+                                                "id": 37,
+                                                "type": "Lit",
+                                                "value": {
+                                                  "type": "Atom",
+                                                  "value": "Type",
+                                                },
+                                              },
+                                              "icit": "Explicit",
+                                              "type": "Pi",
+                                              "variable": "a",
+                                            },
+                                            "closure": {
+                                              "ctx": {
+                                                "env": [],
+                                                "implicits": [],
+                                                "metas": {},
+                                                "sigma": {},
+                                                "zonker": {},
+                                              },
+                                              "term": {
+                                                "binding": {
+                                                  "annotation": {
+                                                    "binding": {
+                                                      "annotation": {
+                                                        "id": 1205,
+                                                        "type": "Var",
+                                                        "variable": {
+                                                          "index": 0,
+                                                          "type": "Bound",
+                                                        },
+                                                      },
+                                                      "icit": "Explicit",
+                                                      "type": "Pi",
+                                                      "variable": "t1",
+                                                    },
+                                                    "body": {
+                                                      "id": 1206,
+                                                      "type": "Lit",
+                                                      "value": {
+                                                        "type": "Atom",
+                                                        "value": "Type",
+                                                      },
+                                                    },
+                                                    "id": 1228,
+                                                    "type": "Abs",
+                                                  },
+                                                  "icit": "Explicit",
+                                                  "type": "Pi",
+                                                  "variable": "p",
+                                                },
+                                                "body": {
+                                                  "id": 1208,
+                                                  "type": "Lit",
+                                                  "value": {
+                                                    "type": "Atom",
+                                                    "value": "Type",
+                                                  },
+                                                },
+                                                "id": 1229,
+                                                "type": "Abs",
+                                              },
+                                              "type": "Closure",
+                                            },
+                                            "id": 80,
+                                            "type": "Abs",
+                                          },
+                                        ],
+                                      },
+                                    ],
+                                    "implicits": [],
+                                    "metas": {
+                                      "1": {
+                                        "ann": {
+                                          "id": 1,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "meta": {
+                                          "lvl": 3,
+                                          "type": "Meta",
+                                          "val": 1,
+                                        },
+                                      },
+                                      "2": {
+                                        "ann": {
+                                          "id": 56,
+                                          "type": "Neutral",
+                                          "value": {
+                                            "id": 55,
+                                            "type": "Var",
+                                            "variable": {
+                                              "lvl": 3,
+                                              "type": "Meta",
+                                              "val": 1,
+                                            },
+                                          },
+                                        },
+                                        "meta": {
+                                          "lvl": 3,
+                                          "type": "Meta",
+                                          "val": 2,
+                                        },
+                                      },
+                                      "3": {
+                                        "ann": {
+                                          "id": 1,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "meta": {
+                                          "lvl": 3,
+                                          "type": "Meta",
+                                          "val": 3,
+                                        },
+                                      },
+                                      "4": {
+                                        "ann": {
+                                          "id": 1,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "meta": {
+                                          "lvl": 4,
+                                          "type": "Meta",
+                                          "val": 4,
+                                        },
+                                      },
+                                      "5": {
+                                        "ann": {
+                                          "id": 62,
+                                          "type": "Neutral",
+                                          "value": {
+                                            "id": 61,
+                                            "type": "Var",
+                                            "variable": {
+                                              "lvl": 4,
+                                              "type": "Meta",
+                                              "val": 4,
+                                            },
+                                          },
+                                        },
+                                        "meta": {
+                                          "lvl": 4,
+                                          "type": "Meta",
+                                          "val": 5,
+                                        },
+                                      },
+                                      "6": {
+                                        "ann": {
+                                          "id": 1,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "meta": {
+                                          "lvl": 4,
+                                          "type": "Meta",
+                                          "val": 6,
+                                        },
+                                      },
+                                    },
+                                    "sigma": {},
+                                    "zonker": {
+                                      "2": {
+                                        "id": 41,
+                                        "type": "Var",
+                                        "variable": {
+                                          "lvl": 1,
+                                          "type": "Bound",
+                                        },
+                                      },
+                                    },
+                                  },
+                                  "term": {
+                                    "binding": {
+                                      "annotation": {
+                                        "binding": {
+                                          "annotation": {
+                                            "id": 1213,
+                                            "type": "Var",
+                                            "variable": {
+                                              "index": 0,
+                                              "type": "Bound",
+                                            },
+                                          },
+                                          "icit": "Explicit",
+                                          "type": "Pi",
+                                          "variable": "t1",
+                                        },
+                                        "body": {
+                                          "id": 1212,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "id": 1230,
+                                        "type": "Abs",
+                                      },
+                                      "icit": "Explicit",
+                                      "type": "Lambda",
+                                      "variable": "p",
+                                    },
+                                    "body": {
+                                      "binding": {
+                                        "annotation": {
+                                          "id": 1232,
+                                          "row": {
+                                            "label": "snd",
+                                            "row": {
+                                              "label": "fst",
+                                              "row": {
+                                                "type": "empty",
+                                              },
+                                              "type": "extension",
+                                              "value": {
+                                                "id": 1220,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "index": 1,
+                                                  "type": "Bound",
+                                                },
+                                              },
+                                            },
+                                            "type": "extension",
+                                            "value": {
+                                              "arg": {
+                                                "id": 1218,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "name": "fst",
+                                                  "type": "Label",
+                                                },
+                                              },
+                                              "func": {
+                                                "id": 1217,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "index": 0,
+                                                  "type": "Bound",
+                                                },
+                                              },
+                                              "icit": "Explicit",
+                                              "id": 1231,
+                                              "type": "App",
+                                            },
+                                          },
+                                          "type": "Row",
+                                        },
+                                        "type": "Sigma",
+                                        "variable": "$sig",
+                                      },
+                                      "body": {
+                                        "arg": {
+                                          "id": 1234,
+                                          "row": {
+                                            "label": "snd",
+                                            "row": {
+                                              "label": "fst",
+                                              "row": {
+                                                "type": "empty",
+                                              },
+                                              "type": "extension",
+                                              "value": {
+                                                "id": 1220,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "index": 1,
+                                                  "type": "Bound",
+                                                },
+                                              },
+                                            },
+                                            "type": "extension",
+                                            "value": {
+                                              "arg": {
+                                                "id": 1218,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "name": "fst",
+                                                  "type": "Label",
+                                                },
+                                              },
+                                              "func": {
+                                                "id": 1217,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "index": 0,
+                                                  "type": "Bound",
+                                                },
+                                              },
+                                              "icit": "Explicit",
+                                              "id": 1233,
+                                              "type": "App",
+                                            },
+                                          },
+                                          "type": "Row",
+                                        },
+                                        "func": {
+                                          "id": 1222,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Schema",
+                                          },
+                                        },
+                                        "icit": "Explicit",
+                                        "id": 1235,
+                                        "type": "App",
+                                      },
+                                      "id": 1236,
+                                      "type": "Abs",
+                                    },
+                                    "id": 1237,
+                                    "type": "Abs",
+                                  },
+                                  "type": "Closure",
+                                },
+                                "id": 97,
+                                "type": "Abs",
+                              },
+                              "type": [
+                                {
+                                  "type": "Let",
+                                  "variable": "Pair",
+                                },
+                                "source",
+                                {
+                                  "binder": {
+                                    "annotation": {
+                                      "id": 37,
+                                      "type": "Lit",
+                                      "value": {
+                                        "type": "Atom",
+                                        "value": "Type",
+                                      },
+                                    },
+                                    "icit": "Explicit",
+                                    "type": "Pi",
+                                    "variable": "a",
+                                  },
+                                  "closure": {
+                                    "ctx": {
+                                      "env": [],
+                                      "implicits": [],
+                                      "metas": {},
+                                      "sigma": {},
+                                      "zonker": {},
+                                    },
+                                    "term": {
+                                      "binding": {
+                                        "annotation": {
+                                          "binding": {
+                                            "annotation": {
+                                              "id": 1205,
+                                              "type": "Var",
+                                              "variable": {
+                                                "index": 0,
+                                                "type": "Bound",
+                                              },
+                                            },
+                                            "icit": "Explicit",
+                                            "type": "Pi",
+                                            "variable": "t1",
+                                          },
+                                          "body": {
+                                            "id": 1206,
+                                            "type": "Lit",
+                                            "value": {
+                                              "type": "Atom",
+                                              "value": "Type",
+                                            },
+                                          },
+                                          "id": 1228,
+                                          "type": "Abs",
+                                        },
+                                        "icit": "Explicit",
+                                        "type": "Pi",
+                                        "variable": "p",
+                                      },
+                                      "body": {
+                                        "id": 1208,
+                                        "type": "Lit",
+                                        "value": {
+                                          "type": "Atom",
+                                          "value": "Type",
+                                        },
+                                      },
+                                      "id": 1229,
+                                      "type": "Abs",
+                                    },
+                                    "type": "Closure",
+                                  },
+                                  "id": 80,
+                                  "type": "Abs",
+                                },
+                              ],
+                            },
+                          ],
+                          "implicits": [],
+                          "metas": {
+                            "1": {
+                              "ann": {
+                                "id": 1,
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Type",
+                                },
+                              },
+                              "meta": {
+                                "lvl": 3,
+                                "type": "Meta",
+                                "val": 1,
+                              },
+                            },
+                            "2": {
+                              "ann": {
+                                "id": 56,
+                                "type": "Neutral",
+                                "value": {
+                                  "id": 55,
+                                  "type": "Var",
+                                  "variable": {
+                                    "lvl": 3,
+                                    "type": "Meta",
+                                    "val": 1,
+                                  },
+                                },
+                              },
+                              "meta": {
+                                "lvl": 3,
+                                "type": "Meta",
+                                "val": 2,
+                              },
+                            },
+                            "3": {
+                              "ann": {
+                                "id": 1,
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Type",
+                                },
+                              },
+                              "meta": {
+                                "lvl": 3,
+                                "type": "Meta",
+                                "val": 3,
+                              },
+                            },
+                            "4": {
+                              "ann": {
+                                "id": 1,
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Type",
+                                },
+                              },
+                              "meta": {
+                                "lvl": 4,
+                                "type": "Meta",
+                                "val": 4,
+                              },
+                            },
+                            "5": {
+                              "ann": {
+                                "id": 62,
+                                "type": "Neutral",
+                                "value": {
+                                  "id": 61,
+                                  "type": "Var",
+                                  "variable": {
+                                    "lvl": 4,
+                                    "type": "Meta",
+                                    "val": 4,
+                                  },
+                                },
+                              },
+                              "meta": {
+                                "lvl": 4,
+                                "type": "Meta",
+                                "val": 5,
+                              },
+                            },
+                            "6": {
+                              "ann": {
+                                "id": 1,
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Type",
+                                },
+                              },
+                              "meta": {
+                                "lvl": 4,
+                                "type": "Meta",
+                                "val": 6,
+                              },
+                            },
+                          },
+                          "sigma": {},
+                          "zonker": {
+                            "2": {
+                              "id": 41,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 1,
+                                "type": "Bound",
+                              },
+                            },
+                          },
+                        },
+                        "term": {
+                          "id": 1243,
+                          "type": "Var",
+                          "variable": {
+                            "name": "String",
+                            "type": "Free",
+                          },
+                        },
+                        "type": "Closure",
+                      },
+                      "id": 117,
+                      "type": "Abs",
+                    },
+                    "type": [
+                      {
+                        "annotation": {
+                          "binder": {
+                            "annotation": {
+                              "id": 113,
+                              "type": "Lit",
+                              "value": {
+                                "type": "Atom",
+                                "value": "Num",
+                              },
+                            },
+                            "icit": "Explicit",
+                            "type": "Pi",
+                            "variable": "t1",
+                          },
+                          "closure": {
+                            "ctx": {
+                              "env": [
+                                {
+                                  "name": {
+                                    "annotation": {
+                                      "id": 96,
+                                      "type": "Lit",
+                                      "value": {
+                                        "type": "Atom",
+                                        "value": "Type",
+                                      },
+                                    },
+                                    "icit": "Explicit",
+                                    "type": "Lambda",
+                                    "variable": "a",
+                                  },
+                                  "nf": {
+                                    "id": 113,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Num",
+                                    },
+                                  },
+                                  "type": [
+                                    {
+                                      "annotation": {
+                                        "id": 96,
+                                        "type": "Lit",
+                                        "value": {
+                                          "type": "Atom",
+                                          "value": "Type",
+                                        },
+                                      },
+                                      "icit": "Explicit",
+                                      "type": "Lambda",
+                                      "variable": "a",
+                                    },
+                                    "source",
+                                    {},
+                                  ],
+                                },
+                                {
+                                  "name": {
+                                    "type": "Let",
+                                    "variable": "Pair",
+                                  },
+                                  "nf": {
+                                    "id": 95,
+                                    "type": "Neutral",
+                                    "value": {
+                                      "id": 94,
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 0,
+                                        "type": "Bound",
+                                      },
+                                    },
+                                  },
+                                  "type": [
+                                    {
+                                      "type": "Let",
+                                      "variable": "Pair",
+                                    },
+                                    "source",
+                                    {
+                                      "binder": {
+                                        "annotation": {
+                                          "id": 37,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "icit": "Explicit",
+                                        "type": "Pi",
+                                        "variable": "a",
+                                      },
+                                      "closure": {
+                                        "ctx": {
+                                          "env": [],
+                                          "implicits": [],
+                                          "metas": {},
+                                          "sigma": {},
+                                          "zonker": {},
+                                        },
+                                        "term": {
+                                          "binding": {
+                                            "annotation": {
+                                              "binding": {
+                                                "annotation": {
+                                                  "id": 1205,
+                                                  "type": "Var",
+                                                  "variable": {
+                                                    "index": 0,
+                                                    "type": "Bound",
+                                                  },
+                                                },
+                                                "icit": "Explicit",
+                                                "type": "Pi",
+                                                "variable": "t1",
+                                              },
+                                              "body": {
+                                                "id": 1206,
+                                                "type": "Lit",
+                                                "value": {
+                                                  "type": "Atom",
+                                                  "value": "Type",
+                                                },
+                                              },
+                                              "id": 1228,
+                                              "type": "Abs",
+                                            },
+                                            "icit": "Explicit",
+                                            "type": "Pi",
+                                            "variable": "p",
+                                          },
+                                          "body": {
+                                            "id": 1208,
+                                            "type": "Lit",
+                                            "value": {
+                                              "type": "Atom",
+                                              "value": "Type",
+                                            },
+                                          },
+                                          "id": 1229,
+                                          "type": "Abs",
+                                        },
+                                        "type": "Closure",
+                                      },
+                                      "id": 80,
+                                      "type": "Abs",
+                                    },
+                                  ],
+                                },
+                              ],
+                              "implicits": [],
+                              "metas": {
+                                "1": {
+                                  "ann": {
+                                    "id": 1,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Type",
+                                    },
+                                  },
+                                  "meta": {
+                                    "lvl": 3,
+                                    "type": "Meta",
+                                    "val": 1,
+                                  },
+                                },
+                                "2": {
+                                  "ann": {
+                                    "id": 56,
+                                    "type": "Neutral",
+                                    "value": {
+                                      "id": 55,
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 3,
+                                        "type": "Meta",
+                                        "val": 1,
+                                      },
+                                    },
+                                  },
+                                  "meta": {
+                                    "lvl": 3,
+                                    "type": "Meta",
+                                    "val": 2,
+                                  },
+                                },
+                                "3": {
+                                  "ann": {
+                                    "id": 1,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Type",
+                                    },
+                                  },
+                                  "meta": {
+                                    "lvl": 3,
+                                    "type": "Meta",
+                                    "val": 3,
+                                  },
+                                },
+                                "4": {
+                                  "ann": {
+                                    "id": 1,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Type",
+                                    },
+                                  },
+                                  "meta": {
+                                    "lvl": 4,
+                                    "type": "Meta",
+                                    "val": 4,
+                                  },
+                                },
+                                "5": {
+                                  "ann": {
+                                    "id": 62,
+                                    "type": "Neutral",
+                                    "value": {
+                                      "id": 61,
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 4,
+                                        "type": "Meta",
+                                        "val": 4,
+                                      },
+                                    },
+                                  },
+                                  "meta": {
+                                    "lvl": 4,
+                                    "type": "Meta",
+                                    "val": 5,
+                                  },
+                                },
+                                "6": {
+                                  "ann": {
+                                    "id": 1,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Type",
+                                    },
+                                  },
+                                  "meta": {
+                                    "lvl": 4,
+                                    "type": "Meta",
+                                    "val": 6,
+                                  },
+                                },
+                              },
+                              "sigma": {},
+                              "zonker": {
+                                "2": {
+                                  "id": 41,
+                                  "type": "Var",
+                                  "variable": {
+                                    "lvl": 1,
+                                    "type": "Bound",
+                                  },
+                                },
+                              },
+                            },
+                            "term": {
+                              "id": 1212,
+                              "type": "Lit",
+                              "value": {
+                                "type": "Atom",
+                                "value": "Type",
+                              },
+                            },
+                            "type": "Closure",
+                          },
+                          "id": 114,
+                          "type": "Abs",
+                        },
+                        "icit": "Explicit",
+                        "type": "Lambda",
+                        "variable": "p",
+                      },
+                      "source",
+                      {},
+                    ],
+                  },
+                  {
+                    "name": {
+                      "annotation": {
+                        "id": 96,
+                        "type": "Lit",
+                        "value": {
+                          "type": "Atom",
+                          "value": "Type",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "Lambda",
+                      "variable": "a",
+                    },
+                    "nf": {
+                      "id": 113,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Num",
+                      },
+                    },
+                    "type": [
+                      {
+                        "annotation": {
+                          "id": 96,
+                          "type": "Lit",
+                          "value": {
+                            "type": "Atom",
+                            "value": "Type",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "type": "Lambda",
+                        "variable": "a",
+                      },
+                      "source",
+                      {},
+                    ],
+                  },
+                  {
+                    "name": {
+                      "type": "Let",
+                      "variable": "Pair",
+                    },
+                    "nf": {
+                      "id": 95,
+                      "type": "Neutral",
+                      "value": {
+                        "id": 94,
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 0,
+                          "type": "Bound",
+                        },
+                      },
+                    },
+                    "type": [
+                      {
+                        "type": "Let",
+                        "variable": "Pair",
+                      },
+                      "source",
+                      {
+                        "binder": {
+                          "annotation": {
+                            "id": 37,
+                            "type": "Lit",
+                            "value": {
+                              "type": "Atom",
+                              "value": "Type",
+                            },
+                          },
+                          "icit": "Explicit",
+                          "type": "Pi",
+                          "variable": "a",
+                        },
+                        "closure": {
+                          "ctx": {
+                            "env": [],
+                            "implicits": [],
+                            "metas": {},
+                            "sigma": {},
+                            "zonker": {},
+                          },
+                          "term": {
+                            "binding": {
+                              "annotation": {
+                                "binding": {
+                                  "annotation": {
+                                    "id": 1205,
+                                    "type": "Var",
+                                    "variable": {
+                                      "index": 0,
+                                      "type": "Bound",
+                                    },
+                                  },
+                                  "icit": "Explicit",
+                                  "type": "Pi",
+                                  "variable": "t1",
+                                },
+                                "body": {
+                                  "id": 1206,
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Type",
+                                  },
+                                },
+                                "id": 1228,
+                                "type": "Abs",
+                              },
+                              "icit": "Explicit",
+                              "type": "Pi",
+                              "variable": "p",
+                            },
+                            "body": {
+                              "id": 1208,
+                              "type": "Lit",
+                              "value": {
+                                "type": "Atom",
+                                "value": "Type",
+                              },
+                            },
+                            "id": 1229,
+                            "type": "Abs",
+                          },
+                          "type": "Closure",
+                        },
+                        "id": 80,
+                        "type": "Abs",
+                      },
+                    ],
+                  },
+                ],
+                "implicits": [],
+                "metas": {
+                  "1": {
+                    "ann": {
+                      "id": 1,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 3,
+                      "type": "Meta",
+                      "val": 1,
+                    },
+                  },
+                  "2": {
+                    "ann": {
+                      "id": 56,
+                      "type": "Neutral",
+                      "value": {
+                        "id": 55,
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 3,
+                          "type": "Meta",
+                          "val": 1,
+                        },
+                      },
+                    },
+                    "meta": {
+                      "lvl": 3,
+                      "type": "Meta",
+                      "val": 2,
+                    },
+                  },
+                  "3": {
+                    "ann": {
+                      "id": 1,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 3,
+                      "type": "Meta",
+                      "val": 3,
+                    },
+                  },
+                  "4": {
+                    "ann": {
+                      "id": 1,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 4,
+                      "type": "Meta",
+                      "val": 4,
+                    },
+                  },
+                  "5": {
+                    "ann": {
+                      "id": 62,
+                      "type": "Neutral",
+                      "value": {
+                        "id": 61,
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 4,
+                          "type": "Meta",
+                          "val": 4,
+                        },
+                      },
+                    },
+                    "meta": {
+                      "lvl": 4,
+                      "type": "Meta",
+                      "val": 5,
+                    },
+                  },
+                  "6": {
+                    "ann": {
+                      "id": 1,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 4,
+                      "type": "Meta",
+                      "val": 6,
+                    },
+                  },
+                },
+                "sigma": {},
+                "zonker": {
+                  "2": {
+                    "id": 41,
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 1,
+                      "type": "Bound",
+                    },
+                  },
+                },
+              },
+              "term": {
+                "arg": {
+                  "id": 1254,
+                  "row": {
+                    "label": "snd",
+                    "row": {
+                      "label": "fst",
+                      "row": {
+                        "type": "empty",
+                      },
+                      "type": "extension",
+                      "value": {
+                        "id": 1220,
+                        "type": "Var",
+                        "variable": {
+                          "index": 1,
+                          "type": "Bound",
+                        },
+                      },
+                    },
+                    "type": "extension",
+                    "value": {
+                      "arg": {
+                        "id": 1218,
+                        "type": "Var",
+                        "variable": {
+                          "name": "fst",
+                          "type": "Label",
+                        },
+                      },
+                      "func": {
+                        "id": 1217,
+                        "type": "Var",
+                        "variable": {
+                          "index": 0,
+                          "type": "Bound",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "id": 1253,
+                      "type": "App",
+                    },
+                  },
+                  "type": "Row",
+                },
+                "func": {
+                  "id": 1222,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Schema",
+                  },
+                },
+                "icit": "Explicit",
+                "id": 1255,
+                "type": "App",
+              },
+              "type": "Closure",
+            },
+            "id": 170,
+            "type": "Abs",
+          },
+          "type": "Let",
+          "value": {
+            "arg": {
+              "id": 1256,
+              "row": {
+                "label": "fst",
+                "row": {
+                  "label": "snd",
+                  "row": {
+                    "type": "empty",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 1248,
+                    "type": "Lit",
+                    "value": {
+                      "type": "String",
+                      "value": "hello",
+                    },
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "id": 1249,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Num",
+                    "value": 1,
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "id": 1250,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Struct",
+              },
+            },
+            "icit": "Explicit",
+            "id": 1257,
+            "type": "App",
+          },
+          "variable": "p",
+        },
+      ],
+      "type": "Block",
+    },
+    "type": {
+      "id": 120,
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "String",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`Projection from Sigma types > projects from parametric dependent pair 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "?2 ~~ L1",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      ""hello" ~~ ?11",
+      "String ~~ ?12",
+      "1 ~~ ?8",
+      "Num ~~ ?9",
+      "Schema [ snd: String, fst: Num ] ~~ Schema [ fst: Num, snd: String ]",
+      "0 <= ω",
+      "0 <= ω",
+    ],
+    "term": "{
+	let Pair
+	: Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
+	= λa -> λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
+	let p
+	: Σ($sig: [ snd: String, fst: Num ]) . (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p = λn -> (closure: String -| Γ: n; Pair = λa -> (closure: λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ] -| Γ: a; Pair = Pair)); a = Num; Pair = Pair)
+	= Struct [ fst: 1, snd: "hello" ];
+	return (p).snd;
+	}",
+    "type": "String",
+  },
+}
+`;
+
+exports[`Projection from Sigma types > projects from parametric dependent pair 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "id": 26,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 27,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 32,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 36,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 58,
+          "type": "Neutral",
+          "value": {
+            "id": 57,
+            "type": "Var",
+            "variable": {
+              "lvl": 3,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "lvl": 3,
+        "right": {
+          "id": 42,
+          "type": "Neutral",
+          "value": {
+            "id": 41,
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Bound",
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 67,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 3,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 37,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 3,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 37,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 105,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 110,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 138,
+          "type": "Lit",
+          "value": {
+            "type": "String",
+            "value": "hello",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 134,
+          "type": "Neutral",
+          "value": {
+            "id": 133,
+            "type": "Var",
+            "variable": {
+              "lvl": 3,
+              "type": "Meta",
+              "val": 11,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 137,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 136,
+          "type": "Neutral",
+          "value": {
+            "id": 135,
+            "type": "Var",
+            "variable": {
+              "lvl": 3,
+              "type": "Meta",
+              "val": 12,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 140,
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 128,
+          "type": "Neutral",
+          "value": {
+            "id": 127,
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 8,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "id": 139,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "id": 130,
+          "type": "Neutral",
+          "value": {
+            "id": 129,
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 9,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "arg": {
+            "id": 156,
+            "row": {
+              "label": "snd",
+              "row": {
+                "label": "fst",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "id": 113,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "extension",
+              "value": {
+                "id": 155,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "String",
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "id": 157,
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "id": 158,
+          "type": "App",
+        },
+        "lvl": 2,
+        "right": {
+          "id": 144,
+          "type": "Neutral",
+          "value": {
+            "arg": {
+              "id": 142,
+              "row": {
+                "label": "fst",
+                "row": {
+                  "label": "snd",
+                  "row": {
+                    "type": "empty",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 137,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "String",
+                    },
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "id": 139,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "id": 141,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Schema",
+              },
+            },
+            "icit": "Explicit",
+            "id": 143,
+            "type": "App",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "computed": "Zero",
+        "expected": "Many",
+        "type": "usage",
+      },
+      {
+        "computed": "Zero",
+        "expected": "Many",
+        "type": "usage",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 3,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "10": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 3,
+          "type": "Meta",
+          "val": 10,
+        },
+      },
+      "11": {
+        "ann": {
+          "id": 132,
+          "type": "Neutral",
+          "value": {
+            "id": 131,
+            "type": "Var",
+            "variable": {
+              "lvl": 3,
+              "type": "Meta",
+              "val": 10,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 3,
+          "type": "Meta",
+          "val": 11,
+        },
+      },
+      "12": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 3,
+          "type": "Meta",
+          "val": 12,
+        },
+      },
+      "2": {
+        "ann": {
+          "id": 56,
+          "type": "Neutral",
+          "value": {
+            "id": 55,
+            "type": "Var",
+            "variable": {
+              "lvl": 3,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 3,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 3,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 4,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "id": 62,
+          "type": "Neutral",
+          "value": {
+            "id": 61,
+            "type": "Var",
+            "variable": {
+              "lvl": 4,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 4,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 4,
+          "type": "Meta",
+          "val": 6,
+        },
+      },
+      "7": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 7,
+        },
+      },
+      "8": {
+        "ann": {
+          "id": 126,
+          "type": "Neutral",
+          "value": {
+            "id": 125,
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 7,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 8,
+        },
+      },
+      "9": {
+        "ann": {
+          "id": 1,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 9,
+        },
+      },
+    },
+    "term": {
+      "id": 1260,
+      "return": {
+        "id": 1259,
+        "label": "snd",
+        "term": {
+          "id": 1258,
+          "type": "Var",
+          "variable": {
+            "index": 0,
+            "type": "Bound",
+          },
+        },
+        "type": "Proj",
+      },
+      "statements": [
+        {
+          "annotation": {
+            "binder": {
+              "annotation": {
+                "id": 37,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Type",
+                },
+              },
+              "icit": "Explicit",
+              "type": "Pi",
+              "variable": "a",
+            },
+            "closure": {
+              "ctx": {
+                "env": [],
+                "implicits": [],
+                "metas": {},
+                "sigma": {},
+                "zonker": {},
+              },
+              "term": {
+                "binding": {
+                  "annotation": {
+                    "binding": {
+                      "annotation": {
+                        "id": 1205,
+                        "type": "Var",
+                        "variable": {
+                          "index": 0,
+                          "type": "Bound",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "Pi",
+                      "variable": "t1",
+                    },
+                    "body": {
+                      "id": 1206,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "id": 1228,
+                    "type": "Abs",
+                  },
+                  "icit": "Explicit",
+                  "type": "Pi",
+                  "variable": "p",
+                },
+                "body": {
+                  "id": 1208,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Type",
+                  },
+                },
+                "id": 1229,
+                "type": "Abs",
+              },
+              "type": "Closure",
+            },
+            "id": 80,
+            "type": "Abs",
+          },
+          "type": "Let",
+          "value": {
+            "binding": {
+              "annotation": {
+                "id": 1211,
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Type",
+                },
+              },
+              "icit": "Explicit",
+              "type": "Lambda",
+              "variable": "a",
+            },
+            "body": {
+              "binding": {
+                "annotation": {
+                  "binding": {
+                    "annotation": {
+                      "id": 1213,
+                      "type": "Var",
+                      "variable": {
+                        "index": 0,
+                        "type": "Bound",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "Pi",
+                    "variable": "t1",
+                  },
+                  "body": {
+                    "id": 1212,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "Type",
+                    },
+                  },
+                  "id": 1230,
+                  "type": "Abs",
+                },
+                "icit": "Explicit",
+                "type": "Lambda",
+                "variable": "p",
+              },
+              "body": {
+                "binding": {
+                  "annotation": {
+                    "id": 1232,
+                    "row": {
+                      "label": "snd",
+                      "row": {
+                        "label": "fst",
+                        "row": {
+                          "type": "empty",
+                        },
+                        "type": "extension",
+                        "value": {
+                          "id": 1220,
+                          "type": "Var",
+                          "variable": {
+                            "index": 1,
+                            "type": "Bound",
+                          },
+                        },
+                      },
+                      "type": "extension",
+                      "value": {
+                        "arg": {
+                          "id": 1218,
+                          "type": "Var",
+                          "variable": {
+                            "name": "fst",
+                            "type": "Label",
+                          },
+                        },
+                        "func": {
+                          "id": 1217,
+                          "type": "Var",
+                          "variable": {
+                            "index": 0,
+                            "type": "Bound",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "id": 1231,
+                        "type": "App",
+                      },
+                    },
+                    "type": "Row",
+                  },
+                  "type": "Sigma",
+                  "variable": "$sig",
+                },
+                "body": {
+                  "arg": {
+                    "id": 1234,
+                    "row": {
+                      "label": "snd",
+                      "row": {
+                        "label": "fst",
+                        "row": {
+                          "type": "empty",
+                        },
+                        "type": "extension",
+                        "value": {
+                          "id": 1220,
+                          "type": "Var",
+                          "variable": {
+                            "index": 1,
+                            "type": "Bound",
+                          },
+                        },
+                      },
+                      "type": "extension",
+                      "value": {
+                        "arg": {
+                          "id": 1218,
+                          "type": "Var",
+                          "variable": {
+                            "name": "fst",
+                            "type": "Label",
+                          },
+                        },
+                        "func": {
+                          "id": 1217,
+                          "type": "Var",
+                          "variable": {
+                            "index": 0,
+                            "type": "Bound",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "id": 1233,
+                        "type": "App",
+                      },
+                    },
+                    "type": "Row",
+                  },
+                  "func": {
+                    "id": 1222,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "Schema",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "id": 1235,
+                  "type": "App",
+                },
+                "id": 1236,
+                "type": "Abs",
+              },
+              "id": 1237,
+              "type": "Abs",
+            },
+            "id": 1238,
+            "type": "Abs",
+          },
+          "variable": "Pair",
+        },
+        {
+          "annotation": {
+            "binder": {
+              "annotation": {
+                "id": 167,
+                "row": {
+                  "label": "snd",
+                  "row": {
+                    "label": "fst",
+                    "row": {
+                      "type": "empty",
+                    },
+                    "type": "extension",
+                    "value": {
+                      "id": 113,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Num",
+                      },
+                    },
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 120,
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "String",
+                    },
+                  },
+                },
+                "type": "Row",
+              },
+              "type": "Sigma",
+              "variable": "$sig",
+            },
+            "closure": {
+              "ctx": {
+                "env": [
+                  {
+                    "name": {
+                      "annotation": {
+                        "binder": {
+                          "annotation": {
+                            "id": 113,
+                            "type": "Lit",
+                            "value": {
+                              "type": "Atom",
+                              "value": "Num",
+                            },
+                          },
+                          "icit": "Explicit",
+                          "type": "Pi",
+                          "variable": "t1",
+                        },
+                        "closure": {
+                          "ctx": {
+                            "env": [
+                              {
+                                "name": {
+                                  "annotation": {
+                                    "id": 96,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Type",
+                                    },
+                                  },
+                                  "icit": "Explicit",
+                                  "type": "Lambda",
+                                  "variable": "a",
+                                },
+                                "nf": {
+                                  "id": 113,
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Num",
+                                  },
+                                },
+                                "type": [
+                                  {
+                                    "annotation": {
+                                      "id": 96,
+                                      "type": "Lit",
+                                      "value": {
+                                        "type": "Atom",
+                                        "value": "Type",
+                                      },
+                                    },
+                                    "icit": "Explicit",
+                                    "type": "Lambda",
+                                    "variable": "a",
+                                  },
+                                  "source",
+                                  {},
+                                ],
+                              },
+                              {
+                                "name": {
+                                  "type": "Let",
+                                  "variable": "Pair",
+                                },
+                                "nf": {
+                                  "id": 95,
+                                  "type": "Neutral",
+                                  "value": {
+                                    "id": 94,
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 0,
+                                      "type": "Bound",
+                                    },
+                                  },
+                                },
+                                "type": [
+                                  {
+                                    "type": "Let",
+                                    "variable": "Pair",
+                                  },
+                                  "source",
+                                  {
+                                    "binder": {
+                                      "annotation": {
+                                        "id": 37,
+                                        "type": "Lit",
+                                        "value": {
+                                          "type": "Atom",
+                                          "value": "Type",
+                                        },
+                                      },
+                                      "icit": "Explicit",
+                                      "type": "Pi",
+                                      "variable": "a",
+                                    },
+                                    "closure": {
+                                      "ctx": {
+                                        "env": [],
+                                        "implicits": [],
+                                        "metas": {},
+                                        "sigma": {},
+                                        "zonker": {},
+                                      },
+                                      "term": {
+                                        "binding": {
+                                          "annotation": {
+                                            "binding": {
+                                              "annotation": {
+                                                "id": 1205,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "index": 0,
+                                                  "type": "Bound",
+                                                },
+                                              },
+                                              "icit": "Explicit",
+                                              "type": "Pi",
+                                              "variable": "t1",
+                                            },
+                                            "body": {
+                                              "id": 1206,
+                                              "type": "Lit",
+                                              "value": {
+                                                "type": "Atom",
+                                                "value": "Type",
+                                              },
+                                            },
+                                            "id": 1228,
+                                            "type": "Abs",
+                                          },
+                                          "icit": "Explicit",
+                                          "type": "Pi",
+                                          "variable": "p",
+                                        },
+                                        "body": {
+                                          "id": 1208,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "id": 1229,
+                                        "type": "Abs",
+                                      },
+                                      "type": "Closure",
+                                    },
+                                    "id": 80,
+                                    "type": "Abs",
+                                  },
+                                ],
+                              },
+                            ],
+                            "implicits": [],
+                            "metas": {
+                              "1": {
+                                "ann": {
+                                  "id": 1,
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Type",
+                                  },
+                                },
+                                "meta": {
+                                  "lvl": 3,
+                                  "type": "Meta",
+                                  "val": 1,
+                                },
+                              },
+                              "2": {
+                                "ann": {
+                                  "id": 56,
+                                  "type": "Neutral",
+                                  "value": {
+                                    "id": 55,
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 3,
+                                      "type": "Meta",
+                                      "val": 1,
+                                    },
+                                  },
+                                },
+                                "meta": {
+                                  "lvl": 3,
+                                  "type": "Meta",
+                                  "val": 2,
+                                },
+                              },
+                              "3": {
+                                "ann": {
+                                  "id": 1,
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Type",
+                                  },
+                                },
+                                "meta": {
+                                  "lvl": 3,
+                                  "type": "Meta",
+                                  "val": 3,
+                                },
+                              },
+                              "4": {
+                                "ann": {
+                                  "id": 1,
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Type",
+                                  },
+                                },
+                                "meta": {
+                                  "lvl": 4,
+                                  "type": "Meta",
+                                  "val": 4,
+                                },
+                              },
+                              "5": {
+                                "ann": {
+                                  "id": 62,
+                                  "type": "Neutral",
+                                  "value": {
+                                    "id": 61,
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 4,
+                                      "type": "Meta",
+                                      "val": 4,
+                                    },
+                                  },
+                                },
+                                "meta": {
+                                  "lvl": 4,
+                                  "type": "Meta",
+                                  "val": 5,
+                                },
+                              },
+                              "6": {
+                                "ann": {
+                                  "id": 1,
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Type",
+                                  },
+                                },
+                                "meta": {
+                                  "lvl": 4,
+                                  "type": "Meta",
+                                  "val": 6,
+                                },
+                              },
+                            },
+                            "sigma": {},
+                            "zonker": {
+                              "2": {
+                                "id": 41,
+                                "type": "Var",
+                                "variable": {
+                                  "lvl": 1,
+                                  "type": "Bound",
+                                },
+                              },
+                            },
+                          },
+                          "term": {
+                            "id": 1212,
+                            "type": "Lit",
+                            "value": {
+                              "type": "Atom",
+                              "value": "Type",
+                            },
+                          },
+                          "type": "Closure",
+                        },
+                        "id": 114,
+                        "type": "Abs",
+                      },
+                      "icit": "Explicit",
+                      "type": "Lambda",
+                      "variable": "p",
+                    },
+                    "nf": {
+                      "binder": {
+                        "annotation": {
+                          "id": 116,
+                          "type": "Lit",
+                          "value": {
+                            "type": "Atom",
+                            "value": "Num",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "type": "Lambda",
+                        "variable": "n",
+                      },
+                      "closure": {
+                        "ctx": {
+                          "env": [
+                            {
+                              "name": {
+                                "type": "Let",
+                                "variable": "Pair",
+                              },
+                              "nf": {
+                                "binder": {
+                                  "annotation": {
+                                    "id": 96,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Type",
+                                    },
+                                  },
+                                  "icit": "Explicit",
+                                  "type": "Lambda",
+                                  "variable": "a",
+                                },
+                                "closure": {
+                                  "ctx": {
+                                    "env": [
+                                      {
+                                        "name": {
+                                          "type": "Let",
+                                          "variable": "Pair",
+                                        },
+                                        "nf": {
+                                          "id": 95,
+                                          "type": "Neutral",
+                                          "value": {
+                                            "id": 94,
+                                            "type": "Var",
+                                            "variable": {
+                                              "lvl": 0,
+                                              "type": "Bound",
+                                            },
+                                          },
+                                        },
+                                        "type": [
+                                          {
+                                            "type": "Let",
+                                            "variable": "Pair",
+                                          },
+                                          "source",
+                                          {
+                                            "binder": {
+                                              "annotation": {
+                                                "id": 37,
+                                                "type": "Lit",
+                                                "value": {
+                                                  "type": "Atom",
+                                                  "value": "Type",
+                                                },
+                                              },
+                                              "icit": "Explicit",
+                                              "type": "Pi",
+                                              "variable": "a",
+                                            },
+                                            "closure": {
+                                              "ctx": {
+                                                "env": [],
+                                                "implicits": [],
+                                                "metas": {},
+                                                "sigma": {},
+                                                "zonker": {},
+                                              },
+                                              "term": {
+                                                "binding": {
+                                                  "annotation": {
+                                                    "binding": {
+                                                      "annotation": {
+                                                        "id": 1205,
+                                                        "type": "Var",
+                                                        "variable": {
+                                                          "index": 0,
+                                                          "type": "Bound",
+                                                        },
+                                                      },
+                                                      "icit": "Explicit",
+                                                      "type": "Pi",
+                                                      "variable": "t1",
+                                                    },
+                                                    "body": {
+                                                      "id": 1206,
+                                                      "type": "Lit",
+                                                      "value": {
+                                                        "type": "Atom",
+                                                        "value": "Type",
+                                                      },
+                                                    },
+                                                    "id": 1228,
+                                                    "type": "Abs",
+                                                  },
+                                                  "icit": "Explicit",
+                                                  "type": "Pi",
+                                                  "variable": "p",
+                                                },
+                                                "body": {
+                                                  "id": 1208,
+                                                  "type": "Lit",
+                                                  "value": {
+                                                    "type": "Atom",
+                                                    "value": "Type",
+                                                  },
+                                                },
+                                                "id": 1229,
+                                                "type": "Abs",
+                                              },
+                                              "type": "Closure",
+                                            },
+                                            "id": 80,
+                                            "type": "Abs",
+                                          },
+                                        ],
+                                      },
+                                    ],
+                                    "implicits": [],
+                                    "metas": {
+                                      "1": {
+                                        "ann": {
+                                          "id": 1,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "meta": {
+                                          "lvl": 3,
+                                          "type": "Meta",
+                                          "val": 1,
+                                        },
+                                      },
+                                      "2": {
+                                        "ann": {
+                                          "id": 56,
+                                          "type": "Neutral",
+                                          "value": {
+                                            "id": 55,
+                                            "type": "Var",
+                                            "variable": {
+                                              "lvl": 3,
+                                              "type": "Meta",
+                                              "val": 1,
+                                            },
+                                          },
+                                        },
+                                        "meta": {
+                                          "lvl": 3,
+                                          "type": "Meta",
+                                          "val": 2,
+                                        },
+                                      },
+                                      "3": {
+                                        "ann": {
+                                          "id": 1,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "meta": {
+                                          "lvl": 3,
+                                          "type": "Meta",
+                                          "val": 3,
+                                        },
+                                      },
+                                      "4": {
+                                        "ann": {
+                                          "id": 1,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "meta": {
+                                          "lvl": 4,
+                                          "type": "Meta",
+                                          "val": 4,
+                                        },
+                                      },
+                                      "5": {
+                                        "ann": {
+                                          "id": 62,
+                                          "type": "Neutral",
+                                          "value": {
+                                            "id": 61,
+                                            "type": "Var",
+                                            "variable": {
+                                              "lvl": 4,
+                                              "type": "Meta",
+                                              "val": 4,
+                                            },
+                                          },
+                                        },
+                                        "meta": {
+                                          "lvl": 4,
+                                          "type": "Meta",
+                                          "val": 5,
+                                        },
+                                      },
+                                      "6": {
+                                        "ann": {
+                                          "id": 1,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "meta": {
+                                          "lvl": 4,
+                                          "type": "Meta",
+                                          "val": 6,
+                                        },
+                                      },
+                                    },
+                                    "sigma": {},
+                                    "zonker": {
+                                      "2": {
+                                        "id": 41,
+                                        "type": "Var",
+                                        "variable": {
+                                          "lvl": 1,
+                                          "type": "Bound",
+                                        },
+                                      },
+                                    },
+                                  },
+                                  "term": {
+                                    "binding": {
+                                      "annotation": {
+                                        "binding": {
+                                          "annotation": {
+                                            "id": 1213,
+                                            "type": "Var",
+                                            "variable": {
+                                              "index": 0,
+                                              "type": "Bound",
+                                            },
+                                          },
+                                          "icit": "Explicit",
+                                          "type": "Pi",
+                                          "variable": "t1",
+                                        },
+                                        "body": {
+                                          "id": 1212,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "id": 1230,
+                                        "type": "Abs",
+                                      },
+                                      "icit": "Explicit",
+                                      "type": "Lambda",
+                                      "variable": "p",
+                                    },
+                                    "body": {
+                                      "binding": {
+                                        "annotation": {
+                                          "id": 1232,
+                                          "row": {
+                                            "label": "snd",
+                                            "row": {
+                                              "label": "fst",
+                                              "row": {
+                                                "type": "empty",
+                                              },
+                                              "type": "extension",
+                                              "value": {
+                                                "id": 1220,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "index": 1,
+                                                  "type": "Bound",
+                                                },
+                                              },
+                                            },
+                                            "type": "extension",
+                                            "value": {
+                                              "arg": {
+                                                "id": 1218,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "name": "fst",
+                                                  "type": "Label",
+                                                },
+                                              },
+                                              "func": {
+                                                "id": 1217,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "index": 0,
+                                                  "type": "Bound",
+                                                },
+                                              },
+                                              "icit": "Explicit",
+                                              "id": 1231,
+                                              "type": "App",
+                                            },
+                                          },
+                                          "type": "Row",
+                                        },
+                                        "type": "Sigma",
+                                        "variable": "$sig",
+                                      },
+                                      "body": {
+                                        "arg": {
+                                          "id": 1234,
+                                          "row": {
+                                            "label": "snd",
+                                            "row": {
+                                              "label": "fst",
+                                              "row": {
+                                                "type": "empty",
+                                              },
+                                              "type": "extension",
+                                              "value": {
+                                                "id": 1220,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "index": 1,
+                                                  "type": "Bound",
+                                                },
+                                              },
+                                            },
+                                            "type": "extension",
+                                            "value": {
+                                              "arg": {
+                                                "id": 1218,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "name": "fst",
+                                                  "type": "Label",
+                                                },
+                                              },
+                                              "func": {
+                                                "id": 1217,
+                                                "type": "Var",
+                                                "variable": {
+                                                  "index": 0,
+                                                  "type": "Bound",
+                                                },
+                                              },
+                                              "icit": "Explicit",
+                                              "id": 1233,
+                                              "type": "App",
+                                            },
+                                          },
+                                          "type": "Row",
+                                        },
+                                        "func": {
+                                          "id": 1222,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Schema",
+                                          },
+                                        },
+                                        "icit": "Explicit",
+                                        "id": 1235,
+                                        "type": "App",
+                                      },
+                                      "id": 1236,
+                                      "type": "Abs",
+                                    },
+                                    "id": 1237,
+                                    "type": "Abs",
+                                  },
+                                  "type": "Closure",
+                                },
+                                "id": 97,
+                                "type": "Abs",
+                              },
+                              "type": [
+                                {
+                                  "type": "Let",
+                                  "variable": "Pair",
+                                },
+                                "source",
+                                {
+                                  "binder": {
+                                    "annotation": {
+                                      "id": 37,
+                                      "type": "Lit",
+                                      "value": {
+                                        "type": "Atom",
+                                        "value": "Type",
+                                      },
+                                    },
+                                    "icit": "Explicit",
+                                    "type": "Pi",
+                                    "variable": "a",
+                                  },
+                                  "closure": {
+                                    "ctx": {
+                                      "env": [],
+                                      "implicits": [],
+                                      "metas": {},
+                                      "sigma": {},
+                                      "zonker": {},
+                                    },
+                                    "term": {
+                                      "binding": {
+                                        "annotation": {
+                                          "binding": {
+                                            "annotation": {
+                                              "id": 1205,
+                                              "type": "Var",
+                                              "variable": {
+                                                "index": 0,
+                                                "type": "Bound",
+                                              },
+                                            },
+                                            "icit": "Explicit",
+                                            "type": "Pi",
+                                            "variable": "t1",
+                                          },
+                                          "body": {
+                                            "id": 1206,
+                                            "type": "Lit",
+                                            "value": {
+                                              "type": "Atom",
+                                              "value": "Type",
+                                            },
+                                          },
+                                          "id": 1228,
+                                          "type": "Abs",
+                                        },
+                                        "icit": "Explicit",
+                                        "type": "Pi",
+                                        "variable": "p",
+                                      },
+                                      "body": {
+                                        "id": 1208,
+                                        "type": "Lit",
+                                        "value": {
+                                          "type": "Atom",
+                                          "value": "Type",
+                                        },
+                                      },
+                                      "id": 1229,
+                                      "type": "Abs",
+                                    },
+                                    "type": "Closure",
+                                  },
+                                  "id": 80,
+                                  "type": "Abs",
+                                },
+                              ],
+                            },
+                          ],
+                          "implicits": [],
+                          "metas": {
+                            "1": {
+                              "ann": {
+                                "id": 1,
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Type",
+                                },
+                              },
+                              "meta": {
+                                "lvl": 3,
+                                "type": "Meta",
+                                "val": 1,
+                              },
+                            },
+                            "2": {
+                              "ann": {
+                                "id": 56,
+                                "type": "Neutral",
+                                "value": {
+                                  "id": 55,
+                                  "type": "Var",
+                                  "variable": {
+                                    "lvl": 3,
+                                    "type": "Meta",
+                                    "val": 1,
+                                  },
+                                },
+                              },
+                              "meta": {
+                                "lvl": 3,
+                                "type": "Meta",
+                                "val": 2,
+                              },
+                            },
+                            "3": {
+                              "ann": {
+                                "id": 1,
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Type",
+                                },
+                              },
+                              "meta": {
+                                "lvl": 3,
+                                "type": "Meta",
+                                "val": 3,
+                              },
+                            },
+                            "4": {
+                              "ann": {
+                                "id": 1,
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Type",
+                                },
+                              },
+                              "meta": {
+                                "lvl": 4,
+                                "type": "Meta",
+                                "val": 4,
+                              },
+                            },
+                            "5": {
+                              "ann": {
+                                "id": 62,
+                                "type": "Neutral",
+                                "value": {
+                                  "id": 61,
+                                  "type": "Var",
+                                  "variable": {
+                                    "lvl": 4,
+                                    "type": "Meta",
+                                    "val": 4,
+                                  },
+                                },
+                              },
+                              "meta": {
+                                "lvl": 4,
+                                "type": "Meta",
+                                "val": 5,
+                              },
+                            },
+                            "6": {
+                              "ann": {
+                                "id": 1,
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Type",
+                                },
+                              },
+                              "meta": {
+                                "lvl": 4,
+                                "type": "Meta",
+                                "val": 6,
+                              },
+                            },
+                          },
+                          "sigma": {},
+                          "zonker": {
+                            "2": {
+                              "id": 41,
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 1,
+                                "type": "Bound",
+                              },
+                            },
+                          },
+                        },
+                        "term": {
+                          "id": 1243,
+                          "type": "Var",
+                          "variable": {
+                            "name": "String",
+                            "type": "Free",
+                          },
+                        },
+                        "type": "Closure",
+                      },
+                      "id": 117,
+                      "type": "Abs",
+                    },
+                    "type": [
+                      {
+                        "annotation": {
+                          "binder": {
+                            "annotation": {
+                              "id": 113,
+                              "type": "Lit",
+                              "value": {
+                                "type": "Atom",
+                                "value": "Num",
+                              },
+                            },
+                            "icit": "Explicit",
+                            "type": "Pi",
+                            "variable": "t1",
+                          },
+                          "closure": {
+                            "ctx": {
+                              "env": [
+                                {
+                                  "name": {
+                                    "annotation": {
+                                      "id": 96,
+                                      "type": "Lit",
+                                      "value": {
+                                        "type": "Atom",
+                                        "value": "Type",
+                                      },
+                                    },
+                                    "icit": "Explicit",
+                                    "type": "Lambda",
+                                    "variable": "a",
+                                  },
+                                  "nf": {
+                                    "id": 113,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Num",
+                                    },
+                                  },
+                                  "type": [
+                                    {
+                                      "annotation": {
+                                        "id": 96,
+                                        "type": "Lit",
+                                        "value": {
+                                          "type": "Atom",
+                                          "value": "Type",
+                                        },
+                                      },
+                                      "icit": "Explicit",
+                                      "type": "Lambda",
+                                      "variable": "a",
+                                    },
+                                    "source",
+                                    {},
+                                  ],
+                                },
+                                {
+                                  "name": {
+                                    "type": "Let",
+                                    "variable": "Pair",
+                                  },
+                                  "nf": {
+                                    "id": 95,
+                                    "type": "Neutral",
+                                    "value": {
+                                      "id": 94,
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 0,
+                                        "type": "Bound",
+                                      },
+                                    },
+                                  },
+                                  "type": [
+                                    {
+                                      "type": "Let",
+                                      "variable": "Pair",
+                                    },
+                                    "source",
+                                    {
+                                      "binder": {
+                                        "annotation": {
+                                          "id": 37,
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Type",
+                                          },
+                                        },
+                                        "icit": "Explicit",
+                                        "type": "Pi",
+                                        "variable": "a",
+                                      },
+                                      "closure": {
+                                        "ctx": {
+                                          "env": [],
+                                          "implicits": [],
+                                          "metas": {},
+                                          "sigma": {},
+                                          "zonker": {},
+                                        },
+                                        "term": {
+                                          "binding": {
+                                            "annotation": {
+                                              "binding": {
+                                                "annotation": {
+                                                  "id": 1205,
+                                                  "type": "Var",
+                                                  "variable": {
+                                                    "index": 0,
+                                                    "type": "Bound",
+                                                  },
+                                                },
+                                                "icit": "Explicit",
+                                                "type": "Pi",
+                                                "variable": "t1",
+                                              },
+                                              "body": {
+                                                "id": 1206,
+                                                "type": "Lit",
+                                                "value": {
+                                                  "type": "Atom",
+                                                  "value": "Type",
+                                                },
+                                              },
+                                              "id": 1228,
+                                              "type": "Abs",
+                                            },
+                                            "icit": "Explicit",
+                                            "type": "Pi",
+                                            "variable": "p",
+                                          },
+                                          "body": {
+                                            "id": 1208,
+                                            "type": "Lit",
+                                            "value": {
+                                              "type": "Atom",
+                                              "value": "Type",
+                                            },
+                                          },
+                                          "id": 1229,
+                                          "type": "Abs",
+                                        },
+                                        "type": "Closure",
+                                      },
+                                      "id": 80,
+                                      "type": "Abs",
+                                    },
+                                  ],
+                                },
+                              ],
+                              "implicits": [],
+                              "metas": {
+                                "1": {
+                                  "ann": {
+                                    "id": 1,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Type",
+                                    },
+                                  },
+                                  "meta": {
+                                    "lvl": 3,
+                                    "type": "Meta",
+                                    "val": 1,
+                                  },
+                                },
+                                "2": {
+                                  "ann": {
+                                    "id": 56,
+                                    "type": "Neutral",
+                                    "value": {
+                                      "id": 55,
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 3,
+                                        "type": "Meta",
+                                        "val": 1,
+                                      },
+                                    },
+                                  },
+                                  "meta": {
+                                    "lvl": 3,
+                                    "type": "Meta",
+                                    "val": 2,
+                                  },
+                                },
+                                "3": {
+                                  "ann": {
+                                    "id": 1,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Type",
+                                    },
+                                  },
+                                  "meta": {
+                                    "lvl": 3,
+                                    "type": "Meta",
+                                    "val": 3,
+                                  },
+                                },
+                                "4": {
+                                  "ann": {
+                                    "id": 1,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Type",
+                                    },
+                                  },
+                                  "meta": {
+                                    "lvl": 4,
+                                    "type": "Meta",
+                                    "val": 4,
+                                  },
+                                },
+                                "5": {
+                                  "ann": {
+                                    "id": 62,
+                                    "type": "Neutral",
+                                    "value": {
+                                      "id": 61,
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 4,
+                                        "type": "Meta",
+                                        "val": 4,
+                                      },
+                                    },
+                                  },
+                                  "meta": {
+                                    "lvl": 4,
+                                    "type": "Meta",
+                                    "val": 5,
+                                  },
+                                },
+                                "6": {
+                                  "ann": {
+                                    "id": 1,
+                                    "type": "Lit",
+                                    "value": {
+                                      "type": "Atom",
+                                      "value": "Type",
+                                    },
+                                  },
+                                  "meta": {
+                                    "lvl": 4,
+                                    "type": "Meta",
+                                    "val": 6,
+                                  },
+                                },
+                              },
+                              "sigma": {},
+                              "zonker": {
+                                "2": {
+                                  "id": 41,
+                                  "type": "Var",
+                                  "variable": {
+                                    "lvl": 1,
+                                    "type": "Bound",
+                                  },
+                                },
+                              },
+                            },
+                            "term": {
+                              "id": 1212,
+                              "type": "Lit",
+                              "value": {
+                                "type": "Atom",
+                                "value": "Type",
+                              },
+                            },
+                            "type": "Closure",
+                          },
+                          "id": 114,
+                          "type": "Abs",
+                        },
+                        "icit": "Explicit",
+                        "type": "Lambda",
+                        "variable": "p",
+                      },
+                      "source",
+                      {},
+                    ],
+                  },
+                  {
+                    "name": {
+                      "annotation": {
+                        "id": 96,
+                        "type": "Lit",
+                        "value": {
+                          "type": "Atom",
+                          "value": "Type",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "Lambda",
+                      "variable": "a",
+                    },
+                    "nf": {
+                      "id": 113,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Num",
+                      },
+                    },
+                    "type": [
+                      {
+                        "annotation": {
+                          "id": 96,
+                          "type": "Lit",
+                          "value": {
+                            "type": "Atom",
+                            "value": "Type",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "type": "Lambda",
+                        "variable": "a",
+                      },
+                      "source",
+                      {},
+                    ],
+                  },
+                  {
+                    "name": {
+                      "type": "Let",
+                      "variable": "Pair",
+                    },
+                    "nf": {
+                      "id": 95,
+                      "type": "Neutral",
+                      "value": {
+                        "id": 94,
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 0,
+                          "type": "Bound",
+                        },
+                      },
+                    },
+                    "type": [
+                      {
+                        "type": "Let",
+                        "variable": "Pair",
+                      },
+                      "source",
+                      {
+                        "binder": {
+                          "annotation": {
+                            "id": 37,
+                            "type": "Lit",
+                            "value": {
+                              "type": "Atom",
+                              "value": "Type",
+                            },
+                          },
+                          "icit": "Explicit",
+                          "type": "Pi",
+                          "variable": "a",
+                        },
+                        "closure": {
+                          "ctx": {
+                            "env": [],
+                            "implicits": [],
+                            "metas": {},
+                            "sigma": {},
+                            "zonker": {},
+                          },
+                          "term": {
+                            "binding": {
+                              "annotation": {
+                                "binding": {
+                                  "annotation": {
+                                    "id": 1205,
+                                    "type": "Var",
+                                    "variable": {
+                                      "index": 0,
+                                      "type": "Bound",
+                                    },
+                                  },
+                                  "icit": "Explicit",
+                                  "type": "Pi",
+                                  "variable": "t1",
+                                },
+                                "body": {
+                                  "id": 1206,
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Type",
+                                  },
+                                },
+                                "id": 1228,
+                                "type": "Abs",
+                              },
+                              "icit": "Explicit",
+                              "type": "Pi",
+                              "variable": "p",
+                            },
+                            "body": {
+                              "id": 1208,
+                              "type": "Lit",
+                              "value": {
+                                "type": "Atom",
+                                "value": "Type",
+                              },
+                            },
+                            "id": 1229,
+                            "type": "Abs",
+                          },
+                          "type": "Closure",
+                        },
+                        "id": 80,
+                        "type": "Abs",
+                      },
+                    ],
+                  },
+                ],
+                "implicits": [],
+                "metas": {
+                  "1": {
+                    "ann": {
+                      "id": 1,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 3,
+                      "type": "Meta",
+                      "val": 1,
+                    },
+                  },
+                  "2": {
+                    "ann": {
+                      "id": 56,
+                      "type": "Neutral",
+                      "value": {
+                        "id": 55,
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 3,
+                          "type": "Meta",
+                          "val": 1,
+                        },
+                      },
+                    },
+                    "meta": {
+                      "lvl": 3,
+                      "type": "Meta",
+                      "val": 2,
+                    },
+                  },
+                  "3": {
+                    "ann": {
+                      "id": 1,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 3,
+                      "type": "Meta",
+                      "val": 3,
+                    },
+                  },
+                  "4": {
+                    "ann": {
+                      "id": 1,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 4,
+                      "type": "Meta",
+                      "val": 4,
+                    },
+                  },
+                  "5": {
+                    "ann": {
+                      "id": 62,
+                      "type": "Neutral",
+                      "value": {
+                        "id": 61,
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 4,
+                          "type": "Meta",
+                          "val": 4,
+                        },
+                      },
+                    },
+                    "meta": {
+                      "lvl": 4,
+                      "type": "Meta",
+                      "val": 5,
+                    },
+                  },
+                  "6": {
+                    "ann": {
+                      "id": 1,
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 4,
+                      "type": "Meta",
+                      "val": 6,
+                    },
+                  },
+                },
+                "sigma": {},
+                "zonker": {
+                  "2": {
+                    "id": 41,
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 1,
+                      "type": "Bound",
+                    },
+                  },
+                },
+              },
+              "term": {
+                "arg": {
+                  "id": 1254,
+                  "row": {
+                    "label": "snd",
+                    "row": {
+                      "label": "fst",
+                      "row": {
+                        "type": "empty",
+                      },
+                      "type": "extension",
+                      "value": {
+                        "id": 1220,
+                        "type": "Var",
+                        "variable": {
+                          "index": 1,
+                          "type": "Bound",
+                        },
+                      },
+                    },
+                    "type": "extension",
+                    "value": {
+                      "arg": {
+                        "id": 1218,
+                        "type": "Var",
+                        "variable": {
+                          "name": "fst",
+                          "type": "Label",
+                        },
+                      },
+                      "func": {
+                        "id": 1217,
+                        "type": "Var",
+                        "variable": {
+                          "index": 0,
+                          "type": "Bound",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "id": 1253,
+                      "type": "App",
+                    },
+                  },
+                  "type": "Row",
+                },
+                "func": {
+                  "id": 1222,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Schema",
+                  },
+                },
+                "icit": "Explicit",
+                "id": 1255,
+                "type": "App",
+              },
+              "type": "Closure",
+            },
+            "id": 170,
+            "type": "Abs",
+          },
+          "type": "Let",
+          "value": {
+            "arg": {
+              "id": 1256,
+              "row": {
+                "label": "fst",
+                "row": {
+                  "label": "snd",
+                  "row": {
+                    "type": "empty",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "id": 1248,
+                    "type": "Lit",
+                    "value": {
+                      "type": "String",
+                      "value": "hello",
+                    },
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "id": 1249,
+                  "type": "Lit",
+                  "value": {
+                    "type": "Num",
+                    "value": 1,
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "id": 1250,
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Struct",
+              },
+            },
+            "icit": "Explicit",
+            "id": 1257,
+            "type": "App",
+          },
+          "variable": "p",
+        },
+      ],
+      "type": "Block",
+    },
+    "type": {
+      "id": 120,
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "String",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;

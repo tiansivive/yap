@@ -28,17 +28,19 @@
 	  	arrow: /->/,
 		backarrow: /<-/,
 		fatArrow: /\=>/,
-		op: /[\+\-\*\/\<\>]|(?:==)|(?:!=)|(?:<=)|(?:>=)|(?:\|>)|(?:<\|)/,
-		equals: /\=(?!>)/,
+		star: /\*/,
 		concat: /<>/,
+		langle: /</,
+		rangle: />/,
+		not: /!/,
+		op: /[\+\-\/]|(?:==)|(?:!=)|(?:<=)|(?:>=)|(?:\|>)|(?:<\|)/,
+		equals: /\=(?!>)/,
 		ldoublebracket: /\[\|/,
 		rdoublebracket: /\|\]/,
 		lparens: /\(/,
 		rparens: /\)/,
 		lbrace: /\{/,
 		rbrace: /\}/,
-		langle: /</,
-		rangle: />/,
 		lbracket: /\[/,
 		rbracket: /\]/,
 		semicolon: /\;/,
@@ -109,11 +111,13 @@ Type -> Mu 				{% id %}
 Expr -> Lambda		{% id %}
   	  | Match 		{% id %}
   	  | Block 		{% id %}
-	  | App 		{% id %}
+	  | Op 			{% id %}
 
-App -> App %space Atom 								{% P.Application %}
-	 | App %space:? (%op | %concat) %space:? Atom 	{% P.Operation %}
-     | Atom 										{% id %}
+Op -> Op %space:? (%op | %concat | %rangle | %langle | %star ) %space:? Atom 	{% P.Operation %}
+	| App 																		{% id %}
+
+App -> App %space Atom 															{% P.Application %}
+     | Atom 																	{% id %}
 
 Atom -> Identifier 		{% P.Var %} 
 	  | %hole 			{% P.Hole %}
@@ -232,7 +236,7 @@ Pattern -> PatAtom 								{% id %}
 PatAtom -> Identifier 									{% P.Pattern.Var %}
 		 | Literal 										{% P.Pattern.Lit %}
 		 | (PatTagged %space %bar %space):* PatTagged 	{% P.Pattern.Variant %}
-		 | Empty[ %lbrace, %rbrace ] 						{% P.Pattern.Empty.Struct %}
+		 | Empty[ %lbrace, %rbrace ] 					{% P.Pattern.Empty.Struct %}
 		 | Curly[ Many[PatAtom, %comma] RowTail:? ] 	{% P.Pattern.Tuple %}
 		 | Curly[ Many[PatKeyVal, %comma] RowTail:? ] 	{% P.Pattern.Struct %}
 		 | Empty[%lbracket, %rbracket] 					{% P.Pattern.Empty.List %}
@@ -256,7 +260,7 @@ Literal
 	 | Bool   {% P.Bool %}
 	 | "Type" {% P.Type %}
 	 | "Unit" {% P.Unit("type") %}
-	 | "*" 	  {% P.Unit("value") %}
+	 | "!"  {% P.Unit("value") %}
 	 | "Row"  {% P.LitRow %}
 	  
 Number 

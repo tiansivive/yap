@@ -19,6 +19,17 @@ describe("Dependent Records", () => {
 			expect({ displays: res.displays }).toMatchSnapshot();
 			expect({ structure: res.structure }).toMatchSnapshot();
 		});
+
+		it("Dependent pair type refers to field's value, not the type", () => {
+			const src = `{
+				let Pair: Type = { fst: Num, snd: :fst };
+				let p: Pair = { fst: 1, snd: 5 };
+				return p;
+			}`;
+
+			expect(() => elaborateFrom(src)).toThrow(/Cannot unify 1 with Num/);
+		});
+
 		it("Pair: dependent pair with type dependent on first component", () => {
 			const src = `{
 				let Pair

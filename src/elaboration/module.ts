@@ -24,6 +24,7 @@ import { match } from "ts-pattern";
 import { Bool, init, Model } from "z3-solver";
 import { getZ3Context } from "@yap/shared/config/options";
 import { PPretty } from "./pretty";
+import { toMap } from "fp-ts/lib/ReadonlyMap";
 
 export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 	const maybeExport = (name: string) => (result: Omit<Interface, "imports">) => {
@@ -118,10 +119,10 @@ export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.C
 export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context]>] => {
 	const inference = V2.Do(function* () {
 		const [elaborated, ty, us] = yield* EB.Stmt.infer.gen(stmt);
-		console.log("\n------------------ LETDEC --------------------------------");
+		// console.log("\n------------------ LETDEC --------------------------------");
 		const [r, next] = yield* EB.Stmt.letdec(elaborated as Extract<EB.Statement, { type: "Let" }>);
 		//const [r, next] = yield* V2.liftE(result)
-		console.log("Elaborated:\n", EB.Display.Statement(r, next));
+		// console.log("Elaborated:\n", EB.Display.Statement(r, next));
 		// const { constraints, metas } = yield* V2.listen();
 		// const subst = yield* V2.local(
 		// 	update("metas", ms => ({ ...ms, ...metas })),
@@ -280,25 +281,28 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 	const inference = V2.Do(function* () {
 		const [elaborated, ty, us] = yield* EB.infer.gen(stmt.value);
 		const { constraints, metas } = yield* V2.listen();
-		const subst = yield* V2.local(
-			update("metas", ms => ({ ...ms, ...metas })),
-			solve(constraints),
-		);
+		const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
+		const subst = yield* V2.local(_ => withMetas, EB.solve(constraints));
+		const zonked = update(withMetas, "zonker", z => Sub.compose(subst, z));
+		// const subst = yield* V2.local(
+		// 	update("metas", ms => ({ ...ms, ...metas })),
+		// 	solve(constraints),
+		// );
 
-		console.log("Substitution:\n", Sub.display(subst, metas));
-		const zonked = F.pipe(
-			ctx,
-			update("metas", prev => ({ ...prev, ...metas })),
-			set("zonker", Sub.compose(subst, ctx.zonker)),
-		);
-		const [generalized, zonker] = NF.generalize(ty, zonked);
+		// // console.log("Substitution:\n", Sub.display(subst, metas));
+		// const zonked = F.pipe(
+		// 	ctx,
+		// 	update("metas", prev => ({ ...prev, ...metas })),
+		// 	set("zonker", Sub.compose(subst, ctx.zonker)),
+		// );
+		const [generalized, zonker] = NF.generalize(NF.force(zonked, ty), zonked);
 		const next = update(zonked, "zonker", z => ({ ...z, ...zonker }));
 		const instantiated = NF.instantiate(generalized, next);
 
 		const wrapped = F.pipe(
-			EB.Icit.instantiate(elaborated, next),
-			inst => EB.Icit.generalize(inst, next),
-			tm => EB.Icit.wrapLambda(tm, ty, next),
+			EB.Icit.wrapLambda(elaborated, instantiated, next),
+			tm => EB.Icit.instantiate(tm, next),
+			// inst => EB.Icit.generalize(inst, next),
 		);
 
 		// init().then(z3 => {

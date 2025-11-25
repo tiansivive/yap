@@ -40,7 +40,7 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
       },
       {
         "left": {
-          "id": 36,
+          "id": 38,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -226,7 +226,7 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
         },
         "type": "Closure",
       },
-      "id": 37,
+      "id": 39,
       "type": "Abs",
     },
     "typedTerms": {},
@@ -254,7 +254,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
     "constraints": [
       {
         "left": {
-          "id": 36,
+          "id": 38,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -314,11 +314,11 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
         },
         "lvl": 1,
         "right": {
-          "id": 40,
+          "id": 42,
           "type": "Neutral",
           "value": {
             "arg": {
-              "id": 38,
+              "id": 40,
               "row": {
                 "type": "variable",
                 "variable": {
@@ -330,7 +330,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
               "type": "Row",
             },
             "func": {
-              "id": 37,
+              "id": 39,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -338,7 +338,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
               },
             },
             "icit": "Explicit",
-            "id": 39,
+            "id": 41,
             "type": "App",
           },
         },
@@ -547,7 +547,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
         },
         "type": "Closure",
       },
-      "id": 45,
+      "id": 47,
       "type": "Abs",
     },
     "typedTerms": {},
@@ -576,7 +576,7 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
     "constraints": [
       {
         "left": {
-          "id": 38,
+          "id": 40,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -626,7 +626,7 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       },
       {
         "left": {
-          "id": 39,
+          "id": 43,
           "type": "Lit",
           "value": {
             "type": "Atom",

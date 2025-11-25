@@ -49,6 +49,13 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 			const ann = NF.quote(ctx, lvl, annotation);
 			return EB.Constructors.Mu(variable, source, ann, body);
 		})
+		.with({ type: "Abs", binder: { type: "Sigma" } }, ({ binder, closure }) => {
+			const { variable, annotation } = binder;
+			const val = NF.apply(binder, closure, binder.annotation);
+			const body = quote(ctx, lvl + 1, val);
+			const ann = NF.quote(ctx, lvl, annotation);
+			return EB.Constructors.Sigma(variable, ann, body);
+		})
 		.with({ type: "Row" }, ({ row }) => {
 			const _quote = (r: NF.Row): EB.Row =>
 				match(r)

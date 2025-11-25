@@ -49,7 +49,9 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 				throw new Error("Unbound free variable: " + variable.name);
 			}
 
-			return evaluate(ctx, val[0], bindings, fuel);
+			const xtended = EB.bind(ctx, { type: "Let", variable: variable.name }, val[1]);
+			return evaluate(xtended, val[0], bindings, fuel);
+			// return evaluate(ctx, val[0], bindings, fuel);
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
 			if (!ctx.zonker[variable.val]) {

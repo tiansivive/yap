@@ -283,7 +283,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
         },
         "lvl": 2,
         "right": {
-          "id": 103,
+          "id": 105,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -294,7 +294,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       },
       {
         "left": {
-          "id": 108,
+          "id": 110,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -314,7 +314,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       },
       {
         "left": {
-          "id": 132,
+          "id": 138,
           "type": "Lit",
           "value": {
             "type": "String",
@@ -323,10 +323,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
         },
         "lvl": 2,
         "right": {
-          "id": 128,
+          "id": 134,
           "type": "Neutral",
           "value": {
-            "id": 127,
+            "id": 133,
             "type": "Var",
             "variable": {
               "lvl": 3,
@@ -339,7 +339,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       },
       {
         "left": {
-          "id": 131,
+          "id": 137,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -348,10 +348,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
         },
         "lvl": 2,
         "right": {
-          "id": 130,
+          "id": 136,
           "type": "Neutral",
           "value": {
-            "id": 129,
+            "id": 135,
             "type": "Var",
             "variable": {
               "lvl": 3,
@@ -364,7 +364,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       },
       {
         "left": {
-          "id": 134,
+          "id": 140,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -373,10 +373,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
         },
         "lvl": 2,
         "right": {
-          "id": 122,
+          "id": 128,
           "type": "Neutral",
           "value": {
-            "id": 121,
+            "id": 127,
             "type": "Var",
             "variable": {
               "lvl": 2,
@@ -389,7 +389,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       },
       {
         "left": {
-          "id": 133,
+          "id": 139,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -398,10 +398,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
         },
         "lvl": 2,
         "right": {
-          "id": 124,
+          "id": 130,
           "type": "Neutral",
           "value": {
-            "id": 123,
+            "id": 129,
             "type": "Var",
             "variable": {
               "lvl": 2,
@@ -415,7 +415,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       {
         "left": {
           "arg": {
-            "id": 148,
+            "id": 156,
             "row": {
               "label": "snd",
               "row": {
@@ -425,7 +425,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                 },
                 "type": "extension",
                 "value": {
-                  "id": 109,
+                  "id": 113,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -435,7 +435,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
               },
               "type": "extension",
               "value": {
-                "id": 147,
+                "id": 155,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -446,7 +446,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
             "type": "Row",
           },
           "func": {
-            "id": 149,
+            "id": 157,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -454,16 +454,16 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
             },
           },
           "icit": "Explicit",
-          "id": 150,
+          "id": 158,
           "type": "App",
         },
         "lvl": 2,
         "right": {
-          "id": 138,
+          "id": 144,
           "type": "Neutral",
           "value": {
             "arg": {
-              "id": 136,
+              "id": 142,
               "row": {
                 "label": "fst",
                 "row": {
@@ -473,7 +473,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                   },
                   "type": "extension",
                   "value": {
-                    "id": 131,
+                    "id": 137,
                     "type": "Lit",
                     "value": {
                       "type": "Atom",
@@ -483,7 +483,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                 },
                 "type": "extension",
                 "value": {
-                  "id": 133,
+                  "id": 139,
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
@@ -494,7 +494,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
               "type": "Row",
             },
             "func": {
-              "id": 135,
+              "id": 141,
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -502,7 +502,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
               },
             },
             "icit": "Explicit",
-            "id": 137,
+            "id": 143,
             "type": "App",
           },
         },
@@ -552,10 +552,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       },
       "11": {
         "ann": {
-          "id": 126,
+          "id": 132,
           "type": "Neutral",
           "value": {
-            "id": 125,
+            "id": 131,
             "type": "Var",
             "variable": {
               "lvl": 3,
@@ -687,10 +687,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       },
       "8": {
         "ann": {
-          "id": 120,
+          "id": 126,
           "type": "Neutral",
           "value": {
-            "id": 119,
+            "id": 125,
             "type": "Var",
             "variable": {
               "lvl": 2,
@@ -968,7 +968,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           "annotation": {
             "binder": {
               "annotation": {
-                "id": 159,
+                "id": 167,
                 "row": {
                   "label": "snd",
                   "row": {
@@ -978,7 +978,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                     },
                     "type": "extension",
                     "value": {
-                      "id": 109,
+                      "id": 113,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -988,7 +988,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                   },
                   "type": "extension",
                   "value": {
-                    "id": 114,
+                    "id": 120,
                     "type": "Lit",
                     "value": {
                       "type": "Atom",
@@ -1009,7 +1009,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                       "annotation": {
                         "binder": {
                           "annotation": {
-                            "id": 109,
+                            "id": 113,
                             "type": "Lit",
                             "value": {
                               "type": "Atom",
@@ -1038,7 +1038,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                   "variable": "a",
                                 },
                                 "nf": {
-                                  "id": 109,
+                                  "id": 113,
                                   "type": "Lit",
                                   "value": {
                                     "type": "Atom",
@@ -1283,7 +1283,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                           },
                           "type": "Closure",
                         },
-                        "id": 110,
+                        "id": 114,
                         "type": "Abs",
                       },
                       "icit": "Explicit",
@@ -1293,7 +1293,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                     "nf": {
                       "binder": {
                         "annotation": {
-                          "id": 112,
+                          "id": 116,
                           "type": "Lit",
                           "value": {
                             "type": "Atom",
@@ -1890,7 +1890,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                         },
                         "type": "Closure",
                       },
-                      "id": 113,
+                      "id": 117,
                       "type": "Abs",
                     },
                     "type": [
@@ -1898,7 +1898,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                         "annotation": {
                           "binder": {
                             "annotation": {
-                              "id": 109,
+                              "id": 113,
                               "type": "Lit",
                               "value": {
                                 "type": "Atom",
@@ -1927,7 +1927,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                     "variable": "a",
                                   },
                                   "nf": {
-                                    "id": 109,
+                                    "id": 113,
                                     "type": "Lit",
                                     "value": {
                                       "type": "Atom",
@@ -2172,7 +2172,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                             },
                             "type": "Closure",
                           },
-                          "id": 110,
+                          "id": 114,
                           "type": "Abs",
                         },
                         "icit": "Explicit",
@@ -2198,7 +2198,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                       "variable": "a",
                     },
                     "nf": {
-                      "id": 109,
+                      "id": 113,
                       "type": "Lit",
                       "value": {
                         "type": "Atom",
@@ -2492,7 +2492,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
               },
               "type": "Closure",
             },
-            "id": 162,
+            "id": 170,
             "type": "Abs",
           },
           "type": "Let",
@@ -2546,7 +2546,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       "type": "Block",
     },
     "type": {
-      "id": 173,
+      "id": 181,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -3471,7 +3471,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Simple 
       "type": "Block",
     },
     "type": {
-      "id": 58,
+      "id": 66,
       "type": "Lit",
       "value": {
         "type": "Atom",
@@ -3762,10 +3762,10 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
       },
       {
         "left": {
-          "id": 72,
+          "id": 74,
           "type": "Neutral",
           "value": {
-            "id": 71,
+            "id": 73,
             "type": "Var",
             "variable": {
               "lvl": 4,
@@ -3819,7 +3819,7 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
       },
       {
         "left": {
-          "id": 89,
+          "id": 93,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -3828,7 +3828,7 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
         },
         "lvl": 5,
         "right": {
-          "id": 85,
+          "id": 87,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -3881,10 +3881,10 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
       },
       "2": {
         "ann": {
-          "id": 70,
+          "id": 72,
           "type": "Neutral",
           "value": {
-            "id": 69,
+            "id": 71,
             "type": "Var",
             "variable": {
               "lvl": 4,
@@ -3931,10 +3931,10 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
       },
       "5": {
         "ann": {
-          "id": 76,
+          "id": 78,
           "type": "Neutral",
           "value": {
-            "id": 75,
+            "id": 77,
             "type": "Var",
             "variable": {
               "lvl": 5,
@@ -4076,7 +4076,7 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
               },
               "type": "Closure",
             },
-            "id": 107,
+            "id": 111,
             "type": "Abs",
           },
           "type": "Let",
@@ -4370,7 +4370,7 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
       "type": "Block",
     },
     "type": {
-      "id": 130,
+      "id": 134,
       "type": "Lit",
       "value": {
         "type": "Atom",

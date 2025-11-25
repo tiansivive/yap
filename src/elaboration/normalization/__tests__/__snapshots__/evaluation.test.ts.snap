@@ -52,7 +52,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
       },
       {
         "left": {
-          "id": 50,
+          "id": 52,
           "type": "Neutral",
           "value": {
             "args": [
@@ -70,7 +70,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
                 },
               },
               {
-                "id": 48,
+                "id": 50,
                 "type": "Lit",
                 "value": {
                   "type": "Num",
@@ -80,7 +80,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
             ],
             "arity": 2,
             "compute": [Function],
-            "id": 49,
+            "id": 51,
             "name": "$add",
             "type": "External",
           },
@@ -128,7 +128,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
       },
       {
         "left": {
-          "id": 52,
+          "id": 54,
           "type": "Lit",
           "value": {
             "type": "Num",
@@ -153,7 +153,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
       },
       {
         "left": {
-          "id": 51,
+          "id": 53,
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -179,7 +179,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
       {
         "left": {
           "arg": {
-            "id": 57,
+            "id": 59,
             "row": {
               "label": "x",
               "row": {
@@ -199,7 +199,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
               },
               "type": "extension",
               "value": {
-                "id": 51,
+                "id": 53,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -210,7 +210,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
             "type": "Row",
           },
           "func": {
-            "id": 53,
+            "id": 55,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -218,13 +218,13 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
             },
           },
           "icit": "Explicit",
-          "id": 58,
+          "id": 60,
           "type": "App",
         },
         "lvl": 0,
         "right": {
           "arg": {
-            "id": 54,
+            "id": 56,
             "row": {
               "label": "x",
               "row": {
@@ -244,7 +244,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
               },
               "type": "extension",
               "value": {
-                "id": 51,
+                "id": 53,
                 "type": "Lit",
                 "value": {
                   "type": "Atom",
@@ -255,7 +255,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
             "type": "Row",
           },
           "func": {
-            "id": 53,
+            "id": 55,
             "type": "Lit",
             "value": {
               "type": "Atom",
@@ -263,7 +263,7 @@ exports[`Normalization: evaluation / reduce / matching > evaluates dependent rec
             },
           },
           "icit": "Explicit",
-          "id": 55,
+          "id": 57,
           "type": "App",
         },
         "type": "assign",

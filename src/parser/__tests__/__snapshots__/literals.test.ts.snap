@@ -50,7 +50,7 @@ exports[`parser: literals > string: "hello" 1`] = `
 }
 `;
 
-exports[`parser: literals > unit: * 1`] = `
+exports[`parser: literals > unit: ! 1`] = `
 {
   "type": "lit",
   "value": {

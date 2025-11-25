@@ -144,7 +144,7 @@ exports[`Inference: Literals > Type: Type >=> Type 2`] = `
 }
 `;
 
-exports[`Inference: Literals > Unit: * >=> Unit 1`] = `
+exports[`Inference: Literals > Unit: ! >=> Unit 1`] = `
 {
   "displays": {
     "constraints": [],
@@ -154,7 +154,7 @@ exports[`Inference: Literals > Unit: * >=> Unit 1`] = `
 }
 `;
 
-exports[`Inference: Literals > Unit: * >=> Unit 2`] = `
+exports[`Inference: Literals > Unit: ! >=> Unit 2`] = `
 {
   "structure": {
     "constraints": [],

@@ -79,6 +79,11 @@ program
 				return rl.close();
 			}
 
+			if ([":show_js"].includes(input.trim())) {
+				options.showJS = !options.showJS;
+				return rl.prompt();
+			}
+
 			if ([":nf", ":normalize"].includes(input.split(" ")[0])) {
 				const [_, ...rest] = input.split(" ");
 				ctx = interpret(rest.join(" "), ctx, { nf: true });

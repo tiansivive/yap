@@ -34,8 +34,8 @@ describe("parser: literals", () => {
 		expect(data.results[0]).toMatchSnapshot();
 	});
 
-	it("unit: *", () => {
-		const data = parser.feed("*");
+	it("unit: !", () => {
+		const data = parser.feed("!");
 		expect(data.results.length).toBe(1);
 		expect(data.results[0]).toMatchSnapshot();
 	});

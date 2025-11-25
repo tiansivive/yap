@@ -452,7 +452,7 @@ describe("VerificationService", () => {
 
 			let ol
 				: List Num (\\x -> \\y -> x < y )
-				= #cons { head: 1, tail: #cons { head: 2, tail: #nil * } };
+				= #cons { head: 1, tail: #cons { head: 2, tail: #nil ! } };
 
 			return 1;	
 		}`;
@@ -480,7 +480,7 @@ describe("VerificationService", () => {
 
 			let ol
 				: List Num (\\x -> \\y -> x < y )
-				= #cons { head: 2, tail: #cons { head: 1, tail: #nil * } };
+				= #cons { head: 2, tail: #cons { head: 1, tail: #nil ! } };
 
 			return 1;	
 		}`;

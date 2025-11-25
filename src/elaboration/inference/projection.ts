@@ -84,6 +84,45 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 					return v;
 				}),
 			)
+			.with(NF.Patterns.Sigma, ({ binder, closure }) =>
+				V2.Do(function* () {
+					// Sigma types have the form: Σ(r: Row). Body(r)
+					// The binder annotation is a Row type
+					// We look up the label in the binder's row annotation
+
+					if (binder.annotation.type !== "Row") {
+						throw new Error("Sigma binder annotation must be a Row");
+					}
+
+					// Look up the label in the binder's row annotation
+					const from = (l: string, row: NF.Row): V2.Elaboration<NF.Value> =>
+						match(row)
+							.with({ type: "empty" }, _ => V2.Do(() => V2.fail<NF.Value>({ type: "MissingLabel", label: l, row })))
+							.with(
+								{ type: "extension" },
+								({ label: l_ }) => l === l_,
+								({ value }) => V2.of<NF.Value>(value),
+							)
+							.with({ type: "extension" }, r => from(l, r.row))
+							.with({ type: "variable" }, r =>
+								V2.Do(function* () {
+									const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+									const val = NF.evaluate(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind)));
+									const newRow = NF.Constructors.Extension(l, val, r);
+									yield* V2.tell("constraint", {
+										type: "assign",
+										left: NF.Constructors.Row(newRow),
+										right: NF.Constructors.Row(row),
+										lvl: ctx.env.length,
+									});
+									return val;
+								}),
+							)
+							.exhaustive();
+
+					return yield* V2.pure(from(label, binder.annotation.row));
+				}),
+			)
 			.otherwise(_ => {
 				throw new Error("Expected Row Type");
 			});

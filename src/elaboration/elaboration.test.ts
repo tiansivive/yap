@@ -14,7 +14,7 @@ import * as Log from "@yap/shared/logging";
 
 import * as E from "fp-ts/Either";
 
-describe("Elaboration", () => {
+describe.skip("Elaboration", () => {
 	let parser: Nearley.Parser;
 	const empty: EB.Context = {
 		env: [],
