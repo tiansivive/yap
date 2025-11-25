@@ -25,7 +25,7 @@ import { entries, set } from "@yap/utils";
 import * as Err from "./shared/errors";
 import { Liquid } from "@yap/verification/modalities";
 import * as Lit from "@yap/shared/literals";
-import { assert } from "vitest";
+import assert from "node:assert";
 
 type Result = [EB.Term, Q.Usages];
 export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, Q.Usages]> =>
