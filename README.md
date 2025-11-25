@@ -26,21 +26,26 @@ There's no grand vision here — just a bunch of features I like, without the st
 
 It’s still early days, so expect **broken things, missing features, a nonsensical mess and half-baked ideas**. But hey, it already supports:
 
-- **Structural typing** - so you don’t have to fight a nominal type system for no reason
-  - Dependent functions, Dependent Records, Variants, Recursive types (Ouroborous style!)
-- **Type inference** - Momma always told me I had a short attention span
+- **Type system goodies**
+  - **Structural typing** - so you don’t have to fight a nominal type system for no reason
+    - Dependent functions, Dependent Records, Variants, Recursive types
+  - **Refinement types** - because Naturals, Ranges, non-empty lists and such exist even if we pretend they don't
+  - **Type inference** - Momma always told me I had a short attention span
 - **Implicits** - so you don’t have to pass a million arguments manually
 - **Module System** - because you have a file system
 - **Customizable data structures** - want to swap out how records/tuples work? Go for it, I don't care
-- **JS codegen** - sue me
+- **Evaluator** - It does things like `1 + 2` and `(\x -> x + 1) 2`
+- **JS codegen** - sue me (also, it's broken)
+
+Check out the Examples folder to get a more in depth overview of what is currently available.
 
 ## Philosophy (Or Lack Thereof)
 
-`Yap` isn’t trying to revolutionize programming. It just does things in a way that **makes sense to me**:
+`Yap` isn’t trying to revolutionize programming. It will just do things in a way that **makes sense to me**:
 
 - **Minimal core** – Small enough that even I can remember how it works.
 - **Sugar, spice and everything nice** - This isn't an academic toy; it should actually be **nice to use**.
-- **Turing complete types** - They're first-class, but I solemnly swear you can nuke the bastards at runtime.
+- **Turing complete types** - I solemnly swear you can nuke the bastards at runtime.
 - **No platform assumptions** – The compiler should let you generate whatever garbage output you want. No judging.
 - **You’re in control** – Defaults exist, but if you don’t like them, override them. No gatekeeping.
 - **Multi paradigm** - let the flame wars begin
@@ -48,41 +53,58 @@ It’s still early days, so expect **broken things, missing features, a nonsensi
 `Yap` will never ship a runtime.  
 It doesn’t assume anything about memory layouts or platforms. You should (eventually) be able to compile this mess to JavaScript, Erlang, Lua, C, Assembly, Brainf\*ck (you demented sicko) or whatever else strokes your ego, without fighting the compiler. `Yap` will provide the required API to soothe your sweet soul, but _you_ will implement it, not `Yap`. Leave _me_ out of it.
 
-Why? Because backends are hard. _Really_ hard. And I'm dumb, _really_ dumb.
+Why? Because backend platforms are hard. _Really_ hard. And I'm dumb, _really_ dumb.
 There's heaps of incredible runtime platforms out in the wild, and hordes of people who actually enjoy dealing with platform-specific stuff — and they’re way better at it than I ever could be. So be free! I'll make sure to deal with those nasty fundamental concepts like mutation and references at the type level, and leave it all nice and pretty with sugar on top.
 How you map that to your platform? That’s on you. You’re welcome.
 I’ll be over here, having an existential crisis about types.
+
+### Note of importance
+
+No runtime does not mean no code generation!  
+A `JS` codegen for proving compilation semantics and techniques is being developed, and `C` codegen will follow once more features become available.
+This means I'm spending an ungodly amount of time ironing out the kinks of what I'd like the (typing) semantics to be, so they're general/flexible/abstract enough to then translate to whatever platform floats your boat.
 
 ## The Plan (A.K.A. The Roadmap)
 
 `Yap` is a work in progress (read: broken, just like my last relationship), so here's a list of things that still need to be done:
 
-### 📝 Syntax
+### Currently in the works
 
-- Auto implicit expansion (because it's obvious)
-- Infix function application (less parens = better)
+- Resource usage semantics
+  - For those pesky mutations, references and IO handles
+
+### Syntax goodies
+
 - Variadic arguments, multiple arguments, named arguments... (Yes, I like arguing)
+- Infix function application (less parens = better)
 - Better syntax sugar for common patterns (shorthand matches, destructuring, backcalls, etc.)
 - `where` clauses (because who likes deep nesting?)
-- Data traversal (telescopes, SQL-like goodies, pipes)
+- Data traversal (nested updates, SQL-like goodies, pipes)
 
-### 🔥 Features
+### Core Features
 
-- Type modalities (mutability, effects, ownership, etc., without hardcoding magic into the compiler)
-  - If this sounds like wishful thinking, well... it is! but I'm still gonna fail at it, because YOLO.
-- Singleton types for `String` and `Num` (so the compiler actually knows what `1` is)
 - Reflection (for runtime type-driven pattern matching)
+- Delimited continuations
+  - shift/reset primitives
+  - Effect system on top
+- Lowered IR
+  - For annoying things like type erasure, monomorphization, FBIP optimizations, customizable data types, fusion, etc
 
 ### 🛠️ Tooling (This Is Important!)
 
 - **Syntax highlighting** (so we can pretend it's a real language)
 - **LSP support** (because writing a language without an LSP in 2025 is just rude)
 - **A debugger** (because I am dumb)
-- **A REPL** (because I want one, and debugging without one sucks)
+- **A REPL** (technically it exists...)
 
 ### Things That Keep Me Up at Night
 
 - **To Any or not to Any** – Do I really want to introduce the TypeScript plague into my pristine little ecosystem?
+  - A gradual type system is a `Yay!` in my book, but also a can of worms
+- **Effects** - Simultaneously the bane of all devs, but also the thing that keeps the world running
+  - How to best allow for ergonomic effects?
+  - I should be able to log stuff without having to change a bazillion files
+  - Exclusive effects? As in: allow all effects except for `X`.
 
 ### Things I’m Embarrassed About
 
@@ -105,10 +127,14 @@ Improvements are coming, but for now, just squint and pretend everything is fine
 But if you're curious, check out the code, mess around with it, and maybe even contribute if you're brave.
 
 1. Clone the repo
-2. Build the compiler
-   - You know the drill: `npm install`, `npm link`, `npm run stuff`, sacrifice a goat, etc.
-3. Write some broken code
-4. Complain
+2. Install `pnpm`
+3. Build the compiler
+   - You know the drill: `pnpm install`, `pnpm run yap`, sacrifice a goat, etc.
+4. Write some broken code
+   - Pray it works
+5. Complain
+
+Refer to `How to` file to see a list of available commands
 
 ## Contributing
 
@@ -133,7 +159,6 @@ I don't know `OCaml`.
 I fall asleep writing `Go`
 
 I like building broken code, I like being able to debug, I like iterating, and I work with `TS` every day these days.
-Sue me.
 
 ## Is this even possible?
 
