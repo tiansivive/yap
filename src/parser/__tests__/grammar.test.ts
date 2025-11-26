@@ -186,7 +186,7 @@ describe("Grammar", () => {
 				expect(expr.arg).toMatchObject({ type: "var", variable: x });
 			});
 
-			it.skip("should parse implicit applications:\tf @x", () => {
+			it("should parse implicit applications:\tf @x", () => {
 				const application = `f @x`;
 				const data = parser.feed(application);
 

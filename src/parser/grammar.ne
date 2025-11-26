@@ -47,6 +47,7 @@
 		colon: /\:/,
 		comma: /\,/,
 		bar: /\|/,
+		at: /@/,
 		hash: /#/,
 		hole: /_/,
 		space: { match: /[ \n\t]+/, lineBreaks: true },
@@ -116,7 +117,8 @@ Expr -> Lambda		{% id %}
 Op -> Op %space:? (%op | %concat | %rangle | %langle | %star ) %space:? Atom 	{% P.Operation %}
 	| App 																		{% id %}
 
-App -> App %space Atom 															{% P.Application %}
+App -> App %space Atom 															{% P.Application("Explicit") %}
+	 | App %space %at Atom 														{% P.Application("Implicit") %}
      | Atom 																	{% id %}
 
 Atom -> Identifier 		{% P.Var %} 

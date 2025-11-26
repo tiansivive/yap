@@ -112,19 +112,30 @@ export const Var: PostProcessor<[Variable], Term> = ([v]) => ({ type: "var", var
 /***********************************************************
  * Application processors
  ***********************************************************/
-const App = (fn: Term, arg: Term): Term => ({
+const App = (fn: Term, arg: Term, icit: Implicitness): Term => ({
 	type: "application",
 	fn,
 	arg,
-	icit: "Explicit",
+	icit,
 	location: span(fn, arg),
 });
-export const Application: PostProcessor<[Term, Whitespace, Term], Term> = ([fn, , arg]) => App(fn, arg);
+
+type ExplicitApp = [Term, Whitespace, Term];
+type ImplicitApp = [Term, Whitespace, Token, Term];
+type Application<T> = T extends "Explicit" ? ExplicitApp : ImplicitApp;
+export const Application: (icit: Implicitness) => PostProcessor<Application<typeof icit>, Term> = icit => (args: Application<typeof icit>) => {
+	if (icit === "Explicit") {
+		const [fn, , arg] = args as ExplicitApp;
+		return App(fn, arg, icit);
+	}
+	const [fn, , , arg] = args as ImplicitApp;
+	return App(fn, arg, icit);
+};
 
 export const Operation: PostProcessor<[Term, Whitespace, [Token], Whitespace, Term], Term> = data => {
 	const [lhs, , [op], , rhs] = data;
 	const op_ = Var([Name([op])]);
-	return App(App(op_, lhs), rhs);
+	return App(App(op_, lhs, "Explicit"), rhs, "Explicit");
 };
 
 /***********************************************************
