@@ -49,9 +49,36 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 				throw new Error("Unbound free variable: " + variable.name);
 			}
 
-			const xtended = EB.bind(ctx, { type: "Let", variable: variable.name }, val[1]);
-			return evaluate(xtended, val[0], bindings, fuel);
-			// return evaluate(ctx, val[0], bindings, fuel);
+			// For recursive functions, we need to tie the knot: evaluate the term
+			// in a context where it can refer to itself. We do this by:
+			// 1. Creating a bound variable as a placeholder
+			// 2. Extending the context with this placeholder
+			// 3. Evaluating the term in the extended context
+			// 4. Mutating the env entry to point to the actual result
+			// This works because the context is captured in the closure, so mutating this reference will update the closure context as well
+			// Subsequent evaluation of the closure body will then see the correct, updated value
+			// TODO: This is a bit hacky, but it works for now. We might want to revisit this later for a cleaner solution and avoid mutation
+			const binder: EB.Binder = { type: "Let", variable: variable.name };
+			const lvl = ctx.env.length;
+
+			// Create env entry with placeholder - this will be mutated after evaluation
+			const entry: EB.Context["env"][number] = {
+				nf: NF.Constructors.Var({ type: "Bound", lvl }), // placeholder
+				type: [binder, "source", val[1]], // use the type from imports
+				name: binder,
+			};
+
+			// Extend context with the entry
+			const extendedCtx = { ...ctx, env: [...ctx.env, entry] };
+
+			// Evaluate in extended context - recursive calls will find the Bound var
+			const result = evaluate(extendedCtx, val[0], bindings, fuel);
+
+			// "Tie the knot" - update placeholder to actual result
+			// This makes recursive references work correctly
+			entry.nf = result;
+
+			return result;
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
 			if (!ctx.zonker[variable.val]) {
@@ -324,7 +351,7 @@ export const matching = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]):
 			F.pipe(
 				meet(ctx, alt.pattern, nf),
 				O.map(binders => {
-					const extended = binders.reduce((_ctx, { binder, nf, quantity, liquid }) => EB.extend(_ctx, binder, nf), ctx);
+					const extended = binders.reduce((_ctx, { binder, nf }) => EB.extend(_ctx, binder, nf), ctx);
 					return evaluate(extended, alt.term);
 				}),
 				O.getOrElse(() => matching(ctx, nf, rest)),
@@ -397,7 +424,7 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 			return meetAll(ctx, p.row, v.row);
 		})
 		.with([NF.Patterns.Variant, { type: "Variant" }], [NF.Patterns.Struct, { type: "Variant" }], ([{ arg }, p]) => {
-			return meetOne(ctx, p.row, arg.row);
+			return meetAll(ctx, p.row, arg.row);
 		})
 		.with([NF.Patterns.HashMap, { type: "List" }], ([v, p]) => {
 			console.warn("List pattern matching not yet implemented");
@@ -438,30 +465,6 @@ const meetAll = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row)
 				O.apS("rest", meetAll(ctx, r1.row, row)),
 				O.map(({ current, rest }) => current.concat(rest)),
 			);
-		})
-		.exhaustive();
-};
-
-const meetOne = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<MeetResult[]> => {
-	return match([pats, vals])
-		.with([{ type: "empty" }, P._], () => O.none)
-		.with([{ type: "variable" }, P._], ([r, tail]) => {
-			// bind the variable
-			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
-			return O.some([{ binder, nf: NF.Constructors.Row(tail) }]);
-		})
-		.with([{ type: "extension" }, { type: "empty" }], () => O.none)
-		.with([{ type: "extension" }, { type: "variable" }], () => O.none)
-		.with([{ type: "extension" }, { type: "extension" }], ([r1, r2]) => {
-			const rewritten = R.rewrite(r2, r1.label);
-			if (E.isLeft(rewritten)) {
-				return O.none; // this pattern branch doesnt match the current variant value
-			}
-
-			if (rewritten.right.type !== "extension") {
-				throw new Error("Rewritting a row extension should result in another row extension");
-			}
-			return meet(ctx, r1.value, rewritten.right.value);
 		})
 		.exhaustive();
 };

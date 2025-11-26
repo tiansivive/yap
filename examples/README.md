@@ -889,7 +889,7 @@ Use pattern matching to write recursive functions:
 let length: (a: Type) => List a -> Num
     = \list -> match list
         | #nil _           -> 0
-        | #cons { x, xs }  -> 1 + length xs;
+        | #cons { x, xs }  -> 1 + (length xs);
 ```
 
 ### Recursive Record Fields

@@ -54,12 +54,12 @@ export const infer: Inference<Src.Pattern, "type"> = {
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 
-			const free = ctx.imports[pat.value.value];
 			// TODO:FIXME: Remove this check for now. Let's ignore matching on defined variables for now, until we answer how to match on lambdas and others
-			if (free) {
-				const [tm, ty, us] = free;
-				return [EB.Constructors.Patterns.Var(pat.value.value, tm), ty, us, []];
-			}
+			// const free = ctx.imports[pat.value.value];
+			// if (free) {
+			// 	const [tm, ty, us] = free;
+			// 	return [EB.Constructors.Patterns.Var(pat.value.value, tm), ty, us, []];
+			// }
 			const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 			const meta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
 			const va = NF.evaluate(ctx, meta);
@@ -85,19 +85,19 @@ export const infer: Inference<Src.Pattern, "type"> = {
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			const [r, rowty, rus, binders] = yield* elaborate.gen(pat.row);
-			const addVar = function* (nfr: NF.Row): Generator<V2.Elaboration<any>, NF.Row, any> {
-				if (nfr.type === "empty") {
-					return R.Constructors.Variable(yield* EB.freshMeta(ctx.env.length, NF.Row));
-				}
+			// const addVar = function* (nfr: NF.Row): Generator<V2.Elaboration<any>, NF.Row, any> {
+			// 	if (nfr.type === "empty") {
+			// 		return R.Constructors.Variable(yield* EB.freshMeta(ctx.env.length, NF.Row));
+			// 	}
 
-				if (nfr.type === "variable") {
-					return nfr;
-				}
-				const tail = yield* addVar(nfr.row);
-				return R.Constructors.Extension(nfr.label, nfr.value, tail);
-			};
+			// 	if (nfr.type === "variable") {
+			// 		return nfr;
+			// 	}
+			// 	const tail = yield* addVar(nfr.row);
+			// 	return R.Constructors.Extension(nfr.label, nfr.value, tail);
+			// };
 
-			const tail = yield* addVar(rowty);
+			// const tail = yield* addVar(rowty);
 			return [EB.Constructors.Patterns.Variant(r), NF.Constructors.Variant(rowty), rus, binders] satisfies Result;
 		}),
 	),

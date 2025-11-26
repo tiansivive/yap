@@ -101,6 +101,7 @@ export const elaborate =
 					.with({ pattern: { type: "struct" } }, inferAltBy("Struct"))
 					.with({ pattern: { type: "variant" } }, inferAltBy("Variant"))
 					.with({ pattern: { type: "list" } }, inferAltBy("List"))
+					.with({ pattern: { type: "wildcard" } }, inferAltBy("Wildcard"))
 					.otherwise(alt => {
 						throw new Error(`Pattern Matching for ${alt.pattern.type}: Not implemented`);
 					});
