@@ -177,7 +177,7 @@ let pairExplicit: { 0: Num, 1: String }
 Arrays are indexed by numbers, dictionaries by strings:
 
 ```ocaml
-let array: { [Num]: String }
+let array: { [Num]: Num }
     = [1, 2, 3];
 
 let dict: { [String]: Num }
@@ -239,11 +239,13 @@ let getX: { x: Num, y: Num } -> Num
     = \p -> match p
         | { x: a, y: b } -> a;
 
-// Can ignore fields with _
+// Can ignore fields
 let getX2: { x: Num, y: Num } -> Num
     = \p -> match p
         | { x: a } -> a;
 ```
+
+Please note that totality/exhaustiveness checks are not yet fully supported.
 
 ### Variant Patterns
 
@@ -252,7 +254,7 @@ let describeShape: Shape -> String
     = \s -> match s
         | #circle r           -> "Circle with radius"
         | #rectangle { w, h } -> "Rectangle"
-        | #point { x, y }     -> "Point at coordinates";
+        | #point { x: _, y: _ }     -> "Point at coordinates";
 ```
 
 ### List Patterns

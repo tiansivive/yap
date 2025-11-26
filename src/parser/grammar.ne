@@ -175,7 +175,10 @@ Variant -> %bar Many[Tagged, %bar]						{% P.variant %}
 Dict -> Curly[ %space:? Square[ %space:? TypeExpr ] %space:? %colon %space:? TypeExpr ] {% P.dict %}
 
 # Fields
-KeyVal -> Identifier %space:? %colon %space:? TypeExpr 				{% P.keyval %}
+KeyVal -> Key %space:? %colon %space:? TypeExpr 				{% P.keyval %}
+
+Key -> %variable 	{% P.Name %}
+	 | %digit:+ 	{% d => P.Name(d[0]) %}
 
 
 Projection -> Atom %dot Identifier 									{% P.Projection %}

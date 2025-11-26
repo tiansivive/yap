@@ -5,13 +5,13 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 1`] = `
   "displays": {
     "constraints": [
       "Num ~~ ?2",
-      "Schema [ x: ?5 ] ~~ Schema [ x: Num ]",
+      "Schema [ x: ?5 | ?6 ] ~~ Schema [ x: Num ]",
       "?5 ~~ ?5",
-      "?5 ~~ ?7",
+      "?5 ~~ ?8",
     ],
     "term": "match Struct [ x: 1 ]
-| Struct [ x: a ] -> a",
-    "type": "?7",
+| Struct [ x: a | $row_6 ] -> a",
+    "type": "?8",
   },
 }
 `;
@@ -50,7 +50,12 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
               "row": {
                 "label": "x",
                 "row": {
-                  "type": "empty",
+                  "type": "variable",
+                  "variable": {
+                    "lvl": 0,
+                    "type": "Meta",
+                    "val": 6,
+                  },
                 },
                 "type": "extension",
                 "value": {
@@ -156,7 +161,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
           "variable": {
             "lvl": 0,
             "type": "Meta",
-            "val": 7,
+            "val": 8,
           },
         },
         "type": "assign",
@@ -243,7 +248,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
           "type": "Lit",
           "value": {
             "type": "Atom",
-            "value": "Type",
+            "value": "Row",
           },
         },
         "meta": {
@@ -254,17 +259,31 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       "7": {
         "ann": {
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 6,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
           "lvl": 0,
           "type": "Meta",
           "val": 7,
+        },
+      },
+      "8": {
+        "ann": {
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 7,
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 8,
         },
       },
     },
@@ -286,12 +305,24 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
                 },
               },
             ],
+            [
+              "$row_6",
+              {
+                "type": "Var",
+                "variable": {
+                  "lvl": 0,
+                  "type": "Meta",
+                  "val": 6,
+                },
+              },
+            ],
           ],
           "pattern": {
             "row": {
               "label": "x",
               "row": {
-                "type": "empty",
+                "type": "variable",
+                "variable": "$row_6",
               },
               "type": "extension",
               "value": {
@@ -304,7 +335,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
           "term": {
             "type": "Var",
             "variable": {
-              "index": 0,
+              "index": 1,
               "type": "Bound",
             },
           },
@@ -345,7 +376,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       "variable": {
         "lvl": 0,
         "type": "Meta",
-        "val": 7,
+        "val": 8,
       },
     },
     "typedTerms": {},

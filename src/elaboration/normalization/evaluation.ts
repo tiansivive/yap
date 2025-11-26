@@ -137,7 +137,6 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 			//return NF.Constructors.Row(evalRow(ctx, row, bindings));
 		})
 		.with({ type: "Match" }, v => {
-			// console.warn("Evaluating match terms not yet implemented. Returning scrutinee as Normal Form for the time being");
 			const scrutinee = evaluate(ctx, v.scrutinee, bindings, fuel);
 			if (scrutinee.type === "Neutral" || (scrutinee.type === "Var" && scrutinee.variable.type === "Meta")) {
 				const lambda = NF.Constructors.Lambda("_scrutinee", "Explicit", NF.Constructors.Closure(ctx, v), NF.Any);
@@ -325,10 +324,7 @@ export const matching = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]):
 			F.pipe(
 				meet(ctx, alt.pattern, nf),
 				O.map(binders => {
-					const extended = binders.reduce(
-						(_ctx, { binder, quantity, liquid }) => EB.extend(_ctx, binder, NF.Constructors.Modal(nf, { quantity, liquid })),
-						ctx,
-					);
+					const extended = binders.reduce((_ctx, { binder, nf, quantity, liquid }) => EB.extend(_ctx, binder, nf), ctx);
 					return evaluate(extended, alt.term);
 				}),
 				O.getOrElse(() => matching(ctx, nf, rest)),
@@ -382,14 +378,13 @@ export const ignoraModal = (value: NF.Value): NF.Value => {
 
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];
 
-export type MeetResult = { binder: EB.Binder } & NF.Modalities;
+export type MeetResult = { binder: EB.Binder; nf: NF.Value };
 export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetResult[]> => {
-	const truthy = (v: NF.Value) => Liquid.Predicate.NeutralNF(v, ctx);
 	return match([unwrapNeutral(nf), pattern])
 		.with([P._, { type: "Wildcard" }], () => O.some([]))
 		.with([P._, { type: "Binder" }], ([v, p]) => {
 			const binder: EB.Binder = { type: "Lambda", variable: p.value };
-			return O.some<MeetResult[]>([{ binder, quantity: Q.Many, liquid: truthy(v) }]);
+			return O.some<MeetResult[]>([{ binder, nf }]);
 		})
 		.with(
 			[{ type: "Lit" }, { type: "Lit" }],
@@ -417,13 +412,12 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 };
 
 const meetAll = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<MeetResult[]> => {
-	const truthy = (v: NF.Value) => Liquid.Predicate.NeutralNF(v, ctx);
 	return match([pats, vals])
 		.with([{ type: "empty" }, P._], () => O.some([])) // empty row matches anything
-		.with([{ type: "variable" }, P._], ([r]) => {
+		.with([{ type: "variable" }, P._], ([r, tail]) => {
 			// bind the variable
 			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
-			return O.some([{ binder, quantity: Q.Many, liquid: truthy(NF.Any) }]);
+			return O.some([{ binder, nf: NF.Constructors.Row(tail) }]);
 		})
 
 		.with([{ type: "extension" }, { type: "empty" }], () => O.none)
@@ -449,20 +443,19 @@ const meetAll = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row)
 };
 
 const meetOne = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<MeetResult[]> => {
-	const truthy = (v: NF.Value) => Liquid.Predicate.NeutralNF(v, ctx);
 	return match([pats, vals])
 		.with([{ type: "empty" }, P._], () => O.none)
-		.with([{ type: "variable" }, P._], ([r]) => {
+		.with([{ type: "variable" }, P._], ([r, tail]) => {
 			// bind the variable
 			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
-			return O.some([{ binder, quantity: Q.Many, liquid: truthy(NF.Any) }]);
+			return O.some([{ binder, nf: NF.Constructors.Row(tail) }]);
 		})
 		.with([{ type: "extension" }, { type: "empty" }], () => O.none)
 		.with([{ type: "extension" }, { type: "variable" }], () => O.none)
 		.with([{ type: "extension" }, { type: "extension" }], ([r1, r2]) => {
 			const rewritten = R.rewrite(r2, r1.label);
 			if (E.isLeft(rewritten)) {
-				return meetOne(ctx, r1.row, r2);
+				return O.none; // this pattern branch doesnt match the current variant value
 			}
 
 			if (rewritten.right.type !== "extension") {

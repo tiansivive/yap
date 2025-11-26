@@ -33,17 +33,24 @@ const Sourced = {
 /***********************************************************
  * Primitive processors
  ***********************************************************/
-export const Name: PostProcessor<[Token], Variable> = tok =>
-	F.pipe(
+export const Name: PostProcessor<[Token], Variable> = tok => {
+	return F.pipe(
 		tok,
 		sourceLoc,
 		Sourced.fold<unknown, Variable>((value, location) => {
-			if (typeof value !== "string") {
-				throw new Error("Expected string value for var name");
+			if (value === undefined || value === null) {
+				throw new Error("Expected non-empty value for var name");
 			}
-			return { type: "name", value, location };
+
+			if (typeof value === "string") {
+				return { type: "name", value, location };
+			}
+
+			return { type: "name", value: JSON.stringify(value), location };
+			// throw new Error("Expected string value for var name");
 		}),
 	);
+};
 
 export const Label: PostProcessor<[Colon, Token], Variable> = ([, tok]) => {
 	return F.pipe(

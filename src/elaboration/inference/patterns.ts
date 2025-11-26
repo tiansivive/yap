@@ -98,7 +98,7 @@ export const infer: Inference<Src.Pattern, "type"> = {
 			};
 
 			const tail = yield* addVar(rowty);
-			return [EB.Constructors.Patterns.Variant(r), NF.Constructors.Variant(tail), rus, binders] satisfies Result;
+			return [EB.Constructors.Patterns.Variant(r), NF.Constructors.Variant(rowty), rus, binders] satisfies Result;
 		}),
 	),
 
@@ -162,7 +162,17 @@ const elaborate = V2.regen(
 			const ctx = yield* V2.ask();
 
 			const rr: RowResult = yield match(r)
-				.with({ type: "empty" }, r => V2.of([r, R.Constructors.Empty(), Q.noUsage(ctx.env.length), []] satisfies RowResult))
+				.with({ type: "empty" }, r =>
+					V2.Do(function* () {
+						const meta = yield* EB.freshMeta(ctx.env.length, NF.Row);
+						const fresh = `$row_${meta.val}`;
+						const binder: Binder = [fresh, NF.Constructors.Var(meta)];
+						const zeros = Q.noUsage(ctx.env.length);
+						// If the pattern row is empty, we create a fresh row variable so we can match against wider rows
+						// The user never sees this variable, but it allows unification to work properly
+						return [R.Constructors.Variable(fresh), R.Constructors.Variable(meta), zeros, [binder]] satisfies RowResult;
+					}),
+				)
 				.with({ type: "variable" }, ({ variable }) =>
 					V2.Do(function* () {
 						const meta = yield* EB.freshMeta(ctx.env.length, NF.Row);

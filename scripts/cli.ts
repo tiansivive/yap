@@ -64,22 +64,37 @@ program
 		}
 
 		let ctx: EB.Context = defaultContext;
+		let buffer: string[] = [];
 
 		const runCode = (input: string) => {
 			try {
 				ctx = interpret(input, ctx);
 			} catch (err) {
 				console.error("Error:", err);
-				rl.prompt();
 			}
 		};
+
+		const executeBuffer = () => {
+			if (buffer.length === 0) {
+				return;
+			}
+
+			const code = buffer.join("\n");
+			buffer = [];
+			rl.setPrompt("λ> ");
+			runCode(code);
+		};
+
 		rl.on("line", input => {
-			if ([":exit", ":quit", ":q"].includes(input.trim())) {
+			const trimmed = input.trim();
+
+			// Commands work anywhere
+			if ([":exit", ":quit", ":q"].includes(trimmed)) {
 				console.log("Goodbye!");
 				return rl.close();
 			}
 
-			if ([":show_js"].includes(input.trim())) {
+			if (trimmed === ":show_js") {
 				options.showJS = !options.showJS;
 				return rl.prompt();
 			}
@@ -90,11 +105,25 @@ program
 				return rl.prompt();
 			}
 
-			if (input.trim() === "") {
+			// Empty line: execute buffered code if any
+			if (trimmed === "") {
+				if (buffer.length > 0) {
+					executeBuffer();
+				}
 				return rl.prompt();
 			}
 
-			runCode(input);
+			// Add line to buffer and continue
+			buffer.push(input);
+			rl.setPrompt("   ");
+			rl.prompt();
+		});
+
+		// Ctrl+C: clear buffer and reset
+		rl.on("SIGINT", () => {
+			buffer = [];
+			console.log("\n(Buffer cleared)");
+			rl.setPrompt("λ> ");
 			rl.prompt();
 		});
 

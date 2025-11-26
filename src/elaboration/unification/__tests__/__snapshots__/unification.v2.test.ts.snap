@@ -66,6 +66,39 @@ with:
 }
 `;
 
+exports[`Unification (V2) > Row Unification > Sigma types unification > fails on Sigma row annotation mismatch 1`] = `
+{
+  "message": "Missing Label: x
+
+Trace:
+
+While unifying:
+	
+	[ x: Type ]
+with:
+	[ y: Type ]
+
+--------------------------------------------------------------------------------------------
+
+
+While unifying:
+	
+	[ x: Type ]
+with:
+	[ y: Type ]
+
+--------------------------------------------------------------------------------------------
+
+
+While unifying:
+	
+	Σ(r: [ x: Type ]) . (closure: Schema [] -| ·)
+with:
+	Σ(r: [ y: Type ]) . (closure: Schema [] -| ·)
+",
+}
+`;
+
 exports[`Unification (V2) > Row Unification > fails on missing label 1`] = `
 {
   "message": "Missing Label: x

@@ -145,6 +145,73 @@ describe("Unification (V2)", () => {
 			expect(printed).toContain("?100 |=> [ y: 43 | ?");
 			expect(printed).toContain("?101 |=> [ x: 42 | ?");
 		});
+
+		describe("Sigma types unification", () => {
+			it("unifies identical Sigmas with empty row", () => {
+				const ctx = Lib.defaultContext();
+				const emptyRow = NF.Constructors.Row(R.Constructors.Empty());
+				const schema = EB.Constructors.Schema(R.Constructors.Empty());
+				const sig1 = NF.Constructors.Sigma("r", emptyRow, NF.Constructors.Closure(ctx, schema));
+				const sig2 = NF.Constructors.Sigma("r", emptyRow, NF.Constructors.Closure(ctx, schema));
+				const out = runUnify(sig1, sig2);
+				const sub = expectRight<Sub.Subst>(out);
+				expect(Sub.display(sub, out.metas)).toBe("empty");
+			});
+
+			it("unifies Sigmas with single-field row", () => {
+				const ctx = Lib.defaultContext();
+				const row = NF.Constructors.Row(R.Constructors.Extension("x", NF.Type, R.Constructors.Empty()));
+				const schema = EB.Constructors.Schema(R.Constructors.Extension("x", EB.Constructors.Lit(Lit.Atom("Num")), R.Constructors.Empty()));
+				const sig1 = NF.Constructors.Sigma("r", row, NF.Constructors.Closure(ctx, schema));
+				const sig2 = NF.Constructors.Sigma("r", row, NF.Constructors.Closure(ctx, schema));
+				const out = runUnify(sig1, sig2);
+				const sub = expectRight<Sub.Subst>(out);
+				expect(Sub.display(sub, out.metas)).toBe("empty");
+			});
+
+			it("fails on Sigma row annotation mismatch", () => {
+				const ctx = Lib.defaultContext();
+				const row1 = NF.Constructors.Row(R.Constructors.Extension("x", NF.Type, R.Constructors.Empty()));
+				const row2 = NF.Constructors.Row(R.Constructors.Extension("y", NF.Type, R.Constructors.Empty()));
+				const schema = EB.Constructors.Schema(R.Constructors.Empty());
+				const sig1 = NF.Constructors.Sigma("r", row1, NF.Constructors.Closure(ctx, schema));
+				const sig2 = NF.Constructors.Sigma("r", row2, NF.Constructors.Closure(ctx, schema));
+				const out = runUnify(sig1, sig2);
+				const err = expectLeft(out);
+				expect(err.type === "MissingLabel" || err.type === "RowMismatch" || err.type === "TypeMismatch").toBeTruthy();
+				expect({ message: EB.V2.display(err) }).toMatchSnapshot();
+			});
+
+			it("unifies Sigmas with polymorphic row variables", () => {
+				const ctx = Lib.defaultContext();
+				const rowVar = NF.Constructors.Row(R.Constructors.Variable({ type: "Meta", val: 1, lvl: 0 }));
+				const concreteRow = NF.Constructors.Row(R.Constructors.Extension("field", NF.Type, R.Constructors.Empty()));
+				const schema = EB.Constructors.Schema(R.Constructors.Variable({ type: "Meta", val: 2, lvl: 0 }));
+				const sig1 = NF.Constructors.Sigma("r", rowVar, NF.Constructors.Closure(ctx, schema));
+				const sig2 = NF.Constructors.Sigma("r", concreteRow, NF.Constructors.Closure(ctx, schema));
+				const out = runUnify(sig1, sig2);
+				const sub = expectRight<Sub.Subst>(out);
+				expect(Sub.display(sub, out.metas)).toContain("?1 |=> [ field: Type ]");
+			});
+
+			it("unifies Sigma with polymorphic row bodies", () => {
+				const ctx = Lib.defaultContext();
+				const row = NF.Constructors.Row(R.Constructors.Extension("x", NF.Type, R.Constructors.Empty()));
+
+				const schemaRow1: EB.Row = R.Constructors.Variable({ type: "Meta", val: 3, lvl: 0 });
+				const schemaRow2: EB.Row = R.Constructors.Variable({ type: "Meta", val: 4, lvl: 0 });
+				const schema1 = EB.Constructors.Schema(schemaRow1);
+				const schema2 = EB.Constructors.Schema(schemaRow2);
+				const sig1 = NF.Constructors.Sigma("r", row, NF.Constructors.Closure(ctx, schema1));
+				const sig2 = NF.Constructors.Sigma("r", row, NF.Constructors.Closure(ctx, schema2));
+				const out = runUnify(sig1, sig2);
+				const sub = expectRight<Sub.Subst>(out);
+
+				const printed = Sub.display(sub, out.metas);
+				expect(printed).toContain("?3");
+				expect(printed).toContain("?4");
+			});
+		});
 	});
 
 	describe("Mu Types", () => {

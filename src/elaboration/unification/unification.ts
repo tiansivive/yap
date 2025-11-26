@@ -103,8 +103,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 					V2.Do(function* () {
 						const sub = yield* V2.pure(unify(sig1.binder.annotation, sig2.binder.annotation, lvl, subst));
 						const composed = Sub.compose(sub, subst);
-						const body1 = NF.apply(sig1.binder, sig1.closure, NF.Constructors.Rigid(lvl));
-						const body2 = NF.apply(sig2.binder, sig2.closure, NF.Constructors.Rigid(lvl));
+						const body1 = NF.apply(sig1.binder, sig1.closure, sig1.binder.annotation);
+						const body2 = NF.apply(sig2.binder, sig2.closure, sig2.binder.annotation);
 						return yield* V2.pure(unify(body1, body2, lvl + 1, composed));
 					}),
 				)
