@@ -12,10 +12,11 @@ import * as F from "fp-ts/lib/function";
 import * as R from "@yap/shared/rows";
 import { Option } from "fp-ts/lib/Option";
 import * as O from "fp-ts/lib/Option";
-import * as A from "fp-ts/lib/NonEmptyArray";
+import * as A from "fp-ts/lib/Array";
 import { Liquid } from "@yap/verification/modalities";
 import * as Modal from "@yap/verification/modalities/shared";
 import { Implicitness } from "@yap/shared/implicitness";
+import { update } from "@yap/utils";
 import assert from "assert";
 
 export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: string]: EB.Term } = {}, fuel = 0): NF.Value {
@@ -282,6 +283,38 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 				quantity: modalities.quantity,
 				liquid: NF.evaluate(ctx, modalities.liquid, bindings, fuel),
 			});
+		})
+		.with({ type: "Block" }, ({ statements, return: ret }) => {
+			const process = (stmts: EB.Statement[], ctx: EB.Context): EB.Context => {
+				if (stmts.length === 0) {
+					return ctx;
+				}
+				const [current, ...rest] = stmts;
+
+				return match(current)
+					.with({ type: "Let" }, ({ variable, annotation, value }) => {
+						const entry: EB.Context["env"][number] = {
+							nf: NF.Constructors.Var({ type: "Bound", lvl: ctx.env.length }),
+							type: [{ type: "Let", variable }, "source", annotation],
+							name: { type: "Let", variable },
+						};
+						const extended = { ...ctx, env: [entry, ...ctx.env] };
+						entry.nf = evaluate(extended, value, bindings, fuel);
+						return process(rest, extended);
+					})
+					.with({ type: "Expression" }, ({ value }) => {
+						evaluate(ctx, value, bindings, fuel);
+						return process(rest, ctx);
+					})
+					.with({ type: "Using" }, ({ value, annotation }) => {
+						// const nf = evaluate(ctx, value, bindings, fuel);
+						const updated = update(ctx, "implicits", A.append<EB.Context["implicits"][0]>([value, annotation]));
+						return process(rest, updated);
+					})
+					.exhaustive();
+			};
+
+			return evaluate(process(statements, ctx), ret, bindings, fuel);
 		})
 		.otherwise(tm => {
 			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx));
