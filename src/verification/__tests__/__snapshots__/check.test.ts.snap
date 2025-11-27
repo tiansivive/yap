@@ -12,7 +12,7 @@ exports[`VerificationService > Flow-sensitive type refinement > refines type in 
                                     (forall ((v Real)) (=> (= v a) true))
                                     true
                                     true
-                                    (forall (($d Real)) (=> (= $d 0.0) true))))
+                                    (forall (($b Real)) (=> (= $b 0.0) true))))
                           (a!2 (forall ((x Real))
                                  (=> (= x a)
                                      (forall ((y Real))
@@ -35,10 +35,10 @@ exports[`VerificationService > Flow-sensitive type refinement > refines type in 
                                        (let ((a!1 (forall (($fresh2 Bool))
                                                     (let ((a!1 (and true
                                                                     true
-                                                                    (forall (($i Real))
-                                                                      (=> (= $i
+                                                                    (forall (($e Real))
+                                                                      (=> (= $e
                                                                              42.0)
-                                                                          (> $i
+                                                                          (> $e
                                                                              0.0))))))
                                                       (=> (and (= $fresh2
                                                                   (> x 0.0))
@@ -46,7 +46,7 @@ exports[`VerificationService > Flow-sensitive type refinement > refines type in 
                                                           a!1)))))
                                          (=> (= y 0.0) a!1)))))))
                       (=> (> b 0.0) (and true a!1 true a!2 a!1 true a!3 true))))))))
-  (and a!1 true (forall (($k Real)) (=> (= $k 1.0) true))))"
+  (and a!1 true (forall (($f Real)) (=> (= $f 1.0) true))))"
 `;
 
 exports[`VerificationService > verifies Nat type alias definition 1`] = `"(and true true)"`;
@@ -70,13 +70,13 @@ exports[`VerificationService > verifies block expression with refined result 1`]
                        a!1
                        true
                        true
-                       (forall (($b Real)) (=> (= $b 1.0) true))
+                       (forall (($a Real)) (=> (= $a 1.0) true))
                        a!2)))
          (=> (> o 0.0) a!3))))
      true
      true
      true
-     (forall (($e Real)) (=> (= $e 1.0) (> $e 0.0)))
+     (forall (($b Real)) (=> (= $b 1.0) (> $b 0.0)))
      (forall ((t1 Real))
        (let ((a!1 (and true (forall ((p Real)) (=> (> p 1.0) (> p 0.0))))))
          (=> (= t1 1.0) a!1))))"
@@ -91,10 +91,10 @@ exports[`VerificationService > verifies dependent record construction 1`] = `
                   (forall (($a Real)) (=> (= $a 1.0) true))
                   true
                   true
-                  (forall (($c Real)) (=> (= $c 2.0) (< 1.0 $c)))
+                  (forall (($b Real)) (=> (= $b 2.0) (< 1.0 $b)))
                   true
                   true))))
-  (and a!1 a!2 true (forall (($e Unit)) (=> (= $e unit) true))))"
+  (and a!1 a!2 true (forall (($c Unit)) (=> (= $c unit) true))))"
 `;
 
 exports[`VerificationService > verifies dependent record construction 2`] = `
@@ -103,13 +103,13 @@ exports[`VerificationService > verifies dependent record construction 2`] = `
       (a!2 (forall ((p Schema))
              (and true
                   true
-                  (forall (($g Real)) (=> (= $g 2.0) true))
+                  (forall (($d Real)) (=> (= $d 2.0) true))
                   true
                   true
-                  (forall (($i Real)) (=> (= $i 1.0) (< 2.0 $i)))
+                  (forall (($e Real)) (=> (= $e 1.0) (< 2.0 $e)))
                   true
                   true))))
-  (and a!1 a!2 true (forall (($k Real)) (=> (= $k 1.0) true))))"
+  (and a!1 a!2 true (forall (($f Real)) (=> (= $f 1.0) true))))"
 `;
 
 exports[`VerificationService > verifies function definition fn 1`] = `
@@ -139,7 +139,7 @@ exports[`VerificationService > verifies higher-order function hof2 1`] = `
          (=> (= t2 1.0) a!1)))
      true
      true
-     (forall (($d Real)) (=> (= $d 1.0) true))
+     (forall (($b Real)) (=> (= $b 1.0) true))
      (forall ((t2 Real))
        (let ((a!1 (forall ((x Real))
                     (=> (> x 0.0)
@@ -160,7 +160,7 @@ exports[`VerificationService > verifies higher-order function hof3 1`] = `
                   (forall ((t3 Real)) (=> (= t3 x) true))
                   true
                   true
-                  (forall (($b Real)) (=> (= $b 1.0) true))
+                  (forall (($a Real)) (=> (= $a 1.0) true))
                   (forall ((t3 Real))
                     (let ((a!1 (forall ((x!1 Real))
                                  (forall ((y Real))
@@ -185,7 +185,7 @@ exports[`VerificationService > verifies inc function definition 1`] = `
                   (forall ((v Real)) (=> (= v x) true))
                   true
                   true
-                  (forall (($b Real)) (=> (= $b 1.0) true))
+                  (forall (($a Real)) (=> (= $a 1.0) true))
                   a!1)))
     (=> true a!2))))"
 `;
@@ -216,7 +216,7 @@ exports[`VerificationService > verifies lambda with dependent refinement on resu
                   (forall ((v Real)) (=> (= v x) true))
                   true
                   true
-                  (forall (($b Real)) (=> (= $b 1.0) true))
+                  (forall (($a Real)) (=> (= $a 1.0) true))
                   a!1)))
     (=> true a!2))))"
 `;
@@ -236,18 +236,18 @@ exports[`VerificationService > verifies ordered list construction 1`] = `
                   true
                   true
                   true
-                  (forall (($c Real)) (=> (= $c 2.0) (< 1.0 $c)))
+                  (forall (($b Real)) (=> (= $b 2.0) (< 1.0 $b)))
                   true
                   true
                   true
-                  (forall (($e Unit)) (=> (= $e unit) true))
+                  (forall (($c Unit)) (=> (= $c unit) true))
                   true
                   true
                   true))))
   (and (forall ((t Type)) (=> true (and true true)))
        a!1
        true
-       (forall (($g Real)) (=> (= $g 1.0) true))))"
+       (forall (($d Real)) (=> (= $d 1.0) true))))"
 `;
 
 exports[`VerificationService > verifies ordered list construction 2`] = `
@@ -255,22 +255,22 @@ exports[`VerificationService > verifies ordered list construction 2`] = `
              (and true
                   true
                   true
-                  (forall (($i Real)) (=> (= $i 2.0) true))
+                  (forall (($e Real)) (=> (= $e 2.0) true))
                   true
                   true
                   true
-                  (forall (($k Real)) (=> (= $k 1.0) (< 2.0 $k)))
+                  (forall (($f Real)) (=> (= $f 1.0) (< 2.0 $f)))
                   true
                   true
                   true
-                  (forall (($m Unit)) (=> (= $m unit) true))
+                  (forall (($g Unit)) (=> (= $g unit) true))
                   true
                   true
                   true))))
   (and (forall ((t Type)) (=> true (and true true)))
        a!1
        true
-       (forall (($o Real)) (=> (= $o 1.0) true))))"
+       (forall (($h Real)) (=> (= $h 1.0) true))))"
 `;
 
 exports[`VerificationService > verifies positive function application 1 + 2 as Nat 1`] = `
@@ -286,7 +286,7 @@ exports[`VerificationService > verifies positive function application 1 + 2 as N
        (forall (($a Real)) (=> (= $a 1.0) true))
        true
        true
-       (forall (($c Real)) (=> (= $c 2.0) true))
+       (forall (($b Real)) (=> (= $b 2.0) true))
        a!1))"
 `;
 

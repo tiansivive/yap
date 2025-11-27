@@ -23,7 +23,7 @@ import { VerificationService } from "@yap/verification/service";
 import { match } from "ts-pattern";
 import { Bool, init, Model } from "z3-solver";
 import { getZ3Context } from "@yap/shared/config/options";
-import { PPretty } from "./pretty";
+
 import { toMap } from "fp-ts/lib/ReadonlyMap";
 
 export const elaborate = (mod: Src.Module, ctx: EB.Context) => {

@@ -8,7 +8,7 @@ import * as Lit from "@yap/shared/literals";
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as Lib from "@yap/shared/lib/primitives";
 
-import { VerificationService } from "@yap/verification/service";
+import { VerificationServiceV2 as VerificationService } from "@yap/verification/V2/service";
 import { init, type Context } from "z3-solver";
 import { elaborate } from "./helpers";
 import { beforeEach } from "node:test";
@@ -40,8 +40,8 @@ describe("VerificationService", () => {
 		if (result._tag === "Left") {
 			throw new Error(EB.V2.display(result.left));
 		}
-
 		const artefacts = result.right;
+
 		const solver = new Z3.Solver();
 		solver.add(artefacts.vc.eq(true));
 		const sat = await solver.check();
