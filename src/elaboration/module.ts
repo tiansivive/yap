@@ -19,7 +19,7 @@ import { solve } from "./solver";
 import * as A from "fp-ts/lib/Array";
 
 import * as Sub from "@yap/elaboration/unification/substitution";
-import { VerificationService } from "@yap/verification/service";
+import { VerificationServiceV2 } from "@yap/verification/V2/service";
 import { match } from "ts-pattern";
 import { Bool, init, Model } from "z3-solver";
 import { getZ3Context } from "@yap/shared/config/options";
@@ -121,56 +121,98 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 		const [elaborated, ty, us] = yield* EB.Stmt.infer.gen(stmt);
 		// console.log("\n------------------ LETDEC --------------------------------");
 		const [r, next] = yield* EB.Stmt.letdec(elaborated as Extract<EB.Statement, { type: "Let" }>);
-		//const [r, next] = yield* V2.liftE(result)
-		// console.log("Elaborated:\n", EB.Display.Statement(r, next));
-		// const { constraints, metas } = yield* V2.listen();
-		// const subst = yield* V2.local(
-		// 	update("metas", ms => ({ ...ms, ...metas })),
-		// 	solve(constraints),
-		// );
-		// //const tyZonked = yield* EB.zonk.gen("nf", ty, subst);
-		// const zonked = F.pipe(
-		// 	ctx,
-		// 	update("metas", prev => ({ ...prev, ...metas })),
-		// 	set("zonker", Sub.compose(subst, ctx.zonker)),
-		// );
 
-		// // Trim the recursive variable from closures in the type before generalizing.
-		// // During inference, the recursive variable is added to env at level 0, and any closures
-		// // created during inference capture this env. We need to trim it before generalization
-		// // since we'll be moving the variable to imports instead of keeping it in env.
-		// const trimmedTy = NF.trimClosureEnvs(ty);
+		const zCtx = getZ3Context();
+		if (!zCtx) {
+			throw new Error("Z3 context not set");
+		}
+		const Verification = VerificationServiceV2(zCtx);
 
-		// const [generalized, next] = NF.generalize(trimmedTy, zonked);
-		// const instantiated = NF.instantiate(generalized, next);
+		const { result: res } = Verification.check(r.value, r.annotation)(next);
+		if (res._tag === "Left") {
+			console.log("Verification failure");
+			console.log(res.left);
+			const ast: EB.AST = [r.value, r.annotation, us];
+			return [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
+		}
+		const artefacts = res.right;
 
-		// const xtended = EB.bind(next, { type: "Let", variable: stmt.variable }, instantiated);
-		// const wrapped = F.pipe(
-		// 	EB.Icit.instantiate(elaborated.value, xtended),
-		// 	// inst => EB.Icit.generalize(inst, xtended),
-		// 	tm => EB.Icit.wrapLambda(tm, instantiated, xtended),
-		// );
+		const solver = new zCtx.Solver();
 
-		// const zCtx = getZ3Context();
-		// if (!zCtx) {
-		// 	throw new Error("Z3 context not set");
-		// }
+		solver.add(artefacts.vc.eq(true));
+		solver
+			.check()
+			.then(res => {
+				if (res === "sat") {
+					return [];
+				}
 
-		// const Verification = VerificationService(zCtx);
+				console.log("\n Could not verify obligations!");
+				console.log(artefacts.vc.sexpr());
+				const obligations = Verification.getObligations?.() ?? [];
+				return Promise.all(
+					obligations.map(async ({ label, expr, context }) => {
+						const s = new zCtx.Solver();
+						s.add(expr.eq(true));
+						const r = await s.check();
+						let model: Model | undefined;
+						if (r === "unsat") {
+							// Try to extract a counterexample by solving the negation
+							const neg = new zCtx.Solver();
+							// Negate obligation by equating it to false to obtain a witness
+							neg.add(expr.eq(false));
+							const rn = await neg.check();
+							if (rn === "sat") {
+								model = neg.model();
+							}
+						}
+						return { label, result: r, expr, model, context };
+					}),
+				);
+			})
+			.then(async rs => {
+				rs.forEach(({ label, result, expr, model, context }, i) => {
+					console.log(` - [${result}] ${label}`);
+					if (context) {
+						if (context.description) {
+							if (Array.isArray(context.description)) {
+								console.log(`   description:`);
+								for (const line of context.description) {
+									console.log(`     ${line}`);
+								}
+							} else {
+								console.log(`   description: ${context.description}`);
+							}
+						}
 
-		// const { result: res } = V2.Do(() => V2.local(_ => xtended, Verification.check(wrapped, instantiated)))(xtended);
-		// if (res._tag === "Left") {
-		// 	console.log("Verification failure");
-		// 	console.log(res.left);
-		// 	throw new Error("Verification failure");
-		// }
-		// const result = res.right;
-		// const artefacts = result;
+						if (context.term) {
+							console.log(`   term: ${context.term}`);
+						}
 
-		// const solver = new zCtx.Solver();
-
-		// solver.add(artefacts.vc.eq(true));
-		// solver.check().then(res => {
+						if (context.type) {
+							console.log(`   type: ${context.type}`);
+						}
+					}
+					if (result === "unsat") {
+						//console.log("   expr:", expr.sexpr());
+						if (model) {
+							// Try to extract variable values from the model
+							console.log("   counterexample:");
+							const decls = model.decls();
+							if (decls && decls.length > 0) {
+								for (const decl of decls) {
+									const name = decl.name();
+									const value = model.get(decl);
+									console.log(`     ${name} = ${value}`);
+								}
+							} else {
+								// Fallback: print the entire model
+								console.log("     ", model.sexpr());
+							}
+						}
+					}
+				});
+			});
 		// 	// Eager local obligation checks
 		// 	const obligations = Verification.getObligations?.() ?? [];
 		// 	if (obligations.length) {
