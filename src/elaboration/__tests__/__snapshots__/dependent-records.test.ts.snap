@@ -28,7 +28,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
 	: Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
 	= λa -> λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
 	let p
-	: Σ($sig: [ snd: String, fst: Num ]) . (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p = λn -> (closure: String -| Γ: n; Pair = λa -> (closure: λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ] -| Γ: a; Pair = Pair)); a = Num; Pair = Pair)
+	: Σ($sig: [ snd: String, fst: Num ]) . (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p; a; Pair)
 	= Struct [ fst: 1, snd: "hello" ];
 	return unit;
 	}",

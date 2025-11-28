@@ -193,7 +193,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
 {
   "displays": {
     "constraints": [
-      "?1 ~~ Π(x: ?2) -> (closure: ?4 -| Γ: x; f = f)",
+      "?1 ~~ Π(x: ?2) -> (closure: ?4 -| Γ: x; f)",
       "Num ~~ ?2",
     ],
     "term": "λf => f 1",
@@ -469,7 +469,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
 {
   "displays": {
     "constraints": [
-      "?1 ~~ Π(x: ?2) -> (closure: ?4 -| Γ: x; f = f)",
+      "?1 ~~ Π(x: ?2) -> (closure: ?4 -| Γ: x; f)",
       "Num ~~ ?2",
     ],
     "term": "λf -> f 1",
