@@ -153,7 +153,7 @@ const displayEnv = (ctx: EB.Context, opts = { deBruijn: false }): string => {
 	const printedEnv = ctx.env
 		.map(({ nf, name, type }) => {
 			if (nf) {
-				return `${name.variable} = ${NF.display(nf, ctx, opts)}`; // : ${NF.display(type[2], ctx, opts)}`;
+				return `${name.variable}`; // = ${NF.display(nf, ctx, opts)}`; FIXME: this now hangs because of recursive tying of the knot
 			}
 			return name.variable;
 		})

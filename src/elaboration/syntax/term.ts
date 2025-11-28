@@ -133,6 +133,7 @@ export const Constructors = {
 	Row: (row: Row): Term => mk({ type: "Row", row }),
 	Extension: (label: string, value: Term, row: Row): Row => ({ type: "extension", label, value, row }),
 
+	Array: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Array")), Constructors.Row(row)),
 	Struct: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row)),
 	Schema: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row)),
 	Variant: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row)),
@@ -190,4 +191,5 @@ export const CtorPatterns = {
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } },
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } },
 	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } },
+	Array: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Array" } }, arg: { type: "Row" } },
 } as const;

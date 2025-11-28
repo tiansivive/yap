@@ -139,6 +139,7 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 				match(l.value)
 					.with({ type: "Num" }, lit => Z3.Real.val(lit.value))
 					.with({ type: "Bool" }, lit => Z3.Bool.val(lit.value))
+					.with({ type: "String" }, lit => Z3.Const(lit.value, Sorts.String))
 					.with({ type: "unit" }, () => Z3.Const("unit", Sorts.Unit))
 					.with({ type: "Atom" }, atom => Z3.Const(atom.value, Sorts.Atom))
 					.otherwise(() => {

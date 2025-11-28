@@ -42,7 +42,7 @@ export const infer = (list: List): V2.Elaboration<EB.AST> =>
 				},
 				{ type: "empty" },
 			);
-			return [EB.Constructors.Row(row), NF.Constructors.Neutral(ty), usages] satisfies EB.AST;
+			return [EB.Constructors.Array(row), NF.Constructors.Neutral(ty), usages] satisfies EB.AST;
 		}),
 	);
 infer.gen = F.flow(infer, V2.pure);

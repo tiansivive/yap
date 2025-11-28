@@ -104,6 +104,14 @@ export const createCheck = ({ Z3, runtime, translation }: CheckDeps) => {
 						),
 					),
 				)
+				.with([EB.CtorPatterns.Array, NF.Patterns.Indexed], ([term, type]) => {
+					return V2.of({
+						vc: runtime.record("check.array", Z3.Bool.val(true), {
+							type: NF.display(type, ctx),
+							description: `Array term checked against indexed type`,
+						}),
+					} satisfies VerificationArtefacts);
+				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Sigma], ([term, type]) => {
 					const value = NF.evaluate(ctx, term);
 					assert(value.type === "App" && value.arg.type === "Row", "Expected struct to evaluate to row application");

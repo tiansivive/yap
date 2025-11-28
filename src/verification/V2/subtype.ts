@@ -50,8 +50,15 @@ export const createSubtype = ({ Z3, runtime, translation }: SubtypeDeps) => {
 					return subtype(t, ty);
 				})
 				.with(
+					[NF.Patterns.Rigid, NF.Patterns.Rigid],
+					([rigid1, rigid2]) => rigid1.variable.lvl === rigid2.variable.lvl,
+					() => {
+						return V2.of(Z3.Bool.val(true));
+					},
+				)
+				.with(
 					[NF.Patterns.Rigid, P._],
-					([rigid, t]) => t.type !== "Var" || t.variable.type !== "Bound" || rigid.variable.lvl !== t.variable.lvl,
+					([rigid, t]) => t.type !== "Var" || t.variable.type !== "Bound",
 					([{ variable }, bt]) =>
 						V2.Do(function* () {
 							const entry = ctx.env[variable.lvl];
@@ -63,7 +70,7 @@ export const createSubtype = ({ Z3, runtime, translation }: SubtypeDeps) => {
 				)
 				.with(
 					[P._, NF.Patterns.Rigid],
-					([at, { variable }]) => at.type !== "Var" || at.variable.type !== "Bound" || variable.lvl !== at.variable.lvl,
+					([at, { variable }]) => at.type !== "Var" || at.variable.type !== "Bound",
 					([at, { variable }]) =>
 						V2.Do(function* () {
 							const entry = ctx.env[variable.lvl];
@@ -236,7 +243,7 @@ export const createSubtype = ({ Z3, runtime, translation }: SubtypeDeps) => {
 					V2.Do(function* () {
 						const ctx = yield* V2.ask();
 						runtime.log("Subtype not implemented for", NF.display(a, ctx), "<:", NF.display(b, ctx));
-						return Z3.Bool.val(false);
+						throw new Error(`Subtype not implemented for ${NF.display(a, ctx)} <: ${NF.display(b, ctx)}`);
 					}),
 				);
 

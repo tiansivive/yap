@@ -16,6 +16,7 @@ import { extractModalities, selfify } from "./utils/refinements";
 import * as Q from "@yap/shared/modalities/multiplicity";
 import { createCheck } from "./check";
 import { createSubtype } from "./subtype";
+import { isLeft } from "fp-ts/lib/Either";
 
 type SynthDeps = {
 	Z3: Z3Context<"main">;
@@ -106,6 +107,7 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 					const { row, vc } = yield* V2.pure(synthStructRow(struct.arg.row));
 					return [NF.Constructors.Schema(row), { vc }] satisfies SynthResult;
 				})
+
 				.with({ type: "App" }, function* (tm) {
 					const incorporate = (argTy: NF.Value, fnTy: NF.Value): V2.Elaboration<SynthResult> =>
 						V2.Do(function* () {
@@ -170,8 +172,34 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 
 					return yield* V2.pure(recurse(block.statements));
 				})
+				.with(EB.CtorPatterns.Proj, function* (proj) {
+					const [baseTy, baseArtefacts] = yield* synth.gen(proj.term);
+					const projected = (label: string, ty: NF.Value): V2.Elaboration<NF.Value> =>
+						V2.Do(function* () {
+							return yield* match(ty)
+								.with(NF.Patterns.Modal, m => V2.pure(projected(label, m.value)))
+								.with(NF.Patterns.Schema, function* ({ func, arg }) {
+									const rewritten = Row.rewrite(arg.row, label);
+									if (isLeft(rewritten)) {
+										throw new Error("Projection label not found: " + label);
+									}
+									if (rewritten.right.type !== "extension") {
+										throw new Error("Projected label is not an extension: " + label);
+									}
+
+									return rewritten.right.value;
+								})
+								.otherwise(() => {
+									throw new Error("Projection expected a Sigma type");
+								});
+						});
+
+					const outTy = yield* V2.pure(projected(proj.label, baseTy));
+					return [outTy, { vc: baseArtefacts.vc }] satisfies SynthResult;
+				})
 				.otherwise(function* () {
-					runtime.log("synth: case not implemented");
+					//  runtime.log("synth: case not implemented");
+					throw new Error("synth: case not implemented for term " + EB.Display.Term(term, ctx));
 					return [NF.Any, { vc: Z3.Bool.val(true) }] satisfies SynthResult;
 				});
 

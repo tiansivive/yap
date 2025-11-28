@@ -101,7 +101,12 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		// console.log("\n" + pretty + ` :: ${EB.NF.display(ty, { zonker, metas: ctx.metas, env: ctx.env })}\n`);
 
 		const nf = EB.NF.evaluate(ctx, tm);
-		console.log("\n", EB.NF.display(nf, { zonker, metas: ctx.metas, env: ctx.env }), "::", EB.NF.display(ty, { zonker, metas: ctx.metas, env: ctx.env }), "\n");
+		console.log(
+			EB.NF.display(nf, { zonker, metas: ctx.metas, env: ctx.env }),
+			"::",
+			EB.NF.display(ty, { zonker: { ...ctx.zonker, ...zonker }, metas: ctx.metas, env: ctx.env }),
+			"\n",
+		);
 		if (opts.nf) {
 			console.log(`NF: ${EB.NF.display(nf, { zonker, metas: ctx.metas, env: ctx.env })}`);
 		}

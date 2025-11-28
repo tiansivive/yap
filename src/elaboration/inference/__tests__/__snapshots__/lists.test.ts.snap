@@ -8,7 +8,7 @@ exports[`inference: list > [1, 2, 3] 1`] = `
       "Num ~~ ?2",
       "Num ~~ ?2",
     ],
-    "term": "[ 0: 1, 1: 2, 2: 3 ]",
+    "term": "Array [ 0: 1, 1: 2, 2: 3 ]",
     "type": "FFI.Indexed Num ?2 @FFI.defaultArray",
   },
 }
@@ -117,21 +117,31 @@ exports[`inference: list > [1, 2, 3] 2`] = `
       },
     },
     "term": {
-      "row": {
-        "label": "0",
+      "arg": {
         "row": {
-          "label": "1",
+          "label": "0",
           "row": {
-            "label": "2",
+            "label": "1",
             "row": {
-              "type": "empty",
+              "label": "2",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 3,
+                },
+              },
             },
             "type": "extension",
             "value": {
               "type": "Lit",
               "value": {
                 "type": "Num",
-                "value": 3,
+                "value": 2,
               },
             },
           },
@@ -140,20 +150,21 @@ exports[`inference: list > [1, 2, 3] 2`] = `
             "type": "Lit",
             "value": {
               "type": "Num",
-              "value": 2,
+              "value": 1,
             },
           },
         },
-        "type": "extension",
+        "type": "Row",
+      },
+      "func": {
+        "type": "Lit",
         "value": {
-          "type": "Lit",
-          "value": {
-            "type": "Num",
-            "value": 1,
-          },
+          "type": "Atom",
+          "value": "Array",
         },
       },
-      "type": "Row",
+      "icit": "Explicit",
+      "type": "App",
     },
     "type": {
       "type": "Neutral",
