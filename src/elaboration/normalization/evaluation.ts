@@ -451,6 +451,43 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 			([v, p]) => _.isEqual(v.value, p.value),
 			() => O.some([]),
 		)
+		.with(
+			[NF.Patterns.Array, { type: "List" }],
+			([v, p]) => v.arg.row.type === "empty" && p.patterns.length === 0 && !p.rest,
+			() => O.some([]),
+		)
+		.with(
+			[NF.Patterns.Array, { type: "List" }],
+			([v, p]) => p.patterns.length === 0 && !p.rest,
+			() => O.none,
+		)
+		.with([NF.Patterns.Array, { type: "List" }], ([v, p]) => {
+			const zip = (patterns: EB.Pattern[], row: NF.Row): O.Option<MeetResult[]> => {
+				if (patterns.length === 0) {
+					if (!p.rest) {
+						return O.some([]);
+					}
+
+					const tail = NF.Constructors.Array(row);
+					const binder: EB.Binder = { type: "Lambda", variable: p.rest };
+					return O.some([{ binder, nf: tail }]);
+				}
+
+				if (row.type !== "extension") {
+					return O.none;
+				}
+
+				const [head, ...tail] = patterns;
+				return F.pipe(
+					O.Do,
+					O.apS("head", meet(ctx, head, row.value)),
+					O.apS("tail", zip(tail, row.row)),
+					O.map(({ head, tail }) => [...head, ...tail]),
+				);
+			};
+
+			return zip(p.patterns, v.arg.row);
+		})
 
 		.with([NF.Patterns.Schema, { type: "Struct" }], [NF.Patterns.Struct, { type: "Struct" }], ([{ arg }, p]) => meetAll(ctx, p.row, arg.row))
 		.with([NF.Patterns.Row, { type: "Row" }], ([v, p]) => {

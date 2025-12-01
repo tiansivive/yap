@@ -16,7 +16,8 @@ import { extractModalities, selfify } from "./utils/refinements";
 import * as Q from "@yap/shared/modalities/multiplicity";
 import { createCheck } from "./check";
 import { createSubtype } from "./subtype";
-import { isLeft } from "fp-ts/lib/Either";
+import * as E from "fp-ts/lib/Either";
+import assert from "node:assert";
 
 type SynthDeps = {
 	Z3: Z3Context<"main">;
@@ -25,7 +26,7 @@ type SynthDeps = {
 };
 
 export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
-	const { translate, quantify } = translation;
+	const { translate, quantify, mkSort } = translation;
 
 	const subtype = createSubtype({ Z3, runtime, translation });
 
@@ -44,9 +45,12 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 					}
 					const [, , ty] = entry.type;
 					const selfified = selfify(tm, ty, ctx);
-					const modalities = extractModalities(selfified, ctx);
-					const predicate = NF.reduce(modalities.liquid, NF.evaluate(ctx, tm), "Explicit");
-					return [selfified, { vc: translate(predicate, ctx) }] satisfies SynthResult;
+					const { liquid } = extractModalities(selfified, ctx);
+					assert(liquid.type === "Abs", "Liquid modality must be a Lambda");
+
+					const predicate = NF.reduce(liquid, NF.evaluate(ctx, tm), "Explicit");
+
+					return [selfified, { vc: translate(predicate, ctx) as Bool }] satisfies SynthResult;
 				})
 				.with({ type: "Var", variable: { type: "Free" } }, function* (tm) {
 					const entry = ctx.imports[tm.variable.name];
@@ -64,12 +68,18 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 				})
 				.with({ type: "Lit" }, function* (tm) {
 					const ann = match(tm.value)
-						.with({ type: "Atom" }, lit => EB.Constructors.Lit(lit))
 						.with({ type: "Num" }, () => EB.Constructors.Lit({ type: "Atom", value: "Num" }))
 						.with({ type: "String" }, () => EB.Constructors.Lit({ type: "Atom", value: "String" }))
 						.with({ type: "Bool" }, () => EB.Constructors.Lit({ type: "Atom", value: "Bool" }))
 						.with({ type: "unit" }, () => EB.Constructors.Lit({ type: "Atom", value: "Unit" }))
-						.exhaustive();
+						.with(
+							{ type: "Atom" },
+							({ value }) => ["Num", "String", "Bool", "Unit", "Type", "Row"].includes(value),
+							() => EB.Constructors.Lit({ type: "Atom", value: "Type" }),
+						)
+						.otherwise(() => {
+							throw new Error("Unsupported literal type in synthesis");
+						});
 					const nf = NF.evaluate(ctx, ann);
 					const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
 					//NOTE:IMPORTANT: empty env to avoid capturing at the refinement level. We're lifitng the primitive vlaue to the refinement, so we need to be careful
@@ -124,8 +134,14 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 								})
 								.with(NF.Patterns.Pi, function* (pi) {
 									const vc = yield* subtype.gen(argTy, pi.binder.annotation);
-									const evaluatedArg = NF.evaluate(localCtx, tm.arg);
-									const appliedArg = evaluatedArg.type !== "Neutral" ? evaluatedArg : NF.Constructors.Rigid(localCtx.env.length);
+									const evaluatedArg = NF.evaluate(ctx, tm.arg);
+									const appliedArg = match(evaluatedArg)
+										.with(
+											{ type: "Neutral" },
+											neutral => neutral.value.type !== "Var",
+											() => NF.Constructors.Rigid(localCtx.env.length),
+										)
+										.otherwise(() => evaluatedArg);
 									const out = NF.apply(pi.binder, pi.closure, appliedArg);
 									return [NF.Constructors.Exists(pi.binder.variable, argTy, { value: out, ctx: localCtx }), { vc }] satisfies SynthResult;
 								})
@@ -164,8 +180,10 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 									const artefacts = yield* check.gen(current.value, current.annotation);
 									const [ty, restArtefacts] = yield* V2.pure(recurse(rest));
 									const conj = Z3.And(artefacts.vc as Bool, restArtefacts.vc as Bool);
+									const ctx = yield* V2.ask();
 									const quantified = quantify(current.variable, current.annotation, conj, ctx);
-									return [ty, { vc: quantified }] satisfies SynthResult;
+									const existential = NF.Constructors.Exists(current.variable, current.annotation, { ctx, value: ty });
+									return [existential, { vc: quantified }] satisfies SynthResult;
 								}),
 							);
 						});
@@ -177,16 +195,33 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 					const projected = (label: string, ty: NF.Value): V2.Elaboration<NF.Value> =>
 						V2.Do(function* () {
 							return yield* match(ty)
-								.with(NF.Patterns.Modal, m => V2.pure(projected(label, m.value)))
+								.with(NF.Patterns.Modal, function* (m) {
+									const proj = yield* V2.pure(projected(label, m.value));
+									return NF.Constructors.Modal(proj, m.modalities);
+								})
 								.with(NF.Patterns.Schema, function* ({ func, arg }) {
 									const rewritten = Row.rewrite(arg.row, label);
-									if (isLeft(rewritten)) {
+									if (E.isLeft(rewritten)) {
 										throw new Error("Projection label not found: " + label);
 									}
 									if (rewritten.right.type !== "extension") {
 										throw new Error("Projected label is not an extension: " + label);
 									}
 
+									return rewritten.right.value;
+								})
+								.with(NF.Patterns.Sigma, function* ({ binder, closure }) {
+									if (binder.annotation.type !== "Row") {
+										throw new Error("Sigma binder annotation must be a Row");
+									}
+
+									const rewritten = Row.rewrite(binder.annotation.row, label);
+									if (E.isLeft(rewritten)) {
+										throw new Error("Projection label not found in Sigma: " + label);
+									}
+									if (rewritten.right.type !== "extension") {
+										throw new Error("Projected label is not an extension in Sigma: " + label);
+									}
 									return rewritten.right.value;
 								})
 								.otherwise(() => {
@@ -197,12 +232,43 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 					const outTy = yield* V2.pure(projected(proj.label, baseTy));
 					return [outTy, { vc: baseArtefacts.vc }] satisfies SynthResult;
 				})
+				.with(EB.CtorPatterns.Inj, function* (inj) {
+					const [baseTy, baseArtefacts] = yield* synth.gen(inj.term);
+					const forcedBase = NF.force(ctx, baseTy);
+					const [valueTy, valueArtefacts] = yield* synth.gen(inj.value);
+					const payloadTy = NF.force(ctx, valueTy);
+
+					const injected = (label: string, ty: NF.Value): V2.Elaboration<NF.Value> =>
+						V2.Do(function* () {
+							return yield* match(ty)
+								.with(NF.Patterns.Modal, function* ({ value, modalities }) {
+									const inner = yield* V2.pure(injected(label, value));
+									return NF.Constructors.Modal(inner, modalities);
+								})
+								.with(NF.Patterns.Schema, function* ({ func, arg }) {
+									const rewritten = Row.rewrite(arg.row, label);
+									if (E.isLeft(rewritten)) {
+										const extended = Row.Constructors.Extension(label, payloadTy, arg.row);
+										return NF.Constructors.App(func, NF.Constructors.Row(extended), "Explicit");
+									}
+
+									return NF.Constructors.App(func, NF.Constructors.Row(rewritten.right), "Explicit");
+								})
+								.otherwise(() => {
+									throw new Error("Injection expected a Schema or Variant type");
+								});
+						});
+
+					const outTy = yield* V2.pure(injected(inj.label, forcedBase));
+					const combinedVc = Z3.And(baseArtefacts.vc as Bool, valueArtefacts.vc as Bool);
+					return [outTy, { vc: combinedVc }] satisfies SynthResult;
+				})
 				.otherwise(function* () {
 					//  runtime.log("synth: case not implemented");
 					throw new Error("synth: case not implemented for term " + EB.Display.Term(term, ctx));
-					return [NF.Any, { vc: Z3.Bool.val(true) }] satisfies SynthResult;
 				});
 
+			runtime.log("Synthesized type", NF.display(result[0], ctx));
 			runtime.exit();
 			return result;
 		});

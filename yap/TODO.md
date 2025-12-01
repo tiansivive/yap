@@ -151,3 +151,9 @@
 - Refactor row operations
   - rewrite
   - meet/join for pattern matching
+
+### Known issues
+
+- Can't elide implicits before an explicit implicit application
+  - Need to figure out how to match which implicit is being applied.
+  - Named args might solve this issue

@@ -129,6 +129,8 @@ export const Constructors = {
 
 	Schema: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit")),
 	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),
+	Struct: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row), "Explicit")),
+	Array: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Array")), Constructors.Row(row), "Explicit")),
 
 	Modal: (value: Value, modalities: Modalities): Value =>
 		mk({
@@ -174,6 +176,7 @@ export const Patterns = {
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } } as const,
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } } as const,
 	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } } as const,
+	Array: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Array" } }, arg: { type: "Row" } } as const,
 
 	App: { type: "App" } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,
@@ -222,14 +225,6 @@ export const Patterns = {
 					arg: { type: "Lit", value: { type: "Atom", value: "String" } },
 				},
 			},
-		},
-	} as const,
-	Array: {
-		type: "App",
-		func: {
-			type: "App",
-			func: { type: "Lit", value: { type: "Atom", value: "Indexed" } },
-			arg: { type: "Lit", value: { type: "Atom", value: "Num" } },
 		},
 	} as const,
 };

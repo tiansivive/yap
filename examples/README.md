@@ -98,6 +98,8 @@ let compose: (Num -> Num) -> (Num -> Num) -> Num -> Num
 let addOne: Num -> Num = \x -> x + 1;
 let add5: Num -> Num = \x -> x + 5;
 
+let double = \x -> x * 2;
+
 let addOneThenDouble = compose double addOne;
 // addOneThenDouble 5 == 12
 ```
@@ -212,6 +214,13 @@ let Shape: Type
       | #rectangle { Num, Num }  // width, height
       | #point { x: Num, y: Num };
 
+
+let Shape: Type
+    = | #circle Num
+      | #rectangle { Num, Num }
+      | #point { x: Num, y: Num };
+
+
 let c: Shape = #circle 5.0;
 let r: Shape = #rectangle { 10, 20 };
 let p: Shape = #point { x: 0, y: 0 };
@@ -268,6 +277,11 @@ let firstOrZero: { [Num]: Num } -> Num
         | [x | xs]   -> x;
 ```
 
+let tail: { [Num]: Num } -> { [Num]: Num }
+= \list -> match list
+| [] -> [0]
+| [x | xs] -> xs;
+
 ---
 
 ## Statement Blocks
@@ -285,17 +299,7 @@ let compute: Num -> Num
 let result = compute 5;  // 20
 ```
 
-Blocks enable sequential computation and local bindings:
-
-```ocaml
-let processData: Num -> Num
-    = \n -> {
-        let doubled = n * 2;
-        let squared = doubled * doubled;
-        let result = squared + 10;
-        return result;
-    };
-```
+Blocks enable sequential computation and local bindings.
 
 ### Side Effects in Blocks
 
@@ -337,6 +341,8 @@ let MyString: Type = String;
 let n: MyNum = 42;        // Same as Num
 let s: MyString = "hi";   // Same as String
 ```
+
+Only values of type `Type` are allowed on the right-hand side of the `:` (type annotation) operator!
 
 ### Type Aliases
 
@@ -454,6 +460,14 @@ let example: Num
     };
 ```
 
+let example: Num
+= {
+let id1 = \x -> x;  
+ let n: Num = id1 42;  
+ let s: String = id1 "hi";  
+ return n;
+};
+
 This automatic generalization is called **let-polymorphism**. The compiler infers that `id` should be polymorphic and automatically adds the implicit type parameter.
 
 ### Traits and Type Classes with Implicits
@@ -497,7 +511,7 @@ let EqNum: Eq Num
 Write functions that require trait instances:
 
 ```ocaml
-let display: (show: Show t) => (x: t) -> String
+let display: (t:Type) => (show: Show t) => (x: t) -> String
     = \x -> show.show x;
 
 let areEqual: (eq: Eq t) => (x: t) -> (y: t) -> Bool

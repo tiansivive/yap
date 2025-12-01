@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`examples README tutorial > runs every snippet through the REPL 1`] = `[]`;

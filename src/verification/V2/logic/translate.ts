@@ -66,11 +66,11 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 						throw new Error("Unsupported literal in sort mapping");
 					}),
 			)
-			.with(NF.Patterns.Row, () => ({ Prim: Sorts.Row }))
-			.with(NF.Patterns.App, ({ func, arg }) => ({ App: [mkSort(func, ctx), mkSort(arg, ctx)] }))
-			.with(NF.Patterns.Sigma, () => ({ Row: Sorts.Schema }))
+			.with(NF.Patterns.Row, () => ({ Row: Sorts.Row }))
+			.with(NF.Patterns.Sigma, NF.Patterns.Schema, NF.Patterns.Variant, NF.Patterns.Indexed, () => ({ Row: Sorts.Schema }))
 			.with(NF.Patterns.Mu, mu => ({ Recursive: Z3.Sort.declare(`Mu_${mu.binder.source}`) }))
 			.with(NF.Patterns.Lambda, () => ({ Prim: Sorts.Function }))
+			.with(NF.Patterns.App, ({ func, arg }) => ({ App: [mkSort(func, ctx), mkSort(arg, ctx)] }))
 			.with({ type: "Abs" }, ({ binder, closure }) => {
 				const body = NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length));
 				return { Func: [mkSort(binder.annotation, ctx), mkSort(body, ctx)] };
@@ -79,7 +79,8 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 			.with({ type: "External" }, e => ({ Prim: Z3.Sort.declare(`External:${e.name}`) }))
 			.with(NF.Patterns.Var, v => {
 				if (v.variable.type === "Bound") {
-					return mkSort(ctx.env[v.variable.lvl].nf, ctx);
+					//return mkSort(ctx.env[EB.lvl2idx(ctx, v.variable.lvl)].nf, ctx);
+					return mkSort(ctx.env[EB.lvl2idx(ctx, v.variable.lvl)].type[2], ctx);
 				}
 				if (v.variable.type === "Meta") {
 					const ty = ctx.zonker[v.variable.val];
@@ -141,7 +142,11 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 					.with({ type: "Bool" }, lit => Z3.Bool.val(lit.value))
 					.with({ type: "String" }, lit => Z3.Const(lit.value, Sorts.String))
 					.with({ type: "unit" }, () => Z3.Const("unit", Sorts.Unit))
-					.with({ type: "Atom" }, atom => Z3.Const(atom.value, Sorts.Atom))
+					.with(
+						{ type: "Atom" },
+						({ value }) => ["Num", "String", "Bool", "Unit", "Type", "Row"].includes(value),
+						atom => Z3.Const(atom.value, Sorts.Type),
+					)
 					.otherwise(() => {
 						throw new Error("Unsupported literal in logical formulas");
 					}),
@@ -165,7 +170,7 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 					}
 					const entry = ctx.env[EB.lvl2idx(ctx, v.variable.lvl)];
 					const sorts = build(mkSort(entry.type[2], ctx));
-					const sort = sorts.length === 1 ? sorts[0] : Z3.Sort.declare(sorts.map(s => s.name()).join("->"));
+					const sort = sorts.length === 1 ? sorts[0] : Z3.Sort.declare(`App_${sorts.map(s => s.name()).join("_")}`);
 					return Z3.Const(entry.name.variable, sort);
 				}
 				if (v.variable.type === "Free") {

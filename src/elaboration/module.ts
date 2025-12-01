@@ -127,8 +127,8 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 			throw new Error("Z3 context not set");
 		}
 		const Verification = VerificationServiceV2(zCtx);
-
-		const { result: res } = Verification.check(r.value, r.annotation)(next);
+		const xtended = EB.bind(next, { type: "Let", variable: stmt.variable }, ty);
+		const { result: res } = Verification.check(r.value, r.annotation)(xtended);
 		if (res._tag === "Left") {
 			console.log("Verification failure");
 			console.log(res.left);

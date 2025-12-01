@@ -6,9 +6,11 @@ import { match } from "ts-pattern";
 
 import * as Lit from "@yap/shared/literals";
 import * as Q from "@yap/shared/modalities/multiplicity";
+import * as R from "@yap/shared/rows";
 
 import * as F from "fp-ts/function";
 import { Liquid } from "@yap/verification/modalities";
+import { isLeft } from "fp-ts/lib/Either";
 
 type Injection = Extract<EB.Term, { type: "injection" }>;
 
@@ -53,8 +55,13 @@ const inject = (label: string, value: EB.AST, tm: EB.AST): V2.Elaboration<NF.Val
 						},
 					}) => value === "Schema" || value === "Variant",
 					({ func, arg }) => {
-						const extended = NF.Constructors.App(func, NF.Constructors.Row(NF.Constructors.Extension(label, value[1], arg.row)), "Explicit");
-						return V2.of(extended);
+						const rewritten = R.rewrite(arg.row, label);
+						if (isLeft(rewritten)) {
+							const extended = NF.Constructors.App(func, NF.Constructors.Row(NF.Constructors.Extension(label, value[1], arg.row)), "Explicit");
+							return V2.of(extended);
+						}
+
+						return V2.of(NF.Constructors.App(func, NF.Constructors.Row(rewritten.right), "Explicit"));
 					},
 				)
 				.otherwise(_ => {
