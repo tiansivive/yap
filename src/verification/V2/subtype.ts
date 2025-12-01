@@ -13,7 +13,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import type { Context as Z3Context, Expr, Bool } from "z3-solver";
 
 import { Liquid } from "../modalities";
-import { extractModalities, type ExtractModalitiesFn } from "./utils/refinements";
+import { extractModalities, isFirstOrder, type ExtractModalitiesFn } from "./utils/refinements";
 import { noCapture } from "./utils/context";
 import type { VerificationRuntime } from "./utils/context";
 import type { TranslationTools } from "./logic/translate";
@@ -115,9 +115,23 @@ export const createSubtype = ({ Z3, runtime, translation }: SubtypeDeps) => {
 						const bnf = NF.apply(bt.binder, bt.closure, NF.Constructors.Rigid(lvl));
 						const vcBody = yield* V2.local(ctx => EB.bind(ctx, bt.binder, bt.binder.annotation), subtype(anf, bnf));
 
+						if (!isFirstOrder(bt.binder.annotation)) {
+							runtime.record("subtype.pi.nonrefinable", vcBody as Bool, {
+								type: `${NF.display(at, envCtx)} <: ${NF.display(bt, envCtx)}`,
+								description: `Function result must be subtype (non-refinable parameter ${bt.binder.variable})`,
+							});
+							return Z3.And(vcArg as Bool, vcBody as Bool);
+						}
+
 						const sortMap = mkSort(bt.binder.annotation, envCtx);
 						const xSort = match(sortMap)
 							.with({ Prim: P.select() }, p => p)
+							.with({ Recursive: P.select() }, r => r)
+							.with({ Row: P.select() }, r => r)
+							.with({ App: P._ }, app => {
+								const sorts = build(app);
+								return Z3.Sort.declare(`App_${sorts.map(s => s.name()).join("_")}`);
+							})
 							.otherwise(() => {
 								throw new Error("Only primitive types can be used in logical formulas");
 							});

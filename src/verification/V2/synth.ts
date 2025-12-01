@@ -62,6 +62,16 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 					const predicate = NF.reduce(modalities.liquid, NF.evaluate(ctx, tm), "Explicit");
 					return [ty, { vc: translate(predicate, ctx) }] satisfies SynthResult;
 				})
+				.with({ type: "Var", variable: { type: "Label" } }, function* ({ variable }) {
+					const entry = ctx.sigma[variable.name];
+					if (!entry) {
+						throw new Error(`Unbound label variable: ${variable.name}`);
+					}
+
+					const modalities = extractModalities(entry.ann, ctx);
+					const predicate = NF.reduce(modalities.liquid, NF.evaluate(ctx, term), "Explicit");
+					return [entry.ann, { vc: translate(predicate, ctx) }] satisfies SynthResult;
+				})
 				.with({ type: "Var" }, function* () {
 					runtime.log("synth: unsupported variable kind");
 					return [NF.Any, { vc: Z3.Bool.val(true) }] satisfies SynthResult;

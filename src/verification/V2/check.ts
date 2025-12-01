@@ -148,7 +148,7 @@ export const createCheck = ({ Z3, runtime, translation }: CheckDeps) => {
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], ([term, type]) => {
 					const nf = NF.evaluate(ctx, term);
-					const traverse = (r1: NF.Row, r2: NF.Row): V2.Elaboration<VerificationArtefacts> =>
+					const traverse = (r1: EB.Row, r2: NF.Row): V2.Elaboration<VerificationArtefacts> =>
 						match([r1, r2])
 							.with([{ type: "empty" }, { type: "empty" }], () => V2.of<VerificationArtefacts>({ vc: Z3.Bool.val(true) }))
 							.with([{ type: "empty" }, { type: "variable" }], () => V2.of<VerificationArtefacts>({ vc: Z3.Bool.val(true) }))
@@ -162,7 +162,7 @@ export const createCheck = ({ Z3, runtime, translation }: CheckDeps) => {
 										return yield* V2.fail<VerificationArtefacts>({ type: "Impossible", message: "Row rewrite should yield extension" });
 									}
 									const { value: rv, row: rr } = rewritten.right;
-									const artefacts = yield* check.gen(NF.quote(ctx, ctx.env.length, value), rv);
+									const artefacts = yield* check.gen(value, rv);
 									const rest = yield* V2.pure(traverse(row, rr));
 									return { vc: Z3.And(artefacts.vc as Bool, rest.vc as Bool) } satisfies VerificationArtefacts;
 								}),
@@ -175,7 +175,7 @@ export const createCheck = ({ Z3, runtime, translation }: CheckDeps) => {
 								const bindings = yield* V2.pure(collectSigmaBindings(struct.arg.row, type.arg.row));
 								return yield* V2.local(
 									update("sigma", sigma => ({ ...sigma, ...bindings })),
-									traverse(struct.arg.row, type.arg.row),
+									traverse(term.arg.row, type.arg.row),
 								);
 							}),
 						)

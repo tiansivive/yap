@@ -586,7 +586,7 @@ let ListFunctor: Functor List
 Use it the same way:
 
 ```ocaml
-let polymorphicMap: (functor: Functor f) => (a: Type) => (b: Type) =>
+let polymorphicMap: (f: Type -> Type) => (functor: Functor f) => (a: Type) => (b: Type) =>
                     (a -> b) -> f a -> f b
     = \fn -> \container -> functor.map fn container;
 
