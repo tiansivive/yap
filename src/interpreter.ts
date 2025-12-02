@@ -5,6 +5,7 @@ import * as Src from "@yap/src/index";
 import * as EB from "@yap/elaboration";
 
 import * as E from "fp-ts/lib/Either";
+import * as A from "fp-ts/lib/Array";
 
 import * as CG from "./Codegen/terms";
 
@@ -17,6 +18,7 @@ import * as Lib from "@yap/shared/lib/primitives";
 
 import beautify from "js-beautify";
 import { options } from "./shared/config/options";
+import { update } from "./utils";
 
 export const interpret = (code: string, ctx: EB.Context, opts = { nf: false }) => {
 	const g = Grammar;
@@ -66,6 +68,22 @@ const interpretStmt = (stmt: Src.Statement, ctx: EB.Context, opts = { nf: false 
 		// console.log(`\n\n${code}`);
 
 		return ctx_;
+	}
+
+	if (stmt.type === "using") {
+		const infer = EB.Stmt.infer(stmt);
+		const { result } = infer(ctx);
+
+		if (E.isLeft(result)) {
+			console.warn(EB.V2.display(result.left));
+			return ctx;
+		}
+
+		type Implicit = EB.Context["implicits"][0];
+		const [{ value }, ty, us] = result.right;
+
+		const next = update(ctx, "implicits", A.append<Implicit>([value, ty]));
+		return next;
 	}
 
 	if (stmt.type === "expression") {

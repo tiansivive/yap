@@ -105,6 +105,17 @@ program
 				return rl.prompt();
 			}
 
+			if ([":implicits"].includes(trimmed)) {
+				console.log("\nImplicits:");
+				ctx.implicits.forEach(([tm, ty], i) => {
+					console.log(`\n  [${i}]:`);
+					console.log(`	Term: ${EB.Display.Term(tm, ctx)}`);
+					console.log(`	Type: ${EB.NF.display(ty, ctx)}`);
+				});
+				console.log("");
+				return rl.prompt();
+			}
+
 			// Empty line: execute buffered code if any
 			if (trimmed === "") {
 				if (buffer.length > 0) {

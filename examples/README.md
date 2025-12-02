@@ -279,7 +279,7 @@ let firstOrZero: { [Num]: Num } -> Num
 
 let tail: { [Num]: Num } -> { [Num]: Num }
 = \list -> match list
-| [] -> [0]
+| [] -> []
 | [x | xs] -> xs;
 
 ---
@@ -508,15 +508,12 @@ let EqNum: Eq Num
 
 #### Using Traits with Implicits
 
-Write functions that require trait instances:
-
-```ocaml
-let display: (t:Type) => (show: Show t) => (x: t) -> String
-    = \x -> show.show x;
+Write functions that require trait
 
 let areEqual: (eq: Eq t) => (x: t) -> (y: t) -> Bool
-    = \x y -> eq.eq x y;
-```
+= \x y -> eq.eq x y;
+
+````
 
 #### The `using` Statement
 
@@ -526,7 +523,7 @@ The `using` statement brings a value into implicit scope, making it available fo
 using ShowNum;  // Make ShowNum available for implicit resolution
 
 // Now any function requiring (show: Show Num) => will use it
-```
+````
 
 Bring instances into scope and use them:
 
@@ -592,6 +589,8 @@ let polymorphicMap: (f: Type -> Type) => (functor: Functor f) => (a: Type) => (b
 
 using ListFunctor;
 
+let empty: List Num = #nil !;
+let one: List Num = #cons { 1, #nil ! };
 let someList = #cons { 1, #cons { 2, #cons { 3, #nil ! } } };
 let result = polymorphicMap (\x -> x + 1) someList;
 ```

@@ -146,9 +146,12 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 									return [NF.Constructors.Exists(ex.variable, ex.annotation, { ctx, value: out }), artefacts] satisfies SynthResult;
 								})
 								.with(NF.Patterns.Pi, function* (pi) {
-									const { vc, nf } = yield* check.gen(arg, pi.binder.annotation);
-									//const [argTy, argArtefacts] = yield* synth.gen(arg);
-									//const vc = yield* subtype.gen(argTy, pi.binder.annotation);
+									// Ignore the local incorporation context = that's only for the existentials.
+									// We need to check the argument in the original context so that bound variables are correctly resolved.
+									// FIXME: Pass an explicit ctx as an argument to incorporate instead of relying on V2.ask().
+									// That way checking will always happen in the right context and we can be explicit about which context to capture in existentials.
+									const { vc, nf } = yield* V2.local(_ => ctx, check(arg, pi.binder.annotation));
+
 									const evaluatedArg = NF.evaluate(ctx, arg);
 									const appliedArg = match(evaluatedArg)
 										.with(

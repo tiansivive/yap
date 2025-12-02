@@ -70,10 +70,10 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 			};
 
 			// Extend context with the entry
-			const extendedCtx = { ...ctx, env: [...ctx.env, entry] };
+			const xtended = { ...ctx, env: [entry, ...ctx.env] };
 
 			// Evaluate in extended context - recursive calls will find the Bound var
-			const result = evaluate(extendedCtx, val[0], bindings, fuel);
+			const result = evaluate(xtended, val[0], bindings, fuel);
 
 			// "Tie the knot" - update placeholder to actual result
 			// This makes recursive references work correctly
