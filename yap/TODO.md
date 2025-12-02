@@ -154,6 +154,23 @@
 
 ### Known issues
 
+- Pattern matching doesnt narrow down types dependent on the scrutinee
+  - Example:
+  ```
+    let process: (b: Bool) -> (v: match b | true -> Num | false -> String) -> String
+      = \b -> \v -> match b
+          | true  -> stringify v  // v: Num here
+          | false -> v;           // v: String here
+  ```
+
+  - `v`'s type is a `StuckMatch` as when it is introduced, we don't know the **value** of `b`. Later, in the each match branch, we can narrow `b` down to `true` or `false` and progress with computing `typeof v`.
+  - I think we need HM, GHC-style Implication constraints.
+  - What are the implications for higher order unification if that ever gets built?
+  - **Possible implementation solution**
+    - Add a different type of constraint: _Implication_. This will carry assumptions one can use to lookup values: `(b = true) ==> StuckMatch(L1) ~~ String`
+    - When unifying `StuckMatch(L1) ~~ String`, we can safely lookup the value of the rigid L1 in the assumptions without breaking scoping (no rigid escape or similar).
+    - If value is found, unblock the match and proceed with unification
+    - If no value is found, leave the rigid as-is
 - Can't elide implicits before an explicit implicit application
   - Need to figure out how to match which implicit is being applied.
   - Named args might solve this issue

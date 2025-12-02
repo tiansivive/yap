@@ -854,19 +854,6 @@ let example2: Pair Bool (\b -> match b | true -> Num | false -> String)
     = { fst: true, snd: 100 };
 ```
 
-### Pattern Matching on Dependent Types
-
-Pattern matching can compute different types for each branch:
-
-```ocaml
-let process: (b: Bool) -> (v: match b | true -> Num | false -> String) -> String
-    = \b -> \v -> match b
-        | true  -> stringify v  // v: Num here
-        | false -> v;           // v: String here
-```
-
-The type of `v` changes based on the value of `b`!
-
 ---
 
 ## Recursive Types

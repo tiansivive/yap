@@ -160,6 +160,17 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						return o2;
 					}),
 				)
+				.with([NF.Patterns.StuckMatch, NF.Patterns.StuckMatch], ([left, right]) => {
+					throw new Error("Unification of stuck match expressions is not supported yet");
+				})
+				.with([NF.Patterns.StuckMatch, P._], ([stuck, v]) => {
+					const applied = NF.reduce(stuck.func, NF.force(ctx, stuck.arg), "Explicit");
+					return unify(applied, v, lvl, subst);
+				})
+				.with([P._, NF.Patterns.StuckMatch], ([v, stuck]) => {
+					const applied = NF.reduce(stuck.func, NF.force(ctx, stuck.arg), "Explicit");
+					return unify(v, applied, lvl, subst);
+				})
 				.with([NF.Patterns.App, NF.Patterns.App], ([left, right]) =>
 					V2.Do<Subst, Subst>(function* () {
 						const unfoldedL = NF.unfoldMu(left);
@@ -212,6 +223,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						// 	);
 					}),
 				)
+
 				.with(
 					[NF.Patterns.App, P._],
 					([app]) => O.isSome(NF.unfoldMu(app)),

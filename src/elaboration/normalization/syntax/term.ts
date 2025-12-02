@@ -132,6 +132,11 @@ export const Constructors = {
 	Struct: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row), "Explicit")),
 	Array: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Array")), Constructors.Row(row), "Explicit")),
 
+	StuckMatch: (closure: Closure, scrutinee: Value): Value => {
+		const lambda = Constructors.Lambda(SCRUTINEE_VAR, "Explicit", closure, Any);
+		const app = Constructors.App(lambda, scrutinee, "Explicit");
+		return Constructors.Neutral(app);
+	},
 	Modal: (value: Value, modalities: Modalities): Value =>
 		mk({
 			type: "Modal",
@@ -161,6 +166,8 @@ export const Any = mk({
 	value: { type: "Atom", value: "Any" },
 });
 
+export const SCRUTINEE_VAR = "$scrutinee";
+
 export const Patterns = {
 	Var: { type: "Var" } as const,
 	Rigid: { type: "Var", variable: { type: "Bound" } } as const,
@@ -177,6 +184,11 @@ export const Patterns = {
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } } as const,
 	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } } as const,
 	Array: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Array" } }, arg: { type: "Row" } } as const,
+
+	StuckMatch: {
+		type: "App",
+		func: { type: "Abs", binder: { type: "Lambda", variable: SCRUTINEE_VAR } },
+	} as const,
 
 	App: { type: "App" } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,

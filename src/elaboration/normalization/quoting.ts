@@ -30,7 +30,7 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 			.with({ type: "Neutral" }, ({ value }) => quote(ctx, lvl, value))
 			// FIXME: This is a bit of a hack to handle match expressions.
 			// QUESTION: Do we need to add a Match contructor Normal Form?
-			.with({ type: "App", func: { type: "Abs", binder: { type: "Lambda", variable: "_scrutinee" } } }, ({ func, arg }) => {
+			.with(NF.Patterns.StuckMatch, ({ func, arg }) => {
 				const quotedArg = NF.quote(ctx, lvl, arg);
 				const match = func.closure.term;
 				assert(match.type === "Match");

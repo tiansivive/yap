@@ -197,9 +197,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 		.with({ type: "Match" }, v => {
 			const scrutinee = evaluate(ctx, v.scrutinee, bindings, fuel);
 			if (scrutinee.type === "Neutral" || (scrutinee.type === "Var" && scrutinee.variable.type === "Meta")) {
-				const lambda = NF.Constructors.Lambda("_scrutinee", "Explicit", NF.Constructors.Closure(ctx, v), NF.Any);
-				const app = NF.Constructors.App(lambda, scrutinee, "Explicit");
-				return NF.Constructors.Neutral(app);
+				return NF.Constructors.StuckMatch(NF.Constructors.Closure(ctx, v), scrutinee);
 			}
 
 			const res = matching(ctx, scrutinee, v.alternatives);
