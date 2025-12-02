@@ -1,0 +1,525 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parser: primitive operations > addition: 1 + 2 1`] = `
+{
+  "arg": {
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 2,
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "+",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > chained operations: 1 + 2 * 3 1`] = `
+{
+  "arg": {
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 3,
+    },
+  },
+  "fn": {
+    "arg": {
+      "arg": {
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 2,
+        },
+      },
+      "fn": {
+        "arg": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "fn": {
+          "type": "var",
+          "variable": {
+            "type": "name",
+            "value": "+",
+          },
+        },
+        "icit": "Explicit",
+        "type": "application",
+      },
+      "icit": "Explicit",
+      "type": "application",
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "*",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > concat: s1 <> s2 1`] = `
+{
+  "arg": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "s2",
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "s1",
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "<>",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > division: 10 / 2 1`] = `
+{
+  "arg": {
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 2,
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 10,
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "/",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > equality: x == y 1`] = `
+{
+  "arg": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "y",
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "==",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > greater than or equal: x >= y 1`] = `
+{
+  "arg": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "y",
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": ">=",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > greater than: x > y 1`] = `
+{
+  "arg": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "y",
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": ">",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > inequality: x != y 1`] = `
+{
+  "arg": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "y",
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "!=",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > less than or equal: x <= y 1`] = `
+{
+  "arg": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "y",
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "<=",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > less than: x < y 1`] = `
+{
+  "arg": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "y",
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "<",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > multiplication: 4 * 2 1`] = `
+{
+  "arg": {
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 2,
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 4,
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "*",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > nested operations: (x + y) * z 1`] = `
+{
+  "arg": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "z",
+    },
+  },
+  "fn": {
+    "arg": {
+      "arg": {
+        "type": "var",
+        "variable": {
+          "type": "name",
+          "value": "y",
+        },
+      },
+      "fn": {
+        "arg": {
+          "type": "var",
+          "variable": {
+            "type": "name",
+            "value": "x",
+          },
+        },
+        "fn": {
+          "type": "var",
+          "variable": {
+            "type": "name",
+            "value": "+",
+          },
+        },
+        "icit": "Explicit",
+        "type": "application",
+      },
+      "icit": "Explicit",
+      "type": "application",
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "*",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > pipe left: f <| g 1`] = `
+{
+  "arg": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "g",
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "f",
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "<|",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > pipe right: f |> g 1`] = `
+{
+  "arg": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "g",
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "f",
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "|>",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
+exports[`parser: primitive operations > subtraction: 5 - 3 1`] = `
+{
+  "arg": {
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 3,
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 5,
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "-",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;

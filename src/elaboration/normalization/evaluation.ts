@@ -122,9 +122,39 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 			return NF.Constructors.Pi(binding.variable, binding.icit, ann, NF.Constructors.Closure(ctx, body));
 		})
 		.with({ type: "Abs", binding: { type: "Sigma" } }, ({ body, binding }) => {
-			// assert(binding.annotation.type === "Row", "Sigma binder annotation must be a Row");
-			const ann = evaluate(ctx, binding.annotation, bindings, fuel);
-			return NF.Constructors.Sigma(binding.variable, ann, NF.Constructors.Closure(ctx, body));
+			assert(binding.annotation.type === "Row", "Sigma binder annotation must be a Row");
+			const extract = (r: EB.Row): { [key: string]: EB.Term } => {
+				if (r.type === "empty" || r.type === "variable") {
+					return {};
+				}
+
+				const { label, value, row } = r;
+				return { [label]: value, ...extract(row) };
+			};
+			const bindings = extract(binding.annotation.row);
+
+			// Block labels from fully reducing by wrapping them as neutral label vars.
+			// Sigma types encode the types of the fields which is different from value-level rows.
+			// For the latter, we can eagerly follow the dependencies to fully evaluate the row structure.
+			// Eg: Struct [x: 1, y: :x + 1] can be fully evaluated to Struct [x: 1, y: 2].
+			// However, for Sigma types, a label reference means "use the value of that field, which we have typed as X", not its evaluated result.
+			// This is what allows types to depend on values!
+			// Eg: ∑sig:[x: Int, y: fn :x]. Schema [x: Int, y: fn :x] means applying the value of field x when constructing the type of field y.
+			// This means that when evaluating (normalizing!) a Sigma, we have to preserve the label references as-is, because we do not have the actual values at this point.
+			// Using neutral vars for labels achieves this.
+			// Later on, checking a value against a Sigma type will actually perform the necessary reductions using the real values.
+			const sigma = Object.entries(bindings).reduce<EB.Context["sigma"]>((sig, b) => {
+				const [label, term] = b;
+
+				if (sig[label]) {
+					return sig;
+				}
+				const v = NF.Constructors.Var({ type: "Label", name: label });
+				return { ...sig, [label]: { nf: NF.Constructors.Neutral(v) } as EB.Sigma };
+			}, ctx.sigma);
+			const xtended = { ...ctx, sigma };
+			const ann = evalRow(xtended, binding.annotation.row, bindings);
+			return NF.Constructors.Sigma(binding.variable, NF.Constructors.Row(ann), NF.Constructors.Closure(ctx, body));
 		})
 		.with({ type: "Abs", binding: { type: "Mu" } }, (mu): NF.Value => {
 			const ann = evaluate(ctx, mu.binding.annotation, bindings, fuel);

@@ -168,8 +168,7 @@ exports[`VerificationService > blocks > verifies return types are scoped to inne
                (let ((a!1 (and true
                                (= x x)
                                true
-                               (forall ((v Real)) (=> (= v x) true))
-                               true))
+                               (forall ((v Real)) (=> (= v x) true))))
                      (a!2 (forall ((x!1 Real))
                             (=> (= x!1 x!1)
                                 (forall ((y Real))
@@ -181,8 +180,7 @@ exports[`VerificationService > blocks > verifies return types are scoped to inne
                                             (= doubled doubled)
                                             true
                                             (forall ((v Real))
-                                              (=> (= v doubled) true))
-                                            true))
+                                              (=> (= v doubled) true))))
                                   (a!2 (forall ((x!1 Real))
                                          (=> (= x!1 doubled)
                                              (forall ((y Real))
@@ -194,10 +192,12 @@ exports[`VerificationService > blocks > verifies return types are scoped to inne
                                                  (=> (= y 10.0) (and true a!1))))))))
                               (and a!1
                                    true
+                                   true
                                    (forall (($b Real)) (=> (= $b 10.0) true))
                                    a!2
                                    (= added added))))))
                  (and a!1
+                      true
                       true
                       (forall (($a Real)) (=> (= $a 2.0) true))
                       a!2

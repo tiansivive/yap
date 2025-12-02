@@ -124,3 +124,8 @@ export const collectSigmaBindings = (r1: NF.Row, r2: NF.Row): V2.Elaboration<EB.
 			}),
 		)
 		.otherwise(() => V2.Do(() => V2.fail({ type: "Impossible", message: "Schema verification: incompatible rows" })));
+
+export const unwrapExistential = (nf: NF.Value): NF.Value =>
+	match(NF.unwrapNeutral(nf))
+		.with({ type: "Existential" }, e => unwrapExistential(e.body.value))
+		.otherwise(() => nf);

@@ -10,7 +10,7 @@ import type { Bool, Context as Z3Context, Expr } from "z3-solver";
 import type { CheckFn, SynthFn, SynthResult, SubtypeFn } from "./types";
 import type { TranslationTools } from "./logic/translate";
 import type { VerificationRuntime } from "./utils/context";
-import { noCapture } from "./utils/context";
+import { noCapture, unwrapExistential } from "./utils/context";
 import { extractModalities, selfify } from "./utils/refinements";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
@@ -127,24 +127,29 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 					const { row, vc } = yield* V2.pure(synthStructRow(struct.arg.row));
 					return [NF.Constructors.Schema(row), { vc }] satisfies SynthResult;
 				})
+				.with(EB.CtorPatterns.Row, function* () {
+					return [NF.Row, { vc: Z3.Bool.val(true) }] satisfies SynthResult;
+				})
 
 				.with({ type: "App" }, function* (tm) {
-					const incorporate = (argTy: NF.Value, fnTy: NF.Value): V2.Elaboration<SynthResult> =>
+					const incorporate = (arg: EB.Term, fnTy: NF.Value): V2.Elaboration<SynthResult> =>
 						V2.Do(function* () {
 							const localCtx = yield* V2.ask();
-							runtime.log("Incorporating argument type", NF.display(argTy, localCtx), "into function type", NF.display(fnTy, localCtx));
+							runtime.log("Incorporating argument type", EB.Display.Term(arg, localCtx), "into function type", NF.display(fnTy, localCtx));
 
 							return yield* match(fnTy)
 								.with({ type: "Existential" }, function* (ex) {
 									const [out, artefacts] = yield* V2.local(
 										inner => EB.bind(inner, { type: "Pi", variable: ex.variable }, ex.annotation),
-										incorporate(argTy, ex.body.value),
+										incorporate(arg, ex.body.value),
 									);
 									return [NF.Constructors.Exists(ex.variable, ex.annotation, { ctx, value: out }), artefacts] satisfies SynthResult;
 								})
 								.with(NF.Patterns.Pi, function* (pi) {
-									const vc = yield* subtype.gen(argTy, pi.binder.annotation);
-									const evaluatedArg = NF.evaluate(ctx, tm.arg);
+									const { vc, nf } = yield* check.gen(arg, pi.binder.annotation);
+									//const [argTy, argArtefacts] = yield* synth.gen(arg);
+									//const vc = yield* subtype.gen(argTy, pi.binder.annotation);
+									const evaluatedArg = NF.evaluate(ctx, arg);
 									const appliedArg = match(evaluatedArg)
 										.with(
 											{ type: "Neutral" },
@@ -153,7 +158,22 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 										)
 										.otherwise(() => evaluatedArg);
 									const out = NF.apply(pi.binder, pi.closure, appliedArg);
-									return [NF.Constructors.Exists(pi.binder.variable, argTy, { value: out, ctx: localCtx }), { vc }] satisfies SynthResult;
+
+									// NOTE: This is a modification of Syn-App-Ex
+									// The Syn-App-Ex rule (Jhala & Vazou, from Knowles & Flanagan) prescribes synthesizing both function and argument, then using subtyping to verify compatibility.
+									// However, this only works when ALL terms are intrinsic (self-typing) and some terms are extrinsic - they require bidirectional checking.
+
+									// Example: `match b | true -> Num | false -> String` cannot be synthesized without surrounding context. Is the codomain `Num | String` or `Type` or something else entirely?
+									// During elaboration, unification constraints provide the needed context and resolve this.
+									// Since verification happens after elaboration, the `match` term has already been typechecked and we merely need to reconstruct the inferred types
+									// However, the term itself lacks the information needed for synthesis.
+									//
+									// The solution is to use `check` instead of `synth` for arguments. Checking allows us to leverage the surrounding context established during elaboration and properly handle extrinsic terms.
+									// When `check` necessarily synthesizes a potential more precise type (e.g., with selfification refinements), it returns it via the optional `nf` field.
+									// Using it here propagates the subtype information through applications. Otherwise, we fall back to the Pi binder's annotation.
+									//
+									// TODO:Future: Cache elaborated types in the AST to enable pure synthesis during verification.
+									return [NF.Constructors.Exists(pi.binder.variable, nf ?? pi.binder.annotation, { value: out, ctx: localCtx }), { vc }] satisfies SynthResult;
 								})
 								.otherwise(() => {
 									throw new Error("Function application expected a Pi type");
@@ -161,9 +181,14 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 						});
 
 					const [fnTy, fnArtefacts] = yield* synth.gen(tm.func);
-					const [argTy, argArtefacts] = yield* synth.gen(tm.arg);
-					const [outTy, appArtefacts] = yield* V2.pure(incorporate(NF.force(ctx, argTy), NF.force(ctx, fnTy)));
-					const combinedVc = Z3.And(Z3.And(fnArtefacts.vc as Bool, argArtefacts.vc as Bool), appArtefacts.vc as Bool);
+					// const unwrapped = unwrapExistential(fnTy)
+					// assert(unwrapped.type === "Abs" && unwrapped.binder.type === "Pi", "Function position must be a Pi type after unwrapping existentials");
+					// const checked = yield* check.gen(tm.arg, unwrapped.binder.annotation);
+
+					// const [argTy, argArtefacts] = yield* synth.gen(tm.arg);
+					const [outTy, appArtefacts] = yield* V2.pure(incorporate(tm.arg, NF.force(ctx, fnTy)));
+					// const combinedVc = Z3.And(Z3.And(fnArtefacts.vc as Bool, checked.vc as Bool), appArtefacts.vc as Bool);
+					const combinedVc = Z3.And(fnArtefacts.vc as Bool, appArtefacts.vc as Bool);
 					return [outTy, { vc: combinedVc }] satisfies SynthResult;
 				})
 				.with({ type: "Block" }, function* (block) {
@@ -273,6 +298,7 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 					const combinedVc = Z3.And(baseArtefacts.vc as Bool, valueArtefacts.vc as Bool);
 					return [outTy, { vc: combinedVc }] satisfies SynthResult;
 				})
+
 				.otherwise(function* () {
 					//  runtime.log("synth: case not implemented");
 					throw new Error("synth: case not implemented for term " + EB.Display.Term(term, ctx));

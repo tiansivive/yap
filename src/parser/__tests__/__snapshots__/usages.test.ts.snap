@@ -1,0 +1,182 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parser: usage annotations (multiplicities) > combined usage and refinement: <1> Num [|\\n -> n >= 0|] 1`] = `
+{
+  "modalities": {
+    "quantity": "One",
+  },
+  "term": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Num",
+    },
+  },
+  "type": "modal",
+}
+`;
+
+exports[`parser: usage annotations (multiplicities) > linear usage: <1> Num 1`] = `
+{
+  "modalities": {
+    "quantity": "One",
+  },
+  "term": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Num",
+    },
+  },
+  "type": "modal",
+}
+`;
+
+exports[`parser: usage annotations (multiplicities) > unrestricted usage: <*> Num 1`] = `
+{
+  "modalities": {
+    "quantity": "Many",
+  },
+  "term": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Num",
+    },
+  },
+  "type": "modal",
+}
+`;
+
+exports[`parser: usage annotations (multiplicities) > usage in function type: <1> Num -> Num 1`] = `
+{
+  "icit": "Explicit",
+  "lhs": {
+    "modalities": {
+      "quantity": "One",
+    },
+    "term": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "Num",
+      },
+    },
+    "type": "modal",
+  },
+  "rhs": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Num",
+    },
+  },
+  "type": "arrow",
+}
+`;
+
+exports[`parser: usage annotations (multiplicities) > usage in pi type: <1> (x: Num) -> Num 1`] = `
+{
+  "icit": "Explicit",
+  "lhs": {
+    "modalities": {
+      "quantity": "One",
+    },
+    "term": {
+      "ann": {
+        "type": "var",
+        "variable": {
+          "type": "name",
+          "value": "Num",
+        },
+      },
+      "term": {
+        "type": "var",
+        "variable": {
+          "type": "name",
+          "value": "x",
+        },
+      },
+      "type": "annotation",
+    },
+    "type": "modal",
+  },
+  "rhs": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Num",
+    },
+  },
+  "type": "arrow",
+}
+`;
+
+exports[`parser: usage annotations (multiplicities) > usage with refinement: <1> Num [|\\n -> n > 0|] 1`] = `
+{
+  "modalities": {
+    "quantity": "One",
+  },
+  "term": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Num",
+    },
+  },
+  "type": "modal",
+}
+`;
+
+exports[`parser: usage annotations (multiplicities) > usage with struct: <*> { x: Num, y: String } 1`] = `
+{
+  "modalities": {
+    "quantity": "Many",
+  },
+  "term": {
+    "row": {
+      "label": "x",
+      "row": {
+        "label": "y",
+        "row": {
+          "type": "empty",
+        },
+        "type": "extension",
+        "value": {
+          "type": "var",
+          "variable": {
+            "type": "name",
+            "value": "String",
+          },
+        },
+      },
+      "type": "extension",
+      "value": {
+        "type": "var",
+        "variable": {
+          "type": "name",
+          "value": "Num",
+        },
+      },
+    },
+    "type": "struct",
+  },
+  "type": "modal",
+}
+`;
+
+exports[`parser: usage annotations (multiplicities) > zero usage: <0> Num 1`] = `
+{
+  "modalities": {
+    "quantity": "Zero",
+  },
+  "term": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Num",
+    },
+  },
+  "type": "modal",
+}
+`;

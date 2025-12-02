@@ -1,0 +1,406 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parser: refinement types (liquid types) > function returning refinement: Num -> Num [|\\v -> v > 0|] 1`] = `
+{
+  "icit": "Explicit",
+  "lhs": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Num",
+    },
+  },
+  "rhs": {
+    "modalities": {
+      "liquid": {
+        "annotation": undefined,
+        "body": {
+          "arg": {
+            "type": "lit",
+            "value": {
+              "type": "Num",
+              "value": 0,
+            },
+          },
+          "fn": {
+            "arg": {
+              "type": "var",
+              "variable": {
+                "type": "name",
+                "value": "v",
+              },
+            },
+            "fn": {
+              "type": "var",
+              "variable": {
+                "type": "name",
+                "value": ">",
+              },
+            },
+            "icit": "Explicit",
+            "type": "application",
+          },
+          "icit": "Explicit",
+          "type": "application",
+        },
+        "icit": "Explicit",
+        "type": "lambda",
+        "variable": "v",
+      },
+    },
+    "term": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "Num",
+      },
+    },
+    "type": "modal",
+  },
+  "type": "arrow",
+}
+`;
+
+exports[`parser: refinement types (liquid types) > nested type with refinement: { x: Num [|\\n -> n > 0|] } 1`] = `
+{
+  "row": {
+    "label": "x",
+    "row": {
+      "type": "empty",
+    },
+    "type": "extension",
+    "value": {
+      "modalities": {
+        "liquid": {
+          "annotation": undefined,
+          "body": {
+            "arg": {
+              "type": "lit",
+              "value": {
+                "type": "Num",
+                "value": 0,
+              },
+            },
+            "fn": {
+              "arg": {
+                "type": "var",
+                "variable": {
+                  "type": "name",
+                  "value": "n",
+                },
+              },
+              "fn": {
+                "type": "var",
+                "variable": {
+                  "type": "name",
+                  "value": ">",
+                },
+              },
+              "icit": "Explicit",
+              "type": "application",
+            },
+            "icit": "Explicit",
+            "type": "application",
+          },
+          "icit": "Explicit",
+          "type": "lambda",
+          "variable": "n",
+        },
+      },
+      "term": {
+        "type": "var",
+        "variable": {
+          "type": "name",
+          "value": "Num",
+        },
+      },
+      "type": "modal",
+    },
+  },
+  "type": "struct",
+}
+`;
+
+exports[`parser: refinement types (liquid types) > refinement in pi type: (x: Num) -> Num [|\\v -> v > x|] 1`] = `
+{
+  "annotation": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Num",
+    },
+  },
+  "body": {
+    "modalities": {
+      "liquid": {
+        "annotation": undefined,
+        "body": {
+          "arg": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "x",
+            },
+          },
+          "fn": {
+            "arg": {
+              "type": "var",
+              "variable": {
+                "type": "name",
+                "value": "v",
+              },
+            },
+            "fn": {
+              "type": "var",
+              "variable": {
+                "type": "name",
+                "value": ">",
+              },
+            },
+            "icit": "Explicit",
+            "type": "application",
+          },
+          "icit": "Explicit",
+          "type": "application",
+        },
+        "icit": "Explicit",
+        "type": "lambda",
+        "variable": "v",
+      },
+    },
+    "term": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "Num",
+      },
+    },
+    "type": "modal",
+  },
+  "icit": "Explicit",
+  "type": "pi",
+  "variable": "x",
+}
+`;
+
+exports[`parser: refinement types (liquid types) > refinement with complex predicate: t [|\\x -> x > 0 == true|] 1`] = `
+{
+  "modalities": {
+    "liquid": {
+      "annotation": undefined,
+      "body": {
+        "arg": {
+          "type": "lit",
+          "value": {
+            "type": "Bool",
+            "value": true,
+          },
+        },
+        "fn": {
+          "arg": {
+            "arg": {
+              "type": "lit",
+              "value": {
+                "type": "Num",
+                "value": 0,
+              },
+            },
+            "fn": {
+              "arg": {
+                "type": "var",
+                "variable": {
+                  "type": "name",
+                  "value": "x",
+                },
+              },
+              "fn": {
+                "type": "var",
+                "variable": {
+                  "type": "name",
+                  "value": ">",
+                },
+              },
+              "icit": "Explicit",
+              "type": "application",
+            },
+            "icit": "Explicit",
+            "type": "application",
+          },
+          "fn": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "==",
+            },
+          },
+          "icit": "Explicit",
+          "type": "application",
+        },
+        "icit": "Explicit",
+        "type": "application",
+      },
+      "icit": "Explicit",
+      "type": "lambda",
+      "variable": "x",
+    },
+  },
+  "term": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "t",
+    },
+  },
+  "type": "modal",
+}
+`;
+
+exports[`parser: refinement types (liquid types) > refinement with equality: x [|\\v -> v == 42|] 1`] = `
+{
+  "modalities": {
+    "liquid": {
+      "annotation": undefined,
+      "body": {
+        "arg": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 42,
+          },
+        },
+        "fn": {
+          "arg": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "v",
+            },
+          },
+          "fn": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "==",
+            },
+          },
+          "icit": "Explicit",
+          "type": "application",
+        },
+        "icit": "Explicit",
+        "type": "application",
+      },
+      "icit": "Explicit",
+      "type": "lambda",
+      "variable": "v",
+    },
+  },
+  "term": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "x",
+    },
+  },
+  "type": "modal",
+}
+`;
+
+exports[`parser: refinement types (liquid types) > refinement with inequality: Num [|\\n -> n >= 0|] 1`] = `
+{
+  "modalities": {
+    "liquid": {
+      "annotation": undefined,
+      "body": {
+        "arg": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 0,
+          },
+        },
+        "fn": {
+          "arg": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "n",
+            },
+          },
+          "fn": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": ">=",
+            },
+          },
+          "icit": "Explicit",
+          "type": "application",
+        },
+        "icit": "Explicit",
+        "type": "application",
+      },
+      "icit": "Explicit",
+      "type": "lambda",
+      "variable": "n",
+    },
+  },
+  "term": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Num",
+    },
+  },
+  "type": "modal",
+}
+`;
+
+exports[`parser: refinement types (liquid types) > simple refinement: Num [|\\n -> n > 0|] 1`] = `
+{
+  "modalities": {
+    "liquid": {
+      "annotation": undefined,
+      "body": {
+        "arg": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 0,
+          },
+        },
+        "fn": {
+          "arg": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "n",
+            },
+          },
+          "fn": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": ">",
+            },
+          },
+          "icit": "Explicit",
+          "type": "application",
+        },
+        "icit": "Explicit",
+        "type": "application",
+      },
+      "icit": "Explicit",
+      "type": "lambda",
+      "variable": "n",
+    },
+  },
+  "term": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Num",
+    },
+  },
+  "type": "modal",
+}
+`;

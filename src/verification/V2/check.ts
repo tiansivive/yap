@@ -240,7 +240,8 @@ export const createCheck = ({ Z3, runtime, translation }: CheckDeps) => {
 						// Since verification runs after typechecking, we can assume that the term has at least the type we are checking against
 						// Therefore, we can lift it to have the type we are checking against, with the added synthed liquid refinement
 						const checked = yield* subtype.gen(synthed, type);
-						return { vc: Z3.And(artefacts.vc as Bool, checked as Bool) } satisfies VerificationArtefacts;
+
+						return { vc: Z3.And(artefacts.vc as Bool, checked as Bool), nf: synthed } satisfies VerificationArtefacts;
 					}),
 				);
 

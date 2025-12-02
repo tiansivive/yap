@@ -5,6 +5,7 @@ import type { Expr, Context as Z3Context } from "z3-solver";
 
 export type VerificationArtefacts = {
 	vc: Expr;
+	nf?: NF.Value;
 };
 
 export type CheckFn = ((term: EB.Term, type: NF.Value) => VerificationResult) & {
