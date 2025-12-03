@@ -20,6 +20,7 @@ import { defaultContext } from "@yap/shared/lib/constants";
 import { options } from "@yap/shared/config/options";
 import { mkInterface } from "../modules/loading";
 import { update } from "@yap/utils";
+import { encode, decode } from "../FFI/codecs";
 
 // Compute arity by recursively checking if function returns another function
 const computeArity = (fn: Function): number => {
@@ -137,8 +138,18 @@ export function repl() {
 								{
 									arity,
 									compute: (...vals: EB.NF.Value[]) => {
-										f(...vals.slice(0, arity));
-										return EB.NF.Constructors.Lit({ type: "unit" });
+										// Handle curried functions by applying arguments one at a time
+										let result = f;
+										const encodedVals = vals.map(encode);
+
+										for (const arg of encodedVals) {
+											if (typeof result !== "function") {
+												throw new Error(`FFI ${name}: attempted to apply argument to non-function value`);
+											}
+											result = result(arg);
+										}
+
+										return decode(result);
 									},
 								},
 							];

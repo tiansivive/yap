@@ -310,7 +310,7 @@ let debug: Num -> Num
     = \x -> {
         print "Computing...";
         let result = x * 2;
-        print ("Result: " ++ stringify result);
+        print (stringify result);
         return result;
     };
 ```
