@@ -3,7 +3,6 @@ import { Command } from "commander";
 
 import { createInterface } from "readline";
 import * as Compiler from "../src/compile";
-import { interpret } from "../src/cli/interpreter";
 
 import * as EB from "@yap/elaboration";
 import { getZ3Context, options, setZ3Context } from "@yap/shared/config/options";

@@ -20,8 +20,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       "String ~~ ?11",
       "Num ~~ ?8",
       "Schema [ snd: String, fst: Num ] ~~ Schema [ fst: Num, snd: String ]",
-      "0 <= ω",
-      "0 <= ω",
     ],
     "term": "{
 	let Pair
@@ -410,16 +408,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           },
         },
         "type": "assign",
-      },
-      {
-        "computed": "Zero",
-        "expected": "Many",
-        "type": "usage",
-      },
-      {
-        "computed": "Zero",
-        "expected": "Many",
-        "type": "usage",
       },
     ],
     "metas": {
@@ -2289,7 +2277,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
       "?2 ~~ L1",
       "Type ~~ Type",
       "Type ~~ Type",
-      "0 <= ω",
     ],
     "term": "{
 	let Pair
@@ -2492,11 +2479,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
           },
         },
         "type": "assign",
-      },
-      {
-        "computed": "Zero",
-        "expected": "Many",
-        "type": "usage",
       },
     ],
     "metas": {
@@ -2830,7 +2812,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Simple 
       "Type ~~ Type",
       "?2 ~~ Type",
       "Type ~~ Type",
-      "0 <= ω",
     ],
     "term": "{
 	let Pair
@@ -2904,11 +2885,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Simple 
           },
         },
         "type": "assign",
-      },
-      {
-        "computed": "Zero",
-        "expected": "Many",
-        "type": "usage",
       },
     ],
     "metas": {
@@ -3133,7 +3109,6 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
       "L2 ~~ L2",
       "Bool ~~ Bool",
       "Type ~~ Type",
-      "0 <= ω",
     ],
     "term": "{
 	let Pair
@@ -3450,11 +3425,6 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
           },
         },
         "type": "assign",
-      },
-      {
-        "computed": "Zero",
-        "expected": "Many",
-        "type": "usage",
       },
     ],
     "metas": {

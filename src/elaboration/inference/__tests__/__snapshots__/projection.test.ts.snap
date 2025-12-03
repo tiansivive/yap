@@ -479,7 +479,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 1`] = `
     "constraints": [
       "Schema [ x: ?3 | ?4 ] ~~ ?2",
       "Π(obj: ?2) -> (closure: (?3 :: Type) -| Γ: obj; proj) ~~ ?1",
-      "0 <= ω",
     ],
     "term": "{
 	let proj
@@ -631,11 +630,6 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
           },
         },
         "type": "assign",
-      },
-      {
-        "computed": "Zero",
-        "expected": "Many",
-        "type": "usage",
       },
     ],
     "metas": {
@@ -1103,8 +1097,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       "String ~~ ?11",
       "Num ~~ ?8",
       "Schema [ snd: String, fst: Num ] ~~ Schema [ fst: Num, snd: String ]",
-      "0 <= ω",
-      "0 <= ω",
     ],
     "term": "{
 	let Pair
@@ -1493,16 +1485,6 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           },
         },
         "type": "assign",
-      },
-      {
-        "computed": "Zero",
-        "expected": "Many",
-        "type": "usage",
-      },
-      {
-        "computed": "Zero",
-        "expected": "Many",
-        "type": "usage",
       },
     ],
     "metas": {

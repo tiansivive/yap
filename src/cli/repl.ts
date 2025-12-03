@@ -242,15 +242,15 @@ export const interpret = (stmt: Src.Statement, ctx: EB.Context) => {
 		.with({ type: "expression" }, s =>
 			F.pipe(
 				EB.Mod.expression(s, ctx),
-				E.map(([tm, ty, us, zonker]) => {
+				E.map(([tm, ty, us, next]) => {
 					if (options.showElaboration) {
 						console.log("\n------------ Elaboration ------------");
-						console.log(EB.Display.Term(tm, ctx));
+						console.log(EB.Display.Term(tm, next));
 						console.log("-------------------------------------\n");
 					}
-					const nf = EB.NF.evaluate(ctx, tm);
-					console.log(EB.NF.display(nf, ctx), "::", EB.NF.display(ty, ctx), "\n");
-					return ctx;
+					const nf = EB.NF.evaluate(next, tm);
+					console.log(EB.NF.display(nf, next), "::", EB.NF.display(ty, next), "\n");
+					return next;
 				}),
 			),
 		)

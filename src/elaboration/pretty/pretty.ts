@@ -121,13 +121,17 @@ const display = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; 
 	return _display(term);
 };
 
-const displayConstraint = (constraint: EB.Constraint, ctx: Pick<EB.Context, "zonker" | "metas" | "env">, opts = { deBruijn: false }): string => {
+const displayConstraint = (constraint: EB.Constraint, ctx: DisplayContext, opts = { deBruijn: false }): string => {
 	if (constraint.type === "assign") {
 		return `${NF.display(constraint.left, ctx, opts)} ~~ ${NF.display(constraint.right, ctx, opts)}`;
 	}
 
-	if (constraint.type === "usage") {
-		return `${Q.display(constraint.computed)} <= ${Q.display(constraint.expected)}`;
+	// if (constraint.type === "usage") {
+	// 	return `${Q.display(constraint.computed)} <= ${Q.display(constraint.expected)}`;
+	// }
+
+	if (constraint.type === "resolve") {
+		return `?${constraint.meta.val} @ ${NF.display(constraint.value, ctx, opts)}`;
 	}
 
 	// if (constraint.type === "resolve") {
@@ -137,11 +141,11 @@ const displayConstraint = (constraint: EB.Constraint, ctx: Pick<EB.Context, "zon
 	return "Unknown Constraint";
 };
 
-const displayContext = (context: EB.Context, opts = { deBruijn: false }): object => {
+const displayContext = (context: EB.Context, resolutions: EB.Resolutions, opts = { deBruijn: false }): object => {
 	const pretty = {
 		env: context.env.map(({ nf, type: [binder, origin, mv], name }) => ({
-			nf: NF.display(nf, context, opts),
-			type: `${displayBinder(binder.type)} ${binder.variable} (${origin}): ${NF.display(mv, context, opts)}`,
+			nf: NF.display(nf, { ...context, resolutions }, opts),
+			type: `${displayBinder(binder.type)} ${binder.variable} (${origin}): ${NF.display(mv, { ...context, resolutions }, opts)}`,
 			name,
 		})),
 		imports: context.imports,
@@ -172,7 +176,7 @@ const displayBinder = (binder: EB.Binder["type"]): string => {
 };
 
 const Alt = {
-	display: (alt: EB.Alternative, ctx: Pick<EB.Context, "zonker" | "metas" | "env">, opts = { deBruijn: false }): string => {
+	display: (alt: EB.Alternative, ctx: DisplayContext, opts = { deBruijn: false }): string => {
 		const xtended = alt.binders.reduce((acc, [b]) => ({ ...acc, env: [{ name: { variable: b } }, ...acc.env] }) as typeof ctx, ctx);
 		return `| ${Pat.display(alt.pattern)} -> ${display(alt.term, xtended, opts)}`;
 	},
@@ -221,7 +225,7 @@ const bind = (name: string, ctx: DisplayContext) => {
 	return { ...ctx, env: [{ name: { variable: name } }, ...ctx.env] } as DisplayContext;
 };
 const Stmt = {
-	display: (stmt: EB.Statement, ctx: Pick<EB.Context, "zonker" | "metas" | "env">, opts = { deBruijn: false }): string => {
+	display: (stmt: EB.Statement, ctx: DisplayContext, opts = { deBruijn: false }): string => {
 		return match(stmt)
 			.with({ type: "Expression" }, ({ value }) => display(value, ctx, opts))
 			.with(
@@ -243,4 +247,4 @@ export const Display = {
 	Statement: Stmt.display,
 };
 
-export type DisplayContext = Pick<EB.Context, "env" | "zonker" | "metas"> & { ambient?: EB.Context["env"] };
+export type DisplayContext = Pick<EB.Context, "env" | "zonker" | "metas"> & { resolutions?: EB.Resolutions };

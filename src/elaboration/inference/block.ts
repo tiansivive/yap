@@ -66,7 +66,7 @@ export const infer = (block: Block) =>
 						},
 						V2.Do(function* () {
 							const [tm, ty, [vu, ...rus]] = yield* V2.pure(recurse(rest, [...results, r]));
-							yield* V2.tell("constraint", { type: "usage", expected: Q.Many, computed: vu });
+							// yield* V2.tell("constraint", { type: "usage", expected: Q.Many, computed: vu });
 							// Remove the usage of the bound variable (same as the lambda rule)
 							// Multiply the usages of the let binder by the multiplicity of the new let binding (same as the application rule)
 							return [tm, ty, Q.add(rus, Q.multiply(Q.Many, sus))] as EB.AST;

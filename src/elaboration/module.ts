@@ -324,20 +324,20 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 		const [elaborated, ty, us] = yield* EB.infer.gen(stmt.value);
 		const { constraints, metas } = yield* V2.listen();
 		const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
-		const subst = yield* V2.local(_ => withMetas, EB.solve(constraints));
-		const zonked = update(withMetas, "zonker", z => Sub.compose(subst, z));
+		const { zonker, resolutions } = yield* V2.local(_ => withMetas, EB.solve(constraints));
+		const zonked = update(withMetas, "zonker", z => Sub.compose(zonker, z));
 
-		const [generalized, zonker] = NF.generalize(NF.force(zonked, ty), zonked);
-		const next = update(zonked, "zonker", z => ({ ...z, ...zonker }));
+		const [generalized, subst] = NF.generalize(NF.force(zonked, ty), zonked);
+		const next = update(zonked, "zonker", z => ({ ...z, ...subst }));
 		const instantiated = NF.instantiate(generalized, next);
 
 		const wrapped = F.pipe(
 			EB.Icit.wrapLambda(elaborated, instantiated, next),
-			tm => EB.Icit.instantiate(tm, next),
+			tm => EB.Icit.instantiate(tm, next, resolutions),
 			// inst => EB.Icit.generalize(inst, next),
 		);
 
-		return [wrapped, instantiated, us, subst] as const;
+		return [wrapped, instantiated, us, next] as const;
 	});
 
 	const { result } = inference(ctx);

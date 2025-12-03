@@ -102,7 +102,7 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 			return NF.Constructors.Lambda(
 				binder.variable,
 				binder.icit,
-				update(closure, "term", t => EB.Icit.instantiate(t, xtended)),
+				update(closure, "term", t => EB.Icit.instantiate(t, xtended, {})),
 				ann,
 			);
 		})
@@ -117,7 +117,7 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 				binder.variable,
 				binder.icit,
 				ann,
-				update(closure, "term", t => EB.Icit.instantiate(t, xtended)),
+				update(closure, "term", t => EB.Icit.instantiate(t, xtended, {})),
 			);
 		})
 		.with(NF.Patterns.Mu, ({ binder, closure }) => {
@@ -131,7 +131,7 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 				binder.variable,
 				binder.source,
 				ann,
-				update(closure, "term", t => EB.Icit.instantiate(t, xtended)),
+				update(closure, "term", t => EB.Icit.instantiate(t, xtended, {})),
 			);
 		})
 		.with(NF.Patterns.Sigma, ({ binder, closure }) => {
@@ -144,7 +144,7 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 			return NF.Constructors.Sigma(
 				binder.variable,
 				ann,
-				update(closure, "term", t => EB.Icit.instantiate(t, xtended)),
+				update(closure, "term", t => EB.Icit.instantiate(t, xtended, {})),
 			);
 		})
 		.with({ type: "App" }, ({ icit, func, arg }) => NF.Constructors.App(instantiate(func, ctx), instantiate(arg, ctx), icit))

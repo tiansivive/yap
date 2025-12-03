@@ -160,6 +160,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						return o2;
 					}),
 				)
+
 				.with([NF.Patterns.StuckMatch, NF.Patterns.StuckMatch], ([left, right]) => {
 					throw new Error("Unification of stuck match expressions is not supported yet");
 				})
@@ -173,10 +174,19 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				})
 				.with([NF.Patterns.App, NF.Patterns.App], ([left, right]) =>
 					V2.Do<Subst, Subst>(function* () {
+						const isFlex = (t: NF.Value) =>
+							match(NF.unwrapNeutral(t))
+								.with(NF.Patterns.Flex, () => true)
+								.otherwise(() => false);
+						if ([left.func, right.func, left.arg, right.arg].some(isFlex)) {
+							const o1 = yield unify(left.func, right.func, lvl, subst);
+							const o2 = yield unify(left.arg, right.arg, lvl, o1);
+							return o2;
+						}
+
 						const unfoldedL = NF.unfoldMu(left);
 						const unfoldedR = NF.unfoldMu(right);
 
-						// NOTE: Using reference equality to check if unfolding made a change. Unfolding returns the same object if no unfolding was done.
 						if (O.isNone(unfoldedL) && O.isNone(unfoldedR)) {
 							const o1 = yield unify(left.func, right.func, lvl, subst);
 							const o2 = yield unify(left.arg, right.arg, lvl, o1);
@@ -196,31 +206,6 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 							subst,
 						);
 						return sub;
-						// 	.with(
-						// 		[NF.Patterns.Mu, P._],
-						// 		([, v]) => v.type !== "Abs" || v.binder.type !== "Mu",
-						// 		([mu, v]) => {
-						// 			const unfolded = NF.apply(mu.binder, mu.closure, mu);
-						// 			const applied = NF.reduce(unfolded, left.arg, "Explicit");
-						// 			return unify(applied, right, lvl, subst);
-						// 		},
-						// 	)
-						// 	.with(
-						// 		[P._, NF.Patterns.Mu],
-						// 		([v]) => v.type !== "Abs" || v.binder.type !== "Mu",
-						// 		([v, mu]) => {
-						// 			const unfolded = NF.apply(mu.binder, mu.closure, mu);
-						// 			const applied = NF.reduce(unfolded, right.arg, "Explicit");
-						// 			return unify(left, applied, lvl, subst);
-						// 		},
-						// 	)
-						// 	.otherwise(() =>
-						// 		V2.Do(function* () {
-						// 			const o1 = yield* V2.pure(unify(left.func, right.func, lvl, subst));
-						// 			const o2 = yield* V2.pure(unify(left.arg, right.arg, lvl, o1));
-						// 			return Sub.compose(o2, o1);
-						// 		}),
-						// 	);
 					}),
 				)
 

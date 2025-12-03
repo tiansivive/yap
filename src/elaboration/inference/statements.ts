@@ -77,11 +77,11 @@ export const letdec = function* (
 
 	const { constraints, metas } = yield* V2.listen();
 	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
-	const subst = yield* V2.local(_ => withMetas, EB.solve(constraints));
-	const zonked = update(withMetas, "zonker", z => compose(subst, z));
+	const { zonker, resolutions } = yield* V2.local(_ => withMetas, EB.solve(constraints));
+	const zonked = update(withMetas, "zonker", z => compose(zonker, z));
 
-	const [generalized, zonker] = NF.generalize(NF.force(zonked, dec.annotation), EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation));
-	const next = update(zonked, "zonker", z => ({ ...z, ...zonker }));
+	const [generalized, subst] = NF.generalize(NF.force(zonked, dec.annotation), EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation));
+	const next = update(zonked, "zonker", z => ({ ...z, ...subst }));
 
 	const instantiated = NF.instantiate(generalized, EB.bind(next, { type: "Let", variable: dec.variable }, generalized));
 
@@ -90,7 +90,7 @@ export const letdec = function* (
 	const xtended = EB.bind(next, { type: "Let", variable: dec.variable }, instantiated);
 	const wrapped = F.pipe(
 		EB.Icit.wrapLambda(dec.value, instantiated, xtended),
-		tm => EB.Icit.instantiate(tm, xtended),
+		tm => EB.Icit.instantiate(tm, xtended, resolutions),
 		// inst => EB.Icit.generalize(inst, xtended),
 	);
 

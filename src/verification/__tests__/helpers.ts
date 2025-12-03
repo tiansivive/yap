@@ -44,7 +44,7 @@ export const elaborate = (src: string) => {
 
 		const [elaborated, ty, us] = yield* EB.Stmt.infer.gen(stmt);
 		const { constraints, metas } = yield* V2.listen();
-		const subst = yield* V2.local(
+		const solution = yield* V2.local(
 			update("metas", ms => ({ ...ms, ...metas })),
 			solve(constraints),
 		);
@@ -52,7 +52,7 @@ export const elaborate = (src: string) => {
 		const zonked = F.pipe(
 			ctx,
 			update("metas", prev => ({ ...prev, ...metas })),
-			set("zonker", Sub.compose(subst, ctx.zonker)),
+			set("zonker", Sub.compose(solution.zonker, ctx.zonker)),
 		);
 		const [generalized, zonker] = NF.generalize(ty, zonked);
 		const next = update(zonked, "zonker", z => ({ ...z, ...zonker }));
@@ -60,9 +60,11 @@ export const elaborate = (src: string) => {
 
 		const xtended = EB.bind(next, { type: "Let", variable: stmt.variable }, instantiated);
 		const wrapped = F.pipe(
-			EB.Icit.instantiate(elaborated.value, xtended),
-			inst => EB.Icit.generalize(inst, xtended),
-			tm => EB.Icit.wrapLambda(tm, ty, xtended),
+			EB.Icit.wrapLambda(elaborated.value, instantiated, xtended),
+			tm => EB.Icit.instantiate(tm, xtended, solution.resolutions),
+			// EB.Icit.instantiate(elaborated.value, xtended, solution.resolutions),
+			// inst => EB.Icit.generalize(inst, xtended),
+			// tm => EB.Icit.wrapLambda(tm, ty, xtended),
 		);
 
 		return [wrapped, instantiated, next] as const;
