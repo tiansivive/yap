@@ -510,10 +510,14 @@ let EqNum: Eq Num
 
 Write functions that require trait
 
+```
+let display: (t:Type) => (show: Show t) => (x: t) -> String
+    = \x -> show.show x;
+
 let areEqual: (eq: Eq t) => (x: t) -> (y: t) -> Bool
 = \x y -> eq.eq x y;
 
-````
+```
 
 #### The `using` Statement
 
@@ -523,7 +527,7 @@ The `using` statement brings a value into implicit scope, making it available fo
 using ShowNum;  // Make ShowNum available for implicit resolution
 
 // Now any function requiring (show: Show Num) => will use it
-````
+```
 
 Bring instances into scope and use them:
 

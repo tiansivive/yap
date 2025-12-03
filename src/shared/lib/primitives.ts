@@ -162,24 +162,24 @@ const comparison = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => bool
     return NF.Constructors.Lit(Lit.Bool(val));
 }
 
-export const FFI = {
-    Indexed: (index: unknown) => (value: unknown) => (strat: unknown) => ({ index, value, strat }),
-    defaultHashMap: "<Placeholder> default_hash_map",
-    defaultArray: "<Placeholder> default_array",
-    $add: (x: any) => (y: any) => x + y,
-    $sub: (x: any) => (y: any) => x - y,
-    $mul: (x: any) => (y: any) => x * y,
-    $div: (x: any) => (y: any) => x / y,
-    $and: (x: any) => (y: any) => x && y,
-    $or: (x: any) => (y: any) => x || y,
-    $eq: (x: any) => (y: any) => x == y,
-    $neq: (x: any) => (y: any) => x != y,
-    $lt: (x: any) => (y: any) => x < y,
-    $gt: (x: any) => (y: any) => x > y,
-    $lte: (x: any) => (y: any) => x <= y,
-    $gte: (x: any) => (y: any) => x >= y,
+// export const FFI = {
+//     Indexed: (index: unknown) => (value: unknown) => (strat: unknown) => ({ index, value, strat }),
+//     defaultHashMap: "<Placeholder> default_hash_map",
+//     defaultArray: "<Placeholder> default_array",
+//     $add: (x: any) => (y: any) => x + y,
+//     $sub: (x: any) => (y: any) => x - y,
+//     $mul: (x: any) => (y: any) => x * y,
+//     $div: (x: any) => (y: any) => x / y,
+//     $and: (x: any) => (y: any) => x && y,
+//     $or: (x: any) => (y: any) => x || y,
+//     $eq: (x: any) => (y: any) => x == y,
+//     $neq: (x: any) => (y: any) => x != y,
+//     $lt: (x: any) => (y: any) => x < y,
+//     $gt: (x: any) => (y: any) => x > y,
+//     $lte: (x: any) => (y: any) => x <= y,
+//     $gte: (x: any) => (y: any) => x >= y,
 
-}
+// }
 
 export const PrimOps: EB.Context['ffi'] = {
     $add: { arity: 2, compute: (x: NF.Value, y: NF.Value) => arithmetic(x, y, (a, b) => a + b) },
