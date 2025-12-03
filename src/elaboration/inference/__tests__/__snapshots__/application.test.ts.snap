@@ -5,6 +5,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
   "displays": {
     "constraints": [
       "Type ~~ Type",
+      "?2 @ ?1",
       "String ~~ String",
     ],
     "term": "(λx => λy -> y) @?2 "hello"",
@@ -34,6 +35,26 @@ exports[`inference: application > implicit insertion > inserts implicit argument
           },
         },
         "type": "assign",
+      },
+      {
+        "implicits": [],
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+        "type": "resolve",
+        "value": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
       },
       {
         "left": {
@@ -167,6 +188,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
     "constraints": [
       "Type ~~ Type",
       "Type ~~ Type",
+      "?1 @ Num",
       "String ~~ String",
     ],
     "term": "(λx => λy -> y) @?1 "hello"",
@@ -214,6 +236,22 @@ exports[`inference: application > implicit insertion > inserts implicit argument
           },
         },
         "type": "assign",
+      },
+      {
+        "implicits": [],
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+        "type": "resolve",
+        "value": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
       },
       {
         "left": {
@@ -327,6 +365,8 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
   "displays": {
     "constraints": [
       "Type ~~ Type",
+      "?3 @ ?2",
+      "?4 @ ?1",
       "String ~~ String",
     ],
     "term": "(λa => (λb => λc -> c) @?3) @?4 "hello"",
@@ -356,6 +396,46 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
           },
         },
         "type": "assign",
+      },
+      {
+        "implicits": [],
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 3,
+        },
+        "type": "resolve",
+        "value": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+      },
+      {
+        "implicits": [],
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 4,
+        },
+        "type": "resolve",
+        "value": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
       },
       {
         "left": {
