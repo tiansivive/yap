@@ -66,25 +66,6 @@ export const wrapLambda = (term: EB.Term, ty: NF.Value, ctx: EB.Context): EB.Ter
 		.otherwise(() => term);
 };
 
-export const generalize = (tm: EB.Term, ctx: EB.Context): EB.Term => {
-	const ms = Metas.collect.eb(tm, ctx.zonker);
-	const charCode = 97; // 'a'
-	return ms.reduce(
-		(tm, m, i) => {
-			return EB.Constructors.Abs(
-				{
-					type: "Lambda",
-					icit: "Implicit",
-					variable: `${String.fromCharCode(charCode + i)}`,
-					annotation: NF.quote(ctx, ctx.env.length, ctx.metas[m.val].ann),
-				},
-				tm,
-			);
-		},
-		tm, //replaceMeta(tm, ms, 0, ctx),
-	);
-};
-
 // TODO: We might want to remove this pass altogether in the future. Perhaps merge it with a lowering pass.
 /**
  * Instantiates unconstrained meta variables in a Term to default values based on their annotations.
@@ -96,13 +77,7 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 	return (
 		match(term)
 			.with({ type: "Var", variable: { type: "Meta" } }, v => {
-				// Don't instantiate metas from outer scopes - they should remain unsolved
-				// and will be handled at their original scope level
-				if (v.variable.lvl < ctx.env.length) {
-					return v;
-				}
-
-				if (resolutions[v.variable.val]) {
+				if (!!resolutions[v.variable.val]) {
 					return resolutions[v.variable.val];
 				}
 
@@ -112,6 +87,11 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 					return instantiate(quoted, ctx, resolutions);
 				}
 
+				// Don't instantiate metas from outer scopes - they should remain unsolved
+				// and will be handled at their original scope level
+				if (v.variable.lvl < ctx.env.length) {
+					return v;
+				}
 				const { ann } = ctx.metas[v.variable.val];
 
 				return match(ann)

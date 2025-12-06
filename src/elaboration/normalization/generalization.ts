@@ -12,17 +12,65 @@ import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
 import * as Sub from "../unification/substitution";
 import { Liquid } from "@yap/verification/modalities";
-import { collectMetasNF } from "../shared/metas";
+import { collectMetasEB, collectMetasNF } from "../shared/metas";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
 
+const charCodes = {
+	any: "A".charCodeAt(0),
+	type: "a".charCodeAt(0),
+	typeCtor: "F".charCodeAt(0),
+	row: "r".charCodeAt(0),
+	num: "n".charCodeAt(0),
+	fun: "f".charCodeAt(0),
+};
+
+const mkCounters = () => ({
+	any: 0,
+	type: 0,
+	typeCtor: 0,
+	row: 0,
+	num: 0,
+	fun: 0,
+});
+const nextCode = (counters: ReturnType<typeof mkCounters>) => (category: keyof typeof counters) => {
+	const index = counters[category];
+	counters[category] += 1;
+	return String.fromCharCode(charCodes[category] + index);
+};
+
+const getNameFactory = (counters: ReturnType<typeof mkCounters>) => {
+	const inc = nextCode(counters);
+
+	return (ann: NF.Value): string =>
+		match(ann)
+			.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => inc("type"))
+			.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => inc("row"))
+			.with({ type: "Lit", value: { type: "Num" } }, () => inc("num"))
+			.with(NF.Patterns.Pi, () => inc("typeCtor"))
+			.with(NF.Patterns.Lambda, () => inc("fun"))
+			.otherwise(() => inc("any"));
+};
 /**
  * Generalizes a value by replacing meta variables with bound variables, which are introduced by wrapping the value in a Pi type for each meta variable.
  * Only generalizes metas created at a deeper level than the current context (i.e., local to this let-binding).
  * Metas from outer scopes (with lvl < ctx.env.length) are NOT generalized, implementing proper let-polymorphism scoping.
+ *
+ * Generalization requires collecting the metas in both the type and the term, since the term may contain implicit arguments that introduce additional metas.
+ * Eg:
+ * ```
+ * fmap: (f: Type -> Type, functor: Functor f, a: Type, b: Type) => (a -> b) -> f a -> f b
+ * stringify: (a: Type) => a -> String
+ *
+ * fmap stringify
+ * ```
+ * Here, generalizing the type of `fmap stringify` alone would miss the meta for `functor`, as its never used in the type.
  */
-export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Context["zonker"]] => {
-	const allMetas = collectMetasNF(val, ctx.zonker);
+export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutions: EB.Resolutions): [NF.Value, EB.Context["zonker"]] => {
+	const tyMetas = collectMetasNF(ty, ctx.zonker);
+	const tmMetas = collectMetasEB(tm, ctx.zonker);
+	const allMetas = fp.uniqBy((m: Meta) => m.val, [...tyMetas, ...tmMetas]).filter(m => !resolutions[m.val]);
+	const getName = getNameFactory(mkCounters());
 
 	// Filter out metas from outer scopes - only generalize metas created in the current scope
 	// A meta's lvl indicates the context depth when it was created
@@ -30,7 +78,7 @@ export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Contex
 	const ms = allMetas.filter(m => m.lvl >= ctx.env.length);
 
 	if (ms.length === 0) {
-		return [val, ctx.zonker];
+		return [ty, ctx.zonker];
 	}
 
 	const charCode = "a".charCodeAt(0);
@@ -38,25 +86,26 @@ export const generalize = (val: NF.Value, ctx: EB.Context): [NF.Value, EB.Contex
 	// Build a single closure context that has all generalized metas mapped to the corresponding bound variables.
 	// We also pre-extend names/types/env so quoting inside closures sees the right level indices.
 	const extendedCtx = ms.reduce((acc, m, i) => {
-		const name = `${String.fromCharCode(charCode + i)}`;
+		//const name = `${String.fromCharCode(charCode + i)}`;
 		const boundLvl = i + ctx.env.length; // outermost binder is the first one after the existing env
 		const { ann } = ctx.metas[m.val];
-		const withBinder = EB.bind(acc, { type: "Pi", variable: name }, ann, "inserted");
+		const withBinder = EB.bind(acc, { type: "Pi", variable: getName(ann) }, ann, "inserted");
 		return set(withBinder, ["zonker", `${m.val}`] as const, NF.Constructors.Var({ type: "Bound", lvl: boundLvl }));
 	}, ctx);
 
 	// Wrap from inner to outer. Each Pi body is quoted with lvl equal to the number of binders in scope.
 	const generalized = A.reverse(ms).reduce<NF.Value>((body, m, i) => {
 		const idx = ms.length - 1 - i; // the idx is the complement of i, since we're going from inner to outer
-		const variable = String.fromCharCode(charCode + idx);
+		//const variable = String.fromCharCode(charCode + idx);
 		// Quote with all binders in scope: lvl = ms.length - i
+		const variable = extendedCtx.env[i].name.variable;
 		const trimmed = update(extendedCtx, "env", e => e.slice(i)); // trim the already introduced binders from the env for quoting
 		const term = NF.quote(trimmed, ctx.env.length + ms.length - i, body);
 		const { ann } = ctx.metas[m.val];
 
 		const closureCtx = update(trimmed, "env", e => e.slice(1)); // drop the binder we are introducing now so it doesn't get captured in the closure
 		return NF.Constructors.Pi(variable, "Implicit", ann, NF.Constructors.Closure(closureCtx, term));
-	}, val);
+	}, ty);
 
 	// Return the context with updated zonker
 	return [generalized, extendedCtx.zonker];

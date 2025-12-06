@@ -22,8 +22,10 @@ let mapList: (a: Type) => (b: Type) => (a -> b) -> List a -> List b
 let ListFunctor: Functor List
     = { map: mapList };
 
-let polymorphicMap: (f: Type -> Type) => (functor: Functor f) => (a: Type) => (b: Type) =>
+let fmap: (f: Type -> Type) => (functor: Functor f) => (a: Type) => (b: Type) =>
                     (a -> b) -> f a -> f b
     = \fn -> \container -> functor.map fn container;
 
+let empty: List Num = #nil !;
 let one: List Num = #cons { 1, #nil ! };
+let someList: List Num = #cons { 1, #cons { 2, #cons { 3, #nil ! } } };

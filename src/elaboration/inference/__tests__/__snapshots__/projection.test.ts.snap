@@ -482,8 +482,8 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 1`] = `
     ],
     "term": "{
 	let proj
-	: Π(a: Row) => (closure: Π(b: Type) => Π(obj: Schema [ x: b | a ]) -> b -| Γ: a; proj)
-	= λa => λb => λobj -> (obj).x;
+	: Π(r: Row) => (closure: Π(a: Type) => Π(obj: Schema [ x: a | r ]) -> a -| Γ: r; proj)
+	= λr => λa => λobj -> (obj).x;
 	return unit;
 	}",
     "type": "Unit",
@@ -710,7 +710,7 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
               },
               "icit": "Implicit",
               "type": "Pi",
-              "variable": "a",
+              "variable": "r",
             },
             "closure": {
               "ctx": {
@@ -947,7 +947,7 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                   },
                   "icit": "Implicit",
                   "type": "Pi",
-                  "variable": "b",
+                  "variable": "a",
                 },
                 "body": {
                   "binding": {
@@ -1014,7 +1014,7 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
               },
               "icit": "Implicit",
               "type": "Lambda",
-              "variable": "a",
+              "variable": "r",
             },
             "body": {
               "binding": {
@@ -1027,7 +1027,7 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                 },
                 "icit": "Implicit",
                 "type": "Lambda",
-                "variable": "b",
+                "variable": "a",
               },
               "body": {
                 "binding": {

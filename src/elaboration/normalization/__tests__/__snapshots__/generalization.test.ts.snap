@@ -7,6 +7,13 @@ exports[`Normalization: generalization > generalize > correctly types metas: (?1
 }
 `;
 
+exports[`Normalization: generalization > generalize > correctly types metas: (?1:Type) -> (?2: Row)  |=> Π(a: Type) => Π(r: Row) => Π(x: a) -> r 1`] = `
+{
+  "eb": "Π(a: Type) => Π(r: Row) => Π(x: a) -> r",
+  "nf": "Π(a: Type) => (closure: Π(r: Row) => Π(x: a) -> r -| Γ: a)",
+}
+`;
+
 exports[`Normalization: generalization > generalize > handles pi types under existing environment entries 1`] = `
 {
   "eb": "Π(x: ?1) -> Num",

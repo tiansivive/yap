@@ -272,7 +272,10 @@ const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<str
 	V2.Do(function* () {
 		const result = match([r1, r2])
 			.with([{ type: "empty" }, { type: "empty" }], () => V2.lift([{ type: "empty" }, us] satisfies [EB.Row, Q.Usages]))
-			.with([{ type: "empty" }, { type: "variable" }], () => V2.lift([{ type: "empty" }, us] satisfies [EB.Row, Q.Usages]))
+			.with([{ type: "empty" }, { type: "variable" }], function* ([e, v]) {
+				yield* V2.tell("constraint", { type: "assign", left: NF.Constructors.Row({ type: "empty" }), right: NF.Constructors.Row(v) });
+				return [{ type: "empty" }, us] satisfies [EB.Row, Q.Usages];
+			})
 			.with([{ type: "empty" }, { type: "extension" }], ([r, { label }]) => V2.fail<[EB.Row, Q.Usages]>(Err.MissingLabel(label, r)))
 			.with([{ type: "variable" }, P._], () => V2.fail<[EB.Row, Q.Usages]>({ type: "Impossible", message: "Cannot have row var in a struct value" }))
 

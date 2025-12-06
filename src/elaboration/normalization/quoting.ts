@@ -40,28 +40,29 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 			.with({ type: "Abs", binder: { type: "Lambda" } }, ({ binder, closure }) => {
 				const { variable, icit, annotation } = binder;
 				const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
-				const body = quote(ctx, lvl + 1, val);
+				const body = quote(closure.ctx, lvl + 1, val);
 				const ann = NF.quote(ctx, lvl, annotation);
 				return EB.Constructors.Lambda(variable, icit, body, ann);
 			})
 			.with({ type: "Abs", binder: { type: "Pi" } }, ({ binder, closure }) => {
 				const { variable, icit, annotation } = binder;
 				const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
-				const body = quote(ctx, lvl + 1, val);
+				const body = quote(closure.ctx, lvl + 1, val);
 				const ann = NF.quote(ctx, lvl, annotation);
 				return EB.Constructors.Pi(variable, icit, ann, body);
 			})
 			.with({ type: "Abs", binder: { type: "Mu" } }, ({ binder, closure }) => {
 				const { variable, source, annotation } = binder;
 				const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
-				const body = quote(ctx, lvl + 1, val);
+				const body = quote(closure.ctx, lvl + 1, val);
 				const ann = NF.quote(ctx, lvl, annotation);
 				return EB.Constructors.Mu(variable, source, ann, body);
 			})
 			.with({ type: "Abs", binder: { type: "Sigma" } }, ({ binder, closure }) => {
 				const { variable, annotation } = binder;
 				const val = NF.apply(binder, closure, binder.annotation);
-				const body = quote(ctx, lvl + 1, val);
+				// Sigma bodies are not under a deBruijn binder. Applying sigmas does not increase the lvl, it extends the sigma env.
+				const body = quote(closure.ctx, lvl, val);
 				const ann = NF.quote(ctx, lvl, annotation);
 				return EB.Constructors.Sigma(variable, ann, body);
 			})

@@ -214,8 +214,8 @@ describe("Let-polymorphism", () => {
 
 		it("recursive function with polymorphic usage", () => {
 			const src = `{
-				let const = \\x -> \\y -> const x y;
-				let a = const 5;
+				let rec = \\x -> \\y -> rec x y;
+				let r = rec 5;
 			}`;
 
 			const res = elaborateFrom(src);
@@ -246,8 +246,8 @@ describe("Let-polymorphism", () => {
 		it("polymorphic function with struct values", () => {
 			const src = `{
 				let getName = \\obj -> obj.name;
-				let a = getName { name: "Alice" };
-				let b = getName { name: "Bob", age: 30 };
+				let alice = getName { name: "Alice" };
+				let bob = getName { name: "Bob", age: 30 };
 			}`;
 
 			const res = elaborateFrom(src);

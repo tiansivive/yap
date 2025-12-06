@@ -235,7 +235,11 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 							return yield* match(ty)
 								.with(NF.Patterns.Modal, function* (m) {
 									const proj = yield* V2.pure(projected(label, m.value));
-									return NF.Constructors.Modal(proj, m.modalities);
+									// TODO: We probably need to find some way to preserve the modalities on the base tye here.
+									// This assuming we want to allow refinements on row types
+									// Maybe implication or conjunction? Anther possibiliy is returning an existential, much like in application
+									// return NF.Constructors.Modal(proj, m.modalities);
+									return proj;
 								})
 								.with(NF.Patterns.Schema, function* ({ func, arg }) {
 									const rewritten = Row.rewrite(arg.row, label);

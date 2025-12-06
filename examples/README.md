@@ -595,7 +595,7 @@ using ListFunctor;
 
 let empty: List Num = #nil !;
 let one: List Num = #cons { 1, #nil ! };
-let someList = #cons { 1, #cons { 2, #cons { 3, #nil ! } } };
+let someList: List Num = #cons { 1, #cons { 2, #cons { 3, #nil ! } } };
 let result = polymorphicMap (\x -> x + 1) someList;
 ```
 
@@ -823,6 +823,10 @@ let head: (n: Num) -> (a: Type) -> Vec (n + 1) a -> a
 ```
 
 The type `Vec (n + 1) a` ensures the vector has at least one element.
+
+## NOTE:
+
+At the moment, it is not possible to use inference/unification to resolve `n`, hence it not being an implicit. In the future we might add arithmetic constraints to the unification algo.
 
 ### Dependent Records (Sigma Types)
 

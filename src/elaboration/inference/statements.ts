@@ -80,7 +80,12 @@ export const letdec = function* (
 	const { zonker, resolutions } = yield* V2.local(_ => withMetas, EB.solve(constraints));
 	const zonked = update(withMetas, "zonker", z => compose(zonker, z));
 
-	const [generalized, subst] = NF.generalize(NF.force(zonked, dec.annotation), EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation));
+	const [generalized, subst] = NF.generalize(
+		NF.force(zonked, dec.annotation),
+		dec.value,
+		EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation),
+		resolutions,
+	);
 	const next = update(zonked, "zonker", z => ({ ...z, ...subst }));
 
 	const instantiated = NF.instantiate(generalized, EB.bind(next, { type: "Let", variable: dec.variable }, generalized));

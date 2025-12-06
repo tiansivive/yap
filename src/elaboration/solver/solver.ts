@@ -72,7 +72,11 @@ const resolve = (cs: Array<Extract<Constraint, { type: "resolve" }>>, ctx: EB.Co
 		const result = unification(ctx).result;
 		if (E.isRight(result)) {
 			if (!_.isEmpty(result.right)) {
-				throw new Error("resolve: Found implicit with constraints; What to do here?");
+				// NOTE: Don't accept this implicit if it introduces constraints.
+				// Non-empty substitutions mean this implicit would prematurely instantiate other metas, reducing polymorphism.
+				// By continuing to search, we preserve generalization opportunity for those metas.
+				// This aligns with how Idris2 and Lean handle implicit resolution: defer decisions that constrain other unknowns.
+				return lookup(rest, nf);
 			}
 			return term;
 		}

@@ -54,6 +54,7 @@ export const createSubtype = ({ Z3, runtime, translation }: SubtypeDeps) => {
 					}
 					throw new Error("Rigid variables do not match in subtype");
 				})
+				.with([NF.Patterns.Row, NF.Patterns.Row], ([a, b]) => contains(b.row, a.row))
 				.with([NF.Patterns.Indexed, NF.Patterns.Indexed], ([a, b]) => {
 					const domainA = a.func.func.arg;
 					const codomainA = a.func.arg;
@@ -80,6 +81,15 @@ export const createSubtype = ({ Z3, runtime, translation }: SubtypeDeps) => {
 						V2.of<Bool>(Z3.Bool.val(true)),
 					);
 				})
+				.with([NF.Patterns.Sigma, NF.Patterns.Sigma], ([a, b]) =>
+					V2.Do(function* () {
+						const vc = yield* subtype.gen(a.binder.annotation, b.binder.annotation);
+						const bodyA = NF.apply(a.binder, a.closure, a.binder.annotation);
+						const bodyB = NF.apply(b.binder, b.closure, b.binder.annotation);
+						const vcBody = yield* subtype.gen(bodyA, bodyB);
+						return Z3.And(vc as Bool, vcBody as Bool);
+					}),
+				)
 				.with([NF.Patterns.Schema, NF.Patterns.Sigma], ([schema, sig]) => {
 					const body = NF.apply(sig.binder, sig.closure, NF.Constructors.Row(schema.arg.row));
 					return subtype(schema, body);
