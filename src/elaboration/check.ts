@@ -270,14 +270,9 @@ const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.R
 
 const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<string, EB.Sigma>): V2.Elaboration<[EB.Row, Q.Usages]> =>
 	V2.Do(function* () {
-		const result = match([r1, r2])
+		const result = match([r2, r1])
 			.with([{ type: "empty" }, { type: "empty" }], () => V2.lift([{ type: "empty" }, us] satisfies [EB.Row, Q.Usages]))
-			.with([{ type: "empty" }, { type: "variable" }], function* ([e, v]) {
-				yield* V2.tell("constraint", { type: "assign", left: NF.Constructors.Row({ type: "empty" }), right: NF.Constructors.Row(v) });
-				return [{ type: "empty" }, us] satisfies [EB.Row, Q.Usages];
-			})
-			.with([{ type: "empty" }, { type: "extension" }], ([r, { label }]) => V2.fail<[EB.Row, Q.Usages]>(Err.MissingLabel(label, r)))
-			.with([{ type: "variable" }, P._], () => V2.fail<[EB.Row, Q.Usages]>({ type: "Impossible", message: "Cannot have row var in a struct value" }))
+			.with([{ type: "extension" }, { type: "empty" }], ([{ label }, r]) => V2.fail<[EB.Row, Q.Usages]>(Err.MissingLabel(label, r)))
 
 			.with([{ type: "extension" }, { type: "extension" }], ([{ label, value, row }, r]) => {
 				const rewritten = R.rewrite(r, label);
@@ -292,9 +287,9 @@ const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<str
 				const { value: rv, row: rr } = rewritten.right;
 
 				return V2.local(
-					ctx => set(ctx, `sigma.${label}.ann`, rv),
+					ctx => set(ctx, `sigma.${label}.ann`, value),
 					V2.Do(function* () {
-						const [tm, tus] = yield* Check.val.gen(value, rv);
+						const [tm, tus] = yield* Check.val.gen(rv, value);
 						const sigma = bindings[label];
 						if (!sigma) {
 							throw new Error("Elaborating Row Extension: Label not found");
@@ -309,14 +304,20 @@ const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<str
 							//{ type: "assign", left: rv, right: sigma.ann, lvl: ctx.env.length }
 						]);
 
-						const [rt, rus] = yield* Check.row.traverse.gen(row as Src.Row, rr, us, bindings);
+						const [rt, rus] = yield* Check.row.traverse.gen(rr as Src.Row, row, us, bindings);
 						const q = Q.add(tus, rus);
 						const xtension = EB.Constructors.Extension(label, tm, rt);
 						return [xtension, q] satisfies [EB.Row, Q.Usages];
 					}),
 				);
 			})
-			.with([{ type: "extension" }, { type: "variable" }], function* ([r, v]) {
+			.with([P._, { type: "variable" }], () => V2.fail<[EB.Row, Q.Usages]>({ type: "Impossible", message: "Cannot have row var in a struct value" }))
+			.with([{ type: "variable" }, { type: "empty" }], function* ([v, e]) {
+				yield* V2.tell("constraint", { type: "assign", left: NF.Constructors.Row({ type: "empty" }), right: NF.Constructors.Row(v) });
+				return [{ type: "empty" }, us] satisfies [EB.Row, Q.Usages];
+			})
+
+			.with([{ type: "variable" }, { type: "extension" }], function* ([v, r]) {
 				const collected = yield* EB.Rows.collect.gen(r);
 				if (collected.tail) {
 					throw new Error("Cannot have row variables in struct values");
@@ -331,7 +332,7 @@ const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<str
 				yield* V2.tell("constraint", { type: "assign", left: NF.Constructors.Row(inferred.ty), right: NF.Constructors.Row(v) });
 				return [inferred.tm, us] satisfies [EB.Row, Q.Usages];
 			})
-			.with([{ type: "extension" }, P._], ([{ label }, r]) => V2.fail<[EB.Row, Q.Usages]>(Err.MissingLabel(label, r)))
+			.with([P._, { type: "extension" }], ([r, { label }]) => V2.fail<[EB.Row, Q.Usages]>(Err.MissingLabel(label, r)))
 			.otherwise(r => {
 				throw new Error("Unknown row action");
 			});

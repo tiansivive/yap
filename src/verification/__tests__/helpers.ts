@@ -54,18 +54,12 @@ export const elaborate = (src: string) => {
 			update("metas", prev => ({ ...prev, ...metas })),
 			set("zonker", Sub.compose(solution.zonker, ctx.zonker)),
 		);
-		const [generalized, zonker] = NF.generalize(ty, elaborated.value, zonked);
+		const [generalized, zonker] = NF.generalize(ty, elaborated.value, zonked, solution.resolutions);
 		const next = update(zonked, "zonker", z => ({ ...z, ...zonker }));
 		const instantiated = NF.instantiate(generalized, next);
 
 		const xtended = EB.bind(next, { type: "Let", variable: stmt.variable }, instantiated);
-		const wrapped = F.pipe(
-			EB.Icit.wrapLambda(elaborated.value, instantiated, xtended),
-			tm => EB.Icit.instantiate(tm, xtended, solution.resolutions),
-			// EB.Icit.instantiate(elaborated.value, xtended, solution.resolutions),
-			// inst => EB.Icit.generalize(inst, xtended),
-			// tm => EB.Icit.wrapLambda(tm, ty, xtended),
-		);
+		const wrapped = F.pipe(EB.Icit.wrapLambda(elaborated.value, instantiated, xtended), tm => EB.Icit.instantiate(tm, xtended, solution.resolutions));
 
 		return [wrapped, instantiated, next] as const;
 	})(Lib.defaultContext());
