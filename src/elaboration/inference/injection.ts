@@ -11,6 +11,7 @@ import * as R from "@yap/shared/rows";
 import * as F from "fp-ts/function";
 import { Liquid } from "@yap/verification/modalities";
 import { isLeft } from "fp-ts/lib/Either";
+import assert from "node:assert";
 
 type Injection = Extract<EB.Term, { type: "injection" }>;
 
@@ -47,23 +48,34 @@ const inject = (label: string, value: EB.AST, tm: EB.AST): V2.Elaboration<NF.Val
 						return extended;
 					}),
 				)
-				.with(
-					{ type: "App", func: { type: "Lit", value: { type: "Atom" } }, arg: { type: "Row" } },
-					({
-						func: {
-							value: { value },
-						},
-					}) => value === "Schema" || value === "Variant",
-					({ func, arg }) => {
-						const rewritten = R.rewrite(arg.row, label);
-						if (isLeft(rewritten)) {
-							const extended = NF.Constructors.App(func, NF.Constructors.Row(NF.Constructors.Extension(label, value[1], arg.row)), "Explicit");
-							return V2.of(extended);
-						}
+				.with(NF.Patterns.Sigma, sig => {
+					assert(sig.binder.annotation.type === "Row", "Injection: Expected Row type in Sigma binder annotation");
+					const rewritten = R.rewrite(sig.binder.annotation.row, label);
+					if (isLeft(rewritten)) {
+						const ann = NF.Constructors.Row(NF.Constructors.Extension(label, value[1], sig.binder.annotation.row));
 
-						return V2.of(NF.Constructors.App(func, NF.Constructors.Row(rewritten.right), "Explicit"));
-					},
-				)
+						const schema = match(sig.closure.term)
+							.with(EB.CtorPatterns.Schema, ({ arg }) =>
+								EB.Constructors.Schema(EB.Constructors.Extension(label, NF.quote(ctx, ctx.env.length, value[1]), arg.row)),
+							)
+							.otherwise(_ => {
+								throw new Error("Injection: Expected Schema type in sigma injection");
+							});
+
+						return V2.of(NF.Constructors.Sigma(sig.binder.variable, ann, NF.Constructors.Closure(sig.closure.ctx, schema)));
+					}
+
+					return V2.of(NF.Constructors.Sigma(sig.binder.variable, NF.Constructors.Row(rewritten.right), sig.closure));
+				})
+				.with(NF.Patterns.Schema, NF.Patterns.Variant, ({ func, arg }) => {
+					const rewritten = R.rewrite(arg.row, label);
+					if (isLeft(rewritten)) {
+						const extended = NF.Constructors.App(func, NF.Constructors.Row(NF.Constructors.Extension(label, value[1], arg.row)), "Explicit");
+						return V2.of(extended);
+					}
+
+					return V2.of(NF.Constructors.App(func, NF.Constructors.Row(rewritten.right), "Explicit"));
+				})
 				.otherwise(_ => {
 					throw new Error("Injection: Expected Row type");
 				}),

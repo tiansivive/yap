@@ -215,12 +215,6 @@ let Shape: Type
       | #point { x: Num, y: Num };
 
 
-let Shape: Type
-    = | #circle Num
-      | #rectangle { Num, Num }
-      | #point { x: Num, y: Num };
-
-
 let c: Shape = #circle 5.0;
 let r: Shape = #rectangle { 10, 20 };
 let p: Shape = #point { x: 0, y: 0 };
