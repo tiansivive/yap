@@ -8,7 +8,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       "?2 @ ?1",
       "String ~~ String",
     ],
-    "term": "(λx => λy -> y) @?2 "hello"",
+    "term": "(λx => λy -> y) @(?2 :: ?1) "hello"",
     "type": "String",
   },
 }
@@ -191,7 +191,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       "?1 @ Num",
       "String ~~ String",
     ],
-    "term": "(λx => λy -> y) @?1 "hello"",
+    "term": "(λx => λy -> y) @(?1 :: Num) "hello"",
     "type": "String",
   },
 }
@@ -369,7 +369,7 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
       "?4 @ ?1",
       "String ~~ String",
     ],
-    "term": "(λa => (λb => λc -> c) @?3) @?4 "hello"",
+    "term": "(λa => (λb => λc -> c) @(?3 :: ?2)) @(?4 :: ?1) "hello"",
     "type": "String",
   },
 }

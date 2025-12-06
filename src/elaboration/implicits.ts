@@ -140,7 +140,7 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 
 						if (s.type === "Let") {
 							const extended = EB.bind(ctx, { type: "Let", variable: s.variable }, s.annotation);
-							const instantiated = { ...s, value: instantiate(s.value, ctx, resolutions) };
+							const instantiated = { ...s, value: instantiate(s.value, extended, resolutions) };
 							return { stmts: [...stmts, instantiated], ctx: extended };
 						}
 						const instantiated = { ...s, value: instantiate(s.value, ctx, resolutions) };

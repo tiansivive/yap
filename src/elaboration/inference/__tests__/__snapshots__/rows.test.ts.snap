@@ -198,7 +198,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       "?1 ~~ Schema [ | ?5 ]",
     ],
     "term": "λr -> Struct [ foo: Num | r ]",
-    "type": "Π(r: ?1) -> (closure: Schema [ foo: Type | ?5 ] -| Γ: r)",
+    "type": "Π(r: ?1) -> (closure: Schema [ foo: Type | (?5 :: Row) ] -| Γ: r)",
   },
 }
 `;

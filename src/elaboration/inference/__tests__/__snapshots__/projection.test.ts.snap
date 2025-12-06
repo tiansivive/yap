@@ -301,7 +301,7 @@ exports[`inference: projection > \\obj -> obj.x 1`] = `
       "Schema [ x: ?2 | ?3 ] ~~ ?1",
     ],
     "term": "λobj -> (obj).x",
-    "type": "Π(obj: ?1) -> (closure: ?2 -| Γ: obj)",
+    "type": "Π(obj: ?1) -> (closure: (?2 :: Type) -| Γ: obj)",
   },
 }
 `;
@@ -1032,12 +1032,37 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
               "body": {
                 "binding": {
                   "annotation": {
-                    "type": "Var",
-                    "variable": {
-                      "lvl": 1,
-                      "type": "Meta",
-                      "val": 2,
+                    "arg": {
+                      "row": {
+                        "label": "x",
+                        "row": {
+                          "type": "variable",
+                          "variable": {
+                            "lvl": 2,
+                            "type": "Meta",
+                            "val": 4,
+                          },
+                        },
+                        "type": "extension",
+                        "value": {
+                          "type": "Var",
+                          "variable": {
+                            "index": 0,
+                            "type": "Bound",
+                          },
+                        },
+                      },
+                      "type": "Row",
                     },
+                    "func": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Schema",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
                   },
                   "icit": "Explicit",
                   "type": "Lambda",

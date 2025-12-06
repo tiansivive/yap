@@ -1,16 +1,15 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Normalization: generalization > generalize > correctly types metas: (?1:Type) -> (?2: Row)  |=> Π(a: Type) => Π(b: Row) => Π(x: a) -> b 1`] = `
-{
-  "eb": "Π(a: Type) => Π(b: Row) => Π(x: a) -> b",
-  "nf": "Π(a: Type) => (closure: Π(b: Row) => Π(x: a) -> b -| Γ: a)",
-}
-`;
-
 exports[`Normalization: generalization > generalize > correctly types metas: (?1:Type) -> (?2: Row)  |=> Π(a: Type) => Π(r: Row) => Π(x: a) -> r 1`] = `
 {
   "eb": "Π(a: Type) => Π(r: Row) => Π(x: a) -> r",
   "nf": "Π(a: Type) => (closure: Π(r: Row) => Π(x: a) -> r -| Γ: a)",
+}
+`;
+
+exports[`Normalization: generalization > generalize > generalizes metas in both type and term, eliminating duplicates 1`] = `
+{
+  "nf": "Π(a: Type) => (closure: Π(b: Type) => Π(c: Type) => a -| Γ: a)",
 }
 `;
 
@@ -28,6 +27,18 @@ exports[`Normalization: generalization > generalize > handles pi types: ?1 -> ?2
 }
 `;
 
+exports[`Normalization: generalization > generalize > ignores metas that are in the resolutions parameter 1`] = `
+{
+  "nf": "Π(a: Type) => (closure: a Num -| Γ: a)",
+}
+`;
+
+exports[`Normalization: generalization > generalize > ignores resolved metas in both type and term 1`] = `
+{
+  "nf": "Π(a: Type) => (closure: Π(b: Type) => a Num -| Γ: a)",
+}
+`;
+
 exports[`Normalization: generalization > generalize > introduces binder under existing environment entries 1`] = `
 {
   "eb": "?1",
@@ -39,6 +50,12 @@ exports[`Normalization: generalization > generalize > introduces multiple binder
 {
   "eb": "?1 Num",
   "nf": "(?1) Num",
+}
+`;
+
+exports[`Normalization: generalization > generalize > metas only in the term, not the type 1`] = `
+{
+  "nf": "Π(a: Type) => (closure: Num -| Γ: a)",
 }
 `;
 
@@ -62,10 +79,28 @@ exports[`Normalization: generalization > generalize > returns the value unchange
 }
 `;
 
+exports[`Normalization: generalization > generalize > sequences type and row variables correctly: ?1 ?2 ?3 |=> Π(a: Type) => Π(b: Type) => Π(r: Row) => ... 1`] = `
+{
+  "nf": "Π(a: Type) => (closure: Π(b: Type) => Π(r: Row) => a b r -| Γ: a)",
+}
+`;
+
 exports[`Normalization: generalization > generalize > simple meta: ?1 |=> Π(a: Type) => a 1`] = `
 {
   "eb": "Π(a: Type) => a",
   "nf": "Π(a: Type) => (closure: a -| Γ: a)",
+}
+`;
+
+exports[`Normalization: generalization > generalize > uses 'F' prefix for Type Constructor (Type -> Type) metas: ?1 ?2 |=> Π(F: Type -> Type) => Π(a: Type) => F a 1`] = `
+{
+  "nf": "Π(F: Π(x: Type) => (closure: Type -| Γ: x)) => (closure: F -| Γ: F)",
+}
+`;
+
+exports[`Normalization: generalization > generalize > uses 'r' prefix for Row variables: ?1 ?2 |=> Π(r: Row) => Π(a: Type) => r → a 1`] = `
+{
+  "nf": "Π(r: Row) => (closure: Π(a: Type) => r a -| Γ: r)",
 }
 `;
 
@@ -114,6 +149,20 @@ exports[`Normalization: generalization > integration: generalize + instantiate r
 `;
 
 exports[`Normalization: generalization > integration: generalize + instantiate round-trip > generalizes and then instantiates a polymorphic type 1`] = `
+{
+  "generalized": "Num",
+  "instantiated": "Num",
+}
+`;
+
+exports[`Normalization: generalization > integration: generalize + instantiate round-trip > generalizes metas in term and type, then instantiates 1`] = `
+{
+  "generalized": "Num",
+  "instantiated": "Num",
+}
+`;
+
+exports[`Normalization: generalization > integration: generalize + instantiate round-trip > generalizes with resolutions and then instantiates 1`] = `
 {
   "generalized": "Num",
   "instantiated": "Num",

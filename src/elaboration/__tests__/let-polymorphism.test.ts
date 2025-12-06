@@ -160,8 +160,8 @@ describe("Let-polymorphism", () => {
 			const src = `{
 				let outer = \\x -> {
 					let inner = \\y -> y;
-					let a = inner x;
-					let b = inner 42;
+					let x2 = inner x;
+					let n = inner 42;
 				};
 			}`;
 

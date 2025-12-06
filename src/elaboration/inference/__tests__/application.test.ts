@@ -47,7 +47,7 @@ describe("inference: application", () => {
 			const res = elaborateFrom('(\\(x: Num) => \\(y: String) -> y) "hello"');
 
 			expect(Object.entries(res.structure.metas)).toHaveLength(1);
-			expect(res.displays.term).toContain("@?1");
+			expect(res.displays.term).toContain("@(?1 :: Num)");
 			expect(res.structure.metas[1].ann).toMatchObject({ type: "Lit", value: { type: "Atom", value: "Num" } });
 
 			expect({ displays: res.displays }).toMatchSnapshot();

@@ -34,23 +34,8 @@ export const infer = (block: Block) =>
 						return yield* V2.pure(recurse(rest, [...results, stmt]));
 					}
 
-					options.verbose = true;
-					// const ctx = yield* V2.ask();
-					// const { zonker, metas, constraints } = yield* V2.listen();
-					// console.log("\n\nTERM:\n", EB.Display.Statement(stmt, { ...ctx, zonker: Sub.empty, metas }));
 					const [r, next] = yield* EB.Stmt.letdec(stmt);
 					yield* V2.tell("zonker", next.zonker);
-
-					// // Debugging info
-					// console.log("LET BINDING");
-					// console.log("ZONKER:\n", Sub.display(zonker, metas));
-					// console.log("\nInferred type:\n", NF.display(sty, { ...ctx, zonker: Sub.empty, metas }));
-
-					// console.log("\n\nCONSTRAINTS:");
-					// constraints.forEach(c => {
-					// 	console.log("--------------------");
-					// 	console.log(EB.Display.Constraint(c, { ...ctx, zonker: Sub.empty, metas }).replace(" ~~ ", "\n"));
-					// });
 
 					return yield* V2.local(
 						_ => {

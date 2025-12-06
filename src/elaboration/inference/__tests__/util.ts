@@ -5,6 +5,7 @@ import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Lib from "@yap/shared/lib/primitives";
 import { omit } from "lodash/fp";
+import { options } from "@yap/shared/config/options";
 
 // Create a fresh parser for expressions (Ann grammar start)
 export const mkParser = () => {
@@ -29,7 +30,7 @@ export const elaborateFrom = (src: string) => {
 	EB.resetSupply("var");
 	EB.resetId();
 	NF.resetId();
-
+	options.verbose = true;
 	const term = parseExpr(src);
 	const ctx = mkCtx();
 
