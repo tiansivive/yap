@@ -37,7 +37,23 @@ It’s still early days, so expect **broken things, missing features, a nonsensi
 - **Evaluator** - It does things like `1 + 2` and `(\x -> x + 1) 2`
 - **JS codegen** - sue me (also, it's broken)
 
-Check out the Examples folder to get a more in depth overview of what is currently available.
+Check out the Examples folder to get a more in depth overview of what is currently available. But for the TLDR crowd:
+
+```ts
+let Factorial: Type
+    = { compute: Num -> Num };
+
+let fact: Factorial
+    = { compute: \n -> match n
+        | 0 -> 1
+        | _ -> n * (:compute (n - 1))
+    };
+    // :compute refers to the 'compute' field itself
+
+let result = fact.compute 5;  // 120
+```
+
+BAM! How do you like them codez?
 
 ## Philosophy (Or Lack Thereof)
 
@@ -75,7 +91,7 @@ This means I'm spending an ungodly amount of time ironing out the kinks of what 
 
 ### Syntax goodies
 
-- Variadic arguments, multiple arguments, named arguments... (Yes, I like arguing)
+- Variadic arguments, named arguments... (Yes, I like arguing)
 - Infix function application (less parens = better)
 - Better syntax sugar for common patterns (shorthand matches, destructuring, backcalls, etc.)
 - `where` clauses (because who likes deep nesting?)
@@ -84,6 +100,7 @@ This means I'm spending an ungodly amount of time ironing out the kinks of what 
 ### Core Features
 
 - Reflection (for runtime type-driven pattern matching)
+- Recursive infinite data (Coinduction)
 - Delimited continuations
   - shift/reset primitives
   - Effect system on top
@@ -104,7 +121,7 @@ This means I'm spending an ungodly amount of time ironing out the kinks of what 
 - **Effects** - Simultaneously the bane of all devs, but also the thing that keeps the world running
   - How to best allow for ergonomic effects?
   - I should be able to log stuff without having to change a bazillion files
-  - Exclusive effects? As in: allow all effects except for `X`.
+  - Exclusive effects? Not like an exclusive/VIP club, you pleb! As in: allow all effects except for `X`.
 
 ### Things I’m Embarrassed About
 
@@ -118,6 +135,7 @@ This means I'm spending an ungodly amount of time ironing out the kinks of what 
 - **Comments** - I forgot, ok?
 - **Tech debt** 💀
   - Well, **lowering** isn't a thing yet (but hey, at least it’s not _not_ a thing, right?)
+  - The generator-monad-look-alike stuff... I wanted to be creative, k?
 
 Improvements are coming, but for now, just squint and pretend everything is fine.
 
