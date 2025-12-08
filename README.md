@@ -53,7 +53,7 @@ let fact: Factorial
 let result = fact.compute 5;  // 120
 ```
 
-BAM! How do you like them codez?
+Yes, this is actual, working syntax! Ensue bikeshedding.
 
 ## Philosophy (Or Lack Thereof)
 
