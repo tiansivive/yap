@@ -156,6 +156,7 @@
 
 - Pattern matching doesnt narrow down types dependent on the scrutinee
   - Example:
+
   ```
     let process: (b: Bool) -> (v: match b | true -> Num | false -> String) -> String
       = \b -> \v -> match b
@@ -166,11 +167,34 @@
   - `v`'s type is a `StuckMatch` as when it is introduced, we don't know the **value** of `b`. Later, in the each match branch, we can narrow `b` down to `true` or `false` and progress with computing `typeof v`.
   - I think we need HM, GHC-style Implication constraints.
   - What are the implications for higher order unification if that ever gets built?
+
+  - Example 2:
+
+  ```
+    let head: (n: Num) -> (a: Type) -> Vec (n + 1) a -> a
+      = \n -> \a -> \vec -> match vec
+          | { x, xs } -> x;
+  ```
+
+  - This currently emits the (failing) constraint: `Schema [ 0: ?1, 1: ?2 | ?3 ] ~~ (Vec) ($add: (L1) (1)) L2
+
   - **Possible implementation solution**
     - Add a different type of constraint: _Implication_. This will carry assumptions one can use to lookup values: `(b = true) ==> StuckMatch(L1) ~~ String`
     - When unifying `StuckMatch(L1) ~~ String`, we can safely lookup the value of the rigid L1 in the assumptions without breaking scoping (no rigid escape or similar).
     - If value is found, unblock the match and proceed with unification
     - If no value is found, leave the rigid as-is
+
+    - for the `head` case:
+      - emit:
+      ```
+        1. (($add L1 1) = k1, k1 ~~ 0)  ==> (StuckMatch(k1) = kk1, kk1 ~~ Unit)                                 ==> Schema [ 0: ?1, 1: ?2 | ?3 ] ~~ kk1
+        2. (($add L1 1) = k2, k2 ~~ k3) ==> (StuckMatch(k2) = kk2, kk2 ~~ Schema [ 0: L2, 1: Vec (k3 - 1) L2 ]) ==> Schema [ 0: ?1, 1: ?2 | ?3 ] ~~ kk2
+      ```
+
+      - First antecendent is from the pattern match in the definition of `Vec`, the second is matching the tuple pattern in `head` against the result of of the first antededent
+      - This would result in `1` failing due to `kk1 ~~ Unit` and `2` giving `?1 = L2, ?2 = Vec (($add L1 1) - 1) L2`
+      - Not sure if this goes anywhere?
+
 - Can't elide implicits before an explicit implicit application
   - Need to figure out how to match which implicit is being applied.
   - Named args might solve this issue

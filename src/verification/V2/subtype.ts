@@ -34,7 +34,7 @@ export const createSubtype = ({ Z3, runtime, translation }: SubtypeDeps) => {
 			runtime.enter();
 			runtime.log("Subtyping:", EB.Display.Env(ctx), NF.display(left, ctx, { deBruijn: true }), "<:", NF.display(right, ctx, { deBruijn: true }));
 
-			const result = match([NF.unwrapNeutral(left), NF.unwrapNeutral(right)])
+			const result = match([NF.force(ctx, NF.unwrapNeutral(left)), NF.force(ctx, NF.unwrapNeutral(right))])
 				/* ***************************************************************************************
 				 * **Basic subtyping rules**
 				 *
@@ -98,6 +98,9 @@ export const createSubtype = ({ Z3, runtime, translation }: SubtypeDeps) => {
 					const body = NF.apply(sig.binder, sig.closure, NF.Constructors.Row(schema.arg.row));
 					return subtype(body, schema);
 				})
+				// QUESTION: Schema <: Variant is a consequence of representing tagged terms as `Struct row`. This means Verification will synthesize schemas from structs.
+				// SOLUTION: Either preserve tagged terms as `Tagged Row` or preserve elaborated/inferred type, which would be a Variant, so we can do Variant <: Variant directly.
+				.with([NF.Patterns.Schema, NF.Patterns.Variant], ([schema, variant]) => contains(variant.arg.row, schema.arg.row))
 				.with([NF.Patterns.Schema, NF.Patterns.Schema], ([{ arg: a }, { arg: b }]) => contains(b.row, a.row))
 				.with([NF.Patterns.Variant, NF.Patterns.Variant], ([{ arg: a }, { arg: b }]) => contains(b.row, a.row))
 				.with([NF.Patterns.Mu, NF.Patterns.Mu], ([mu1, mu2]) =>
@@ -297,6 +300,16 @@ export const createSubtype = ({ Z3, runtime, translation }: SubtypeDeps) => {
 				)
 				.with([NF.Patterns.App, NF.Patterns.App], ([left, right]) =>
 					V2.Do<Expr, Expr>(function* () {
+						const isFlex = (t: NF.Value) =>
+							match(NF.unwrapNeutral(t))
+								.with(NF.Patterns.Flex, () => true)
+								.otherwise(() => false);
+						if ([left.func, right.func, left.arg, right.arg].some(isFlex)) {
+							const vc1 = yield subtype(left.func, right.func);
+							const vc2 = yield subtype(left.arg, right.arg);
+							return Z3.And(vc1 as Bool, vc2 as Bool);
+						}
+
 						const unfoldedL = NF.unfoldMu(left);
 						const unfoldedR = NF.unfoldMu(right);
 

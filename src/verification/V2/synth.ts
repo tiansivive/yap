@@ -26,9 +26,7 @@ type SynthDeps = {
 };
 
 export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
-	const { translate, quantify, mkSort } = translation;
-
-	const subtype = createSubtype({ Z3, runtime, translation });
+	const { translate, quantify } = translation;
 
 	const synth = (term: EB.Term): V2.Elaboration<SynthResult> =>
 		V2.Do(function* () {
@@ -295,6 +293,29 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 									}
 
 									return NF.Constructors.App(func, NF.Constructors.Row(rewritten.right), "Explicit");
+								})
+								.with(NF.Patterns.Sigma, function* ({ binder, closure }) {
+									if (binder.annotation.type !== "Row") {
+										throw new Error("Sigma binder annotation must be a Row");
+									}
+
+									const rewritten = Row.rewrite(binder.annotation.row, label);
+									if (E.isLeft(rewritten)) {
+										const extended = Row.Constructors.Extension(label, payloadTy, binder.annotation.row);
+										const ann = NF.Constructors.Row(extended);
+
+										const schema = match(closure.term)
+											.with(EB.CtorPatterns.Schema, ({ arg }) =>
+												EB.Constructors.Schema(EB.Constructors.Extension(label, NF.quote(ctx, ctx.env.length, payloadTy), arg.row)),
+											)
+											.otherwise(_ => {
+												throw new Error("Injection expected a Schema type in sigma injection");
+											});
+
+										return NF.Constructors.Sigma(binder.variable, ann, NF.Constructors.Closure(closure.ctx, schema));
+									}
+
+									return NF.Constructors.Sigma(binder.variable, NF.Constructors.Row(rewritten.right), closure);
 								})
 								.otherwise(() => {
 									throw new Error("Injection expected a Schema or Variant type");

@@ -124,96 +124,105 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 		if (!zCtx) {
 			throw new Error("Z3 context not set");
 		}
-		const Verification = VerificationServiceV2(zCtx);
+		const Verification = VerificationServiceV2(zCtx, { logging: stmt.variable === "ascending" });
 		const xtended = EB.bind(next, { type: "Let", variable: stmt.variable }, ty);
-		const { result: res } = Verification.check(r.value, r.annotation)(xtended);
-		if (res._tag === "Left") {
-			console.log("Verification failure");
-			console.log(res.left);
-			const ast: EB.AST = [r.value, r.annotation, us];
-			return [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
-		}
-		const artefacts = res.right;
-
-		const solver = new zCtx.Solver();
-
-		solver.add(artefacts.vc.eq(true));
-		solver
-			.check()
-			.then(res => {
-				if (res === "sat") {
-					return [];
-				}
-
-				console.log("\n Could not verify obligations!");
-				console.log(artefacts.vc.sexpr());
-				const obligations = Verification.getObligations?.() ?? [];
-				return Promise.all(
-					obligations.map(async ({ label, expr, context }) => {
-						const s = new zCtx.Solver();
-						s.add(expr.eq(true));
-						const r = await s.check();
-						let model: Model | undefined;
-						if (r === "unsat") {
-							// Try to extract a counterexample by solving the negation
-							const neg = new zCtx.Solver();
-							// Negate obligation by equating it to false to obtain a witness
-							neg.add(expr.eq(false));
-							const rn = await neg.check();
-							if (rn === "sat") {
-								model = neg.model();
-							}
-						}
-						return { label, result: r, expr, model, context };
-					}),
-				);
-			})
-			.then(async rs => {
-				rs.forEach(({ label, result, expr, model, context }, i) => {
-					console.log(` - [${result}] ${label}`);
-					if (context) {
-						if (context.description) {
-							if (Array.isArray(context.description)) {
-								console.log(`   description:`);
-								for (const line of context.description) {
-									console.log(`     ${line}`);
-								}
-							} else {
-								console.log(`   description: ${context.description}`);
-							}
-						}
-
-						if (context.term) {
-							console.log(`   term: ${context.term}`);
-						}
-
-						if (context.type) {
-							console.log(`   type: ${context.type}`);
-						}
-					}
-					if (result === "unsat") {
-						//console.log("   expr:", expr.sexpr());
-						if (model) {
-							// Try to extract variable values from the model
-							console.log("   counterexample:");
-							const decls = model.decls();
-							if (decls && decls.length > 0) {
-								for (const decl of decls) {
-									const name = decl.name();
-									const value = model.get(decl);
-									console.log(`     ${name} = ${value}`);
-								}
-							} else {
-								// Fallback: print the entire model
-								console.log("     ", model.sexpr());
-							}
-						}
-					}
-				});
-			});
-
 		const ast: EB.AST = [r.value, r.annotation, us];
-		return [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
+		const final = [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
+		try {
+			const { result: res } = Verification.check(r.value, r.annotation)(xtended);
+
+			if (res._tag === "Left") {
+				console.log("Verification failure");
+				console.log(res.left);
+
+				return final;
+			}
+			const artefacts = res.right;
+
+			const solver = new zCtx.Solver();
+
+			solver.add(artefacts.vc.eq(true));
+			solver
+				.check()
+				.then(res => {
+					if (res === "sat") {
+						return [];
+					}
+
+					console.log("\nCould not verify obligations for dec: ", stmt.variable);
+					console.log(artefacts.vc.sexpr());
+					const obligations = Verification.getObligations?.() ?? [];
+					return Promise.all(
+						obligations.map(async ({ label, expr, context }) => {
+							const s = new zCtx.Solver();
+							s.add(expr.eq(true));
+							const r = await s.check();
+							let model: Model | undefined;
+							if (r === "unsat") {
+								// Try to extract a counterexample by solving the negation
+								const neg = new zCtx.Solver();
+								// Negate obligation by equating it to false to obtain a witness
+								neg.add(expr.eq(false));
+								const rn = await neg.check();
+								if (rn === "sat") {
+									model = neg.model();
+								}
+							}
+							return { label, result: r, expr, model, context };
+						}),
+					);
+				})
+				.then(async rs => {
+					rs.forEach(({ label, result, expr, model, context }, i) => {
+						console.log(` - [${result}] ${label}`);
+						if (context) {
+							if (context.description) {
+								if (Array.isArray(context.description)) {
+									console.log(`   description:`);
+									for (const line of context.description) {
+										console.log(`     ${line}`);
+									}
+								} else {
+									console.log(`   description: ${context.description}`);
+								}
+							}
+
+							if (context.term) {
+								console.log(`   term: ${context.term}`);
+							}
+
+							if (context.type) {
+								console.log(`   type: ${context.type}`);
+							}
+						}
+						if (result === "unsat") {
+							//console.log("   expr:", expr.sexpr());
+							if (model) {
+								// Try to extract variable values from the model
+								console.log("   counterexample:");
+								const decls = model.decls();
+								if (decls && decls.length > 0) {
+									for (const decl of decls) {
+										const name = decl.name();
+										const value = model.get(decl);
+										console.log(`     ${name} = ${value}`);
+									}
+								} else {
+									// Fallback: print the entire model
+									console.log("     ", model.sexpr());
+								}
+							}
+						}
+					});
+				});
+		} catch (e) {
+			console.log(`Verification error in letdec ${stmt.variable}`);
+			console.log(e);
+			return final;
+		}
+
+		console.log("Elaborated letdec:", stmt.variable);
+		return final;
 	});
 
 	const { result } = inference(ctx);

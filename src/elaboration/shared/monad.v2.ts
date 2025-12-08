@@ -20,7 +20,7 @@ type Collector<A> = {
 	binders: EB.Binder[];
 	metas: EB.Context["metas"];
 	zonker: EB.Zonker;
-	types: Record<EB.Term["id"], { nf: EB.NF.Value; modalities: Modal.Annotations }>;
+	types: Record<EB.Term["id"], { nf: EB.NF.Value; modalities: Modal.Annotations<EB.Term> }>;
 	result: Either<Err, A>;
 };
 
@@ -161,7 +161,7 @@ type Payload<K extends Channel> = K extends "constraint"
 		: K extends "meta"
 			? { meta: EB.Meta; ann: EB.NF.Value }
 			: K extends "type"
-				? { term: EB.Term; nf: EB.NF.Value; modalities: Modal.Annotations }
+				? { term: EB.Term; nf: EB.NF.Value; modalities: Modal.Annotations<EB.Term> }
 				: K extends "zonker"
 					? EB.Zonker
 					: never;

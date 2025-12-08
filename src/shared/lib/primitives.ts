@@ -41,8 +41,8 @@ export const Terms = () => ({
     ">=": EB.Constructors.Var({ type: "Foreign", name: "$gte" }),
     "%": EB.Constructors.Var({ type: "Foreign", name: "$mod" }),
 
-    "<>": EB.Constructors.Lit(Lit.Atom("<>")),
-    "++": EB.Constructors.Lit(Lit.Atom("++")),
+    "<>": EB.Constructors.Var({ type: "Foreign", name: "$concat" }),
+    "++": EB.Constructors.Var({ type: "Foreign", name: "$concat" }),
 
 })
 
@@ -111,6 +111,12 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         term: EB.Constructors.Pi("y", "Explicit", Terms().Bool, Terms().Bool)
     })
 
+    const String_String_String = NF.Constructors.Pi("x", "Explicit", NormalForms.String(), {
+        type: "Closure",
+        ctx: dummyContext,
+        term: EB.Constructors.Pi("y", "Explicit", Terms().String, Terms().String)
+    })
+
     const Type_Type_Type = NF.Constructors.Pi("x", "Explicit", NF.Type, {
         type: "Closure",
         ctx: dummyContext,
@@ -133,6 +139,8 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         "<=": [Terms()["<="], Num_Num_Bool([, , reflectLiquid(Terms().Bool)(EB.DSL.lte)]), []],
         ">=": [Terms()[">="], Num_Num_Bool([, , reflectLiquid(Terms().Bool)(EB.DSL.gte)]), []],
         "%": [Terms()["%"], Num_Num_Num([]), []],
+        "<>": [Terms()["<>"], String_String_String, []],
+        "++": [Terms()["++"], String_String_String, []],
 
     }
 }
@@ -145,6 +153,7 @@ const arithmetic = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => numb
     const val = fn(x.value.value, y.value.value);
     return NF.Constructors.Lit(Lit.Num(val));
 }
+
 
 const typecheckBool = (val: NF.Value): val is NF.Value & { type: "Lit", value: { type: "Bool", value: boolean } } => val.type === "Lit" && val.value.type === "Bool"
 
@@ -160,6 +169,15 @@ const comparison = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => bool
     if (!typecheckNum(y)) throw new Error(`Expected number, got ${NF.display(y, { zonker: Sub.empty, metas: {}, env: [] })}`);
     const val = fn(x.value.value, y.value.value);
     return NF.Constructors.Lit(Lit.Bool(val));
+}
+
+const typecheckString = (val: NF.Value): val is NF.Value & { type: "Lit", value: { type: "String", value: string } } => val.type === "Lit" && val.value.type === "String"
+
+const concatenate = (x: NF.Value, y: NF.Value): NF.Value => {
+    if (!typecheckString(x)) throw new Error(`Expected string, got ${NF.display(x, { zonker: Sub.empty, metas: {}, env: [] })}`);
+    if (!typecheckString(y)) throw new Error(`Expected string, got ${NF.display(y, { zonker: Sub.empty, metas: {}, env: [] })}`);
+    const val = x.value.value + y.value.value;
+    return NF.Constructors.Lit(Lit.String(val));
 }
 
 // export const FFI = {
@@ -194,6 +212,8 @@ export const PrimOps: EB.Context['ffi'] = {
     $gt: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a > b) },
     $lte: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a <= b) },
     $gte: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a >= b) },
+    $mod: { arity: 2, compute: (x: NF.Value, y: NF.Value) => arithmetic(x, y, (a, b) => a % b) },
+    $concat: { arity: 2, compute: (x: NF.Value, y: NF.Value) => concatenate(x, y) },
     $not: {
         arity: 1, compute: (x: NF.Value) => {
             if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${NF.display(x, { zonker: Sub.empty, metas: {}, env: [] })}`);
@@ -219,6 +239,9 @@ export const OP_SUB = "$sub" as const;
 export const OP_MUL = "$mul" as const;
 export const OP_DIV = "$div" as const;
 
+export const OP_CONCAT = "$concat" as const;
+
+
 
 export const operatorMap: Record<string, string> = {
     [OP_AND]: "&&",
@@ -235,5 +258,7 @@ export const operatorMap: Record<string, string> = {
     [OP_SUB]: "-",
     [OP_MUL]: "*",
     [OP_DIV]: "/",
+
+    [OP_CONCAT]: "++",
 
 }

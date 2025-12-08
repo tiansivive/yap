@@ -61,6 +61,16 @@ export const fold = <T, V, A>(row: Row<T, V>, onVal: (value: T, label: string, a
 	return recurse(row, acc);
 };
 
+export const append = <T, V>(left: Row<T, V>, right: Row<T, V>): Row<T, V> => {
+	return match(left)
+		.with({ type: "empty" }, () => right)
+		.with({ type: "extension" }, ({ label, value, row }) => Constructors.Extension(label, value, append(row, right)))
+		.with({ type: "variable" }, () => {
+			throw new Error("Cannot append to a variable row");
+		})
+		.exhaustive();
+};
+
 // FIXME:TODO: Improve Error handling. Most likely need to parameterize `rewrite` over the error type.
 type Err = { tag: "Mismatch"; label: string } | { tag: "ExpectedExtension" } | { tag: "Other"; message: string };
 

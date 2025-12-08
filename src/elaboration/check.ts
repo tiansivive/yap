@@ -258,9 +258,19 @@ const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.R
 
 					return [{ type: "extension", label: lbl, value: tm, row: r }, Q.add(us, usages)] satisfies [EB.Row, Q.Usages];
 				}),
-			({ value }) => {
-				throw new Error("Not implemented yet: Cannot have row var in a map value");
-			},
+			(v, acc) =>
+				V2.Do(function* () {
+					const ctx = yield* V2.ask();
+					const [tm, ty, us] = yield* EB.lookup.gen(v, ctx);
+					assert(tm.type === "Var", "Expected row variable in struct value check");
+					yield* V2.tell("constraint", { type: "assign", left: ty, right: NF.Row, lvl: ctx.env.length });
+
+					const [r, usages]: [EB.Row, Q.Usages] = yield acc;
+
+					const rvar: EB.Row = { type: "variable", variable: tm.variable };
+
+					return [R.append(r, rvar), Q.add(us, usages)] as [EB.Row, Q.Usages];
+				}),
 			V2.of<[EB.Row, Q.Usages]>([{ type: "empty" }, Q.noUsage(lvl)]),
 		),
 		match(ty)

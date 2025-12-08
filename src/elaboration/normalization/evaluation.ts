@@ -307,10 +307,14 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 		.with({ type: "Modal" }, ({ term, modalities }) => {
 			const nf = evaluate(ctx, term, bindings, fuel);
 
-			return NF.Constructors.Modal(nf, {
-				quantity: modalities.quantity,
-				liquid: NF.evaluate(ctx, modalities.liquid, bindings, fuel),
-			});
+			const liquid = NF.evaluate(ctx, modalities.liquid, bindings, fuel);
+
+			return match(nf)
+				.with(NF.Patterns.Modal, ({ modalities: innerModalities, value }) => {
+					const combined = Modal.combine(innerModalities, { quantity: modalities.quantity, liquid }, ctx);
+					return NF.Constructors.Modal(value, combined);
+				})
+				.otherwise(v => NF.Constructors.Modal(v, { quantity: modalities.quantity, liquid }));
 		})
 		.with({ type: "Block" }, ({ statements, return: ret }) => {
 			const process = (stmts: EB.Statement[], ctx: EB.Context): EB.Context => {

@@ -6,6 +6,7 @@ let n: Num = 42;
 let greeting: String = "Hello, Yap!";
 let u: Unit = !;     
 
+
 let add: Num -> Num -> Num
     = \x -> \y -> x + y;
 
@@ -150,7 +151,7 @@ let n1 = idExplicit Num 42;
 let const: (a: Type) -> (b: Type) -> a -> b -> a
     = \a -> \b -> \x -> \y -> x;
 
-let constNumStr = const Num Str 1 "hello";
+let constNumStr = const Num String 1 "hello";
 
 let id: (a: Type) => a -> a
     = \x -> x; 
@@ -178,15 +179,15 @@ let List: Type -> Type
     = \a -> | #nil Unit | #cons { a, List a };
 
 let empty: List Num = #nil !;
-let one: List Num = #cons { 1, #nil ! };
-let someList: List Num = #cons { 1, #cons { 2, #cons { 3, #nil ! } } };
+let listOf1: List Num = #cons { 1, #nil ! };
+let listOf3: List Num = #cons { 1, #cons { 2, #cons { 3, #nil ! } } };
 
 let Peano: Type
     = | #zero Unit | #succ Peano;
 
 let zero: Peano = #zero !;
-let one: Peano = #succ zero;
-let two: Peano = #succ one;
+let first: Peano = #succ zero;
+let second: Peano = #succ first;
 
 
 let Show: Type -> Type
@@ -205,7 +206,7 @@ let EqNum: Eq Num
 let display: (t:Type) => (show: Show t) => (x: t) -> String
     = \x -> show.show x;
 
-let areEqual: (eq: Eq t) => (x: t) -> (y: t) -> Bool
+let areEqual: (t: Type) => (eq: Eq t) => (x: t) -> (y: t) -> Bool
     = \x -> \y -> eq.eq x y;
 
 
@@ -234,7 +235,7 @@ let fmap: (f: Type -> Type) => (functor: Functor f) => (a: Type) => (b: Type) =>
 
 let strmap = fmap stringify;
 
-let strList = strmap one;
+let strList = strmap listOf1;
 
 
 
@@ -244,9 +245,9 @@ let r: Row = [x: Num, y: String];
 let getOpenX: (r: Row) => { x: Num | r } -> Num
     = \record -> record.x;
 
-let p1 = getX { x: 10, y: 20 };
-let p2 = getX { x: 5, y: 3, z: 7 };
-let p3 = getX { x: 100, name: "point" };
+let p1 = getOpenX { x: 10, y: 20 };
+let p2 = getOpenX { x: 5, y: 3, z: 7 };
+let p3 = getOpenX { x: 100, name: "point" };
 
 let getName: (r: Row) => { name: String | r } -> String
     = \obj -> obj.name;
@@ -259,15 +260,6 @@ let name2 = getName book;
 
 let addZ: (r: Row) => { x: Num, y: Num | r } -> { x: Num, y: Num, z: Num | r }
     = \rec -> { rec | z = 0 };
-
-let handleNone: (r: Row) => (| #none Unit | r) -> String
-    = \variant -> match variant
-        | #none _ -> "Nothing here"
-        | other   -> "Something else";
-let opt: | #none Unit | #some Num = #none !;
-let nothingHere = handleNone opt; 
-
-
 
 
 let makeType: Bool -> Type
@@ -287,10 +279,6 @@ let vec0: Vec 0 Num = !;
 let vec1: Vec 1 Num = { 10, vec0 };
 let vec2: Vec 2 Num = { 20, vec1 };
 let vec3: Vec 3 Num = { 30, vec2 };
-
-let head: (n: Num) -> (a: Type) -> Vec (n + 1) a -> a
-    = \n -> \a -> \vec -> match vec
-        | { x, xs } -> x;
 
 
 let DependentPair: Type
@@ -358,16 +346,16 @@ let takePosFunction: (Pos -> Num) -> Num
 let natToNum: Nat -> Num = \x -> x;
 let posToNum: Pos -> Num = \x -> x;
 
-let result1 = takePosFunction natToNum;  // OK
+let result1 = takePosFunction natToNum;
 let result2 = takePosFunction posToNum;
 
-let constrainedId: (p: Num -> Bool) -> Num[|\v -> p v |] -> Num
-    = \x -> x;
+let checkNum: (p: Num -> Bool) -> Num[| \v -> p v |] -> Num
+    = \p -> \x -> x;
 
-let nat5 = constrainedId (\n -> n >= 0) 5; 
+let nat5 = checkNum (\n -> n >= 0) 5; 
 
 let safeInc: (p: Num -> Bool) -> (x: Num[|\v -> p (v + 1) |]) -> Num[|\v -> p v |]
-    = \x -> x + 1;
+    = \p -> \x -> x + 1;
 let natInc = safeInc (\n -> n >= 0); 
 let posInc = safeInc (\n -> n > 0); 
 
@@ -377,23 +365,15 @@ let OrderedPair: Type
 let valid: OrderedPair = { fst: 3, snd: 5 }; 
 let invalid: OrderedPair = { fst: 5, snd: 3 }; 
 
-let OrderedList: Type -> Type
-    = \t -> | #nil Unit
-            | #cons { head: t, tail: OrderedList (t[|\v -> v > :head |]) };
-
-let orderedList: OrderedList Num
-    = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
-
-let OrderedListPoly: (t: Type) -> (p: t -> t -> Bool) -> Type
+let OrderedList: (t: Type) -> (p: t -> t -> Bool) -> Type
     = \t -> \p -> 
         | #nil Unit
-        | #cons { head: t, tail: OrderedListPoly (t[|\v -> p :head v |]) p };
+        | #cons { head: t, tail: OrderedList (t[| \v -> p :head v |]) p };
 
-let ascending: OrderedListPoly Num (\x -> \y -> x < y)
+
+let ascending: OrderedList Num (\x -> \y -> x < y)
     = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
 
-let descending: OrderedListPoly Num (\x -> \y -> x > y)
+let descending: OrderedList Num (\x -> \y -> x > y)
     = #cons { head: 3, tail: #cons { head: 2, tail: #cons { head: 1, tail: #nil ! } } };
 
-let nonDecreasing: OrderedListPoly Num (\x -> \y -> x <= y)
-    = #cons { head: 1, tail: #cons { head: 1, tail: #cons { head: 2, tail: #nil ! } } };

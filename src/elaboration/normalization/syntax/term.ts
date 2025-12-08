@@ -54,7 +54,7 @@ export type Closure =
 	| { type: "Closure"; ctx: EB.Context; term: EB.Term }
 	| { type: "PrimOp"; ctx: EB.Context; term: EB.Term; arity: number; compute: (...args: Value[]) => Value };
 
-export type Modalities = SetFieldType<Modal.Annotations, "liquid", Value>;
+export type Modalities = Modal.Annotations<Value>;
 
 let currentId = 0;
 const nextId = () => ++currentId;

@@ -2,10 +2,11 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import { Solver, Expr } from "z3-solver";
+import assert from "node:assert";
 
-export type Annotations = {
+export type Annotations<T> = {
 	quantity: Q.Multiplicity;
-	liquid: EB.Term;
+	liquid: T;
 };
 
 export type Artefacts = {
@@ -34,3 +35,20 @@ export const Verification = {
 		return NF.Constructors.Lambda("$x", "Explicit", NF.Constructors.Closure(ctx, and), ann);
 	},
 };
+
+export const combine = (a: Annotations<NF.Value>, b: Annotations<NF.Value>, ctx: EB.Context): Annotations<NF.Value> => ({
+	quantity: Q.SR.mul(a.quantity, b.quantity),
+	liquid: (() => {
+		assert(a.liquid.type === "Abs" && a.liquid.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
+		assert(b.liquid.type === "Abs" && b.liquid.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
+
+		const name = `${a.liquid.binder.variable}_and_${b.liquid.binder.variable}`;
+		const lvl = ctx.env.length;
+		const anf = NF.apply(a.liquid.binder, a.liquid.closure, NF.Constructors.Rigid(lvl));
+		const bnf = NF.apply(b.liquid.binder, b.liquid.closure, NF.Constructors.Rigid(lvl));
+
+		const body = NF.DSL.Binop.and(anf, bnf);
+		return NF.Constructors.Lambda(name, "Explicit", NF.Constructors.Closure(ctx, NF.quote(ctx, lvl + 1, body)), a.liquid.binder.annotation);
+		// return NF.DSL.Binop.and(a.liquid, b.liquid);
+	})(),
+});

@@ -225,3 +225,11 @@ let id = \x -> x;
 
 let s: String = id "hello";
 let n = id 42; 
+
+let handleNone: (r: Row) => (| #none Unit | r) -> String
+    = \variant -> match variant
+        | #none _ -> "Nothing here"
+        | other   -> "Something else";
+let opt: | #none Unit | #some Num = #none !;
+let nothingHere = handleNone opt; 
+

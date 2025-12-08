@@ -30,6 +30,7 @@
 		fatArrow: /\=>/,
 		star: /\*/,
 		concat: /<>/,
+		concat2: /\+\+/,
 		op: /[\+\-\/]|(?:==)|(?:!=)|(?:<=)|(?:>=)|(?:\|>)|(?:<\|)/,
 		langle: /</,
 		rangle: />/,
@@ -114,7 +115,7 @@ Expr -> Lambda		{% id %}
   	  | Block 		{% id %}
 	  | Op 			{% id %}
 
-Op -> Op %space:? (%op | %concat | %rangle | %langle | %star ) %space:? Atom 	{% P.Operation %}
+Op -> Op %space:? (%op | %concat | %concat2 | %rangle | %langle | %star ) %space:? Atom 	{% P.Operation %}
 	| App 																		{% id %}
 
 App -> App %space Atom 															{% P.Application("Explicit") %}
