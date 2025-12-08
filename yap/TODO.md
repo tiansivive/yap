@@ -33,16 +33,29 @@
 
 ### Core Features
 
+- Recursion
+  - Fixpoint: `Y` abstraction for fn recursion
+  - Recursive types: `mu` abstraction for equi-recursive types
+  - Coinduction: `nu` abstraction
+    - No type level distinction between infite and finite types
+    - Only use for recursive **data** structures via `nu`.
+    - Leverage `check`
+      - When checking a variable against a mu type, wrap in a `nu` => means codata
 - ~~Type level singleton String and Nums~~
-  - Adapt normalization to reduce string operations, ~~arithmetic and logical expressions~~
+  - ~~Adapt normalization to reduce string operations~~, ~~arithmetic and logical expressions~~
   - ~~rely on bidir for implementation~~
     - ~~infer `1` as `Num`. Check `1: 1` as well as `1: Type` and `1: Num`~~
     - ~~implications for interop with rows and indexed types?~~
 - Fix sigma contexts (dependent records)
   - Must be a stack
+  - Change `Sigma`s to introduce an actual `env` entry. Labels can implemented with deBruijn idx + label name.
+    - eg: `Σsig: [foo: Num]. Schema I0 -| .`
+    - Applying gives `sig: [foo: Num] |- Schema L0`
+    - `:foo` would evaluate to `L0:foo` -> use normal deBruijn idx/lvl to find the correct var in the `env` and then `:lbl` to find the field in the row.
   - ~~unify evaluation and elaboration sigmas so we don't need the extract bindings trick in evaluation~~
 - Delimited continuations
   - shift/reset
+- Function domains modelled with Rows?
 - Exclusion/Not type operator
   - `!Int` means any type that is not an `Int`
   - More useful concept for rows to model `Lacks` constraints
@@ -125,9 +138,12 @@
 - Use tree sitter instead of Nearley
 - Normal forms
   - Create a wrapper that is more explicit about using WHNF while inferring
+  - If/when we move to `Evaluation` monad, the wrapper to perform `eval` within `Elaboration` can/should be called `normalize`
 - Store inferred types in elaborated terms
 - Spineful applications?
   - Would help/prepare for Higher-Order unification
+- Redo `row` based terms to proper constructors
+  - Gets around all the hacks we have for pattern matching on Recursive/App/Mu/etc
 - Testing
 - Monads Monads Monads
   - ~~Debugging and stack tracing is hard~~ (No longer applicable after generator refactor)
@@ -144,13 +160,16 @@
   - Portable across SMT backends
 - Rework let binding "sequencing" (multiple decs in a block)
   - Recursion currently demands a lot of ctx entending in different places.
-  - Maybe better to have only a `fix` abstraction, perhpas unifying with `mu`.
+  - ~~Maybe better to have only a `fix` abstraction, perhpas unifying with `mu`.~~
 - After switching to closures containing the whole Context, some functions are no longer dependent on it (eg, quoting). Clean up those params
   - It's probably not necessary to hold the whole context, we can perhaps keep just imports and env, and adjust Context utilities
   - This helps with the "Not Implemented" Errors in some scenarios handling closures
 - Refactor row operations
   - rewrite
   - meet/join for pattern matching
+  - Use a better data structure? Just a plain array?
+- Modal terms
+  - Associate only one modality? so usage + liquid would be `Modal Q Many (Modal L (\x -> x > 0) (Num))`
 
 ### Known issues
 
@@ -186,6 +205,7 @@
 
     - for the `head` case:
       - emit:
+
       ```
         1. (($add L1 1) = k1, k1 ~~ 0)  ==> (StuckMatch(k1) = kk1, kk1 ~~ Unit)                                 ==> Schema [ 0: ?1, 1: ?2 | ?3 ] ~~ kk1
         2. (($add L1 1) = k2, k2 ~~ k3) ==> (StuckMatch(k2) = kk2, kk2 ~~ Schema [ 0: L2, 1: Vec (k3 - 1) L2 ]) ==> Schema [ 0: ?1, 1: ?2 | ?3 ] ~~ kk2
