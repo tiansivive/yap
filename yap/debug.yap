@@ -8,7 +8,7 @@ let u: Unit = !;
 
 
 let add: Num -> Num -> Num
-    = \x -> \y -> x + y;
+    = \x y -> x + y;
 
 let identity: Num -> Num
     = \x -> x;
@@ -17,7 +17,7 @@ let forty2 = identity 42;
 let added = add 10 20;  
 
 let compose: (Num -> Num) -> (Num -> Num) -> Num -> Num
-    = \f -> \g -> \x -> f (g x);
+    = \f g x -> f (g x);
 
 
 let add1 = \x -> x + 1;
@@ -127,7 +127,7 @@ let debug: Num -> Num
         return result;
     };
 
-let run = \x:Unit -> {
+let run = \(x:Unit) -> {
     print "hello world";
 };
 
@@ -145,11 +145,11 @@ let origin: Point = { x: 0, y: 0 };
 
 
 let idExplicit: (a: Type) -> a -> a
-    = \a -> \x -> x;
+    = \a x -> x;
 let n1 = idExplicit Num 42; 
 
 let const: (a: Type) -> (b: Type) -> a -> b -> a
-    = \a -> \b -> \x -> \y -> x;
+    = \a b x y -> x;
 
 let constNumStr = const Num String 1 "hello";
 
@@ -201,13 +201,13 @@ let ShowBool: Show Bool
     = { show: \b -> match b | true -> "true" | false -> "false" };
 
 let EqNum: Eq Num
-    = { eq: \x -> \y -> x == y };
+    = { eq: \x y -> x == y };
 
 let display: (t:Type) => (show: Show t) => (x: t) -> String
     = \x -> show.show x;
 
 let areEqual: (t: Type) => (eq: Eq t) => (x: t) -> (y: t) -> Bool
-    = \x -> \y -> eq.eq x y;
+    = \x y -> eq.eq x y;
 
 
 using ShowNum;
@@ -222,7 +222,7 @@ let Functor: (Type -> Type) -> Type
     = \f -> { map: (a: Type) => (b: Type) => (a -> b) -> f a -> f b };
 
 let mapList: (a: Type) => (b: Type) => (a -> b) -> List a -> List b
-    = \f -> \list -> match list
+    = \f list -> match list
         | #nil _           -> #nil !
         | #cons { x, xs }  -> #cons { f x, mapList f xs };
 
@@ -231,7 +231,7 @@ let ListFunctor: Functor List
 
 let fmap: (f: Type -> Type) => (functor: Functor f) => (a: Type) => (b: Type) =>
                     (a -> b) -> f a -> f b
-    = \fn -> \container -> functor.map fn container;
+    = \fn container -> functor.map fn container;
 
 let strmap = fmap stringify;
 
@@ -271,7 +271,7 @@ let T2: Type = makeType false;
 
 
 let Vec: Num -> Type -> Type
-    = \n -> \t -> match n
+    = \n t -> match n
         | 0 -> Unit
         | l -> { t, Vec (l - 1) t };
 
@@ -290,7 +290,7 @@ let strPair: DependentPair
     = { fst: String, snd: "hello" };
 
 let Pair: (a: Type) -> (p: a -> Type) -> Type
-    = \a -> \p -> { fst: a, snd: p :fst };
+    = \a p -> { fst: a, snd: p :fst };
 
 let exampleP1: Pair Num (\n -> String)
     = { fst: 42, snd: "hello" };
@@ -350,12 +350,12 @@ let result1 = takePosFunction natToNum;
 let result2 = takePosFunction posToNum;
 
 let checkNum: (p: Num -> Bool) -> Num[| \v -> p v |] -> Num
-    = \p -> \x -> x;
+    = \p x -> x;
 
 let nat5 = checkNum (\n -> n >= 0) 5; 
 
 let safeInc: (p: Num -> Bool) -> (x: Num[|\v -> p (v + 1) |]) -> Num[|\v -> p v |]
-    = \p -> \x -> x + 1;
+    = \p x -> x + 1;
 let natInc = safeInc (\n -> n >= 0); 
 let posInc = safeInc (\n -> n > 0); 
 
@@ -366,14 +366,14 @@ let valid: OrderedPair = { fst: 3, snd: 5 };
 let invalid: OrderedPair = { fst: 5, snd: 3 }; 
 
 let OrderedList: (t: Type) -> (p: t -> t -> Bool) -> Type
-    = \t -> \p -> 
+    = \t p -> 
         | #nil Unit
         | #cons { head: t, tail: OrderedList (t[| \v -> p :head v |]) p };
 
 
-let ascending: OrderedList Num (\x -> \y -> x < y)
+let ascending: OrderedList Num (\x y -> x < y)
     = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
 
-let descending: OrderedList Num (\x -> \y -> x > y)
+let descending: OrderedList Num (\x y -> x > y)
     = #cons { head: 3, tail: #cons { head: 2, tail: #cons { head: 1, tail: #nil ! } } };
 

@@ -39,9 +39,26 @@ describe("parser: functions (lambdas, pis, applications)", () => {
 		expect(data.results.length).toBe(1);
 		expect(data.results[0]).toMatchSnapshot();
 	});
+	it("multi params: \\x y z -> 2", () => {
+		const data = parser.feed("\\x y z -> 2");
+		expect(data.results.length).toBe(1);
+		expect(data.results[0]).toMatchSnapshot();
+	});
+
+	it("multi typed params: \\(x: Num) (y: String) (z: Bool) -> 4", () => {
+		const data = parser.feed("\\(x: Num) (y: String) (z: Bool) -> 4");
+		expect(data.results.length).toBe(1);
+		expect(data.results[0]).toMatchSnapshot();
+	});
 
 	it("implicit lambda: \\x => 2", () => {
 		const data = parser.feed("\\x => 2");
+		expect(data.results.length).toBe(1);
+		expect(data.results[0]).toMatchSnapshot();
+	});
+
+	it("multi implicit params: \\x y z => 2", () => {
+		const data = parser.feed("\\x y z => 2");
 		expect(data.results.length).toBe(1);
 		expect(data.results[0]).toMatchSnapshot();
 	});

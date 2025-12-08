@@ -142,13 +142,21 @@ Mu -> "μ" %space:? Identifier %space:? %arrow %space:? TypeExpr 		{% P.Mu %}
 # ------------------------------------
 # FUNCTIONS
 # ------------------------------------
-Lambda -> %backslash Param %space:? %arrow %space:? TypeExpr 				{% P.Lambda("Explicit") %}
-		| %backslash Param %space:? %fatArrow %space:? TypeExpr 			{% P.Lambda("Implicit") %}
+Lambda -> %backslash (Param (%space:+ Param):*) %space:? %arrow %space:? TypeExpr 				{% P.Lambda("Explicit") %}
+		| %backslash (Param (%space:+ Param):*) %space:? %fatArrow %space:? TypeExpr 			{% P.Lambda("Implicit") %}
 		
+Params -> Param (%space:+ Param):*												{% P.Params %}
+		
+
 Param -> Identifier 															{% P.Param %}
-	   | Identifier %space:? %colon %space:? TypeExpr 							{% P.Param %}
+	 #  | Identifier %space:? %colon %space:? TypeExpr 							{% P.Param %}
 	#    | Identifier %space:? %colon %space:? Angle[Quantity] %space:? TypeExpr 	{% P.Param %}
-	   | Parens[Param] 															{% P.extract %}
+	   | Parens[TypedParam] 													{% P.extract %}
+
+TypedParam -> Identifier %space:? %colon %space:? TypeExpr 						{% P.Param %}
+		   | Param	 															{% id %}	
+
+												
 		 
 
 Pi -> ModalType %space:? %arrow %space:? PiTail 		{% P.Pi("Explicit") %}

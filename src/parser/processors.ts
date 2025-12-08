@@ -168,23 +168,29 @@ export const Annotation = ([term, ...rest]: [Term, ...Annotation]): Term => {
  * Lambda processors
  ***********************************************************/
 
-type Implicit = [Backslash, Param, Whitespace, Arrow, Whitespace, Term];
-type Explicit = [Backslash, Param, Whitespace, Arrow, Whitespace, Term];
+type Implicit = [Backslash, Param[], Whitespace, Arrow, Whitespace, Term];
+type Explicit = [Backslash, Param[], Whitespace, Arrow, Whitespace, Term];
 type Param = { type: "param"; binding: Variable; annotation?: Term };
 
-const Lam = (icit: Implicitness, param: Param, body: Term): Term => ({
-	type: "lambda",
-	icit,
-	variable: param.binding.value,
-	annotation: param.annotation,
-	body,
-	location: locSpan(param.binding.location, body.location),
-});
+const Lam = (icit: Implicitness, params: Param[], body: Term): Term => {
+	return params.reduceRight((acc, param) => {
+		return {
+			type: "lambda",
+			icit,
+			variable: param.binding.value,
+			annotation: param.annotation,
+			body: acc,
+			location: locSpan(param.binding.location, acc.location),
+		};
+	}, body);
+};
 
-export const Lambda: (icit: Implicitness) => PostProcessor<[Backslash, Param, Whitespace, Arrow, Whitespace, Term], Term> =
-	icit =>
-	([, param, , , , body]) => {
-		return Lam(icit, param, body);
+export const Lambda: (icit: Implicitness) => PostProcessor<[Backslash, [Param, [Whitespace, Param][]], Whitespace, Arrow, Whitespace, Term], Term> =
+	icit => args => {
+		const [, raw, , , , body] = args;
+
+		const params = [raw[0], ...raw[1].map(([, p]) => p)];
+		return Lam(icit, params, body);
 	};
 
 export const Pi: (icit: Implicitness) => PostProcessor<[Term, Whitespace, Token, Whitespace, Term], Term> =
@@ -207,7 +213,8 @@ export const Pi: (icit: Implicitness) => PostProcessor<[Term, Whitespace, Token,
 		return { type: "arrow", lhs: expr, rhs: body, icit, location: span(expr, body) };
 	};
 
-export const Param = ([binding, ...ann]: [Variable, ...Annotation]): Param => {
+export const Param = (p: [Variable, ...Annotation]): Param => {
+	const [binding, ...ann] = p;
 	if (ann.length === 0) {
 		return {
 			type: "param",
@@ -330,7 +337,7 @@ export const Projection: PostProcessor<[Term, Dot, Variable] | [Dot, Variable], 
 	if (input.length === 2) {
 		const [tok, label] = input;
 		const binding: Variable = { type: "name", value: "x", location: { from: loc(tok) } };
-		return Lam("Explicit", { type: "param", binding }, project(label, Var([binding])));
+		return Lam("Explicit", [{ type: "param", binding }], project(label, Var([binding])));
 	}
 	const [term, , label] = input;
 	return project(label, term);
@@ -350,7 +357,7 @@ export const Injection: PostProcessor<[Injection], Term> = ([inj]) => {
 		const [, tok, pairs] = inj;
 		const binding: Variable = { type: "name", value: "x", location: { from: loc(tok) } };
 		const body = pairs.reduce((tm, kv) => inject(kv, tm), Var([binding]));
-		return Lam("Explicit", { type: "param", binding }, body);
+		return Lam("Explicit", [{ type: "param", binding }], body);
 	}
 
 	const [, term, , , pairs] = inj;

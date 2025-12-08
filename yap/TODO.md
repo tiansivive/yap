@@ -5,7 +5,7 @@
 - custom operators?
 - allow unicode identifiers
   - mostly just `'`
-- Multiple arguments
+    ~~- Multiple arguments~~
 - Variadic arguments
   - Arity regex constraints
 - Argument pattern matching
