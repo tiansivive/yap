@@ -747,11 +747,22 @@ let strList = strmap listOf1;
 
 This pattern works for Monads, Applicatives, and other higher-kinded abstractions. After all, polymorphism in Yap is simply higher order functions!
 
----
-
 ## Dependent Types
 
 Dependent types allow types to depend on **values**. This enables extremely precise type signatures.
+
+### Polymorphism is Dependent!
+
+Actually, we've already been using dependent types! When we wrote:
+
+```ocaml
+let id: (a: Type) -> a -> a
+    = \a -> \x -> x;
+```
+
+The return type `a` depends on the **value** of the parameter `a`. This is a **dependent function type**, also called a **Pi type**.
+
+Polymorphism is just a familiar case of dependent types where **values depend on types**. But Yap allows the dual too: **types depending on values**!
 
 ### Dependent Functions (Pi Types)
 
