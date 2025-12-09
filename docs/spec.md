@@ -1,4 +1,4 @@
-# Yap: A Small Dependently Typed Core (Formal Specification)
+# Yap: A Small Dependently Typed Core (Formal-ish Specification)
 
 This document formalizes the core of Yap as implemented in this repository: a dependently typed language with structural rows (records, variants, tuples, lists), implicit arguments, and verification via Liquid-style refinements (as modal annotations). Multiplicity/usage annotations appear in the syntax but are not enforced here.
 

@@ -1,6 +1,6 @@
 <h1 align="center">Yap</h1>
 
-<p align="center">A small TT core lang with some extra fluff</p>
+<p align="center">A small core lang with some extra fluff</p>
 
 <p align="center">
 	<!-- prettier-ignore-start -->
@@ -11,7 +11,6 @@
 	<a href="https://github.com/tiansivive/lama/blob/main/.github/CODE_OF_CONDUCT.md" target="_blank"><img alt="🤝 Code of Conduct: Kept" src="https://img.shields.io/badge/%F0%9F%A4%9D_code_of_conduct-kept-21bb42" /></a>
 	<a href="https://codecov.io/gh/tiansivive/lama" target="_blank"><img alt="🧪 Coverage" src="https://img.shields.io/codecov/c/github/tiansivive/lama?label=%F0%9F%A7%AA%20coverage" /></a>
 	<a href="https://github.com/tiansivive/lama/blob/main/LICENSE.md" target="_blank"><img alt="📝 License: MIT" src="https://img.shields.io/badge/%F0%9F%93%9D_license-MIT-21bb42.svg"></a>
-	<a href="http://npmjs.com/package/lama"><img alt="📦 npm version" src="https://img.shields.io/npm/v/lama?color=21bb42&label=%F0%9F%93%A6%20npm" /></a>
 	<img alt="💪 TypeScript: Strict" src="https://img.shields.io/badge/%F0%9F%92%AA_typescript-strict-21bb42.svg" />
 </p>
 
@@ -22,7 +21,8 @@ There's no grand vision here — just a bunch of features I like, without the st
 
 ## What Even Is This?
 
-`Yap` is a **dependently typed language** with **first-class, structural types**, **implicits**, and **zero runtime assumptions**. The idea is to keep the core **minimal**, let types do their thing (and then nuke them!), and **make everything customizable**. If you don’t like how something works, change it — preferably without rewriting the compiler.
+`Yap` is a **dependently typed language** with **first-class, structural types**, **implicits**, and **zero runtime assumptions**. The idea is to keep the core **minimal**, let types do their thing (and then nuke them!), and **make everything customizable**.  
+If you don’t like how something works, change it — preferably without rewriting the compiler.
 
 It’s still early days, so expect **broken things, missing features, a nonsensical mess and half-baked ideas**. But hey, it already supports:
 
@@ -32,9 +32,10 @@ It’s still early days, so expect **broken things, missing features, a nonsensi
   - **Refinement types** - because Naturals, Ranges, non-empty lists and such exist even if we pretend they don't
   - **Type inference** - Momma always told me I had a short attention span
 - **Implicits** - so you don’t have to pass a million arguments manually
-- **Module System** - because you have a file system
-- **Customizable data structures** - want to swap out how records/tuples work? Go for it, I don't care
 - **Evaluator** - It does things like `1 + 2` and `(\x -> x + 1) 2`
+- **Customizable data structures** - want to swap out how records/tuples work? Go for it, I don't care
+- **Foreign function interface** - Just an excuse to write JS instead of actual yap code
+- **Module System** - because you have a file system
 - **JS codegen** - sue me (also, it's broken)
 
 Check out the Examples folder to get a more in depth overview of what is currently available. But for the TLDR crowd:
@@ -55,6 +56,49 @@ let result = fact.compute 5;  // 120
 
 Yes, this is actual, working syntax! Ensue bikeshedding.
 
+## Trying It Out
+
+`Yap` isn’t quite "usable" yet unless you enjoy debugging the compiler. If you're a masochist though, you'll need some groundwork:
+
+1. [Install `z3` ](https://github.com/Z3Prover/z3/releases)
+   - On macOS, use `brew install z3` like a normal person
+2. Clone the repo
+3. Install `node`
+   - Easiest [via `nvm`](https://github.com/nvm-sh/nvm). Either `nvm use` or `nvm install`
+4. [Install `pnpm`](https://pnpm.io/installation)
+5. `pnpm install`
+6. `pnpm nearley` builds the parser
+
+That wasn't so hard!
+Now chop chop, fun part is coming
+
+### Playing with the REPL
+
+You know the drill:
+
+1. `pnpm run yap repl`
+2. Write some broken code
+   - sacrifice a goat
+   - pray it works
+   - get mad when it breaks
+3. Complain
+
+The `examples/README` has a fairly good overview of what's currently supported, although I make no claims that anything outside of those carefully curated examples will work.
+
+### What about compiling code?
+
+There's a very broken, outdated (read ignored), mess of a JS codegen. At most you can generate some JS, scream in despair, load it up in `node` and then break your computer because you're coding in JS.
+
+Try it out with
+
+```
+pnpm run yap <path_to_file>
+```
+
+Output will go to `bin/`
+
+Refer to `How to` file to see a list of available commands
+
 ## Philosophy (Or Lack Thereof)
 
 `Yap` isn’t trying to revolutionize programming. It will just do things in a way that **makes sense to me**:
@@ -70,14 +114,14 @@ Yes, this is actual, working syntax! Ensue bikeshedding.
 It doesn’t assume anything about memory layouts or platforms. You should (eventually) be able to compile this mess to JavaScript, Erlang, Lua, C, Assembly, Brainf\*ck (you demented sicko) or whatever else strokes your ego, without fighting the compiler. `Yap` will provide the required API to soothe your sweet soul, but _you_ will implement it, not `Yap`. Leave _me_ out of it.
 
 Why? Because backend platforms are hard. _Really_ hard. And I'm dumb, _really_ dumb.
-There's heaps of incredible runtime platforms out in the wild, and hordes of people who actually enjoy dealing with platform-specific stuff — and they’re way better at it than I ever could be. So be free! I'll make sure to deal with those nasty fundamental concepts like mutation and references at the type level, and leave it all nice and pretty with sugar on top.
-How you map that to your platform? That’s on you. You’re welcome.
+There's heaps of incredible runtime platforms out in the wild, and hordes of people who actually enjoy dealing with platform-specific stuff — and they’re way better at it than I ever could be. So be free! I'll make sure to deal with those nasty fundamental concepts like mutation and references at the type level, and leave it all nice and pretty with sugar on top.  
+How you map that to your platform? That’s on you. You’re welcome.  
 I’ll be over here, having an existential crisis about types.
 
 ### Note of importance
 
 No runtime does not mean no code generation!  
-A `JS` codegen for proving compilation semantics and techniques is being developed, and `C` codegen will follow once more features become available.
+A `JS` codegen for proving compilation semantics and techniques is being developed, and `C` codegen will follow once more features become available.  
 This means I'm spending an ungodly amount of time ironing out the kinks of what I'd like the (typing) semantics to be, so they're general/flexible/abstract enough to then translate to whatever platform floats your boat.
 
 ## The Plan (A.K.A. The Roadmap)
@@ -127,10 +171,9 @@ This means I'm spending an ungodly amount of time ironing out the kinks of what 
 
 `Yap` has some… let’s call them character-building aspects.
 
-- **The module system** - it's so embarrassing even ChatGPT could do better.
+- **The `REPL`** - More like a suggestion than a real tool.
 - **The `FFI`** - Functional in the same way a car with three wheels is technically functional.
-- **The `REPL`?** - More like a suggestion than a real tool.
-- **The `CLI`** - Yeah, it exists.
+- **The module system** - Yeah, it exists.
 - **Testing** - because I keep breaking everything every other day
 - **Comments** - I forgot, ok?
 - **Tech debt** 💀
@@ -139,48 +182,31 @@ This means I'm spending an ungodly amount of time ironing out the kinks of what 
 
 Improvements are coming, but for now, just squint and pretend everything is fine.
 
-## Trying It Out
-
-`Yap` isn’t quite "usable" yet unless you enjoy debugging the compiler. At most you can generate some JS, scream in despair, load it up in `node` and then break your computer because you're coding in JS.
-But if you're curious, check out the code, mess around with it, and maybe even contribute if you're brave.
-
-1. Clone the repo
-2. Install `pnpm`
-3. Build the compiler
-   - You know the drill: `pnpm install`, `pnpm run yap`, sacrifice a goat, etc.
-4. Write some broken code
-   - Pray it works
-5. Complain
-
-Refer to `How to` file to see a list of available commands
-
 ## Contributing
 
 If you want to contribute, that’s cool! Open an issue, start a discussion, or throw a PR my way. I genuinely enjoy discussing ideas.  
 I also suck at communication, so feel free to continue to pester me with notifications while I continue to ignore them. Such is life.
 
----
-
 ## What’s With the Name?
 
-“Yap” stands for “Yet Another Problem.” Because, let’s be real, that’s exactly what this is. Another problem I’ve decided to create for myself instead of just, you know, using something that works.
+“Yap” stands for “Yet Another Problem.” Because, let’s be real, that’s exactly what this is. Another problem I’ve decided to create for myself instead of just, you know, using something that works.  
 Could’ve called it “Just Another Language,” but then it wouldn’t have been as honest or as snarky. So here we are.
 
 ## TypeScript? You're not serious
 
-I love `Haskell`; it drove me mad.
-I enjoy `Rust` and `I<Maybe<Box<Dynamic<&Result<Trait<🤯>>>>>>`
-I will never write `Java`
-I am too young for `C/C++`
-I believe `Python` is a snake species
-I don't know `OCaml`.
-I fall asleep writing `Go`
+I love `Haskell`; it drove me mad.  
+I enjoy `Rust` and `I<Maybe<Box<Dynamic<&Result<Trait<🤯>>>>>>`.  
+I will never write `Java`.  
+I am too young for `C/C++`.  
+I believe `Python` is a snake species.  
+I don't know `OCaml`.  
+I fall asleep writing `Go`.
 
 I like building broken code, I like being able to debug, I like iterating, and I work with `TS` every day these days.
 
 ## Is this even possible?
 
-I don't know, you're better off asking a CS PhD Nobel Laureate logician.
+I don't know, you're better off asking a CS PhD Nobel Laureate logician.  
 Maybe it’s a terrible, and terribly flawed, idea. Maybe it’s genius. Maybe it’s just a complete dumpster fire wrapped in _my_ own personal code therapy session.
 
 Could it ever be fully usable, safe, sound, fast, feature-rich and whatever else your shiny programming language needs to be? Probably not. Maybe it’ll never turn into something functional. **But do I like it**? Yeah, _I_ do. I think it’s cool.
