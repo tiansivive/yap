@@ -69,6 +69,17 @@ export function repl() {
 		const trimmed = input.trim();
 
 		try {
+			if (trimmed.startsWith(":help")) {
+				console.log("Available commands:");
+				console.log("  :help               Show this help message");
+				console.log("  :exit, :quit, :q    Exit the REPL");
+				console.log("  :load <filepath>    Load a Yap module from the specified file");
+				console.log("  :set elaboration    Toggle showing elaboration results");
+				console.log("  :implicits          Show current implicit arguments in context");
+				console.log("");
+				console.log("To enter multi-line input, just continue typing. Submit with an empty line. (sorry about that)");
+				return rl.prompt();
+			}
 			// Commands work anywhere
 			if ([":exit", ":quit", ":q"].includes(trimmed)) {
 				console.log("Goodbye!");

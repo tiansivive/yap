@@ -46,9 +46,8 @@ let Factorial: Type
 let fact: Factorial
     = { compute: \n -> match n
         | 0 -> 1
-        | _ -> n * (:compute (n - 1))
+        | _ -> n * (:compute (n - 1)) // :compute refers to the 'compute' field itself
     };
-    // :compute refers to the 'compute' field itself
 
 let result = fact.compute 5;  // 120
 ```
@@ -86,7 +85,7 @@ The `examples/README` has a fairly good overview of what's currently supported, 
 
 ### What about compiling code?
 
-There's a very broken, outdated (read ignored), mess of a JS codegen. At most you can generate some JS, scream in despair, load it up in `node` and then break your computer because you're coding in JS.
+There's a very broken, outdated (read: ignored), mess of a JS codegen. At most you can generate some JS, scream in despair, load it up in `node` and then break your computer because you're coding in JS.
 
 Try it out with
 
@@ -96,9 +95,7 @@ pnpm run yap <path_to_file>
 
 Output will go to `bin/`
 
-Refer to `How to` file to see a list of available commands
-
-## Philosophy (Or Lack Thereof)
+## My twisted worldview
 
 `Yap` isn’t trying to revolutionize programming. It will just do things in a way that **makes sense to me**:
 
@@ -109,19 +106,20 @@ Refer to `How to` file to see a list of available commands
 - **You’re in control** – Defaults exist, but if you don’t like them, override them. No gatekeeping.
 - **Multi paradigm** - let the flame wars begin
 
-`Yap` will never ship a runtime.  
+`Yap` will (probably) never ship a runtime.  
 It doesn’t assume anything about memory layouts or platforms. You should (eventually) be able to compile this mess to JavaScript, Erlang, Lua, C, Assembly, Brainf\*ck (you demented sicko) or whatever else strokes your ego, without fighting the compiler. `Yap` will provide the required API to soothe your sweet soul, but _you_ will implement it, not `Yap`. Leave _me_ out of it.
 
-Why? Because backend platforms are hard. _Really_ hard. And I'm dumb, _really_ dumb.
+Why? Because backend platforms are hard. _Really_ hard. And I'm dumb, _really_ dumb.  
 There's heaps of incredible runtime platforms out in the wild, and hordes of people who actually enjoy dealing with platform-specific stuff — and they’re way better at it than I ever could be. So be free! I'll make sure to deal with those nasty fundamental concepts like mutation and references at the type level, and leave it all nice and pretty with sugar on top.  
 How you map that to your platform? That’s on you. You’re welcome.  
 I’ll be over here, having an existential crisis about types.
 
-### Note of importance
+#### Note
 
-No runtime does not mean no code generation!  
 A `JS` codegen for proving compilation semantics and techniques is being developed, and `C` codegen will follow once more features become available.  
-This means I'm spending an ungodly amount of time ironing out the kinks of what I'd like the (typing) semantics to be, so they're general/flexible/abstract enough to then translate to whatever platform floats your boat.
+This means I'm spending an ungodly amount of time ironing out the kinks of what I'd like the (typing) semantics to be, so they're general/flexible/abstract enough to then translate to whatever platform floats your boat.  
+The goal is _predictability_: I might write garbage code, but at least I'll know how that garbage is being compiled and executed. This means typical optimizations might have to be user-controlled, or even _user-implemented_. That keeps the backend dead simple, at the cost of needing some way to actually plug those implementations in. A bit wishy-washy, some might say.  
+In any case, Yap ain't there yet. These are just my wild fantasies.
 
 ## The Plan (A.K.A. The Roadmap)
 
@@ -136,9 +134,9 @@ This means I'm spending an ungodly amount of time ironing out the kinks of what 
 
 - Variadic arguments, named arguments... (Yes, I like arguing)
 - Infix function application (less parens = better)
-- Better syntax sugar for common patterns (shorthand matches, destructuring, backcalls, etc.)
+- Better syntax sugar for common patterns (shorthand matches, destructuring, backcalls, pipes, etc.)
 - `where` clauses (because who likes deep nesting?)
-- Data traversal (nested updates, SQL-like goodies, pipes)
+- Data traversal (nested updates, SQL-like goodies)
 
 ### Core Features
 
@@ -150,7 +148,7 @@ This means I'm spending an ungodly amount of time ironing out the kinks of what 
 - Lowered IR
   - For annoying things like type erasure, monomorphization, FBIP optimizations, customizable data types, fusion, etc
 
-### 🛠️ Tooling (This Is Important!)
+### Tooling (This Is Important!)
 
 - **Syntax highlighting** (so we can pretend it's a real language)
 - **LSP support** (because writing a language without an LSP in 2025 is just rude)

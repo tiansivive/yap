@@ -12,7 +12,6 @@ export * as U from "./unification/unification";
 export * from "./inference";
 export * from "./solver";
 
-export * as M from "./shared/monad";
 export * as NF from "./normalization";
 
 export * as Icit from "./implicits";
