@@ -48,8 +48,6 @@ export const display = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBrui
 				.with({ type: "Sigma" }, () => ".")
 				.with({ icit: "Implicit" }, () => "=>")
 				.otherwise(() => "->");
-			// const xtended = { ...ctx, env: [{ name: { variable: binder.variable } }, ...ctx.env] } as EB.DisplayContext;
-			// const prettyCls = displayClosure(closure, xtended, opts);
 
 			const z = compose(ctx.zonker, closure.ctx.zonker);
 
@@ -121,9 +119,7 @@ const displayClosure = (closure: NF.Closure, ctx: EB.DisplayContext, opts = { de
 		}
 		return name.variable;
 	});
-	//.slice(0); // remove the bound variable itself
 
 	let prettyEnv = printedEnv.length > 0 ? `Γ: ${printedEnv.join("; ")}` : "·";
-
 	return `(closure: ${EB.Display.Term(closure.term, extended, opts)} -| ${prettyEnv})`;
 };

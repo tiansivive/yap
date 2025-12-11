@@ -6,7 +6,6 @@ import * as Q from "@yap/shared/modalities/multiplicity"
 import * as Lit from "@yap/shared/literals"
 
 import * as Sub from "@yap/elaboration/unification/substitution"
-import { Types } from "@yap/utils"
 
 import { isEqual } from "lodash"
 
@@ -55,11 +54,7 @@ export const NormalForms = {
 
 
 
-// const BinaryOp = (ty: NF.Value, tm: EB.Term) => NF.Constructors.Pi("x", "Explicit", { nf: ty, modalities: modalities() }, {
-//     type: "Closure",
-//     ctx: defaultContext(),
-//     term: EB.Constructors.Pi("y", "Explicit", modalities(), tm, tm)
-// })
+
 
 export const Elaborated: () => EB.Context['imports'] = () => {
 
@@ -180,24 +175,6 @@ const concatenate = (x: NF.Value, y: NF.Value): NF.Value => {
     return NF.Constructors.Lit(Lit.String(val));
 }
 
-// export const FFI = {
-//     Indexed: (index: unknown) => (value: unknown) => (strat: unknown) => ({ index, value, strat }),
-//     defaultHashMap: "<Placeholder> default_hash_map",
-//     defaultArray: "<Placeholder> default_array",
-//     $add: (x: any) => (y: any) => x + y,
-//     $sub: (x: any) => (y: any) => x - y,
-//     $mul: (x: any) => (y: any) => x * y,
-//     $div: (x: any) => (y: any) => x / y,
-//     $and: (x: any) => (y: any) => x && y,
-//     $or: (x: any) => (y: any) => x || y,
-//     $eq: (x: any) => (y: any) => x == y,
-//     $neq: (x: any) => (y: any) => x != y,
-//     $lt: (x: any) => (y: any) => x < y,
-//     $gt: (x: any) => (y: any) => x > y,
-//     $lte: (x: any) => (y: any) => x <= y,
-//     $gte: (x: any) => (y: any) => x >= y,
-
-// }
 
 export const PrimOps: EB.Context['ffi'] = {
     $add: { arity: 2, compute: (x: NF.Value, y: NF.Value) => arithmetic(x, y, (a, b) => a + b) },

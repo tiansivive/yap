@@ -32,8 +32,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 			const ctx = yield* V2.ask();
 			const zonked = { ...ctx, zonker: Sub.compose(subst, ctx.zonker) };
 			const [l, r] = [NF.force(zonked, left), NF.force(zonked, right)];
+
 			// Force wraps unsolved metas in a Neutral, so we need to unwrap them again.
-			// TODO: check if we can remove the wrapping in Force.
 			const unifier = match([NF.unwrapNeutral(l), NF.unwrapNeutral(r)])
 				.with([NF.Patterns.Flex, NF.Patterns.Flex], ([meta1, meta2]) =>
 					V2.Do<Subst, Subst>(function* () {
@@ -278,28 +278,6 @@ export const bind = (ctx: EB.Context, v: Meta, ty: NF.Value): Subst => {
 	}
 
 	if (!occursCheck(ctx, v, ty)) {
-		// if (ty.type === "Abs") {
-		// 	// NOTE: Pruning the environment to the level of the variable
-		// 	// Because closures capture the environment during elaboration, we ensure only the necessary variables are captured here
-		// 	// when unifying with a meta generated at a certain, lower level.
-		// 	// The other way around is not a problem, since the closure env already contains all the strictly necessary variables.
-
-		// 	// This is not an ideal solution, as it demands that metas contain the level at which they were generated.
-		// 	// An alternative would be higher-order unification, which is more complex to implement, but more powerful.
-		// 	//const _ty = { ...ty, closure: { ...ty.closure, env: ty.closure.env.slice(-v.lvl) } };
-		// 	const _ty = update(ty, "closure.ctx", ctx => EB.prune(ctx, v.lvl));
-		// 	return Sub.of(v.val, _ty);
-		// }
-		// IMPORTANT: Do not prune closure environments here.
-		// Pruning the captured environment (e.g., to the meta's level) invalidates
-		// de Bruijn indices inside the closure.term, which were quoted relative to the
-		// original captured context. That leads to misindexed variables (e.g., `x`
-		// turning into `incf`) and missing binders (like a local `tmp`).
-		// If restricting environments becomes necessary, we must also reindex the term,
-		// which we don't currently support. So we keep closures as captured during elaboration.
-
-		// Pruning was meant to avoid escaping binders in the meta solution. (out of scope errors)
-		// TODO: Either generalize over the escaped binder, or implement higher-order unification.
 		return Sub.of(v.val, ty);
 	}
 

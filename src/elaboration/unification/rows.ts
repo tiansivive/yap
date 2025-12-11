@@ -2,7 +2,6 @@ import { match, P } from "ts-pattern";
 import _ from "lodash";
 
 import * as F from "fp-ts/lib/function";
-import * as A from "fp-ts/Array";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
@@ -13,18 +12,14 @@ import { Subst } from "./substitution";
 import * as Err from "@yap/elaboration/shared/errors";
 import * as R from "@yap/shared/rows";
 
-import { number } from "fp-ts";
 import { bind } from ".";
 
 import * as U from "@yap/elaboration/unification";
 
-let count = 0;
 export const unify = (r1: NF.Row, r2: NF.Row, s: Subst): V2.Elaboration<Subst> =>
 	V2.track(
 		{ tag: "unify", type: "row", rows: [r1, r2], metadata: { action: "unification" } },
 		V2.Do(function* () {
-			// count++;
-			// console.log("Unify rows:", count);
 			const ctx = yield* V2.ask();
 
 			const lvl = ctx.env.length;
@@ -64,19 +59,6 @@ export const unify = (r1: NF.Row, r2: NF.Row, s: Subst): V2.Elaboration<Subst> =
 
 				.with([{ type: "extension" }, P._], ([{ label, value, row }, r]) =>
 					V2.Do(function* () {
-						count++;
-						// console.log("\nUnify rows rewrites", count);
-						// const print = R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, ctx.zonker), var: v => NF.display({ type: "Var", variable: v }, ctx.zonker) });
-						// console.log("LHS:", print(r1));
-						// console.log("RHS:", print(r2));
-						// console.log("Current substitution:\n", Sub.display(s));
-
-						// const intersection = A.intersection(number.Eq)(tail(row), Object.keys(s).map(Number));
-
-						// if (intersection.length !== 0) {
-						// 	throw new Error("Circular row type");
-						// }
-
 						const [rewritten, o1] = yield* V2.pure(rewrite(r, label, s));
 						if (rewritten.type !== "extension") {
 							return yield* V2.fail<Subst>(Err.Impossible("Expected extension"));

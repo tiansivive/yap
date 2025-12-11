@@ -18,19 +18,8 @@ export function insert(node: EB.AST): V2.Elaboration<EB.AST> {
 	return V2.Do(function* () {
 		const ctx = yield* V2.ask();
 		const r = match(node)
-			//.with([{ type: "Abs", binding: { type: "Lambda", icit: "Implicit" } }, P._, P._], () => V2.of<EB.AST>(node))
 			.with([P._, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._], ([, pi]) =>
 				V2.Do(function* () {
-					// const found = yield* V2.pure(EB.resolveImplicit(pi.binder.annotation));
-
-					// if (found) {
-					// 	if (!_.isEmpty(found[1])) {
-					// 		throw new Error("insert: Found implicit with constraints; What to do here?");
-					// 	}
-					// 	const bodyNF = NF.apply(pi.binder, pi.closure, pi.binder.annotation);
-					// 	const tm = EB.Constructors.App("Implicit", term, found[0]);
-					// 	return [tm, bodyNF, us] satisfies EB.AST;
-					// }
 					const meta = yield* EB.freshMeta(ctx.env.length, pi.binder.annotation);
 					const mvar = EB.Constructors.Var(meta);
 					const vNF = NF.evaluate(ctx, mvar);
@@ -154,23 +143,4 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 			.with({ type: "Modal" }, ({ term, modalities }) => EB.Constructors.Modal(instantiate(term, ctx, resolutions), modalities))
 			.otherwise(t => t)
 	);
-
-	// return EB.traverse(term, v => {
-	// 	if (v.variable.type !== "Meta") {
-	// 		return v;
-	// 	}
-
-	// 	if (!!ctx.zonker[v.variable.val]) {
-	// 		// Solved meta means it's in the zonker = not unconstrained, so no need to instantiate it
-	// 		return NF.quote(ctx, ctx.env.length, ctx.zonker[v.variable.val]);
-	// 	}
-
-	// 	const { ann } = ctx.metas[v.variable.val];
-
-	// 	return match(ann)
-	// 		.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.Constructors.Row({ type: "empty" }))
-	// 		.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Any" }))
-	// 		.with({ type: "Lit", value: { type: "Atom", value: "Any" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Void" }))
-	// 		.otherwise(() => EB.Constructors.Var(v.variable));
-	// });
 };

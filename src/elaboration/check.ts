@@ -2,18 +2,14 @@ import { match, P } from "ts-pattern";
 
 import * as F from "fp-ts/lib/function";
 import * as E from "fp-ts/lib/Either";
-import * as RCD from "fp-ts/lib/Record";
-import * as A from "fp-ts/lib/Array";
 
 import * as EB from ".";
 import * as NF from "./normalization";
-import * as M from "./shared/monad";
-import * as V2 from "./shared/monad.v2";
 
+import * as V2 from "./shared/monad.v2";
 import * as Src from "@yap/src/index";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
-
 import * as R from "@yap/shared/rows";
 
 import { freshMeta } from "./shared/supply";
@@ -24,7 +20,7 @@ import { entries, set } from "@yap/utils";
 
 import * as Err from "./shared/errors";
 import { Liquid } from "@yap/verification/modalities";
-import * as Lit from "@yap/shared/literals";
+
 import assert from "node:assert";
 
 type Result = [EB.Term, Q.Usages];
@@ -96,8 +92,6 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 					V2.Do(function* () {
 						const [r, us] = yield* Check.row.gen(row, NF.Type, ctx.env.length);
 
-						// const v = EB.Constructors.Vars.Bound(0)
-						// const body = EB.Constructors.App("Explicit", EB.Constructors.Lit(Lit.Atom("Schema")), EB.Constructors.Var(v));
 						const sigma = EB.Constructors.Sigma("$sig", EB.Constructors.Row(r), EB.Constructors.Schema(r));
 						return [sigma, us] satisfies Result;
 						//return [EB.Constructors.Schema(r), us] satisfies Result;
@@ -237,23 +231,7 @@ const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.R
 			row,
 			(val, lbl, acc) =>
 				V2.Do(function* () {
-					const ctx = yield* V2.ask();
 					const [tm, us] = yield* Check.val.gen(val, ty);
-					// const { constraints:cs, metas:ms } = yield* V2.listen();
-					// console.log("Row Check Constraints:", cs);
-					// const sigma = ctx.sigma[lbl];
-					// if (!sigma) {
-					// 	throw new Error("Elaborating Row Extension: Label not found");
-					// }
-
-					// const nf = NF.evaluate(ctx, tm);
-					// yield* V2.tell("constraint", [
-					// 	{ type: "assign", left: nf, right: sigma.nf, lvl: ctx.env.length },
-					// 	{ type: "assign", left: ty, right: sigma.ann, lvl: ctx.env.length },
-					// ]);
-					// const { constraints, metas } = yield* V2.listen();
-					// console.log("Row Check Constraints:", constraints);
-					// console.log("Sigma:", sigma)
 					const [r, usages]: [EB.Row, Q.Usages] = yield acc;
 
 					return [{ type: "extension", label: lbl, value: tm, row: r }, Q.add(us, usages)] satisfies [EB.Row, Q.Usages];
