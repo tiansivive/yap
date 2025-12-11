@@ -42,14 +42,14 @@ There is none. There are intentions.
 
 - Multiplicities for mutation, references and other such unimportant things like IO
 - Delimited continuations (because they’re absurdly powerful and fun).
-- Better error reporting from the verifier: counterexamples and unsat cores
 
 ### Coming eventually (real intentions)
 
 - LSP
-- Proper module system
 - A proper IVL to structure evaluation and verification.
+- Better error reporting from the verifier: counterexamples and unsat cores
 - Coinductivity
+- Proper module system
 - Type erasure
 - C Codegen
 - Packages
@@ -71,17 +71,19 @@ There's a `TODO.md` file with a lot of notes and sketches. Take it with a grain 
 
 ## Effects in Yap
 
-I like effects. I do **not** like baroque 40-year towers of monad transformer plumbing.
+I _like_ effect systems. I also like being able to do:
 
-Effects in Yap aim to be:
+```
+foreign print: String -> Unit;
 
-- straightforward,
-- explicit,
-- predictable,
-- minimal ceremony.
+let debug = \x -> {
+  print (stringify x);
+  return x;
+};
+```
 
-A sane effect system lets you print to the console without doing religious rituals.
-If you want `IO` via twenty typeclass layers, the Haskell ecosystem is thriving.
+without summoning a dozen type constructors.  
+A sane effect system should let you print to the console without doing religious rituals. Consequently, I'm leaning heavily on adding `shift/reset` and letting the good folks in library land deal with it. Power to the people!
 
 ## Quick dependent types crash course
 
