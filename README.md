@@ -33,7 +33,6 @@ It’s still early days, so expect **broken things, missing features, a nonsensi
   - **Type inference** - Momma always told me I had a short attention span
 - **Implicits** - so you don’t have to pass a million arguments manually
 - **Evaluator** - It does things like `1 + 2` and `(\x -> x + 1) 2`
-- **Customizable data structures** - want to swap out how records/tuples work? Go for it, I don't care
 - **Foreign function interface** - Just an excuse to write JS instead of actual yap code
 - **Module System** - because you have a file system
 - **JS codegen** - sue me (also, it's broken)

@@ -196,7 +196,19 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 		})
 		.with({ type: "Match" }, v => {
 			const scrutinee = evaluate(ctx, v.scrutinee, bindings, fuel);
-			if (scrutinee.type === "Neutral" || (scrutinee.type === "Var" && scrutinee.variable.type === "Meta")) {
+
+			const isStuck = (val: NF.Value) =>
+				match(scrutinee)
+					.with({ type: "Neutral" }, neutral =>
+						match(neutral.value)
+							.with(NF.Patterns.Struct, NF.Patterns.Schema, NF.Patterns.Variant, NF.Patterns.Array, () => false)
+							.otherwise(() => true),
+					)
+					.otherwise(() => false);
+			// if (scrutinee.type === "Neutral" || (scrutinee.type === "Var" && scrutinee.variable.type === "Meta")) {
+			// 	return NF.Constructors.StuckMatch(NF.Constructors.Closure(ctx, v), scrutinee);
+			// }
+			if (isStuck(scrutinee)) {
 				return NF.Constructors.StuckMatch(NF.Constructors.Closure(ctx, v), scrutinee);
 			}
 
@@ -345,8 +357,8 @@ export function evaluate(ctx: EB.Context, term: EB.Term, bindings: { [key: strin
 					})
 					.exhaustive();
 			};
-
-			return evaluate(process(statements, ctx), ret, bindings, fuel);
+			let xtended = process(statements, ctx);
+			return evaluate(xtended, ret, bindings, fuel);
 		})
 		.otherwise(tm => {
 			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx));

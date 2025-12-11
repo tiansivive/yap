@@ -1,0 +1,380 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > evaluates dependent record projection 1`] = `
+{
+  "pretty": "2",
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 5,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "arg": {
+            "row": {
+              "label": "x",
+              "row": {
+                "label": "y",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "extension",
+              "value": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "type": "App",
+        },
+        "lvl": 0,
+        "right": {
+          "arg": {
+            "row": {
+              "label": "x",
+              "row": {
+                "label": "y",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+              },
+              "type": "extension",
+              "value": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "type": "App",
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 6,
+        },
+      },
+    },
+    "term": {
+      "label": "y",
+      "term": {
+        "arg": {
+          "row": {
+            "label": "x",
+            "row": {
+              "label": "y",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "arg": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Num",
+                    "value": 1,
+                  },
+                },
+                "func": {
+                  "arg": {
+                    "type": "Var",
+                    "variable": {
+                      "name": "x",
+                      "type": "Label",
+                    },
+                  },
+                  "func": {
+                    "type": "Var",
+                    "variable": {
+                      "name": "+",
+                      "type": "Free",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "type": "App",
+                },
+                "icit": "Explicit",
+                "type": "App",
+              },
+            },
+            "type": "extension",
+            "value": {
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 1,
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "func": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Struct",
+          },
+        },
+        "icit": "Explicit",
+        "type": "App",
+      },
+      "type": "Proj",
+    },
+    "type": {
+      "type": "Lit",
+      "value": {
+        "type": "Atom",
+        "value": "Num",
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > evaluates lambda application via reduce to WHNF 1`] = `
+{
+  "pretty": "1",
+}
+`;
+
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > evaluates literals and arithmetic to WHNF 1`] = `
+{
+  "pretty": "3",
+}
+`;
+
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > evaluates rows + projection 1`] = `
+{
+  "pretty": "1",
+}
+`;
+
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > handles deeply nested recursion without stack overflow 1`] = `
+{
+  "pretty": "10000",
+}
+`;
+
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > handles simple recursion 1`] = `
+{
+  "pretty": "0",
+}
+`;
+
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > pattern matches on a struct 1`] = `
+{
+  "pretty": "1",
+}
+`;

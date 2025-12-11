@@ -842,17 +842,17 @@ Refine a primitive type with a predicate over its values:
 
 ```ts
 let Nat: Type
-    = Num [|\n -> n >= 0 |];
+    = Num [| \n -> n >= 0 |];
 
 let Pos: Type
-    = Num [|\p -> p > 0 |];
+    = Num [| \p -> p > 0 |];
 
 let n: Nat = 42;   // OK: 42 >= 0
 let p: Pos = 42;   // OK: 42 > 0
 let zero: Nat = 0; // OK: 0 >= 0
 ```
 
-The syntax `[|\n -> n >= 0 |]` is a refinement predicate - a lambda that returns a boolean.
+The syntax `[| \n -> n >= 0 |]` is a refinement predicate - a lambda that returns a boolean.
 
 ### Verification Errors
 
@@ -871,8 +871,8 @@ These errors are caught at compile time via SMT solving!
 You can specify exact values:
 
 ```ts
-let exactOne: Num [|\v -> v == 1 |] = 1;  // OK
-let notOne: Num [|\v -> v == 1 |] = 2;    // ERROR
+let exactOne: Num [| \v -> v == 1 |] = 1;  // OK
+let notOne: Num [| \v -> v == 1 |] = 2;    // ERROR
 ```
 
 ### Pre and Postconditions
@@ -890,7 +890,7 @@ let unsafe: (n: Nat) -> Nat
 Refinements track relationships between function inputs and outputs:
 
 ```ts
-let inc: (x: Num) -> Num [|\v -> v == (x + 1) |]
+let inc: (x: Num) -> Num [| \v -> v == (x + 1) |]
     = \x -> x + 1;
 ```
 
@@ -983,7 +983,7 @@ Now we can combine dependent types (types depending on values) with refinements 
 ```ts
 // The second field's type is refined based on the first field's value
 let OrderedPair: Type
-    = { fst: Num, snd: Num[|\v -> v > :fst |] };
+    = { fst: Num, snd: Num[| \v -> v > :fst |] };
 
 let valid: OrderedPair = { fst: 3, snd: 5 };    // OK: 5 > 3
 let invalid: OrderedPair = { fst: 5, snd: 3 };  // ERROR: 3 is not > 5
@@ -1013,7 +1013,7 @@ This combines:
 
 - **Refinement polymorphism**: `p` is a parameter
 - **Dependent types**: `:head` references the field value
-- **Refinements**: `t[|\v -> p :head v |]` constrains tail elements
+- **Refinements**: `t[| \v -> p :head v |]` constrains tail elements
 
 Powerful!
 

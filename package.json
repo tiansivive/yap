@@ -33,7 +33,7 @@
 		"test": "vitest",
 		"tsc": "tsc -p ./tsc.tsconfig.json",
 		"typecheck": "tsc --noEmit -p ./tsc.tsconfig.json",
-		"yap": "ts-node -T ./scripts/cli.ts"
+		"yap": "TS_NODE_TRANSPILE_ONLY=true node --stack-size=131072 --require ts-node/register ./scripts/cli.ts"
 	},
 	"lint-staged": {
 		"*": "prettier --ignore-unknown --write"

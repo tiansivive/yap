@@ -50,7 +50,7 @@ export function decode(js: any): NF.Value {
 
 	if (typeof js === "object" && js.tag === "Struct") {
 		const row = Object.entries(js.payload).reduce<NF.Row>((acc, [lbl, val]) => Row.Constructors.Extension(lbl, decode(val), acc), Row.Constructors.Empty());
-		return NF.Constructors.Struct(row);
+		return Array.isArray(js.payload) ? NF.Constructors.Array(row) : NF.Constructors.Struct(row);
 	}
 
 	if (typeof js === "object" && js.tag === "Unsupported") {
