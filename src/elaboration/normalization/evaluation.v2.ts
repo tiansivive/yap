@@ -348,6 +348,34 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 			// Process statements to extend context, then evaluate return
 			processStatementsAndPush(statements, ctx, ret);
 		})
+		.with({ type: "Reset" }, ({ body }) => {
+			// Evaluate the reset body
+			// For now, just evaluate the body directly
+			// TODO: Mark this as a reset delimiter for shift to capture
+			globalWorkStack.push({
+				type: "Cont",
+				arity: 1,
+				handler: ([result]) => {
+					// Wrap result in Reset value for now
+					globalResultStack.push(NF.Constructors.Reset(result));
+				},
+			});
+			globalWorkStack.push({ type: "Eval", ctx, term: body });
+		})
+		.with({ type: "Shift" }, ({ arg }) => {
+			// Evaluate the shift argument
+			// For now, just evaluate the argument
+			// TODO: Capture the continuation up to the enclosing reset
+			globalWorkStack.push({
+				type: "Cont",
+				arity: 1,
+				handler: ([argVal]) => {
+					// Wrap argument in Shift value for now
+					globalResultStack.push(NF.Constructors.Shift(argVal));
+				},
+			});
+			globalWorkStack.push({ type: "Eval", ctx, term: arg });
+		})
 		.otherwise(tm => {
 			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx));
 			throw new Error("Not implemented");

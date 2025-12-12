@@ -24,4 +24,7 @@ export * as Block from "./block";
 export * as Hole from "./holes";
 export * as Lit from "./literal";
 
+export * as Reset from "./reset";
+export * as Shift from "./shift";
+
 export * as Inference from ".";

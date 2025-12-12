@@ -1,0 +1,191 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Inference: shift > shift with string literal 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "String ~~ ?2",
+    ],
+    "term": "S("hello")",
+    "type": "?1",
+  },
+}
+`;
+
+exports[`Inference: shift > shift with string literal 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "type": "Lit",
+        "value": {
+          "type": "String",
+          "value": "hello",
+        },
+      },
+      "type": "Shift",
+    },
+    "type": {
+      "type": "Neutral",
+      "value": {
+        "type": "Var",
+        "variable": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
+exports[`Inference: shift > simple shift 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Num ~~ ?2",
+    ],
+    "term": "S(42)",
+    "type": "?1",
+  },
+}
+`;
+
+exports[`Inference: shift > simple shift 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "2": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+    },
+    "term": {
+      "arg": {
+        "type": "Lit",
+        "value": {
+          "type": "Num",
+          "value": 42,
+        },
+      },
+      "type": "Shift",
+    },
+    "type": {
+      "type": "Neutral",
+      "value": {
+        "type": "Var",
+        "variable": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+    },
+    "typedTerms": {},
+  },
+}
+`;
