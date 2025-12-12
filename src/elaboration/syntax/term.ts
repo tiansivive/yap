@@ -26,7 +26,9 @@ type Constructor =
 	| { type: "Inj"; label: string; value: Term; term: Term }
 	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> }
 	| { type: "Block"; statements: Array<Statement>; return: Term }
-	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> };
+	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
+	| { type: "Reset"; body: Term }
+	| { type: "Shift"; arg: Term };
 
 export type Variable =
 	| { type: "Bound"; index: number }
@@ -154,6 +156,9 @@ export const Constructors = {
 
 	Modal: (term: Term, modalities: Modal.Annotations<Term>): Term => mk({ type: "Modal", term, modalities }),
 
+	Reset: (body: Term): Term => mk({ type: "Reset", body }),
+	Shift: (arg: Term): Term => mk({ type: "Shift", arg }),
+
 	Patterns: {
 		Binder: (value: string): Pattern => ({ type: "Binder", value }),
 		Var: (value: string, term: Term): Pattern => ({ type: "Var", value, term }),
@@ -192,4 +197,6 @@ export const CtorPatterns = {
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } },
 	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } },
 	Array: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Array" } }, arg: { type: "Row" } },
+	Reset: { type: "Reset" },
+	Shift: { type: "Shift" },
 } as const;

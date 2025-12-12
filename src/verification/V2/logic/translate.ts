@@ -91,6 +91,9 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 				}
 				return { Prim: Z3.Sort.declare(v.variable.name) };
 			})
+			.with(NF.Patterns.Reset, ({ body }) => mkSort(body, ctx))
+			.with(NF.Patterns.Shift, () => ({ Prim: Sorts.Atom }))
+			.with(NF.Patterns.Continuation, () => ({ Prim: Sorts.Function }))
 			.exhaustive();
 
 	const collectArgs = (value: NF.Value, ctx: EB.Context, rigids: Record<number, Expr>): Expr[] =>
@@ -201,6 +204,13 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 					.otherwise(name => {
 						throw new Error(`Unknown external function in logical formulas: ${name}`);
 					});
+			})
+			.with(NF.Patterns.Reset, ({ body }) => translate(body, ctx, rigids))
+			.with(NF.Patterns.Shift, () => {
+				throw new Error("Shift not supported in logical formulas");
+			})
+			.with(NF.Patterns.Continuation, () => {
+				throw new Error("Continuation not supported in logical formulas");
 			})
 			.otherwise(() => {
 				throw new Error("Unknown expression type");

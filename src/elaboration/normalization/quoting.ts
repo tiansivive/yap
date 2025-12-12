@@ -90,6 +90,19 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 					liquid: quote(ctx, lvl, modalities.liquid),
 				}),
 			)
+			.with({ type: "Reset" }, ({ body }) => EB.Constructors.Reset(quote(ctx, lvl, body)))
+			.with({ type: "Shift" }, ({ arg }) => EB.Constructors.Shift(quote(ctx, lvl, arg)))
+			.with({ type: "Continuation" }, ({ frames }) => {
+				// Quote a continuation as a lambda that replays the frames
+				// λx. ⟨F[x]⟩ where F is the captured context
+				const variable = "$k";
+				const varTerm = EB.Constructors.Var({ type: "Bound", index: 0 });
+				// For now, create a simple lambda representing the continuation
+				// The actual frame replay logic will be in the evaluator
+				const body = varTerm; // Placeholder - actual implementation in evaluator
+				const annTerm = quote(ctx, lvl, NF.Any);
+				return EB.Constructors.Lambda(variable, "Explicit", body, annTerm);
+			})
 			.otherwise(nf => {
 				throw new Error("Quote: Not implemented yet: " + NF.display(nf, ctx));
 			})

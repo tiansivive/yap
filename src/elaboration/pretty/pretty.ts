@@ -114,6 +114,8 @@ const display = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; 
 				.with({ type: "Modal" }, ({ term, modalities }) => {
 					return `<${Q.display(modalities.quantity)}> ${_display(term)} [| ${_display(modalities.liquid)} |]`;
 				})
+				.with({ type: "Reset" }, ({ body }) => `⟨${_display(body)}⟩`)
+				.with({ type: "Shift" }, ({ arg }) => `S(${_display(arg)})`)
 				//.otherwise(tm => `_display Term ${tm.type}: Not implemented`);
 				.exhaustive()
 		);

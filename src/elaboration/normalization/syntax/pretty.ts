@@ -100,6 +100,9 @@ export const display = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBrui
 			const prettyEnv = EB.Display.Env(xtended, opts);
 			return `∃(${existential.variable}: ${display(existential.annotation, ctx, opts)}). <packed: ${display(existential.body.value, xtended, opts)} -| ${prettyEnv}>`;
 		})
+		.with({ type: "Reset" }, ({ body }) => `⟨${display(body, ctx, opts)}⟩`)
+		.with({ type: "Shift" }, ({ arg }) => `S(${display(arg, ctx, opts)})`)
+		.with({ type: "Continuation" }, () => `<continuation>`)
 
 		.exhaustive();
 	//.exhaustive();

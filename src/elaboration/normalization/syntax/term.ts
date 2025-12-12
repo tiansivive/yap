@@ -30,7 +30,16 @@ type Constructor =
 				ctx: EB.Context;
 				value: Value;
 			};
-	  }; // Used during verification only
+	  } // Used during verification only
+	| { type: "Reset"; body: Value }
+	| { type: "Shift"; arg: Value }
+	| { type: "Continuation"; frames: ContinuationFrame[] }; // Captured continuation
+
+export type ContinuationFrame = {
+	type: "frame";
+	ctx: EB.Context;
+	term: EB.Term;
+};
 
 export type Row = R.Row<Value, Variable>;
 
@@ -144,6 +153,10 @@ export const Constructors = {
 			modalities,
 		}),
 	External: (name: string, arity: number, compute: (...args: Value[]) => Value, args: Value[]): Value => mk({ type: "External", name, arity, compute, args }),
+
+	Reset: (body: Value): Value => mk({ type: "Reset", body }),
+	Shift: (arg: Value): Value => mk({ type: "Shift", arg }),
+	Continuation: (frames: ContinuationFrame[]): Value => mk({ type: "Continuation", frames }),
 };
 
 export const Type: Value = mk({
@@ -197,6 +210,10 @@ export const Patterns = {
 	Mu: { type: "Abs", binder: { type: "Mu" } } as const,
 	Row: { type: "Row" } as const,
 	Modal: { type: "Modal" } as const,
+
+	Reset: { type: "Reset" } as const,
+	Shift: { type: "Shift" } as const,
+	Continuation: { type: "Continuation" } as const,
 
 	Recursive: {
 		type: "App",
