@@ -38,7 +38,9 @@ export type Bare =
 	| { type: "projection"; label: string; term: Term }
 	| { type: "match"; scrutinee: Term; alternatives: Array<Alternative> }
 	| { type: "block"; statements: Statement[]; return?: Term }
-	| { type: "modal"; term: Term; modalities: { quantity?: Q.Multiplicity; liquid?: Term } };
+	| { type: "modal"; term: Term; modalities: { quantity?: Q.Multiplicity; liquid?: Term } }
+	| { type: "reset"; handler: Term; body: Term }
+	| { type: "shift"; arg: Term };
 
 export type Alternative = WithLocation<{ pattern: Pattern; term: Term }>;
 export type Pattern =

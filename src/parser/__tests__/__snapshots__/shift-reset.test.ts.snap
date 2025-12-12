@@ -1,0 +1,203 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Parser: Shift/Reset > reset syntax > parse nested reset 1`] = `
+{
+  "result": {
+    "body": {
+      "body": {
+        "type": "var",
+        "variable": {
+          "type": "name",
+          "value": "e",
+        },
+      },
+      "handler": {
+        "type": "var",
+        "variable": {
+          "type": "name",
+          "value": "h2",
+        },
+      },
+      "type": "reset",
+    },
+    "handler": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "h1",
+      },
+    },
+    "type": "reset",
+  },
+}
+`;
+
+exports[`Parser: Shift/Reset > reset syntax > parse reset with lambda handler 1`] = `
+{
+  "result": {
+    "body": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "body",
+      },
+    },
+    "handler": {
+      "annotation": undefined,
+      "body": {
+        "annotation": undefined,
+        "body": {
+          "arg": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "v",
+            },
+          },
+          "fn": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "k",
+            },
+          },
+          "icit": "Explicit",
+          "type": "application",
+        },
+        "icit": "Explicit",
+        "type": "lambda",
+        "variable": "v",
+      },
+      "icit": "Explicit",
+      "type": "lambda",
+      "variable": "k",
+    },
+    "type": "reset",
+  },
+}
+`;
+
+exports[`Parser: Shift/Reset > reset syntax > parse simple reset 1`] = `
+{
+  "result": {
+    "body": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "e",
+      },
+    },
+    "handler": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "h",
+      },
+    },
+    "type": "reset",
+  },
+}
+`;
+
+exports[`Parser: Shift/Reset > reset with shift > parse complex reset/shift expression 1`] = `
+{
+  "result": {
+    "body": {
+      "arg": {
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 1,
+        },
+      },
+      "type": "shift",
+    },
+    "handler": {
+      "annotation": undefined,
+      "body": {
+        "annotation": undefined,
+        "body": {
+          "arg": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "v",
+            },
+          },
+          "fn": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "k",
+            },
+          },
+          "icit": "Explicit",
+          "type": "application",
+        },
+        "icit": "Explicit",
+        "type": "lambda",
+        "variable": "v",
+      },
+      "icit": "Explicit",
+      "type": "lambda",
+      "variable": "k",
+    },
+    "type": "reset",
+  },
+}
+`;
+
+exports[`Parser: Shift/Reset > reset with shift > parse reset containing shift 1`] = `
+{
+  "result": {
+    "body": {
+      "arg": {
+        "type": "var",
+        "variable": {
+          "type": "name",
+          "value": "v",
+        },
+      },
+      "type": "shift",
+    },
+    "handler": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "h",
+      },
+    },
+    "type": "reset",
+  },
+}
+`;
+
+exports[`Parser: Shift/Reset > shift syntax > parse shift with literal 1`] = `
+{
+  "result": {
+    "arg": {
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 42,
+      },
+    },
+    "type": "shift",
+  },
+}
+`;
+
+exports[`Parser: Shift/Reset > shift syntax > parse simple shift 1`] = `
+{
+  "result": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "v",
+      },
+    },
+    "type": "shift",
+  },
+}
+`;

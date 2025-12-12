@@ -391,6 +391,27 @@ export const Alternative: PostProcessor<[Space, Bar, Space, Src.Pattern, Space, 
 	};
 };
 
+/***********************************************************
+ * Shift/Reset processors
+ ***********************************************************/
+
+export const Reset: PostProcessor<[Keyword, Whitespace, Term, Whitespace, Term], Term> = ([tok, , handler, , body]) => {
+	return {
+		type: "reset",
+		handler,
+		body,
+		location: locSpan({ from: loc(tok) }, body.location),
+	};
+};
+
+export const Shift: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , arg]) => {
+	return {
+		type: "shift",
+		arg,
+		location: locSpan({ from: loc(tok) }, arg.location),
+	};
+};
+
 type PatKeyVal = [string, Src.Pattern];
 export const keyvalPat = (pair: [Variable, Whitespace, Colon, Whitespace, Src.Pattern]): PatKeyVal => {
 	const [v, , , , pat] = pair;

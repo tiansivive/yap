@@ -21,6 +21,7 @@
 				foreign: "foreign", loop: "loop", repeat: "repeat",
 				if: "if", else: "else", then: "then",
 				true: "true", false: "false",
+				reset: "reset", shift: "shift",
 			}) 
 		},
 	  	dot: /\./,
@@ -113,6 +114,8 @@ Type -> Mu 				{% id %}
 Expr -> Lambda		{% id %}
   	  | Match 		{% id %}
   	  | Block 		{% id %}
+	  | Reset 		{% id %}
+	  | Shift 		{% id %}
 	  | Op 			{% id %}
 
 Op -> Op %space:? (%op | %concat | %concat2 | %rangle | %langle | %star ) %space:? Atom 	{% P.Operation %}
@@ -241,6 +244,12 @@ Quantity -> "1" {% () => Q.One %}
 # ------------------------------------
 Match -> "match" %space:+ TypeExpr Alt:+ 									{% P.Match %} 
 Alt -> %space:? %bar %space:? Pattern %space:? %arrow %space:? TypeExpr 	{% P.Alternative %}
+
+# ------------------------------------
+# Shift/Reset
+# ------------------------------------
+Reset -> "reset" %space:+ TypeExpr %space:+ TypeExpr 	{% P.Reset %}
+Shift -> "shift" %space:+ TypeExpr 						{% P.Shift %}
 
 
 Pattern -> PatAtom 								{% id %}
