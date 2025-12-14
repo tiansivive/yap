@@ -124,6 +124,34 @@ exports[`parser: functions (lambdas, pis, applications) > multi implicit params:
 }
 `;
 
+exports[`parser: functions (lambdas, pis, applications) > multi params: \\x y z -> 2 1`] = `
+{
+  "annotation": undefined,
+  "body": {
+    "annotation": undefined,
+    "body": {
+      "annotation": undefined,
+      "body": {
+        "type": "lit",
+        "value": {
+          "type": "Num",
+          "value": 2,
+        },
+      },
+      "icit": "Explicit",
+      "type": "lambda",
+      "variable": "z",
+    },
+    "icit": "Explicit",
+    "type": "lambda",
+    "variable": "y",
+  },
+  "icit": "Explicit",
+  "type": "lambda",
+  "variable": "x",
+}
+`;
+
 exports[`parser: functions (lambdas, pis, applications) > multi typed params: \\(x: Num) (y: String) (z: Bool) -> 4 1`] = `
 {
   "annotation": {
@@ -154,34 +182,6 @@ exports[`parser: functions (lambdas, pis, applications) > multi typed params: \\
         "value": {
           "type": "Num",
           "value": 4,
-        },
-      },
-      "icit": "Explicit",
-      "type": "lambda",
-      "variable": "z",
-    },
-    "icit": "Explicit",
-    "type": "lambda",
-    "variable": "y",
-  },
-  "icit": "Explicit",
-  "type": "lambda",
-  "variable": "x",
-}
-`;
-
-exports[`parser: functions (lambdas, pis, applications) > multi: \\x y z -> 2 1`] = `
-{
-  "annotation": undefined,
-  "body": {
-    "annotation": undefined,
-    "body": {
-      "annotation": undefined,
-      "body": {
-        "type": "lit",
-        "value": {
-          "type": "Num",
-          "value": 2,
         },
       },
       "icit": "Explicit",
