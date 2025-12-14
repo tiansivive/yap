@@ -73,6 +73,7 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         env: [],
         implicits: [],
         sigma: {},
+        handlers: [],
         trace: [],
         imports: PrimTypes,
         zonker: Sub.empty,

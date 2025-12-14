@@ -91,14 +91,12 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 				}),
 			)
 			.with({ type: "Reset" }, ({ closure }) => {
-				const val = NF.apply({ type: "Lambda", variable: "_", icit: "Explicit", annotation: NF.Any }, closure, NF.Constructors.Rigid(lvl));
-				const body = quote(closure.ctx, lvl + 1, val);
-				return EB.Constructors.Reset(body);
+				// Simply quote the closure's term
+				return EB.Constructors.Reset(closure.term);
 			})
 			.with({ type: "Shift" }, ({ closure }) => {
-				const val = NF.apply({ type: "Lambda", variable: "_", icit: "Explicit", annotation: NF.Any }, closure, NF.Constructors.Rigid(lvl));
-				const body = quote(closure.ctx, lvl + 1, val);
-				return EB.Constructors.Shift(body);
+				// Simply quote the closure's term
+				return EB.Constructors.Shift(closure.term);
 			})
 			.otherwise(nf => {
 				throw new Error("Quote: Not implemented yet: " + NF.display(nf, ctx));

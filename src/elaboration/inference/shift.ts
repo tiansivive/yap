@@ -27,11 +27,11 @@ export const infer = (shift: Shift): V2.Elaboration<EB.AST> =>
 
 			// Create a fresh meta for the continuation type
 			// The continuation has type A -> R where A is the answer type and R is the result type
-			const answerType = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
-			const resultType = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+			const answerTypeMeta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+			const resultTypeMeta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 
-			// Build the continuation type: A -> R
-			const contType = NF.Constructors.Pi("k", "Explicit", answerType, NF.Constructors.Closure(ctx, EB.Constructors.Lit({ type: "Atom", value: resultType })));
+			const answerType = NF.evaluate(ctx, answerTypeMeta);
+			const resultType = NF.evaluate(ctx, resultTypeMeta);
 
 			// Build the elaborated shift term: shift (\k -> h k v)
 			// where h is the handler, k is the continuation, and v is the value
@@ -42,8 +42,11 @@ export const infer = (shift: Shift): V2.Elaboration<EB.AST> =>
 			const handlerAppK = EB.Constructors.App("Explicit", handler, kBound);
 			const handlerAppKV = EB.Constructors.App("Explicit", handlerAppK, valueTerm);
 
+			// Build the continuation type annotation: A -> R
+			const contTypeAnnotation = EB.Constructors.Pi(kVar, "Explicit", answerTypeMeta, resultTypeMeta);
+
 			// Build: \k -> h k v
-			const contLambda = EB.Constructors.Lambda(kVar, "Explicit", handlerAppKV, EB.Constructors.Lit({ type: "Atom", value: contType }));
+			const contLambda = EB.Constructors.Lambda(kVar, "Explicit", handlerAppKV, contTypeAnnotation);
 
 			const tm = EB.Constructors.Shift(contLambda);
 

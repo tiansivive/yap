@@ -77,6 +77,12 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 			})
 			.with({ type: "Existential" }, ex => mkSort(ex.body.value, EB.bind(ctx, { type: "Pi", variable: ex.variable }, ex.annotation)))
 			.with({ type: "External" }, e => ({ Prim: Z3.Sort.declare(`External:${e.name}`) }))
+			.with({ type: "Reset" }, () => {
+				throw new Error("Reset/Shift control flow not supported in verification sort mapping");
+			})
+			.with({ type: "Shift" }, () => {
+				throw new Error("Reset/Shift control flow not supported in verification sort mapping");
+			})
 			.with(NF.Patterns.Var, v => {
 				if (v.variable.type === "Bound") {
 					//return mkSort(ctx.env[EB.lvl2idx(ctx, v.variable.lvl)].nf, ctx);
@@ -201,6 +207,12 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 					.otherwise(name => {
 						throw new Error(`Unknown external function in logical formulas: ${name}`);
 					});
+			})
+			.with({ type: "Reset" }, () => {
+				throw new Error("Reset/Shift control flow not supported in verification logical formulas");
+			})
+			.with({ type: "Shift" }, () => {
+				throw new Error("Reset/Shift control flow not supported in verification logical formulas");
 			})
 			.otherwise(() => {
 				throw new Error("Unknown expression type");

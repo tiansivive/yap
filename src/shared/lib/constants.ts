@@ -6,6 +6,7 @@ export const defaultContext: EB.Context = {
     env: [],
     implicits: [],
     sigma: {},
+    handlers: [],
     trace: [],
     imports: { ...Lib.Elaborated() },
     zonker: Sub.empty,
