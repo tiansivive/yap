@@ -349,14 +349,19 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 			processStatementsAndPush(statements, ctx, ret);
 		})
 		.with({ type: "Reset" }, ({ term }) => {
-			// For reset, we just evaluate the enclosed term
-			// The handler was already pushed onto the context during elaboration
+			// Reset establishes a delimiter for shift operations within its scope.
+			// The delimited continuation semantics are realized through elaboration:
+			// - Handler h was already added to context during elaboration
+			// - Any shift in the enclosed term was elaborated to (\k -> h k v)
+			// At evaluation time, we simply evaluate the enclosed term.
 			globalWorkStack.push({ type: "Eval", ctx, term });
 		})
 		.with({ type: "Shift" }, ({ body }) => {
-			// Shift captures the continuation and applies the handler
-			// During evaluation, the shift body is a lambda that takes the continuation
-			// We evaluate it to get the closure
+			// Shift was elaborated during type checking to (\k -> h k v) where:
+			// - k is the captured continuation (yet-to-be-traversed terms up to enclosing reset)
+			// - h is the handler from the enclosing reset
+			// - v is the shifted value
+			// At evaluation time, we evaluate the elaborated lambda.
 			globalWorkStack.push({ type: "Eval", ctx, term: body });
 		})
 		.otherwise(tm => {

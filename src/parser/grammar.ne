@@ -247,6 +247,8 @@ Alt -> %space:? %bar %space:? Pattern %space:? %arrow %space:? TypeExpr 	{% P.Al
 
 # ------------------------------------
 # Delimited Continuations
+# Syntax: reset \k v -> handler_body enclosed_term
+#         shift value
 # ------------------------------------
 Reset -> "reset" %space:+ Lambda %space:+ TypeExpr 		{% P.Reset %}
 Shift -> "shift" %space:+ TypeExpr 						{% P.Shift %}

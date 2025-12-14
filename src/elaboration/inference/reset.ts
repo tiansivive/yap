@@ -20,9 +20,10 @@ export const infer = (reset: Reset): V2.Elaboration<EB.AST> =>
 			// First, infer the handler lambda
 			const [handlerTerm, handlerType, handlerUsages] = yield* EB.infer.gen(reset.handler);
 
-			// The handler should be a function type: (k: A -> R) -> A -> R
-			// where A is the answer type and R is the result type
-			// For now, we don't enforce this structurally - answer-type polymorphism handles it
+			// The handler should be a function type: (k: A -> R) -> V -> R
+			// where A is the answer type, R is the result type, and V is the shift value type
+			// NOTE: Structural type checking is deferred to answer-type polymorphism.
+			// Future work: Add explicit handler type constraints during elaboration
 
 			// Add the handler to the context stack
 			const [enclosedTerm, enclosedType, enclosedUsages] = yield* V2.local(
