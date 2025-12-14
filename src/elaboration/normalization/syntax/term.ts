@@ -30,7 +30,9 @@ type Constructor =
 				ctx: EB.Context;
 				value: Value;
 			};
-	  }; // Used during verification only
+	  } // Used during verification only
+	| { type: "Reset"; closure: Closure }
+	| { type: "Shift"; closure: Closure };
 
 export type Row = R.Row<Value, Variable>;
 
@@ -144,6 +146,8 @@ export const Constructors = {
 			modalities,
 		}),
 	External: (name: string, arity: number, compute: (...args: Value[]) => Value, args: Value[]): Value => mk({ type: "External", name, arity, compute, args }),
+	Reset: (closure: Closure): Value => mk({ type: "Reset", closure }),
+	Shift: (closure: Closure): Value => mk({ type: "Shift", closure }),
 };
 
 export const Type: Value = mk({

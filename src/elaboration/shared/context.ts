@@ -27,6 +27,7 @@ export type Context = {
 	}>;
 	implicits: Array<[EB.Term, NF.Value]>;
 	sigma: Record<string, Sigma>;
+	handlers: Array<EB.Term>;
 
 	zonker: Sub.Subst;
 	metas: Record<number, { meta: EB.Meta; ann: NF.Value }>;

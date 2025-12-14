@@ -13,6 +13,7 @@ export const defaultContext = () => ({
     env: [],
     implicits: [],
     sigma: {},
+    handlers: [],
     trace: [],
     imports: Elaborated(),
     zonker: Sub.empty,

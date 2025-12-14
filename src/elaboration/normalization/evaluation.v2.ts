@@ -348,6 +348,17 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 			// Process statements to extend context, then evaluate return
 			processStatementsAndPush(statements, ctx, ret);
 		})
+		.with({ type: "Reset" }, ({ term }) => {
+			// For reset, we just evaluate the enclosed term
+			// The handler was already pushed onto the context during elaboration
+			globalWorkStack.push({ type: "Eval", ctx, term });
+		})
+		.with({ type: "Shift" }, ({ body }) => {
+			// Shift captures the continuation and applies the handler
+			// During evaluation, the shift body is a lambda that takes the continuation
+			// We evaluate it to get the closure
+			globalWorkStack.push({ type: "Eval", ctx, term: body });
+		})
 		.otherwise(tm => {
 			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx));
 			throw new Error("Not implemented");

@@ -90,6 +90,16 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 					liquid: quote(ctx, lvl, modalities.liquid),
 				}),
 			)
+			.with({ type: "Reset" }, ({ closure }) => {
+				const val = NF.apply({ type: "Lambda", variable: "_", icit: "Explicit", annotation: NF.Any }, closure, NF.Constructors.Rigid(lvl));
+				const body = quote(closure.ctx, lvl + 1, val);
+				return EB.Constructors.Reset(body);
+			})
+			.with({ type: "Shift" }, ({ closure }) => {
+				const val = NF.apply({ type: "Lambda", variable: "_", icit: "Explicit", annotation: NF.Any }, closure, NF.Constructors.Rigid(lvl));
+				const body = quote(closure.ctx, lvl + 1, val);
+				return EB.Constructors.Shift(body);
+			})
 			.otherwise(nf => {
 				throw new Error("Quote: Not implemented yet: " + NF.display(nf, ctx));
 			})

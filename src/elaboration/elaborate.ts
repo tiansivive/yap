@@ -41,6 +41,9 @@ export const infer = V2.regen((ast: Src.Term): V2.Elaboration<AST> => {
 				.with({ type: "block" }, EB.Block.infer)
 				.with({ type: "modal" }, EB.Modal.infer)
 				.with({ type: "annotation" }, EB.Annotation.infer)
+
+				.with({ type: "reset" }, EB.Reset.infer)
+				.with({ type: "shift" }, EB.Shift.infer)
 				.otherwise(v => {
 					throw new Error("Not implemented yet: " + JSON.stringify(v));
 				});

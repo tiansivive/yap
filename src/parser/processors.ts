@@ -391,6 +391,27 @@ export const Alternative: PostProcessor<[Space, Bar, Space, Src.Pattern, Space, 
 	};
 };
 
+/***********************************************************
+ * Delimited Continuations processors
+ ***********************************************************/
+
+export const Reset: PostProcessor<[Keyword, Whitespace, Term, Whitespace, Term], Term> = ([tok, , handler, , term]) => {
+	return {
+		type: "reset",
+		handler,
+		term,
+		location: locSpan({ from: loc(tok) }, term.location),
+	};
+};
+
+export const Shift: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , term]) => {
+	return {
+		type: "shift",
+		term,
+		location: locSpan({ from: loc(tok) }, term.location),
+	};
+};
+
 type PatKeyVal = [string, Src.Pattern];
 export const keyvalPat = (pair: [Variable, Whitespace, Colon, Whitespace, Src.Pattern]): PatKeyVal => {
 	const [v, , , , pat] = pair;

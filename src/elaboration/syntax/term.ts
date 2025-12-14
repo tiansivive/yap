@@ -26,7 +26,9 @@ type Constructor =
 	| { type: "Inj"; label: string; value: Term; term: Term }
 	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> }
 	| { type: "Block"; statements: Array<Statement>; return: Term }
-	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> };
+	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
+	| { type: "Reset"; term: Term }
+	| { type: "Shift"; body: Term };
 
 export type Variable =
 	| { type: "Bound"; index: number }
@@ -153,6 +155,9 @@ export const Constructors = {
 	Block: (statements: Array<Statement>, term: Term): Term => mk({ type: "Block", statements, return: term }),
 
 	Modal: (term: Term, modalities: Modal.Annotations<Term>): Term => mk({ type: "Modal", term, modalities }),
+
+	Reset: (term: Term): Term => mk({ type: "Reset", term }),
+	Shift: (body: Term): Term => mk({ type: "Shift", body }),
 
 	Patterns: {
 		Binder: (value: string): Pattern => ({ type: "Binder", value }),
