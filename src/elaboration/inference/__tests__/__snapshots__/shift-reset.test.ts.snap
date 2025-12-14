@@ -4,8 +4,8 @@ exports[`Inference: Shift/Reset > Answer-type polymorphism > should handle diffe
 {
   "displays": {
     "constraints": [],
-    "term": "reset shift λk -> (λk -> λv -> "result") k 123",
-    "type": "?4",
+    "term": "reset shift ShiftPair (λk -> λv -> "result") 123",
+    "type": "?5",
   },
 }
 `;
@@ -49,6 +49,20 @@ exports[`Inference: Shift/Reset > Reset > should infer type for reset with simpl
           "val": 1,
         },
       },
+      "2": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
     },
     "term": {
       "term": {
@@ -79,8 +93,8 @@ exports[`Inference: Shift/Reset > Shift > should infer type within reset 1`] = `
       "?1 ~~ Π(x: ?3) -> (closure: (?5 :: Type) -| Γ: x; v; k)",
       "?2 ~~ ?3",
     ],
-    "term": "reset shift λk -> (λk -> λv -> k v) k 42",
-    "type": "?7",
+    "term": "reset shift ShiftPair (λk -> λv -> k v) 42",
+    "type": "?8",
   },
 }
 `;
@@ -366,112 +380,94 @@ exports[`Inference: Shift/Reset > Shift > should infer type within reset 2`] = `
           "val": 7,
         },
       },
+      "8": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 0,
+          "type": "Meta",
+          "val": 8,
+        },
+      },
     },
     "term": {
       "term": {
         "body": {
-          "binding": {
-            "annotation": {
+          "arg": {
+            "type": "Lit",
+            "value": {
+              "type": "Num",
+              "value": 42,
+            },
+          },
+          "func": {
+            "arg": {
               "binding": {
                 "annotation": {
                   "type": "Var",
                   "variable": {
                     "lvl": 0,
                     "type": "Meta",
-                    "val": 6,
+                    "val": 1,
                   },
                 },
                 "icit": "Explicit",
-                "type": "Pi",
+                "type": "Lambda",
                 "variable": "k",
               },
               "body": {
-                "type": "Var",
-                "variable": {
-                  "lvl": 0,
-                  "type": "Meta",
-                  "val": 7,
-                },
-              },
-              "type": "Abs",
-            },
-            "icit": "Explicit",
-            "type": "Lambda",
-            "variable": "k",
-          },
-          "body": {
-            "arg": {
-              "type": "Lit",
-              "value": {
-                "type": "Num",
-                "value": 42,
-              },
-            },
-            "func": {
-              "arg": {
-                "type": "Var",
-                "variable": {
-                  "index": 0,
-                  "type": "Bound",
-                },
-              },
-              "func": {
                 "binding": {
                   "annotation": {
                     "type": "Var",
                     "variable": {
-                      "lvl": 0,
+                      "lvl": 1,
                       "type": "Meta",
-                      "val": 1,
+                      "val": 2,
                     },
                   },
                   "icit": "Explicit",
                   "type": "Lambda",
-                  "variable": "k",
+                  "variable": "v",
                 },
                 "body": {
-                  "binding": {
-                    "annotation": {
-                      "type": "Var",
-                      "variable": {
-                        "lvl": 1,
-                        "type": "Meta",
-                        "val": 2,
-                      },
+                  "arg": {
+                    "type": "Var",
+                    "variable": {
+                      "index": 0,
+                      "type": "Bound",
                     },
-                    "icit": "Explicit",
-                    "type": "Lambda",
-                    "variable": "v",
                   },
-                  "body": {
-                    "arg": {
-                      "type": "Var",
-                      "variable": {
-                        "index": 0,
-                        "type": "Bound",
-                      },
+                  "func": {
+                    "type": "Var",
+                    "variable": {
+                      "index": 1,
+                      "type": "Bound",
                     },
-                    "func": {
-                      "type": "Var",
-                      "variable": {
-                        "index": 1,
-                        "type": "Bound",
-                      },
-                    },
-                    "icit": "Explicit",
-                    "type": "App",
                   },
-                  "type": "Abs",
+                  "icit": "Explicit",
+                  "type": "App",
                 },
                 "type": "Abs",
               },
-              "icit": "Explicit",
-              "type": "App",
+              "type": "Abs",
+            },
+            "func": {
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "ShiftPair",
+              },
             },
             "icit": "Explicit",
             "type": "App",
           },
-          "type": "Abs",
+          "icit": "Explicit",
+          "type": "App",
         },
         "type": "Shift",
       },
@@ -484,7 +480,7 @@ exports[`Inference: Shift/Reset > Shift > should infer type within reset 2`] = `
         "variable": {
           "lvl": 0,
           "type": "Meta",
-          "val": 7,
+          "val": 8,
         },
       },
     },

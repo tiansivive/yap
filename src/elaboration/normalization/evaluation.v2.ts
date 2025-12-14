@@ -349,19 +349,32 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 			processStatementsAndPush(statements, ctx, ret);
 		})
 		.with({ type: "Reset" }, ({ term }) => {
-			// Reset establishes a delimiter for shift operations within its scope.
-			// The delimited continuation semantics are realized through elaboration:
-			// - Handler h was already added to context during elaboration
-			// - Any shift in the enclosed term was elaborated to (\k -> h k v)
-			// At evaluation time, we simply evaluate the enclosed term.
+			// Reset establishes a delimiter for continuation capture.
+			// Simply evaluate the enclosed term.
+			// The continuation capture happens when shift is evaluated.
 			globalWorkStack.push({ type: "Eval", ctx, term });
 		})
 		.with({ type: "Shift" }, ({ body }) => {
-			// Shift was elaborated during type checking to (\k -> h k v) where:
-			// - k is the captured continuation (yet-to-be-traversed terms up to enclosing reset)
-			// - h is the handler from the enclosing reset
-			// - v is the shifted value
-			// At evaluation time, we evaluate the elaborated lambda.
+			// Shift captures the current continuation and applies the handler.
+			// The body contains (handler, value) pair from elaboration.
+			//
+			// To properly implement shift/reset:
+			// 1. Extract handler and value from the body
+			// 2. Capture the continuation (evaluation frames up to reset)
+			// 3. Create a continuation function that resumes with captured frames
+			// 4. Apply handler to continuation and value
+			//
+			// NOTE: Full continuation capture requires tracking reset delimiters
+			// and capturing stack frames. This is a simplified implementation
+			// that evaluates the body, which was prepared during elaboration.
+			//
+			// For true delimited continuations, we would need to:
+			// - Mark reset boundaries on the evaluation stack
+			// - Capture frames between shift and the delimiter
+			// - Reify those frames as a callable function
+			// - Apply the handler with the reified continuation
+			//
+			// This remains as future work for full shift/reset semantics.
 			globalWorkStack.push({ type: "Eval", ctx, term: body });
 		})
 		.otherwise(tm => {

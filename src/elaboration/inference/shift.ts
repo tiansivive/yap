@@ -25,30 +25,39 @@ export const infer = (shift: Shift): V2.Elaboration<EB.AST> =>
 			// Infer the value being shifted
 			const [valueTerm, valueType, valueUsages] = yield* EB.infer.gen(shift.term);
 
-			// Create a fresh meta for the continuation type
-			// The continuation has type A -> R where A is the answer type and R is the result type
+			// The key insight: shift needs to capture the continuation.
+			// The continuation represents "what comes next" in the computation.
+			// In a proper implementation, this requires CPS transformation of the entire
+			// enclosed term within reset.
+			//
+			// Current approach: We store the handler in the Shift term itself.
+			// During evaluation, shift will need to:
+			// 1. Capture the evaluation stack frames up to the nearest reset
+			// 2. Bundle those frames into a callable continuation
+			// 3. Apply the handler to the continuation and the shifted value
+			//
+			// The Shift term will contain:
+			// - The shifted value
+			// - The handler (retrieved from context)
+			// This allows the evaluator to have all info needed to capture the continuation.
+
+			// Create a fresh meta for the answer and result types
 			const answerTypeMeta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 			const resultTypeMeta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 
 			const answerType = NF.evaluate(ctx, answerTypeMeta);
 			const resultType = NF.evaluate(ctx, resultTypeMeta);
 
-			// Build the elaborated shift term: shift (\k -> h k v)
-			// where h is the handler, k is the continuation, and v is the value
-			const kVar = "k";
-			const kBound = EB.Constructors.Var({ type: "Bound", index: 0 });
+			// Store both the handler and the value in the shift term
+			// The evaluator will use these to construct and apply the continuation
+			// Build: (handler, value) pair
+			const pair = EB.Constructors.App(
+				"Explicit",
+				EB.Constructors.App("Explicit", EB.Constructors.Lit({ type: "Atom", value: "ShiftPair" }), handler),
+				valueTerm,
+			);
 
-			// Build: h k v
-			const handlerAppK = EB.Constructors.App("Explicit", handler, kBound);
-			const handlerAppKV = EB.Constructors.App("Explicit", handlerAppK, valueTerm);
-
-			// Build the continuation type annotation: A -> R
-			const contTypeAnnotation = EB.Constructors.Pi(kVar, "Explicit", answerTypeMeta, resultTypeMeta);
-
-			// Build: \k -> h k v
-			const contLambda = EB.Constructors.Lambda(kVar, "Explicit", handlerAppKV, contTypeAnnotation);
-
-			const tm = EB.Constructors.Shift(contLambda);
+			const tm = EB.Constructors.Shift(pair);
 
 			// The type of shift is the result type R
 			const ty = resultType;

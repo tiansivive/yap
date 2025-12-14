@@ -25,21 +25,27 @@ export const infer = (reset: Reset): V2.Elaboration<EB.AST> =>
 			// NOTE: Structural type checking is deferred to answer-type polymorphism.
 			// Future work: Add explicit handler type constraints during elaboration
 
-			// Add the handler to the context stack
+			// Create a meta for the answer type (type of values that can be returned from within reset)
+			const answerTypeMeta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+			const answerType = NF.evaluate(ctx, answerTypeMeta);
+
+			// Add the handler to the context stack along with the answer type
+			// The answer type is used by shift to create proper continuations
 			const [enclosedTerm, enclosedType, enclosedUsages] = yield* V2.local(
 				_ctx => update(_ctx, "handlers", hs => [handlerTerm, ...hs]),
 				V2.Do(function* () {
 					// Infer the enclosed term with the handler in scope
+					// The enclosed term is transformed into CPS by shift operations
 					return yield* EB.infer.gen(reset.term);
 				}),
 			);
 
-			// The reset term has the result type R
-			// The enclosed term has type A, but reset transforms it to R
-			// For answer-type polymorphism: reset e : R where e : A
+			// The reset term has the result type which is the type of the enclosed term
+			// This implements answer-type polymorphism: reset e : R where e : A
+			// In the presence of no shifts, A = R
+			// With shifts, the handler transforms A to R
 
 			const tm = EB.Constructors.Reset(enclosedTerm);
-			// Answer-type polymorphism: the type of reset is the result type
 			const ty = enclosedType;
 
 			return [tm, ty, Q.add(handlerUsages, enclosedUsages)] as EB.AST;
