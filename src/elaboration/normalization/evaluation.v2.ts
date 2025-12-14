@@ -31,7 +31,10 @@ import assert from "assert";
  * The stacks grow on the heap, not the JS call stack.
  */
 
-type StackFrame = { type: "Eval"; ctx: EB.Context; term: EB.Term } | { type: "Cont"; arity: number; handler: (results: NF.Value[]) => void };
+type StackFrame =
+	| { type: "Eval"; ctx: EB.Context; term: EB.Term }
+	| { type: "Cont"; arity: number; handler: (results: NF.Value[]) => void }
+	| { type: "ResetDelimiter"; handler: EB.Term; ctx: EB.Context };
 
 // GLOBAL stacks - reused across all evaluate calls
 const globalWorkStack: StackFrame[] = [];
@@ -63,6 +66,10 @@ export function evaluate(ctx: EB.Context, term: EB.Term, maxSteps = 10000000): N
 				throw new Error(`Continuation expected ${frame.arity} results but got ${args.length}`);
 			}
 			frame.handler(args);
+		} else if (frame.type === "ResetDelimiter") {
+			// Reset delimiter reached - the result is already on the stack from the enclosed term
+			// Just pass through - the delimiter stays processed
+			continue;
 		} else {
 			// Evaluate term
 			evaluateTerm(frame.ctx, frame.term);
@@ -350,32 +357,97 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 		})
 		.with({ type: "Reset" }, ({ term }) => {
 			// Reset establishes a delimiter for continuation capture.
-			// Simply evaluate the enclosed term.
-			// The continuation capture happens when shift is evaluated.
+			// Get the handler from context (was pushed during elaboration)
+			const handler = ctx.handlers[0];
+			if (!handler) {
+				throw new Error("Reset evaluated without handler in context");
+			}
+
+			// Push delimiter marker, then evaluate the enclosed term
+			// The delimiter marks the boundary for shift's continuation capture
+			globalWorkStack.push({ type: "ResetDelimiter", handler, ctx });
 			globalWorkStack.push({ type: "Eval", ctx, term });
 		})
 		.with({ type: "Shift" }, ({ body }) => {
-			// Shift captures the current continuation and applies the handler.
-			// The body contains (handler, value) pair from elaboration.
-			//
-			// To properly implement shift/reset:
-			// 1. Extract handler and value from the body
-			// 2. Capture the continuation (evaluation frames up to reset)
-			// 3. Create a continuation function that resumes with captured frames
-			// 4. Apply handler to continuation and value
-			//
-			// NOTE: Full continuation capture requires tracking reset delimiters
-			// and capturing stack frames. This is a simplified implementation
-			// that evaluates the body, which was prepared during elaboration.
-			//
-			// For true delimited continuations, we would need to:
-			// - Mark reset boundaries on the evaluation stack
-			// - Capture frames between shift and the delimiter
-			// - Reify those frames as a callable function
-			// - Apply the handler with the reified continuation
-			//
-			// This remains as future work for full shift/reset semantics.
-			globalWorkStack.push({ type: "Eval", ctx, term: body });
+			// Shift captures the continuation up to the nearest reset delimiter.
+			// body is: App(App(ShiftPair, handler), value)
+			if (body.type !== "App") {
+				throw new Error("Shift body must be an application");
+			}
+			const handlerApp = body.func;
+			if (handlerApp.type !== "App") {
+				throw new Error("Shift body must be nested application");
+			}
+
+			const handlerTerm = handlerApp.arg;
+			const valueTerm = body.arg;
+
+			// Evaluate the shifted value first
+			globalWorkStack.push({
+				type: "Cont",
+				arity: 1,
+				handler: ([shiftedValue]) => {
+					// Search backwards through the stack for the nearest ResetDelimiter
+					const capturedFrames: StackFrame[] = [];
+					let delimiterIndex = -1;
+
+					for (let i = globalWorkStack.length - 1; i >= 0; i--) {
+						const frame = globalWorkStack[i];
+						if (frame.type === "ResetDelimiter") {
+							delimiterIndex = i;
+							break;
+						}
+						capturedFrames.unshift(frame);
+					}
+
+					if (delimiterIndex === -1) {
+						throw new Error("Shift encountered without enclosing reset delimiter");
+					}
+
+					// Get the delimiter info before removing
+					const delimiter = globalWorkStack[delimiterIndex] as Extract<StackFrame, { type: "ResetDelimiter" }>;
+					const resetHandler = delimiter.handler;
+					const resetCtx = delimiter.ctx;
+
+					// Remove captured frames and delimiter from the stack
+					globalWorkStack.splice(delimiterIndex, globalWorkStack.length - delimiterIndex);
+
+					// Create a continuation that replays the captured frames
+					// This continuation is a lambda that takes a value and resumes execution
+					const continuationClosure: NF.Closure = {
+						type: "Closure",
+						ctx: resetCtx,
+						term: EB.Constructors.Var({ type: "Foreign", name: "__continuation__" }),
+					};
+
+					// Create the continuation value with replay capability
+					const continuation: NF.Value = {
+						...NF.Constructors.Lambda("x", "Explicit", continuationClosure, NF.Any),
+						// Store replay logic as a property
+						__capturedFrames: capturedFrames,
+					} as any;
+
+					// Evaluate the handler
+					const handlerValue = NF.evaluate(resetCtx, resetHandler);
+
+					// Apply handler(continuation, shiftedValue)
+					// Handler is: \k v -> body
+					const handlerWithCont = NF.apply(
+						{ type: "Lambda", variable: "k", annotation: NF.Any, icit: "Explicit" },
+						handlerValue.type === "Abs" ? handlerValue.closure : continuationClosure,
+						continuation,
+					);
+
+					const result = NF.apply(
+						{ type: "Lambda", variable: "v", annotation: NF.Any, icit: "Explicit" },
+						handlerWithCont.type === "Abs" ? handlerWithCont.closure : continuationClosure,
+						shiftedValue,
+					);
+
+					globalResultStack.push(result);
+				},
+			});
+			globalWorkStack.push({ type: "Eval", ctx, term: valueTerm });
 		})
 		.otherwise(tm => {
 			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx));
@@ -814,6 +886,57 @@ export const matching = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]):
 };
 
 export function apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): NF.Value {
+	// Check if this is a captured continuation being applied
+	if ((closure as any).__capturedFrames) {
+		// This is a continuation - replay the captured frames
+		const capturedFrames = (closure as any).__capturedFrames as StackFrame[];
+
+		// Push the value that the continuation expects
+		globalResultStack.push(value);
+
+		// Replay all captured frames
+		for (const frame of capturedFrames) {
+			globalWorkStack.push(frame);
+		}
+
+		// The result will be computed by the replayed frames
+		// We need to run the evaluation loop
+		const initialWorkSize = globalWorkStack.length - capturedFrames.length;
+		const initialResultSize = globalResultStack.length - 1;
+
+		let steps = 0;
+		const maxSteps = 10000000;
+
+		while (globalWorkStack.length > initialWorkSize) {
+			steps++;
+			if (steps > maxSteps) {
+				throw new Error(`Continuation replay exceeded maximum steps`);
+			}
+
+			const frame = globalWorkStack.pop()!;
+
+			if (frame.type === "Cont") {
+				const args = globalResultStack.splice(-frame.arity, frame.arity);
+				if (args.length !== frame.arity) {
+					throw new Error(`Continuation expected ${frame.arity} results but got ${args.length}`);
+				}
+				frame.handler(args);
+			} else if (frame.type === "ResetDelimiter") {
+				continue;
+			} else {
+				evaluateTerm(frame.ctx, frame.term);
+			}
+		}
+
+		// Return the result from the replayed computation
+		const resultCount = globalResultStack.length - initialResultSize;
+		if (resultCount !== 1) {
+			throw new Error(`Continuation replay expected 1 result, got ${resultCount}`);
+		}
+
+		return globalResultStack.pop()!;
+	}
+
 	let { ctx, term } = closure;
 
 	const extended = (() => {
