@@ -6,6 +6,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
+import assert from "node:assert";
 
 type Shift = Extract<Src.Term, { type: "shift" }>;
 
@@ -20,49 +21,30 @@ export const infer = (shift: Shift): V2.Elaboration<EB.AST> =>
 				throw new Error("shift without enclosing reset");
 			}
 
-			const [handler, ...restHandlers] = ctx.handlers;
+			const [h] = ctx.handlers;
 
-			// Infer the value being shifted
-			const [valueTerm, valueType, valueUsages] = yield* EB.infer.gen(shift.term);
+			const desugared: Src.Term = {
+				type: "application",
+				icit: "Explicit",
+				fn: {
+					type: "application",
+					icit: "Explicit",
+					fn: h.src,
+					arg: { type: "var", variable: { type: "name", value: "k", location: shift.continuation.location }, location: shift.location },
+					location: shift.location,
+				},
+				arg: shift.term,
+				location: shift.location,
+			};
 
-			// The key insight: shift needs to capture the continuation.
-			// The continuation represents "what comes next" in the computation.
-			// In a proper implementation, this requires CPS transformation of the entire
-			// enclosed term within reset.
-			//
-			// Current approach: We store the handler in the Shift term itself.
-			// During evaluation, shift will need to:
-			// 1. Capture the evaluation stack frames up to the nearest reset
-			// 2. Bundle those frames into a callable continuation
-			// 3. Apply the handler to the continuation and the shifted value
-			//
-			// The Shift term will contain:
-			// - The shifted value
-			// - The handler (retrieved from context)
-			// This allows the evaluator to have all info needed to capture the continuation.
+			const [ktm, kty] = yield* EB.infer.gen(shift.continuation);
 
-			// Create a fresh meta for the answer and result types
-			const answerTypeMeta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
-			const resultTypeMeta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+			const [bodyTm, answer, us] = yield* V2.local(ctx => EB.bind(ctx, { type: "Lambda", variable: "k" }, kty, "source"), EB.infer(desugared));
 
-			const answerType = NF.evaluate(ctx, answerTypeMeta);
-			const resultType = NF.evaluate(ctx, resultTypeMeta);
+			const lambda = EB.Constructors.Lambda("k", "Explicit", bodyTm, NF.quote(ctx, ctx.env.length, kty));
 
-			// Store both the handler and the value in the shift term
-			// The evaluator will use these to construct and apply the continuation
-			// Build: (handler, value) pair
-			const pair = EB.Constructors.App(
-				"Explicit",
-				EB.Constructors.App("Explicit", EB.Constructors.Lit({ type: "Atom", value: "ShiftPair" }), handler),
-				valueTerm,
-			);
-
-			const tm = EB.Constructors.Shift(pair);
-
-			// The type of shift is the result type R
-			const ty = resultType;
-
-			return [tm, ty, valueUsages] as EB.AST;
+			const app = EB.Constructors.App("Explicit", ktm, EB.Constructors.Shift(lambda));
+			return [app, answer, us] satisfies EB.AST;
 		}),
 	);
 

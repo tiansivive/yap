@@ -24,7 +24,7 @@ describe("Inference: type-level rows", () => {
 	});
 
 	it("Record type polymorphism \\r:Row -> { foo: Num | r}", () => {
-		const { structure, displays } = elaborateFrom("\\r:Row -> { foo: Num | r }");
+		const { structure, displays } = elaborateFrom("\\(r:Row) -> { foo: Num | r }");
 
 		expect(displays.type).toContain("r: Row");
 		expect(displays.type).toContain("Type");
@@ -33,7 +33,6 @@ describe("Inference: type-level rows", () => {
 		expect({ displays }).toMatchSnapshot();
 		expect({ structure }).toMatchSnapshot();
 	});
-
 	it("Row literal with tail is unsupported", () => {
 		expect(() => elaborateFrom("\\r -> [ x: Num | r ]")).toThrow(/Row literals with tails are not supported/);
 	});

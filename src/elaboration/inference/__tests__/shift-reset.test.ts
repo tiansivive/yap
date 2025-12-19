@@ -4,7 +4,7 @@ import { elaborateFrom } from "./util";
 describe("Inference: Shift/Reset", () => {
 	describe("Reset", () => {
 		it("should infer type for reset with simple value", () => {
-			const src = "reset \\k -> k 10";
+			const src = "reset 10 with \\k v -> k !";
 			const { displays, structure } = elaborateFrom(src);
 
 			// Check that it elaborates successfully
@@ -16,7 +16,7 @@ describe("Inference: Shift/Reset", () => {
 		});
 
 		it("should add handler to context stack", () => {
-			const src = "reset \\k v -> v 10";
+			const src = "reset 10 with \\k v -> v";
 			const { displays, structure } = elaborateFrom(src);
 
 			expect(structure.term.type).toBe("Reset");
@@ -32,7 +32,7 @@ describe("Inference: Shift/Reset", () => {
 		});
 
 		it("should infer type within reset", () => {
-			const src = "reset \\k v -> k v shift 42";
+			const src = "reset shift 42 with \\k v -> k v";
 			const { displays, structure } = elaborateFrom(src);
 
 			expect(structure.term.type).toBe("Reset");
@@ -44,7 +44,15 @@ describe("Inference: Shift/Reset", () => {
 	describe("Answer-type polymorphism", () => {
 		it("should handle different answer and result types", () => {
 			// Handler transforms number to string
-			const src = 'reset \\k v -> "result" shift 123';
+			const src = 'reset shift 123 with \\k v -> "result"';
+			const { displays, structure } = elaborateFrom(src);
+
+			expect(structure.term.type).toBe("Reset");
+			expect({ displays }).toMatchSnapshot();
+		});
+
+		it("should handle compound expression with shift", () => {
+			const src = "\\f -> reset (f 10 (shift 10)) with \\k v -> 0";
 			const { displays, structure } = elaborateFrom(src);
 
 			expect(structure.term.type).toBe("Reset");
