@@ -395,25 +395,19 @@ export const Alternative: PostProcessor<[Space, Bar, Space, Src.Pattern, Space, 
  * Delimited Continuations processors
  ***********************************************************/
 
-export const Reset: PostProcessor<[Keyword, Whitespace, Term, Whitespace, Keyword, Whitespace, Term], Term> = ([tok, , term, , , , handler]) => {
+export const Reset: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , term]) => {
 	return {
 		type: "reset",
-		handler,
 		term,
 		location: locSpan({ from: loc(tok) }, term.location),
 	};
 };
 
-export const Shift: PostProcessor<[Keyword, Whitespace, Term, Whitespace, Term], Term> = ([tok, , value, , lambda]) => {
-	if (lambda.type !== "lambda") {
-		throw new Error("Expected lambda after shift value in ShiftWithBinder");
-	}
-
+export const Shift: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , k]) => {
 	return {
 		type: "shift",
-		term: value,
-		continuation: lambda,
-		location: locSpan({ from: loc(tok) }, lambda.location),
+		continuation: k,
+		location: locSpan({ from: loc(tok) }, k.location),
 	};
 };
 

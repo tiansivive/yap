@@ -250,8 +250,8 @@ Alt -> %space:? %bar %space:? Pattern %space:? %arrow %space:? TypeExpr 	{% P.Al
 # Syntax: reset \k v -> handler_body enclosed_term
 #         shift value
 # ------------------------------------
-Reset -> "reset" %space:+ TypeExpr %space:+ "with" %space:+ Lambda 		{% P.Reset %}
-Shift -> "shift" %space:+ Atom %space:+ Lambda   						{% P.Shift %}
+Reset -> "reset" %space:+ TypeExpr 	{% P.Reset %}
+Shift -> "shift" %space:+ Lambda    {% P.Shift %}
 
 
 
