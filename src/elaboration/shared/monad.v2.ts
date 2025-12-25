@@ -1,4 +1,5 @@
 import * as EB from "@yap/elaboration";
+import * as Src from "@yap/src/index";
 
 import * as E from "fp-ts/Either";
 import * as F from "fp-ts/function";
@@ -13,7 +14,7 @@ import * as P from "./provenance";
 import * as Modal from "@yap/verification/modalities/shared";
 import * as Sub from "@yap/elaboration/unification/substitution";
 
-export type Elaboration<A> = (ctx: EB.Context, w?: Omit<Collector<A>, "result">) => Collector<A>;
+export type Elaboration<A> = (ctx: EB.Context, w?: Omit<Collector<A>, "result">, st?: MutState) => [Collector<A>, MutState];
 
 type Collector<A> = {
 	constraints: P.WithProvenance<EB.Constraint>[];
@@ -34,6 +35,29 @@ const concat: (fa: Accumulator, fb: Accumulator) => Accumulator = (fa, fb) => ({
 });
 const empty: Accumulator = { constraints: [], binders: [], metas: {}, types: {}, zonker: Sub.empty };
 
+export type MutState = {
+	delimitations: Array<Delimitation>;
+	skolems: Record<number, EB.Term>;
+	nondeterminism: {
+		solution: Record<number, EB.NF.Value[]>;
+	};
+};
+
+export type Delimitation = {
+	answer: { initial: EB.NF.Value; final: EB.NF.Value };
+	//handlerQ: Array<{ meta: EB.Meta, handler: Src.Term, ann: EB.NF.Value }>;
+	//solution: Record<number, { values: EB.NF.Value[], term: EB.Term }>;
+
+	/** `
+	 * Needed to know if any shift has occurred within the reset.
+	 * If `false`, we can enforce that the initial and final answer types are the same.
+	 * Dumb but effective.
+	 **/
+	shifted: boolean;
+};
+
+export const initialState: MutState = { delimitations: [], skolems: {}, nondeterminism: { solution: {} } };
+
 export type Err = Cause & { provenance?: P.Provenance[]; ctx: EB.Context };
 
 export const display = (err: Err): string => {
@@ -42,44 +66,9 @@ export const display = (err: Err): string => {
 	return prov ? `${cause}\n\nTrace:\n${prov}` : cause;
 };
 
-/************************************************************************************************************************
- * Functor combinators
- ************************************************************************************************************************/
-export function fmap<A, B>(fa: Collector<A>, f: (x: A) => B): Collector<B>;
-export function fmap<A, B>(f: (x: A) => B): (fa: Collector<A>) => Collector<B>;
-export function fmap<A, B>(...args: [(x: A) => B] | [Collector<A>, (x: A) => B]): any {
-	if (args.length === 1) {
-		const [f] = args;
-		return (fa: Collector<A>) => ({ ...fa, result: E.Functor.map(fa.result, f) });
-	}
-
-	const [fa, f] = args;
-	return { ...fa, result: E.Functor.map(fa.result, f) };
-}
-
-export function chain<A, B>(fa: Collector<A>, f: (x: A) => Collector<B>): Collector<B>;
-export function chain<A, B>(f: (x: A) => Collector<B>): (fa: Collector<A>) => Collector<B>;
-export function chain<A, B>(...args: [(x: A) => Collector<B>] | [Collector<A>, (x: A) => Collector<B>]): any {
-	const _chain = (fa: Collector<A>, f: (x: A) => Collector<B>) => {
-		if (E.isLeft(fa.result)) {
-			return fa;
-		}
-		const next = f(fa.result.right);
-		const final = concat(fa, next);
-		return { ...final, result: next.result };
-	};
-	if (args.length === 1) {
-		const [f] = args;
-		return (fa: Collector<A>) => _chain(fa, f);
-	}
-
-	const [fa, f] = args;
-	return _chain(fa, f);
-}
-
-export const track: <A>(provenance: P.Provenance | P.Provenance[], fa: Elaboration<A>) => Elaboration<A> = (provenance, fa) => ctx => {
+export const track: <A>(provenance: P.Provenance | P.Provenance[], fa: Elaboration<A>) => Elaboration<A> = (provenance, fa) => (ctx, w, st) => {
 	const extended = { ...ctx, trace: ctx.trace.concat(provenance) };
-	return fa(extended);
+	return fa(extended, w, st);
 };
 
 /************************************************************************************************************************
@@ -118,8 +107,8 @@ export const mkCollector = <A>(a: A): Collector<A> => ({
 
 export const of =
 	<A>(a: A): Elaboration<A> =>
-	ctx =>
-		mkCollector(a);
+	(ctx, w, st = initialState) => [mkCollector(a), st];
+
 /******************
  *
  * DO NOTATION
@@ -128,11 +117,11 @@ export const of =
 export type Unwrap<T> = T extends Elaboration<infer A> ? A : never;
 
 export const ask = function* (): Generator<Elaboration<EB.Context>, EB.Context, EB.Context> {
-	return yield mkCollector;
+	return yield (ctx, w, st = initialState) => [mkCollector(ctx), st];
 };
 
 export const asks = function* <A>(fn: (r: EB.Context) => A): Generator<Elaboration<A>, A, A> {
-	return yield F.flow(fn, mkCollector);
+	return yield (ctx, w, st = initialState) => [mkCollector(fn(ctx)), st];
 };
 
 export function local<A>(modify: (ctx: EB.Context) => EB.Context, ma: Elaboration<A>): Generator<Elaboration<A>, A, A>;
@@ -142,13 +131,13 @@ export function local<A>(...args: any[]): any {
 		const [modify] = args as [(ctx: EB.Context) => EB.Context];
 		return <B>(ma: Elaboration<B>) =>
 			(function* (): Generator<Elaboration<B>, B, B> {
-				const b: B = yield (ctx: EB.Context) => ma(modify(ctx));
+				const b: B = yield (ctx: EB.Context, w, st = initialState) => ma(modify(ctx), w, st);
 				return b;
 			})();
 	}
 	const [modify, ma] = args as [(ctx: EB.Context) => EB.Context, Elaboration<A>];
 	return (function* (): Generator<Elaboration<A>, A, A> {
-		const a: A = yield (ctx: EB.Context) => ma(modify(ctx));
+		const a: A = yield (ctx: EB.Context, w, st = initialState) => ma(modify(ctx), w, st);
 		return a;
 	})();
 }
@@ -220,31 +209,60 @@ export const tell = function* <K extends Channel>(channel: K, payload: Payload<K
 		return empty;
 	})();
 
-	return yield* pure(ctx => ({ ...writer, result: E.right(undefined) }));
+	return yield* pure((ctx, w, st = initialState) => [{ ...writer, result: E.right(undefined) }, st]);
 };
 
 export const listen = function* (): Generator<Elaboration<Accumulator>, Accumulator, Accumulator> {
-	return yield (_, w = empty) => mkCollector(w);
+	return yield (_, w = empty, st = initialState) => [mkCollector(w), st];
 };
 
 export const fail = function* <A>(cause: Cause): Generator<Elaboration<any>, A, any> {
 	const ctx = yield* ask();
 	return yield* liftE(E.left({ ...cause, provenance: ctx.trace, ctx }));
 };
-
 // export const catchErr = function* <A>(handler: (err: Err) => Elaboration<A>): Generator<Elaboration<A>, A, A> {
 // 	return yield* (ctx: EB.Context) => {
 // 		const result = handler(ctx);
 // 		return mkCollector(result);
 // 	};
 // };
+/***********************
+ *
+ *  Mutable state operations
+ *
+ ***********************/
+
+export const getSt = function* (): Generator<Elaboration<MutState>, MutState, MutState> {
+	return yield (ctx, w, st = initialState) => [mkCollector(st), st];
+};
+
+export const putSt = function* (newSt: MutState): Generator<Elaboration<void>, void, void> {
+	return yield (ctx, w, st = initialState) => [mkCollector(undefined), newSt];
+};
+
+export const modifySt = function* (f: (st: MutState) => MutState): Generator<Elaboration<void>, void, void> {
+	return yield (ctx, w, st = initialState) => [mkCollector(undefined), f(st)];
+};
+
+export const localSt = function* <A>(modify: (st: MutState) => MutState, ma: Elaboration<A>): Generator<Elaboration<A>, A, A> {
+	return yield (ctx, w, st = initialState) => {
+		const [result] = ma(ctx, w, modify(st));
+		return [result, st];
+	};
+};
+
+/***********************
+ * 
+ * Lifting
+ * 
+ /***********************/
 
 export const lift = function* <A>(a: A): Generator<Elaboration<A>, A, A> {
-	return yield _ => mkCollector(a);
+	return yield (_ctx, _w, st = initialState) => [mkCollector(a), st];
 };
 
 export const liftC = function* <A>(c: Collector<A>): Generator<Elaboration<A>, A, A> {
-	return yield _ => c;
+	return yield (_ctx, _w, st = initialState) => [c, st];
 };
 
 export const liftE = <A>(e: E.Either<Err, A>): Generator<Elaboration<A>, A, A> => {
@@ -261,20 +279,22 @@ export const regen = <A, B>(f: (a: A) => Elaboration<B>) => {
 };
 
 export function Do<R, A>(gen: () => Generator<Elaboration<any>, R, A>): Elaboration<R> {
-	return ctx => {
+	return (ctx, _, initialSt = initialState) => {
 		const it = gen();
 
 		let collected: Omit<Collector<unknown>, "result"> = empty;
+		let mutableState: MutState = initialSt;
 		let state = it.next();
 
 		while (!state.done) {
-			const ma = state.value(ctx, collected); // pipe context for each step of the generator
+			const [ma, st] = state.value(ctx, collected, mutableState); // pipe context for each step of the generator
 			collected = concat(collected, ma); // accumulate results a la Writer
+			mutableState = st;
 
-			// accumulate results a la Writer
+			// Error handling semantics : short-circuit on first error
 			if (E.isLeft(ma.result)) {
-				return ma;
-			} // Error handling semantics // Error handling semantics
+				return [ma, mutableState];
+			}
 			state = it.next(ma.result.right); // proceed with the sequence until the next yield
 		}
 		const result = mkCollector(state.value);
@@ -283,7 +303,7 @@ export function Do<R, A>(gen: () => Generator<Elaboration<any>, R, A>): Elaborat
 		result.metas = collected.metas;
 		result.types = collected.types;
 		result.zonker = collected.zonker;
-		return result;
+		return [result, mutableState];
 	};
 }
 

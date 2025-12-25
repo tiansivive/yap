@@ -27,20 +27,22 @@ export type Context = {
 	}>;
 	implicits: Array<[EB.Term, NF.Value]>;
 	sigma: Record<string, Sigma>;
-	delimitations: Array<{ answer: { initial: NF.Value; final: NF.Value } }>;
 
 	zonker: Sub.Subst;
 	metas: Record<number, { meta: EB.Meta; ann: NF.Value }>;
 	imports: Record<string, EB.AST>;
 	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
 	trace: P.Stack<Provenance>;
+
+	//control: Array<{ continuation: { binder: string, annotation: Pi, lvl: number }; resumption: { meta: EB.Meta } }>;
 };
+type Pi = EB.NF.Value & { type: "Abs"; binder: Extract<NF.Binder, { type: "Pi" }> };
 
 export type Zonker = Context["zonker"];
 
 export type Sigma = { term: EB.Term; nf: NF.Value; ann: NF.Value; multiplicity: Q.Multiplicity; isAnnotation?: boolean };
 
-export type Binder = Pick<EB.Binding, "type" | "variable">;
+export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
 export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.AST> => {
 	const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
@@ -106,7 +108,7 @@ export const resolveImplicit = (nf: NF.Value): V2.Elaboration<[EB.Term, Sub.Subs
 
 			const [[term, value], ...rest] = implicits;
 			const unification = U.unify(nf, value, ctx.env.length, Sub.empty);
-			const result = unification(ctx).result;
+			const [{ result }] = unification(ctx);
 
 			if (E.isRight(result)) {
 				return [term, result.right];

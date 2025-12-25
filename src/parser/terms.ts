@@ -40,7 +40,8 @@ export type Bare =
 	| { type: "block"; statements: Statement[]; return?: Term }
 	| { type: "modal"; term: Term; modalities: { quantity?: Q.Multiplicity; liquid?: Term } }
 	| { type: "reset"; term: Term }
-	| { type: "shift"; continuation: Term };
+	| { type: "shift"; term: Term }
+	| { type: "resume"; term: Term };
 
 export type Alternative = WithLocation<{ pattern: Pattern; term: Term }>;
 export type Pattern =

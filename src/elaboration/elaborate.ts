@@ -44,6 +44,7 @@ export const infer = V2.regen((ast: Src.Term): V2.Elaboration<AST> => {
 
 				.with({ type: "reset" }, EB.Reset.infer)
 				.with({ type: "shift" }, EB.Shift.infer)
+				.with({ type: "resume" }, EB.Shift.resume)
 				.otherwise(v => {
 					throw new Error("Not implemented yet: " + JSON.stringify(v));
 				});

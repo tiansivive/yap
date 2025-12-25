@@ -9,6 +9,9 @@ import { V2 } from "@yap/elaboration";
 import { update } from "@yap/utils";
 
 import * as E from "fp-ts/lib/Either";
+import * as F from "fp-ts/lib/function";
+import * as A from "fp-ts/lib/Array";
+import * as R from "fp-ts/lib/Record";
 
 export const mkParser = () => {
 	const g = { ...Grammar, ParserStart: "Letdec" } as typeof Grammar;
@@ -35,7 +38,7 @@ export const elaborate = (src: string) => {
 		throw new Error("Expected a Let statement");
 	}
 
-	const { constraints, metas, zonker, result } = V2.Do(function* () {
+	const [{ constraints, metas, zonker, result }, state] = V2.Do(function* () {
 		const ctx = yield* V2.ask();
 
 		const [elaborated, ty] = yield* EB.Stmt.infer.gen(stmt);
@@ -57,14 +60,29 @@ export const elaborate = (src: string) => {
 		type: NF.display(type, { zonker: solution, metas, env: [] }),
 		solution: Sub.display(solution, metas),
 		constraints: constraints.map(c => EB.Display.Constraint(c, { zonker: Sub.empty, metas, env: [] })),
+		state: {
+			skolems: F.pipe(
+				state.skolems,
+				R.toEntries,
+				A.map(([k, v]): [string, string] => [k, EB.Display.Term(v, { zonker: solution, metas, env: [] })]),
+				R.fromEntries,
+			),
+			nondeterminism: F.pipe(
+				state.nondeterminism.solution,
+				R.toEntries,
+				A.map(([k, vs]): [string, string[]] => [k, vs.map(val => NF.display(val, { zonker: solution, metas, env: [] }))]),
+				R.fromEntries,
+			),
+		},
 	};
 	return {
 		pretty,
 		structure: {
 			term,
 			type,
-			constraints,
 			metas,
+			constraints,
+			state,
 			solution,
 			resolutions,
 		},

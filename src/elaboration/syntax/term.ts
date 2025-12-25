@@ -39,6 +39,7 @@ export type Variable =
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
 	| { type: "Meta"; val: number; lvl: number };
+
 export type Meta = Extract<Variable, { type: "Meta" }>;
 export type Row = R.Row<Term, Variable>;
 

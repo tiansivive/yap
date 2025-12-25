@@ -39,7 +39,7 @@ export const elaborate = (src: string) => {
 		throw new Error("Expected a Let statement");
 	}
 
-	const { result } = V2.Do(function* () {
+	const [{ result }] = V2.Do(function* () {
 		const ctx = yield* V2.ask();
 
 		const [elaborated, ty, us] = yield* EB.Stmt.infer.gen(stmt);

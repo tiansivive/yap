@@ -32,27 +32,27 @@ export const infer = (reset: Reset): V2.Elaboration<EB.AST> =>
 			const metaA = yield* EB.freshMeta(ctx.env.length, NF.Type);
 			const metaR = yield* EB.freshMeta(ctx.env.length, NF.Type);
 
-			const d: EB.Context["delimitations"][number] = {
+			const d: V2.Delimitation = {
 				answer: {
 					initial: NF.Constructors.Var(metaA),
 					final: NF.Constructors.Var(metaR),
 				},
+				shifted: false,
 			};
-			const [tm, ty, usages] = yield* V2.local(
-				_ctx => update(_ctx, "delimitations", ds => [d, ...ds]),
-				V2.Do(function* () {
-					const [term, type, usages] = yield* EB.infer.gen(reset.term);
-					// const emitted = yield* V2.listen();
-					return [term, type, usages] as EB.AST;
-				}),
-			);
+			//yield* V2.modifySt(update("delimitations", ds => [d, ...ds]))
+			yield* V2.modifySt(update("delimitations", ds => [d, ...ds]));
+			const [tm, us] = yield* EB.check.gen(reset.term, d.answer.initial);
+			const {
+				delimitations: [{ shifted }],
+			} = yield* V2.getSt();
+			if (!shifted) {
+				// No shifts were used, so initial and final answer types must be the same
+				yield* V2.tell("constraint", { type: "assign", left: d.answer.initial, right: d.answer.final });
+			}
 
-			// Constrain the enclosed type to be the answer type
-			// This ensures that the body of reset conforms to the expected answer type
-			yield* V2.tell("constraint", { type: "assign", left: ty, right: d.answer.initial });
+			yield* V2.modifySt(update("delimitations", ([d, ...ds]) => ds));
 
-			// The final type of reset is the result type R tho!
-			return [EB.Constructors.Reset(tm), d.answer.final, usages] as EB.AST;
+			return [EB.Constructors.Reset(tm), d.answer.final, us] satisfies EB.AST;
 		}),
 	);
 

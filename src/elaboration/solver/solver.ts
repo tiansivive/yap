@@ -69,7 +69,7 @@ const resolve = (cs: Array<Extract<Constraint, { type: "resolve" }>>, ctx: EB.Co
 
 		const [[term, value], ...rest] = implicits;
 		const unification = U.unify(nf, value, ctx.env.length, Sub.empty);
-		const result = unification(ctx).result;
+		const [{ result }] = unification(ctx);
 		if (E.isRight(result)) {
 			if (!_.isEmpty(result.right)) {
 				// NOTE: Don't accept this implicit if it introduces constraints.

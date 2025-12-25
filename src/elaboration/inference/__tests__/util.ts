@@ -41,7 +41,7 @@ export const elaborateFrom = (src: string) => {
 		return { tm, ty, constraints, metas, types, zonker } as const;
 	});
 
-	const out = result(ctx);
+	const [out] = result(ctx);
 	if (out.result._tag === "Left") {
 		throw new Error(EB.V2.display(out.result.left));
 	}

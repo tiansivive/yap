@@ -96,7 +96,7 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 
 export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context]>] => {
 	const check = EB.check(stmt.annotation, NF.Type);
-	const { result } = check(ctx);
+	const [{ result }] = check(ctx);
 	const e = E.Functor.map(result, ([tm, us]): [EB.AST, EB.Context] => {
 		const nf = NF.evaluate(ctx, tm);
 		const v = EB.Constructors.Var({ type: "Foreign", name: stmt.variable });
@@ -108,7 +108,7 @@ export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: 
 
 export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.Context): Either<V2.Err, EB.Context> => {
 	const infer = EB.Stmt.infer(stmt);
-	const { result } = infer(ctx);
+	const [{ result }] = infer(ctx);
 	type Implicit = EB.Context["implicits"][0];
 	return E.Functor.map(result, ([t, ty]) => update(ctx, "implicits", A.append<Implicit>([t.value, ty])));
 };
@@ -128,7 +128,7 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 		const ast: EB.AST = [r.value, r.annotation, us];
 		const final = [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
 		try {
-			const { result: res } = Verification.check(r.value, r.annotation)(xtended);
+			const [{ result: res }] = Verification.check(r.value, r.annotation)(xtended);
 
 			if (res._tag === "Left") {
 				console.log("Verification failure");
@@ -224,7 +224,7 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 		return final;
 	});
 
-	const { result } = inference(ctx);
+	const [{ result }] = inference(ctx);
 	return [stmt.variable, result];
 };
 
@@ -249,6 +249,6 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 		return [wrapped, instantiated, us, next] as const;
 	});
 
-	const { result } = inference(ctx);
+	const [{ result }] = inference(ctx);
 	return result;
 };

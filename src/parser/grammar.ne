@@ -21,7 +21,7 @@
 				foreign: "foreign", loop: "loop", repeat: "repeat",
 				if: "if", else: "else", then: "then",
 				true: "true", false: "false",
-				shift: "shift", reset: "reset",
+				shift: "shift", reset: "reset", resume: "resume"
 			}) 
 		},
 	  	dot: /\./,
@@ -116,6 +116,7 @@ Expr -> Lambda		{% id %}
   	  | Block 		{% id %}
 	  | Reset 		{% id %}
 	  | Shift 		{% id %}
+	  | Resume 		{% id %}
 	  | Op 			{% id %}
 
 Op -> Op %space:? (%op | %concat | %concat2 | %rangle | %langle | %star ) %space:? Atom 	{% P.Operation %}
@@ -250,8 +251,9 @@ Alt -> %space:? %bar %space:? Pattern %space:? %arrow %space:? TypeExpr 	{% P.Al
 # Syntax: reset \k v -> handler_body enclosed_term
 #         shift value
 # ------------------------------------
-Reset -> "reset" %space:+ TypeExpr 	{% P.Reset %}
-Shift -> "shift" %space:+ Lambda    {% P.Shift %}
+Reset -> "reset" %space:+ TypeExpr 		{% P.Reset %}
+Shift -> "shift" %space:+ TypeExpr    	{% P.Shift %}
+Resume -> "resume" %space:+ TypeExpr    {% P.Resume %}
 
 
 

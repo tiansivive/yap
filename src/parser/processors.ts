@@ -14,6 +14,7 @@ import * as Null from "@yap/utils";
 
 import * as F from "fp-ts/function";
 import * as NEA from "fp-ts/NonEmptyArray";
+import assert from "node:assert";
 
 type Sourced<T> = [T, P.Location];
 const Sourced = {
@@ -403,13 +404,25 @@ export const Reset: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , 
 	};
 };
 
-export const Shift: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , k]) => {
+export const Shift: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , term]) => {
 	return {
 		type: "shift",
-		continuation: k,
-		location: locSpan({ from: loc(tok) }, k.location),
+		term,
+		location: locSpan({ from: loc(tok) }, term.location),
 	};
 };
+
+export const Resume: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , term]) => {
+	return {
+		type: "resume",
+		term,
+		location: locSpan({ from: loc(tok) }, term.location),
+	};
+};
+
+/***********************************************************
+ * Pattern processors
+ ***********************************************************/
 
 type PatKeyVal = [string, Src.Pattern];
 export const keyvalPat = (pair: [Variable, Whitespace, Colon, Whitespace, Src.Pattern]): PatKeyVal => {

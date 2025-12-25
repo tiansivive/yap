@@ -358,96 +358,106 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 		.with({ type: "Reset" }, ({ term }) => {
 			// Reset establishes a delimiter for continuation capture.
 			// Get the handler from context (was pushed during elaboration)
-			const handler = ctx.handlers[0];
-			if (!handler) {
-				throw new Error("Reset evaluated without handler in context");
-			}
+			// const handler = ctx.handlers[0];
+			// if (!handler) {
+			// 	throw new Error("Reset evaluated without handler in context");
+			// }
 
-			// Push delimiter marker, then evaluate the enclosed term
-			// The delimiter marks the boundary for shift's continuation capture
-			globalWorkStack.push({ type: "ResetDelimiter", handler, ctx });
-			globalWorkStack.push({ type: "Eval", ctx, term });
+			// // Push delimiter marker, then evaluate the enclosed term
+			// // The delimiter marks the boundary for shift's continuation capture
+			// globalWorkStack.push({ type: "ResetDelimiter", handler, ctx });
+			// globalWorkStack.push({ type: "Eval", ctx, term });
+			throw new Error("Reset evaluation not implemented yet");
 		})
 		.with({ type: "Shift" }, ({ body }) => {
-			// Shift captures the continuation up to the nearest reset delimiter.
-			// body is: App(App(ShiftPair, handler), value)
-			if (body.type !== "App") {
-				throw new Error("Shift body must be an application");
-			}
-			const handlerApp = body.func;
-			if (handlerApp.type !== "App") {
-				throw new Error("Shift body must be nested application");
-			}
+			// // Shift captures the continuation up to the nearest reset delimiter.
+			// // body is: App(App(ShiftPair, handler), value)
+			// if (body.type !== "App") {
+			// 	throw new Error("Shift body must be an application");
+			// }
+			// const handlerApp = body.func;
+			// if (handlerApp.type !== "App") {
+			// 	throw new Error("Shift body must be nested application");
+			// }
 
-			const handlerTerm = handlerApp.arg;
-			const valueTerm = body.arg;
+			// const handlerTerm = handlerApp.arg;
+			// const valueTerm = body.arg;
 
-			// Evaluate the shifted value first
+			// // Evaluate the shifted value first
+			// globalWorkStack.push({
+			// 	type: "Cont",
+			// 	arity: 1,
+			// 	handler: ([shiftedValue]) => {
+			// 		// Search backwards through the stack for the nearest ResetDelimiter
+			// 		const capturedFrames: StackFrame[] = [];
+			// 		let delimiterIndex = -1;
+
+			// 		for (let i = globalWorkStack.length - 1; i >= 0; i--) {
+			// 			const frame = globalWorkStack[i];
+			// 			if (frame.type === "ResetDelimiter") {
+			// 				delimiterIndex = i;
+			// 				break;
+			// 			}
+			// 			capturedFrames.unshift(frame);
+			// 		}
+
+			// 		if (delimiterIndex === -1) {
+			// 			throw new Error("Shift encountered without enclosing reset delimiter");
+			// 		}
+
+			// 		// Get the delimiter info before removing
+			// 		const delimiter = globalWorkStack[delimiterIndex] as Extract<StackFrame, { type: "ResetDelimiter" }>;
+			// 		const resetHandler = delimiter.handler;
+			// 		const resetCtx = delimiter.ctx;
+
+			// 		// Remove captured frames and delimiter from the stack
+			// 		globalWorkStack.splice(delimiterIndex, globalWorkStack.length - delimiterIndex);
+
+			// 		// Create a continuation that replays the captured frames
+			// 		// This continuation is a lambda that takes a value and resumes execution
+			// 		const continuationClosure: NF.Closure = {
+			// 			type: "Closure",
+			// 			ctx: resetCtx,
+			// 			term: EB.Constructors.Var({ type: "Foreign", name: "__continuation__" }),
+			// 		};
+
+			// 		// Create the continuation value with replay capability
+			// 		const continuation: NF.Value = {
+			// 			...NF.Constructors.Lambda("x", "Explicit", continuationClosure, NF.Any),
+			// 			// Store replay logic as a property
+			// 			__capturedFrames: capturedFrames,
+			// 		} as any;
+
+			// 		// Evaluate the handler
+			// 		const handlerValue = NF.evaluate(resetCtx, resetHandler);
+
+			// 		// Apply handler(continuation, shiftedValue)
+			// 		// Handler is: \k v -> body
+			// 		const handlerWithCont = NF.apply(
+			// 			{ type: "Lambda", variable: "k", annotation: NF.Any, icit: "Explicit" },
+			// 			handlerValue.type === "Abs" ? handlerValue.closure : continuationClosure,
+			// 			continuation,
+			// 		);
+
+			// 		const result = NF.apply(
+			// 			{ type: "Lambda", variable: "v", annotation: NF.Any, icit: "Explicit" },
+			// 			handlerWithCont.type === "Abs" ? handlerWithCont.closure : continuationClosure,
+			// 			shiftedValue,
+			// 		);
+
+			// 		globalResultStack.push(result);
+			// 	},
+			// });
+			// globalWorkStack.push({ type: "Eval", ctx, term: valueTerm });
 			globalWorkStack.push({
 				type: "Cont",
 				arity: 1,
-				handler: ([shiftedValue]) => {
-					// Search backwards through the stack for the nearest ResetDelimiter
-					const capturedFrames: StackFrame[] = [];
-					let delimiterIndex = -1;
-
-					for (let i = globalWorkStack.length - 1; i >= 0; i--) {
-						const frame = globalWorkStack[i];
-						if (frame.type === "ResetDelimiter") {
-							delimiterIndex = i;
-							break;
-						}
-						capturedFrames.unshift(frame);
-					}
-
-					if (delimiterIndex === -1) {
-						throw new Error("Shift encountered without enclosing reset delimiter");
-					}
-
-					// Get the delimiter info before removing
-					const delimiter = globalWorkStack[delimiterIndex] as Extract<StackFrame, { type: "ResetDelimiter" }>;
-					const resetHandler = delimiter.handler;
-					const resetCtx = delimiter.ctx;
-
-					// Remove captured frames and delimiter from the stack
-					globalWorkStack.splice(delimiterIndex, globalWorkStack.length - delimiterIndex);
-
-					// Create a continuation that replays the captured frames
-					// This continuation is a lambda that takes a value and resumes execution
-					const continuationClosure: NF.Closure = {
-						type: "Closure",
-						ctx: resetCtx,
-						term: EB.Constructors.Var({ type: "Foreign", name: "__continuation__" }),
-					};
-
-					// Create the continuation value with replay capability
-					const continuation: NF.Value = {
-						...NF.Constructors.Lambda("x", "Explicit", continuationClosure, NF.Any),
-						// Store replay logic as a property
-						__capturedFrames: capturedFrames,
-					} as any;
-
-					// Evaluate the handler
-					const handlerValue = NF.evaluate(resetCtx, resetHandler);
-
-					// Apply handler(continuation, shiftedValue)
-					// Handler is: \k v -> body
-					const handlerWithCont = NF.apply(
-						{ type: "Lambda", variable: "k", annotation: NF.Any, icit: "Explicit" },
-						handlerValue.type === "Abs" ? handlerValue.closure : continuationClosure,
-						continuation,
-					);
-
-					const result = NF.apply(
-						{ type: "Lambda", variable: "v", annotation: NF.Any, icit: "Explicit" },
-						handlerWithCont.type === "Abs" ? handlerWithCont.closure : continuationClosure,
-						shiftedValue,
-					);
-
-					globalResultStack.push(result);
+				handler: ([h]) => {
+					const app = NF.Constructors.App(NF.Constructors.Atom("shift"), h, "Explicit");
+					globalResultStack.push(NF.Constructors.Neutral(app));
 				},
 			});
-			globalWorkStack.push({ type: "Eval", ctx, term: valueTerm });
+			globalWorkStack.push({ type: "Eval", ctx, term: body });
 		})
 		.otherwise(tm => {
 			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx));

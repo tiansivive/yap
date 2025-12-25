@@ -259,7 +259,7 @@ export const interpret = (stmt: Src.Statement, ctx: EB.Context) => {
 						console.log(EB.Display.Term(tm, next));
 						console.log("-------------------------------------\n");
 					}
-					const nf = EB.NF.V2.evaluate(next, tm);
+					const nf = EB.NF.evaluate(next, tm);
 					console.log(EB.NF.display(nf, next), "::", EB.NF.display(ty, next), "\n");
 					return next;
 				}),
