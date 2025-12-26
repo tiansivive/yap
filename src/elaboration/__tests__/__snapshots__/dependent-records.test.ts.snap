@@ -621,7 +621,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
             "closure": {
               "ctx": {
                 "env": [],
-                "handlers": [],
                 "implicits": [],
                 "metas": {},
                 "sigma": {},
@@ -941,7 +940,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                     "closure": {
                                       "ctx": {
                                         "env": [],
-                                        "handlers": [],
                                         "implicits": [],
                                         "metas": {},
                                         "sigma": {},
@@ -991,7 +989,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                 ],
                               },
                             ],
-                            "handlers": [],
                             "implicits": [],
                             "metas": {
                               "1": {
@@ -1187,7 +1184,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                             "closure": {
                                               "ctx": {
                                                 "env": [],
-                                                "handlers": [],
                                                 "implicits": [],
                                                 "metas": {},
                                                 "sigma": {},
@@ -1237,7 +1233,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                         ],
                                       },
                                     ],
-                                    "handlers": [],
                                     "implicits": [],
                                     "metas": {
                                       "1": {
@@ -1496,7 +1491,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                   "closure": {
                                     "ctx": {
                                       "env": [],
-                                      "handlers": [],
                                       "implicits": [],
                                       "metas": {},
                                       "sigma": {},
@@ -1546,7 +1540,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                               ],
                             },
                           ],
-                          "handlers": [],
                           "implicits": [],
                           "metas": {
                             "1": {
@@ -1756,7 +1749,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                       "closure": {
                                         "ctx": {
                                           "env": [],
-                                          "handlers": [],
                                           "implicits": [],
                                           "metas": {},
                                           "sigma": {},
@@ -1806,7 +1798,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                   ],
                                 },
                               ],
-                              "handlers": [],
                               "implicits": [],
                               "metas": {
                                 "1": {
@@ -2006,7 +1997,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                         "closure": {
                           "ctx": {
                             "env": [],
-                            "handlers": [],
                             "implicits": [],
                             "metas": {},
                             "sigma": {},
@@ -2056,7 +2046,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                     ],
                   },
                 ],
-                "handlers": [],
                 "implicits": [],
                 "metas": {
                   "1": {
@@ -2611,7 +2600,6 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
             "closure": {
               "ctx": {
                 "env": [],
-                "handlers": [],
                 "implicits": [],
                 "metas": {},
                 "sigma": {},
@@ -3558,7 +3546,6 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
             "closure": {
               "ctx": {
                 "env": [],
-                "handlers": [],
                 "implicits": [],
                 "metas": {},
                 "sigma": {},

@@ -7,3 +7,5 @@ export * as DSL from "./syntax/dsl";
 
 export * from "./recursion";
 export * from "./evaluation.v2";
+
+export * as Pats from "./patterns";

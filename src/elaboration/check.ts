@@ -2,6 +2,9 @@ import { match, P } from "ts-pattern";
 
 import * as F from "fp-ts/lib/function";
 import * as E from "fp-ts/lib/Either";
+import * as A from "fp-ts/lib/Array";
+import * as O from "fp-ts/lib/Option";
+import * as Rec from "fp-ts/lib/Record";
 
 import * as EB from ".";
 import * as NF from "./normalization";
@@ -16,7 +19,7 @@ import { freshMeta } from "./shared/supply";
 
 import _ from "lodash";
 import { extract } from "./inference/rows";
-import { entries, set } from "@yap/utils";
+import { entries, set, update } from "@yap/utils";
 
 import * as Err from "./shared/errors";
 import { Liquid } from "@yap/verification/modalities";
@@ -171,6 +174,82 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 						return [tm, sus] satisfies Result;
 					});
 				})
+				.with([{ type: "match" }, P._], ([m, ty]) =>
+					V2.Do(function* () {
+						const ast = yield* EB.infer.gen(m.scrutinee);
+						const [scrutinee, , sus] = ast;
+						// if (scrutinee.type !== "Var") {
+						// 	const inferred = yield* EB.infer.gen(m);
+						// 	yield* V2.tell("constraint", { type: "assign", left: inferred[1], right: ty, lvl: ctx.env.length });
+						// 	return [inferred[0], inferred[2]] satisfies Result;
+						// }
+
+						const quoted = NF.quote(ctx, ctx.env.length, ty);
+						const narrow = (nf: NF.Value, ctx: EB.Context) => {
+							const next = match(scrutinee)
+								.with({ type: "Var", variable: { type: "Bound" } }, bound =>
+									update(
+										ctx,
+										"env",
+										F.flow(
+											A.modifyAt<EB.Context["env"][number]>(bound.variable.index, set("nf", NF.Constructors.Neutral(nf))),
+											O.getOrElse(() => ctx.env),
+										),
+									),
+								)
+								.with({ type: "Var", variable: { type: "Free" } }, free =>
+									update(ctx, "imports", imports =>
+										F.pipe(
+											imports,
+											Rec.modifyAt(free.variable.name, set("0", NF.quote(ctx, ctx.env.length, nf))),
+											O.getOrElse(() => imports),
+										),
+									),
+								)
+								.with({ type: "Var", variable: { type: "Label" } }, label =>
+									update(ctx, "sigma", sigma =>
+										F.pipe(
+											sigma,
+											Rec.modifyAt(label.variable.name, set("nf", nf)),
+											O.getOrElse(() => sigma),
+										),
+									),
+								)
+								.otherwise(() => ctx);
+							return next;
+						};
+
+						const alternatives = yield* V2.pure(
+							V2.traverse(
+								m.alternatives,
+								EB.Inference.Match.elaborate(ast, (src, [pat, patty, , binders]) =>
+									V2.Do(function* () {
+										const ctx = yield* V2.ask();
+										const val = NF.Pats.evaluate(pat, ctx, binders);
+										const [tm, us] = yield* V2.local(
+											c => narrow(val, c),
+											V2.Do(function* () {
+												const ctx = yield* V2.ask();
+												const r = yield* EB.check.gen(src, NF.evaluate(ctx, quoted));
+												return r;
+											}),
+										);
+
+										//const [tm, us] = yield* EB.check.gen(src, narrow(val));
+										return [tm, ty, us];
+									}),
+								),
+							),
+						);
+
+						const tm = EB.Constructors.Match(
+							scrutinee,
+							alternatives.map(([alt]) => alt),
+						);
+
+						return [tm, sus] satisfies Result;
+					}),
+				)
 				.with(
 					[
 						{ type: "lit", value: { type: "Num" } },

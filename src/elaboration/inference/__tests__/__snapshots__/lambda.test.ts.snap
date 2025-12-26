@@ -74,7 +74,6 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
       "closure": {
         "ctx": {
           "env": [],
-          "handlers": [],
           "implicits": [],
           "metas": {},
           "sigma": {},
@@ -169,7 +168,6 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
       "closure": {
         "ctx": {
           "env": [],
-          "handlers": [],
           "implicits": [],
           "metas": {},
           "sigma": {},
@@ -276,7 +274,6 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
                   ],
                 },
               ],
-              "handlers": [],
               "implicits": [],
               "metas": {
                 "1": {
@@ -446,7 +443,6 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
       "closure": {
         "ctx": {
           "env": [],
-          "handlers": [],
           "implicits": [],
           "metas": {},
           "sigma": {},
@@ -554,7 +550,6 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
                   ],
                 },
               ],
-              "handlers": [],
               "implicits": [],
               "metas": {
                 "1": {
@@ -724,7 +719,6 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
       "closure": {
         "ctx": {
           "env": [],
-          "handlers": [],
           "implicits": [],
           "metas": {},
           "sigma": {},
@@ -820,7 +814,6 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
       "closure": {
         "ctx": {
           "env": [],
-          "handlers": [],
           "implicits": [],
           "metas": {},
           "sigma": {},

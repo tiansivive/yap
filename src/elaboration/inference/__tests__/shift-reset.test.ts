@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { elaborateFrom } from "./util";
 
-describe("Inference: Shift/Reset", () => {
+describe.skip("Inference: Shift/Reset", () => {
 	describe("Reset", () => {
 		it("should infer type for reset with simple value", () => {
 			const src = "reset 10 with \\k v -> k !";

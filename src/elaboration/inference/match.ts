@@ -70,7 +70,7 @@ infer.gen = F.flow(infer, V2.pure);
  */
 export type AltNode = [EB.Alternative, NF.Value, Q.Usages];
 export const elaborate =
-	([scrutinee, scuty, sus]: EB.AST, action: (alt: Src.Term) => V2.Elaboration<EB.AST>) =>
+	([scrutinee, scuty, sus]: EB.AST, action: (alt: Src.Term, pat: EB.Patterns.Result) => V2.Elaboration<EB.AST>) =>
 	(alt: Src.Alternative): V2.Elaboration<AltNode> =>
 		V2.track(
 			{ tag: "alt", alt, metadata: { action: "alternative", motive: "elaborating pattern", type: scuty } },
@@ -82,13 +82,14 @@ export const elaborate =
 					<K extends keyof Patterns.Inference<Src.Pattern, "type">>(key: K) =>
 					(alt: Src.Alternative & { pattern: Extract<Src.Pattern, { type: K }> }) =>
 						V2.Do(function* () {
-							const [pat, patty, patus, binders] = yield* Patterns.infer[key].gen(alt.pattern);
+							const inferred = yield* Patterns.infer[key].gen(alt.pattern);
+							const [pat, patty, patus, binders] = inferred;
 							yield* V2.tell("constraint", { type: "assign", left: patty, right: scuty });
 
 							const node = yield* V2.local(
 								extend(binders),
 								V2.Do(function* () {
-									const [branch, branty, brus]: EB.AST = yield action(alt.term);
+									const [branch, branty, brus]: EB.AST = yield action(alt.term, inferred);
 									return [EB.Constructors.Alternative(pat, branch, binders), branty, brus] satisfies AltNode;
 								}),
 							);

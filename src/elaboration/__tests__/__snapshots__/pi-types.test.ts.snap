@@ -1,0 +1,78 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`dependent types elaboration > dependent match with nested dependent types 1`] = `
+{
+  "constraints": [
+    "Type ~~ Type",
+    "Num ~~ Num",
+    "Type ~~ Type",
+    "Num ~~ Num",
+    "Type ~~ Type",
+    "?2 ~~ Num",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Num ~~ Num",
+    "Num ~~ Num",
+    "Num ~~ Num",
+    "String ~~ String",
+    "?4 ~~ Num",
+    "Bool ~~ Bool",
+  ],
+  "solution": "?2 |=> Num
+?4 |=> Num",
+  "state": {
+    "nondeterminism": {},
+    "skolems": {},
+  },
+  "term": "let f
+	: Π(x: Num) -> (closure: match x
+| 0 -> Num
+| 1 -> String
+| _ -> Bool -| Γ: x)
+	= λx -> match x
+| 0 -> 10
+| 1 -> "10"
+| _ -> true",
+  "type": "Π(x: Num) -> (closure: match x
+| 0 -> Num
+| 1 -> String
+| _ -> Bool -| Γ: x)",
+}
+`;
+
+exports[`dependent types elaboration > simple dependent match expression type 1`] = `
+{
+  "constraints": [
+    "Type ~~ Type",
+    "Num ~~ Num",
+    "Type ~~ Type",
+    "?2 ~~ Num",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Num ~~ Num",
+    "Num ~~ (λ$scrutinee -> (closure: match $scrutinee
+| 0 -> Num
+| _ -> String -| Γ: $scrutinee; x; f)) 0",
+    "?4 ~~ Num",
+    "String ~~ (λ$scrutinee -> (closure: match $scrutinee
+| 0 -> Num
+| _ -> String -| Γ: $scrutinee; x; f)) wildcard",
+  ],
+  "solution": "?2 |=> Num
+?4 |=> Num",
+  "state": {
+    "nondeterminism": {},
+    "skolems": {},
+  },
+  "term": "let f
+	: Π(x: Num) -> (closure: match x
+| 0 -> Num
+| _ -> String -| Γ: x)
+	= λx -> match x
+| 0 -> 10
+| _ -> "10"",
+  "type": "Π(x: Num) -> (closure: match x
+| 0 -> Num
+| _ -> String -| Γ: x)",
+}
+`;

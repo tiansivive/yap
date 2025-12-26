@@ -38,7 +38,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -56,7 +56,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -74,7 +74,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -93,7 +93,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -111,7 +111,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -131,7 +131,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -149,7 +149,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -167,7 +167,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -185,7 +185,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -203,7 +203,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -221,7 +221,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -238,7 +238,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -256,7 +256,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -273,7 +273,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -291,7 +291,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -309,7 +309,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -326,7 +326,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -344,7 +344,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -364,7 +364,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -388,7 +388,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -419,7 +419,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -449,7 +449,7 @@ describe("VerificationService", () => {
 
 			const [tm2, ty2, ctx2] = elaborate(src2);
 
-			const { result: result2 } = V2.Do(() => V2.local(_ => ctx2, Verification.check(tm2, ty2)))(ctx2);
+			const [{ result: result2 }] = V2.Do(() => V2.local(_ => ctx2, Verification.check(tm2, ty2)))(ctx2);
 			if (result2._tag === "Left") {
 				throw new Error(EB.V2.display(result2.left));
 			}
@@ -479,7 +479,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}
@@ -510,7 +510,7 @@ describe("VerificationService", () => {
 
 			const [tm2, ty2, ctx2] = elaborate(src2);
 
-			const { result: result2 } = V2.Do(() => V2.local(_ => ctx2, Verification.check(tm2, ty2)))(ctx2);
+			const [{ result: result2 }] = V2.Do(() => V2.local(_ => ctx2, Verification.check(tm2, ty2)))(ctx2);
 			if (result2._tag === "Left") {
 				throw new Error(EB.V2.display(result2.left));
 			}
@@ -537,7 +537,7 @@ describe("VerificationService", () => {
 			const [tm, ty, ctx] = elaborate(src);
 
 			const Verification = VerificationService(Z3);
-			const { result } = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
+			const [{ result }] = V2.Do(() => V2.local(_ => ctx, Verification.check(tm, ty)))(ctx);
 			if (result._tag === "Left") {
 				throw new Error(EB.V2.display(result.left));
 			}

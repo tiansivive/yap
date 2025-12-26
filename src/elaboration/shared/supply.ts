@@ -20,14 +20,14 @@ export const freshMeta = function* (lvl: number, ann: EB.NF.Value) {
 	return m;
 };
 
-export const freshSkolem = function* (ann: EB.NF.Value) {
-	counts.skolem++;
+// export const freshSkolem = function* (ann: EB.NF.Value) {
+// 	counts.skolem++;
 
-	const s = { type: "Skolem", val: counts.skolem, name: `s${counts.skolem}` } as const;
-	yield* V2.tell("skolem", { skolem: s, ann });
+// 	const s = { type: "Skolem", val: counts.skolem, name: `s${counts.skolem}` } as const;
+// 	yield* V2.tell("skolem", { skolem: s, ann });
 
-	return s;
-};
+// 	return s;
+// };
 
 export const nextCount = () => {
 	counts.var++;

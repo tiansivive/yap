@@ -149,39 +149,6 @@ exports[`Shift-reset > only one shift within reset > invoking simple continuatio
 }
 `;
 
-exports[`Shift-reset > only one shift within reset > multiple k applications 1`] = `
-{
-  "constraints": [
-    "Num ~~ ?4",
-    "?2 ~~ Num",
-    "Num ~~ ?4",
-    "?2 ~~ Num",
-    "Num ~~ ?3",
-    "?4 ~~ ?2",
-    "?3 ~~ ?1",
-  ],
-  "solution": "?1 |=> Num
-?2 |=> Num
-?3 |=> Num
-?4 |=> Num",
-  "state": {
-    "nondeterminism": {
-      "5": [
-        "2",
-        "1",
-      ],
-    },
-    "skolems": {
-      "5": "shift (λ$k -> + ($k 1) ($k 2))",
-    },
-  },
-  "term": "let test
-	: Num
-	= reset |?5|",
-  "type": "Num",
-}
-`;
-
 exports[`Shift-reset > only one shift within reset > multiple resumptions 1`] = `
 {
   "constraints": [

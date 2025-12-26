@@ -10,7 +10,7 @@ import * as Lib from "@yap/shared/lib/primitives";
 
 const runUnify = (left: NF.Value, right: NF.Value) => {
 	const ctx = Lib.defaultContext();
-	const result = EB.V2.Do(function* () {
+	const [result] = EB.V2.Do(function* () {
 		const sub = yield* U.unify.gen(left, right, ctx.env.length, Sub.empty);
 		return sub;
 	})(ctx);

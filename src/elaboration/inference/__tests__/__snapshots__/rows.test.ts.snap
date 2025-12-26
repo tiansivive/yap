@@ -169,7 +169,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
       "closure": {
         "ctx": {
           "env": [],
-          "handlers": [],
           "implicits": [],
           "metas": {},
           "sigma": {},
@@ -412,7 +411,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       "closure": {
         "ctx": {
           "env": [],
-          "handlers": [],
           "implicits": [],
           "metas": {},
           "sigma": {},

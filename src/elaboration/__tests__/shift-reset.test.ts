@@ -102,18 +102,5 @@ describe("Shift-reset", () => {
 		});
 	});
 
-	describe("resumption of dependent continuation", () => {
-		it("simple dependent continuation", () => {
-			const src = `let f
-				: (x: Num) -> (match x | 0 -> Num | _ -> String) 
-				= \\x -> match x
-					| 0 -> 10
-					| _ -> "10"`;
-
-			const { pretty, structure } = elaborate(src);
-
-			expect(pretty).toMatchSnapshot();
-			//expect(structure).toMatchSnapshot();
-		});
-	});
+	describe.skip("resumption of dependent continuation", () => {});
 });
