@@ -96,4 +96,34 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 		expect(nf.type).toBe("Lit");
 		expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
 	});
+
+	describe("delimited continuations (shift/reset)", () => {
+		it("simple shift/reset", () => {
+			const src = `{
+				let test = reset (shift (resume 10));
+				return test;
+			}`;
+
+			const { structure, state } = elaborateFrom(src);
+			const ctx = ctxFor(mkCtx(), structure.metas);
+
+			const nf = Eval.evaluate(ctx, structure.term, undefined, state.skolems);
+			expect(nf.type).toBe("Lit");
+			expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
+		});
+
+		it("resumption with computation", () => {
+			const src = `{
+				let test = reset (1 + (shift ((resume 10) + (resume 20))));
+				return test;
+			}`;
+
+			const { structure, state } = elaborateFrom(src);
+			const ctx = ctxFor(mkCtx(), structure.metas);
+
+			const nf = Eval.evaluate(ctx, structure.term, undefined, state.skolems);
+			expect(nf.type).toBe("Lit");
+			expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
+		});
+	});
 });

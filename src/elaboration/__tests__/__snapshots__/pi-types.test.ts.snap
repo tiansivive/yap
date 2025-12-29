@@ -50,13 +50,9 @@ exports[`dependent types elaboration > simple dependent match expression type 1`
     "Type ~~ Type",
     "Type ~~ Type",
     "Num ~~ Num",
-    "Num ~~ (λ$scrutinee -> (closure: match $scrutinee
-| 0 -> Num
-| _ -> String -| Γ: $scrutinee; x; f)) 0",
+    "Num ~~ Num",
     "?4 ~~ Num",
-    "String ~~ (λ$scrutinee -> (closure: match $scrutinee
-| 0 -> Num
-| _ -> String -| Γ: $scrutinee; x; f)) wildcard",
+    "String ~~ String",
   ],
   "solution": "?2 |=> Num
 ?4 |=> Num",

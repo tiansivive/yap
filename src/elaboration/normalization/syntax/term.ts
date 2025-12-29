@@ -54,7 +54,8 @@ export type Variable =
 
 export type Closure =
 	| { type: "Closure"; ctx: EB.Context; term: EB.Term }
-	| { type: "PrimOp"; ctx: EB.Context; term: EB.Term; arity: number; compute: (...args: Value[]) => Value };
+	| { type: "PrimOp"; ctx: EB.Context; term: EB.Term; arity: number; compute: (...args: Value[]) => Value }
+	| { type: "Continuation"; ctx: EB.Context; term: EB.Term; frames: EB.NF.StackFrame[]; results: Value[] };
 
 export type Modalities = Modal.Annotations<Value>;
 

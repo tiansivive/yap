@@ -6,13 +6,16 @@ import * as NF from "@yap/elaboration/normalization";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as F from "fp-ts/lib/function";
+import * as R from "fp-ts/lib/Record";
 
 import { match } from "ts-pattern";
 import { freshMeta } from "@yap/elaboration/shared/supply";
 
-import * as Modal from "@yap/verification/modalities";
+import * as Sub from "@yap/elaboration/unification/substitution";
 import { compose } from "@yap/elaboration/unification/substitution";
 import { set, update } from "@yap/utils";
+import { replay } from "../solver/nondeterminism";
+import { unify, display } from "../unification";
 
 export type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
 export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
@@ -74,30 +77,53 @@ export const letdec = function* (
 	dec: Extract<EB.Statement, { type: "Let" }>,
 ): Generator<V2.Elaboration<any>, [Extract<EB.Statement, { type: "Let" }>, EB.Context], any> {
 	const ctx = yield* V2.ask();
-
 	const { constraints, metas } = yield* V2.listen();
 	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
-	const { zonker, resolutions } = yield* V2.local(_ => withMetas, EB.solve(constraints));
-	const zonked = update(withMetas, "zonker", z => compose(zonker, z));
 
-	const [generalized, subst] = NF.generalize(
-		NF.force(zonked, dec.annotation),
-		dec.value,
-		EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation),
-		resolutions,
-	);
-	const next = update(zonked, "zonker", z => ({ ...z, ...subst }));
+	const _letdec = (z: Record<number, NF.Value>) =>
+		V2.Do(function* (): Generator<V2.Elaboration<any>, [NF.Value, EB.Context, EB.Resolutions], any> {
+			const nondet = update(withMetas, "zonker", old => ({ ...old, ...z }));
 
-	const instantiated = NF.instantiate(generalized, EB.bind(next, { type: "Let", variable: dec.variable }, generalized));
+			const { zonker, resolutions } = yield* V2.local(_ => nondet, EB.solve(constraints));
+			const zonked = update(nondet, "zonker", z => compose(zonker, z));
+
+			const [generalized, subst] = NF.generalize(
+				NF.force(zonked, dec.annotation),
+				dec.value,
+				EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation),
+				resolutions,
+			);
+			const next = update(zonked, "zonker", z => compose(subst, z));
+			const instantiated = NF.instantiate(generalized, EB.bind(next, { type: "Let", variable: dec.variable }, generalized));
+			return [instantiated, next, resolutions];
+		});
 
 	// Extend again now that we have the generalized type
 	// Use the zonked context to avoid issues with the already generalized metas
+
+	const st = yield* V2.getSt();
+	// if (R.isEmpty(st.nondeterminism.solution)) {
+	// 	const [instantiated, next, resolutions] = yield _letdec({});
+	// 	const xtended = EB.bind(next, { type: "Let", variable: dec.variable }, instantiated);
+	// 	const wrapped = F.pipe(
+	// 		EB.Icit.wrapLambda(dec.value, instantiated, xtended),
+	// 		tm => EB.Icit.instantiate(tm, xtended, resolutions),
+	// 	);
+
+	// 	const statement = EB.Constructors.Stmt.Let(dec.variable, wrapped, instantiated);
+	// 	return [statement, next] as [Extract<EB.Statement, { type: "Let" }>, EB.Context];
+	// }
+
+	const [[instantiated, next, resolutions], ...rest] = R.isEmpty(st.nondeterminism.solution) ? [yield _letdec({})] : yield* replay(_letdec);
+
+	let final = next;
+	for (const [type] of rest) {
+		const solution = yield* unify.gen(instantiated, type, next.env.length, Sub.empty);
+		final = update(final, "zonker", z => compose(solution, z));
+	}
+
 	const xtended = EB.bind(next, { type: "Let", variable: dec.variable }, instantiated);
-	const wrapped = F.pipe(
-		EB.Icit.wrapLambda(dec.value, instantiated, xtended),
-		tm => EB.Icit.instantiate(tm, xtended, resolutions),
-		// inst => EB.Icit.generalize(inst, xtended),
-	);
+	const wrapped = F.pipe(EB.Icit.wrapLambda(dec.value, instantiated, xtended), tm => EB.Icit.instantiate(tm, xtended, resolutions));
 
 	const statement = EB.Constructors.Stmt.Let(dec.variable, wrapped, instantiated);
 	return [statement, next] as [Extract<EB.Statement, { type: "Let" }>, EB.Context];

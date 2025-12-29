@@ -192,7 +192,7 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 										ctx,
 										"env",
 										F.flow(
-											A.modifyAt<EB.Context["env"][number]>(bound.variable.index, set("nf", NF.Constructors.Neutral(nf))),
+											A.modifyAt<EB.Context["env"][number]>(bound.variable.index, set("nf", nf)),
 											O.getOrElse(() => ctx.env),
 										),
 									),

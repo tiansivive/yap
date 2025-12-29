@@ -56,7 +56,7 @@ export const elaborate = (src: string) => {
 	const { term, type, solution, resolutions } = result.right;
 
 	const pretty = {
-		term: EB.Display.Statement(term, { zonker: solution, metas, env: [] }),
+		term: EB.Display.Statement(term, { zonker: solution, metas, env: [], skolems: state.skolems }),
 		type: NF.display(type, { zonker: solution, metas, env: [] }),
 		solution: Sub.display(solution, metas),
 		constraints: constraints.map(c => EB.Display.Constraint(c, { zonker: Sub.empty, metas, env: [] })),

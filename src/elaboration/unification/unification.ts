@@ -277,8 +277,14 @@ export const bind = (ctx: EB.Context, v: Meta, ty: NF.Value): Subst => {
 		return Sub.empty;
 	}
 
-	if (!occursCheck(ctx, v, ty)) {
-		return Sub.of(v.val, ty);
+	const canonical = match(ty)
+		.with(NF.Patterns.StuckMatch, ({ func, arg }) => {
+			return NF.reduce(func, NF.force(ctx, arg), "Explicit");
+		})
+		.otherwise(() => ty);
+
+	if (!occursCheck(ctx, v, canonical)) {
+		return Sub.of(v.val, canonical);
 	}
 
 	// solution is a mu type

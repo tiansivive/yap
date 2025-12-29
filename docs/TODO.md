@@ -196,6 +196,18 @@
   ```
 
   - This currently emits the (failing) constraint: `Schema [ 0: ?1, 1: ?2 | ?3 ] ~~ (Vec) ($add: (L1) (1)) L2
+  - UPDATE:
+    - Some initial work on narrowing types has fixed a subset of these issues
+    - In short: We replace the stuck scrutinee with the literal value of the pattern and elaborate each branch under the narrowed context
+    - We quote the type being checked and re-evaluate under this narrowed context
+    - Result: successfully typechecks terms where the type being checked is the stuck type
+      ```
+      let choice: (x:Num) -> (match x | 0 -> Num | _ -> String)
+                = \x -> match x | 0 -> 10 | _ -> "10"
+      ```
+    - The `process` above doesnt typecheck because the stuck type is not the codomain, it's one of the args
+    - Need to find a way to reevaluate stuck terms
+    - Idea: Andras Kovacs DOE? other examples in elab-zoo?
 
   - **Possible implementation solution**
     - Add a different type of constraint: _Implication_. This will carry assumptions one can use to lookup values: `(b = true) ==> StuckMatch(L1) ~~ String`

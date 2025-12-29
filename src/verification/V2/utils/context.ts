@@ -94,6 +94,9 @@ export const extendContext = (context: EB.Context, binder: EB.Binder, value: NF.
 };
 
 export const applyClosure = (binder: EB.Binder, closure: NF.Closure, value: NF.Value, ann: NF.Value): NF.Value => {
+	if (closure.type === "Continuation") {
+		throw new Error("Cannot applyContinuation with applyClosure");
+	}
 	const extended = extendContext(closure.ctx, binder, value, ann);
 	if (closure.type === "Closure") {
 		return NF.evaluate(extended, closure.term);

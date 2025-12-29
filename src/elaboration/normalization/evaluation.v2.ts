@@ -4,6 +4,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as EB from "@yap/elaboration";
 import * as NF from ".";
+import * as V2 from "@yap/elaboration/shared/monad.v2";
 import _ from "lodash";
 
 import * as E from "fp-ts/lib/Either";
@@ -19,6 +20,8 @@ import { Implicitness } from "@yap/shared/implicitness";
 import { update } from "@yap/utils";
 import assert from "assert";
 
+import * as Lit from "@yap/shared/literals";
+
 /**
  * Stack-based evaluation to prevent stack overflow on deeply recursive Yap programs.
  *
@@ -31,16 +34,16 @@ import assert from "assert";
  * The stacks grow on the heap, not the JS call stack.
  */
 
-type StackFrame =
+export type StackFrame =
 	| { type: "Eval"; ctx: EB.Context; term: EB.Term }
 	| { type: "Cont"; arity: number; handler: (results: NF.Value[]) => void }
-	| { type: "ResetDelimiter"; handler: EB.Term; ctx: EB.Context };
+	| { type: "Delimiter"; ctx: EB.Context; resultSize: number };
 
 // GLOBAL stacks - reused across all evaluate calls
 const globalWorkStack: StackFrame[] = [];
 const globalResultStack: NF.Value[] = [];
 
-export function evaluate(ctx: EB.Context, term: EB.Term, maxSteps = 10000000): NF.Value {
+export function evaluate(ctx: EB.Context, term: EB.Term, maxSteps = 10000000, skolems: V2.MutState["skolems"] = {}): NF.Value {
 	// Track where this call's work starts in the global stack
 	const initialWorkSize = globalWorkStack.length;
 	const initialResultSize = globalResultStack.length;
@@ -66,13 +69,13 @@ export function evaluate(ctx: EB.Context, term: EB.Term, maxSteps = 10000000): N
 				throw new Error(`Continuation expected ${frame.arity} results but got ${args.length}`);
 			}
 			frame.handler(args);
-		} else if (frame.type === "ResetDelimiter") {
+		} else if (frame.type === "Delimiter") {
 			// Reset delimiter reached - the result is already on the stack from the enclosed term
 			// Just pass through - the delimiter stays processed
 			continue;
 		} else {
 			// Evaluate term
-			evaluateTerm(frame.ctx, frame.term);
+			evaluateTerm(frame.ctx, frame.term, skolems);
 		}
 	}
 
@@ -85,7 +88,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term, maxSteps = 10000000): N
 	return globalResultStack.pop()!;
 }
 
-function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
+function evaluateTerm(ctx: EB.Context, term: EB.Term, skolems: V2.MutState["skolems"]): void {
 	match(term)
 		.with({ type: "Lit" }, ({ value }) => {
 			globalResultStack.push(NF.Constructors.Lit(value));
@@ -140,6 +143,10 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 			globalWorkStack.push({ type: "Eval", ctx: xtended, term: val[0] });
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
+			if (skolems[variable.val]) {
+				globalWorkStack.push({ type: "Eval", ctx, term: skolems[variable.val] });
+				return;
+			}
 			if (!ctx.zonker[variable.val]) {
 				const v = NF.Constructors.Var(variable);
 				globalResultStack.push(NF.Constructors.Neutral(v));
@@ -357,106 +364,61 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 		})
 		.with({ type: "Reset" }, ({ term }) => {
 			// Reset establishes a delimiter for continuation capture.
-			// Get the handler from context (was pushed during elaboration)
-			// const handler = ctx.handlers[0];
-			// if (!handler) {
-			// 	throw new Error("Reset evaluated without handler in context");
-			// }
-
-			// // Push delimiter marker, then evaluate the enclosed term
-			// // The delimiter marks the boundary for shift's continuation capture
-			// globalWorkStack.push({ type: "ResetDelimiter", handler, ctx });
-			// globalWorkStack.push({ type: "Eval", ctx, term });
-			throw new Error("Reset evaluation not implemented yet");
+			// We annotate the delimiter with the current result stack size so that
+			// shift can restore it when capturing.
+			globalWorkStack.push({ type: "Delimiter", ctx, resultSize: globalResultStack.length });
+			globalWorkStack.push({ type: "Eval", ctx, term });
 		})
 		.with({ type: "Shift" }, ({ body }) => {
-			// // Shift captures the continuation up to the nearest reset delimiter.
-			// // body is: App(App(ShiftPair, handler), value)
-			// if (body.type !== "App") {
-			// 	throw new Error("Shift body must be an application");
-			// }
-			// const handlerApp = body.func;
-			// if (handlerApp.type !== "App") {
-			// 	throw new Error("Shift body must be nested application");
-			// }
-
-			// const handlerTerm = handlerApp.arg;
-			// const valueTerm = body.arg;
-
-			// // Evaluate the shifted value first
-			// globalWorkStack.push({
-			// 	type: "Cont",
-			// 	arity: 1,
-			// 	handler: ([shiftedValue]) => {
-			// 		// Search backwards through the stack for the nearest ResetDelimiter
-			// 		const capturedFrames: StackFrame[] = [];
-			// 		let delimiterIndex = -1;
-
-			// 		for (let i = globalWorkStack.length - 1; i >= 0; i--) {
-			// 			const frame = globalWorkStack[i];
-			// 			if (frame.type === "ResetDelimiter") {
-			// 				delimiterIndex = i;
-			// 				break;
-			// 			}
-			// 			capturedFrames.unshift(frame);
-			// 		}
-
-			// 		if (delimiterIndex === -1) {
-			// 			throw new Error("Shift encountered without enclosing reset delimiter");
-			// 		}
-
-			// 		// Get the delimiter info before removing
-			// 		const delimiter = globalWorkStack[delimiterIndex] as Extract<StackFrame, { type: "ResetDelimiter" }>;
-			// 		const resetHandler = delimiter.handler;
-			// 		const resetCtx = delimiter.ctx;
-
-			// 		// Remove captured frames and delimiter from the stack
-			// 		globalWorkStack.splice(delimiterIndex, globalWorkStack.length - delimiterIndex);
-
-			// 		// Create a continuation that replays the captured frames
-			// 		// This continuation is a lambda that takes a value and resumes execution
-			// 		const continuationClosure: NF.Closure = {
-			// 			type: "Closure",
-			// 			ctx: resetCtx,
-			// 			term: EB.Constructors.Var({ type: "Foreign", name: "__continuation__" }),
-			// 		};
-
-			// 		// Create the continuation value with replay capability
-			// 		const continuation: NF.Value = {
-			// 			...NF.Constructors.Lambda("x", "Explicit", continuationClosure, NF.Any),
-			// 			// Store replay logic as a property
-			// 			__capturedFrames: capturedFrames,
-			// 		} as any;
-
-			// 		// Evaluate the handler
-			// 		const handlerValue = NF.evaluate(resetCtx, resetHandler);
-
-			// 		// Apply handler(continuation, shiftedValue)
-			// 		// Handler is: \k v -> body
-			// 		const handlerWithCont = NF.apply(
-			// 			{ type: "Lambda", variable: "k", annotation: NF.Any, icit: "Explicit" },
-			// 			handlerValue.type === "Abs" ? handlerValue.closure : continuationClosure,
-			// 			continuation,
-			// 		);
-
-			// 		const result = NF.apply(
-			// 			{ type: "Lambda", variable: "v", annotation: NF.Any, icit: "Explicit" },
-			// 			handlerWithCont.type === "Abs" ? handlerWithCont.closure : continuationClosure,
-			// 			shiftedValue,
-			// 		);
-
-			// 		globalResultStack.push(result);
-			// 	},
-			// });
-			// globalWorkStack.push({ type: "Eval", ctx, term: valueTerm });
+			// At this point the typing phase has already desugared
+			//   shift e
+			// into
+			//   shift (\k -> e[k])
+			// where each `resume v` in `e` became `k v`.
+			//
+			// Here we implement the dynamic semantics: capture the continuation
+			// up to the nearest Reset-delimiter, package it as a function value,
+			// and apply the body-lambda to that continuation.
 			globalWorkStack.push({
 				type: "Cont",
 				arity: 1,
 				handler: ([h]) => {
-					const app = NF.Constructors.App(NF.Constructors.Atom("shift"), h, "Explicit");
-					globalResultStack.push(NF.Constructors.Neutral(app));
+					// Find the nearest reset delimiter.
+					const delimiterIndex = globalWorkStack.findLastIndex(frame => frame.type === "Delimiter");
+					if (delimiterIndex < 0) {
+						throw new Error("Shift without enclosing reset");
+					}
+
+					// Extract delimiter, captured frames, and the result suffix produced
+					// inside this reset up to the shift point.
+					const delimiter = globalWorkStack[delimiterIndex] as Extract<StackFrame, { type: "Delimiter" }>;
+					const capturedFrames: StackFrame[] = globalWorkStack.slice(delimiterIndex + 1);
+					const capturedResults = globalResultStack.slice(delimiter.resultSize);
+
+					// Restore work/result stacks to the state at reset, so the current
+					// evaluation no longer sees the aborted inner continuation.
+					globalWorkStack.splice(delimiterIndex); // drop delimiter + frames
+					globalResultStack.splice(delimiter.resultSize);
+
+					// Build a continuation closure that, when applied to a value v,
+					// will replay the captured continuation as if it had been
+					// resumed at the shift point.
+					const continuation: NF.Closure = {
+						type: "Continuation",
+						frames: capturedFrames,
+						results: capturedResults,
+						ctx: delimiter.ctx,
+						term: EB.Constructors.Lit(Lit.unit()), // dummy term
+					};
+
+					const kVal = NF.Constructors.Lambda("kArg", "Explicit", continuation, NF.Any);
+
+					// Now apply the desugared handler `h : (A -> R) -> R` to the
+					// continuation value `kVal`.
+					reduceAndPushStack(h, kVal, "Explicit");
 				},
 			});
+			// Evaluate the body-lambda; the above continuation receives it.
 			globalWorkStack.push({ type: "Eval", ctx, term: body });
 		})
 		.otherwise(tm => {
@@ -756,22 +718,30 @@ function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): v
 		})
 		.with({ type: "Abs" }, ({ closure, binder }) => {
 			// Inline apply semantics: extend context and evaluate body
-			const extended = (() => {
+			const extended = (cls: Exclude<NF.Closure, { type: "Continuation" }>) => {
 				if (binder.type !== "Sigma") {
-					return EB.extend(closure.ctx, binder, nfa);
+					return EB.extend(cls.ctx, binder, nfa);
 				}
 				assert(nfa.type === "Row", "Sigma binder should be applied to a Row");
-				return EB.extendSigmaEnv(closure.ctx, nfa.row);
-			})();
-
-			if (closure.type === "Closure") {
-				// Push evaluation of the body
-				globalWorkStack.push({ type: "Eval", ctx: extended, term: closure.term });
-			} else {
-				// ForeignClosure: compute with environment arguments
-				const args = extended.env.slice(0, closure.arity).map(({ nf }) => nf);
-				globalResultStack.push(closure.compute(...args));
-			}
+				return EB.extendSigmaEnv(cls.ctx, nfa.row);
+			};
+			match(closure)
+				.with({ type: "Closure" }, cls => globalWorkStack.push({ type: "Eval", ctx: extended(cls), term: cls.term }))
+				.with({ type: "PrimOp" }, primop => {
+					const args = extended(primop)
+						.env.slice(0, primop.arity)
+						.map(({ nf }) => nf);
+					globalResultStack.push(primop.compute(...args));
+				})
+				.with({ type: "Continuation" }, cont => {
+					// Restore the captured result suffix and then push the new argument.
+					globalResultStack.push(...cont.results);
+					globalResultStack.push(nfa);
+					// Replay captured frames as the rest of the delimited continuation.
+					globalWorkStack.push(...cont.frames);
+					return;
+				})
+				.exhaustive();
 		})
 		.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => {
 			globalResultStack.push(NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit));
@@ -897,22 +867,18 @@ export const matching = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]):
 
 export function apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): NF.Value {
 	// Check if this is a captured continuation being applied
-	if ((closure as any).__capturedFrames) {
-		// This is a continuation - replay the captured frames
-		const capturedFrames = (closure as any).__capturedFrames as StackFrame[];
-
-		// Push the value that the continuation expects
+	if (closure.type === "Continuation") {
+		// This is a continuation - replay the captured frames in a local loop.
+		// Restore captured result suffix and then push the new argument.
+		const initialWorkSize = globalWorkStack.length;
+		const initialResultSize = globalResultStack.length;
+		globalResultStack.push(...closure.results);
 		globalResultStack.push(value);
 
 		// Replay all captured frames
-		for (const frame of capturedFrames) {
+		for (const frame of closure.frames) {
 			globalWorkStack.push(frame);
 		}
-
-		// The result will be computed by the replayed frames
-		// We need to run the evaluation loop
-		const initialWorkSize = globalWorkStack.length - capturedFrames.length;
-		const initialResultSize = globalResultStack.length - 1;
 
 		let steps = 0;
 		const maxSteps = 10000000;
@@ -931,10 +897,10 @@ export function apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): 
 					throw new Error(`Continuation expected ${frame.arity} results but got ${args.length}`);
 				}
 				frame.handler(args);
-			} else if (frame.type === "ResetDelimiter") {
+			} else if (frame.type === "Delimiter") {
 				continue;
 			} else {
-				evaluateTerm(frame.ctx, frame.term);
+				evaluateTerm(frame.ctx, frame.term, {});
 			}
 		}
 

@@ -102,5 +102,20 @@ describe("Shift-reset", () => {
 		});
 	});
 
-	describe.skip("resumption of dependent continuation", () => {});
+	describe("resumption of dependent continuation", () => {
+		it("resuming continuation with dependent type", () => {
+			const src = `let test = {
+
+				let f: (x: Num) -> (match x | 0 -> Num | _ -> String)
+					 = \\x -> match x | 0 -> 0 | _ -> "hello"; 
+				
+				let foo = reset (f (shift (resume 10)));
+			}`;
+
+			const { pretty, structure } = elaborate(src);
+
+			expect(pretty).toMatchSnapshot();
+			//expect(structure).toMatchSnapshot();
+		});
+	});
 });

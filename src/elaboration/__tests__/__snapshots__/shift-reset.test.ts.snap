@@ -33,7 +33,7 @@ exports[`Shift-reset > multiple shifts within reset > invoking continuations 1`]
   },
   "term": "let test
 	: Num
-	= reset |+ ?5 ?7|",
+	= reset |+ shift (λ$k -> $k 10) shift (λ$k -> $k 20)|",
   "type": "Num",
 }
 `;
@@ -84,7 +84,7 @@ exports[`Shift-reset > multiple shifts within reset > multiple shifts and multip
   },
   "term": "let test
 	: Num
-	= reset |+ (+ (+ 4 ?5) ?7) ?9|",
+	= reset |+ (+ (+ 4 shift (λ$k -> $k 3)) shift (λ$k -> $k 2)) shift (λ$k -> $k ($k 1))|",
   "type": "Num",
 }
 `;
@@ -113,7 +113,7 @@ exports[`Shift-reset > only one shift within reset > invoking id continuation 1`
   },
   "term": "let test
 	: String
-	= reset |?5|",
+	= reset |shift (λ$k -> $k "hello")|",
   "type": "String",
 }
 `;
@@ -144,7 +144,7 @@ exports[`Shift-reset > only one shift within reset > invoking simple continuatio
   },
   "term": "let test
 	: Num
-	= reset |+ 1 ?5|",
+	= reset |+ 1 shift (λ$k -> $k 1)|",
   "type": "Num",
 }
 `;
@@ -177,7 +177,7 @@ exports[`Shift-reset > only one shift within reset > multiple resumptions 1`] = 
   },
   "term": "let test
 	: Num
-	= reset |?5|",
+	= reset |shift (λ$k -> + ($k 1) ($k 2))|",
   "type": "Num",
 }
 `;
@@ -208,7 +208,7 @@ exports[`Shift-reset > only one shift within reset > nested resumption 1`] = `
   },
   "term": "let test
 	: Num
-	= reset |?5|",
+	= reset |shift (λ$k -> $k ($k 10))|",
   "type": "Num",
 }
 `;
@@ -241,7 +241,7 @@ exports[`Shift-reset > only one shift within reset > nested resumption with non-
   },
   "term": "let test
 	: Num
-	= reset |+ 1 ?5|",
+	= reset |+ 1 shift (λ$k -> $k ($k 10))|",
   "type": "Num",
 }
 `;
@@ -264,7 +264,7 @@ exports[`Shift-reset > only one shift within reset > not invoking continuation 1
   },
   "term": "let test
 	: String
-	= reset |?5|",
+	= reset |shift (λ$k -> "world")|",
   "type": "String",
 }
 `;
@@ -290,7 +290,7 @@ exports[`Shift-reset > only one shift within reset > overriding continuation ret
   },
   "term": "let test
 	: String
-	= reset |+ 1 ?5|",
+	= reset |+ 1 shift (λ$k -> "hello")|",
   "type": "String",
 }
 `;
@@ -313,5 +313,69 @@ exports[`Shift-reset > resets without shifts > literal value 1`] = `
 	: Num
 	= reset |10|",
   "type": "Num",
+}
+`;
+
+exports[`Shift-reset > resumption of dependent continuation > resuming continuation with dependent type 1`] = `
+{
+  "constraints": [
+    "Type ~~ Type",
+    "Num ~~ Num",
+    "Type ~~ Type",
+    "?3 ~~ Num",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Num ~~ Num",
+    "Num ~~ Num",
+    "?5 ~~ Num",
+    "String ~~ String",
+    "Num ~~ ?9",
+    "?7 ~~ ?8",
+    "?9 ~~ Num",
+    "(λ$scrutinee -> (closure: match $scrutinee
+| 0 -> Num
+| _ -> String -| Γ: $scrutinee; x; test)) ?10 ~~ ?7",
+    "?8 ~~ ?6",
+    "Unit ~~ ?1",
+  ],
+  "solution": "?1 |=> Unit
+?3 |=> Num
+?5 |=> Num
+?6 |=> (λ$scrutinee -> (closure: match $scrutinee
+| 0 -> Num
+| _ -> String -| Γ: $scrutinee; $scrutinee; $scrutinee; x; test)) ?10
+?7 |=> (λ$scrutinee -> (closure: match $scrutinee
+| 0 -> Num
+| _ -> String -| Γ: $scrutinee; $scrutinee; x; test)) ?10
+?8 |=> (λ$scrutinee -> (closure: match $scrutinee
+| 0 -> Num
+| _ -> String -| Γ: $scrutinee; $scrutinee; x; test)) ?10
+?9 |=> Num",
+  "state": {
+    "nondeterminism": {
+      "10": [
+        "10",
+      ],
+    },
+    "skolems": {
+      "10": "shift (λ$k -> $k 10)",
+    },
+  },
+  "term": "let test
+	: Unit
+	= {
+	let f
+	: Π(x: Num) -> (closure: match x
+| 0 -> Num
+| _ -> String -| Γ: x; test)
+	= λx -> match x
+| 0 -> 0
+| _ -> "hello";
+	let foo
+	: String
+	= reset |f shift (λ$k -> $k 10)|;
+	return unit;
+	}",
+  "type": "Unit",
 }
 `;

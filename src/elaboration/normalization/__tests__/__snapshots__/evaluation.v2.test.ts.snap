@@ -1,5 +1,17 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimited continuations (shift/reset) > resumption with computation 1`] = `
+{
+  "pretty": "32",
+}
+`;
+
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimited continuations (shift/reset) > simple shift/reset 1`] = `
+{
+  "pretty": "10",
+}
+`;
+
 exports[`Normalization v2 (stack-based): evaluation / reduce / matching > evaluates dependent record projection 1`] = `
 {
   "pretty": "2",

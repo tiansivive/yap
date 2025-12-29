@@ -81,8 +81,6 @@ export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutio
 		return [ty, ctx.zonker];
 	}
 
-	const charCode = "a".charCodeAt(0);
-
 	// Build a single closure context that has all generalized metas mapped to the corresponding bound variables.
 	// We also pre-extend names/types/env so quoting inside closures sees the right level indices.
 	const extendedCtx = ms.reduce((acc, m, i) => {

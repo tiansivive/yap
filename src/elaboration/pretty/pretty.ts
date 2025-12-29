@@ -12,6 +12,8 @@ import { options } from "@yap/shared/config/options";
 
 import * as Null from "@yap/utils";
 
+import * as V2 from "@yap/elaboration/shared/monad.v2";
+
 const display = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; printEnv?: boolean } = { deBruijn: false, printEnv: false }): string => {
 	const _display = (term: EB.Term): string => {
 		return (
@@ -27,6 +29,9 @@ const display = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; 
 						.with({ type: "Foreign" }, ({ name }) => `FFI.${name}`)
 						.with({ type: "Label" }, ({ name }) => `:${name}`)
 						.with({ type: "Meta" }, ({ val }) => {
+							if (ctx.skolems && ctx.skolems[val]) {
+								return _display(ctx.skolems[val]);
+							}
 							if (ctx.zonker[val]) {
 								return NF.display(ctx.zonker[val], ctx, opts);
 							}
@@ -253,4 +258,4 @@ export const Display = {
 	Statement: Stmt.display,
 };
 
-export type DisplayContext = Pick<EB.Context, "env" | "zonker" | "metas"> & { resolutions?: EB.Resolutions };
+export type DisplayContext = Pick<EB.Context, "env" | "zonker" | "metas"> & { resolutions?: EB.Resolutions; skolems?: V2.MutState["skolems"] };

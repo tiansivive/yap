@@ -4,15 +4,12 @@
 			"path": ".",
 		},
 		{
-			"path": "../yap.worktrees/modalities-v2",
+			"path": "../brainstorming",
 		},
 	],
 	"settings": {
 		"typescript.tsdk": "node_modules/typescript/lib",
 		"typescript.tsserver.nodePath": "node",
 		"typescript.tsserver.maxTsServerMemory": 4096,
-		"ocaml.sandbox": {
-			"kind": "global",
-		},
 	},
 }
