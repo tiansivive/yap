@@ -168,7 +168,7 @@ I also suck at communication, so feel free to continue to pester me with notific
 
 ## What’s With the Name?
 
-“Yap” stands for “Yet Another Problem.” Because, let’s be real, that’s exactly what this is. Another problem I’ve decided to create for myself instead of just, you know, using something that works.  
+“Yap” stands for “Yet Another Problem”. Because, let’s be real, that’s exactly what this is. Another problem I’ve decided to create for myself instead of just, you know, using something that works.  
 Could’ve called it “Just Another Language,” but then it wouldn’t have been as honest or as snarky. So here we are.
 
 ## Is this even possible?
