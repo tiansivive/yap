@@ -6,6 +6,31 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
 }
 `;
 
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimited continuations (shift/reset) > shifts under a lambda 1`] = `
+{
+  "pretty": {
+    "constraints": [
+      "Num ~~ Num",
+      "?4 ~~ Num",
+      "Num ~~ Num",
+      "Num ~~ ?5",
+      "?2 ~~ ?3",
+      "?5 ~~ Num",
+      "Π(x: ?4) -> (closure: Num -| Γ: x; test) ~~ ?2",
+      "?3 ~~ ?1",
+      "Num ~~ ?4",
+    ],
+    "term": "{
+	let test
+	: Π(x: Num) -> (closure: Num -| Γ: x; test)
+	= reset |λx -> + 1 shift (λ$k -> $k (+ x 10))|;
+	return test 5;
+	}",
+    "type": "Num",
+  },
+}
+`;
+
 exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimited continuations (shift/reset) > simple shift/reset 1`] = `
 {
   "pretty": "10",

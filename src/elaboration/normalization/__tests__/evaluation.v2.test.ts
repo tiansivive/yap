@@ -125,5 +125,54 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 			expect(nf.type).toBe("Lit");
 			expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
 		});
+
+		it("shifts under a lambda", () => {
+			const src = `{
+				let test = reset (\\x -> 1 + (shift (resume (x + 10))));
+				return (test 5);
+			}`;
+
+			const { structure, displays, state } = elaborateFrom(src);
+			const ctx = ctxFor(mkCtx(), structure.metas);
+			expect(() => Eval.evaluate(ctx, structure.term, undefined, state.skolems)).toThrow("Shift without enclosing reset");
+
+			expect({ pretty: displays }).toMatchSnapshot();
+		});
+
+		it.skip("models looping continuation", () => {
+			/* Example adapted from
+			let while_ cond body =
+			reset (fun () ->
+				let rec loop () =
+				if cond () then (
+					shift (fun k ->
+					body ();
+					k ();       (* continue loop *)
+					)
+				) else
+					()
+				in
+				loop ()
+			)
+			*/
+			const src = `{
+				let while
+					: (Unit -> Bool) -> (Unit -> Unit)
+					= \\cond body -> reset (\\u -> {
+						let go = \\u -> shift (match (cond !)
+							| true -> resume (body !)
+							| false -> !);
+						return go !;
+					});
+				return while;
+			}`;
+
+			const { structure, state } = elaborateFrom(src);
+			const ctx = ctxFor(mkCtx(), structure.metas);
+
+			const nf = Eval.evaluate(ctx, structure.term, undefined, state.skolems);
+			expect(nf.type).toBe("Lit");
+			expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
+		});
 	});
 });

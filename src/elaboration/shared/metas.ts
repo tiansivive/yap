@@ -46,6 +46,7 @@ export const collectMetasNF = (val: NF.Value, zonker: Subst): MetaNF[] => {
 		.with(NF.Patterns.Mu, ({ closure, binder }) => [...collectMetasNF(binder.annotation, zonker), ...collectMetasEB(closure.term, zonker)])
 		.with(NF.Patterns.Sigma, ({ closure, binder }) => [...collectMetasNF(binder.annotation, zonker), ...collectMetasEB(closure.term, zonker)])
 		.with(NF.Patterns.Modal, ({ value }) => collectMetasNF(value, zonker))
+		.with(NF.Patterns.External, ({ args }) => args.flatMap(arg => collectMetasNF(arg, zonker)))
 		.otherwise(() => {
 			throw new Error("metas: Not implemented yet");
 		});

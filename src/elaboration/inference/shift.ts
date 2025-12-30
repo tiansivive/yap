@@ -75,15 +75,15 @@ export const resume = (resume: Resume): V2.Elaboration<EB.AST> =>
 				throw new Error("resume without enclosing shift");
 			}
 			const {
-				type: [, , annotation],
+				type: [, , kty],
 				name: binder,
 			} = ctx.env[idx];
 			assert(binder.type === "Continuation", "Expected continuation binder");
-			assert(annotation.type === "Abs" && annotation.binder.type === "Pi", "Expected continuation to have Pi type");
+			assert(kty.type === "Abs" && kty.binder.type === "Pi", "Expected continuation to have Pi type");
 
-			const [atm, aus] = yield* EB.check.gen(resume.term, annotation.binder.annotation);
+			const [atm, aus] = yield* EB.check.gen(resume.term, kty.binder.annotation);
 			const va = NF.evaluate(ctx, atm);
-			const codomain = NF.apply(annotation.binder, annotation.closure, va);
+			const codomain = NF.apply(kty.binder, kty.closure, va);
 			yield* V2.modifySt(update(`nondeterminism.solution.${binder.resumption.meta.val}`, (vals = []) => [va, ...vals]));
 
 			const k = EB.Constructors.Var({ type: "Bound", index: idx });
