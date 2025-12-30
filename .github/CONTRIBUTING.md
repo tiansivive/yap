@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in contributing to `lama`! 💖
+Thanks for your interest in contributing to `yap`! 💖
 
 > After this page, see [DEVELOPMENT.md](./DEVELOPMENT.md) for local development instructions.
 
