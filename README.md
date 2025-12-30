@@ -21,7 +21,7 @@ There's no grand vision here — just a bunch of features I like, without the st
 
 ## What Even Is This?
 
-`Yap` is a **dependently typed language** with **first-class, structural types**, **implicits**, and **zero runtime assumptions**. The idea is to keep the core **minimal**, let types do their thing (and then nuke them!), and **make everything customizable**.  
+A **dependently typed language** with **first-class, structural types**, **implicits**, and **zero runtime assumptions**. The idea is to keep the core **minimal**, let types do their thing (and then nuke them!), and **make everything customizable**.  
 If you don’t like how something works, change it — preferably without rewriting the compiler.
 
 It’s still early days, so expect **broken things, missing features, a nonsensical mess and half-baked ideas**. But hey, it already supports:
@@ -32,12 +32,13 @@ It’s still early days, so expect **broken things, missing features, a nonsensi
   - **Refinement types** - because Naturals, Ranges, non-empty lists and such exist even if we pretend they don't
   - **Type inference** - Momma always told me I had a short attention span
 - **Implicits** - so you don’t have to pass a million arguments manually
+- **Delimited continuations** - for when you make an oopsie and need control flow to pretend it was intended
 - **Evaluator** - It does things like `1 + 2` and `(\x -> x + 1) 2`
 - **Foreign function interface** - Just an excuse to write JS instead of actual yap code
-- **Module System** - because you have a file system
+- **Module system** - because you have a file system
 - **JS codegen** - sue me (also, it's broken)
 
-Check out the Examples folder to get a more in depth overview of what is currently available. But for the TLDR crowd:
+Check out the [examples](./examples/README.md) folder to get a more in depth overview of what is currently available. But for the TLDR crowd:
 
 ```ts
 let Factorial: Type
@@ -83,18 +84,6 @@ You know the drill:
 
 The `examples/README` has a fairly good overview of what's currently supported, although I make no claims that anything outside of those carefully curated examples will work.
 
-### What about compiling code?
-
-There's a very broken, outdated (read: ignored), mess of a JS codegen. At most you can generate some JS, scream in despair, load it up in `node` and then break your computer because you're coding in JS.
-
-Try it out with
-
-```
-pnpm run yap <path_to_file>
-```
-
-Output will go to `bin/`
-
 ## My twisted worldview
 
 `Yap` isn’t trying to revolutionize programming. It will just do things in a way that **makes sense to me**:
@@ -106,27 +95,21 @@ Output will go to `bin/`
 - **You’re in control** – Defaults exist, but if you don’t like them, override them. No gatekeeping.
 - **Multi paradigm** - let the flame wars begin
 
-`Yap` will (probably) never ship a runtime.  
-It doesn’t assume anything about memory layouts or platforms. You should (eventually) be able to compile this mess to JavaScript, Erlang, Lua, C, Assembly, Brainf\*ck (you demented sicko) or whatever else strokes your ego, without fighting the compiler. `Yap` will provide the required API to soothe your sweet soul, but _you_ will implement it, not `Yap`. Leave _me_ out of it.
+### But who will use it?
 
-Why? Because backend platforms are hard. _Really_ hard. And I'm dumb, _really_ dumb.  
-There's heaps of incredible runtime platforms out in the wild, and hordes of people who actually enjoy dealing with platform-specific stuff — and they’re way better at it than I ever could be. So be free! I'll make sure to deal with those nasty fundamental concepts like mutation and references at the type level, and leave it all nice and pretty with sugar on top.  
-How you map that to your platform? That’s on you. You’re welcome.  
-I’ll be over here, having an existential crisis about types.
+Whomever fancies it. Yap isn’t aimed at “frontend people” or “systems people” or whatever other tribe the internet has invented this week.  
+Most software is just trying to ship a product so it's for anyone who just wants normal, product-driven code without getting bogged down in platform-specific constraints.
 
-#### Note
+See more in the [`FAQ`](./FAQ.md)
 
-A `JS` codegen for proving compilation semantics and techniques is being developed, and `C` codegen will follow once more features become available.  
-This means I'm spending an ungodly amount of time ironing out the kinks of what I'd like the (typing) semantics to be, so they're general/flexible/abstract enough to then translate to whatever platform floats your boat.  
-The goal is _predictability_: I might write garbage code, but at least I'll know how that garbage is being compiled and executed. This means typical optimizations might have to be user-controlled, or even _user-implemented_. That keeps the backend dead simple, at the cost of needing some way to actually plug those implementations in. A bit wishy-washy, some might say.  
-In any case, Yap ain't there yet. These are just my wild fantasies.
+## The Plan
 
-## The Plan (A.K.A. The Roadmap)
-
-`Yap` is a work in progress (read: broken, just like my last relationship), so here's a list of things that still need to be done:
+In case it wasn't obviours, this here is a work in progress (read: broken, just like my last relationship), so here's a list of things that still need to be done:
 
 ### Currently in the works
 
+- Delimited continuations
+  - It already supports basic shift/reset and type inference/checking
 - Resource usage semantics
   - For those pesky mutations, references and IO handles
 
@@ -143,7 +126,6 @@ In any case, Yap ain't there yet. These are just my wild fantasies.
 - Reflection (for runtime type-driven pattern matching)
 - Recursive infinite data (Coinduction)
 - Delimited continuations
-  - shift/reset primitives
   - Effect system on top
 - Lowered IR
   - For annoying things like type erasure, monomorphization, FBIP optimizations, customizable data types, fusion, etc
@@ -189,18 +171,6 @@ I also suck at communication, so feel free to continue to pester me with notific
 “Yap” stands for “Yet Another Problem.” Because, let’s be real, that’s exactly what this is. Another problem I’ve decided to create for myself instead of just, you know, using something that works.  
 Could’ve called it “Just Another Language,” but then it wouldn’t have been as honest or as snarky. So here we are.
 
-## TypeScript? You're not serious
-
-I love `Haskell`; it drove me mad.  
-I enjoy `Rust` and `I<Maybe<Box<Dynamic<&Result<Trait<🤯>>>>>>`.  
-I will never write `Java`.  
-I am too young for `C/C++`.  
-I believe `Python` is a snake species.  
-I don't know `OCaml`.  
-I fall asleep writing `Go`.
-
-I like building broken code, I like being able to debug, I like iterating, and I work with `TS` every day these days.
-
 ## Is this even possible?
 
 I don't know, you're better off asking a CS PhD Nobel Laureate logician.  
@@ -210,28 +180,3 @@ Could it ever be fully usable, safe, sound, fast, feature-rich and whatever else
 If _you_ do too, cool. If you don’t, cool. Either way, it's here.
 
 And it works... _kinda_.
-
-## Contributors
-
-<!-- spellchecker: disable -->
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tbody>
-    <tr>
-      <td align="center" valign="top" width="14.28%"><a href="http://www.joshuakgoldberg.com/"><img src="https://avatars.githubusercontent.com/u/3335181?v=4?s=100" width="100px;" alt="Josh Goldberg ✨"/><br /><sub><b>Josh Goldberg ✨</b></sub></a><br /><a href="#tool-JoshuaKGoldberg" title="Tools">🔧</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/tiansivive"><img src="https://avatars.githubusercontent.com/u/2423976?v=4?s=100" width="100px;" alt="Tiago Vila Verde"/><br /><sub><b>Tiago Vila Verde</b></sub></a><br /><a href="https://github.com/tiansivive/lama/commits?author=tiansivive" title="Code">💻</a> <a href="#content-tiansivive" title="Content">🖋</a> <a href="https://github.com/tiansivive/lama/commits?author=tiansivive" title="Documentation">📖</a> <a href="#ideas-tiansivive" title="Ideas, Planning, & Feedback">🤔</a> <a href="#infra-tiansivive" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#maintenance-tiansivive" title="Maintenance">🚧</a> <a href="#projectManagement-tiansivive" title="Project Management">📆</a> <a href="#tool-tiansivive" title="Tools">🔧</a></td>
-    </tr>
-  </tbody>
-</table>
-
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-<!-- spellchecker: enable -->
-
-<!-- You can remove this notice if you don't want it 🙂 no worries! -->
-
-> 💙 This package was templated with [`create-typescript-app`](https://github.com/JoshuaKGoldberg/create-typescript-app).
