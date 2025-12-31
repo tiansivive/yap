@@ -883,8 +883,8 @@ Combine preconditions (on inputs) and postconditions (on outputs):
 let safe: (n: Nat) -> Nat
     = \x -> x;  // OK: input Nat guarantees output Nat
 
-let unsafe: (n: Nat) -> Nat
-    = \x -> 1;  // ERROR: 1 violates Nat postcondition
+let unsafe: (n: Nat) -> Pos
+    = \x -> 0;  // ERROR: 0 violates Pos postcondition
 ```
 
 Refinements track relationships between function inputs and outputs:
