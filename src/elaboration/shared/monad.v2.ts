@@ -279,7 +279,7 @@ export const regen = <A, B>(f: (a: A) => Elaboration<B>) => {
 };
 
 export function Do<R, A>(gen: () => Generator<Elaboration<any>, R, A>): Elaboration<R> {
-	return (ctx, _, initialSt = initialState) => {
+	return (ctx, w, initialSt = initialState) => {
 		const it = gen();
 
 		let collected: Omit<Collector<unknown>, "result"> = empty;
