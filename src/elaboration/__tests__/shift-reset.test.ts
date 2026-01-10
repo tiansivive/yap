@@ -104,7 +104,7 @@ describe("Shift-reset", () => {
 
 	describe("resumption of dependent continuation", () => {
 		it("resuming continuation with dependent type", () => {
-			const src = `let test = {
+			const src = /* fs */ `let test = {
 
 				let f: (x: Num) -> (match x | 0 -> Num | _ -> String)
 					 = \\x -> match x | 0 -> 0 | _ -> "hello"; 
