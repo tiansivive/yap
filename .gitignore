@@ -8,3 +8,7 @@ gen/
 bin/
 
 src/parser/grammar.ts
+
+# Tree-sitter build artifacts
+src/parser-ts/build/
+src/parser-ts/node_modules/
