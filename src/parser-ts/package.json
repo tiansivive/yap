@@ -1,0 +1,52 @@
+{
+  "name": "tree-sitter-yap",
+  "version": "0.0.1",
+  "description": "Tree-sitter grammar for Yap",
+  "main": "bindings/node",
+  "types": "bindings/node/index.d.ts",
+  "keywords": [
+    "parser",
+    "tree-sitter",
+    "yap"
+  ],
+  "files": [
+    "grammar.js",
+    "binding.gyp",
+    "prebuilds/**",
+    "bindings/node/*",
+    "queries/*",
+    "src/**"
+  ],
+  "dependencies": {
+    "node-addon-api": "^8.2.1",
+    "node-gyp-build": "^4.8.4"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.23.2",
+    "prebuildify": "^6.0.1"
+  },
+  "peerDependencies": {
+    "tree-sitter": "^0.21.0"
+  },
+  "peerDependenciesMeta": {
+    "tree-sitter": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "install": "node-gyp-build",
+    "prestart": "tree-sitter build --wasm",
+    "start": "tree-sitter playground",
+    "test": "node --test bindings/node/*_test.js"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.yap",
+      "file-types": [
+        "yap"
+      ],
+      "injection-regex": "^yap$"
+    }
+  ],
+  "license": "MIT"
+}
