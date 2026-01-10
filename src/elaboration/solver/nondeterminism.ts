@@ -12,12 +12,14 @@ import { mapKeys } from "lodash";
 import { update } from "@yap/utils";
 import { unify } from "../unification";
 
-export const replay = function* <T>(action: (zonker: Record<number, NF.Value>) => V2.Elaboration<T>): Generator<V2.Elaboration<any>, T[], any> {
+export const replay = function* <T>(
+	action: (zonker: Record<number, NF.Value>, skolems: V2.MutState["skolems"]) => V2.Elaboration<T>,
+): Generator<V2.Elaboration<any>, T[], any> {
 	const ctx = yield* V2.ask();
 	const state = yield* V2.getSt();
 
 	if (R.isEmpty(state.nondeterminism.solution)) {
-		return [yield* V2.pure(action(ctx))];
+		return [yield* V2.pure(action(ctx.zonker, state.skolems))];
 	}
 
 	const zonkers = F.pipe(
@@ -32,7 +34,7 @@ export const replay = function* <T>(action: (zonker: Record<number, NF.Value>) =
 
 	const answers: T[] = [];
 	for (const z of zonkers) {
-		const answer = yield action(z);
+		const answer = yield action(z, state.skolems);
 		answers.push(answer);
 	}
 

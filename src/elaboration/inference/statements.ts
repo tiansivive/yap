@@ -80,18 +80,19 @@ export const letdec = function* (
 	const { constraints, metas } = yield* V2.listen();
 	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
 
-	const _letdec = (z: Record<number, NF.Value>) =>
+	const _letdec = (z: Record<number, NF.Value>, skolems: V2.MutState["skolems"]) =>
 		V2.Do(function* (): Generator<V2.Elaboration<any>, [NF.Value, EB.Context, EB.Resolutions], any> {
 			const nondet = update(withMetas, "zonker", old => ({ ...old, ...z }));
 
 			const { zonker, resolutions } = yield* V2.local(_ => nondet, EB.solve(constraints));
-			const zonked = update(nondet, "zonker", z => compose(zonker, z));
+			const zonked = update(withMetas, "zonker", z => compose(zonker, z));
 
 			const [generalized, subst] = NF.generalize(
 				NF.force(zonked, dec.annotation),
 				dec.value,
 				EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation),
 				resolutions,
+				skolems,
 			);
 			const next = update(zonked, "zonker", z => compose(subst, z));
 			const instantiated = NF.instantiate(generalized, EB.bind(next, { type: "Let", variable: dec.variable }, generalized));
@@ -114,7 +115,7 @@ export const letdec = function* (
 	// 	return [statement, next] as [Extract<EB.Statement, { type: "Let" }>, EB.Context];
 	// }
 
-	const [[instantiated, next, resolutions], ...rest] = R.isEmpty(st.nondeterminism.solution) ? [yield _letdec({})] : yield* replay(_letdec);
+	const [[instantiated, next, resolutions], ...rest] = R.isEmpty(st.nondeterminism.solution) ? [yield _letdec({}, {})] : yield* replay(_letdec);
 
 	let final = next;
 	for (const [type] of rest) {

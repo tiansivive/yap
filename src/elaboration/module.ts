@@ -236,7 +236,9 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 		const { zonker, resolutions } = yield* V2.local(_ => withMetas, EB.solve(constraints));
 		const zonked = update(withMetas, "zonker", z => Sub.compose(zonker, z));
 
-		const [generalized, subst] = NF.generalize(NF.force(zonked, ty), elaborated, zonked, resolutions);
+		const state = yield* V2.getSt();
+
+		const [generalized, subst] = NF.generalize(NF.force(zonked, ty), elaborated, zonked, resolutions, state.skolems);
 		const next = update(zonked, "zonker", z => ({ ...z, ...subst }));
 		const instantiated = NF.instantiate(generalized, next);
 

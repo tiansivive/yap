@@ -66,5 +66,6 @@ export const elaborateFrom = (src: string) => {
 			typedTerms: types,
 		},
 		state,
+		zonker,
 	};
 };

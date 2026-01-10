@@ -66,10 +66,16 @@ const getNameFactory = (counters: ReturnType<typeof mkCounters>) => {
  * ```
  * Here, generalizing the type of `fmap stringify` alone would miss the meta for `functor`, as its never used in the type.
  */
-export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutions: EB.Resolutions): [NF.Value, EB.Context["zonker"]] => {
+export const generalize = (
+	ty: NF.Value,
+	tm: EB.Term,
+	ctx: EB.Context,
+	resolutions: EB.Resolutions,
+	skolems: EB.V2.MutState["skolems"],
+): [NF.Value, EB.Context["zonker"]] => {
 	const tyMetas = collectMetasNF(ty, ctx.zonker);
 	const tmMetas = collectMetasEB(tm, ctx.zonker);
-	const allMetas = fp.uniqBy((m: Meta) => m.val, [...tyMetas, ...tmMetas]).filter(m => !resolutions[m.val]);
+	const allMetas = fp.uniqBy((m: Meta) => m.val, [...tyMetas, ...tmMetas]).filter(m => !resolutions[m.val] && !skolems[m.val]);
 	const getName = getNameFactory(mkCounters());
 
 	// Filter out metas from outer scopes - only generalize metas created in the current scope

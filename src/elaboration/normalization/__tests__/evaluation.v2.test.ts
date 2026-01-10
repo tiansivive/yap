@@ -5,6 +5,7 @@ import * as NF from "@yap/elaboration/normalization";
 import * as Eval from "../evaluation.v2";
 
 import { elaborateFrom, mkCtx } from "../../inference/__tests__/util";
+import { update } from "@yap/utils";
 
 const ctxFor = (base = mkCtx(), metas: EB.Context["metas"] = {}) => ({
 	...base,
@@ -139,7 +140,7 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 			expect({ pretty: displays }).toMatchSnapshot();
 		});
 
-		it.skip("models looping continuation", () => {
+		it("models looping continuation", () => {
 			/* Example adapted from
 			let while_ cond body =
 			reset (fun () ->
@@ -157,22 +158,25 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 			*/
 			const src = `{
 				let while
-					: (Unit -> Bool) -> (Unit -> Unit)
-					= \\cond body -> reset (\\u -> {
+					: (Unit -> Bool) -> (Unit -> Unit) -> Unit
+					= \\cond body -> reset ({
 						let go = \\u -> shift (match (cond !)
-							| true -> resume (body !)
+							| true -> { body !; resume go !; }
 							| false -> !);
 						return go !;
 					});
 				return while;
 			}`;
 
-			const { structure, state } = elaborateFrom(src);
-			const ctx = ctxFor(mkCtx(), structure.metas);
+			const { structure, state, displays, zonker } = elaborateFrom(src);
+			const ctx = update(ctxFor(mkCtx(), structure.metas), "zonker", z => ({ ...z, ...zonker }));
 
 			const nf = Eval.evaluate(ctx, structure.term, undefined, state.skolems);
-			expect(nf.type).toBe("Lit");
-			expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
+			//expect(nf.type).toBe("Lit");
+			expect({
+				displays,
+				evaluation: show(nf, ctx),
+			}).toMatchSnapshot();
 		});
 	});
 });

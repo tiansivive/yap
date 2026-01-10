@@ -41,7 +41,11 @@ export const infer = (reset: Reset): V2.Elaboration<EB.AST> =>
 			};
 			//yield* V2.modifySt(update("delimitations", ds => [d, ...ds]))
 			yield* V2.modifySt(update("delimitations", ds => [d, ...ds]));
-			const [tm, us] = yield* EB.check.gen(reset.term, d.answer.initial);
+			const { metas } = yield* V2.listen();
+			const [tm, us] = yield* V2.local(
+				update("metas", ms => ({ ...ms, ...metas })),
+				EB.check(reset.term, d.answer.initial),
+			);
 			const {
 				delimitations: [{ shifted }],
 			} = yield* V2.getSt();
@@ -51,7 +55,6 @@ export const infer = (reset: Reset): V2.Elaboration<EB.AST> =>
 			}
 
 			yield* V2.modifySt(update("delimitations", ([d, ...ds]) => ds));
-
 			return [EB.Constructors.Reset(tm), d.answer.final, us] satisfies EB.AST;
 		}),
 	);

@@ -1,5 +1,61 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimited continuations (shift/reset) > models looping continuation 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Unit ~~ Unit",
+      "Bool ~~ Bool",
+      "Unit ~~ Unit",
+      "?3 ~~ Π(x: ?7) -> (closure: (?9 :: Type) -| Γ: x; $k; u; go; body; cond; while)",
+      "Unit ~~ ?7",
+      "?9 ~~ ?5",
+      "Unit ~~ ?2",
+      "Bool ~~ Bool",
+      "Unit ~~ ?2",
+      "Π(u: ?4) -> (closure: (?5 :: Type) -| Γ: u; go; body; cond; while) ~~ ?3",
+      "?10 @ Type",
+      "Unit ~~ Unit",
+      "?10 ~~ ?1",
+      "?2 ~~ Unit",
+    ],
+    "term": "{
+	let while
+	: Π(a: Type) => (closure: Π(t1: Π(t2: Unit) -> Bool) -> Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)
+	= λa => λcond -> λbody -> reset |{
+	let go
+	: Π(a: Type) => (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
+	= λa => λu -> shift (λ$k -> match body unit
+| true -> {
+	go unit;
+	$k (a unit);
+	return unit;
+	}
+| false -> unit);
+	return go @a unit;
+	}|;
+	return while;
+	}",
+    "type": "Π(a: Type) => (closure: Π(t1: Π(t2: Unit) -> Bool) -> Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)",
+  },
+  "evaluation": "λa => (closure: λcond -> λbody -> reset |{
+	let go
+	: Π(a: Type) => (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
+	= λa => λu -> (?6 :: go);
+	return go @a unit;
+	}| -| Γ: a; while)",
+}
+`;
+
 exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimited continuations (shift/reset) > resumption with computation 1`] = `
 {
   "pretty": "32",
