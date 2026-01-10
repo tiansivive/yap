@@ -26,7 +26,7 @@ export function parse(sourceCode: string): Module | Script {
   }
 
   const parser = new Parser();
-  parser.setLanguage(yapLanguage.language());
+  parser.setLanguage(yapLanguage.language);
 
   const tree = parser.parse(sourceCode);
   
@@ -69,7 +69,7 @@ export function parseToTree(sourceCode: string): Parser.Tree {
   }
 
   const parser = new Parser();
-  parser.setLanguage(yapLanguage.language());
+  parser.setLanguage(yapLanguage.language);
 
   return parser.parse(sourceCode);
 }

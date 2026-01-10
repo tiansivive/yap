@@ -1,0 +1,10 @@
+{
+  "grammars": [
+    {
+      "name": "yap",
+      "scope": "source.yap",
+      "path": ".",
+      "external-files": []
+    }
+  ]
+}
