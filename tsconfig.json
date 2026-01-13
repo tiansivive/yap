@@ -23,7 +23,7 @@
 			"@yap/utils": ["./src/utils/index"]
 		}
 	},
-	"include": ["src", "scripts/cli.ts", "integration-tests"],
+	"include": ["src", "scripts/cli.ts", "integration-tests", "src/types/generated.d.ts"],
 	// "exclude": ["src/QTT/parser/grammar.ts"],
 	"ts-node": {
 		"require": ["tsconfig-paths/register"]
