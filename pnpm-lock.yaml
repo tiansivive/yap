@@ -37,7 +37,7 @@ importers:
         version: 0.25.0
       tree-sitter-yap:
         specifier: github:tiansivive/tree-sitter-yap#main
-        version: https://codeload.github.com/tiansivive/tree-sitter-yap/tar.gz/f900fd0fcfd092be4c550c0fb8872c9007ac9f9d(tree-sitter@0.25.0)
+        version: https://codeload.github.com/tiansivive/tree-sitter-yap/tar.gz/17df04b8603051255fd3246eb8ab123a7db79c01(tree-sitter@0.25.0)
       ts-pattern:
         specifier: ^5.3.1
         version: 5.3.1
@@ -3388,8 +3388,8 @@ packages:
     engines: {node: '>=12.0.0'}
     hasBin: true
 
-  tree-sitter-yap@https://codeload.github.com/tiansivive/tree-sitter-yap/tar.gz/f900fd0fcfd092be4c550c0fb8872c9007ac9f9d:
-    resolution: {tarball: https://codeload.github.com/tiansivive/tree-sitter-yap/tar.gz/f900fd0fcfd092be4c550c0fb8872c9007ac9f9d}
+  tree-sitter-yap@https://codeload.github.com/tiansivive/tree-sitter-yap/tar.gz/17df04b8603051255fd3246eb8ab123a7db79c01:
+    resolution: {tarball: https://codeload.github.com/tiansivive/tree-sitter-yap/tar.gz/17df04b8603051255fd3246eb8ab123a7db79c01}
     version: 0.1.4
     peerDependencies:
       tree-sitter: '>=0.25.0'
@@ -6851,7 +6851,7 @@ snapshots:
 
   tree-sitter-cli@0.26.3: {}
 
-  tree-sitter-yap@https://codeload.github.com/tiansivive/tree-sitter-yap/tar.gz/f900fd0fcfd092be4c550c0fb8872c9007ac9f9d(tree-sitter@0.25.0):
+  tree-sitter-yap@https://codeload.github.com/tiansivive/tree-sitter-yap/tar.gz/17df04b8603051255fd3246eb8ab123a7db79c01(tree-sitter@0.25.0):
     dependencies:
       node-addon-api: 8.5.0
       node-gyp-build: 4.8.4

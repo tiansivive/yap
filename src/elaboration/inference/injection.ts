@@ -12,8 +12,9 @@ import * as F from "fp-ts/function";
 import { Liquid } from "@yap/verification/modalities";
 import { isLeft } from "fp-ts/lib/Either";
 import assert from "node:assert";
+import * as Src from "@yap/src/index";
 
-type Injection = Extract<EB.Term, { type: "injection" }>;
+type Injection = Extract<Src.Term, { type: "injection" }>;
 
 export const infer = (injection: Injection): V2.Elaboration<EB.AST> =>
 	V2.track(

@@ -316,6 +316,10 @@ export const enum SyntaxType {
 	Using = "using",
 	Variable = "variable",
 	Variant = "variant",
+	Bang = "Bang",
+	Row = "Row",
+	TypeOfTypes = "TypeOfTypes",
+	Unit = "Unit",
 	And = "and",
 	Comment = "comment",
 	Explicit = "explicit",
@@ -331,7 +335,6 @@ export const enum SyntaxType {
 }
 
 export type UnnamedType =
-	| "!"
 	| "!="
 	| "#"
 	| "%"
@@ -358,9 +361,6 @@ export type UnnamedType =
 	| ">"
 	| ">="
 	| "@"
-	| "Row"
-	| "Type"
-	| "Unit"
 	| "["
 	| "[|"
 	| "\\"
@@ -446,7 +446,6 @@ export type SyntaxNode =
 	| UsingNode
 	| VariableNode
 	| VariantNode
-	| UnnamedNode<"!">
 	| UnnamedNode<"!=">
 	| UnnamedNode<"#">
 	| UnnamedNode<"%">
@@ -473,9 +472,10 @@ export type SyntaxNode =
 	| UnnamedNode<">">
 	| UnnamedNode<">=">
 	| UnnamedNode<"@">
-	| UnnamedNode<"Row">
-	| UnnamedNode<"Type">
-	| UnnamedNode<"Unit">
+	| BangNode
+	| RowNode
+	| TypeOfTypesNode
+	| UnitNode
 	| UnnamedNode<"[">
 	| UnnamedNode<"[|">
 	| UnnamedNode<"\\">
@@ -620,7 +620,7 @@ export interface ImportNode extends NamedNodeBase {
 export interface InjectionNode extends NamedNodeBase {
 	type: SyntaxType.Injection;
 	recordNode?: ExprNode;
-	updatesNodes: (UnnamedNode<","> | AssignmentNode)[];
+	updatesNodes: AssignmentNode[];
 }
 
 export interface KeyNode extends NamedNodeBase {
@@ -649,8 +649,8 @@ export interface LetdecNode extends NamedNodeBase {
 
 export interface ListNode extends NamedNodeBase {
 	type: SyntaxType.List;
-	elementNodes: (UnnamedNode<","> | TypeExprNode)[];
-	tailNodes: (IdentifierNode | UnnamedNode<"|">)[];
+	elementNodes: TypeExprNode[];
+	tailNode?: IdentifierNode;
 }
 
 export interface LiteralNode extends NamedNodeBase {
@@ -842,7 +842,23 @@ export interface VariableNode extends NamedNodeBase {
 
 export interface VariantNode extends NamedNodeBase {
 	type: SyntaxType.Variant;
-	variantNodes: (TaggedNode | UnnamedNode<"|">)[];
+	variantNodes: TaggedNode[];
+}
+
+export interface BangNode extends NamedNodeBase {
+	type: SyntaxType.Bang;
+}
+
+export interface RowNode extends NamedNodeBase {
+	type: SyntaxType.Row;
+}
+
+export interface TypeOfTypesNode extends NamedNodeBase {
+	type: SyntaxType.TypeOfTypes;
+}
+
+export interface UnitNode extends NamedNodeBase {
+	type: SyntaxType.Unit;
 }
 
 export interface AndNode extends NamedNodeBase {

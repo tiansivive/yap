@@ -26,7 +26,7 @@ export const infer = (node: Block) =>
 					}
 
 					const [current, ...rest] = stmts;
-					const [stmt, sty] = yield* EB.Stmt.infer.gen(current);
+					const [stmt, sty] = yield* tmp.Stmt.infer(current);
 
 					if (stmt.type !== "Let") {
 						return yield* M.pure(recurse(rest, [...results, stmt]));
