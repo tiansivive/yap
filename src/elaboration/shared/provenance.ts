@@ -10,6 +10,7 @@ export type WithProvenance<T extends object> = T & { trace: Provenance[] };
 export type Provenance = (
 	| { tag: "src"; type: "term"; term: Src.Term }
 	| { tag: "src"; type: "stmt"; stmt: Src.Statement }
+	| { tag: "src"; type: "ts-node"; node: Src.CST.SyntaxNode }
 	| { tag: "eb"; term: EB.Term }
 	| { tag: "nf"; val: NF.Value }
 	| { tag: "alt"; alt: Src.Alternative }

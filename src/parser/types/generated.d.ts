@@ -266,11 +266,13 @@ export const enum SyntaxType {
 	Alternative = "alternative",
 	Annotation = "annotation",
 	Application = "application",
+	Argument = "argument",
 	Arrow = "arrow",
 	Assignment = "assignment",
 	Block = "block",
 	Boolean = "boolean",
 	Dict = "dict",
+	Domain = "domain",
 	Exports = "exports",
 	Foreign = "foreign",
 	Import = "import",
@@ -314,15 +316,16 @@ export const enum SyntaxType {
 	Using = "using",
 	Variable = "variable",
 	Variant = "variant",
+	And = "and",
 	Comment = "comment",
-	ExplicitArrow = "explicit_arrow",
+	Explicit = "explicit",
 	Field = "field",
 	Hole = "hole",
 	Identifier = "identifier",
-	ImplicitApplication = "implicit_application",
-	ImplicitArrow = "implicit_arrow",
+	Implicit = "implicit",
 	Index = "index",
 	Label = "label",
+	Or = "or",
 	String = "string",
 	Wildcard = "wildcard",
 }
@@ -332,7 +335,6 @@ export type UnnamedType =
 	| "!="
 	| "#"
 	| "%"
-	| "&&"
 	| "("
 	| ")"
 	| "*"
@@ -355,6 +357,7 @@ export type UnnamedType =
 	| "=="
 	| ">"
 	| ">="
+	| "@"
 	| "Row"
 	| "Type"
 	| "Unit"
@@ -379,7 +382,6 @@ export type UnnamedType =
 	| "|"
 	| "|>"
 	| "|]"
-	| "||"
 	| "}"
 	| "μ";
 
@@ -394,11 +396,13 @@ export type SyntaxNode =
 	| AlternativeNode
 	| AnnotationNode
 	| ApplicationNode
+	| ArgumentNode
 	| ArrowNode
 	| AssignmentNode
 	| BlockNode
 	| BooleanNode
 	| DictNode
+	| DomainNode
 	| ExportsNode
 	| ForeignNode
 	| ImportNode
@@ -446,7 +450,6 @@ export type SyntaxNode =
 	| UnnamedNode<"!=">
 	| UnnamedNode<"#">
 	| UnnamedNode<"%">
-	| UnnamedNode<"&&">
 	| UnnamedNode<"(">
 	| UnnamedNode<")">
 	| UnnamedNode<"*">
@@ -469,6 +472,7 @@ export type SyntaxNode =
 	| UnnamedNode<"==">
 	| UnnamedNode<">">
 	| UnnamedNode<">=">
+	| UnnamedNode<"@">
 	| UnnamedNode<"Row">
 	| UnnamedNode<"Type">
 	| UnnamedNode<"Unit">
@@ -476,22 +480,23 @@ export type SyntaxNode =
 	| UnnamedNode<"[|">
 	| UnnamedNode<"\\">
 	| UnnamedNode<"]">
+	| AndNode
 	| UnnamedNode<"as">
 	| CommentNode
-	| ExplicitArrowNode
+	| ExplicitNode
 	| UnnamedNode<"export">
 	| UnnamedNode<"false">
 	| FieldNode
 	| UnnamedNode<SyntaxType.Foreign>
 	| HoleNode
 	| IdentifierNode
-	| ImplicitApplicationNode
-	| ImplicitArrowNode
+	| ImplicitNode
 	| UnnamedNode<SyntaxType.Import>
 	| IndexNode
 	| LabelNode
 	| UnnamedNode<"let">
 	| UnnamedNode<SyntaxType.Match>
+	| OrNode
 	| UnnamedNode<SyntaxType.Reset>
 	| UnnamedNode<SyntaxType.Resume>
 	| UnnamedNode<"return">
@@ -504,12 +509,13 @@ export type SyntaxNode =
 	| UnnamedNode<"|">
 	| UnnamedNode<"|>">
 	| UnnamedNode<"|]">
-	| UnnamedNode<"||">
 	| UnnamedNode<"}">
 	| UnnamedNode<"μ">
 	| ErrorNode;
 
 export type AtomNode =
+	| BlockNode
+	| DictNode
 	| HoleNode
 	| InjectionNode
 	| ListNode
@@ -525,7 +531,7 @@ export type AtomNode =
 	| TupleNode
 	| VariableNode;
 
-export type ExprNode = AnnotationNode | ApplicationNode | AtomNode | BlockNode | LambdaNode | MatchNode | OperationNode | TypeExprNode | UnaryNode;
+export type ExprNode = AnnotationNode | ApplicationNode | AtomNode | LambdaNode | MatchNode | OperationNode | UnaryNode;
 
 export type PatternNode =
 	| LiteralNode
@@ -537,9 +543,9 @@ export type PatternNode =
 	| VariableNode
 	| WildcardNode;
 
-export type StatementNode = ExprNode | ForeignNode | LetdecNode | UsingNode;
+export type StatementNode = ForeignNode | LetdecNode | TypeExprNode | UsingNode;
 
-export type TypeExprNode = ArrowNode | DictNode | ModalNode | MuNode | PiNode | VariantNode;
+export type TypeExprNode = ArrowNode | ExprNode | ModalNode | MuNode | PiNode | VariantNode;
 
 export interface AlternativeNode extends NamedNodeBase {
 	type: SyntaxType.Alternative;
@@ -549,30 +555,39 @@ export interface AlternativeNode extends NamedNodeBase {
 
 export interface AnnotationNode extends NamedNodeBase {
 	type: SyntaxType.Annotation;
+	exprNode: ExprNode;
+	typeNode: TypeExprNode;
 }
 
 export interface ApplicationNode extends NamedNodeBase {
 	type: SyntaxType.Application;
-	argumentNode: AtomNode;
-	functionNode: ExprNode;
+	argumentNodes: ArgumentNode[];
+	functionNode: AtomNode;
+}
+
+export interface ArgumentNode extends NamedNodeBase {
+	type: SyntaxType.Argument;
+	explicitNode?: AtomNode;
+	implicitNode?: AtomNode;
 }
 
 export interface ArrowNode extends NamedNodeBase {
 	type: SyntaxType.Arrow;
-	codomainNode: ExprNode;
-	domainNodes: (UnnamedNode<"("> | UnnamedNode<")"> | UnnamedNode<","> | ExprNode)[];
+	codomainNode: TypeExprNode;
+	domainNode: DomainNode;
+	icitNode: ExplicitNode | ImplicitNode;
 }
 
 export interface AssignmentNode extends NamedNodeBase {
 	type: SyntaxType.Assignment;
 	keyNode: IdentifierNode;
-	valueNode: ExprNode;
+	valueNode: TypeExprNode;
 }
 
 export interface BlockNode extends NamedNodeBase {
 	type: SyntaxType.Block;
 	returnNode?: ReturnStatementNode;
-	statementsNodes: (UnnamedNode<";"> | StatementNode)[];
+	statementNodes: StatementNode[];
 }
 
 export interface BooleanNode extends NamedNodeBase {
@@ -581,6 +596,13 @@ export interface BooleanNode extends NamedNodeBase {
 
 export interface DictNode extends NamedNodeBase {
 	type: SyntaxType.Dict;
+	indexNode: ExprNode;
+	typeNode: TypeExprNode;
+}
+
+export interface DomainNode extends NamedNodeBase {
+	type: SyntaxType.Domain;
+	paramNodes: (TypeExprNode | TypingNode)[];
 }
 
 export interface ExportsNode extends NamedNodeBase {
@@ -607,23 +629,27 @@ export interface KeyNode extends NamedNodeBase {
 
 export interface KeyValueNode extends NamedNodeBase {
 	type: SyntaxType.KeyValue;
+	keyNode: KeyNode;
+	valueNode: TypeExprNode;
 }
 
 export interface LambdaNode extends NamedNodeBase {
 	type: SyntaxType.Lambda;
-	bodyNode: ExprNode;
+	bodyNode: TypeExprNode;
+	icitNode: ExplicitNode | ImplicitNode;
 	paramsNode: ParamsNode;
 }
 
 export interface LetdecNode extends NamedNodeBase {
 	type: SyntaxType.Letdec;
 	nameNode: IdentifierNode;
-	typeNode?: ExprNode;
-	valueNode: ExprNode;
+	typeNode?: TypeExprNode;
+	valueNode: TypeExprNode;
 }
 
 export interface ListNode extends NamedNodeBase {
 	type: SyntaxType.List;
+	elementNodes: (UnnamedNode<","> | TypeExprNode)[];
 	tailNodes: (IdentifierNode | UnnamedNode<"|">)[];
 }
 
@@ -647,7 +673,7 @@ export interface ModuleNode extends NamedNodeBase {
 
 export interface MuNode extends NamedNodeBase {
 	type: SyntaxType.Mu;
-	bodyNode: ExprNode;
+	bodyNode: TypeExprNode;
 	nameNode: IdentifierNode;
 }
 
@@ -657,6 +683,26 @@ export interface NumberNode extends NamedNodeBase {
 
 export interface OperationNode extends NamedNodeBase {
 	type: SyntaxType.Operation;
+	leftNode: ExprNode;
+	operatorNode:
+		| UnnamedNode<"!=">
+		| UnnamedNode<"%">
+		| UnnamedNode<"*">
+		| UnnamedNode<"+">
+		| UnnamedNode<"++">
+		| UnnamedNode<"-">
+		| UnnamedNode<"/">
+		| UnnamedNode<"<">
+		| UnnamedNode<"<=">
+		| UnnamedNode<"<>">
+		| UnnamedNode<"<|">
+		| UnnamedNode<"==">
+		| UnnamedNode<">">
+		| UnnamedNode<">=">
+		| AndNode
+		| OrNode
+		| UnnamedNode<"|>">;
+	rightNode: ExprNode;
 }
 
 export interface ParamNode extends NamedNodeBase {
@@ -673,18 +719,26 @@ export interface ParenthesizedNode extends NamedNodeBase {
 
 export interface PatternKeyValueNode extends NamedNodeBase {
 	type: SyntaxType.PatternKeyValue;
+	keyNode: IdentifierNode;
+	patternNode: PatternNode;
 }
 
 export interface PatternListNode extends NamedNodeBase {
 	type: SyntaxType.PatternList;
+	elementNodes: (UnnamedNode<","> | PatternNode)[];
+	tailNodes: (IdentifierNode | UnnamedNode<"|">)[];
 }
 
 export interface PatternRowNode extends NamedNodeBase {
 	type: SyntaxType.PatternRow;
+	fieldNodes: (UnnamedNode<","> | PatternKeyValueNode)[];
+	tailNodes: (IdentifierNode | UnnamedNode<"|">)[];
 }
 
 export interface PatternStructNode extends NamedNodeBase {
 	type: SyntaxType.PatternStruct;
+	fieldNodes: (UnnamedNode<","> | PatternKeyValueNode)[];
+	tailNodes: (IdentifierNode | UnnamedNode<"|">)[];
 }
 
 export interface PatternTaggedNode extends NamedNodeBase {
@@ -695,12 +749,15 @@ export interface PatternTaggedNode extends NamedNodeBase {
 
 export interface PatternTupleNode extends NamedNodeBase {
 	type: SyntaxType.PatternTuple;
+	elementNodes: (UnnamedNode<","> | PatternNode)[];
+	tailNodes: (IdentifierNode | UnnamedNode<"|">)[];
 }
 
 export interface PiNode extends NamedNodeBase {
 	type: SyntaxType.Pi;
-	codomainNode: ExprNode;
-	domainNodes: (UnnamedNode<"("> | UnnamedNode<")"> | UnnamedNode<","> | TypingNode)[];
+	codomainNode: TypeExprNode;
+	domainNode: DomainNode;
+	icitNode: ExplicitNode | ImplicitNode;
 }
 
 export interface ProjectionNode extends NamedNodeBase {
@@ -715,19 +772,22 @@ export interface QuantityNode extends NamedNodeBase {
 
 export interface ResetNode extends NamedNodeBase {
 	type: SyntaxType.Reset;
+	bodyNode: ExprNode;
 }
 
 export interface ResumeNode extends NamedNodeBase {
 	type: SyntaxType.Resume;
+	bodyNode: ExprNode;
 }
 
 export interface ReturnStatementNode extends NamedNodeBase {
 	type: SyntaxType.ReturnStatement;
-	valueNode: ExprNode;
+	valueNode: TypeExprNode;
 }
 
 export interface RowNode extends NamedNodeBase {
 	type: SyntaxType.Row;
+	fieldNodes: (UnnamedNode<","> | KeyValueNode)[];
 	tailNodes: (IdentifierNode | UnnamedNode<"|">)[];
 }
 
@@ -737,6 +797,7 @@ export interface ScriptNode extends NamedNodeBase {
 
 export interface ShiftNode extends NamedNodeBase {
 	type: SyntaxType.Shift;
+	bodyNode: ExprNode;
 }
 
 export interface SourceFileNode extends NamedNodeBase {
@@ -745,6 +806,7 @@ export interface SourceFileNode extends NamedNodeBase {
 
 export interface StructNode extends NamedNodeBase {
 	type: SyntaxType.Struct;
+	fieldNodes: (UnnamedNode<","> | KeyValueNode)[];
 	tailNodes: (IdentifierNode | UnnamedNode<"|">)[];
 }
 
@@ -756,6 +818,7 @@ export interface TaggedNode extends NamedNodeBase {
 
 export interface TupleNode extends NamedNodeBase {
 	type: SyntaxType.Tuple;
+	elementNodes: (UnnamedNode<","> | TypeExprNode)[];
 	tailNodes: (IdentifierNode | UnnamedNode<"|">)[];
 }
 
@@ -765,6 +828,8 @@ export interface TypingNode extends NamedNodeBase {
 
 export interface UnaryNode extends NamedNodeBase {
 	type: SyntaxType.Unary;
+	operandNode: ExprNode;
+	operatorNode: UnnamedNode<"+"> | UnnamedNode<"-">;
 }
 
 export interface UsingNode extends NamedNodeBase {
@@ -777,14 +842,19 @@ export interface VariableNode extends NamedNodeBase {
 
 export interface VariantNode extends NamedNodeBase {
 	type: SyntaxType.Variant;
+	variantNodes: (TaggedNode | UnnamedNode<"|">)[];
+}
+
+export interface AndNode extends NamedNodeBase {
+	type: SyntaxType.And;
 }
 
 export interface CommentNode extends NamedNodeBase {
 	type: SyntaxType.Comment;
 }
 
-export interface ExplicitArrowNode extends NamedNodeBase {
-	type: SyntaxType.ExplicitArrow;
+export interface ExplicitNode extends NamedNodeBase {
+	type: SyntaxType.Explicit;
 }
 
 export interface FieldNode extends NamedNodeBase {
@@ -799,12 +869,8 @@ export interface IdentifierNode extends NamedNodeBase {
 	type: SyntaxType.Identifier;
 }
 
-export interface ImplicitApplicationNode extends NamedNodeBase {
-	type: SyntaxType.ImplicitApplication;
-}
-
-export interface ImplicitArrowNode extends NamedNodeBase {
-	type: SyntaxType.ImplicitArrow;
+export interface ImplicitNode extends NamedNodeBase {
+	type: SyntaxType.Implicit;
 }
 
 export interface IndexNode extends NamedNodeBase {
@@ -813,6 +879,10 @@ export interface IndexNode extends NamedNodeBase {
 
 export interface LabelNode extends NamedNodeBase {
 	type: SyntaxType.Label;
+}
+
+export interface OrNode extends NamedNodeBase {
+	type: SyntaxType.Or;
 }
 
 export interface StringNode extends NamedNodeBase {
