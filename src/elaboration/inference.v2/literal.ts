@@ -3,11 +3,11 @@ import * as EB from "@yap/elaboration";
 import * as M from "@yap/monad";
 
 import * as F from "fp-ts/lib/function";
-import * as Src from "@yap/src/index";
+
 import { match } from "ts-pattern";
 
 import * as Lit from "@yap/shared/literals";
-import * as Q from "@yap/shared/modalities/multiplicity";
+
 import { NF } from "@yap/elaboration";
 import { SyntaxType } from "@yap/cst/types/generated";
 import * as tmp from "./tmp";

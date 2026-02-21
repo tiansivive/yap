@@ -3,6 +3,7 @@ import * as A from "fp-ts/Array";
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
+import * as CST from "@yap/cst";
 
 import * as R from "@yap/shared/rows";
 
@@ -10,10 +11,11 @@ export type WithProvenance<T extends object> = T & { trace: Provenance[] };
 export type Provenance = (
 	| { tag: "src"; type: "term"; term: Src.Term }
 	| { tag: "src"; type: "stmt"; stmt: Src.Statement }
-	| { tag: "src"; type: "ts-node"; node: Src.CST.SyntaxNode }
+	| { tag: "src"; type: "ts-node"; node: CST.Types.SyntaxNode }
 	| { tag: "eb"; term: EB.Term }
 	| { tag: "nf"; val: NF.Value }
 	| { tag: "alt"; alt: Src.Alternative }
+	| { tag: "alt-ts"; alt: CST.Types.AlternativeNode }
 	| { tag: "unify"; type: "nf"; vals: [NF.Value, NF.Value] }
 	| { tag: "unify"; type: "row"; rows: [NF.Row, NF.Row] }
 ) & { metadata?: Metadata };

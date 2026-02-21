@@ -40,11 +40,11 @@ type Pi = EB.NF.Value & { type: "Abs"; binder: Extract<NF.Binder, { type: "Pi" }
 
 export type Zonker = Context["zonker"];
 
-export type Sigma = { term: EB.Term; nf: NF.Value; ann: NF.Value; multiplicity: Q.Multiplicity; isAnnotation?: boolean };
+export type Sigma = { term: EB.Term; nf: NF.Value; ann: NF.Value; multiplicity?: Q.Multiplicity; isAnnotation?: boolean };
 
 export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
-export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.AST> => {
+export const lookup = (variable: Omit<Src.Variable, "location">, ctx: Context): V2.Elaboration<EB.AST> => {
 	const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
 	// labels are different syntax (:varname), so we can check them before bound variables as the latter will never shadow the former
 	if (variable.type === "label") {

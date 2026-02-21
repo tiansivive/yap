@@ -3,6 +3,8 @@ import * as EB from "@yap/elaboration";
 import * as NF from "@yap/normalization";
 import * as CST from "@yap/cst";
 
+export * as Patterns from "./patterns";
+
 export type Typing = [EB.Term, NF.Value];
 export type StmtTyping = [EB.Statement, NF.Value];
 
@@ -19,3 +21,4 @@ export const Stmt = {
 		return 1;
 	},
 };
+
