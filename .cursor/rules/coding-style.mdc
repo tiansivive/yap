@@ -1,0 +1,47 @@
+---
+description: Yap coding style — immutable, terse, ts-pattern, V2 Do
+globs: "**/*.ts"
+alwaysApply: false
+---
+
+# Yap coding style
+
+## General
+
+- **Prefer immutable code**
+- **Prefer declarative over imperative**
+- **Prefer recursion over imperative looping**
+- **Prefer simple, linear flow** via V2 Do notation (`src/elaboration/shared/monad.v2.ts`)
+- **Avoid long fp-ts pipelines** — they make debugging harder
+- **Prefer function composition** to interstitial variables that add no semantic value
+- **Prefer iterators and built-in HOFs** (map, filter, reduce) over manual loops
+- **Avoid unnecessary callbacks**: `Array.map(doStuff)` not `Array.map(v => doStuff(v))`
+
+## Naming and structure
+
+- **One-word names** — multi-word names often indicate a function does too much; refactor
+- **One-letter vars OK** in ML style: `Array.map(x => ...)`, `const [x, ...xs] = [...]`
+- **KISS and DRY** — small functions compose
+- **Avoid bloated code** — strive for minimalism, avoid cryptic cleverness
+
+## ts-pattern
+
+- **Prefer `match` with guards** over if/else chains and ternaries for multi-way dispatch
+- **Flatten cases** into separate `.with` clauses; use guards (second arg) rather than nesting conditionals
+- **Match on the discriminant** (e.g. `node.type`, tuple of values) so ts-pattern narrows types
+- **Use `.otherwise`** for fallthrough
+- See `.cursor/rules/pattern-matching.mdc` for pattern objects
+
+## Elaboration monad
+
+- **V2 is canonical** — V1 is deprecated, kept for reference
+- `V2.Do()` takes a generator; yields use ReaderWriterEither semantics
+- Inference v2: `src/elaboration/inference.v2/`
+- Checking v2: `src/elaboration/checking.v2/`
+
+## Comments
+
+- **Avoid unneeded comments** — code should be self-documenting
+- **Use types to document intent**
+- **Comments explain "why"**, not "what"
+- Brief and to the point

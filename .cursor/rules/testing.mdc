@@ -1,0 +1,44 @@
+---
+description: Yap testing patterns — parser, elaboration, snapshots
+globs: ["**/__tests__/**/*.ts", "**/*.test.ts"]
+alwaysApply: false
+---
+
+# Yap testing patterns
+
+## Parser tests (`src/parser/__tests__`)
+
+- Create parser: `const g = { ...Grammar, ParserStart: "Ann" }; new Nearley.Parser(...)`
+- **Always assert** `data.results.length === 1`; then snapshot `data.results[0]`
+- Change `ParserStart` for different entry points (e.g. `"Ann"`, `"Statement"`, `"Module"`)
+
+## Elaboration tests (`src/elaboration/inference/__tests__`)
+
+- **Setup**: Use `elaborateFrom(src)` from `util.ts`:
+  - Resets supplies: `EB.resetSupply("meta")`, `EB.resetSupply("var")`
+  - Parses with `ParserStart = "Ann"`
+  - Uses `Lib.defaultContext()`
+  - Runs `EB.infer(term)` in V2 monad
+  - Returns `{ src, displays, structure }`
+
+- **Assertions**:
+  - **Structural first**: Assert on `structure` (e.g. `expect(res.structure.term.type).toBe("Block")`)
+  - **Snapshots for output**: `expect({ displays: res.displays }).toMatchSnapshot()`
+  - **Avoid string equality** on pretty output — use snapshots or tolerant regex
+  - Check constraints: `expect(res.displays.constraints).toHaveLength(...)`
+  - Check metas: `Object.keys(res.structure.metas).length`
+
+- **Organization**: `describe()` blocks, descriptive names, positive + negative cases, edge cases
+
+- **Common patterns**: Type inference, polymorphism (let-polymorphism.test.ts), constraints, scoping, recursion (Mu terms)
+
+## Module tests (`src/elaboration/__tests__`)
+
+- Full module elaboration: top-level let, exports, foreign imports
+- Same patterns as inference tests at module granularity
+
+## General
+
+- **Snapshots heavily used** — update with `pnpm test -u`
+- **Path aliases** resolved by vite-tsconfig-paths
+- **Reset supplies** before tests → deterministic meta/var IDs in snapshots

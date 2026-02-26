@@ -1,0 +1,164 @@
+import * as EB from "@yap/elaboration";
+import { match } from "ts-pattern";
+import * as LIR from "./lir";
+import { Patterns } from "./patterns";
+import type { LowerCtx, LowerResult } from "./context";
+import { mkCtx, resetSupply } from "./context";
+
+
+function eraseTypeLevel(term: EB.Term, ctx: LowerCtx): LowerResult {
+	// TODO: handle erasure more systematically; erasure semantics TBD
+	console.warn("Type expression being erased during lowering:", term.type);
+	const result = ctx.nextVar();
+	return {
+		instrs: [LIR.Constructors.Instr.Alloc({ type: "Record", fields: [] }, result)],
+		value: result,
+	};
+}
+
+function extractFields(row: EB.Row): Array<{ label: string; term: EB.Term }> {
+	return match(row)
+		.with(Patterns.Extension, ({ label, value, row: rest }) => [
+			{ label, term: value },
+			...extractFields(rest),
+		])
+		.with(Patterns.Variable, () => {
+			// TODO: handle erasure more systematically; erasure semantics TBD
+			console.warn("Type expression being erased during lowering: row variable");
+			throw new Error("Row variable in value position — type-level only");
+		})
+		.with(Patterns.Empty, () => [])
+		.exhaustive();
+}
+
+const PRIM_OPS = new Set([
+	"$add",
+	"$sub",
+	"$mul",
+	"$div",
+	"$and",
+	"$or",
+	"$eq",
+	"$neq",
+	"$lt",
+	"$gt",
+	"$lte",
+	"$gte",
+	"$mod",
+	"$concat",
+	"$not",
+]);
+
+const isPrimOp = (name: string): boolean => PRIM_OPS.has(name);
+
+function unwrapPrimitiveApp(term: EB.Term): { op: string; args: EB.Term[] } | null {
+	return match(term)
+		.with(Patterns.App, ({ func, arg }) => {
+			const inner = unwrapPrimitiveApp(func);
+			return inner ? { op: inner.op, args: [...inner.args, arg] } : null;
+		})
+		.with(Patterns.VarForeign, ({ variable }) =>
+			isPrimOp(variable.name) ? { op: variable.name, args: [] } : null,
+		)
+		.otherwise(() => null);
+}
+
+export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
+	const prim = unwrapPrimitiveApp(term);
+	if (prim && prim.args.length > 0) {
+		const results = prim.args.map(arg => lower(arg, ctx));
+		const instrs = results.flatMap(r => r.instrs);
+		const argVars = results.map(r => r.value);
+		const result = ctx.nextVar();
+		return {
+			instrs: [...instrs, LIR.Constructors.Instr.Let(result, LIR.Constructors.Expr.PrimOp(prim.op, argVars))],
+			value: result,
+		};
+	}
+
+	return match(term)
+		.with({ type: "Proj", term: Patterns.Row }, ({ term: t }) => eraseTypeLevel(t, ctx))
+		.with({ type: "Proj", term: Patterns.TypeLevelApp }, ({ term: t }) => eraseTypeLevel(t, ctx))
+		.with(Patterns.Proj, ({ label, term: t }) => {
+			const target = lower(t, ctx);
+			const result = ctx.nextVar();
+			return {
+				instrs: [...target.instrs, LIR.Constructors.Instr.Read(label, target.value, result)],
+				value: result,
+			};
+		})
+		.with({ type: "Inj", term: Patterns.Row }, ({ term: t }) => eraseTypeLevel(t, ctx))
+		.with({ type: "Inj", term: Patterns.TypeLevelApp }, ({ term: t }) => eraseTypeLevel(t, ctx))
+		.with(Patterns.Inj, ({ label, value: val, term: t }) => {
+			const intoResult = lower(t, ctx);
+			const valueResult = lower(val, ctx);
+			const result = ctx.nextVar();
+			const alloc: LIR.Allocation = { type: "Record", fields: [{ label, value: valueResult.value }] };
+			return {
+				instrs: [
+					...intoResult.instrs,
+					...valueResult.instrs,
+					LIR.Constructors.Instr.UpdateImmutable(intoResult.value, result, alloc),
+				],
+				value: result,
+			};
+		})
+		.with(Patterns.StructApp, ({ arg }) => {
+				const row = arg.row;
+				const fields = extractFields(row);
+				const fieldResults = fields.map(({ label, term: t }) => ({ label, value: lower(t, ctx) }));
+				const result = ctx.nextVar();
+				const instrs = fieldResults.flatMap(r => r.value.instrs);
+				const alloc: LIR.Allocation = {
+					type: "Record",
+					fields: fieldResults.map(r => ({ label: r.label, value: r.value.value })),
+				};
+				instrs.push(LIR.Constructors.Instr.Alloc(alloc, result));
+				return { instrs, value: result };
+			},
+		)
+		.with(Patterns.Row, t => eraseTypeLevel(t, ctx))
+		.with(Patterns.TypeLevelApp, t => eraseTypeLevel(t, ctx))
+		.with(Patterns.Lit, ({ value }) => {
+			const x = ctx.nextVar();
+			return {
+				instrs: [LIR.Constructors.Instr.Let(x, LIR.Constructors.Expr.Lit(value))],
+				value: x,
+			};
+		})
+		.with(Patterns.VarBound, ({ variable }) => {
+			const name = ctx.bound.get(variable.index);
+			if (name === undefined) throw new Error(`Unbound variable index ${variable.index}`);
+			return { instrs: [], value: name };
+		})
+		.with(Patterns.VarFree, ({ variable }) => {
+				const name = ctx.free.get(variable.name);
+				if (name !== undefined) return { instrs: [], value: name };
+				throw new Error(`Unbound variable: ${variable.name}`);
+			},
+		)
+		.with(Patterns.VarForeign, ({ variable }) => {
+				const name = ctx.free.get(variable.name);
+				if (name !== undefined) return { instrs: [], value: name };
+				if (isPrimOp(variable.name)) {
+					throw new Error(
+						`Primitive ${variable.name} used as value; expected application (not yet implemented)`,
+					);
+				}
+				throw new Error(`Unbound variable: ${variable.name}`);
+			},
+		)
+		.otherwise(() => {
+			throw new Error(
+				`Lowering not implemented for ${term.type} (primitives and ops only)`,
+			);
+		});
+}
+
+export function lowerToMir(term: EB.Term): LIR.Function {
+	resetSupply();
+	const ctx = mkCtx();
+	const { instrs, value } = lower(term, ctx);
+	const block = LIR.Constructors.Block("entry", [], instrs, LIR.Constructors.Terminator.Return(value));
+	return LIR.Constructors.Function("main", [], "entry", [block]);
+}

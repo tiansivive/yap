@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LIR pretty printer > display() handles all types 1`] = `
+"fn main entry=entry
+  entry:
+    let x0 = 1
+    let x1 = 2
+    let x2 = +(x0, x1)
+    return x2"
+`;
+
+exports[`LIR pretty printer > display.block with one Let and Return 1`] = `
+"entry:
+  let x = 42
+  return x"
+`;
+
+exports[`LIR pretty printer > display.function for lowerToMir(EB.DSL.num(42)) 1`] = `
+"fn main entry=entry
+  entry:
+    let x0 = 42
+    return x0"
+`;
+
+exports[`LIR pretty printer > display.module 1`] = `
+"module
+  fn main entry=entry
+    entry:
+      let x0 = 42
+      return x0"
+`;

@@ -51,6 +51,9 @@ importers:
         specifier: ^4.15.3
         version: 4.15.3
     devDependencies:
+      '@asgerf/dts-tree-sitter':
+        specifier: ^0.21.0
+        version: 0.21.0
       '@eslint/js':
         specifier: ^9.10.0
         version: 9.10.0
@@ -140,6 +143,11 @@ importers:
         version: 4.0.13(@types/node@25.0.6)(@vitest/ui@4.0.13)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2)
 
 packages:
+
+  '@asgerf/dts-tree-sitter@0.21.0':
+    resolution: {integrity: sha512-habiFcvSC1BjO818ETw0DTrlwrTsf2rKJLm+qzUAr+NcY4HLNkJKgAveru+Gk7p8GseBrH5wcZHfFyW1jgxT0A==}
+    engines: {node: '>=16'}
+    hasBin: true
 
   '@babel/code-frame@7.24.7':
     resolution: {integrity: sha512-BcYH1CVJBO9tvyIZ2jVeXgSIMvGZ2FDRvDdOIVQyuklNKSsx+eppDEBq/g47Ayw+RqNFE+URvOShmf+f/qwAlA==}
@@ -3397,6 +3405,9 @@ packages:
       tree-sitter:
         optional: true
 
+  tree-sitter@0.21.1:
+    resolution: {integrity: sha512-7dxoA6kYvtgWw80265MyqJlkRl4yawIjO7S5MigytjELkX43fV2WsAXzsNfO7sBpPPCF5Gp0+XzHk0DwLCq3xQ==}
+
   tree-sitter@0.25.0:
     resolution: {integrity: sha512-PGZZzFW63eElZJDe/b/R/LbsjDDYJa5UEjLZJB59RQsMX+fo0j54fqBPn1MGKav/QNa0JR0zBiVaikYDWCj5KQ==}
 
@@ -3772,6 +3783,10 @@ packages:
     resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
 
 snapshots:
+
+  '@asgerf/dts-tree-sitter@0.21.0':
+    dependencies:
+      tree-sitter: 0.21.1
 
   '@babel/code-frame@7.24.7':
     dependencies:
@@ -6857,6 +6872,11 @@ snapshots:
       node-gyp-build: 4.8.4
     optionalDependencies:
       tree-sitter: 0.25.0
+
+  tree-sitter@0.21.1:
+    dependencies:
+      node-addon-api: 8.5.0
+      node-gyp-build: 4.8.4
 
   tree-sitter@0.25.0:
     dependencies:

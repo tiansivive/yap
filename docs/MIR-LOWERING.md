@@ -12,11 +12,12 @@
 2. [Design Decisions](#2-design-decisions)
 3. [MIR Structure (Data Stubs)](#3-mir-structure-data-stubs)
 4. [Pipeline Overview](#4-pipeline-overview)
-5. [EB.Term → MIR Mapping](#5-ebterm--mir-mapping)
-6. [Shift/Reset Lowering (Detailed)](#6-shiftreset-lowering-detailed)
-7. [Continuation Representation: Option A and Path to B](#7-continuation-representation-option-a-and-path-to-b)
-8. [Out of Scope / Deferred](#8-out-of-scope--deferred)
-9. [Open Questions](#9-open-questions)
+5. [Implementation Status](#5-implementation-status)
+6. [EB.Term → MIR Mapping](#6-ebterm--mir-mapping)
+7. [Shift/Reset Lowering (Detailed)](#7-shiftreset-lowering-detailed)
+8. [Continuation Representation: Option A and Path to B](#8-continuation-representation-option-a-and-path-to-b)
+9. [Out of Scope / Deferred](#9-out-of-scope--deferred)
+10. [Open Questions](#10-open-questions)
 
 ---
 
@@ -98,7 +99,7 @@ jump merge(x2)
 
 **Decision:** No `Assign` for general mutation; only `Let` for bindings. Exception: when multiplicity allows (FBIP), MIR encodes in-place mutation via `Update` with mode `mutate`.
 
-**Rationale:** Yap is functional with structural sharing. Multiplicities track when mutation is allowed. MIR must encode these semantics so the backend compiles them correctly without extra analysis. See [§5.4](#54-structural-operations-read-and-update-crud).
+**Rationale:** Yap is functional with structural sharing. Multiplicities track when mutation is allowed. MIR must encode these semantics so the backend compiles them correctly without extra analysis. See [§6.4](#64-structural-operations-read-and-update-crud).
 
 ### 2.4 Block Parameters for Jump Targets
 
@@ -110,7 +111,7 @@ jump merge(x2)
 
 **Decision:** Initial implementation heap-allocates the captured frame for multi-shot. The continuation block label is a compile-time constant. `k` is a heap ref `(L_cont, frame)`; `k(v)` becomes `Resume(k_ref, v)`.
 
-**Rationale:** Multi-shot requires frame capture. Heap allocation is the simplest correct approach. We can optimize single-shot (stack allocation, direct jump) later. See [§7](#7-continuation-representation-option-a-and-path-to-b) for the path to Option B.
+**Rationale:** Multi-shot requires frame capture. Heap allocation is the simplest correct approach. We can optimize single-shot (stack allocation, direct jump) later. See [§8](#8-continuation-representation-option-a-and-path-to-b) for the path to Option B.
 
 ---
 
@@ -242,9 +243,48 @@ MIR (Function with blocks)
 
 ---
 
-## 5. EB.Term → MIR Mapping
+## 5. Implementation Status
 
-### 5.1 Source Language Context
+> Last updated: 2026-02-26
+
+The lowering pass lives in `src/lowering/`. The LIR types (Module, Function, Block, Instr, Terminator, Expr, Allocation) are defined in `lir.ts` — Let, Var, Lit, PrimOp; Read, Update (immutable/fbip), Alloc; Jump, Branch, Return. A pretty printer (`pretty.ts`) provides `display.expr`, `display.instr`, etc., with pattern-matched polymorphic dispatch.
+
+### Implemented
+
+| EB.Term / Feature | Status | Notes |
+| ----------------- | ------ | ----- |
+| `Lit` | ✅ | Num, Bool, String, etc. → `Let x = Lit(v); Return x` |
+| `Var(Bound)` | ✅ | Resolved via `LowerCtx.bound` map |
+| `Var(Free)` | ✅ | Resolved via `LowerCtx.free` map |
+| `Var(Foreign)` | ✅ | As prim op arg only; throws if used as value |
+| Primitive `App` | ✅ | Curried apps (`add(1, 2)`, `not(true)`) → `Let` + `PrimOp` + `Return` |
+| `App(Struct, Row)` | ✅ | Record construction → `Alloc` with fields |
+| `Proj` | ✅ | From Struct only → `Read(label, target, result)` |
+| `Inj` | ✅ | From Struct only → `Update` (immutable mode); type-level base → erasure |
+
+Supported primops: `$add`, `$sub`, `$mul`, `$div`, `$and`, `$or`, `$eq`, `$neq`, `$lt`, `$gt`, `$lte`, `$gte`, `$mod`, `$concat`, `$not`.
+
+### Not Yet Implemented
+
+| EB.Term / Feature | Status | Notes |
+| ----------------- | ------ | ----- |
+| `Lambda` | ❌ | Throws "not implemented" |
+| `App` (general) | ❌ | Only primitive apps and Struct supported |
+| `Block` | ❌ | — |
+| `Match` | ❌ | — |
+| `Reset` / `Shift` | ❌ | — |
+| `Let` | ❌ | — |
+
+### Tests
+
+- `src/lowering/__tests__/lower.test.ts` — Lit, Var, prim App, struct, proj, inj, Lambda/Foreign throw
+- `src/lowering/__tests__/pretty.test.ts` — Pretty printer unit tests and snapshots (incl. Read, Alloc, Update)
+
+---
+
+## 6. EB.Term → MIR Mapping
+
+### 6.1 Source Language Context
 
 EB.Term constructors (from `src/elaboration/syntax/term.ts`):
 
@@ -259,7 +299,7 @@ EB.Term constructors (from `src/elaboration/syntax/term.ts`):
 | `Modal`                            | Modality annotations    |
 | `Reset`, `Shift`                   | Delimited continuations |
 
-### 5.2 Conceptual Mappings (Not Exhaustive)
+### 6.2 Conceptual Mappings (Not Exhaustive)
 
 **Literals and Variables**
 
@@ -310,7 +350,7 @@ EB.Modal(term, { quantity, liquid })
   →  lower(term)  // liquid used in verification; quantity flows to structural ops (FBIP)
 ```
 
-### 5.4 Structural Operations: READ and UPDATE (CRUD)
+### 6.4 Structural Operations: READ and UPDATE (CRUD)
 
 Yap uses **immutable structural sharing** by default. Multiplicities allow **FBIP** (functional but in-place): when we have exclusive/linear access, mutation is permitted. This is **Yap semantics**, not a backend choice.
 
@@ -328,7 +368,7 @@ Yap uses **immutable structural sharing** by default. Multiplicities allow **FBI
 
 **Variants:** Variants are structs with a tag and payload. Injection on variants is type-level; the runtime representation is a struct. TODO/QUESTION: Do we need to support injection on variants in MIR, or can we defer? The representation may be straightforward; the semantics need clarification.
 
-### 5.5 Reset and Shift (High-Level)
+### 6.5 Reset and Shift (High-Level)
 
 ```
 EB.Reset(term)
@@ -342,13 +382,13 @@ EB.Shift(body)   // body = Lambda(k, e) with k = continuation
   →  lower(e) with k = k_ref; App(k, v) in e becomes Resume(k_ref, v)
 ```
 
-See [§6](#6-shiftreset-lowering-detailed) for the detailed transformation.
+See [§7](#7-shiftreset-lowering-detailed) for the detailed transformation.
 
 ---
 
-## 6. Shift/Reset Lowering (Detailed)
+## 7. Shift/Reset Lowering (Detailed)
 
-### 6.1 EB.Term Structure
+### 7.1 EB.Term Structure
 
 From elaboration:
 
@@ -356,7 +396,7 @@ From elaboration:
 - **Shift(body):** `body` is `Lambda(k, e)` where `k` is the continuation (type `A → α`). The body `e` is checked with `k` in scope. `resume v` in source becomes `App(k, v)` in EB.Term.
 - **Resume:** In EB.Term, resume is `App(k, v)` where `k` is the continuation binder (Bound index) and `v` is the value.
 
-### 6.2 Continuation as Block + Frame
+### 7.2 Continuation as Block + Frame
 
 The continuation is the "rest of the reset" from the shift point to the reset boundary. We represent it as:
 
@@ -365,7 +405,7 @@ The continuation is the "rest of the reset" from the shift point to the reset bo
 
 When the shift body calls `k(v)`, we emit `Resume(k_ref, v)`, which restores the frame and jumps to the continuation block with `v`.
 
-### 6.3 Transformation: Single Shift
+### 7.3 Transformation: Single Shift
 
 **Source (conceptual):**
 
@@ -403,7 +443,7 @@ block reset_exit(result):
 - `k(v)` becomes `Resume(k_ref, v)` — a terminator that restores the frame and jumps to `L_cont` with `v`.
 - For Option A (non-escaping), we could optimize to direct `jump L_cont(v)` when we know single-shot — but first iteration we always use the heap-allocated path.
 
-### 6.4 Transformation: Nested Shifts
+### 7.4 Transformation: Nested Shifts
 
 ```
 reset {
@@ -447,7 +487,7 @@ block reset_exit(result):
     ...
 ```
 
-### 6.5 Shift That Returns Without Resuming
+### 7.5 Shift That Returns Without Resuming
 
 ```
 reset { shift (\k -> 42) }
@@ -457,7 +497,7 @@ reset { shift (\k -> 42) }
 - Emit `jump reset_exit(42)`.
 - The continuation block is dead (never jumped to).
 
-### 6.6 Multi-Shot Semantics and Frame Capture
+### 7.6 Multi-Shot Semantics and Frame Capture
 
 **Multi-shot:** A continuation `k` can be resumed multiple times. Each `k(v)` runs the continuation from the shift point with that value. The continuation must be **replayable** — its captured state cannot be consumed on first use.
 
@@ -477,7 +517,7 @@ For multi-shot, each resume must be able to replay the continuation with a fresh
 
 **Simplified first iteration:** Always heap-allocate. `k` is a heap-allocated continuation. `k(v)` = load continuation, restore frame, jump to its block with `v`. This correctly implements multi-shot. We can optimize single-shot later (e.g. stack allocation, or direct jump when we know `k` is used once and doesn't escape).
 
-### 6.7 Lowering Algorithm Sketch
+### 7.7 Lowering Algorithm Sketch
 
 ```
 lowerReset(term, ctx):
@@ -498,7 +538,7 @@ lowerInReset(term, ctx):
     ...
 ```
 
-### 6.8 Identifying the Continuation
+### 7.8 Identifying the Continuation
 
 The continuation is the "rest of the reset" from the shift point to the reset boundary. We extract it by **traversing the term and passing the context** (what would run after the current subterm) as we go. When we hit a Shift, we turn that context into a block. No CPS IR needed — just context-passing in the lowering traversal.
 
@@ -510,7 +550,7 @@ The continuation is the "rest of the reset" from the shift point to the reset bo
 
 ---
 
-## 7. Continuation Representation: Option A and Path to B
+## 8. Continuation Representation: Option A and Path to B
 
 ### 7.1 Option A (Current)
 
@@ -532,7 +572,7 @@ To support escaping continuations:
 
 ---
 
-## 8. Out of Scope / Deferred
+## 9. Out of Scope / Deferred
 
 | Item                                               | Reason                                                                                                         |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -548,7 +588,7 @@ To support escaping continuations:
 
 ---
 
-## 9. Open Questions
+## 10. Open Questions
 
 1. **Block parameters and merge points:** We explicitly avoid φ nodes. Block parameters receive values from jumps; each predecessor passes its args via `jump B(args)`. Multiple predecessors → multiple jump sites to the same block, each passing (possibly different) args. The block's params are the merge — no φ needed. Open: do we need to formalize the "which predecessor" mapping, or is the current model sufficient?
 

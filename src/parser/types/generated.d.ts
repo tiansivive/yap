@@ -308,7 +308,7 @@ export const enum SyntaxType {
   Reset = "reset",
   Resume = "resume",
   ReturnStatement = "return_statement",
-  Row = "row",
+  row = "row",
   Script = "script",
   Shift = "shift",
   SourceFile = "source_file",

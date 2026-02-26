@@ -16,7 +16,7 @@ Per-module architecture documents:
 
 Migration tracking: `docs/V2-MIGRATION.md`
 
-MIR and lowering: `docs/MIR-LOWERING.md` — Design plan for lowering EB.Term to MIR (SSA, shift/reset, CRUD, FBIP). Early draft; consult when working on `src/lowering/` or backend pipeline.
+MIR and lowering: `docs/MIR-LOWERING.md` — Design plan for lowering EB.Term to MIR (SSA, shift/reset, CRUD, FBIP). Early draft; consult when working on `src/lowering/` or backend pipeline. Lowering supports Struct, Proj, Inj → Read/Update/Alloc (see §5).
 
 The agent should read `docs/ARCHITECTURE.md` at session start and consult the relevant per-module doc when working in a specific subsystem.
 
@@ -54,6 +54,8 @@ Run `pnpm test` to run the tests. You can update snapshots with `pnpm test -u` a
 
 ## Coding guidelines
 
+> **Cursor users**: Style and conventions are also encoded in `.cursor/rules/*.mdc` (pattern-matching, coding-style, testing, conventions, agent-behavior). See `AGENTS.md` for the rule index.
+
 ### Patterns and abstraction
 
 - Elaboration Monad (V2) (`src/elaboration/shared/monad.v2.ts`)
@@ -80,6 +82,7 @@ Run `pnpm test` to run the tests. You can update snapshots with `pnpm test -u` a
   - Flatten all cases into separate `.with` clauses using guards (second argument) rather than nesting conditionals inside a handler.
   - Match on the discriminant directly (e.g. `node.type`, tuple of values) so ts-pattern can narrow types.
   - Use `.otherwise` for the fallthrough case.
+  - **Do NOT use predicate helpers or if checks for structural dispatch:** Use `.with()` with **const pattern objects** (like `NF.Patterns`, `EB.CtorPatterns`, `src/lowering/patterns.ts`). Create pattern objects with `as const` and reuse them. Use `P.when` for value guards when needed.
 - Prefer recursion over imperative looping.
 - Avoid unneeded comments. Code should be self-documenting as much as possible.
   - Use types to document intent.

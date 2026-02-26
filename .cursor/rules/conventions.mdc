@@ -1,0 +1,40 @@
+---
+description: Yap conventions — path aliases, pitfalls, tree-sitter, v2
+globs: "**/*.ts"
+alwaysApply: false
+---
+
+# Yap conventions
+
+## Path aliases (tsconfig.json)
+
+- `@yap/elaboration/*` → `src/elaboration/*`
+- `@yap/src/*` → `src/parser/*`
+- `@yap/shared/*` → `src/shared/*`
+
+## Key locations
+
+- **Elaboration dispatch**: `src/elaboration/elaborate.ts` — authoritative list for AST node handling
+- **Parser expression categories**: Lambda, Pi/arrow, Application, rows (struct/tuple/list/variant/tagged), Projection, Injection, Block, Match, Annotation
+- **Grammar changes**: Regenerate with `pnpm nearley`; re-run parser tests (snapshot shapes from `processors.ts`)
+- **Types/values in tests**: Pretty via `EB.Display.Term(...)`, `NF.display(...)` — use snapshots, not exact string equality
+
+## Common pitfalls
+
+- **Forgetting `pnpm nearley`** after `grammar.ne` changes → stale `grammar.ts`
+- **Not resetting supplies** before tests → nondeterministic snapshots
+- **NF.Value branded type**: `Extract<NF.Value, { type: "Abs" }>` → `never`. Use intersection: `NF.Value & { binder: { type: "Pi"; ... }; closure: NF.Closure }`
+- **CST nodes**: Use `SyntaxType.X` enum (e.g. `SyntaxType.Lambda`), not raw `"lambda"`
+
+## Tree-sitter (v2)
+
+- Grammar in `tree-sitter-yap` (external)
+- Regenerate types: `pnpm ts-dts` → `src/parser/types/generated.d.ts`
+- **Field access**: `CST.Utils.extractFields(node, "field1", "field2")` for named fields; `extractParam(node)` or `firstNamedChild` for empty/XOR fields
+
+## v2 elaboration
+
+- `check` returns `EB.Term` (not `[EB.Term, Q.Usages]`)
+- Dispatch by **term shape** at top level (`check.ts`), **type shape** within modules (e.g. struct.ts → Type/HashMap/Schema/Sigma)
+- Modules: `check.ts`, `pi.ts`, `struct.ts`, `row.ts`, `variant.ts`, `tuple.ts`, `injection.ts`, `tagged.ts`
+- V1 kept for reference; v2 does not use it

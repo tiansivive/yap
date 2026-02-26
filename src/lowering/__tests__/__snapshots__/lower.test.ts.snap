@@ -1,0 +1,60 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Lowering: primitives and ops > lowers Lit(Num(42)) 1`] = `
+"fn main entry=entry
+  entry:
+    let x0 = 42
+    return x0"
+`;
+
+exports[`Lowering: primitives and ops > lowers add(1, 2) 1`] = `
+"fn main entry=entry
+  entry:
+    let x0 = 1
+    let x1 = 2
+    let x2 = +(x0, x1)
+    return x2"
+`;
+
+exports[`Lowering: primitives and ops > lowers not(true) 1`] = `
+"fn main entry=entry
+  entry:
+    let x0 = true
+    let x1 = !(x0)
+    return x1"
+`;
+
+exports[`Lowering: struct, proj, inj > lowers empty struct 1`] = `
+"fn main entry=entry
+  entry:
+    let x0 = alloc {  }
+    return x0"
+`;
+
+exports[`Lowering: struct, proj, inj > lowers inj(label, value, struct) 1`] = `
+"fn main entry=entry
+  entry:
+    let x0 = 1
+    let x1 = alloc { x: x0 }
+    let x2 = 2
+    let x3 = update-immutable x1 { y: x2 }
+    return x3"
+`;
+
+exports[`Lowering: struct, proj, inj > lowers proj(label, struct) 1`] = `
+"fn main entry=entry
+  entry:
+    let x0 = 42
+    let x1 = alloc { x: x0 }
+    let x2 = read x1.x
+    return x2"
+`;
+
+exports[`Lowering: struct, proj, inj > lowers struct({ x: 1, y: 2 }) 1`] = `
+"fn main entry=entry
+  entry:
+    let x0 = 1
+    let x1 = 2
+    let x2 = alloc { x: x0, y: x1 }
+    return x2"
+`;

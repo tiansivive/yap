@@ -70,7 +70,7 @@ src/
 ├── modules/loading.ts          Module resolution, import handling
 ├── Codegen/                    JavaScript code generation
 ├── FFI/codecs.ts               Foreign function interface codec
-├── lowering/lir.ts             Lowering IR (early-stage); see docs/MIR-LOWERING.md for design plan
+├── lowering/                   MIR lowering (EB.Term → LIR); see docs/MIR-LOWERING.md for design and status
 ├── shared/                     Cross-cutting types, primitives, config
 └── utils/                      Generic helpers (types, objects, functions)
 ```

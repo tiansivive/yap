@@ -1,5 +1,18 @@
 import * as EB from "@yap/elaboration";
+import * as Lit from "@yap/shared/literals";
+import * as R from "@yap/shared/rows";
 import { OP_AND, OP_EQ, OP_NOT, OP_OR } from "@yap/shared/lib/primitives";
+
+// Core term builders (literals, variables)
+export const num = (n: number): EB.Term => EB.Constructors.Lit(Lit.Num(n));
+export const bool = (b: boolean): EB.Term => EB.Constructors.Lit(Lit.Bool(b));
+export const str = (s: string): EB.Term => EB.Constructors.Lit(Lit.String(s));
+export const bound = (i: number): EB.Term => EB.Constructors.Var(EB.Constructors.Vars.Bound(i));
+export const free = (name: string): EB.Term => EB.Constructors.Var(EB.Constructors.Vars.Free(name));
+export const foreign = (name: string): EB.Term => EB.Constructors.Var(EB.Constructors.Vars.Foreign(name));
+export const type = (name: string): EB.Term => EB.Constructors.Lit(Lit.Atom(name));
+export const lambda = (variable: string, body: EB.Term, annotation: EB.Term): EB.Term =>
+	EB.Constructors.Lambda(variable, "Explicit", body, annotation);
 
 export const and = (p: EB.Term, q: EB.Term): EB.Term => {
 	const _and = EB.Constructors.Var({ type: "Foreign", name: OP_AND });
@@ -78,3 +91,17 @@ export const lte = (p: EB.Term, q: EB.Term): EB.Term => {
 	const app = EB.Constructors.App("Explicit", EB.Constructors.App("Explicit", _lte, p), q);
 	return app;
 };
+
+// Structural: struct, proj, inj
+export const struct = (fields: Array<{ label: string; value: EB.Term }>): EB.Term => {
+	const row = fields.reduceRight<EB.Row>(
+		(acc, { label, value }) => R.Constructors.Extension(label, value, acc),
+		R.Constructors.Empty() as EB.Row,
+	);
+	return EB.Constructors.Struct(row);
+};
+
+export const proj = (label: string, term: EB.Term): EB.Term => EB.Constructors.Proj(label, term);
+
+export const inj = (label: string, value: EB.Term, term: EB.Term): EB.Term =>
+	EB.Constructors.Inj(label, value, term);

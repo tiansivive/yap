@@ -2,7 +2,17 @@
 
 Yap is a dependently typed language with structural types, implicits, and verification semantics. This file guides AI coding agents working on the codebase.
 
-**For full context**, read `.github/copilot-instructions.md` at session start. It covers architecture, coding guidelines, testing patterns, V2 migration, and agent interaction style.
+**For full context**, read `.github/copilot-instructions.md` at session start. It covers architecture, detailed guidelines, testing patterns, V2 migration, and agent interaction style.
+
+**Cursor rules** (`.cursor/rules/`) encode style and conventions; they apply automatically when editing matching files:
+
+| Rule | Applies | Content |
+|------|---------|---------|
+| `pattern-matching.mdc` | `**/*.ts` | ts-pattern with const pattern objects; no if checks |
+| `coding-style.mdc` | `**/*.ts` | Immutable, terse, V2 Do, recursion, comments |
+| `testing.mdc` | `**/__tests__/**`, `*.test.ts` | Parser, elaboration, module test patterns |
+| `conventions.mdc` | `**/*.ts` | Path aliases, pitfalls, tree-sitter, v2 |
+| `agent-behavior.mdc` | always | Collaborative, validate, surface issues, self-maintenance |
 
 ## Project overview
 
@@ -11,57 +21,59 @@ Yap is a dependently typed language with structural types, implicits, and verifi
 - **Verification**: Liquid refinements, SMT translation, Z3
 - **Stack**: TypeScript (strict), pnpm, Vitest
 
-Architecture docs: `docs/ARCHITECTURE.md`, `src/elaboration/ARCHITECTURE.md`, `docs/V2-MIGRATION.md`
+Architecture: `docs/ARCHITECTURE.md`, `src/elaboration/ARCHITECTURE.md`, `docs/V2-MIGRATION.md`
 
-## Dev environment tips
+## Dev environment
 
 - Use `pnpm` for all commands (Node ≥ 18.3)
 - Install z3: `brew install z3` (macOS)
 - Path aliases: `@yap/elaboration/*`, `@yap/src/*`, `@yap/shared/*` (see `tsconfig.json`)
-- After editing `src/parser/grammar.ne`, run `pnpm nearley` to regenerate the parser
-- Regenerate tree-sitter types: `pnpm ts-dts` (after grammar changes in tree-sitter-yap)
+- After editing `src/parser/grammar.ne` → `pnpm nearley`
+- After grammar changes in tree-sitter-yap → `pnpm ts-dts`
 
 ## Build and run
 
 ```bash
 pnpm install
 pnpm nearley           # Regenerate parser (if grammar changed)
-pnpm yap < file > .yap # Parse, elaborate, verify a source file
+pnpm yap < file > .yap # Parse, elaborate, verify
 pnpm yap repl          # Interactive REPL
 ```
 
 Do not use `pnpm build` while debugging; run `pnpm yap` directly.
 
-## Testing instructions
+## Testing
 
-- Run tests: `pnpm test`
-- Update snapshots: `pnpm test -u`
-- Specific test: `pnpm test <path/to/test/file>`
+- Run: `pnpm test` | Update snapshots: `pnpm test -u` | Specific: `pnpm test <path>`
 - Before committing: `pnpm lint` and `pnpm test`
-- **Parser tests**: Use `ParserStart = "Ann"`; assert `data.results.length === 1`; snapshot `data.results[0]`
-- **Elaboration tests**: Use `elaborateFrom(src)` from `util.ts`; reset supplies for determinism; assert on `structure` first, then snapshots
+- **Parser**: `ParserStart = "Ann"`; assert `data.results.length === 1`; snapshot `data.results[0]`
+- **Elaboration**: `elaborateFrom(src)` from `util.ts`; reset supplies; assert on `structure` first, then snapshots
 - Add or update tests for code you change
 
-## Coding conventions
+## Style guide (summary)
 
-- Prefer immutable code, V2 Do notation, `ts-pattern` match over if/else
-- One-word names; small functions; KISS/DRY
-- Prefer recursion over imperative loops
-- Comments explain "why", not "what"
-- V2 elaboration: `src/elaboration/inference.v2/`, `src/elaboration/checking.v2/`; v1 is deprecated
+- **Immutable**, declarative, recursion over loops
+- **V2 Do notation**; avoid long fp-ts pipelines
+- **ts-pattern** with const pattern objects (no if checks, no predicate helpers)
+- **One-word names**; small functions; KISS/DRY
+- **Comments explain "why"**, not "what"
+- **V2 elaboration** in `inference.v2/`, `checking.v2/`; v1 deprecated
 
 ## PR instructions
 
-- Title format: `[<area>] <Description>`
+- Title: `[<area>] <Description>`
 - Run `pnpm lint` and `pnpm test` before committing
 - Ensure tests pass and snapshots are updated if behavior changed
 
 ## Key references
 
-| Topic                        | Location                          |
-| ---------------------------- | --------------------------------- |
-| Full agent instructions      | `.github/copilot-instructions.md` |
-| Architecture                 | `docs/ARCHITECTURE.md`            |
-| V2 migration status          | `docs/V2-MIGRATION.md`            |
-| MIR design and lowering plan | `docs/MIR-LOWERING.md`            |
-| Design specs, roadmap        | `brainstorming/yap/`              |
+| Topic | Location |
+|-------|----------|
+| Full agent instructions | `.github/copilot-instructions.md` |
+| Architecture | `docs/ARCHITECTURE.md` |
+| V2 migration | `docs/V2-MIGRATION.md` |
+| MIR / lowering | `docs/MIR-LOWERING.md` |
+| Design specs, roadmap | `brainstorming/yap/` |
+| Cursor rules | `.cursor/rules/*.mdc` |
+
+Lowering (`src/lowering/`): Struct, Proj, Inj → LIR Read/Update/Alloc. See MIR-LOWERING.md §5.
