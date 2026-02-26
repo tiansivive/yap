@@ -8,12 +8,15 @@ It contains a Nearley-based parser and an elaboration/inference pipeline which u
 For the full architecture overview, see `docs/ARCHITECTURE.md`. It covers the compiler pipeline, module map, key data types (`Src.Term`, `EB.Term`, `NF.Value`, `Context`), cross-cutting concerns (monad, metas, constraint flow, primitives), and design decisions.
 
 Per-module architecture documents:
+
 - `src/parser/ARCHITECTURE.md` — Dual parser backends, grammar, AST vs CST
 - `src/elaboration/ARCHITECTURE.md` — Bidirectional inference, dispatch, monad, context, solver
 - `src/elaboration/normalization/ARCHITECTURE.md` — NbE engine, values, closures, evaluator
 - `src/verification/ARCHITECTURE.md` — Liquid refinements, SMT translation, Z3
 
 Migration tracking: `docs/V2-MIGRATION.md`
+
+MIR and lowering: `docs/MIR-LOWERING.md` — Design plan for lowering EB.Term to MIR (SSA, shift/reset, CRUD, FBIP). Early draft; consult when working on `src/lowering/` or backend pipeline.
 
 The agent should read `docs/ARCHITECTURE.md` at session start and consult the relevant per-module doc when working in a specific subsystem.
 
@@ -179,6 +182,7 @@ Run `pnpm test` to run the tests. You can update snapshots with `pnpm test -u` a
 The codebase is migrating from Nearley to tree-sitter. V2 files coexist with v1.
 
 ### CST structure
+
 - The tree-sitter grammar lives in `tree-sitter-yap` (external package).
 - CST node types are generated into `src/parser/types/generated.d.ts`. Regenerate after grammar changes:
   ```sh
@@ -190,11 +194,13 @@ The codebase is migrating from Nearley to tree-sitter. V2 files coexist with v1.
   - XOR fields (e.g. `lambda` has `explicitNode` xor `implicitNode`) → access via typed properties directly.
 
 ### v2 elaboration conventions
+
 - V2 elaboration drops usages/multiplicities (deferred to verification pass).
   - `check` returns `EB.Term`, not `[EB.Term, Q.Usages]`.
 - Inference v2 modules live in `src/elaboration/inference.v2/`.
 - Checking v2 modules live in `src/elaboration/checking.v2/`.
-- Checking modules are organized by **type shape being checked against** (e.g. `pi.ts` for Pi types, `struct.ts` for structs), not by term shape.
+- Checking modules are organized by **term shape** at the top-level dispatch (`check.ts`), then by **type shape** within each module (e.g. `struct.ts` matches on Type/HashMap/Schema/Sigma).
+- Current checking.v2 modules: `check.ts` (dispatcher), `pi.ts`, `struct.ts`, `row.ts` (shared helpers), `variant.ts`, `tuple.ts`, `injection.ts`, `tagged.ts`. Still missing: `match.ts`, `modal.ts`.
 - Each v2 directory has a `tmp.ts` stub as a central dispatch for `check`/`infer`. These are temporary stubs (`return 1 as any`) that will be wired to the full dispatcher later. Import from `./tmp` within sibling modules.
 - V1 files are kept alongside for reference but are not used by v2 code.
 

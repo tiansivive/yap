@@ -3,6 +3,7 @@ import { Literal } from "@yap/shared/literals";
 import { Simplify } from "type-fest";
 
 // Lowered IR syntax for Yap.
+// Design plan and lowering spec: docs/MIR-LOWERING.md (early draft).
 //
 // This is intentionally small and focused on control-flow:
 // - basic blocks identified by labels

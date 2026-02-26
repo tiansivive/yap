@@ -70,7 +70,7 @@ src/
 ├── modules/loading.ts          Module resolution, import handling
 ├── Codegen/                    JavaScript code generation
 ├── FFI/codecs.ts               Foreign function interface codec
-├── lowering/lir.ts             Lowering IR (early-stage)
+├── lowering/lir.ts             Lowering IR (early-stage); see docs/MIR-LOWERING.md for design plan
 ├── shared/                     Cross-cutting types, primitives, config
 └── utils/                      Generic helpers (types, objects, functions)
 ```
@@ -105,19 +105,19 @@ The tree-sitter parse output. Typed node types with field access, used by `infer
 
 The output of elaboration. A branded type (`Types.Brand<symbol, Constructor & { id }>`) with core term forms:
 
-| Constructor | Description |
-|-------------|-------------|
-| `Lit` | Literal values |
-| `Var` | Variables: `Bound` (de Bruijn index), `Free`, `Foreign`, `Label`, `Meta` (with val + lvl) |
-| `Abs` | Abstraction with `Binding`: `Let`, `Lambda`, `Mu`, `Pi`, `Sigma` — each carries an annotation |
-| `App` | Application with icit |
-| `Row` | Row types (struct, variant, array, schema fields) |
-| `Proj` | Record projection |
-| `Inj` | Variant injection |
-| `Match` | Pattern matching with alternatives |
-| `Block` | Statement sequences with return |
-| `Modal` | Modality annotations (refinements, multiplicities) |
-| `Reset` / `Shift` | Delimited continuations |
+| Constructor       | Description                                                                                   |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| `Lit`             | Literal values                                                                                |
+| `Var`             | Variables: `Bound` (de Bruijn index), `Free`, `Foreign`, `Label`, `Meta` (with val + lvl)     |
+| `Abs`             | Abstraction with `Binding`: `Let`, `Lambda`, `Mu`, `Pi`, `Sigma` — each carries an annotation |
+| `App`             | Application with icit                                                                         |
+| `Row`             | Row types (struct, variant, array, schema fields)                                             |
+| `Proj`            | Record projection                                                                             |
+| `Inj`             | Variant injection                                                                             |
+| `Match`           | Pattern matching with alternatives                                                            |
+| `Block`           | Statement sequences with return                                                               |
+| `Modal`           | Modality annotations (refinements, multiplicities)                                            |
+| `Reset` / `Shift` | Delimited continuations                                                                       |
 
 Structural types are encoded via smart constructors: e.g., `Struct(row)` → `App(Lit(Atom("Struct")), Row(row))`.
 
@@ -142,16 +142,16 @@ Closures are one of: `Closure` (ctx + unevaluated `EB.Term`), `PrimOp` (arity + 
 
 The environment threaded through elaboration (via the reader component of the monad):
 
-| Field | Type | Purpose |
-|-------|------|---------|
-| `env` | `Array<{ type, nf, name }>` | Binding stack — each entry has the binder, its origin, its NF type, and the value |
-| `implicits` | `Array<[EB.Term, NF.Value]>` | Implicit arguments in scope |
-| `sigma` | `Record<string, Sigma>` | Dependent record field context (term, nf, annotation, multiplicity) |
-| `zonker` | `Sub.Subst` | Meta substitution — avoids eager substitution |
-| `metas` | `Record<number, { meta, ann }>` | All generated meta-variables with their annotations |
-| `imports` | `Record<string, EB.AST>` | Imported / free variable bindings |
-| `ffi` | `Record<string, { arity, compute }>` | Primitive / foreign function implementations |
-| `trace` | `P.Stack<Provenance>` | Source provenance tracking |
+| Field       | Type                                 | Purpose                                                                           |
+| ----------- | ------------------------------------ | --------------------------------------------------------------------------------- |
+| `env`       | `Array<{ type, nf, name }>`          | Binding stack — each entry has the binder, its origin, its NF type, and the value |
+| `implicits` | `Array<[EB.Term, NF.Value]>`         | Implicit arguments in scope                                                       |
+| `sigma`     | `Record<string, Sigma>`              | Dependent record field context (term, nf, annotation, multiplicity)               |
+| `zonker`    | `Sub.Subst`                          | Meta substitution — avoids eager substitution                                     |
+| `metas`     | `Record<number, { meta, ann }>`      | All generated meta-variables with their annotations                               |
+| `imports`   | `Record<string, EB.AST>`             | Imported / free variable bindings                                                 |
+| `ffi`       | `Record<string, { arity, compute }>` | Primitive / foreign function implementations                                      |
+| `trace`     | `P.Stack<Provenance>`                | Source provenance tracking                                                        |
 
 Variable lookup resolves through: labels via `sigma`, bound vars via `env` scan, free vars via `imports`.
 
@@ -202,6 +202,7 @@ Meta-variables are placeholders for unknown types or terms, generated with `fres
 A small set of primitive types (`Num`, `Bool`, `String`, `Unit`) and operators (`+`, `-`, `*`, `/`, `&&`, `||`, `==`, `!=`, `<`, `>`, `<=`, `>=`, `%`, `<>`, `++`, `not`).
 
 Each primitive operator has:
+
 - An elaborated type (with liquid refinements, e.g., `+` carries `\r -> r == x + y`)
 - A NF value representation
 - A runtime compute function (for NbE evaluation)
@@ -213,6 +214,7 @@ Each primitive operator has:
 **Defined in:** `src/modules/loading.ts`
 
 `mkInterface(moduleName, visited, opts)`:
+
 - Memoises into `globalModules` to avoid re-loading
 - Detects circular dependencies via `visited` list
 - Parses `.yap` files via Nearley into `Src.Module`
@@ -227,38 +229,39 @@ Import modes: `*` (with hiding), explicit, qualified (with alias prefix).
 
 ## Entry Points
 
-| Entry Point | Command | Description |
-|-------------|---------|-------------|
-| File compilation | `pnpm yap <file>.yap` | Parse → elaborate → codegen. Outputs JS to `./bin/` |
-| REPL | `pnpm yap repl` | Interactive session with persistent context. Supports multi-line input, FFI, expression evaluation |
-| Tests | `pnpm test` | Vitest. Parser tests, inference tests (v1), evaluation tests (v2), unification tests |
-| Grammar regeneration | `pnpm run nearley` | Recompile `grammar.ne` → `grammar.ts` |
-| Type regeneration | `pnpm run ts-dts` | Regenerate tree-sitter types → `generated.d.ts` |
-| Type checking | `pnpm run typecheck` | `tsc --noEmit` |
+| Entry Point          | Command               | Description                                                                                        |
+| -------------------- | --------------------- | -------------------------------------------------------------------------------------------------- |
+| File compilation     | `pnpm yap <file>.yap` | Parse → elaborate → codegen. Outputs JS to `./bin/`                                                |
+| REPL                 | `pnpm yap repl`       | Interactive session with persistent context. Supports multi-line input, FFI, expression evaluation |
+| Tests                | `pnpm test`           | Vitest. Parser tests, inference tests (v1), evaluation tests (v2), unification tests               |
+| Grammar regeneration | `pnpm run nearley`    | Recompile `grammar.ne` → `grammar.ts`                                                              |
+| Type regeneration    | `pnpm run ts-dts`     | Regenerate tree-sitter types → `generated.d.ts`                                                    |
+| Type checking        | `pnpm run typecheck`  | `tsc --noEmit`                                                                                     |
 
 ---
 
 ## Per-module Documentation
 
-| Document | Scope |
-|----------|-------|
-| `src/parser/ARCHITECTURE.md` | Dual parser backends, grammar structure, AST vs CST, tree-sitter utilities |
-| `src/elaboration/ARCHITECTURE.md` | Bidirectional algorithm, dispatch maps, module organisation, monad, context, constraints, solver |
-| `src/elaboration/normalization/ARCHITECTURE.md` | NbE engine: values, closures, stack-based evaluator, quoting, generalization |
-| `src/verification/ARCHITECTURE.md` | Liquid refinements, VC generation, SMT translation, Z3 integration, subtyping |
-| `docs/V2-MIGRATION.md` | v1→v2 migration status, action plan, per-module inventory |
+| Document                                        | Scope                                                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `src/parser/ARCHITECTURE.md`                    | Dual parser backends, grammar structure, AST vs CST, tree-sitter utilities                       |
+| `src/elaboration/ARCHITECTURE.md`               | Bidirectional algorithm, dispatch maps, module organisation, monad, context, constraints, solver |
+| `src/elaboration/normalization/ARCHITECTURE.md` | NbE engine: values, closures, stack-based evaluator, quoting, generalization                     |
+| `src/verification/ARCHITECTURE.md`              | Liquid refinements, VC generation, SMT translation, Z3 integration, subtyping                    |
+| `docs/V2-MIGRATION.md`                          | v1→v2 migration status, action plan, per-module inventory                                        |
+| `docs/MIR-LOWERING.md`                          | MIR design and lowering plan (early draft): SSA, shift/reset, CRUD, FBIP                         |
 
 ---
 
 ## Design Decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| **Bidirectional inference** | Natural fit for dependent types with annotations. `infer` synthesises, `check` pushes expected types inward |
-| **NbE for equality** | Definitional equality checking via normalisation — evaluate to values, compare structurally |
-| **De Bruijn levels in NF, indices in EB** | Levels avoid shifting during weakening (NbE); indices are natural for syntactic binding |
-| **Deferred constraint solving** | Constraints collected during inference, solved per-let-binding. Enables polymorphism via generalization |
-| **Deferred verification** | Modality semantics (refinements, multiplicities) verified after elaboration, not during. Keeps elaboration focused on type inference |
-| **Branded types** | `EB.Term` and `NF.Value` are branded (`Types.Brand<symbol, ...>`) to prevent accidental mixing of syntactic and semantic domains |
-| **Generator-based monad** | `V2.Do(function*() { ... })` provides readable imperative-style code with monadic sequencing, avoiding fp-ts pipe chains |
-| **Structural types via rows** | Structs, tuples, variants, arrays are all row-based. Enables row polymorphism and uniform treatment |
+| Decision                                  | Rationale                                                                                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Bidirectional inference**               | Natural fit for dependent types with annotations. `infer` synthesises, `check` pushes expected types inward                          |
+| **NbE for equality**                      | Definitional equality checking via normalisation — evaluate to values, compare structurally                                          |
+| **De Bruijn levels in NF, indices in EB** | Levels avoid shifting during weakening (NbE); indices are natural for syntactic binding                                              |
+| **Deferred constraint solving**           | Constraints collected during inference, solved per-let-binding. Enables polymorphism via generalization                              |
+| **Deferred verification**                 | Modality semantics (refinements, multiplicities) verified after elaboration, not during. Keeps elaboration focused on type inference |
+| **Branded types**                         | `EB.Term` and `NF.Value` are branded (`Types.Brand<symbol, ...>`) to prevent accidental mixing of syntactic and semantic domains     |
+| **Generator-based monad**                 | `V2.Do(function*() { ... })` provides readable imperative-style code with monadic sequencing, avoiding fp-ts pipe chains             |
+| **Structural types via rows**             | Structs, tuples, variants, arrays are all row-based. Enables row polymorphism and uniform treatment                                  |
