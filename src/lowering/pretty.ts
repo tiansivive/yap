@@ -10,6 +10,7 @@ const d = {
 		match(expr)
 			.with({ type: "Var" }, ({ name }) => name)
 			.with({ type: "Lit" }, ({ value }) => Lit.display(value))
+			.with({ type: "FuncRef" }, ({ name }) => `&${name}`)
 			.with({ type: "PrimOp" }, ({ op, args }) => {
 				const sym = operatorMap[op] ?? op;
 				const argsStr = args.join(", ");
@@ -32,6 +33,11 @@ const d = {
 			.with({ type: "Alloc" }, ({ alloc, result }) => {
 				const fieldsStr = alloc.fields.map(f => `${f.label}: ${f.value}`).join(", ");
 				return `let ${result} = alloc { ${fieldsStr} }`;
+			})
+			.with({ type: "Call" }, ({ target, args, result }) => {
+				const argsStr = args.join(", ");
+				const targetStr = target.type === "direct" ? target.func : `*${target.callee}`;
+				return `let ${result} = call ${targetStr}(${argsStr})`;
 			})
 			.exhaustive(),
 
@@ -74,11 +80,13 @@ function displayAny(x: Expr | Instr | Terminator | Block | Function | Module): s
 	return match(x)
 		.with({ type: "Var" }, e => d.expr(e))
 		.with({ type: "Lit" }, e => d.expr(e))
+		.with({ type: "FuncRef" }, e => d.expr(e))
 		.with({ type: "PrimOp" }, e => d.expr(e))
 		.with({ type: "Let" }, i => d.instr(i))
 		.with({ type: "Read" }, i => d.instr(i))
 		.with({ type: "Update" }, i => d.instr(i))
 		.with({ type: "Alloc" }, i => d.instr(i))
+		.with({ type: "Call" }, i => d.instr(i))
 		.with({ type: "Return" }, t => d.terminator(t))
 		.with({ type: "Jump" }, t => d.terminator(t))
 		.with({ type: "Branch" }, t => d.terminator(t))

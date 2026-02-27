@@ -26,6 +26,21 @@ describe("MIR pretty printer", () => {
 		expect(Pretty.display.expr(expr)).toBe("x0");
 	});
 
+	it("display.expr FuncRef", () => {
+		const expr = MIR.Constructors.Expr.FuncRef("f_0");
+		expect(Pretty.display.expr(expr)).toBe("&f_0");
+	});
+
+	it("display.instr Call direct", () => {
+		const instr = MIR.Constructors.Instr.Call({ type: "direct", func: "foo" }, ["a", "b"], "r");
+		expect(Pretty.display.instr(instr)).toBe("let r = call foo(a, b)");
+	});
+
+	it("display.instr Call indirect", () => {
+		const instr = MIR.Constructors.Instr.Call({ type: "indirect", callee: "fnVar" }, ["envVar", "x"], "r");
+		expect(Pretty.display.instr(instr)).toBe("let r = call *fnVar(envVar, x)");
+	});
+
 	it("display.instr Let", () => {
 		const instr = MIR.Constructors.Instr.Let("x", MIR.Constructors.Expr.Lit(Lit.Num(1)));
 		expect(Pretty.display.instr(instr)).toBe("let x = 1");

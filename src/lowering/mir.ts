@@ -43,19 +43,26 @@ export type Allocation = {
 	fields: Array<{ label: string; value: string }>;
 };
 
+export type CallTarget = { type: "direct"; func: string } | { type: "indirect"; callee: string };
+
 export type Instr =
 	| { type: "Let"; name: string; expr: Expr }
 	| { type: "Read"; label: string; target: string; result: string }
 	| { type: "Update"; mode: "immutable"; into: string; result: string; alloc: Allocation }
 	| { type: "Update"; mode: "fbip"; into: string; updates: Array<{ label: string; value: string }> }
-	| { type: "Alloc"; alloc: Allocation; result: string };
+	| { type: "Alloc"; alloc: Allocation; result: string }
+	| { type: "Call"; target: CallTarget; args: string[]; result: string };
 
 export type Terminator =
 	| { type: "Jump"; target: Label; args: string[] }
 	| { type: "Branch"; cond: string; thenTarget: Label; thenArgs: string[]; elseTarget: Label; elseArgs: string[] }
 	| { type: "Return"; value: string };
 
-export type Expr = { type: "Var"; name: string } | { type: "Lit"; value: Literal } | { type: "PrimOp"; op: string; args: string[] };
+export type Expr =
+	| { type: "Var"; name: string }
+	| { type: "Lit"; value: Literal }
+	| { type: "FuncRef"; name: string }
+	| { type: "PrimOp"; op: string; args: string[] };
 
 let currentId = 0;
 const nextId = () => ++currentId;
@@ -76,6 +83,7 @@ export const Constructors = {
 	Expr: {
 		Var: (name: string): Expr => ({ type: "Var", name }),
 		Lit: (value: Literal): Expr => ({ type: "Lit", value }),
+		FuncRef: (name: string): Expr => ({ type: "FuncRef", name }),
 		PrimOp: (op: string, args: string[]): Expr => ({ type: "PrimOp", op, args }),
 	},
 	Instr: {
@@ -84,6 +92,7 @@ export const Constructors = {
 		UpdateImmutable: (into: string, result: string, alloc: Allocation): Instr => ({ type: "Update", mode: "immutable", into, result, alloc }),
 		UpdateFbip: (into: string, updates: Array<{ label: string; value: string }>): Instr => ({ type: "Update", mode: "fbip", into, updates }),
 		Alloc: (alloc: Allocation, result: string): Instr => ({ type: "Alloc", alloc, result }),
+		Call: (target: CallTarget, args: string[], result: string): Instr => ({ type: "Call", target, args, result }),
 	},
 	Terminator: {
 		Jump: (target: Label, args: string[]): Terminator => ({ type: "Jump", target, args }),
