@@ -12,6 +12,7 @@ function eraseTypeLevel(term: EB.Term, ctx: LowerCtx): LowerResult {
 	return {
 		instrs: [MIR.Constructors.Instr.Alloc({ type: "Record", fields: [] }, result)],
 		value: result,
+		functions: [],
 	};
 }
 
@@ -47,10 +48,12 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 		const results = prim.args.map(arg => lower(arg, ctx));
 		const instrs = results.flatMap(r => r.instrs);
 		const argVars = results.map(r => r.value);
+		const functions = results.flatMap(r => r.functions);
 		const result = ctx.nextVar();
 		return {
 			instrs: [...instrs, MIR.Constructors.Instr.Let(result, MIR.Constructors.Expr.PrimOp(prim.op, argVars))],
 			value: result,
+			functions,
 		};
 	}
 
@@ -63,6 +66,7 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			return {
 				instrs: [...target.instrs, MIR.Constructors.Instr.Read(label, target.value, result)],
 				value: result,
+				functions: target.functions,
 			};
 		})
 		.with({ type: "Inj", term: Patterns.Row }, ({ term: t }) => eraseTypeLevel(t, ctx))
@@ -75,6 +79,7 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			return {
 				instrs: [...intoResult.instrs, ...valueResult.instrs, MIR.Constructors.Instr.UpdateImmutable(intoResult.value, result, alloc)],
 				value: result,
+				functions: [...intoResult.functions, ...valueResult.functions],
 			};
 		})
 		.with(Patterns.StructApp, ({ arg }) => {
@@ -83,12 +88,13 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			const fieldResults = fields.map(({ label, term: t }) => ({ label, value: lower(t, ctx) }));
 			const result = ctx.nextVar();
 			const instrs = fieldResults.flatMap(r => r.value.instrs);
+			const functions = fieldResults.flatMap(r => r.value.functions);
 			const alloc: MIR.Allocation = {
 				type: "Record",
 				fields: fieldResults.map(r => ({ label: r.label, value: r.value.value })),
 			};
 			instrs.push(MIR.Constructors.Instr.Alloc(alloc, result));
-			return { instrs, value: result };
+			return { instrs, value: result, functions };
 		})
 		.with(Patterns.Row, t => eraseTypeLevel(t, ctx))
 		.with(Patterns.TypeLevelApp, t => eraseTypeLevel(t, ctx))
@@ -97,6 +103,7 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			return {
 				instrs: [MIR.Constructors.Instr.Let(x, MIR.Constructors.Expr.Lit(value))],
 				value: x,
+				functions: [],
 			};
 		})
 		.with(Patterns.VarBound, ({ variable }) => {
@@ -105,13 +112,13 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			if (name === undefined) {
 				throw new Error(`Unbound variable index ${variable.index}`);
 			}
-			return { instrs: [], value: name };
+			return { instrs: [], value: name, functions: [] };
 		})
 		.with(Patterns.VarFree, ({ variable }) => {
 			const name = ctx.free.get(variable.name);
 
 			if (name !== undefined) {
-				return { instrs: [], value: name };
+				return { instrs: [], value: name, functions: [] };
 			}
 			throw new Error(`Unbound variable: ${variable.name}`);
 		})
@@ -119,7 +126,7 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			const name = ctx.free.get(variable.name);
 
 			if (name !== undefined) {
-				return { instrs: [], value: name };
+				return { instrs: [], value: name, functions: [] };
 			}
 			if (isPrimOp(variable.name)) {
 				throw new Error(`Primitive ${variable.name} used as value; expected application (not yet implemented)`);

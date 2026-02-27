@@ -295,7 +295,7 @@ Supported primops: `$add`, `$sub`, `$mul`, `$div`, `$and`, `$or`, `$eq`, `$neq`,
 
 ### Supply convention
 
-Lowering follows the same convention as other passes: supplies are global; passes do NOT reset. See `docs/ARCHITECTURE.md` § Supply and naming.
+Lowering follows the same convention as other passes: supplies are global; passes do NOT reset. `lowerToMir` does NOT call `resetSupply()`; callers (e.g. tests) must call it for deterministic names (vars, labels, func names like `f_0`, `f_1`). See `docs/ARCHITECTURE.md` § Supply and naming.
 
 ---
 
