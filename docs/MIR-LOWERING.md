@@ -153,15 +153,19 @@ Values in MIR are **references** (locations/pointers). Yap owns the semantics of
 ### 3.4 Instructions (Pure, Value-Producing)
 
 ```ts
+type CallTarget =
+	| { type: "direct"; func: string } // compile-time known function name (reserved for future top-level fn refs)
+	| { type: "indirect"; callee: string }; // SSA var holding fn ptr (from closure or param)
+
 type Instr =
 	| { type: "Let"; name: string; expr: Expr } // immutable binding
 	// CRUD-style structural operations
 	| { type: "Read"; label: string; target: string; result: string }
-	| { type: "Update"; mode: "allocate"; label: string; value: string; into: string; result: string; alloc: AllocSpec }
-	| { type: "Update"; mode: "mutate"; label: string; value: string; into: string }
-	| { type: "Alloc"; shape: AllocShape; result: string } // allocate new storage (standalone)
-	| { type: "Call"; func: string; args: string[]; result: string }
-	| { type: "PrimOp"; op: string; args: string[]; result: string }
+	| { type: "Update"; mode: "immutable"; into: string; result: string; alloc: Allocation }
+	| { type: "Update"; mode: "fbip"; into: string; updates: Array<{ label: string; value: string }> }
+	| { type: "Alloc"; alloc: Allocation; result: string } // allocate new storage (standalone)
+	| { type: "Call"; target: CallTarget; args: string[]; result: string }
+	| { type: "PrimOp"; op: string; args: string[] } // result via Let
 	// Shift/reset: frame capture (heap-allocated for first iteration)
 	| { type: "MakeCont"; block: Label; captured: string[]; result: string };
 // ... other pure operations as needed
@@ -169,31 +173,40 @@ type Instr =
 
 **Read** — Always a read; no mutability. Projects a field from a struct/record.
 
-**Update** — Discriminated union on `mode`; each variant has the fields it needs:
+**Update** — Discriminated union on `mode`; aligns with current implementation:
 
-- **`mode: "allocate"`** — Has `result` and `alloc`. Update is the primary semantic concept; allocation is part of how the update is performed. The `alloc` field specifies how the allocation works (e.g. record-update delta shape). Allocates a new record: the updated field(s) plus a ref to `into` for unchanged parts. Does _not_ copy the whole value; allocates the delta and shares the rest (immutable structural sharing).
+- **`mode: "immutable"`** — Has `result` and `alloc`. Allocates a new record: the updated field(s) plus a ref to `into` for unchanged parts. Does _not_ copy the whole value; allocates the delta and shares the rest (immutable structural sharing).
 
-- **`mode: "mutate"`** — No `result`, no `alloc`. Mutates `into` in place (FBIP). The instruction produces `into` as its output (same ref).
+- **`mode: "fbip"`** — Functional but in-place. Mutates `into` when multiplicity allows. No `result`; the instruction produces `into` (same ref).
+
+**Call** — Single instruction with discriminated union target. **direct**: `Call({ type: "direct", func: "foo" }, ["a", "b"], "r")` → call `foo(a, b)` directly (reserved for future top-level fn refs). **indirect**: `Call({ type: "indirect", callee: "fnVar" }, [envVar, ...args], "r")` → call through fnVar. Phase 1 uses indirect only. Closure calls expand to Read `__fn`, `__env`, then `Call(indirect, fnVar, [envVar, ...args])`.
 
 ### 3.5 Expressions (Referenced in Instructions)
 
 ```ts
 type Expr =
-  | { type: "Var"; name: string }
-  | { type: "Lit"; value: Literal }
-  | { type: "Construct"; tag: string; args: string[] }
-  // ...
-  ;
+	| { type: "Var"; name: string }
+	| { type: "Lit"; value: Literal }
+	| { type: "FuncRef"; name: string } // function reference; used in closure allocation
+	| { type: "PrimOp"; op: string; args: string[] }
+	| { type: "Construct"; tag: string; args: string[] };
+// ...
 
-type AllocShape = { type: "Record"; fields: string[] } | { type: "Variant"; tag: string } | /* ... */;
-
-// Specifies how allocation works when part of an Update(allocate)
-type AllocSpec =
-  | { type: "RecordUpdate"; base: string }   // allocate delta, share rest from base (into)
-  | /* other allocation strategies for updates */
+type Allocation = { type: "Record"; fields: Array<{ label: string; value: string }> };
 ```
 
-### 3.6 Terminators
+### 3.6 Closure Layout (Func Ptr + Env Record)
+
+Closures use a **function pointer + environment record** layout. No special allocation:
+
+- **Closure** = regular Record with `__fn` (FuncRef) and `__env` (env record ref).
+- **Expr.FuncRef(name)** — binds a function reference; used in `Let fn = FuncRef("f_0")`.
+- **Closure creation** — `AllocRecord([{ __fn, fn }, { __env, envRef }], result)`.
+- **Closure call** — Expand to Read `__fn`, Read `__env`, then `Call(indirect, fnVar, [envVar, ...args])`. Backend sees plain Read + Call; no special closure handling.
+
+This layout is portable, debuggable, and C-friendly. **Spine note:** Spines (multi-arg, explicit arity) are planned; the closure layout accommodates evolution without fundamental redesign.
+
+### 3.7 Terminators
 
 ```ts
 type Terminator =
@@ -206,7 +219,7 @@ type Terminator =
 
 Each block ends with exactly one terminator. No fallthrough.
 
-### 3.7 Design Note: Assign vs Let
+### 3.8 Design Note: Assign vs Let
 
 MIR uses `Let` for immutable bindings (replacing the earlier `Assign`). Each `Let` introduces a new SSA value. This aligns with Yap's functional semantics and simplifies reasoning about dataflow.
 
@@ -362,11 +375,11 @@ Yap uses **immutable structural sharing** by default. Multiplicities allow **FBI
 
 **Record update** lowers to one of:
 
-1. **`Update { mode: "allocate"; label; value; into; result; alloc }`** — Allocate the new record: updated field(s) plus ref to `into` for unchanged parts. The `alloc` field specifies how the allocation works (e.g. `RecordUpdate { base: into }`). `result` is the new allocation.
+1. **`Update { mode: "immutable"; into; result; alloc }`** — Allocate the new record: updated field(s) plus ref to `into` for unchanged parts. `result` is the new allocation.
 
-2. **`Update { mode: "mutate"; label; value; into }`** — Mutate `into` in place (FBIP). No `result`; the instruction produces `into` (same ref).
+2. **`Update { mode: "fbip"; into; updates }`** — Mutate `into` in place (FBIP). No `result`; the instruction produces `into` (same ref).
 
-**Lowering:** `EB.Proj(label, term)` → `Read(label, target, result)`. `EB.Inj(label, value, term)` → `Update` with `mode` from multiplicity: `allocate` or `mutate`.
+**Lowering:** `EB.Proj(label, term)` → `Read(label, target, result)`. `EB.Inj(label, value, term)` → `Update` with `mode` from multiplicity: `immutable` or `fbip`.
 
 **Allocation:** `Alloc` allocates new storage (records, variants, etc.). Used when constructing values and for the allocate-mode update.
 
@@ -611,6 +624,6 @@ This document adapts the MIR spec (SSA with block parameters, no CPS, no φ) to 
 - **Functions** — Top-level units; one function per top-level definition (or similar).
 - **Blocks** — `label`, `params`, `instrs`, `terminator`.
 - **Values** — References (locations/pointers); Yap owns ref semantics.
-- **Instructions** — Pure. `Let` for bindings. `Read` (always read). `Update` discriminated on `mode`: `allocate` (has `result`, `alloc`; allocation is part of the update) or `mutate` (no `result`, produces `into`). `Alloc` for standalone allocation. `MakeCont` for frame capture.
+- **Instructions** — Pure. `Let` for bindings. `Read` (always read). `Update` discriminated on `mode`: `immutable` (has `result`, `alloc`) or `fbip` (no `result`, produces `into`). `Alloc` for standalone allocation. `Call` with `CallTarget` (direct | indirect). `MakeCont` for frame capture.
 - **Terminators** — `Jump`, `Branch`, `Switch`, `Return`, `Resume`.
 - **Shift/reset** — State machine via blocks and jumps; heap-allocated frame capture for multi-shot; Option A (compile-time block label) with path to Option B.
