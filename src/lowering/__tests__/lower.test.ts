@@ -1,12 +1,14 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
 import * as EB from "@yap/elaboration";
 
 import { lower, lowerToMir } from "../lower";
-import { mkCtx } from "../context";
+import { mkCtx, resetSupply } from "../context";
 import * as Pretty from "../pretty";
 
 describe("Lowering: primitives and ops", () => {
+	beforeEach(() => resetSupply());
+
 	it("lowers Lit(Num(42))", () => {
 		const fn = lowerToMir(EB.DSL.num(42));
 		expect(Pretty.display(fn)).toMatchSnapshot();
@@ -51,6 +53,8 @@ describe("Lowering: primitives and ops", () => {
 });
 
 describe("Lowering: struct, proj, inj", () => {
+	beforeEach(() => resetSupply());
+
 	it("lowers struct({ x: 1, y: 2 })", () => {
 		const term = EB.DSL.struct([
 			{ label: "x", value: EB.DSL.num(1) },

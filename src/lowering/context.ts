@@ -1,5 +1,9 @@
-import type { Instr } from "./lir";
+import type { Instr } from "./mir";
 
+/**
+ * Supply (nextVar, nextLabel, nextFuncName) is global — passes do NOT reset.
+ * See docs/ARCHITECTURE.md § Supply and naming.
+ */
 export type LowerCtx = {
 	bound: Map<number, string>;
 	free: Map<string, string>;
@@ -25,10 +29,7 @@ export const resetSupply = () => {
 	labelCounter = 0;
 };
 
-export const mkCtx = (opts?: {
-	bound?: Array<[number, string]>;
-	free?: Array<[string, string]>;
-}): LowerCtx => {
+export const mkCtx = (opts?: { bound?: Array<[number, string]>; free?: Array<[string, string]> }): LowerCtx => {
 	const supply = mkSupply();
 	return {
 		bound: new Map(opts?.bound ?? []),

@@ -2,8 +2,8 @@ import { Types } from "@yap/utils";
 import { Literal } from "@yap/shared/literals";
 import { Simplify } from "type-fest";
 
-// Lowered IR syntax for Yap.
-// Design plan and lowering spec: docs/MIR-LOWERING.md (early draft).
+// Machine-Independent IR for Yap.
+// Design plan and lowering spec: docs/MIR-LOWERING.md
 //
 // This is intentionally small and focused on control-flow:
 // - basic blocks identified by labels
@@ -11,7 +11,7 @@ import { Simplify } from "type-fest";
 // - assignments of simple expressions to SSA-ish variables
 
 export type Term = Types.Brand<typeof tag, Constructor & { id: number }>;
-const tag: unique symbol = Symbol("LIR.Term");
+const tag: unique symbol = Symbol("MIR.Term");
 
 type Constructor =
 	| { type: "BlockGraph"; blocks: Block[]; entry: Label }
@@ -55,10 +55,7 @@ export type Terminator =
 	| { type: "Branch"; cond: string; thenTarget: Label; thenArgs: string[]; elseTarget: Label; elseArgs: string[] }
 	| { type: "Return"; value: string };
 
-export type Expr =
-	| { type: "Var"; name: string }
-	| { type: "Lit"; value: Literal }
-	| { type: "PrimOp"; op: string; args: string[] };
+export type Expr = { type: "Var"; name: string } | { type: "Lit"; value: Literal } | { type: "PrimOp"; op: string; args: string[] };
 
 let currentId = 0;
 const nextId = () => ++currentId;
@@ -84,21 +81,20 @@ export const Constructors = {
 	Instr: {
 		Let: (name: string, expr: Expr): Instr => ({ type: "Let", name, expr }),
 		Read: (label: string, target: string, result: string): Instr => ({ type: "Read", label, target, result }),
-		UpdateImmutable: (into: string, result: string, alloc: Allocation): Instr =>
-			({ type: "Update", mode: "immutable", into, result, alloc }),
-		UpdateFbip: (into: string, updates: Array<{ label: string; value: string }>): Instr =>
-			({ type: "Update", mode: "fbip", into, updates }),
+		UpdateImmutable: (into: string, result: string, alloc: Allocation): Instr => ({ type: "Update", mode: "immutable", into, result, alloc }),
+		UpdateFbip: (into: string, updates: Array<{ label: string; value: string }>): Instr => ({ type: "Update", mode: "fbip", into, updates }),
 		Alloc: (alloc: Allocation, result: string): Instr => ({ type: "Alloc", alloc, result }),
 	},
 	Terminator: {
 		Jump: (target: Label, args: string[]): Terminator => ({ type: "Jump", target, args }),
-		Branch: (
-			cond: string,
-			thenTarget: Label,
-			thenArgs: string[],
-			elseTarget: Label,
-			elseArgs: string[],
-		): Terminator => ({ type: "Branch", cond, thenTarget, thenArgs, elseTarget, elseArgs }),
+		Branch: (cond: string, thenTarget: Label, thenArgs: string[], elseTarget: Label, elseArgs: string[]): Terminator => ({
+			type: "Branch",
+			cond,
+			thenTarget,
+			thenArgs,
+			elseTarget,
+			elseArgs,
+		}),
 		Return: (value: string): Terminator => ({ type: "Return", value }),
 	},
 	Block: (label: Label, params: string[], instrs: Instr[], terminator: Terminator): Block => ({

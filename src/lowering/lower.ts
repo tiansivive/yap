@@ -1,27 +1,23 @@
 import * as EB from "@yap/elaboration";
 import { match } from "ts-pattern";
-import * as LIR from "./lir";
+import * as MIR from "./mir";
 import { Patterns } from "./patterns";
 import type { LowerCtx, LowerResult } from "./context";
-import { mkCtx, resetSupply } from "./context";
-
+import { mkCtx } from "./context";
 
 function eraseTypeLevel(term: EB.Term, ctx: LowerCtx): LowerResult {
 	// TODO: handle erasure more systematically; erasure semantics TBD
 	console.warn("Type expression being erased during lowering:", term.type);
 	const result = ctx.nextVar();
 	return {
-		instrs: [LIR.Constructors.Instr.Alloc({ type: "Record", fields: [] }, result)],
+		instrs: [MIR.Constructors.Instr.Alloc({ type: "Record", fields: [] }, result)],
 		value: result,
 	};
 }
 
 function extractFields(row: EB.Row): Array<{ label: string; term: EB.Term }> {
 	return match(row)
-		.with(Patterns.Extension, ({ label, value, row: rest }) => [
-			{ label, term: value },
-			...extractFields(rest),
-		])
+		.with(Patterns.Extension, ({ label, value, row: rest }) => [{ label, term: value }, ...extractFields(rest)])
 		.with(Patterns.Variable, () => {
 			// TODO: handle erasure more systematically; erasure semantics TBD
 			console.warn("Type expression being erased during lowering: row variable");
@@ -31,23 +27,7 @@ function extractFields(row: EB.Row): Array<{ label: string; term: EB.Term }> {
 		.exhaustive();
 }
 
-const PRIM_OPS = new Set([
-	"$add",
-	"$sub",
-	"$mul",
-	"$div",
-	"$and",
-	"$or",
-	"$eq",
-	"$neq",
-	"$lt",
-	"$gt",
-	"$lte",
-	"$gte",
-	"$mod",
-	"$concat",
-	"$not",
-]);
+const PRIM_OPS = new Set(["$add", "$sub", "$mul", "$div", "$and", "$or", "$eq", "$neq", "$lt", "$gt", "$lte", "$gte", "$mod", "$concat", "$not"]);
 
 const isPrimOp = (name: string): boolean => PRIM_OPS.has(name);
 
@@ -57,9 +37,7 @@ function unwrapPrimitiveApp(term: EB.Term): { op: string; args: EB.Term[] } | nu
 			const inner = unwrapPrimitiveApp(func);
 			return inner ? { op: inner.op, args: [...inner.args, arg] } : null;
 		})
-		.with(Patterns.VarForeign, ({ variable }) =>
-			isPrimOp(variable.name) ? { op: variable.name, args: [] } : null,
-		)
+		.with(Patterns.VarForeign, ({ variable }) => (isPrimOp(variable.name) ? { op: variable.name, args: [] } : null))
 		.otherwise(() => null);
 }
 
@@ -71,7 +49,7 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 		const argVars = results.map(r => r.value);
 		const result = ctx.nextVar();
 		return {
-			instrs: [...instrs, LIR.Constructors.Instr.Let(result, LIR.Constructors.Expr.PrimOp(prim.op, argVars))],
+			instrs: [...instrs, MIR.Constructors.Instr.Let(result, MIR.Constructors.Expr.PrimOp(prim.op, argVars))],
 			value: result,
 		};
 	}
@@ -83,7 +61,7 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			const target = lower(t, ctx);
 			const result = ctx.nextVar();
 			return {
-				instrs: [...target.instrs, LIR.Constructors.Instr.Read(label, target.value, result)],
+				instrs: [...target.instrs, MIR.Constructors.Instr.Read(label, target.value, result)],
 				value: result,
 			};
 		})
@@ -93,72 +71,69 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			const intoResult = lower(t, ctx);
 			const valueResult = lower(val, ctx);
 			const result = ctx.nextVar();
-			const alloc: LIR.Allocation = { type: "Record", fields: [{ label, value: valueResult.value }] };
+			const alloc: MIR.Allocation = { type: "Record", fields: [{ label, value: valueResult.value }] };
 			return {
-				instrs: [
-					...intoResult.instrs,
-					...valueResult.instrs,
-					LIR.Constructors.Instr.UpdateImmutable(intoResult.value, result, alloc),
-				],
+				instrs: [...intoResult.instrs, ...valueResult.instrs, MIR.Constructors.Instr.UpdateImmutable(intoResult.value, result, alloc)],
 				value: result,
 			};
 		})
 		.with(Patterns.StructApp, ({ arg }) => {
-				const row = arg.row;
-				const fields = extractFields(row);
-				const fieldResults = fields.map(({ label, term: t }) => ({ label, value: lower(t, ctx) }));
-				const result = ctx.nextVar();
-				const instrs = fieldResults.flatMap(r => r.value.instrs);
-				const alloc: LIR.Allocation = {
-					type: "Record",
-					fields: fieldResults.map(r => ({ label: r.label, value: r.value.value })),
-				};
-				instrs.push(LIR.Constructors.Instr.Alloc(alloc, result));
-				return { instrs, value: result };
-			},
-		)
+			const row = arg.row;
+			const fields = extractFields(row);
+			const fieldResults = fields.map(({ label, term: t }) => ({ label, value: lower(t, ctx) }));
+			const result = ctx.nextVar();
+			const instrs = fieldResults.flatMap(r => r.value.instrs);
+			const alloc: MIR.Allocation = {
+				type: "Record",
+				fields: fieldResults.map(r => ({ label: r.label, value: r.value.value })),
+			};
+			instrs.push(MIR.Constructors.Instr.Alloc(alloc, result));
+			return { instrs, value: result };
+		})
 		.with(Patterns.Row, t => eraseTypeLevel(t, ctx))
 		.with(Patterns.TypeLevelApp, t => eraseTypeLevel(t, ctx))
 		.with(Patterns.Lit, ({ value }) => {
 			const x = ctx.nextVar();
 			return {
-				instrs: [LIR.Constructors.Instr.Let(x, LIR.Constructors.Expr.Lit(value))],
+				instrs: [MIR.Constructors.Instr.Let(x, MIR.Constructors.Expr.Lit(value))],
 				value: x,
 			};
 		})
 		.with(Patterns.VarBound, ({ variable }) => {
 			const name = ctx.bound.get(variable.index);
-			if (name === undefined) throw new Error(`Unbound variable index ${variable.index}`);
+
+			if (name === undefined) {
+				throw new Error(`Unbound variable index ${variable.index}`);
+			}
 			return { instrs: [], value: name };
 		})
 		.with(Patterns.VarFree, ({ variable }) => {
-				const name = ctx.free.get(variable.name);
-				if (name !== undefined) return { instrs: [], value: name };
-				throw new Error(`Unbound variable: ${variable.name}`);
-			},
-		)
+			const name = ctx.free.get(variable.name);
+
+			if (name !== undefined) {
+				return { instrs: [], value: name };
+			}
+			throw new Error(`Unbound variable: ${variable.name}`);
+		})
 		.with(Patterns.VarForeign, ({ variable }) => {
-				const name = ctx.free.get(variable.name);
-				if (name !== undefined) return { instrs: [], value: name };
-				if (isPrimOp(variable.name)) {
-					throw new Error(
-						`Primitive ${variable.name} used as value; expected application (not yet implemented)`,
-					);
-				}
-				throw new Error(`Unbound variable: ${variable.name}`);
-			},
-		)
+			const name = ctx.free.get(variable.name);
+
+			if (name !== undefined) {
+				return { instrs: [], value: name };
+			}
+			if (isPrimOp(variable.name)) {
+				throw new Error(`Primitive ${variable.name} used as value; expected application (not yet implemented)`);
+			}
+			throw new Error(`Unbound variable: ${variable.name}`);
+		})
 		.otherwise(() => {
-			throw new Error(
-				`Lowering not implemented for ${term.type} (primitives and ops only)`,
-			);
+			throw new Error(`Lowering not implemented for ${term.type} (primitives and ops only)`);
 		});
 }
 
-export function lowerToMir(term: EB.Term): LIR.Function {
-	resetSupply();
+export function lowerToMir(term: EB.Term): MIR.Function {
 	const ctx = mkCtx();
 	const { instrs, value } = lower(term, ctx);
-	const block = LIR.Constructors.Block("entry", [], instrs, LIR.Constructors.Terminator.Return(value));
-	return LIR.Constructors.Function("main", [], "entry", [block]);
+	const block = MIR.Constructors.Block("entry", [], instrs, MIR.Constructors.Terminator.Return(value));
+	return MIR.Constructors.Function("main", [], "entry", [block]);
 }

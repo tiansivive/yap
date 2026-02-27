@@ -1,7 +1,7 @@
 import { match, P } from "ts-pattern";
 import * as Lit from "@yap/shared/literals";
 import { operatorMap } from "@yap/shared/lib/primitives";
-import type { Block, Expr, Function, Instr, Module, Terminator } from "./lir";
+import type { Block, Expr, Function, Instr, Module, Terminator } from "./mir";
 
 const INDENT = "  ";
 
@@ -21,20 +21,14 @@ const d = {
 		match(instr)
 			.with({ type: "Let" }, ({ name, expr }) => `let ${name} = ${d.expr(expr)}`)
 			.with({ type: "Read" }, ({ label, target, result }) => `let ${result} = read ${target}.${label}`)
-			.with(
-				{ type: "Update", mode: "immutable" },
-				({ into, result, alloc }) => {
-					const fieldsStr = alloc.fields.map(f => `${f.label}: ${f.value}`).join(", ");
-					return `let ${result} = update-immutable ${into} { ${fieldsStr} }`;
-				},
-			)
-			.with(
-				{ type: "Update", mode: "fbip" },
-				({ into, updates }) => {
-					const fieldsStr = updates.map(f => `${f.label}: ${f.value}`).join(", ");
-					return `update-fbip ${into} { ${fieldsStr} }`;
-				},
-			)
+			.with({ type: "Update", mode: "immutable" }, ({ into, result, alloc }) => {
+				const fieldsStr = alloc.fields.map(f => `${f.label}: ${f.value}`).join(", ");
+				return `let ${result} = update-immutable ${into} { ${fieldsStr} }`;
+			})
+			.with({ type: "Update", mode: "fbip" }, ({ into, updates }) => {
+				const fieldsStr = updates.map(f => `${f.label}: ${f.value}`).join(", ");
+				return `update-fbip ${into} { ${fieldsStr} }`;
+			})
 			.with({ type: "Alloc" }, ({ alloc, result }) => {
 				const fieldsStr = alloc.fields.map(f => `${f.label}: ${f.value}`).join(", ");
 				return `let ${result} = alloc { ${fieldsStr} }`;
@@ -48,14 +42,11 @@ const d = {
 				const argsStr = args.length > 0 ? `(${args.join(", ")})` : "";
 				return `jump ${target}${argsStr}`;
 			})
-			.with(
-				{ type: "Branch" },
-				({ cond, thenTarget, thenArgs, elseTarget, elseArgs }) => {
-					const thenStr = thenArgs.length > 0 ? `(${thenArgs.join(", ")})` : "";
-					const elseStr = elseArgs.length > 0 ? `(${elseArgs.join(", ")})` : "";
-					return `branch ${cond} ? ${thenTarget}${thenStr} : ${elseTarget}${elseStr}`;
-				},
-			)
+			.with({ type: "Branch" }, ({ cond, thenTarget, thenArgs, elseTarget, elseArgs }) => {
+				const thenStr = thenArgs.length > 0 ? `(${thenArgs.join(", ")})` : "";
+				const elseStr = elseArgs.length > 0 ? `(${elseArgs.join(", ")})` : "";
+				return `branch ${cond} ? ${thenTarget}${thenStr} : ${elseTarget}${elseStr}`;
+			})
 			.exhaustive(),
 
 	block: (block: Block): string => {
@@ -69,23 +60,17 @@ const d = {
 	function: (fn: Function): string => {
 		const paramsStr = fn.params.length > 0 ? `(${fn.params.join(", ")})` : "";
 		const header = `fn ${fn.name}${paramsStr} entry=${fn.entry}`;
-		const blocks = fn.blocks.map(b =>
-			INDENT + d.block(b).replace(/\n/g, "\n" + INDENT),
-		);
+		const blocks = fn.blocks.map(b => INDENT + d.block(b).replace(/\n/g, "\n" + INDENT));
 		return [header, ...blocks].join("\n");
 	},
 
 	module: (m: Module): string => {
-		const fns = m.functions.map(f =>
-			INDENT + d.function(f).replace(/\n/g, "\n" + INDENT),
-		);
+		const fns = m.functions.map(f => INDENT + d.function(f).replace(/\n/g, "\n" + INDENT));
 		return ["module", ...fns].join("\n");
 	},
 };
 
-function displayAny(
-	x: Expr | Instr | Terminator | Block | Function | Module,
-): string {
+function displayAny(x: Expr | Instr | Terminator | Block | Function | Module): string {
 	return match(x)
 		.with({ type: "Var" }, e => d.expr(e))
 		.with({ type: "Lit" }, e => d.expr(e))
