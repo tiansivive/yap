@@ -11,8 +11,9 @@ export const bound = (i: number): EB.Term => EB.Constructors.Var(EB.Constructors
 export const free = (name: string): EB.Term => EB.Constructors.Var(EB.Constructors.Vars.Free(name));
 export const foreign = (name: string): EB.Term => EB.Constructors.Var(EB.Constructors.Vars.Foreign(name));
 export const type = (name: string): EB.Term => EB.Constructors.Lit(Lit.Atom(name));
-export const lambda = (variable: string, body: EB.Term, annotation: EB.Term): EB.Term =>
-	EB.Constructors.Lambda(variable, "Explicit", body, annotation);
+export const lambda = (variable: string, body: EB.Term, annotation: EB.Term): EB.Term => EB.Constructors.Lambda(variable, "Explicit", body, annotation);
+
+export const app = (func: EB.Term, arg: EB.Term): EB.Term => EB.Constructors.App("Explicit", func, arg);
 
 export const and = (p: EB.Term, q: EB.Term): EB.Term => {
 	const _and = EB.Constructors.Var({ type: "Foreign", name: OP_AND });
@@ -94,14 +95,10 @@ export const lte = (p: EB.Term, q: EB.Term): EB.Term => {
 
 // Structural: struct, proj, inj
 export const struct = (fields: Array<{ label: string; value: EB.Term }>): EB.Term => {
-	const row = fields.reduceRight<EB.Row>(
-		(acc, { label, value }) => R.Constructors.Extension(label, value, acc),
-		R.Constructors.Empty() as EB.Row,
-	);
+	const row = fields.reduceRight<EB.Row>((acc, { label, value }) => R.Constructors.Extension(label, value, acc), R.Constructors.Empty() as EB.Row);
 	return EB.Constructors.Struct(row);
 };
 
 export const proj = (label: string, term: EB.Term): EB.Term => EB.Constructors.Proj(label, term);
 
-export const inj = (label: string, value: EB.Term, term: EB.Term): EB.Term =>
-	EB.Constructors.Inj(label, value, term);
+export const inj = (label: string, value: EB.Term, term: EB.Term): EB.Term => EB.Constructors.Inj(label, value, term);

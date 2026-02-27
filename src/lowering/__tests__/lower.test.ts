@@ -40,9 +40,28 @@ describe("Lowering: primitives and ops", () => {
 		expect(Pretty.display(fn)).toMatchSnapshot();
 	});
 
-	it("throws for Lambda (not yet implemented)", () => {
+	it("lowers Lambda (closure)", () => {
 		const term = EB.DSL.lambda("x", EB.DSL.num(1), EB.DSL.type("Num"));
-		expect(() => lowerToMir(term)).toThrow(/primitives and ops only/);
+		const fn = lowerToMir(term);
+		expect(Pretty.display(fn)).toMatchSnapshot();
+	});
+
+	it("lowers nested Lambda", () => {
+		const term = EB.DSL.lambda("x", EB.DSL.lambda("y", EB.DSL.bound(1), EB.DSL.type("Num")), EB.DSL.type("Num"));
+		const fn = lowerToMir(term);
+		expect(Pretty.display(fn)).toMatchSnapshot();
+	});
+
+	it("lowers λx.x (identity, closed)", () => {
+		const term = EB.DSL.lambda("x", EB.DSL.bound(0), EB.DSL.type("Num"));
+		const fn = lowerToMir(term);
+		expect(Pretty.display(fn)).toMatchSnapshot();
+	});
+
+	it("lowers (λx.x) 42 (indirect call)", () => {
+		const term = EB.DSL.app(EB.DSL.lambda("x", EB.DSL.bound(0), EB.DSL.type("Num")), EB.DSL.num(42));
+		const fn = lowerToMir(term);
+		expect(Pretty.display(fn)).toMatchSnapshot();
 	});
 
 	it("throws for Var(Foreign) used as value", () => {

@@ -1,5 +1,27 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Lowering: primitives and ops > lowers (λx.x) 42 (indirect call) 1`] = `
+"fn main entry=entry
+  entry:
+    let env_0 = alloc {  }
+    let fnref_0 = &f_0
+    let closure_0 = alloc { __fn: fnref_0, __env: env_0 }
+    let x0 = 42
+    let fnref_1 = read closure_0.__fn
+    let env_1 = read closure_0.__env
+    let x1 = call *fnref_1(env_1, x0)
+    return x1"
+`;
+
+exports[`Lowering: primitives and ops > lowers Lambda (closure) 1`] = `
+"fn main entry=entry
+  entry:
+    let env_0 = alloc {  }
+    let fnref_0 = &f_0
+    let closure_0 = alloc { __fn: fnref_0, __env: env_0 }
+    return closure_0"
+`;
+
 exports[`Lowering: primitives and ops > lowers Lit(Num(42)) 1`] = `
 "fn main entry=entry
   entry:
@@ -16,12 +38,30 @@ exports[`Lowering: primitives and ops > lowers add(1, 2) 1`] = `
     return x2"
 `;
 
+exports[`Lowering: primitives and ops > lowers nested Lambda 1`] = `
+"fn main entry=entry
+  entry:
+    let env_2 = alloc {  }
+    let fnref_1 = &f_1
+    let closure_1 = alloc { __fn: fnref_1, __env: env_2 }
+    return closure_1"
+`;
+
 exports[`Lowering: primitives and ops > lowers not(true) 1`] = `
 "fn main entry=entry
   entry:
     let x0 = true
     let x1 = !(x0)
     return x1"
+`;
+
+exports[`Lowering: primitives and ops > lowers λx.x (identity, closed) 1`] = `
+"fn main entry=entry
+  entry:
+    let env_0 = alloc {  }
+    let fnref_0 = &f_0
+    let closure_0 = alloc { __fn: fnref_0, __env: env_0 }
+    return closure_0"
 `;
 
 exports[`Lowering: struct, proj, inj > lowers empty struct 1`] = `

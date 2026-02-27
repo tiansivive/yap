@@ -41,4 +41,4 @@ alwaysApply: false
 
 - **Snapshots heavily used** — update with `pnpm test -u`
 - **Path aliases** resolved by vite-tsconfig-paths
-- **Reset supplies before tests** — compiler passes (elaboration, lowering, etc.) do NOT reset supplies. Tests that need deterministic output (e.g. snapshots) must call the relevant `resetSupply()` / `resetId()` at the start of each test (or in `beforeEach`). Applies to any pass: parser, elaboration, lowering, verification. Lowering's `resetSupply()` resets var, label, and func-name counters (e.g. `f_0`, `f_1`).
+- **Reset supplies before tests** — compiler passes (elaboration, lowering, etc.) do NOT reset supplies. Tests that need deterministic output (e.g. snapshots) must call the relevant `resetSupply()` / `resetId()` at the start of each test (or in `beforeEach`). Applies to any pass: parser, elaboration, lowering, verification. Lowering's `resetSupply()` resets var (by kind: x, fn, closure, env, etc.), label, and func-name counters.

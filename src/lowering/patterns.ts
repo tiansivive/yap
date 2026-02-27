@@ -40,6 +40,8 @@ export const Patterns = {
 	VarFree: { type: "Var" as const, variable: { type: "Free" as const } } as const,
 	VarForeign: { type: "Var" as const, variable: { type: "Foreign" as const } } as const,
 
+	Lambda: { type: "Abs" as const, binding: { type: "Lambda" as const } } as const,
+
 	// EB.Row (R.Row)
 	Extension: { type: "extension" as const } as const,
 	Variable: { type: "variable" as const } as const,

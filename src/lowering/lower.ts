@@ -3,7 +3,9 @@ import { match } from "ts-pattern";
 import * as MIR from "./mir";
 import { Patterns } from "./patterns";
 import type { LowerCtx, LowerResult } from "./context";
-import { mkCtx } from "./context";
+import { at, bind, mkCtx, resolveCaptured } from "./context";
+import { convertClosure } from "./closures";
+import { freeVars, sortedNumbers } from "./shared/freevars";
 
 function eraseTypeLevel(term: EB.Term, ctx: LowerCtx): LowerResult {
 	// TODO: handle erasure more systematically; erasure semantics TBD
@@ -96,6 +98,25 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			instrs.push(MIR.Constructors.Instr.Alloc(alloc, result));
 			return { instrs, value: result, functions };
 		})
+		.with(Patterns.App, ({ func, arg }) => {
+			const funcResult = lower(func, ctx);
+			const argResult = lower(arg, ctx);
+			const fnVar = ctx.nextVar("fnref");
+			const envVar = ctx.nextVar("env");
+			const result = ctx.nextVar();
+			const instrs = [
+				...funcResult.instrs,
+				...argResult.instrs,
+				MIR.Constructors.Instr.Read("__fn", funcResult.value, fnVar),
+				MIR.Constructors.Instr.Read("__env", funcResult.value, envVar),
+				MIR.Constructors.Instr.Call({ type: "indirect", callee: fnVar }, [envVar, argResult.value], result),
+			];
+			return {
+				instrs,
+				value: result,
+				functions: [...funcResult.functions, ...argResult.functions],
+			};
+		})
 		.with(Patterns.Row, t => eraseTypeLevel(t, ctx))
 		.with(Patterns.TypeLevelApp, t => eraseTypeLevel(t, ctx))
 		.with(Patterns.Lit, ({ value }) => {
@@ -133,6 +154,30 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			}
 			throw new Error(`Unbound variable: ${variable.name}`);
 		})
+		.with(Patterns.Lambda, ({ binding, body }) => {
+			const freeIndices = sortedNumbers(freeVars(body, 1));
+			const captured = resolveCaptured(ctx, freeIndices);
+
+			const readVars = freeIndices.map(() => ctx.nextVar());
+			const overrides = new Map(freeIndices.map((idx, j) => [idx, at(readVars, j)]));
+			const inner = lower(body, bind(ctx, binding.variable, overrides));
+
+			const fnName = ctx.nextVar("fn");
+			const envFields = freeIndices.map((_, j) => ({ label: `v${j}`, value: at(captured, j) }));
+			const envRef = ctx.nextVar("env");
+			const envAllocInstrs: MIR.Instr[] = [MIR.Constructors.Instr.Alloc({ type: "Record", fields: envFields }, envRef)];
+
+			if (freeIndices.length > 0) {
+				const envParam = ctx.nextVar("env");
+				const params = [envParam, binding.variable];
+				const envReads = freeIndices.map((_, j) => MIR.Constructors.Instr.Read(`v${j}`, envParam, at(readVars, j)));
+				const instrs = [...envReads, ...inner.instrs];
+				return convertClosure(ctx, fnName, params, instrs, inner, envAllocInstrs, envRef);
+			}
+
+			const params = [binding.variable];
+			return convertClosure(ctx, fnName, params, inner.instrs, inner, envAllocInstrs, envRef);
+		})
 		.otherwise(() => {
 			throw new Error(`Lowering not implemented for ${term.type} (primitives and ops only)`);
 		});
@@ -140,7 +185,7 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 
 export function lowerToMir(term: EB.Term): MIR.Function {
 	const ctx = mkCtx();
-	const { instrs, value } = lower(term, ctx);
+	const { instrs, value, functions } = lower(term, ctx);
 	const block = MIR.Constructors.Block("entry", [], instrs, MIR.Constructors.Terminator.Return(value));
 	return MIR.Constructors.Function("main", [], "entry", [block]);
 }
