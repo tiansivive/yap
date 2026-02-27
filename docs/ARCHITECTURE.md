@@ -43,6 +43,10 @@ The pipeline is orchestrated by two entry points:
 
 Verification is **not** invoked automatically during `compile`. It runs on demand (from the REPL or via explicit CLI invocation) after the Z3 solver context is initialised.
 
+### Supply and naming
+
+Compiler passes (elaboration, lowering, verification, etc.) use global supplies for fresh names (metas, vars, labels, function names). **Passes do NOT reset supplies** — they produce globally unique names so that incremental or multi-module compilation works correctly. Tests that need deterministic output must call the relevant `resetSupply()` / `resetId()` at the start of each test. See `.cursor/rules/testing.mdc`.
+
 ---
 
 ## Module Map
@@ -70,7 +74,7 @@ src/
 ├── modules/loading.ts          Module resolution, import handling
 ├── Codegen/                    JavaScript code generation
 ├── FFI/codecs.ts               Foreign function interface codec
-├── lowering/                   MIR lowering (EB.Term → LIR); see docs/MIR-LOWERING.md for design and status
+├── lowering/                   MIR lowering (EB.Term → MIR); see docs/MIR-LOWERING.md for design and status
 ├── shared/                     Cross-cutting types, primitives, config
 └── utils/                      Generic helpers (types, objects, functions)
 ```

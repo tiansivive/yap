@@ -1,6 +1,6 @@
 # MIR Design and Lowering Plan
 
-> Machine-Independent IR for Yap. Design document for lowering EB.Term (and surface language) into a block-graph IR with explicit control flow. Renames and extends the existing LIR.
+> Machine-Independent IR for Yap. Design document for lowering EB.Term (and surface language) into a block-graph IR with explicit control flow.
 
 > **Early draft.** None of this is final — the whole document is a work in progress. Structures, naming, and design decisions may change as we implement and learn.
 
@@ -208,7 +208,7 @@ Each block ends with exactly one terminator. No fallthrough.
 
 ### 3.7 Design Note: Assign vs Let
 
-The current LIR has `Assign`. We move to `Let` for immutable bindings. Each `Let` introduces a new SSA value. This aligns with Yap's functional semantics and simplifies reasoning about dataflow.
+MIR uses `Let` for immutable bindings (replacing the earlier `Assign`). Each `Let` introduces a new SSA value. This aligns with Yap's functional semantics and simplifies reasoning about dataflow.
 
 ---
 
@@ -247,38 +247,42 @@ MIR (Function with blocks)
 
 > Last updated: 2026-02-26
 
-The lowering pass lives in `src/lowering/`. The LIR types (Module, Function, Block, Instr, Terminator, Expr, Allocation) are defined in `lir.ts` — Let, Var, Lit, PrimOp; Read, Update (immutable/fbip), Alloc; Jump, Branch, Return. A pretty printer (`pretty.ts`) provides `display.expr`, `display.instr`, etc., with pattern-matched polymorphic dispatch.
+The lowering pass lives in `src/lowering/`. The MIR types (Module, Function, Block, Instr, Terminator, Expr, Allocation) are defined in `mir.ts` — Let, Var, Lit, PrimOp; Read, Update (immutable/fbip), Alloc; Jump, Branch, Return. A pretty printer (`pretty.ts`) provides `display.expr`, `display.instr`, etc., with pattern-matched polymorphic dispatch.
 
 ### Implemented
 
-| EB.Term / Feature | Status | Notes |
-| ----------------- | ------ | ----- |
-| `Lit` | ✅ | Num, Bool, String, etc. → `Let x = Lit(v); Return x` |
-| `Var(Bound)` | ✅ | Resolved via `LowerCtx.bound` map |
-| `Var(Free)` | ✅ | Resolved via `LowerCtx.free` map |
-| `Var(Foreign)` | ✅ | As prim op arg only; throws if used as value |
-| Primitive `App` | ✅ | Curried apps (`add(1, 2)`, `not(true)`) → `Let` + `PrimOp` + `Return` |
-| `App(Struct, Row)` | ✅ | Record construction → `Alloc` with fields |
-| `Proj` | ✅ | From Struct only → `Read(label, target, result)` |
-| `Inj` | ✅ | From Struct only → `Update` (immutable mode); type-level base → erasure |
+| EB.Term / Feature  | Status | Notes                                                                   |
+| ------------------ | ------ | ----------------------------------------------------------------------- |
+| `Lit`              | ✅     | Num, Bool, String, etc. → `Let x = Lit(v); Return x`                    |
+| `Var(Bound)`       | ✅     | Resolved via `LowerCtx.bound` map                                       |
+| `Var(Free)`        | ✅     | Resolved via `LowerCtx.free` map                                        |
+| `Var(Foreign)`     | ✅     | As prim op arg only; throws if used as value                            |
+| Primitive `App`    | ✅     | Curried apps (`add(1, 2)`, `not(true)`) → `Let` + `PrimOp` + `Return`   |
+| `App(Struct, Row)` | ✅     | Record construction → `Alloc` with fields                               |
+| `Proj`             | ✅     | From Struct only → `Read(label, target, result)`                        |
+| `Inj`              | ✅     | From Struct only → `Update` (immutable mode); type-level base → erasure |
 
 Supported primops: `$add`, `$sub`, `$mul`, `$div`, `$and`, `$or`, `$eq`, `$neq`, `$lt`, `$gt`, `$lte`, `$gte`, `$mod`, `$concat`, `$not`.
 
 ### Not Yet Implemented
 
-| EB.Term / Feature | Status | Notes |
-| ----------------- | ------ | ----- |
-| `Lambda` | ❌ | Throws "not implemented" |
-| `App` (general) | ❌ | Only primitive apps and Struct supported |
-| `Block` | ❌ | — |
-| `Match` | ❌ | — |
-| `Reset` / `Shift` | ❌ | — |
-| `Let` | ❌ | — |
+| EB.Term / Feature | Status | Notes                                    |
+| ----------------- | ------ | ---------------------------------------- |
+| `Lambda`          | ❌     | Throws "not implemented"                 |
+| `App` (general)   | ❌     | Only primitive apps and Struct supported |
+| `Block`           | ❌     | —                                        |
+| `Match`           | ❌     | —                                        |
+| `Reset` / `Shift` | ❌     | —                                        |
+| `Let`             | ❌     | —                                        |
 
 ### Tests
 
 - `src/lowering/__tests__/lower.test.ts` — Lit, Var, prim App, struct, proj, inj, Lambda/Foreign throw
 - `src/lowering/__tests__/pretty.test.ts` — Pretty printer unit tests and snapshots (incl. Read, Alloc, Update)
+
+### Supply convention
+
+Lowering follows the same convention as other passes: supplies are global; passes do NOT reset. See `docs/ARCHITECTURE.md` § Supply and naming.
 
 ---
 
@@ -594,7 +598,7 @@ To support escaping continuations:
 
 2. **Closure conversion complexity:** Integrated into lowering. Open: how complex for nested lambdas, mutually recursive closures, etc.? We'll discover as we implement.
 
-3. **Naming:** Rename LIR → MIR in the codebase? The document uses MIR; the module is still `src/lowering/lir.ts`.
+3. **Naming:** LIR → MIR rename completed. MIR types are defined in `src/lowering/mir.ts`.
 
 4. **AllocShape:** What allocation shapes do we need? Records, variants, continuations, ...? Refine as we implement.
 

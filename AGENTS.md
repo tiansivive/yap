@@ -6,13 +6,13 @@ Yap is a dependently typed language with structural types, implicits, and verifi
 
 **Cursor rules** (`.cursor/rules/`) encode style and conventions; they apply automatically when editing matching files:
 
-| Rule | Applies | Content |
-|------|---------|---------|
-| `pattern-matching.mdc` | `**/*.ts` | ts-pattern with const pattern objects; no if checks |
-| `coding-style.mdc` | `**/*.ts` | Immutable, terse, V2 Do, recursion, comments |
-| `testing.mdc` | `**/__tests__/**`, `*.test.ts` | Parser, elaboration, module test patterns |
-| `conventions.mdc` | `**/*.ts` | Path aliases, pitfalls, tree-sitter, v2 |
-| `agent-behavior.mdc` | always | Collaborative, validate, surface issues, self-maintenance |
+| Rule                   | Applies                        | Content                                                   |
+| ---------------------- | ------------------------------ | --------------------------------------------------------- |
+| `pattern-matching.mdc` | `**/*.ts`                      | ts-pattern with const pattern objects; no if checks       |
+| `coding-style.mdc`     | `**/*.ts`                      | Immutable, terse, V2 Do, recursion, comments              |
+| `testing.mdc`          | `**/__tests__/**`, `*.test.ts` | Parser, elaboration, module test patterns                 |
+| `conventions.mdc`      | `**/*.ts`                      | Path aliases, pitfalls, tree-sitter, v2                   |
+| `agent-behavior.mdc`   | always                         | Collaborative, validate, surface issues, self-maintenance |
 
 ## Project overview
 
@@ -67,13 +67,13 @@ Do not use `pnpm build` while debugging; run `pnpm yap` directly.
 
 ## Key references
 
-| Topic | Location |
-|-------|----------|
+| Topic                   | Location                          |
+| ----------------------- | --------------------------------- |
 | Full agent instructions | `.github/copilot-instructions.md` |
-| Architecture | `docs/ARCHITECTURE.md` |
-| V2 migration | `docs/V2-MIGRATION.md` |
-| MIR / lowering | `docs/MIR-LOWERING.md` |
-| Design specs, roadmap | `brainstorming/yap/` |
-| Cursor rules | `.cursor/rules/*.mdc` |
+| Architecture            | `docs/ARCHITECTURE.md`            |
+| V2 migration            | `docs/V2-MIGRATION.md`            |
+| MIR / lowering          | `docs/MIR-LOWERING.md`            |
+| Design specs, roadmap   | `brainstorming/yap/`              |
+| Cursor rules            | `.cursor/rules/*.mdc`             |
 
-Lowering (`src/lowering/`): Struct, Proj, Inj → LIR Read/Update/Alloc. See MIR-LOWERING.md §5.
+Lowering (`src/lowering/`): Struct, Proj, Inj → MIR Read/Update/Alloc. See MIR-LOWERING.md §5.
