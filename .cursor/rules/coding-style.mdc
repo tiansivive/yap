@@ -1,7 +1,7 @@
 ---
 description: Yap coding style — immutable, terse, ts-pattern, V2 Do
 globs: "**/*.ts"
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Yap coding style
@@ -19,6 +19,7 @@ alwaysApply: false
 
 ## Naming and structure
 
+- **Namespace-based APIs** — prefer `Category.action` over `actionCategory`. Encode functionality in namespaces (objects with methods/fields), not in function names. Extensible and discoverable.
 - **One-word names** — multi-word names often indicate a function does too much; refactor
 - **One-letter vars OK** in ML style: `Array.map(x => ...)`, `const [x, ...xs] = [...]`
 - **KISS and DRY** — small functions compose

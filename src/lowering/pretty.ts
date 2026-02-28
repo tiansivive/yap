@@ -48,10 +48,14 @@ const d = {
 				const argsStr = args.length > 0 ? `(${args.join(", ")})` : "";
 				return `jump ${target}${argsStr}`;
 			})
-			.with({ type: "Branch" }, ({ cond, thenTarget, thenArgs, elseTarget, elseArgs }) => {
-				const thenStr = thenArgs.length > 0 ? `(${thenArgs.join(", ")})` : "";
-				const elseStr = elseArgs.length > 0 ? `(${elseArgs.join(", ")})` : "";
-				return `branch ${cond} ? ${thenTarget}${thenStr} : ${elseTarget}${elseStr}`;
+			.with({ type: "Branch" }, ({ scrutinee, cases, default: def }) => {
+				const caseStrs = cases.map(c => {
+					const argsStr = c.args.length > 0 ? `(${c.args.join(", ")})` : "";
+					return `${c.value} -> ${c.target}${argsStr}`;
+				});
+				const casesStr = caseStrs.join(" | ");
+				const defaultStr = def ? `; default -> ${def.target}${def.args.length > 0 ? `(${def.args.join(", ")})` : ""}` : "";
+				return `branch ${scrutinee} { ${casesStr}${defaultStr} }`;
 			})
 			.exhaustive(),
 

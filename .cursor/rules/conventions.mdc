@@ -1,7 +1,7 @@
 ---
 description: Yap conventions — path aliases, pitfalls, tree-sitter, v2
 globs: "**/*.ts"
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Yap conventions

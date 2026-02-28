@@ -17,6 +17,7 @@
 7. [Shift/Reset Lowering (Detailed)](#7-shiftreset-lowering-detailed)
 8. [Continuation Representation: Option A and Path to B](#8-continuation-representation-option-a-and-path-to-b)
 9. [Out of Scope / Deferred](#9-out-of-scope--deferred)
+   - [9.1 Functional Patterns (Curry-style)](#91-functional-patterns-curry-style)
 10. [Open Questions](#10-open-questions)
 
 ---
@@ -107,11 +108,11 @@ jump merge(x2)
 
 **Rationale:** Enables passing the resume value into continuation blocks. `jump cont_block(v)` binds `v` in the continuation block. No need for a separate "result" slot.
 
-### 2.5 Continuations: Heap-Allocated Frame, Compile-Time Block (Option A)
+### 2.5 Continuations: Heap-Allocated Frame, No Special MIR Instructions (Option A)
 
-**Decision:** Initial implementation heap-allocates the captured frame for multi-shot. The continuation block label is a compile-time constant. `k` is a heap ref `(L_cont, frame)`; `k(v)` becomes `Resume(k_ref, v)`.
+**Decision:** Continuation = heap-allocated record with `__env` field (closure convention). No special MIR instructions. Creation: `Alloc`. Invocation: `Read(__env)` + `Jump`. The block label is a compile-time constant.
 
-**Rationale:** Multi-shot requires frame capture. Heap allocation is the simplest correct approach. We can optimize single-shot (stack allocation, direct jump) later. See [§8](#8-continuation-representation-option-a-and-path-to-b) for the path to Option B.
+**Rationale:** Multi-shot requires frame capture. Heap allocation is the simplest correct approach. Using only existing Alloc, Read, Jump keeps MIR minimal. We can optimize single-shot (stack allocation, direct jump) later. See [§8](#8-continuation-representation-option-a-and-path-to-b) for the path to Option B.
 
 ---
 
@@ -165,11 +166,11 @@ type Instr =
 	| { type: "Update"; mode: "fbip"; into: string; updates: Array<{ label: string; value: string }> }
 	| { type: "Alloc"; alloc: Allocation; result: string } // allocate new storage (standalone)
 	| { type: "Call"; target: CallTarget; args: string[]; result: string }
-	| { type: "PrimOp"; op: string; args: string[] } // result via Let
-	// Shift/reset: frame capture (heap-allocated for first iteration)
-	| { type: "MakeCont"; block: Label; captured: string[]; result: string };
+	| { type: "PrimOp"; op: string; args: string[] }; // result via Let
 // ... other pure operations as needed
 ```
+
+**Shift/reset:** Uses only `Alloc`, `Read`, `Jump`. No dedicated continuation instructions. Continuation = `Alloc { __env: envRef }`; resume = `Read("__env", k_ref, envRef)` then `Jump L_cont(v, envRef)`.
 
 **Read** — Always a read; no mutability. Projects a field from a struct/record.
 
@@ -208,14 +209,18 @@ This layout is portable, debuggable, and C-friendly. **Spine note:** Spines (mul
 
 ### 3.7 Terminators
 
+Branch uses **switch semantics** (multi-way dispatch). No separate Switch terminator.
+
 ```ts
 type Terminator =
-	| { type: "Jump"; target: Label; args: Expr[] }
-	| { type: "Branch"; cond: string; thenTarget: Label; thenArgs: Expr[]; elseTarget: Label; elseArgs: Expr[] }
-	| { type: "Switch"; scrutinee: string; cases: Array<{ tag: string; target: Label; args: Expr[] }>; default?: { target: Label; args: Expr[] } }
-	| { type: "Return"; value: string }
-	| { type: "Resume"; cont: string; value: string }; // restore cont's frame, jump to cont's block with value
+	| { type: "Jump"; target: Label; args: string[] }
+	| { type: "Branch"; scrutinee: string; cases: Array<{ value: string; target: Label; args: string[] }>; default?: { target: Label; args: string[] } }
+	| { type: "Return"; value: string };
 ```
+
+- **Branch**: `scrutinee` = SSA var; `cases` = `{ value, target, args }` (value = tag name or literal); `default` = failure path (e.g. non-exhaustive match).
+
+**Resume:** Lowered to `Read` + `Jump`; no Resume terminator. When the shift body calls `k(v)`, we emit `Read("__env", k_ref, envRef)` then `Jump L_cont(v, envRef)`.
 
 Each block ends with exactly one terminator. No fallthrough.
 
@@ -241,7 +246,7 @@ EB.Term (zonked, solved)
     │  - Lower Proj/Inj to READ/UPDATE with multiplicity-derived mode (FBIP)
     │
     ▼
-MIR (Function with blocks)
+MIR (Module with functions)
     │
     ▼
 [Optimization Passes] (future)
@@ -250,17 +255,17 @@ MIR (Function with blocks)
 [Backend Lowering] (JS, native, interpreter — out of scope for this doc)
 ```
 
-**Closure conversion** is part of the lowering pass. When we lower a lambda, we either: (a) convert it to a top-level function with an explicit environment parameter (if it escapes), or (b) inline it (if it doesn't). This keeps the pipeline simple — one lowering pass that produces MIR. Whether this is tricky depends on the lambda structure; we integrate it and iterate.
+**Closure conversion** is part of the lowering pass. Lambdas are always closure-converted (Phase 1: no escape analysis). Each lambda becomes a top-level function with params `[env, x]` and an explicit env record. `lowerToMir` returns a `Module` with `main` plus all lifted functions.
 
-**Phase 1:** Implement core lowering including closure conversion for non-nested lambdas. Lower a subset of EB.Term (literals, vars, app, let, block, reset, shift, resume, proj→Read, inj→Update) to MIR.
+**Phase 1 (implemented):** Lit, Var, prim App, Struct/Proj/Inj, Lambda (nested supported), App (indirect calls), Match. Shift/Reset (Alloc + Read + Jump, no MakeCont/Resume). Not yet: Block, Let.
 
 ---
 
 ## 5. Implementation Status
 
-> Last updated: 2026-02-26
+> Last updated: 2026-02-27
 
-The lowering pass lives in `src/lowering/`. The MIR types (Module, Function, Block, Instr, Terminator, Expr, Allocation) are defined in `mir.ts` — Let, Var, Lit, PrimOp; Read, Update (immutable/fbip), Alloc; Jump, Branch, Return. A pretty printer (`pretty.ts`) provides `display.expr`, `display.instr`, etc., with pattern-matched polymorphic dispatch.
+The lowering pass lives in `src/lowering/`. The MIR types (Module, Function, Block, Instr, Terminator, Expr, Allocation) are defined in `mir.ts` — Let, Var, Lit, PrimOp, FuncRef; Read, Update (immutable/fbip), Alloc; Call (direct/indirect); Jump, Branch, Return. A pretty printer (`pretty.ts`) provides `display.expr`, `display.instr`, `display.module`, etc.
 
 ### Implemented
 
@@ -272,26 +277,35 @@ The lowering pass lives in `src/lowering/`. The MIR types (Module, Function, Blo
 | `Var(Foreign)`     | ✅     | As prim op arg only; throws if used as value                            |
 | Primitive `App`    | ✅     | Curried apps (`add(1, 2)`, `not(true)`) → `Let` + `PrimOp` + `Return`   |
 | `App(Struct, Row)` | ✅     | Record construction → `Alloc` with fields                               |
+| `App` (general)    | ✅     | Read `__fn`/`__env`, `Call(indirect, fnVar, [envVar, arg])`             |
+| `Lambda`           | ✅     | Closure conversion; nested supported; uniform `(env, x)` params         |
 | `Proj`             | ✅     | From Struct only → `Read(label, target, result)`                        |
 | `Inj`              | ✅     | From Struct only → `Update` (immutable mode); type-level base → erasure |
 
 Supported primops: `$add`, `$sub`, `$mul`, `$div`, `$and`, `$or`, `$eq`, `$neq`, `$lt`, `$gt`, `$lte`, `$gte`, `$mod`, `$concat`, `$not`.
 
+**Closure layout:** `{ __fn: FuncRef, __env: record }`. Uniform calling convention: all closure-called functions take `(env, x)`; caller always passes `[envVar, arg]`.
+
+**lowerToMir** returns `Module` with `[main, ...functions]` (lifted closure bodies included).
+
+### Match (Phase 1)
+
+| EB.Term / Feature | Status | Notes                                                                                                                                                                                                                                            |
+| ----------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Match`           | ✅     | Decision-tree compilation (Maranget-style). Variant, Lit, Struct, Binder, Wildcard. Branch = switch form. Merge via block params. Failure block. List pattern not yet implemented. See plan `.cursor/plans/match_expression_lowering_*.plan.md`. |
+
 ### Not Yet Implemented
 
-| EB.Term / Feature | Status | Notes                                    |
-| ----------------- | ------ | ---------------------------------------- |
-| `Lambda`          | ❌     | Throws "not implemented"                 |
-| `App` (general)   | ❌     | Only primitive apps and Struct supported |
-| `Block`           | ❌     | —                                        |
-| `Match`           | ❌     | —                                        |
-| `Reset` / `Shift` | ❌     | —                                        |
-| `Let`             | ❌     | —                                        |
+| EB.Term / Feature | Status | Notes                                                           |
+| ----------------- | ------ | --------------------------------------------------------------- |
+| `Block`           | ❌     | —                                                               |
+| `Reset` / `Shift` | ✅     | Alloc + Read + Jump; see `src/lowering/delimited_continuation/` |
+| `Let`             | ❌     | —                                                               |
 
 ### Tests
 
-- `src/lowering/__tests__/lower.test.ts` — Lit, Var, prim App, struct, proj, inj, Lambda/Foreign throw
-- `src/lowering/__tests__/pretty.test.ts` — Pretty printer unit tests and snapshots (incl. Read, Alloc, Update)
+- `src/lowering/__tests__/lower.test.ts` — Lit, Var, prim App, struct, proj, inj, Lambda, App (indirect, curried), closure with capture; uses `display.module(mod)` for snapshots
+- `src/lowering/__tests__/pretty.test.ts` — Pretty printer unit tests and snapshots (incl. Read, Alloc, Update, Call, display.module)
 
 ### Supply convention
 
@@ -347,8 +361,9 @@ EB.Block(statements, return)
 
 ```
 EB.Abs(Lambda, x, body)
-  →  If escaping: new top-level function with params [env, x]; body = lower(body) with env for free vars
-  →  If not escaping: inline or lower as block with x param
+  →  Top-level function with params [env, x]; body = lower(body) with env for free vars
+  →  Alloc env record with captured values; Alloc closure { __fn: FuncRef(name), __env: envRef }
+  →  Phase 1: always closure-convert (no escape analysis). Uniform calling convention: all lambdas take (env, x).
 ```
 
 **Match**
@@ -390,13 +405,13 @@ Yap uses **immutable structural sharing** by default. Multiplicities allow **FBI
 ```
 EB.Reset(term)
   →  Create reset_entry, reset_exit blocks
-  →  lower(term) in context { exit: reset_exit }
+  →  lowerInReset(term) in context { resetExit }
   →  Result flows to reset_exit
 
-EB.Shift(body)   // body = Lambda(k, e) with k = continuation
-  →  Create L_cont (continuation block), capture frame (live vars)
-  →  MakeCont(L_cont, captured) → k_ref; jump shift_body(k_ref)
-  →  lower(e) with k = k_ref; App(k, v) in e becomes Resume(k_ref, v)
+EB.Shift(body)   // body = Lambda(k, e)
+  →  Alloc { __env: envRef } → k_ref  (envRef = Alloc { v0, v1, ... } with captured)
+  →  Jump shift_body(k_ref)
+  →  k(v) in body → Read("__env", k_ref, envRef); Jump L_cont(v, envRef)
 ```
 
 See [§7](#7-shiftreset-lowering-detailed) for the detailed transformation.
@@ -411,16 +426,33 @@ From elaboration:
 
 - **Reset(term):** `term` is the body of the reset. It may contain `Shift` and `App(k, v)` (resume).
 - **Shift(body):** `body` is `Lambda(k, e)` where `k` is the continuation (type `A → α`). The body `e` is checked with `k` in scope. `resume v` in source becomes `App(k, v)` in EB.Term.
-- **Resume:** In EB.Term, resume is `App(k, v)` where `k` is the continuation binder (Bound index) and `v` is the value.
+- **Resume:** In EB.Term, resume is `App(k, v)` where `k` is the continuation binder (Bound index) and `v` is the value. There is no separate `EB.Resume` constructor.
 
-### 7.2 Continuation as Block + Frame
+### 7.2 Continuation Layout (Closure Convention)
 
-The continuation is the "rest of the reset" from the shift point to the reset boundary. We represent it as:
+Continuation = heap-allocated record with single `__env` field. The env record holds captured vars as `v0`, `v1`, ... (same convention as closures).
 
-- A **block** with one parameter (the resume value)
-- A **frame** (captured live variables) — heap-allocated for multi-shot
+```
+k_ref = Alloc { __env: envRef }
+envRef = Alloc { v0: x0, v1: x1, ... }  // captured vars
 
-When the shift body calls `k(v)`, we emit `Resume(k_ref, v)`, which restores the frame and jumps to the continuation block with `v`.
+Resume: Read("__env", k_ref, envRef)
+        Jump L_cont(v, envRef)
+
+Block L_cont(v, envRef):
+  Read("v0", envRef, t0)
+  Read("v1", envRef, t1)
+  ...
+  // rest of reset body, with t0, t1, ... in scope
+  Jump reset_exit(result)
+```
+
+**Frame replay:** The `Read` + `Jump` sequence is the lowering equivalent of frame replay. We restore captured state (env record) and transfer control to the continuation block. The continuation block executes the rest of the reset body — semantically equivalent to replaying the captured frames with the resumed value.
+
+**Continuation body scope:** The continuation body's scope depends on how the shift appears:
+
+- **Shift as statement** (`shift k -> e; rest`): The continuation body has only block bindings (env captures). The resumption value `v` is passed to `L_cont` but the body may ignore it. To use the resumption value, the user must explicitly bind it.
+- **Shift in Let RHS** (`let v = shift k -> e; rest`): The Let variable `v` is the resumption binder. The continuation body has `v` at index 0 and block bindings at 1+. The body may use both.
 
 ### 7.3 Transformation: Single Shift
 
@@ -434,20 +466,24 @@ reset {
 }
 ```
 
-**MIR structure (with heap-allocated frame for multi-shot):**
+**MIR structure (Alloc + Read + Jump only):**
 
 ```
 block reset_entry():
     // lower e1
-    // Capture live vars into frame; MakeCont(L_cont, [v1, v2, ...]) → k_ref
+    envRef = Alloc { v0: x0, v1: x1, ... }   // captured live vars
+    k_ref = Alloc { __env: envRef }
     jump shift_body(k_ref)
 
-block shift_body(k_ref):     // k_ref = heap-allocated continuation (block + frame)
-    // lower e2; k(v) → Resume(k_ref, v)
-    // terminator: Resume(k_ref, v) or jump reset_exit(result)
+block shift_body(k_ref):
+    // lower e2; k(v) → Read("__env", k_ref, envRef); Jump L_cont(v, envRef)
+    // terminator: Jump L_cont(v, envRef) or jump reset_exit(result)
 
-block L_cont(v):             // continuation block: "rest of reset"
-    // lower e3 (frame was restored by Resume)
+block L_cont(v, envRef):
+    Read("v0", envRef, t0)
+    Read("v1", envRef, t1)
+    ...
+    // lower e3 with t0, t1, ... in scope
     jump reset_exit(result)
 
 block reset_exit(result):
@@ -456,53 +492,12 @@ block reset_exit(result):
 
 **Key points:**
 
-- For multi-shot we heap-allocate. Before jumping to the shift body, we emit `MakeCont(L_cont, captured_vars)` to allocate the continuation. The shift body receives `k_ref`.
-- `k(v)` becomes `Resume(k_ref, v)` — a terminator that restores the frame and jumps to `L_cont` with `v`.
-- For Option A (non-escaping), we could optimize to direct `jump L_cont(v)` when we know single-shot — but first iteration we always use the heap-allocated path.
+- No MakeCont or Resume. Continuation creation = `Alloc` env + `Alloc` k_ref with `__env`.
+- `k(v)` = `Read("__env", k_ref, envRef)` then `Jump L_cont(v, envRef)` — this restores captured state and replays the continuation.
 
 ### 7.4 Transformation: Nested Shifts
 
-```
-reset {
-  e1;
-  shift (\k1 -> e2);
-  e3;
-  shift (\k2 -> e4);
-  e5
-}
-```
-
-- First shift: continuation = `e3; shift (\k2 -> e4); e5`
-- Second shift: continuation = `e5`
-
-Each shift gets its own continuation block and frame capture. The structure is recursive:
-
-```
-block reset_entry():
-    ... lower e1 ...
-    k1_ref = MakeCont(L_cont_1, captured_1)
-    jump shift_body_1(k1_ref)
-
-block shift_body_1(k1_ref):
-    ... lower e2, k1(v) → Resume(k1_ref, v) ...
-    // exits: Resume(k1_ref, v) or jump reset_exit(r)
-
-block L_cont_1(v):
-    ... lower e3 ...
-    k2_ref = MakeCont(L_cont_2, captured_2)
-    jump shift_body_2(k2_ref)
-
-block shift_body_2(k2_ref):
-    ... lower e4, k2(v) → Resume(k2_ref, v) ...
-    // exits: Resume(k2_ref, v) or jump reset_exit(r)
-
-block L_cont_2(v):
-    ... lower e5 ...
-    jump reset_exit(result)
-
-block reset_exit(result):
-    ...
-```
+Each shift gets its own continuation block and frame capture. Same pattern: `Alloc` env, `Alloc` k_ref, `Jump` shift_body; resume = `Read` + `Jump`.
 
 ### 7.5 Shift That Returns Without Resuming
 
@@ -514,44 +509,29 @@ reset { shift (\k -> 42) }
 - Emit `jump reset_exit(42)`.
 - The continuation block is dead (never jumped to).
 
-### 7.6 Multi-Shot Semantics and Frame Capture
+### 7.6 Multi-Shot Semantics
 
-**Multi-shot:** A continuation `k` can be resumed multiple times. Each `k(v)` runs the continuation from the shift point with that value. The continuation must be **replayable** — its captured state cannot be consumed on first use.
-
-**Single-shot vs multi-shot:** For single-shot (linear) `k`, we could theoretically use stack allocation — but we simplify the first iteration by **heap-allocating all continuations**. This correctly handles multi-shot and defers optimization of linear continuations.
-
-**Frame capture:** When we shift, we capture:
-
-- The **continuation** — the code from the shift point to the reset boundary (a block)
-- The **frame/state** — the environment (live variables, stack frames) at the shift point
-
-For multi-shot, each resume must be able to replay the continuation with a fresh copy of the state (or the state must be immutable). First iteration: **heap-allocate the captured frame**. The continuation is a heap object containing:
-
-- A reference to the continuation block (code)
-- The captured environment (live vars, any nested frames)
-
-**MIR representation:** We introduce a `Continuation` value kind (or a `MakeCont` instruction) that heap-allocates the captured state. `resume` becomes: load the continuation, restore its frame, `jump` to its block with the value. The lowering pass emits `MakeCont(L_cont, captured_vars)` when creating the continuation, and `Resume(cont_ref, v)` when the shift body calls `k(v)`. For Option A (non-escaping), we can still use direct `jump L_cont(v)` when `k` doesn't escape — but to support multi-shot we need the frame capture. So even in Option A, we heap-allocate the frame; the difference is whether `k` is a label (direct jump) or a value (indirect jump).
-
-**Simplified first iteration:** Always heap-allocate. `k` is a heap-allocated continuation. `k(v)` = load continuation, restore frame, jump to its block with `v`. This correctly implements multi-shot. We can optimize single-shot later (e.g. stack allocation, or direct jump when we know `k` is used once and doesn't escape).
+**Multi-shot:** A continuation `k` can be resumed multiple times. Each `k(v)` runs the continuation from the shift point with that value. We **always heap-allocate** for the first implementation; linear optimization (direct jump, stack allocation) is deferred.
 
 ### 7.7 Lowering Algorithm Sketch
 
 ```
 lowerReset(term, ctx):
   reset_exit = freshLabel()
-  ctx' = ctx ∪ { resetExit: reset_exit }
+  ctx' = ctx ∪ { resetExit, resetCtx }
   lowerInReset(term, ctx')  // returns (entryBlock, blocks)
 
 lowerInReset(term, ctx):
   case term of
     Shift(Lambda(k, e)):
       L_cont = freshLabel()
-      // Capture live vars for frame; emit MakeCont(L_cont, captured) before jump to body
-      contBlocks = lowerInReset(restOfReset, ctx)
-      bodyBlocks = lower(e, ctx ∪ { k: (L_cont, frame) })   // k(v) → Resume(k_ref, v)
+      captured = liveVars(restOfReset)
+      envRef = Alloc { v0, v1, ... }(captured)
+      k_ref = Alloc { __env: envRef }
+      // k(v) in e → Read("__env", k_ref, envRef); Jump L_cont(v, envRef)
       ...
     App(k, v) when k is continuation:
-      emit Resume(k_ref, lower(v))
+      emit Read("__env", k_ref, envRef); Jump L_cont(lower(v), envRef)
     ...
 ```
 
@@ -559,49 +539,100 @@ lowerInReset(term, ctx):
 
 The continuation is the "rest of the reset" from the shift point to the reset boundary. We extract it by **traversing the term and passing the context** (what would run after the current subterm) as we go. When we hit a Shift, we turn that context into a block. No CPS IR needed — just context-passing in the lowering traversal.
 
-**Example:** `reset (f (shift (\k -> e)))` — the continuation is `\v -> f(v)`. As we traverse, we have context `f([])`. At the shift, we create a block that receives `v` and computes `f(v)`. The lowering algorithm passes this context through the traversal.
-
 **Simpler case:** `reset (Block [e1, shift body, e3])` — the continuation is `e3`. For Block, we identify: statements before shift, the shift, statements after shift. The "rest" is explicit.
 
 **Deferred:** Full treatment of arbitrary shift placement. Phase 1 can focus on reset bodies that are Blocks with at most one shift, or a simple structural form.
+
+### 7.9 Elaboration Expectations and Gaps
+
+| Expectation                                       | Current Elaboration               | Gap / Note                                                             |
+| ------------------------------------------------- | --------------------------------- | ---------------------------------------------------------------------- |
+| `Reset(term)`                                     | Yes                               | —                                                                      |
+| `Shift(body)` with `body = Lambda(k, e)`          | Yes (k = Continuation binder)     | —                                                                      |
+| Resume = `App(k, v)` with k Bound to Continuation | Yes                               | —                                                                      |
+| Block structure for "rest of reset"               | Block has statements + return     | Phase 1: focus on Block with at most one shift                         |
+| Continuation binder identifiable                  | Binder type `Continuation` in env | Need to detect in lowering when App(func, arg) has func = continuation |
+| Multiplicity on k                                 | Not tracked                       | Assume multi-shot; defer linear optimization                           |
+| Shift outside Reset                               | Not supported                     | Lowering throws; see §7.10.1                                           |
+
+**Note:** If elaboration does not output these structures, that is a problem for later. Lowering will throw or behave incorrectly; document and defer.
+
+### 7.10.1 Shift Outside Reset
+
+Terms like `\x -> shift k -> k 0` (shift inside a lambda, outside reset) are **not supported** by the current lowering. The effect system could type such terms (the function would carry a continuation effect; callers would need to handle it), but **lowering** requires an enclosing `Reset` to provide `reset_exit` and `resetCtx`. Without reset, the continuation would need to escape (Option B). For now, elaboration should reject or wrap such terms; lowering throws "Shift without enclosing reset".
+
+### 7.10 State Machine: Block-Graph and Loop-Driven Forms
+
+Shift/reset lowering produces a **state machine** expressed as a block-graph: each state is a block (reset_entry, shift_body, L_cont, reset_exit), and transitions are jumps. The CFG is the state machine.
+
+An alternative compilation strategy is a **loop-driven** form:
+
+```
+entry:
+  state = ENTER
+  jump loop(state)
+
+loop(s):
+  branch s {
+    ENTER -> ...   // run reset body until shift
+    RESUME -> ...  // run continuation with resumed value
+  }
+```
+
+Both forms are equivalent. MIR keeps the block-graph form (states = blocks, transitions = jumps). A backend may compile this as a loop+switch if desired — the block-graph is the canonical MIR representation; the loop form is a backend compilation option.
 
 ---
 
 ## 8. Continuation Representation: Option A and Path to B
 
-### 7.1 Option A (Current)
+### 8.1 Option A (Current)
 
-- **Continuation** = heap-allocated object `(block_label, frame)`. The block label is a compile-time constant.
-- **MakeCont** allocates; **Resume** restores frame and jumps to the block.
-- **k** is passed to the shift body as a value (the heap ref). The block label inside it is fixed.
+- **Continuation** = `Alloc { __env: envRef }`. Block label is compile-time constant.
+- **Creation:** `Alloc` env record, then `Alloc` k_ref with `__env`.
+- **Resume** = `Read("__env", k_ref, envRef)` + `Jump L_cont(v, envRef)`.
 
 **Limitation:** `k` cannot escape. If the shift body stores `k` or passes it to a function that uses it later, we have no way to represent that — the continuation object is tied to this reset's scope. Escape analysis is deferred; we assume `k` does not escape.
 
-### 7.2 Path to Option B
+### 8.2 Path to Option B
 
 To support escaping continuations:
 
 1. **Block references as first-class values** — the continuation can hold a block chosen at runtime.
-2. **Indirect jump** — `Resume` (or a variant) can jump to a block whose identity is stored in the continuation, not fixed at compile time.
+2. **Indirect jump** — jump to a block whose identity is stored in the continuation, not fixed at compile time.
 3. **Backend mapping** — escaping continuations become trampoline closures or code pointers.
-
-**Migration:** The lowering pass can be parameterized. Option A: continuation = `(L_cont, frame)` with fixed `L_cont`. Option B: continuation = `(block_ref, frame)` where `block_ref` can be any block. The rest of the lowering stays the same.
 
 ---
 
 ## 9. Out of Scope / Deferred
 
-| Item                                               | Reason                                                                                                         |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Escape analysis for k**                          | Reduces scope; can be added later. Escaping `k` will be incorrect until then.                                  |
-| **Type system changes for linearity**              | Type system works as-is. Lowering assumes correct usage; we can test linear vs multishot without type changes. |
-| **ANF normalization**                              | Can be added as a phase; not required for initial lowering.                                                    |
-| **Full pattern matching**                          | Match lowering is complex; can start with simplified forms.                                                    |
-| **Optimization passes**                            | Dead block elimination, inlining, etc. — future work.                                                          |
-| **Backend lowering (JS, native)**                  | MIR is the target; backend is separate.                                                                        |
-| **First-class block refs (Option B)**              | Documented as future work.                                                                                     |
-| **Stack allocation for single-shot continuations** | First iteration heap-allocates; optimize later.                                                                |
-| **Variant injection in MIR**                       | TODO/QUESTION: Defer until semantics are clearer.                                                              |
+### 9.1 Functional Patterns (Curry-style)
+
+**Yap does not support functional patterns yet.** In Curry, patterns can contain function symbols:
+
+```curry
+last (_++[e]) = e
+```
+
+- **Unification vs. pattern matching:** Functional patterns require runtime unification, not just deconstruction. The pattern `_++[e]` unifies scrutinee with (some list ++ [e]). Current match lowering uses decision-tree compilation (Maranget-style) — constructor deconstruction only.
+- **Compilation:** Narrowing (unification + reduction); possibly backtracking. Cannot use pure decision trees. Residuation may be needed for non-deterministic or constraint-based matching.
+- **Elaboration impact:** Elaboration would need significant changes. Pattern inference currently assumes constructor patterns (Lit, Struct, Variant, Binder, Wildcard). Functional patterns require:
+  - Pattern type inference for patterns containing function symbols (unification of scrutinee with pattern shape).
+  - Possibly nondeterministic or constraint-based elaboration (residuation, narrowing).
+  - See `src/elaboration/inference.v2/match.ts`, `src/elaboration/checking.v2/match.ts`, and `docs/V2-MIGRATION.md` for current match handling.
+- **References:** Curry tutorial §3.5.5; Hanus FLOPS 2002; narrowing machines. See also `docs/TODO.md` (Unification? Residuations?).
+
+| Item                                               | Reason                                                                                                                |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Functional patterns (Curry-style)**              | Requires runtime unification, narrowing, possibly residuation. Elaboration and lowering both need redesign. See §9.1. |
+| **Escape analysis for k**                          | Reduces scope; can be added later. Escaping `k` will be incorrect until then.                                         |
+| **Type system changes for linearity**              | Type system works as-is. Lowering assumes correct usage; we can test linear vs multishot without type changes.        |
+| **ANF normalization**                              | Can be added as a phase; not required for initial lowering.                                                           |
+| **Full pattern matching**                          | Match lowering is complex; can start with simplified forms.                                                           |
+| **Optimization passes**                            | Dead block elimination, inlining, etc. — future work.                                                                 |
+| **Backend lowering (JS, native)**                  | MIR is the target; backend is separate.                                                                               |
+| **First-class block refs (Option B)**              | Documented as future work.                                                                                            |
+| **Stack allocation for single-shot continuations** | First iteration heap-allocates; optimize later.                                                                       |
+| **Variant injection in MIR**                       | TODO/QUESTION: Defer until semantics are clearer.                                                                     |
 
 ---
 
@@ -624,6 +655,6 @@ This document adapts the MIR spec (SSA with block parameters, no CPS, no φ) to 
 - **Functions** — Top-level units; one function per top-level definition (or similar).
 - **Blocks** — `label`, `params`, `instrs`, `terminator`.
 - **Values** — References (locations/pointers); Yap owns ref semantics.
-- **Instructions** — Pure. `Let` for bindings. `Read` (always read). `Update` discriminated on `mode`: `immutable` (has `result`, `alloc`) or `fbip` (no `result`, produces `into`). `Alloc` for standalone allocation. `Call` with `CallTarget` (direct | indirect). `MakeCont` for frame capture.
-- **Terminators** — `Jump`, `Branch`, `Switch`, `Return`, `Resume`.
+- **Instructions** — Pure. `Let` for bindings. `Read` (always read). `Update` discriminated on `mode`: `immutable` (has `result`, `alloc`) or `fbip` (no `result`, produces `into`). `Alloc` for standalone allocation. `Call` with `CallTarget` (direct | indirect). Shift/reset uses only Alloc, Read, Jump — no dedicated continuation instructions.
+- **Terminators** — `Jump`, `Branch`, `Return`. Resume is lowered to Read + Jump.
 - **Shift/reset** — State machine via blocks and jumps; heap-allocated frame capture for multi-shot; Option A (compile-time block label) with path to Option B.

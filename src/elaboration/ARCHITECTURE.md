@@ -110,6 +110,8 @@ Return type: `AST = [EB.Term, NF.Value, Q.Usages]`. Modalities are stripped from
 | `[modal, _]`              | Check inner, typecheck liquid, wrap                 |
 | **fallthrough**           | Infer + insert implicits + emit `assign` constraint |
 
+**Note:** Curry-style functional patterns (patterns with function symbols, unification/residuation) would require elaboration redesign. See docs/MIR-LOWERING.md §9.1.
+
 ## Monad (`shared/monad.v2.ts`)
 
 ```

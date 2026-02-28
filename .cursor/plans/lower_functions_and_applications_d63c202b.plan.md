@@ -4,31 +4,31 @@ overview: Plan for implementing lowering of Lambda and general App in the Yap MI
 todos:
   - id: rename-lir-mir
     content: Rename lir.ts to mir.ts; update imports, LIR→MIR names, comments, docs (first step)
-    status: pending
+    status: completed
   - id: doc-mir
     content: Update MIR-LOWERING.md with Call target union, closure layout, spine note
-    status: pending
+    status: completed
   - id: doc-roadmap
     content: Add lowering/compilation vision to ROADMAP or create LOWERING-VISION.md
     status: pending
   - id: mir-call
     content: Add Call instruction with CallTarget discriminated union to mir.ts
-    status: pending
+    status: completed
   - id: mir-fnref
     content: Add Expr.FuncRef; closure as Record (no special allocation)
-    status: pending
+    status: completed
   - id: lower-app
     content: Lower App(f, arg); Phase 1 indirect only (direct reserved for future top-level fn refs)
-    status: pending
+    status: completed
   - id: lower-lambda
     content: Lower Lambda with closure conversion (nested supported)
-    status: pending
+    status: completed
   - id: lower-module
     content: Change lowerToMir to return Module, accumulate functions
-    status: pending
+    status: completed
   - id: tests
     content: Add tests for lambda, nested lambda, indirect call, λx.x as whole term; switch to Module, use display.module, snapshot full module
-    status: pending
+    status: completed
 isProject: false
 ---
 
@@ -69,10 +69,10 @@ isProject: false
 
 ## Current State
 
-- **Implemented**: Lit, Var (Bound/Free/Foreign), primitive App (e.g. `add(1,2)`), Struct/Proj/Inj
-- **Not implemented**: Lambda, general App, Block, Match, Let, Reset/Shift
-- **IR** (`[src/lowering/lir.ts](src/lowering/lir.ts)`): Code still uses LIR naming; plan references MIR. Has `Let`, `Read`, `Update` (modes `immutable`, `fbip`), `Alloc`, `PrimOp`; no `Call` instruction
-- **lowerToMir** returns a single `Function`; MIR spec defines `Module` with `functions[]`
+- **Implemented**: Lit, Var (Bound/Free/Foreign), primitive App (e.g. `add(1,2)`), Struct/Proj/Inj, **Lambda** (closure conversion, nested), **App** (indirect calls)
+- **Not implemented**: Block, Match, Let, Reset/Shift
+- **IR** (`src/lowering/mir.ts`): MIR naming. Has `Let`, `Read`, `Update` (modes `immutable`, `fbip`), `Alloc`, `PrimOp`, `Call` (direct/indirect), `Expr.FuncRef`; closure = Record `{ __fn, __env }`
+- **lowerToMir** returns `Module` with `[main, ...functions]`; lifted closure bodies included
 
 ---
 
@@ -136,7 +136,7 @@ The lowering pass: (1) allocates env, (2) emits the function, (3) binds FuncRef,
 
 **Free variable collection**: Implement `freeVars(term: EB.Term, depth: number): Set<number>`. `depth` = number of lambda binders we're currently inside. `Bound(i)` is free when `i >= depth`.
 
-**Closed lambdas** (no free vars): Function params = `[x]` only. Allocate empty env record `Alloc({ type: "Record", fields: [] }, envRef)` for `__env`; closure = Record with FuncRef and env ref. (Empty-env allocation will be optimized later; Phase 1 keeps uniform closure layout.)
+**Closed lambdas** (no free vars): Uniform calling convention — params = `[env, x]` (same as capturing lambdas); caller always passes `[envVar, arg]`. Allocate empty env record for `__env`; closure layout uniform. (Empty-env allocation will be optimized later.)
 
 **Env field order**: Deterministic — sort free var indices ascending; use field names derived from `ctx.bound` (e.g. `v1`, `v2`) or original binder names. Ensures stable closure layout.
 

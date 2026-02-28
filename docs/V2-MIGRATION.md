@@ -149,7 +149,7 @@ Covers: literal unification, lambda/Pi unification, rigid variable mismatch, met
 
 **Still missing checking.v2 modules:**
 
-- `match.ts` — match checking (against Type and against arbitrary types with pattern narrowing)
+- `match.ts` — match checking (against Type and against arbitrary types with pattern narrowing). **Note:** Curry-style functional patterns (unification, residuation) would require elaboration redesign; see docs/MIR-LOWERING.md §9.1.
 - `modal.ts` — modal checking (strip Modal wrapper, check inner with liquid refinements)
 
 ### Wiring
@@ -180,7 +180,7 @@ This is the **hard prerequisite** for everything else — all modules depend on 
 - ~~Fix the broken code in `check.ts`~~ ✅ Done (2026-02-23)
 - ~~Implement `struct.ts`, `row.ts`~~ ✅ Done (2026-02-22)
 - ~~Implement `variant.ts`, `tuple.ts`, `injection.ts`, `tagged.ts`~~ ✅ Done (2026-02-23)
-- Implement `match.ts` — match checking (against Type and against arbitrary types with pattern narrowing)
+- Implement `match.ts` — match checking (against Type and against arbitrary types with pattern narrowing). Curry-style functional patterns (docs/MIR-LOWERING.md §9.1) would require elaboration redesign.
 - Implement `modal.ts` — modal checking (strip Modal, check inner, liquid refinements)
 - Wire `checking.v2/tmp.ts` to the real dispatcher in `check.ts`
 

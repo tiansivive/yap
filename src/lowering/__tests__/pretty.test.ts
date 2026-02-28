@@ -88,23 +88,24 @@ describe("MIR pretty printer", () => {
 		expect(Pretty.display.block(block)).toMatchSnapshot();
 	});
 
-	it("display.function for lowerToMir(EB.DSL.num(42))", () => {
+	it("display.function for main from lowerToMir(EB.DSL.num(42))", () => {
 		const term = EB.DSL.num(42);
-		const fn = lowerToMir(term);
-		expect(Pretty.display.function(fn)).toMatchSnapshot();
+		const mod = lowerToMir(term);
+		const main = mod.functions[0];
+		expect(main).toBeDefined();
+		expect(Pretty.display.function(main!)).toMatchSnapshot();
 	});
 
 	it("display() handles all types", () => {
 		const expr = MIR.Constructors.Expr.Lit(Lit.Num(1));
 		expect(Pretty.display(expr)).toBe("1");
 
-		const fn = lowerToMir(EB.DSL.add(EB.DSL.num(1), EB.DSL.num(2)));
-		expect(Pretty.display(fn)).toMatchSnapshot();
+		const mod = lowerToMir(EB.DSL.add(EB.DSL.num(1), EB.DSL.num(2)));
+		expect(Pretty.display(mod)).toMatchSnapshot();
 	});
 
 	it("display.module", () => {
-		const fn = lowerToMir(EB.DSL.num(42));
-		const mod = MIR.Constructors.Module([fn]);
+		const mod = lowerToMir(EB.DSL.num(42));
 		expect(Pretty.display.module(mod)).toMatchSnapshot();
 	});
 });

@@ -2,6 +2,8 @@ import * as EB from "@yap/elaboration";
 import * as Lit from "@yap/shared/literals";
 import * as R from "@yap/shared/rows";
 import { OP_AND, OP_EQ, OP_NOT, OP_OR } from "@yap/shared/lib/primitives";
+import type { Alternative, Pattern } from "@yap/elaboration";
+import * as NF from "@yap/elaboration/normalization";
 
 // Core term builders (literals, variables)
 export const num = (n: number): EB.Term => EB.Constructors.Lit(Lit.Num(n));
@@ -102,3 +104,20 @@ export const struct = (fields: Array<{ label: string; value: EB.Term }>): EB.Ter
 export const proj = (label: string, term: EB.Term): EB.Term => EB.Constructors.Proj(label, term);
 
 export const inj = (label: string, value: EB.Term, term: EB.Term): EB.Term => EB.Constructors.Inj(label, value, term);
+
+/** Pattern builders — namespace-based, extensible. */
+export const Pat = {
+	/** Build a variant pattern: { [tag]: payloadPattern }. Binder("x") for payload binds the payload. */
+	variant: (tag: string, payload: Pattern): Pattern =>
+		EB.Constructors.Patterns.Variant(R.Constructors.Extension(tag, payload, R.Constructors.Empty() as R.Row<Pattern, string>)),
+};
+
+/** Build match(scrutinee, alternatives). Alternatives: [pattern, term] pairs. */
+export const match = (scrutinee: EB.Term, alts: Array<{ pattern: Pattern; term: EB.Term }>): EB.Term => {
+	const dummyBinder: [string, NF.Value] = ["_", NF.Constructors.Lit(Lit.Atom("Num"))];
+	const alternatives: Alternative[] = alts.map(({ pattern, term }) => {
+		const binders: [string, NF.Value][] = pattern.type === "Variant" || pattern.type === "Binder" ? [dummyBinder] : [];
+		return EB.Constructors.Alternative(pattern, term, binders);
+	});
+	return EB.Constructors.Match(scrutinee, alternatives);
+};

@@ -37,6 +37,12 @@ alwaysApply: false
 - Full module elaboration: top-level let, exports, foreign imports
 - Same patterns as inference tests at module granularity
 
+## Lowering tests (`src/lowering/__tests__`)
+
+- **Setup**: Call `resetSupply()` in `beforeEach` for deterministic names (vars, fn names like `f_0`, `f_1`)
+- **Output**: `lowerToMir(term)` returns `Module`; use `Pretty.display.module(mod)` for snapshots (full module with main + lifted functions)
+- **DSL**: `EB.DSL.app(func, arg)` for generic application; `EB.DSL.lambda` for lambdas
+
 ## General
 
 - **Snapshots heavily used** — update with `pnpm test -u`

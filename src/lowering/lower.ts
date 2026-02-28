@@ -5,7 +5,9 @@ import { Patterns } from "./patterns";
 import type { LowerCtx, LowerResult } from "./context";
 import { at, bind, mkCtx, resolveCaptured } from "./context";
 import { convertClosure } from "./closures";
+import { lowerMatch } from "./match";
 import { freeVars, sortedNumbers } from "./shared/freevars";
+import { lowerReset, lowerInReset, isContinuationApp, lowerContinuationApp } from "./delimited_continuation";
 
 function eraseTypeLevel(term: EB.Term, ctx: LowerCtx): LowerResult {
 	// TODO: handle erasure more systematically; erasure semantics TBD
@@ -20,13 +22,13 @@ function eraseTypeLevel(term: EB.Term, ctx: LowerCtx): LowerResult {
 
 function extractFields(row: EB.Row): Array<{ label: string; term: EB.Term }> {
 	return match(row)
-		.with(Patterns.Extension, ({ label, value, row: rest }) => [{ label, term: value }, ...extractFields(rest)])
-		.with(Patterns.Variable, () => {
+		.with(Patterns.Rows.Extension, ({ label, value, row: rest }) => [{ label, term: value }, ...extractFields(rest)])
+		.with(Patterns.Rows.Variable, () => {
 			// TODO: handle erasure more systematically; erasure semantics TBD
 			console.warn("Type expression being erased during lowering: row variable");
 			throw new Error("Row variable in value position — type-level only");
 		})
-		.with(Patterns.Empty, () => [])
+		.with(Patterns.Rows.Empty, () => [])
 		.exhaustive();
 }
 
@@ -40,7 +42,7 @@ function unwrapPrimitiveApp(term: EB.Term): { op: string; args: EB.Term[] } | nu
 			const inner = unwrapPrimitiveApp(func);
 			return inner ? { op: inner.op, args: [...inner.args, arg] } : null;
 		})
-		.with(Patterns.VarForeign, ({ variable }) => (isPrimOp(variable.name) ? { op: variable.name, args: [] } : null))
+		.with(Patterns.Vars.Foreign, ({ variable }) => (isPrimOp(variable.name) ? { op: variable.name, args: [] } : null))
 		.otherwise(() => null);
 }
 
@@ -99,6 +101,9 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			return { instrs, value: result, functions };
 		})
 		.with(Patterns.App, ({ func, arg }) => {
+			if (isContinuationApp(term, ctx)) {
+				return lowerContinuationApp(term, ctx, lower);
+			}
 			const funcResult = lower(func, ctx);
 			const argResult = lower(arg, ctx);
 			const fnVar = ctx.nextVar("fnref");
@@ -127,7 +132,7 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 				functions: [],
 			};
 		})
-		.with(Patterns.VarBound, ({ variable }) => {
+		.with(Patterns.Vars.Bound, ({ variable }) => {
 			const name = ctx.bound.get(variable.index);
 
 			if (name === undefined) {
@@ -135,7 +140,7 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			}
 			return { instrs: [], value: name, functions: [] };
 		})
-		.with(Patterns.VarFree, ({ variable }) => {
+		.with(Patterns.Vars.Free, ({ variable }) => {
 			const name = ctx.free.get(variable.name);
 
 			if (name !== undefined) {
@@ -143,7 +148,7 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			}
 			throw new Error(`Unbound variable: ${variable.name}`);
 		})
-		.with(Patterns.VarForeign, ({ variable }) => {
+		.with(Patterns.Vars.Foreign, ({ variable }) => {
 			const name = ctx.free.get(variable.name);
 
 			if (name !== undefined) {
@@ -153,6 +158,14 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 				throw new Error(`Primitive ${variable.name} used as value; expected application (not yet implemented)`);
 			}
 			throw new Error(`Unbound variable: ${variable.name}`);
+		})
+		.with({ type: "Match" }, ({ scrutinee, alternatives }) => lowerMatch(scrutinee, alternatives, ctx, lower))
+		.with({ type: "Reset" }, ({ term: t }) => lowerReset(t, ctx, lower))
+		.with({ type: "Shift" }, t => {
+			if (!ctx.resetCtx) {
+				throw new Error("Shift without enclosing reset");
+			}
+			return lowerInReset(t, ctx, lower);
 		})
 		.with(Patterns.Lambda, ({ binding, body }) => {
 			const freeIndices = sortedNumbers(freeVars(body, 1));
@@ -167,25 +180,26 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			const envRef = ctx.nextVar("env");
 			const envAllocInstrs: MIR.Instr[] = [MIR.Constructors.Instr.Alloc({ type: "Record", fields: envFields }, envRef)];
 
-			if (freeIndices.length > 0) {
-				const envParam = ctx.nextVar("env");
-				const params = [envParam, binding.variable];
-				const envReads = freeIndices.map((_, j) => MIR.Constructors.Instr.Read(`v${j}`, envParam, at(readVars, j)));
-				const instrs = [...envReads, ...inner.instrs];
-				return convertClosure(ctx, fnName, params, instrs, inner, envAllocInstrs, envRef);
-			}
-
-			const params = [binding.variable];
-			return convertClosure(ctx, fnName, params, inner.instrs, inner, envAllocInstrs, envRef);
+			// Uniform calling convention: caller always passes [env, arg]. Closed lambdas accept env but don't use it.
+			const envParam = ctx.nextVar("env");
+			const params = [envParam, binding.variable];
+			const envReads = freeIndices.map((_, j) => MIR.Constructors.Instr.Read(`v${j}`, envParam, at(readVars, j)));
+			const instrs = [...envReads, ...inner.instrs];
+			return convertClosure(ctx, fnName, params, instrs, inner, envAllocInstrs, envRef);
 		})
 		.otherwise(() => {
 			throw new Error(`Lowering not implemented for ${term.type} (primitives and ops only)`);
 		});
 }
 
-export function lowerToMir(term: EB.Term): MIR.Function {
+export function lowerToMir(term: EB.Term): MIR.Module {
 	const ctx = mkCtx();
-	const { instrs, value, functions } = lower(term, ctx);
-	const block = MIR.Constructors.Block("entry", [], instrs, MIR.Constructors.Terminator.Return(value));
-	return MIR.Constructors.Function("main", [], "entry", [block]);
+	const result = lower(term, ctx);
+	if (result.blocks !== undefined && result.entry !== undefined) {
+		const main = MIR.Constructors.Function("main", [], result.entry, result.blocks);
+		return MIR.Constructors.Module([main, ...result.functions]);
+	}
+	const block = MIR.Constructors.Block("entry", [], result.instrs, MIR.Constructors.Terminator.Return(result.value));
+	const main = MIR.Constructors.Function("main", [], "entry", [block]);
+	return MIR.Constructors.Module([main, ...result.functions]);
 }

@@ -1,7 +1,7 @@
 ---
 description: Prefer ts-pattern over if checks for structural dispatch
 globs: "**/*.ts"
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Pattern matching over if checks
@@ -19,16 +19,20 @@ const TypeLevelVariant = { type: "App" as const, func: { type: "Lit" as const, v
 const TypeLevelArray = { type: "App" as const, func: { type: "Lit" as const, value: { type: "Atom" as const, value: "Array" } }, arg: { type: "Row" as const } } as const;
 
 export const Patterns = {
-  StructApp: { type: "App" as const, func: { type: "Lit" as const, value: { type: "Atom" as const, value: "Struct" } }, arg: { type: "Row" as const } },
   Proj: { type: "Proj" } as const,
-  Row: { type: "Row" } as const,
-  TypeLevelApp: P.union(TypeLevelSchema, TypeLevelVariant, TypeLevelArray),
+  Inj: { type: "Inj" } as const,
+  Vars: { Bound: ..., Free: ..., Foreign: ... },   // Var patterns
+  Rows: { Extension: ..., Variable: ..., Empty: ... },  // R.Row structure
+  Pats: { Variant: ..., Binder: ..., Wildcard: ..., Lit: ... },  // EB.Pattern
 } as const;
 
-// usage
+// usage — grouped by logical unit
 match(term)
   .with(Patterns.StructApp, ({ arg }) => ...)
   .with(Patterns.Proj, ({ label, term: t }) => ...)
+  .with(Patterns.Vars.Bound, ({ variable }) => ...)
+  .with(Patterns.Rows.Extension, ({ label, value, row }) => ...)
+  .with(Patterns.Pats.Variant, ({ row }) => ...)
   .otherwise(() => fallback);
 ```
 
@@ -36,7 +40,7 @@ match(term)
 
 - Pattern objects are reusable, readable, and match elaboration conventions.
 - Predicate helpers (`isStructApp`, etc.) hide structure and encourage if/else chains.
-- See `src/elaboration/normalization/syntax/term.ts` (NF.Patterns), `src/elaboration/syntax/term.ts` (CtorPatterns), `src/lowering/patterns.ts`.
+- See `src/elaboration/normalization/syntax/term.ts` (NF.Patterns), `src/elaboration/syntax/term.ts` (CtorPatterns), `src/lowering/patterns.ts` (Patterns).
 
 ## Don't
 

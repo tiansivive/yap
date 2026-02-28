@@ -55,6 +55,7 @@
   - ~~unify evaluation and elaboration sigmas so we don't need the extract bindings trick in evaluation~~
 - Delimited continuations
   - shift/reset
+  - Shift/reset lowering — see MIR-LOWERING.md §7
 - Function domains modelled with Rows?
 - Exclusion/Not type operator
   - `!Int` means any type that is not an `Int`
@@ -120,6 +121,7 @@
 - Pattern matching implementations
   - Unification? Residuations?
     - Check curry lang and functional logic papers
+    - See docs/MIR-LOWERING.md §9.1 (Functional Patterns Curry-style) for design notes and elaboration impact
 - Indexed types implementation
   - Hashmap for dicts
   - Contiguous block for Array

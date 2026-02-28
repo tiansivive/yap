@@ -1,12 +1,13 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`MIR pretty printer > display() handles all types 1`] = `
-"fn main entry=entry
-  entry:
-    let x0 = 1
-    let x1 = 2
-    let x2 = +(x0, x1)
-    return x2"
+"module
+  fn main entry=entry
+    entry:
+      let x0 = 1
+      let x1 = 2
+      let x2 = +(x0, x1)
+      return x2"
 `;
 
 exports[`MIR pretty printer > display.block with one Let and Return 1`] = `
@@ -15,7 +16,7 @@ exports[`MIR pretty printer > display.block with one Let and Return 1`] = `
   return x"
 `;
 
-exports[`MIR pretty printer > display.function for lowerToMir(EB.DSL.num(42)) 1`] = `
+exports[`MIR pretty printer > display.function for main from lowerToMir(EB.DSL.num(42)) 1`] = `
 "fn main entry=entry
   entry:
     let x0 = 42

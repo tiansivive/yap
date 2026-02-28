@@ -16,7 +16,7 @@ Per-module architecture documents:
 
 Migration tracking: `docs/V2-MIGRATION.md`
 
-MIR and lowering: `docs/MIR-LOWERING.md` — Design plan for lowering EB.Term to MIR (SSA, shift/reset, CRUD, FBIP). Early draft; consult when working on `src/lowering/` or backend pipeline. Lowering supports Struct, Proj, Inj → Read/Update/Alloc (see §5).
+MIR and lowering: `docs/MIR-LOWERING.md` — Design plan for lowering EB.Term to MIR (SSA, shift/reset, CRUD, FBIP). Consult when working on `src/lowering/` or backend pipeline. Phase 1 implemented: Lit, Var, prim App, Struct/Proj/Inj, Lambda (closure conversion), App (indirect), Match, Shift/Reset (Alloc + Read + Jump, no MakeCont/Resume). Returns `Module` (see §5).
 
 The agent should read `docs/ARCHITECTURE.md` at session start and consult the relevant per-module doc when working in a specific subsystem.
 
@@ -71,6 +71,7 @@ Run `pnpm test` to run the tests. You can update snapshots with `pnpm test -u` a
 - Prefer function composition/pipelines to interstitial variables that do not add semantic value.
 - Prefer iterators and built-in higher order functions (map, filter, reduce, etc) over manual loops.
 - Avoid wrapping in unecessary callbacks. e.g. `Array.map(doStuff)` instead of `Array.map(v => doStuff(v))`
+- **Namespace-based APIs:** Prefer `Category.action` over `actionCategory`. Encode functionality in namespaces (objects with methods/fields), not in function names. Extensible and discoverable.
 - Clean, Clear and Terse code:
   - One letter var names are fine in ML-like fashin. e.g. `Array.map(x =>...)` or `const [x, ...xs] = [1,2,3,4]`.
   - Try to keep function and variable names to only one word. Multi-word names typically indicate a function is doing too much, so refactoring is encouraged
@@ -82,7 +83,7 @@ Run `pnpm test` to run the tests. You can update snapshots with `pnpm test -u` a
   - Flatten all cases into separate `.with` clauses using guards (second argument) rather than nesting conditionals inside a handler.
   - Match on the discriminant directly (e.g. `node.type`, tuple of values) so ts-pattern can narrow types.
   - Use `.otherwise` for the fallthrough case.
-  - **Do NOT use predicate helpers or if checks for structural dispatch:** Use `.with()` with **const pattern objects** (like `NF.Patterns`, `EB.CtorPatterns`, `src/lowering/patterns.ts`). Create pattern objects with `as const` and reuse them. Use `P.when` for value guards when needed.
+  - **Do NOT use predicate helpers or if checks for structural dispatch:** Use `.with()` with **const pattern objects** (like `NF.Patterns`, `EB.CtorPatterns`, `src/lowering/patterns.ts` → `Patterns`). Create pattern objects with `as const` and reuse them.
 - Prefer recursion over imperative looping.
 - Avoid unneeded comments. Code should be self-documenting as much as possible.
   - Use types to document intent.

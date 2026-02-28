@@ -53,9 +53,12 @@ export type Instr =
 	| { type: "Alloc"; alloc: Allocation; result: string }
 	| { type: "Call"; target: CallTarget; args: string[]; result: string };
 
+export type Case = { value: string; target: Label; args: string[] };
+export type DefaultCase = { target: Label; args: string[] };
+
 export type Terminator =
 	| { type: "Jump"; target: Label; args: string[] }
-	| { type: "Branch"; cond: string; thenTarget: Label; thenArgs: string[]; elseTarget: Label; elseArgs: string[] }
+	| { type: "Branch"; scrutinee: string; cases: Case[]; default?: DefaultCase }
 	| { type: "Return"; value: string };
 
 export type Expr =
@@ -96,13 +99,11 @@ export const Constructors = {
 	},
 	Terminator: {
 		Jump: (target: Label, args: string[]): Terminator => ({ type: "Jump", target, args }),
-		Branch: (cond: string, thenTarget: Label, thenArgs: string[], elseTarget: Label, elseArgs: string[]): Terminator => ({
+		Branch: (scrutinee: string, cases: Case[], def?: DefaultCase): Terminator => ({
 			type: "Branch",
-			cond,
-			thenTarget,
-			thenArgs,
-			elseTarget,
-			elseArgs,
+			scrutinee,
+			cases,
+			...(def !== undefined && { default: def }),
 		}),
 		Return: (value: string): Terminator => ({ type: "Return", value }),
 	},

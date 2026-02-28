@@ -4,15 +4,24 @@ Yap is a dependently typed language with structural types, implicits, and verifi
 
 **For full context**, read `.github/copilot-instructions.md` at session start. It covers architecture, detailed guidelines, testing patterns, V2 migration, and agent interaction style.
 
+**Session start (recommended):** At the start of a new chat, @-mention these files so the agent has them in context:
+
+```
+@AGENTS.md @.github/copilot-instructions.md @.cursor/rules/coding-style.mdc @.cursor/rules/pattern-matching.mdc
+```
+
+Then ask the agent to read and apply them for the session. This ensures the guidelines are always followed.
+
 **Cursor rules** (`.cursor/rules/`) encode style and conventions; they apply automatically when editing matching files:
 
 | Rule                   | Applies                        | Content                                                   |
 | ---------------------- | ------------------------------ | --------------------------------------------------------- |
-| `pattern-matching.mdc` | `**/*.ts`                      | ts-pattern with const pattern objects; no if checks       |
-| `coding-style.mdc`     | `**/*.ts`                      | Immutable, terse, V2 Do, recursion, comments              |
-| `testing.mdc`          | `**/__tests__/**`, `*.test.ts` | Parser, elaboration, module test patterns                 |
-| `conventions.mdc`      | `**/*.ts`                      | Path aliases, pitfalls, tree-sitter, v2                   |
+| `session-start.mdc`    | always                         | Read guidelines at session start; apply from the start    |
 | `agent-behavior.mdc`   | always                         | Collaborative, validate, surface issues, self-maintenance |
+| `coding-style.mdc`     | always                         | Immutable, terse, V2 Do, recursion, map/reduce            |
+| `pattern-matching.mdc` | always                         | ts-pattern with const pattern objects; no if checks       |
+| `conventions.mdc`      | always                         | Path aliases, pitfalls, tree-sitter, v2                   |
+| `testing.mdc`          | `**/__tests__/**`, `*.test.ts` | Parser, elaboration, module test patterns                 |
 
 ## Project overview
 
@@ -53,6 +62,7 @@ Do not use `pnpm build` while debugging; run `pnpm yap` directly.
 ## Style guide (summary)
 
 - **Immutable**, declarative, recursion over loops
+- **Namespace-based APIs** — `Category.action` over `actionCategory`
 - **V2 Do notation**; avoid long fp-ts pipelines
 - **ts-pattern** with const pattern objects (no if checks, no predicate helpers)
 - **One-word names**; small functions; KISS/DRY
@@ -76,4 +86,4 @@ Do not use `pnpm build` while debugging; run `pnpm yap` directly.
 | Design specs, roadmap   | `brainstorming/yap/`              |
 | Cursor rules            | `.cursor/rules/*.mdc`             |
 
-Lowering (`src/lowering/`): Struct, Proj, Inj → MIR Read/Update/Alloc. See MIR-LOWERING.md §5.
+Lowering (`src/lowering/`): Lit, Var, prim App, Struct/Proj/Inj, Lambda (closure conversion), App (indirect), Match, Reset/Shift. Shift/reset in `delimited_continuation/` (Alloc + Read + Jump). Returns `Module`. See MIR-LOWERING.md §5.

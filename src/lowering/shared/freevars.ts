@@ -5,7 +5,7 @@ import { Patterns } from "../patterns";
 /** Free de Bruijn indices in term (indices >= depth). depth = number of lambda binders we're inside. */
 export function freeVars(term: EB.Term, depth: number): Set<number> {
 	return match(term)
-		.with(Patterns.VarBound, ({ variable }) => (variable.index >= depth ? new Set<number>([variable.index]) : new Set<number>()))
+		.with(Patterns.Vars.Bound, ({ variable }) => (variable.index >= depth ? new Set<number>([variable.index]) : new Set<number>()))
 		.with({ type: "Var" }, () => new Set<number>())
 		.with({ type: "Lit" }, () => new Set<number>())
 		.with({ type: "Abs" }, ({ body }) => {
@@ -51,13 +51,13 @@ export function freeVars(term: EB.Term, depth: number): Set<number> {
 
 function freeVarsRow(row: EB.Row, depth: number): Set<number> {
 	return match(row)
-		.with(Patterns.Extension, ({ value, row: rest }) => {
+		.with(Patterns.Rows.Extension, ({ value, row: rest }) => {
 			const a = freeVars(value, depth);
 			const b = freeVarsRow(rest, depth);
 			return new Set<number>([...a, ...b]);
 		})
-		.with(Patterns.Variable, () => new Set<number>())
-		.with(Patterns.Empty, () => new Set<number>())
+		.with(Patterns.Rows.Variable, () => new Set<number>())
+		.with(Patterns.Rows.Empty, () => new Set<number>())
 		.exhaustive();
 }
 
