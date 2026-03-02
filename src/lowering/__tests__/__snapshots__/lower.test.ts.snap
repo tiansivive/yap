@@ -222,93 +222,89 @@ exports[`Lowering: match > lowers match on variant with struct payload (Some(Poi
 exports[`Lowering: match > lowers reset(42) — no shift 1`] = `
 {
   "mir": "module
-  fn main entry=b1
-    b1:
-      let x1 = 42
-      jump b0(x1)
-    b0(x0):
+  fn main entry=entry
+    entry:
+      let x0 = 42
       return x0",
   "term": "reset |42|",
-}
-`;
-
-exports[`Lowering: match > lowers reset(Block) with captured frame — let x=1; shift k->k 10; x+100 1`] = `
-{
-  "mir": "module
-  fn main entry=b3
-    b3:
-      let x1 = 1
-      let env_0 = alloc { v0: x1 }
-      let cont_0 = alloc { __env: env_0 }
-      jump b2(cont_0)
-    b2(cont_0):
-      let x2 = 10
-      let env_1 = read cont_0.__env
-      jump b1(x2, env_1)
-    b1(v_0, env_2):
-      let x3 = read env_2.v0
-      let x4 = 100
-      let x5 = +(x3, x4)
-      jump b0(x5)
-    b0(x0):
-      return x0",
-  "term": "reset |{
-	let x
-	: Num
-	= 1;
-	shift (λk -> k 10);
-	return FFI.$add x 100;
-	}|",
-}
-`;
-
-exports[`Lowering: match > lowers reset(Block) — continuation uses resumption value and captured var (let v = shift; add(v, x)) 1`] = `
-{
-  "mir": "module
-  fn main entry=b3
-    b3:
-      let x1 = 7
-      let env_0 = alloc { v0: x1 }
-      let cont_0 = alloc { __env: env_0 }
-      jump b2(cont_0)
-    b2(cont_0):
-      let x2 = 99
-      let env_1 = read cont_0.__env
-      jump b1(x2, env_1)
-    b1(v_0, env_2):
-      let x3 = read env_2.v0
-      let x4 = +(v_0, x3)
-      jump b0(x4)
-    b0(x0):
-      return x0",
-  "term": "reset |{
-	let x
-	: Num
-	= 7;
-	let v
-	: Num
-	= shift (λk -> k 99);
-	return FFI.$add v x;
-	}|",
 }
 `;
 
 exports[`Lowering: match > lowers reset(shift k -> 42) — shift returns without resuming 1`] = `
 {
   "mir": "module
-  fn main entry=b3
-    b3:
+  fn main entry=b2
+    b2:
       let env_0 = alloc {  }
-      let cont_0 = alloc { __env: env_0 }
-      jump b2(cont_0)
-    b2(cont_0):
-      let x1 = 42
-      jump b0(x1)
-    b1(v_0, env_1):
-      jump b0(v_0)
-    b0(x0):
-      return x0",
+      let closure_0 = alloc { __env: env_0 }
+      let x0 = 42
+      jump b0(x0)
+    b0(x1):
+      return x1
+    b1(x2, env_1, x3):
+      branch x3 {  }",
   "term": "reset |shift (λk -> 42)|",
+}
+`;
+
+exports[`Lowering: match > lowers reset(shift k -> add(k 1, k 2)) — multi-shot state machine (add(1,2)=3) 1`] = `
+{
+  "mir": "module
+  fn main entry=b4
+    b4:
+      let env_0 = alloc {  }
+      let x0 = 1
+      let i0 = 0
+      let env_0 = read closure_0.__env
+      jump b1(x0, env_0, x1)
+    b0(x8):
+      return x8
+    b1(x9, env_4, x10):
+      branch x10 { 0 -> b2(x9, env_4) | 1 -> b3(x9, env_4) }
+    b2(x2, env_1):
+      let x3 = 2
+      let x4 = 1
+      let env_0 = read closure_0.__env
+      let env_3 = update-immutable env_1 { r0: x2 }
+      jump b1(x3, env_3, x4)
+    b3(x5, env_2):
+      let x7 = read env_2.r0
+      let x6 = +(x2, x7)
+      jump b0(x6)",
+  "term": "reset |shift (λk -> FFI.$add (k 1) (k 2))|",
+}
+`;
+
+exports[`Lowering: match > lowers reset(shift k -> f (k 1) (k 2)) — uniform App handling for user functions 1`] = `
+{
+  "mir": "module
+  fn main entry=b4
+    b4:
+      let env_0 = alloc {  }
+      let closure_0 = alloc { __env: env_0 }
+      let x2 = 1
+      let x3 = 0
+      let env_0 = read closure_0.__env
+      jump b1(x2, env_0, x3)
+    b0(x11):
+      return x11
+    b1(x12, env_9, x13):
+      branch x13 { 0 -> b2(x12, env_9) | 1 -> b3(x12, env_9) }
+    b2(x4, env_5):
+      let fnref_2 = read closure_2.__fn
+      let env_6 = read closure_2.__env
+      let x5 = call *fnref_2(env_6, x4)
+      let x6 = 2
+      let x7 = 1
+      let env_0 = read closure_0.__env
+      jump b0(x9)
+    b3(x8, env_7):
+      let x10 = read env_7.r0
+      let fnref_3 = read x5.__fn
+      let env_8 = read x5.__env
+      let x9 = call *fnref_3(env_8, x10)
+      return x9",
+  "term": "reset |shift (λk -> (λx -> λy -> FFI.$add x y) (k 1) (k 2))|",
 }
 `;
 
@@ -318,16 +314,17 @@ exports[`Lowering: match > lowers reset(shift(λk. k 42)) — resume returns 42 
   fn main entry=b3
     b3:
       let env_0 = alloc {  }
-      let cont_0 = alloc { __env: env_0 }
-      jump b2(cont_0)
-    b2(cont_0):
-      let x1 = 42
-      let env_1 = read cont_0.__env
-      jump b1(x1, env_1)
-    b1(v_0, env_2):
-      jump b0(v_0)
-    b0(x0):
-      return x0",
+      let closure_0 = alloc { __env: env_0 }
+      let x0 = 42
+      let x1 = 0
+      let env_0 = read closure_0.__env
+      jump b1(x0, env_0, x1)
+    b0(x3):
+      return x3
+    b1(x4, env_2, x5):
+      branch x5 { 0 -> b2(x4, env_2) }
+    b2(x2, env_1):
+      jump b0(x2)",
   "term": "reset |shift (λk -> k 42)|",
 }
 `;

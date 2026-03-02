@@ -1,0 +1,60 @@
+module
+  fn main entry=b4
+    b4:
+      let env_0 = alloc {  }
+      let x0 = 1
+      let i0 = 0
+      jump b1(x0, env_0, i0)
+
+    // the reset exit block. This is the block of code that is executed after the shift body.
+    b0(x8):
+      return x8
+
+    // the captured continuation block, ie. the rest of code after the shift up to the enclosing reset
+    b1(x1, env_1, i1): 
+      
+      /********* CONTINUATION BLOCK BODY ********* 
+       * Here we would lower the continuation body 
+       * This example has no continuation body, so it just returns the resumption value (x1). This is also the value the shift expression evaluates to.
+       ******************************************/
+      
+      /********* CONTINUATION BLOCK END ********* 
+       * The end of the continuation block is always a jump back to the shift body.
+       * Because we support multi-shot semantics, we need to branch on the resume index, which is provided by the jump instruction out of the shift body.
+       * The resume index tells us which resume block to jump to.
+       ******************************************/
+      
+      branch i1 { 0 -> b2(x1, env_1) | 1 -> b3(x1, env_1) }
+
+    // The first resume block. This is the block of code within the shift body that is executed after the first resumption.
+    // That is, after the first call to the continuation returns.
+    // The parameter is the return value of the continuation.
+    b2(x2, env_1):
+      // at this point, we have a new value in scope: the result of the first continuation call.
+      // we update the env record with the new value so that any code that runs after all resumptions have completed has access to all the continuation results.
+      let env_2 = update-immutable env_1 { r0: x2 }
+
+
+      let x3 = 2
+      let i2 = 1
+
+      // jump to the continuation block again. This is the second resumption.
+      jump b1(x3, env_2, i2)
+
+    // The second resume block. This is the block of code within the shift body that is executed after the second resumption.
+    // In this example, it is also the end of the shift body.
+    b3(x4, env_3):
+      // new value in scope: the result of the second continuation call. Update the env record with the new value.
+      let env_4 = update-immutable env_3 { r1: x4 }
+      
+      // the last thing in the shift body is the call to (+). The parameters have now been converted to the results of the continuation calls.
+      // So we need to read them from the env record.
+      let x5 = read env_4.r0
+      let x6 = read env_4.r1
+
+      // call to +, which in this case is a primop
+      let x7 = +(x5, x6)
+
+      // end of the shift body. Jump to the reset exit block.
+      jump b0(x7)
+

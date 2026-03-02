@@ -3,6 +3,7 @@ coverage/
 node_modules/
 gen/
 .logs/
+debug-*.log
 
 .vscode/
 bin/
