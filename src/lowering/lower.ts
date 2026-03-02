@@ -7,7 +7,7 @@ import { at, bind, mkCtx, resolveCaptured } from "./context";
 import { convertClosure } from "./closures";
 import { lowerMatch } from "./match";
 import { freeVars, sortedNumbers } from "./shared/freevars";
-import { lowerReset, lowerInReset, isContinuationApp, lowerContinuationApp } from "./delimited_continuation";
+
 
 function eraseTypeLevel(term: EB.Term, ctx: LowerCtx): LowerResult {
 	// TODO: handle erasure more systematically; erasure semantics TBD
@@ -101,9 +101,7 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			return { instrs, value: result, functions };
 		})
 		.with(Patterns.App, ({ func, arg }) => {
-			if (isContinuationApp(term, ctx)) {
-				return lowerContinuationApp(term, ctx, lower);
-			}
+
 			const funcResult = lower(func, ctx);
 			const argResult = lower(arg, ctx);
 			const fnVar = ctx.nextVar("fnref");
@@ -160,13 +158,6 @@ export function lower(term: EB.Term, ctx: LowerCtx): LowerResult {
 			throw new Error(`Unbound variable: ${variable.name}`);
 		})
 		.with({ type: "Match" }, ({ scrutinee, alternatives }) => lowerMatch(scrutinee, alternatives, ctx, lower))
-		.with({ type: "Reset" }, ({ term: t }) => lowerReset(t, ctx, lower))
-		.with({ type: "Shift" }, t => {
-			if (!ctx.resetCtx) {
-				throw new Error("Shift without enclosing reset");
-			}
-			return lowerInReset(t, ctx, lower);
-		})
 		.with(Patterns.Lambda, ({ binding, body }) => {
 			const freeIndices = sortedNumbers(freeVars(body, 1));
 			const captured = resolveCaptured(ctx, freeIndices);
