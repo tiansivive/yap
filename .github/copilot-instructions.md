@@ -16,7 +16,7 @@ Per-module architecture documents:
 
 Migration tracking: `docs/V2-MIGRATION.md`
 
-MIR and lowering: `docs/MIR-LOWERING.md` — Design plan for lowering EB.Term to MIR (SSA, shift/reset, CRUD, FBIP). Consult when working on `src/lowering/` or backend pipeline. Phase 1 implemented: Lit, Var, prim App, Struct/Proj/Inj, Lambda (closure conversion), App (indirect), Match, Shift/Reset (Alloc + Read + Jump, no MakeCont/Resume). Returns `Module` (see §5).
+MIR and lowering: `docs/MIR-LOWERING.md` — Design plan for lowering EB.Term to MIR (SSA, shift/reset, CRUD, FBIP). Consult when working on `src/lowering/` or backend pipeline. Phase 1 implemented: Lit, Var, prim App, Struct/Proj/Inj, Lambda (closure conversion), App (indirect), Match, Block, Shift/Reset (Alloc + Read + Jump, multishot: Branch + resume blocks). Returns `Module` (see §5, §7.6).
 
 The agent should read `docs/ARCHITECTURE.md` at session start and consult the relevant per-module doc when working in a specific subsystem.
 

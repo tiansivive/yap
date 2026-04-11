@@ -253,6 +253,15 @@ describe("Lowering: match", () => {
 		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
 	});
 
+	it("lowers Block (let x=1; let y=2; add(x,y))", () => {
+		const numTy = NF.Constructors.Lit(Lit.Atom("Num"));
+		const stmts: EB.Statement[] = [EB.Constructors.Stmt.Let("x", EB.DSL.num(1), numTy), EB.Constructors.Stmt.Let("y", EB.DSL.num(2), numTy)];
+		const returnTerm = EB.DSL.add(EB.DSL.bound(0), EB.DSL.bound(1));
+		const block = EB.Constructors.Block(stmts, returnTerm);
+		const mod = lowerToMir(block);
+		expect({ term: EB.Display.Term(block, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+
 	it("lowers reset(shift(λk. k 42)) — resume returns 42", () => {
 		const body = EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(42)), EB.DSL.type("Num"));
 		const term = EB.Constructors.Reset(EB.Constructors.Shift(body));
@@ -268,6 +277,13 @@ describe("Lowering: match", () => {
 
 	it("lowers reset(shift k -> 42) — shift returns without resuming", () => {
 		const body = EB.DSL.lambda("k", EB.DSL.num(42), EB.DSL.type("Num"));
+		const term = EB.Constructors.Reset(EB.Constructors.Shift(body));
+		const mod = lowerToMir(term);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+
+	it("lowers reset(shift k -> (k 1) + (k 2)) — multishot", () => {
+		const body = EB.DSL.lambda("k", EB.DSL.add(EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(1)), EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(2))), EB.DSL.type("Num"));
 		const term = EB.Constructors.Reset(EB.Constructors.Shift(body));
 		const mod = lowerToMir(term);
 		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();

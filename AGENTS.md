@@ -86,4 +86,4 @@ Do not use `pnpm build` while debugging; run `pnpm yap` directly.
 | Design specs, roadmap   | `brainstorming/yap/`              |
 | Cursor rules            | `.cursor/rules/*.mdc`             |
 
-Lowering (`src/lowering/`): Lit, Var, prim App, Struct/Proj/Inj, Lambda (closure conversion), App (indirect), Match, Reset/Shift. Shift/reset in `delimited_continuation/` (Alloc + Read + Jump). Returns `Module`. See MIR-LOWERING.md §5.
+Lowering (`src/lowering/`): Lit, Var, prim App, Struct/Proj/Inj, Lambda (closure conversion), App (indirect), Match, Block, Reset/Shift. Shift/reset in `delimited_continuation/` (Alloc + Read + Jump, multishot: Branch + resume blocks). Returns `Module`. See MIR-LOWERING.md §5, §7.6.

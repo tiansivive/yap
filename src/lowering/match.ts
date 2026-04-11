@@ -358,8 +358,13 @@ function compileMatrix(
 		});
 }
 
-export const lowerMatch = (scrutinee: EB.Term, alternatives: EB.Alternative[], ctx: LowerCtx, lower: (t: EB.Term, c: LowerCtx) => LowerResult): LowerResult => {
-	const scrutResult = lower(scrutinee, ctx);
+/** Lower match when scrutinee is already lowered (for worklist integration). */
+export const lowerMatchFromScrut = (
+	scrutResult: LowerResult,
+	alternatives: EB.Alternative[],
+	ctx: LowerCtx,
+	lower: (t: EB.Term, c: LowerCtx) => LowerResult,
+): LowerResult => {
 	const mergeLabel = ctx.nextLabel();
 	const mergeParam = ctx.nextVar();
 	const failLabel = ctx.nextLabel();
@@ -392,3 +397,6 @@ export const lowerMatch = (scrutinee: EB.Term, alternatives: EB.Alternative[], c
 		entry: "entry",
 	};
 };
+
+export const lowerMatch = (scrutinee: EB.Term, alternatives: EB.Alternative[], ctx: LowerCtx, lower: (t: EB.Term, c: LowerCtx) => LowerResult): LowerResult =>
+	lowerMatchFromScrut(lower(scrutinee, ctx), alternatives, ctx, lower);

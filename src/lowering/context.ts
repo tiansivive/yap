@@ -1,11 +1,41 @@
+import type * as EB from "@yap/elaboration";
 import type { Block, Function, Instr, Terminator } from "./mir";
 import type { ResetCtx } from "./delimited_continuation/types";
+
+/**
+ * Worklist frame for stack-based lowering (no recursion).
+ * Same pattern as evaluation.v2.ts globalWorkStack.
+ */
+export type Frame =
+	| { type: "Lower"; ctx: LowerCtx; term: EB.Term }
+	| { type: "Cont"; arity: number; handler: (results: LowerResult[]) => void }
+	| { type: "Delimiter"; id: number; resultSize: number };
 
 /**
  * Supply (nextVar, nextLabel) is global — passes do NOT reset.
  * lowerToMir does NOT call resetSupply(); callers (e.g. tests) must call it for deterministic names.
  * See docs/ARCHITECTURE.md § Supply and naming.
  */
+/** Resume block built incrementally for multishot. */
+export type ResumeBlockInfo = {
+	label: string;
+	/** Index for env update r{i}. */
+	index: number;
+	/** Filled by prim/App handler. Takes (valueParam, envParam) and returns block body. */
+	body?: (valueParam: string, envParam: string) => { instrs: Instr[]; terminator: Terminator };
+};
+
+/** Context when lowering inside a shift body. Used for k-call detection and multishot. */
+export type ShiftBodyCtx = {
+	contBlock: string;
+	envRef: string;
+	kRef: string;
+	/** Current resume index; incremented per k-call. */
+	resumeIndex: number;
+	/** Resume blocks built incrementally. */
+	resumeBlocks: ResumeBlockInfo[];
+};
+
 export type LowerCtx = {
 	bound: Map<number, string>;
 	free: Map<string, string>;
@@ -13,6 +43,8 @@ export type LowerCtx = {
 	nextLabel: () => string;
 	/** When inside a reset, carries exit label and continuation bindings. */
 	resetCtx?: ResetCtx;
+	/** When inside a shift body, for emitting k-calls (Read + Jump). */
+	shiftBodyCtx?: ShiftBodyCtx;
 };
 
 export type LowerResult = {
@@ -25,6 +57,8 @@ export type LowerResult = {
 	entry?: string;
 	/** When present, block ends with this terminator instead of Return(value). Used for continuation resume. */
 	terminator?: Terminator;
+	/** When terminator from k-call, index for resume block. */
+	kCallIndex?: number;
 };
 
 const VAR_PREFIX: Record<string, string> = {

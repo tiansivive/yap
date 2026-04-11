@@ -43,6 +43,10 @@ export const Patterns = {
 
 	Lambda: { type: "Abs" as const, binding: { type: "Lambda" as const } } as const,
 
+	Block: { type: "Block" as const } as const,
+	Reset: { type: "Reset" as const } as const,
+	Shift: { type: "Shift" as const } as const,
+
 	// R.Row (row structure)
 	Rows: {
 		Extension: { type: "extension" as const } as const,

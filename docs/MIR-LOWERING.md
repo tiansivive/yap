@@ -170,7 +170,7 @@ type Instr =
 // ... other pure operations as needed
 ```
 
-**Shift/reset:** Uses only `Alloc`, `Read`, `Jump`. No dedicated continuation instructions. Continuation = `Alloc { __env: envRef }`; resume = `Read("__env", k_ref, envRef)` then `Jump L_cont(v, envRef)`.
+**Shift/reset:** Uses only `Alloc`, `Read`, `Jump`, `Branch`. No dedicated continuation instructions. Continuation = `Alloc { __env: envRef }`; resume = `Read("__env", k_ref, envRef)` then `Jump L_cont(v, envRef, index)`; multi-shot uses `Branch` on index to resume blocks.
 
 **Read** — Always a read; no mutability. Projects a field from a struct/record.
 
@@ -220,7 +220,7 @@ type Terminator =
 
 - **Branch**: `scrutinee` = SSA var; `cases` = `{ value, target, args }` (value = tag name or literal); `default` = failure path (e.g. non-exhaustive match).
 
-**Resume:** Lowered to `Read` + `Jump`; no Resume terminator. When the shift body calls `k(v)`, we emit `Read("__env", k_ref, envRef)` then `Jump L_cont(v, envRef)`.
+**Resume:** Lowered to `Read` + `Jump`; no Resume terminator. When the shift body calls `k(v)`, we emit `Read("__env", k_ref, envRef)` then `Jump L_cont(v, envRef, index)` (index for multi-shot; single-shot uses Branch with one case).
 
 Each block ends with exactly one terminator. No fallthrough.
 
@@ -257,15 +257,15 @@ MIR (Module with functions)
 
 **Closure conversion** is part of the lowering pass. Lambdas are always closure-converted (Phase 1: no escape analysis). Each lambda becomes a top-level function with params `[env, x]` and an explicit env record. `lowerToMir` returns a `Module` with `main` plus all lifted functions.
 
-**Phase 1 (implemented):** Lit, Var, prim App, Struct/Proj/Inj, Lambda (nested supported), App (indirect calls), Match. Shift/Reset (Alloc + Read + Jump, no MakeCont/Resume). Not yet: Block, Let.
+**Phase 1 (implemented):** Lit, Var, prim App, Struct/Proj/Inj, Lambda (nested supported), App (indirect calls), Match, Block, Shift/Reset (Alloc + Read + Jump, multishot). Not yet: Let as standalone (Let is part of Block).
 
 ---
 
 ## 5. Implementation Status
 
-> Last updated: 2026-02-27
+> Last updated: 2026-03-02
 
-The lowering pass lives in `src/lowering/`. The MIR types (Module, Function, Block, Instr, Terminator, Expr, Allocation) are defined in `mir.ts` — Let, Var, Lit, PrimOp, FuncRef; Read, Update (immutable/fbip), Alloc; Call (direct/indirect); Jump, Branch, Return. A pretty printer (`pretty.ts`) provides `display.expr`, `display.instr`, `display.module`, etc.
+The lowering pass lives in `src/lowering/`. Shift/reset lowering uses a **worklist-based trampoline** (no recursion): global `worklist: Frame[]`, frame types `Lower`, `Cont`, `Delimiter`. Same pattern as `evaluation.v2.ts`. Types: `Frame`, `CapturedKont` in `context.ts` and `delimited_continuation/types.ts`. The MIR types (Module, Function, Block, Instr, Terminator, Expr, Allocation) are defined in `mir.ts` — Let, Var, Lit, PrimOp, FuncRef; Read, Update (immutable/fbip), Alloc; Call (direct/indirect); Jump, Branch, Return. A pretty printer (`pretty.ts`) provides `display.expr`, `display.instr`, `display.module`, etc.
 
 ### Implemented
 
@@ -296,11 +296,11 @@ Supported primops: `$add`, `$sub`, `$mul`, `$div`, `$and`, `$or`, `$eq`, `$neq`,
 
 ### Not Yet Implemented
 
-| EB.Term / Feature | Status | Notes                                                           |
-| ----------------- | ------ | --------------------------------------------------------------- |
-| `Block`           | ❌     | —                                                               |
-| `Reset` / `Shift` | ✅     | Alloc + Read + Jump; see `src/lowering/delimited_continuation/` |
-| `Let`             | ❌     | —                                                               |
+| EB.Term / Feature  | Status | Notes                                                                        |
+| ------------------ | ------ | ---------------------------------------------------------------------------- |
+| `Block`            | ✅     | Via `processStatementsAndPush`; Let/Expr per statement                       |
+| `Reset` / `Shift`  | ✅     | Alloc + Read + Jump; multishot (Branch + resume blocks, env r0/r1); see §7.6 |
+| `Let` (standalone) | ❌     | Let is part of Block; standalone Let not used in current pipeline            |
 
 ### Tests
 
@@ -436,10 +436,10 @@ Continuation = heap-allocated record with single `__env` field. The env record h
 k_ref = Alloc { __env: envRef }
 envRef = Alloc { v0: x0, v1: x1, ... }  // captured vars
 
-Resume: Read("__env", k_ref, envRef)
-        Jump L_cont(v, envRef)
+Resume (single-shot): Read("__env", k_ref, envRef); Jump L_cont(v, envRef)
+Resume (multi-shot):  Read("__env", k_ref, envRef); Jump L_cont(v, envRef, index)
 
-Block L_cont(v, envRef):
+Block L_cont(v, envRef [, index]):
   Read("v0", envRef, t0)
   Read("v1", envRef, t1)
   ...
@@ -513,27 +513,47 @@ reset { shift (\k -> 42) }
 
 **Multi-shot:** A continuation `k` can be resumed multiple times. Each `k(v)` runs the continuation from the shift point with that value. We **always heap-allocate** for the first implementation; linear optimization (direct jump, stack allocation) is deferred.
 
+**Implementation (as of 2026-03):** Each k-call gets a **resume index** (0, 1, 2, …). The continuation block receives `(value, env, index)` and **branches** on index to the appropriate resume block. Resume blocks are built incrementally when combining results (e.g. in prim-op handlers for `(k 1) + (k 2)`):
+
+- **Continuation block**
+  - `L_cont(value, env, index)` — params include index
+  - `branch index { 0 -> b2(value, env) | 1 -> b3(value, env) | ... }`
+
+- **Resume block i**
+  - Receives `(value, env)` from the branch
+  - `env' = update-immutable env { r{i}: value }` — store this k-call's result
+  - Either: run next k-call and `jump L_cont(nextValue, env', nextIndex)`
+  - Or: read `r0`, `r1`, … from env, compute final result, `jump reset_exit(result)`
+
+- **k-call lowering**
+  - `Read("__env", k_ref, envRef)` then `Jump L_cont(argValue, envRef, indexVar)` where `indexVar` holds the literal index
+
+Reference: `src/lowering/__tests__/multishot.mir` and `lower.test.ts` "lowers reset(shift k -> (k 1) + (k 2)) — multishot".
+
 ### 7.7 Lowering Algorithm Sketch
 
-```
-lowerReset(term, ctx):
-  reset_exit = freshLabel()
-  ctx' = ctx ∪ { resetExit, resetCtx }
-  lowerInReset(term, ctx')  // returns (entryBlock, blocks)
+Lowering uses a **worklist + result stack** (same pattern as `evaluation.v2.ts`). Frames: `Lower(ctx, term)`, `Cont(arity, handler)`, `Delimiter(id, resultSize)`.
 
-lowerInReset(term, ctx):
+```
+lowerToMir(term):
+  worklist = [Lower(mkCtx(), term)]
+  while worklist not empty:
+    frame = pop worklist
+    match frame:
+      Lower(ctx, t): lowerTerm(ctx, t)  // dispatch; may push Cont, Lower, or push result
+      Cont(arity, h): results = pop arity from resultStack; h(results)
+      Delimiter: (marker for Shift; splice worklist/resultStack)
+
+lowerTerm(ctx, term):
   case term of
-    Shift(Lambda(k, e)):
-      L_cont = freshLabel()
-      captured = liveVars(restOfReset)
-      envRef = Alloc { v0, v1, ... }(captured)
-      k_ref = Alloc { __env: envRef }
-      // k(v) in e → Read("__env", k_ref, envRef); Jump L_cont(v, envRef)
-      ...
-    App(k, v) when k is continuation:
-      emit Read("__env", k_ref, envRef); Jump L_cont(lower(v), envRef)
+    Reset(t): push Delimiter, Cont(1), Lower(t)
+    Shift(Lambda(k, e)): find Delimiter; splice; push Cont(1), Lower(e) with shiftBodyCtx
+    App(k, v) when k-call: push Cont(1) with terminator Jump(L_cont, [v, envRef, index]); push Lower(v)
+    PrimOp(+, [a,b]) when a,b have terminators: fill resume blocks; push first result (multishot)
     ...
 ```
+
+**k-call detection:** `App(func, arg)` where `func` is `Var(Bound(0))` and `ctx.bound.get(0) === kRef` (inside shift body).
 
 ### 7.8 Identifying the Continuation
 
