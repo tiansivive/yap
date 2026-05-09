@@ -9,3 +9,5 @@ debug-*.log
 bin/
 
 src/parser/grammar.ts
+
+z-yap/
