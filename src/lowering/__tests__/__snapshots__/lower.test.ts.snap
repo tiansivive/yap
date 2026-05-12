@@ -25,25 +25,23 @@ exports[`Lowering: match > lowers match on literals (42, 0, wildcard) 1`] = `
 {
   "mir": "module
   fn main entry=entry
-    entry:
-      let x0 = 42
-      jump b5
-    b5:
-      branch x0 { 42 -> b2 | 0 -> b3; default -> b4 }
-    b2:
-      let x2 = 1
-      jump b0(x2)
-    b3:
-      let x3 = 0
-      jump b0(x3)
-    b4:
-      let x4 = -1
-      jump b0(x4)
-    b0(x1):
-      return x1
-    b1:
+    e0:
       let __match_fail = "non-exhaustive match"
-      return __match_fail",
+      return __match_fail
+    entry:
+      let x1 = 42
+      branch x1 { 42 -> c0 | 0 -> c1; default -> d0 }
+    c0:
+      let x2 = 1
+      jump j0(x2)
+    c1:
+      let x3 = 0
+      jump j0(x3)
+    d0:
+      let x4 = -1
+      jump j0(x4)
+    j0(x0):
+      return x0",
   "term": "match 42
 | 42 -> 1
 | 0 -> 0
@@ -55,28 +53,22 @@ exports[`Lowering: match > lowers match on nested struct with literal patterns 1
 {
   "mir": "module
   fn main entry=entry
+    e0:
+      let __match_fail = "non-exhaustive match"
+      return __match_fail
     entry:
-      let x0 = 1
-      let x1 = 2
-      let x2 = alloc { x: x0, y: x1 }
-      let x3 = alloc { outer: x2 }
-      jump b5
-    b5(x3):
-      let x5 = read x3.outer
-      jump b4(x5)
-    b4(x5):
+      let x1 = 1
+      let x2 = 2
+      let x3 = alloc { x: x1, y: x2 }
+      let x4 = alloc { outer: x3 }
+      let x5 = read x4.outer
       let x6 = read x5.x
       let x7 = read x5.y
-      jump b3
-    b3:
-      branch x6 { 1 -> b2; default -> b1 }
-    b2:
-      jump b0(x7)
-    b0(x4):
-      return x4
-    b1:
-      let __match_fail = "non-exhaustive match"
-      return __match_fail",
+      branch x6 { 1 -> c0; default -> e0 }
+    c0:
+      jump j0(x7)
+    j0(x0):
+      return x0",
   "term": "match Struct [ outer: Struct [ x: 1, y: 2 ] ]
 | Struct [ outer: Struct [ x: 1, y: b ] ] -> b",
 }
@@ -86,19 +78,19 @@ exports[`Lowering: match > lowers match on struct (field bindings) 1`] = `
 {
   "mir": "module
   fn main entry=entry
-    entry:
-      let x0 = 1
-      let x1 = 2
-      let x2 = alloc { x: x0, y: x1 }
-      let x4 = read x2.x
-      let x5 = read x2.y
-      let x6 = +(x4, x5)
-      jump b0
-    b0(x3):
-      return x3
-    b1:
+    e0:
       let __match_fail = "non-exhaustive match"
-      return __match_fail",
+      return __match_fail
+    entry:
+      let x1 = 1
+      let x2 = 2
+      let x3 = alloc { x: x1, y: x2 }
+      let x4 = read x3.x
+      let x5 = read x3.y
+      let x6 = +(x4, x5)
+      jump j0(x6)
+    j0(x0):
+      return x0",
   "term": "match Struct [ x: 1, y: 2 ]
 | Struct [ x: a, y: b ] -> FFI.$add I0 I1",
 }
@@ -108,26 +100,22 @@ exports[`Lowering: match > lowers match on struct + variable ({ foo: 1 } -> 1 | 
 {
   "mir": "module
   fn main entry=entry
-    entry:
-      let x0 = 1
-      let x1 = alloc { foo: x0 }
-      jump b6
-    b6(x1):
-      let x3 = read x1.foo
-      jump b5
-    b5:
-      branch x3 { 1 -> b4; default -> b3 }
-    b4:
-      let x5 = 1
-      jump b0(x5)
-    b3:
-      let x4 = 0
-      jump b0(x4)
-    b0(x2):
-      return x2
-    b1:
+    e0:
       let __match_fail = "non-exhaustive match"
-      return __match_fail",
+      return __match_fail
+    entry:
+      let x1 = 1
+      let x2 = alloc { foo: x1 }
+      let x3 = read x2.foo
+      branch x3 { 1 -> c0; default -> d0 }
+    c0:
+      let x4 = 1
+      jump j0(x4)
+    d0:
+      let x5 = 0
+      jump j0(x5)
+    j0(x0):
+      return x0",
   "term": "match Struct [ foo: 1 ]
 | Struct [ foo: 1 ] -> 1
 | o -> 0",
@@ -138,31 +126,27 @@ exports[`Lowering: match > lowers match on struct with literal patterns (x: 1 vs
 {
   "mir": "module
   fn main entry=entry
+    e0:
+      let __match_fail = "non-exhaustive match"
+      return __match_fail
     entry:
-      let x0 = 1
-      let x1 = 10
-      let x2 = alloc { x: x0, y: x1 }
-      jump b6
-    b6(x2):
-      let x4 = read x2.x
-      let x5 = read x2.y
-      jump b5
-    b5:
-      branch x4 { 1 -> b2 | 2 -> b3; default -> b4 }
-    b2:
-      jump b0(x5)
-    b3:
+      let x1 = 1
+      let x2 = 10
+      let x3 = alloc { x: x1, y: x2 }
+      let x4 = read x3.x
+      let x5 = read x3.y
+      branch x4 { 1 -> c0 | 2 -> c1; default -> d0 }
+    c0:
+      jump j0(x5)
+    c1:
       let x6 = 1
       let x7 = +(x5, x6)
-      jump b0(x7)
-    b4:
+      jump j0(x7)
+    d0:
       let x8 = +(x4, x5)
-      jump b0(x8)
-    b0(x3):
-      return x3
-    b1:
-      let __match_fail = "non-exhaustive match"
-      return __match_fail",
+      jump j0(x8)
+    j0(x0):
+      return x0",
   "term": "match Struct [ x: 1, y: 10 ]
 | Struct [ x: 1, y: b ] -> _
 | Struct [ x: 2, y: b ] -> FFI.$add _ 1
@@ -174,26 +158,24 @@ exports[`Lowering: match > lowers match on variant (Some/None) 1`] = `
 {
   "mir": "module
   fn main entry=entry
-    entry:
-      let x0 = "Some"
-      let x1 = 42
-      let x2 = alloc { __tag: x0, Some: x1 }
-      jump b4
-    b4:
-      let x7 = read x2.__tag
-      branch x7 { Some -> b2(x2) | None -> b3(x2); default -> b1 }
-    b2(scrut_0):
-      let x4 = read scrut_0.Some
-      jump b0(x4)
-    b3(scrut_1):
-      let x5 = read scrut_1.None
-      let x6 = 0
-      jump b0(x6)
-    b0(x3):
-      return x3
-    b1:
+    e0:
       let __match_fail = "non-exhaustive match"
-      return __match_fail",
+      return __match_fail
+    entry:
+      let x1 = "Some"
+      let x2 = 42
+      let x3 = alloc { __tag: x1, Some: x2 }
+      let x6 = read x3.__tag
+      branch x6 { Some -> c0(x3) | None -> c1(x3); default -> e0 }
+    c0(scrut_0):
+      let x4 = read scrut_0.Some
+      jump j0(x4)
+    c1(scrut_1):
+      let x5 = read scrut_1.None
+      let x7 = 0
+      jump j0(x7)
+    j0(x0):
+      return x0",
   "term": "match Struct [ __tag: "Some", Some: 42 ]
 | Variant [ Some: x ] -> _
 | Variant [ None: _ ] -> 0",
@@ -204,36 +186,30 @@ exports[`Lowering: match > lowers match on variant with struct payload (Some(Poi
 {
   "mir": "module
   fn main entry=entry
-    entry:
-      let x0 = "Some"
-      let x1 = 1
-      let x2 = 2
-      let x3 = alloc { x: x1, y: x2 }
-      let x4 = alloc { __tag: x0, Some: x3 }
-      jump b7
-    b7:
-      let x11 = read x4.__tag
-      branch x11 { Some -> b2(x4) | None -> b6(x4); default -> b1 }
-    b2(scrut_0):
-      let x6 = read scrut_0.Some
-      jump b5(x6)
-    b5(x6):
-      let x7 = read x6.x
-      let x8 = read x6.y
-      jump b4
-    b4:
-      branch x7 { 1 -> b3; default -> b1 }
-    b3:
-      jump b0(x8)
-    b6(scrut_1):
-      let x9 = read scrut_1.None
-      let x10 = 0
-      jump b0(x10)
-    b0(x5):
-      return x5
-    b1:
+    e0:
       let __match_fail = "non-exhaustive match"
-      return __match_fail",
+      return __match_fail
+    entry:
+      let x1 = "Some"
+      let x2 = 1
+      let x3 = 2
+      let x4 = alloc { x: x2, y: x3 }
+      let x5 = alloc { __tag: x1, Some: x4 }
+      let x8 = read x5.__tag
+      branch x8 { Some -> c0(x5) | None -> c1(x5); default -> e0 }
+    c0(scrut_0):
+      let x6 = read scrut_0.Some
+      let x9 = read x6.x
+      let x10 = read x6.y
+      branch x9 { 1 -> c2; default -> e0 }
+    c2:
+      jump j0(x10)
+    c1(scrut_1):
+      let x7 = read scrut_1.None
+      let x11 = 0
+      jump j0(x11)
+    j0(x0):
+      return x0",
   "term": "match Struct [ __tag: "Some", Some: Struct [ x: 1, y: 2 ] ]
 | Variant [ Some: Struct [ x: 1, y: b ] ] -> _
 | Variant [ None: _ ] -> 0",
@@ -251,28 +227,80 @@ exports[`Lowering: match > lowers reset(42) — no shift 1`] = `
 }
 `;
 
+exports[`Lowering: match > lowers reset(Block) - resumes twice with different values, consumes shifted value in continuation and captured var - let x=5; let v = shift k-> k 10 + k 20; add(x, v) 1`] = `
+{
+  "mir": "module
+  fn main entry=entry
+    entry:
+      let x0 = 5
+      let env_1 = alloc { v0: x0 }
+      let k_0 = alloc { __env: env_1 }
+      jump s0(k_0)
+    s0(k_1):
+      let env_1 = read k_1.__env
+      let x0 = read env_1.v0
+      let x4 = 10
+      let i_1 = 0
+      jump r0(x4, env_1, i_1)
+    s1(x5, env_2):
+      let env_3 = update-immutable env_2 { r0: x5 }
+      let x3 = read env_3.r0
+      let x0 = read env_3.v0
+      let x7 = 20
+      let i_2 = 1
+      jump r0(x7, env_3, i_2)
+    s2(x8, env_4):
+      let env_5 = update-immutable env_4 { r1: x8 }
+      let x3 = read env_5.r0
+      let x6 = read env_5.r1
+      let x0 = read env_5.v0
+      let x9 = +(x3, x6)
+      jump reset_exit0(x9)
+    r0(x1, env_0, i_0):
+      let x0 = read env_0.v0
+      let x2 = +(x1, x0)
+      branch i_0 { 0 -> s1(x2, env_0) | 1 -> s2(x2, env_0) }
+    reset_exit0(x10):
+      return x10",
+  "term": "reset |{
+	let x
+	: Num
+	= 5;
+	let v
+	: Num
+	= shift (λk -> FFI.$add (k 10) (k 20));
+	return FFI.$add v x;
+	}|",
+}
+`;
+
 exports[`Lowering: match > lowers reset(Block) with captured frame — let x=1; shift k->k 10; x+100 1`] = `
 {
   "mir": "module
   fn main entry=entry
     entry:
-      let env_0 = alloc {  }
-      let k_0 = alloc { __env: env_0 }
-      jump b1(k_0)
-    b0(x2):
-      return x2
-    b2(x3, env_1, i_1):
-      branch i_1 { 0 -> b3(x3, env_1) }
-    b3(x4, env_2):
-      let x5 = read env_2.v0
-      let x6 = 100
-      let x7 = +(x5, x6)
-      jump b0(x7)
-    b1(k_0):
-      let x1 = 10
-      let i_0 = 0
-      let env_0 = read k_0.__env
-      jump b2(x1, env_0, i_0)",
+      let x0 = 1
+      let env_1 = alloc { v0: x0 }
+      let k_0 = alloc { __env: env_1 }
+      jump s0(k_0)
+    s0(k_1):
+      let env_1 = read k_1.__env
+      let x0 = read env_1.v0
+      let x5 = 10
+      let i_1 = 0
+      jump r0(x5, env_1, i_1)
+    s1(x6, env_2):
+      let env_3 = update-immutable env_2 { r0: x6 }
+      let x4 = read env_3.r0
+      let x0 = read env_3.v0
+      jump reset_exit0(x4)
+    r0(x1, env_0, i_0):
+      let x0 = read env_0.v0
+      let x2 = 100
+      let x3 = +(x0, x2)
+      branch i_0 { 0 -> s1(x3, env_0) }
+    reset_exit0(x7):
+      return x7",
   "term": "reset |{
 	let x
 	: Num
@@ -283,28 +311,76 @@ exports[`Lowering: match > lowers reset(Block) with captured frame — let x=1; 
 }
 `;
 
+exports[`Lowering: match > lowers reset(Block) with multishot + rest-of-reset — let x=10; shift k->k 1+k 2; x 1`] = `
+{
+  "mir": "module
+  fn main entry=entry
+    entry:
+      let x0 = 10
+      let env_1 = alloc { v0: x0 }
+      let k_0 = alloc { __env: env_1 }
+      jump s0(k_0)
+    s0(k_1):
+      let env_1 = read k_1.__env
+      let x0 = read env_1.v0
+      let x3 = 1
+      let i_1 = 0
+      jump r0(x3, env_1, i_1)
+    s1(x4, env_2):
+      let env_3 = update-immutable env_2 { r0: x4 }
+      let x2 = read env_3.r0
+      let x0 = read env_3.v0
+      let x6 = 2
+      let i_2 = 1
+      jump r0(x6, env_3, i_2)
+    s2(x7, env_4):
+      let env_5 = update-immutable env_4 { r1: x7 }
+      let x2 = read env_5.r0
+      let x5 = read env_5.r1
+      let x0 = read env_5.v0
+      let x8 = +(x2, x5)
+      jump reset_exit0(x8)
+    r0(x1, env_0, i_0):
+      let x0 = read env_0.v0
+      branch i_0 { 0 -> s1(x0, env_0) | 1 -> s2(x0, env_0) }
+    reset_exit0(x9):
+      return x9",
+  "term": "reset |{
+	let x
+	: Num
+	= 10;
+	shift (λk -> FFI.$add (k 1) (k 2));
+	return x;
+	}|",
+}
+`;
+
 exports[`Lowering: match > lowers reset(Block) — continuation uses resumption value and captured var (let v = shift; add(v, x)) 1`] = `
 {
   "mir": "module
   fn main entry=entry
     entry:
-      let env_0 = alloc {  }
-      let k_0 = alloc { __env: env_0 }
-      jump b1(k_0)
-    b0(x2):
-      return x2
-    b2(x3, env_1, i_1):
-      branch i_1 { 0 -> b3(x3, env_1) }
-    b3(x4, env_2):
-      let x5 = read env_2.v0
-      let x6 = read env_2.v1
-      let x7 = +(x5, x6)
-      jump b0(x7)
-    b1(k_0):
-      let x1 = 99
-      let i_0 = 0
-      let env_0 = read k_0.__env
-      jump b2(x1, env_0, i_0)",
+      let x0 = 7
+      let env_1 = alloc { v0: x0 }
+      let k_0 = alloc { __env: env_1 }
+      jump s0(k_0)
+    s0(k_1):
+      let env_1 = read k_1.__env
+      let x0 = read env_1.v0
+      let x4 = 99
+      let i_1 = 0
+      jump r0(x4, env_1, i_1)
+    s1(x5, env_2):
+      let env_3 = update-immutable env_2 { r0: x5 }
+      let x3 = read env_3.r0
+      let x0 = read env_3.v0
+      jump reset_exit0(x3)
+    r0(x1, env_0, i_0):
+      let x0 = read env_0.v0
+      let x2 = +(x1, x0)
+      branch i_0 { 0 -> s1(x2, env_0) }
+    reset_exit0(x6):
+      return x6",
   "term": "reset |{
 	let x
 	: Num
@@ -322,29 +398,30 @@ exports[`Lowering: match > lowers reset(shift k -> (k 1) + (k 2)) — multishot 
   "mir": "module
   fn main entry=entry
     entry:
-      let env_0 = alloc {  }
-      let k_0 = alloc { __env: env_0 }
-      jump b1(k_0)
-    b0(x2):
-      return x2
-    b2(x3, env_1, i_2):
-      branch i_2 { 0 -> b4(x3, env_1) | 1 -> b5(x3, env_1) }
-    b4(x4, env_2):
-      let env_3 = update-immutable env_2 { r0: x4 }
-      let x1 = 2
-      let i_1 = 1
-      jump b2(x1, env_3, i_1)
-    b5(x5, env_4):
-      let env_5 = update-immutable env_4 { r1: x5 }
-      let x6 = read env_5.r0
-      let x7 = read env_5.r1
-      let x8 = +(x6, x7)
-      jump b0(x8)
-    b1(k_0):
-      let x0 = 1
-      let i_0 = 0
-      let env_0 = read k_0.__env
-      jump b2(x0, env_0, i_0)",
+      let env_1 = alloc {  }
+      let k_0 = alloc { __env: env_1 }
+      jump s0(k_0)
+    s0(k_1):
+      let env_1 = read k_1.__env
+      let x2 = 1
+      let i_1 = 0
+      jump r0(x2, env_1, i_1)
+    s1(x3, env_2):
+      let env_3 = update-immutable env_2 { r0: x3 }
+      let x1 = read env_3.r0
+      let x5 = 2
+      let i_2 = 1
+      jump r0(x5, env_3, i_2)
+    s2(x6, env_4):
+      let env_5 = update-immutable env_4 { r1: x6 }
+      let x1 = read env_5.r0
+      let x4 = read env_5.r1
+      let x7 = +(x1, x4)
+      jump reset_exit0(x7)
+    r0(x0, env_0, i_0):
+      branch i_0 { 0 -> s1(x0, env_0) | 1 -> s2(x0, env_0) }
+    reset_exit0(x8):
+      return x8",
   "term": "reset |shift (λk -> FFI.$add (k 1) (k 2))|",
 }
 `;
@@ -354,17 +431,76 @@ exports[`Lowering: match > lowers reset(shift k -> 42) — shift returns without
   "mir": "module
   fn main entry=entry
     entry:
-      let env_0 = alloc {  }
-      let k_0 = alloc { __env: env_0 }
-      jump b1(k_0)
-    b0(x1):
-      return x1
-    b2(x2, env_1):
-      jump b0(x2)
-    b1(k_0):
-      let x0 = 42
-      jump b0(x0)",
+      let env_1 = alloc {  }
+      let k_0 = alloc { __env: env_1 }
+      jump s0(k_0)
+    s0(k_1):
+      let env_1 = read k_1.__env
+      let x1 = 42
+      jump reset_exit0(x1)
+    reset_exit0(x2):
+      return x2",
   "term": "reset |shift (λk -> 42)|",
+}
+`;
+
+exports[`Lowering: match > lowers reset(shift k -> let k2 = k; k2 5) — k-call through let alias 1`] = `
+{
+  "mir": "module
+  fn main entry=entry
+    entry:
+      let env_1 = alloc {  }
+      let k_0 = alloc { __env: env_1 }
+      jump s0(k_0)
+    s0(k_1):
+      let env_1 = read k_1.__env
+      let x2 = 5
+      let i_1 = 0
+      jump r0(x2, env_1, i_1)
+    s1(x3, env_2):
+      let env_3 = update-immutable env_2 { r0: x3 }
+      let x1 = read env_3.r0
+      jump reset_exit0(x1)
+    r0(x0, env_0, i_0):
+      branch i_0 { 0 -> s1(x0, env_0) }
+    reset_exit0(x4):
+      return x4",
+  "term": "reset |shift (λk -> {
+	let k2
+	: Num
+	= k2;
+	return k2 5;
+	})|",
+}
+`;
+
+exports[`Lowering: match > lowers reset(shift k -> let y=5; k y) — k-call with k at index 1 (post-let) 1`] = `
+{
+  "mir": "module
+  fn main entry=entry
+    entry:
+      let env_1 = alloc {  }
+      let k_0 = alloc { __env: env_1 }
+      jump s0(k_0)
+    s0(k_1):
+      let env_1 = read k_1.__env
+      let x1 = 5
+      let i_1 = 0
+      jump r0(x1, env_1, i_1)
+    s1(x3, env_2):
+      let env_3 = update-immutable env_2 { r0: x3 }
+      let x2 = read env_3.r0
+      jump reset_exit0(x2)
+    r0(x0, env_0, i_0):
+      branch i_0 { 0 -> s1(x0, env_0) }
+    reset_exit0(x4):
+      return x4",
+  "term": "reset |shift (λk -> {
+	let y
+	: Num
+	= 5;
+	return k y;
+	})|",
 }
 `;
 
@@ -373,20 +509,22 @@ exports[`Lowering: match > lowers reset(shift(λk. k 42)) — resume returns 42 
   "mir": "module
   fn main entry=entry
     entry:
-      let env_0 = alloc {  }
-      let k_0 = alloc { __env: env_0 }
-      jump b1(k_0)
-    b0(x1):
-      return x1
-    b2(x2, env_1, i_1):
-      branch i_1 { 0 -> b4(x2, env_1) }
-    b4(x3, env_2):
-      jump b0(x3)
-    b1(k_0):
-      let x0 = 42
-      let i_0 = 0
-      let env_0 = read k_0.__env
-      jump b2(x0, env_0, i_0)",
+      let env_1 = alloc {  }
+      let k_0 = alloc { __env: env_1 }
+      jump s0(k_0)
+    s0(k_1):
+      let env_1 = read k_1.__env
+      let x2 = 42
+      let i_1 = 0
+      jump r0(x2, env_1, i_1)
+    s1(x3, env_2):
+      let env_3 = update-immutable env_2 { r0: x3 }
+      let x1 = read env_3.r0
+      jump reset_exit0(x1)
+    r0(x0, env_0, i_0):
+      branch i_0 { 0 -> s1(x0, env_0) }
+    reset_exit0(x4):
+      return x4",
   "term": "reset |shift (λk -> k 42)|",
 }
 `;
@@ -396,16 +534,16 @@ exports[`Lowering: primitives and ops > lowers (λx.x) 42 (indirect call) 1`] = 
   "mir": "module
   fn main entry=entry
     entry:
-      let env_0 = alloc {  }
+      let env_1 = alloc {  }
       let fnref_0 = &f_0
-      let closure_0 = alloc { __fn: fnref_0, __env: env_0 }
+      let closure_0 = alloc { __fn: fnref_0, __env: env_1 }
       let x0 = 42
       let fnref_1 = read closure_0.__fn
       let env_2 = read closure_0.__env
       let x1 = call *fnref_1(env_2, x0)
       return x1
-  fn f_0(env_1, x) entry=entry
-    entry:
+  fn f_0(env_0, x) entry=f_0_entry
+    f_0_entry:
       return x",
   "term": "(λx -> x) 42",
 }
@@ -416,9 +554,9 @@ exports[`Lowering: primitives and ops > lowers (λx.λy.x) 1 2 (curried const) 1
   "mir": "module
   fn main entry=entry
     entry:
-      let env_2 = alloc {  }
-      let fnref_1 = &f_1
-      let closure_1 = alloc { __fn: fnref_1, __env: env_2 }
+      let env_3 = alloc {  }
+      let fnref_1 = &f_0
+      let closure_1 = alloc { __fn: fnref_1, __env: env_3 }
       let x1 = 1
       let fnref_2 = read closure_1.__fn
       let env_4 = read closure_1.__env
@@ -428,15 +566,15 @@ exports[`Lowering: primitives and ops > lowers (λx.λy.x) 1 2 (curried const) 1
       let env_5 = read x2.__env
       let x4 = call *fnref_3(env_5, x3)
       return x4
-  fn f_0(env_1, y) entry=entry
-    entry:
+  fn f_1(env_1, y) entry=f_1_entry
+    f_1_entry:
       let x0 = read env_1.v0
       return x0
-  fn f_1(env_3, x) entry=entry
-    entry:
-      let env_0 = alloc { v0: x }
-      let fnref_0 = &f_0
-      let closure_0 = alloc { __fn: fnref_0, __env: env_0 }
+  fn f_0(env_0, x) entry=f_0_entry
+    f_0_entry:
+      let env_2 = alloc { v0: x }
+      let fnref_0 = &f_1
+      let closure_0 = alloc { __fn: fnref_0, __env: env_2 }
       return closure_0",
   "term": "(λx -> λy -> x) 1 2",
 }
@@ -447,9 +585,9 @@ exports[`Lowering: primitives and ops > lowers (λx.λy.x+y) 1 2 (curried closur
   "mir": "module
   fn main entry=entry
     entry:
-      let env_2 = alloc {  }
-      let fnref_1 = &f_1
-      let closure_1 = alloc { __fn: fnref_1, __env: env_2 }
+      let env_3 = alloc {  }
+      let fnref_1 = &f_0
+      let closure_1 = alloc { __fn: fnref_1, __env: env_3 }
       let x2 = 1
       let fnref_2 = read closure_1.__fn
       let env_4 = read closure_1.__env
@@ -459,16 +597,16 @@ exports[`Lowering: primitives and ops > lowers (λx.λy.x+y) 1 2 (curried closur
       let env_5 = read x3.__env
       let x5 = call *fnref_3(env_5, x4)
       return x5
-  fn f_0(env_1, y) entry=entry
-    entry:
+  fn f_1(env_1, y) entry=f_1_entry
+    f_1_entry:
       let x0 = read env_1.v0
       let x1 = +(x0, y)
       return x1
-  fn f_1(env_3, x) entry=entry
-    entry:
-      let env_0 = alloc { v0: x }
-      let fnref_0 = &f_0
-      let closure_0 = alloc { __fn: fnref_0, __env: env_0 }
+  fn f_0(env_0, x) entry=f_0_entry
+    f_0_entry:
+      let env_2 = alloc { v0: x }
+      let fnref_0 = &f_1
+      let closure_0 = alloc { __fn: fnref_0, __env: env_2 }
       return closure_0",
   "term": "(λx -> λy -> FFI.$add x y) 1 2",
 }
@@ -479,12 +617,12 @@ exports[`Lowering: primitives and ops > lowers Lambda (closure) 1`] = `
   "mir": "module
   fn main entry=entry
     entry:
-      let env_0 = alloc {  }
+      let env_1 = alloc {  }
       let fnref_0 = &f_0
-      let closure_0 = alloc { __fn: fnref_0, __env: env_0 }
+      let closure_0 = alloc { __fn: fnref_0, __env: env_1 }
       return closure_0
-  fn f_0(env_1, x) entry=entry
-    entry:
+  fn f_0(env_0, x) entry=f_0_entry
+    f_0_entry:
       let x0 = 1
       return x0",
   "term": "λx -> 1",
@@ -520,19 +658,19 @@ exports[`Lowering: primitives and ops > lowers nested Lambda 1`] = `
   "mir": "module
   fn main entry=entry
     entry:
-      let env_2 = alloc {  }
-      let fnref_1 = &f_1
-      let closure_1 = alloc { __fn: fnref_1, __env: env_2 }
+      let env_3 = alloc {  }
+      let fnref_1 = &f_0
+      let closure_1 = alloc { __fn: fnref_1, __env: env_3 }
       return closure_1
-  fn f_0(env_1, y) entry=entry
-    entry:
+  fn f_1(env_1, y) entry=f_1_entry
+    f_1_entry:
       let x0 = read env_1.v0
       return x0
-  fn f_1(env_3, x) entry=entry
-    entry:
-      let env_0 = alloc { v0: x }
-      let fnref_0 = &f_0
-      let closure_0 = alloc { __fn: fnref_0, __env: env_0 }
+  fn f_0(env_0, x) entry=f_0_entry
+    f_0_entry:
+      let env_2 = alloc { v0: x }
+      let fnref_0 = &f_1
+      let closure_0 = alloc { __fn: fnref_0, __env: env_2 }
       return closure_0",
   "term": "λx -> λy -> x",
 }
@@ -555,14 +693,32 @@ exports[`Lowering: primitives and ops > lowers λx.x (identity, closed) 1`] = `
   "mir": "module
   fn main entry=entry
     entry:
-      let env_0 = alloc {  }
+      let env_1 = alloc {  }
       let fnref_0 = &f_0
-      let closure_0 = alloc { __fn: fnref_0, __env: env_0 }
+      let closure_0 = alloc { __fn: fnref_0, __env: env_1 }
       return closure_0
-  fn f_0(env_1, x) entry=entry
-    entry:
+  fn f_0(env_0, x) entry=f_0_entry
+    f_0_entry:
       return x",
   "term": "λx -> x",
+}
+`;
+
+exports[`Lowering: primitives and ops > lowers λx.x+1 (bound var in expression) 1`] = `
+{
+  "mir": "module
+  fn main entry=entry
+    entry:
+      let env_1 = alloc {  }
+      let fnref_0 = &f_0
+      let closure_0 = alloc { __fn: fnref_0, __env: env_1 }
+      return closure_0
+  fn f_0(env_0, x) entry=f_0_entry
+    f_0_entry:
+      let x0 = 1
+      let x1 = +(x, x0)
+      return x1",
+  "term": "λx -> FFI.$add x 1",
 }
 `;
 
@@ -588,6 +744,23 @@ exports[`Lowering: struct, proj, inj > lowers inj(label, value, struct) 1`] = `
       let x3 = update-immutable x1 { y: x2 }
       return x3",
   "term": "{ Struct [ x: 1 ] | y = 2 }",
+}
+`;
+
+exports[`Lowering: struct, proj, inj > lowers proj from bound var (λr. r.x) 1`] = `
+{
+  "mir": "module
+  fn main entry=entry
+    entry:
+      let env_1 = alloc {  }
+      let fnref_0 = &f_0
+      let closure_0 = alloc { __fn: fnref_0, __env: env_1 }
+      return closure_0
+  fn f_0(env_0, r) entry=f_0_entry
+    f_0_entry:
+      let x0 = read r.x
+      return x0",
+  "term": "λr -> (r).x",
 }
 `;
 

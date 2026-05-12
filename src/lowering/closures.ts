@@ -1,33 +1,43 @@
 import * as MIR from "./mir";
-import type { LowerCtx, LowerResult } from "./context";
+import * as M from "./monad";
+import type * as C from "./context";
 
-/** Build closure result: function block, alloc closure record, return instrs and value. */
-export function convertClosure(
-	ctx: LowerCtx,
-	funcName: string,
+export function* convertClosure(
+	ctx: C.LowerCtx,
+	fnName: string,
 	params: string[],
-	bodyInstrs: MIR.Instr[],
-	bodyResult: LowerResult,
-	envAllocInstrs: MIR.Instr[],
-	envRef: string,
-): LowerResult {
-	const block = MIR.Constructors.Block("entry", [], bodyInstrs, MIR.Constructors.Terminator.Return(bodyResult.value));
-	const fn = MIR.Constructors.Function(funcName, params, "entry", [block]);
+	body: {
+		instrs: MIR.Instr[];
+		result: M.LowerResult;
+	},
+	env: {
+		allocInstrs: MIR.Instr[];
+		ref: C.Stamped;
+	},
+): M.Glowering<C.Stamped> {
+	const block = MIR.Constructors.Block(`${fnName}_entry`, [], body.instrs, MIR.Constructors.Terminator.Return(body.result.value.name));
+	const fn = MIR.Constructors.Function(fnName, params, block.label, [block]);
+
 	const fnVar = ctx.nextVar("fnref");
 	const closureRef = ctx.nextVar("closure");
+
 	const instrs = [
-		...envAllocInstrs,
-		MIR.Constructors.Instr.Let(fnVar, MIR.Constructors.Expr.FuncRef(funcName)),
+		...env.allocInstrs,
+		MIR.Constructors.Instr.Let(fnVar.name, MIR.Constructors.Expr.FuncRef(fnName)),
 		MIR.Constructors.Instr.Alloc(
 			{
 				type: "Record",
 				fields: [
-					{ label: "__fn", value: fnVar },
-					{ label: "__env", value: envRef },
+					{ label: "__fn", value: fnVar.name },
+					{ label: "__env", value: env.ref.name },
 				],
 			},
-			closureRef,
+			closureRef.name,
 		),
 	];
-	return { instrs, value: closureRef, functions: [...bodyResult.functions, fn] };
+
+	yield* M.Functions.emit(fn);
+	yield* M.Pending.appendMany(instrs);
+
+	return closureRef;
 }

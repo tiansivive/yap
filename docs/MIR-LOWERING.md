@@ -263,9 +263,15 @@ MIR (Module with functions)
 
 ## 5. Implementation Status
 
-> Last updated: 2026-03-02
+> Last updated: 2026-05-10
 
-The lowering pass lives in `src/lowering/`. Shift/reset lowering uses a **worklist-based trampoline** (no recursion): global `worklist: Frame[]`, frame types `Lower`, `Cont`, `Delimiter`. Same pattern as `evaluation.v2.ts`. Types: `Frame`, `CapturedKont` in `context.ts` and `delimited_continuation/types.ts`. The MIR types (Module, Function, Block, Instr, Terminator, Expr, Allocation) are defined in `mir.ts` — Let, Var, Lit, PrimOp, FuncRef; Read, Update (immutable/fbip), Alloc; Call (direct/indirect); Jump, Branch, Return. A pretty printer (`pretty.ts`) provides `display.expr`, `display.instr`, `display.module`, etc.
+The lowering pass lives in `src/lowering/`. It is a single worklist-driven function (no parallel sync recursion): global `worklist: Frame[]`, frame types `Lower`, `Cont`, `Delimiter`. Same pattern as `evaluation.v2.ts`. Types: `Frame`, `LowerCtx`, `LowerResult`, `ResetCtx`, `ShiftBodyCtx`, `Stamped` in `context.ts`. The MIR types (Module, Function, Block, Instr, Terminator, Expr, Allocation) are defined in `mir.ts` — Let, Var, Lit, PrimOp, FuncRef; Read, Update (immutable/fbip), Alloc; Call (direct/indirect); Jump, Branch, Return. A pretty printer (`pretty.ts`) provides `display.expr`, `display.instr`, `display.module`, etc.
+
+Two helpers wrap the main drain loop: `lowerSync(term, ctx)` for synchronous sub-lowering of a single term (used by `match.ts` for arm bodies), and `subLower(capturedFrames, capturedResults, primer)` for shift's rest-of-reset capture (sub-drives the worklist with a synthetic primer the bottom captured Cont consumes).
+
+### Var identity: `Stamped` (stamp + name)
+
+`ctx.bound: Map<number, Stamped>` and `LowerResult.value: Stamped`, where `Stamped = { stamp: number; name: string }`. The `stamp` is a unique monotone id allocated by `nextVar` per binder/value, used for _identity_ comparisons (e.g. detecting k-calls in shift body); the `name` is the MIR variable identifier used at _emission_ time. `bind(ctx, binder, overrides)` preserves stamps through aliasing — `let k2 = k` propagates k's stamp to k2's bound entry, so `App(Bound(k2_idx), …)` is detected as a k-call uniformly with `App(Bound(k_idx), …)`. Identity tracking does not depend on `nextVar`'s monotonicity (the stamp is the explicit identifier; the name is for printing).
 
 ### Implemented
 
@@ -294,13 +300,13 @@ Supported primops: `$add`, `$sub`, `$mul`, `$div`, `$and`, `$or`, `$eq`, `$neq`,
 | ----------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `Match`           | ✅     | Decision-tree compilation (Maranget-style). Variant, Lit, Struct, Binder, Wildcard. Branch = switch form. Merge via block params. Failure block. List pattern not yet implemented. See plan `.cursor/plans/match_expression_lowering_*.plan.md`. |
 
-### Not Yet Implemented
+### Other terms
 
-| EB.Term / Feature  | Status | Notes                                                                        |
-| ------------------ | ------ | ---------------------------------------------------------------------------- |
-| `Block`            | ✅     | Via `processStatementsAndPush`; Let/Expr per statement                       |
-| `Reset` / `Shift`  | ✅     | Alloc + Read + Jump; multishot (Branch + resume blocks, env r0/r1); see §7.6 |
-| `Let` (standalone) | ❌     | Let is part of Block; standalone Let not used in current pipeline            |
+| EB.Term / Feature  | Status | Notes                                                                                                                                              |
+| ------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Block`            | ✅     | Via `processStatementsAndPush`; Let/Expr per statement                                                                                             |
+| `Reset` / `Shift`  | ✅     | Worklist-suffix capture into shared `r` block; k-call splits current block into `s_i`; multishot stashes results in env (`r0`, `r1`, ...). See §7. |
+| `Let` (standalone) | ❌     | Let is part of Block; standalone Let not used in current pipeline                                                                                  |
 
 ### Tests
 
@@ -428,72 +434,38 @@ From elaboration:
 - **Shift(body):** `body` is `Lambda(k, e)` where `k` is the continuation (type `A → α`). The body `e` is checked with `k` in scope. `resume v` in source becomes `App(k, v)` in EB.Term.
 - **Resume:** In EB.Term, resume is `App(k, v)` where `k` is the continuation binder (Bound index) and `v` is the value. There is no separate `EB.Resume` constructor.
 
-### 7.2 Continuation Layout (Closure Convention)
+### 7.2 Block Layout
 
-Continuation = heap-allocated record with single `__env` field. The env record holds captured vars as `v0`, `v1`, ... (same convention as closures).
+Shift/reset lowers to four block roles:
 
-```
-k_ref = Alloc { __env: envRef }
-envRef = Alloc { v0: x0, v1: x1, ... }  // captured vars
-
-Resume (single-shot): Read("__env", k_ref, envRef); Jump L_cont(v, envRef)
-Resume (multi-shot):  Read("__env", k_ref, envRef); Jump L_cont(v, envRef, index)
-
-Block L_cont(v, envRef [, index]):
-  Read("v0", envRef, t0)
-  Read("v1", envRef, t1)
-  ...
-  // rest of reset body, with t0, t1, ... in scope
-  Jump reset_exit(result)
-```
-
-**Frame replay:** The `Read` + `Jump` sequence is the lowering equivalent of frame replay. We restore captured state (env record) and transfer control to the continuation block. The continuation block executes the rest of the reset body — semantically equivalent to replaying the captured frames with the resumed value.
+- **`entry`** — allocates an empty env record (fields populated at runtime by k-call stashes), allocates the k_ref `Alloc { __env: envRef }`, jumps to `s_init(k_ref)`.
+- **`s_init`** — first block of the shift body. Reads env from k_ref. Subsequent k-calls in the body close `s_init` (or whichever is current) with `Jump(r, [arg, env, idx])` and start a fresh `s_i`.
+- **`r(v, env, idx)`** — single shared resumption block. Body = lowered rest-of-reset (with `v` at index 0). Ends with `Branch(idx, …)` dispatching to `s_1, s_2, …` based on which k-call jumped here.
+- **`s_i (i ≥ 1)`** — post-k-call states. Each `s_i` starts by stashing its block-param value into env (`r_{i-1}`), then re-reads all prior k-call results from env into stable names so consumers (primops, etc.) can reference them across blocks. Final `s_n` ends with `Jump(reset_exit, [shift_body_value])`.
+- **`reset_exit(result)`** — `Return(result)`.
 
 **Continuation body scope:** The continuation body's scope depends on how the shift appears:
 
-- **Shift as statement** (`shift k -> e; rest`): The continuation body has only block bindings (env captures). The resumption value `v` is passed to `L_cont` but the body may ignore it. To use the resumption value, the user must explicitly bind it.
-- **Shift in Let RHS** (`let v = shift k -> e; rest`): The Let variable `v` is the resumption binder. The continuation body has `v` at index 0 and block bindings at 1+. The body may use both.
+- **Shift as statement** (`shift k -> e; rest`): The continuation body has only block bindings. The resumption value `v` is passed to `r` but rest-of-reset may ignore it.
+- **Shift in Let RHS** (`let v = shift k -> e; rest`): The Let variable `v` is the resumption binder, bound at index 0 in rest-of-reset.
 
-### 7.3 Transformation: Single Shift
+Captured names from the outer entry block flow into rest-of-reset by being recomputed inside `r`'s body during sub-lowering — the captured frames close over those names, so the lowered rest-of-reset references them and the outer Let instructions are inlined into `r`. (Bloated for pure code, semantically correct.)
 
-**Source (conceptual):**
+### 7.3 Algorithm
 
-```yap
-reset {
-  e1;
-  shift (\k -> e2);   // e2 may call k(v) or return normally
-  e3
-}
-```
+Shift handling is a worklist-suffix capture (mirroring NbE's `evaluate` in `evaluation.v2.ts`):
 
-**MIR structure (Alloc + Read + Jump only):**
+1. Find the `Delimiter` frame on the worklist (pushed by the enclosing Reset).
+2. Slice the suffix: `capturedFrames = worklist.slice(delim+1)`, `capturedResults = resultStack.slice(delim.resultSize)`. Splice both off.
+3. Allocate `r`'s block params (`v_param`, `env_param`, `idx_param`) and `r_label`.
+4. Sub-lower the captured suffix into `r`'s body: push captured results back, push a synthetic primer `{ value: v_param }` (this is what the bottom captured Cont — waiting for shift's value — consumes), push captured frames; drain to a watermark; pop the result. That's `(restInstrs, restValue)`.
+5. Set up `shiftBodyCtx` with the current `s_init` block and push `Lower(shiftBody)`.
+6. As the shift body lowers, k-calls (detected by `App(func, arg)` with `func = Var(Bound(0))` and `ctx.bound.get(0) === kRef`) split the current MIR block: emit prep into the current block, terminate it with `Jump(r_label, [arg, env, idx])`, allocate the next `s_i`, push a result whose value is `s_i`'s block param.
+7. After the shift body finishes, an assembler Cont finalizes the last block (`Jump(reset_exit, [bodyValue])`), builds entry / r / reset_exit, and emits the full block list as a `LowerResult { blocks, entry: "entry" }`.
 
-```
-block reset_entry():
-    // lower e1
-    envRef = Alloc { v0: x0, v1: x1, ... }   // captured live vars
-    k_ref = Alloc { __env: envRef }
-    jump shift_body(k_ref)
+The `r` block is built only if at least one k-call fired. Its body is `restInstrs ++ Branch(idx_param, cases)` where each case dispatches to one `s_i` with `[restValue, env_param]`.
 
-block shift_body(k_ref):
-    // lower e2; k(v) → Read("__env", k_ref, envRef); Jump L_cont(v, envRef)
-    // terminator: Jump L_cont(v, envRef) or jump reset_exit(result)
-
-block L_cont(v, envRef):
-    Read("v0", envRef, t0)
-    Read("v1", envRef, t1)
-    ...
-    // lower e3 with t0, t1, ... in scope
-    jump reset_exit(result)
-
-block reset_exit(result):
-    // caller continues from here
-```
-
-**Key points:**
-
-- No MakeCont or Resume. Continuation creation = `Alloc` env + `Alloc` k_ref with `__env`.
-- `k(v)` = `Read("__env", k_ref, envRef)` then `Jump L_cont(v, envRef)` — this restores captured state and replays the continuation.
+**No syntactic dispatch.** The shift handler does not inspect whether shift appears as a Block statement, a Let RHS, or anywhere else. The captured worklist suffix carries that structure as data.
 
 ### 7.4 Transformation: Nested Shifts
 
@@ -511,57 +483,25 @@ reset { shift (\k -> 42) }
 
 ### 7.6 Multi-Shot Semantics
 
-**Multi-shot:** A continuation `k` can be resumed multiple times. Each `k(v)` runs the continuation from the shift point with that value. We **always heap-allocate** for the first implementation; linear optimization (direct jump, stack allocation) is deferred.
+**Multi-shot:** A continuation `k` can be resumed multiple times. Each `k(v)` jumps to the shared `r` block, which dispatches via `Branch(idx, …)` to the appropriate `s_i`. We **always heap-allocate** the env; linear optimization (direct jump, stack allocation) is deferred.
 
-**Implementation (as of 2026-03):** Each k-call gets a **resume index** (0, 1, 2, …). The continuation block receives `(value, env, index)` and **branches** on index to the appropriate resume block. Resume blocks are built incrementally when combining results (e.g. in prim-op handlers for `(k 1) + (k 2)`):
-
-- **Continuation block**
-  - `L_cont(value, env, index)` — params include index
-  - `branch index { 0 -> b2(value, env) | 1 -> b3(value, env) | ... }`
-
-- **Resume block i**
-  - Receives `(value, env)` from the branch
-  - `env' = update-immutable env { r{i}: value }` — store this k-call's result
-  - Either: run next k-call and `jump L_cont(nextValue, env', nextIndex)`
-  - Or: read `r0`, `r1`, … from env, compute final result, `jump reset_exit(result)`
-
-- **k-call lowering**
-  - `Read("__env", k_ref, envRef)` then `Jump L_cont(argValue, envRef, indexVar)` where `indexVar` holds the literal index
-
-Reference: `src/lowering/__tests__/multishot.mir` and `lower.test.ts` "lowers reset(shift k -> (k 1) + (k 2)) — multishot".
-
-### 7.7 Lowering Algorithm Sketch
-
-Lowering uses a **worklist + result stack** (same pattern as `evaluation.v2.ts`). Frames: `Lower(ctx, term)`, `Cont(arity, handler)`, `Delimiter(id, resultSize)`.
+Each `s_i` (for i ≥ 1) starts with:
 
 ```
-lowerToMir(term):
-  worklist = [Lower(mkCtx(), term)]
-  while worklist not empty:
-    frame = pop worklist
-    match frame:
-      Lower(ctx, t): lowerTerm(ctx, t)  // dispatch; may push Cont, Lower, or push result
-      Cont(arity, h): results = pop arity from resultStack; h(results)
-      Delimiter: (marker for Shift; splice worklist/resultStack)
-
-lowerTerm(ctx, term):
-  case term of
-    Reset(t): push Delimiter, Cont(1), Lower(t)
-    Shift(Lambda(k, e)): find Delimiter; splice; push Cont(1), Lower(e) with shiftBodyCtx
-    App(k, v) when k-call: push Cont(1) with terminator Jump(L_cont, [v, envRef, index]); push Lower(v)
-    PrimOp(+, [a,b]) when a,b have terminators: fill resume blocks; push first result (multishot)
+s_i(v_i_param, env_i_param):
+    let stashedEnv = update-immutable env_i_param { r{i-1}: v_i_param }
+    let kresult_0 = read stashedEnv.r0
+    let kresult_1 = read stashedEnv.r1
     ...
+    let kresult_{i-1} = read stashedEnv.r{i-1}
+    // ...rest of shift body executes from here...
 ```
 
-**k-call detection:** `App(func, arg)` where `func` is `Var(Bound(0))` and `ctx.bound.get(0) === kRef` (inside shift body).
+The `kresult_j` names are pre-allocated when each k-call splits and used as the value pushed onto the result stack. Re-reading them at every block transition keeps the names in scope across block boundaries (each block gets its own SSA binding for the same name).
 
-### 7.8 Identifying the Continuation
+For `(k 1) + (k 2)`: `s_init` jumps to `r(1, env, 0)`. `r` (empty body for empty rest-of-reset) branches `0 -> s_1(1, env)`. `s_1` stashes 1 into env.r0, computes arg=2, jumps to `r(2, env', 1)`. `r` branches `1 -> s_2(2, env')`. `s_2` stashes 2 into env.r1, reads `kresult_0 = env.r0` and `kresult_1 = env.r1`, computes the primop, jumps to `reset_exit`.
 
-The continuation is the "rest of the reset" from the shift point to the reset boundary. We extract it by **traversing the term and passing the context** (what would run after the current subterm) as we go. When we hit a Shift, we turn that context into a block. No CPS IR needed — just context-passing in the lowering traversal.
-
-**Simpler case:** `reset (Block [e1, shift body, e3])` — the continuation is `e3`. For Block, we identify: statements before shift, the shift, statements after shift. The "rest" is explicit.
-
-**Deferred:** Full treatment of arbitrary shift placement. Phase 1 can focus on reset bodies that are Blocks with at most one shift, or a simple structural form.
+Reference: `lower.test.ts` "lowers reset(shift k -> (k 1) + (k 2)) — multishot".
 
 ### 7.9 Elaboration Expectations and Gaps
 
@@ -641,18 +581,21 @@ last (_++[e]) = e
   - See `src/elaboration/inference.v2/match.ts`, `src/elaboration/checking.v2/match.ts`, and `docs/V2-MIGRATION.md` for current match handling.
 - **References:** Curry tutorial §3.5.5; Hanus FLOPS 2002; narrowing machines. See also `docs/TODO.md` (Unification? Residuations?).
 
-| Item                                               | Reason                                                                                                                |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Functional patterns (Curry-style)**              | Requires runtime unification, narrowing, possibly residuation. Elaboration and lowering both need redesign. See §9.1. |
-| **Escape analysis for k**                          | Reduces scope; can be added later. Escaping `k` will be incorrect until then.                                         |
-| **Type system changes for linearity**              | Type system works as-is. Lowering assumes correct usage; we can test linear vs multishot without type changes.        |
-| **ANF normalization**                              | Can be added as a phase; not required for initial lowering.                                                           |
-| **Full pattern matching**                          | Match lowering is complex; can start with simplified forms.                                                           |
-| **Optimization passes**                            | Dead block elimination, inlining, etc. — future work.                                                                 |
-| **Backend lowering (JS, native)**                  | MIR is the target; backend is separate.                                                                               |
-| **First-class block refs (Option B)**              | Documented as future work.                                                                                            |
-| **Stack allocation for single-shot continuations** | First iteration heap-allocates; optimize later.                                                                       |
-| **Variant injection in MIR**                       | TODO/QUESTION: Defer until semantics are clearer.                                                                     |
+| Item                                               | Reason                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Functional patterns (Curry-style)**              | Requires runtime unification, narrowing, possibly residuation. Elaboration and lowering both need redesign. See §9.1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **k captured in a closure (escaping or not)**      | Lambda handler in lowering throws when shift body lifts a closure that captures k. Needs Option B (§8) — `k_ref` is a record without `__fn`, so it can't be invoked through the indirect-call machinery from a lifted function, and `rLabel`/`currentBlock` belong to the outer function's CFG. Includes the immediately-applied case `(\x -> k x) 1`: NbE will eventually beta-reduce administrative redexes, but we deliberately don't beta-reduce here (transparency: programmers should be able to map source to MIR without optimizations changing the shape).                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **Pre-shift state recompute in `r`**               | Current design: rest-of-reset's lowered MIR is placed into `r`'s body unchanged, which means pre-shift `Let` instructions (allocated before shift fired into the outer builder; transferred into `r`'s body by the shift handler) get re-executed on every resumption. Correct for pure code; bloat for performance. Optimization: emit pre-shift instrs in `entry`, capture their values in env, read back in `r`. Deferred.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| **Lowering as pure CFG combinators**               | Today's lowering uses `ctx.builder` (mutable record holding `currentBlock` + `closedBlocks`), with controlled mutation scoped by the worklist's LIFO frame order. A more "principled" alternative would use a `Fragment` ADT — `LowerResult` carries either an open tail (instrs to append) or a closing tail (instrs + terminator + next block). A sequence combinator pattern-matches on `(A.tail × B.tail)` and produces the right composition. Pure-functional, no mutation, but the data type is unwieldy for our IR (4 cases per sequence, surrounding-block plumbing fiddly). Worth reconsidering if/when we need fine-grained CFG manipulation (escape analysis, dead-block elimination by hand). For now, the mutate-`ctx.builder` style is the same Reader/Writer model expressed imperatively — Reader = `currentBlock.label/params`, Writer = `currentBlock.instrs`, "join points" (k-call, shift body end) read both, seal a Block, install a fresh one. |
+| **Type system changes for linearity**              | Type system works as-is. Lowering assumes correct usage; we can test linear vs multishot without type changes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **ANF normalization**                              | Can be added as a phase; not required for initial lowering.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **Beta-reduction of `App(Lambda, arg)`**           | Deliberately not done at lowering time. Beta-reduction of administrative redexes would let the closure-capture-of-k case "just work," but obscures the mapping from source to MIR. NbE (`evaluation.v2.ts`) is the right place for this when we want it.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **Full pattern matching**                          | Match lowering is complex; can start with simplified forms.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| **Optimization passes**                            | Dead block elimination, inlining, etc. — future work.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **Backend lowering (JS, native)**                  | MIR is the target; backend is separate.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| **First-class block refs (Option B)**              | Documented as future work.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **Stack allocation for single-shot continuations** | First iteration heap-allocates; optimize later.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **Variant injection in MIR**                       | TODO/QUESTION: Defer until semantics are clearer.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ---
 

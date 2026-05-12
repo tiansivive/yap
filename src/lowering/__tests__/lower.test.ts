@@ -7,8 +7,8 @@ import * as R from "@yap/shared/rows";
 
 import * as Sub from "@yap/elaboration/unification/substitution";
 
-import { lower, lowerToMir } from "../lower";
-import { mkCtx, resetSupply } from "../context";
+import { lowerToMir } from "../lower";
+import { resetSupply } from "../context";
 import * as Pretty from "../pretty";
 
 const emptyDisplayCtx: EB.DisplayContext = { env: [], zonker: Sub.empty, metas: {} };
@@ -22,20 +22,10 @@ describe("Lowering: primitives and ops", () => {
 		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
 	});
 
-	it("lowers Var(Bound 0) with env", () => {
-		const term = EB.DSL.bound(0);
-		const ctx = mkCtx({ bound: [[0, "x"]] });
-		const { instrs, value } = lower(term, ctx);
-		expect(instrs).toHaveLength(0);
-		expect(value).toBe("x");
-	});
-
-	it("lowers Var(Free n) with env", () => {
-		const term = EB.DSL.free("foo");
-		const ctx = mkCtx({ free: [["foo", "x"]] });
-		const { instrs, value } = lower(term, ctx);
-		expect(instrs).toHaveLength(0);
-		expect(value).toBe("x");
+	it("lowers λx.x+1 (bound var in expression)", () => {
+		const term = EB.DSL.lambda("x", EB.DSL.add(EB.DSL.bound(0), EB.DSL.num(1)), EB.DSL.type("Num"));
+		const mod = lowerToMir(term);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
 	});
 
 	it("lowers add(1, 2)", () => {
@@ -92,8 +82,7 @@ describe("Lowering: primitives and ops", () => {
 
 	it("throws for Var(Foreign) used as value", () => {
 		const term = EB.DSL.foreign("$add");
-		const ctx = mkCtx();
-		expect(() => lower(term, ctx)).toThrow(/Primitive.*used as value/);
+		expect(() => lowerToMir(term)).toThrow(/primitive.*used as value/i);
 	});
 });
 
@@ -128,13 +117,10 @@ describe("Lowering: struct, proj, inj", () => {
 		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
 	});
 
-	it("lowers proj from bound var", () => {
-		const term = EB.DSL.proj("x", EB.DSL.bound(0));
-		const ctx = mkCtx({ bound: [[0, "r"]] });
-		const { instrs, value } = lower(term, ctx);
-		expect(instrs).toHaveLength(1);
-		expect(instrs[0]).toMatchObject({ type: "Read", label: "x", target: "r" });
-		expect(value).toBeDefined();
+	it("lowers proj from bound var (λr. r.x)", () => {
+		const term = EB.DSL.lambda("r", EB.DSL.proj("x", EB.DSL.bound(0)), EB.DSL.type("Num"));
+		const mod = lowerToMir(term);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
 	});
 });
 
@@ -289,6 +275,21 @@ describe("Lowering: match", () => {
 		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
 	});
 
+	it("lowers reset(Block) with multishot + rest-of-reset — let x=10; shift k->k 1+k 2; x", () => {
+		const numTy = NF.Constructors.Lit(Lit.Atom("Num"));
+		const shiftBody = EB.DSL.lambda(
+			"k",
+			EB.DSL.add(EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(1)), EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(2))),
+			EB.DSL.type("Num"),
+		);
+		const stmts: EB.Statement[] = [EB.Constructors.Stmt.Let("x", EB.DSL.num(10), numTy), EB.Constructors.Stmt.Expr(EB.Constructors.Shift(shiftBody))];
+		const returnTerm = EB.DSL.bound(0); // return x
+		const block = EB.Constructors.Block(stmts, returnTerm);
+		const term = EB.Constructors.Reset(block);
+		const mod = lowerToMir(term);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+
 	it("lowers reset(Block) with captured frame — let x=1; shift k->k 10; x+100", () => {
 		const numTy = NF.Constructors.Lit(Lit.Atom("Num"));
 		const stmts: EB.Statement[] = [
@@ -312,6 +313,60 @@ describe("Lowering: match", () => {
 		const returnTerm = EB.DSL.add(EB.DSL.bound(0), EB.DSL.bound(1));
 		const block = EB.Constructors.Block(stmts, returnTerm);
 		const term = EB.Constructors.Reset(block);
+		const mod = lowerToMir(term);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+
+	it("lowers reset(Block) - resumes twice with different values, consumes shifted value in continuation and captured var - let x=5; let v = shift k-> k 10 + k 20; add(x, v)", () => {
+		const numTy = NF.Constructors.Lit(Lit.Atom("Num"));
+		const stmts: EB.Statement[] = [
+			EB.Constructors.Stmt.Let("x", EB.DSL.num(5), numTy),
+			EB.Constructors.Stmt.Let(
+				"v",
+				EB.Constructors.Shift(
+					EB.DSL.lambda("k", EB.DSL.add(EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(10)), EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(20))), EB.DSL.type("Num")),
+				),
+				numTy,
+			),
+		];
+		const returnTerm = EB.DSL.add(EB.DSL.bound(0), EB.DSL.bound(1)); // add(v, x) where v=resumption (index 0), x=captured (index 1)
+		const block = EB.Constructors.Block(stmts, returnTerm);
+		const term = EB.Constructors.Reset(block);
+		const mod = lowerToMir(term);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+
+	it("throws when shift body captures k in a closure — reset(shift k -> (\\x -> k x) 1)", () => {
+		// Inside the lambda, `k x` = App(Bound 1, Bound 0). k is captured into the closure's env;
+		// the Lambda handler detects the capture (via stamp match against sbc.kRef) and throws.
+		const innerLambda = EB.DSL.lambda("x", EB.DSL.app(EB.DSL.bound(1), EB.DSL.bound(0)), EB.DSL.type("Num"));
+		const shiftBody = EB.DSL.lambda("k", EB.DSL.app(innerLambda, EB.DSL.num(1)), EB.DSL.type("Num"));
+		const term = EB.Constructors.Reset(EB.Constructors.Shift(shiftBody));
+		expect(() => lowerToMir(term)).toThrow(/captures continuation k/);
+	});
+
+	it("lowers reset(shift k -> let y=5; k y) — k-call with k at index 1 (post-let)", () => {
+		// After `let y = 5`, k shifts to index 1 in the shift body's ctx. Detection must rely on
+		// stamp identity, not on `index === 0`.
+		const numTy = NF.Constructors.Lit(Lit.Atom("Num"));
+		const stmts: EB.Statement[] = [EB.Constructors.Stmt.Let("y", EB.DSL.num(5), numTy)];
+		const ret = EB.DSL.app(EB.DSL.bound(1), EB.DSL.bound(0)); // k y
+		const block = EB.Constructors.Block(stmts, ret);
+		const shiftBody = EB.DSL.lambda("k", block, EB.DSL.type("Num"));
+		const term = EB.Constructors.Reset(EB.Constructors.Shift(shiftBody));
+		const mod = lowerToMir(term);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+
+	it("lowers reset(shift k -> let k2 = k; k2 5) — k-call through let alias", () => {
+		// `let k2 = k` aliases k. The let-handler binds k2's bound entry to the value's Stamped
+		// (k's stamp), so `k2 5` is detected as a k-call through stamp-identity.
+		const numTy = NF.Constructors.Lit(Lit.Atom("Num"));
+		const stmts: EB.Statement[] = [EB.Constructors.Stmt.Let("k2", EB.DSL.bound(0), numTy)];
+		const ret = EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(5)); // k2 5
+		const block = EB.Constructors.Block(stmts, ret);
+		const shiftBody = EB.DSL.lambda("k", block, EB.DSL.type("Num"));
+		const term = EB.Constructors.Reset(EB.Constructors.Shift(shiftBody));
 		const mod = lowerToMir(term);
 		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
 	});

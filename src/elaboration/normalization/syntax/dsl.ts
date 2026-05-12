@@ -1,3 +1,4 @@
+import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import { Implicitness } from "@yap/shared/implicitness";
 import { OP_ADD, OP_AND, OP_DIV, OP_EQ, OP_GT, OP_GTE, OP_LT, OP_LTE, OP_MUL, OP_NEQ, OP_NOT, OP_OR, OP_SUB, PrimOps } from "@yap/shared/lib/primitives";
