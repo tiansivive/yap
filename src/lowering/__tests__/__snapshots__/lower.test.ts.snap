@@ -216,6 +216,55 @@ exports[`Lowering: match > lowers match on variant with struct payload (Some(Poi
 }
 `;
 
+exports[`Lowering: match > lowers reset { let a=5; let f=λp.p+a; let v=shift k->k a + k(f a); v+a } — multi-var capture, multi-resume 1`] = `
+"module
+  fn main entry=entry
+    entry:
+      let x0 = 5
+      let env_1 = alloc { v0: x0 }
+      let fnref_0 = &f_0
+      let closure_0 = alloc { __fn: fnref_0, __env: env_1 }
+      let env_3 = alloc { v0: closure_0, v1: x0 }
+      let k_0 = alloc { __env: env_3 }
+      jump s0(k_0)
+    s0(k_1):
+      let env_3 = read k_1.__env
+      let closure_0 = read env_3.v0
+      let x0 = read env_3.v1
+      let i_1 = 0
+      jump r0(x0, env_3, i_1)
+    s1(x6, env_4):
+      let env_5 = update-immutable env_4 { r0: x6 }
+      let x5 = read env_5.r0
+      let closure_0 = read env_5.v0
+      let x0 = read env_5.v1
+      let fnref_1 = read closure_0.__fn
+      let env_6 = read closure_0.__env
+      let x8 = call *fnref_1(env_6, x0)
+      let i_2 = 1
+      jump r0(x8, env_5, i_2)
+    s2(x9, env_7):
+      let env_8 = update-immutable env_7 { r1: x9 }
+      let x5 = read env_8.r0
+      let x7 = read env_8.r1
+      let closure_0 = read env_8.v0
+      let x0 = read env_8.v1
+      let x10 = +(x5, x7)
+      jump reset_exit0(x10)
+    r0(x3, env_2, i_0):
+      let closure_0 = read env_2.v0
+      let x0 = read env_2.v1
+      let x4 = +(x3, x0)
+      branch i_0 { 0 -> s1(x4, env_2) | 1 -> s2(x4, env_2) }
+    reset_exit0(x11):
+      return x11
+  fn f_0(env_0, p) entry=f_0_entry
+    f_0_entry:
+      let x1 = read env_0.v0
+      let x2 = +(p, x1)
+      return x2"
+`;
+
 exports[`Lowering: match > lowers reset(42) — no shift 1`] = `
 {
   "mir": "module

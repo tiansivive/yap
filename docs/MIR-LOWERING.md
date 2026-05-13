@@ -18,7 +18,8 @@
 8. [Continuation Representation: Option A and Path to B](#8-continuation-representation-option-a-and-path-to-b)
 9. [Out of Scope / Deferred](#9-out-of-scope--deferred)
    - [9.1 Functional Patterns (Curry-style)](#91-functional-patterns-curry-style)
-10. [Open Questions](#10-open-questions)
+10. [FFI Lowering](#10-ffi-lowering)
+11. [Open Questions](#11-open-questions)
 
 ---
 
@@ -599,7 +600,131 @@ last (_++[e]) = e
 
 ---
 
-## 10. Open Questions
+## 10. FFI Lowering
+
+> **Status: design phase.** Not yet implemented.
+
+### 10.1 Background
+
+Yap has two kinds of foreign names:
+
+- **Primitive operations** (`$add`, `$sub`, etc.) — Hardcoded in `PRIM_OPS`. Appear as `Var(Foreign("$add"))` in curried applications. Lowering already handles these via `unwrapPrimitiveApp` → `PrimOp` instructions. Cannot be used as standalone values.
+
+- **User-declared foreign functions** (`foreign print : String -> Unit`) — Declared in source. The parser produces `{ type: "foreign", variable, annotation }`. Module elaboration (`module.ts:foreign()`) checks the annotation against `Type`, evaluates it to NF, and stores `Var(Foreign(name))` in `ctx.imports`. These are opaque external symbols with no Yap-level body.
+
+Currently, user-declared foreigns **cannot be lowered** — `lowerForeign` only resolves against `ctx.free` and `PRIM_OPS`, so anything else errors with `UnboundForeignName`.
+
+### 10.2 Agreed Design
+
+**Module-level declarations.** The MIR `Module` carries a `declarations` list alongside `functions`. Each declaration names an external symbol with its runtime arity. The backend consults this to emit the appropriate import/linkage for the target platform (e.g., `require("./<module>.ffi.js")` for JS, `extern` for C).
+
+```
+Module = { functions: Function[]; declarations: Declaration[] }
+Declaration = { name: string; arity: number; source: "ffi" }
+```
+
+**Saturated calls → `Call(direct, name, args)`.** When a foreign function is fully applied, lowering emits a direct call. This is strictly better than wrapping in a closure — the backend knows the target statically, enabling optimizations. The existing `CallTarget.direct` (currently reserved for "future top-level fn refs") is its first real use.
+
+**Partial application → closure conversion.** If a foreign is partially applied or used as a first-class value, lowering generates a synthetic forwarding function whose body does the direct call, then wraps it in a closure. Same machinery as lambda closure conversion.
+
+**Arity computed at elaboration time.** Specifically in `module.ts:foreign()`, which already has `ctx` and the normalized type (`nf`). This is the only point in the pipeline with access to NbE. The arity flows into the module `Interface` and from there to lowering as input metadata.
+
+### 10.3 Arity Computation
+
+The normalized type of a foreign declaration is WHNF — Pi bodies are closures (`Closure { ctx, term }`). You cannot structurally count binders. To determine arity, you iteratively "open" each Pi by applying the closure to a fresh rigid variable via `NF.apply(binder, closure, Rigid(level))`, which evaluates the body and exposes the next layer.
+
+**Algorithm (sketch):**
+
+```
+computeArity(ctx, ty):
+  match ty:
+    Abs { binder: { type: "Pi", ... }, closure } →
+      rigid = Rigid(ctx.env.length)
+      extended = EB.bind(ctx, binder, binder.annotation)
+      returnType = NF.apply(binder, closure, rigid)
+      1 + computeArity(extended, returnType)
+    otherwise →
+      if headStuck(ty): error "foreign type has undecidable arity"
+      0
+```
+
+This lives in `module.ts:foreign()`, right after `const nf = NF.evaluate(ctx, tm)` — the only point in the pipeline with live NbE and full context.
+
+**All Pi binders count toward arity — including implicits.** Implicitness and erasability are orthogonal concerns:
+
+- **Implicitness** is about inference — whether the elaborator fills in an argument. A typeclass dictionary is implicit but runtime-relevant. A type parameter is implicit and also happens to be erasable.
+- **Erasability** is about runtime relevance — whether the argument carries information needed at runtime. `Type`-kinded arguments don't (parametric polymorphism). Value-kinded implicits (dictionaries) do.
+
+Since there is no separate erasure pass, **lowering itself performs erasure** — guided by the type in check-mode fashion (like bidirectional elaboration). The type is available at every call site; lowering walks the Pi telescope in lock-step with arguments and decides per-binder whether to emit or erase. Until erasure is implemented in lowering, all binders are emitted. When erasure arrives, it doesn't need a pre-computed icitness map — the type is the source of truth at each step.
+
+**Consequence:** for `f : (A : Type) -i> A -> A`, arity is **2** today (both binders are runtime parameters). When lowering learns erasure, it will see `A : Type` and skip it → effective arity becomes 1. The arity number itself doesn't change; lowering uses the type to decide what to emit.
+
+### 10.4 Validating Foreign Types: Head Stability
+
+Not all types in the return position are safe for arity computation. Consider:
+
+```
+foreign f : (a : Int) -> match a | 0 -> Int | _ -> (Int -> Int)
+```
+
+After opening the first Pi with a fresh rigid, the return type is `match rigid_0 | 0 -> Int | _ -> (Int -> Int)` — a stuck match. Its arity is value-dependent and undecidable at compile time.
+
+**Restriction:** Foreign types must have statically determined arity. When the arity walk hits a non-Pi, we check that the type's **head is inert** — i.e., it cannot reduce to a Pi with more information.
+
+The check (`inert`): unwrap `Neutral` layers, walk the `App` spine to the head, classify:
+
+| Head form                                | Example                                        | Verdict    | Reasoning                                                                |
+| ---------------------------------------- | ---------------------------------------------- | ---------- | ------------------------------------------------------------------------ |
+| `Lit` (atom)                             | `Schema`, `Struct`, `Variant`, `Array`, `Type` | **safe**   | Concrete type constructors, can never be a Pi                            |
+| `Var(Foreign _)`                         | `Indexed`                                      | **safe**   | Known external type, fully determined                                    |
+| `Var(Bound _)` without apps              | Polymorphic return `A`                         | **safe**   | A bare rigid is a type variable; it can't reduce further in this context |
+| `Var(Bound _)` with apps                 | `F Int` where `F : Type -> Type`               | **reject** | Stuck type-level function application; `F` could produce a Pi            |
+| `Var(Meta _)`                            | Unsolved `?α`                                  | **reject** | Could be solved to anything including a Pi                               |
+| `Abs(Lambda { variable: "$scrutinee" })` | StuckMatch                                     | **reject** | Value-dependent branch, could be a Pi                                    |
+
+The distinction between "safe neutral" and "stuck neutral" is structural: walk the application spine to its head and check if the head is a literal or known foreign name (inert) vs. a rigid applied to arguments, a meta, or a stuck match (live).
+
+**Name:** `inert` — the head cannot compute further regardless of what values become known.
+
+**Expressivity tradeoff:** This restriction means you cannot write foreign functions with value-dependent return types. This matches what every other dependently typed compiler does for FFI (Idris 2, Lean 4, Agda all restrict foreign types to first-order, statically determined signatures). The FFI boundary is a calling convention agreement — arity must be fixed.
+
+**Future:** Type-directed lowering could lift this restriction by applying the dependent application typing rule at each call site during lowering, continuing to provide type information that guides how each application gets lowered. Deferred until we tackle general type-directed lowering.
+
+### 10.5 Open Questions
+
+**1. Type aliases and opaque types.**
+
+`let F = Num -> Num; foreign inc : F` — does `NF.evaluate` fully unfold `F`? It should (evaluation resolves let-bound names). But what about aliases from other modules, or types that don't reduce to a manifest Pi chain? May need a restriction or a clear error.
+
+**2. Polymorphic and constrained foreigns.**
+
+`foreign inc : Num a => a -> a` — the typeclass dict is a real runtime argument (arity includes it). But what does the foreign implementation look like? Does the JS/C function receive the dict? This is a design question about the FFI contract for constrained types. May require restricting foreign types to monomorphic for V1.
+
+**3. Distinguishing FFI from normal in the call graph.**
+
+Calls to foreign functions use `Call(direct)` — the same as future top-level Yap function calls. The distinction lives in the `Module.declarations` list, not at the call site. The backend resolves each `direct` call target against declarations to determine linkage.
+
+**4. Type-driven lowering.**
+
+FFI does not force type-driven lowering — arity can be pre-computed as metadata. However, FBIP (multiplicity-driven mutation mode), type/proof erasure, and unboxing will eventually need types during lowering. FFI arity is the first case where type information flows into the lowering context. The dependent application typing rule could be applied during lowering to provide per-call-site type information — this would also subsume the arity restriction on foreign types (§10.4).
+
+### 10.6 Deferred
+
+- **Cross-module FFI** — module B imports a foreign from module A. Deferred to module-lowering work.
+- **Type-driven lowering** — not blocking FFI; future work for FBIP, erasure, unboxing.
+- **Restrictions on foreign type annotations** — whether to require closed/monomorphic types, or handle the general case. Deferred pending V1 implementation experience.
+
+### 10.7 References
+
+- **GHC (Haskell):** Manifest arity on STG closures; `foreign import` with explicit type-derived arity; type-erased STG with arity metadata. FFI calls are `ccall` with known arity.
+- **Idris 2:** Dependent Pi types require evaluator for arity; `%foreign` annotation; arity computed during compilation to ANF/lifted IR using the normalizer.
+- **Lean 4:** Dependent types; arity extracted from types during IR generation using the type checker's evaluation machinery; stored as declaration metadata.
+- **MLton (Standard ML):** `_import` FFI with explicit type annotations; arity syntactic (no dependent closures).
+- **General:** Type-directed compilation (Xi & Harper), call-by-name/call-by-value distinctions in erasure, closure conversion of known-arity foreign wrappers.
+
+---
+
+## 11. Open Questions
 
 1. **Block parameters and merge points:** We explicitly avoid φ nodes. Block parameters receive values from jumps; each predecessor passes its args via `jump B(args)`. Multiple predecessors → multiple jump sites to the same block, each passing (possibly different) args. The block's params are the merge — no φ needed. Open: do we need to formalize the "which predecessor" mapping, or is the current model sufficient?
 

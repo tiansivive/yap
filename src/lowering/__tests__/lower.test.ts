@@ -371,6 +371,26 @@ describe("Lowering: match", () => {
 		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
 	});
 
+	it("lowers reset { let a=5; let f=λp.p+a; let v=shift k->k a + k(f a); v+a } — multi-var capture, multi-resume", () => {
+		// TODO(let-rec): yap's `let` is let-rec — indices below use non-rec interpretation (see smoke.test.ts comment)
+		const numTy = NF.Constructors.Lit(Lit.Atom("Num"));
+		const shiftBody = EB.DSL.lambda(
+			"k",
+			EB.DSL.add(EB.DSL.app(EB.DSL.bound(0), EB.DSL.bound(2)), EB.DSL.app(EB.DSL.bound(0), EB.DSL.app(EB.DSL.bound(1), EB.DSL.bound(2)))),
+			EB.DSL.type("Num"),
+		);
+		const stmts: EB.Statement[] = [
+			EB.Constructors.Stmt.Let("a", EB.DSL.num(5), numTy),
+			EB.Constructors.Stmt.Let("f", EB.DSL.lambda("p", EB.DSL.add(EB.DSL.bound(0), EB.DSL.bound(1)), EB.DSL.type("Num")), undefined as any),
+			EB.Constructors.Stmt.Let("v", EB.Constructors.Shift(shiftBody), numTy),
+		];
+		const returnTerm = EB.DSL.add(EB.DSL.bound(0), EB.DSL.bound(2));
+		const block = EB.Constructors.Block(stmts, returnTerm);
+		const term = EB.Constructors.Reset(block);
+		const mod = lowerToMir(term);
+		expect(Pretty.display.module(mod)).toMatchSnapshot();
+	});
+
 	it("lowers match on nested struct with literal patterns", () => {
 		const inner = EB.DSL.struct([
 			{ label: "x", value: EB.DSL.num(1) },
