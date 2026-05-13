@@ -1,6 +1,6 @@
-import * as MIR from "./mir";
-import * as M from "./monad";
-import type * as C from "./context";
+import * as MIR from "../mir";
+import * as M from "../monad";
+import type * as C from "../context";
 
 const { Block, Instr, Expr: E, Terminator: T, Function: Fn } = MIR.Constructors;
 

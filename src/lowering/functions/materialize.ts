@@ -9,9 +9,9 @@
 
 import assert from "node:assert";
 import { match } from "ts-pattern";
-import * as MIR from "./mir";
-import * as M from "./monad";
-import * as C from "./context";
+import * as MIR from "../mir";
+import * as M from "../monad";
+import * as C from "../context";
 import * as Closure from "./closures";
 
 const { Block, Instr, Expr: E, Terminator: T, Function: Fn } = MIR.Constructors;
