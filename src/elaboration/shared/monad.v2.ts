@@ -15,6 +15,7 @@ import * as Modal from "@yap/verification/modalities/shared";
 import * as Sub from "@yap/elaboration/unification/substitution";
 
 export type Elaboration<A> = (ctx: EB.Context, w?: Omit<Collector<A>, "result">, st?: MutState) => [Collector<A>, MutState];
+export type Gelaboration<A> = Generator<Elaboration<any>, A, any>;
 
 type Collector<A> = {
 	constraints: P.WithProvenance<EB.Constraint>[];
@@ -88,17 +89,21 @@ export const fold = <A, B>(f: (acc: B, a: A, i: number) => Elaboration<B>, initi
 /************************************************************************************************************************
  * Traversable combinators
  ************************************************************************************************************************/
-export const traverse = <A, B>(as: A[], f: (a: A, i: number) => Elaboration<B>): Elaboration<B[]> => {
+export function traverse<A, B>(as: A[], f: (a: A, i: number) => Elaboration<B>): Elaboration<B[]>;
+export function traverse<A, B>(as: A[], f: (a: A, i: number) => Gelaboration<B>): Elaboration<B[]>;
+export function traverse<A, B>(as: A[], f: (a: A, i: number) => Elaboration<B> | Gelaboration<B>) {
 	return fold(
 		(acc, a, i) =>
 			Do<B[], B>(function* () {
-				const b = yield f(a, i);
+				const result = f(a, i);
+				const b = typeof result === "object" && "next" in result ? yield* result : yield result;
+
 				return A.append(b)(acc);
 			}),
 		[] as B[],
 		as,
 	);
-};
+}
 
 export const mkCollector = <A>(a: A): Collector<A> => ({
 	...empty,
