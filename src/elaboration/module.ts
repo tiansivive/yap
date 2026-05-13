@@ -13,7 +13,7 @@ import * as F from "fp-ts/lib/function";
 
 import { set, update } from "@yap/utils";
 
-import { Interface } from "../modules/loading";
+import { Declaration, Interface } from "../modules/loading";
 import { solve } from "./solver";
 import * as A from "fp-ts/lib/Array";
 
@@ -38,7 +38,7 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 	type Pair = [string, Either<EB.V2.Err, EB.AST>];
 	const next = (stmts: Src.Statement[], ctx: EB.Context): Omit<Interface, "imports"> => {
 		if (stmts.length === 0) {
-			return { foreign: [], exports: [], letdecs: [], errors: [] };
+			return { foreign: [], exports: [], letdecs: [], errors: [], declarations: {} };
 		}
 
 		const [head, ...tail] = stmts;
@@ -59,7 +59,13 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 				result,
 				E.match(
 					e => update(next(tail, ctx), "foreign", A.prepend<Pair>([name, E.left(e)])),
-					([ast, ctx]) => F.pipe(next(tail, ctx), update("foreign", A.prepend<Pair>([name, E.right(ast)])), maybeExport(name)),
+					([ast, ctx, decl]) =>
+						F.pipe(
+							next(tail, ctx),
+							update("foreign", A.prepend<Pair>([name, E.right(ast)])),
+							update("declarations", (d: Record<string, Declaration>) => ({ ...d, [name]: decl })),
+							maybeExport(name),
+						),
 				),
 			);
 		}
@@ -94,13 +100,14 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 	return result;
 };
 
-export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context]>] => {
+export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context, Declaration]>] => {
 	const check = EB.check(stmt.annotation, NF.Type);
 	const [{ result }] = check(ctx);
-	const e = E.Functor.map(result, ([tm, us]): [EB.AST, EB.Context] => {
+	const e = E.Functor.map(result, ([tm, us]): [EB.AST, EB.Context, Declaration] => {
 		const nf = NF.evaluate(ctx, tm);
 		const v = EB.Constructors.Var({ type: "Foreign", name: stmt.variable });
-		return [[v, nf, us], set(ctx, ["imports", stmt.variable] as const, [v, nf, us])];
+		const a = NF.arity(ctx, nf);
+		return [[v, nf, us], set(ctx, ["imports", stmt.variable] as const, [v, nf, us]), { arity: a, source: "ffi" }];
 	});
 
 	return [stmt.variable, e];

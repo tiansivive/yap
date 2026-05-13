@@ -6,10 +6,14 @@
 		{
 			"path": "../brainstorming",
 		},
+		{
+			"path": "../tree-sitter-yap",
+		},
 	],
 	"settings": {
 		"typescript.tsdk": "node_modules/typescript/lib",
 		"typescript.tsserver.nodePath": "node",
 		"typescript.tsserver.maxTsServerMemory": 4096,
+		"cSpell.words": ["instrs"],
 	},
 }

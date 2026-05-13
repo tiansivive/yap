@@ -3,8 +3,11 @@ coverage/
 node_modules/
 gen/
 .logs/
+debug-*.log
 
 .vscode/
 bin/
 
 src/parser/grammar.ts
+
+z-yap/
