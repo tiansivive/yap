@@ -28,6 +28,8 @@ import { defaultContext } from "@yap/shared/lib/constants";
 type ModuleName = string;
 export const globalModules: Record<ModuleName, Interface> = {};
 
+export type Declaration = { arity: number; source: "ffi" };
+
 export type Interface = {
 	imports: Record<string, Separated>;
 	exports: string[];
@@ -35,6 +37,7 @@ export type Interface = {
 	foreign: [string, Either<V2.Err, EB.AST>][];
 	letdecs: [string, Either<V2.Err, EB.AST>][];
 	errors: V2.Err[];
+	declarations: Record<string, Declaration>;
 };
 
 type Separated = [Array<[string, V2.Err]>, Array<[string, EB.AST]>];

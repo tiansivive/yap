@@ -1,0 +1,17 @@
+export const ARITIES: Record<string, number> = {
+	$add: 2,
+	$sub: 2,
+	$mul: 2,
+	$div: 2,
+	$and: 2,
+	$or: 2,
+	$eq: 2,
+	$neq: 2,
+	$lt: 2,
+	$gt: 2,
+	$lte: 2,
+	$gte: 2,
+	$mod: 2,
+	$concat: 2,
+	$not: 1,
+};
