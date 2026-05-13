@@ -87,6 +87,66 @@ describe("Lowering: primitives and ops", () => {
 	});
 });
 
+describe("Lowering: FFI", () => {
+	beforeEach(() => resetSupply());
+
+	it("lowers saturated FFI call — print('hello') (arity 1)", () => {
+		const declarations = new Map([["print", { name: "print", arity: 1, source: "ffi" as const }]]);
+		const term = EB.DSL.app(EB.DSL.foreign("print"), EB.DSL.str("hello"));
+		const mod = lowerToMir(term, declarations);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+
+	it("lowers unsaturated FFI as value — write (arity 2, 0 args) → closure wrapper", () => {
+		const declarations = new Map([["write", { name: "write", arity: 2, source: "ffi" as const }]]);
+		const term = EB.DSL.foreign("write");
+		const mod = lowerToMir(term, declarations);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+
+	it("lowers partially applied FFI — write(fd) (arity 2, 1 arg) → closure wrapper", () => {
+		const declarations = new Map([["write", { name: "write", arity: 2, source: "ffi" as const }]]);
+		const term = EB.DSL.app(EB.DSL.foreign("write"), EB.DSL.num(1));
+		const mod = lowerToMir(term, declarations);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+
+	it("lowers FFI inside lambda — λx. print(x)", () => {
+		const declarations = new Map([["print", { name: "print", arity: 1, source: "ffi" as const }]]);
+		const term = EB.DSL.lambda("x", EB.DSL.app(EB.DSL.foreign("print"), EB.DSL.bound(0)), EB.DSL.type("Str"));
+		const mod = lowerToMir(term, declarations);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+
+	it("lowers unsaturated FFI captured via closure — (λf. f 'hi')(write 1)", () => {
+		const declarations = new Map([["write", { name: "write", arity: 2, source: "ffi" as const }]]);
+		// write(1) is partially applied → closure wrapper. Then passed to a lambda that calls it.
+		const innerLambda = EB.DSL.lambda("f", EB.DSL.app(EB.DSL.bound(0), EB.DSL.str("hi")), EB.DSL.type("Str"));
+		const term = EB.DSL.app(innerLambda, EB.DSL.app(EB.DSL.foreign("write"), EB.DSL.num(1)));
+		const mod = lowerToMir(term, declarations);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+
+	it("lowers reset(shift k -> k(print 'hello')) — saturated FFI inside shift body", () => {
+		const declarations = new Map([["print", { name: "print", arity: 1, source: "ffi" as const }]]);
+		const printCall = EB.DSL.app(EB.DSL.foreign("print"), EB.DSL.str("hello"));
+		const shiftBody = EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), printCall), EB.DSL.type("Str"));
+		const term = EB.Constructors.Reset(EB.Constructors.Shift(shiftBody));
+		const mod = lowerToMir(term, declarations);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+
+	it("lowers reset(shift k -> k(write 1)) — unsaturated FFI materialized at k-call boundary", () => {
+		const declarations = new Map([["write", { name: "write", arity: 2, source: "ffi" as const }]]);
+		// write(1) is partially applied (1/2 args). k-call materializes it → closure wrapper passed to continuation.
+		const partialWrite = EB.DSL.app(EB.DSL.foreign("write"), EB.DSL.num(1));
+		const shiftBody = EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), partialWrite), EB.DSL.type("Str"));
+		const term = EB.Constructors.Reset(EB.Constructors.Shift(shiftBody));
+		const mod = lowerToMir(term, declarations);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
+	});
+});
+
 describe("Lowering: struct, proj, inj", () => {
 	beforeEach(() => resetSupply());
 

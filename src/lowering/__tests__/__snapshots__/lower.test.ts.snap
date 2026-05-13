@@ -1,5 +1,175 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Lowering: FFI > lowers FFI inside lambda — λx. print(x) 1`] = `
+{
+  "mir": "module
+  declare ffi print (arity 1)
+  fn main entry=entry
+    entry:
+      let env_1 = alloc {  }
+      let fnref_0 = &f_0
+      let closure_0 = alloc { __fn: fnref_0, __env: env_1 }
+      return closure_0
+  fn f_0(env_0, x) entry=f_0_entry
+    f_0_entry:
+      let x0 = call print(x)
+      return x0",
+  "term": "λx -> FFI.print x",
+}
+`;
+
+exports[`Lowering: FFI > lowers partially applied FFI — write(fd) (arity 2, 1 arg) → closure wrapper 1`] = `
+{
+  "mir": "module
+  declare ffi write (arity 2)
+  fn main entry=entry
+    entry:
+      let x0 = 1
+      let env_1 = alloc { v0: x0 }
+      let fnref_0 = &f_0
+      let closure_0 = alloc { __fn: fnref_0, __env: env_1 }
+      return closure_0
+  fn f_0(env_0, x1) entry=f_0_entry
+    f_0_entry:
+      let x2 = read env_0.v0
+      let x3 = call write(x2, x1)
+      return x3",
+  "term": "FFI.write 1",
+}
+`;
+
+exports[`Lowering: FFI > lowers reset(shift k -> k(print 'hello')) — saturated FFI inside shift body 1`] = `
+{
+  "mir": "module
+  declare ffi print (arity 1)
+  fn main entry=entry
+    entry:
+      let env_1 = alloc {  }
+      let k_0 = alloc { __env: env_1 }
+      jump s0(k_0)
+    s0(k_1):
+      let env_1 = read k_1.__env
+      let x2 = "hello"
+      let x3 = call print(x2)
+      let i_1 = 0
+      jump r0(x3, env_1, i_1)
+    s1(x4, env_2):
+      let env_3 = update-immutable env_2 { r0: x4 }
+      let x1 = read env_3.r0
+      jump reset_exit0(x1)
+    r0(x0, env_0, i_0):
+      branch i_0 { 0 -> s1(x0, env_0) }
+    reset_exit0(x5):
+      return x5",
+  "term": "reset |shift (λk -> k (FFI.print "hello"))|",
+}
+`;
+
+exports[`Lowering: FFI > lowers reset(shift k -> k(write 1)) — unsaturated FFI materialized at k-call boundary 1`] = `
+{
+  "mir": "module
+  declare ffi write (arity 2)
+  fn main entry=entry
+    entry:
+      let env_1 = alloc {  }
+      let k_0 = alloc { __env: env_1 }
+      jump s0(k_0)
+    s0(k_1):
+      let env_1 = read k_1.__env
+      let x2 = 1
+      let env_3 = alloc { v0: x2 }
+      let fnref_0 = &f_0
+      let closure_0 = alloc { __fn: fnref_0, __env: env_3 }
+      let i_1 = 0
+      jump r0(closure_0, env_1, i_1)
+    s1(x6, env_4):
+      let env_5 = update-immutable env_4 { r0: x6 }
+      let x1 = read env_5.r0
+      jump reset_exit0(x1)
+    r0(x0, env_0, i_0):
+      branch i_0 { 0 -> s1(x0, env_0) }
+    reset_exit0(x7):
+      return x7
+  fn f_0(env_2, x3) entry=f_0_entry
+    f_0_entry:
+      let x4 = read env_2.v0
+      let x5 = call write(x4, x3)
+      return x5",
+  "term": "reset |shift (λk -> k (FFI.write 1))|",
+}
+`;
+
+exports[`Lowering: FFI > lowers saturated FFI call — print('hello') (arity 1) 1`] = `
+{
+  "mir": "module
+  declare ffi print (arity 1)
+  fn main entry=entry
+    entry:
+      let x0 = "hello"
+      let x1 = call print(x0)
+      return x1",
+  "term": "FFI.print "hello"",
+}
+`;
+
+exports[`Lowering: FFI > lowers unsaturated FFI as value — write (arity 2, 0 args) → closure wrapper 1`] = `
+{
+  "mir": "module
+  declare ffi write (arity 2)
+  fn main entry=entry
+    entry:
+      let env_3 = alloc {  }
+      let fnref_1 = &f_0
+      let closure_1 = alloc { __fn: fnref_1, __env: env_3 }
+      return closure_1
+  fn f_1(env_1, x1) entry=f_1_entry
+    f_1_entry:
+      let x2 = read env_1.v0
+      let x3 = call write(x2, x1)
+      return x3
+  fn f_0(env_0, x0) entry=f_0_entry
+    f_0_entry:
+      let env_2 = alloc { v0: x0 }
+      let fnref_0 = &f_1
+      let closure_0 = alloc { __fn: fnref_0, __env: env_2 }
+      return closure_0",
+  "term": "FFI.write",
+}
+`;
+
+exports[`Lowering: FFI > lowers unsaturated FFI captured via closure — (λf. f 'hi')(write 1) 1`] = `
+{
+  "mir": "module
+  declare ffi write (arity 2)
+  fn main entry=entry
+    entry:
+      let env_2 = alloc {  }
+      let fnref_1 = &f_0
+      let closure_0 = alloc { __fn: fnref_1, __env: env_2 }
+      let x2 = 1
+      let env_4 = alloc { v0: x2 }
+      let fnref_2 = &f_1
+      let closure_1 = alloc { __fn: fnref_2, __env: env_4 }
+      let fnref_3 = read closure_0.__fn
+      let env_5 = read closure_0.__env
+      let x6 = call *fnref_3(env_5, closure_1)
+      return x6
+  fn f_0(env_0, f) entry=f_0_entry
+    f_0_entry:
+      let x0 = "hi"
+      let fnref_0 = read f.__fn
+      let env_1 = read f.__env
+      let x1 = call *fnref_0(env_1, x0)
+      return x1
+  fn f_1(env_3, x3) entry=f_1_entry
+    f_1_entry:
+      let x4 = read env_3.v0
+      let x5 = call write(x4, x3)
+      return x5",
+  "term": "(λf -> f "hi") (FFI.write 1)",
+}
+`;
+
 exports[`Lowering: match > lowers Block (let x=1; let y=2; add(x,y)) 1`] = `
 {
   "mir": "module
