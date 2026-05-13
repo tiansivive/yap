@@ -25,13 +25,14 @@ import * as EB from "@yap/elaboration";
 import type { Literal } from "@yap/shared/literals";
 import * as Lit from "@yap/shared/literals";
 import { match } from "ts-pattern";
-import * as R from "@yap/shared/rows";
 import * as MIR from "./mir";
 import * as M from "./monad";
 import * as C from "./context";
 import { Patterns } from "./patterns";
 import { freeVars, sortedNumbers } from "./shared/freevars";
 import { convertClosure } from "./closures";
+import { lowerMatch } from "./match";
+import { materialize } from "./materialize";
 
 const { Block, Instr, Expr: E, Terminator: T, Function: Fn, Module } = MIR.Constructors;
 
@@ -124,18 +125,15 @@ function lowerForeign(name: string): M.Lowering<void> {
 		const ctx = yield* M.ask();
 		const stamped = ctx.free.get(name);
 		if (stamped !== undefined) {
-			yield* M.Results.push({ tag: "value", value: stamped });
-			return;
+			return yield* M.Results.push({ tag: "value", value: stamped });
 		}
 		const primArity = PRIMOP_ARITIES[name];
 		if (primArity !== undefined) {
-			yield* M.Results.push({ tag: "primop", op: name, arity: primArity, args: [] });
-			return;
+			return yield* M.Results.push({ tag: "primop", op: name, arity: primArity, args: [] });
 		}
 		const decl = ctx.declarations.get(name);
 		if (decl !== undefined) {
-			yield* M.Results.push({ tag: "foreign", name, arity: decl.arity, args: [] });
-			return;
+			return yield* M.Results.push({ tag: "foreign", name, arity: decl.arity, args: [] });
 		}
 		return yield* M.fail<void>({ tag: "UnboundForeignName", name });
 	});
@@ -244,7 +242,7 @@ function lowerApp(func: EB.Term, arg: EB.Term): M.Lowering<void> {
 					assert(argR);
 					const argVal = (argR as M.ValueResult).value;
 					yield match(funcR)
-						.with({ tag: "foreign" as const }, fr => {
+						.with({ tag: "foreign" }, fr => {
 							const newArgs = [...fr.args, argVal];
 							if (newArgs.length === fr.arity) {
 								return M.Do(function* () {
@@ -263,7 +261,7 @@ function lowerApp(func: EB.Term, arg: EB.Term): M.Lowering<void> {
 								yield* M.Results.push({ tag: "foreign", name: fr.name, arity: fr.arity, args: newArgs });
 							});
 						})
-						.with({ tag: "primop" as const }, pr => {
+						.with({ tag: "primop" }, pr => {
 							const newArgs = [...pr.args, argVal];
 							if (newArgs.length === pr.arity) {
 								return M.Do(function* () {
@@ -284,7 +282,7 @@ function lowerApp(func: EB.Term, arg: EB.Term): M.Lowering<void> {
 								yield* M.Results.push({ tag: "primop", op: pr.op, arity: pr.arity, args: newArgs });
 							});
 						})
-						.with({ tag: "value" as const }, vr => {
+						.with({ tag: "value" }, vr => {
 							return M.Do(function* () {
 								const fnVar = ctx.nextVar("fnref");
 								const envVar = ctx.nextVar("env");
@@ -557,7 +555,6 @@ function lowerShift(body: EB.Term): M.Lowering<void> {
 		const capturedFrames = state.worklist.slice(di + 1);
 		const capturedResults = state.results.slice(delim.resultSize);
 
-		// Closure-converted captures (all currently-bound vars).
 		const captures: Array<{ label: string; target: string }> = Array.from(ctx.bound.values()).map((s, j) => ({
 			label: `v${j}`,
 			target: s.name,
@@ -590,7 +587,6 @@ function lowerShift(body: EB.Term): M.Lowering<void> {
 			throw new Error("Shift: no focused pending block");
 		}
 
-		// Append closure setup to outer entry; finalize with Jump(sInit). Focus is cleared.
 		const envFields = captures.map(c => ({ label: c.label, value: c.target }));
 		yield* M.Pending.appendMany([
 			Instr.Alloc({ type: "Record", fields: envFields }, envRef.name),
@@ -598,18 +594,14 @@ function lowerShift(body: EB.Term): M.Lowering<void> {
 		]);
 		yield* M.Pending.finalize(outerFocus, T.Jump(sInit, [kRef.name]));
 
-		// Open r block; focus → r. Captured frames (about to be re-pushed) will emit here as
-		// the regular drain processes them.
 		const rCaptureReads = captures.map(c => Instr.Read(c.label, r_envParam.name, c.target));
 		yield* M.Pending.open(rLabel, [v_param.name, r_envParam.name, idx_param.name], rCaptureReads);
 
-		// Bind k → kRef inside the body, install shiftBodyCtx.
 		const innerCtx: C.LowerCtx = {
 			...C.bind(ctx, C.stampNamed(kBinder), new Map([[0, kRef]])),
 			shiftBodyCtx: sbc,
 		};
 
-		// JS-closure holder for rest-of-reset's value (filled by bridge, consumed by assemble).
 		const restHolder: { result?: M.ValueResult } = {};
 
 		const bridgeCont: M.Frame = {
@@ -659,7 +651,6 @@ function lowerShift(body: EB.Term): M.Lowering<void> {
 				}),
 		};
 
-		// Splice [D, ...captured] from worklist; splice capturedResults from results stack.
 		yield* M.State.modify(s => ({
 			...s,
 			worklist: s.worklist.slice(0, di),
@@ -676,8 +667,6 @@ function lowerShift(body: EB.Term): M.Lowering<void> {
 			yield* M.Worklist.push(f);
 		}
 
-		// Restore captured results below the primer. Primer is what the first captured Cont
-		// (e.g. C(bind-v)) pops as the "value of shift" — it's r's first param `v_param`.
 		for (const r of capturedResults) {
 			yield* M.Results.push(r);
 		}
@@ -739,494 +728,6 @@ function lowerKCall(ctx: C.LowerCtx, sbc: C.ShiftBodyCtx, arg: EB.Term): M.Lower
 }
 
 /* ================================================================================
- * Match — Maranget clause-matrix compilation, fully worklist-driven
- *
- * No recursion: each level of the decision tree is a Cont handler that inspects
- * its closure-captured sub-matrix, emits structural blocks, and pushes further
- * Conts + Lowers for deeper sub-matrices or leaf bodies.
- * ================================================================================ */
-
-const TAG_FIELD = "__tag";
-
-type VariantBranch = EB.Alternative & { pattern: { type: "Variant"; row: R.Extension<EB.Pattern, string> } };
-type LitBranch = EB.Alternative & { pattern: { type: "Lit"; value: Lit.Literal } };
-type StructBranch = EB.Alternative & { pattern: { type: "Struct"; row: R.Row<EB.Pattern, string> } };
-type VariableBranch = EB.Alternative & { pattern: { type: "Binder" } | { type: "Wildcard" } };
-
-const MatchPats = {
-	isVariable: (p: EB.Pattern): boolean =>
-		match(p)
-			.with(Patterns.Pats.Binder, () => true)
-			.with(Patterns.Pats.Wildcard, () => true)
-			.otherwise(() => false),
-
-	allVariable: (branches: EB.Alternative[]): boolean => branches.every(b => MatchPats.isVariable(b.pattern)),
-
-	allVariant: (branches: EB.Alternative[]): branches is VariantBranch[] => branches.every(b => b.pattern.type === "Variant"),
-
-	allLit: (branches: EB.Alternative[]): branches is LitBranch[] => branches.every(b => b.pattern.type === "Lit"),
-
-	allStruct: (branches: EB.Alternative[]): branches is StructBranch[] => branches.every(b => b.pattern.type === "Struct"),
-};
-
-const MatchBranches = {
-	variant: (branches: EB.Alternative[]): VariantBranch[] => branches.filter((b): b is VariantBranch => b.pattern.type === "Variant"),
-	lit: (branches: EB.Alternative[]): LitBranch[] => branches.filter((b): b is LitBranch => b.pattern.type === "Lit"),
-	struct: (branches: EB.Alternative[]): StructBranch[] => branches.filter((b): b is StructBranch => b.pattern.type === "Struct"),
-	variable: (branches: EB.Alternative[]): VariableBranch[] => branches.filter((b): b is VariableBranch => MatchPats.isVariable(b.pattern)),
-};
-
-const MatchExtract = {
-	binderName: (p: EB.Pattern): string =>
-		match(p)
-			.with(Patterns.Pats.Binder, ({ value }) => value)
-			.otherwise(() => "_"),
-
-	variantTag: (row: R.Row<EB.Pattern, string>): string => {
-		if (row.type !== "extension") {
-			throw new Error("Variant pattern must have extension row");
-		}
-		return row.label;
-	},
-
-	variantPayload: (row: R.Row<EB.Pattern, string>): EB.Pattern => {
-		if (row.type !== "extension") {
-			throw new Error("Variant pattern must have extension row");
-		}
-		return row.value;
-	},
-
-	structFields: (row: R.Row<EB.Pattern, string>): Array<{ label: string; pattern: EB.Pattern }> => {
-		const acc: Array<{ label: string; pattern: EB.Pattern }> = [];
-		let r: R.Row<EB.Pattern, string> = row;
-		while (r.type === "extension") {
-			acc.push({ label: r.label, pattern: r.value });
-			r = r.row;
-		}
-		return acc;
-	},
-
-	litDisplay: (lit: Lit.Literal): string => Lit.display(lit),
-};
-
-const MatchInOrder = {
-	variantTags: (branches: VariantBranch[]): string[] =>
-		branches.reduce((acc, b) => {
-			const tag = b.pattern.row.label;
-			return acc.includes(tag) ? acc : [...acc, tag];
-		}, [] as string[]),
-
-	litValues: (branches: LitBranch[]): string[] =>
-		branches.reduce((acc, b) => {
-			const val = MatchExtract.litDisplay(b.pattern.value);
-			return acc.includes(val) ? acc : [...acc, val];
-		}, [] as string[]),
-};
-
-/** Project struct branches onto the pattern at the given label. */
-const matchProject = (label: string, branches: StructBranch[]): EB.Alternative[] =>
-	branches.map(b => {
-		const fields = MatchExtract.structFields(b.pattern.row);
-		const found = fields.find(f => f.label === label);
-		return { pattern: found?.pattern ?? ({ type: "Wildcard" } as EB.Pattern), term: b.term, binders: b.binders };
-	});
-
-type ColumnBindings = Map<number, C.Stamped>;
-
-/**
- * Push worklist frames for a clause sub-matrix. Called from inside Cont handlers.
- * Each call inspects the branches, emits structural blocks, and pushes Conts/Lowers
- * for deeper sub-matrices or leaf bodies.
- */
-function* compileSubMatrix(
-	scrutVar: C.Stamped,
-	branches: EB.Alternative[],
-	mergeLabel: string,
-	failLabel: string,
-	ctx: C.LowerCtx,
-	columnBindings?: ColumnBindings,
-): M.Glowering<void> {
-	if (branches.length === 0) {
-		// Empty matrix → fail
-		const focus = yield* M.Focus.get();
-		if (focus !== undefined) {
-			yield* M.Pending.finalize(focus, T.Jump(failLabel, []));
-		}
-		return;
-	}
-
-	const variableBranches = MatchBranches.variable(branches);
-
-	if (MatchPats.allVariable(branches)) {
-		const first = variableBranches[0];
-		assert(first);
-		yield* pushVariableLeaf(scrutVar, first, mergeLabel, ctx, columnBindings);
-		return;
-	}
-	if (MatchPats.allVariant(branches) || MatchBranches.variant(branches).length > 0) {
-		yield* pushVariantFrames(MatchBranches.variant(branches), scrutVar, mergeLabel, failLabel, ctx, variableBranches, columnBindings);
-		return;
-	}
-	if (MatchPats.allLit(branches) || MatchBranches.lit(branches).length > 0) {
-		yield* pushLitFrames(MatchBranches.lit(branches), scrutVar, mergeLabel, failLabel, ctx, variableBranches, columnBindings);
-		return;
-	}
-	if (MatchPats.allStruct(branches) || MatchBranches.struct(branches).length > 0) {
-		yield* pushStructFrames(MatchBranches.struct(branches), scrutVar, mergeLabel, failLabel, ctx, variableBranches, columnBindings);
-		return;
-	}
-	throw new Error("Match lowering: unsupported pattern mix");
-}
-
-/**
- * Variable rule (leaf): bind scrutinee, push Lower for the body.
- * The current pending block is already open and focused.
- */
-function* pushVariableLeaf(
-	scrutVar: C.Stamped,
-	branch: VariableBranch,
-	mergeLabel: string,
-	ctx: C.LowerCtx,
-	columnBindings?: ColumnBindings,
-): M.Glowering<void> {
-	const overrides = new Map<number, C.Stamped>(columnBindings ?? []);
-	overrides.set(0, scrutVar);
-	const altCtx = C.bind(ctx, C.stampNamed(MatchExtract.binderName(branch.pattern)), overrides);
-
-	yield* M.Worklist.push({
-		type: "Cont",
-		arity: 1,
-		handler: ([bodyR]) =>
-			M.Do(function* () {
-				assert(bodyR);
-				const focus = yield* M.Focus.get();
-				if (focus !== undefined) {
-					yield* M.Pending.finalize(focus, T.Jump(mergeLabel, [bodyR.value.name]));
-				}
-			}),
-	});
-	yield* M.Worklist.push({ type: "Lower", ctx: altCtx, term: branch.term });
-}
-
-/**
- * Default/variable fallback: push frames to lower the first variable branch as default.
- * Opens a fresh block for the default, pushes Lower + finalize.
- * Returns the label of the default block (for use as Branch default target).
- */
-function* pushDefaultBranch(
-	scrutVar: C.Stamped,
-	branch: VariableBranch,
-	mergeLabel: string,
-	ctx: C.LowerCtx,
-	columnBindings?: ColumnBindings,
-): M.Glowering<string> {
-	const defLabel = ctx.nextLabel("d");
-	const overrides = new Map<number, C.Stamped>(columnBindings ?? []);
-	overrides.set(0, scrutVar);
-	const altCtx = C.bind(ctx, C.stampNamed(MatchExtract.binderName(branch.pattern)), overrides);
-
-	yield* M.Worklist.push({
-		type: "Cont",
-		arity: 1,
-		handler: ([bodyR]) =>
-			M.Do(function* () {
-				assert(bodyR);
-				yield* M.Pending.finalize(defLabel, T.Jump(mergeLabel, [bodyR.value.name]));
-			}),
-	});
-	yield* M.Worklist.push({ type: "Lower", ctx: altCtx, term: branch.term });
-	yield* M.Worklist.push({
-		type: "Cont",
-		arity: 0,
-		handler: () =>
-			M.Do(function* () {
-				yield* M.Pending.open(defLabel, []);
-			}),
-	});
-	return defLabel;
-}
-
-/**
- * Variant rule: read __tag, Branch to per-tag case blocks.
- * Each tag's case block reads its payload then compiles the payload sub-matrix.
- */
-function* pushVariantFrames(
-	branches: VariantBranch[],
-	scrutVar: C.Stamped,
-	mergeLabel: string,
-	failLabel: string,
-	ctx: C.LowerCtx,
-	variableBranches: VariableBranch[],
-	columnBindings?: ColumnBindings,
-): M.Glowering<void> {
-	const tags = MatchInOrder.variantTags(branches);
-
-	// Pre-allocate per-tag labels + vars
-	const tagAllocs = tags.map(tag => ({
-		tag,
-		caseLabel: ctx.nextLabel("c"),
-		scrutParam: ctx.nextVar("scrut"),
-		payloadVar: ctx.nextVar(),
-	}));
-	const tagVar = ctx.nextVar();
-
-	// Default case
-	let defaultTarget = failLabel;
-	if (variableBranches.length > 0) {
-		const vb = variableBranches[0];
-		assert(vb);
-		defaultTarget = yield* pushDefaultBranch(scrutVar, vb, mergeLabel, ctx, columnBindings);
-	}
-
-	// Build Branch cases
-	const cases: MIR.Case[] = tagAllocs.map(({ tag, caseLabel }) => ({
-		value: tag,
-		target: caseLabel,
-		args: [scrutVar.name],
-	}));
-	const defaultCase: MIR.DefaultCase = { target: defaultTarget, args: [] };
-
-	// Append Read(__tag) to current focus, then finalize with Branch
-	yield* M.Pending.append(Instr.Read(TAG_FIELD, scrutVar.name, tagVar.name));
-	const outerFocus = yield* M.Focus.get();
-
-	if (outerFocus === undefined) {
-		throw new Error("pushVariantFrames: no focus");
-	}
-	yield* M.Pending.finalize(outerFocus, T.Branch(tagVar.name, cases, defaultCase));
-
-	// Push per-tag frames (in reverse order so first tag drains first)
-	for (let i = tagAllocs.length - 1; i >= 0; i--) {
-		const alloc = tagAllocs[i];
-		assert(alloc);
-		const { tag, caseLabel, scrutParam, payloadVar } = alloc;
-		const matchingBranches = branches.filter(b => b.pattern.row.label === tag);
-		const payloadBranches: EB.Alternative[] = matchingBranches.map(b => ({
-			pattern: MatchExtract.variantPayload(b.pattern.row),
-			term: b.term,
-			binders: b.binders,
-		}));
-
-		// Cont that opens the case block, then compiles the payload sub-matrix
-		yield* M.Worklist.push({
-			type: "Cont",
-			arity: 0,
-			handler: () =>
-				M.Do(function* () {
-					yield* M.Pending.open(caseLabel, [scrutParam.name], [Instr.Read(tag, scrutParam.name, payloadVar.name)]);
-					yield* compileSubMatrix(payloadVar, payloadBranches, mergeLabel, failLabel, ctx, columnBindings);
-				}),
-		});
-	}
-}
-
-/**
- * Lit rule: Branch on the scrutinee value. One case block per literal value.
- */
-function* pushLitFrames(
-	branches: LitBranch[],
-	scrutVar: C.Stamped,
-	mergeLabel: string,
-	failLabel: string,
-	ctx: C.LowerCtx,
-	variableBranches: VariableBranch[],
-	columnBindings?: ColumnBindings,
-): M.Glowering<void> {
-	const vals = MatchInOrder.litValues(branches);
-
-	// Pre-allocate per-value labels
-	const valAllocs = vals.map(val => ({
-		val,
-		caseLabel: ctx.nextLabel("c"),
-		branch: branches.find(b => MatchExtract.litDisplay(b.pattern.value) === val),
-	}));
-
-	// Default case
-	let defaultTarget = failLabel;
-	if (variableBranches.length > 0) {
-		const vb = variableBranches[0];
-		assert(vb);
-		defaultTarget = yield* pushDefaultBranch(scrutVar, vb, mergeLabel, ctx, columnBindings);
-	}
-
-	// Build Branch cases
-	const cases: MIR.Case[] = valAllocs.map(({ val, caseLabel }) => ({
-		value: val,
-		target: caseLabel,
-		args: [],
-	}));
-	const defaultCase: MIR.DefaultCase = { target: defaultTarget, args: [] };
-
-	// Finalize current focus with Branch
-	const outerFocus = yield* M.Focus.get();
-
-	if (outerFocus === undefined) {
-		throw new Error("pushLitFrames: no focus");
-	}
-	yield* M.Pending.finalize(outerFocus, T.Branch(scrutVar.name, cases, defaultCase));
-
-	// Push per-value frames (reverse order)
-	for (let i = valAllocs.length - 1; i >= 0; i--) {
-		const va = valAllocs[i];
-		assert(va);
-		const { caseLabel, branch } = va;
-		assert(branch);
-
-		// Build the ctx for the body: columnBindings shifted (lit doesn't bind)
-		const litCtx = columnBindings ? { ...ctx, bound: new Map([...ctx.bound, ...[...columnBindings.entries()].map(([col, v]) => [col - 1, v] as const)]) } : ctx;
-
-		yield* M.Worklist.push({
-			type: "Cont",
-			arity: 1,
-			handler: ([bodyR]) =>
-				M.Do(function* () {
-					assert(bodyR);
-					yield* M.Pending.finalize(caseLabel, T.Jump(mergeLabel, [bodyR.value.name]));
-				}),
-		});
-		yield* M.Worklist.push({ type: "Lower", ctx: litCtx, term: branch.term });
-		yield* M.Worklist.push({
-			type: "Cont",
-			arity: 0,
-			handler: () =>
-				M.Do(function* () {
-					yield* M.Pending.open(caseLabel, []);
-				}),
-		});
-	}
-}
-
-/**
- * Struct rule: read all fields, then compile the first column as a sub-matrix.
- * Remaining columns are carried as columnBindings.
- */
-function* pushStructFrames(
-	branches: StructBranch[],
-	scrutVar: C.Stamped,
-	mergeLabel: string,
-	failLabel: string,
-	ctx: C.LowerCtx,
-	variableBranches: VariableBranch[],
-	_outerColumnBindings?: ColumnBindings,
-): M.Glowering<void> {
-	const firstBranch = branches[0];
-	assert(firstBranch);
-	const fields = MatchExtract.structFields(firstBranch.pattern.row);
-
-	if (fields.length === 0) {
-		yield* M.Worklist.push({
-			type: "Cont",
-			arity: 1,
-			handler: ([bodyR]) =>
-				M.Do(function* () {
-					assert(bodyR);
-					const focus = yield* M.Focus.get();
-					if (focus !== undefined) {
-						yield* M.Pending.finalize(focus, T.Jump(mergeLabel, [bodyR.value.name]));
-					}
-				}),
-		});
-		yield* M.Worklist.push({ type: "Lower", ctx, term: firstBranch.term });
-		return;
-	}
-
-	// Read all fields
-	const fieldVars: Record<string, C.Stamped> = {};
-	const readInstrs: MIR.Instr[] = [];
-	for (const { label } of fields) {
-		const v = ctx.nextVar();
-		fieldVars[label] = v;
-		readInstrs.push(Instr.Read(label, scrutVar.name, v.name));
-	}
-	yield* M.Pending.appendMany(readInstrs);
-
-	// Project the matrix onto the first column
-	const firstField = fields[0];
-	assert(firstField);
-	const firstLabel = firstField.label;
-	const field0Var = fieldVars[firstLabel];
-	assert(field0Var);
-	const column = matchProject(firstLabel, branches);
-
-	// columnBindings for remaining fields
-	const newColumnBindings: ColumnBindings = new Map(
-		fields.slice(1).map((f, i) => {
-			const fv = fieldVars[f.label];
-			assert(fv);
-			return [i + 1, fv] as const;
-		}),
-	);
-
-	// If first column is all-variable, this is a leaf
-	if (MatchPats.allVariable(column)) {
-		const firstCol = column[0];
-		assert(firstCol);
-		yield* pushVariableLeaf(field0Var, { ...firstBranch, pattern: firstCol.pattern as VariableBranch["pattern"] }, mergeLabel, ctx, newColumnBindings);
-		return;
-	}
-
-	// For struct+variable mix: set up default branch using fail or variable fallback
-	let actualFailLabel = failLabel;
-	if (variableBranches.length > 0) {
-		const vb = variableBranches[0];
-		assert(vb);
-		actualFailLabel = yield* pushDefaultBranch(scrutVar, vb, mergeLabel, ctx);
-	}
-
-	// Compile the first column as a sub-matrix (pushes a Cont that does the analysis)
-	yield* M.Worklist.push({
-		type: "Cont",
-		arity: 0,
-		handler: () =>
-			M.Do(function* () {
-				yield* compileSubMatrix(field0Var, column, mergeLabel, actualFailLabel, ctx, newColumnBindings);
-			}),
-	});
-}
-
-/**
- * Entry point: lower a Match expression via the worklist.
- * Pushes Lower(scrutinee) + a scrutineeCont that analyzes patterns and
- * pushes the decision tree frames.
- */
-function lowerMatch(scrutinee: EB.Term, alternatives: EB.Alternative[]): M.Lowering<void> {
-	return M.Do(function* () {
-		const ctx = yield* M.ask();
-		const mergeLabel = ctx.nextLabel("j");
-		const mergeParam = ctx.nextVar();
-		const failLabel = ctx.nextLabel("e");
-
-		yield* M.Worklist.push({
-			type: "Cont",
-			arity: 1,
-			handler: ([scrutR]) =>
-				M.Do(function* () {
-					assert(scrutR);
-					const outerFocus = yield* M.Focus.get();
-					assert(outerFocus, "lowerMatch: no focus");
-
-					yield* M.Blocks.emit(Block(failLabel, [], [Instr.Let("__match_fail", E.Lit(Lit.String("non-exhaustive match")))], T.Return("__match_fail")));
-
-					// Push postMatch Cont FIRST (bottom of LIFO — drains last, after all alts)
-					yield* M.Worklist.push({
-						type: "Cont",
-						arity: 0,
-						handler: () =>
-							M.Do(function* () {
-								yield* M.Pending.open(mergeLabel, [mergeParam.name]);
-								yield* M.Results.push({ tag: "value", value: mergeParam });
-							}),
-					});
-
-					// Compile the pattern matrix (pushes alt frames on top — drain first)
-					yield* compileSubMatrix(scrutR.value, alternatives, mergeLabel, failLabel, ctx);
-				}),
-		});
-		yield* M.Worklist.push({ type: "Lower", ctx, term: scrutinee });
-	});
-}
-
-/* ================================================================================
  * Dispatch — one Lower frame at a time
  * ================================================================================ */
 
@@ -1262,160 +763,6 @@ function lowerOne(term: EB.Term): M.Lowering<void> {
 
 			.otherwise(t => notImplemented(t.type))
 	);
-}
-
-/* ================================================================================
- * Materialization — convert pending foreign/primop results into values
- *
- * Called by drainAll before passing results to Cont handlers. Positions marked
- * in the Cont's `saturate` set are passed through raw (for App's accumulation
- * logic). Everything else is materialized: saturated foreigns/primops emit their
- * call instruction; partial ones emit a curried closure wrapper chain.
- * ================================================================================ */
-
-function* materializePartial(ctx: C.LowerCtx, kind: "foreign" | "primop", nameOrOp: string, arity: number, capturedArgs: C.Stamped[]): M.Glowering<C.Stamped> {
-	const remaining = arity - capturedArgs.length;
-
-	// Pre-allocate names for all wrapper levels (outermost = index 0)
-	const wrappers = Array.from({ length: remaining }, () => ({
-		fnName: ctx.nextVar("fn"),
-		envParam: ctx.nextVar("env"),
-		freshParam: ctx.nextVar(),
-	}));
-
-	// Build from innermost (last level) to outermost (first level)
-	for (let level = remaining - 1; level >= 0; level--) {
-		const w = wrappers[level];
-		assert(w);
-		const { fnName, envParam, freshParam } = w;
-		const numCaptured = capturedArgs.length + level;
-
-		const bodyReads: C.Stamped[] = [];
-		const bodyInstrs: MIR.Instr[] = [];
-		for (let j = 0; j < numCaptured; j++) {
-			const v = ctx.nextVar();
-			bodyReads.push(v);
-			bodyInstrs.push(Instr.Read(`v${j}`, envParam.name, v.name));
-		}
-		const allArgs = [...bodyReads, freshParam];
-
-		if (level === remaining - 1) {
-			// Innermost: emit the saturated call
-			const callResult = ctx.nextVar();
-			if (kind === "primop") {
-				bodyInstrs.push(
-					Instr.Let(
-						callResult.name,
-						E.PrimOp(
-							nameOrOp,
-							allArgs.map(a => a.name),
-						),
-					),
-				);
-			} else {
-				bodyInstrs.push(
-					Instr.Call(
-						{ type: "direct", func: nameOrOp },
-						allArgs.map(a => a.name),
-						callResult.name,
-					),
-				);
-			}
-			const block = Block(`${fnName.name}_entry`, [], bodyInstrs, T.Return(callResult.name));
-			yield* M.Functions.emit(Fn(fnName.name, [envParam.name, freshParam.name], block.label, [block]));
-		} else {
-			// Intermediate: create closure for next level
-			const next = wrappers[level + 1];
-			assert(next);
-			const newEnvRef = ctx.nextVar("env");
-			const newFnRef = ctx.nextVar("fnref");
-			const closureRef = ctx.nextVar("closure");
-			bodyInstrs.push(
-				Instr.Alloc({ type: "Record", fields: allArgs.map((a, i) => ({ label: `v${i}`, value: a.name })) }, newEnvRef.name),
-				Instr.Let(newFnRef.name, E.FuncRef(next.fnName.name)),
-				Instr.Alloc(
-					{
-						type: "Record",
-						fields: [
-							{ label: "__fn", value: newFnRef.name },
-							{ label: "__env", value: newEnvRef.name },
-						],
-					},
-					closureRef.name,
-				),
-			);
-			const block = Block(`${fnName.name}_entry`, [], bodyInstrs, T.Return(closureRef.name));
-			yield* M.Functions.emit(Fn(fnName.name, [envParam.name, freshParam.name], block.label, [block]));
-		}
-	}
-
-	// Outer: alloc env with captured args, create closure pointing to first wrapper
-	const outerWrapper = wrappers[0];
-	assert(outerWrapper);
-	const envRef = ctx.nextVar("env");
-	const fnRef = ctx.nextVar("fnref");
-	const closureRef = ctx.nextVar("closure");
-	yield* M.Pending.appendMany([
-		Instr.Alloc({ type: "Record", fields: capturedArgs.map((a, i) => ({ label: `v${i}`, value: a.name })) }, envRef.name),
-		Instr.Let(fnRef.name, E.FuncRef(outerWrapper.fnName.name)),
-		Instr.Alloc(
-			{
-				type: "Record",
-				fields: [
-					{ label: "__fn", value: fnRef.name },
-					{ label: "__env", value: envRef.name },
-				],
-			},
-			closureRef.name,
-		),
-	]);
-	return closureRef;
-}
-
-function* materialize(results: M.LowerResult[], saturate: Set<number>): M.Glowering<M.LowerResult[]> {
-	const ctx = yield* M.ask();
-	const out: M.LowerResult[] = [];
-
-	for (let i = 0; i < results.length; i++) {
-		const r = results[i];
-		assert(r);
-		if (saturate.has(i)) {
-			out.push(r);
-			continue;
-		}
-		if (r.tag === "value") {
-			out.push(r);
-			continue;
-		}
-		const nameOrOp = r.tag === "foreign" ? r.name : r.op;
-		if (r.args.length === r.arity) {
-			const result = ctx.nextVar();
-			if (r.tag === "primop") {
-				yield* M.Pending.append(
-					Instr.Let(
-						result.name,
-						E.PrimOp(
-							nameOrOp,
-							r.args.map(a => a.name),
-						),
-					),
-				);
-			} else {
-				yield* M.Pending.append(
-					Instr.Call(
-						{ type: "direct", func: nameOrOp },
-						r.args.map(a => a.name),
-						result.name,
-					),
-				);
-			}
-			out.push({ tag: "value", value: result });
-		} else {
-			const closureRef = yield* materializePartial(ctx, r.tag, nameOrOp, r.arity, r.args);
-			out.push({ tag: "value", value: closureRef });
-		}
-	}
-	return out;
 }
 
 /* ================================================================================

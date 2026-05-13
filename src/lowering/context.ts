@@ -180,6 +180,12 @@ export const bind = (ctx: LowerCtx, binder: Stamped, overrides?: Map<number, Sta
 	return { ...ctx, bound };
 };
 
+/** Extend ctx.bound with column bindings shifted down by 1 (for non-binding match cases like literals). */
+export const bindColumns = (ctx: LowerCtx, columns: Map<number, Stamped>): LowerCtx => ({
+	...ctx,
+	bound: new Map([...ctx.bound, ...[...columns.entries()].map(([col, v]) => [col - 1, v] as const)]),
+});
+
 /** Resolve free indices to Stamped via ctx.bound. depth: 0 = indices are 0-based (block scope),
  * 1 = indices are 1-based (lambda body). */
 export const resolveCaptured = (ctx: LowerCtx, indices: number[], depth = 1): Stamped[] => {

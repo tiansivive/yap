@@ -44,6 +44,12 @@ export type LowerResult =
 
 export type ValueResult = Extract<LowerResult, { tag: "value" }>;
 
+// NOTE: arity-0 Conts are effectively sequencing-only side effects (e.g. open a block).
+// They don't consume results — they just need to fire at a specific drain position.
+// A dedicated `Effect` frame variant could make this intent explicit and open the door
+// to richer worklist semantics: selective capture during shift (ambient vs local effects),
+// interception/handling (algebraic-effect-style), and observability. For now arity-0 Cont
+// is sufficient; revisit if capture semantics or effect management become relevant.
 export type Frame =
 	| { type: "Lower"; ctx: LowerCtx; term: EB.Term }
 	| { type: "Cont"; arity: number; handler: (results: ValueResult[]) => Lowering<void> }
