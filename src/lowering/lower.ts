@@ -32,7 +32,7 @@ import { Patterns } from "./patterns";
 import { freeVars, sortedNumbers } from "./shared/freevars";
 import * as Closure from "./closures";
 import { lowerMatch } from "./match";
-import { materialize } from "./materialize";
+import { materialize, call as emitCall } from "./materialize";
 
 const { Instr, Expr: E, Terminator: T, Function: Fn, Module } = MIR.Constructors;
 
@@ -240,46 +240,14 @@ function lowerApp(func: EB.Term, arg: EB.Term): M.Lowering<void> {
 				M.Do(function* () {
 					assert(funcR);
 					assert(argR);
-					const argVal = (argR as M.ValueResult).value;
+					assert(argR.tag === "value");
+					const argVal = argR.value;
 					yield match(funcR)
-						.with({ tag: "foreign" }, fr => {
-							const newArgs = [...fr.args, argVal];
-							if (newArgs.length === fr.arity) {
-								return M.Do(function* () {
-									const result = ctx.nextVar();
-									yield* M.Pending.append(
-										Instr.Call(
-											{ type: "direct", func: fr.name },
-											newArgs.map(a => a.name),
-											result.name,
-										),
-									);
-									yield* M.Results.push({ tag: "value", value: result });
-								});
-							}
+						.with({ tag: "foreign" }, { tag: "primop" }, pending => {
 							return M.Do(function* () {
-								yield* M.Results.push({ tag: "foreign", name: fr.name, arity: fr.arity, args: newArgs });
-							});
-						})
-						.with({ tag: "primop" }, pr => {
-							const newArgs = [...pr.args, argVal];
-							if (newArgs.length === pr.arity) {
-								return M.Do(function* () {
-									const result = ctx.nextVar();
-									yield* M.Pending.append(
-										Instr.Let(
-											result.name,
-											E.PrimOp(
-												pr.op,
-												newArgs.map(a => a.name),
-											),
-										),
-									);
-									yield* M.Results.push({ tag: "value", value: result });
-								});
-							}
-							return M.Do(function* () {
-								yield* M.Results.push({ tag: "primop", op: pr.op, arity: pr.arity, args: newArgs });
+								const saturated = { ...pending, args: [...pending.args, argVal] };
+								const next = saturated.args.length === saturated.arity ? yield* emitCall(ctx, saturated) : saturated;
+								yield* M.Results.push(next);
 							});
 						})
 						.with({ tag: "value" }, vr => {

@@ -16,7 +16,7 @@ import * as Closure from "./closures";
 
 const { Block, Instr, Expr: E, Terminator: T, Function: Fn } = MIR.Constructors;
 
-type Pending = Extract<M.LowerResult, { tag: "foreign" | "primop" }>;
+export type Pending = Extract<M.LowerResult, { tag: "foreign" | "primop" }>;
 type Wrapper = { fnName: C.Stamped; envParam: C.Stamped; freshParam: C.Stamped };
 
 /* ================================================================================
@@ -53,7 +53,7 @@ function* reify(ctx: C.LowerCtx, r: M.LowerResult, exempt: boolean): M.Glowering
  * Steps
  * ================================================================================ */
 
-function* call(ctx: C.LowerCtx, r: Pending): M.Glowering<M.LowerResult> {
+export function* call(ctx: C.LowerCtx, r: Pending): M.Glowering<M.LowerResult> {
 	const result = ctx.nextVar();
 	const argNames = r.args.map(a => a.name);
 	const instr = match(r)
