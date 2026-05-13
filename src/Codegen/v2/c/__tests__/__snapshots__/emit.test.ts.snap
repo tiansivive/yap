@@ -1,0 +1,487 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`C Codegen: snapshot tests > (λx.x) 42 — identity 1`] = `
+"#include "/Users/t.vilaverde/Workspace/panlogion/yap/src/Codegen/v2/c/rt/yap_rt.h"
+
+static YapValue yap_main(void);
+
+static YapValue f_0(YapValue* __args, int __argc);
+
+static YapValue yap_main(void) {
+  YapValue env_1 = yap_alloc_record(0);
+  YapValue fnref_0 = yap_mk_closure(&f_0, yap_null());
+  YapValue closure_0 = yap_alloc_record(2);
+  yap_record_set(&closure_0, "__fn", fnref_0);
+  yap_record_set(&closure_0, "__env", env_1);
+  YapValue x0 = yap_num(42);
+  YapValue fnref_1 = yap_record_get(closure_0, "__fn");
+  YapValue env_2 = yap_record_get(closure_0, "__env");
+  YapValue x1 = yap_call_closure(fnref_1, (YapValue[]){env_2, x0}, 2);
+  return x1;
+}
+
+static YapValue f_0(YapValue* __args, int __argc) {
+  YapValue env_0 = __args[0];
+  YapValue x = __args[1];
+  return x;
+}
+
+int main(void) {
+  yap_arena_init();
+  YapValue __result = yap_main();
+  yap_print_value(__result);
+  printf("\\n");
+  yap_arena_free();
+  return 0;
+}"
+`;
+
+exports[`C Codegen: snapshot tests > (λx.λy.x+y) 3 4 — curried closure 1`] = `
+"#include "/Users/t.vilaverde/Workspace/panlogion/yap/src/Codegen/v2/c/rt/yap_rt.h"
+
+static YapValue yap_main(void);
+
+static YapValue f_1(YapValue* __args, int __argc);
+
+static YapValue f_0(YapValue* __args, int __argc);
+
+static YapValue yap_main(void) {
+  YapValue env_3 = yap_alloc_record(0);
+  YapValue fnref_1 = yap_mk_closure(&f_0, yap_null());
+  YapValue closure_1 = yap_alloc_record(2);
+  yap_record_set(&closure_1, "__fn", fnref_1);
+  yap_record_set(&closure_1, "__env", env_3);
+  YapValue x2 = yap_num(3);
+  YapValue fnref_2 = yap_record_get(closure_1, "__fn");
+  YapValue env_4 = yap_record_get(closure_1, "__env");
+  YapValue x3 = yap_call_closure(fnref_2, (YapValue[]){env_4, x2}, 2);
+  YapValue x4 = yap_num(4);
+  YapValue fnref_3 = yap_record_get(x3, "__fn");
+  YapValue env_5 = yap_record_get(x3, "__env");
+  YapValue x5 = yap_call_closure(fnref_3, (YapValue[]){env_5, x4}, 2);
+  return x5;
+}
+
+static YapValue f_1(YapValue* __args, int __argc) {
+  YapValue env_1 = __args[0];
+  YapValue y = __args[1];
+  YapValue x0 = yap_record_get(env_1, "v0");
+  YapValue x1 = yap_add(x0, y);
+  return x1;
+}
+
+static YapValue f_0(YapValue* __args, int __argc) {
+  YapValue env_0 = __args[0];
+  YapValue x = __args[1];
+  YapValue env_2 = yap_alloc_record(1);
+  yap_record_set(&env_2, "v0", x);
+  YapValue fnref_0 = yap_mk_closure(&f_1, yap_null());
+  YapValue closure_0 = yap_alloc_record(2);
+  yap_record_set(&closure_0, "__fn", fnref_0);
+  yap_record_set(&closure_0, "__env", env_2);
+  return closure_0;
+}
+
+int main(void) {
+  yap_arena_init();
+  YapValue __result = yap_main();
+  yap_print_value(__result);
+  printf("\\n");
+  yap_arena_free();
+  return 0;
+}"
+`;
+
+exports[`C Codegen: snapshot tests > Lit("hello") 1`] = `
+"#include "/Users/t.vilaverde/Workspace/panlogion/yap/src/Codegen/v2/c/rt/yap_rt.h"
+
+static YapValue yap_main(void);
+
+static YapValue yap_main(void) {
+  YapValue x0 = yap_str("hello");
+  return x0;
+}
+
+int main(void) {
+  yap_arena_init();
+  YapValue __result = yap_main();
+  yap_print_value(__result);
+  printf("\\n");
+  yap_arena_free();
+  return 0;
+}"
+`;
+
+exports[`C Codegen: snapshot tests > Lit(42) 1`] = `
+"#include "/Users/t.vilaverde/Workspace/panlogion/yap/src/Codegen/v2/c/rt/yap_rt.h"
+
+static YapValue yap_main(void);
+
+static YapValue yap_main(void) {
+  YapValue x0 = yap_num(42);
+  return x0;
+}
+
+int main(void) {
+  yap_arena_init();
+  YapValue __result = yap_main();
+  yap_print_value(__result);
+  printf("\\n");
+  yap_arena_free();
+  return 0;
+}"
+`;
+
+exports[`C Codegen: snapshot tests > Lit(true) 1`] = `
+"#include "/Users/t.vilaverde/Workspace/panlogion/yap/src/Codegen/v2/c/rt/yap_rt.h"
+
+static YapValue yap_main(void);
+
+static YapValue yap_main(void) {
+  YapValue x0 = yap_bool(1);
+  return x0;
+}
+
+int main(void) {
+  yap_arena_init();
+  YapValue __result = yap_main();
+  yap_print_value(__result);
+  printf("\\n");
+  yap_arena_free();
+  return 0;
+}"
+`;
+
+exports[`C Codegen: snapshot tests > add(1, 2) 1`] = `
+"#include "/Users/t.vilaverde/Workspace/panlogion/yap/src/Codegen/v2/c/rt/yap_rt.h"
+
+static YapValue yap_main(void);
+
+static YapValue yap_main(void) {
+  YapValue x0 = yap_num(1);
+  YapValue x1 = yap_num(2);
+  YapValue x2 = yap_add(x0, x1);
+  return x2;
+}
+
+int main(void) {
+  yap_arena_init();
+  YapValue __result = yap_main();
+  yap_print_value(__result);
+  printf("\\n");
+  yap_arena_free();
+  return 0;
+}"
+`;
+
+exports[`C Codegen: snapshot tests > match on variant (Some 42) 1`] = `
+"#include "/Users/t.vilaverde/Workspace/panlogion/yap/src/Codegen/v2/c/rt/yap_rt.h"
+
+static YapValue yap_main(void);
+
+static YapValue yap_main(void) {
+  int yap_pc = 1;
+  YapValue scrut_0;
+  YapValue scrut_1;
+  YapValue x0;
+  while (1) {
+  switch (yap_pc) {
+  case 0: {
+    YapValue __match_fail = yap_str("non-exhaustive match");
+    return __match_fail;
+  }
+  case 1: {
+    YapValue x1 = yap_str("Some");
+    YapValue x2 = yap_num(42);
+    YapValue x3 = yap_alloc_record(2);
+    yap_record_set(&x3, "__tag", x1);
+    yap_record_set(&x3, "Some", x2);
+    YapValue x6 = yap_record_get(x3, "__tag");
+    if (yap_streq(yap_to_str(x6), "Some")) {
+  YapValue __t0 = x3;
+  scrut_0 = __t0;
+  yap_pc = 2;
+  break;
+}
+    if (yap_streq(yap_to_str(x6), "None")) {
+  YapValue __t0 = x3;
+  scrut_1 = __t0;
+  yap_pc = 3;
+  break;
+}
+    {
+  yap_pc = 0;
+  break;
+}
+  }
+  case 2: {
+    YapValue x4 = yap_record_get(scrut_0, "Some");
+    YapValue __t0 = x4;
+    x0 = __t0;
+    yap_pc = 4;
+    break;
+  }
+  case 3: {
+    YapValue x5 = yap_record_get(scrut_1, "None");
+    YapValue x7 = yap_num(0);
+    YapValue __t0 = x7;
+    x0 = __t0;
+    yap_pc = 4;
+    break;
+  }
+  case 4: {
+    return x0;
+  }
+}
+}
+}
+
+int main(void) {
+  yap_arena_init();
+  YapValue __result = yap_main();
+  yap_print_value(__result);
+  printf("\\n");
+  yap_arena_free();
+  return 0;
+}"
+`;
+
+exports[`C Codegen: snapshot tests > not(true) 1`] = `
+"#include "/Users/t.vilaverde/Workspace/panlogion/yap/src/Codegen/v2/c/rt/yap_rt.h"
+
+static YapValue yap_main(void);
+
+static YapValue yap_main(void) {
+  YapValue x0 = yap_bool(1);
+  YapValue x1 = yap_not(x0);
+  return x1;
+}
+
+int main(void) {
+  yap_arena_init();
+  YapValue __result = yap_main();
+  yap_print_value(__result);
+  printf("\\n");
+  yap_arena_free();
+  return 0;
+}"
+`;
+
+exports[`C Codegen: snapshot tests > proj('x', struct({ x: 42 })) 1`] = `
+"#include "/Users/t.vilaverde/Workspace/panlogion/yap/src/Codegen/v2/c/rt/yap_rt.h"
+
+static YapValue yap_main(void);
+
+static YapValue yap_main(void) {
+  YapValue x0 = yap_num(42);
+  YapValue x1 = yap_alloc_record(1);
+  yap_record_set(&x1, "x", x0);
+  YapValue x2 = yap_record_get(x1, "x");
+  return x2;
+}
+
+int main(void) {
+  yap_arena_init();
+  YapValue __result = yap_main();
+  yap_print_value(__result);
+  printf("\\n");
+  yap_arena_free();
+  return 0;
+}"
+`;
+
+exports[`C Codegen: snapshot tests > reset(shift k -> (k 1) + (k 2)) — multishot 1`] = `
+"#include "/Users/t.vilaverde/Workspace/panlogion/yap/src/Codegen/v2/c/rt/yap_rt.h"
+
+static YapValue yap_main(void);
+
+static YapValue yap_main(void) {
+  int yap_pc = 0;
+  YapValue k_1;
+  YapValue x3;
+  YapValue env_2;
+  YapValue x6;
+  YapValue env_4;
+  YapValue x0;
+  YapValue env_0;
+  YapValue i_0;
+  YapValue x8;
+  while (1) {
+  switch (yap_pc) {
+  case 0: {
+    YapValue env_1 = yap_alloc_record(0);
+    YapValue k_0 = yap_alloc_record(1);
+    yap_record_set(&k_0, "__env", env_1);
+    YapValue __t0 = k_0;
+    k_1 = __t0;
+    yap_pc = 1;
+    break;
+  }
+  case 1: {
+    YapValue env_1 = yap_record_get(k_1, "__env");
+    YapValue x2 = yap_num(1);
+    YapValue i_1 = yap_num(0);
+    YapValue __t0 = x2;
+    YapValue __t1 = env_1;
+    YapValue __t2 = i_1;
+    x0 = __t0;
+    env_0 = __t1;
+    i_0 = __t2;
+    yap_pc = 4;
+    break;
+  }
+  case 2: {
+    YapValue env_3 = yap_record_copy_with(env_2, (YapField[]){{"r0", x3}}, 1);
+    YapValue x1 = yap_record_get(env_3, "r0");
+    YapValue x5 = yap_num(2);
+    YapValue i_2 = yap_num(1);
+    YapValue __t0 = x5;
+    YapValue __t1 = env_3;
+    YapValue __t2 = i_2;
+    x0 = __t0;
+    env_0 = __t1;
+    i_0 = __t2;
+    yap_pc = 4;
+    break;
+  }
+  case 3: {
+    YapValue env_5 = yap_record_copy_with(env_4, (YapField[]){{"r1", x6}}, 1);
+    YapValue x1 = yap_record_get(env_5, "r0");
+    YapValue x4 = yap_record_get(env_5, "r1");
+    YapValue x7 = yap_add(x1, x4);
+    YapValue __t0 = x7;
+    x8 = __t0;
+    yap_pc = 5;
+    break;
+  }
+  case 4: {
+    if (yap_streq(yap_to_str(i_0), "0")) {
+  YapValue __t0 = x0;
+  YapValue __t1 = env_0;
+  x3 = __t0;
+  env_2 = __t1;
+  yap_pc = 2;
+  break;
+}
+    if (yap_streq(yap_to_str(i_0), "1")) {
+  YapValue __t0 = x0;
+  YapValue __t1 = env_0;
+  x6 = __t0;
+  env_4 = __t1;
+  yap_pc = 3;
+  break;
+}
+  }
+  case 5: {
+    return x8;
+  }
+}
+}
+}
+
+int main(void) {
+  yap_arena_init();
+  YapValue __result = yap_main();
+  yap_print_value(__result);
+  printf("\\n");
+  yap_arena_free();
+  return 0;
+}"
+`;
+
+exports[`C Codegen: snapshot tests > reset(shift k -> k 42) — single resume 1`] = `
+"#include "/Users/t.vilaverde/Workspace/panlogion/yap/src/Codegen/v2/c/rt/yap_rt.h"
+
+static YapValue yap_main(void);
+
+static YapValue yap_main(void) {
+  int yap_pc = 0;
+  YapValue k_1;
+  YapValue x3;
+  YapValue env_2;
+  YapValue x0;
+  YapValue env_0;
+  YapValue i_0;
+  YapValue x4;
+  while (1) {
+  switch (yap_pc) {
+  case 0: {
+    YapValue env_1 = yap_alloc_record(0);
+    YapValue k_0 = yap_alloc_record(1);
+    yap_record_set(&k_0, "__env", env_1);
+    YapValue __t0 = k_0;
+    k_1 = __t0;
+    yap_pc = 1;
+    break;
+  }
+  case 1: {
+    YapValue env_1 = yap_record_get(k_1, "__env");
+    YapValue x2 = yap_num(42);
+    YapValue i_1 = yap_num(0);
+    YapValue __t0 = x2;
+    YapValue __t1 = env_1;
+    YapValue __t2 = i_1;
+    x0 = __t0;
+    env_0 = __t1;
+    i_0 = __t2;
+    yap_pc = 3;
+    break;
+  }
+  case 2: {
+    YapValue env_3 = yap_record_copy_with(env_2, (YapField[]){{"r0", x3}}, 1);
+    YapValue x1 = yap_record_get(env_3, "r0");
+    YapValue __t0 = x1;
+    x4 = __t0;
+    yap_pc = 4;
+    break;
+  }
+  case 3: {
+    if (yap_streq(yap_to_str(i_0), "0")) {
+  YapValue __t0 = x0;
+  YapValue __t1 = env_0;
+  x3 = __t0;
+  env_2 = __t1;
+  yap_pc = 2;
+  break;
+}
+  }
+  case 4: {
+    return x4;
+  }
+}
+}
+}
+
+int main(void) {
+  yap_arena_init();
+  YapValue __result = yap_main();
+  yap_print_value(__result);
+  printf("\\n");
+  yap_arena_free();
+  return 0;
+}"
+`;
+
+exports[`C Codegen: snapshot tests > struct({ x: 1, y: 2 }) 1`] = `
+"#include "/Users/t.vilaverde/Workspace/panlogion/yap/src/Codegen/v2/c/rt/yap_rt.h"
+
+static YapValue yap_main(void);
+
+static YapValue yap_main(void) {
+  YapValue x0 = yap_num(1);
+  YapValue x1 = yap_num(2);
+  YapValue x2 = yap_alloc_record(2);
+  yap_record_set(&x2, "x", x0);
+  yap_record_set(&x2, "y", x1);
+  return x2;
+}
+
+int main(void) {
+  yap_arena_init();
+  YapValue __result = yap_main();
+  yap_print_value(__result);
+  printf("\\n");
+  yap_arena_free();
+  return 0;
+}"
+`;

@@ -1,5 +1,5 @@
 import { match } from "ts-pattern";
-import type * as MIR from "../../lowering/mir";
+import type * as MIR from "../../../lowering/mir";
 import type { Literal } from "@yap/shared/literals";
 import * as JS from "./js";
 

@@ -25,10 +25,12 @@ import { lowerToMir } from "../lowering/lower";
 import { interpret as mirInterpret, type Value } from "../lowering/interpret";
 import * as Pretty from "../lowering/pretty";
 import type { Declaration } from "../lowering/mir";
-import { emit } from "../Codegen/v2/emit";
-import { print as printJS } from "../Codegen/v2/print";
+import { emit as emitJS } from "../Codegen/v2/js/emit";
+import { print as printJS } from "../Codegen/v2/js/print";
+import { emit as emitC } from "../Codegen/v2/c/emit";
+import { print as printC } from "../Codegen/v2/c/print";
 
-export type ReplOpts = { mir: boolean; codegen: boolean };
+export type ReplOpts = { mir: boolean; codegen: boolean; target: "js" | "c" };
 
 // Compute arity by recursively checking if function returns another function
 const computeArity = (fn: Function): number => {
@@ -56,8 +58,8 @@ const computeArity = (fn: Function): number => {
 	return arity;
 };
 
-export function repl(opts: ReplOpts = { mir: false, codegen: false }) {
-	const prompt = opts.codegen ? "js λ> " : opts.mir ? "mir λ> " : "λ> ";
+export function repl(opts: ReplOpts = { mir: false, codegen: false, target: "js" }) {
+	const prompt = opts.codegen ? `${opts.target} λ> ` : opts.mir ? "mir λ> " : "λ> ";
 	const rl = createInterface({ input: process.stdin, output: process.stdout, prompt });
 
 	let ctx: EB.Context = defaultContext;
@@ -334,10 +336,10 @@ const evalMIR =
 	(mod: ReturnType<typeof lowerToMir>): Value =>
 		mirInterpret(mod, ffi);
 
-const evalCodegen =
+const evalCodegenJS =
 	(ffi: Record<string, (...args: any[]) => any>) =>
 	(mod: ReturnType<typeof lowerToMir>): unknown => {
-		const program = emit(mod);
+		const program = emitJS(mod);
 		const code = printJS(program);
 		if (options.showElaboration) {
 			console.log("\n------------- JS Output -------------");
@@ -349,6 +351,17 @@ const evalCodegen =
 		return new Function(...ffiNames, code)(...ffiValues);
 	};
 
+const evalCodegenC =
+	() =>
+	(mod: ReturnType<typeof lowerToMir>): null => {
+		const raw = emitC(mod);
+		const code = printC(raw);
+		console.log("\n------------- C Output --------------");
+		console.log(code);
+		console.log("-------------------------------------\n");
+		return null;
+	};
+
 export const interpretMIR = (
 	stmt: Src.Statement,
 	ctx: EB.Context,
@@ -356,7 +369,7 @@ export const interpretMIR = (
 	declarations: Map<string, Declaration>,
 	opts: ReplOpts,
 ): EB.Context => {
-	const evaluate = opts.codegen ? evalCodegen(ffi) : evalMIR(ffi);
+	const evaluate = opts.codegen ? (opts.target === "c" ? evalCodegenC() : evalCodegenJS(ffi)) : evalMIR(ffi);
 
 	const either = match(stmt)
 		.with({ type: "expression" }, s =>
@@ -375,7 +388,9 @@ export const interpretMIR = (
 						console.log("-------------------------------------\n");
 					}
 					const result = evaluate(mod);
-					console.log(displayValue(result as Value), "::", EB.NF.display(ty, next), "\n");
+					if (opts.target !== "c") {
+						console.log(displayValue(result as Value), "::", EB.NF.display(ty, next), "\n");
+					}
 					return next;
 				}),
 			),

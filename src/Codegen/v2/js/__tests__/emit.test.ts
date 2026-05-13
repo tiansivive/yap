@@ -5,9 +5,9 @@ import * as Lit from "@yap/shared/literals";
 import * as NF from "@yap/elaboration/normalization";
 import * as R from "@yap/shared/rows";
 
-import { lowerToMir } from "../../../lowering/lower";
-import { resetSupply } from "../../../lowering/context";
-import type { Declaration } from "../../../lowering/mir";
+import { lowerToMir } from "../../../../lowering/lower";
+import { resetSupply } from "../../../../lowering/context";
+import type { Declaration } from "../../../../lowering/mir";
 import { emit } from "../emit";
 import { print } from "../print";
 
