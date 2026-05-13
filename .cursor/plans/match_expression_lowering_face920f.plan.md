@@ -169,7 +169,7 @@ last (_++[e]) = e
 - **Unification vs. pattern matching:** Functional patterns require runtime unification, not just deconstruction. The pattern `_++[e]` unifies scrutinee with (some list ++ [e]).
 - **Compilation:** Narrowing (unification + reduction); possibly backtracking. Cannot use pure decision trees.
 - **References:** Curry tutorial §3.5.5; Hanus FLOPS 2002; narrowing machines.
-- **Document:** Added to docs/MIR-LOWERING.md §9.1 (Out of Scope). Elaboration impact noted in MIR-LOWERING.md, docs/TODO.md, docs/V2-MIGRATION.md, src/elaboration/ARCHITECTURE.md.
+- **Document:** Added to docs/MIR-LOWERING.md §9.1 (Out of Scope). Elaboration impact noted in MIR-LOWERING.md, docs/TODO.md, brainstorming/yap/V2-MIGRATION.md, src/elaboration/ARCHITECTURE.md.
 
 ### 8.2 Integer Tags
 

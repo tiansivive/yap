@@ -252,7 +252,7 @@ Import modes: `*` (with hiding), explicit, qualified (with alias prefix).
 | `src/elaboration/ARCHITECTURE.md`               | Bidirectional algorithm, dispatch maps, module organisation, monad, context, constraints, solver |
 | `src/elaboration/normalization/ARCHITECTURE.md` | NbE engine: values, closures, stack-based evaluator, quoting, generalization                     |
 | `src/verification/ARCHITECTURE.md`              | Liquid refinements, VC generation, SMT translation, Z3 integration, subtyping                    |
-| `docs/V2-MIGRATION.md`                          | v1→v2 migration status, action plan, per-module inventory                                        |
+| `brainstorming/yap/V2-MIGRATION.md`             | v1→v2 migration status, action plan, per-module inventory                                        |
 | `docs/MIR-LOWERING.md`                          | MIR design and lowering plan (early draft): SSA, shift/reset, CRUD, FBIP                         |
 
 ---

@@ -14,7 +14,7 @@ Per-module architecture documents:
 - `src/elaboration/normalization/ARCHITECTURE.md` — NbE engine, values, closures, evaluator
 - `src/verification/ARCHITECTURE.md` — Liquid refinements, SMT translation, Z3
 
-Migration tracking: `docs/V2-MIGRATION.md`
+Migration tracking: `brainstorming/yap/V2-MIGRATION.md`
 
 MIR and lowering: `docs/MIR-LOWERING.md` — Design plan for lowering EB.Term to MIR (SSA, shift/reset, CRUD, FBIP). Consult when working on `src/lowering/` or backend pipeline. Phase 1 implemented: Lit, Var, prim App, Struct/Proj/Inj, Lambda (closure conversion), App (indirect), Match, Block, Shift/Reset (Alloc + Read + Jump, multishot: Branch + resume blocks). Returns `Module` (see §5, §7.6).
 
@@ -221,7 +221,7 @@ These instructions are a living document. During any session, the agent should b
 - **Project documentation**: When a session introduces changes that affect user-facing documentation—`README.md`, `FAQ.md`, `docs/`, or `examples/`—check whether those documents are still accurate. Flag any drift (e.g., outdated CLI usage, missing features, stale examples, incorrect API descriptions) and propose updates.
 - **Architecture docs**: When a session changes compiler pipeline structure, adds/removes modules, modifies key data types, or alters cross-cutting concerns (monad, context, constraint flow), check whether `docs/ARCHITECTURE.md` and the relevant per-module `ARCHITECTURE.md` are still accurate. Propose updates if they have drifted.
 - **Examples and README alignment**: The `examples/` folder, `examples/README.md` (the language tour), `README.md`, and `FAQ.md` must stay in sync with each other and with the actual language capabilities. When a session implements, removes, or changes a language feature, check whether these documents reflect the new reality. Flag stale feature statuses, broken code snippets, dead file references, and undocumented examples. The integration test `src/__tests__/integration/examples-readme.repl.test.ts` validates README snippets — changes to README examples must stay in sync with this test.
-- **Known documentation issues**: Discovered documentation drift should be added to `docs/KNOWN-DOC-ISSUES.md` when it cannot be fixed in the current session. Use `read_file` to load this file at session start and surface any issues relevant to the current work.
+- **Known documentation issues**: Discovered documentation drift should be added to `brainstorming/yap/KNOWN-DOC-ISSUES.md` when it cannot be fixed in the current session. Use `read_file` to load this file at session start and surface any issues relevant to the current work.
 
 ## Agent interaction style
 
@@ -248,12 +248,12 @@ The agent should maintain broad awareness of the project and actively cross-refe
 
 ## V2 migration awareness
 
-The codebase is undergoing a major migration from v1 (Nearley AST-based) to v2 (tree-sitter CST-based) elaboration. The migration plan, current status inventory, and open decisions are tracked in `docs/V2-MIGRATION.md`. The agent should treat this document as a living companion to these instructions:
+The codebase is undergoing a major migration from v1 (Nearley AST-based) to v2 (tree-sitter CST-based) elaboration. The migration plan, current status inventory, and open decisions are tracked in `brainstorming/yap/V2-MIGRATION.md`. The agent should treat this document as a living companion to these instructions:
 
-- **Stay informed**: When a session touches elaboration, inference, checking, parsing, or the compiler pipeline, use `read_file` to load `docs/V2-MIGRATION.md` at the start to understand the current migration state and open blockers.
+- **Stay informed**: When a session touches elaboration, inference, checking, parsing, or the compiler pipeline, use `read_file` to load `brainstorming/yap/V2-MIGRATION.md` at the start to understand the current migration state and open blockers.
 - **Assess impact**: When implementing a feature or refactor, consider whether it affects the v2 migration. If the change touches v1 code that has a v2 counterpart, flag it and ask whether the v2 module should be updated in parallel.
 - **Flag regression risk**: If a change to shared infrastructure (monad, normalization, unification, context, constructors, display) could break v2 modules, surface the concern before proceeding.
-- **Keep the document in sync**: If a session completes a migration step, changes the status of a module, adds/removes files in `inference.v2/` or `checking.v2/`, or resolves an open decision, propose an update to `docs/V2-MIGRATION.md` to reflect the new state.
+- **Keep the document in sync**: If a session completes a migration step, changes the status of a module, adds/removes files in `inference.v2/` or `checking.v2/`, or resolves an open decision, propose an update to `brainstorming/yap/V2-MIGRATION.md` to reflect the new state.
 - **Surface migration opportunities**: If work in a session naturally aligns with a pending migration step (e.g., wiring `tmp.ts`, adding a missing module, writing tests), mention it and ask whether to tackle it as part of the current work.
 - **Warn on v1-only changes**: If the user is adding significant new functionality exclusively to v1 inference/checking modules without a v2 counterpart, flag the potential migration debt.
 

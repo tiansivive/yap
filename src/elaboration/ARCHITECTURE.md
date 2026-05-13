@@ -255,4 +255,4 @@ Errors are enriched with provenance (trace stack) and the context at point of fa
 - **`inference.v2/`** — CST-based inference (by term shape). 22/23 modules implemented; `tmp.ts` stub blocks wiring.
 - **`checking.v2/`** — CST-based checking (by type shape). Row-based + Pi checking complete (8 modules): `check.ts` (dispatcher), `pi.ts`, `struct.ts`, `row.ts`, `variant.ts`, `tuple.ts`, `injection.ts`, `tagged.ts`. Still missing: `match.ts`, `modal.ts`. `tmp.ts` stub blocks wiring.
 
-See `docs/V2-MIGRATION.md` for current status and migration plan.
+See `brainstorming/yap/V2-MIGRATION.md` for current status and migration plan.

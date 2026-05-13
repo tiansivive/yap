@@ -32,11 +32,11 @@ alwaysApply: true
 - **Flag outdated info** — v2 maturity, new patterns; propose doc updates
 - **Flag missing info** — suggest adding discovered patterns
 - **Architecture docs** — when pipeline/modules/types change, propose `docs/ARCHITECTURE.md` updates
-- **Known issues** — add drift to `docs/KNOWN-DOC-ISSUES.md` when not fixable now
+- **Known issues** — add drift to `brainstorming/yap/KNOWN-DOC-ISSUES.md` when not fixable now
 
 ## V2 migration awareness
 
-- **Read `docs/V2-MIGRATION.md`** when touching elaboration, inference, checking, parsing
+- **Read `brainstorming/yap/V2-MIGRATION.md`** when touching elaboration, inference, checking, parsing
 - **Assess impact** — v1 change with v2 counterpart? Ask about parallel v2 update
 - **Flag regression risk** — monad, normalization, unification, context changes
 - **Keep doc in sync** — migration steps, module status, resolved decisions

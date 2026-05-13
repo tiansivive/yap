@@ -617,7 +617,7 @@ last (_++[e]) = e
 - **Elaboration impact:** Elaboration would need significant changes. Pattern inference currently assumes constructor patterns (Lit, Struct, Variant, Binder, Wildcard). Functional patterns require:
   - Pattern type inference for patterns containing function symbols (unification of scrutinee with pattern shape).
   - Possibly nondeterministic or constraint-based elaboration (residuation, narrowing).
-  - See `src/elaboration/inference.v2/match.ts`, `src/elaboration/checking.v2/match.ts`, and `docs/V2-MIGRATION.md` for current match handling.
+  - See `src/elaboration/inference.v2/match.ts`, `src/elaboration/checking.v2/match.ts`, and `brainstorming/yap/V2-MIGRATION.md` for current match handling.
 - **References:** Curry tutorial §3.5.5; Hanus FLOPS 2002; narrowing machines. See also `docs/TODO.md` (Unification? Residuations?).
 
 | Item                                               | Reason                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
