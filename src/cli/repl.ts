@@ -21,6 +21,12 @@ import { options } from "@yap/shared/config/options";
 import { mkInterface } from "../modules/loading";
 import { update } from "@yap/utils";
 import { encode, decode } from "../FFI/codecs";
+import { lowerToMir } from "../lowering/lower";
+import { interpret as mirInterpret, type Value } from "../lowering/interpret";
+import * as Pretty from "../lowering/pretty";
+import type { Declaration } from "../lowering/mir";
+
+export type ReplOpts = { mir: boolean };
 
 // Compute arity by recursively checking if function returns another function
 const computeArity = (fn: Function): number => {
@@ -48,10 +54,13 @@ const computeArity = (fn: Function): number => {
 	return arity;
 };
 
-export function repl() {
-	const rl = createInterface({ input: process.stdin, output: process.stdout, prompt: "λ> " });
+export function repl(opts: ReplOpts = { mir: false }) {
+	const prompt = opts.mir ? "mir λ> " : "λ> ";
+	const rl = createInterface({ input: process.stdin, output: process.stdout, prompt });
 
 	let ctx: EB.Context = defaultContext;
+	let mirFfi: Record<string, (...args: any[]) => any> = {};
+	let mirDeclarations: Map<string, Declaration> = new Map();
 	let buffer: string[] = [];
 
 	const executeBuffer = () => {
@@ -61,8 +70,8 @@ export function repl() {
 
 		const code = buffer.join("\n");
 		buffer = [];
-		rl.setPrompt("λ> ");
-		ctx = run(code, ctx);
+		rl.setPrompt(prompt);
+		ctx = run(code, ctx, opts, mirFfi, mirDeclarations);
 	};
 
 	rl.on("line", input => {
@@ -170,6 +179,21 @@ export function repl() {
 					console.log(`Loaded FFI: ${FFIfile}`);
 				}
 
+				if (opts.mir && fs.existsSync(FFIpath)) {
+					const rawExports = (() => {
+						const code = fs.readFileSync(FFIpath, "utf-8");
+						const sandbox = { module: { exports: {} }, exports: {}, console };
+						vm.createContext(sandbox);
+						vm.runInContext(code, sandbox);
+						return sandbox.module.exports as Record<string, Function>;
+					})();
+					for (const [name, fn] of Object.entries(rawExports)) {
+						mirFfi[name] = fn as (...args: any[]) => any;
+						const arity = typeof fn === "function" ? computeArity(fn as Function) : 0;
+						mirDeclarations.set(name, { name, arity, source: "ffi" });
+					}
+				}
+
 				console.log(`Loaded module: ${filepath}`);
 				ctx = F.pipe(
 					ctx,
@@ -200,30 +224,29 @@ export function repl() {
 		} catch (err) {
 			console.error("Error:", err);
 			buffer = [];
-			rl.setPrompt("λ> ");
+			rl.setPrompt(prompt);
 			return rl.prompt();
 		}
 
 		// Add line to buffer and continue
 		buffer.push(input);
 		rl.setPrompt("   ");
-		rl.prompt();
+		return rl.prompt();
 	});
 
-	// Ctrl+C: clear buffer and reset
 	rl.on("SIGINT", () => {
 		buffer = [];
 		console.log("\n(Buffer cleared)");
-		rl.setPrompt("λ> ");
+		rl.setPrompt(prompt);
 		rl.prompt();
 	});
 
 	rl.prompt();
 }
 
-const run = (code: string, ctx: EB.Context) => {
+const run = (code: string, ctx: EB.Context, opts: ReplOpts, mirFfi: Record<string, (...args: any[]) => any>, mirDeclarations: Map<string, Declaration>) => {
 	const script = parse(code);
-	return interpret(script[0], ctx);
+	return opts.mir ? interpretMIR(script[0], ctx, mirFfi, mirDeclarations) : interpretNbE(script[0], ctx);
 };
 
 export const parse = (code: string) => {
@@ -248,7 +271,34 @@ export const parse = (code: string) => {
 	return script;
 };
 
-export const interpret = (stmt: Src.Statement, ctx: EB.Context) => {
+const foldResult = (ctx: EB.Context, either: E.Either<EB.V2.Err, EB.Context>): EB.Context =>
+	F.pipe(
+		either,
+		E.fold(
+			(err: EB.V2.Err) => {
+				console.warn(EB.V2.display(err));
+				return ctx;
+			},
+			next => next,
+		),
+	);
+
+const displayValue = (v: Value): string => {
+	if (typeof v === "object" && v !== null && "__funcref" in v) {
+		return `<function ${v.__funcref}>`;
+	}
+
+	if (typeof v === "object" && v !== null) {
+		return JSON.stringify(v);
+	}
+
+	if (typeof v === "string") {
+		return `"${v}"`;
+	}
+	return String(v);
+};
+
+export const interpretNbE = (stmt: Src.Statement, ctx: EB.Context): EB.Context => {
 	const either = match(stmt)
 		.with({ type: "expression" }, s =>
 			F.pipe(
@@ -274,14 +324,47 @@ export const interpret = (stmt: Src.Statement, ctx: EB.Context) => {
 			throw new Error("Unsupported statement");
 		});
 
-	return F.pipe(
-		either,
-		E.fold(
-			(err: EB.V2.Err) => {
-				console.warn(EB.V2.display(err));
-				return ctx;
-			},
-			next => next,
-		),
-	);
+	return foldResult(ctx, either);
 };
+
+export const interpretMIR = (
+	stmt: Src.Statement,
+	ctx: EB.Context,
+	ffi: Record<string, (...args: any[]) => any>,
+	declarations: Map<string, Declaration>,
+): EB.Context => {
+	const either = match(stmt)
+		.with({ type: "expression" }, s =>
+			F.pipe(
+				EB.Mod.expression(s, ctx),
+				E.map(([tm, ty, us, next]) => {
+					if (options.showElaboration) {
+						console.log("\n------------ Elaboration ------------");
+						console.log(EB.Display.Term(tm, next));
+						console.log("-------------------------------------\n");
+					}
+					const mod = lowerToMir(tm, declarations);
+					if (options.showElaboration) {
+						console.log("\n--------------- MIR -----------------");
+						console.log(Pretty.display.module(mod));
+						console.log("-------------------------------------\n");
+					}
+					const result = mirInterpret(mod, ffi);
+					console.log(displayValue(result), "::", EB.NF.display(ty, next), "\n");
+					return next;
+				}),
+			),
+		)
+		.with({ type: "let" }, s => {
+			const [name, result] = EB.Mod.letdec(s, ctx);
+			return E.Functor.map(result, ([[tm, ty, us], next]) => next);
+		})
+		.with({ type: "using" }, s => EB.Mod.using(s, ctx))
+		.otherwise(() => {
+			throw new Error("Unsupported statement");
+		});
+
+	return foldResult(ctx, either);
+};
+
+export const interpret = (stmt: Src.Statement, ctx: EB.Context) => interpretNbE(stmt, ctx);

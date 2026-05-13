@@ -5,6 +5,25 @@ import { ARITIES } from "./shared/primops";
 
 const { Instr, Expr: E } = MIR.Constructors;
 
+const PRIMOP_ALIASES: Record<string, string> = {
+	"+": "$add",
+	"-": "$sub",
+	"*": "$mul",
+	"/": "$div",
+	"&&": "$and",
+	"||": "$or",
+	"==": "$eq",
+	"!=": "$neq",
+	"<": "$lt",
+	">": "$gt",
+	"<=": "$lte",
+	">=": "$gte",
+	"%": "$mod",
+	"<>": "$concat",
+	"++": "$concat",
+	not: "$not",
+};
+
 export const literal = (value: Literal): M.Lowering<void> =>
 	M.Do(function* () {
 		const ctx = yield* M.ask();
@@ -27,10 +46,15 @@ export const free = (name: string): M.Lowering<void> =>
 	M.Do(function* () {
 		const ctx = yield* M.ask();
 		const stamped = ctx.free.get(name);
-		if (stamped === undefined) {
-			return yield* M.fail<void>({ tag: "UnboundFreeName", name });
+		if (stamped !== undefined) {
+			return yield* M.Results.push({ tag: "value", value: stamped });
 		}
-		yield* M.Results.push({ tag: "value", value: stamped });
+		const alias = PRIMOP_ALIASES[name];
+		if (!alias) {
+			throw new Error(`Unknown free variable "${name}" and no primop alias found. Free vars require module import lowering which is not yet implemented.`);
+		}
+
+		return yield foreign(alias);
 	});
 
 export const foreign = (name: string): M.Lowering<void> =>

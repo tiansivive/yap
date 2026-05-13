@@ -48,10 +48,15 @@ program
 	.command("repl")
 	.description("Start a Yap REPL")
 	.option("--verbose", "Enable verbose output")
+	.option("--mir", "Use MIR-based interpreter instead of NbE")
 	.action(async cmd => {
 		console.log("Yap REPL started. Type :exit to quit.");
 		options.verbose = cmd.verbose || false;
 		console.log("Verbose mode:", options.verbose);
+
+		if (cmd.mir) {
+			console.log("MIR interpreter active");
+		}
 
 		let z3Ctx = getZ3Context();
 		if (!z3Ctx) {
@@ -61,7 +66,7 @@ program
 			setZ3Context(z3Ctx);
 		}
 
-		repl();
+		repl({ mir: cmd.mir || false });
 	});
 
 program.parse();
