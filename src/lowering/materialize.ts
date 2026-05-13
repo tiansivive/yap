@@ -8,148 +8,136 @@
  */
 
 import assert from "node:assert";
+import { match } from "ts-pattern";
 import * as MIR from "./mir";
 import * as M from "./monad";
 import * as C from "./context";
+import * as Closure from "./closures";
 
 const { Block, Instr, Expr: E, Terminator: T, Function: Fn } = MIR.Constructors;
 
-function* partial(ctx: C.LowerCtx, kind: "foreign" | "primop", nameOrOp: string, arity: number, capturedArgs: C.Stamped[]): M.Glowering<C.Stamped> {
-	const remaining = arity - capturedArgs.length;
+type Pending = Extract<M.LowerResult, { tag: "foreign" | "primop" }>;
+type Wrapper = { fnName: C.Stamped; envParam: C.Stamped; freshParam: C.Stamped };
 
-	const wrappers = Array.from({ length: remaining }, () => ({
+/* ================================================================================
+ * Entry point
+ * ================================================================================ */
+
+export function* materialize(results: M.LowerResult[], saturate: Set<number>): M.Glowering<M.LowerResult[]> {
+	const ctx = yield* M.ask();
+	return yield* M.traverse(results, (r, i) => reify(ctx, r, saturate.has(i)));
+}
+
+/* ================================================================================
+ * Dispatcher
+ * ================================================================================ */
+
+function* reify(ctx: C.LowerCtx, r: M.LowerResult, exempt: boolean): M.Glowering<M.LowerResult> {
+	if (exempt) {
+		return r;
+	}
+
+	if (r.tag === "value") {
+		return r;
+	}
+
+	if (r.args.length === r.arity) {
+		return yield* call(ctx, r);
+	}
+
+	const closureRef = yield* partial(ctx, r);
+	return { tag: "value", value: closureRef };
+}
+
+/* ================================================================================
+ * Steps
+ * ================================================================================ */
+
+function* call(ctx: C.LowerCtx, r: Pending): M.Glowering<M.LowerResult> {
+	const result = ctx.nextVar();
+	const argNames = r.args.map(a => a.name);
+	const instr = match(r)
+		.with({ tag: "primop" }, ({ op }) => Instr.Let(result.name, E.PrimOp(op, argNames)))
+		.with({ tag: "foreign" }, ({ name }) => Instr.Call({ type: "direct", func: name }, argNames, result.name))
+		.exhaustive();
+	yield* M.Pending.append(instr);
+	return { tag: "value", value: result };
+}
+
+/* ================================================================================
+ * Closure wrapper chain for partial application
+ * ================================================================================ */
+
+function* partial(ctx: C.LowerCtx, r: Pending): M.Glowering<C.Stamped> {
+	const remaining = r.arity - r.args.length;
+
+	const wrappers: Wrapper[] = Array.from({ length: remaining }, () => ({
 		fnName: ctx.nextVar("fn"),
 		envParam: ctx.nextVar("env"),
 		freshParam: ctx.nextVar(),
 	}));
 
-	for (let level = remaining - 1; level >= 0; level--) {
-		const w = wrappers[level];
-		assert(w);
-		const { fnName, envParam, freshParam } = w;
-		const numCaptured = capturedArgs.length + level;
-
-		const bodyReads: C.Stamped[] = [];
-		const bodyInstrs: MIR.Instr[] = [];
-		for (let j = 0; j < numCaptured; j++) {
-			const v = ctx.nextVar();
-			bodyReads.push(v);
-			bodyInstrs.push(Instr.Read(`v${j}`, envParam.name, v.name));
-		}
-		const allArgs = [...bodyReads, freshParam];
+	yield* M.traverse(wrappers.toReversed(), function* (w, reverseIdx) {
+		const level = remaining - 1 - reverseIdx;
+		const numCaptured = r.args.length + level;
 
 		if (level === remaining - 1) {
-			const callResult = ctx.nextVar();
-			if (kind === "primop") {
-				bodyInstrs.push(
-					Instr.Let(
-						callResult.name,
-						E.PrimOp(
-							nameOrOp,
-							allArgs.map(a => a.name),
-						),
-					),
-				);
-			} else {
-				bodyInstrs.push(
-					Instr.Call(
-						{ type: "direct", func: nameOrOp },
-						allArgs.map(a => a.name),
-						callResult.name,
-					),
-				);
-			}
-			const block = Block(`${fnName.name}_entry`, [], bodyInstrs, T.Return(callResult.name));
-			yield* M.Functions.emit(Fn(fnName.name, [envParam.name, freshParam.name], block.label, [block]));
-		} else {
-			const next = wrappers[level + 1];
-			assert(next);
-			const newEnvRef = ctx.nextVar("env");
-			const newFnRef = ctx.nextVar("fnref");
-			const closureRef = ctx.nextVar("closure");
-			bodyInstrs.push(
-				Instr.Alloc({ type: "Record", fields: allArgs.map((a, i) => ({ label: `v${i}`, value: a.name })) }, newEnvRef.name),
-				Instr.Let(newFnRef.name, E.FuncRef(next.fnName.name)),
-				Instr.Alloc(
-					{
-						type: "Record",
-						fields: [
-							{ label: "__fn", value: newFnRef.name },
-							{ label: "__env", value: newEnvRef.name },
-						],
-					},
-					closureRef.name,
-				),
-			);
-			const block = Block(`${fnName.name}_entry`, [], bodyInstrs, T.Return(closureRef.name));
-			yield* M.Functions.emit(Fn(fnName.name, [envParam.name, freshParam.name], block.label, [block]));
+			return yield* invoke(ctx, w, numCaptured, r);
 		}
-	}
+		const next = wrappers[level + 1];
+		assert(next);
+		yield* curry(ctx, w, numCaptured, next.fnName.name);
+	});
 
 	const outerWrapper = wrappers[0];
 	assert(outerWrapper);
-	const envRef = ctx.nextVar("env");
-	const fnRef = ctx.nextVar("fnref");
-	const closureRef = ctx.nextVar("closure");
-	yield* M.Pending.appendMany([
-		Instr.Alloc({ type: "Record", fields: capturedArgs.map((a, i) => ({ label: `v${i}`, value: a.name })) }, envRef.name),
-		Instr.Let(fnRef.name, E.FuncRef(outerWrapper.fnName.name)),
-		Instr.Alloc(
-			{
-				type: "Record",
-				fields: [
-					{ label: "__fn", value: fnRef.name },
-					{ label: "__env", value: envRef.name },
-				],
-			},
-			closureRef.name,
-		),
-	]);
+	const { instrs, closureRef } = Closure.bundle(ctx, outerWrapper.fnName.name, r.args);
+	yield* M.Pending.appendMany(instrs);
 	return closureRef;
 }
 
-export function* materialize(results: M.LowerResult[], saturate: Set<number>): M.Glowering<M.LowerResult[]> {
-	const ctx = yield* M.ask();
-	const out: M.LowerResult[] = [];
+/* ================================================================================
+ * Wrapper body generators
+ * ================================================================================ */
 
-	for (let i = 0; i < results.length; i++) {
-		const r = results[i];
-		assert(r);
-		if (saturate.has(i)) {
-			out.push(r);
-			continue;
-		}
-		if (r.tag === "value") {
-			out.push(r);
-			continue;
-		}
-		const nameOrOp = r.tag === "foreign" ? r.name : r.op;
-		if (r.args.length === r.arity) {
-			const result = ctx.nextVar();
-			if (r.tag === "primop") {
-				yield* M.Pending.append(
-					Instr.Let(
-						result.name,
-						E.PrimOp(
-							nameOrOp,
-							r.args.map(a => a.name),
-						),
-					),
-				);
-			} else {
-				yield* M.Pending.append(
-					Instr.Call(
-						{ type: "direct", func: nameOrOp },
-						r.args.map(a => a.name),
-						result.name,
-					),
-				);
-			}
-			out.push({ tag: "value", value: result });
-		} else {
-			const closureRef = yield* partial(ctx, r.tag, nameOrOp, r.arity, r.args);
-			out.push({ tag: "value", value: closureRef });
-		}
-	}
-	return out;
+/** Innermost wrapper — all args collected, emit the actual foreign/primop call. */
+function* invoke(ctx: C.LowerCtx, w: Wrapper, numCaptured: number, r: Pending): M.Glowering<void> {
+	const { vars, instrs: readInstrs } = unpackEnv(ctx, numCaptured, w.envParam);
+	const allArgs = [...vars, w.freshParam];
+	const argNames = allArgs.map(a => a.name);
+	const callResult = ctx.nextVar();
+	const callInstr = match(r)
+		.with({ tag: "primop" }, ({ op }) => Instr.Let(callResult.name, E.PrimOp(op, argNames)))
+		.with({ tag: "foreign" }, ({ name }) => Instr.Call({ type: "direct", func: name }, argNames, callResult.name))
+		.exhaustive();
+	const block = Block(`${w.fnName.name}_entry`, [], [...readInstrs, callInstr], T.Return(callResult.name));
+	yield* M.Functions.emit(Fn(w.fnName.name, [w.envParam.name, w.freshParam.name], block.label, [block]));
 }
+
+/** Intermediate wrapper — capture one more arg, return closure to the next level. */
+function* curry(ctx: C.LowerCtx, w: Wrapper, numCaptured: number, nextFnName: string): M.Glowering<void> {
+	const { vars, instrs: readInstrs } = unpackEnv(ctx, numCaptured, w.envParam);
+	const allArgs = [...vars, w.freshParam];
+	const { instrs: bundleInstrs, closureRef } = Closure.bundle(ctx, nextFnName, allArgs);
+	const block = Block(`${w.fnName.name}_entry`, [], [...readInstrs, ...bundleInstrs], T.Return(closureRef.name));
+	yield* M.Functions.emit(Fn(w.fnName.name, [w.envParam.name, w.freshParam.name], block.label, [block]));
+}
+
+/* ================================================================================
+ * Pure helpers
+ * ================================================================================ */
+
+/** Read captured values out of the environment record. */
+const unpackEnv = (ctx: C.LowerCtx, count: number, envParam: C.Stamped) =>
+	Array(count)
+		.fill(0)
+		.reduce<{ vars: C.Stamped[]; instrs: MIR.Instr[] }>(
+			(acc, _, j) => {
+				const v = ctx.nextVar();
+				return {
+					vars: [...acc.vars, v],
+					instrs: [...acc.instrs, Instr.Read(`v${j}`, envParam.name, v.name)],
+				};
+			},
+			{ vars: [], instrs: [] },
+		);

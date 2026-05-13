@@ -2,42 +2,43 @@ import * as MIR from "./mir";
 import * as M from "./monad";
 import type * as C from "./context";
 
-export function* convertClosure(
+const { Block, Instr, Expr: E, Terminator: T, Function: Fn } = MIR.Constructors;
+
+export function* convert(
 	ctx: C.LowerCtx,
 	fnName: string,
 	params: string[],
-	body: {
-		instrs: MIR.Instr[];
-		result: M.ValueResult;
-	},
-	env: {
-		allocInstrs: MIR.Instr[];
-		ref: C.Stamped;
-	},
+	body: { instrs: MIR.Instr[]; result: M.ValueResult },
+	captured: C.Stamped[],
 ): M.Glowering<C.Stamped> {
-	const block = MIR.Constructors.Block(`${fnName}_entry`, [], body.instrs, MIR.Constructors.Terminator.Return(body.result.value.name));
-	const fn = MIR.Constructors.Function(fnName, params, block.label, [block]);
+	const block = Block(`${fnName}_entry`, [], body.instrs, T.Return(body.result.value.name));
+	yield* M.Functions.emit(Fn(fnName, params, block.label, [block]));
 
-	const fnVar = ctx.nextVar("fnref");
-	const closureRef = ctx.nextVar("closure");
-
-	const instrs = [
-		...env.allocInstrs,
-		MIR.Constructors.Instr.Let(fnVar.name, MIR.Constructors.Expr.FuncRef(fnName)),
-		MIR.Constructors.Instr.Alloc(
-			{
-				type: "Record",
-				fields: [
-					{ label: "__fn", value: fnVar.name },
-					{ label: "__env", value: env.ref.name },
-				],
-			},
-			closureRef.name,
-		),
-	];
-
-	yield* M.Functions.emit(fn);
+	const { instrs, closureRef } = bundle(ctx, fnName, captured);
 	yield* M.Pending.appendMany(instrs);
-
 	return closureRef;
 }
+
+/** Package a function reference + captured args into a closure triple (env alloc, fnref, closure alloc). */
+export const bundle = (ctx: C.LowerCtx, fnName: string, captured: C.Stamped[]) => {
+	const envRef = ctx.nextVar("env");
+	const fnRef = ctx.nextVar("fnref");
+	const closureRef = ctx.nextVar("closure");
+	return {
+		instrs: [
+			Instr.Alloc({ type: "Record", fields: captured.map((a, i) => ({ label: `v${i}`, value: a.name })) }, envRef.name),
+			Instr.Let(fnRef.name, E.FuncRef(fnName)),
+			Instr.Alloc(
+				{
+					type: "Record",
+					fields: [
+						{ label: "__fn", value: fnRef.name },
+						{ label: "__env", value: envRef.name },
+					],
+				},
+				closureRef.name,
+			),
+		],
+		closureRef,
+	};
+};

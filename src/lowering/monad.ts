@@ -441,13 +441,21 @@ export const local = Reader.local;
 export const fail = Error.fail;
 
 /* ================================================================================
+ * Combinators
+ * ================================================================================ */
+
+export function* traverse<A, B>(xs: A[], f: (a: A, i: number) => Glowering<B>): Glowering<B[]> {
+	const out: B[] = [];
+	for (let i = 0; i < xs.length; i++) {
+		out.push(yield* f(xs[i] as A, i));
+	}
+	return out;
+}
+
+/* ================================================================================
  * Run
  * ================================================================================ */
 
 export function run<A>(ma: Lowering<A>, ctx: LowerCtx, st: State = State.initial): [Collector<A>, State] {
 	return ma(ctx, emptyAcc, st);
 }
-
-type Test = { tag: "foo"; x: number; fn: (s: string) => number } | { tag: "foo:sat"; fn: (n: number) => string };
-
-const t: Test = { tag: "foo:sat", fn: n => "hello" };

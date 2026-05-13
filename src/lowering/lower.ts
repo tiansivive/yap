@@ -30,11 +30,11 @@ import * as M from "./monad";
 import * as C from "./context";
 import { Patterns } from "./patterns";
 import { freeVars, sortedNumbers } from "./shared/freevars";
-import { convertClosure } from "./closures";
+import * as Closure from "./closures";
 import { lowerMatch } from "./match";
 import { materialize } from "./materialize";
 
-const { Block, Instr, Expr: E, Terminator: T, Function: Fn, Module } = MIR.Constructors;
+const { Instr, Expr: E, Terminator: T, Function: Fn, Module } = MIR.Constructors;
 
 /* ================================================================================
  * Primops + helpers
@@ -451,28 +451,7 @@ function lowerLambda(formal: string, body: EB.Term): M.Lowering<void> {
 						return { ...s, accumulated, focus: outerFocus };
 					});
 
-					const envRef = ctx.nextVar("env");
-					const envAllocInstrs: MIR.Instr[] = [
-						Instr.Alloc(
-							{
-								type: "Record",
-								fields: indices.map((_, j) => {
-									const c = captured[j];
-									assert(c);
-									return { label: `v${j}`, value: c.name };
-								}),
-							},
-							envRef.name,
-						),
-					];
-
-					const closureRef = yield* convertClosure(
-						ctx,
-						fnName.name,
-						[envParam.name, formal],
-						{ instrs: pending.instrs, result: bodyR },
-						{ allocInstrs: envAllocInstrs, ref: envRef },
-					);
+					const closureRef = yield* Closure.convert(ctx, fnName.name, [envParam.name, formal], { instrs: pending.instrs, result: bodyR }, captured);
 					yield* M.Results.push({ tag: "value", value: closureRef });
 				}),
 		});
