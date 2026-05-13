@@ -8,7 +8,7 @@ export function* convertClosure(
 	params: string[],
 	body: {
 		instrs: MIR.Instr[];
-		result: M.LowerResult;
+		result: M.ValueResult;
 	},
 	env: {
 		allocInstrs: MIR.Instr[];

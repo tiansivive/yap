@@ -20,6 +20,7 @@
  * alternative body is a `Lower` frame bracketed by `Cont`s that open/finalize its case block.
  */
 
+import assert from "node:assert";
 import * as EB from "@yap/elaboration";
 import type { Literal } from "@yap/shared/literals";
 import * as Lit from "@yap/shared/literals";
@@ -38,18 +39,23 @@ const { Block, Instr, Expr: E, Terminator: T, Function: Fn, Module } = MIR.Const
  * Primops + helpers
  * ================================================================================ */
 
-const PRIM_OPS = new Set(["$add", "$sub", "$mul", "$div", "$and", "$or", "$eq", "$neq", "$lt", "$gt", "$lte", "$gte", "$mod", "$concat", "$not"]);
-const isPrimOp = (name: string): boolean => PRIM_OPS.has(name);
-
-function unwrapPrimitiveApp(term: EB.Term): { op: string; args: EB.Term[] } | undefined {
-	return match(term)
-		.with(Patterns.App, ({ func, arg }) => {
-			const inner = unwrapPrimitiveApp(func);
-			return inner ? { op: inner.op, args: [...inner.args, arg] } : undefined;
-		})
-		.with(Patterns.Vars.Foreign, ({ variable }) => (isPrimOp(variable.name) ? { op: variable.name, args: [] as EB.Term[] } : undefined))
-		.otherwise(() => undefined);
-}
+const PRIMOP_ARITIES: Record<string, number> = {
+	$add: 2,
+	$sub: 2,
+	$mul: 2,
+	$div: 2,
+	$and: 2,
+	$or: 2,
+	$eq: 2,
+	$neq: 2,
+	$lt: 2,
+	$gt: 2,
+	$lte: 2,
+	$gte: 2,
+	$mod: 2,
+	$concat: 2,
+	$not: 1,
+};
 
 function extractFields(row: EB.Row): Array<{ label: string; term: EB.Term }> {
 	return match(row)
@@ -67,7 +73,9 @@ function extractFields(row: EB.Row): Array<{ label: string; term: EB.Term }> {
 
 function* pushChildrenReversed(ctx: C.LowerCtx, terms: EB.Term[]): M.Glowering<void> {
 	for (let i = terms.length - 1; i >= 0; i--) {
-		yield* M.Worklist.push({ type: "Lower", ctx, term: terms[i]! });
+		const term = terms[i];
+		assert(term);
+		yield* M.Worklist.push({ type: "Lower", ctx, term });
 	}
 }
 
@@ -85,7 +93,7 @@ function lowerLit(value: Literal): M.Lowering<void> {
 		const ctx = yield* M.ask();
 		const x = ctx.nextVar();
 		yield* M.Pending.append(Instr.Let(x.name, E.Lit(value)));
-		yield* M.Results.push({ value: x });
+		yield* M.Results.push({ tag: "value", value: x });
 	});
 }
 
@@ -96,7 +104,7 @@ function lowerBound(index: number): M.Lowering<void> {
 		if (stamped === undefined) {
 			return yield* M.fail<void>({ tag: "UnboundBoundIndex", index });
 		}
-		yield* M.Results.push({ value: stamped });
+		yield* M.Results.push({ tag: "value", value: stamped });
 	});
 }
 
@@ -107,7 +115,7 @@ function lowerFree(name: string): M.Lowering<void> {
 		if (stamped === undefined) {
 			return yield* M.fail<void>({ tag: "UnboundFreeName", name });
 		}
-		yield* M.Results.push({ value: stamped });
+		yield* M.Results.push({ tag: "value", value: stamped });
 	});
 }
 
@@ -116,11 +124,18 @@ function lowerForeign(name: string): M.Lowering<void> {
 		const ctx = yield* M.ask();
 		const stamped = ctx.free.get(name);
 		if (stamped !== undefined) {
-			yield* M.Results.push({ value: stamped });
+			yield* M.Results.push({ tag: "value", value: stamped });
 			return;
 		}
-		if (isPrimOp(name)) {
-			return yield* M.fail<void>({ tag: "PrimitiveAsValue", name });
+		const primArity = PRIMOP_ARITIES[name];
+		if (primArity !== undefined) {
+			yield* M.Results.push({ tag: "primop", op: name, arity: primArity, args: [] });
+			return;
+		}
+		const decl = ctx.declarations.get(name);
+		if (decl !== undefined) {
+			yield* M.Results.push({ tag: "foreign", name, arity: decl.arity, args: [] });
+			return;
 		}
 		return yield* M.fail<void>({ tag: "UnboundForeignName", name });
 	});
@@ -131,38 +146,13 @@ function eraseTypeLevel(): M.Lowering<void> {
 		const ctx = yield* M.ask();
 		const result = ctx.nextVar();
 		yield* M.Pending.append(Instr.Alloc({ type: "Record", fields: [] }, result.name));
-		yield* M.Results.push({ value: result });
+		yield* M.Results.push({ tag: "value", value: result });
 	});
 }
 
 /* ================================================================================
  * Compound rules — push Cont + Lower frames
  * ================================================================================ */
-
-function lowerPrimOp(op: string, args: EB.Term[]): M.Lowering<void> {
-	return M.Do(function* () {
-		const ctx = yield* M.ask();
-		yield* M.Worklist.push({
-			type: "Cont",
-			arity: args.length,
-			handler: results =>
-				M.Do(function* () {
-					const result = ctx.nextVar();
-					yield* M.Pending.append(
-						Instr.Let(
-							result.name,
-							E.PrimOp(
-								op,
-								results.map(r => r.value.name),
-							),
-						),
-					);
-					yield* M.Results.push({ value: result });
-				}),
-		});
-		yield* pushChildrenReversed(ctx, args);
-	});
-}
 
 function lowerProj(label: string, term: EB.Term): M.Lowering<void> {
 	return M.Do(function* () {
@@ -172,9 +162,10 @@ function lowerProj(label: string, term: EB.Term): M.Lowering<void> {
 			arity: 1,
 			handler: ([target]) =>
 				M.Do(function* () {
+					assert(target);
 					const result = ctx.nextVar();
-					yield* M.Pending.append(Instr.Read(label, target!.value.name, result.name));
-					yield* M.Results.push({ value: result });
+					yield* M.Pending.append(Instr.Read(label, target.value.name, result.name));
+					yield* M.Results.push({ tag: "value", value: result });
 				}),
 		});
 		yield* M.Worklist.push({ type: "Lower", ctx, term });
@@ -189,14 +180,16 @@ function lowerInj(label: string, value: EB.Term, term: EB.Term): M.Lowering<void
 			arity: 2,
 			handler: ([intoR, valueR]) =>
 				M.Do(function* () {
+					assert(intoR);
+					assert(valueR);
 					const result = ctx.nextVar();
 					yield* M.Pending.append(
-						Instr.UpdateImmutable(intoR!.value.name, result.name, {
+						Instr.UpdateImmutable(intoR.value.name, result.name, {
 							type: "Record",
-							fields: [{ label, value: valueR!.value.name }],
+							fields: [{ label, value: valueR.value.name }],
 						}),
 					);
-					yield* M.Results.push({ value: result });
+					yield* M.Results.push({ tag: "value", value: result });
 				}),
 		});
 		// LIFO: push `value` first so `term` (the "into") drains first.
@@ -216,9 +209,9 @@ function lowerStructApp(row: EB.Row): M.Lowering<void> {
 				M.Do(function* () {
 					const result = ctx.nextVar();
 					yield* M.Pending.append(
-						Instr.Alloc({ type: "Record", fields: results.map((r, i) => ({ label: fields[i]!.label, value: r.value.name })) }, result.name),
+						Instr.Alloc({ type: "Record", fields: results.map((r, i) => ({ label: fields[i]?.label ?? "", value: r.value.name })) }, result.name),
 					);
-					yield* M.Results.push({ value: result });
+					yield* M.Results.push({ tag: "value", value: result });
 				}),
 		});
 		yield* pushChildrenReversed(
@@ -237,23 +230,74 @@ function lowerApp(func: EB.Term, arg: EB.Term): M.Lowering<void> {
 		const sbc = ctx.shiftBodyCtx;
 		const isKCall = sbc !== undefined && func.type === "Var" && func.variable.type === "Bound" && ctx.bound.get(func.variable.index)?.stamp === sbc.kRef.stamp;
 		if (isKCall) {
-			return yield* M.pure(lowerKCall(ctx, sbc!, arg));
+			assert(sbc);
+			return yield* M.pure(lowerKCall(ctx, sbc, arg));
 		}
 
 		yield* M.Worklist.push({
-			type: "Cont",
+			type: "Cont:sat",
 			arity: 2,
+			saturate: new Set([0]),
 			handler: ([funcR, argR]) =>
 				M.Do(function* () {
-					const fnVar = ctx.nextVar("fnref");
-					const envVar = ctx.nextVar("env");
-					const result = ctx.nextVar();
-					yield* M.Pending.appendMany([
-						Instr.Read("__fn", funcR!.value.name, fnVar.name),
-						Instr.Read("__env", funcR!.value.name, envVar.name),
-						Instr.Call({ type: "indirect", callee: fnVar.name }, [envVar.name, argR!.value.name], result.name),
-					]);
-					yield* M.Results.push({ value: result });
+					assert(funcR);
+					assert(argR);
+					const argVal = (argR as M.ValueResult).value;
+					yield match(funcR)
+						.with({ tag: "foreign" as const }, fr => {
+							const newArgs = [...fr.args, argVal];
+							if (newArgs.length === fr.arity) {
+								return M.Do(function* () {
+									const result = ctx.nextVar();
+									yield* M.Pending.append(
+										Instr.Call(
+											{ type: "direct", func: fr.name },
+											newArgs.map(a => a.name),
+											result.name,
+										),
+									);
+									yield* M.Results.push({ tag: "value", value: result });
+								});
+							}
+							return M.Do(function* () {
+								yield* M.Results.push({ tag: "foreign", name: fr.name, arity: fr.arity, args: newArgs });
+							});
+						})
+						.with({ tag: "primop" as const }, pr => {
+							const newArgs = [...pr.args, argVal];
+							if (newArgs.length === pr.arity) {
+								return M.Do(function* () {
+									const result = ctx.nextVar();
+									yield* M.Pending.append(
+										Instr.Let(
+											result.name,
+											E.PrimOp(
+												pr.op,
+												newArgs.map(a => a.name),
+											),
+										),
+									);
+									yield* M.Results.push({ tag: "value", value: result });
+								});
+							}
+							return M.Do(function* () {
+								yield* M.Results.push({ tag: "primop", op: pr.op, arity: pr.arity, args: newArgs });
+							});
+						})
+						.with({ tag: "value" as const }, vr => {
+							return M.Do(function* () {
+								const fnVar = ctx.nextVar("fnref");
+								const envVar = ctx.nextVar("env");
+								const result = ctx.nextVar();
+								yield* M.Pending.appendMany([
+									Instr.Read("__fn", vr.value.name, fnVar.name),
+									Instr.Read("__env", vr.value.name, envVar.name),
+									Instr.Call({ type: "indirect", callee: fnVar.name }, [envVar.name, argVal.name], result.name),
+								]);
+								yield* M.Results.push({ tag: "value", value: result });
+							});
+						})
+						.exhaustive();
 				}),
 		});
 		// LIFO: push `arg` first so `func` drains first.
@@ -276,9 +320,10 @@ function lowerBlock(stmts: EB.Statement[], ret: EB.Term): M.Lowering<void> {
 		}
 
 		const [head, ...rest] = stmts;
+		assert(head);
 		const tail = EB.Constructors.Block(rest, ret);
 
-		yield match(head!)
+		yield match(head)
 			.with(
 				{ type: "Let" },
 				({ variable, value }): M.Lowering<void> =>
@@ -306,8 +351,9 @@ function lowerBlock(stmts: EB.Statement[], ret: EB.Term): M.Lowering<void> {
 							arity: 1,
 							handler: ([valueR]) =>
 								M.Do(function* () {
+									assert(valueR);
 									const binder = C.stampNamed(variable);
-									const extended = C.bind(ctx, binder, new Map([[0, valueR!.value]]));
+									const extended = C.bind(ctx, binder, new Map([[0, valueR.value]]));
 									yield* M.Worklist.push({ type: "Lower", ctx: extended, term: tail });
 								}),
 						});
@@ -321,7 +367,7 @@ function lowerBlock(stmts: EB.Statement[], ret: EB.Term): M.Lowering<void> {
 						yield* M.Worklist.push({
 							type: "Cont",
 							arity: 1,
-							handler: _ =>
+							handler: () =>
 								M.Do(function* () {
 									yield* M.Worklist.push({ type: "Lower", ctx, term: tail });
 								}),
@@ -372,11 +418,21 @@ function lowerLambda(formal: string, body: EB.Term): M.Lowering<void> {
 
 		// Pre-body allocations.
 		const readVars = indices.map(() => ctx.nextVar());
-		const overrides = new Map(indices.map((idx, j) => [idx, readVars[j]!] as const));
+		const overrides = new Map(
+			indices.map((idx, j) => {
+				const rv = readVars[j];
+				assert(rv);
+				return [idx, rv] as const;
+			}),
+		);
 		const formalStamped = C.stampNamed(formal);
 		const fnName = ctx.nextVar("fn");
 		const envParam = ctx.nextVar("env");
-		const envReads: MIR.Instr[] = indices.map((_, j) => Instr.Read(`v${j}`, envParam.name, readVars[j]!.name));
+		const envReads: MIR.Instr[] = indices.map((_, j) => {
+			const rv = readVars[j];
+			assert(rv);
+			return Instr.Read(`v${j}`, envParam.name, rv.name);
+		});
 		const lambdaEntry = `${fnName.name}_entry`;
 		const innerCtx = C.bind(ctx, formalStamped, overrides);
 
@@ -388,34 +444,38 @@ function lowerLambda(formal: string, body: EB.Term): M.Lowering<void> {
 			arity: 1,
 			handler: ([bodyR]) =>
 				M.Do(function* () {
-					// Read the body's pending block, then drop it from accumulated + restore
-					// outer focus. We don't go through `Pending.finalize` because the body's
-					// block belongs to the lifted Fn (assembled in `convertClosure`), not to
-					// the Blocks Writer.
+					assert(bodyR);
 					const pending = yield* M.Pending.peek(lambdaEntry);
-					if (pending === undefined) {
-						throw new Error(`lowerLambda: pending block ${lambdaEntry} missing`);
-					}
+					assert(pending, `lowerLambda: pending block ${lambdaEntry} missing`);
 					yield* M.State.modify(s => {
 						const accumulated = new Map(s.accumulated);
 						accumulated.delete(lambdaEntry);
 						return { ...s, accumulated, focus: outerFocus };
 					});
 
-					// Outer-side envRef (post-body, matching v1's allocation order for envRef).
 					const envRef = ctx.nextVar("env");
 					const envAllocInstrs: MIR.Instr[] = [
-						Instr.Alloc({ type: "Record", fields: indices.map((_, j) => ({ label: `v${j}`, value: captured[j]!.name })) }, envRef.name),
+						Instr.Alloc(
+							{
+								type: "Record",
+								fields: indices.map((_, j) => {
+									const c = captured[j];
+									assert(c);
+									return { label: `v${j}`, value: c.name };
+								}),
+							},
+							envRef.name,
+						),
 					];
 
 					const closureRef = yield* convertClosure(
 						ctx,
 						fnName.name,
 						[envParam.name, formal],
-						{ instrs: pending.instrs, result: bodyR! },
+						{ instrs: pending.instrs, result: bodyR },
 						{ allocInstrs: envAllocInstrs, ref: envRef },
 					);
-					yield* M.Results.push({ value: closureRef });
+					yield* M.Results.push({ tag: "value", value: closureRef });
 				}),
 		});
 		yield* M.Worklist.push({ type: "Lower", ctx: innerCtx, term: body });
@@ -444,7 +504,8 @@ function lowerReset(term: EB.Term): M.Lowering<void> {
 			arity: 1,
 			handler: ([bodyR]) =>
 				M.Do(function* () {
-					yield* M.Results.push(bodyR!);
+					assert(bodyR);
+					yield* M.Results.push(bodyR);
 				}),
 		});
 		yield* M.Worklist.push({ type: "Lower", ctx: innerCtx, term });
@@ -549,15 +610,15 @@ function lowerShift(body: EB.Term): M.Lowering<void> {
 		};
 
 		// JS-closure holder for rest-of-reset's value (filled by bridge, consumed by assemble).
-		const restHolder: { result?: M.LowerResult } = {};
+		const restHolder: { result?: M.ValueResult } = {};
 
 		const bridgeCont: M.Frame = {
 			type: "Cont",
 			arity: 1,
 			handler: ([restR]) =>
 				M.Do(function* () {
+					assert(restR);
 					restHolder.result = restR;
-					// Open s_init: read __env into envRef, re-read captures.
 					const sInitCaptureReads = captures.map(c => Instr.Read(c.label, envRef.name, c.target));
 					yield* M.Pending.open(sInit, [kP.name], [Instr.Read("__env", kP.name, envRef.name), ...sInitCaptureReads]);
 				}),
@@ -568,19 +629,18 @@ function lowerShift(body: EB.Term): M.Lowering<void> {
 			arity: 1,
 			handler: ([bodyResult]) =>
 				M.Do(function* () {
-					// Finalize current pending (last s_i, or s_init if no k-calls) with jump to exit.
+					assert(bodyResult);
 					const finalFocus = yield* M.Focus.get();
-					if (finalFocus === undefined) {
-						throw new Error("Shift assembly: no focused pending block");
-					}
-					yield* M.Pending.finalize(finalFocus, T.Jump(rc.resetExit, [bodyResult!.value.name]));
+					assert(finalFocus, "Shift assembly: no focused pending block");
+					yield* M.Pending.finalize(finalFocus, T.Jump(rc.resetExit, [bodyResult.value.name]));
 
-					// Finalize r. With k-calls: Branch on idx to the s_i labels. Otherwise drop r.
 					if (sbc.nextKCallIdx > 0) {
+						const { result } = restHolder;
+						assert(result, "Shift assembly: no rest result");
 						const cases = sbc.sLabels.map((label, i) => ({
 							value: String(i),
 							target: label,
-							args: [restHolder.result!.value.name, r_envParam.name],
+							args: [result.value.name, r_envParam.name],
 						}));
 						yield* M.Pending.finalize(rLabel, T.Branch(idx_param.name, cases));
 					} else {
@@ -591,13 +651,11 @@ function lowerShift(body: EB.Term): M.Lowering<void> {
 						});
 					}
 
-					// Emit resetExit block: `param e -> return e`.
 					const exitParam = ctx.nextVar();
 					yield* M.Pending.open(rc.resetExit, [exitParam.name]);
 					yield* M.Pending.finalize(rc.resetExit, T.Return(exitParam.name));
 
-					// Sentinel — lowerToMir sees `entry` is already finalized and skips its Return.
-					yield* M.Results.push({ value: { stamp: -1, name: "" } as C.Stamped });
+					yield* M.Results.push({ tag: "value", value: { stamp: -1, name: "" } as C.Stamped });
 				}),
 		};
 
@@ -623,7 +681,7 @@ function lowerShift(body: EB.Term): M.Lowering<void> {
 		for (const r of capturedResults) {
 			yield* M.Results.push(r);
 		}
-		yield* M.Results.push({ value: v_param });
+		yield* M.Results.push({ tag: "value", value: v_param });
 	});
 }
 
@@ -647,13 +705,11 @@ function lowerKCall(ctx: C.LowerCtx, sbc: C.ShiftBodyCtx, arg: EB.Term): M.Lower
 			arity: 1,
 			handler: ([argResult]) =>
 				M.Do(function* () {
-					// Emit idx literal, then seal current pending with jump to r.
+					assert(argResult);
 					yield* M.Pending.append(Instr.Let(idxVar.name, E.Lit(Lit.Num(idx))));
 					const focus = yield* M.Focus.get();
-					if (focus === undefined) {
-						throw new Error("kCall: no focused pending block");
-					}
-					yield* M.Pending.finalize(focus, T.Jump(sbc.rLabel, [argResult!.value.name, sbc.envRef.name, idxVar.name]));
+					assert(focus, "kCall: no focused pending block");
+					yield* M.Pending.finalize(focus, T.Jump(sbc.rLabel, [argResult.value.name, sbc.envRef.name, idxVar.name]));
 
 					// Open new s_i: receives (v, envIn); stashes v into envIn.r_idx and re-reads
 					// all stashes + captures.
@@ -675,7 +731,7 @@ function lowerKCall(ctx: C.LowerCtx, sbc: C.ShiftBodyCtx, arg: EB.Term): M.Lower
 					yield* M.Pending.open(sLabel, [v.name, envIn.name], stashInstrs);
 					sbc.envRef = envOut;
 
-					yield* M.Results.push({ value: kr });
+					yield* M.Results.push({ tag: "value", value: kr });
 				}),
 		});
 		yield* M.Worklist.push({ type: "Lower", ctx, term: arg });
@@ -802,7 +858,9 @@ function* compileSubMatrix(
 	const variableBranches = MatchBranches.variable(branches);
 
 	if (MatchPats.allVariable(branches)) {
-		yield* pushVariableLeaf(scrutVar, variableBranches[0]!, mergeLabel, ctx, columnBindings);
+		const first = variableBranches[0];
+		assert(first);
+		yield* pushVariableLeaf(scrutVar, first, mergeLabel, ctx, columnBindings);
 		return;
 	}
 	if (MatchPats.allVariant(branches) || MatchBranches.variant(branches).length > 0) {
@@ -840,9 +898,10 @@ function* pushVariableLeaf(
 		arity: 1,
 		handler: ([bodyR]) =>
 			M.Do(function* () {
+				assert(bodyR);
 				const focus = yield* M.Focus.get();
 				if (focus !== undefined) {
-					yield* M.Pending.finalize(focus, T.Jump(mergeLabel, [bodyR!.value.name]));
+					yield* M.Pending.finalize(focus, T.Jump(mergeLabel, [bodyR.value.name]));
 				}
 			}),
 	});
@@ -871,7 +930,8 @@ function* pushDefaultBranch(
 		arity: 1,
 		handler: ([bodyR]) =>
 			M.Do(function* () {
-				yield* M.Pending.finalize(defLabel, T.Jump(mergeLabel, [bodyR!.value.name]));
+				assert(bodyR);
+				yield* M.Pending.finalize(defLabel, T.Jump(mergeLabel, [bodyR.value.name]));
 			}),
 	});
 	yield* M.Worklist.push({ type: "Lower", ctx: altCtx, term: branch.term });
@@ -913,7 +973,9 @@ function* pushVariantFrames(
 	// Default case
 	let defaultTarget = failLabel;
 	if (variableBranches.length > 0) {
-		defaultTarget = yield* pushDefaultBranch(scrutVar, variableBranches[0]!, mergeLabel, ctx, columnBindings);
+		const vb = variableBranches[0];
+		assert(vb);
+		defaultTarget = yield* pushDefaultBranch(scrutVar, vb, mergeLabel, ctx, columnBindings);
 	}
 
 	// Build Branch cases
@@ -935,7 +997,9 @@ function* pushVariantFrames(
 
 	// Push per-tag frames (in reverse order so first tag drains first)
 	for (let i = tagAllocs.length - 1; i >= 0; i--) {
-		const { tag, caseLabel, scrutParam, payloadVar } = tagAllocs[i]!;
+		const alloc = tagAllocs[i];
+		assert(alloc);
+		const { tag, caseLabel, scrutParam, payloadVar } = alloc;
 		const matchingBranches = branches.filter(b => b.pattern.row.label === tag);
 		const payloadBranches: EB.Alternative[] = matchingBranches.map(b => ({
 			pattern: MatchExtract.variantPayload(b.pattern.row),
@@ -974,13 +1038,15 @@ function* pushLitFrames(
 	const valAllocs = vals.map(val => ({
 		val,
 		caseLabel: ctx.nextLabel("c"),
-		branch: branches.find(b => MatchExtract.litDisplay(b.pattern.value) === val)!,
+		branch: branches.find(b => MatchExtract.litDisplay(b.pattern.value) === val),
 	}));
 
 	// Default case
 	let defaultTarget = failLabel;
 	if (variableBranches.length > 0) {
-		defaultTarget = yield* pushDefaultBranch(scrutVar, variableBranches[0]!, mergeLabel, ctx, columnBindings);
+		const vb = variableBranches[0];
+		assert(vb);
+		defaultTarget = yield* pushDefaultBranch(scrutVar, vb, mergeLabel, ctx, columnBindings);
 	}
 
 	// Build Branch cases
@@ -1001,7 +1067,10 @@ function* pushLitFrames(
 
 	// Push per-value frames (reverse order)
 	for (let i = valAllocs.length - 1; i >= 0; i--) {
-		const { caseLabel, branch } = valAllocs[i]!;
+		const va = valAllocs[i];
+		assert(va);
+		const { caseLabel, branch } = va;
+		assert(branch);
 
 		// Build the ctx for the body: columnBindings shifted (lit doesn't bind)
 		const litCtx = columnBindings ? { ...ctx, bound: new Map([...ctx.bound, ...[...columnBindings.entries()].map(([col, v]) => [col - 1, v] as const)]) } : ctx;
@@ -1011,7 +1080,8 @@ function* pushLitFrames(
 			arity: 1,
 			handler: ([bodyR]) =>
 				M.Do(function* () {
-					yield* M.Pending.finalize(caseLabel, T.Jump(mergeLabel, [bodyR!.value.name]));
+					assert(bodyR);
+					yield* M.Pending.finalize(caseLabel, T.Jump(mergeLabel, [bodyR.value.name]));
 				}),
 		});
 		yield* M.Worklist.push({ type: "Lower", ctx: litCtx, term: branch.term });
@@ -1039,23 +1109,24 @@ function* pushStructFrames(
 	variableBranches: VariableBranch[],
 	_outerColumnBindings?: ColumnBindings,
 ): M.Glowering<void> {
-	const fields = MatchExtract.structFields(branches[0]!.pattern.row);
+	const firstBranch = branches[0];
+	assert(firstBranch);
+	const fields = MatchExtract.structFields(firstBranch.pattern.row);
 
 	if (fields.length === 0) {
-		// Empty struct: treat as variable (match anything)
-		const branch = branches[0]!;
 		yield* M.Worklist.push({
 			type: "Cont",
 			arity: 1,
 			handler: ([bodyR]) =>
 				M.Do(function* () {
+					assert(bodyR);
 					const focus = yield* M.Focus.get();
 					if (focus !== undefined) {
-						yield* M.Pending.finalize(focus, T.Jump(mergeLabel, [bodyR!.value.name]));
+						yield* M.Pending.finalize(focus, T.Jump(mergeLabel, [bodyR.value.name]));
 					}
 				}),
 		});
-		yield* M.Worklist.push({ type: "Lower", ctx, term: branch.term });
+		yield* M.Worklist.push({ type: "Lower", ctx, term: firstBranch.term });
 		return;
 	}
 
@@ -1070,23 +1141,36 @@ function* pushStructFrames(
 	yield* M.Pending.appendMany(readInstrs);
 
 	// Project the matrix onto the first column
-	const firstLabel = fields[0]!.label;
-	const field0Var = fieldVars[firstLabel]!;
+	const firstField = fields[0];
+	assert(firstField);
+	const firstLabel = firstField.label;
+	const field0Var = fieldVars[firstLabel];
+	assert(field0Var);
 	const column = matchProject(firstLabel, branches);
 
 	// columnBindings for remaining fields
-	const newColumnBindings: ColumnBindings = new Map(fields.slice(1).map((f, i) => [i + 1, fieldVars[f.label]!] as const));
+	const newColumnBindings: ColumnBindings = new Map(
+		fields.slice(1).map((f, i) => {
+			const fv = fieldVars[f.label];
+			assert(fv);
+			return [i + 1, fv] as const;
+		}),
+	);
 
 	// If first column is all-variable, this is a leaf
 	if (MatchPats.allVariable(column)) {
-		yield* pushVariableLeaf(field0Var, { ...branches[0]!, pattern: column[0]!.pattern as VariableBranch["pattern"] }, mergeLabel, ctx, newColumnBindings);
+		const firstCol = column[0];
+		assert(firstCol);
+		yield* pushVariableLeaf(field0Var, { ...firstBranch, pattern: firstCol.pattern as VariableBranch["pattern"] }, mergeLabel, ctx, newColumnBindings);
 		return;
 	}
 
 	// For struct+variable mix: set up default branch using fail or variable fallback
 	let actualFailLabel = failLabel;
 	if (variableBranches.length > 0) {
-		actualFailLabel = yield* pushDefaultBranch(scrutVar, variableBranches[0]!, mergeLabel, ctx);
+		const vb = variableBranches[0];
+		assert(vb);
+		actualFailLabel = yield* pushDefaultBranch(scrutVar, vb, mergeLabel, ctx);
 	}
 
 	// Compile the first column as a sub-matrix (pushes a Cont that does the analysis)
@@ -1117,15 +1201,10 @@ function lowerMatch(scrutinee: EB.Term, alternatives: EB.Alternative[]): M.Lower
 			arity: 1,
 			handler: ([scrutR]) =>
 				M.Do(function* () {
+					assert(scrutR);
 					const outerFocus = yield* M.Focus.get();
+					assert(outerFocus, "lowerMatch: no focus");
 
-					if (outerFocus === undefined) {
-						throw new Error("lowerMatch: no focus");
-					}
-
-					// Emit fail block
-
-					// Emit fail block
 					yield* M.Blocks.emit(Block(failLabel, [], [Instr.Let("__match_fail", E.Lit(Lit.String("non-exhaustive match")))], T.Return("__match_fail")));
 
 					// Push postMatch Cont FIRST (bottom of LIFO — drains last, after all alts)
@@ -1135,12 +1214,12 @@ function lowerMatch(scrutinee: EB.Term, alternatives: EB.Alternative[]): M.Lower
 						handler: () =>
 							M.Do(function* () {
 								yield* M.Pending.open(mergeLabel, [mergeParam.name]);
-								yield* M.Results.push({ value: mergeParam });
+								yield* M.Results.push({ tag: "value", value: mergeParam });
 							}),
 					});
 
 					// Compile the pattern matrix (pushes alt frames on top — drain first)
-					yield* compileSubMatrix(scrutR!.value, alternatives, mergeLabel, failLabel, ctx);
+					yield* compileSubMatrix(scrutR.value, alternatives, mergeLabel, failLabel, ctx);
 				}),
 		});
 		yield* M.Worklist.push({ type: "Lower", ctx, term: scrutinee });
@@ -1152,11 +1231,6 @@ function lowerMatch(scrutinee: EB.Term, alternatives: EB.Alternative[]): M.Lower
  * ================================================================================ */
 
 function lowerOne(term: EB.Term): M.Lowering<void> {
-	const prim = unwrapPrimitiveApp(term);
-	if (prim && prim.args.length > 0) {
-		return lowerPrimOp(prim.op, prim.args);
-	}
-
 	return (
 		match(term)
 			// Type-level erasure (must precede generic shapes — Row/TypeLevelApp can nest in Proj/Inj).
@@ -1191,6 +1265,160 @@ function lowerOne(term: EB.Term): M.Lowering<void> {
 }
 
 /* ================================================================================
+ * Materialization — convert pending foreign/primop results into values
+ *
+ * Called by drainAll before passing results to Cont handlers. Positions marked
+ * in the Cont's `saturate` set are passed through raw (for App's accumulation
+ * logic). Everything else is materialized: saturated foreigns/primops emit their
+ * call instruction; partial ones emit a curried closure wrapper chain.
+ * ================================================================================ */
+
+function* materializePartial(ctx: C.LowerCtx, kind: "foreign" | "primop", nameOrOp: string, arity: number, capturedArgs: C.Stamped[]): M.Glowering<C.Stamped> {
+	const remaining = arity - capturedArgs.length;
+
+	// Pre-allocate names for all wrapper levels (outermost = index 0)
+	const wrappers = Array.from({ length: remaining }, () => ({
+		fnName: ctx.nextVar("fn"),
+		envParam: ctx.nextVar("env"),
+		freshParam: ctx.nextVar(),
+	}));
+
+	// Build from innermost (last level) to outermost (first level)
+	for (let level = remaining - 1; level >= 0; level--) {
+		const w = wrappers[level];
+		assert(w);
+		const { fnName, envParam, freshParam } = w;
+		const numCaptured = capturedArgs.length + level;
+
+		const bodyReads: C.Stamped[] = [];
+		const bodyInstrs: MIR.Instr[] = [];
+		for (let j = 0; j < numCaptured; j++) {
+			const v = ctx.nextVar();
+			bodyReads.push(v);
+			bodyInstrs.push(Instr.Read(`v${j}`, envParam.name, v.name));
+		}
+		const allArgs = [...bodyReads, freshParam];
+
+		if (level === remaining - 1) {
+			// Innermost: emit the saturated call
+			const callResult = ctx.nextVar();
+			if (kind === "primop") {
+				bodyInstrs.push(
+					Instr.Let(
+						callResult.name,
+						E.PrimOp(
+							nameOrOp,
+							allArgs.map(a => a.name),
+						),
+					),
+				);
+			} else {
+				bodyInstrs.push(
+					Instr.Call(
+						{ type: "direct", func: nameOrOp },
+						allArgs.map(a => a.name),
+						callResult.name,
+					),
+				);
+			}
+			const block = Block(`${fnName.name}_entry`, [], bodyInstrs, T.Return(callResult.name));
+			yield* M.Functions.emit(Fn(fnName.name, [envParam.name, freshParam.name], block.label, [block]));
+		} else {
+			// Intermediate: create closure for next level
+			const next = wrappers[level + 1];
+			assert(next);
+			const newEnvRef = ctx.nextVar("env");
+			const newFnRef = ctx.nextVar("fnref");
+			const closureRef = ctx.nextVar("closure");
+			bodyInstrs.push(
+				Instr.Alloc({ type: "Record", fields: allArgs.map((a, i) => ({ label: `v${i}`, value: a.name })) }, newEnvRef.name),
+				Instr.Let(newFnRef.name, E.FuncRef(next.fnName.name)),
+				Instr.Alloc(
+					{
+						type: "Record",
+						fields: [
+							{ label: "__fn", value: newFnRef.name },
+							{ label: "__env", value: newEnvRef.name },
+						],
+					},
+					closureRef.name,
+				),
+			);
+			const block = Block(`${fnName.name}_entry`, [], bodyInstrs, T.Return(closureRef.name));
+			yield* M.Functions.emit(Fn(fnName.name, [envParam.name, freshParam.name], block.label, [block]));
+		}
+	}
+
+	// Outer: alloc env with captured args, create closure pointing to first wrapper
+	const outerWrapper = wrappers[0];
+	assert(outerWrapper);
+	const envRef = ctx.nextVar("env");
+	const fnRef = ctx.nextVar("fnref");
+	const closureRef = ctx.nextVar("closure");
+	yield* M.Pending.appendMany([
+		Instr.Alloc({ type: "Record", fields: capturedArgs.map((a, i) => ({ label: `v${i}`, value: a.name })) }, envRef.name),
+		Instr.Let(fnRef.name, E.FuncRef(outerWrapper.fnName.name)),
+		Instr.Alloc(
+			{
+				type: "Record",
+				fields: [
+					{ label: "__fn", value: fnRef.name },
+					{ label: "__env", value: envRef.name },
+				],
+			},
+			closureRef.name,
+		),
+	]);
+	return closureRef;
+}
+
+function* materialize(results: M.LowerResult[], saturate: Set<number>): M.Glowering<M.LowerResult[]> {
+	const ctx = yield* M.ask();
+	const out: M.LowerResult[] = [];
+
+	for (let i = 0; i < results.length; i++) {
+		const r = results[i];
+		assert(r);
+		if (saturate.has(i)) {
+			out.push(r);
+			continue;
+		}
+		if (r.tag === "value") {
+			out.push(r);
+			continue;
+		}
+		const nameOrOp = r.tag === "foreign" ? r.name : r.op;
+		if (r.args.length === r.arity) {
+			const result = ctx.nextVar();
+			if (r.tag === "primop") {
+				yield* M.Pending.append(
+					Instr.Let(
+						result.name,
+						E.PrimOp(
+							nameOrOp,
+							r.args.map(a => a.name),
+						),
+					),
+				);
+			} else {
+				yield* M.Pending.append(
+					Instr.Call(
+						{ type: "direct", func: nameOrOp },
+						r.args.map(a => a.name),
+						result.name,
+					),
+				);
+			}
+			out.push({ tag: "value", value: result });
+		} else {
+			const closureRef = yield* materializePartial(ctx, r.tag, nameOrOp, r.arity, r.args);
+			out.push({ tag: "value", value: closureRef });
+		}
+	}
+	return out;
+}
+
+/* ================================================================================
  * Drain loop
  * ================================================================================ */
 
@@ -1203,7 +1431,14 @@ function* drainAll(): M.Glowering<void> {
 		}
 
 		if (frame.type === "Cont") {
-			const results = yield* M.Results.pop(frame.arity);
+			const raw = yield* M.Results.pop(frame.arity);
+			const results = (yield* materialize(raw, new Set())) as M.ValueResult[];
+			yield frame.handler(results);
+			continue;
+		}
+		if (frame.type === "Cont:sat") {
+			const raw = yield* M.Results.pop(frame.arity);
+			const results = yield* materialize(raw, frame.saturate);
 			yield frame.handler(results);
 			continue;
 		}
@@ -1220,24 +1455,27 @@ function* drainAll(): M.Glowering<void> {
  * Entry point
  * ================================================================================ */
 
-export function lowerToMir(term: EB.Term): MIR.Module {
+export function lowerToMir(term: EB.Term, declarations?: Map<string, MIR.Declaration>): MIR.Module {
 	C.resetSupply();
 	MIR.resetId();
 
-	const ctx = C.mkCtx();
+	const ctx = C.mkCtx({ declarations });
 	const ENTRY = "entry";
 
 	const program: M.Lowering<void> = M.Do(function* () {
 		yield* M.Pending.open(ENTRY, []);
 		yield* M.Worklist.push({ type: "Lower", ctx, term });
 		yield* drainAll();
-		const [result] = yield* M.Results.pop(1);
+		const [rawResult] = yield* M.Results.pop(1);
+		assert(rawResult);
+		const [result] = (yield* materialize([rawResult], new Set())) as M.ValueResult[];
+		assert(result);
 		// If a top-level Shift fired, it finalized all pending blocks — skip.
 		// If a Match is at the top level, the current focus is the merge block (not "entry").
 		// Finalize whatever the current focus is with Return.
 		const finalFocus = yield* M.Focus.get();
 		if (finalFocus !== undefined) {
-			yield* M.Pending.finalize(finalFocus, T.Return(result!.value.name));
+			yield* M.Pending.finalize(finalFocus, T.Return(result.value.name));
 		}
 	});
 
@@ -1246,5 +1484,6 @@ export function lowerToMir(term: EB.Term): MIR.Module {
 		throw new Error(`lowering failed: ${M.display(collected.result.left)}`);
 	}
 	const mainFn = Fn("main", [], ENTRY, collected.blocks);
-	return Module([mainFn, ...collected.functions]);
+	const mirDeclarations = declarations ? Array.from(declarations.values()) : [];
+	return Module([mainFn, ...collected.functions], mirDeclarations);
 }

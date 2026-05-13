@@ -80,9 +80,10 @@ describe("Lowering: primitives and ops", () => {
 		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
 	});
 
-	it("throws for Var(Foreign) used as value", () => {
+	it("lowers Var(Foreign) primop as value — emits closure wrapper", () => {
 		const term = EB.DSL.foreign("$add");
-		expect(() => lowerToMir(term)).toThrow(/primitive.*used as value/i);
+		const mod = lowerToMir(term);
+		expect({ term: EB.Display.Term(term, emptyDisplayCtx), mir: Pretty.display.module(mod) }).toMatchSnapshot();
 	});
 });
 

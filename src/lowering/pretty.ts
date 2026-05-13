@@ -75,8 +75,9 @@ const d = {
 	},
 
 	module: (m: Module): string => {
+		const decls = m.declarations.map(decl => INDENT + `declare ${decl.source} ${decl.name} (arity ${decl.arity})`);
 		const fns = m.functions.map(f => INDENT + d.function(f).replace(/\n/g, "\n" + INDENT));
-		return ["module", ...fns].join("\n");
+		return ["module", ...decls, ...fns].join("\n");
 	},
 };
 

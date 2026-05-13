@@ -689,6 +689,30 @@ exports[`Lowering: primitives and ops > lowers Lit(Num(42)) 1`] = `
 }
 `;
 
+exports[`Lowering: primitives and ops > lowers Var(Foreign) primop as value — emits closure wrapper 1`] = `
+{
+  "mir": "module
+  fn main entry=entry
+    entry:
+      let env_3 = alloc {  }
+      let fnref_1 = &f_0
+      let closure_1 = alloc { __fn: fnref_1, __env: env_3 }
+      return closure_1
+  fn f_1(env_1, x1) entry=f_1_entry
+    f_1_entry:
+      let x2 = read env_1.v0
+      let x3 = +(x2, x1)
+      return x3
+  fn f_0(env_0, x0) entry=f_0_entry
+    f_0_entry:
+      let env_2 = alloc { v0: x0 }
+      let fnref_0 = &f_1
+      let closure_0 = alloc { __fn: fnref_0, __env: env_2 }
+      return closure_0",
+  "term": "FFI.$add",
+}
+`;
+
 exports[`Lowering: primitives and ops > lowers add(1, 2) 1`] = `
 {
   "mir": "module

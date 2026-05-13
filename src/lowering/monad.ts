@@ -37,13 +37,26 @@ export type Pending = {
 	instrs: MIR.Instr[];
 };
 
-export type LowerResult = {
-	value: Stamped;
-};
+export type LowerResult =
+	| { tag: "value"; value: Stamped }
+	| { tag: "foreign"; name: string; arity: number; args: Stamped[] }
+	| { tag: "primop"; op: string; arity: number; args: Stamped[] };
+
+export type ValueResult = Extract<LowerResult, { tag: "value" }>;
 
 export type Frame =
 	| { type: "Lower"; ctx: LowerCtx; term: EB.Term }
-	| { type: "Cont"; arity: number; handler: (results: LowerResult[]) => Lowering<void> }
+	| { type: "Cont"; arity: number; handler: (results: ValueResult[]) => Lowering<void> }
+	| {
+			type: "Cont:sat";
+			arity: number;
+			/** Positions in the results array that participate in foreign/primop saturation.
+			 * These positions are NOT auto-materialized by drainAll — the handler receives the
+			 * raw LowerResult (which may be a pending foreign/primop) and is responsible for
+			 * accumulation logic. All other positions are materialized before reaching the handler. */
+			saturate: Set<number>;
+			handler: (results: LowerResult[]) => Lowering<void>;
+	  }
 	| { type: "Delimiter"; resultSize: number };
 
 export type Cause =
@@ -428,3 +441,7 @@ export const fail = Error.fail;
 export function run<A>(ma: Lowering<A>, ctx: LowerCtx, st: State = State.initial): [Collector<A>, State] {
 	return ma(ctx, emptyAcc, st);
 }
+
+type Test = { tag: "foo"; x: number; fn: (s: string) => number } | { tag: "foo:sat"; fn: (n: number) => string };
+
+const t: Test = { tag: "foo:sat", fn: n => "hello" };

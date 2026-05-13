@@ -27,8 +27,11 @@ export type Function = {
 	blocks: Block[];
 };
 
+export type Declaration = { name: string; arity: number; source: "ffi" };
+
 export type Module = {
 	functions: Function[];
+	declarations: Declaration[];
 };
 
 export type Block = {
@@ -119,5 +122,5 @@ export const Constructors = {
 		entry,
 		blocks,
 	}),
-	Module: (functions: Function[]): Module => ({ functions }),
+	Module: (functions: Function[], declarations: Declaration[] = []): Module => ({ functions, declarations }),
 };

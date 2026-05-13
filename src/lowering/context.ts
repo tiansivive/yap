@@ -1,5 +1,5 @@
 import type * as EB from "@yap/elaboration";
-import type { Block, Function, Instr } from "./mir";
+import type { Block, Declaration, Function, Instr } from "./mir";
 
 /**
  * Worklist frame for stack-based lowering (no recursion).
@@ -82,6 +82,7 @@ export type ShiftBodyCtx = {
 export type LowerCtx = {
 	bound: Map<number, Stamped>;
 	free: Map<string, Stamped>;
+	declarations: Map<string, Declaration>;
 	nextVar: (kind?: string) => Stamped;
 	nextLabel: (kind?: string) => string;
 	/** Block builder; shared by reference across spreads of the same scope. Lambda / shift /
@@ -152,13 +153,19 @@ export const resetSupply = () => {
 	}
 };
 
-export const mkCtx = (opts?: { bound?: Array<[number, string]>; free?: Array<[string, string]>; builder?: BlockBuilder }): LowerCtx => {
+export const mkCtx = (opts?: {
+	bound?: Array<[number, string]>;
+	free?: Array<[string, string]>;
+	builder?: BlockBuilder;
+	declarations?: Map<string, Declaration>;
+}): LowerCtx => {
 	const supply = mkSupply();
 	const bound = new Map<number, Stamped>(opts?.bound?.map(([idx, name]) => [idx, stampNamed(name)] as const) ?? []);
 	const free = new Map<string, Stamped>(opts?.free?.map(([k, name]) => [k, stampNamed(name)] as const) ?? []);
 	return {
 		bound,
 		free,
+		declarations: opts?.declarations ?? new Map(),
 		builder: opts?.builder ?? mkBuilder("entry"),
 		...supply,
 	};
