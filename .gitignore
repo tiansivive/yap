@@ -6,6 +6,7 @@ gen/
 debug-*.log
 
 .vscode/
+.cursor/
 bin/
 
 src/parser/grammar.ts
