@@ -49,12 +49,18 @@ program
 	.description("Start a Yap REPL")
 	.option("--verbose", "Enable verbose output")
 	.option("--mir", "Use MIR-based interpreter instead of NbE")
+	.option("--codegen", "Use MIR-to-JS codegen instead of MIR interpreter (implies --mir)")
 	.action(async cmd => {
 		console.log("Yap REPL started. Type :exit to quit.");
 		options.verbose = cmd.verbose || false;
 		console.log("Verbose mode:", options.verbose);
 
-		if (cmd.mir) {
+		const codegen = cmd.codegen || false;
+		const mir = cmd.mir || codegen;
+
+		if (codegen) {
+			console.log("MIR codegen active");
+		} else if (mir) {
 			console.log("MIR interpreter active");
 		}
 
@@ -66,7 +72,7 @@ program
 			setZ3Context(z3Ctx);
 		}
 
-		repl({ mir: cmd.mir || false });
+		repl({ mir, codegen });
 	});
 
 program.parse();

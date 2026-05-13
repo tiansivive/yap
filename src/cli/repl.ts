@@ -25,8 +25,10 @@ import { lowerToMir } from "../lowering/lower";
 import { interpret as mirInterpret, type Value } from "../lowering/interpret";
 import * as Pretty from "../lowering/pretty";
 import type { Declaration } from "../lowering/mir";
+import { emit } from "../Codegen/v2/emit";
+import { print as printJS } from "../Codegen/v2/print";
 
-export type ReplOpts = { mir: boolean };
+export type ReplOpts = { mir: boolean; codegen: boolean };
 
 // Compute arity by recursively checking if function returns another function
 const computeArity = (fn: Function): number => {
@@ -54,8 +56,8 @@ const computeArity = (fn: Function): number => {
 	return arity;
 };
 
-export function repl(opts: ReplOpts = { mir: false }) {
-	const prompt = opts.mir ? "mir λ> " : "λ> ";
+export function repl(opts: ReplOpts = { mir: false, codegen: false }) {
+	const prompt = opts.codegen ? "js λ> " : opts.mir ? "mir λ> " : "λ> ";
 	const rl = createInterface({ input: process.stdin, output: process.stdout, prompt });
 
 	let ctx: EB.Context = defaultContext;
@@ -246,7 +248,7 @@ export function repl(opts: ReplOpts = { mir: false }) {
 
 const run = (code: string, ctx: EB.Context, opts: ReplOpts, mirFfi: Record<string, (...args: any[]) => any>, mirDeclarations: Map<string, Declaration>) => {
 	const script = parse(code);
-	return opts.mir ? interpretMIR(script[0], ctx, mirFfi, mirDeclarations) : interpretNbE(script[0], ctx);
+	return opts.mir ? interpretMIR(script[0], ctx, mirFfi, mirDeclarations, opts) : interpretNbE(script[0], ctx);
 };
 
 export const parse = (code: string) => {
@@ -327,12 +329,35 @@ export const interpretNbE = (stmt: Src.Statement, ctx: EB.Context): EB.Context =
 	return foldResult(ctx, either);
 };
 
+const evalMIR =
+	(ffi: Record<string, (...args: any[]) => any>) =>
+	(mod: ReturnType<typeof lowerToMir>): Value =>
+		mirInterpret(mod, ffi);
+
+const evalCodegen =
+	(ffi: Record<string, (...args: any[]) => any>) =>
+	(mod: ReturnType<typeof lowerToMir>): unknown => {
+		const program = emit(mod);
+		const code = printJS(program);
+		if (options.showElaboration) {
+			console.log("\n------------- JS Output -------------");
+			console.log(code);
+			console.log("-------------------------------------\n");
+		}
+		const ffiNames = Object.keys(ffi);
+		const ffiValues = Object.values(ffi);
+		return new Function(...ffiNames, code)(...ffiValues);
+	};
+
 export const interpretMIR = (
 	stmt: Src.Statement,
 	ctx: EB.Context,
 	ffi: Record<string, (...args: any[]) => any>,
 	declarations: Map<string, Declaration>,
+	opts: ReplOpts,
 ): EB.Context => {
+	const evaluate = opts.codegen ? evalCodegen(ffi) : evalMIR(ffi);
+
 	const either = match(stmt)
 		.with({ type: "expression" }, s =>
 			F.pipe(
@@ -349,8 +374,8 @@ export const interpretMIR = (
 						console.log(Pretty.display.module(mod));
 						console.log("-------------------------------------\n");
 					}
-					const result = mirInterpret(mod, ffi);
-					console.log(displayValue(result), "::", EB.NF.display(ty, next), "\n");
+					const result = evaluate(mod);
+					console.log(displayValue(result as Value), "::", EB.NF.display(ty, next), "\n");
 					return next;
 				}),
 			),
