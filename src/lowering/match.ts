@@ -88,15 +88,8 @@ const Extract = {
 		return row.value;
 	},
 
-	structFields: (row: R.Row<EB.Pattern, string>): Array<{ label: string; pattern: EB.Pattern }> => {
-		const acc: Array<{ label: string; pattern: EB.Pattern }> = [];
-		let r: R.Row<EB.Pattern, string> = row;
-		while (r.type === "extension") {
-			acc.push({ label: r.label, pattern: r.value });
-			r = r.row;
-		}
-		return acc;
-	},
+	structFields: (row: R.Row<EB.Pattern, string>): Array<{ label: string; pattern: EB.Pattern }> =>
+		row.type === "extension" ? [{ label: row.label, pattern: row.value }, ...Extract.structFields(row.row)] : [],
 
 	litDisplay: (lit: Lit.Literal): string => Lit.display(lit),
 };
@@ -213,12 +206,7 @@ function* pushVariantFrames(
 	}));
 	const tagVar = ctx.nextVar();
 
-	let defaultTarget = failLabel;
-	if (variableBranches.length > 0) {
-		const vb = variableBranches[0];
-		assert(vb);
-		defaultTarget = yield* pushDefaultBranch(scrutVar, vb, mergeLabel, ctx, columnBindings);
-	}
+	const defaultTarget = variableBranches[0] ? yield* pushDefaultBranch(scrutVar, variableBranches[0], mergeLabel, ctx, columnBindings) : failLabel;
 
 	const cases: MIR.Case[] = tagAllocs.map(({ tag, caseLabel }) => ({
 		value: tag,
@@ -235,16 +223,10 @@ function* pushVariantFrames(
 	}
 	yield* M.Pending.finalize(outerFocus, T.Branch(tagVar.name, cases, defaultCase));
 
-	for (let i = tagAllocs.length - 1; i >= 0; i--) {
-		const alloc = tagAllocs[i];
-		assert(alloc);
-		const { tag, caseLabel, scrutParam, payloadVar } = alloc;
-		const matchingBranches = branches.filter(b => b.pattern.row.label === tag);
-		const payloadBranches: EB.Alternative[] = matchingBranches.map(b => ({
-			pattern: Extract.variantPayload(b.pattern.row),
-			term: b.term,
-			binders: b.binders,
-		}));
+	yield* M.traverse(tagAllocs.toReversed(), function* ({ tag, caseLabel, scrutParam, payloadVar }) {
+		const payloadBranches: EB.Alternative[] = branches
+			.filter(b => b.pattern.row.label === tag)
+			.map(b => ({ pattern: Extract.variantPayload(b.pattern.row), term: b.term, binders: b.binders }));
 
 		yield* M.Worklist.push({
 			type: "Cont",
@@ -255,7 +237,7 @@ function* pushVariantFrames(
 					yield* compileSubMatrix(payloadVar, payloadBranches, mergeLabel, failLabel, ctx, columnBindings);
 				}),
 		});
-	}
+	});
 }
 
 function* pushLitFrames(
@@ -275,12 +257,7 @@ function* pushLitFrames(
 		branch: branches.find(b => Extract.litDisplay(b.pattern.value) === val),
 	}));
 
-	let defaultTarget = failLabel;
-	if (variableBranches.length > 0) {
-		const vb = variableBranches[0];
-		assert(vb);
-		defaultTarget = yield* pushDefaultBranch(scrutVar, vb, mergeLabel, ctx, columnBindings);
-	}
+	const defaultTarget = variableBranches[0] ? yield* pushDefaultBranch(scrutVar, variableBranches[0], mergeLabel, ctx, columnBindings) : failLabel;
 
 	const cases: MIR.Case[] = valAllocs.map(({ val, caseLabel }) => ({
 		value: val,
@@ -296,18 +273,14 @@ function* pushLitFrames(
 	}
 	yield* M.Pending.finalize(outerFocus, T.Branch(scrutVar.name, cases, defaultCase));
 
-	for (let i = valAllocs.length - 1; i >= 0; i--) {
-		const va = valAllocs[i];
-		assert(va);
-		const { caseLabel, branch } = va;
+	const litCtx = columnBindings ? C.bindColumns(ctx, columnBindings) : ctx;
+
+	yield* M.traverse(valAllocs.toReversed(), function* ({ caseLabel, branch }) {
 		assert(branch);
-
-		const litCtx = columnBindings ? C.bindColumns(ctx, columnBindings) : ctx;
-
 		yield* M.Worklist.push(Conts.seal(caseLabel, mergeLabel));
 		yield* M.Worklist.push({ type: "Lower", ctx: litCtx, term: branch.term });
 		yield* M.Worklist.push(Conts.open(caseLabel));
-	}
+	});
 }
 
 function* pushStructFrames(
@@ -329,13 +302,16 @@ function* pushStructFrames(
 		return;
 	}
 
-	const fieldVars: Record<string, C.Stamped> = {};
-	const readInstrs: MIR.Instr[] = [];
-	for (const { label } of fields) {
-		const v = ctx.nextVar();
-		fieldVars[label] = v;
-		readInstrs.push(Instr.Read(label, scrutVar.name, v.name));
-	}
+	const { fieldVars, readInstrs } = fields.reduce<{ fieldVars: Record<string, C.Stamped>; readInstrs: MIR.Instr[] }>(
+		(acc, { label }) => {
+			const v = ctx.nextVar();
+			return {
+				fieldVars: { ...acc.fieldVars, [label]: v },
+				readInstrs: [...acc.readInstrs, Instr.Read(label, scrutVar.name, v.name)],
+			};
+		},
+		{ fieldVars: {}, readInstrs: [] },
+	);
 	yield* M.Pending.appendMany(readInstrs);
 
 	const firstField = fields[0];
@@ -360,12 +336,7 @@ function* pushStructFrames(
 		return;
 	}
 
-	let actualFailLabel = failLabel;
-	if (variableBranches.length > 0) {
-		const vb = variableBranches[0];
-		assert(vb);
-		actualFailLabel = yield* pushDefaultBranch(scrutVar, vb, mergeLabel, ctx);
-	}
+	const actualFailLabel = variableBranches[0] ? yield* pushDefaultBranch(scrutVar, variableBranches[0], mergeLabel, ctx) : failLabel;
 
 	yield* M.Worklist.push({
 		type: "Cont",
