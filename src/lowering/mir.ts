@@ -10,14 +10,6 @@ import { Simplify } from "type-fest";
 // - structured jumps (Goto / Branch)
 // - assignments of simple expressions to SSA-ish variables
 
-export type Term = Types.Brand<typeof tag, Constructor & { id: number }>;
-const tag: unique symbol = Symbol("MIR.Term");
-
-type Constructor =
-	| { type: "BlockGraph"; blocks: Block[]; entry: Label }
-	| { type: "Lambda"; params: string[]; body: Term }
-	| { type: "App"; func: Term; args: Term[] };
-
 export type Label = string;
 
 export type Function = {
@@ -76,16 +68,7 @@ export const resetId = () => {
 	currentId = 0;
 };
 
-export const mk = <K extends Constructor["type"]>(ctor: Extract<Constructor, { type: K }>) => {
-	const r = Types.make(tag, { ...ctor, id: nextId() });
-	return r as Simplify<typeof r>;
-};
-
 export const Constructors = {
-	BlockGraph: (blocks: Block[], entry: Label): Extract<Term, { type: "BlockGraph" }> => mk({ type: "BlockGraph", blocks, entry }),
-	Lambda: (params: string[], body: Term): Extract<Term, { type: "Lambda" }> => mk({ type: "Lambda", params, body }),
-	App: (func: Term, args: Term[]): Extract<Term, { type: "App" }> => mk({ type: "App", func, args }),
-
 	Expr: {
 		Var: (name: string): Expr => ({ type: "Var", name }),
 		Lit: (value: Literal): Expr => ({ type: "Lit", value }),
