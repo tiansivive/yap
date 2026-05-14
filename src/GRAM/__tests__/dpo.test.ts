@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { Nodes, Edges, Query, setRoot, empty, resetId } from "../graph";
+import { Nodes, Edges, Query, mkGraph, entry, resetId } from "../graph";
 import type { Rule } from "../grs";
 import { Match, Rewrite, Strategy } from "../grs";
 
@@ -9,13 +9,13 @@ describe("DPO matching", () => {
 	beforeEach(resetId);
 
 	it("matches a single node by tag", () => {
-		const [, g] = Nodes.add("a", {}, prov)(empty);
+		const [, g] = Nodes.add("a", {}, prov)(mkGraph());
 		const rule: Rule = { lhs: { nodes: [{ bind: "$x", tag: "a" }], edges: [] }, rhs: { nodes: [], edges: [] } };
 		expect(Match.one(rule, g)).toBeDefined();
 	});
 
 	it("matches node + edge", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
+		const [a, g1] = Nodes.add("a", {}, prov)(mkGraph());
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
 		const g = Edges.add(a, ":x", b)(g2);
 
@@ -35,7 +35,7 @@ describe("DPO matching", () => {
 	});
 
 	it("matches multiple edges", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
+		const [a, g1] = Nodes.add("a", {}, prov)(mkGraph());
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
 		const [c, g3] = Nodes.add("c", {}, prov)(g2);
 		const g = Edges.add(a, ":y", c)(Edges.add(a, ":x", b)(g3));
@@ -61,7 +61,7 @@ describe("DPO matching", () => {
 	});
 
 	it("matches self-referential edge", () => {
-		const [a, g1] = Nodes.add("mu", {}, prov)(empty);
+		const [a, g1] = Nodes.add("mu", {}, prov)(mkGraph());
 		const g = Edges.add(a, ":self", a)(g1);
 
 		const rule: Rule = {
@@ -76,7 +76,7 @@ describe("DPO matching", () => {
 	});
 
 	it("rejects when edge missing", () => {
-		const [, g1] = Nodes.add("a", {}, prov)(empty);
+		const [, g1] = Nodes.add("a", {}, prov)(mkGraph());
 		const [, g] = Nodes.add("b", {}, prov)(g1);
 
 		const rule: Rule = {
@@ -93,7 +93,7 @@ describe("DPO matching", () => {
 	});
 
 	it("rejects when non-anchor node unreachable via edges", () => {
-		const [, g1] = Nodes.add("a", {}, prov)(empty);
+		const [, g1] = Nodes.add("a", {}, prov)(mkGraph());
 		const [, g] = Nodes.add("b", {}, prov)(g1);
 
 		const rule: Rule = {
@@ -110,7 +110,7 @@ describe("DPO matching", () => {
 	});
 
 	it("where clause accepts", () => {
-		const [, g] = Nodes.add("a", { v: 2 }, prov)(empty);
+		const [, g] = Nodes.add("a", { v: 2 }, prov)(mkGraph());
 		const rule: Rule = {
 			lhs: { nodes: [{ bind: "$x", tag: "a" }], edges: [] },
 			rhs: { nodes: [], edges: [] },
@@ -120,7 +120,7 @@ describe("DPO matching", () => {
 	});
 
 	it("where clause rejects", () => {
-		const [, g] = Nodes.add("a", { v: 1 }, prov)(empty);
+		const [, g] = Nodes.add("a", { v: 1 }, prov)(mkGraph());
 		const rule: Rule = {
 			lhs: { nodes: [{ bind: "$x", tag: "a" }], edges: [] },
 			rhs: { nodes: [], edges: [] },
@@ -130,7 +130,7 @@ describe("DPO matching", () => {
 	});
 
 	it("payload predicate accepts", () => {
-		const [, g] = Nodes.add("a", { v: 42 }, prov)(empty);
+		const [, g] = Nodes.add("a", { v: 42 }, prov)(mkGraph());
 		const rule: Rule = {
 			lhs: { nodes: [{ bind: "$x", tag: "a", payload: p => p.v === 42 }], edges: [] },
 			rhs: { nodes: [], edges: [] },
@@ -139,7 +139,7 @@ describe("DPO matching", () => {
 	});
 
 	it("payload predicate rejects", () => {
-		const [, g] = Nodes.add("a", { v: 1 }, prov)(empty);
+		const [, g] = Nodes.add("a", { v: 1 }, prov)(mkGraph());
 		const rule: Rule = {
 			lhs: { nodes: [{ bind: "$x", tag: "a", payload: p => p.v === 42 }], edges: [] },
 			rhs: { nodes: [], edges: [] },
@@ -148,7 +148,7 @@ describe("DPO matching", () => {
 	});
 
 	it("matchAll finds multiple", () => {
-		const [, g1] = Nodes.add("a", {}, prov)(empty);
+		const [, g1] = Nodes.add("a", {}, prov)(mkGraph());
 		const [, g2] = Nodes.add("a", {}, prov)(g1);
 		const [, g] = Nodes.add("a", {}, prov)(g2);
 
@@ -161,17 +161,18 @@ describe("DPO rewrite", () => {
 	beforeEach(resetId);
 
 	it("deletes LHS-only nodes", () => {
-		const [, g] = Nodes.add("old", {}, prov)(empty);
+		const [, g] = Nodes.add("old", {}, prov)(mkGraph());
 		const rule: Rule = {
 			lhs: { nodes: [{ bind: "$x", tag: "old" }], edges: [] },
 			rhs: { nodes: [], edges: [] },
 		};
-		const result = Rewrite.apply(rule, g)!;
-		expect(result.nodes.size).toBe(0);
+		const result = Rewrite.apply(rule, g);
+		expect(result).toBeDefined();
+		expect(Query.byTag("old")(result ?? g).size).toBe(0);
 	});
 
 	it("preserves interface nodes", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
+		const [a, g1] = Nodes.add("a", {}, prov)(mkGraph());
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
 		const g = Edges.add(a, ":x", b)(g2);
 
@@ -185,13 +186,14 @@ describe("DPO rewrite", () => {
 			},
 			rhs: { nodes: [{ bind: "$b", tag: "b", payload: {}, provenance: prov }], edges: [] },
 		};
-		const result = Rewrite.apply(rule, g)!;
-		expect(result.nodes.size).toBe(1);
-		expect(Nodes.get(b)(result)?.tag).toBe("b");
+		const result = Rewrite.apply(rule, g);
+		expect(result).toBeDefined();
+		expect(Query.byTag("a")(result ?? g).size).toBe(0);
+		expect(Nodes.get(b)(result ?? g)?.tag).toBe("b");
 	});
 
 	it("external edges to interface nodes survive", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
+		const [a, g1] = Nodes.add("a", {}, prov)(mkGraph());
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
 		const [ext, g3] = Nodes.add("ext", {}, prov)(g2);
 		const g = Edges.add(ext, ":ref", b)(Edges.add(a, ":x", b)(g3));
@@ -212,7 +214,7 @@ describe("DPO rewrite", () => {
 	});
 
 	it("creates RHS-only nodes", () => {
-		const [, g] = Nodes.add("old", {}, prov)(empty);
+		const [, g] = Nodes.add("old", {}, prov)(mkGraph());
 		const rule: Rule = {
 			lhs: { nodes: [{ bind: "$x", tag: "old" }], edges: [] },
 			rhs: { nodes: [{ bind: "$new", tag: "new", payload: { replaced: true }, provenance: prov }], edges: [] },
@@ -223,7 +225,7 @@ describe("DPO rewrite", () => {
 	});
 
 	it("creates RHS edges between interface and new nodes", () => {
-		const [a, g] = Nodes.add("a", {}, prov)(empty);
+		const [a, g] = Nodes.add("a", {}, prov)(mkGraph());
 		const rule: Rule = {
 			lhs: { nodes: [{ bind: "$a", tag: "a" }], edges: [] },
 			rhs: {
@@ -234,13 +236,14 @@ describe("DPO rewrite", () => {
 				edges: [{ source: "$a", label: ":child", target: "$b" }],
 			},
 		};
-		const result = Rewrite.apply(rule, g)!;
-		expect(result.nodes.size).toBe(2);
-		expect(Edges.byLabel(a, ":child")(result)).toBeDefined();
+		const result = Rewrite.apply(rule, g);
+		expect(result).toBeDefined();
+		expect(Query.byTag("b")(result ?? g).size).toBe(1);
+		expect(Edges.byLabel(a, ":child")(result ?? g)).toBeDefined();
 	});
 
 	it("rejects on dangling edges (DPO)", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
+		const [a, g1] = Nodes.add("a", {}, prov)(mkGraph());
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
 		const [c, g3] = Nodes.add("c", {}, prov)(g2);
 		const g = Edges.add(c, ":y", b)(Edges.add(a, ":x", b)(g3));
@@ -259,7 +262,7 @@ describe("DPO rewrite", () => {
 	});
 
 	it("removes LHS edges not in RHS between interface nodes", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
+		const [a, g1] = Nodes.add("a", {}, prov)(mkGraph());
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
 		const g = Edges.add(a, ":old", b)(g2);
 
@@ -285,7 +288,7 @@ describe("DPO rewrite", () => {
 	});
 
 	it("computed payload in RHS", () => {
-		const [, g] = Nodes.add("a", { v: 10 }, prov)(empty);
+		const [, g] = Nodes.add("a", { v: 10 }, prov)(mkGraph());
 		const rule: Rule = {
 			lhs: { nodes: [{ bind: "$x", tag: "a" }], edges: [] },
 			rhs: {
@@ -305,22 +308,11 @@ describe("DPO rewrite", () => {
 		expect(n?.payload.doubled).toBe(20);
 	});
 
-	it("root cleared when root node deleted", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
-		const g = setRoot(a)(g1);
-
-		const rule: Rule = {
-			lhs: { nodes: [{ bind: "$x", tag: "a" }], edges: [] },
-			rhs: { nodes: [], edges: [] },
-		};
-		const result = Rewrite.apply(rule, g)!;
-		expect(result.root).toBeUndefined();
-	});
-
-	it("root preserved when non-root node deleted", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
+	it("redirect transfers entry when deleting the entry node", () => {
+		const base = mkGraph();
+		const [a, g1] = Nodes.add("a", {}, prov)(base);
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
-		const g = setRoot(a)(Edges.add(a, ":x", b)(g2));
+		const g = Edges.add(a, ":child", b)(Edges.add(base.root, ":entry", a)(g2));
 
 		const rule: Rule = {
 			lhs: {
@@ -328,29 +320,32 @@ describe("DPO rewrite", () => {
 					{ bind: "$a", tag: "a" },
 					{ bind: "$b", tag: "b" },
 				],
-				edges: [{ source: "$a", label: ":x", target: "$b" }],
+				edges: [{ source: "$a", label: ":child", target: "$b" }],
 			},
-			rhs: { nodes: [{ bind: "$a", tag: "a", payload: {}, provenance: prov }], edges: [] },
+			rhs: { nodes: [{ bind: "$b", tag: "b", payload: {}, provenance: prov }], edges: [] },
+			redirect: { $a: "$b" },
 		};
-		const result = Rewrite.apply(rule, g)!;
-		expect(result.root).toBe(a);
+		const result = Rewrite.apply(rule, g);
+		expect(result).toBeDefined();
+		expect(entry(result ?? g)).toBe(b);
 	});
 
 	it("in-place retag via shared interface bind", () => {
-		const [a, g1] = Nodes.add("old", { keep: true }, prov)(empty);
+		const base = mkGraph();
+		const [a, g1] = Nodes.add("old", { keep: true }, prov)(base);
 		const [b, g2] = Nodes.add("ref", {}, prov)(g1);
-		const g = setRoot(a)(Edges.add(b, ":to", a)(g2));
+		const g = Edges.add(b, ":to", a)(Edges.add(base.root, ":entry", a)(g2));
 
 		const rule: Rule = {
 			lhs: { nodes: [{ bind: "$x", tag: "old" }], edges: [] },
 			rhs: { nodes: [{ bind: "$x", tag: "new", payload: { keep: true }, provenance: prov }], edges: [] },
 		};
-		const result = Rewrite.apply(rule, g)!;
-
-		expect(Nodes.get(a)(result)?.tag).toBe("new");
-		expect(Nodes.get(a)(result)?.payload.keep).toBe(true);
-		expect(Edges.byLabel(b, ":to")(result)?.target).toBe(a);
-		expect(result.root).toBe(a);
+		const result = Rewrite.apply(rule, g);
+		expect(result).toBeDefined();
+		expect(Nodes.get(a)(result ?? g)?.tag).toBe("new");
+		expect(Nodes.get(a)(result ?? g)?.payload.keep).toBe(true);
+		expect(Edges.byLabel(b, ":to")(result ?? g)?.target).toBe(a);
+		expect(entry(result ?? g)).toBe(a);
 	});
 });
 
@@ -363,7 +358,7 @@ describe("DPO strategies", () => {
 	});
 
 	it("apply rewrites until exhaustion", () => {
-		const [, g1] = Nodes.add("old", {}, prov)(empty);
+		const [, g1] = Nodes.add("old", {}, prov)(mkGraph());
 		const [, g2] = Nodes.add("old", {}, prov)(g1);
 		const [, g] = Nodes.add("old", {}, prov)(g2);
 
@@ -373,7 +368,7 @@ describe("DPO strategies", () => {
 	});
 
 	it("apply stops on dangling rejection", () => {
-		const [a, g1] = Nodes.add("target", {}, prov)(empty);
+		const [a, g1] = Nodes.add("target", {}, prov)(mkGraph());
 		const [b, g2] = Nodes.add("ext", {}, prov)(g1);
 		const g = Edges.add(b, ":ref", a)(g2);
 
@@ -386,7 +381,7 @@ describe("DPO strategies", () => {
 	});
 
 	it("once rewrites one", () => {
-		const [, g1] = Nodes.add("old", {}, prov)(empty);
+		const [, g1] = Nodes.add("old", {}, prov)(mkGraph());
 		const [, g] = Nodes.add("old", {}, prov)(g1);
 
 		const result = Strategy.once(replace("old", "new"))(g);
@@ -395,25 +390,25 @@ describe("DPO strategies", () => {
 	});
 
 	it("seq composes", () => {
-		const [, g] = Nodes.add("a", {}, prov)(empty);
+		const [, g] = Nodes.add("a", {}, prov)(mkGraph());
 		const result = Strategy.seq(Strategy.apply(replace("a", "b")), Strategy.apply(replace("b", "c")))(g);
 		expect(Query.byTag("c")(result).size).toBe(1);
 	});
 
 	it("try_ doesn't fail on no match", () => {
-		const [, g] = Nodes.add("a", {}, prov)(empty);
+		const [, g] = Nodes.add("a", {}, prov)(mkGraph());
 		const result = Strategy.try_(replace("nope", "new"))(g);
 		expect(Query.byTag("a")(result).size).toBe(1);
 	});
 
 	it("choice picks first matching rule", () => {
-		const [, g] = Nodes.add("a", {}, prov)(empty);
+		const [, g] = Nodes.add("a", {}, prov)(mkGraph());
 		const result = Strategy.choice(replace("nope", "x"), replace("a", "found"))(g);
 		expect(Query.byTag("found")(result).size).toBe(1);
 	});
 
 	it("repeat stops at fixpoint", () => {
-		const [, g1] = Nodes.add("a", {}, prov)(empty);
+		const [, g1] = Nodes.add("a", {}, prov)(mkGraph());
 		const [, g] = Nodes.add("b", {}, prov)(g1);
 
 		const result = Strategy.repeat(Strategy.once(replace("a", "b")))(g);

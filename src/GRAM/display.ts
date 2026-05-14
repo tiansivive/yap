@@ -4,9 +4,8 @@ const INDENT = "  ";
 
 const d = {
 	graph: (g: Graph): string => {
-		const header = g.root !== undefined ? [`root: [${g.root}]`] : [];
 		const nodes = [...g.nodes.values()].sort((a, b) => a.id - b.id).flatMap(n => [d.node(n), ...d.edges(g, n.id)]);
-		return [...header, ...nodes].join("\n");
+		return nodes.join("\n");
 	},
 
 	node: (n: Node): string => {

@@ -22,7 +22,7 @@ export type Graph = {
 	readonly nodes: ReadonlyMap<NodeId, Node>;
 	readonly edges: ReadonlyMap<NodeId, ReadonlyMap<Label, Edge>>;
 	readonly byTag: ReadonlyMap<Tag, ReadonlySet<NodeId>>;
-	readonly root?: NodeId;
+	readonly root: NodeId;
 };
 
 // ── Id supply ──
@@ -35,10 +35,12 @@ export const resetId = (): void => {
 
 // ── Empty ──
 
-export const empty: Graph = {
-	nodes: new Map(),
-	edges: new Map(),
-	byTag: new Map(),
+export const mkGraph = (): Graph => {
+	const id = fresh();
+	const node: Node = { id, tag: "root", payload: {}, provenance: { created_by: "graph" } };
+	const nodes: ReadonlyMap<NodeId, Node> = new Map([[id, node]]);
+	const byTag: ReadonlyMap<string, ReadonlySet<NodeId>> = new Map([["root", new Set([id])]]);
+	return { nodes, edges: new Map(), byTag, root: id };
 };
 
 // ── Internal index helpers ──
@@ -106,8 +108,7 @@ export const Nodes = {
 			const nodes = new Map(g.nodes);
 			nodes.delete(id);
 			const byTag = removeFromTagIndex(g, node.tag, id);
-			const cleaned = dropAllEdgesOf(id, { ...g, nodes, byTag });
-			return cleaned.root === id ? { ...cleaned, root: undefined } : cleaned;
+			return dropAllEdgesOf(id, { ...g, nodes, byTag });
 		},
 
 	get:
@@ -185,6 +186,25 @@ export const Query = {
 		(g: Graph): NodeId | undefined =>
 			labels.reduce<NodeId | undefined>((cur, label) => (cur !== undefined ? g.edges.get(cur)?.get(label)?.target : undefined), id),
 
+	any:
+		(from: NodeId, pred: (edge: Edge) => boolean) =>
+		(g: Graph): boolean => {
+			const visited = new Set<NodeId>();
+			const walk = (id: NodeId): boolean => {
+				if (visited.has(id)) {
+					return false;
+				}
+				visited.add(id);
+				const out = g.edges.get(id);
+
+				if (!out) {
+					return false;
+				}
+				return [...out.values()].some(e => pred(e) || walk(e.target));
+			};
+			return walk(from);
+		},
+
 	subgraph:
 		(ids: ReadonlySet<NodeId>) =>
 		(g: Graph): Graph =>
@@ -208,6 +228,4 @@ export const Query = {
 
 // ── Root ──
 
-export const setRoot =
-	(id: NodeId) =>
-	(g: Graph): Graph => ({ ...g, root: id });
+export const entry = (g: Graph): NodeId | undefined => g.edges.get(g.root)?.get(":entry")?.target;

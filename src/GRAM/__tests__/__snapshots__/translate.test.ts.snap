@@ -1,43 +1,75 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`GRAM translate > (λx.λy.x+y) 3 4 — curried closure 1`] = `
-"root: [1]
-[1] app {"icit":"Explicit"}
-  :arg -> [14]
-  :func -> [2]
+"[1] root
+  :entry -> [2]
 [2] app {"icit":"Explicit"}
-  :arg -> [13]
+  :arg -> [15]
   :func -> [3]
-[3] lambda {"variable":"x","icit":"Explicit"}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Num"}}
-[5] lambda {"variable":"y","icit":"Explicit"}
-  :annotation -> [6]
-  :body -> [7]
-[6] lit {"value":{"type":"Atom","value":"Num"}}
-[7] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [8]
+[3] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [4]
+[4] lambda {"variable":"x","icit":"Explicit"}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] lambda {"variable":"y","icit":"Explicit"}
+  :annotation -> [7]
+  :body -> [8]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
 [8] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[9] var:foreign {"name":"$add"}
-[10] var:ref {"name":"$add"}
-  :refers_to -> [9]
-[11] var:bound {"index":1}
-  :refers_to -> [3]
-[12] var:bound {"index":0}
-  :refers_to -> [5]
-[13] lit {"value":{"type":"Num","value":3}}
-[14] lit {"value":{"type":"Num","value":4}}"
+  :arg -> [13]
+  :func -> [9]
+[9] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[10] var:foreign {"name":"$add"}
+[11] var:ref {"name":"$add"}
+  :refers_to -> [10]
+[12] var:bound {"index":1}
+  :refers_to -> [4]
+[13] var:bound {"index":0}
+  :refers_to -> [6]
+[14] lit {"value":{"type":"Num","value":3}}
+[15] lit {"value":{"type":"Num","value":4}}"
 `;
 
 exports[`GRAM translate > App(Lambda(x, Bound(0)), Num(1)) 1`] = `
-"root: [1]
-[1] app {"icit":"Explicit"}
-  :arg -> [6]
-  :func -> [2]
+"[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [3]
+[3] lambda {"variable":"x","icit":"Explicit"}
+  :annotation -> [5]
+  :body -> [6]
+[4] var:free {"name":"Int"}
+[5] var:ref {"name":"Int"}
+  :refers_to -> [4]
+[6] var:bound {"index":0}
+  :refers_to -> [3]
+[7] lit {"value":{"type":"Num","value":1}}"
+`;
+
+exports[`GRAM translate > Foreign variable 1`] = `
+"[1] root
+  :entry -> [3]
+[2] var:foreign {"name":"$add"}
+[3] var:ref {"name":"$add"}
+  :refers_to -> [2]"
+`;
+
+exports[`GRAM translate > Free variable 1`] = `
+"[1] root
+  :entry -> [3]
+[2] var:free {"name":"x"}
+[3] var:ref {"name":"x"}
+  :refers_to -> [2]"
+`;
+
+exports[`GRAM translate > Lambda(x, Bound(0)) — identity 1`] = `
+"[1] root
+  :entry -> [2]
 [2] lambda {"variable":"x","icit":"Explicit"}
   :annotation -> [4]
   :body -> [5]
@@ -45,279 +77,58 @@ exports[`GRAM translate > App(Lambda(x, Bound(0)), Num(1)) 1`] = `
 [4] var:ref {"name":"Int"}
   :refers_to -> [3]
 [5] var:bound {"index":0}
-  :refers_to -> [2]
-[6] lit {"value":{"type":"Num","value":1}}"
-`;
-
-exports[`GRAM translate > Foreign variable 1`] = `
-"root: [2]
-[1] var:foreign {"name":"$add"}
-[2] var:ref {"name":"$add"}
-  :refers_to -> [1]"
-`;
-
-exports[`GRAM translate > Free variable 1`] = `
-"root: [2]
-[1] var:free {"name":"x"}
-[2] var:ref {"name":"x"}
-  :refers_to -> [1]"
-`;
-
-exports[`GRAM translate > Lambda(x, Bound(0)) — identity 1`] = `
-"root: [1]
-[1] lambda {"variable":"x","icit":"Explicit"}
-  :annotation -> [3]
-  :body -> [4]
-[2] var:free {"name":"Int"}
-[3] var:ref {"name":"Int"}
-  :refers_to -> [2]
-[4] var:bound {"index":0}
-  :refers_to -> [1]"
+  :refers_to -> [2]"
 `;
 
 exports[`GRAM translate > Lit(42) 1`] = `
-"root: [1]
-[1] lit {"value":{"type":"Num","value":42}}"
+"[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"Num","value":42}}"
 `;
 
 exports[`GRAM translate > Lit(string) 1`] = `
-"root: [1]
-[1] lit {"value":{"type":"String","value":"hello"}}"
+"[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"String","value":"hello"}}"
 `;
 
 exports[`GRAM translate > Lit(true) 1`] = `
-"root: [1]
-[1] lit {"value":{"type":"Bool","value":true}}"
+"[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"Bool","value":true}}"
 `;
 
 exports[`GRAM translate > add(1, 2) — curried foreign primop 1`] = `
-"root: [1]
-[1] app {"icit":"Explicit"}
-  :arg -> [6]
-  :func -> [2]
+"[1] root
+  :entry -> [2]
 [2] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[3] var:foreign {"name":"$add"}
-[4] var:ref {"name":"$add"}
-  :refers_to -> [3]
-[5] lit {"value":{"type":"Num","value":1}}
-[6] lit {"value":{"type":"Num","value":2}}"
+  :arg -> [7]
+  :func -> [3]
+[3] app {"icit":"Explicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:foreign {"name":"$add"}
+[5] var:ref {"name":"$add"}
+  :refers_to -> [4]
+[6] lit {"value":{"type":"Num","value":1}}
+[7] lit {"value":{"type":"Num","value":2}}"
 `;
 
 exports[`GRAM translate > block — let x=1; let y=2; x+y 1`] = `
-"root: [1]
-[1] block
-  :return -> [6]
-  :stmt_0 -> [2]
-  :stmt_1 -> [4]
-[2] stmt:let {"variable":"x"}
-  :value -> [3]
-[3] lit {"value":{"type":"Num","value":1}}
-[4] stmt:let {"variable":"y"}
-  :value -> [5]
-[5] lit {"value":{"type":"Num","value":2}}
-[6] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [7]
-[7] app {"icit":"Explicit"}
-  :arg -> [10]
-  :func -> [9]
-[8] var:foreign {"name":"$add"}
-[9] var:ref {"name":"$add"}
-  :refers_to -> [8]
-[10] var:bound {"index":0}
-  :refers_to -> [4]
-[11] var:bound {"index":1}
-  :refers_to -> [2]"
-`;
-
-exports[`GRAM translate > injection — { r | tag = value } 1`] = `
-"root: [1]
-[1] inj {"label":"tag"}
-  :target -> [4]
-  :value -> [2]
-[2] lit {"value":{"type":"String","value":"hello"}}
-[3] var:free {"name":"r"}
-[4] var:ref {"name":"r"}
-  :refers_to -> [3]"
-`;
-
-exports[`GRAM translate > match on variant (Some 42) 1`] = `
-"root: [1]
-[1] match
-  :case_0 -> [9]
-  :case_1 -> [11]
-  :scrutinee -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"__tag"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"String","value":"Some"}}
-[6] row:ext {"label":"Some"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Num","value":42}}
-[8] row:empty
-[9] case {"pattern":{"type":"Variant","row":{"type":"extension","label":"Some","value":{"type":"Binder","value":"x"},"row":{"type":"empty"}}},"binders":[["_",{"type":"Lit","value":{"type":"Atom","value":"Num"},"id":6}]]}
-  :body -> [10]
-[10] var:bound {"index":0}
-  :refers_to -> [9]
-[11] case {"pattern":{"type":"Variant","row":{"type":"extension","label":"None","value":{"type":"Wildcard"},"row":{"type":"empty"}}},"binders":[["_",{"type":"Lit","value":{"type":"Atom","value":"Num"},"id":6}]]}
-  :body -> [12]
-[12] lit {"value":{"type":"Num","value":0}}"
-`;
-
-exports[`GRAM translate > match with alternatives 1`] = `
-"root: [1]
-[1] lambda {"variable":"x","icit":"Explicit"}
-  :annotation -> [3]
-  :body -> [4]
-[2] var:free {"name":"Int"}
-[3] var:ref {"name":"Int"}
-  :refers_to -> [2]
-[4] match
-  :case_0 -> [6]
-  :case_1 -> [8]
-  :scrutinee -> [5]
-[5] var:bound {"index":0}
-  :refers_to -> [1]
-[6] case {"pattern":{"type":"Lit","value":{"type":"Num","value":0}},"binders":[]}
-  :body -> [7]
-[7] lit {"value":{"type":"Num","value":1}}
-[8] case {"pattern":{"type":"Wildcard"},"binders":[]}
-  :body -> [9]
-[9] lit {"value":{"type":"Num","value":2}}"
-`;
-
-exports[`GRAM translate > nested lambdas — de Bruijn resolution 1`] = `
-"root: [1]
-[1] lambda {"variable":"x","icit":"Explicit"}
-  :annotation -> [3]
-  :body -> [4]
-[2] var:free {"name":"Int"}
-[3] var:ref {"name":"Int"}
-  :refers_to -> [2]
-[4] lambda {"variable":"y","icit":"Explicit"}
-  :annotation -> [5]
-  :body -> [6]
-[5] var:ref {"name":"Int"}
-  :refers_to -> [2]
-[6] var:bound {"index":1}
-  :refers_to -> [1]"
-`;
-
-exports[`GRAM translate > proj('x', struct({ x: 42 })) 1`] = `
-"root: [1]
-[1] proj {"label":"x"}
-  :target -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"x"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Num","value":42}}
-[6] row:empty"
-`;
-
-exports[`GRAM translate > projection 1`] = `
-"root: [1]
-[1] proj {"label":"x"}
-  :target -> [3]
-[2] var:free {"name":"r"}
-[3] var:ref {"name":"r"}
-  :refers_to -> [2]"
-`;
-
-exports[`GRAM translate > reset(shift k -> (k 1) + (k 2)) — multishot 1`] = `
-"root: [1]
-[1] reset
-  :body -> [2]
-[2] shift
-  :body -> [3]
-[3] lambda {"variable":"k","icit":"Explicit"}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Num"}}
-[5] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [6]
-[6] app {"icit":"Explicit"}
-  :arg -> [9]
-  :func -> [8]
-[7] var:foreign {"name":"$add"}
-[8] var:ref {"name":"$add"}
-  :refers_to -> [7]
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] var:bound {"index":0}
-  :refers_to -> [3]
-[11] lit {"value":{"type":"Num","value":1}}
-[12] app {"icit":"Explicit"}
-  :arg -> [14]
-  :func -> [13]
-[13] var:bound {"index":0}
-  :refers_to -> [3]
-[14] lit {"value":{"type":"Num","value":2}}"
-`;
-
-exports[`GRAM translate > reset(shift k -> k 42) — single resume 1`] = `
-"root: [1]
-[1] reset
-  :body -> [2]
-[2] shift
-  :body -> [3]
-[3] lambda {"variable":"k","icit":"Explicit"}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Num"}}
-[5] app {"icit":"Explicit"}
-  :arg -> [7]
-  :func -> [6]
-[6] var:bound {"index":0}
-  :refers_to -> [3]
-[7] lit {"value":{"type":"Num","value":42}}"
-`;
-
-exports[`GRAM translate > struct — row extension chain 1`] = `
-"root: [1]
-[1] app {"icit":"Explicit"}
-  :arg -> [3]
-  :func -> [2]
-[2] lit {"value":{"type":"Atom","value":"Struct"}}
-[3] row:ext {"label":"x"}
-  :rest -> [5]
+"[1] root
+  :entry -> [2]
+[2] block
+  :return -> [7]
+  :stmt_0 -> [3]
+  :stmt_1 -> [5]
+[3] stmt:let {"variable":"x"}
   :value -> [4]
 [4] lit {"value":{"type":"Num","value":1}}
-[5] row:ext {"label":"y"}
-  :rest -> [7]
+[5] stmt:let {"variable":"y"}
   :value -> [6]
 [6] lit {"value":{"type":"Num","value":2}}
-[7] row:empty"
-`;
-
-exports[`GRAM translate > triple nested lambda — de Bruijn indices at all depths 1`] = `
-"root: [1]
-[1] lambda {"variable":"x","icit":"Explicit"}
-  :annotation -> [2]
-  :body -> [3]
-[2] lit {"value":{"type":"Atom","value":"Num"}}
-[3] lambda {"variable":"y","icit":"Explicit"}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Num"}}
-[5] lambda {"variable":"z","icit":"Explicit"}
-  :annotation -> [6]
-  :body -> [7]
-[6] lit {"value":{"type":"Atom","value":"Num"}}
 [7] app {"icit":"Explicit"}
-  :arg -> [16]
+  :arg -> [12]
   :func -> [8]
 [8] app {"icit":"Explicit"}
   :arg -> [11]
@@ -325,18 +136,227 @@ exports[`GRAM translate > triple nested lambda — de Bruijn indices at all dept
 [9] var:foreign {"name":"$add"}
 [10] var:ref {"name":"$add"}
   :refers_to -> [9]
-[11] app {"icit":"Explicit"}
-  :arg -> [15]
-  :func -> [12]
-[12] app {"icit":"Explicit"}
-  :arg -> [14]
-  :func -> [13]
-[13] var:ref {"name":"$add"}
-  :refers_to -> [9]
-[14] var:bound {"index":2}
-  :refers_to -> [1]
-[15] var:bound {"index":1}
+[11] var:bound {"index":0}
+  :refers_to -> [5]
+[12] var:bound {"index":1}
+  :refers_to -> [3]"
+`;
+
+exports[`GRAM translate > injection — { r | tag = value } 1`] = `
+"[1] root
+  :entry -> [2]
+[2] inj {"label":"tag"}
+  :target -> [5]
+  :value -> [3]
+[3] lit {"value":{"type":"String","value":"hello"}}
+[4] var:free {"name":"r"}
+[5] var:ref {"name":"r"}
+  :refers_to -> [4]"
+`;
+
+exports[`GRAM translate > match on variant (Some 42) 1`] = `
+"[1] root
+  :entry -> [2]
+[2] match
+  :case_0 -> [10]
+  :case_1 -> [12]
+  :scrutinee -> [3]
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"__tag"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"String","value":"Some"}}
+[7] row:ext {"label":"Some"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Num","value":42}}
+[9] row:empty
+[10] case {"pattern":{"type":"Variant","row":{"type":"extension","label":"Some","value":{"type":"Binder","value":"x"},"row":{"type":"empty"}}},"binders":[["_",{"type":"Lit","value":{"type":"Atom","value":"Num"},"id":6}]]}
+  :body -> [11]
+[11] var:bound {"index":0}
+  :refers_to -> [10]
+[12] case {"pattern":{"type":"Variant","row":{"type":"extension","label":"None","value":{"type":"Wildcard"},"row":{"type":"empty"}}},"binders":[["_",{"type":"Lit","value":{"type":"Atom","value":"Num"},"id":6}]]}
+  :body -> [13]
+[13] lit {"value":{"type":"Num","value":0}}"
+`;
+
+exports[`GRAM translate > match with alternatives 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit"}
+  :annotation -> [4]
+  :body -> [5]
+[3] var:free {"name":"Int"}
+[4] var:ref {"name":"Int"}
   :refers_to -> [3]
-[16] var:bound {"index":0}
-  :refers_to -> [5]"
+[5] match
+  :case_0 -> [7]
+  :case_1 -> [9]
+  :scrutinee -> [6]
+[6] var:bound {"index":0}
+  :refers_to -> [2]
+[7] case {"pattern":{"type":"Lit","value":{"type":"Num","value":0}},"binders":[]}
+  :body -> [8]
+[8] lit {"value":{"type":"Num","value":1}}
+[9] case {"pattern":{"type":"Wildcard"},"binders":[]}
+  :body -> [10]
+[10] lit {"value":{"type":"Num","value":2}}"
+`;
+
+exports[`GRAM translate > nested lambdas — de Bruijn resolution 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit"}
+  :annotation -> [4]
+  :body -> [5]
+[3] var:free {"name":"Int"}
+[4] var:ref {"name":"Int"}
+  :refers_to -> [3]
+[5] lambda {"variable":"y","icit":"Explicit"}
+  :annotation -> [6]
+  :body -> [7]
+[6] var:ref {"name":"Int"}
+  :refers_to -> [3]
+[7] var:bound {"index":1}
+  :refers_to -> [2]"
+`;
+
+exports[`GRAM translate > proj('x', struct({ x: 42 })) 1`] = `
+"[1] root
+  :entry -> [2]
+[2] proj {"label":"x"}
+  :target -> [3]
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"x"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Num","value":42}}
+[7] row:empty"
+`;
+
+exports[`GRAM translate > projection 1`] = `
+"[1] root
+  :entry -> [2]
+[2] proj {"label":"x"}
+  :target -> [4]
+[3] var:free {"name":"r"}
+[4] var:ref {"name":"r"}
+  :refers_to -> [3]"
+`;
+
+exports[`GRAM translate > reset(shift k -> (k 1) + (k 2)) — multishot 1`] = `
+"[1] root
+  :entry -> [2]
+[2] reset
+  :body -> [3]
+[3] shift
+  :body -> [4]
+[4] lambda {"variable":"k","icit":"Explicit"}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [7]
+[7] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [9]
+[8] var:foreign {"name":"$add"}
+[9] var:ref {"name":"$add"}
+  :refers_to -> [8]
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] var:bound {"index":0}
+  :refers_to -> [4]
+[12] lit {"value":{"type":"Num","value":1}}
+[13] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] var:bound {"index":0}
+  :refers_to -> [4]
+[15] lit {"value":{"type":"Num","value":2}}"
+`;
+
+exports[`GRAM translate > reset(shift k -> k 42) — single resume 1`] = `
+"[1] root
+  :entry -> [2]
+[2] reset
+  :body -> [3]
+[3] shift
+  :body -> [4]
+[4] lambda {"variable":"k","icit":"Explicit"}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [7]
+[7] var:bound {"index":0}
+  :refers_to -> [4]
+[8] lit {"value":{"type":"Num","value":42}}"
+`;
+
+exports[`GRAM translate > struct — row extension chain 1`] = `
+"[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"x"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":1}}
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Num","value":2}}
+[8] row:empty"
+`;
+
+exports[`GRAM translate > triple nested lambda — de Bruijn indices at all depths 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit"}
+  :annotation -> [3]
+  :body -> [4]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] lambda {"variable":"y","icit":"Explicit"}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] lambda {"variable":"z","icit":"Explicit"}
+  :annotation -> [7]
+  :body -> [8]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] app {"icit":"Explicit"}
+  :arg -> [17]
+  :func -> [9]
+[9] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[10] var:foreign {"name":"$add"}
+[11] var:ref {"name":"$add"}
+  :refers_to -> [10]
+[12] app {"icit":"Explicit"}
+  :arg -> [16]
+  :func -> [13]
+[13] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] var:ref {"name":"$add"}
+  :refers_to -> [10]
+[15] var:bound {"index":2}
+  :refers_to -> [2]
+[16] var:bound {"index":1}
+  :refers_to -> [4]
+[17] var:bound {"index":0}
+  :refers_to -> [6]"
 `;

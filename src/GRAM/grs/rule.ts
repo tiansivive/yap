@@ -13,9 +13,9 @@ export type Pattern = {
 
 export type Constructor = {
 	readonly bind: string;
-	readonly tag: Tag;
-	readonly payload: Payload | ((b: Bindings, host: Graph) => Payload);
-	readonly provenance: Provenance;
+	readonly tag?: Tag;
+	readonly payload?: Payload | ((b: Bindings, host: Graph) => Payload);
+	readonly provenance?: Provenance;
 };
 
 export type Edge = {
@@ -27,6 +27,7 @@ export type Edge = {
 export type Rule = {
 	readonly lhs: { readonly nodes: ReadonlyArray<Pattern>; readonly edges: ReadonlyArray<Edge> };
 	readonly rhs: { readonly nodes: ReadonlyArray<Constructor>; readonly edges: ReadonlyArray<Edge> };
+	readonly redirect?: Readonly<Record<string, string>>;
 	readonly where?: (b: Bindings, host: Graph) => boolean;
 };
 

@@ -4,7 +4,7 @@ import type { Row } from "@yap/shared/rows";
 import { match } from "ts-pattern";
 
 import type { Graph, NodeId, Payload } from "./graph";
-import { Nodes, Edges, setRoot, resetId, empty } from "./graph";
+import { Nodes, Edges, mkGraph, resetId } from "./graph";
 import { Tags, Labels } from "./vocabulary";
 import type { Provenance, Location } from "./provenance";
 import { TRANSLATE } from "./provenance";
@@ -21,7 +21,7 @@ type State = {
 };
 
 const mkState = (opts?: { locations?: ReadonlyMap<number, Location>; types?: Record<number, { nf: NF.Value }> }): State => ({
-	graph: empty,
+	graph: mkGraph(),
 	binders: [],
 	freeVars: new Map(),
 	foreignVars: new Map(),
@@ -68,8 +68,9 @@ export const translate = (
 	},
 ): Graph => {
 	resetId();
-	const [root, final] = walk(term, mkState(opts));
-	return setRoot(root)(final.graph);
+	const st = mkState(opts);
+	const [entryId, final] = walk(term, st);
+	return Edges.add(st.graph.root, Labels.ENTRY, entryId)(final.graph);
 };
 
 // ── Dispatch ──

@@ -11,13 +11,36 @@ const resolve = (bindings: Bindings, bind: string): NodeId | undefined => bindin
 // ── Pushout steps ──
 
 const Dangling = {
-	check: (toDelete: ReadonlyArray<string>, bindings: Bindings, host: Graph): boolean => {
+	check: (toDelete: ReadonlyArray<string>, bindings: Bindings, redirects: Record<string, string>, host: Graph): boolean => {
 		const matched = new Set(bindings.values());
 		return toDelete.some(bind => {
+			if (redirects[bind]) {
+				return false;
+			}
 			const id = resolve(bindings, bind);
 			return id !== undefined && Edges.to(id)(host).some(e => !matched.has(e.source));
 		});
 	},
+};
+
+const Redirect = {
+	edges: (toDelete: ReadonlyArray<string>, bindings: Bindings, redirectMap: Record<string, string>, extended: Map<string, NodeId>, g: Graph): Graph =>
+		toDelete.reduce((acc, bind) => {
+			const target = redirectMap[bind];
+
+			if (!target) {
+				return acc;
+			}
+
+			const oldId = resolve(bindings, bind);
+			const newId = extended.get(target);
+
+			if (oldId === undefined || newId === undefined) {
+				return acc;
+			}
+
+			return Edges.to(oldId)(acc).reduce((a, e) => Edges.add(e.source, e.label, newId)(a), acc);
+		}, g),
 };
 
 const Remove = {
@@ -39,26 +62,26 @@ const Remove = {
 const Update = {
 	interfaceNodes: (rule: Rule, k: Set<string>, bindings: Bindings, host: Graph, g: Graph): Graph =>
 		rule.rhs.nodes
-			.filter(n => k.has(n.bind))
+			.filter(n => k.has(n.bind) && n.tag !== undefined)
 			.reduce((acc, n) => {
 				const id = resolve(bindings, n.bind);
 
-				if (id === undefined) {
+				if (id === undefined || !n.tag) {
 					return acc;
 				}
-				const p = typeof n.payload === "function" ? n.payload(bindings, host) : n.payload;
-				return Nodes.retag(id, n.tag, p, n.provenance)(acc);
+				const p = typeof n.payload === "function" ? n.payload(bindings, host) : (n.payload ?? {});
+				return Nodes.retag(id, n.tag, p, n.provenance ?? { created_by: "rewrite" })(acc);
 			}, g),
 };
 
 const Create = {
 	nodes: (rule: Rule, k: Set<string>, bindings: Bindings, host: Graph, g: Graph): [Map<string, NodeId>, Graph] =>
 		rule.rhs.nodes
-			.filter(n => !k.has(n.bind))
+			.filter(n => !k.has(n.bind) && n.tag !== undefined)
 			.reduce<[Map<string, NodeId>, Graph]>(
 				([ext, acc], n) => {
-					const p = typeof n.payload === "function" ? n.payload(bindings, host) : n.payload;
-					const [id, next] = Nodes.add(n.tag, p, n.provenance)(acc);
+					const p = typeof n.payload === "function" ? n.payload(bindings, host) : (n.payload ?? {});
+					const [id, next] = Nodes.add(n.tag ?? "", p, n.provenance ?? { created_by: "rewrite" })(acc);
 					ext.set(n.bind, id);
 					return [ext, next];
 				},
@@ -83,15 +106,17 @@ export const apply = (rule: Rule, host: Graph, bindings?: Bindings): Graph | und
 	}
 
 	const toDelete = lhsOnly(rule);
+	const redirects = rule.redirect ?? {};
 
-	if (Dangling.check(toDelete, b, host)) {
+	if (Dangling.check(toDelete, b, redirects, host)) {
 		return undefined;
 	}
 
 	const k = iface(rule);
 	const g1 = Remove.staleEdges(rule, b, host);
-	const g2 = Remove.nodes(toDelete, b, g1);
-	const g3 = Update.interfaceNodes(rule, k, b, host, g2);
-	const [extended, g4] = Create.nodes(rule, k, b, host, g3);
-	return Create.edges(rule.rhs.edges, extended, g4);
+	const g2 = Update.interfaceNodes(rule, k, b, host, g1);
+	const [extended, g3] = Create.nodes(rule, k, b, host, g2);
+	const g4 = Redirect.edges(toDelete, b, redirects, extended, g3);
+	const g5 = Remove.nodes(toDelete, b, g4);
+	return Create.edges(rule.rhs.edges, extended, g5);
 };

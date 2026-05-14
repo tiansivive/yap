@@ -1,4 +1,5 @@
 export const Tags = {
+	ROOT: "root",
 	LIT: "lit",
 
 	VAR_BOUND: "var:bound",
@@ -69,6 +70,7 @@ export const Labels = {
 	SCRUTINEE: ":scrutinee",
 	RETURN: ":return",
 	TERM: ":term",
+	ENTRY: ":entry",
 	REFERS_TO: ":refers_to",
 	HAS_TYPE: ":has_type",
 	DERIVED_FROM: ":derived_from",

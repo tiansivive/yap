@@ -1,0 +1,40 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`eta-reduce > reduces nested eta: λx. (λy. f(y))(x) → f 1`] = `
+"[1] root
+  :entry -> [10]
+[3] var:free {"name":"Int"}
+[4] var:ref {"name":"Int"}
+  :refers_to -> [3]
+[7] var:ref {"name":"Int"}
+  :refers_to -> [3]
+[9] var:free {"name":"f"}
+[10] var:ref {"name":"f"}
+  :refers_to -> [9]"
+`;
+
+exports[`eta-reduce > λx. (λy. y)(x) → λy. y 1`] = `
+"[1] root
+  :entry -> [6]
+[3] var:free {"name":"Int"}
+[4] var:ref {"name":"Int"}
+  :refers_to -> [3]
+[6] lambda {"variable":"y","icit":"Explicit"}
+  :annotation -> [7]
+  :body -> [8]
+[7] var:ref {"name":"Int"}
+  :refers_to -> [3]
+[8] var:bound {"index":0}
+  :refers_to -> [6]"
+`;
+
+exports[`eta-reduce > λx. f(x) → f when f is free 1`] = `
+"[1] root
+  :entry -> [7]
+[3] var:free {"name":"Int"}
+[4] var:ref {"name":"Int"}
+  :refers_to -> [3]
+[6] var:free {"name":"f"}
+[7] var:ref {"name":"f"}
+  :refers_to -> [6]"
+`;

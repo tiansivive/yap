@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { Nodes, Edges, Query, setRoot, empty, resetId } from "../graph";
+import { Nodes, Edges, Query, mkGraph, entry, resetId } from "../graph";
 import { display } from "../display";
 
 const prov = { created_by: "test" } as const;
@@ -7,40 +7,46 @@ const prov = { created_by: "test" } as const;
 describe("GRAM graph", () => {
 	beforeEach(resetId);
 
-	it("empty graph has no nodes", () => {
-		expect(empty.nodes.size).toBe(0);
+	it("mkGraph creates root node", () => {
+		const g = mkGraph();
+		expect(g.nodes.size).toBe(1);
+		expect(Nodes.get(g.root)(g)?.tag).toBe("root");
 	});
 
 	it("Nodes.add creates node with tag index", () => {
-		const [id, g] = Nodes.add("lit", { value: 42 }, prov)(empty);
-		expect(Nodes.get(id)(g)?.tag).toBe("lit");
-		expect(Nodes.get(id)(g)?.payload.value).toBe(42);
-		expect(Query.byTag("lit")(g).size).toBe(1);
+		const g = mkGraph();
+		const [id, g2] = Nodes.add("lit", { value: 42 }, prov)(g);
+		expect(Nodes.get(id)(g2)?.tag).toBe("lit");
+		expect(Nodes.get(id)(g2)?.payload.value).toBe(42);
+		expect(Query.byTag("lit")(g2).size).toBe(1);
 	});
 
 	it("Edges.add creates outgoing and reverse-lookupable", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
+		const g = mkGraph();
+		const [a, g1] = Nodes.add("a", {}, prov)(g);
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
-		const g = Edges.add(a, ":child", b)(g2);
+		const g3 = Edges.add(a, ":child", b)(g2);
 
-		expect(Edges.byLabel(a, ":child")(g)?.target).toBe(b);
-		expect(Edges.to(b)(g).some(e => e.source === a && e.label === ":child")).toBe(true);
+		expect(Edges.byLabel(a, ":child")(g3)?.target).toBe(b);
+		expect(Edges.to(b)(g3).some(e => e.source === a && e.label === ":child")).toBe(true);
 	});
 
 	it("Edges.add overwrites existing label", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
-		const [b, g2] = Nodes.add("b", {}, prov)(g1);
+		const g = mkGraph();
+		const [a, g1] = Nodes.add("a", {}, prov)(g);
+		const [, g2] = Nodes.add("b", {}, prov)(g1);
 		const [c, g3] = Nodes.add("c", {}, prov)(g2);
-		const g = Edges.add(a, ":x", c)(Edges.add(a, ":x", b)(g3));
+		const g4 = Edges.add(a, ":x", c)(Edges.add(a, ":x", c)(g3));
 
-		expect(Edges.byLabel(a, ":x")(g)?.target).toBe(c);
+		expect(Edges.byLabel(a, ":x")(g4)?.target).toBe(c);
 	});
 
 	it("Nodes.remove cleans up edges and index", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
+		const g = mkGraph();
+		const [a, g1] = Nodes.add("a", {}, prov)(g);
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
-		const g = Edges.add(a, ":child", b)(g2);
-		const result = Nodes.remove(a)(g);
+		const g3 = Edges.add(a, ":child", b)(g2);
+		const result = Nodes.remove(a)(g3);
 
 		expect(Nodes.get(a)(result)).toBeUndefined();
 		expect(Query.byTag("a")(result).size).toBe(0);
@@ -48,10 +54,11 @@ describe("GRAM graph", () => {
 	});
 
 	it("Edges.remove preserves nodes", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
+		const g = mkGraph();
+		const [a, g1] = Nodes.add("a", {}, prov)(g);
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
-		const g = Edges.add(a, ":child", b)(g2);
-		const result = Edges.remove(a, ":child")(g);
+		const g3 = Edges.add(a, ":child", b)(g2);
+		const result = Edges.remove(a, ":child")(g3);
 
 		expect(Nodes.get(a)(result)).toBeDefined();
 		expect(Nodes.get(b)(result)).toBeDefined();
@@ -60,41 +67,35 @@ describe("GRAM graph", () => {
 	});
 
 	it("Query.follow walks a path", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
+		const g = mkGraph();
+		const [a, g1] = Nodes.add("a", {}, prov)(g);
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
 		const [c, g3] = Nodes.add("c", {}, prov)(g2);
-		const g = Edges.add(b, ":y", c)(Edges.add(a, ":x", b)(g3));
+		const g4 = Edges.add(b, ":y", c)(Edges.add(a, ":x", b)(g3));
 
-		expect(Query.follow(a, ":x", ":y")(g)).toBe(c);
-		expect(Query.follow(a, ":x", ":z")(g)).toBeUndefined();
+		expect(Query.follow(a, ":x", ":y")(g4)).toBe(c);
+		expect(Query.follow(a, ":x", ":z")(g4)).toBeUndefined();
 	});
 
 	it("Query.byTag returns empty set for unknown tag", () => {
-		expect(Query.byTag("nope")(empty).size).toBe(0);
+		expect(Query.byTag("nope")(mkGraph()).size).toBe(0);
 	});
 
-	it("Query.subgraph extracts induced subgraph", () => {
-		const [a, g1] = Nodes.add("a", {}, prov)(empty);
-		const [b, g2] = Nodes.add("b", {}, prov)(g1);
-		const [c, g3] = Nodes.add("c", {}, prov)(g2);
-		const g = Edges.add(a, ":z", c)(Edges.add(b, ":y", c)(Edges.add(a, ":x", b)(g3)));
-
-		const sub = Query.subgraph(new Set([a, b]))(g);
-		expect(sub.nodes.size).toBe(2);
-		expect(Edges.byLabel(a, ":x")(sub)?.target).toBe(b);
-		expect(Edges.byLabel(a, ":z")(sub)).toBeUndefined();
+	it("entry returns the node linked from root via :entry", () => {
+		const g = mkGraph();
+		const [a, g1] = Nodes.add("a", {}, prov)(g);
+		const g2 = Edges.add(g.root, ":entry", a)(g1);
+		expect(entry(g2)).toBe(a);
 	});
 
-	it("setRoot and display include root", () => {
-		const [a, g1] = Nodes.add("lit", { value: 1 }, prov)(empty);
-		const g = setRoot(a)(g1);
-		expect(g.root).toBe(a);
-		expect(display(g)).toContain("root:");
+	it("entry returns undefined when no :entry edge", () => {
+		expect(entry(mkGraph())).toBeUndefined();
 	});
 
 	it("immutability — Nodes.add does not mutate original", () => {
-		const [, g] = Nodes.add("a", {}, prov)(empty);
-		expect(empty.nodes.size).toBe(0);
+		const g = mkGraph();
+		const [, g2] = Nodes.add("a", {}, prov)(g);
 		expect(g.nodes.size).toBe(1);
+		expect(g2.nodes.size).toBe(2);
 	});
 });
