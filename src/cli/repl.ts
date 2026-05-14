@@ -29,8 +29,10 @@ import { emit as emitJS } from "../Codegen/v2/js/emit";
 import { print as printJS } from "../Codegen/v2/js/print";
 import { emit as emitC } from "../Codegen/v2/c/emit";
 import { print as printC } from "../Codegen/v2/c/print";
+import { emit as emitErl } from "../Codegen/v2/erlang/emit";
+import { print as printErl } from "../Codegen/v2/erlang/print";
 
-export type ReplOpts = { mir: boolean; codegen: boolean; target: "js" | "c" };
+export type ReplOpts = { mir: boolean; codegen: boolean; target: "js" | "c" | "erlang" };
 
 // Compute arity by recursively checking if function returns another function
 const computeArity = (fn: Function): number => {
@@ -362,6 +364,17 @@ const evalCodegenC =
 		return null;
 	};
 
+const evalCodegenErlang =
+	() =>
+	(mod: ReturnType<typeof lowerToMir>): null => {
+		const ast = emitErl(mod);
+		const code = printErl(ast);
+		console.log("\n---------- Core Erlang Output --------");
+		console.log(code);
+		console.log("--------------------------------------\n");
+		return null;
+	};
+
 export const interpretMIR = (
 	stmt: Src.Statement,
 	ctx: EB.Context,
@@ -369,7 +382,13 @@ export const interpretMIR = (
 	declarations: Map<string, Declaration>,
 	opts: ReplOpts,
 ): EB.Context => {
-	const evaluate = opts.codegen ? (opts.target === "c" ? evalCodegenC() : evalCodegenJS(ffi)) : evalMIR(ffi);
+	const evaluate = opts.codegen
+		? match(opts.target)
+				.with("js", () => evalCodegenJS(ffi))
+				.with("c", () => evalCodegenC())
+				.with("erlang", () => evalCodegenErlang())
+				.exhaustive()
+		: evalMIR(ffi);
 
 	const either = match(stmt)
 		.with({ type: "expression" }, s =>
@@ -388,7 +407,7 @@ export const interpretMIR = (
 						console.log("-------------------------------------\n");
 					}
 					const result = evaluate(mod);
-					if (opts.target !== "c") {
+					if (opts.target === "js" || !opts.codegen) {
 						console.log(displayValue(result as Value), "::", EB.NF.display(ty, next), "\n");
 					}
 					return next;

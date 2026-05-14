@@ -1,0 +1,303 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Erlang Codegen: snapshot tests > (lam x.lam y.x+y) 3 4 — curried closure 1`] = `
+"module 'yap_main' ['main'/0, 'f_1'/2, 'f_0'/2]
+attributes []
+
+'f_1'/2 = fun (Env_1, Y) ->
+  let <X0> = call 'maps':'get'('v0', Env_1)
+  in let <X1> = call 'erlang':'+'(X0, Y)
+  in X1
+
+'f_0'/2 = fun (Env_0, X) ->
+  let <Env_2> = call 'maps':'from_list'([{'v0', X}])
+  in let <Fnref_0> = fun 'yap_main':'f_1'/2
+  in let <Closure_0> = call 'maps':'from_list'([{'__fn', Fnref_0}, {'__env', Env_2}])
+  in Closure_0
+
+'main'/0 = fun () ->
+  let <_MainResult> = let <Env_3> = call 'maps':'from_list'([])
+in let <Fnref_1> = fun 'yap_main':'f_0'/2
+in let <Closure_1> = call 'maps':'from_list'([{'__fn', Fnref_1}, {'__env', Env_3}])
+in let <X2> = 3
+in let <Fnref_2> = call 'maps':'get'('__fn', Closure_1)
+in let <Env_4> = call 'maps':'get'('__env', Closure_1)
+in let <X3> = apply Fnref_2(Env_4, X2)
+in let <X4> = 4
+in let <Fnref_3> = call 'maps':'get'('__fn', X3)
+in let <Env_5> = call 'maps':'get'('__env', X3)
+in let <X5> = apply Fnref_3(Env_5, X4)
+in X5
+  in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
+  in 'ok'
+end
+"
+`;
+
+exports[`Erlang Codegen: snapshot tests > (lam x.x) 42 — identity 1`] = `
+"module 'yap_main' ['main'/0, 'f_0'/2]
+attributes []
+
+'f_0'/2 = fun (Env_0, X) ->
+  X
+
+'main'/0 = fun () ->
+  let <_MainResult> = let <Env_1> = call 'maps':'from_list'([])
+in let <Fnref_0> = fun 'yap_main':'f_0'/2
+in let <Closure_0> = call 'maps':'from_list'([{'__fn', Fnref_0}, {'__env', Env_1}])
+in let <X0> = 42
+in let <Fnref_1> = call 'maps':'get'('__fn', Closure_0)
+in let <Env_2> = call 'maps':'get'('__env', Closure_0)
+in let <X1> = apply Fnref_1(Env_2, X0)
+in X1
+  in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
+  in 'ok'
+end
+"
+`;
+
+exports[`Erlang Codegen: snapshot tests > Lit("hello") 1`] = `
+"module 'yap_main' ['main'/0]
+attributes []
+
+'main'/0 = fun () ->
+  let <_MainResult> = let <X0> = "hello"
+in X0
+  in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
+  in 'ok'
+end
+"
+`;
+
+exports[`Erlang Codegen: snapshot tests > Lit(42) 1`] = `
+"module 'yap_main' ['main'/0]
+attributes []
+
+'main'/0 = fun () ->
+  let <_MainResult> = let <X0> = 42
+in X0
+  in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
+  in 'ok'
+end
+"
+`;
+
+exports[`Erlang Codegen: snapshot tests > Lit(true) 1`] = `
+"module 'yap_main' ['main'/0]
+attributes []
+
+'main'/0 = fun () ->
+  let <_MainResult> = let <X0> = 'true'
+in X0
+  in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
+  in 'ok'
+end
+"
+`;
+
+exports[`Erlang Codegen: snapshot tests > add(1, 2) 1`] = `
+"module 'yap_main' ['main'/0]
+attributes []
+
+'main'/0 = fun () ->
+  let <_MainResult> = let <X0> = 1
+in let <X1> = 2
+in let <X2> = call 'erlang':'+'(X0, X1)
+in X2
+  in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
+  in 'ok'
+end
+"
+`;
+
+exports[`Erlang Codegen: snapshot tests > match on variant (Some 42) 1`] = `
+"module 'yap_main' ['main'/0]
+attributes []
+
+'main'/0 = fun () ->
+  let <_MainResult> = letrec
+  'e0'/0 = fun () ->
+    let <__match_fail> = "non-exhaustive match"
+    in __match_fail
+
+  'entry'/0 = fun () ->
+    let <X1> = "Some"
+    in let <X2> = 42
+    in let <X3> = call 'maps':'from_list'([{'__tag', X1}, {'Some', X2}])
+    in let <X6> = call 'maps':'get'('__tag', X3)
+    in case case X6 of
+  <_A> when call 'erlang':'is_atom'(_A) ->
+    call 'erlang':'atom_to_list'(_A)
+  <_N> when call 'erlang':'is_integer'(_N) ->
+    call 'erlang':'integer_to_list'(_N)
+  <_L> when 'true' ->
+    _L
+end of
+      <"Some"> when 'true' ->
+        apply 'c0'/1(X3)
+      <"None"> when 'true' ->
+        apply 'c1'/1(X3)
+      <_> when 'true' ->
+        apply 'e0'/0()
+    end
+
+  'c0'/1 = fun (Scrut_0) ->
+    let <X4> = call 'maps':'get'('Some', Scrut_0)
+    in apply 'j0'/1(X4)
+
+  'c1'/1 = fun (Scrut_1) ->
+    let <X5> = call 'maps':'get'('None', Scrut_1)
+    in let <X7> = 0
+    in apply 'j0'/1(X7)
+
+  'j0'/1 = fun (X0) ->
+    X0
+in apply 'entry'/0()
+  in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
+  in 'ok'
+end
+"
+`;
+
+exports[`Erlang Codegen: snapshot tests > not(true) 1`] = `
+"module 'yap_main' ['main'/0]
+attributes []
+
+'main'/0 = fun () ->
+  let <_MainResult> = let <X0> = 'true'
+in let <X1> = call 'erlang':'not'(X0)
+in X1
+  in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
+  in 'ok'
+end
+"
+`;
+
+exports[`Erlang Codegen: snapshot tests > proj('x', struct({ x: 42 })) 1`] = `
+"module 'yap_main' ['main'/0]
+attributes []
+
+'main'/0 = fun () ->
+  let <_MainResult> = let <X0> = 42
+in let <X1> = call 'maps':'from_list'([{'x', X0}])
+in let <X2> = call 'maps':'get'('x', X1)
+in X2
+  in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
+  in 'ok'
+end
+"
+`;
+
+exports[`Erlang Codegen: snapshot tests > reset(shift k -> (k 1) + (k 2)) — multishot 1`] = `
+"module 'yap_main' ['main'/0]
+attributes []
+
+'main'/0 = fun () ->
+  let <_MainResult> = letrec
+  'entry'/0 = fun () ->
+    let <Env_1> = call 'maps':'from_list'([])
+    in let <K_0> = call 'maps':'from_list'([{'__env', Env_1}])
+    in apply 's0'/1(K_0)
+
+  's0'/1 = fun (K_1) ->
+    let <Env_1> = call 'maps':'get'('__env', K_1)
+    in let <X2> = 1
+    in let <I_1> = 0
+    in apply 'r0'/3(X2, Env_1, I_1)
+
+  's1'/2 = fun (X3, Env_2) ->
+    let <Env_3> = call 'maps':'merge'(Env_2, call 'maps':'from_list'([{'r0', X3}]))
+    in let <X1> = call 'maps':'get'('r0', Env_3)
+    in let <X5> = 2
+    in let <I_2> = 1
+    in apply 'r0'/3(X5, Env_3, I_2)
+
+  's2'/2 = fun (X6, Env_4) ->
+    let <Env_5> = call 'maps':'merge'(Env_4, call 'maps':'from_list'([{'r1', X6}]))
+    in let <X1> = call 'maps':'get'('r0', Env_5)
+    in let <X4> = call 'maps':'get'('r1', Env_5)
+    in let <X7> = call 'erlang':'+'(X1, X4)
+    in apply 'reset_exit0'/1(X7)
+
+  'r0'/3 = fun (X0, Env_0, I_0) ->
+    case case I_0 of
+  <_A> when call 'erlang':'is_atom'(_A) ->
+    call 'erlang':'atom_to_list'(_A)
+  <_N> when call 'erlang':'is_integer'(_N) ->
+    call 'erlang':'integer_to_list'(_N)
+  <_L> when 'true' ->
+    _L
+end of
+      <"0"> when 'true' ->
+        apply 's1'/2(X0, Env_0)
+      <"1"> when 'true' ->
+        apply 's2'/2(X0, Env_0)
+    end
+
+  'reset_exit0'/1 = fun (X8) ->
+    X8
+in apply 'entry'/0()
+  in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
+  in 'ok'
+end
+"
+`;
+
+exports[`Erlang Codegen: snapshot tests > reset(shift k -> k 42) — single resume 1`] = `
+"module 'yap_main' ['main'/0]
+attributes []
+
+'main'/0 = fun () ->
+  let <_MainResult> = letrec
+  'entry'/0 = fun () ->
+    let <Env_1> = call 'maps':'from_list'([])
+    in let <K_0> = call 'maps':'from_list'([{'__env', Env_1}])
+    in apply 's0'/1(K_0)
+
+  's0'/1 = fun (K_1) ->
+    let <Env_1> = call 'maps':'get'('__env', K_1)
+    in let <X2> = 42
+    in let <I_1> = 0
+    in apply 'r0'/3(X2, Env_1, I_1)
+
+  's1'/2 = fun (X3, Env_2) ->
+    let <Env_3> = call 'maps':'merge'(Env_2, call 'maps':'from_list'([{'r0', X3}]))
+    in let <X1> = call 'maps':'get'('r0', Env_3)
+    in apply 'reset_exit0'/1(X1)
+
+  'r0'/3 = fun (X0, Env_0, I_0) ->
+    case case I_0 of
+  <_A> when call 'erlang':'is_atom'(_A) ->
+    call 'erlang':'atom_to_list'(_A)
+  <_N> when call 'erlang':'is_integer'(_N) ->
+    call 'erlang':'integer_to_list'(_N)
+  <_L> when 'true' ->
+    _L
+end of
+      <"0"> when 'true' ->
+        apply 's1'/2(X0, Env_0)
+    end
+
+  'reset_exit0'/1 = fun (X4) ->
+    X4
+in apply 'entry'/0()
+  in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
+  in 'ok'
+end
+"
+`;
+
+exports[`Erlang Codegen: snapshot tests > struct({ x: 1, y: 2 }) 1`] = `
+"module 'yap_main' ['main'/0]
+attributes []
+
+'main'/0 = fun () ->
+  let <_MainResult> = let <X0> = 1
+in let <X1> = 2
+in let <X2> = call 'maps':'from_list'([{'x', X0}, {'y', X1}])
+in X2
+  in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
+  in 'ok'
+end
+"
+`;

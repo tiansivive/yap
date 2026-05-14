@@ -50,22 +50,22 @@ program
 	.option("--verbose", "Enable verbose output")
 	.option("--mir", "Use MIR-based interpreter instead of NbE")
 	.option("--codegen", "Use MIR-to-JS codegen instead of MIR interpreter (implies --mir)")
-	.option("--target <target>", "Codegen target: js or c (requires --codegen)", "js")
+	.option("--target <target>", "Codegen target: js, c, or erlang (requires --codegen)", "js")
 	.action(async cmd => {
 		console.log("Yap REPL started. Type :exit to quit.");
 		options.verbose = cmd.verbose || false;
 		console.log("Verbose mode:", options.verbose);
 
-		const target = cmd.target as "js" | "c";
+		const target = cmd.target as "js" | "c" | "erlang";
 		const codegen = cmd.codegen || false;
 		const mir = cmd.mir || codegen;
 
-		if (target !== "js" && target !== "c") {
-			console.error(`Unknown target: ${target}. Use 'js' or 'c'.`);
+		if (target !== "js" && target !== "c" && target !== "erlang") {
+			console.error(`Unknown target: ${target}. Use 'js', 'c', or 'erlang'.`);
 			process.exit(1);
 		}
-		if (target === "c" && !codegen) {
-			console.error("--target=c requires --codegen");
+		if (target !== "js" && !codegen) {
+			console.error(`--target=${target} requires --codegen`);
 			process.exit(1);
 		}
 
