@@ -32,6 +32,12 @@ export const Tags = {
 	MODAL: "modal",
 	RESET: "reset",
 	SHIFT: "shift",
+
+	CLOSURE: "closure",
+	ENV: "env",
+	FUNC: "func",
+	DIRECT_CALL: "direct_call",
+	INDIRECT_CALL: "indirect_call",
 } as const;
 
 export const TypeTags = {
@@ -66,6 +72,11 @@ export const Labels = {
 	REFERS_TO: ":refers_to",
 	HAS_TYPE: ":has_type",
 	DERIVED_FROM: ":derived_from",
+	FN: ":fn",
+	ENV: ":env",
+	CALLEE: ":callee",
+
+	captureN: (n: number): string => `:capture_${n}`,
 
 	caseN: (n: number): string => `:case_${n}`,
 	stmtN: (n: number): string => `:stmt_${n}`,

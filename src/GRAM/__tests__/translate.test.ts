@@ -50,9 +50,10 @@ describe("GRAM translate", () => {
 
 		const bodyId = Query.follow(lamId, Labels.BODY)(g);
 		expect(bodyId).toBeDefined();
-		expect(Nodes.get(bodyId!)(g)?.tag).toBe(Tags.VAR_BOUND);
+		expect(bodyId).toBeDefined();
+		expect(Nodes.get(bodyId ?? -1)(g)?.tag).toBe(Tags.VAR_BOUND);
 
-		const ref = Query.follow(bodyId!, Labels.REFERS_TO)(g);
+		const ref = Query.follow(bodyId ?? -1, Labels.REFERS_TO)(g);
 		expect(ref).toBe(lamId);
 	});
 
@@ -66,7 +67,8 @@ describe("GRAM translate", () => {
 		const outerLam = lambdas.find(id => Nodes.get(id)(g)?.payload.variable === "x")!;
 		const innerBody = Query.follow(outerLam, Labels.BODY, Labels.BODY)(g);
 
-		expect(Query.follow(innerBody!, Labels.REFERS_TO)(g)).toBe(outerLam);
+		expect(innerBody).toBeDefined();
+		expect(Query.follow(innerBody ?? -1, Labels.REFERS_TO)(g)).toBe(outerLam);
 	});
 
 	it("App(Lambda(x, Bound(0)), Num(1))", () => {

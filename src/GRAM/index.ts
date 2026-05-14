@@ -6,6 +6,4 @@ export type { Provenance, PassId, Location } from "./provenance";
 export { TRANSLATE, TRANSLATE_TYPE } from "./provenance";
 export { display } from "./display";
 export { translate } from "./translate";
-export * as Patterns from "./patterns";
-export * as Rewrite from "./rewrite";
-export * as Strategies from "./strategies";
+export * as GRS from "./grs";

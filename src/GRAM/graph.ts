@@ -21,7 +21,6 @@ export type Edge = {
 export type Graph = {
 	readonly nodes: ReadonlyMap<NodeId, Node>;
 	readonly edges: ReadonlyMap<NodeId, ReadonlyMap<Label, Edge>>;
-	readonly incoming: ReadonlyMap<NodeId, ReadonlyMap<Label, NodeId>>;
 	readonly byTag: ReadonlyMap<Tag, ReadonlySet<NodeId>>;
 	readonly root?: NodeId;
 };
@@ -39,7 +38,6 @@ export const resetId = (): void => {
 export const empty: Graph = {
 	nodes: new Map(),
 	edges: new Map(),
-	incoming: new Map(),
 	byTag: new Map(),
 };
 
@@ -69,52 +67,19 @@ const addOutgoing = (g: Graph, e: Edge): ReadonlyMap<NodeId, ReadonlyMap<Label, 
 	return all;
 };
 
-const addIncoming = (g: Graph, label: Label, source: NodeId, target: NodeId): ReadonlyMap<NodeId, ReadonlyMap<Label, NodeId>> => {
-	const all = new Map(g.incoming);
-	const tgt = new Map(g.incoming.get(target));
-	tgt.set(label, source);
-	all.set(target, tgt);
-	return all;
+// TODO: consider a reverse-lookup index if scanning edges for incoming becomes a bottleneck
+
+const edgesTo = (id: NodeId, g: Graph): ReadonlyArray<Edge> => [...g.edges.values()].flatMap(m => [...m.values()]).filter(e => e.target === id);
+
+const dropOutgoingOf = (id: NodeId, g: Graph): Graph => {
+	const edges = new Map(g.edges);
+	edges.delete(id);
+	return { ...g, edges };
 };
 
-const dropIncoming = (g: Graph, label: Label, target: NodeId): ReadonlyMap<NodeId, ReadonlyMap<Label, NodeId>> => {
-	const all = new Map(g.incoming);
-	const tgt = new Map(g.incoming.get(target));
-	tgt.delete(label);
-	tgt.size === 0 ? all.delete(target) : all.set(target, tgt);
-	return all;
-};
+const dropEdgesPointingTo = (id: NodeId, g: Graph): Graph => edgesTo(id, g).reduce((acc, e) => Edges.remove(e.source, e.label)(acc), g);
 
-const dropAllEdgesOf = (id: NodeId, g: Graph): Graph => {
-	const out = g.edges.get(id);
-	let result = g;
-
-	if (out) {
-		let inc = result.incoming;
-
-		for (const [, e] of out) {
-			inc = dropIncoming({ ...result, incoming: inc }, e.label, e.target);
-		}
-		const edges = new Map(result.edges);
-		edges.delete(id);
-		result = { ...result, edges, incoming: inc };
-	}
-
-	const inc = result.incoming.get(id);
-	if (inc) {
-		let edges = new Map(result.edges);
-		for (const [label, src] of inc) {
-			const srcMap = new Map(edges.get(src));
-			srcMap.delete(label);
-			srcMap.size === 0 ? edges.delete(src) : edges.set(src, srcMap);
-		}
-		const incoming = new Map(result.incoming);
-		incoming.delete(id);
-		result = { ...result, edges, incoming };
-	}
-
-	return result;
-};
+const dropAllEdgesOf = (id: NodeId, g: Graph): Graph => dropEdgesPointingTo(id, dropOutgoingOf(id, g));
 
 // ── Nodes ──
 
@@ -149,6 +114,20 @@ export const Nodes = {
 		(id: NodeId) =>
 		(g: Graph): Node | undefined =>
 			g.nodes.get(id),
+
+	retag:
+		(id: NodeId, tag: Tag, payload: Payload, provenance: Provenance) =>
+		(g: Graph): Graph => {
+			const old = g.nodes.get(id);
+
+			if (!old) {
+				return g;
+			}
+			const nodes = new Map(g.nodes);
+			nodes.set(id, { id, tag, payload, provenance });
+			const byTag = removeFromTagIndex(g, old.tag, id);
+			return { ...g, nodes, byTag: addToTagIndex({ ...g, byTag }, tag, id) };
+		},
 };
 
 // ── Edges ──
@@ -157,28 +136,24 @@ export const Edges = {
 	add:
 		(source: NodeId, label: Label, target: NodeId, payload: Payload = {}) =>
 		(g: Graph): Graph => {
-			const prev = g.edges.get(source)?.get(label);
 			const edge: Edge = { source, label, target, payload };
-			const edges = addOutgoing(g, edge);
-			const inc = prev && prev.target !== target ? dropIncoming({ ...g, incoming: g.incoming }, label, prev.target) : g.incoming;
-			return { ...g, edges, incoming: addIncoming({ ...g, incoming: inc }, label, source, target) };
+			return { ...g, edges: addOutgoing(g, edge) };
 		},
 
 	remove:
 		(source: NodeId, label: Label) =>
 		(g: Graph): Graph => {
-			const edge = g.edges.get(source)?.get(label);
+			const srcMap = g.edges.get(source);
 
-			if (!edge) {
+			if (!srcMap?.has(label)) {
 				return g;
 			}
 
-			const src = new Map(g.edges.get(source)!);
-			src.delete(label);
+			const updated = new Map(srcMap);
+			updated.delete(label);
 			const edges = new Map(g.edges);
-			src.size === 0 ? edges.delete(source) : edges.set(source, src);
-
-			return { ...g, edges, incoming: dropIncoming(g, label, edge.target) };
+			updated.size === 0 ? edges.delete(source) : edges.set(source, updated);
+			return { ...g, edges };
 		},
 
 	outgoing:
@@ -191,10 +166,10 @@ export const Edges = {
 		(g: Graph): Edge | undefined =>
 			g.edges.get(id)?.get(label),
 
-	incoming:
+	to:
 		(id: NodeId) =>
-		(g: Graph): ReadonlyMap<Label, NodeId> =>
-			g.incoming.get(id) ?? new Map(),
+		(g: Graph): ReadonlyArray<Edge> =>
+			edgesTo(id, g),
 };
 
 // ── Query ──
@@ -219,8 +194,8 @@ export const Query = {
 				if (!node) {
 					return acc;
 				}
-				const [, withNode] = Nodes.add(node.tag, node.payload, node.provenance)(acc);
 
+				const [, withNode] = Nodes.add(node.tag, node.payload, node.provenance)(acc);
 				const out = g.edges.get(id);
 
 				if (!out) {
