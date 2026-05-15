@@ -87,3 +87,17 @@ Do not use `pnpm build` while debugging; run `pnpm yap` directly.
 | Cursor rules            | `.cursor/rules/*.mdc`               |
 
 Lowering (`src/lowering/`): Lit, Var, prim App, Struct/Proj/Inj, Lambda (closure conversion), App (indirect), Match, Block, Reset/Shift. Shift/reset in `delimited_continuation/` (Alloc + Read + Jump, multishot: Branch + resume blocks). Returns `Module`. See MIR-LOWERING.md §5, §7.6.
+
+## Cursor Cloud specific instructions
+
+This is a self-contained TypeScript compiler project (no databases, Docker, or external services). All setup commands are documented in the sections above; key points for cloud agents:
+
+- **Dependencies**: `pnpm install` is the only install step. The `z3-solver` npm package bundles Z3 as WASM — no system-level Z3 binary is needed.
+- **Parser regen**: Run `pnpm nearley` after any change to `src/parser/grammar.ne`. This is already included in the update script.
+- **Lint**: `pnpm lint` (ESLint, must pass with zero warnings).
+- **Test**: `pnpm test` (Vitest). Use `pnpm test -u` to update snapshots if behavior intentionally changed.
+- **Run**: `pnpm yap repl` for the REPL, or `echo '<expression>' | pnpm yap` to compile from stdin.
+- **Type check**: `pnpm tsc` (separate tsconfig at `tsc.tsconfig.json`).
+- **Pre-commit hook**: Husky runs `lint-staged` (Prettier) on commit. This runs automatically — no manual setup needed.
+- **Node version**: `.nvmrc` specifies 23.11.1 but `engines` requires `>=18.3.0`. Any recent Node (v20+) works fine.
+- **`--stack-size=131072`**: The `pnpm yap` script sets a large stack size for deep recursion in elaboration/NbE. This is already configured in `package.json` scripts.
