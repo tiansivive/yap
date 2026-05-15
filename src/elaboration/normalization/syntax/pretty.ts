@@ -36,7 +36,7 @@ export const doc = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBruijn: 
 		.with({ type: "Abs", binder: { type: "Mu" } }, ({ binder }) => binder.source)
 		.with({ type: "Abs" }, ({ binder, closure }) => {
 			const b: PP.Doc = match(binder)
-				.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
+				.with({ type: "Lambda" }, ({ variable, annotation }) => ["λ(", variable, ": ", doc(annotation, ctx, opts), ")"])
 				.with({ type: "Pi" }, ({ variable, annotation }) => ["Π(", variable, ": ", doc(annotation, ctx, opts), ")"])
 				.with({ type: "Mu" }, ({ variable, annotation }) => ["μ(", variable, ": ", doc(annotation, ctx, opts), ")"])
 				.with({ type: "Sigma" }, ({ variable }) => ["Σ(", variable, ": ", doc(binder.annotation, ctx, opts), ")"])

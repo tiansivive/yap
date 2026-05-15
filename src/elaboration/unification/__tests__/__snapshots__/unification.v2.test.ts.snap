@@ -141,17 +141,17 @@ with:
 exports[`Unification (V2) > fails on lambda icit mismatch 1`] = `
 {
   "message": "Type Mismatch: Cannot unify:
-	λx -> (closure: x -| Γ: x)
+	λ(x: Any) -> (closure: x -| Γ: x)
 with
-	λx => (closure: x -| Γ: x)
+	λ(x: Any) => (closure: x -| Γ: x)
 
 Trace:
 
 While unifying:
 	
-	λx -> (closure: x -| Γ: x)
+	λ(x: Any) -> (closure: x -| Γ: x)
 with:
-	λx => (closure: x -| Γ: x)
+	λ(x: Any) => (closure: x -| Γ: x)
 ",
 }
 `;

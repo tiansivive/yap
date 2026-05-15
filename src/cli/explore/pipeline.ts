@@ -18,14 +18,20 @@ import { emit as emitC } from "../../Codegen/v2/c/emit";
 import { print as printC } from "../../Codegen/v2/c/print";
 import { emit as emitErl } from "../../Codegen/v2/erlang/emit";
 import { print as printErl } from "../../Codegen/v2/erlang/print";
+import * as VCPretty from "../../verification/V2/pretty";
+import * as Sub from "../../elaboration/unification/substitution";
+import type { Expr } from "z3-solver";
 
 export type DeBruijnMode = "off" | "index" | "level" | "both";
 export type ParserRule = "Ann" | "Script";
+
+export type VCFormat = "pretty" | "sexpr";
 
 export type Options = {
 	deBruijn: DeBruijnMode;
 	parserRule: ParserRule;
 	rawJson: boolean;
+	vcFormat: VCFormat;
 };
 
 export type Result = {
@@ -34,6 +40,9 @@ export type Result = {
 	elaborated: string;
 	type: string;
 	normalized: string;
+	constraints: string;
+	metas: string;
+	verification: string;
 	mir: string;
 	gram: string;
 	codegenJS: string;
@@ -49,6 +58,9 @@ const empty: Result = {
 	elaborated: "",
 	type: "",
 	normalized: "",
+	constraints: "",
+	metas: "",
+	verification: "",
 	mir: "",
 	gram: "",
 	codegenJS: "",
@@ -65,6 +77,15 @@ const deBruijnOpts = (mode: DeBruijnMode) => ({
 const attempt = <T>(fn: () => T, errors: string[]): T | undefined => {
 	try {
 		return fn();
+	} catch (e) {
+		errors.push(e instanceof Error ? e.message : String(e));
+		return undefined;
+	}
+};
+
+const attemptAsync = async <T>(fn: () => Promise<T>, errors: string[]): Promise<T | undefined> => {
+	try {
+		return await fn();
 	} catch (e) {
 		errors.push(e instanceof Error ? e.message : String(e));
 		return undefined;
@@ -100,7 +121,7 @@ const parse = (source: string, rule: ParserRule): Src.Term | Src.Statement => {
 	return data.results[0] as Src.Term;
 };
 
-export const run = (source: string, opts: Options): Result => {
+export const run = async (source: string, opts: Options): Promise<Result> => {
 	const errors: string[] = [];
 	const result = { ...empty, source };
 	const db = deBruijnOpts(opts.deBruijn);
@@ -137,9 +158,53 @@ export const run = (source: string, opts: Options): Result => {
 		return { ...result, errors };
 	}
 
-	const [tm, ty, _us, ctx] = elaborated.right;
+	const [tm, ty, _us, ctx, debug] = elaborated.right;
 
 	result.elaborated = attempt(() => EB.Display.Term(tm, ctx, db), errors) ?? "";
+
+	if (debug) {
+		const displayCtx = { zonker: ctx.zonker, metas: ctx.metas, env: ctx.env };
+		result.constraints =
+			attempt(() => {
+				if (debug.constraints.length === 0) {
+					return "No constraints";
+				}
+				return debug.constraints
+					.map((c, i) => {
+						const prefix = `[${i}] `;
+						if (c.type === "assign") {
+							const l = EB.NF.display(c.left, displayCtx, db);
+							const r = EB.NF.display(c.right, displayCtx, db);
+							return `${prefix}${l}  ~  ${r}`;
+						}
+						return `${prefix}resolve ?${c.meta.val}`;
+					})
+					.join("\n");
+			}, errors) ?? "";
+
+		result.metas =
+			attempt(() => {
+				const sections: string[] = [];
+				const zonkerStr = Sub.display(debug.zonker, ctx.metas);
+				sections.push(`Zonker:\n${zonkerStr}`);
+				const resKeys = Object.keys(debug.resolutions);
+				if (resKeys.length > 0) {
+					const resStr = resKeys.map(k => `  ?${k} |=> ${EB.Display.Term(debug.resolutions[Number(k)], ctx, db)}`).join("\n");
+					sections.push(`\nResolutions:\n${resStr}`);
+				}
+				const metaKeys = Object.keys(ctx.metas);
+				if (metaKeys.length > 0) {
+					const metaStr = metaKeys
+						.map(k => {
+							const m = ctx.metas[Number(k)];
+							return `  ?${k} : ${EB.NF.display(m.ann, displayCtx, db)}`;
+						})
+						.join("\n");
+					sections.push(`\nMetas (${metaKeys.length}):\n${metaStr}`);
+				}
+				return sections.join("\n");
+			}, errors) ?? "";
+	}
 
 	if (opts.rawJson) {
 		result.raw.elaborated = tm;
@@ -163,6 +228,49 @@ export const run = (source: string, opts: Options): Result => {
 		const quotedNF = attempt(() => EB.NF.quote(ctx, ctx.env.length, nf), errors);
 		if (quotedNF) {
 			result.normalized += `\n\n--- Quoted ---\n${attempt(() => EB.Display.Term(quotedNF, ctx, db), errors) ?? ""}`;
+		}
+	}
+
+	const vResult = await attemptAsync(() => EB.Mod.verify(tm, ty, ctx), errors);
+	if (vResult) {
+		const lines: string[] = [];
+		const dbOpts = { deBruijn: opts.deBruijn !== "off" };
+		const fmt = opts.vcFormat === "sexpr" ? VCPretty.sexpr : (e: Expr) => VCPretty.display(e, dbOpts);
+
+		if (vResult.vc) {
+			lines.push(fmt(vResult.vc));
+		}
+
+		if (vResult.result) {
+			lines.push(`\nSolver: ${vResult.result}`);
+		}
+		if (vResult.obligations?.length) {
+			lines.push("\nObligations:");
+			vResult.obligations.forEach(({ label, result: r, expr, context }) => {
+				lines.push(`  [${r}] ${label}`);
+
+				if (expr) {
+					lines.push(`    ${fmt(expr)}`);
+				}
+				if (context?.description) {
+					const desc = Array.isArray(context.description) ? context.description.join("\n    ") : context.description;
+					lines.push(`    ${desc}`);
+				}
+			});
+		}
+
+		if (vResult.error) {
+			lines.push(`\nError: ${vResult.error}`);
+		}
+		result.verification = lines.join("\n");
+
+		if (opts.rawJson) {
+			result.raw.verification = {
+				vc: vResult.vc?.sexpr(),
+				result: vResult.result,
+				obligations: vResult.obligations?.map(o => ({ ...o, expr: o.expr?.sexpr() })),
+				error: vResult.error,
+			};
 		}
 	}
 

@@ -314,7 +314,7 @@ export const interpretNbE = (stmt: Src.Statement, ctx: EB.Context): EB.Context =
 		.with({ type: "expression" }, s =>
 			F.pipe(
 				EB.Mod.expression(s, ctx),
-				E.map(([tm, ty, us, next]) => {
+				E.map(([tm, ty, us, next, _debug]) => {
 					if (options.showElaboration) {
 						console.log("\n------------ Elaboration ------------");
 						console.log(EB.Display.Term(tm, next));
@@ -399,7 +399,7 @@ export const interpretMIR = (
 		.with({ type: "expression" }, s =>
 			F.pipe(
 				EB.Mod.expression(s, ctx),
-				E.map(([tm, ty, us, next]) => {
+				E.map(([tm, ty, us, next, _debug]) => {
 					if (options.showElaboration) {
 						console.log("\n------------ Elaboration ------------");
 						console.log(EB.Display.Term(tm, next));
