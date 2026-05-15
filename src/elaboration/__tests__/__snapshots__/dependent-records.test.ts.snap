@@ -24,8 +24,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
     "term": "{
   let Pair
     : Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
-    = λa ->
-      λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
+    = λ(a: Type) ->
+      λ(p: Π(t1: a) -> Type) ->
+        Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
   let p
     : Σ($sig: [ snd: String, fst: Num ]) .
       (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p; a; Pair)
@@ -2283,8 +2284,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
     "term": "{
   let Pair
     : Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
-    = λa ->
-      λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
+    = λ(a: Type) ->
+      λ(p: Π(t1: a) -> Type) ->
+        Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
   return unit;
 }",
     "type": "Unit",
@@ -3118,11 +3120,11 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
     : Π(a: Type) ->
       (closure: Π(b: Type) ->
         Π(p: Π(t1: a) -> Π(t2: b) -> Bool) -> Type -| Γ: a)
-    = λa ->
-      λb ->
-        λp ->
-          Σ($sig: [ snd: <ω> b [| λv -> p :fst v |], fst: a ]) .
-            Schema [ snd: <ω> b [| λv -> p :fst v |], fst: a ];
+    = λ(a: Type) ->
+      λ(b: Type) ->
+        λ(p: Π(t1: a) -> Π(t2: b) -> Bool) ->
+          Σ($sig: [ snd: <ω> b [| λ(v: b) -> p :fst v |], fst: a ]) .
+            Schema [ snd: <ω> b [| λ(v: b) -> p :fst v |], fst: a ];
   return unit;
 }",
     "type": "Unit",

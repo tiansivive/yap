@@ -1,10 +1,10 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Displaying elaborated terms > Abstractions > should display a lambda 1`] = `"λx -> x"`;
+exports[`Displaying elaborated terms > Abstractions > should display a lambda 1`] = `"λ(x: Any) -> x"`;
 
 exports[`Displaying elaborated terms > Abstractions > should display a pi 1`] = `"Π(x: Int) -> Bool"`;
 
-exports[`Displaying elaborated terms > Abstractions > should display an implicit lambda 1`] = `"λx => x"`;
+exports[`Displaying elaborated terms > Abstractions > should display an implicit lambda 1`] = `"λ(x: Any) => x"`;
 
 exports[`Displaying elaborated terms > Abstractions > should display an implicit pi 1`] = `"Π(x: Int) => Bool"`;
 

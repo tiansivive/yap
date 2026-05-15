@@ -6,7 +6,7 @@ exports[`Inference: lambdas > explicit lambda with param annotation 1`] = `
     "constraints": [
       "Type ~~ Type",
     ],
-    "term": "λx -> 1",
+    "term": "λ(x: String) -> 1",
     "type": "Π(x: String) -> (closure: Num -| Γ: x)",
   },
 }
@@ -99,7 +99,7 @@ exports[`Inference: lambdas > explicit lambda without annotation 1`] = `
 {
   "displays": {
     "constraints": [],
-    "term": "λx -> 1",
+    "term": "λ(x: (?1 :: Type)) -> 1",
     "type": "Π(x: ?1) -> (closure: Num -| Γ: x)",
   },
 }
@@ -196,7 +196,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
       "?1 ~~ Π(x: ?2) -> (closure: (?4 :: Type) -| Γ: x; f)",
       "Num ~~ ?2",
     ],
-    "term": "λf => f 1",
+    "term": "λ(f: (?1 :: Type)) => f 1",
     "type": "Π(f: ?1) => (closure: (?4 :: Type) -| Γ: f)",
   },
 }
@@ -472,7 +472,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
       "?1 ~~ Π(x: ?2) -> (closure: (?4 :: Type) -| Γ: x; f)",
       "Num ~~ ?2",
     ],
-    "term": "λf -> f 1",
+    "term": "λ(f: (?1 :: Type)) -> f 1",
     "type": "Π(f: ?1) -> (closure: (?4 :: Type) -| Γ: f)",
   },
 }
@@ -745,7 +745,7 @@ exports[`Inference: lambdas > implicit lambda without annotation 1`] = `
 {
   "displays": {
     "constraints": [],
-    "term": "λx => 1",
+    "term": "λ(x: (?1 :: Type)) => 1",
     "type": "Π(x: ?1) => (closure: Num -| Γ: x)",
   },
 }

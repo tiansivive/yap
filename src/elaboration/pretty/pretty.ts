@@ -59,7 +59,7 @@ const doc = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; prin
 			})
 			.with({ type: "Abs" }, ({ binding, body }) => {
 				const b: PP.Doc = match(binding)
-					.with({ type: "Lambda" }, ({ variable }) => `λ${variable}`)
+					.with({ type: "Lambda" }, ({ variable, annotation }) => ["λ(", variable, ": ", go(annotation), ")"])
 					.with({ type: "Sigma" }, ({ variable }) => ["Σ(", variable, ": ", go(binding.annotation), ")"])
 					.with({ type: "Pi" }, ({ variable, annotation }) => ["Π(", variable, ": ", go(annotation), ")"])
 					.otherwise(() => {

@@ -18,10 +18,12 @@ import { solve } from "./solver";
 import * as A from "fp-ts/lib/Array";
 
 import * as Sub from "@yap/elaboration/unification/substitution";
+import { type Constraint, type Resolutions } from "./solver";
 import { VerificationServiceV2 } from "@yap/verification/V2/service";
 import { match } from "ts-pattern";
-import { Bool, init, Model } from "z3-solver";
+import { Bool, Expr, init, Model } from "z3-solver";
 import { getZ3Context } from "@yap/shared/config/options";
+import type { WithProvenance } from "./shared/provenance";
 
 export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 	const maybeExport = (name: string) => (result: Omit<Interface, "imports">) => {
@@ -235,6 +237,19 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 	return [stmt.variable, result];
 };
 
+export type ElaborationDebug = {
+	constraints: WithProvenance<Constraint>[];
+	zonker: Sub.Subst;
+	resolutions: Resolutions;
+};
+
+export type VerificationResult = {
+	vc?: Expr;
+	result?: "sat" | "unsat" | "unknown";
+	obligations?: Array<{ label: string; result: string; expr?: Expr; context?: { term?: string; type?: string; description?: string | string[] } }>;
+	error?: string;
+};
+
 export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>, ctx: EB.Context) => {
 	const inference = V2.Do(function* () {
 		const [elaborated, ty, us] = yield* EB.infer.gen(stmt.value);
@@ -249,15 +264,56 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 		const next = update(zonked, "zonker", z => ({ ...z, ...subst }));
 		const instantiated = NF.instantiate(generalized, next);
 
-		const wrapped = F.pipe(
-			EB.Icit.wrapLambda(elaborated, instantiated, next),
-			tm => EB.Icit.instantiate(tm, next, resolutions),
-			// inst => EB.Icit.generalize(inst, next),
-		);
+		const wrapped = F.pipe(EB.Icit.wrapLambda(elaborated, instantiated, next), tm => EB.Icit.instantiate(tm, next, resolutions));
 
-		return [wrapped, instantiated, us, next] as const;
+		const debug: ElaborationDebug = { constraints, zonker, resolutions };
+		return [wrapped, instantiated, us, next, debug] as const;
 	});
 
 	const [{ result }] = inference(ctx);
 	return result;
+};
+
+export const verify = async (term: EB.Term, type: NF.Value, ctx: EB.Context): Promise<VerificationResult> => {
+	const zCtx = getZ3Context();
+
+	if (!zCtx) {
+		return { error: "Z3 context not set" };
+	}
+
+	try {
+		const Verification = VerificationServiceV2(zCtx, {});
+		const [{ result: res }] = Verification.check(term, type)(ctx);
+
+		if (res._tag === "Left") {
+			return { error: `Verification failure: ${V2.display(res.left)}` };
+		}
+
+		const artefacts = res.right;
+		const vc = artefacts.vc;
+		const allObligations = Verification.getObligations();
+		const obligations = allObligations.map(({ label, expr, context }) => ({ label, result: "pending", expr, context }));
+
+		const solver = new zCtx.Solver();
+		solver.add(artefacts.vc.eq(true));
+		const solverResult = (await solver.check()) as "sat" | "unsat" | "unknown";
+
+		if (solverResult !== "sat") {
+			await Promise.all(
+				allObligations.map(async ({ label, expr, context }, i) => {
+					const s = new zCtx.Solver();
+					s.add(expr.eq(true));
+					obligations[i].result = await s.check();
+				}),
+			);
+		} else {
+			obligations.forEach(o => {
+				o.result = "sat";
+			});
+		}
+
+		return { vc, result: solverResult, obligations };
+	} catch (e) {
+		return { error: e instanceof Error ? e.message : String(e) };
+	}
 };

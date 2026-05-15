@@ -33,16 +33,16 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
     : Π(a: Type) =>
       (closure: Π(t1: Π(t2: Unit) -> Bool) ->
         Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)
-    = λa =>
-      λcond ->
-        λbody ->
+    = λ(a: Type) =>
+      λ(cond: Π(t2: Unit) -> Bool) ->
+        λ(body: Π(t4: Unit) -> Unit) ->
           reset |{
             let go
               : Π(a: Type) =>
                 (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
-              = λa =>
-                λu ->
-                  shift (λ$k ->
+              = λ(a: Type) =>
+                λ(u: Unit) ->
+                  shift (λ($k: Π($k: go) -> a) ->
                     match body unit
                       | true -> { go unit; $k (a unit); return unit; }
                       | false -> unit);
@@ -54,14 +54,14 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
   (closure: Π(t1: Π(t2: Unit) -> Bool) ->
     Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)",
   },
-  "evaluation": "λa =>
-  (closure: λcond ->
-    λbody ->
+  "evaluation": "λ(a: Type) =>
+  (closure: λ(cond: Π(t2: Unit) -> Bool) ->
+    λ(body: Π(t4: Unit) -> Unit) ->
       reset |{
         let go
           : Π(a: Type) =>
             (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
-          = λa => λu -> (?6 :: go);
+          = λ(a: Type) => λ(u: Unit) -> (?6 :: go);
         return go @a unit;
       }| -| Γ: a; while)",
 }
@@ -90,7 +90,10 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
     "term": "{
   let test
     : Π(x: Num) -> (closure: Num -| Γ: x; test)
-    = reset |λx -> + 1 shift (λ$k -> $k (+ x 10))|;
+    = reset |λ(x: Num) ->
+      + 1
+        shift (λ($k: Π($k: Num) -> Π(x: Num) -> (closure: Num -| Γ: x; test)) ->
+          $k (+ x 10))|;
   return test 5;
 }",
     "type": "Num",

@@ -14,7 +14,7 @@ exports[`Lowering: FFI > lowers FFI inside lambda — λx. print(x) 1`] = `
     f_0_entry:
       let x0 = call print(x)
       return x0",
-  "term": "λx -> FFI.print x",
+  "term": "λ(x: Str) -> FFI.print x",
 }
 `;
 
@@ -61,7 +61,7 @@ exports[`Lowering: FFI > lowers reset(shift k -> k(print 'hello')) — saturated
       branch i_0 { 0 -> s1(x0, env_0) }
     reset_exit0(x5):
       return x5",
-  "term": "reset |shift (λk -> k (FFI.print "hello"))|",
+  "term": "reset |shift (λ(k: Str) -> k (FFI.print "hello"))|",
 }
 `;
 
@@ -95,7 +95,7 @@ exports[`Lowering: FFI > lowers reset(shift k -> k(write 1)) — unsaturated FFI
       let x4 = read env_2.v0
       let x5 = call write(x4, x3)
       return x5",
-  "term": "reset |shift (λk -> k (FFI.write 1))|",
+  "term": "reset |shift (λ(k: Str) -> k (FFI.write 1))|",
 }
 `;
 
@@ -166,7 +166,7 @@ exports[`Lowering: FFI > lowers unsaturated FFI captured via closure — (λf. f
       let x4 = read env_3.v0
       let x5 = call write(x4, x3)
       return x5",
-  "term": "(λf -> f "hi") (FFI.write 1)",
+  "term": "(λ(f: Str) -> f "hi") (FFI.write 1)",
 }
 `;
 
@@ -469,7 +469,7 @@ exports[`Lowering: match > lowers reset(Block) - resumes twice with different va
       return x10",
   "term": "reset |{
   let x : Num = 5;
-  let v : Num = shift (λk -> FFI.$add (k 10) (k 20));
+  let v : Num = shift (λ(k: Num) -> FFI.$add (k 10) (k 20));
   return FFI.$add v x;
 }|",
 }
@@ -502,7 +502,7 @@ exports[`Lowering: match > lowers reset(Block) with captured frame — let x=1; 
       branch i_0 { 0 -> s1(x3, env_0) }
     reset_exit0(x7):
       return x7",
-  "term": "reset |{ let x : Num = 1; shift (λk -> k 10); return FFI.$add x 100; }|",
+  "term": "reset |{ let x : Num = 1; shift (λ(k: Num) -> k 10); return FFI.$add x 100; }|",
 }
 `;
 
@@ -540,7 +540,11 @@ exports[`Lowering: match > lowers reset(Block) with multishot + rest-of-reset �
       branch i_0 { 0 -> s1(x0, env_0) | 1 -> s2(x0, env_0) }
     reset_exit0(x9):
       return x9",
-  "term": "reset |{ let x : Num = 10; shift (λk -> FFI.$add (k 1) (k 2)); return x; }|",
+  "term": "reset |{
+  let x : Num = 10;
+  shift (λ(k: Num) -> FFI.$add (k 1) (k 2));
+  return x;
+}|",
 }
 `;
 
@@ -572,7 +576,7 @@ exports[`Lowering: match > lowers reset(Block) — continuation uses resumption 
       return x6",
   "term": "reset |{
   let x : Num = 7;
-  let v : Num = shift (λk -> k 99);
+  let v : Num = shift (λ(k: Num) -> k 99);
   return FFI.$add v x;
 }|",
 }
@@ -607,7 +611,7 @@ exports[`Lowering: match > lowers reset(shift k -> (k 1) + (k 2)) — multishot 
       branch i_0 { 0 -> s1(x0, env_0) | 1 -> s2(x0, env_0) }
     reset_exit0(x8):
       return x8",
-  "term": "reset |shift (λk -> FFI.$add (k 1) (k 2))|",
+  "term": "reset |shift (λ(k: Num) -> FFI.$add (k 1) (k 2))|",
 }
 `;
 
@@ -625,7 +629,7 @@ exports[`Lowering: match > lowers reset(shift k -> 42) — shift returns without
       jump reset_exit0(x1)
     reset_exit0(x2):
       return x2",
-  "term": "reset |shift (λk -> 42)|",
+  "term": "reset |shift (λ(k: Num) -> 42)|",
 }
 `;
 
@@ -650,7 +654,7 @@ exports[`Lowering: match > lowers reset(shift k -> let k2 = k; k2 5) — k-call 
       branch i_0 { 0 -> s1(x0, env_0) }
     reset_exit0(x4):
       return x4",
-  "term": "reset |shift (λk -> { let k2 : Num = k2; return k2 5; })|",
+  "term": "reset |shift (λ(k: Num) -> { let k2 : Num = k2; return k2 5; })|",
 }
 `;
 
@@ -675,7 +679,7 @@ exports[`Lowering: match > lowers reset(shift k -> let y=5; k y) — k-call with
       branch i_0 { 0 -> s1(x0, env_0) }
     reset_exit0(x4):
       return x4",
-  "term": "reset |shift (λk -> { let y : Num = 5; return k y; })|",
+  "term": "reset |shift (λ(k: Num) -> { let y : Num = 5; return k y; })|",
 }
 `;
 
@@ -700,7 +704,7 @@ exports[`Lowering: match > lowers reset(shift(λk. k 42)) — resume returns 42 
       branch i_0 { 0 -> s1(x0, env_0) }
     reset_exit0(x4):
       return x4",
-  "term": "reset |shift (λk -> k 42)|",
+  "term": "reset |shift (λ(k: Num) -> k 42)|",
 }
 `;
 
@@ -720,7 +724,7 @@ exports[`Lowering: primitives and ops > lowers (λx.x) 42 (indirect call) 1`] = 
   fn f_0(env_0, x) entry=f_0_entry
     f_0_entry:
       return x",
-  "term": "(λx -> x) 42",
+  "term": "(λ(x: Num) -> x) 42",
 }
 `;
 
@@ -751,7 +755,7 @@ exports[`Lowering: primitives and ops > lowers (λx.λy.x) 1 2 (curried const) 1
       let fnref_0 = &f_1
       let closure_0 = alloc { __fn: fnref_0, __env: env_2 }
       return closure_0",
-  "term": "(λx -> λy -> x) 1 2",
+  "term": "(λ(x: Num) -> λ(y: Num) -> x) 1 2",
 }
 `;
 
@@ -783,7 +787,7 @@ exports[`Lowering: primitives and ops > lowers (λx.λy.x+y) 1 2 (curried closur
       let fnref_0 = &f_1
       let closure_0 = alloc { __fn: fnref_0, __env: env_2 }
       return closure_0",
-  "term": "(λx -> λy -> FFI.$add x y) 1 2",
+  "term": "(λ(x: Num) -> λ(y: Num) -> FFI.$add x y) 1 2",
 }
 `;
 
@@ -800,7 +804,7 @@ exports[`Lowering: primitives and ops > lowers Lambda (closure) 1`] = `
     f_0_entry:
       let x0 = 1
       return x0",
-  "term": "λx -> 1",
+  "term": "λ(x: Num) -> 1",
 }
 `;
 
@@ -871,7 +875,7 @@ exports[`Lowering: primitives and ops > lowers nested Lambda 1`] = `
       let fnref_0 = &f_1
       let closure_0 = alloc { __fn: fnref_0, __env: env_2 }
       return closure_0",
-  "term": "λx -> λy -> x",
+  "term": "λ(x: Num) -> λ(y: Num) -> x",
 }
 `;
 
@@ -899,7 +903,7 @@ exports[`Lowering: primitives and ops > lowers λx.x (identity, closed) 1`] = `
   fn f_0(env_0, x) entry=f_0_entry
     f_0_entry:
       return x",
-  "term": "λx -> x",
+  "term": "λ(x: Num) -> x",
 }
 `;
 
@@ -917,7 +921,7 @@ exports[`Lowering: primitives and ops > lowers λx.x+1 (bound var in expression)
       let x0 = 1
       let x1 = +(x, x0)
       return x1",
-  "term": "λx -> FFI.$add x 1",
+  "term": "λ(x: Num) -> FFI.$add x 1",
 }
 `;
 
@@ -959,7 +963,7 @@ exports[`Lowering: struct, proj, inj > lowers proj from bound var (λr. r.x) 1`]
     f_0_entry:
       let x0 = read r.x
       return x0",
-  "term": "λr -> (r).x",
+  "term": "λ(r: Num) -> (r).x",
 }
 `;
 
