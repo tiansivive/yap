@@ -5,13 +5,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
 	{
-		ignores: [
-			"coverage*",
-			"lib",
-			"node_modules",
-			"pnpm-lock.yaml",
-			"**/*.snap",
-		],
+		ignores: ["coverage*", "lib", "node_modules", "pnpm-lock.yaml", "**/*.snap"],
 	},
 	{
 		linterOptions: {
@@ -26,7 +20,7 @@ export default tseslint.config(
 		languageOptions: {
 			parserOptions: {
 				projectService: {
-					allowDefaultProject: ["*.*s", "eslint.config.js"],
+					allowDefaultProject: ["*.*s", "eslint.config.mjs"],
 					defaultProject: "./tsconfig.json",
 				},
 				tsconfigRootDir: import.meta.dirname,
