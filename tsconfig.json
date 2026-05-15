@@ -24,7 +24,7 @@
 		}
 	},
 	"include": ["src", "scripts/cli.ts", "integration-tests"],
-	// "exclude": ["src/QTT/parser/grammar.ts"],
+	"exclude": ["src/cli/explore/static", "tooling/syntax-highlighting"],
 	"ts-node": {
 		"require": ["tsconfig-paths/register"]
 	}

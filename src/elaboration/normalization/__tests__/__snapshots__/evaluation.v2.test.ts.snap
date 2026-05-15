@@ -29,30 +29,41 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
       "?2 ~~ Unit",
     ],
     "term": "{
-	let while
-	: Π(a: Type) => (closure: Π(t1: Π(t2: Unit) -> Bool) -> Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)
-	= λa => λcond -> λbody -> reset |{
-	let go
-	: Π(a: Type) => (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
-	= λa => λu -> shift (λ$k -> match body unit
-| true -> {
-	go unit;
-	$k (a unit);
-	return unit;
-	}
-| false -> unit);
-	return go @a unit;
-	}|;
-	return while;
-	}",
-    "type": "Π(a: Type) => (closure: Π(t1: Π(t2: Unit) -> Bool) -> Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)",
+  let while
+    : Π(a: Type) =>
+      (closure: Π(t1: Π(t2: Unit) -> Bool) ->
+        Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)
+    = λa =>
+      λcond ->
+        λbody ->
+          reset |{
+            let go
+              : Π(a: Type) =>
+                (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
+              = λa =>
+                λu ->
+                  shift (λ$k ->
+                    match body unit
+                      | true -> { go unit; $k (a unit); return unit; }
+                      | false -> unit);
+            return go @a unit;
+          }|;
+  return while;
+}",
+    "type": "Π(a: Type) =>
+  (closure: Π(t1: Π(t2: Unit) -> Bool) ->
+    Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)",
   },
-  "evaluation": "λa => (closure: λcond -> λbody -> reset |{
-	let go
-	: Π(a: Type) => (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
-	= λa => λu -> (?6 :: go);
-	return go @a unit;
-	}| -| Γ: a; while)",
+  "evaluation": "λa =>
+  (closure: λcond ->
+    λbody ->
+      reset |{
+        let go
+          : Π(a: Type) =>
+            (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
+          = λa => λu -> (?6 :: go);
+        return go @a unit;
+      }| -| Γ: a; while)",
 }
 `;
 
@@ -77,11 +88,11 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
       "Num ~~ ?4",
     ],
     "term": "{
-	let test
-	: Π(x: Num) -> (closure: Num -| Γ: x; test)
-	= reset |λx -> + 1 shift (λ$k -> $k (+ x 10))|;
-	return test 5;
-	}",
+  let test
+    : Π(x: Num) -> (closure: Num -| Γ: x; test)
+    = reset |λx -> + 1 shift (λ$k -> $k (+ x 10))|;
+  return test 5;
+}",
     "type": "Num",
   },
 }

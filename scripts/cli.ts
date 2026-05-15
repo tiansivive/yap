@@ -10,6 +10,7 @@ import { getZ3Context, options, setZ3Context } from "@yap/shared/config/options"
 import { defaultContext } from "@yap/shared/lib/constants";
 import { init } from "z3-solver";
 import { repl } from "../src/cli/repl";
+import { start as startExplorer } from "../src/cli/explore";
 
 const program = new Command();
 
@@ -84,6 +85,22 @@ program
 		}
 
 		repl({ mir, codegen, target });
+	});
+
+program
+	.command("explore")
+	.description("Open pipeline explorer dashboard")
+	.option("-p, --port <number>", "port", "3333")
+	.action(async cmd => {
+		let z3Ctx = getZ3Context();
+		if (!z3Ctx) {
+			const z3 = await init();
+			z3.enableTrace("main");
+			z3Ctx = z3.Context("main");
+			setZ3Context(z3Ctx);
+		}
+
+		startExplorer({ port: parseInt(cmd.port) });
 	});
 
 program.parse();

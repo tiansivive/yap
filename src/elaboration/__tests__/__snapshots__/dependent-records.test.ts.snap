@@ -22,14 +22,16 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       "Schema [ snd: String, fst: Num ] ~~ Schema [ fst: Num, snd: String ]",
     ],
     "term": "{
-	let Pair
-	: Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
-	= λa -> λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
-	let p
-	: Σ($sig: [ snd: String, fst: Num ]) . (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p; a; Pair)
-	= Struct [ fst: 1, snd: "hello" ];
-	return unit;
-	}",
+  let Pair
+    : Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
+    = λa ->
+      λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
+  let p
+    : Σ($sig: [ snd: String, fst: Num ]) .
+      (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p; a; Pair)
+    = Struct [ fst: 1, snd: "hello" ];
+  return unit;
+}",
     "type": "Unit",
   },
 }
@@ -2279,11 +2281,12 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
       "Type ~~ Type",
     ],
     "term": "{
-	let Pair
-	: Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
-	= λa -> λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
-	return unit;
-	}",
+  let Pair
+    : Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
+    = λa ->
+      λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
+  return unit;
+}",
     "type": "Unit",
   },
 }
@@ -2814,11 +2817,11 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Simple 
       "Type ~~ Type",
     ],
     "term": "{
-	let Pair
-	: Type
-	= Σ($sig: [ snd: :fst, fst: Num ]) . Schema [ snd: :fst, fst: Num ];
-	return unit;
-	}",
+  let Pair
+    : Type
+    = Σ($sig: [ snd: :fst, fst: Num ]) . Schema [ snd: :fst, fst: Num ];
+  return unit;
+}",
     "type": "Unit",
   },
 }
@@ -3111,11 +3114,17 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
       "Type ~~ Type",
     ],
     "term": "{
-	let Pair
-	: Π(a: Type) -> (closure: Π(b: Type) -> Π(p: Π(t1: a) -> Π(t2: b) -> Bool) -> Type -| Γ: a)
-	= λa -> λb -> λp -> Σ($sig: [ snd: <ω> b [| λv -> p :fst v |], fst: a ]) . Schema [ snd: <ω> b [| λv -> p :fst v |], fst: a ];
-	return unit;
-	}",
+  let Pair
+    : Π(a: Type) ->
+      (closure: Π(b: Type) ->
+        Π(p: Π(t1: a) -> Π(t2: b) -> Bool) -> Type -| Γ: a)
+    = λa ->
+      λb ->
+        λp ->
+          Σ($sig: [ snd: <ω> b [| λv -> p :fst v |], fst: a ]) .
+            Schema [ snd: <ω> b [| λv -> p :fst v |], fst: a ];
+  return unit;
+}",
     "type": "Unit",
   },
 }

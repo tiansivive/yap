@@ -265,7 +265,12 @@ export const parse = (code: string) => {
 	if (data.results.length !== 1) {
 		console.error("Failed to parse statement");
 
-		fs.writeFileSync(resolve(process.cwd(), "./.logs/error.json"), JSON.stringify(data.results, null, 2));
+		const logsDir = resolve(process.cwd(), "./.logs");
+
+		if (!fs.existsSync(logsDir)) {
+			fs.mkdirSync(logsDir, { recursive: true });
+		}
+		fs.writeFileSync(resolve(logsDir, "error.json"), JSON.stringify(data.results, null, 2));
 
 		throw new Error("Error while parsing statement. Check error.json for more information");
 	}

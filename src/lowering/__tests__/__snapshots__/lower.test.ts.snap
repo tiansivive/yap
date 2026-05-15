@@ -179,15 +179,7 @@ exports[`Lowering: match > lowers Block (let x=1; let y=2; add(x,y)) 1`] = `
       let x1 = 2
       let x2 = +(x1, x0)
       return x2",
-  "term": "{
-	let x
-	: Num
-	= 1;
-	let y
-	: Num
-	= 2;
-	return FFI.$add y x;
-	}",
+  "term": "{ let x : Num = 1; let y : Num = 2; return FFI.$add y x; }",
 }
 `;
 
@@ -212,10 +204,7 @@ exports[`Lowering: match > lowers match on literals (42, 0, wildcard) 1`] = `
       jump j0(x4)
     j0(x0):
       return x0",
-  "term": "match 42
-| 42 -> 1
-| 0 -> 0
-| _ -> -1",
+  "term": "match 42 | 42 -> 1 | 0 -> 0 | _ -> -1",
 }
 `;
 
@@ -240,7 +229,7 @@ exports[`Lowering: match > lowers match on nested struct with literal patterns 1
     j0(x0):
       return x0",
   "term": "match Struct [ outer: Struct [ x: 1, y: 2 ] ]
-| Struct [ outer: Struct [ x: 1, y: b ] ] -> b",
+  | Struct [ outer: Struct [ x: 1, y: b ] ] -> b",
 }
 `;
 
@@ -261,8 +250,7 @@ exports[`Lowering: match > lowers match on struct (field bindings) 1`] = `
       jump j0(x6)
     j0(x0):
       return x0",
-  "term": "match Struct [ x: 1, y: 2 ]
-| Struct [ x: a, y: b ] -> FFI.$add I0 I1",
+  "term": "match Struct [ x: 1, y: 2 ] | Struct [ x: a, y: b ] -> FFI.$add I0 I1",
 }
 `;
 
@@ -286,9 +274,7 @@ exports[`Lowering: match > lowers match on struct + variable ({ foo: 1 } -> 1 | 
       jump j0(x5)
     j0(x0):
       return x0",
-  "term": "match Struct [ foo: 1 ]
-| Struct [ foo: 1 ] -> 1
-| o -> 0",
+  "term": "match Struct [ foo: 1 ] | Struct [ foo: 1 ] -> 1 | o -> 0",
 }
 `;
 
@@ -318,9 +304,9 @@ exports[`Lowering: match > lowers match on struct with literal patterns (x: 1 vs
     j0(x0):
       return x0",
   "term": "match Struct [ x: 1, y: 10 ]
-| Struct [ x: 1, y: b ] -> _
-| Struct [ x: 2, y: b ] -> FFI.$add _ 1
-| Struct [ x: a, y: b ] -> FFI.$add _ _",
+  | Struct [ x: 1, y: b ] -> _
+  | Struct [ x: 2, y: b ] -> FFI.$add _ 1
+  | Struct [ x: a, y: b ] -> FFI.$add _ _",
 }
 `;
 
@@ -347,8 +333,8 @@ exports[`Lowering: match > lowers match on variant (Some/None) 1`] = `
     j0(x0):
       return x0",
   "term": "match Struct [ __tag: "Some", Some: 42 ]
-| Variant [ Some: x ] -> _
-| Variant [ None: _ ] -> 0",
+  | Variant [ Some: x ] -> _
+  | Variant [ None: _ ] -> 0",
 }
 `;
 
@@ -381,8 +367,8 @@ exports[`Lowering: match > lowers match on variant with struct payload (Some(Poi
     j0(x0):
       return x0",
   "term": "match Struct [ __tag: "Some", Some: Struct [ x: 1, y: 2 ] ]
-| Variant [ Some: Struct [ x: 1, y: b ] ] -> _
-| Variant [ None: _ ] -> 0",
+  | Variant [ Some: Struct [ x: 1, y: b ] ] -> _
+  | Variant [ None: _ ] -> 0",
 }
 `;
 
@@ -482,14 +468,10 @@ exports[`Lowering: match > lowers reset(Block) - resumes twice with different va
     reset_exit0(x10):
       return x10",
   "term": "reset |{
-	let x
-	: Num
-	= 5;
-	let v
-	: Num
-	= shift (λk -> FFI.$add (k 10) (k 20));
-	return FFI.$add v x;
-	}|",
+  let x : Num = 5;
+  let v : Num = shift (λk -> FFI.$add (k 10) (k 20));
+  return FFI.$add v x;
+}|",
 }
 `;
 
@@ -520,13 +502,7 @@ exports[`Lowering: match > lowers reset(Block) with captured frame — let x=1; 
       branch i_0 { 0 -> s1(x3, env_0) }
     reset_exit0(x7):
       return x7",
-  "term": "reset |{
-	let x
-	: Num
-	= 1;
-	shift (λk -> k 10);
-	return FFI.$add x 100;
-	}|",
+  "term": "reset |{ let x : Num = 1; shift (λk -> k 10); return FFI.$add x 100; }|",
 }
 `;
 
@@ -564,13 +540,7 @@ exports[`Lowering: match > lowers reset(Block) with multishot + rest-of-reset �
       branch i_0 { 0 -> s1(x0, env_0) | 1 -> s2(x0, env_0) }
     reset_exit0(x9):
       return x9",
-  "term": "reset |{
-	let x
-	: Num
-	= 10;
-	shift (λk -> FFI.$add (k 1) (k 2));
-	return x;
-	}|",
+  "term": "reset |{ let x : Num = 10; shift (λk -> FFI.$add (k 1) (k 2)); return x; }|",
 }
 `;
 
@@ -601,14 +571,10 @@ exports[`Lowering: match > lowers reset(Block) — continuation uses resumption 
     reset_exit0(x6):
       return x6",
   "term": "reset |{
-	let x
-	: Num
-	= 7;
-	let v
-	: Num
-	= shift (λk -> k 99);
-	return FFI.$add v x;
-	}|",
+  let x : Num = 7;
+  let v : Num = shift (λk -> k 99);
+  return FFI.$add v x;
+}|",
 }
 `;
 
@@ -684,12 +650,7 @@ exports[`Lowering: match > lowers reset(shift k -> let k2 = k; k2 5) — k-call 
       branch i_0 { 0 -> s1(x0, env_0) }
     reset_exit0(x4):
       return x4",
-  "term": "reset |shift (λk -> {
-	let k2
-	: Num
-	= k2;
-	return k2 5;
-	})|",
+  "term": "reset |shift (λk -> { let k2 : Num = k2; return k2 5; })|",
 }
 `;
 
@@ -714,12 +675,7 @@ exports[`Lowering: match > lowers reset(shift k -> let y=5; k y) — k-call with
       branch i_0 { 0 -> s1(x0, env_0) }
     reset_exit0(x4):
       return x4",
-  "term": "reset |shift (λk -> {
-	let y
-	: Num
-	= 5;
-	return k y;
-	})|",
+  "term": "reset |shift (λk -> { let y : Num = 5; return k y; })|",
 }
 `;
 

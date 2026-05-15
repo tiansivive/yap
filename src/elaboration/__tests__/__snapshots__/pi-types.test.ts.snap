@@ -61,14 +61,8 @@ exports[`dependent types elaboration > simple dependent match expression type 1`
     "skolems": {},
   },
   "term": "let f
-	: Π(x: Num) -> (closure: match x
-| 0 -> Num
-| _ -> String -| Γ: x)
-	= λx -> match x
-| 0 -> 10
-| _ -> "10"",
-  "type": "Π(x: Num) -> (closure: match x
-| 0 -> Num
-| _ -> String -| Γ: x)",
+  : Π(x: Num) -> (closure: match x | 0 -> Num | _ -> String -| Γ: x)
+  = λx -> match x | 0 -> 10 | _ -> "10"",
+  "type": "Π(x: Num) -> (closure: match x | 0 -> Num | _ -> String -| Γ: x)",
 }
 `;

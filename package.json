@@ -47,6 +47,7 @@
 		"lodash": "^4.17.21",
 		"moo": "^0.5.2",
 		"prettier": "^3.6.2",
+		"prettier-printer": "^1.1.4",
 		"ts-pattern": "^5.3.1",
 		"type-fest": "^5.0.1",
 		"winston": "^3.17.0",

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Yap Pipeline Explorer</title>
+		<link rel="stylesheet" href="/style.css" />
+	</head>
+	<body>
+		<header>
+			<h1>yap explore</h1>
+			<button id="run-btn">Run <kbd>Mod+Enter</kbd></button>
+			<span id="status" class="status"></span>
+			<button id="sidebar-toggle" class="toggle-btn">Config</button>
+		</header>
+
+		<div class="main">
+			<div class="editor-pane">
+				<div class="pane-label">Source</div>
+				<div id="editor"></div>
+			</div>
+			<div class="output-pane">
+				<div class="tabs" id="tabs"></div>
+				<div id="output-container">
+					<div id="output"></div>
+					<button id="raw-toggle" class="hidden">Raw JSON</button>
+					<div id="raw-panel" class="hidden">
+						<div id="raw-content" class="collapsed"><pre></pre></div>
+					</div>
+				</div>
+				<div class="errors hidden" id="errors"><pre></pre></div>
+			</div>
+			<div class="sidebar" id="sidebar">
+				<h3>Config</h3>
+				<label>
+					Parser rule
+					<select id="cfg-parser">
+						<option value="Ann" selected>Expression (Ann)</option>
+						<option value="Script">Statement (Script)</option>
+					</select>
+				</label>
+				<label>
+					de Bruijn
+					<select id="cfg-debruijn">
+						<option value="off" selected>Off</option>
+						<option value="index">Index (#I)</option>
+						<option value="level">Level (#L)</option>
+						<option value="both">Both</option>
+					</select>
+				</label>
+				<div class="check-row">
+					<input type="checkbox" id="cfg-raw" />
+					<label for="cfg-raw" style="flex-direction: row">Show raw JSON</label>
+				</div>
+			</div>
+		</div>
+
+		<script type="module" src="/app.js"></script>
+	</body>
+</html>
