@@ -18,15 +18,17 @@ type State = {
 	readonly foreignVars: ReadonlyMap<string, NodeId>;
 	readonly locations: ReadonlyMap<number, Location>;
 	readonly types: Readonly<Record<number, { nf: NF.Value }>>;
+	readonly arities: Readonly<Record<string, number>>;
 };
 
-const mkState = (opts?: { locations?: ReadonlyMap<number, Location>; types?: Record<number, { nf: NF.Value }> }): State => ({
+const mkState = (opts?: { locations?: ReadonlyMap<number, Location>; types?: Record<number, { nf: NF.Value }>; arities?: Record<string, number> }): State => ({
 	graph: mkGraph(),
 	binders: [],
 	freeVars: new Map(),
 	foreignVars: new Map(),
 	locations: opts?.locations ?? new Map(),
 	types: opts?.types ?? {},
+	arities: opts?.arities ?? {},
 });
 
 // ── Helpers ──
@@ -65,6 +67,7 @@ export const translate = (
 	opts?: {
 		locations?: ReadonlyMap<number, Location>;
 		types?: Record<number, { nf: NF.Value }>;
+		arities?: Record<string, number>;
 	},
 ): Graph => {
 	resetId();
@@ -117,7 +120,9 @@ const intern = (tag: string, name: string, pool: "freeVars" | "foreignVars", tid
 	let s = st;
 
 	if (defId === undefined) {
-		const [id, s2] = emit(st, tag, { name }, prov(tid, st));
+		const arity = pool === "foreignVars" ? st.arities[name] : undefined;
+		const payload = arity !== undefined ? { name, arity } : { name };
+		const [id, s2] = emit(st, tag, payload, prov(tid, st));
 		defId = id;
 		s = { ...s2, [pool]: new Map([...s2[pool], [name, defId]]) };
 	}

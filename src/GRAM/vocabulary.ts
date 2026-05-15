@@ -34,6 +34,8 @@ export const Tags = {
 	RESET: "reset",
 	SHIFT: "shift",
 
+	EXTERNAL: "external",
+	PRIMOP: "primop",
 	CLOSURE: "closure",
 	ENV: "env",
 	FUNC: "func",

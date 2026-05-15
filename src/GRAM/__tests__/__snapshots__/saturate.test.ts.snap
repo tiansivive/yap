@@ -1,0 +1,70 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`saturate > (λx.λy.x+y) 3 4 — saturates inner add, preserves lambda apps 1`] = `
+"[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [3]
+[3] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [4]
+[4] lambda {"variable":"x","icit":"Explicit"}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] lambda {"variable":"y","icit":"Explicit"}
+  :annotation -> [7]
+  :body -> [16]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:foreign {"name":"$add","arity":2}
+[12] var:bound {"index":1}
+  :refers_to -> [4]
+[13] var:bound {"index":0}
+  :refers_to -> [6]
+[14] lit {"value":{"type":"Num","value":3}}
+[15] lit {"value":{"type":"Num","value":4}}
+[16] primop {"op":"$add"}
+  :callee -> [10]
+  :case_0 -> [12]
+  :case_1 -> [13]"
+`;
+
+exports[`saturate > add(1, 2) → primop 1`] = `
+"[1] root
+  :entry -> [8]
+[4] var:foreign {"name":"$add","arity":2}
+[6] lit {"value":{"type":"Num","value":1}}
+[7] lit {"value":{"type":"Num","value":2}}
+[8] primop {"op":"$add"}
+  :callee -> [4]
+  :case_0 -> [6]
+  :case_1 -> [7]"
+`;
+
+exports[`saturate > add(add(1, 2), 3) → two primops 1`] = `
+"[1] root
+  :entry -> [12]
+[4] var:foreign {"name":"$add","arity":2}
+[9] lit {"value":{"type":"Num","value":1}}
+[10] lit {"value":{"type":"Num","value":2}}
+[11] lit {"value":{"type":"Num","value":3}}
+[12] primop {"op":"$add"}
+  :callee -> [4]
+  :case_0 -> [13]
+  :case_1 -> [11]
+[13] primop {"op":"$add"}
+  :callee -> [4]
+  :case_0 -> [9]
+  :case_1 -> [10]"
+`;
+
+exports[`saturate > not(true) → primop (arity 1) 1`] = `
+"[1] root
+  :entry -> [6]
+[3] var:foreign {"name":"$not","arity":1}
+[5] lit {"value":{"type":"Bool","value":true}}
+[6] primop {"op":"$not"}
+  :callee -> [3]
+  :case_0 -> [5]"
+`;

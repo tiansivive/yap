@@ -1,5 +1,5 @@
 import type { Graph } from "../graph";
-import type { Rule } from "./rule";
+import type { Rule, Bindings } from "./rule";
 import { Match } from "./match";
 import * as Rewrite from "./rewrite";
 
@@ -48,4 +48,20 @@ export const repeat =
 			return next.nodes === current.nodes && next.edges === current.edges ? next : step(next, i + 1);
 		};
 		return step(g, 0);
+	};
+
+export const derive =
+	(anchor: Rule, build: (bindings: Bindings, host: Graph) => Rule): Pass =>
+	(g: Graph): Graph => {
+		const step = (current: Graph): Graph => {
+			const b = Match.one(anchor, current);
+
+			if (!b) {
+				return current;
+			}
+			const rule = build(b, current);
+			const next = Rewrite.apply(rule, current, b);
+			return next ? step(next) : current;
+		};
+		return step(g);
 	};
