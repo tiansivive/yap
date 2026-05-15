@@ -2,6 +2,8 @@ import { match, P } from "ts-pattern";
 
 import * as E from "fp-ts/lib/Either";
 
+import * as PP from "@yap/shared/pretty";
+
 export type Injection<T> = { type: "injection"; label: string; value: T; term: T };
 export type Projection<T> = { type: "projection"; label: string; term: T };
 
@@ -41,6 +43,32 @@ export const display =
 				.run();
 
 		return `[ ${recurse(row)} ]`;
+	};
+
+export const displayDoc =
+	<T, V>(pretty: { term: (term: T) => PP.Doc; var: (variable: V) => PP.Doc }) =>
+	(row: Row<T, V>): PP.Doc => {
+		if (row.type === "empty") {
+			return "[]";
+		}
+
+		const fields: PP.Doc[] = [];
+		let tail: PP.Doc | undefined;
+
+		const collect = (r: Row<T, V>): void =>
+			match(r)
+				.with({ type: "empty" }, () => {})
+				.with({ type: "extension" }, ({ label, value, row }) => {
+					fields.push([label, ": ", pretty.term(value)]);
+					collect(row);
+				})
+				.with({ type: "variable" }, ({ variable }) => {
+					tail = ["| ", pretty.var(variable)];
+				})
+				.run();
+
+		collect(row);
+		return PP.row(fields, tail);
 	};
 
 export const traverse = <T, V, A, B>(row: Row<T, V>, onVal: (value: T, label: string) => A, onVar: (v: V) => Row<A, B>): Row<A, B> =>

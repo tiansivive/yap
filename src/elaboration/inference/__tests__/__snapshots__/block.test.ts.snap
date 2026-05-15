@@ -6,12 +6,7 @@ exports[`inference: block > { let x = 1; return x; } 1`] = `
     "constraints": [
       "Num ~~ ?1",
     ],
-    "term": "{
-	let x
-	: Num
-	= 1;
-	return x;
-	}",
+    "term": "{ let x : Num = 1; return x; }",
     "type": "Num",
   },
 }
@@ -106,9 +101,7 @@ exports[`inference: block > { return 1; } 1`] = `
 {
   "displays": {
     "constraints": [],
-    "term": "{
-	return 1;
-	}",
+    "term": "{ return 1; }",
     "type": "Num",
   },
 }

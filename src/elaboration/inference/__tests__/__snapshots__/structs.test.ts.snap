@@ -999,7 +999,9 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
       "Num ~~ ?18",
       "Schema [ x: Num, y: Num ] ~~ ?2",
     ],
-    "term": "Struct [ point: Struct [ x: 1, y: 2 ], halved: Struct [ a: / (:point).x 2, b: / (:point).y 2 ] ]",
+    "term": "Struct
+  [ point: Struct [ x: 1, y: 2 ],
+    halved: Struct [ a: / (:point).x 2, b: / (:point).y 2 ] ]",
     "type": "Schema [ point: Schema [ x: Num, y: Num ], halved: Schema [ a: Num, b: Num ] ]",
   },
 }
@@ -2007,8 +2009,14 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
       "Schema [ inner: ?2 ] ~~ ?5",
       "Num ~~ ?2",
     ],
-    "term": "Struct [ overriden: 1, foo: Struct [ inner: :overriden ], bar: Struct [ overriden: "hello", inner: :overriden ] ]",
-    "type": "Schema [ overriden: Num, foo: Schema [ inner: ?2 ], bar: Schema [ overriden: String, inner: ?11 ] ]",
+    "term": "Struct
+  [ overriden: 1,
+    foo: Struct [ inner: :overriden ],
+    bar: Struct [ overriden: "hello", inner: :overriden ] ]",
+    "type": "Schema
+  [ overriden: Num,
+    foo: Schema [ inner: ?2 ],
+    bar: Schema [ overriden: String, inner: ?11 ] ]",
   },
 }
 `;

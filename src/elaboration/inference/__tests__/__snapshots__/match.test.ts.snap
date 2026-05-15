@@ -9,8 +9,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 1`] = `
       "?5 ~~ ?5",
       "?5 ~~ ?8",
     ],
-    "term": "match Struct [ x: 1 ]
-| Struct [ x: a | $row_6 ] -> a",
+    "term": "match Struct [ x: 1 ] | Struct [ x: a | $row_6 ] -> a",
     "type": "?8",
   },
 }
@@ -392,8 +391,7 @@ exports[`inference: match > match 1 | 1 -> 2 1`] = `
       "Num ~~ Num",
       "Num ~~ ?2",
     ],
-    "term": "match 1
-| 1 -> 2",
+    "term": "match 1 | 1 -> 2",
     "type": "?2",
   },
 }

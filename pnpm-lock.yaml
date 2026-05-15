@@ -32,6 +32,9 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
+      prettier-printer:
+        specifier: ^1.1.4
+        version: 1.1.4
       ts-pattern:
         specifier: ^5.3.1
         version: 5.3.1
@@ -2197,6 +2200,9 @@ packages:
     resolution: {integrity: sha512-EdDDZu4A2OyIK7Lr/2zG+w5jmbuk1DVBnEwREQvBzspBJkCEbRa8GxU1lghYcaGJCnRWibjDXlq779X1/y5xwg==}
     engines: {node: '>=8'}
 
+  infestines@0.4.11:
+    resolution: {integrity: sha512-09nHagZLOYUaXKHqdV+nxEaYaD0hRlKyhQMhgTMwfbvWpMkowXf4XLZzAkLq6Y90wZ7Wqm6aMoL2trBsNNKGeg==}
+
   inflight@1.0.6:
     resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
     deprecated: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
@@ -2812,6 +2818,12 @@ packages:
   parse-url@8.1.0:
     resolution: {integrity: sha512-xDvOoLU5XRrcOZvnI6b8zA6n9O9ejNk/GExuz1yBuWUGn9KA97GI6HTs6u02wKara1CeVmZhH+0TZFdWScR89w==}
 
+  partial.lenses.validation@2.0.0:
+    resolution: {integrity: sha512-NBZhmrunQWc4Ih5pJGYPHCEJfjIITPEkYn0Z6YB8qmW0iN4ZeqN0eZTWAPAH8MxjsEGx3G+8xnTMsEHbzy0k/A==}
+
+  partial.lenses@14.17.0:
+    resolution: {integrity: sha512-Iq+wDw5b5iwmn7b9MO+//buOqF0YoAC2Hsj+HoeG88BGeT3NkL/YwHNGDrySyX7xZSqj0LFEWwfgGSj4cSFmXQ==}
+
   path-exists@4.0.0:
     resolution: {integrity: sha512-ak9Qy5Q7jYb2Wwcey5Fpvg2KoAc/ZIhLSLOSBmRmygPsGwkVVt0fZa0qrtMz+m6tJTAHfZQ8FnmB4MG4LWy7/w==}
     engines: {node: '>=8'}
@@ -2922,6 +2934,9 @@ packages:
     engines: {node: '>=16.0.0'}
     peerDependencies:
       prettier: ^3.0.3
+
+  prettier-printer@1.1.4:
+    resolution: {integrity: sha512-gQIWF7PKVknRcMoZ4Lsqj2icc97W+Q9JTa7xQgNem07yZFzOimUPq50N5oRfKkSRBZT8QqrVW1IBEMBPWqjBgQ==}
 
   prettier@3.6.2:
     resolution: {integrity: sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==}
@@ -5670,6 +5685,8 @@ snapshots:
 
   indent-string@4.0.0: {}
 
+  infestines@0.4.11: {}
+
   inflight@1.0.6:
     dependencies:
       once: 1.4.0
@@ -6274,6 +6291,15 @@ snapshots:
     dependencies:
       parse-path: 7.0.0
 
+  partial.lenses.validation@2.0.0:
+    dependencies:
+      infestines: 0.4.11
+      partial.lenses: 14.17.0
+
+  partial.lenses@14.17.0:
+    dependencies:
+      infestines: 0.4.11
+
   path-exists@4.0.0: {}
 
   path-exists@5.0.0: {}
@@ -6349,6 +6375,11 @@ snapshots:
       mvdan-sh: 0.10.1
       prettier: 3.6.2
       sh-syntax: 0.4.2
+
+  prettier-printer@1.1.4:
+    dependencies:
+      infestines: 0.4.11
+      partial.lenses.validation: 2.0.0
 
   prettier@3.6.2: {}
 

@@ -481,11 +481,12 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 1`] = `
       "Π(obj: ?2) -> (closure: (?3 :: Type) -| Γ: obj; proj) ~~ ?1",
     ],
     "term": "{
-	let proj
-	: Π(r: Row) => (closure: Π(a: Type) => Π(obj: Schema [ x: a | r ]) -> a -| Γ: r; proj)
-	= λr => λa => λobj -> (obj).x;
-	return unit;
-	}",
+  let proj
+    : Π(r: Row) =>
+      (closure: Π(a: Type) => Π(obj: Schema [ x: a | r ]) -> a -| Γ: r; proj)
+    = λr => λa => λobj -> (obj).x;
+  return unit;
+}",
     "type": "Unit",
   },
 }
@@ -1124,14 +1125,16 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       "Schema [ snd: String, fst: Num ] ~~ Schema [ fst: Num, snd: String ]",
     ],
     "term": "{
-	let Pair
-	: Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
-	= λa -> λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
-	let p
-	: Σ($sig: [ snd: String, fst: Num ]) . (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p; a; Pair)
-	= Struct [ fst: 1, snd: "hello" ];
-	return (p).snd;
-	}",
+  let Pair
+    : Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
+    = λa ->
+      λp -> Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
+  let p
+    : Σ($sig: [ snd: String, fst: Num ]) .
+      (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p; a; Pair)
+    = Struct [ fst: 1, snd: "hello" ];
+  return (p).snd;
+}",
     "type": "String",
   },
 }
