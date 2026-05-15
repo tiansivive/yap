@@ -3,7 +3,7 @@ import * as EB from "@yap/elaboration";
 
 import { translate } from "../translate";
 import { display } from "../display";
-import { resetId, Nodes, Query, entry } from "../graph";
+import { resetId, Nodes, Edges, Query, entry } from "../graph";
 import { Tags, Labels } from "../vocabulary";
 import { saturate } from "../passes/saturate";
 import { ARITIES } from "../../lowering/shared/primops";
@@ -42,6 +42,11 @@ describe("saturate", () => {
 
 		expect(Query.byTag(Tags.PRIMOP)(g).size).toBe(2);
 		expect(Query.byTag(Tags.APP)(g).size).toBe(0);
+
+		for (const pid of Query.byTag(Tags.PRIMOP)(g)) {
+			const args = Edges.byLabel(pid, Labels.ARG)(g);
+			args.forEach(e => expect(e.payload.index).toBeDefined());
+		}
 	});
 
 	it("preserves non-foreign apps", () => {

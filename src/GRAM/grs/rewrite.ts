@@ -39,7 +39,7 @@ const Redirect = {
 				return acc;
 			}
 
-			return Edges.to(oldId)(acc).reduce((a, e) => Edges.add(e.source, e.label, newId)(a), acc);
+			return Edges.to(oldId)(acc).reduce((a, e) => Edges.add(e.source, e.label, newId, e.payload)(a), acc);
 		}, g),
 };
 
@@ -49,7 +49,18 @@ const Remove = {
 			.filter(e => !edgeInRhs(e, rule.rhs))
 			.reduce((acc, e) => {
 				const src = resolve(bindings, e.source);
-				return src !== undefined ? Edges.remove(src, e.label)(acc) : acc;
+				const tgt = resolve(bindings, e.target);
+
+				if (src === undefined || tgt === undefined) {
+					return acc;
+				}
+
+				const payloadKey = e.payload ? JSON.stringify(e.payload) : undefined;
+				const hostEdge = Edges.byLabel(
+					src,
+					e.label,
+				)(acc).find(he => he.target === tgt && (payloadKey === undefined || JSON.stringify(he.payload) === payloadKey));
+				return hostEdge ? Edges.remove(hostEdge)(acc) : acc;
 			}, g),
 
 	nodes: (binds: ReadonlyArray<string>, bindings: Bindings, g: Graph): Graph =>
@@ -92,7 +103,7 @@ const Create = {
 		edges.reduce((acc, e) => {
 			const src = bindings.get(e.source);
 			const tgt = bindings.get(e.target);
-			return src !== undefined && tgt !== undefined ? Edges.add(src, e.label, tgt)(acc) : acc;
+			return src !== undefined && tgt !== undefined ? Edges.add(src, e.label, tgt, e.payload ?? {})(acc) : acc;
 		}, g),
 };
 

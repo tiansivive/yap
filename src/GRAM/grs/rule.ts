@@ -1,4 +1,4 @@
-import type { NodeId, Payload } from "../graph";
+import type { NodeId, Payload, Edge as GraphEdge } from "../graph";
 import type { Tag, Label } from "../vocabulary";
 import type { Provenance } from "../provenance";
 import type { Graph } from "../graph";
@@ -22,7 +22,11 @@ export type Edge = {
 	readonly source: string;
 	readonly label: Label;
 	readonly target: string;
+	readonly payload?: Payload;
 };
+
+export type LhsNode = Pattern;
+export type RuleEdge = Edge;
 
 export type Rule = {
 	readonly lhs: { readonly nodes: ReadonlyArray<Pattern>; readonly edges: ReadonlyArray<Edge> };
@@ -45,4 +49,11 @@ export const lhsOnly = (rule: Rule): ReadonlyArray<string> => {
 	return [...bindsOf(rule.lhs.nodes)].filter(b => !k.has(b));
 };
 
-export const edgeInRhs = (e: Edge, rhs: Rule["rhs"]): boolean => rhs.edges.some(r => r.source === e.source && r.label === e.label && r.target === e.target);
+export const edgeInRhs = (e: Edge, rhs: Rule["rhs"]): boolean =>
+	rhs.edges.some(
+		r =>
+			r.source === e.source &&
+			r.label === e.label &&
+			r.target === e.target &&
+			(e.payload === undefined || JSON.stringify(r.payload) === JSON.stringify(e.payload)),
+	);

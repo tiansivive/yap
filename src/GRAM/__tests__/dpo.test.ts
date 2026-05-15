@@ -210,7 +210,7 @@ describe("DPO rewrite", () => {
 		};
 		const result = Rewrite.apply(rule, g)!;
 		expect(Nodes.get(ext)(result)).toBeDefined();
-		expect(Edges.byLabel(ext, ":ref")(result)?.target).toBe(b);
+		expect(Edges.byLabel(ext, ":ref")(result)[0]?.target).toBe(b);
 	});
 
 	it("creates RHS-only nodes", () => {
@@ -239,7 +239,7 @@ describe("DPO rewrite", () => {
 		const result = Rewrite.apply(rule, g);
 		expect(result).toBeDefined();
 		expect(Query.byTag("b")(result ?? g).size).toBe(1);
-		expect(Edges.byLabel(a, ":child")(result ?? g)).toBeDefined();
+		expect(Edges.byLabel(a, ":child")(result ?? g)[0]).toBeDefined();
 	});
 
 	it("rejects on dangling edges (DPO)", () => {
@@ -283,8 +283,8 @@ describe("DPO rewrite", () => {
 			},
 		};
 		const result = Rewrite.apply(rule, g)!;
-		expect(Edges.byLabel(a, ":old")(result)).toBeUndefined();
-		expect(Edges.byLabel(a, ":new")(result)).toBeDefined();
+		expect(Edges.byLabel(a, ":old")(result)[0]).toBeUndefined();
+		expect(Edges.byLabel(a, ":new")(result)[0]).toBeDefined();
 	});
 
 	it("computed payload in RHS", () => {
@@ -344,7 +344,7 @@ describe("DPO rewrite", () => {
 		expect(result).toBeDefined();
 		expect(Nodes.get(a)(result ?? g)?.tag).toBe("new");
 		expect(Nodes.get(a)(result ?? g)?.payload.keep).toBe(true);
-		expect(Edges.byLabel(b, ":to")(result ?? g)?.target).toBe(a);
+		expect(Edges.byLabel(b, ":to")(result ?? g)[0]?.target).toBe(a);
 		expect(entry(result ?? g)).toBe(a);
 	});
 });

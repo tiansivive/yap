@@ -20,7 +20,7 @@ export type Edge = {
 
 export type Graph = {
 	readonly nodes: ReadonlyMap<NodeId, Node>;
-	readonly edges: ReadonlyMap<NodeId, ReadonlyMap<Label, Edge>>;
+	readonly edges: ReadonlyMap<NodeId, ReadonlyMap<Label, ReadonlyArray<Edge>>>;
 	readonly byTag: ReadonlyMap<Tag, ReadonlySet<NodeId>>;
 	readonly root: NodeId;
 };
@@ -61,17 +61,22 @@ const removeFromTagIndex = (g: Graph, tag: Tag, id: NodeId): ReadonlyMap<Tag, Re
 	return idx;
 };
 
-const addOutgoing = (g: Graph, e: Edge): ReadonlyMap<NodeId, ReadonlyMap<Label, Edge>> => {
+const addOutgoing = (g: Graph, e: Edge): ReadonlyMap<NodeId, ReadonlyMap<Label, ReadonlyArray<Edge>>> => {
 	const all = new Map(g.edges);
 	const src = new Map(g.edges.get(e.source));
-	src.set(e.label, e);
+	const existing = src.get(e.label) ?? [];
+	const key = JSON.stringify(e.payload);
+	if (existing.some(x => x.target === e.target && JSON.stringify(x.payload) === key)) {
+		return g.edges;
+	}
+	src.set(e.label, [...existing, e]);
 	all.set(e.source, src);
 	return all;
 };
 
 // TODO: consider a reverse-lookup index if scanning edges for incoming becomes a bottleneck
 
-const edgesTo = (id: NodeId, g: Graph): ReadonlyArray<Edge> => [...g.edges.values()].flatMap(m => [...m.values()]).filter(e => e.target === id);
+const edgesTo = (id: NodeId, g: Graph): ReadonlyArray<Edge> => [...g.edges.values()].flatMap(m => [...m.values()].flat()).filter(e => e.target === id);
 
 const dropOutgoingOf = (id: NodeId, g: Graph): Graph => {
 	const edges = new Map(g.edges);
@@ -79,7 +84,7 @@ const dropOutgoingOf = (id: NodeId, g: Graph): Graph => {
 	return { ...g, edges };
 };
 
-const dropEdgesPointingTo = (id: NodeId, g: Graph): Graph => edgesTo(id, g).reduce((acc, e) => Edges.remove(e.source, e.label)(acc), g);
+const dropEdgesPointingTo = (id: NodeId, g: Graph): Graph => edgesTo(id, g).reduce((acc, e) => Edges.remove(e)(acc), g);
 
 const dropAllEdgesOf = (id: NodeId, g: Graph): Graph => dropEdgesPointingTo(id, dropOutgoingOf(id, g));
 
@@ -142,30 +147,44 @@ export const Edges = {
 		},
 
 	remove:
-		(source: NodeId, label: Label) =>
+		(edge: Edge) =>
 		(g: Graph): Graph => {
-			const srcMap = g.edges.get(source);
+			const srcMap = g.edges.get(edge.source);
+			const arr = srcMap?.get(edge.label);
 
-			if (!srcMap?.has(label)) {
+			if (!arr) {
+				return g;
+			}
+
+			const key = JSON.stringify(edge.payload);
+			const idx = arr.findIndex(e => e.target === edge.target && JSON.stringify(e.payload) === key);
+
+			if (idx < 0) {
 				return g;
 			}
 
 			const updated = new Map(srcMap);
-			updated.delete(label);
+			const newArr = [...arr.slice(0, idx), ...arr.slice(idx + 1)];
+			newArr.length === 0 ? updated.delete(edge.label) : updated.set(edge.label, newArr);
 			const edges = new Map(g.edges);
-			updated.size === 0 ? edges.delete(source) : edges.set(source, updated);
+			updated.size === 0 ? edges.delete(edge.source) : edges.set(edge.source, updated);
 			return { ...g, edges };
 		},
 
 	outgoing:
 		(id: NodeId) =>
-		(g: Graph): ReadonlyMap<Label, Edge> =>
-			g.edges.get(id) ?? new Map(),
+		(g: Graph): ReadonlyArray<Edge> =>
+			[...(g.edges.get(id)?.values() ?? [])].flat(),
 
 	byLabel:
 		(id: NodeId, label: Label) =>
+		(g: Graph): ReadonlyArray<Edge> =>
+			g.edges.get(id)?.get(label) ?? [],
+
+	one:
+		(id: NodeId, label: Label) =>
 		(g: Graph): Edge | undefined =>
-			g.edges.get(id)?.get(label),
+			g.edges.get(id)?.get(label)?.[0],
 
 	to:
 		(id: NodeId) =>
@@ -184,7 +203,7 @@ export const Query = {
 	follow:
 		(id: NodeId, ...labels: Label[]) =>
 		(g: Graph): NodeId | undefined =>
-			labels.reduce<NodeId | undefined>((cur, label) => (cur !== undefined ? g.edges.get(cur)?.get(label)?.target : undefined), id),
+			labels.reduce<NodeId | undefined>((cur, label) => (cur !== undefined ? g.edges.get(cur)?.get(label)?.[0]?.target : undefined), id),
 
 	any:
 		(from: NodeId, pred: (edge: Edge) => boolean) =>
@@ -200,7 +219,7 @@ export const Query = {
 				if (!out) {
 					return false;
 				}
-				return [...out.values()].some(e => pred(e) || walk(e.target));
+				return [...out.values()].flat().some(e => pred(e) || walk(e.target));
 			};
 			return walk(from);
 		},
@@ -222,10 +241,13 @@ export const Query = {
 					return withNode;
 				}
 
-				return [...out.values()].filter(e => ids.has(e.target)).reduce((a, e) => Edges.add(e.source, e.label, e.target, e.payload)(a), withNode);
+				return [...out.values()]
+					.flat()
+					.filter(e => ids.has(e.target))
+					.reduce((a, e) => Edges.add(e.source, e.label, e.target, e.payload)(a), withNode);
 			}, empty),
 };
 
 // ── Root ──
 
-export const entry = (g: Graph): NodeId | undefined => g.edges.get(g.root)?.get(":entry")?.target;
+export const entry = (g: Graph): NodeId | undefined => g.edges.get(g.root)?.get(":entry")?.[0]?.target;

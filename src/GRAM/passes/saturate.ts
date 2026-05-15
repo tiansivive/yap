@@ -1,4 +1,4 @@
-import { Nodes } from "../graph";
+import { Nodes, Edges } from "../graph";
 import type { Graph } from "../graph";
 import { Tags, Labels } from "../vocabulary";
 import type { Rule, Bindings } from "../grs";
@@ -36,7 +36,7 @@ const initial: Rule = {
 		],
 		edges: [
 			{ source: "$ext", label: ":callee", target: "$foreign" },
-			{ source: "$ext", label: Labels.caseN(0), target: "$arg" },
+			{ source: "$ext", label: Labels.ARG, target: "$arg", payload: { index: 0 } },
 		],
 	},
 	redirect: { $app: "$ext" },
@@ -60,7 +60,8 @@ const accumulateAnchor: Rule = {
 };
 
 const buildAccumulate = (b: Bindings, host: Graph): Rule => {
-	const prev = Nodes.get(b.get("$ext") ?? -1)(host)?.payload ?? {};
+	const extId = b.get("$ext") ?? -1;
+	const prev = Nodes.get(extId)(host)?.payload ?? {};
 	const args = (prev.args as number) ?? 0;
 	const arity = (prev.arity as number) ?? 0;
 
@@ -76,10 +77,26 @@ const buildAccumulate = (b: Bindings, host: Graph): Rule => {
 				},
 				{ bind: "$arg" },
 			],
-			edges: [{ source: "$ext", label: Labels.caseN(args), target: "$arg" }],
+			edges: [{ source: "$ext", label: Labels.ARG, target: "$arg", payload: { index: args } }],
 		},
 		redirect: { $app: "$ext" },
 	};
+};
+
+// ── Add :next chains between args ──
+
+const chainArgs: Strategy.Pass = (g: Graph): Graph => {
+	const externals = [...(g.byTag.get(Tags.EXTERNAL) ?? []), ...(g.byTag.get(Tags.PRIMOP) ?? [])];
+	return externals.reduce((acc, extId) => {
+		const args = Edges.byLabel(
+			extId,
+			Labels.ARG,
+		)(acc)
+			.slice()
+			.sort((a, b) => ((a.payload.index as number) ?? 0) - ((b.payload.index as number) ?? 0));
+
+		return args.reduce((a, edge, i) => (i > 0 ? Edges.add(args[i - 1].target, Labels.NEXT, edge.target)(a) : a), acc);
+	}, g);
 };
 
 // ── Rule 3: saturated primop external → primop ──
@@ -107,5 +124,6 @@ const resolvePrimops: Rule = {
 export const saturate: Strategy.Pass = Strategy.seq(
 	Strategy.apply(initial),
 	Strategy.derive(accumulateAnchor, buildAccumulate),
+	chainArgs,
 	Strategy.apply(resolvePrimops),
 );

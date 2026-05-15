@@ -43,14 +43,34 @@ const resolveEdge = (e: RuleEdge, rule: Rule, host: Graph, bound: Map<string, No
 		return false;
 	}
 
-	const edge = Edges.byLabel(srcId, e.label)(host);
+	const edges = Edges.byLabel(srcId, e.label)(host);
+	const target = rule.lhs.nodes.find(n => n.bind === e.target);
 
-	if (!edge) {
+	if (!target) {
 		return false;
 	}
 
-	const target = rule.lhs.nodes.find(n => n.bind === e.target);
-	return target !== undefined && bindNode(target, edge.target, host, bound, used);
+	for (const edge of edges) {
+		const boundSnap = new Map(bound);
+		const usedSnap = new Set(used);
+
+		if (bindNode(target, edge.target, host, bound, used)) {
+			return true;
+		}
+
+		bound.clear();
+
+		for (const [k, v] of boundSnap) {
+			bound.set(k, v);
+		}
+		used.clear();
+
+		for (const v of usedSnap) {
+			used.add(v);
+		}
+	}
+
+	return false;
 };
 
 const allBound = (nodes: ReadonlyArray<LhsNode>, bound: Map<string, NodeId>): boolean => nodes.every(n => bound.has(n.bind));

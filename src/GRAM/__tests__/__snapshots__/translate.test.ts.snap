@@ -119,9 +119,10 @@ exports[`GRAM translate > block — let x=1; let y=2; x+y 1`] = `
   :entry -> [2]
 [2] block
   :return -> [7]
-  :stmt_0 -> [3]
-  :stmt_1 -> [5]
+  :stmt -> [3] {"index":0}
+  :stmt -> [5] {"index":1}
 [3] stmt:let {"variable":"x"}
+  :next -> [5]
   :value -> [4]
 [4] lit {"value":{"type":"Num","value":1}}
 [5] stmt:let {"variable":"y"}
@@ -158,8 +159,8 @@ exports[`GRAM translate > match on variant (Some 42) 1`] = `
 "[1] root
   :entry -> [2]
 [2] match
-  :case_0 -> [10]
-  :case_1 -> [12]
+  :case -> [10] {"index":0}
+  :case -> [12] {"index":1}
   :scrutinee -> [3]
 [3] app {"icit":"Explicit"}
   :arg -> [5]
@@ -176,6 +177,7 @@ exports[`GRAM translate > match on variant (Some 42) 1`] = `
 [9] row:empty
 [10] case {"pattern":{"type":"Variant","row":{"type":"extension","label":"Some","value":{"type":"Binder","value":"x"},"row":{"type":"empty"}}},"binders":[["_",{"type":"Lit","value":{"type":"Atom","value":"Num"},"id":6}]]}
   :body -> [11]
+  :next -> [12]
 [11] var:bound {"index":0}
   :refers_to -> [10]
 [12] case {"pattern":{"type":"Variant","row":{"type":"extension","label":"None","value":{"type":"Wildcard"},"row":{"type":"empty"}}},"binders":[["_",{"type":"Lit","value":{"type":"Atom","value":"Num"},"id":6}]]}
@@ -193,13 +195,14 @@ exports[`GRAM translate > match with alternatives 1`] = `
 [4] var:ref {"name":"Int"}
   :refers_to -> [3]
 [5] match
-  :case_0 -> [7]
-  :case_1 -> [9]
+  :case -> [7] {"index":0}
+  :case -> [9] {"index":1}
   :scrutinee -> [6]
 [6] var:bound {"index":0}
   :refers_to -> [2]
 [7] case {"pattern":{"type":"Lit","value":{"type":"Num","value":0}},"binders":[]}
   :body -> [8]
+  :next -> [9]
 [8] lit {"value":{"type":"Num","value":1}}
 [9] case {"pattern":{"type":"Wildcard"},"binders":[]}
   :body -> [10]

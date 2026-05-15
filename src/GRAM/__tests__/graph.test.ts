@@ -27,18 +27,19 @@ describe("GRAM graph", () => {
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
 		const g3 = Edges.add(a, ":child", b)(g2);
 
-		expect(Edges.byLabel(a, ":child")(g3)?.target).toBe(b);
+		expect(Edges.byLabel(a, ":child")(g3)[0]?.target).toBe(b);
 		expect(Edges.to(b)(g3).some(e => e.source === a && e.label === ":child")).toBe(true);
 	});
 
-	it("Edges.add overwrites existing label", () => {
+	it("Edges.add deduplicates identical edges", () => {
 		const g = mkGraph();
 		const [a, g1] = Nodes.add("a", {}, prov)(g);
 		const [, g2] = Nodes.add("b", {}, prov)(g1);
 		const [c, g3] = Nodes.add("c", {}, prov)(g2);
 		const g4 = Edges.add(a, ":x", c)(Edges.add(a, ":x", c)(g3));
 
-		expect(Edges.byLabel(a, ":x")(g4)?.target).toBe(c);
+		expect(Edges.byLabel(a, ":x")(g4)).toHaveLength(1);
+		expect(Edges.byLabel(a, ":x")(g4)[0]?.target).toBe(c);
 	});
 
 	it("Nodes.remove cleans up edges and index", () => {
@@ -58,11 +59,12 @@ describe("GRAM graph", () => {
 		const [a, g1] = Nodes.add("a", {}, prov)(g);
 		const [b, g2] = Nodes.add("b", {}, prov)(g1);
 		const g3 = Edges.add(a, ":child", b)(g2);
-		const result = Edges.remove(a, ":child")(g3);
+		const edge = Edges.byLabel(a, ":child")(g3)[0];
+		const result = Edges.remove(edge)(g3);
 
 		expect(Nodes.get(a)(result)).toBeDefined();
 		expect(Nodes.get(b)(result)).toBeDefined();
-		expect(Edges.byLabel(a, ":child")(result)).toBeUndefined();
+		expect(Edges.byLabel(a, ":child")(result)).toHaveLength(0);
 		expect(Edges.to(b)(result)).toHaveLength(0);
 	});
 
@@ -97,5 +99,61 @@ describe("GRAM graph", () => {
 		const [, g2] = Nodes.add("a", {}, prov)(g);
 		expect(g.nodes.size).toBe(1);
 		expect(g2.nodes.size).toBe(2);
+	});
+
+	it("multi-edge — same label, different targets", () => {
+		const g = mkGraph();
+		const [a, g1] = Nodes.add("a", {}, prov)(g);
+		const [b, g2] = Nodes.add("b", {}, prov)(g1);
+		const [c, g3] = Nodes.add("c", {}, prov)(g2);
+		const g4 = Edges.add(a, ":child", c)(Edges.add(a, ":child", b)(g3));
+
+		expect(Edges.byLabel(a, ":child")(g4)).toHaveLength(2);
+		expect(Edges.byLabel(a, ":child")(g4).map(e => e.target)).toEqual([b, c]);
+	});
+
+	it("multi-edge — same label and target, different payload", () => {
+		const g = mkGraph();
+		const [a, g1] = Nodes.add("a", {}, prov)(g);
+		const [b, g2] = Nodes.add("b", {}, prov)(g1);
+		const g3 = Edges.add(a, ":x", b, { index: 0 })(g2);
+		const g4 = Edges.add(a, ":x", b, { index: 1 })(g3);
+
+		expect(Edges.byLabel(a, ":x")(g4)).toHaveLength(2);
+	});
+
+	it("Edges.remove matches by payload", () => {
+		const g = mkGraph();
+		const [a, g1] = Nodes.add("a", {}, prov)(g);
+		const [b, g2] = Nodes.add("b", {}, prov)(g1);
+		const g3 = Edges.add(a, ":x", b, { index: 1 })(Edges.add(a, ":x", b, { index: 0 })(g2));
+		const edge0 = Edges.byLabel(a, ":x")(g3)[0];
+		const result = Edges.remove(edge0)(g3);
+
+		expect(Edges.byLabel(a, ":x")(result)).toHaveLength(1);
+		expect(Edges.byLabel(a, ":x")(result)[0]?.payload.index).toBe(1);
+	});
+
+	it("Edges.one returns first edge for label", () => {
+		const g = mkGraph();
+		const [a, g1] = Nodes.add("a", {}, prov)(g);
+		const [b, g2] = Nodes.add("b", {}, prov)(g1);
+		const [c, g3] = Nodes.add("c", {}, prov)(g2);
+		const g4 = Edges.add(a, ":child", c)(Edges.add(a, ":child", b)(g3));
+
+		expect(Edges.one(a, ":child")(g4)?.target).toBe(b);
+		expect(Edges.one(a, ":missing")(g4)).toBeUndefined();
+	});
+
+	it("Edges.outgoing returns all edges flattened", () => {
+		const g = mkGraph();
+		const [a, g1] = Nodes.add("a", {}, prov)(g);
+		const [b, g2] = Nodes.add("b", {}, prov)(g1);
+		const [c, g3] = Nodes.add("c", {}, prov)(g2);
+		const g4 = Edges.add(a, ":y", c)(Edges.add(a, ":x", b)(g3));
+
+		const out = Edges.outgoing(a)(g4);
+		expect(out).toHaveLength(2);
+		expect(out.map(e => e.label).sort()).toEqual([":x", ":y"]);
 	});
 });

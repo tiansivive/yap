@@ -80,10 +80,10 @@ export const Labels = {
 	ENV: ":env",
 	CALLEE: ":callee",
 
-	captureN: (n: number): string => `:capture_${n}`,
-
-	caseN: (n: number): string => `:case_${n}`,
-	stmtN: (n: number): string => `:stmt_${n}`,
+	STMT: ":stmt",
+	CASE: ":case",
+	CAPTURE: ":capture",
+	NEXT: ":next",
 } as const;
 
 export type Label = string;

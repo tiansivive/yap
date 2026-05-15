@@ -43,9 +43,9 @@ const emit = (st: State, tag: string, payload: Payload, p: Provenance): [NodeId,
 	return [id, { ...st, graph }];
 };
 
-const link = (st: State, source: NodeId, label: string, target: NodeId): State => ({
+const link = (st: State, source: NodeId, label: string, target: NodeId, payload: Payload = {}): State => ({
 	...st,
-	graph: Edges.add(source, label, target)(st.graph),
+	graph: Edges.add(source, label, target, payload)(st.graph),
 });
 
 const push = (st: State, id: NodeId): State => ({
@@ -211,11 +211,17 @@ const inj = (t: EB.Term & { type: "Inj" }, st: State): [NodeId, State] => {
 const matchExpr = (t: EB.Term & { type: "Match" }, st: State): [NodeId, State] => {
 	const [id, s1] = emit(st, Tags.MATCH, {}, prov(t.id, st));
 	const [scrut, s2] = walk(t.scrutinee, s1);
+	let prev: NodeId | undefined;
 
 	return t.alternatives.reduce<[NodeId, State]>(
 		([mid, s], alt, i) => {
 			const [cid, s2] = emit(s, Tags.CASE, { pattern: alt.pattern, binders: alt.binders }, prov(t.id, s));
-			const s3 = link(s2, mid, Labels.caseN(i), cid);
+			let s3 = link(s2, mid, Labels.CASE, cid, { index: i });
+
+			if (prev !== undefined) {
+				s3 = link(s3, prev, Labels.NEXT, cid);
+			}
+			prev = cid;
 			const bound = (alt.binders ?? []).reduce<State>((acc, _) => push(acc, cid), s3);
 			const [body, s4] = walk(alt.term, bound);
 			const unbound = (alt.binders ?? []).reduce<State>(pop, s4);
@@ -229,29 +235,37 @@ const matchExpr = (t: EB.Term & { type: "Match" }, st: State): [NodeId, State] =
 
 const block = (t: EB.Term & { type: "Block" }, st: State): [NodeId, State] => {
 	const [id, s1] = emit(st, Tags.BLOCK, {}, prov(t.id, st));
+	let prev: NodeId | undefined;
 
-	const s2 = t.statements.reduce<State>(
-		(s, stmt, i) =>
-			match(stmt)
-				.with({ type: "Expression" }, stmt => {
-					const [sid, s2] = emit(s, Tags.STMT_EXPR, {}, prov(t.id, s));
-					const [val, s3] = walk(stmt.value, s2);
-					return link(link(s3, sid, Labels.VALUE, val), id, Labels.stmtN(i), sid);
-				})
-				.with({ type: "Let" }, stmt => {
-					const [sid, s2] = emit(s, Tags.STMT_LET, { variable: stmt.variable }, prov(t.id, s));
-					const [val, s3] = walk(stmt.value, s2);
-					const s4 = link(link(s3, sid, Labels.VALUE, val), id, Labels.stmtN(i), sid);
-					return push(s4, sid);
-				})
-				.with({ type: "Using" }, stmt => {
-					const [sid, s2] = emit(s, Tags.STMT_USING, {}, prov(t.id, s));
-					const [val, s3] = walk(stmt.value, s2);
-					return link(link(s3, sid, Labels.VALUE, val), id, Labels.stmtN(i), sid);
-				})
-				.exhaustive(),
-		s1,
-	);
+	const s2 = t.statements.reduce<State>((s, stmt, i) => {
+		const linkStmt = (sid: NodeId, s: State): State => {
+			let s2 = link(s, id, Labels.STMT, sid, { index: i });
+
+			if (prev !== undefined) {
+				s2 = link(s2, prev, Labels.NEXT, sid);
+			}
+			prev = sid;
+			return s2;
+		};
+
+		return match(stmt)
+			.with({ type: "Expression" }, stmt => {
+				const [sid, s2] = emit(s, Tags.STMT_EXPR, {}, prov(t.id, s));
+				const [val, s3] = walk(stmt.value, s2);
+				return linkStmt(sid, link(s3, sid, Labels.VALUE, val));
+			})
+			.with({ type: "Let" }, stmt => {
+				const [sid, s2] = emit(s, Tags.STMT_LET, { variable: stmt.variable }, prov(t.id, s));
+				const [val, s3] = walk(stmt.value, s2);
+				return push(linkStmt(sid, link(s3, sid, Labels.VALUE, val)), sid);
+			})
+			.with({ type: "Using" }, stmt => {
+				const [sid, s2] = emit(s, Tags.STMT_USING, {}, prov(t.id, s));
+				const [val, s3] = walk(stmt.value, s2);
+				return linkStmt(sid, link(s3, sid, Labels.VALUE, val));
+			})
+			.exhaustive();
+	}, s1);
 
 	const [ret, s3] = walk(t.return, s2);
 	return [id, link(s3, id, Labels.RETURN, ret)];

@@ -17,7 +17,15 @@ const d = {
 		const out = g.edges.get(id);
 		return out
 			? [...out.values()]
-					.sort((a, b) => a.label.localeCompare(b.label))
+					.flat()
+					.sort((a, b) => {
+						const cmp = a.label.localeCompare(b.label);
+
+						if (cmp !== 0) {
+							return cmp;
+						}
+						return ((a.payload.index as number) ?? 0) - ((b.payload.index as number) ?? 0);
+					})
 					.map(e => {
 						const p = d.payload(e.payload);
 						return `${INDENT}${e.label} -> [${e.target}]${p}`;
