@@ -207,9 +207,10 @@ export const Query = {
 			labels.reduce<NodeId | undefined>((cur, label) => (cur !== undefined ? g.edges.get(cur)?.get(label)?.[0]?.target : undefined), id),
 
 	any:
-		(from: NodeId, pred: (edge: Edge) => boolean) =>
+		(from: NodeId, pred: (edge: Edge) => boolean, follow?: (edge: Edge) => boolean) =>
 		(g: Graph): boolean => {
 			const visited = new Set<NodeId>();
+			const shouldFollow = follow ?? (() => true);
 			const walk = (id: NodeId): boolean => {
 				if (visited.has(id)) {
 					return false;
@@ -220,9 +221,39 @@ export const Query = {
 				if (!out) {
 					return false;
 				}
-				return [...out.values()].flat().some(e => pred(e) || walk(e.target));
+				return [...out.values()].flat().some(e => pred(e) || (shouldFollow(e) && walk(e.target)));
 			};
 			return walk(from);
+		},
+
+	collect:
+		(from: NodeId, pred: (edge: Edge) => boolean, follow?: (edge: Edge) => boolean) =>
+		(g: Graph): ReadonlyArray<Edge> => {
+			const visited = new Set<NodeId>();
+			const shouldFollow = follow ?? (() => true);
+			const results: Edge[] = [];
+			const walk = (id: NodeId): void => {
+				if (visited.has(id)) {
+					return;
+				}
+				visited.add(id);
+				const out = g.edges.get(id);
+
+				if (!out) {
+					return;
+				}
+				[...out.values()].flat().forEach(e => {
+					if (pred(e)) {
+						results.push(e);
+					}
+
+					if (shouldFollow(e)) {
+						walk(e.target);
+					}
+				});
+			};
+			walk(from);
+			return results;
 		},
 
 	subgraph:

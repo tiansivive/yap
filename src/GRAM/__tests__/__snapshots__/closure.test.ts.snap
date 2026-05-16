@@ -1,0 +1,218 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`capture > captures let binder 1`] = `
+"[1] root
+  :entry -> [2]
+[2] block
+  :return -> [5]
+  :stmt -> [3] {"index":0}
+[3] stmt:let {"variable":"a"}
+  :value -> [4]
+[4] lit {"value":{"type":"Num","value":1}}
+[5] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [6]
+  :body -> [7]
+  :env -> [13]
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[7] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [8]
+[8] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[9] var:foreign {"name":"$add","arity":2}
+[10] var:ref {"name":"$add"}
+  :refers_to -> [9]
+  :scope -> [3] {"level":0}
+  :scope -> [5] {"level":1}
+[11] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [3] {"level":0}
+  :scope -> [5] {"level":1}
+[12] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [3] {"level":0}
+  :scope -> [5] {"level":1}
+[13] env
+  :capture -> [9] {"index":0}
+  :capture -> [3] {"index":1}"
+`;
+
+exports[`capture > identity lambda — no captures, empty env 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [6]
+[3] var:free {"name":"Int"}
+[4] var:ref {"name":"Int"}
+  :refers_to -> [3]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] env"
+`;
+
+exports[`capture > nested lambda — inner captures outer binder 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [12]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] lambda {"variable":"y","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [13]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [7]
+[7] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [9]
+[8] var:foreign {"name":"$add","arity":2}
+[9] var:ref {"name":"$add"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[10] var:bound {"index":1}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[11] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[12] env
+  :capture -> [8] {"index":0}
+[13] env
+  :capture -> [8] {"index":0}
+  :capture -> [2] {"index":1}"
+`;
+
+exports[`capture > post-saturation — captures still work with primop in body 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [13]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] lambda {"variable":"y","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [12]
+  :env -> [14]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[8] var:foreign {"name":"$add","arity":2}
+[10] var:bound {"index":1}
+  :next -> [11]
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[11] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[12] primop {"op":"$add"}
+  :arg -> [10] {"index":0}
+  :arg -> [11] {"index":1}
+  :callee -> [8]
+[13] env
+[14] env
+  :capture -> [2] {"index":0}"
+`;
+
+exports[`capture > triple nested — innermost captures both outer binders 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [14]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] lambda {"variable":"y","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [15]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] lambda {"variable":"z","icit":"Explicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [16]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [9]
+[9] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[10] var:foreign {"name":"$add","arity":2}
+[11] var:ref {"name":"$add"}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[12] var:bound {"index":2}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[13] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[14] env
+  :capture -> [10] {"index":0}
+[15] env
+  :capture -> [10] {"index":0}
+  :capture -> [2] {"index":1}
+[16] env
+  :capture -> [10] {"index":0}
+  :capture -> [2] {"index":1}"
+`;
+
+exports[`close > adds closure node wrapping lambda + env 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [6]
+[3] var:free {"name":"Int"}
+[4] var:ref {"name":"Int"}
+  :refers_to -> [3]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] env
+[7] closure
+  :body -> [2]
+  :env -> [6]"
+`;
+
+exports[`closureConvert (combined) > lambda preserved, app untouched 1`] = `
+"[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [3]
+[3] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [8]
+[4] var:free {"name":"Int"}
+[5] var:ref {"name":"Int"}
+  :refers_to -> [4]
+[6] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [3] {"level":0}
+[7] lit {"value":{"type":"Num","value":42}}
+[8] env
+[9] closure
+  :body -> [3]
+  :env -> [8]"
+`;

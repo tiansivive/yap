@@ -1,5 +1,5 @@
 import { Query } from "../graph";
-import { Tags, Labels } from "../vocabulary";
+import { Tags, Labels, isStructural } from "../vocabulary";
 import type { Rule } from "../grs";
 import * as Strategy from "../grs/strategy";
 
@@ -21,7 +21,11 @@ export const rule: Rule = {
 	where: (b, g) => {
 		const fId = b.get("$f") ?? -1;
 		const lamId = b.get("$lam") ?? -1;
-		return !Query.any(fId, e => e.label === Labels.REFERS_TO && e.target === lamId)(g);
+		return !Query.any(
+			fId,
+			e => e.label === Labels.REFERS_TO && e.target === lamId,
+			e => isStructural(e.label),
+		)(g);
 	},
 };
 

@@ -9,11 +9,11 @@ exports[`saturate > (λx.λy.x+y) 3 4 — saturates inner add, preserves lambda 
 [3] app {"icit":"Explicit"}
   :arg -> [14]
   :func -> [4]
-[4] lambda {"variable":"x","icit":"Explicit"}
+[4] lambda {"variable":"x","icit":"Explicit","level":0}
   :annotation -> [5]
   :body -> [6]
 [5] lit {"value":{"type":"Atom","value":"Num"}}
-[6] lambda {"variable":"y","icit":"Explicit"}
+[6] lambda {"variable":"y","icit":"Explicit","level":1}
   :annotation -> [7]
   :body -> [16]
 [7] lit {"value":{"type":"Atom","value":"Num"}}
@@ -21,8 +21,12 @@ exports[`saturate > (λx.λy.x+y) 3 4 — saturates inner add, preserves lambda 
 [12] var:bound {"index":1}
   :next -> [13]
   :refers_to -> [4]
+  :scope -> [4] {"level":0}
+  :scope -> [6] {"level":1}
 [13] var:bound {"index":0}
   :refers_to -> [6]
+  :scope -> [4] {"level":0}
+  :scope -> [6] {"level":1}
 [14] lit {"value":{"type":"Num","value":3}}
 [15] lit {"value":{"type":"Num","value":4}}
 [16] primop {"op":"$add"}

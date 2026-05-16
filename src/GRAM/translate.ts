@@ -107,7 +107,9 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 		.with({ type: "Bound" }, ({ index }) => {
 			const [id, s] = emit(st, Tags.VAR_BOUND, { index }, prov(tid, st));
 			const target = resolve(st, index);
-			return (target !== undefined ? [id, link(s, id, Labels.REFERS_TO, target)] : [id, s]) as [NodeId, State];
+			const withRef = target !== undefined ? link(s, id, Labels.REFERS_TO, target) : s;
+			const withScopes = st.binders.reduce((acc, binderId, i) => link(acc, id, Labels.SCOPE, binderId, { level: i }), withRef);
+			return [id, withScopes] as [NodeId, State];
 		})
 		.with({ type: "Free" }, ({ name }) => intern(Tags.VAR_FREE, name, "freeVars", tid, st))
 		.with({ type: "Foreign" }, ({ name }) => intern(Tags.VAR_FOREIGN, name, "foreignVars", tid, st))
@@ -128,22 +130,24 @@ const intern = (tag: string, name: string, pool: "freeVars" | "foreignVars", tid
 	}
 
 	const [ref, s3] = emit(s, Tags.VAR_REF, { name }, prov(tid, s));
-	return [ref, link(s3, ref, Labels.REFERS_TO, defId)];
+	const withRef = link(s3, ref, Labels.REFERS_TO, defId);
+	const withScopes = s.binders.reduce((acc, binderId, i) => link(acc, ref, Labels.SCOPE, binderId, { level: i }), withRef);
+	return [ref, withScopes];
 };
 
 // ── Abstractions ──
 
-const bindingPayload = (b: EB.Binding): Payload =>
+const bindingPayload = (b: EB.Binding, level: number): Payload =>
 	match(b)
-		.with({ type: "Lambda" }, b => ({ variable: b.variable, icit: b.icit }))
-		.with({ type: "Pi" }, b => ({ variable: b.variable, icit: b.icit }))
-		.with({ type: "Sigma" }, b => ({ variable: b.variable }))
-		.with({ type: "Mu" }, b => ({ variable: b.variable, source: b.source }))
-		.with({ type: "Let" }, b => ({ variable: b.variable }))
+		.with({ type: "Lambda" }, b => ({ variable: b.variable, icit: b.icit, level }))
+		.with({ type: "Pi" }, b => ({ variable: b.variable, icit: b.icit, level }))
+		.with({ type: "Sigma" }, b => ({ variable: b.variable, level }))
+		.with({ type: "Mu" }, b => ({ variable: b.variable, source: b.source, level }))
+		.with({ type: "Let" }, b => ({ variable: b.variable, level }))
 		.exhaustive();
 
 const abs = (tag: string, t: EB.Term & { type: "Abs" }, st: State): [NodeId, State] => {
-	const [id, s1] = emit(st, tag, bindingPayload(t.binding), prov(t.id, st));
+	const [id, s1] = emit(st, tag, bindingPayload(t.binding, st.binders.length), prov(t.id, st));
 	const [ann, s2] = walk(t.binding.annotation, s1);
 	const s3 = link(s2, id, Labels.ANNOTATION, ann);
 	const [body, s4] = walk(t.body, push(s3, id));
@@ -151,7 +155,7 @@ const abs = (tag: string, t: EB.Term & { type: "Abs" }, st: State): [NodeId, Sta
 };
 
 const mu = (t: EB.Term & { type: "Abs"; binding: { type: "Mu" } }, st: State): [NodeId, State] => {
-	const [id, s1] = emit(st, Tags.MU, bindingPayload(t.binding), prov(t.id, st));
+	const [id, s1] = emit(st, Tags.MU, bindingPayload(t.binding, st.binders.length), prov(t.id, st));
 	const [ann, s2] = walk(t.binding.annotation, s1);
 	const s3 = link(s2, id, Labels.ANNOTATION, ann);
 	const [body, s4] = walk(t.body, push(s3, id));
@@ -159,7 +163,7 @@ const mu = (t: EB.Term & { type: "Abs"; binding: { type: "Mu" } }, st: State): [
 };
 
 const letBinding = (t: EB.Term & { type: "Abs"; binding: { type: "Let" } }, st: State): [NodeId, State] => {
-	const [id, s1] = emit(st, Tags.LET, bindingPayload(t.binding), prov(t.id, st));
+	const [id, s1] = emit(st, Tags.LET, bindingPayload(t.binding, st.binders.length), prov(t.id, st));
 	const [val, s2] = walk(t.binding.value, s1);
 	const s3 = link(s2, id, Labels.VALUE, val);
 	const [ann, s4] = walk(t.binding.annotation, s3);

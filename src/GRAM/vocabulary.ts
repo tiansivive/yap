@@ -73,6 +73,7 @@ export const Labels = {
 	RETURN: ":return",
 	TERM: ":term",
 	ENTRY: ":entry",
+	SCOPE: ":scope",
 	REFERS_TO: ":refers_to",
 	HAS_TYPE: ":has_type",
 	DERIVED_FROM: ":derived_from",
@@ -87,3 +88,21 @@ export const Labels = {
 } as const;
 
 export type Label = string;
+
+const STRUCTURAL: ReadonlySet<string> = new Set([
+	Labels.BODY,
+	Labels.FUNC,
+	Labels.ARG,
+	Labels.ANNOTATION,
+	Labels.VALUE,
+	Labels.REST,
+	Labels.TARGET,
+	Labels.SCRUTINEE,
+	Labels.RETURN,
+	Labels.TERM,
+	Labels.ENTRY,
+	Labels.STMT,
+	Labels.CASE,
+]);
+
+export const isStructural = (label: Label): boolean => STRUCTURAL.has(label);
