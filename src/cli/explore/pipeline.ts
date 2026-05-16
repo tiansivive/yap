@@ -3,7 +3,10 @@ import Grammar from "@yap/src/grammar";
 
 import * as Src from "@yap/src/index";
 import * as EB from "@yap/elaboration";
-//import * as GRAM from "@yap/gram";
+import * as GRAM from "@yap/gram";
+import { closureConvert } from "../../GRAM/passes/closure";
+import { eta } from "../../GRAM/passes/eta";
+import { saturate } from "../../GRAM/passes/saturate";
 
 import * as E from "fp-ts/lib/Either";
 import fs from "fs";
@@ -258,8 +261,9 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 		result.raw.mir = mod;
 	}
 
-	// const graph = attempt(() => GRAM.translate(tm), errors);
-	// result.gram = graph ? (attempt(() => GRAM.display(graph), errors) ?? "") : "";
+	const rawGraph = attempt(() => GRAM.translate(tm), errors);
+	const graph = rawGraph ? attempt(() => closureConvert(saturate(eta(rawGraph))), errors) : undefined;
+	result.gram = graph ? (attempt(() => GRAM.display(graph), errors) ?? "") : "";
 
 	if (mod) {
 		result.codegenJS = attempt(() => printJS(emitJS(mod)), errors) ?? "";
