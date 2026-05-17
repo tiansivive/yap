@@ -237,6 +237,22 @@ describe("GRAM translate", () => {
 		expect(refTargets).toContainEqual([2, xLam]);
 	});
 
+	it("skolem meta resolves to stashed term", () => {
+		const shiftBody = EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(42)), EB.DSL.type("Num"));
+		const shiftTerm = EB.Constructors.Shift(shiftBody);
+		const skolemMeta: EB.Variable = { type: "Meta", val: 99, lvl: 0 };
+		const term = EB.Constructors.Reset(EB.Constructors.Var(skolemMeta));
+
+		const withSkolems = translate(term, { skolems: { 99: shiftTerm } });
+		expect(Query.byTag(Tags.SHIFT)(withSkolems).size).toBe(1);
+		expect(Query.byTag(Tags.LAMBDA)(withSkolems).size).toBe(1);
+		expect(Query.byTag(Tags.VAR_META)(withSkolems).size).toBe(0);
+
+		const withoutSkolems = translate(term);
+		expect(Query.byTag(Tags.SHIFT)(withoutSkolems).size).toBe(0);
+		expect(Query.byTag(Tags.VAR_META)(withoutSkolems).size).toBe(1);
+	});
+
 	it("foreign variable interning across nested apps", () => {
 		const term = EB.DSL.add(EB.DSL.add(EB.DSL.num(1), EB.DSL.num(2)), EB.DSL.num(3));
 		const g = translate(term);

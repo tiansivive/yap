@@ -241,6 +241,7 @@ export type ElaborationDebug = {
 	constraints: WithProvenance<Constraint>[];
 	zonker: Sub.Subst;
 	resolutions: Resolutions;
+	skolems: V2.MutState["skolems"];
 };
 
 export type VerificationResult = {
@@ -266,7 +267,7 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 
 		const wrapped = F.pipe(EB.Icit.wrapLambda(elaborated, instantiated, next), tm => EB.Icit.instantiate(tm, next, resolutions));
 
-		const debug: ElaborationDebug = { constraints, zonker, resolutions };
+		const debug: ElaborationDebug = { constraints, zonker, resolutions, skolems: state.skolems };
 		return [wrapped, instantiated, us, next, debug] as const;
 	});
 

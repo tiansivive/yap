@@ -157,10 +157,10 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 
 	const [tm, ty, _us, ctx, debug] = elaborated.right;
 
-	result.elaborated = attempt(() => EB.Display.Term(tm, ctx, db), errors) ?? "";
+	result.elaborated = attempt(() => EB.Display.Term(tm, { ...ctx, skolems: debug?.skolems }, db), errors) ?? "";
 
 	if (debug) {
-		const displayCtx = { zonker: ctx.zonker, metas: ctx.metas, env: ctx.env };
+		const displayCtx = { zonker: ctx.zonker, metas: ctx.metas, env: ctx.env, skolems: debug.skolems };
 		result.constraints =
 			attempt(() => {
 				if (debug.constraints.length === 0) {
@@ -186,8 +186,13 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 				sections.push(`Zonker:\n${zonkerStr}`);
 				const resKeys = Object.keys(debug.resolutions);
 				if (resKeys.length > 0) {
-					const resStr = resKeys.map(k => `  ?${k} |=> ${EB.Display.Term(debug.resolutions[Number(k)], ctx, db)}`).join("\n");
+					const resStr = resKeys.map(k => `  ?${k} |=> ${EB.Display.Term(debug.resolutions[Number(k)], displayCtx, db)}`).join("\n");
 					sections.push(`\nResolutions:\n${resStr}`);
+				}
+				const skolemKeys = Object.keys(debug.skolems);
+				if (skolemKeys.length > 0) {
+					const skolemStr = skolemKeys.map(k => `  ?${k} := ${EB.Display.Term(debug.skolems[Number(k)], displayCtx, db)}`).join("\n");
+					sections.push(`\nSkolems (${skolemKeys.length}):\n${skolemStr}`);
 				}
 				const metaKeys = Object.keys(ctx.metas);
 				if (metaKeys.length > 0) {
@@ -261,7 +266,7 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 		result.raw.mir = mod;
 	}
 
-	const rawGraph = attempt(() => GRAM.translate(tm), errors);
+	const rawGraph = attempt(() => GRAM.translate(tm, { skolems: debug?.skolems, zonker: ctx.zonker }), errors);
 	const graph = rawGraph ? attempt(() => closureConvert(saturate(eta(rawGraph))), errors) : undefined;
 	result.gram = graph ? (attempt(() => GRAM.display(graph), errors) ?? "") : "";
 

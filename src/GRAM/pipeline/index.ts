@@ -30,6 +30,8 @@ export type CompileOpts = {
 	readonly locations?: ReadonlyMap<number, Location>;
 	readonly types?: Record<number, { nf: NF.Value }>;
 	readonly arities?: Record<string, number>;
+	readonly skolems?: Record<number, EB.Term>;
+	readonly zonker?: import("@yap/elaboration/unification/substitution").Subst;
 };
 
 export const defaultPipeline: E.Either<ReadonlyArray<Inconsistency>, Pipeline> = configure(eta, saturate, closure);

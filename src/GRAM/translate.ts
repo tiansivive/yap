@@ -1,7 +1,8 @@
 import type * as EB from "@yap/elaboration";
-import type * as NF from "@yap/elaboration/normalization";
+import * as NF from "@yap/elaboration/normalization";
 import type { Row } from "@yap/shared/rows";
 import { match } from "ts-pattern";
+import type { Subst } from "@yap/elaboration/unification/substitution";
 
 import type { Graph, NodeId, Payload } from "./graph";
 import { Nodes, Edges, mkGraph, resetId } from "./graph";
@@ -19,9 +20,17 @@ type State = {
 	readonly locations: ReadonlyMap<number, Location>;
 	readonly types: Readonly<Record<number, { nf: NF.Value }>>;
 	readonly arities: Readonly<Record<string, number>>;
+	readonly skolems: Readonly<Record<number, EB.Term>>;
+	readonly zonker: Subst | undefined;
 };
 
-const mkState = (opts?: { locations?: ReadonlyMap<number, Location>; types?: Record<number, { nf: NF.Value }>; arities?: Record<string, number> }): State => ({
+const mkState = (opts?: {
+	locations?: ReadonlyMap<number, Location>;
+	types?: Record<number, { nf: NF.Value }>;
+	arities?: Record<string, number>;
+	skolems?: Record<number, EB.Term>;
+	zonker?: Subst;
+}): State => ({
 	graph: mkGraph(),
 	binders: [],
 	freeVars: new Map(),
@@ -29,6 +38,8 @@ const mkState = (opts?: { locations?: ReadonlyMap<number, Location>; types?: Rec
 	locations: opts?.locations ?? new Map(),
 	types: opts?.types ?? {},
 	arities: opts?.arities ?? {},
+	skolems: opts?.skolems ?? {},
+	zonker: opts?.zonker,
 });
 
 // ── Helpers ──
@@ -68,6 +79,8 @@ export const translate = (
 		locations?: ReadonlyMap<number, Location>;
 		types?: Record<number, { nf: NF.Value }>;
 		arities?: Record<string, number>;
+		skolems?: Record<number, EB.Term>;
+		zonker?: Subst;
 	},
 ): Graph => {
 	resetId();
@@ -114,7 +127,19 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 		.with({ type: "Free" }, ({ name }) => intern(Tags.VAR_FREE, name, "freeVars", tid, st))
 		.with({ type: "Foreign" }, ({ name }) => intern(Tags.VAR_FOREIGN, name, "foreignVars", tid, st))
 		.with({ type: "Label" }, ({ name }) => emit(st, Tags.VAR_LABEL, { name }, prov(tid, st)))
-		.with({ type: "Meta" }, ({ val, lvl }) => emit(st, Tags.VAR_META, { val, lvl }, prov(tid, st)))
+		.with({ type: "Meta" }, ({ val, lvl }) => {
+			const stashed = st.skolems[val];
+
+			if (stashed) {
+				return walk(stashed, st);
+			}
+			const zonked = st.zonker?.[val];
+
+			if (zonked) {
+				return walk(NF.quote({ env: [], metas: {}, zonker: st.zonker! }, lvl, zonked), st);
+			}
+			return emit(st, Tags.VAR_META, { val, lvl }, prov(tid, st));
+		})
 		.exhaustive();
 
 const intern = (tag: string, name: string, pool: "freeVars" | "foreignVars", tid: number, st: State): [NodeId, State] => {
