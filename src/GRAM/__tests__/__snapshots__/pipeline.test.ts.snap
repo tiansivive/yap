@@ -1,0 +1,242 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compile > block with let — let a = 1; λx. a + x (eta-reduces) 1`] = `
+"[1] root
+  :entry -> [2]
+[2] block
+  :return -> [13]
+  :stmt -> [3] {"index":0}
+[3] stmt:let {"variable":"a"}
+  :value -> [4]
+[4] lit {"value":{"type":"Num","value":1}}
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[9] var:foreign {"name":"$add","arity":2}
+[11] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [3] {"level":0}
+  :scope -> [13] {"level":1}
+[13] external {"name":"$add","arity":2,"args":1,"saturated":false}
+  :arg -> [11] {"index":0}
+  :callee -> [9]"
+`;
+
+exports[`compile > block with let — non-eta-reducible closure 1`] = `
+"[1] root
+  :entry -> [2]
+[2] block
+  :return -> [5]
+  :stmt -> [3] {"index":0}
+[3] stmt:let {"variable":"a"}
+  :value -> [4]
+[4] lit {"value":{"type":"Num","value":1}}
+[5] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [6]
+  :body -> [13]
+  :env -> [14]
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[9] var:foreign {"name":"$add","arity":2}
+[11] var:bound {"index":0}
+  :next -> [12]
+  :refers_to -> [5]
+  :scope -> [3] {"level":0}
+  :scope -> [5] {"level":1}
+[12] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [3] {"level":0}
+  :scope -> [5] {"level":1}
+[13] primop {"op":"$add"}
+  :arg -> [11] {"index":0}
+  :arg -> [12] {"index":1}
+  :callee -> [9]
+[14] env
+[15] closure
+  :body -> [5]
+  :env -> [14]"
+`;
+
+exports[`compile > complex — nested lambdas + free vars + foreigns + let + match 1`] = `
+"[1] root
+  :entry -> [2]
+[2] block
+  :return -> [5]
+  :stmt -> [3] {"index":0}
+[3] stmt:let {"variable":"n"}
+  :value -> [4]
+[4] lit {"value":{"type":"Num","value":10}}
+[5] app {"icit":"Explicit"}
+  :arg -> [16]
+  :func -> [6]
+[6] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [7]
+  :body -> [17]
+  :env -> [18]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[12] var:foreign {"name":"$add","arity":2}
+[14] var:bound {"index":1}
+  :refers_to -> [6]
+  :scope -> [3] {"level":0}
+  :scope -> [6] {"level":1}
+  :scope -> [17] {"level":2}
+[16] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [3] {"level":0}
+[17] external {"name":"$add","arity":2,"args":1,"saturated":false}
+  :arg -> [14] {"index":0}
+  :callee -> [12]
+[18] env
+[19] closure
+  :body -> [6]
+  :env -> [18]"
+`;
+
+exports[`compile > curried closure — (λx.λy. x+y) 3 4 1`] = `
+"[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [3]
+[3] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [4]
+[4] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [5]
+  :body -> [16]
+  :env -> [17]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:foreign {"name":"$add","arity":2}
+[12] var:bound {"index":1}
+  :refers_to -> [4]
+  :scope -> [4] {"level":0}
+  :scope -> [16] {"level":1}
+[14] lit {"value":{"type":"Num","value":3}}
+[15] lit {"value":{"type":"Num","value":4}}
+[16] external {"name":"$add","arity":2,"args":1,"saturated":false}
+  :arg -> [12] {"index":0}
+  :callee -> [10]
+[17] env
+[18] closure
+  :body -> [4]
+  :env -> [17]"
+`;
+
+exports[`compile > eta-reducible — λx. f(x) 1`] = `
+"[1] root
+  :entry -> [7]
+[3] var:free {"name":"Int"}
+[4] var:ref {"name":"Int"}
+  :refers_to -> [3]
+[6] var:free {"name":"f"}
+[7] var:ref {"name":"f"}
+  :refers_to -> [6]
+  :scope -> [7] {"level":0}"
+`;
+
+exports[`compile > identity — λx. x 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [6]
+[3] var:free {"name":"Int"}
+[4] var:ref {"name":"Int"}
+  :refers_to -> [3]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] env
+[7] closure
+  :body -> [2]
+  :env -> [6]"
+`;
+
+exports[`compile > literal — 42 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"Num","value":42}}"
+`;
+
+exports[`compile > match — variant alternatives 1`] = `
+"[1] root
+  :entry -> [2]
+[2] match
+  :case -> [10] {"index":0}
+  :case -> [12] {"index":1}
+  :scrutinee -> [3]
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"__tag"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"String","value":"Some"}}
+[7] row:ext {"label":"Some"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Num","value":42}}
+[9] row:empty
+[10] case {"pattern":{"type":"Variant","row":{"type":"extension","label":"Some","value":{"type":"Binder","value":"x"},"row":{"type":"empty"}}},"binders":[["_",{"type":"Lit","value":{"type":"Atom","value":"Num"},"id":7}]]}
+  :body -> [11]
+  :next -> [12]
+[11] var:bound {"index":0}
+  :refers_to -> [10]
+  :scope -> [10] {"level":0}
+[12] case {"pattern":{"type":"Variant","row":{"type":"extension","label":"None","value":{"type":"Wildcard"},"row":{"type":"empty"}}},"binders":[["_",{"type":"Lit","value":{"type":"Atom","value":"Num"},"id":7}]]}
+  :body -> [13]
+[13] lit {"value":{"type":"Num","value":0}}"
+`;
+
+exports[`compile > nested primop — add(add(1, 2), 3) 1`] = `
+"[1] root
+  :entry -> [12]
+[4] var:foreign {"name":"$add","arity":2}
+[9] lit {"value":{"type":"Num","value":1}}
+  :next -> [10]
+[10] lit {"value":{"type":"Num","value":2}}
+[11] lit {"value":{"type":"Num","value":3}}
+[12] primop {"op":"$add"}
+  :arg -> [13] {"index":0}
+  :arg -> [11] {"index":1}
+  :callee -> [4]
+[13] primop {"op":"$add"}
+  :arg -> [9] {"index":0}
+  :arg -> [10] {"index":1}
+  :callee -> [4]
+  :next -> [11]"
+`;
+
+exports[`compile > primop — add(1, 2) 1`] = `
+"[1] root
+  :entry -> [8]
+[4] var:foreign {"name":"$add","arity":2}
+[6] lit {"value":{"type":"Num","value":1}}
+  :next -> [7]
+[7] lit {"value":{"type":"Num","value":2}}
+[8] primop {"op":"$add"}
+  :arg -> [6] {"index":0}
+  :arg -> [7] {"index":1}
+  :callee -> [4]"
+`;
+
+exports[`compile > struct/proj — { x: 1, y: 2 }.x 1`] = `
+"[1] root
+  :entry -> [2]
+[2] proj {"label":"x"}
+  :target -> [3]
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"x"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Num","value":1}}
+[7] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Num","value":2}}
+[9] row:empty"
+`;

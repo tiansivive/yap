@@ -4,6 +4,8 @@ import { Tags, Labels } from "../vocabulary";
 import type { Pass } from "../grs/strategy";
 import type { Rule } from "../grs/rule";
 import * as Strategy from "../grs/strategy";
+import type { Descriptor } from "../pipeline/descriptor";
+import { none } from "../pipeline/descriptor";
 
 const PASS_CAPTURE = { created_by: "capture" } as const;
 
@@ -76,3 +78,19 @@ export const close: Pass = Strategy.apply(closeRule);
 // ── Combined ──
 
 export const closureConvert: Pass = (g: Graph): Graph => close(capture(g));
+
+export const descriptor: Descriptor = {
+	name: "closure",
+	requires: {
+		tags: new Set([Tags.LAMBDA, Tags.VAR_BOUND, Tags.VAR_REF]),
+		labels: new Set([Labels.SCOPE, Labels.REFERS_TO]),
+	},
+	delta: {
+		tags: { added: new Set([Tags.CLOSURE, Tags.ENV]), removed: new Set() },
+		labels: {
+			added: new Set([Labels.ENV, Labels.CAPTURE]),
+			removed: new Set(),
+		},
+	},
+	run: closureConvert,
+};

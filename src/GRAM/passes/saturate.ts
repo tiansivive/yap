@@ -4,6 +4,8 @@ import { Tags, Labels } from "../vocabulary";
 import type { Rule, Bindings } from "../grs";
 import * as Strategy from "../grs/strategy";
 import { ARITIES } from "../../lowering/shared/primops";
+import type { Descriptor } from "../pipeline/descriptor";
+import { none } from "../pipeline/descriptor";
 
 const PASS = { created_by: "saturate" } as const;
 
@@ -127,3 +129,16 @@ export const saturate: Strategy.Pass = Strategy.seq(
 	chainArgs,
 	Strategy.apply(resolvePrimops),
 );
+
+export const descriptor: Descriptor = {
+	name: "saturate",
+	requires: {
+		tags: new Set([Tags.APP, Tags.VAR_REF, Tags.VAR_FOREIGN]),
+		labels: new Set([Labels.FUNC, Labels.ARG, Labels.REFERS_TO]),
+	},
+	delta: {
+		tags: { added: new Set([Tags.EXTERNAL, Tags.PRIMOP]), removed: new Set() },
+		labels: { added: new Set([Labels.CALLEE, Labels.NEXT]), removed: new Set() },
+	},
+	run: saturate,
+};

@@ -2,10 +2,17 @@ import { Query } from "../graph";
 import { Tags, Labels, isStructural } from "../vocabulary";
 import type { Rule } from "../grs";
 import * as Strategy from "../grs/strategy";
+import type { Descriptor } from "../pipeline/descriptor";
+import { none } from "../pipeline/descriptor";
 
 export const rule: Rule = {
 	lhs: {
-		nodes: [{ bind: "$lam", tag: Tags.LAMBDA }, { bind: "$app", tag: Tags.APP }, { bind: "$arg", tag: Tags.VAR_BOUND }, { bind: "$f" }],
+		nodes: [
+			{ bind: "$lam", tag: Tags.LAMBDA },
+			{ bind: "$app", tag: Tags.APP },
+			{ bind: "$arg", tag: Tags.VAR_BOUND, payload: p => p.index === 0 },
+			{ bind: "$f" },
+		],
 		edges: [
 			{ source: "$lam", label: Labels.BODY, target: "$app" },
 			{ source: "$app", label: Labels.FUNC, target: "$f" },
@@ -30,3 +37,13 @@ export const rule: Rule = {
 };
 
 export const eta: Strategy.Pass = Strategy.apply(rule);
+
+export const descriptor: Descriptor = {
+	name: "eta",
+	requires: {
+		tags: new Set([Tags.LAMBDA, Tags.APP, Tags.VAR_BOUND]),
+		labels: new Set([Labels.BODY, Labels.FUNC, Labels.ARG, Labels.REFERS_TO]),
+	},
+	delta: { tags: none, labels: none },
+	run: eta,
+};
