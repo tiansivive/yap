@@ -33,6 +33,9 @@ export const Tags = {
 	MODAL: "modal",
 	RESET: "reset",
 	SHIFT: "shift",
+	BUBBLE: "bubble",
+	CONTINUATION: "continuation",
+	RESUMPTION: "resumption",
 
 	EXTERNAL: "external",
 	PRIMOP: "primop",
@@ -85,6 +88,12 @@ export const Labels = {
 	CASE: ":case",
 	CAPTURE: ":capture",
 	NEXT: ":next",
+
+	DELIMITER: ":delimiter",
+	CAPTURED_AT: ":captured_at",
+	HANDLER: ":handler",
+	PARAM: ":param",
+	INVOKES: ":invokes",
 } as const;
 
 export type Label = string;

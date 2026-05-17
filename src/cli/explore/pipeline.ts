@@ -4,11 +4,9 @@ import Grammar from "@yap/src/grammar";
 import * as Src from "@yap/src/index";
 import * as EB from "@yap/elaboration";
 import * as GRAM from "@yap/gram";
-import { closureConvert } from "../../GRAM/passes/closure";
-import { eta } from "../../GRAM/passes/eta";
-import { saturate } from "../../GRAM/passes/saturate";
 
 import * as E from "fp-ts/lib/Either";
+import { pipe } from "fp-ts/function";
 import fs from "fs";
 import { resolve } from "path";
 
@@ -266,9 +264,18 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 		result.raw.mir = mod;
 	}
 
-	const rawGraph = attempt(() => GRAM.translate(tm, { skolems: debug?.skolems, zonker: ctx.zonker }), errors);
-	const graph = rawGraph ? attempt(() => closureConvert(saturate(eta(rawGraph))), errors) : undefined;
-	result.gram = graph ? (attempt(() => GRAM.display(graph), errors) ?? "") : "";
+	result.gram =
+		attempt(
+			() =>
+				pipe(
+					GRAM.Pipeline.compile(tm, { skolems: debug?.skolems, zonker: ctx.zonker }),
+					E.fold(err => {
+						errors.push(`GRAM: ${JSON.stringify(err)}`);
+						return "";
+					}, GRAM.display),
+				),
+			errors,
+		) ?? "";
 
 	if (mod) {
 		result.codegenJS = attempt(() => printJS(emitJS(mod)), errors) ?? "";

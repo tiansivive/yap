@@ -168,21 +168,33 @@ describe("compile", () => {
 	});
 });
 
-// ── shift/reset (pending GRAM lowering pass) ──
+// ── shift/reset ──
 
-describe.skip("shift/reset (pending GRAM lowering pass)", () => {
+describe("shift/reset", () => {
 	beforeEach(reset);
 
 	it("reset(shift k -> k(42))", () => {
 		const body = EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(42)), EB.DSL.type("Num"));
 		const result = compile(EB.Constructors.Reset(EB.Constructors.Shift(body)));
 		expect(E.isRight(result)).toBe(true);
+		if (E.isRight(result)) {
+			expect(Query.byTag(Tags.BUBBLE)(result.right).size).toBe(1);
+			expect(Query.byTag(Tags.CONTINUATION)(result.right).size).toBe(1);
+			expect(Query.byTag(Tags.RESUMPTION)(result.right).size).toBe(1);
+			expect(display(result.right)).toMatchSnapshot();
+		}
 	});
 
 	it("reset(shift k -> k(1) + k(2)) — multishot", () => {
 		const body = EB.DSL.lambda("k", EB.DSL.add(EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(1)), EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(2))), EB.DSL.type("Num"));
 		const result = compile(EB.Constructors.Reset(EB.Constructors.Shift(body)), { arities: ARITIES });
 		expect(E.isRight(result)).toBe(true);
+		if (E.isRight(result)) {
+			expect(Query.byTag(Tags.BUBBLE)(result.right).size).toBe(1);
+			expect(Query.byTag(Tags.CONTINUATION)(result.right).size).toBe(1);
+			expect(Query.byTag(Tags.RESUMPTION)(result.right).size).toBe(2);
+			expect(display(result.right)).toMatchSnapshot();
+		}
 	});
 });
 

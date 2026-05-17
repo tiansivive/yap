@@ -1,0 +1,153 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`shift-reset enrichment pass > reset(1 + shift(k -> k(42))) — shift embedded in expression 1`] = `
+"[1] root
+  :entry -> [2]
+[2] reset
+  :body -> [3]
+[3] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [4]
+[4] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:foreign {"name":"$add"}
+[6] var:ref {"name":"$add"}
+  :refers_to -> [5]
+[7] lit {"value":{"type":"Num","value":1}}
+[8] shift
+[9] lambda {"variable":"k","icit":"Explicit","level":0}
+  :annotation -> [10]
+  :body -> [11]
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[11] resumption {"icit":"Explicit"}
+  :arg -> [13]
+  :invokes -> [15]
+[12] var:bound {"index":0}
+  :refers_to -> [9]
+  :scope -> [9] {"level":0}
+[13] lit {"value":{"type":"Num","value":42}}
+[14] bubble {"binder":"$bubble_0"}
+[15] continuation {"binder":"$bubble_0"}
+  :captured_at -> [8]
+  :delimiter -> [2]
+  :handler -> [9]
+  :param -> [14]"
+`;
+
+exports[`shift-reset enrichment pass > reset(shift k -> 'hello') — discarded continuation 1`] = `
+"[1] root
+  :entry -> [2]
+[2] reset
+  :body -> [7]
+[3] shift
+[4] lambda {"variable":"k","icit":"Explicit","level":0}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Str"}}
+[6] lit {"value":{"type":"String","value":"hello"}}
+[7] bubble {"binder":"$bubble_0"}
+[8] continuation {"binder":"$bubble_0"}
+  :captured_at -> [3]
+  :delimiter -> [2]
+  :handler -> [4]
+  :param -> [7]"
+`;
+
+exports[`shift-reset enrichment pass > reset(shift k -> k(1) + k(2)) — multishot 1`] = `
+"[1] root
+  :entry -> [2]
+[2] reset
+  :body -> [16]
+[3] shift
+[4] lambda {"variable":"k","icit":"Explicit","level":0}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [7]
+[7] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [9]
+[8] var:foreign {"name":"$add"}
+[9] var:ref {"name":"$add"}
+  :refers_to -> [8]
+  :scope -> [4] {"level":0}
+[10] resumption {"icit":"Explicit"}
+  :arg -> [12]
+  :invokes -> [17]
+[11] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [4] {"level":0}
+[12] lit {"value":{"type":"Num","value":1}}
+[13] resumption {"icit":"Explicit"}
+  :arg -> [15]
+  :invokes -> [17]
+[14] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [4] {"level":0}
+[15] lit {"value":{"type":"Num","value":2}}
+[16] bubble {"binder":"$bubble_0"}
+[17] continuation {"binder":"$bubble_0"}
+  :captured_at -> [3]
+  :delimiter -> [2]
+  :handler -> [4]
+  :param -> [16]"
+`;
+
+exports[`shift-reset enrichment pass > reset(shift k -> k(42)) — single resumption 1`] = `
+"[1] root
+  :entry -> [2]
+[2] reset
+  :body -> [9]
+[3] shift
+[4] lambda {"variable":"k","icit":"Explicit","level":0}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] resumption {"icit":"Explicit"}
+  :arg -> [8]
+  :invokes -> [10]
+[7] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [4] {"level":0}
+[8] lit {"value":{"type":"Num","value":42}}
+[9] bubble {"binder":"$bubble_0"}
+[10] continuation {"binder":"$bubble_0"}
+  :captured_at -> [3]
+  :delimiter -> [2]
+  :handler -> [4]
+  :param -> [9]"
+`;
+
+exports[`shift-reset enrichment pass > reset(shift k -> k(k(10))) — nested resumption 1`] = `
+"[1] root
+  :entry -> [2]
+[2] reset
+  :body -> [11]
+[3] shift
+[4] lambda {"variable":"k","icit":"Explicit","level":0}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] resumption {"icit":"Explicit"}
+  :arg -> [8]
+  :invokes -> [12]
+[7] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [4] {"level":0}
+[8] resumption {"icit":"Explicit"}
+  :arg -> [10]
+  :invokes -> [12]
+[9] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [4] {"level":0}
+[10] lit {"value":{"type":"Num","value":10}}
+[11] bubble {"binder":"$bubble_0"}
+[12] continuation {"binder":"$bubble_0"}
+  :captured_at -> [3]
+  :delimiter -> [2]
+  :handler -> [4]
+  :param -> [11]"
+`;
