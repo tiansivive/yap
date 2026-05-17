@@ -139,11 +139,15 @@ fields: Record<string, Sort>;
 tail?: string;
 };
 
+export type NumSort = Extract<Sort, { tag: "Int" | "Real" }>;
+
 export type Term =
 | { tag: "Var", name: string, sort: Sort }
 | { tag: "Const", name: string, sort: Sort }
-| { tag: "Num", value: string, sort: "Int" | "Real" }
+| { tag: "Num", value: string, sort: NumSort }
 | { tag: "Str", value: string }
+| { tag: "Arith", op: ArithOp, args: Term[], sort: NumSort }
+| { tag: "StrLen", value: Term, sort: Extract<Sort, { tag: "Int" }> }
 | { tag: "App", head: string, args: Term[], sort: Sort }
 | { tag: "RowEmpty", sort: Sort }
 | { tag: "RowExtend", row: Term, label: string, value: Term, sort: Sort }
@@ -165,8 +169,9 @@ export type Trigger = { terms: Term[] };
 export type AtomOp =
 | "=" | "!="
 | "<" | "<=" | ">" | ">="
-| "+" | "-" | "*" | "/" | "%"
-| "str.len" | "str.prefix" | "str.suffix" | "str.contains";
+| "str.prefix" | "str.suffix" | "str.contains";
+
+export type ArithOp = "+" | "-" | "*" | "/" | "%";
 }
 ```
 
@@ -525,10 +530,10 @@ solve: (artefacts: VerificationArtefacts) => backend.solve(artefacts.vc, runtime
 
 ```ts
 export const createTranslationTools = (runtime: VerificationRuntime): TranslationTools => ({
-mkSort: (nf, ctx) => ({ tag: "Uninterpreted", name: NF.display(nf, ctx) }),
-translateTerm: (nf, ctx, rigids = {}) => { throw new Error("stub"); },
-translateFormula: (nf, ctx, rigids = {}) => { throw new Error("stub"); },
-quantify: (variable, annotation, body, ctx) => ({ tag: "Forall", binders: [], body, triggers: [] }),
+mkSort: (_nf, _ctx) => { throw new Error("mkSort not implemented"); },
+translateTerm: (_nf, _ctx, _rigids = {}) => { throw new Error("translateTerm not implemented"); },
+translateFormula: (_nf, _ctx, _rigids = {}) => { throw new Error("translateFormula not implemented"); },
+quantify: (_variable, _annotation, _body, _ctx) => { throw new Error("quantify not implemented"); },
 });
 ```
 
