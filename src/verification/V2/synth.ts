@@ -5,8 +5,8 @@ import * as NF from "@yap/elaboration/normalization";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as Row from "@yap/shared/rows";
 
-import type { Bool, Context as Z3Context, Expr } from "z3-solver";
-
+import type { IVL } from "../solver/ivl";
+import { Build } from "../solver/ivl.build";
 import type { CheckFn, SynthFn, SynthResult, SubtypeFn } from "./types";
 import type { TranslationTools } from "./logic/translate";
 import type { VerificationRuntime } from "./utils/context";
@@ -20,17 +20,16 @@ import * as E from "fp-ts/lib/Either";
 import assert from "node:assert";
 
 type SynthDeps = {
-	Z3: Z3Context<"main">;
 	runtime: VerificationRuntime;
 	translation: TranslationTools;
 };
 
-export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
-	const { translate, quantify } = translation;
+export const createSynth = ({ runtime, translation }: SynthDeps) => {
+	const { term: translate, formula, quantify } = translation;
 
 	const synth = (term: EB.Term): V2.Elaboration<SynthResult> =>
 		V2.Do(function* () {
-			const check = createCheck({ Z3, runtime, translation });
+			const check = createCheck({ runtime, translation });
 			runtime.enter();
 			const ctx = yield* V2.ask();
 			runtime.log("Synthesizing", EB.Display.Term(term, ctx));
@@ -48,7 +47,7 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 
 					const predicate = NF.reduce(liquid, NF.evaluate(ctx, tm), "Explicit");
 
-					return [selfified, { vc: translate(predicate, ctx) as Bool }] satisfies SynthResult;
+					return [selfified, { vc: formula(predicate, ctx) }] satisfies SynthResult;
 				})
 				.with({ type: "Var", variable: { type: "Free" } }, function* (tm) {
 					const entry = ctx.imports[tm.variable.name];
@@ -58,7 +57,7 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 					const [, ty] = entry;
 					const modalities = extractModalities(ty, ctx);
 					const predicate = NF.reduce(modalities.liquid, NF.evaluate(ctx, tm), "Explicit");
-					return [ty, { vc: translate(predicate, ctx) }] satisfies SynthResult;
+					return [ty, { vc: formula(predicate, ctx) }] satisfies SynthResult;
 				})
 				.with({ type: "Var", variable: { type: "Label" } }, function* ({ variable }) {
 					const entry = ctx.sigma[variable.name];
@@ -68,11 +67,11 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 
 					const modalities = extractModalities(entry.ann, ctx);
 					const predicate = NF.reduce(modalities.liquid, NF.evaluate(ctx, term), "Explicit");
-					return [entry.ann, { vc: translate(predicate, ctx) }] satisfies SynthResult;
+					return [entry.ann, { vc: formula(predicate, ctx) }] satisfies SynthResult;
 				})
 				.with({ type: "Var" }, function* () {
 					runtime.log("synth: unsupported variable kind");
-					return [NF.Any, { vc: Z3.Bool.val(true) }] satisfies SynthResult;
+					return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
 				})
 				.with({ type: "Lit" }, function* (tm) {
 					const ann = match(tm.value)
@@ -90,23 +89,22 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 						});
 					const nf = NF.evaluate(ctx, ann);
 					const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
-					//NOTE:IMPORTANT: empty env to avoid capturing at the refinement level. We're lifitng the primitive vlaue to the refinement, so we need to be careful
 					const closure = NF.Constructors.Closure(noCapture(ctx), EB.DSL.eq(bound, tm));
 					const fresh = runtime.freshName();
 					const modalities = {
 						quantity: Q.Many,
 						liquid: NF.Constructors.Lambda(fresh, "Explicit", closure, nf),
 					};
-					return [NF.Constructors.Modal(nf, modalities), { vc: Z3.Bool.val(true) }] satisfies SynthResult;
+					return [NF.Constructors.Modal(nf, modalities), { vc: Build.true_() }] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Pi, function* () {
-					return [NF.Type, { vc: Z3.Bool.val(true) }] satisfies SynthResult;
+					return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Mu, function* () {
-					return [NF.Type, { vc: Z3.Bool.val(true) }] satisfies SynthResult;
+					return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Sigma, function* () {
-					return [NF.Type, { vc: Z3.Bool.val(true) }] satisfies SynthResult;
+					return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Lambda, function* (tm) {
 					const annotation = NF.evaluate(ctx, tm.binding.annotation);
@@ -116,17 +114,17 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 					return [type, { vc: bodyArtefacts.vc }] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Variant, function* () {
-					return [NF.Type, { vc: Z3.Bool.val(true) }] satisfies SynthResult;
+					return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Schema, function* () {
-					return [NF.Type, { vc: Z3.Bool.val(true) }] satisfies SynthResult;
+					return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Struct, function* (struct) {
 					const { row, vc } = yield* V2.pure(synthStructRow(struct.arg.row));
 					return [NF.Constructors.Schema(row), { vc }] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Row, function* () {
-					return [NF.Row, { vc: Z3.Bool.val(true) }] satisfies SynthResult;
+					return [NF.Row, { vc: Build.true_() }] satisfies SynthResult;
 				})
 
 				.with({ type: "App" }, function* (tm) {
@@ -144,10 +142,6 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 									return [NF.Constructors.Exists(ex.variable, ex.annotation, { ctx, value: out }), artefacts] satisfies SynthResult;
 								})
 								.with(NF.Patterns.Pi, function* (pi) {
-									// Ignore the local incorporation context = that's only for the existentials.
-									// We need to check the argument in the original context so that bound variables are correctly resolved.
-									// FIXME: Pass an explicit ctx as an argument to incorporate instead of relying on V2.ask().
-									// That way checking will always happen in the right context and we can be explicit about which context to capture in existentials.
 									const { vc, nf } = yield* V2.local(_ => ctx, check(arg, pi.binder.annotation));
 
 									const evaluatedArg = NF.evaluate(ctx, arg);
@@ -160,20 +154,6 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 										.otherwise(() => evaluatedArg);
 									const out = NF.apply(pi.binder, pi.closure, appliedArg);
 
-									// NOTE: This is a modification of Syn-App-Ex
-									// The Syn-App-Ex rule (Jhala & Vazou, from Knowles & Flanagan) prescribes synthesizing both function and argument, then using subtyping to verify compatibility.
-									// However, this only works when ALL terms are intrinsic (self-typing) and some terms are extrinsic - they require bidirectional checking.
-
-									// Example: `match b | true -> Num | false -> String` cannot be synthesized without surrounding context. Is the codomain `Num | String` or `Type` or something else entirely?
-									// During elaboration, unification constraints provide the needed context and resolve this.
-									// Since verification happens after elaboration, the `match` term has already been typechecked and we merely need to reconstruct the inferred types
-									// However, the term itself lacks the information needed for synthesis.
-									//
-									// The solution is to use `check` instead of `synth` for arguments. Checking allows us to leverage the surrounding context established during elaboration and properly handle extrinsic terms.
-									// When `check` necessarily synthesizes a potential more precise type (e.g., with selfification refinements), it returns it via the optional `nf` field.
-									// Using it here propagates the subtype information through applications. Otherwise, we fall back to the Pi binder's annotation.
-									//
-									// TODO:Future: Cache elaborated types in the AST to enable pure synthesis during verification.
 									return [NF.Constructors.Exists(pi.binder.variable, nf ?? pi.binder.annotation, { value: out, ctx: localCtx }), { vc }] satisfies SynthResult;
 								})
 								.otherwise(() => {
@@ -182,14 +162,8 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 						});
 
 					const [fnTy, fnArtefacts] = yield* synth.gen(tm.func);
-					// const unwrapped = unwrapExistential(fnTy)
-					// assert(unwrapped.type === "Abs" && unwrapped.binder.type === "Pi", "Function position must be a Pi type after unwrapping existentials");
-					// const checked = yield* check.gen(tm.arg, unwrapped.binder.annotation);
-
-					// const [argTy, argArtefacts] = yield* synth.gen(tm.arg);
 					const [outTy, appArtefacts] = yield* V2.pure(incorporate(tm.arg, NF.force(ctx, fnTy)));
-					// const combinedVc = Z3.And(Z3.And(fnArtefacts.vc as Bool, checked.vc as Bool), appArtefacts.vc as Bool);
-					const combinedVc = Z3.And(fnArtefacts.vc as Bool, appArtefacts.vc as Bool);
+					const combinedVc = Build.and(fnArtefacts.vc, appArtefacts.vc);
 					return [outTy, { vc: combinedVc }] satisfies SynthResult;
 				})
 				.with({ type: "Block" }, function* (block) {
@@ -203,7 +177,7 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 							if (current.type === "Expression") {
 								const [, exprArtefacts] = yield* synth.gen(current.value);
 								const [ty, restArtefacts] = yield* V2.pure(recurse(rest));
-								return [ty, { vc: Z3.And(exprArtefacts.vc as Bool, restArtefacts.vc as Bool) }] satisfies SynthResult;
+								return [ty, { vc: Build.and(exprArtefacts.vc, restArtefacts.vc) }] satisfies SynthResult;
 							}
 
 							if (current.type !== "Let") {
@@ -215,7 +189,7 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 								V2.Do(function* () {
 									const artefacts = yield* check.gen(current.value, current.annotation);
 									const [ty, restArtefacts] = yield* V2.pure(recurse(rest));
-									const conj = Z3.And(artefacts.vc as Bool, restArtefacts.vc as Bool);
+									const conj = Build.and(artefacts.vc, restArtefacts.vc);
 									const ctx = yield* V2.ask();
 									const quantified = quantify(current.variable, current.annotation, conj, ctx);
 									const existential = NF.Constructors.Exists(current.variable, current.annotation, { ctx, value: ty });
@@ -233,10 +207,6 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 							return yield* match(ty)
 								.with(NF.Patterns.Modal, function* (m) {
 									const proj = yield* V2.pure(projected(label, m.value));
-									// TODO: We probably need to find some way to preserve the modalities on the base tye here.
-									// This assuming we want to allow refinements on row types
-									// Maybe implication or conjunction? Anther possibiliy is returning an existential, much like in application
-									// return NF.Constructors.Modal(proj, m.modalities);
 									return proj;
 								})
 								.with(NF.Patterns.Schema, function* ({ func, arg }) {
@@ -323,12 +293,11 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 						});
 
 					const outTy = yield* V2.pure(injected(inj.label, forcedBase));
-					const combinedVc = Z3.And(baseArtefacts.vc as Bool, valueArtefacts.vc as Bool);
+					const combinedVc = Build.and(baseArtefacts.vc, valueArtefacts.vc);
 					return [outTy, { vc: combinedVc }] satisfies SynthResult;
 				})
 
 				.otherwise(function* () {
-					//  runtime.log("synth: case not implemented");
 					throw new Error("synth: case not implemented for term " + EB.Display.Term(term, ctx));
 				});
 
@@ -340,24 +309,24 @@ export const createSynth = ({ Z3, runtime, translation }: SynthDeps) => {
 	synth.gen = (term: EB.Term) => V2.pure(synth(term));
 	return synth;
 
-	type StructRow = { row: NF.Row; vc: Expr };
+	type StructRow = { row: NF.Row; vc: IVL.Formula };
 	function synthStructRow(row: EB.Row): V2.Elaboration<StructRow> {
 		return V2.Do(function* () {
 			const result = yield* match(row)
 				.with({ type: "empty" }, function* () {
-					return { row: Row.Constructors.Empty(), vc: Z3.Bool.val(true) } satisfies StructRow;
+					return { row: Row.Constructors.Empty(), vc: Build.true_() } satisfies StructRow;
 				})
 				.with({ type: "extension" }, function* ({ label, value, row: rest }) {
 					const [ty, artefacts] = yield* synth.gen(value);
 					const restResult = yield* V2.pure(synthStructRow(rest));
 					return {
 						row: Row.Constructors.Extension(label, ty, restResult.row),
-						vc: Z3.And(artefacts.vc as Bool, restResult.vc as Bool),
+						vc: Build.and(artefacts.vc, restResult.vc),
 					} satisfies StructRow;
 				})
 				.with({ type: "variable" }, function* ({ variable }) {
 					const currentCtx = yield* V2.ask();
-					return { row: Row.Constructors.Variable(toNFVariable(currentCtx, variable)), vc: Z3.Bool.val(true) } satisfies StructRow;
+					return { row: Row.Constructors.Variable(toNFVariable(currentCtx, variable)), vc: Build.true_() } satisfies StructRow;
 				})
 				.exhaustive();
 			return result;

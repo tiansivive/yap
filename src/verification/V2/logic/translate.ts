@@ -1,6 +1,5 @@
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 import assert from "assert";
-import type { Context as Z3Context, Sort, Expr, Bool, IntNum, SMTArray } from "z3-solver";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
@@ -23,69 +22,55 @@ import {
 	PrimOps,
 } from "@yap/shared/lib/primitives";
 
+import type { IVL } from "../../solver/ivl";
+import { Build } from "../../solver/ivl.build";
 import type { VerificationRuntime } from "../utils/context";
 import type { ExtractModalitiesFn } from "../utils/refinements";
 
 export type TranslationTools = ReturnType<typeof createTranslationTools>;
 
-export const createTranslationTools = (Z3: Z3Context<"main">, runtime: VerificationRuntime, toModalities: ExtractModalitiesFn) => {
-	const Sorts = {
-		Int: Z3.Int.sort(),
-		Num: Z3.Real.sort(),
-		Bool: Z3.Bool.sort(),
-		String: Z3.Sort.declare("String"),
-		Unit: Z3.Sort.declare("Unit"),
-		Row: Z3.Sort.declare("Row"),
-		Schema: Z3.Sort.declare("Schema"),
-		Atom: Z3.Sort.declare("Atom"),
-		Type: Z3.Sort.declare("Type"),
-		Function: Z3.Sort.declare("Function"),
-	};
-
-	type SortMap = { Prim: Sort } | { Func: SortMap[] } | { App: SortMap[] } | { Row: Sort } | { Recursive: Sort };
-
-	const build = (s: SortMap): Sort[] =>
-		match(s)
-			.with({ Prim: P.select() }, p => [p])
-			.with({ App: P.select() }, ([f, a]) => build(f).concat(build(a)))
-			.with({ Func: P.select() }, ([a, body]) => build(a).concat(build(body)))
-			.with({ Row: P.select() }, r => [r])
-			.with({ Recursive: P.select() }, r => [r])
-			.exhaustive();
-
-	const mkSort = (nf: NF.Value, ctx: EB.Context): SortMap =>
+export const createTranslationTools = (runtime: VerificationRuntime, toModalities: ExtractModalitiesFn) => {
+	const mkSort = (nf: NF.Value, ctx: EB.Context): IVL.Sort =>
 		match(nf)
 			.with({ type: "Neutral" }, n => mkSort(n.value, ctx))
 			.with({ type: "Modal" }, m => mkSort(m.value, ctx))
 			.with(NF.Patterns.Lit, l =>
 				match(l.value)
 					.with({ type: "Atom" }, ({ value }) => {
-						return { Prim: Sorts[value as keyof typeof Sorts] || Sorts.Atom };
+						const map: Record<string, IVL.Sort> = {
+							Num: Build.Real,
+							Int: Build.Int,
+							Bool: Build.Bool,
+							String: Build.String,
+							Unit: Build.Unit,
+							Type: Build.uninterpreted("Type"),
+							Row: Build.Row,
+						};
+						return map[value] ?? Build.uninterpreted(value);
 					})
 					.otherwise(() => {
 						throw new Error("Unsupported literal in sort mapping");
 					}),
 			)
-			.with(NF.Patterns.Row, () => ({ Row: Sorts.Row }))
-			.with(NF.Patterns.Sigma, NF.Patterns.Schema, NF.Patterns.Variant, NF.Patterns.Indexed, () => ({ Row: Sorts.Schema }))
-			.with(NF.Patterns.Mu, mu => ({ Recursive: Z3.Sort.declare(`Mu_${mu.binder.source}`) }))
-			.with(NF.Patterns.Lambda, () => ({ Prim: Sorts.Function }))
-			.with(NF.Patterns.App, ({ func, arg }) => ({ App: [mkSort(func, ctx), mkSort(arg, ctx)] }))
+			.with(NF.Patterns.Row, () => Build.Row)
+			.with(NF.Patterns.Sigma, NF.Patterns.Schema, NF.Patterns.Variant, NF.Patterns.Indexed, () => Build.uninterpreted("Schema"))
+			.with(NF.Patterns.Mu, mu => Build.uninterpreted(`Mu_${mu.binder.source}`))
+			.with(NF.Patterns.Lambda, () => Build.uninterpreted("Function"))
+			.with(NF.Patterns.App, ({ func, arg }) => {
+				const fSort = mkSort(func, ctx);
+				const aSort = mkSort(arg, ctx);
+				return Build.uninterpreted(`App_${sortName(fSort)}_${sortName(aSort)}`);
+			})
 			.with({ type: "Abs" }, ({ binder, closure }) => {
 				const body = NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length));
-				return { Func: [mkSort(binder.annotation, ctx), mkSort(body, ctx)] };
+				const argSort = mkSort(binder.annotation, ctx);
+				const retSort = mkSort(body, ctx);
+				return Build.fn([argSort], retSort);
 			})
 			.with({ type: "Existential" }, ex => mkSort(ex.body.value, EB.bind(ctx, { type: "Pi", variable: ex.variable }, ex.annotation)))
-			.with({ type: "External" }, e => ({ Prim: Z3.Sort.declare(`External:${e.name}`) }))
-			.with({ type: "Reset" }, () => {
-				throw new Error("Reset/Shift control flow not supported in verification sort mapping");
-			})
-			.with({ type: "Shift" }, () => {
-				throw new Error("Reset/Shift control flow not supported in verification sort mapping");
-			})
+			.with({ type: "External" }, e => Build.uninterpreted(`External:${e.name}`))
 			.with(NF.Patterns.Var, v => {
 				if (v.variable.type === "Bound") {
-					//return mkSort(ctx.env[EB.lvl2idx(ctx, v.variable.lvl)].nf, ctx);
 					return mkSort(ctx.env[EB.lvl2idx(ctx, v.variable.lvl)].type[2], ctx);
 				}
 				if (v.variable.type === "Meta") {
@@ -95,93 +80,127 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 					}
 					return mkSort(ty, ctx);
 				}
-				return { Prim: Z3.Sort.declare(v.variable.name) };
+				return Build.uninterpreted(v.variable.name);
 			})
-			.exhaustive();
+			.otherwise(() => {
+				throw new Error("Unsupported NF.Value in verification sort mapping");
+			});
 
-	const collectArgs = (value: NF.Value, ctx: EB.Context, rigids: Record<number, Expr>): Expr[] =>
-		match(value)
-			.with(NF.Patterns.App, ({ func, arg }) => collectArgs(func, ctx, rigids).concat([translate(arg, ctx, rigids)]))
-			.otherwise(() => [translate(value, ctx, rigids)]);
-
-	const mkFunction = (val: NF.Value, ctx: EB.Context): SMTArray<"main", [Sort<"main">, ...Sort<"main">[]], Sort<"main">> =>
-		match(val)
-			.with(NF.Patterns.Var, ({ variable }) => {
-				const get = () => {
+	const getFnSorts = (value: NF.Value, ctx: EB.Context): { name: string; args: IVL.Sort[]; ret: IVL.Sort } => {
+		const getName = (val: NF.Value): string =>
+			match(NF.unwrapNeutral(val))
+				.with(NF.Patterns.Var, ({ variable }) => {
 					if (variable.type === "Bound") {
 						const entry = ctx.env[EB.lvl2idx(ctx, variable.lvl)];
-						return { name: entry.name.variable, type: entry.nf };
+						return entry.name.variable;
+					}
+
+					if (variable.type === "Free") {
+						return variable.name;
+					}
+
+					if (variable.type === "Foreign") {
+						return variable.name;
+					}
+					throw new Error("Unsupported variable type in getFnSorts");
+				})
+				.with({ type: "External" }, e => e.name)
+				.with(NF.Patterns.App, a => getName(a.func))
+				.otherwise(() => {
+					throw new Error("Not a function");
+				});
+
+		const getType = (val: NF.Value): NF.Value =>
+			match(NF.unwrapNeutral(val))
+				.with(NF.Patterns.Var, ({ variable }) => {
+					if (variable.type === "Bound") {
+						const entry = ctx.env[EB.lvl2idx(ctx, variable.lvl)];
+						return entry.type[2];
 					}
 					if (variable.type === "Free") {
 						const [, type] = ctx.imports[variable.name];
-						return { name: variable.name, type };
+						return type;
 					}
 					if (variable.type === "Foreign") {
 						if (!(variable.name in PrimOps)) {
 							throw new Error("Foreign variable not supported in logical formulas");
 						}
 						const [, type] = ctx.imports[operatorMap[variable.name]];
-						return { name: variable.name, type };
+						return type;
 					}
-					throw new Error("Unsupported variable type in mkFunction");
-				};
-				const { name, type } = get();
-				const sorts = build(mkSort(type, ctx)) as [Sort, ...Sort[], Sort];
-				return Z3.Array.const(name, ...sorts);
-			})
-			.with(NF.Patterns.App, a => mkFunction(a.func, ctx))
-			.with({ type: "External" }, e => {
-				const args = e.args.flatMap(arg => build(mkSort(arg, ctx))) as [Sort, ...Sort[], Sort];
-				return Z3.Array.const(e.name, ...args);
-			})
-			.otherwise(() => {
-				throw new Error("Not a function");
-			});
+					throw new Error("Unsupported variable type in getFnSorts");
+				})
+				.with({ type: "External" }, e => {
+					const sorts = e.args.map(a => mkSort(a, ctx));
+					const ret = Build.uninterpreted(`External:${e.name}:ret`);
+					return NF.Any; // unused—we derive sorts from args directly
+				})
+				.with(NF.Patterns.App, a => getType(a.func))
+				.otherwise(() => {
+					throw new Error("Not a function");
+				});
 
-	const translate = (nf: NF.Value, ctx: EB.Context, rigids: Record<number, Expr> = {}): Expr =>
+		const name = getName(value);
+		const sort = mkSort(getType(value), ctx);
+
+		const collectFnSorts = (s: IVL.Sort): { args: IVL.Sort[]; ret: IVL.Sort } =>
+			match(s)
+				.with({ tag: "Fn" }, ({ args, ret }) => ({ args, ret }))
+				.otherwise(s => ({ args: [], ret: s }));
+
+		const { args, ret } = collectFnSorts(sort);
+		return { name, args, ret };
+	};
+
+	const collectArgs = (value: NF.Value, ctx: EB.Context, rigids: Record<number, IVL.Term>): IVL.Term[] =>
+		match(value)
+			.with(NF.Patterns.App, ({ func, arg }) => collectArgs(func, ctx, rigids).concat([term(arg, ctx, rigids)]))
+			.otherwise(() => []);
+
+	const term = (nf: NF.Value, ctx: EB.Context, rigids: Record<number, IVL.Term> = {}): IVL.Term =>
 		match(nf)
-			.with({ type: "Neutral" }, n => translate(n.value, ctx, rigids))
-			.with({ type: "Modal" }, m => translate(m.value, ctx, rigids))
+			.with({ type: "Neutral" }, ({ value }) => term(value, ctx, rigids))
+			.with({ type: "Modal" }, ({ value }) => term(value, ctx, rigids))
 			.with(NF.Patterns.Lit, l =>
 				match(l.value)
-					.with({ type: "Num" }, lit => Z3.Real.val(lit.value))
-					.with({ type: "Bool" }, lit => Z3.Bool.val(lit.value))
-					.with({ type: "String" }, lit => Z3.Const(lit.value, Sorts.String))
-					.with({ type: "unit" }, () => Z3.Const("unit", Sorts.Unit))
+					.with({ type: "Num" }, lit => Build.num(lit.value, Build.Real))
+					.with({ type: "Bool" }, lit => Build.bool(lit.value))
+					.with({ type: "String" }, lit => Build.str(lit.value))
+					.with({ type: "unit" }, () => Build.const_("unit", Build.Unit))
 					.with(
 						{ type: "Atom" },
 						({ value }) => ["Num", "String", "Bool", "Unit", "Type", "Row"].includes(value),
-						atom => Z3.Const(atom.value, Sorts.Type),
+						atom => Build.const_(atom.value, Build.uninterpreted("Type")),
 					)
 					.otherwise(() => {
 						throw new Error("Unsupported literal in logical formulas");
 					}),
 			)
-			.with(NF.Patterns.Row, () => {
-				throw new Error("Row literals not supported yet");
-			})
-			.with({ type: "Abs" }, () => {
-				throw new Error("Function literals not supported in logical formulas");
-			})
 			.with(NF.Patterns.App, fn => {
-				const f = mkFunction(fn.func, ctx);
-				const [, ...args] = collectArgs(fn, ctx, rigids);
-				return f.select(args[0], ...args.slice(1));
+				const { name, args: argSorts, ret } = getFnSorts(fn, ctx);
+				const args = collectArgs(fn, ctx, rigids);
+
+				if (args.length === 0) {
+					return Build.const_(name, ret);
+				}
+				const fnSort = Build.fn(argSorts, ret);
+				const fnTerm = Build.const_(name, fnSort);
+				return Build.select(fnTerm, args[0], ret);
 			})
 			.with(NF.Patterns.Var, v => {
 				if (v.variable.type === "Bound") {
 					const mapped = rigids[v.variable.lvl];
+
 					if (mapped) {
 						return mapped;
 					}
 					const entry = ctx.env[EB.lvl2idx(ctx, v.variable.lvl)];
-					const sorts = build(mkSort(entry.type[2], ctx));
-					const sort = sorts.length === 1 ? sorts[0] : Z3.Sort.declare(`App_${sorts.map(s => s.name()).join("_")}`);
-					return Z3.Const(entry.name.variable, sort);
+					const sort = mkSort(entry.type[2], ctx);
+					return Build.const_(entry.name.variable, sort);
 				}
 				if (v.variable.type === "Free") {
-					const [term] = ctx.imports[v.variable.name];
-					return translate(NF.evaluate(ctx, term), ctx, rigids);
+					const [t] = ctx.imports[v.variable.name];
+					return term(NF.evaluate(ctx, t), ctx, rigids);
 				}
 				throw new Error("Unsupported variable in translation");
 			})
@@ -189,36 +208,43 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 				if (e.args.length !== e.arity) {
 					throw new Error("External with wrong arity in logical formulas");
 				}
-				const args = e.args.map(arg => translate(arg, ctx, rigids));
+				const args = e.args.map(arg => term(arg, ctx, rigids));
 				return match(e.name)
-					.with(OP_ADD, () => (args[0] as IntNum).add(args[1] as IntNum))
-					.with(OP_SUB, () => (args[0] as IntNum).sub(args[1] as IntNum))
-					.with(OP_MUL, () => (args[0] as IntNum).mul(args[1] as IntNum))
-					.with(OP_DIV, () => (args[0] as IntNum).div(args[1] as IntNum))
-					.with(OP_AND, () => Z3.And(args[0] as Bool, args[1] as Bool))
-					.with(OP_OR, () => Z3.Or(args[0] as Bool, args[1] as Bool))
-					.with(OP_NOT, () => (args[0] as Bool).not())
-					.with(OP_EQ, () => args[0].eq(args[1]))
-					.with(OP_NEQ, () => args[0].neq(args[1]))
-					.with(OP_GT, () => (args[0] as IntNum).gt(args[1] as IntNum))
-					.with(OP_GTE, () => (args[0] as IntNum).ge(args[1] as IntNum))
-					.with(OP_LT, () => (args[0] as IntNum).lt(args[1] as IntNum))
-					.with(OP_LTE, () => (args[0] as IntNum).le(args[1] as IntNum))
-					.otherwise(name => {
-						throw new Error(`Unknown external function in logical formulas: ${name}`);
-					});
-			})
-			.with({ type: "Reset" }, () => {
-				throw new Error("Reset/Shift control flow not supported in verification logical formulas");
-			})
-			.with({ type: "Shift" }, () => {
-				throw new Error("Reset/Shift control flow not supported in verification logical formulas");
+					.with(OP_ADD, () => Build.arith("+", args[0], args[1], Build.Real))
+					.with(OP_SUB, () => Build.arith("-", args[0], args[1], Build.Real))
+					.with(OP_MUL, () => Build.arith("*", args[0], args[1], Build.Real))
+					.with(OP_DIV, () => Build.arith("/", args[0], args[1], Build.Real))
+					.otherwise(() => Build.const_(`__external_${e.name}`, Build.Bool));
 			})
 			.otherwise(() => {
-				throw new Error("Unknown expression type");
+				throw new Error("Unsupported expression type in verification");
 			});
 
-	const quantify = (variable: string, annotation: NF.Value, vc: Expr, ctx: EB.Context): Expr =>
+	const formula = (nf: NF.Value, ctx: EB.Context, rigids: Record<number, IVL.Term> = {}): IVL.Formula =>
+		match(nf)
+			.with({ type: "Neutral" }, ({ value }) => formula(value, ctx, rigids))
+			.with({ type: "Modal" }, ({ value }) => formula(value, ctx, rigids))
+			.with(NF.Patterns.Lit, ({ value }) =>
+				match(value)
+					.with({ type: "Bool" }, ({ value }) => (value ? Build.true_() : Build.false_()))
+					.otherwise(() => Build.atom("=", term(nf, ctx, rigids), Build.bool(true))),
+			)
+			.with({ type: "External" }, ({ name, args }) =>
+				match(name)
+					.with(OP_AND, () => Build.and(formula(args[0], ctx, rigids), formula(args[1], ctx, rigids)))
+					.with(OP_OR, () => Build.or(formula(args[0], ctx, rigids), formula(args[1], ctx, rigids)))
+					.with(OP_NOT, () => Build.not(formula(args[0], ctx, rigids)))
+					.with(OP_EQ, () => Build.atom("=", term(args[0], ctx, rigids), term(args[1], ctx, rigids)))
+					.with(OP_NEQ, () => Build.atom("!=", term(args[0], ctx, rigids), term(args[1], ctx, rigids)))
+					.with(OP_GT, () => Build.atom(">", term(args[0], ctx, rigids), term(args[1], ctx, rigids)))
+					.with(OP_GTE, () => Build.atom(">=", term(args[0], ctx, rigids), term(args[1], ctx, rigids)))
+					.with(OP_LT, () => Build.atom("<", term(args[0], ctx, rigids), term(args[1], ctx, rigids)))
+					.with(OP_LTE, () => Build.atom("<=", term(args[0], ctx, rigids), term(args[1], ctx, rigids)))
+					.otherwise(() => Build.atom("=", term(nf, ctx, rigids), Build.bool(true))),
+			)
+			.otherwise(() => Build.atom("=", term(nf, ctx, rigids), Build.bool(true)));
+
+	const quantify = (variable: string, annotation: NF.Value, vc: IVL.Formula, ctx: EB.Context): IVL.Formula =>
 		match(annotation)
 			.with({ type: "Existential" }, ex => {
 				const c = quantify(variable, ex.body.value, vc, EB.bind(ex.body.ctx, { type: "Pi", variable: ex.variable }, ex.annotation));
@@ -226,22 +252,11 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 			})
 			.with(NF.Patterns.Pi, () => vc)
 			.otherwise(() => {
-				const sortMap = mkSort(annotation, ctx);
-				const xSort = match(sortMap)
-					.with({ Prim: P.select() }, p => p)
-					.with({ Recursive: P.select() }, r => r)
-					.with({ Row: P.select() }, r => r)
-					.with({ App: P._ }, app => {
-						const sorts = build(app);
-						return Z3.Sort.declare(`App_${sorts.map(s => s.name()).join("_")}`);
-					})
-					.otherwise(() => {
-						throw new Error("Unknown sort in logical formulas");
-					});
+				const sort = mkSort(annotation, ctx);
+				const x = Build.var_(variable, sort);
 
-				const x = Z3.Const(variable, xSort);
 				if (annotation.type !== "Modal") {
-					return runtime.record(`quantify:${variable}`, Z3.ForAll([x], vc as Bool), {
+					return runtime.record(`quantify:${variable}`, Build.forall([{ name: variable, sort }], vc), {
 						description: `Quantifying over ${variable} with ${NF.display(annotation, ctx)}`,
 					});
 				}
@@ -250,19 +265,29 @@ export const createTranslationTools = (Z3: Z3Context<"main">, runtime: Verificat
 				assert(modalities.liquid.type === "Abs", "Liquid refinements must be unary functions");
 				const lvl = ctx.env.length;
 				const applied = NF.apply(modalities.liquid.binder, modalities.liquid.closure, NF.Constructors.Rigid(lvl));
-				const rigids = { [lvl]: x } as Record<number, Expr>;
-				const phi = translate(applied, ctx, rigids) as Bool;
-				return runtime.record(`quantify:${variable}`, Z3.ForAll([x], Z3.Implies(phi, vc as Bool)) as Bool, { description: `Quantifying refined ${variable}` });
+				const rigids = { [lvl]: x } as Record<number, IVL.Term>;
+				const phi = formula(applied, ctx, rigids);
+				return runtime.record(`quantify:${variable}`, Build.forall([{ name: variable, sort }], Build.implies(phi, vc)), {
+					description: `Quantifying refined ${variable}`,
+				});
 			});
 
 	return {
-		Sorts,
 		mkSort,
-		build,
-		translate,
-		mkFunction,
+		term,
+		formula,
 		quantify,
 	};
 };
 
-export type SortMap = ReturnType<ReturnType<typeof createTranslationTools>["mkSort"]>;
+const sortName = (s: IVL.Sort): string =>
+	match(s)
+		.with({ tag: "Bool" }, () => "Bool")
+		.with({ tag: "Int" }, () => "Int")
+		.with({ tag: "Real" }, () => "Real")
+		.with({ tag: "String" }, () => "String")
+		.with({ tag: "Unit" }, () => "Unit")
+		.with({ tag: "Row" }, () => "Row")
+		.with({ tag: "Fn" }, ({ args, ret }) => `Fn_${args.map(sortName).join("_")}_${sortName(ret)}`)
+		.with({ tag: "Uninterpreted" }, ({ name }) => name)
+		.exhaustive();

@@ -1,5 +1,3 @@
-import type { Expr } from "z3-solver";
-
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
@@ -10,13 +8,14 @@ import { match } from "ts-pattern";
 
 import * as Err from "@yap/elaboration/shared/errors";
 
+import type { IVL } from "../../solver/ivl";
 import type { Obligation, VerificationServiceOptions } from "../types";
 
 export type VerificationRuntime = {
 	log: (...msgs: string[]) => void;
 	enter: () => void;
 	exit: () => void;
-	record: (label: string, expr: Expr, context?: Obligation["context"]) => Expr;
+	record: (label: string, expr: IVL.Formula, context?: Obligation["context"]) => IVL.Formula;
 	freshName: () => string;
 	getObligations: () => Obligation[];
 };
