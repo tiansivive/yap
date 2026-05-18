@@ -33,7 +33,7 @@ exports[`Shift-reset > multiple shifts within reset > invoking continuations 1`]
   },
   "term": "let test
   : Num
-  = reset |+ shift (λ($k: Π($k: Num) -> Num) -> $k 10)
+  = reset |FFI.$add shift (λ($k: Π($k: Num) -> Num) -> $k 10)
     shift (λ($k: Π($k: Num) -> Num) -> $k 20)|",
   "type": "Num",
 }
@@ -85,8 +85,8 @@ exports[`Shift-reset > multiple shifts within reset > multiple shifts and multip
   },
   "term": "let test
   : Num
-  = reset |+
-    (+ (+ 4 shift (λ($k: Π($k: Num) -> Num) -> $k 3))
+  = reset |FFI.$add
+    (FFI.$add (FFI.$add 4 shift (λ($k: Π($k: Num) -> Num) -> $k 3))
       shift (λ($k: Π($k: Num) -> Num) -> $k 2))
     shift (λ($k: Π($k: Num) -> Num) -> $k ($k 1))|",
   "type": "Num",
@@ -144,7 +144,7 @@ exports[`Shift-reset > only one shift within reset > invoking simple continuatio
       "5": "shift (λ($k: Π($k: Num) -> Num) -> $k 1)",
     },
   },
-  "term": "let test : Num = reset |+ 1 shift (λ($k: Π($k: Num) -> Num) -> $k 1)|",
+  "term": "let test : Num = reset |FFI.$add 1 shift (λ($k: Π($k: Num) -> Num) -> $k 1)|",
   "type": "Num",
 }
 `;
@@ -172,10 +172,12 @@ exports[`Shift-reset > only one shift within reset > multiple resumptions 1`] = 
       ],
     },
     "skolems": {
-      "5": "shift (λ($k: Π($k: Num) -> Num) -> + ($k 1) ($k 2))",
+      "5": "shift (λ($k: Π($k: Num) -> Num) -> FFI.$add ($k 1) ($k 2))",
     },
   },
-  "term": "let test : Num = reset |shift (λ($k: Π($k: Num) -> Num) -> + ($k 1) ($k 2))|",
+  "term": "let test
+  : Num
+  = reset |shift (λ($k: Π($k: Num) -> Num) -> FFI.$add ($k 1) ($k 2))|",
   "type": "Num",
 }
 `;
@@ -235,7 +237,9 @@ exports[`Shift-reset > only one shift within reset > nested resumption with non-
       "5": "shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10))",
     },
   },
-  "term": "let test : Num = reset |+ 1 shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10))|",
+  "term": "let test
+  : Num
+  = reset |FFI.$add 1 shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10))|",
   "type": "Num",
 }
 `;
@@ -280,7 +284,9 @@ exports[`Shift-reset > only one shift within reset > overriding continuation ret
       "5": "shift (λ($k: Π($k: Num) -> Num) -> "hello")",
     },
   },
-  "term": "let test : String = reset |+ 1 shift (λ($k: Π($k: Num) -> Num) -> "hello")|",
+  "term": "let test
+  : String
+  = reset |FFI.$add 1 shift (λ($k: Π($k: Num) -> Num) -> "hello")|",
   "type": "String",
 }
 `;

@@ -1,0 +1,245 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`pattern compilation pass > literal patterns > 0 / _ — switch on literal, default fallthrough 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lambda {"variable":"n","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] match
+  :alt -> [6] {"index":0}
+  :alt -> [9] {"index":1}
+  :decision_tree -> [12]
+  :scrutinee -> [5]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] case
+  :body -> [8]
+  :next -> [9]
+  :pattern -> [7]
+[7] pat:lit {"value":{"type":"Num","value":0}}
+[8] lit {"value":{"type":"Num","value":1}}
+[9] case
+  :body -> [11]
+  :pattern -> [10]
+[10] pat:wildcard
+[11] lit {"value":{"type":"Num","value":2}}
+[12] switch {"kind":"lit"}
+  :branch -> [13] {"value":{"type":"Num","value":0}}
+  :default -> [14]
+  :inspect -> [5]
+[13] leaf
+  :body -> [8]
+[14] leaf
+  :body -> [11]"
+`;
+
+exports[`pattern compilation pass > literal patterns > multiple literals — distinct branches 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lambda {"variable":"n","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] match
+  :alt -> [6] {"index":0}
+  :alt -> [9] {"index":1}
+  :alt -> [12] {"index":2}
+  :decision_tree -> [15]
+  :scrutinee -> [5]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] case
+  :body -> [8]
+  :next -> [9]
+  :pattern -> [7]
+[7] pat:lit {"value":{"type":"Num","value":0}}
+[8] lit {"value":{"type":"Num","value":10}}
+[9] case
+  :body -> [11]
+  :next -> [12]
+  :pattern -> [10]
+[10] pat:lit {"value":{"type":"Num","value":1}}
+[11] lit {"value":{"type":"Num","value":20}}
+[12] case
+  :body -> [14]
+  :pattern -> [13]
+[13] pat:wildcard
+[14] lit {"value":{"type":"Num","value":30}}
+[15] switch {"kind":"lit"}
+  :branch -> [16] {"value":{"type":"Num","value":0}}
+  :branch -> [17] {"value":{"type":"Num","value":1}}
+  :default -> [18]
+  :inspect -> [5]
+[16] leaf
+  :body -> [8]
+[17] leaf
+  :body -> [11]
+[18] leaf
+  :body -> [14]"
+`;
+
+exports[`pattern compilation pass > struct patterns > struct with field patterns — expands to nested switch 1`] = `
+"[1] root
+  :entry -> [2]
+[2] match
+  :alt -> [4] {"index":0}
+  :decision_tree -> [9]
+  :scrutinee -> [3]
+[3] lit {"value":{"type":"Num","value":1}}
+[4] case
+  :body -> [8]
+  :pattern -> [5]
+[5] pat:struct
+  :field -> [6] {"label":"x"}
+  :field -> [7] {"label":"y"}
+[6] pat:lit {"value":{"type":"Num","value":1}}
+[7] pat:binder {"name":"b","level":0}
+[8] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [7] {"level":0}
+[9] switch {"kind":"struct"}
+  :branch -> [12]
+  :inspect -> [3]
+[10] proj {"label":"x"}
+  :target -> [3]
+[11] proj {"label":"y"}
+  :target -> [3]
+[12] switch {"kind":"lit"}
+  :branch -> [13] {"value":{"type":"Num","value":1}}
+  :inspect -> [10]
+[13] leaf
+  :bind -> [7] {"name":"b"}
+  :body -> [8]"
+`;
+
+exports[`pattern compilation pass > variant patterns > Some/None — switch on tag, two branches 1`] = `
+"[1] root
+  :entry -> [2]
+[2] match
+  :alt -> [10] {"index":0}
+  :alt -> [14] {"index":1}
+  :decision_tree -> [18]
+  :scrutinee -> [3]
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"__tag"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"String","value":"Some"}}
+[7] row:ext {"label":"Some"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Num","value":42}}
+[9] row:empty
+[10] case
+  :body -> [13]
+  :next -> [14]
+  :pattern -> [11]
+[11] pat:variant {"label":"Some"}
+  :payload -> [12]
+[12] pat:binder {"name":"x","level":0}
+[13] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [12] {"level":0}
+[14] case
+  :body -> [17]
+  :pattern -> [15]
+[15] pat:variant {"label":"None"}
+  :payload -> [16]
+[16] pat:wildcard
+[17] lit {"value":{"type":"Num","value":0}}
+[18] switch {"kind":"tag"}
+  :branch -> [20] {"label":"Some"}
+  :branch -> [22] {"label":"None"}
+  :inspect -> [3]
+[19] proj {"label":"Some"}
+  :target -> [3]
+[20] leaf
+  :bind -> [12] {"name":"x"}
+  :body -> [13]
+[21] proj {"label":"None"}
+  :target -> [3]
+[22] leaf
+  :body -> [17]"
+`;
+
+exports[`pattern compilation pass > variant patterns > variant with wildcard default — default branch present 1`] = `
+"[1] root
+  :entry -> [2]
+[2] match
+  :alt -> [4] {"index":0}
+  :alt -> [8] {"index":1}
+  :decision_tree -> [11]
+  :scrutinee -> [3]
+[3] lit {"value":{"type":"Num","value":1}}
+[4] case
+  :body -> [7]
+  :next -> [8]
+  :pattern -> [5]
+[5] pat:variant {"label":"Some"}
+  :payload -> [6]
+[6] pat:binder {"name":"x","level":0}
+[7] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [6] {"level":0}
+[8] case
+  :body -> [10]
+  :pattern -> [9]
+[9] pat:wildcard
+[10] lit {"value":{"type":"Num","value":0}}
+[11] switch {"kind":"tag"}
+  :branch -> [14] {"label":"Some"}
+  :default -> [15]
+  :inspect -> [3]
+[12] proj {"label":"Some"}
+  :target -> [3]
+[13] pat:wildcard
+[14] leaf
+  :bind -> [6] {"name":"x"}
+  :body -> [7]
+[15] leaf
+  :body -> [10]"
+`;
+
+exports[`pattern compilation pass > wildcard / binder patterns > single binder — leaf with bind, no switch 1`] = `
+"[1] root
+  :entry -> [2]
+[2] match
+  :alt -> [4] {"index":0}
+  :decision_tree -> [7]
+  :scrutinee -> [3]
+[3] lit {"value":{"type":"Num","value":42}}
+[4] case
+  :body -> [6]
+  :pattern -> [5]
+[5] pat:binder {"name":"x","level":0}
+[6] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [5] {"level":0}
+[7] leaf
+  :bind -> [5] {"name":"x"}
+  :body -> [6]"
+`;
+
+exports[`pattern compilation pass > wildcard / binder patterns > single wildcard — direct leaf, no switch 1`] = `
+"[1] root
+  :entry -> [2]
+[2] match
+  :alt -> [4] {"index":0}
+  :decision_tree -> [7]
+  :scrutinee -> [3]
+[3] lit {"value":{"type":"Num","value":42}}
+[4] case
+  :body -> [6]
+  :pattern -> [5]
+[5] pat:wildcard
+[6] lit {"value":{"type":"Num","value":0}}
+[7] leaf
+  :body -> [6]"
+`;

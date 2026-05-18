@@ -237,6 +237,55 @@ const inj = (t: EB.Term & { type: "Inj" }, st: State): [NodeId, State] => {
 
 // ── Match ──
 
+const walkPattern = (pat: EB.Pattern, tid: number, st: State): [NodeId, State] =>
+	match(pat)
+		.with({ type: "Variant" }, p => {
+			const ext = p.row as Row<EB.Pattern, string> & { type: "extension" };
+			const [id, s1] = emit(st, Tags.PAT_VARIANT, { label: ext.label }, prov(tid, st));
+			const [payload, s2] = walkPattern(ext.value, tid, s1);
+			return [id, link(s2, id, Labels.PAYLOAD, payload)] as [NodeId, State];
+		})
+		.with({ type: "Struct" }, p => {
+			const [id, s1] = emit(st, Tags.PAT_STRUCT, {}, prov(tid, st));
+			return walkPatternRow(p.row, id, tid, s1);
+		})
+		.with({ type: "Row" }, p => {
+			const [id, s1] = emit(st, Tags.PAT_STRUCT, {}, prov(tid, st));
+			return walkPatternRow(p.row, id, tid, s1);
+		})
+		.with({ type: "Lit" }, p => emit(st, Tags.PAT_LIT, { value: p.value }, prov(tid, st)))
+		.with({ type: "Binder" }, p => {
+			const [id, s1] = emit(st, Tags.PAT_BINDER, { name: p.value, level: st.binders.length }, prov(tid, st));
+			return [id, push(s1, id)] as [NodeId, State];
+		})
+		.with({ type: "Var" }, p => {
+			const [id, s1] = emit(st, Tags.PAT_BINDER, { name: p.value, level: st.binders.length }, prov(tid, st));
+			return [id, push(s1, id)] as [NodeId, State];
+		})
+		.with({ type: "Wildcard" }, () => emit(st, Tags.PAT_WILDCARD, {}, prov(tid, st)))
+		.with({ type: "List" }, p => {
+			const [id, s1] = emit(st, Tags.PAT_STRUCT, {}, prov(tid, st));
+			return p.patterns.reduce<[NodeId, State]>(
+				([parent, s], el, i) => {
+					const [child, s2] = walkPattern(el, tid, s);
+					return [parent, link(s2, parent, Labels.FIELD, child, { label: String(i) })];
+				},
+				[id, s1],
+			);
+		})
+		.exhaustive();
+
+const walkPatternRow = (r: Row<EB.Pattern, string>, parentId: NodeId, tid: number, st: State): [NodeId, State] =>
+	match(r)
+		.with({ type: "extension" }, r => {
+			const [child, s1] = walkPattern(r.value, tid, st);
+			const s2 = link(s1, parentId, Labels.FIELD, child, { label: r.label });
+			return walkPatternRow(r.row, parentId, tid, s2);
+		})
+		.with({ type: "empty" }, () => [parentId, st] as [NodeId, State])
+		.with({ type: "variable" }, () => [parentId, st] as [NodeId, State])
+		.exhaustive();
+
 const matchExpr = (t: EB.Term & { type: "Match" }, st: State): [NodeId, State] => {
 	const [id, s1] = emit(st, Tags.MATCH, {}, prov(t.id, st));
 	const [scrut, s2] = walk(t.scrutinee, s1);
@@ -244,16 +293,19 @@ const matchExpr = (t: EB.Term & { type: "Match" }, st: State): [NodeId, State] =
 
 	return t.alternatives.reduce<[NodeId, State]>(
 		([mid, s], alt, i) => {
-			const [cid, s2] = emit(s, Tags.CASE, { pattern: alt.pattern, binders: alt.binders }, prov(t.id, s));
-			let s3 = link(s2, mid, Labels.CASE, cid, { index: i });
+			const [cid, s2] = emit(s, Tags.CASE, {}, prov(t.id, s));
+			let s3 = link(s2, mid, Labels.ALT, cid, { index: i });
 
 			if (prev !== undefined) {
 				s3 = link(s3, prev, Labels.NEXT, cid);
 			}
 			prev = cid;
-			const bound = (alt.binders ?? []).reduce<State>((acc, _) => push(acc, cid), s3);
-			const [body, s4] = walk(alt.term, bound);
-			const unbound = (alt.binders ?? []).reduce<State>(pop, s4);
+			const depth = s3.binders.length;
+			const [patId, s4] = walkPattern(alt.pattern, t.id, s3);
+			const s5 = link(s4, cid, Labels.PATTERN, patId);
+			const [body, s6] = walk(alt.term, s5);
+			const pushed = s6.binders.length - depth;
+			const unbound = Array.from({ length: pushed }).reduce<State>(s => pop(s), s6);
 			return [mid, link(unbound, cid, Labels.BODY, body)];
 		},
 		[id, link(s2, id, Labels.SCRUTINEE, scrut)],
@@ -285,8 +337,8 @@ const block = (t: EB.Term & { type: "Block" }, st: State): [NodeId, State] => {
 			})
 			.with({ type: "Let" }, stmt => {
 				const [sid, s2] = emit(s, Tags.STMT_LET, { variable: stmt.variable }, prov(t.id, s));
-				const [val, s3] = walk(stmt.value, s2);
-				return push(linkStmt(sid, link(s3, sid, Labels.VALUE, val)), sid);
+				const [val, s3] = walk(stmt.value, push(s2, sid));
+				return linkStmt(sid, link(s3, sid, Labels.VALUE, val));
 			})
 			.with({ type: "Using" }, stmt => {
 				const [sid, s2] = emit(s, Tags.STMT_USING, {}, prov(t.id, s));

@@ -10,6 +10,7 @@ import type { Location } from "../provenance";
 import { descriptor as eta } from "../passes/eta";
 import { descriptor as saturate } from "../passes/saturate";
 import { descriptor as shiftReset } from "../passes/shift-reset";
+import { descriptor as pattern } from "../passes/pattern";
 import { descriptor as closure } from "../passes/closure";
 import type { Inconsistency, Pipeline } from "./configure";
 import { configure } from "./configure";
@@ -35,7 +36,7 @@ export type CompileOpts = {
 	readonly zonker?: import("@yap/elaboration/unification/substitution").Subst;
 };
 
-export const defaultPipeline: E.Either<ReadonlyArray<Inconsistency>, Pipeline> = configure(eta, saturate, shiftReset, closure);
+export const defaultPipeline: E.Either<ReadonlyArray<Inconsistency>, Pipeline> = configure(eta, saturate, shiftReset, pattern, closure);
 
 export const compile = (term: EB.Term, opts?: CompileOpts): E.Either<CompileError, Graph> =>
 	pipe(

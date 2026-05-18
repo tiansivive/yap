@@ -162,8 +162,9 @@ exports[`compile > match — variant alternatives 1`] = `
 "[1] root
   :entry -> [2]
 [2] match
-  :case -> [10] {"index":0}
-  :case -> [12] {"index":1}
+  :alt -> [10] {"index":0}
+  :alt -> [14] {"index":1}
+  :decision_tree -> [18]
   :scrutinee -> [3]
 [3] app {"icit":"Explicit"}
   :arg -> [5]
@@ -178,15 +179,36 @@ exports[`compile > match — variant alternatives 1`] = `
   :value -> [8]
 [8] lit {"value":{"type":"Num","value":42}}
 [9] row:empty
-[10] case {"pattern":{"type":"Variant","row":{"type":"extension","label":"Some","value":{"type":"Binder","value":"x"},"row":{"type":"empty"}}},"binders":[["_",{"type":"Lit","value":{"type":"Atom","value":"Num"},"id":7}]]}
-  :body -> [11]
-  :next -> [12]
-[11] var:bound {"index":0}
-  :refers_to -> [10]
-  :scope -> [10] {"level":0}
-[12] case {"pattern":{"type":"Variant","row":{"type":"extension","label":"None","value":{"type":"Wildcard"},"row":{"type":"empty"}}},"binders":[["_",{"type":"Lit","value":{"type":"Atom","value":"Num"},"id":7}]]}
+[10] case
   :body -> [13]
-[13] lit {"value":{"type":"Num","value":0}}"
+  :next -> [14]
+  :pattern -> [11]
+[11] pat:variant {"label":"Some"}
+  :payload -> [12]
+[12] pat:binder {"name":"x","level":0}
+[13] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [12] {"level":0}
+[14] case
+  :body -> [17]
+  :pattern -> [15]
+[15] pat:variant {"label":"None"}
+  :payload -> [16]
+[16] pat:wildcard
+[17] lit {"value":{"type":"Num","value":0}}
+[18] switch {"kind":"tag"}
+  :branch -> [20] {"label":"Some"}
+  :branch -> [22] {"label":"None"}
+  :inspect -> [3]
+[19] proj {"label":"Some"}
+  :target -> [3]
+[20] leaf
+  :bind -> [12] {"name":"x"}
+  :body -> [13]
+[21] proj {"label":"None"}
+  :target -> [3]
+[22] leaf
+  :body -> [17]"
 `;
 
 exports[`compile > nested primop — add(add(1, 2), 3) 1`] = `

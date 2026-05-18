@@ -9,7 +9,7 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
       "Num ~~ Num",
       "Num ~~ ?2",
     ],
-    "term": "Struct [ y: + :x 2, x: 1 ]",
+    "term": "Struct [ y: FFI.$add :x 2, x: 1 ]",
     "type": "Schema [ y: Num, x: Num ]",
   },
 }
@@ -236,8 +236,8 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
               "func": {
                 "type": "Var",
                 "variable": {
-                  "name": "+",
-                  "type": "Free",
+                  "name": "$add",
+                  "type": "Foreign",
                 },
               },
               "icit": "Explicit",
@@ -315,7 +315,7 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
       "Num ~~ ?5",
       "Num ~~ ?2",
     ],
-    "term": "Struct [ x: 1, y: + :x 2 ]",
+    "term": "Struct [ x: 1, y: FFI.$add :x 2 ]",
     "type": "Schema [ x: Num, y: Num ]",
   },
 }
@@ -533,8 +533,8 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
                 "func": {
                   "type": "Var",
                   "variable": {
-                    "name": "+",
-                    "type": "Free",
+                    "name": "$add",
+                    "type": "Foreign",
                   },
                 },
                 "icit": "Explicit",
@@ -623,7 +623,7 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
       "Num ~~ Num",
       "Num ~~ ?2",
     ],
-    "term": "Struct [ a: + :b 1, b: + :a 1 ]",
+    "term": "Struct [ a: FFI.$add :b 1, b: FFI.$add :a 1 ]",
     "type": "Schema [ a: Num, b: Num ]",
   },
 }
@@ -881,8 +881,8 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
                 "func": {
                   "type": "Var",
                   "variable": {
-                    "name": "+",
-                    "type": "Free",
+                    "name": "$add",
+                    "type": "Foreign",
                   },
                 },
                 "icit": "Explicit",
@@ -912,8 +912,8 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
               "func": {
                 "type": "Var",
                 "variable": {
-                  "name": "+",
-                  "type": "Free",
+                  "name": "$add",
+                  "type": "Foreign",
                 },
               },
               "icit": "Explicit",
@@ -1001,7 +1001,7 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
     ],
     "term": "Struct
   [ point: Struct [ x: 1, y: 2 ],
-    halved: Struct [ a: / (:point).x 2, b: / (:point).y 2 ] ]",
+    halved: Struct [ a: FFI.$div (:point).x 2, b: FFI.$div (:point).y 2 ] ]",
     "type": "Schema [ point: Schema [ x: Num, y: Num ], halved: Schema [ a: Num, b: Num ] ]",
   },
 }
@@ -1769,8 +1769,8 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                         "func": {
                           "type": "Var",
                           "variable": {
-                            "name": "/",
-                            "type": "Free",
+                            "name": "$div",
+                            "type": "Foreign",
                           },
                         },
                         "icit": "Explicit",
@@ -1804,8 +1804,8 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                       "func": {
                         "type": "Var",
                         "variable": {
-                          "name": "/",
-                          "type": "Free",
+                          "name": "$div",
+                          "type": "Foreign",
                         },
                       },
                       "icit": "Explicit",
@@ -3472,7 +3472,7 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
       "Num ~~ Num",
       "Num ~~ ?2",
     ],
-    "term": "Struct [ x: + 1 2, y: "hello" ]",
+    "term": "Struct [ x: FFI.$add 1 2, y: "hello" ]",
     "type": "Schema [ x: Num, y: String ]",
   },
 }
@@ -3695,8 +3695,8 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
               "func": {
                 "type": "Var",
                 "variable": {
-                  "name": "+",
-                  "type": "Free",
+                  "name": "$add",
+                  "type": "Foreign",
                 },
               },
               "icit": "Explicit",

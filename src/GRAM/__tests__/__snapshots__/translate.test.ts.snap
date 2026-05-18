@@ -173,8 +173,8 @@ exports[`GRAM translate > match on variant (Some 42) 1`] = `
 "[1] root
   :entry -> [2]
 [2] match
-  :case -> [10] {"index":0}
-  :case -> [12] {"index":1}
+  :alt -> [10] {"index":0}
+  :alt -> [14] {"index":1}
   :scrutinee -> [3]
 [3] app {"icit":"Explicit"}
   :arg -> [5]
@@ -189,15 +189,23 @@ exports[`GRAM translate > match on variant (Some 42) 1`] = `
   :value -> [8]
 [8] lit {"value":{"type":"Num","value":42}}
 [9] row:empty
-[10] case {"pattern":{"type":"Variant","row":{"type":"extension","label":"Some","value":{"type":"Binder","value":"x"},"row":{"type":"empty"}}},"binders":[["_",{"type":"Lit","value":{"type":"Atom","value":"Num"},"id":6}]]}
-  :body -> [11]
-  :next -> [12]
-[11] var:bound {"index":0}
-  :refers_to -> [10]
-  :scope -> [10] {"level":0}
-[12] case {"pattern":{"type":"Variant","row":{"type":"extension","label":"None","value":{"type":"Wildcard"},"row":{"type":"empty"}}},"binders":[["_",{"type":"Lit","value":{"type":"Atom","value":"Num"},"id":6}]]}
+[10] case
   :body -> [13]
-[13] lit {"value":{"type":"Num","value":0}}"
+  :next -> [14]
+  :pattern -> [11]
+[11] pat:variant {"label":"Some"}
+  :payload -> [12]
+[12] pat:binder {"name":"x","level":0}
+[13] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [12] {"level":0}
+[14] case
+  :body -> [17]
+  :pattern -> [15]
+[15] pat:variant {"label":"None"}
+  :payload -> [16]
+[16] pat:wildcard
+[17] lit {"value":{"type":"Num","value":0}}"
 `;
 
 exports[`GRAM translate > match with alternatives 1`] = `
@@ -210,19 +218,23 @@ exports[`GRAM translate > match with alternatives 1`] = `
 [4] var:ref {"name":"Int"}
   :refers_to -> [3]
 [5] match
-  :case -> [7] {"index":0}
-  :case -> [9] {"index":1}
+  :alt -> [7] {"index":0}
+  :alt -> [10] {"index":1}
   :scrutinee -> [6]
 [6] var:bound {"index":0}
   :refers_to -> [2]
   :scope -> [2] {"level":0}
-[7] case {"pattern":{"type":"Lit","value":{"type":"Num","value":0}},"binders":[]}
-  :body -> [8]
-  :next -> [9]
-[8] lit {"value":{"type":"Num","value":1}}
-[9] case {"pattern":{"type":"Wildcard"},"binders":[]}
-  :body -> [10]
-[10] lit {"value":{"type":"Num","value":2}}"
+[7] case
+  :body -> [9]
+  :next -> [10]
+  :pattern -> [8]
+[8] pat:lit {"value":{"type":"Num","value":0}}
+[9] lit {"value":{"type":"Num","value":1}}
+[10] case
+  :body -> [12]
+  :pattern -> [11]
+[11] pat:wildcard
+[12] lit {"value":{"type":"Num","value":2}}"
 `;
 
 exports[`GRAM translate > nested lambdas — de Bruijn resolution 1`] = `

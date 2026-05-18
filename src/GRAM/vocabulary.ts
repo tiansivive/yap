@@ -25,6 +25,12 @@ export const Tags = {
 	MATCH: "match",
 	CASE: "case",
 
+	PAT_VARIANT: "pat:variant",
+	PAT_STRUCT: "pat:struct",
+	PAT_LIT: "pat:lit",
+	PAT_BINDER: "pat:binder",
+	PAT_WILDCARD: "pat:wildcard",
+
 	BLOCK: "block",
 	STMT_LET: "stmt:let",
 	STMT_EXPR: "stmt:expr",
@@ -36,6 +42,10 @@ export const Tags = {
 	BUBBLE: "bubble",
 	CONTINUATION: "continuation",
 	RESUMPTION: "resumption",
+
+	SWITCH: "switch",
+	LEAF: "leaf",
+	FAIL: "fail",
 
 	EXTERNAL: "external",
 	PRIMOP: "primop",
@@ -85,9 +95,19 @@ export const Labels = {
 	CALLEE: ":callee",
 
 	STMT: ":stmt",
-	CASE: ":case",
+	ALT: ":alt",
 	CAPTURE: ":capture",
 	NEXT: ":next",
+
+	PATTERN: ":pattern",
+	PAYLOAD: ":payload",
+	FIELD: ":field",
+
+	DECISION_TREE: ":decision_tree",
+	BRANCH: ":branch",
+	DEFAULT: ":default",
+	INSPECT: ":inspect",
+	BIND: ":bind",
 
 	DELIMITER: ":delimiter",
 	CAPTURED_AT: ":captured_at",
@@ -111,7 +131,10 @@ const STRUCTURAL: ReadonlySet<string> = new Set([
 	Labels.TERM,
 	Labels.ENTRY,
 	Labels.STMT,
-	Labels.CASE,
+	Labels.ALT,
+	Labels.PATTERN,
+	Labels.PAYLOAD,
+	Labels.FIELD,
 ]);
 
 export const isStructural = (label: Label): boolean => STRUCTURAL.has(label);

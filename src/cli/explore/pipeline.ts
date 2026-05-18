@@ -11,6 +11,7 @@ import fs from "fs";
 import { resolve } from "path";
 
 import { defaultContext } from "@yap/shared/lib/constants";
+import { ARITIES } from "../../lowering/shared/primops";
 import { lowerToMir } from "../../lowering/lower";
 import * as MIR from "../../lowering/pretty";
 import { emit as emitJS } from "../../Codegen/v2/js/emit";
@@ -268,7 +269,7 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 		attempt(
 			() =>
 				pipe(
-					GRAM.Pipeline.compile(tm, { skolems: debug?.skolems, zonker: ctx.zonker }),
+					GRAM.Pipeline.compile(tm, { skolems: debug?.skolems, zonker: ctx.zonker, arities: ARITIES }),
 					E.fold(err => {
 						errors.push(`GRAM: ${JSON.stringify(err)}`);
 						return "";

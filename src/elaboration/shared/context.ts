@@ -13,6 +13,7 @@ import * as Sub from "@yap/elaboration/unification/substitution";
 
 import * as F from "fp-ts/function";
 import * as E from "fp-ts/Either";
+import { match } from "ts-pattern";
 import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
 import { Provenance } from "./provenance";
@@ -66,10 +67,12 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.
 		if (types.length === 0) {
 			const free = ctx.imports[variable.value];
 			if (free) {
-				const [, nf, us] = free;
+				const [storedTm, nf, us] = free;
 
-				const tm = EB.Constructors.Var({ type: "Free", name: variable.value });
-				return V2.of<EB.AST>([tm, nf, Q.add(us, zeros)]); //QUESTION: is this addition correct?
+				const tm = match(storedTm)
+					.with({ type: "Var", variable: { type: "Foreign" } }, t => EB.Constructors.Var({ type: "Foreign", name: t.variable.name }))
+					.otherwise(() => EB.Constructors.Var({ type: "Free", name: variable.value }));
+				return V2.of<EB.AST>([tm, nf, Q.add(us, zeros)]);
 			}
 
 			throw new Error(`Variable not found: ${variable.value}`);
