@@ -6,7 +6,7 @@ import * as V2 from "@yap/elaboration/shared/monad.v2";
 import { VerificationServiceV2 as VerificationService } from "@yap/verification/V2/service";
 import { init, type Context } from "z3-solver";
 import { solve } from "@yap/verification/solver/z3.adapter";
-import { Print } from "@yap/verification/solver/ivl.print";
+import { Print } from "@yap/verification/solver/ivl/print";
 import { elaborate } from "./helpers";
 
 describe("VerificationService", () => {

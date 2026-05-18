@@ -1,7 +1,7 @@
 import type * as EB from "@yap/elaboration";
 import type * as NF from "@yap/elaboration/normalization";
 import type * as V2 from "@yap/elaboration/shared/monad.v2";
-import type { IVL } from "../solver/ivl";
+import type { IVL } from "../solver/ivl/types";
 
 export type VerificationArtefacts = {
 	vc: IVL.Formula;

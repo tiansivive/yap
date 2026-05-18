@@ -10,8 +10,8 @@ import * as E from "fp-ts/Either";
 import * as F from "fp-ts/function";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
-import type { IVL } from "../solver/ivl";
-import { Build } from "../solver/ivl.build";
+import type { IVL } from "../solver/ivl/types";
+import { Build } from "../solver/ivl/build";
 import { Liquid } from "../modalities";
 import { extractModalities, isFirstOrder, type ExtractModalitiesFn } from "./utils/refinements";
 import { noCapture } from "./utils/context";

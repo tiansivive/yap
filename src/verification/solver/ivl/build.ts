@@ -1,4 +1,4 @@
-import type { IVL } from "./ivl";
+import type { IVL } from "./types";
 
 export namespace Build {
 	// --- Sorts ---

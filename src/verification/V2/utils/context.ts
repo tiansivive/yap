@@ -8,7 +8,7 @@ import { match } from "ts-pattern";
 
 import * as Err from "@yap/elaboration/shared/errors";
 
-import type { IVL } from "../../solver/ivl";
+import type { IVL } from "../../solver/ivl/types";
 import type { Obligation, VerificationServiceOptions } from "../types";
 
 export type VerificationRuntime = {

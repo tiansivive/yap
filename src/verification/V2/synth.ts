@@ -5,8 +5,8 @@ import * as NF from "@yap/elaboration/normalization";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as Row from "@yap/shared/rows";
 
-import type { IVL } from "../solver/ivl";
-import { Build } from "../solver/ivl.build";
+import type { IVL } from "../solver/ivl/types";
+import { Build } from "../solver/ivl/build";
 import type { CheckFn, SynthFn, SynthResult, SubtypeFn } from "./types";
 import type { TranslationTools } from "./logic/translate";
 import type { VerificationRuntime } from "./utils/context";

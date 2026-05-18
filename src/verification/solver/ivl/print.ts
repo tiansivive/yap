@@ -1,5 +1,5 @@
 import { match } from "ts-pattern";
-import type { IVL } from "./ivl";
+import type { IVL } from "./types";
 
 export namespace Print {
 	export const sort = (s: IVL.Sort): string =>

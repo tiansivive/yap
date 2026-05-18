@@ -22,8 +22,8 @@ import {
 	PrimOps,
 } from "@yap/shared/lib/primitives";
 
-import type { IVL } from "../../solver/ivl";
-import { Build } from "../../solver/ivl.build";
+import type { IVL } from "../../solver/ivl/types";
+import { Build } from "../../solver/ivl/build";
 import type { VerificationRuntime } from "../utils/context";
 import type { ExtractModalitiesFn } from "../utils/refinements";
 

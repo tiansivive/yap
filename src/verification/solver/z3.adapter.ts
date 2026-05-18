@@ -1,6 +1,6 @@
 import { match } from "ts-pattern";
 import type { Context as Z3Context, Expr, Bool, Sort as Z3Sort } from "z3-solver";
-import type { IVL } from "./ivl";
+import type { IVL } from "./ivl/types";
 
 export const sortToZ3 = (Z3: Z3Context<"main">, s: IVL.Sort): Z3Sort<"main"> =>
 	match(s)

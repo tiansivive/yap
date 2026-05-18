@@ -13,8 +13,8 @@ import { nextCount } from "@yap/elaboration/shared/supply";
 import * as Err from "@yap/elaboration/shared/errors";
 import { update } from "@yap/utils";
 
-import type { IVL } from "../solver/ivl";
-import { Build } from "../solver/ivl.build";
+import type { IVL } from "../solver/ivl/types";
+import { Build } from "../solver/ivl/build";
 import type { VerificationArtefacts, CheckFn, SynthFn, SynthResult, SubtypeFn } from "./types";
 import type { TranslationTools } from "./logic/translate";
 import type { VerificationRuntime } from "./utils/context";
