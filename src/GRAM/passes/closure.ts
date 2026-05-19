@@ -1,3 +1,5 @@
+import { match } from "ts-pattern";
+
 import { Nodes, Edges, Query } from "../graph";
 import type { Graph, NodeId } from "../graph";
 import { Tags, Labels } from "../vocabulary";
@@ -9,26 +11,27 @@ import { none } from "../pipeline/descriptor";
 
 const PASS_CAPTURE = { created_by: "capture" } as const;
 
-// ── Capture: add env with :capture edges to each lambda ──
-//
-// Cannot be expressed as a GRS rule: requires collecting a variable-length
-// set of captured vars before emitting the ENV node — aggregate pattern
-// matching that DPO rules don't support. LoGRAM (Datalog over triple store)
-// will make this a first-class join. See src/GRAM/grs/README.md.
-
+// GRS cannot express aggregate pattern matching (variable-length captured set).
+// LoGRAM (Datalog over triple store) will make this a first-class join.
 const GLOBAL_TAGS: ReadonlySet<string> = new Set([Tags.VAR_FREE, Tags.VAR_FOREIGN]);
 
 const isGlobal = (id: NodeId, g: Graph): boolean => GLOBAL_TAGS.has(Nodes.get(id)(g)?.tag ?? "");
 
 const level = (id: NodeId, g: Graph): number => Number(Nodes.get(id)(g)?.payload.level ?? 0);
 
+const isCapture =
+	(lamId: NodeId, lamLvl: number, g: Graph) =>
+	(e: { target: NodeId }): boolean =>
+		e.target !== lamId && (isGlobal(e.target, g) || level(e.target, g) < lamLvl);
+
 const capturesOf = (lamId: NodeId, g: Graph): ReadonlyArray<NodeId> => {
 	const lamLvl = level(lamId, g);
-	const scoped = Edges.to(lamId)(g).filter(e => e.label === Labels.SCOPE);
-	const targets = scoped
-		.map(e => Edges.one(e.source, Labels.REFERS_TO)(g))
-		.filter((e): e is NonNullable<typeof e> => e !== undefined && e.target !== lamId && (isGlobal(e.target, g) || level(e.target, g) < lamLvl))
-		.map(e => e.target);
+	const targets = Edges.to(lamId)(g)
+		.filter(e => e.label === Labels.SCOPE)
+		.flatMap(e => {
+			const ref = Edges.one(e.source, Labels.REFERS_TO)(g);
+			return ref !== undefined && isCapture(lamId, lamLvl, g)(ref) ? [ref.target] : [];
+		});
 	return [...new Set(targets)];
 };
 
@@ -46,10 +49,7 @@ export const capture: Pass = (g: Graph): Graph => {
 	return lambdas.reduce((acc, id) => enrichOne(id, acc), g);
 };
 
-// ── Close: add closure node wrapping each lambda + env ──
-// Additive enrichment — does not replace the lambda or touch existing edges.
-// Backends query the closure node; structural passes ignore it.
-
+// Additive — backends query the closure node; structural passes ignore it.
 export const closeRule: Rule = {
 	lhs: {
 		nodes: [{ bind: "$lam", tag: Tags.LAMBDA }, { bind: "$env" }],
@@ -69,13 +69,18 @@ export const closeRule: Rule = {
 		if (lamId === undefined) {
 			return false;
 		}
-		return !Edges.to(lamId)(g).some(e => e.label === Labels.BODY && Nodes.get(e.source)(g)?.tag === Tags.CLOSURE);
+		const alreadyClosed = Edges.to(lamId)(g).some(
+			e =>
+				e.label === Labels.BODY &&
+				match(Nodes.get(e.source)(g)?.tag)
+					.with(Tags.CLOSURE, () => true)
+					.otherwise(() => false),
+		);
+		return !alreadyClosed;
 	},
 };
 
 export const close: Pass = Strategy.apply(closeRule);
-
-// ── Combined ──
 
 export const closureConvert: Pass = (g: Graph): Graph => close(capture(g));
 

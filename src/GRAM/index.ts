@@ -8,3 +8,4 @@ export { display } from "./display";
 export { translate } from "./translate";
 export * as GRS from "./grs";
 export * as Pipeline from "./pipeline";
+export * as Bridge from "./bridge";

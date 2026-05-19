@@ -45,3 +45,18 @@ exports[`eta-reduce > λx. f(x) → f when f is free 1`] = `
   :refers_to -> [6]
   :scope -> [7] {"level":0}"
 `;
+
+exports[`eta-reduce > λx.λy. f(x)(y) → f (double eta) 1`] = `
+"[1] root
+  :entry -> [10]
+[3] var:free {"name":"Int"}
+[4] var:ref {"name":"Int"}
+  :refers_to -> [3]
+[6] var:ref {"name":"Int"}
+  :refers_to -> [3]
+  :scope -> [10] {"level":0}
+[9] var:free {"name":"f"}
+[10] var:ref {"name":"f"}
+  :refers_to -> [9]
+  :scope -> [10] {"level":0}"
+`;

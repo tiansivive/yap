@@ -83,9 +83,11 @@ describe("compile", () => {
 		expect(E.isRight(result)).toBe(true);
 		if (E.isRight(result)) {
 			expect(display(result.right)).toMatchSnapshot();
-			expect(Query.byTag(Tags.LAMBDA)(result.right).size).toBe(1);
-			expect(Query.byTag(Tags.CLOSURE)(result.right).size).toBe(1);
-			expect(Query.byTag(Tags.APP)(result.right).size).toBe(2);
+			// double eta reduces both lambdas, saturation fully applies $add
+			expect(Query.byTag(Tags.LAMBDA)(result.right).size).toBe(0);
+			expect(Query.byTag(Tags.CLOSURE)(result.right).size).toBe(0);
+			expect(Query.byTag(Tags.PRIMOP)(result.right).size).toBe(1);
+			expect(Query.byTag(Tags.APP)(result.right).size).toBe(0);
 		}
 	});
 

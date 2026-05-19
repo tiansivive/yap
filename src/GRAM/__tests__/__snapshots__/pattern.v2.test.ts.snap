@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`pattern compilation pass > literal patterns > 0 / _ — switch on literal, default fallthrough 1`] = `
+exports[`pattern.v2 > literal patterns > 0 / _ — switch on literal, default fallthrough 1`] = `
 "[1] root
   :entry -> [2]
 [2] lambda {"variable":"n","icit":"Explicit","level":0}
@@ -36,7 +36,7 @@ exports[`pattern compilation pass > literal patterns > 0 / _ — switch on liter
   :body -> [11]"
 `;
 
-exports[`pattern compilation pass > literal patterns > multiple literals — distinct branches 1`] = `
+exports[`pattern.v2 > literal patterns > multiple literals — distinct branches 1`] = `
 "[1] root
   :entry -> [2]
 [2] lambda {"variable":"n","icit":"Explicit","level":0}
@@ -82,7 +82,7 @@ exports[`pattern compilation pass > literal patterns > multiple literals — dis
   :body -> [14]"
 `;
 
-exports[`pattern compilation pass > struct patterns > struct with field patterns — expands to nested switch 1`] = `
+exports[`pattern.v2 > struct patterns > struct with field patterns — expands to nested switch 1`] = `
 "[1] root
   :entry -> [2]
 [2] match
@@ -116,7 +116,7 @@ exports[`pattern compilation pass > struct patterns > struct with field patterns
   :body -> [8]"
 `;
 
-exports[`pattern compilation pass > variant patterns > Some/None — switch on tag, two branches 1`] = `
+exports[`pattern.v2 > variant patterns > Some/None — switch on tag, two branches 1`] = `
 "[1] root
   :entry -> [2]
 [2] match
@@ -169,7 +169,7 @@ exports[`pattern compilation pass > variant patterns > Some/None — switch on t
   :body -> [17]"
 `;
 
-exports[`pattern compilation pass > variant patterns > variant with wildcard default — default branch present 1`] = `
+exports[`pattern.v2 > variant patterns > variant with wildcard default — default branch present 1`] = `
 "[1] root
   :entry -> [2]
 [2] match
@@ -207,7 +207,7 @@ exports[`pattern compilation pass > variant patterns > variant with wildcard def
   :body -> [10]"
 `;
 
-exports[`pattern compilation pass > wildcard / binder patterns > single binder — leaf with bind, no switch 1`] = `
+exports[`pattern.v2 > wildcard / binder patterns > single binder — leaf with bind, no switch 1`] = `
 "[1] root
   :entry -> [2]
 [2] match
@@ -227,7 +227,7 @@ exports[`pattern compilation pass > wildcard / binder patterns > single binder �
   :body -> [6]"
 `;
 
-exports[`pattern compilation pass > wildcard / binder patterns > single wildcard — direct leaf, no switch 1`] = `
+exports[`pattern.v2 > wildcard / binder patterns > single wildcard — direct leaf, no switch 1`] = `
 "[1] root
   :entry -> [2]
 [2] match

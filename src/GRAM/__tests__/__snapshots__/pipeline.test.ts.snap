@@ -11,10 +11,9 @@ exports[`compile > block with let — let a = 1; λx. a + x (eta-reduces) 1`] = 
 [4] lit {"value":{"type":"Num","value":1}}
 [6] lit {"value":{"type":"Atom","value":"Num"}}
 [9] var:foreign {"name":"$add","arity":2}
-[11] var:bound {"index":1}
+[11] var:bound {"index":0}
   :refers_to -> [3]
   :scope -> [3] {"level":0}
-  :scope -> [13] {"level":1}
 [13] external {"name":"$add","arity":2,"args":1,"saturated":false}
   :arg -> [11] {"index":0}
   :callee -> [9]"
@@ -58,67 +57,35 @@ exports[`compile > complex — nested lambdas + free vars + foreigns + let + mat
 "[1] root
   :entry -> [2]
 [2] block
-  :return -> [5]
+  :return -> [17]
   :stmt -> [3] {"index":0}
 [3] stmt:let {"variable":"n"}
   :value -> [4]
 [4] lit {"value":{"type":"Num","value":10}}
-[5] app {"icit":"Explicit"}
-  :arg -> [16]
-  :func -> [6]
-[6] lambda {"variable":"x","icit":"Explicit","level":1}
-  :annotation -> [7]
-  :body -> [17]
-  :env -> [18]
 [7] lit {"value":{"type":"Atom","value":"Num"}}
 [9] lit {"value":{"type":"Atom","value":"Num"}}
 [12] var:foreign {"name":"$add","arity":2}
-[14] var:bound {"index":1}
-  :refers_to -> [6]
-  :scope -> [3] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [17] {"level":2}
 [16] var:bound {"index":0}
   :refers_to -> [3]
   :scope -> [3] {"level":0}
 [17] external {"name":"$add","arity":2,"args":1,"saturated":false}
-  :arg -> [14] {"index":0}
-  :callee -> [12]
-[18] env
-[19] closure
-  :body -> [6]
-  :env -> [18]"
+  :arg -> [16] {"index":0}
+  :callee -> [12]"
 `;
 
 exports[`compile > curried closure — (λx.λy. x+y) 3 4 1`] = `
 "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [15]
-  :func -> [3]
-[3] app {"icit":"Explicit"}
-  :arg -> [14]
-  :func -> [4]
-[4] lambda {"variable":"x","icit":"Explicit","level":0}
-  :annotation -> [5]
-  :body -> [16]
-  :env -> [17]
+  :entry -> [16]
 [5] lit {"value":{"type":"Atom","value":"Num"}}
 [7] lit {"value":{"type":"Atom","value":"Num"}}
 [10] var:foreign {"name":"$add","arity":2}
-[12] var:bound {"index":1}
-  :refers_to -> [4]
-  :scope -> [4] {"level":0}
-  :scope -> [16] {"level":1}
 [14] lit {"value":{"type":"Num","value":3}}
+  :next -> [15]
 [15] lit {"value":{"type":"Num","value":4}}
-[16] external {"name":"$add","arity":2,"args":1,"saturated":false}
-  :arg -> [12] {"index":0}
-  :callee -> [10]
-[17] env
-[18] closure
-  :body -> [4]
-  :env -> [17]"
+[16] primop {"op":"$add"}
+  :arg -> [14] {"index":0}
+  :arg -> [15] {"index":1}
+  :callee -> [10]"
 `;
 
 exports[`compile > eta-reducible — λx. f(x) 1`] = `
@@ -203,7 +170,7 @@ exports[`compile > match — variant alternatives 1`] = `
 [19] proj {"label":"Some"}
   :target -> [3]
 [20] leaf
-  :bind -> [12] {"name":"x"}
+  :bind -> [19] {"name":"x","binder":12}
   :body -> [13]
 [21] proj {"label":"None"}
   :target -> [3]

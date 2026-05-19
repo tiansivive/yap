@@ -1,3 +1,5 @@
+import { match } from "ts-pattern";
+
 import { Nodes, Edges, Query } from "../graph";
 import type { Graph, NodeId, Payload } from "../graph";
 import { Tags, Labels } from "../vocabulary";
@@ -5,8 +7,6 @@ import type { Pass } from "../grs/strategy";
 import type { Descriptor } from "../pipeline/descriptor";
 
 const PASS = { created_by: "pattern" } as const;
-
-// ── Types ──
 
 type Binding = { readonly binder: NodeId; readonly value: NodeId };
 
@@ -24,367 +24,9 @@ type Head = {
 	readonly subLabels: ReadonlyArray<string>;
 };
 
-// ── Pattern introspection ──
+type Acc<T> = readonly [T, Graph];
 
-const patTag = (pid: NodeId, g: Graph): string => Nodes.get(pid)(g)?.tag ?? "";
-
-const isWild = (pid: NodeId, g: Graph): boolean => {
-	const tag = patTag(pid, g);
-	return tag === Tags.PAT_WILDCARD || tag === Tags.PAT_BINDER;
-};
-
-const headKey = (pid: NodeId, g: Graph): string => {
-	const node = Nodes.get(pid)(g);
-
-	if (!node) {
-		return "";
-	}
-
-	if (node.tag === Tags.PAT_VARIANT) {
-		return String(node.payload.label);
-	}
-
-	if (node.tag === Tags.PAT_LIT) {
-		return JSON.stringify(node.payload.value);
-	}
-
-	if (node.tag === Tags.PAT_STRUCT) {
-		return "__struct__";
-	}
-	return "";
-};
-
-const patSubPatterns = (pid: NodeId, g: Graph): ReadonlyArray<{ label: string; node: NodeId }> => {
-	const node = Nodes.get(pid)(g);
-
-	if (!node) {
-		return [];
-	}
-
-	if (node.tag === Tags.PAT_VARIANT) {
-		const payload = Edges.one(pid, Labels.PAYLOAD)(g);
-		return payload ? [{ label: "", node: payload.target }] : [];
-	}
-
-	if (node.tag === Tags.PAT_STRUCT) {
-		return Edges.byLabel(
-			pid,
-			Labels.FIELD,
-		)(g)
-			.map(e => ({ label: String(e.payload.label), node: e.target }))
-			.sort((a, b) => a.label.localeCompare(b.label));
-	}
-
-	return [];
-};
-
-// ── Helpers ──
-
-const freshWildcards = (count: number, g: Graph): [ReadonlyArray<NodeId>, Graph] =>
-	Array.from({ length: count }).reduce<[NodeId[], Graph]>(
-		([ids, gAcc]) => {
-			const [id, gNext] = Nodes.add(Tags.PAT_WILDCARD, {}, PASS)(gAcc);
-			return [[...ids, id], gNext];
-		},
-		[[], g],
-	);
-
-const inferKind = (rows: ReadonlyArray<Row>, col: number, g: Graph): string => {
-	for (const row of rows) {
-		const tag = patTag(row.patterns[col], g);
-
-		if (tag === Tags.PAT_VARIANT) {
-			return "tag";
-		}
-
-		if (tag === Tags.PAT_LIT) {
-			return "lit";
-		}
-
-		if (tag === Tags.PAT_STRUCT) {
-			return "struct";
-		}
-	}
-	return "tag";
-};
-
-// Maranget: pick first column where the first row is not a wildcard
-const pickColumn = (rows: ReadonlyArray<Row>, g: Graph): number => {
-	for (let col = 0; col < rows[0].patterns.length; col++) {
-		if (!isWild(rows[0].patterns[col], g)) {
-			return col;
-		}
-	}
-	return 0;
-};
-
-// ── Head extraction ──
-
-const allStructLabels = (rows: ReadonlyArray<Row>, col: number, g: Graph): ReadonlyArray<string> => {
-	const labels = new Set<string>();
-	for (const row of rows) {
-		if (patTag(row.patterns[col], g) === Tags.PAT_STRUCT) {
-			for (const sp of patSubPatterns(row.patterns[col], g)) {
-				labels.add(sp.label);
-			}
-		}
-	}
-	return [...labels].sort();
-};
-
-const headPayload = (pid: NodeId, g: Graph): Payload => {
-	const node = Nodes.get(pid)(g);
-
-	if (!node) {
-		return {};
-	}
-
-	if (node.tag === Tags.PAT_VARIANT) {
-		return { label: node.payload.label };
-	}
-
-	if (node.tag === Tags.PAT_LIT) {
-		return { value: node.payload.value };
-	}
-
-	if (node.tag === Tags.PAT_STRUCT) {
-		return {};
-	}
-	return {};
-};
-
-const distinctHeads = (rows: ReadonlyArray<Row>, col: number, g: Graph): ReadonlyArray<Head> => {
-	const seen = new Map<string, Head>();
-
-	for (const row of rows) {
-		const pid = row.patterns[col];
-
-		if (isWild(pid, g)) {
-			continue;
-		}
-
-		const key = headKey(pid, g);
-
-		if (seen.has(key)) {
-			continue;
-		}
-
-		const tag = patTag(pid, g);
-		const value = headPayload(pid, g);
-		if (tag === Tags.PAT_STRUCT) {
-			const labels = allStructLabels(rows, col, g);
-			seen.set(key, { tag, key, value, arity: labels.length, subLabels: labels });
-		} else {
-			const subs = patSubPatterns(pid, g);
-			seen.set(key, { tag, key, value, arity: subs.length, subLabels: subs.map(s => s.label) });
-		}
-	}
-
-	return [...seen.values()];
-};
-
-// ── Matrix operations ──
-
-const specializeRow = (head: Head, col: number, scrutinees: ReadonlyArray<NodeId>, row: Row, g: Graph): { row: Row; graph: Graph } | undefined => {
-	const pid = row.patterns[col];
-
-	if (isWild(pid, g)) {
-		const newBindings = patTag(pid, g) === Tags.PAT_BINDER ? [...row.bindings, { binder: pid, value: scrutinees[col] }] : [...row.bindings];
-		const [wilds, gW] = freshWildcards(head.arity, g);
-		return {
-			row: {
-				patterns: [...row.patterns.slice(0, col), ...wilds, ...row.patterns.slice(col + 1)],
-				body: row.body,
-				bindings: newBindings,
-			},
-			graph: gW,
-		};
-	}
-
-	if (headKey(pid, g) !== head.key) {
-		return undefined;
-	}
-
-	if (head.tag === Tags.PAT_STRUCT) {
-		const existing = new Map(patSubPatterns(pid, g).map(sp => [sp.label, sp.node]));
-		const [normalized, gN] = head.subLabels.reduce<[NodeId[], Graph]>(
-			([ids, gAcc], label) => {
-				const node = existing.get(label);
-
-				if (node !== undefined) {
-					return [[...ids, node], gAcc];
-				}
-				const [wildId, gNext] = Nodes.add(Tags.PAT_WILDCARD, {}, PASS)(gAcc);
-				return [[...ids, wildId], gNext];
-			},
-			[[], g],
-		);
-		return {
-			row: {
-				patterns: [...row.patterns.slice(0, col), ...normalized, ...row.patterns.slice(col + 1)],
-				body: row.body,
-				bindings: [...row.bindings],
-			},
-			graph: gN,
-		};
-	}
-
-	const subs = patSubPatterns(pid, g);
-	return {
-		row: {
-			patterns: [...row.patterns.slice(0, col), ...subs.map(s => s.node), ...row.patterns.slice(col + 1)],
-			body: row.body,
-			bindings: [...row.bindings],
-		},
-		graph: g,
-	};
-};
-
-const specializeMatrix = (
-	head: Head,
-	col: number,
-	scrutinees: ReadonlyArray<NodeId>,
-	rows: ReadonlyArray<Row>,
-	g: Graph,
-): { rows: ReadonlyArray<Row>; scrutinees: ReadonlyArray<NodeId>; graph: Graph } => {
-	let gAcc = g;
-	const subScruts: NodeId[] = [];
-
-	for (const label of head.subLabels) {
-		const projLabel = label || head.key;
-		const [projId, gNext] = Nodes.add(Tags.PROJ, { label: projLabel }, PASS)(gAcc);
-		gAcc = Edges.add(projId, Labels.TARGET, scrutinees[col])(gNext);
-		subScruts.push(projId);
-	}
-
-	const newScruts = [...scrutinees.slice(0, col), ...subScruts, ...scrutinees.slice(col + 1)];
-	const specialized: Row[] = [];
-
-	for (const row of rows) {
-		const result = specializeRow(head, col, scrutinees, row, gAcc);
-		if (result) {
-			specialized.push(result.row);
-			gAcc = result.graph;
-		}
-	}
-
-	return { rows: specialized, scrutinees: newScruts, graph: gAcc };
-};
-
-const defaultMatrix = (
-	col: number,
-	scrutinees: ReadonlyArray<NodeId>,
-	rows: ReadonlyArray<Row>,
-	g: Graph,
-): { rows: ReadonlyArray<Row>; scrutinees: ReadonlyArray<NodeId> } => {
-	const newScruts = [...scrutinees.slice(0, col), ...scrutinees.slice(col + 1)];
-	const defaults = rows
-		.filter(r => isWild(r.patterns[col], g))
-		.map(r => {
-			const pid = r.patterns[col];
-			const newBindings = patTag(pid, g) === Tags.PAT_BINDER ? [...r.bindings, { binder: pid, value: scrutinees[col] }] : [...r.bindings];
-			return {
-				patterns: [...r.patterns.slice(0, col), ...r.patterns.slice(col + 1)],
-				body: r.body,
-				bindings: newBindings,
-			};
-		});
-	return { rows: defaults, scrutinees: newScruts };
-};
-
-// ── Leaf & Fail ──
-
-const makeLeaf = (row: Row, g: Graph): [NodeId, Graph] => {
-	const [leafId, g1] = Nodes.add(Tags.LEAF, {}, PASS)(g);
-	let gAcc = Edges.add(leafId, Labels.BODY, row.body)(g1);
-
-	for (const { binder } of row.bindings) {
-		const name = String(Nodes.get(binder)(gAcc)?.payload.name ?? "");
-		gAcc = Edges.add(leafId, Labels.BIND, binder, { name })(gAcc);
-	}
-
-	for (const pid of row.patterns) {
-		if (patTag(pid, gAcc) === Tags.PAT_BINDER) {
-			const name = String(Nodes.get(pid)(gAcc)?.payload.name ?? "");
-			gAcc = Edges.add(leafId, Labels.BIND, pid, { name })(gAcc);
-		}
-	}
-
-	return [leafId, gAcc];
-};
-
-// ── Core: Maranget decision tree compilation ──
-
-const compile = (scrutinees: ReadonlyArray<NodeId>, rows: ReadonlyArray<Row>, g: Graph): [NodeId, Graph] => {
-	if (rows.length === 0) {
-		return Nodes.add(Tags.FAIL, {}, PASS)(g);
-	}
-
-	if (rows[0].patterns.every(pid => isWild(pid, g))) {
-		return makeLeaf(rows[0], g);
-	}
-
-	const col = pickColumn(rows, g);
-	const heads = distinctHeads(rows, col, g);
-	const kind = inferKind(rows, col, g);
-	const [switchId, g1] = Nodes.add(Tags.SWITCH, { kind }, PASS)(g);
-	const g2 = Edges.add(switchId, Labels.INSPECT, scrutinees[col])(g1);
-
-	let gAcc = g2;
-
-	for (const head of heads) {
-		const spec = specializeMatrix(head, col, scrutinees, rows, gAcc);
-		const [child, gNext] = compile(spec.scrutinees, spec.rows, spec.graph);
-		gAcc = Edges.add(switchId, Labels.BRANCH, child, head.value)(gNext);
-	}
-
-	const def = defaultMatrix(col, scrutinees, rows, gAcc);
-	if (def.rows.length > 0) {
-		const [defId, gDef] = compile(def.scrutinees, def.rows, gAcc);
-		gAcc = Edges.add(switchId, Labels.DEFAULT, defId)(gDef);
-	}
-
-	return [switchId, gAcc];
-};
-
-// ── Top-level: process each match node ──
-
-const compileMatch = (matchId: NodeId, g: Graph): Graph => {
-	const scrutinee = Query.follow(matchId, Labels.SCRUTINEE)(g);
-
-	if (scrutinee === undefined) {
-		return g;
-	}
-
-	const alts = Edges.byLabel(
-		matchId,
-		Labels.ALT,
-	)(g)
-		.slice()
-		.sort((a, b) => Number(a.payload.index ?? 0) - Number(b.payload.index ?? 0));
-
-	const rows: Row[] = alts.reduce<Row[]>((acc, alt) => {
-		const patEdge = Edges.one(alt.target, Labels.PATTERN)(g);
-		const bodyEdge = Edges.one(alt.target, Labels.BODY)(g);
-
-		if (!patEdge || !bodyEdge) {
-			return acc;
-		}
-		return [...acc, { patterns: [patEdge.target], body: bodyEdge.target, bindings: [] }];
-	}, []);
-
-	if (rows.length === 0) {
-		return g;
-	}
-
-	const [rootSwitch, g1] = compile([scrutinee], rows, g);
-	return Edges.add(matchId, Labels.DECISION_TREE, rootSwitch)(g1);
-};
-
-export const compilePatterns: Pass = (g: Graph): Graph => {
-	const matches = [...Query.byTag(Tags.MATCH)(g)];
-	return matches.reduce((acc, id) => compileMatch(id, acc), g);
-};
+export const compilePatterns: Pass = (g: Graph): Graph => [...Query.byTag(Tags.MATCH)(g)].reduce((acc, id) => compileMatch(id, acc), g);
 
 export const descriptor: Descriptor = {
 	name: "pattern",
@@ -400,4 +42,314 @@ export const descriptor: Descriptor = {
 		},
 	},
 	run: compilePatterns,
+};
+
+const compileMatch = (matchId: NodeId, g: Graph): Graph => {
+	const scrutinee = Query.follow(matchId, Labels.SCRUTINEE)(g);
+
+	if (scrutinee === undefined) {
+		return g;
+	}
+
+	const rows = Edges.byLabel(
+		matchId,
+		Labels.ALT,
+	)(g)
+		.slice()
+		.sort((a, b) => Number(a.payload.index ?? 0) - Number(b.payload.index ?? 0))
+		.flatMap(alt => {
+			const patEdge = Edges.one(alt.target, Labels.PATTERN)(g);
+			const bodyEdge = Edges.one(alt.target, Labels.BODY)(g);
+			return patEdge !== undefined && bodyEdge !== undefined ? [{ patterns: [patEdge.target], body: bodyEdge.target, bindings: [] as Binding[] }] : [];
+		});
+
+	if (rows.length === 0) {
+		return g;
+	}
+
+	const [rootSwitch, g1] = compile([scrutinee], rows, g);
+	return Edges.add(matchId, Labels.DECISION_TREE, rootSwitch)(g1);
+};
+
+const compile = (scrutinees: ReadonlyArray<NodeId>, rows: ReadonlyArray<Row>, g: Graph): Acc<NodeId> => {
+	if (rows.length === 0) {
+		return Nodes.add(Tags.FAIL, {}, PASS)(g);
+	}
+
+	if (rows[0].patterns.every(pid => Pat.wild(pid, g))) {
+		return leaf(rows[0], scrutinees, g);
+	}
+
+	const col = column(rows, g);
+	const heads = Heads.distinct(rows, col, g);
+	const kind = Heads.kind(rows, col, g);
+	const [switchId, g1] = Nodes.add(Tags.SWITCH, { kind }, PASS)(g);
+	const g2 = Edges.add(switchId, Labels.INSPECT, scrutinees[col])(g1);
+
+	const g3 = heads.reduce((acc, head) => {
+		const spec = Matrix.specialize(head, col, scrutinees, rows, acc);
+		const [child, gNext] = compile(spec.scrutinees, spec.rows, spec.graph);
+		return Edges.add(switchId, Labels.BRANCH, child, head.value)(gNext);
+	}, g2);
+
+	const def = Matrix.defaults(col, scrutinees, rows, g3);
+
+	if (def.rows.length === 0) {
+		return [switchId, g3];
+	}
+	const [defId, g4] = compile(def.scrutinees, def.rows, g3);
+	return [switchId, Edges.add(switchId, Labels.DEFAULT, defId)(g4)];
+};
+
+const column = (rows: ReadonlyArray<Row>, g: Graph): number => {
+	const idx = rows[0].patterns.findIndex(pid => !Pat.wild(pid, g));
+	return idx >= 0 ? idx : 0;
+};
+
+const leaf = (row: Row, scrutinees: ReadonlyArray<NodeId>, g: Graph): Acc<NodeId> => {
+	const [leafId, g1] = Nodes.add(Tags.LEAF, {}, PASS)(g);
+	const g2 = Edges.add(leafId, Labels.BODY, row.body)(g1);
+	const g3 = row.bindings.reduce((acc, { binder, value }) => {
+		const name = String(Nodes.get(binder)(acc)?.payload.name ?? "");
+		return Edges.add(leafId, Labels.BIND, value, { name, binder })(acc);
+	}, g2);
+	const g4 = row.patterns.reduce((acc, pid, i) => {
+		if (Pat.tag(pid, acc) !== Tags.PAT_BINDER) {
+			return acc;
+		}
+		const name = String(Nodes.get(pid)(acc)?.payload.name ?? "");
+		const target = scrutinees[i] ?? pid;
+		return Edges.add(leafId, Labels.BIND, target, { name, binder: pid })(acc);
+	}, g3);
+	return [leafId, g4];
+};
+
+const bindings = (pid: NodeId, scrutinee: NodeId, row: Row, g: Graph): ReadonlyArray<Binding> =>
+	Pat.tag(pid, g) === Tags.PAT_BINDER ? [...row.bindings, { binder: pid, value: scrutinee }] : [...row.bindings];
+
+const Matrix = {
+	specialize(
+		head: Head,
+		col: number,
+		scrutinees: ReadonlyArray<NodeId>,
+		rows: ReadonlyArray<Row>,
+		g: Graph,
+	): { rows: ReadonlyArray<Row>; scrutinees: ReadonlyArray<NodeId>; graph: Graph } {
+		const [subScruts, g1] = head.subLabels.reduce<Acc<NodeId[]>>(
+			([ids, gAcc], label) => {
+				const projLabel = label || head.key;
+				const [projId, gNext] = Nodes.add(Tags.PROJ, { label: projLabel }, PASS)(gAcc);
+				const gLinked = Edges.add(projId, Labels.TARGET, scrutinees[col])(gNext);
+				return [[...ids, projId], gLinked];
+			},
+			[[], g],
+		);
+
+		const newScruts = splice(scrutinees, col, subScruts);
+
+		const [specialized, g2] = rows.reduce<Acc<Row[]>>(
+			([acc, gAcc], row) => {
+				const result = Row.specialize(head, col, scrutinees, row, gAcc);
+				return result !== undefined ? [[...acc, result.row], result.graph] : [acc, gAcc];
+			},
+			[[], g1],
+		);
+
+		return { rows: specialized, scrutinees: newScruts, graph: g2 };
+	},
+
+	defaults(
+		col: number,
+		scrutinees: ReadonlyArray<NodeId>,
+		rows: ReadonlyArray<Row>,
+		g: Graph,
+	): { rows: ReadonlyArray<Row>; scrutinees: ReadonlyArray<NodeId> } {
+		return {
+			scrutinees: splice(scrutinees, col, []),
+			rows: rows
+				.filter(r => Pat.wild(r.patterns[col], g))
+				.map(r => ({
+					patterns: splice(r.patterns, col, []),
+					body: r.body,
+					bindings: bindings(r.patterns[col], scrutinees[col], r, g),
+				})),
+		};
+	},
+};
+
+const Row = {
+	specialize(head: Head, col: number, scrutinees: ReadonlyArray<NodeId>, row: Row, g: Graph): { row: Row; graph: Graph } | undefined {
+		const pid = row.patterns[col];
+
+		if (Pat.wild(pid, g)) {
+			const [wilds, gW] = Wild.fresh(head.arity, g);
+			return {
+				row: { patterns: splice(row.patterns, col, wilds), body: row.body, bindings: bindings(pid, scrutinees[col], row, g) },
+				graph: gW,
+			};
+		}
+
+		if (Pat.key(pid, g) !== head.key) {
+			return undefined;
+		}
+
+		return match(head.tag)
+			.with(Tags.PAT_STRUCT, () => {
+				const existing = new Map(Pat.subs(pid, g).map(sp => [sp.label, sp.node]));
+				const [normalized, gN] = head.subLabels.reduce<Acc<NodeId[]>>(
+					([ids, gAcc], label) => {
+						const node = existing.get(label);
+
+						if (node !== undefined) {
+							return [[...ids, node], gAcc];
+						}
+						const [wildId, gNext] = Nodes.add(Tags.PAT_WILDCARD, {}, PASS)(gAcc);
+						return [[...ids, wildId], gNext];
+					},
+					[[], g],
+				);
+				return {
+					row: { patterns: splice(row.patterns, col, normalized), body: row.body, bindings: [...row.bindings] },
+					graph: gN,
+				};
+			})
+			.otherwise(() => ({
+				row: {
+					patterns: splice(
+						row.patterns,
+						col,
+						Pat.subs(pid, g).map(s => s.node),
+					),
+					body: row.body,
+					bindings: [...row.bindings],
+				},
+				graph: g,
+			}));
+	},
+};
+
+const Heads = {
+	distinct(rows: ReadonlyArray<Row>, col: number, g: Graph): ReadonlyArray<Head> {
+		return rows.reduce<ReadonlyArray<Head>>((acc, row) => {
+			const pid = row.patterns[col];
+
+			if (Pat.wild(pid, g)) {
+				return acc;
+			}
+			const key = Pat.key(pid, g);
+
+			if (acc.some(h => h.key === key)) {
+				return acc;
+			}
+			const tag = Pat.tag(pid, g);
+			const value = Pat.payload(pid, g);
+			return match(tag)
+				.with(Tags.PAT_STRUCT, () => {
+					const labels = Heads.labels(rows, col, g);
+					return [...acc, { tag, key, value, arity: labels.length, subLabels: labels }];
+				})
+				.otherwise(() => {
+					const subs = Pat.subs(pid, g);
+					return [...acc, { tag, key, value, arity: subs.length, subLabels: subs.map(s => s.label) }];
+				});
+		}, []);
+	},
+
+	kind(rows: ReadonlyArray<Row>, col: number, g: Graph): string {
+		const found = rows.find(row =>
+			match(Pat.tag(row.patterns[col], g))
+				.with(Tags.PAT_VARIANT, () => true)
+				.with(Tags.PAT_LIT, () => true)
+				.with(Tags.PAT_STRUCT, () => true)
+				.otherwise(() => false),
+		);
+
+		if (found === undefined) {
+			return "tag";
+		}
+		return match(Pat.tag(found.patterns[col], g))
+			.with(Tags.PAT_VARIANT, () => "tag")
+			.with(Tags.PAT_LIT, () => "lit")
+			.with(Tags.PAT_STRUCT, () => "struct")
+			.otherwise(() => "tag");
+	},
+
+	labels(rows: ReadonlyArray<Row>, col: number, g: Graph): ReadonlyArray<string> {
+		const labels = rows.filter(row => Pat.tag(row.patterns[col], g) === Tags.PAT_STRUCT).flatMap(row => Pat.subs(row.patterns[col], g).map(sp => sp.label));
+		return [...new Set(labels)].sort();
+	},
+};
+
+const Pat = {
+	tag: (pid: NodeId, g: Graph): string => Nodes.get(pid)(g)?.tag ?? "",
+
+	wild: (pid: NodeId, g: Graph): boolean =>
+		match(Pat.tag(pid, g))
+			.with(Tags.PAT_WILDCARD, () => true)
+			.with(Tags.PAT_BINDER, () => true)
+			.otherwise(() => false),
+
+	key: (pid: NodeId, g: Graph): string => {
+		const node = Nodes.get(pid)(g);
+
+		if (!node) {
+			return "";
+		}
+		return match(node.tag)
+			.with(Tags.PAT_VARIANT, () => String(node.payload.label))
+			.with(Tags.PAT_LIT, () => JSON.stringify(node.payload.value))
+			.with(Tags.PAT_STRUCT, () => "__struct__")
+			.otherwise(() => "");
+	},
+
+	payload: (pid: NodeId, g: Graph): Payload => {
+		const node = Nodes.get(pid)(g);
+
+		if (!node) {
+			return {};
+		}
+		return match(node.tag)
+			.with(Tags.PAT_VARIANT, () => ({ label: node.payload.label }))
+			.with(Tags.PAT_LIT, () => ({ value: node.payload.value }))
+			.otherwise(() => ({}));
+	},
+
+	subs: (pid: NodeId, g: Graph): ReadonlyArray<{ label: string; node: NodeId }> => {
+		const node = Nodes.get(pid)(g);
+
+		if (!node) {
+			return [];
+		}
+		return match(node.tag)
+			.with(Tags.PAT_VARIANT, () => {
+				const edge = Edges.one(pid, Labels.PAYLOAD)(g);
+				return edge !== undefined ? [{ label: "", node: edge.target }] : [];
+			})
+			.with(Tags.PAT_STRUCT, () =>
+				Edges.byLabel(
+					pid,
+					Labels.FIELD,
+				)(g)
+					.map(e => ({ label: String(e.payload.label), node: e.target }))
+					.sort((a, b) => a.label.localeCompare(b.label)),
+			)
+			.otherwise(() => []);
+	},
+};
+
+const splice = <T>(arr: ReadonlyArray<T>, col: number, replacement: ReadonlyArray<T>): ReadonlyArray<T> => [
+	...arr.slice(0, col),
+	...replacement,
+	...arr.slice(col + 1),
+];
+
+const Wild = {
+	fresh: (count: number, g: Graph): Acc<ReadonlyArray<NodeId>> =>
+		Array.from({ length: count }).reduce<Acc<NodeId[]>>(
+			([ids, gAcc]) => {
+				const [id, gNext] = Nodes.add(Tags.PAT_WILDCARD, {}, PASS)(gAcc);
+				return [[...ids, id], gNext];
+			},
+			[[], g],
+		),
 };

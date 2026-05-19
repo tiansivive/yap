@@ -1,0 +1,68 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GRAM Bridge: Phase 1 — leaves and structural ops > snapshot: proj('x', struct { x: 42 }) 1`] = `
+"module
+  fn main entry=entry
+    entry:
+      let v0 = 42
+      let v1 = alloc { x: v0 }
+      let v2 = read v1.x
+      return v2"
+`;
+
+exports[`GRAM Bridge: Phase 1 — leaves and structural ops > snapshot: struct { x: 1 } 1`] = `
+"module
+  fn main entry=entry
+    entry:
+      let v0 = 1
+      let v1 = alloc { x: v0 }
+      return v1"
+`;
+
+exports[`GRAM Bridge: Phase 2 — closures and primops > (λx. x) 42 — identity closure 1`] = `
+"module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_8
+      let v1 = 42
+      let v2 = call *v0(v1)
+      return v2
+  fn closure_8(x) entry=entry
+    entry:
+      return x"
+`;
+
+exports[`GRAM Bridge: Phase 2 — closures and primops > snapshot: add(1, 2) 1`] = `
+"module
+  fn main entry=entry
+    entry:
+      let v0 = 1
+      let v1 = 2
+      let v2 = +(v0, v1)
+      return v2"
+`;
+
+exports[`GRAM Bridge: Phase 3 — pattern matching > snapshot: match 0 / _ 1`] = `
+"module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_18
+      let v1 = 5
+      let v2 = call *v0(v1)
+      return v2
+  fn closure_18(x) entry=entry
+    entry:
+      jump sw1
+    sw1:
+      branch x { 0 -> case3; default -> default4 }
+    case3:
+      let v4 = 1
+      let match0 = v4
+      jump join2
+    default4:
+      let v5 = 2
+      let match0 = v5
+      jump join2
+    join2:
+      return match0"
+`;

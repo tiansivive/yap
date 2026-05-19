@@ -1,15 +1,13 @@
 import { Nodes, Edges } from "../graph";
 import type { Graph } from "../graph";
 import { Tags, Labels } from "../vocabulary";
+import * as P from "../payload";
 import type { Rule, Bindings } from "../grs";
 import * as Strategy from "../grs/strategy";
 import { ARITIES } from "../../lowering/shared/primops";
 import type { Descriptor } from "../pipeline/descriptor";
-import { none } from "../pipeline/descriptor";
 
 const PASS = { created_by: "saturate" } as const;
-
-// ── Rule 1: app(ref → foreign) → external ──
 
 const initial: Rule = {
 	lhs: {
@@ -27,8 +25,12 @@ const initial: Rule = {
 				tag: Tags.EXTERNAL,
 				payload: (b, host) => {
 					const node = Nodes.get(b.get("$foreign") ?? -1)(host);
-					const name = (node?.payload.name as string) ?? "";
-					const arity = (node?.payload.arity as number) ?? 0;
+
+					if (node === undefined) {
+						throw new Error("saturate: $foreign node missing");
+					}
+					const name = P.string(node.payload, "name");
+					const arity = P.number(node.payload, "arity");
 					return { name, arity, args: 1, saturated: arity <= 1 };
 				},
 				provenance: PASS,
@@ -48,8 +50,6 @@ const initial: Rule = {
 	},
 };
 
-// ── Rule 2: app(external) → external (accumulate) ──
-
 const accumulateAnchor: Rule = {
 	lhs: {
 		nodes: [{ bind: "$app", tag: Tags.APP }, { bind: "$ext", tag: Tags.EXTERNAL, payload: p => p.saturated !== true }, { bind: "$arg" }],
@@ -63,9 +63,14 @@ const accumulateAnchor: Rule = {
 
 const buildAccumulate = (b: Bindings, host: Graph): Rule => {
 	const extId = b.get("$ext") ?? -1;
-	const prev = Nodes.get(extId)(host)?.payload ?? {};
-	const args = (prev.args as number) ?? 0;
-	const arity = (prev.arity as number) ?? 0;
+	const node = Nodes.get(extId)(host);
+
+	if (node === undefined) {
+		throw new Error("saturate: $ext node missing");
+	}
+	const prev = node.payload;
+	const args = P.number(prev, "args");
+	const arity = P.number(prev, "arity");
 
 	return {
 		lhs: accumulateAnchor.lhs,
@@ -85,27 +90,20 @@ const buildAccumulate = (b: Bindings, host: Graph): Rule => {
 	};
 };
 
-// ── Add :next chains between args ──
+const sortByIndex = <T extends { payload: Record<string, unknown> }>(edges: ReadonlyArray<T>): T[] =>
+	edges.slice().sort((a, b) => Number(a.payload.index ?? 0) - Number(b.payload.index ?? 0));
 
 const chainArgs: Strategy.Pass = (g: Graph): Graph => {
 	const externals = [...(g.byTag.get(Tags.EXTERNAL) ?? []), ...(g.byTag.get(Tags.PRIMOP) ?? [])];
 	return externals.reduce((acc, extId) => {
-		const args = Edges.byLabel(
-			extId,
-			Labels.ARG,
-		)(acc)
-			.slice()
-			.sort((a, b) => ((a.payload.index as number) ?? 0) - ((b.payload.index as number) ?? 0));
-
+		const args = sortByIndex(Edges.byLabel(extId, Labels.ARG)(acc));
 		return args.reduce((a, edge, i) => (i > 0 ? Edges.add(args[i - 1].target, Labels.NEXT, edge.target)(a) : a), acc);
 	}, g);
 };
 
-// ── Rule 3: saturated primop external → primop ──
-
 const resolvePrimops: Rule = {
 	lhs: {
-		nodes: [{ bind: "$ext", tag: Tags.EXTERNAL, payload: p => p.saturated === true && ARITIES[p.name as string] !== undefined }],
+		nodes: [{ bind: "$ext", tag: Tags.EXTERNAL, payload: p => p.saturated === true && typeof p.name === "string" && ARITIES[p.name] !== undefined }],
 		edges: [],
 	},
 	rhs: {
@@ -113,15 +111,20 @@ const resolvePrimops: Rule = {
 			{
 				bind: "$ext",
 				tag: Tags.PRIMOP,
-				payload: (b, host) => ({ op: (Nodes.get(b.get("$ext") ?? -1)(host)?.payload.name as string) ?? "" }),
+				payload: (b, host) => {
+					const node = Nodes.get(b.get("$ext") ?? -1)(host);
+
+					if (node === undefined) {
+						throw new Error("saturate: $ext node missing for primop");
+					}
+					return { op: P.string(node.payload, "name") };
+				},
 				provenance: PASS,
 			},
 		],
 		edges: [],
 	},
 };
-
-// ── Pass ──
 
 export const saturate: Strategy.Pass = Strategy.seq(
 	Strategy.apply(initial),
