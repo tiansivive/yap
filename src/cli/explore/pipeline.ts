@@ -12,7 +12,6 @@ import { resolve } from "path";
 
 import { defaultContext } from "@yap/shared/lib/constants";
 import { ARITIES } from "../../lowering/shared/primops";
-import { lowerToMir } from "../../lowering/lower";
 import * as MIR from "../../lowering/pretty";
 import { emit as emitJS } from "../../Codegen/v2/js/emit";
 import { print as printJS } from "../../Codegen/v2/js/print";
@@ -257,26 +256,21 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 			}, errors) ?? "";
 	}
 
-	const declarations = new Map();
-	const mod = attempt(() => lowerToMir(tm, declarations), errors);
+	const gramResult = attempt(() => GRAM.Pipeline.compile(tm, { skolems: debug?.skolems, zonker: ctx.zonker, arities: ARITIES }), errors);
+
+	const gramGraph = gramResult && E.isRight(gramResult) ? gramResult.right : undefined;
+	result.gram = gramGraph ? (attempt(() => GRAM.display(gramGraph), errors) ?? "") : "";
+
+	if (gramResult && E.isLeft(gramResult)) {
+		errors.push(`GRAM: ${JSON.stringify(gramResult.left)}`);
+	}
+
+	const mod = gramGraph ? (attempt(() => GRAM.Bridge.emit(gramGraph), errors) ?? undefined) : undefined;
 	result.mir = mod ? (attempt(() => MIR.display.module(mod), errors) ?? "") : "";
 
 	if (opts.rawJson && mod) {
 		result.raw.mir = mod;
 	}
-
-	result.gram =
-		attempt(
-			() =>
-				pipe(
-					GRAM.Pipeline.compile(tm, { skolems: debug?.skolems, zonker: ctx.zonker, arities: ARITIES }),
-					E.fold(err => {
-						errors.push(`GRAM: ${JSON.stringify(err)}`);
-						return "";
-					}, GRAM.display),
-				),
-			errors,
-		) ?? "";
 
 	if (mod) {
 		result.codegenJS = attempt(() => printJS(emitJS(mod)), errors) ?? "";
