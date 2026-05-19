@@ -66,3 +66,100 @@ exports[`GRAM Bridge: Phase 3 — pattern matching > snapshot: match 0 / _ 1`] =
     join2:
       return match0"
 `;
+
+exports[`GRAM Bridge: Phase 4 — shift/reset > reset(1 + shift k -> k 10) — rest-of-reset 1`] = `
+"module
+  fn main entry=entry
+    entry:
+      jump pre7
+    pre7:
+      let env5 = alloc {  }
+      let k6 = alloc { __env: env5 }
+      jump s0(k6)
+    s0(k_param):
+      let env8 = read k_param.__env
+      let v9 = 10
+      let idx10 = 0
+      jump r1(v9, env5, idx10)
+    s4(kr11, env12):
+      let env13 = update-immutable env12 { r0: kr11 }
+      jump reset_exit2(kr11)
+    r1(v_param, env_param, idx_param):
+      let v8 = 1
+      let v9 = +(v8, v_param)
+      branch idx_param { 0 -> s4(v9, env_param) }
+    reset_exit2(xr3):
+      return xr3"
+`;
+
+exports[`GRAM Bridge: Phase 4 — shift/reset > reset(shift k -> 'hello') — no resume 1`] = `
+"module
+  fn main entry=entry
+    entry:
+      jump pre6
+    pre6:
+      let env4 = alloc {  }
+      let k5 = alloc { __env: env4 }
+      jump s0(k5)
+    s0(k_param):
+      let env7 = read k_param.__env
+      let v8 = "hello"
+      jump reset_exit2(v8)
+    r1(v_param, env_param, idx_param):
+      jump reset_exit2(v_param)
+    reset_exit2(xr3):
+      return xr3"
+`;
+
+exports[`GRAM Bridge: Phase 4 — shift/reset > reset(shift k -> k 1 + k 2) — multishot 1`] = `
+"module
+  fn main entry=entry
+    entry:
+      jump pre8
+    pre8:
+      let env6 = alloc {  }
+      let k7 = alloc { __env: env6 }
+      jump s0(k7)
+    s0(k_param):
+      let env9 = read k_param.__env
+      let v10 = 1
+      let idx11 = 0
+      jump r1(v10, env6, idx11)
+    s4(kr12, env13):
+      let env14 = update-immutable env13 { r0: kr12 }
+      let v15 = 2
+      let idx16 = 1
+      jump r1(v15, env14, idx16)
+    s5(kr17, env18):
+      let env19 = update-immutable env18 { r1: kr17 }
+      let kr20 = read env19.r0
+      let p21 = +(kr12, kr17)
+      jump reset_exit2(p21)
+    r1(v_param, env_param, idx_param):
+      branch idx_param { 0 -> s4(v_param, env_param) | 1 -> s5(v_param, env_param) }
+    reset_exit2(xr3):
+      return xr3"
+`;
+
+exports[`GRAM Bridge: Phase 4 — shift/reset > reset(shift k -> k 42) — single resume 1`] = `
+"module
+  fn main entry=entry
+    entry:
+      jump pre7
+    pre7:
+      let env5 = alloc {  }
+      let k6 = alloc { __env: env5 }
+      jump s0(k6)
+    s0(k_param):
+      let env8 = read k_param.__env
+      let v9 = 42
+      let idx10 = 0
+      jump r1(v9, env5, idx10)
+    s4(kr11, env12):
+      let env13 = update-immutable env12 { r0: kr11 }
+      jump reset_exit2(kr11)
+    r1(v_param, env_param, idx_param):
+      branch idx_param { 0 -> s4(v_param, env_param) }
+    reset_exit2(xr3):
+      return xr3"
+`;

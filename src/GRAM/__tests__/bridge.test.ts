@@ -187,3 +187,47 @@ describe("GRAM Bridge: Phase 3 — pattern matching", () => {
 		expect(display.module(bridge(EB.DSL.app(lam, EB.DSL.num(5))))).toMatchSnapshot();
 	});
 });
+
+describe("GRAM Bridge: Phase 4 — shift/reset", () => {
+	beforeEach(() => {
+		EB.resetId();
+		resetId();
+		MIR.resetId();
+	});
+
+	it("reset(shift k -> k 42) — single resume", () => {
+		const body = EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(42)), EB.DSL.type("Num"));
+		const term = EB.Constructors.Reset(EB.Constructors.Shift(body));
+		const mod = bridge(term);
+		expect(display.module(mod)).toMatchSnapshot();
+		const result = interpret(mod);
+		expect(result).toBe(42);
+	});
+
+	it("reset(shift k -> 'hello') — no resume", () => {
+		const body = EB.DSL.lambda("k", EB.DSL.str("hello"), EB.DSL.type("String"));
+		const term = EB.Constructors.Reset(EB.Constructors.Shift(body));
+		const mod = bridge(term);
+		expect(display.module(mod)).toMatchSnapshot();
+		const result = interpret(mod);
+		expect(result).toBe("hello");
+	});
+
+	it("reset(1 + shift k -> k 10) — rest-of-reset", () => {
+		const shift = EB.Constructors.Shift(EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(10)), EB.DSL.type("Num")));
+		const term = EB.Constructors.Reset(EB.DSL.add(EB.DSL.num(1), shift));
+		const mod = bridge(term);
+		expect(display.module(mod)).toMatchSnapshot();
+		const result = interpret(mod);
+		expect(result).toBe(11);
+	});
+
+	it("reset(shift k -> k 1 + k 2) — multishot", () => {
+		const body = EB.DSL.lambda("k", EB.DSL.add(EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(1)), EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(2))), EB.DSL.type("Num"));
+		const term = EB.Constructors.Reset(EB.Constructors.Shift(body));
+		const mod = bridge(term);
+		expect(display.module(mod)).toMatchSnapshot();
+		const result = interpret(mod);
+		expect(result).toBe(3);
+	});
+});

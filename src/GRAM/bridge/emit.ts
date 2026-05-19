@@ -13,6 +13,7 @@ import * as Blocks from "./blocks";
 import * as Closures from "./closures";
 import * as Primops from "./primops";
 import * as Decisions from "./decisions";
+import * as Continuations from "./continuations";
 
 const { Terminator, Block, Function: Fn, Module } = Constructors;
 
@@ -51,6 +52,9 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.PRIMOP, () => Primops.primop(id, walk, ctx))
 		.with(Tags.EXTERNAL, () => Primops.external(id, walk, ctx))
 		.with(Tags.MATCH, () => Decisions.decision(id, walk, ctx))
+		.with(Tags.RESET, () => Continuations.reset(id, walk, ctx))
+		.with(Tags.RESUMPTION, () => Continuations.resume(id, walk, ctx))
+		.with(Tags.BUBBLE, () => Leaves.passthrough(id, ctx))
 		.with(Tags.ROW_EXT, () => struct(id, ctx))
 		.with(Tags.ROW_EMPTY, () => emptyStruct(ctx))
 		.otherwise(() => Leaves.passthrough(id, ctx));
