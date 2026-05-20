@@ -34,7 +34,17 @@ exports[`Solver trace (end-to-end) > replay snapshots > EUF contradiction (congr
   #3: true                -> satisfied
 
 [theory]  euf assert p1: ok
+    classes: {x}  {y}  {f(x)}  {f(y)}
+    merge x ≡ y                         reason: p1
+    classes: {x, y}  {f(x)}  {f(y)}
+    congruence f(x) ≅ f(y)              reason: args in same class
+    merge f(x) ≡ f(y)                   reason: p1
+    classes: {x, y}  {f(x), f(y)}
+
 [theory]  arithmetic assert p1: ok
+    assert (x - y) ≥ 0                  →  (x - y) ∈ [0, ∞]
+    assert (x - y) ≤ 0                  →  (x - y) ∈ [0, 0]
+
 [propagate]  p2 = true  (forced by #1: ~p3 v p2)
   trail: { p3@0, p1@0, p2@0 }
 [clauses]
@@ -44,7 +54,11 @@ exports[`Solver trace (end-to-end) > replay snapshots > EUF contradiction (congr
   #3: true                  -> satisfied
 
 [theory]  euf assert p2: conflict
-[conflict]  #-1: ~p1 v ~p2 — all literals false
+    classes: {x, y}  {f(x), f(y)}
+    scan p2: (!= (f x) (f y))           → same class, contradicts !=
+    euf:disequality-conflict: ~p1 v ~p2 → ~(= x y) v ~(!= (f x) (f y))
+
+[conflict]  euf:disequality-conflict: ~p1 v ~p2 → ~(= x y) v ~(!= (f x) (f y)) — all literals false
 [unsat]  core: [#0, #1, #2, #3]"
 `;
 
@@ -83,6 +97,8 @@ exports[`Solver trace (end-to-end) > replay snapshots > arithmetic SAT 1`] = `
 
 [theory]  euf assert p1: ok
 [theory]  arithmetic assert p1: ok
+    assert x ≥ 0                        →  x ∈ [0, ∞]
+
 [propagate]  p2 = true  (forced by #1: ~p3 v p2)
   trail: { p3@0, p1@0, p2@0 }
 [clauses]
@@ -93,8 +109,12 @@ exports[`Solver trace (end-to-end) > replay snapshots > arithmetic SAT 1`] = `
 
 [theory]  euf assert p2: ok
 [theory]  arithmetic assert p2: ok
+    assert x ≤ 10                       →  x ∈ [0, 10]
+
 [theory]  euf check: ok
 [theory]  arithmetic check: ok
+    feasible
+
 [sat]"
 `;
 
@@ -137,6 +157,8 @@ exports[`Solver trace (end-to-end) > replay snapshots > arithmetic UNSAT 1`] = `
 
 [theory]  euf assert p1: ok
 [theory]  arithmetic assert p1: ok
+    assert (+ x y) ≤ 5                  →  (+ x y) ∈ [-∞, 5]
+
 [propagate]  p2 = true  (forced by #1: ~p4 v p2)
   trail: { p4@0, p1@0, p2@0 }
 [clauses]
@@ -148,6 +170,8 @@ exports[`Solver trace (end-to-end) > replay snapshots > arithmetic UNSAT 1`] = `
 
 [theory]  euf assert p2: ok
 [theory]  arithmetic assert p2: ok
+    assert x ≥ 3                        →  (+ x y) ∈ [-∞, 5], x ∈ [3, ∞]
+
 [propagate]  p3 = true  (forced by #2: ~p4 v p3)
   trail: { p4@0, p1@0, p2@0, p3@0 }
 [clauses]
@@ -159,8 +183,13 @@ exports[`Solver trace (end-to-end) > replay snapshots > arithmetic UNSAT 1`] = `
 
 [theory]  euf assert p3: ok
 [theory]  arithmetic assert p3: ok
+    assert y ≥ 3                        →  (+ x y) ∈ [-∞, 5], x ∈ [3, ∞], y ∈ [3, ∞]
+
 [theory]  euf check: ok
 [theory]  arithmetic check: conflict
+    violation  (+ x y) = 6, above its upper bound
+    infeasible  no pivot candidate for (+ x y)
+
 [unsat]  core: [#0, #1, #2, #3, #4]"
 `;
 
@@ -197,7 +226,14 @@ exports[`Solver trace (end-to-end) > replay snapshots > propositional contradict
   #3: true                 -> satisfied
 
 [theory]  euf assert (= x 1): ok
+    classes: {x}  {1}
+    merge x ≡ 1                         reason: (= x 1)
+    classes: {x, 1}
+
 [theory]  arithmetic assert (= x 1): ok
+    assert x ≥ 1                        →  x ∈ [1, ∞]
+    assert x ≤ 1                        →  x ∈ [1, 1]
+
 [conflict]  #1: ~p2 v ~(= x 1) — all literals false
 [unsat]  core: [#0, #1, #2, #3]"
 `;
@@ -235,7 +271,14 @@ exports[`Solver trace (end-to-end) > replay snapshots > propositional contradict
   #3: true                 -> satisfied
 
 [theory]  euf assert p1: ok
+    classes: {x}  {1}
+    merge x ≡ 1                         reason: p1
+    classes: {x, 1}
+
 [theory]  arithmetic assert p1: ok
+    assert x ≥ 1                        →  x ∈ [1, ∞]
+    assert x ≤ 1                        →  x ∈ [1, 1]
+
 [conflict]  #1: ~p2 v ~p1 — all literals false
 [unsat]  core: [#0, #1, #2, #3]"
 `;
@@ -256,9 +299,15 @@ exports[`Solver trace (end-to-end) > replay snapshots > quantifier UNSAT 1`] = `
   #0: true  -> satisfied
 
 [theory]  euf assert p1: ok
+    classes: {a}  {f(a)}  {1}
+    merge f(a) ≡ 1                      reason: p1
+    classes: {a}  {f(a), 1}
+
 [theory]  arithmetic assert p1: ok
 [theory]  euf check: ok
 [theory]  arithmetic check: ok
+    feasible
+
 [sat]
 [quant]  round 0: 1 lemmas
 [propagate]  p1 = true  (forced by #0: p1)
@@ -267,6 +316,8 @@ exports[`Solver trace (end-to-end) > replay snapshots > quantifier UNSAT 1`] = `
   #0: true  -> satisfied
 
 [theory]  euf assert p1: ok
+    skip  f(a) already equal
+
 [theory]  arithmetic assert p1: ok
 [conflict]  #1: ~p1 — all literals false
 [unsat]  core: [#0, #1]"

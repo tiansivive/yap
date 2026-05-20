@@ -6,13 +6,23 @@ import { match } from "ts-pattern";
 import { Print } from "./ivl/print";
 import type { Clause, Literal, Variable, Assignment } from "./cdcl/core";
 import type { AtomInfo, ProxyInfo, CNFResult } from "./cnf";
+import type { TheoryStep } from "./theories/theory";
+import { EUFTrace, ArithTrace } from "./theories/theory";
+import { Rational } from "./theories/arithmetic/rational";
+import type { ArenaState, EnodeId } from "./theories/euf/arena";
 
 export type Step =
 	| { readonly tag: "propagate"; readonly literal: Literal; readonly reason: Clause }
 	| { readonly tag: "conflict"; readonly clause: Clause }
 	| { readonly tag: "decide"; readonly literal: Literal; readonly level: number }
-	| { readonly tag: "theory-assert"; readonly theory: string; readonly literal: Literal; readonly result: "ok" | "conflict" }
-	| { readonly tag: "theory-check"; readonly theory: string; readonly result: "ok" | "conflict" }
+	| {
+			readonly tag: "theory-assert";
+			readonly theory: string;
+			readonly literal: Literal;
+			readonly result: "ok" | "conflict";
+			readonly detail: readonly TheoryStep[];
+	  }
+	| { readonly tag: "theory-check"; readonly theory: string; readonly result: "ok" | "conflict"; readonly detail: readonly TheoryStep[] }
 	| { readonly tag: "theory-push"; readonly level: number }
 	| { readonly tag: "theory-pop"; readonly to: number }
 	| { readonly tag: "analyze"; readonly conflict: Clause; readonly learned: Clause; readonly backtrackLevel: number }
@@ -51,7 +61,8 @@ const symbolicNamer: Namer = (lit: Literal) => {
 
 const mkNamer = (mode: ReplayMode, atoms: AtomTable): Namer => (mode === "symbolic" ? symbolicNamer : expandedNamer(atoms));
 
-const clauseStr = (clause: Clause, name: Namer): string => `#${clause.id}: ${clause.literals.map(name).join(" v ")}`;
+const clauseId = (id: number): string => (id < 0 ? `T${-id}` : `#${id}`);
+const clauseStr = (clause: Clause, name: Namer): string => `${clauseId(clause.id)}: ${clause.literals.map(name).join(" v ")}`;
 
 // --- Small-step clause evaluation ---
 
@@ -147,7 +158,7 @@ const clauseStateDoc = (clauses: readonly Clause[], name: Namer, assignments: As
 };
 
 const clauseWithValues = (clause: Clause, name: Namer, assignments: Assignments): string =>
-	`#${clause.id}: ${clause.literals.map(l => litWithValue(l, name, assignments)).join(" v ")}`;
+	`${clauseId(clause.id)}: ${clause.literals.map(l => litWithValue(l, name, assignments)).join(" v ")}`;
 
 // --- Trail ---
 
@@ -158,12 +169,234 @@ const trailLine = (trail: readonly TrailEntry[], name: Namer): Doc => {
 	return trail.length === 0 ? [NL, "  trail: { }"] : [NL, `  trail: { ${entries.join(", ")} }`];
 };
 
+// --- Slack variable resolution ---
+
+const SLACK_RE = /^\$slack_(-?\d+)$/;
+
+const resolveVar = (variable: string, atoms: AtomTable): string => {
+	const m = SLACK_RE.exec(variable);
+
+	if (!m) {
+		return variable;
+	}
+	const lit = Math.abs(Number(m[1]));
+	const info = atoms.get(lit);
+
+	if (!info) {
+		return variable;
+	}
+	return match(info.op)
+		.with("=", () => `(${Print.term(info.args[0])} - ${Print.term(info.args[1])})`)
+		.with("!=", () => `(${Print.term(info.args[0])} - ${Print.term(info.args[1])})`)
+		.otherwise(() => Print.term(info.args[0]));
+};
+
+// --- EUF replay state ---
+
+type EqClass = ReadonlyMap<EnodeId, ReadonlySet<EnodeId>>;
+
+const enodeName = (arena: ArenaState, id: EnodeId): string => {
+	const node = arena.nodes.get(id);
+
+	if (!node) {
+		return `e${id}`;
+	}
+	return node.args.length === 0 ? node.head : `${node.head}(${node.args.map(a => enodeName(arena, a)).join(", ")})`;
+};
+
+const allClassesStr = (classes: EqClass, arena: ArenaState): string =>
+	[...classes.values()].map(members => `{${[...members].map(id => enodeName(arena, id)).join(", ")}}`).join("  ");
+
+const initEqClasses = (arena: ArenaState): EqClass => new Map([...arena.nodes.keys()].map(id => [id, new Set([id])]));
+
+const mergeClasses = (classes: EqClass, winner: EnodeId, loser: EnodeId): EqClass => {
+	const winnerSet = classes.get(winner) ?? new Set([winner]);
+	const loserSet = classes.get(loser) ?? new Set([loser]);
+	const merged = new Set([...winnerSet, ...loserSet]);
+	const updated = new Map(classes);
+	updated.set(winner, merged);
+	updated.delete(loser);
+	return updated;
+};
+
+type EUFReplayState = { readonly classes: EqClass; readonly initialized: boolean };
+
+type EUFStepResult = { readonly lines: readonly string[]; readonly state: EUFReplayState };
+
+const atomDesc = (literal: Literal, atoms: AtomTable): string => {
+	const v = Math.abs(literal);
+	const info = atoms.get(v);
+
+	if (!info) {
+		return "";
+	}
+	return `(${info.op} ${Print.term(info.args[0])} ${Print.term(info.args[1])})`;
+};
+
+const replayEUFStep = (step: EUFTrace.Step, euf: EUFReplayState, arena: ArenaState, name: Namer, atoms: AtomTable): EUFStepResult =>
+	match(step)
+		.with({ tag: "merge" }, ({ a, b, reason, winner, loser }) => {
+			const next: EUFReplayState = { classes: mergeClasses(euf.classes, winner, loser), initialized: euf.initialized };
+			return {
+				lines: [
+					`merge ${enodeName(arena, a)} ≡ ${enodeName(arena, b)}`.padEnd(36) + `reason: ${name(reason)}`,
+					`classes: ${allClassesStr(next.classes, arena)}`,
+				],
+				state: next,
+			};
+		})
+		.with({ tag: "merge-skip" }, ({ root }) => ({
+			lines: [`skip  ${enodeName(arena, root)} already equal`],
+			state: euf,
+		}))
+		.with({ tag: "congruence" }, ({ pA, pB }) => ({
+			lines: [`congruence ${enodeName(arena, pA)} ≅ ${enodeName(arena, pB)}`.padEnd(36) + `reason: args in same class`],
+			state: euf,
+		}))
+		.with({ tag: "conflict" }, ({ clause }) => {
+			const symbolic = clause.literals.map(name).join(" v ");
+			const expanded = clause.literals.map(l => expandedNamer(atoms)(l)).join(" v ");
+			return {
+				lines: [`${clause.origin}: ${symbolic} → ${expanded}`],
+				state: euf,
+			};
+		})
+		.with({ tag: "scan" }, ({ literal, equal }) => {
+			const desc = atomDesc(literal, atoms);
+			const expanded = desc ? `${name(literal)}: ${desc}` : name(literal);
+			const v = Math.abs(literal);
+			const info = atoms.get(v);
+			const op = info?.op ?? "!=";
+			return equal
+				? {
+						lines: [`classes: ${allClassesStr(euf.classes, arena)}`, `scan ${expanded}`.padEnd(36) + `→ same class, contradicts ${op}`],
+						state: euf,
+					}
+				: { lines: [`scan ${expanded}`.padEnd(36) + `→ ok`], state: euf };
+		})
+		.exhaustive();
+
+// --- Arithmetic replay state ---
+
+type BoundsMap = ReadonlyMap<string, { readonly lower?: string; readonly upper?: string }>;
+
+type ArithReplayState = { readonly bounds: BoundsMap };
+
+const boundsStr = (bounds: BoundsMap, atoms: AtomTable): string => {
+	const entries = [...bounds.entries()]
+		.filter(([, b]) => b.lower !== undefined || b.upper !== undefined)
+		.map(([v, b]) => {
+			const lo = b.lower ?? "-∞";
+			const hi = b.upper ?? "∞";
+			return `${resolveVar(v, atoms)} ∈ [${lo}, ${hi}]`;
+		});
+	return entries.length === 0 ? "(no bounds)" : entries.join(", ");
+};
+
+const updateBound = (bounds: BoundsMap, variable: string, kind: "lower" | "upper", value: Rational, strict: boolean): BoundsMap => {
+	const existing = bounds.get(variable) ?? {};
+	const formatted = `${strict ? "(" : ""}${Rational.toString(value)}`;
+	const updated = kind === "lower" ? { ...existing, lower: formatted } : { ...existing, upper: formatted };
+	return new Map([...bounds, [variable, updated]]);
+};
+
+type ArithStepResult = { readonly lines: readonly string[]; readonly state: ArithReplayState };
+
+const replayArithStep = (step: ArithTrace.Step, arith: ArithReplayState, atoms: AtomTable): ArithStepResult =>
+	match(step)
+		.with({ tag: "bound" }, ({ variable, kind, value, strict }) => {
+			const next = { bounds: updateBound(arith.bounds, variable, kind, value, strict) };
+			const resolved = resolveVar(variable, atoms);
+			const assertion = `${resolved} ${kind === "lower" ? "≥" : "≤"} ${Rational.toString(value)}${strict ? " (strict)" : ""}`;
+			return {
+				lines: [`assert ${assertion}`.padEnd(36) + `→  ${boundsStr(next.bounds, atoms)}`],
+				state: next,
+			};
+		})
+		.with({ tag: "bound-conflict" }, ({ variable, lower, upper }) => ({
+			lines: [`conflict  ${resolveVar(variable, atoms)}: lower ${Rational.toString(lower)} > upper ${Rational.toString(upper)}`],
+			state: arith,
+		}))
+		.with({ tag: "violation" }, ({ variable, value, direction }) => ({
+			lines: [`violation  ${resolveVar(variable, atoms)} = ${Rational.toString(value)}, ${direction} its ${direction === "below" ? "lower" : "upper"} bound`],
+			state: arith,
+		}))
+		.with({ tag: "pivot" }, ({ leaving, entering }) => ({
+			lines: [`pivot  ${resolveVar(leaving, atoms)} ↔ ${resolveVar(entering, atoms)}`],
+			state: arith,
+		}))
+		.with({ tag: "infeasible" }, ({ variable }) => ({
+			lines: [`infeasible  no pivot candidate for ${resolveVar(variable, atoms)}`],
+			state: arith,
+		}))
+		.with({ tag: "feasible" }, () => ({
+			lines: [`feasible`],
+			state: arith,
+		}))
+		.exhaustive();
+
+// --- Combined theory replay ---
+
+type TheoryReplayState = {
+	readonly euf: EUFReplayState;
+	readonly arith: ArithReplayState;
+};
+
+const isEUFStep = (s: TheoryStep): s is EUFTrace.Step =>
+	s.tag === "merge" || s.tag === "merge-skip" || s.tag === "congruence" || s.tag === "conflict" || s.tag === "scan";
+
+const replayTheoryDetail = (
+	detail: readonly TheoryStep[],
+	theory: string,
+	tState: TheoryReplayState,
+	arena: ArenaState,
+	name: Namer,
+	atoms: AtomTable,
+): { readonly docs: Doc; readonly hasContent: boolean; readonly state: TheoryReplayState } => {
+	if (detail.length === 0) {
+		return { docs: [], hasContent: false, state: tState };
+	}
+
+	const initialDoc: Doc[] = [];
+
+	// Show initial EUF classes on first EUF detail
+	const showEufInit = theory === "euf" && !tState.euf.initialized && detail.some(isEUFStep);
+
+	const startState: TheoryReplayState = showEufInit ? { ...tState, euf: { ...tState.euf, initialized: true } } : tState;
+
+	if (showEufInit) {
+		initialDoc.push([NL, `    classes: ${allClassesStr(tState.euf.classes, arena)}`]);
+	}
+
+	const fold = (remaining: readonly TheoryStep[], current: TheoryReplayState, acc: Doc[]): { readonly docs: Doc[]; readonly state: TheoryReplayState } => {
+		if (remaining.length === 0) {
+			return { docs: acc, state: current };
+		}
+
+		const [step, ...rest] = remaining;
+
+		if (isEUFStep(step)) {
+			const { lines, state: nextEuf } = replayEUFStep(step, current.euf, arena, name, atoms);
+			const lineDocs: Doc[] = lines.map(l => [NL, `    ${l}`]);
+			return fold(rest, { ...current, euf: nextEuf }, [...acc, ...lineDocs]);
+		}
+
+		const { lines, state: nextArith } = replayArithStep(step as ArithTrace.Step, current.arith, atoms);
+		const lineDocs: Doc[] = lines.map(l => [NL, `    ${l}`]);
+		return fold(rest, { ...current, arith: nextArith }, [...acc, ...lineDocs]);
+	};
+
+	const { docs: stepDocs, state: nextState } = fold(detail, startState, initialDoc);
+	return { docs: stepDocs, hasContent: true, state: nextState };
+};
+
 // --- Replay state machine ---
 
 type ReplayState = {
 	readonly trail: readonly TrailEntry[];
 	readonly assignments: Assignments;
 	readonly allClauses: readonly Clause[];
+	readonly theories: TheoryReplayState;
 };
 
 const assignLit = (assignments: Assignments, lit: Literal): Assignments => new Map([...assignments, [Math.abs(lit), lit > 0]]);
@@ -194,7 +427,7 @@ const assignmentStep = (
 	};
 };
 
-const replayStep = (step: Step, name: Namer, state: ReplayState): { readonly docs: Doc; readonly state: ReplayState } =>
+const replayStep = (step: Step, name: Namer, state: ReplayState, arena: ArenaState, atoms: AtomTable): { readonly docs: Doc; readonly state: ReplayState } =>
 	match(step)
 		.with({ tag: "decide" }, ({ literal, level }) =>
 			assignmentStep("decide", `${name(literal)} = ${literal > 0 ? "true" : "false"}  (level ${level})`, literal, level, "decision", name, state),
@@ -206,15 +439,21 @@ const replayStep = (step: Step, name: Namer, state: ReplayState): { readonly doc
 				`${name(literal)} = ${literal > 0 ? "true" : "false"}  (forced by ${clauseStr(reason, name)})`,
 				literal,
 				level,
-				`#${reason.id}`,
+				clauseId(reason.id),
 				name,
 				state,
 			);
 		})
-		.with({ tag: "conflict" }, ({ clause }) => ({
-			docs: [NL, `[conflict]  ${clauseStr(clause, name)} — all literals false`],
-			state,
-		}))
+		.with({ tag: "conflict" }, ({ clause }) => {
+			const isTheory = clause.id < 0;
+			const symbolic = clause.literals.map(name).join(" v ");
+			const expanded = clause.literals.map(l => expandedNamer(atoms)(l)).join(" v ");
+			const body = isTheory ? `${clause.origin}: ${symbolic} → ${expanded}` : `${clauseStr(clause, name)}`;
+			return {
+				docs: [NL, `[conflict]  ${body} — all literals false`],
+				state,
+			};
+		})
 		.with({ tag: "analyze" }, ({ conflict, learned, backtrackLevel }) => ({
 			docs: [
 				NL,
@@ -235,14 +474,20 @@ const replayStep = (step: Step, name: Namer, state: ReplayState): { readonly doc
 				state: next,
 			};
 		})
-		.with({ tag: "theory-assert" }, ({ theory, literal, result }) => ({
-			docs: [NL, `[theory]  ${theory} assert ${name(literal)}: ${result}`],
-			state,
-		}))
-		.with({ tag: "theory-check" }, ({ theory, result }) => ({
-			docs: [NL, `[theory]  ${theory} check: ${result}`],
-			state,
-		}))
+		.with({ tag: "theory-assert" }, ({ theory, literal, result, detail }) => {
+			const { docs: detailDocs, hasContent, state: nextTheories } = replayTheoryDetail(detail, theory, state.theories, arena, name, atoms);
+			return {
+				docs: [NL, `[theory]  ${theory} assert ${name(literal)}: ${result}`, detailDocs, hasContent ? NL : []],
+				state: { ...state, theories: nextTheories },
+			};
+		})
+		.with({ tag: "theory-check" }, ({ theory, result, detail }) => {
+			const { docs: detailDocs, hasContent, state: nextTheories } = replayTheoryDetail(detail, theory, state.theories, arena, name, atoms);
+			return {
+				docs: [NL, `[theory]  ${theory} check: ${result}`, detailDocs, hasContent ? NL : []],
+				state: { ...state, theories: nextTheories },
+			};
+		})
 		.with({ tag: "theory-push" }, ({ level }) => ({
 			docs: [NL, `[push]  level ${level}`],
 			state,
@@ -260,7 +505,7 @@ const replayStep = (step: Step, name: Namer, state: ReplayState): { readonly doc
 			state,
 		}))
 		.with({ tag: "unsat" }, ({ core }) => ({
-			docs: [NL, `[unsat]  core: [${core.map(c => `#${c.id}`).join(", ")}]`],
+			docs: [NL, `[unsat]  core: [${core.map(c => clauseId(c.id)).join(", ")}]`],
 			state,
 		}))
 		.exhaustive();
@@ -286,7 +531,7 @@ export const Trace = {
 			.with({ tag: "backjump" }, ({ from, to }) => `[backjump]   level ${from} -> ${to}`)
 			.with({ tag: "quantifier-round" }, ({ round, lemmas }) => `[quant]      round ${round}: ${lemmas} lemmas`)
 			.with({ tag: "sat" }, () => `[sat]`)
-			.with({ tag: "unsat" }, ({ core }) => `[unsat]      core: [${core.map(c => `#${c.id}`).join(", ")}]`)
+			.with({ tag: "unsat" }, ({ core }) => `[unsat]      core: [${core.map(c => clauseId(c.id)).join(", ")}]`)
 			.exhaustive(),
 
 	drain: <R>(gen: Generator<Step, R>): R => {
@@ -326,12 +571,20 @@ export const Trace = {
 		readonly atoms: AtomTable;
 		readonly proxies: ProxyTable;
 		readonly clauses: readonly Clause[];
+		readonly arena?: ArenaState;
 		readonly mode?: ReplayMode;
 	}): string => {
-		const { formula, steps, atoms, proxies, clauses, mode = "symbolic" } = opts;
+		const { formula, steps, atoms, proxies, clauses, arena, mode = "symbolic" } = opts;
 		const name = mkNamer(mode, atoms);
 
-		const initialState: ReplayState = { trail: [], assignments: new Map(), allClauses: clauses };
+		const defaultArena: ArenaState = { nodes: new Map(), hashIndex: new Map(), nextId: 0 };
+		const theoryArena = arena ?? defaultArena;
+
+		const initialTheories: TheoryReplayState = {
+			euf: { classes: initEqClasses(theoryArena) },
+			arith: { bounds: new Map() },
+		};
+		const initialState: ReplayState = { trail: [], assignments: new Map(), allClauses: clauses, theories: initialTheories };
 
 		const preamble: Doc = [
 			"=== Formula ===",
@@ -348,7 +601,7 @@ export const Trace = {
 			remaining.length === 0
 				? acc
 				: (() => {
-						const { docs, state: next } = replayStep(remaining[0], name, state);
+						const { docs, state: next } = replayStep(remaining[0], name, state, theoryArena, atoms);
 						return fold(remaining.slice(1), next, [...acc, docs]);
 					})();
 

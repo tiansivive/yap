@@ -116,18 +116,18 @@ describe("Solver trace (end-to-end)", () => {
 		const replay = (f: IVL.Formula) => {
 			const solver = Solver.createTraced();
 			solver.assert(f);
-			const { trace, atoms, proxies, clauses } = solver.check();
+			const { trace, atoms, proxies, clauses, arena } = solver.check();
 			const { steps } = Trace.collect(trace);
-			return Trace.replay({ formula: Print.formula(f), steps, atoms, proxies, clauses });
+			return Trace.replay({ formula: Print.formula(f), steps, atoms, proxies, clauses, arena });
 		};
 
 		const replayMulti = (...formulas: [IVL.Formula, string?][]) => {
 			const solver = Solver.createTraced();
 			formulas.forEach(([f, origin]) => solver.assert(f, origin));
 			const combined = DSL.and(...formulas.map(([f]) => f));
-			const { trace, atoms, proxies, clauses } = solver.check();
+			const { trace, atoms, proxies, clauses, arena } = solver.check();
 			const { steps } = Trace.collect(trace);
-			return Trace.replay({ formula: Print.formula(combined), steps, atoms, proxies, clauses });
+			return Trace.replay({ formula: Print.formula(combined), steps, atoms, proxies, clauses, arena });
 		};
 
 		it("propositional contradiction", () => {
@@ -168,9 +168,9 @@ describe("Solver trace (end-to-end)", () => {
 			const solver = Solver.createTraced();
 			const f = DSL.and(DSL.eq(DSL.x, DSL.int(1)), DSL.not(DSL.eq(DSL.x, DSL.int(1))));
 			solver.assert(f);
-			const { trace, atoms, proxies, clauses } = solver.check();
+			const { trace, atoms, proxies, clauses, arena } = solver.check();
 			const { steps } = Trace.collect(trace);
-			expect(Trace.replay({ formula: Print.formula(f), steps, atoms, proxies, clauses, mode: "expanded" })).toMatchSnapshot();
+			expect(Trace.replay({ formula: Print.formula(f), steps, atoms, proxies, clauses, arena, mode: "expanded" })).toMatchSnapshot();
 		});
 	});
 });

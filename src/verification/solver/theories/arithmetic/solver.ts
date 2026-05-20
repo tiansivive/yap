@@ -6,7 +6,7 @@ import * as O from "fp-ts/Option";
 import { pipe } from "fp-ts/function";
 import { match } from "ts-pattern";
 import type { Literal } from "../../cdcl/core";
-import type { Theory, TheoryCheck } from "../theory";
+import type { Theory, TheoryCheck, TracedTheoryCheck } from "../theory";
 import type { AtomInfo } from "../../cnf";
 import type { IVL } from "../../ivl/types";
 import { Simplex, type Tableau } from "./simplex";
@@ -109,6 +109,34 @@ const buildTheory = (state: ArithState): Theory => ({
 				return [];
 			}),
 		),
+
+	assertTrace: function* (literal: Literal): TracedTheoryCheck {
+		const mapping = state.constraintMap.get(literal);
+
+		if (!mapping) {
+			return E.right([]);
+		}
+
+		const boundResult = yield* Bounds.assertTrace(state.tableau, state.boundMap, literal);
+		return pipe(
+			boundResult,
+			E.map(updated => {
+				state.tableau = updated;
+				return [] as const;
+			}),
+		);
+	},
+
+	checkTrace: function* (): TracedTheoryCheck {
+		const simplexResult = yield* Simplex.checkTrace(state.tableau);
+		return pipe(
+			simplexResult,
+			E.map(updated => {
+				state.tableau = updated;
+				return [] as const;
+			}),
+		);
+	},
 
 	push: (): void => {
 		state.stateStack.push({

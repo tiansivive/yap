@@ -6,7 +6,8 @@
 import * as E from "fp-ts/Either";
 import { Literal } from "../../cdcl/core";
 import type { Clause, Conflict } from "../../cdcl/core";
-import type { Theory, TheoryCheck, TheoryPropagation } from "../theory";
+import type { Theory, TheoryCheck, TheoryPropagation, TracedTheoryCheck } from "../theory";
+import { EUFTrace } from "../theory";
 import type { EnodeId, ArenaState } from "./arena";
 
 const { negate } = Literal;
@@ -80,6 +81,8 @@ const buildTheory = (state: CCState, arena: ArenaState): Theory => ({
 	name: "euf",
 	assert: literal => assertLiteral(state, arena, literal),
 	check: () => check(state),
+	assertTrace: literal => assertLiteralTrace(state, arena, literal),
+	checkTrace: () => checkTrace(state),
 	push: () => push(state),
 	pop: () => pop(state),
 	explain: literal => explainLiteral(state, literal),
@@ -113,6 +116,8 @@ const congruent = (arena: ArenaState, uf: Map<EnodeId, UnionFindEntry>, a: Enode
 	}
 	return nodeA.args.every((argA, i) => find(uf, argA) === find(uf, nodeB.args[i]));
 };
+
+// --- Non-traced (original) paths ---
 
 const merge = (state: CCState, arena: ArenaState, a: EnodeId, b: EnodeId, reason: Literal): TheoryCheck => {
 	const rootA = find(state.uf, a);
@@ -157,47 +162,6 @@ const merge = (state: CCState, arena: ArenaState, a: EnodeId, b: EnodeId, reason
 	return E.right(propagations);
 };
 
-const explain = (state: CCState, a: EnodeId, b: EnodeId): readonly Literal[] => {
-	if (find(state.uf, a) !== find(state.uf, b)) {
-		return [];
-	}
-
-	const reasons: Literal[] = [];
-	const visited = new Set<string>();
-	const queue: [EnodeId, EnodeId][] = [[a, b]];
-
-	while (queue.length > 0) {
-		const [x, y] = queue[0];
-		queue.splice(0, 1);
-		const key = `${Math.min(x, y)},${Math.max(x, y)}`;
-
-		if (visited.has(key)) {
-			continue;
-		}
-		visited.add(key);
-
-		const step = state.mergeLog.find(
-			m =>
-				(find(state.uf, m.a) === find(state.uf, x) && find(state.uf, m.b) === find(state.uf, y)) ||
-				(find(state.uf, m.a) === find(state.uf, y) && find(state.uf, m.b) === find(state.uf, x)),
-		);
-
-		if (step) {
-			reasons.push(step.reason);
-
-			if (step.a !== x) {
-				queue.push([x, step.a]);
-			}
-
-			if (step.b !== y) {
-				queue.push([step.b, y]);
-			}
-		}
-	}
-
-	return [...new Set(reasons)];
-};
-
 const assertLiteral = (state: CCState, arena: ArenaState, literal: Literal): TheoryCheck => {
 	const mapping = state.literalMap.get(literal);
 
@@ -240,6 +204,150 @@ const check = (state: CCState): TheoryCheck => {
 	const props = [...state.pendingPropagations];
 	state.pendingPropagations.length = 0;
 	return E.right(props);
+};
+
+// --- Traced (generator) paths ---
+
+function* mergeTrace(state: CCState, arena: ArenaState, a: EnodeId, b: EnodeId, reason: Literal): TracedTheoryCheck {
+	const rootA = find(state.uf, a);
+	const rootB = find(state.uf, b);
+
+	if (rootA === rootB) {
+		yield { tag: "merge-skip", root: rootA } satisfies EUFTrace.Step;
+		return E.right([]);
+	}
+
+	state.mergeLog.push({ a, b, reason });
+
+	const entryA = state.uf.get(rootA) ?? { parent: rootA, rank: 0 };
+	const entryB = state.uf.get(rootB) ?? { parent: rootB, rank: 0 };
+
+	const [winner, loser] = entryA.rank >= entryB.rank ? [rootA, rootB] : [rootB, rootA];
+	state.uf.set(loser, { parent: winner, rank: state.uf.get(loser)?.rank ?? 0 });
+	if (entryA.rank === entryB.rank) {
+		state.uf.set(winner, { parent: winner, rank: entryA.rank + 1 });
+	}
+
+	yield { tag: "merge", a, b, reason, winner, loser } satisfies EUFTrace.Step;
+
+	const loserParents = state.parents.get(loser) ?? new Set();
+	const winnerParents = state.parents.get(winner) ?? new Set();
+
+	const propagations: TheoryPropagation[] = [];
+
+	for (const pA of winnerParents) {
+		for (const pB of loserParents) {
+			if (find(state.uf, pA) !== find(state.uf, pB) && congruent(arena, state.uf, pA, pB)) {
+				yield { tag: "congruence", pA, pB } satisfies EUFTrace.Step;
+				const congResult: TheoryCheck = yield* mergeTrace(state, arena, pA, pB, reason);
+
+				if (E.isLeft(congResult)) {
+					return congResult;
+				}
+				propagations.push(...congResult.right);
+			}
+		}
+	}
+
+	loserParents.forEach(p => winnerParents.add(p));
+	state.parents.set(winner, winnerParents);
+
+	return E.right(propagations);
+}
+
+function* assertLiteralTrace(state: CCState, arena: ArenaState, literal: Literal): TracedTheoryCheck {
+	const mapping = state.literalMap.get(literal);
+
+	if (!mapping) {
+		return E.right([]);
+	}
+
+	if (mapping.positive) {
+		return yield* mergeTrace(state, arena, mapping.a, mapping.b, literal);
+	}
+
+	const equal = find(state.uf, mapping.a) === find(state.uf, mapping.b);
+	yield { tag: "scan", literal, equal } satisfies EUFTrace.Step;
+
+	if (equal) {
+		const justification = explain(state, mapping.a, mapping.b);
+		const clause: Clause = {
+			id: THEORY_CLAUSE_ID,
+			literals: [...justification.map(negate), negate(literal)],
+			origin: "euf:disequality-conflict",
+		};
+		yield { tag: "conflict", clause } satisfies EUFTrace.Step;
+		return E.left({ clause });
+	}
+
+	return E.right([]);
+}
+
+function* checkTrace(state: CCState): TracedTheoryCheck {
+	for (const [lit, mapping] of state.literalMap.entries()) {
+		if (!mapping.positive) {
+			const equal = find(state.uf, mapping.a) === find(state.uf, mapping.b);
+			yield { tag: "scan", literal: lit, equal } satisfies EUFTrace.Step;
+
+			if (equal) {
+				const justification = explain(state, mapping.a, mapping.b);
+				const clause: Clause = {
+					id: THEORY_CLAUSE_ID,
+					literals: [...justification.map(negate), negate(lit)],
+					origin: "euf:disequality-conflict",
+				};
+				yield { tag: "conflict", clause } satisfies EUFTrace.Step;
+				return E.left({ clause });
+			}
+		}
+	}
+
+	const props = [...state.pendingPropagations];
+	state.pendingPropagations.length = 0;
+	return E.right(props);
+}
+
+// --- Shared utilities ---
+
+const explain = (state: CCState, a: EnodeId, b: EnodeId): readonly Literal[] => {
+	if (find(state.uf, a) !== find(state.uf, b)) {
+		return [];
+	}
+
+	const reasons: Literal[] = [];
+	const visited = new Set<string>();
+	const queue: [EnodeId, EnodeId][] = [[a, b]];
+
+	while (queue.length > 0) {
+		const [x, y] = queue[0];
+		queue.splice(0, 1);
+		const key = `${Math.min(x, y)},${Math.max(x, y)}`;
+
+		if (visited.has(key)) {
+			continue;
+		}
+		visited.add(key);
+
+		const step = state.mergeLog.find(
+			m =>
+				(find(state.uf, m.a) === find(state.uf, x) && find(state.uf, m.b) === find(state.uf, y)) ||
+				(find(state.uf, m.a) === find(state.uf, y) && find(state.uf, m.b) === find(state.uf, x)),
+		);
+
+		if (step) {
+			reasons.push(step.reason);
+
+			if (step.a !== x) {
+				queue.push([x, step.a]);
+			}
+
+			if (step.b !== y) {
+				queue.push([step.b, y]);
+			}
+		}
+	}
+
+	return [...new Set(reasons)];
 };
 
 const push = (state: CCState): void => {

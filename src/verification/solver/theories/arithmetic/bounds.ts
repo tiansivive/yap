@@ -9,6 +9,7 @@ import type { Tableau, Bound } from "./simplex";
 import { Simplex } from "./simplex";
 import { Rational } from "./rational";
 import type { LinearConstraint } from "./normalize";
+import { ArithTrace } from "../theory";
 
 export type BoundRegistration = {
 	readonly variable: string;
@@ -48,6 +49,48 @@ export const Bounds = {
 				),
 			E.right(tab),
 		);
+	},
+
+	assertTrace: function* (tab: Tableau, map: BoundMap, literal: Literal): Generator<ArithTrace.Step, E.Either<Conflict, Tableau>> {
+		const registrations = map.get(literal);
+
+		if (!registrations) {
+			return E.right(tab);
+		}
+
+		const step = function* (current: E.Either<Conflict, Tableau>, regs: readonly BoundRegistration[]): Generator<ArithTrace.Step, E.Either<Conflict, Tableau>> {
+			if (regs.length === 0 || E.isLeft(current)) {
+				return current;
+			}
+
+			const [head, ...tail] = regs;
+			const bound: Bound = { value: head.value, strict: head.strict, reason: literal };
+			yield { tag: "bound", variable: head.variable, kind: head.kind, value: head.value, strict: head.strict } satisfies ArithTrace.Step;
+
+			const result = pipe(
+				current,
+				E.chain(t =>
+					match(head.kind)
+						.with("lower", () => Simplex.assertLower(t, head.variable, bound))
+						.with("upper", () => Simplex.assertUpper(t, head.variable, bound))
+						.exhaustive(),
+				),
+			);
+
+			if (E.isLeft(result)) {
+				const bp = E.isRight(current) ? current.right.bounds.get(head.variable) : undefined;
+				const existingLower = bp?.lower;
+				const existingUpper = bp?.upper;
+				const lower = head.kind === "lower" ? head.value : existingLower && existingLower._tag === "Some" ? existingLower.value.value : Rational.zero;
+				const upper = head.kind === "upper" ? head.value : existingUpper && existingUpper._tag === "Some" ? existingUpper.value.value : Rational.zero;
+				yield { tag: "bound-conflict", variable: head.variable, lower, upper } satisfies ArithTrace.Step;
+				return result;
+			}
+
+			return yield* step(result, tail);
+		};
+
+		return yield* step(E.right(tab), registrations);
 	},
 };
 

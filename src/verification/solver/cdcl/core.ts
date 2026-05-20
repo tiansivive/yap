@@ -7,7 +7,7 @@ import * as O from "fp-ts/Option";
 import * as A from "fp-ts/Array";
 import { pipe } from "fp-ts/function";
 import { match } from "ts-pattern";
-import type { Theory } from "../theories/theory";
+import type { Theory, TheoryStep } from "../theories/theory";
 import type { Step } from "../trace";
 import { Trace } from "../trace";
 
@@ -180,35 +180,49 @@ function* bcpTrace(state: SolveState, theories: readonly Theory[]): Generator<St
 
 type ProbeResult = { readonly step: Step; readonly conflict: Conflict | undefined };
 
-const probeAssert = (theory: Theory, literal: Literal): ProbeResult =>
-	pipe(
-		theory.assert(literal),
-		E.match(
-			(conflict): ProbeResult => ({
-				step: { tag: "theory-assert", theory: theory.name, literal, result: "conflict" },
-				conflict,
-			}),
-			(): ProbeResult => ({
-				step: { tag: "theory-assert", theory: theory.name, literal, result: "ok" },
-				conflict: undefined,
-			}),
-		),
-	);
+const collectTrace = <R>(gen: Generator<TheoryStep, R>): { readonly detail: readonly TheoryStep[]; readonly result: R } => {
+	const detail: TheoryStep[] = [];
+	let next = gen.next();
+	while (!next.done) {
+		detail.push(next.value);
+		next = gen.next();
+	}
+	return { detail, result: next.value };
+};
 
-const probeCheck = (theory: Theory): ProbeResult =>
-	pipe(
-		theory.check(),
+const probeAssert = (theory: Theory, literal: Literal): ProbeResult => {
+	const { detail, result } = collectTrace(theory.assertTrace(literal));
+	return pipe(
+		result,
 		E.match(
 			(conflict): ProbeResult => ({
-				step: { tag: "theory-check", theory: theory.name, result: "conflict" },
+				step: { tag: "theory-assert", theory: theory.name, literal, result: "conflict", detail },
 				conflict,
 			}),
 			(): ProbeResult => ({
-				step: { tag: "theory-check", theory: theory.name, result: "ok" },
+				step: { tag: "theory-assert", theory: theory.name, literal, result: "ok", detail },
 				conflict: undefined,
 			}),
 		),
 	);
+};
+
+const probeCheck = (theory: Theory): ProbeResult => {
+	const { detail, result } = collectTrace(theory.checkTrace());
+	return pipe(
+		result,
+		E.match(
+			(conflict): ProbeResult => ({
+				step: { tag: "theory-check", theory: theory.name, result: "conflict", detail },
+				conflict,
+			}),
+			(): ProbeResult => ({
+				step: { tag: "theory-check", theory: theory.name, result: "ok", detail },
+				conflict: undefined,
+			}),
+		),
+	);
+};
 
 function* assertTheoriesTrace(literal: Literal, theories: readonly Theory[]): Generator<Step, Conflict | undefined> {
 	return yield* theoryScan(theories, theory => probeAssert(theory, literal));

@@ -39,6 +39,7 @@ export type TracedCheck = {
 	readonly atoms: AtomTable;
 	readonly proxies: ProxyTable;
 	readonly clauses: readonly Clause[];
+	readonly arena: ArenaState;
 };
 
 export type SolverInstance = {
@@ -118,6 +119,7 @@ const prepare = (formula: IVL.Formula): TracedCheck => {
 		atoms: cnfResult.atoms,
 		proxies: cnfResult.proxies,
 		clauses: cnfResult.clauses,
+		arena: setup.arena,
 	};
 };
 

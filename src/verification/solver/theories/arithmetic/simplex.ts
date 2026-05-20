@@ -10,6 +10,7 @@ import { pipe } from "fp-ts/function";
 import { match } from "ts-pattern";
 import { Rational } from "./rational";
 import type { Literal, Conflict, Clause } from "../../cdcl/core";
+import { ArithTrace } from "../theory";
 
 const THEORY_CLAUSE_ID = -2;
 
@@ -93,6 +94,10 @@ export const Simplex = {
 	},
 
 	check: (tab: Tableau): E.Either<Conflict, Tableau> => repair(tab),
+
+	checkTrace: function* (tab: Tableau): Generator<ArithTrace.Step, E.Either<Conflict, Tableau>> {
+		return yield* repairTrace(tab);
+	},
 
 	value: (tab: Tableau, variable: string): Rational => tab.assignment.get(variable) ?? Rational.zero,
 };
@@ -197,6 +202,37 @@ const repair = (tab: Tableau): E.Either<Conflict, Tableau> => {
 
 	return step(tab, 0);
 };
+
+function* repairTrace(tab: Tableau): Generator<ArithTrace.Step, E.Either<Conflict, Tableau>> {
+	const step = function* (current: Tableau, pivotCount: number): Generator<ArithTrace.Step, E.Either<Conflict, Tableau>> {
+		if (pivotCount >= MAX_PIVOTS) {
+			yield { tag: "feasible" } satisfies ArithTrace.Step;
+			return E.right(current);
+		}
+
+		const violation = findViolation(current);
+		if (O.isNone(violation)) {
+			yield { tag: "feasible" } satisfies ArithTrace.Step;
+			return E.right(current);
+		}
+
+		const v = violation.value;
+		const value = current.assignment.get(v.variable) ?? Rational.zero;
+		yield { tag: "violation", variable: v.variable, value, direction: v.direction } satisfies ArithTrace.Step;
+
+		const candidate = findPivotCandidate(current, v);
+		if (O.isNone(candidate)) {
+			yield { tag: "infeasible", variable: v.variable } satisfies ArithTrace.Step;
+			return E.left(violationConflict(current, v));
+		}
+
+		const entering = candidate.value;
+		yield { tag: "pivot", leaving: v.variable, entering } satisfies ArithTrace.Step;
+		return yield* step(pivot(current, v.variable, entering), pivotCount + 1);
+	};
+
+	return yield* step(tab, 0);
+}
 
 type Violation = {
 	readonly variable: string;
