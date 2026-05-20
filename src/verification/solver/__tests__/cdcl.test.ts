@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { match } from "ts-pattern";
 import { CDCL, type Clause } from "../cdcl/core";
+import { Trace } from "../trace";
+import type { Step } from "../trace";
 
 describe("CDCL Core", () => {
 	describe("trivial SAT", () => {
@@ -116,6 +118,88 @@ describe("CDCL Core", () => {
 			];
 			const result = CDCL.solve(clauses);
 			expect(result.tag).toBe("sat");
+		});
+	});
+
+	describe("trace events", () => {
+		const tags = (steps: readonly Step[]) => steps.map(s => s.tag);
+
+		it("SAT trace ends with sat event", () => {
+			const clauses: Clause[] = [{ id: 0, literals: [1], origin: "test" }];
+			const { steps, result } = Trace.collect(CDCL.solveTrace(clauses));
+
+			expect(result.tag).toBe("sat");
+			expect(tags(steps).at(-1)).toBe("sat");
+		});
+
+		it("SAT trace contains propagate for unit clause", () => {
+			const clauses: Clause[] = [{ id: 0, literals: [1], origin: "test" }];
+			const { steps } = Trace.collect(CDCL.solveTrace(clauses));
+
+			const propagations = steps.filter(s => s.tag === "propagate");
+			expect(propagations.length).toBeGreaterThanOrEqual(1);
+		});
+
+		it("UNSAT trace ends with unsat event", () => {
+			const clauses: Clause[] = [
+				{ id: 0, literals: [1], origin: "a" },
+				{ id: 1, literals: [-1], origin: "b" },
+			];
+			const { steps, result } = Trace.collect(CDCL.solveTrace(clauses));
+
+			expect(result.tag).toBe("unsat");
+			expect(tags(steps).at(-1)).toBe("unsat");
+		});
+
+		it("UNSAT trace contains conflict event", () => {
+			const clauses: Clause[] = [
+				{ id: 0, literals: [1], origin: "a" },
+				{ id: 1, literals: [-1], origin: "b" },
+			];
+			const { steps } = Trace.collect(CDCL.solveTrace(clauses));
+
+			expect(steps.some(s => s.tag === "conflict")).toBe(true);
+		});
+
+		it("backtracking trace includes decide, analyze, backjump", () => {
+			const clauses: Clause[] = [
+				{ id: 0, literals: [1, 2], origin: "c1" },
+				{ id: 1, literals: [1, -2], origin: "c2" },
+				{ id: 2, literals: [-1, 2], origin: "c3" },
+				{ id: 3, literals: [-1, -2], origin: "c4" },
+			];
+			const { steps, result } = Trace.collect(CDCL.solveTrace(clauses));
+
+			expect(result.tag).toBe("unsat");
+			const t = tags(steps);
+			expect(t).toContain("decide");
+			expect(t).toContain("analyze");
+			expect(t).toContain("backjump");
+		});
+
+		it("BCP chain trace shows propagations", () => {
+			const clauses: Clause[] = [
+				{ id: 0, literals: [1], origin: "unit" },
+				{ id: 1, literals: [-1, 2], origin: "impl1" },
+				{ id: 2, literals: [-2, 3], origin: "impl2" },
+			];
+			const { steps, result } = Trace.collect(CDCL.solveTrace(clauses));
+
+			expect(result.tag).toBe("sat");
+			const propagations = steps.filter(s => s.tag === "propagate");
+			expect(propagations.length).toBeGreaterThanOrEqual(3);
+		});
+
+		it("Trace.format produces non-empty output", () => {
+			const clauses: Clause[] = [
+				{ id: 0, literals: [1], origin: "a" },
+				{ id: 1, literals: [-1], origin: "b" },
+			];
+			const { steps } = Trace.collect(CDCL.solveTrace(clauses));
+			const output = Trace.format(steps);
+
+			expect(output.length).toBeGreaterThan(0);
+			expect(output).toContain("[");
 		});
 	});
 });

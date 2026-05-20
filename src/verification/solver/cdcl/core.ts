@@ -1,6 +1,5 @@
 // CDCL: Conflict-Driven Clause Learning — the boolean SAT engine.
-// Implements decide, BCP (unit propagation), 1UIP conflict analysis, and backjumping.
-// https://github.com/tiansivive/z-yap/blob/main/zettels/cdcl-t-solver.md
+// Generator-based: yields Step events at each logical transition for tracing/debugging.
 // CDCL = Conflict-Driven Clause Learning, BCP = Boolean Constraint Propagation, 1UIP = First Unique Implication Point
 
 import * as E from "fp-ts/Either";
@@ -9,6 +8,8 @@ import * as A from "fp-ts/Array";
 import { pipe } from "fp-ts/function";
 import { match } from "ts-pattern";
 import type { Theory } from "../theories/theory";
+import type { Step } from "../trace";
+import { Trace } from "../trace";
 
 export type Variable = number;
 export type Literal = number;
@@ -26,7 +27,6 @@ export type TrailEntry = {
 };
 
 export type Conflict = { readonly clause: Clause };
-export type Propagation = E.Either<Conflict, readonly Literal[]>;
 
 export type Assignment = "true" | "false" | "unassigned";
 
@@ -51,14 +51,24 @@ type SolveState = {
 };
 
 export const CDCL = {
-	solve: (initialClauses: readonly Clause[], theories: readonly Theory[] = []): CDCLResult =>
-		pipe(
-			bcp(initial(initialClauses), theories),
-			E.match(
-				() => ({ tag: "unsat" as const, core: initialClauses }),
-				state => solveLoop(state, theories),
-			),
-		),
+	solve: (initialClauses: readonly Clause[], theories: readonly Theory[] = []): CDCLResult => Trace.drain(CDCL.solveTrace(initialClauses, theories)),
+
+	solveTrace: function* (initialClauses: readonly Clause[], theories: readonly Theory[] = []): Generator<Step, CDCLResult> {
+		const state = initial(initialClauses);
+		const bcpResult = yield* bcpTrace(state, theories);
+
+		return yield* match(bcpResult)
+			.with({ tag: "conflict" }, function* ({ clause }): Generator<Step, CDCLResult> {
+				yield { tag: "conflict", clause };
+				const result: CDCLResult = { tag: "unsat", core: initialClauses };
+				yield { tag: "unsat", core: initialClauses };
+				return result;
+			})
+			.with({ tag: "ok" }, function* ({ state: propagated }): Generator<Step, CDCLResult> {
+				return yield* solveLoop(propagated, theories);
+			})
+			.exhaustive();
+	},
 };
 
 const initial = (clauses: readonly Clause[]): SolveState => ({
@@ -69,74 +79,156 @@ const initial = (clauses: readonly Clause[]): SolveState => ({
 	nextClauseId: clauses.reduce((max, c) => Math.max(max, c.id), 0) + 1,
 });
 
-const solveLoop = (state: SolveState, theories: readonly Theory[]): CDCLResult =>
-	pipe(
-		checkTheories(state, theories),
-		O.match(
-			() =>
-				pipe(
-					decide(state),
-					O.match(
-						() => ({ tag: "sat" as const, assignments: state.assignments }),
-						lit => {
-							theories.forEach(t => t.push());
-							return propagateAndResolve({ ...assign(state, lit, "decision"), level: state.level + 1 }, theories);
-						},
-					),
-				),
-			conflict => resolveConflict(state, conflict, theories),
-		),
-	);
+type BCPResult = { readonly tag: "ok"; readonly state: SolveState } | { readonly tag: "conflict"; readonly clause: Clause };
 
-const propagateAndResolve = (state: SolveState, theories: readonly Theory[]): CDCLResult =>
-	pipe(
-		bcp(state, theories),
-		E.match(
-			conflict => resolveConflict(state, conflict, theories),
-			propagated =>
-				pipe(
-					checkTheories(propagated, theories),
-					O.match(
-						() => solveLoop(propagated, theories),
-						conflict => resolveConflict(propagated, conflict, theories),
-					),
-				),
-		),
-	);
+function* solveLoop(state: SolveState, theories: readonly Theory[]): Generator<Step, CDCLResult> {
+	const theoryConflict = yield* checkTheoriesTrace(theories);
 
-const resolveConflict = (state: SolveState, conflict: Conflict, theories: readonly Theory[]): CDCLResult => {
+	if (theoryConflict) {
+		return yield* resolveConflict(state, theoryConflict, theories);
+	}
+
+	const lit = decide(state);
+
+	if (lit === undefined) {
+		const result: CDCLResult = { tag: "sat", assignments: state.assignments };
+		yield { tag: "sat", assignments: state.assignments };
+		return result;
+	}
+
+	yield { tag: "decide", literal: lit, level: state.level + 1 };
+	yield { tag: "theory-push", level: state.level + 1 };
+
+	// Justification for forEach: theory push/pop is inherently side-effecting (external interface)
+	theories.forEach(t => t.push());
+
+	const nextState: SolveState = { ...assign(state, lit, "decision"), level: state.level + 1 };
+	return yield* propagateAndResolve(nextState, theories);
+}
+
+function* propagateAndResolve(state: SolveState, theories: readonly Theory[]): Generator<Step, CDCLResult> {
+	const bcpResult = yield* bcpTrace(state, theories);
+
+	return yield* match(bcpResult)
+		.with({ tag: "conflict" }, function* ({ clause }): Generator<Step, CDCLResult> {
+			yield { tag: "conflict", clause };
+			return yield* resolveConflict(state, { clause }, theories);
+		})
+		.with({ tag: "ok" }, function* ({ state: propagated }): Generator<Step, CDCLResult> {
+			const theoryConflict = yield* checkTheoriesTrace(theories);
+
+			if (theoryConflict) {
+				return yield* resolveConflict(propagated, theoryConflict, theories);
+			}
+
+			return yield* solveLoop(propagated, theories);
+		})
+		.exhaustive();
+}
+
+function* resolveConflict(state: SolveState, conflict: Conflict, theories: readonly Theory[]): Generator<Step, CDCLResult> {
 	if (state.level === 0) {
-		return { tag: "unsat", core: state.clauses };
+		const result: CDCLResult = { tag: "unsat", core: state.clauses };
+		yield { tag: "unsat", core: state.clauses };
+		return result;
 	}
 
 	const { learned, backtrackLevel } = analyze(state, conflict);
+
+	yield { tag: "analyze", conflict: conflict.clause, learned, backtrackLevel };
+	yield { tag: "backjump", from: state.level, to: backtrackLevel };
+	yield { tag: "theory-pop", to: backtrackLevel };
+
 	const afterBackjump = backjump({ ...state, clauses: [...state.clauses, learned] }, backtrackLevel, theories);
 
-	return pipe(
-		bcp(afterBackjump, theories),
+	const bcpResult = yield* bcpTrace(afterBackjump, theories);
+
+	return yield* match(bcpResult)
+		.with({ tag: "conflict" }, function* ({ clause }): Generator<Step, CDCLResult> {
+			yield { tag: "conflict", clause };
+			return yield* resolveConflict(afterBackjump, { clause }, theories);
+		})
+		.with({ tag: "ok" }, function* ({ state: propagated }): Generator<Step, CDCLResult> {
+			return yield* solveLoop(propagated, theories);
+		})
+		.exhaustive();
+}
+
+function* bcpTrace(state: SolveState, theories: readonly Theory[]): Generator<Step, BCPResult> {
+	const unit = classify(state);
+
+	return yield* match(unit)
+		.with({ tag: "none" }, function* (): Generator<Step, BCPResult> {
+			return { tag: "ok", state };
+		})
+		.with({ tag: "conflict" }, function* ({ clause }): Generator<Step, BCPResult> {
+			return { tag: "conflict", clause };
+		})
+		.with({ tag: "unit" }, function* ({ literal, reason }): Generator<Step, BCPResult> {
+			yield { tag: "propagate", literal, reason };
+
+			const theoryConflict = yield* assertTheoriesTrace(literal, theories);
+
+			if (theoryConflict) {
+				return { tag: "conflict", clause: theoryConflict.clause };
+			}
+
+			return yield* bcpTrace(assign(state, literal, reason), theories);
+		})
+		.exhaustive();
+}
+
+type ProbeResult = { readonly step: Step; readonly conflict: Conflict | undefined };
+
+const probeAssert = (theory: Theory, literal: Literal): ProbeResult =>
+	pipe(
+		theory.assert(literal),
 		E.match(
-			rebcpConflict => resolveConflict(afterBackjump, rebcpConflict, theories),
-			propagated => solveLoop(propagated, theories),
+			(conflict): ProbeResult => ({
+				step: { tag: "theory-assert", theory: theory.name, literal, result: "conflict" },
+				conflict,
+			}),
+			(): ProbeResult => ({
+				step: { tag: "theory-assert", theory: theory.name, literal, result: "ok" },
+				conflict: undefined,
+			}),
 		),
 	);
-};
 
-const bcp = (state: SolveState, theories: readonly Theory[]): E.Either<Conflict, SolveState> =>
-	pipe(classify(state), unit =>
-		match(unit)
-			.with({ tag: "none" }, () => E.right(state))
-			.with({ tag: "conflict" }, ({ clause }) => E.left({ clause }))
-			.with({ tag: "unit" }, ({ literal, reason }) =>
-				pipe(
-					assertTheories(literal, theories),
-					O.match(
-						() => bcp(assign(state, literal, reason), theories),
-						conflict => E.left(conflict),
-					),
-				),
-			)
-			.exhaustive(),
+const probeCheck = (theory: Theory): ProbeResult =>
+	pipe(
+		theory.check(),
+		E.match(
+			(conflict): ProbeResult => ({
+				step: { tag: "theory-check", theory: theory.name, result: "conflict" },
+				conflict,
+			}),
+			(): ProbeResult => ({
+				step: { tag: "theory-check", theory: theory.name, result: "ok" },
+				conflict: undefined,
+			}),
+		),
 	);
+
+function* assertTheoriesTrace(literal: Literal, theories: readonly Theory[]): Generator<Step, Conflict | undefined> {
+	return yield* theoryScan(theories, theory => probeAssert(theory, literal));
+}
+
+function* checkTheoriesTrace(theories: readonly Theory[]): Generator<Step, Conflict | undefined> {
+	return yield* theoryScan(theories, probeCheck);
+}
+
+function* theoryScan(theories: readonly Theory[], probe: (theory: Theory) => ProbeResult): Generator<Step, Conflict | undefined> {
+	if (theories.length === 0) {
+		return undefined;
+	}
+
+	const [head, ...tail] = theories;
+	const { step, conflict } = probe(head);
+	yield step;
+
+	return conflict ?? (yield* theoryScan(tail, probe));
+}
 
 type UnitSearch =
 	| { readonly tag: "none" }
@@ -162,45 +254,18 @@ const classifyClause = (assignments: ReadonlyMap<Variable, Assignment>, clause: 
 						.otherwise(() => O.none),
 			);
 
-const assertTheories = (literal: Literal, theories: readonly Theory[]): O.Option<Conflict> =>
-	pipe(
-		theories,
-		A.findFirstMap(theory =>
-			pipe(
-				theory.assert(literal),
-				E.match(
-					conflict => O.some(conflict),
-					_propagations => O.none,
-				),
-			),
-		),
-	);
-
-const checkTheories = (_state: SolveState, theories: readonly Theory[]): O.Option<Conflict> =>
-	pipe(
-		theories,
-		A.findFirstMap(theory =>
-			pipe(
-				theory.check(),
-				E.match(
-					conflict => O.some(conflict),
-					_propagations => O.none,
-				),
-			),
-		),
-	);
-
 const assign = (state: SolveState, lit: Literal, reason: Clause | "decision"): SolveState => ({
 	...state,
 	trail: [...state.trail, { literal: lit, level: state.level, reason }],
 	assignments: new Map([...state.assignments, [variable(lit), polarity(lit) ? "true" : "false"]]),
 });
 
-const decide = (state: SolveState): O.Option<Literal> =>
+const decide = (state: SolveState): Literal | undefined =>
 	pipe(
 		[...state.assignments.entries()],
 		A.findFirst(([_, asgn]) => asgn === "unassigned"),
-		O.map(([v]) => v as Literal),
+		O.map(([v]) => v),
+		O.toUndefined,
 	);
 
 const analyze = (state: SolveState, conflict: Conflict): { learned: Clause; backtrackLevel: number } => {
@@ -251,6 +316,7 @@ const backjump = (state: SolveState, targetLevel: number, theories: readonly The
 	const kept = state.trail.filter(entry => entry.level <= targetLevel);
 	const keptAssignments = new Map(kept.map(e => [variable(e.literal), polarity(e.literal) ? ("true" as const) : ("false" as const)]));
 
+	// Justification for forEach: theory pop is inherently side-effecting (external interface)
 	theories.forEach(t => t.pop());
 
 	return {

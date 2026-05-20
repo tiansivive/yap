@@ -1,10 +1,9 @@
 // Solver: top-level API wiring normalization, skolemization, Tseitin CNF,
 // CDCL boolean core, EUF theory, arithmetic theory, and quantifier instantiation
 // into a single assert/check interface for IVL formulas.
-// https://github.com/tiansivive/z-yap/blob/main/zettels/cdcl-t-solver.md
+// Generator-based: solveTrace yields Step events for tracing/debugging.
 
 import * as O from "fp-ts/Option";
-import * as E from "fp-ts/Either";
 import * as A from "fp-ts/Array";
 import { pipe } from "fp-ts/function";
 import { match } from "ts-pattern";
@@ -12,13 +11,14 @@ import { IVL } from "./ivl/types";
 import { Build } from "./ivl/build";
 import { normalize } from "./normalize";
 import { skolemize } from "./skolem";
-import { tseitin, type CNFResult, type AtomInfo } from "./cnf";
-import { CDCL, Literal, type Clause, type CDCLResult } from "./cdcl/core";
+import { tseitin, type CNFResult, type AtomInfo, type ProxyInfo } from "./cnf";
+import { CDCL, Literal, type Variable, type Clause, type CDCLResult } from "./cdcl/core";
 import { Arena, type ArenaState, type EnodeId } from "./theories/euf/arena";
 import { EUF, type CCState } from "./theories/euf/cc";
 import { Arithmetic } from "./theories/arithmetic/solver";
 import { QuantifierEngine, type QuantifierState } from "./quantifiers/solver";
 import type { Theory } from "./theories/theory";
+import { Trace, type Step } from "./trace";
 
 export type SolveResult =
 	| { readonly tag: "sat"; readonly model: Model }
@@ -29,9 +29,28 @@ export type Model = {
 	readonly evaluate: (term: IVL.Term) => O.Option<IVL.Term>;
 };
 
+export type AtomTable = ReadonlyMap<Literal, AtomInfo>;
+
+export type ProxyTable = ReadonlyMap<Variable, ProxyInfo>;
+
+export type TracedCheck = {
+	readonly formula: IVL.Formula;
+	readonly trace: Generator<Step, SolveResult>;
+	readonly atoms: AtomTable;
+	readonly proxies: ProxyTable;
+	readonly clauses: readonly Clause[];
+};
+
 export type SolverInstance = {
 	readonly assert: (formula: IVL.Formula, origin?: string) => void;
 	readonly check: () => SolveResult;
+	readonly push: () => void;
+	readonly pop: () => void;
+};
+
+export type TracedSolverInstance = {
+	readonly assert: (formula: IVL.Formula, origin?: string) => void;
+	readonly check: () => TracedCheck;
 	readonly push: () => void;
 	readonly pop: () => void;
 };
@@ -40,41 +59,45 @@ export type SolverInstance = {
 // assert() calls and maintains a stack for push/pop. This is the standard interface
 // for incremental SMT solvers and is inherently stateful at the API boundary.
 
+const createBase = () => {
+	// Justification for let: incremental solver API boundary (assert/push/pop)
+	let formulas: IVL.Formula[] = [];
+	let stack: IVL.Formula[][] = [];
+
+	return {
+		assert: (formula: IVL.Formula, origin?: string) => {
+			const tagged = origin ? { ...formula, origin } : formula;
+			formulas.push(tagged);
+		},
+		push: () => {
+			stack.push([...formulas]);
+		},
+		pop: () => {
+			const prev = stack.pop();
+
+			if (prev) {
+				formulas = prev;
+			}
+		},
+		combined: () => (formulas.length === 1 ? formulas[0] : Build.and(...formulas)),
+	};
+};
+
 export const Solver = {
 	create: (): SolverInstance => {
-		let formulas: IVL.Formula[] = [];
-		let stack: IVL.Formula[][] = [];
+		const base = createBase();
+		return { ...base, check: () => solve(base.combined()) };
+	},
 
-		return {
-			assert: (formula, origin) => {
-				const tagged = origin ? { ...formula, origin } : formula;
-				formulas.push(tagged);
-			},
-
-			check: () => {
-				const combined = formulas.length === 1 ? formulas[0] : Build.and(...formulas);
-
-				return solve(combined);
-			},
-
-			push: () => {
-				stack.push([...formulas]);
-			},
-
-			pop: () => {
-				const prev = stack.pop();
-
-				if (prev) {
-					formulas = prev;
-				}
-			},
-		};
+	createTraced: (): TracedSolverInstance => {
+		const base = createBase();
+		return { ...base, check: () => prepare(base.combined()) };
 	},
 };
 
 const MAX_QUANTIFIER_ROUNDS = 5;
 
-const solve = (formula: IVL.Formula): SolveResult => {
+const prepare = (formula: IVL.Formula): TracedCheck => {
 	const normalized = normalize(formula);
 	const skolemized = skolemize(normalized);
 	const { propositional, quantifiers } = separate(skolemized);
@@ -87,36 +110,43 @@ const solve = (formula: IVL.Formula): SolveResult => {
 	setup.arithmetics.forEach(entry => Arithmetic.register(setup.arithState, entry.literal, entry.info, entry.positive));
 
 	const theories: Theory[] = [setup.eufTheory, setup.arithTheory];
-
-	// Quantifier engine
 	const qEngine = quantifiers.length > 0 ? O.some(QuantifierEngine.create(Build.and(...quantifiers.map(q => q as IVL.Formula)))) : O.none;
 
-	return quantifierLoop(cnfResult.clauses, theories, qEngine, setup, cnfResult, 0);
+	return {
+		formula,
+		trace: quantifierLoopTrace(cnfResult.clauses, theories, qEngine, setup, cnfResult, 0),
+		atoms: cnfResult.atoms,
+		proxies: cnfResult.proxies,
+		clauses: cnfResult.clauses,
+	};
 };
 
-const quantifierLoop = (
+const solve = (formula: IVL.Formula): SolveResult => Trace.drain(prepare(formula).trace);
+
+function* quantifierLoopTrace(
 	clauses: readonly Clause[],
 	theories: readonly Theory[],
 	qEngine: O.Option<QuantifierState>,
 	setup: SolveSetup,
 	cnfResult: CNFResult,
 	round: number,
-): SolveResult => {
-	const cdclResult = CDCL.solve(clauses, theories);
+): Generator<Step, SolveResult> {
+	const cdclResult = yield* CDCL.solveTrace(clauses, theories);
 
-	return match(cdclResult)
-		.with({ tag: "unsat" }, ({ core }) => ({
-			tag: "unsat" as const,
-			core: core.map(c => c.origin),
-		}))
-		.with({ tag: "sat" }, ({ assignments }) =>
-			pipe(
+	return yield* match(cdclResult)
+		.with({ tag: "unsat" }, function* ({ core }): Generator<Step, SolveResult> {
+			return { tag: "unsat", core: core.map(c => c.origin) };
+		})
+		.with({ tag: "sat" }, function* ({ assignments }): Generator<Step, SolveResult> {
+			return yield* pipe(
 				qEngine,
 				O.match(
-					() => ({ tag: "sat" as const, model: createModel(assignments, cnfResult, setup.arena) }),
-					engine => {
+					function* (): Generator<Step, SolveResult> {
+						return { tag: "sat", model: createModel(assignments, cnfResult, setup.arena) };
+					},
+					function* (engine): Generator<Step, SolveResult> {
 						if (round >= MAX_QUANTIFIER_ROUNDS) {
-							return { tag: "unknown" as const, reason: "quantifier instantiation limit reached" };
+							return { tag: "unknown", reason: "quantifier instantiation limit reached" };
 						}
 
 						const findRep = (id: EnodeId) => EUF.find(setup.ccState, id);
@@ -124,17 +154,20 @@ const quantifierLoop = (
 						let nextId = clauses.reduce((max, c) => Math.max(max, c.id), 0) + 1;
 						const { lemmas, state: updatedEngine } = QuantifierEngine.round(engine, setup.arena, findRep, () => nextId++, encodeLemma(cnfResult));
 
-						return lemmas.length === 0
-							? { tag: "sat" as const, model: createModel(assignments, cnfResult, setup.arena) }
-							: quantifierLoop([...clauses, ...lemmas.map(l => l.clause)], theories, O.some(updatedEngine), setup, cnfResult, round + 1);
+						yield { tag: "quantifier-round", round, lemmas: lemmas.length };
+
+						if (lemmas.length === 0) {
+							return { tag: "sat", model: createModel(assignments, cnfResult, setup.arena) };
+						}
+
+						return yield* quantifierLoopTrace([...clauses, ...lemmas.map(l => l.clause)], theories, O.some(updatedEngine), setup, cnfResult, round + 1);
 					},
 				),
-			),
-		)
+			);
+		})
 		.exhaustive();
-};
+}
 
-// Encode a grounded IVL formula as CDCL literals using the existing atom table
 const encodeLemma =
 	(cnfResult: CNFResult) =>
 	(formula: IVL.Formula): readonly Literal[] =>

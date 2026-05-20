@@ -12,9 +12,15 @@ export type AtomInfo = {
 	readonly args: readonly [IVL.Term, IVL.Term];
 };
 
+export type ProxyInfo = {
+	readonly op: "and" | "or" | "implies" | "true" | "false" | "forall" | "exists";
+	readonly operands: readonly Literal[];
+};
+
 export type CNFResult = {
 	readonly clauses: readonly Clause[];
 	readonly atoms: ReadonlyMap<Literal, AtomInfo>;
+	readonly proxies: ReadonlyMap<Variable, ProxyInfo>;
 	readonly nextVar: Variable;
 };
 
@@ -24,16 +30,22 @@ type TseitinState = {
 	readonly clauses: readonly Clause[];
 	readonly keyIndex: ReadonlyMap<AtomKey, Literal>;
 	readonly atoms: ReadonlyMap<Literal, AtomInfo>;
+	readonly proxies: ReadonlyMap<Variable, ProxyInfo>;
 	readonly nextVar: Variable;
 	readonly nextClauseId: number;
 };
 
+const addProxy = (state: TseitinState, v: Variable, info: ProxyInfo): TseitinState => ({
+	...state,
+	proxies: new Map([...state.proxies, [v, info]]),
+});
+
 export const tseitin = (formula: IVL.Formula): CNFResult => {
-	const initial: TseitinState = { clauses: [], keyIndex: new Map(), atoms: new Map(), nextVar: 1, nextClauseId: 0 };
+	const initial: TseitinState = { clauses: [], keyIndex: new Map(), atoms: new Map(), proxies: new Map(), nextVar: 1, nextClauseId: 0 };
 	const { literal: topLit, state } = encode(initial, formula);
 	const final = addClause(state, [topLit], formula.origin ?? "top");
 
-	return { clauses: final.clauses, atoms: final.atoms, nextVar: final.nextVar };
+	return { clauses: final.clauses, atoms: final.atoms, proxies: final.proxies, nextVar: final.nextVar };
 };
 
 type EncodeResult = { readonly literal: Literal; readonly state: TseitinState };
@@ -59,11 +71,13 @@ const encode = (state: TseitinState, formula: IVL.Formula): EncodeResult =>
 	match(formula)
 		.with({ tag: "True" }, () => {
 			const { v: p, state: s1 } = freshVar(state);
-			return { literal: p, state: addClause(s1, [p], "true") };
+			const s2 = addProxy(s1, p, { op: "true", operands: [] });
+			return { literal: p, state: addClause(s2, [p], "true") };
 		})
 		.with({ tag: "False" }, () => {
 			const { v: p, state: s1 } = freshVar(state);
-			return { literal: p, state: addClause(s1, [-p], "false") };
+			const s2 = addProxy(s1, p, { op: "false", operands: [] });
+			return { literal: p, state: addClause(s2, [-p], "false") };
 		})
 		.with({ tag: "Atom" }, ({ op, args }) => {
 			const key = atomKey(op, args);
@@ -83,18 +97,20 @@ const encode = (state: TseitinState, formula: IVL.Formula): EncodeResult =>
 		.with({ tag: "And" }, ({ values, origin }) => {
 			const { literals: subs, state: s1 } = encodeMany(state, values);
 			const { v: p, state: s2 } = freshVar(s1);
+			const s2p = addProxy(s2, p, { op: "and", operands: subs });
 			const orig = origin ?? "and";
 
-			const s3 = subs.reduce((s, sub) => addClause(s, [-p, sub], orig), s2);
+			const s3 = subs.reduce((s, sub) => addClause(s, [-p, sub], orig), s2p);
 			const s4 = addClause(s3, [...subs.map(s => -s), p], orig);
 			return { literal: p, state: s4 };
 		})
 		.with({ tag: "Or" }, ({ values, origin }) => {
 			const { literals: subs, state: s1 } = encodeMany(state, values);
 			const { v: p, state: s2 } = freshVar(s1);
+			const s2p = addProxy(s2, p, { op: "or", operands: subs });
 			const orig = origin ?? "or";
 
-			const s3 = addClause(s2, [-p, ...subs], orig);
+			const s3 = addClause(s2p, [-p, ...subs], orig);
 			const s4 = subs.reduce((s, sub) => addClause(s, [-sub, p], orig), s3);
 			return { literal: p, state: s4 };
 		})
@@ -102,20 +118,23 @@ const encode = (state: TseitinState, formula: IVL.Formula): EncodeResult =>
 			const { literal: l, state: s1 } = encode(state, left);
 			const { literal: r, state: s2 } = encode(s1, right);
 			const { v: p, state: s3 } = freshVar(s2);
+			const s3p = addProxy(s3, p, { op: "implies", operands: [l, r] });
 			const orig = origin ?? "implies";
 
-			const s4 = addClause(s3, [-p, -l, r], orig);
+			const s4 = addClause(s3p, [-p, -l, r], orig);
 			const s5 = addClause(s4, [l, p], orig);
 			const s6 = addClause(s5, [-r, p], orig);
 			return { literal: p, state: s6 };
 		})
 		.with({ tag: "Forall" }, () => {
 			const { v: p, state: s1 } = freshVar(state);
-			return { literal: p, state: addAtom(s1, `forall:${p}`, p) };
+			const s2 = addProxy(s1, p, { op: "forall", operands: [] });
+			return { literal: p, state: addAtom(s2, `forall:${p}`, p) };
 		})
 		.with({ tag: "Exists" }, () => {
 			const { v: p, state: s1 } = freshVar(state);
-			return { literal: p, state: s1 };
+			const s2 = addProxy(s1, p, { op: "exists", operands: [] });
+			return { literal: p, state: s2 };
 		})
 		.exhaustive();
 
