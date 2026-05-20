@@ -14,7 +14,9 @@ export const int = (n: number) => Build.num(n, Build.Int);
 export const eq = (l: IVL.Term, r: IVL.Term, origin?: string) => Build.atom("=", l, r, origin);
 export const neq = (l: IVL.Term, r: IVL.Term, origin?: string) => Build.atom("!=", l, r, origin);
 export const gt = (l: IVL.Term, r: IVL.Term, origin?: string) => Build.atom(">", l, r, origin);
+export const gte = (l: IVL.Term, r: IVL.Term, origin?: string) => Build.atom(">=", l, r, origin);
 export const lt = (l: IVL.Term, r: IVL.Term, origin?: string) => Build.atom("<", l, r, origin);
+export const lte = (l: IVL.Term, r: IVL.Term, origin?: string) => Build.atom("<=", l, r, origin);
 
 export const T = Build.true_();
 export const F = Build.false_();
@@ -26,3 +28,6 @@ export const implies = Build.implies;
 export const add = (l: IVL.Term, r: IVL.Term) => Build.arith("+", l, r, Build.Int);
 export const sub = (l: IVL.Term, r: IVL.Term) => Build.arith("-", l, r, Build.Int);
 export const mul = (l: IVL.Term, r: IVL.Term) => Build.arith("*", l, r, Build.Int);
+
+export const forall = Build.forall;
+export const var_ = Build.var_;

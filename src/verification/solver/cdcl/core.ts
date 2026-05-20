@@ -53,7 +53,7 @@ type SolveState = {
 export const CDCL = {
 	solve: (initialClauses: readonly Clause[], theories: readonly Theory[] = []): CDCLResult =>
 		pipe(
-			bcp(initial(initialClauses)),
+			bcp(initial(initialClauses), theories),
 			E.match(
 				() => ({ tag: "unsat" as const, core: initialClauses }),
 				state => solveLoop(state, theories),
@@ -71,19 +71,26 @@ const initial = (clauses: readonly Clause[]): SolveState => ({
 
 const solveLoop = (state: SolveState, theories: readonly Theory[]): CDCLResult =>
 	pipe(
-		decide(state),
+		checkTheories(state, theories),
 		O.match(
-			() => ({ tag: "sat" as const, assignments: state.assignments }),
-			lit => {
-				theories.forEach(t => t.push());
-				return propagateAndResolve({ ...assign(state, lit, "decision"), level: state.level + 1 }, theories);
-			},
+			() =>
+				pipe(
+					decide(state),
+					O.match(
+						() => ({ tag: "sat" as const, assignments: state.assignments }),
+						lit => {
+							theories.forEach(t => t.push());
+							return propagateAndResolve({ ...assign(state, lit, "decision"), level: state.level + 1 }, theories);
+						},
+					),
+				),
+			conflict => resolveConflict(state, conflict, theories),
 		),
 	);
 
 const propagateAndResolve = (state: SolveState, theories: readonly Theory[]): CDCLResult =>
 	pipe(
-		bcp(state),
+		bcp(state, theories),
 		E.match(
 			conflict => resolveConflict(state, conflict, theories),
 			propagated =>
@@ -106,7 +113,7 @@ const resolveConflict = (state: SolveState, conflict: Conflict, theories: readon
 	const afterBackjump = backjump({ ...state, clauses: [...state.clauses, learned] }, backtrackLevel, theories);
 
 	return pipe(
-		bcp(afterBackjump),
+		bcp(afterBackjump, theories),
 		E.match(
 			rebcpConflict => resolveConflict(afterBackjump, rebcpConflict, theories),
 			propagated => solveLoop(propagated, theories),
@@ -114,12 +121,20 @@ const resolveConflict = (state: SolveState, conflict: Conflict, theories: readon
 	);
 };
 
-const bcp = (state: SolveState): E.Either<Conflict, SolveState> =>
+const bcp = (state: SolveState, theories: readonly Theory[]): E.Either<Conflict, SolveState> =>
 	pipe(classify(state), unit =>
 		match(unit)
 			.with({ tag: "none" }, () => E.right(state))
 			.with({ tag: "conflict" }, ({ clause }) => E.left({ clause }))
-			.with({ tag: "unit" }, ({ literal, reason }) => bcp(assign(state, literal, reason)))
+			.with({ tag: "unit" }, ({ literal, reason }) =>
+				pipe(
+					assertTheories(literal, theories),
+					O.match(
+						() => bcp(assign(state, literal, reason), theories),
+						conflict => E.left(conflict),
+					),
+				),
+			)
 			.exhaustive(),
 	);
 
@@ -146,6 +161,20 @@ const classifyClause = (assignments: ReadonlyMap<Variable, Assignment>, clause: 
 						.with(1, () => O.some<UnitSearch>({ tag: "unit", literal: unassigned[0], reason: clause }))
 						.otherwise(() => O.none),
 			);
+
+const assertTheories = (literal: Literal, theories: readonly Theory[]): O.Option<Conflict> =>
+	pipe(
+		theories,
+		A.findFirstMap(theory =>
+			pipe(
+				theory.assert(literal),
+				E.match(
+					conflict => O.some(conflict),
+					_propagations => O.none,
+				),
+			),
+		),
+	);
 
 const checkTheories = (_state: SolveState, theories: readonly Theory[]): O.Option<Conflict> =>
 	pipe(

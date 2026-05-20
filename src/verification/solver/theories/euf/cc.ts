@@ -43,6 +43,8 @@ export const EUF = {
 	register: (state: CCState, literal: Literal, a: EnodeId, b: EnodeId, positive: boolean): void => {
 		state.literalMap.set(literal, { a, b, positive });
 	},
+
+	find: (state: CCState, id: EnodeId): EnodeId => find(state.uf, id),
 };
 
 const initState = (arena: ArenaState): CCState => {

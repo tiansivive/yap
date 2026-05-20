@@ -1,19 +1,22 @@
 // Solver: top-level API wiring normalization, skolemization, Tseitin CNF,
-// CDCL boolean core, EUF theory, and quantifier instantiation into a single
-// assert/check interface for IVL formulas.
+// CDCL boolean core, EUF theory, arithmetic theory, and quantifier instantiation
+// into a single assert/check interface for IVL formulas.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/cdcl-t-solver.md
 
 import * as O from "fp-ts/Option";
 import * as E from "fp-ts/Either";
+import * as A from "fp-ts/Array";
+import { pipe } from "fp-ts/function";
 import { match } from "ts-pattern";
 import { IVL } from "./ivl/types";
 import { Build } from "./ivl/build";
 import { normalize } from "./normalize";
 import { skolemize } from "./skolem";
-import { tseitin, type CNFResult } from "./cnf";
-import { CDCL, type Clause, type Literal, type CDCLResult } from "./cdcl/core";
+import { tseitin, type CNFResult, type AtomInfo } from "./cnf";
+import { CDCL, Literal, type Clause, type CDCLResult } from "./cdcl/core";
 import { Arena, type ArenaState, type EnodeId } from "./theories/euf/arena";
-import { EUF } from "./theories/euf/cc";
+import { EUF, type CCState } from "./theories/euf/cc";
+import { Arithmetic } from "./theories/arithmetic/solver";
 import { QuantifierEngine, type QuantifierState } from "./quantifiers/solver";
 import type { Theory } from "./theories/theory";
 
@@ -69,31 +72,124 @@ export const Solver = {
 	},
 };
 
+const MAX_QUANTIFIER_ROUNDS = 5;
+
 const solve = (formula: IVL.Formula): SolveResult => {
 	const normalized = normalize(formula);
 	const skolemized = skolemize(normalized);
 	const { propositional, quantifiers } = separate(skolemized);
 	const cnfResult = tseitin(propositional);
-	const arenaSetup = buildArena(cnfResult);
-	const { theory: eufTheory, state: ccState } = EUF.create(arenaSetup.arena);
+	const setup = buildSetup(cnfResult);
 
-	arenaSetup.equalities.forEach(eq => {
-		EUF.register(ccState, eq.literal, eq.a, eq.b, eq.positive);
-	});
+	// Justification for forEach: theory registration mutates encapsulated theory state;
+	// the Theory interface is inherently side-effecting (assert/push/pop protocol).
+	setup.equalities.forEach(eq => EUF.register(setup.ccState, eq.literal, eq.a, eq.b, eq.positive));
+	setup.arithmetics.forEach(entry => Arithmetic.register(setup.arithState, entry.literal, entry.info, entry.positive));
 
-	const theories: Theory[] = [eufTheory];
-	const cdclResult = CDCL.solve(cnfResult.clauses, theories);
+	const theories: Theory[] = [setup.eufTheory, setup.arithTheory];
+
+	// Quantifier engine
+	const qEngine = quantifiers.length > 0 ? O.some(QuantifierEngine.create(Build.and(...quantifiers.map(q => q as IVL.Formula)))) : O.none;
+
+	return quantifierLoop(cnfResult.clauses, theories, qEngine, setup, cnfResult, 0);
+};
+
+const quantifierLoop = (
+	clauses: readonly Clause[],
+	theories: readonly Theory[],
+	qEngine: O.Option<QuantifierState>,
+	setup: SolveSetup,
+	cnfResult: CNFResult,
+	round: number,
+): SolveResult => {
+	const cdclResult = CDCL.solve(clauses, theories);
 
 	return match(cdclResult)
-		.with({ tag: "sat" }, ({ assignments }) => ({
-			tag: "sat" as const,
-			model: createModel(assignments, cnfResult, arenaSetup.arena),
-		}))
 		.with({ tag: "unsat" }, ({ core }) => ({
 			tag: "unsat" as const,
 			core: core.map(c => c.origin),
 		}))
+		.with({ tag: "sat" }, ({ assignments }) =>
+			pipe(
+				qEngine,
+				O.match(
+					() => ({ tag: "sat" as const, model: createModel(assignments, cnfResult, setup.arena) }),
+					engine => {
+						if (round >= MAX_QUANTIFIER_ROUNDS) {
+							return { tag: "unknown" as const, reason: "quantifier instantiation limit reached" };
+						}
+
+						const findRep = (id: EnodeId) => EUF.find(setup.ccState, id);
+						// Justification for let: QuantifierEngine.round requires a mutable ID generator
+						let nextId = clauses.reduce((max, c) => Math.max(max, c.id), 0) + 1;
+						const { lemmas, state: updatedEngine } = QuantifierEngine.round(engine, setup.arena, findRep, () => nextId++, encodeLemma(cnfResult));
+
+						return lemmas.length === 0
+							? { tag: "sat" as const, model: createModel(assignments, cnfResult, setup.arena) }
+							: quantifierLoop([...clauses, ...lemmas.map(l => l.clause)], theories, O.some(updatedEngine), setup, cnfResult, round + 1);
+					},
+				),
+			),
+		)
 		.exhaustive();
+};
+
+// Encode a grounded IVL formula as CDCL literals using the existing atom table
+const encodeLemma =
+	(cnfResult: CNFResult) =>
+	(formula: IVL.Formula): readonly Literal[] =>
+		match(formula)
+			.with({ tag: "Atom" }, atom => {
+				const direct = findAtomLiteral(cnfResult, atom.op, atom.args);
+				return pipe(
+					direct,
+					O.match(
+						() =>
+							pipe(
+								findComplementary(cnfResult, atom.op, atom.args),
+								O.match(
+									() => [],
+									lit => [Literal.negate(lit)],
+								),
+							),
+						lit => [lit],
+					),
+				);
+			})
+			.with({ tag: "Not" }, ({ value }) => encodeLemma(cnfResult)(value).map(Literal.negate))
+			.with({ tag: "And" }, ({ values }) => values.flatMap(v => encodeLemma(cnfResult)(v)))
+			.with({ tag: "True" }, () => [])
+			.with({ tag: "False" }, () => [])
+			.otherwise(() => []);
+
+const COMPLEMENTARY_OPS: ReadonlyMap<IVL.AtomOp, IVL.AtomOp> = new Map([
+	["=", "!="],
+	["!=", "="],
+	["<", ">="],
+	[">=", "<"],
+	["<=", ">"],
+	[">", "<="],
+]);
+
+const findAtomLiteral = (cnfResult: CNFResult, op: IVL.AtomOp, args: readonly [IVL.Term, IVL.Term]): O.Option<Literal> =>
+	pipe(
+		[...cnfResult.atoms.entries()],
+		A.findFirstMap(([lit, info]) => (info.op === op && termEqual(info.args[0], args[0]) && termEqual(info.args[1], args[1]) ? O.some(lit) : O.none)),
+	);
+
+const findComplementary = (cnfResult: CNFResult, op: IVL.AtomOp, args: readonly [IVL.Term, IVL.Term]): O.Option<Literal> =>
+	pipe(
+		COMPLEMENTARY_OPS.get(op),
+		O.fromNullable,
+		O.chain(complement => findAtomLiteral(cnfResult, complement, args)),
+	);
+
+const termEqual = (a: IVL.Term, b: IVL.Term): boolean => a.tag === b.tag && JSON.stringify(a) === JSON.stringify(b);
+
+type ArithEntry = {
+	readonly literal: Literal;
+	readonly info: AtomInfo;
+	readonly positive: boolean;
 };
 
 type EqualityEntry = {
@@ -103,9 +199,14 @@ type EqualityEntry = {
 	readonly positive: boolean;
 };
 
-type ArenaSetup = {
+type SolveSetup = {
 	readonly arena: ArenaState;
 	readonly equalities: readonly EqualityEntry[];
+	readonly arithmetics: readonly ArithEntry[];
+	readonly eufTheory: Theory;
+	readonly arithTheory: Theory;
+	readonly ccState: CCState;
+	readonly arithState: ReturnType<typeof Arithmetic.create>["state"];
 };
 
 const separate = (formula: IVL.Formula): { propositional: IVL.Formula; quantifiers: readonly IVL.Formula[] } =>
@@ -122,24 +223,42 @@ const separate = (formula: IVL.Formula): { propositional: IVL.Formula; quantifie
 		.with({ tag: "Forall" }, f => ({ propositional: Build.true_(), quantifiers: [f] }))
 		.otherwise(f => ({ propositional: f, quantifiers: [] }));
 
-const buildArena = (cnfResult: CNFResult): ArenaSetup =>
-	[...cnfResult.atoms.entries()].reduce<ArenaSetup>(
-		(acc, [literal, { op, args }]) => {
-			const { internedA, internedB, state: newArena } = internTerms(acc.arena, args[0], args[1]);
+const ARITH_OPS: readonly IVL.AtomOp[] = ["<", "<=", ">", ">="];
 
-			return match(op)
+const buildSetup = (cnfResult: CNFResult): SolveSetup => {
+	const { arena, equalities, arithmetics } = [...cnfResult.atoms.entries()].reduce<{
+		arena: ArenaState;
+		equalities: EqualityEntry[];
+		arithmetics: ArithEntry[];
+	}>(
+		(acc, [literal, info]) => {
+			const { internedA, internedB, state: newArena } = internTerms(acc.arena, info.args[0], info.args[1]);
+
+			return match(info.op)
 				.with("=", () => ({
 					arena: newArena,
 					equalities: [...acc.equalities, { literal, a: internedA, b: internedB, positive: true }],
+					arithmetics: [...acc.arithmetics, { literal, info, positive: true }],
 				}))
 				.with("!=", () => ({
 					arena: newArena,
 					equalities: [...acc.equalities, { literal, a: internedA, b: internedB, positive: false }],
+					arithmetics: [...acc.arithmetics, { literal, info, positive: false }],
 				}))
-				.otherwise(() => ({ arena: newArena, equalities: acc.equalities }));
+				.otherwise(op => ({
+					arena: newArena,
+					equalities: acc.equalities,
+					arithmetics: ARITH_OPS.includes(op) ? [...acc.arithmetics, { literal, info, positive: true }] : acc.arithmetics,
+				}));
 		},
-		{ arena: Arena.create(), equalities: [] },
+		{ arena: Arena.create(), equalities: [], arithmetics: [] },
 	);
+
+	const { theory: eufTheory, state: ccState } = EUF.create(arena);
+	const { theory: arithTheory, state: arithState } = Arithmetic.create();
+
+	return { arena, equalities, arithmetics, eufTheory, arithTheory, ccState, arithState };
+};
 
 const internTerms = (arena: ArenaState, left: IVL.Term, right: IVL.Term): { internedA: EnodeId; internedB: EnodeId; state: ArenaState } => {
 	const { id: a, state: s1 } = intern(arena, left);
