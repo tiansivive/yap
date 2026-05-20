@@ -90,14 +90,6 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 					liquid: quote(ctx, lvl, modalities.liquid),
 				}),
 			)
-			.with({ type: "Reset" }, ({ closure }) => {
-				// Simply quote the closure's term
-				return EB.Constructors.Reset(closure.term);
-			})
-			.with({ type: "Shift" }, ({ closure }) => {
-				// Simply quote the closure's term
-				return EB.Constructors.Shift(closure.term);
-			})
 			.otherwise(nf => {
 				throw new Error("Quote: Not implemented yet: " + NF.display(nf, ctx));
 			})

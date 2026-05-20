@@ -68,7 +68,11 @@ export const createTranslationTools = (runtime: VerificationRuntime, toModalitie
 				return Build.fn([argSort], retSort);
 			})
 			.with({ type: "Existential" }, ex => mkSort(ex.body.value, EB.bind(ctx, { type: "Pi", variable: ex.variable }, ex.annotation)))
+<<<<<<< HEAD
 			.with({ type: "External" }, e => Build.uninterpreted(`External:${e.name}`))
+=======
+			.with({ type: "External" }, e => ({ Prim: Z3.Sort.declare(`External:${e.name}`) }))
+>>>>>>> 8dc918b (savepoint)
 			.with(NF.Patterns.Var, v => {
 				if (v.variable.type === "Bound") {
 					return mkSort(ctx.env[EB.lvl2idx(ctx, v.variable.lvl)].type[2], ctx);
@@ -213,11 +217,30 @@ export const createTranslationTools = (runtime: VerificationRuntime, toModalitie
 				}
 				const args = e.args.map(arg => term(arg, ctx, rigids));
 				return match(e.name)
+<<<<<<< HEAD
 					.with(OP_ADD, () => Build.arith("+", args[0], args[1], Build.Real))
 					.with(OP_SUB, () => Build.arith("-", args[0], args[1], Build.Real))
 					.with(OP_MUL, () => Build.arith("*", args[0], args[1], Build.Real))
 					.with(OP_DIV, () => Build.arith("/", args[0], args[1], Build.Real))
 					.otherwise(() => Build.const_(`__external_${e.name}`, Build.Bool));
+=======
+					.with(OP_ADD, () => (args[0] as IntNum).add(args[1] as IntNum))
+					.with(OP_SUB, () => (args[0] as IntNum).sub(args[1] as IntNum))
+					.with(OP_MUL, () => (args[0] as IntNum).mul(args[1] as IntNum))
+					.with(OP_DIV, () => (args[0] as IntNum).div(args[1] as IntNum))
+					.with(OP_AND, () => Z3.And(args[0] as Bool, args[1] as Bool))
+					.with(OP_OR, () => Z3.Or(args[0] as Bool, args[1] as Bool))
+					.with(OP_NOT, () => (args[0] as Bool).not())
+					.with(OP_EQ, () => args[0].eq(args[1]))
+					.with(OP_NEQ, () => args[0].neq(args[1]))
+					.with(OP_GT, () => (args[0] as IntNum).gt(args[1] as IntNum))
+					.with(OP_GTE, () => (args[0] as IntNum).ge(args[1] as IntNum))
+					.with(OP_LT, () => (args[0] as IntNum).lt(args[1] as IntNum))
+					.with(OP_LTE, () => (args[0] as IntNum).le(args[1] as IntNum))
+					.otherwise(name => {
+						throw new Error(`Unknown external function in logical formulas: ${name}`);
+					});
+>>>>>>> 8dc918b (savepoint)
 			})
 			.otherwise(() => {
 				throw new Error("Unsupported expression type in verification");

@@ -127,8 +127,7 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 		return { ...result, errors };
 	}
 
-	const stmt: Extract<Src.Statement, { type: "expression" }> =
-		opts.parserRule === "Ann" ? { type: "expression", value: parsed as Src.Term } : (parsed as Src.Statement);
+	const stmt: Src.Statement = opts.parserRule === "Ann" ? ({ type: "expression", value: parsed as Src.Term } as Src.Statement) : (parsed as Src.Statement);
 
 	if (stmt.type !== "expression") {
 		result.parsed = Src.Stmt.display(stmt);

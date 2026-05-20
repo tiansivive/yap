@@ -136,7 +136,7 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 			const zonked = st.zonker?.[val];
 
 			if (zonked) {
-				return walk(NF.quote({ env: [], metas: {}, zonker: st.zonker! }, lvl, zonked), st);
+				return walk(NF.quote({ env: [], metas: {}, zonker: st.zonker! } as unknown as EB.Context, lvl, zonked), st);
 			}
 			return emit(st, Tags.VAR_META, { val, lvl }, prov(tid, st));
 		})

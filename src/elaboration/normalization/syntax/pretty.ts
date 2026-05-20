@@ -100,22 +100,6 @@ export const doc = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBruijn: 
 				PP.nest(2, [PP.line, "<packed: ", doc(existential.body.value, xtended, opts), " -| ", prettyEnv, ">"]),
 			]);
 		})
-		.with({ type: "Reset" }, ({ closure: cls }) => ["reset |", closureDoc(cls, ctx, opts), "|"])
-		.with({ type: "Shift" }, ({ closure: cls }) => ["shift (", closureDoc(cls, ctx, opts), ")"])
 		.exhaustive();
 
 export const display = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBruijn: false }): string => PP.render(doc(value, ctx, opts));
-
-const closureDoc = (closure: NF.Closure, ctx: EB.DisplayContext, opts = { deBruijn: false }): PP.Doc => {
-	const z = compose(ctx.zonker, closure.ctx.zonker);
-	const extended: EB.DisplayContext = { ...closure.ctx, zonker: z };
-
-	const printedEnv = extended.env.map(({ nf, name }) => {
-		if (nf) {
-			return `${name.variable} = ${NF.display(nf, extended, opts)}`;
-		}
-		return name.variable;
-	});
-	const prettyEnv = printedEnv.length > 0 ? `Γ: ${printedEnv.join("; ")}` : "·";
-	return PP.closure(EB.Display.doc(closure.term, extended, opts), prettyEnv);
-};
