@@ -302,6 +302,13 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 					const artefacts = yield* check.gen(tm.term, tm.ann);
 					return [tm.ann, artefacts] satisfies SynthResult;
 				})
+				.with({ type: "Reset" }, function* (tm) {
+					return yield* synth.gen(tm.term);
+				})
+				.with({ type: "Shift" }, function* () {
+					runtime.log("synth: shift expression treated as opaque (stub)");
+					return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
+				})
 				.otherwise(function* () {
 					throw new Error("synth: case not implemented for term " + EB.Display.Term(term, ctx));
 				});

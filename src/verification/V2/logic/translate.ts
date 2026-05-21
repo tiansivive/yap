@@ -202,7 +202,10 @@ export const createTranslationTools = (runtime: VerificationRuntime, toModalitie
 					const [t] = ctx.imports[v.variable.name];
 					return term(NF.evaluate(ctx, t), ctx, rigids);
 				}
-				throw new Error("Unsupported variable in translation");
+				if (v.variable.type === "Meta") {
+					return Build.const_(`?${v.variable.val}`, Build.uninterpreted("Any"));
+				}
+				throw new Error(`Unsupported variable in formula translation: ${v.variable.type} (${JSON.stringify(v.variable)})`);
 			})
 			.with({ type: "External" }, e => {
 				if (e.args.length !== e.arity) {

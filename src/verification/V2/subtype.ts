@@ -32,7 +32,16 @@ export const createSubtype = ({ runtime, translation }: SubtypeDeps) => {
 			const ctx = yield* V2.ask();
 			runtime.enter();
 			runtime.log("Subtyping:", EB.Display.Env(ctx), NF.display(left, ctx, { deBruijn: true }), "<:", NF.display(right, ctx, { deBruijn: true }));
+
 			const result = match([NF.force(ctx, NF.unwrapNeutral(left)), NF.force(ctx, NF.unwrapNeutral(right))])
+				.with([NF.Patterns.Any, P._], ([, b]) => {
+					runtime.log("subtype: Any <:", NF.display(b, ctx), "— treating as trivially true (stub)");
+					return V2.of(Build.true_());
+				})
+				.with([P._, NF.Patterns.Any], ([a]) => {
+					runtime.log("subtype:", NF.display(a, ctx), "<: Any — treating as trivially true (stub)");
+					return V2.of(Build.true_());
+				})
 				.with([NF.Patterns.Lit, NF.Patterns.Lit], ([{ value: v1 }, { value: v2 }]) => V2.of(isEqual(v1, v2) ? Build.true_() : Build.false_()))
 				.with([NF.Patterns.Rigid, NF.Patterns.Rigid], ([rigid1, rigid2]) => {
 					if (rigid1.variable.lvl === rigid2.variable.lvl) {
