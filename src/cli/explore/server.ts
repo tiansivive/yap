@@ -2,7 +2,7 @@ import http from "http";
 import fs from "fs";
 import path from "path";
 
-import { run, type DeBruijnMode, type ParserRule, type VCFormat } from "./pipeline";
+import { run, type DeBruijnMode, type ParserRule } from "./pipeline";
 
 type Options = { port: number };
 
@@ -54,9 +54,9 @@ const handle = async (req: http.IncomingMessage, res: http.ServerResponse) => {
 		const deBruijn: DeBruijnMode = body.deBruijn ?? "off";
 		const parserRule: ParserRule = body.parserRule ?? "Ann";
 		const rawJson: boolean = body.rawJson ?? false;
-		const vcFormat: VCFormat = body.vcFormat ?? "pretty";
+		const ivlSimplify: boolean = body.ivlSimplify ?? true;
 
-		const result = await run(source, { deBruijn, parserRule, rawJson, vcFormat });
+		const result = await run(source, { deBruijn, parserRule, rawJson, ivlSimplify });
 
 		res.writeHead(200, { "Content-Type": "application/json" });
 		return res.end(JSON.stringify(result));

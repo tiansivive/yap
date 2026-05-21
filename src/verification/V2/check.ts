@@ -76,7 +76,6 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 								const lvl = extended.env.length;
 								const applied = NF.apply(p.binder, p.closure, NF.Constructors.Rigid(lvl));
 								const phi = translation.formula(applied, extended, { [lvl]: x });
-
 								const imp = runtime.record(
 									"check.abs.quantification",
 									Build.forall([{ name: term.binding.variable, sort }], Build.implies(phi, artefacts.vc)),

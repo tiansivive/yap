@@ -108,9 +108,10 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 				})
 				.with(EB.CtorPatterns.Lambda, function* (tm) {
 					const annotation = NF.evaluate(ctx, tm.binding.annotation);
-					const [_, bodyArtefacts] = yield* V2.local(inner => EB.bind(inner, { type: "Pi", variable: tm.binding.variable }, annotation), synth(tm.body));
+					const [bodyType, bodyArtefacts] = yield* V2.local(inner => EB.bind(inner, { type: "Pi", variable: tm.binding.variable }, annotation), synth(tm.body));
 					const icit = tm.binding.type === "Lambda" || tm.binding.type === "Pi" ? tm.binding.icit : "Explicit";
-					const type = NF.Constructors.Pi(tm.binding.variable, icit, annotation, NF.Constructors.Closure(ctx, tm.body));
+					const bodyTypeQuoted = NF.quote(ctx, ctx.env.length + 1, bodyType);
+					const type = NF.Constructors.Pi(tm.binding.variable, icit, annotation, NF.Constructors.Closure(ctx, bodyTypeQuoted));
 					return [type, { vc: bodyArtefacts.vc }] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Variant, function* () {

@@ -11,6 +11,7 @@ import { defaultContext } from "@yap/shared/lib/constants";
 import { init } from "z3-solver";
 import { repl } from "../src/cli/repl";
 import { start as startExplorer } from "../src/cli/explore";
+import { Build } from "../src/verification/solver/ivl/build";
 
 const program = new Command();
 
@@ -91,6 +92,7 @@ program
 	.command("explore")
 	.description("Open pipeline explorer dashboard")
 	.option("-p, --port <number>", "port", "3333")
+	.option("--ivl-no-simplify", "disable IVL algebraic simplification")
 	.action(async cmd => {
 		let z3Ctx = getZ3Context();
 		if (!z3Ctx) {
@@ -100,6 +102,9 @@ program
 			setZ3Context(z3Ctx);
 		}
 
+		if (cmd.ivlNoSimplify) {
+			Build.simplify = false;
+		}
 		startExplorer({ port: parseInt(cmd.port) });
 	});
 

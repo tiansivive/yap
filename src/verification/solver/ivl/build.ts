@@ -1,6 +1,8 @@
 import type { IVL } from "./types";
 
 export namespace Build {
+	export let simplify = true;
+
 	// --- Sorts ---
 	export const Bool: IVL.Sort = { tag: "Bool" };
 	export const Int: IVL.NumSort = { tag: "Int" };
@@ -44,15 +46,15 @@ export namespace Build {
 	});
 
 	export const not = (value: IVL.Formula, origin?: string): IVL.Formula => {
-		if (value.tag === "Not") {
+		if (simplify && value.tag === "Not") {
 			return { ...value.value, origin: origin ?? value.value.origin };
 		}
 
-		if (value.tag === "True") {
+		if (simplify && value.tag === "True") {
 			return false_(origin);
 		}
 
-		if (value.tag === "False") {
+		if (simplify && value.tag === "False") {
 			return true_(origin);
 		}
 		return { tag: "Not", value, origin };
@@ -63,15 +65,15 @@ export namespace Build {
 	export const andWithOrigin = (formulas: IVL.Formula[], origin?: string): IVL.Formula => {
 		const flat: IVL.Formula[] = [];
 		for (const f of formulas) {
-			if (f.tag === "False") {
+			if (simplify && f.tag === "False") {
 				return false_(origin);
 			}
 
-			if (f.tag === "True") {
+			if (simplify && f.tag === "True") {
 				continue;
 			}
 
-			if (f.tag === "And") {
+			if (simplify && f.tag === "And") {
 				flat.push(...f.values);
 			} else {
 				flat.push(f);
@@ -82,7 +84,7 @@ export namespace Build {
 			return true_(origin);
 		}
 
-		if (flat.length === 1) {
+		if (simplify && flat.length === 1) {
 			return { ...flat[0], origin: origin ?? flat[0].origin };
 		}
 		return { tag: "And", values: flat, origin };
@@ -93,15 +95,15 @@ export namespace Build {
 	export const orWithOrigin = (formulas: IVL.Formula[], origin?: string): IVL.Formula => {
 		const flat: IVL.Formula[] = [];
 		for (const f of formulas) {
-			if (f.tag === "True") {
+			if (simplify && f.tag === "True") {
 				return true_(origin);
 			}
 
-			if (f.tag === "False") {
+			if (simplify && f.tag === "False") {
 				continue;
 			}
 
-			if (f.tag === "Or") {
+			if (simplify && f.tag === "Or") {
 				flat.push(...f.values);
 			} else {
 				flat.push(f);
@@ -112,22 +114,22 @@ export namespace Build {
 			return false_(origin);
 		}
 
-		if (flat.length === 1) {
+		if (simplify && flat.length === 1) {
 			return { ...flat[0], origin: origin ?? flat[0].origin };
 		}
 		return { tag: "Or", values: flat, origin };
 	};
 
 	export const implies = (left: IVL.Formula, right: IVL.Formula, origin?: string): IVL.Formula => {
-		if (left.tag === "True") {
+		if (simplify && left.tag === "True") {
 			return { ...right, origin: origin ?? right.origin };
 		}
 
-		if (left.tag === "False") {
+		if (simplify && left.tag === "False") {
 			return true_(origin);
 		}
 
-		if (right.tag === "True") {
+		if (simplify && right.tag === "True") {
 			return true_(origin);
 		}
 		return { tag: "Implies", left, right, origin };
@@ -138,7 +140,7 @@ export namespace Build {
 			return { ...body, origin: origin ?? body.origin };
 		}
 
-		if (body.tag === "True") {
+		if (simplify && body.tag === "True") {
 			return true_(origin);
 		}
 		return { tag: "Forall", binders, body, triggers, origin };
@@ -149,7 +151,7 @@ export namespace Build {
 			return { ...body, origin: origin ?? body.origin };
 		}
 
-		if (body.tag === "True") {
+		if (simplify && body.tag === "True") {
 			return true_(origin);
 		}
 		return { tag: "Exists", binders, body, origin };

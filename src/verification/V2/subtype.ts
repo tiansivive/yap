@@ -32,7 +32,6 @@ export const createSubtype = ({ runtime, translation }: SubtypeDeps) => {
 			const ctx = yield* V2.ask();
 			runtime.enter();
 			runtime.log("Subtyping:", EB.Display.Env(ctx), NF.display(left, ctx, { deBruijn: true }), "<:", NF.display(right, ctx, { deBruijn: true }));
-
 			const result = match([NF.force(ctx, NF.unwrapNeutral(left)), NF.force(ctx, NF.unwrapNeutral(right))])
 				.with([NF.Patterns.Lit, NF.Patterns.Lit], ([{ value: v1 }, { value: v2 }]) => V2.of(isEqual(v1, v2) ? Build.true_() : Build.false_()))
 				.with([NF.Patterns.Rigid, NF.Patterns.Rigid], ([rigid1, rigid2]) => {
@@ -188,7 +187,6 @@ export const createSubtype = ({ runtime, translation }: SubtypeDeps) => {
 						const rigids = { [lvl]: x } as Record<number, IVL.Term>;
 						const phiAt = formula(appliedAt, ctx, rigids);
 						const phiBt = formula(appliedBt, ctx, rigids);
-
 						const forall = Build.forall([{ name: pAt.binder.variable, sort }], Build.implies(phiAt, phiBt));
 						return Build.and(baseVc, forall);
 					}),

@@ -18,20 +18,21 @@ import { emit as emitC } from "../../Codegen/v2/c/emit";
 import { print as printC } from "../../Codegen/v2/c/print";
 import { emit as emitErl } from "../../Codegen/v2/erlang/emit";
 import { print as printErl } from "../../Codegen/v2/erlang/print";
-import * as VCPretty from "../../verification/V2/pretty";
 import * as Sub from "../../elaboration/unification/substitution";
-import type { Expr } from "z3-solver";
+import { VerificationServiceV2 } from "../../verification/V2/service";
+import { Build } from "../../verification/solver/ivl/build";
+import { Print as IVLPrint } from "../../verification/solver/ivl/print";
+import { Solver } from "../../verification/solver/solver";
+import { Trace } from "../../verification/solver/trace";
 
 export type DeBruijnMode = "off" | "index" | "level" | "both";
 export type ParserRule = "Ann" | "Script";
-
-export type VCFormat = "pretty" | "sexpr";
 
 export type Options = {
 	deBruijn: DeBruijnMode;
 	parserRule: ParserRule;
 	rawJson: boolean;
-	vcFormat: VCFormat;
+	ivlSimplify: boolean;
 };
 
 export type Result = {
@@ -42,7 +43,8 @@ export type Result = {
 	normalized: string;
 	constraints: string;
 	metas: string;
-	verification: string;
+	ivl: string;
+	solverTrace: string;
 	mir: string;
 	gram: string;
 	codegenJS: string;
@@ -60,7 +62,8 @@ const empty: Result = {
 	normalized: "",
 	constraints: "",
 	metas: "",
-	verification: "",
+	ivl: "",
+	solverTrace: "",
 	mir: "",
 	gram: "",
 	codegenJS: "",
@@ -77,15 +80,6 @@ const deBruijnOpts = (mode: DeBruijnMode) => ({
 const attempt = <T>(fn: () => T, errors: string[]): T | undefined => {
 	try {
 		return fn();
-	} catch (e) {
-		errors.push(e instanceof Error ? e.message : String(e));
-		return undefined;
-	}
-};
-
-const attemptAsync = async <T>(fn: () => Promise<T>, errors: string[]): Promise<T | undefined> => {
-	try {
-		return await fn();
 	} catch (e) {
 		errors.push(e instanceof Error ? e.message : String(e));
 		return undefined;
@@ -231,47 +225,29 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 		}
 	}
 
-	const vResult = await attemptAsync(() => EB.Mod.verify(tm, ty, ctx), errors);
-	if (vResult) {
-		const lines: string[] = [];
-		const dbOpts = { deBruijn: opts.deBruijn !== "off" };
-		const fmt = opts.vcFormat === "sexpr" ? VCPretty.sexpr : (e: Expr) => VCPretty.display(e, dbOpts);
+	Build.simplify = opts.ivlSimplify;
+	const ivlArtefacts = attempt(() => {
+		const V2 = VerificationServiceV2();
+		const [{ result: res }] = V2.check(tm, ty)(ctx);
 
-		if (vResult.vc) {
-			lines.push(fmt(vResult.vc));
+		if (res._tag === "Left") {
+			return undefined;
 		}
+		//const x = V2.getObligations().forEach(o => o.)
+		return res.right;
+	}, errors);
 
-		if (vResult.result) {
-			lines.push(`\nSolver: ${vResult.result}`);
-		}
-		if (vResult.obligations?.length) {
-			lines.push("\nObligations:");
-			vResult.obligations.forEach(({ label, result: r, expr, context }) => {
-				lines.push(`  [${r}] ${label}`);
+	if (ivlArtefacts) {
+		result.ivl = attempt(() => IVLPrint.formula(ivlArtefacts.vc), errors) ?? "";
 
-				if (expr) {
-					lines.push(`    ${fmt(expr)}`);
-				}
-				if (context?.description) {
-					const desc = Array.isArray(context.description) ? context.description.join("\n    ") : context.description;
-					lines.push(`    ${desc}`);
-				}
-			});
-		}
-
-		if (vResult.error) {
-			lines.push(`\nError: ${vResult.error}`);
-		}
-		result.verification = lines.join("\n");
-
-		if (opts.rawJson) {
-			result.raw.verification = {
-				vc: vResult.vc?.sexpr(),
-				result: vResult.result,
-				obligations: vResult.obligations?.map(o => ({ ...o, expr: o.expr?.sexpr() })),
-				error: vResult.error,
-			};
-		}
+		result.solverTrace =
+			attempt(() => {
+				const solver = Solver.createTraced();
+				solver.assert(ivlArtefacts.vc);
+				const { trace, atoms, proxies, clauses, arena } = solver.check();
+				const { steps } = Trace.collect(trace);
+				return Trace.replay({ formula: IVLPrint.formula(ivlArtefacts.vc), steps, atoms, proxies, clauses, arena });
+			}, errors) ?? "";
 	}
 
 	const declarations = new Map();

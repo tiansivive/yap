@@ -18,7 +18,8 @@ const TABS = [
 	{ key: "normalized", label: "NF", mode: yap },
 	{ key: "constraints", label: "Constraints", mode: null },
 	{ key: "metas", label: "Metas", mode: null },
-	{ key: "verification", label: "Verify", mode: smtlib },
+	{ key: "ivl", label: "IVL", mode: smtlib },
+	{ key: "solverTrace", label: "Trace", mode: null },
 	{ key: "mir", label: "MIR", mode: mir },
 	{ key: "gram", label: "GRAM", mode: gram },
 	{ key: "codegenJS", label: "JS", mode: javascript },
@@ -37,7 +38,7 @@ const config = {
 	parser: saved.parser || "Ann",
 	deBruijn: saved.deBruijn || "off",
 	raw: saved.raw || false,
-	vcFormat: saved.vcFormat || "pretty",
+	ivlSimplify: saved.ivlSimplify !== false,
 	sidebarOpen: saved.sidebarOpen !== false,
 };
 
@@ -58,7 +59,7 @@ const $rawContent = $("raw-content");
 const $cfgParser = $("cfg-parser");
 const $cfgDb = $("cfg-debruijn");
 const $cfgRaw = $("cfg-raw");
-const $cfgVcFormat = $("cfg-vc-format");
+const $cfgIvlSimplify = $("cfg-ivl-simplify");
 const $sidebarToggle = $("sidebar-toggle");
 
 // ── Sidebar ──
@@ -76,7 +77,11 @@ $sidebarToggle.onclick = () => {
 $cfgParser.value = config.parser;
 $cfgDb.value = config.deBruijn;
 $cfgRaw.checked = config.raw;
-$cfgVcFormat.value = config.vcFormat;
+$cfgIvlSimplify.checked = config.ivlSimplify;
+$cfgIvlSimplify.onchange = () => {
+	config.ivlSimplify = $cfgIvlSimplify.checked;
+	persist();
+};
 $cfgParser.onchange = () => {
 	config.parser = $cfgParser.value;
 	persist();
@@ -89,10 +94,6 @@ $cfgRaw.onchange = () => {
 	config.raw = $cfgRaw.checked;
 	persist();
 	updateRawPanel();
-};
-$cfgVcFormat.onchange = () => {
-	config.vcFormat = $cfgVcFormat.value;
-	persist();
 };
 applySidebar();
 
@@ -201,7 +202,7 @@ const execute = async () => {
 				deBruijn: config.deBruijn,
 				parserRule: config.parser,
 				rawJson: config.raw,
-				vcFormat: config.vcFormat,
+				ivlSimplify: config.ivlSimplify,
 			}),
 		});
 		data = await res.json();
