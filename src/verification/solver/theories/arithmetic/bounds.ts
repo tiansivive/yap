@@ -11,6 +11,10 @@ import { Rational } from "./rational";
 import type { LinearConstraint } from "./normalize";
 import { ArithTrace } from "../theory";
 
+import * as Fold from "fp-ts/Foldable";
+
+import * as A from "fp-ts/Array";
+
 export type BoundRegistration = {
 	readonly variable: string;
 	readonly kind: "lower" | "upper";
@@ -18,7 +22,7 @@ export type BoundRegistration = {
 	readonly strict: boolean;
 };
 
-export type BoundMap = ReadonlyMap<Literal, readonly BoundRegistration[]>;
+export type BoundMap = ReadonlyMap<Literal, BoundRegistration[]>;
 
 export const Bounds = {
 	register: (map: BoundMap, literal: Literal, constraint: LinearConstraint): BoundMap => {
@@ -35,19 +39,16 @@ export const Bounds = {
 			return E.right(tab);
 		}
 
-		return registrations.reduce<E.Either<Conflict, Tableau>>(
-			(acc, reg) =>
-				pipe(
-					acc,
-					E.chain(current => {
-						const bound: Bound = { value: reg.value, strict: reg.strict, reason: literal };
-						return match(reg.kind)
-							.with("lower", () => Simplex.assertLower(current, reg.variable, bound))
-							.with("upper", () => Simplex.assertUpper(current, reg.variable, bound))
-							.exhaustive();
-					}),
-				),
-			E.right(tab),
+		const fold = Fold.reduceM(E.Monad, A.Foldable);
+		return pipe(
+			registrations,
+			fold(tab, (acc, reg) => {
+				const bound: Bound = { value: reg.value, strict: reg.strict, reason: literal };
+				return match(reg.kind)
+					.with("lower", () => Simplex.assertLower(acc, reg.variable, bound))
+					.with("upper", () => Simplex.assertUpper(acc, reg.variable, bound))
+					.exhaustive();
+			}),
 		);
 	},
 
@@ -78,7 +79,7 @@ export const Bounds = {
 			);
 
 			if (E.isLeft(result)) {
-				const bp = E.isRight(current) ? current.right.bounds.get(head.variable) : undefined;
+				const bp = current.right.bounds.get(head.variable);
 				const existingLower = bp?.lower;
 				const existingUpper = bp?.upper;
 				const lower = head.kind === "lower" ? head.value : existingLower && existingLower._tag === "Some" ? existingLower.value.value : Rational.zero;
@@ -96,7 +97,7 @@ export const Bounds = {
 
 // Single-variable constraints become direct bounds.
 // Multi-variable constraints introduce a slack variable with the constraint as its row.
-const constraintToBounds = (literal: Literal, constraint: LinearConstraint): readonly BoundRegistration[] =>
+const constraintToBounds = (literal: Literal, constraint: LinearConstraint): BoundRegistration[] =>
 	match(constraint)
 		.with({ tag: "leq" }, ({ expr }) => (expr.coefficients.size === 1 ? singleVarBound(expr, "upper", false) : slackBound(literal, expr, "upper", false)))
 		.with({ tag: "lt" }, ({ expr }) => (expr.coefficients.size === 1 ? singleVarBound(expr, "upper", true) : slackBound(literal, expr, "upper", true)))

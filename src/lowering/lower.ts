@@ -73,6 +73,7 @@ function lower(ctx: C.LowerCtx, term: EB.Term): M.Lowering<void> {
 
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => Match.lower(scrutinee, alternatives))
 
+			.with({ type: "Ann" }, ({ term }) => lower(ctx, term))
 			.otherwise(t => notImplemented(t.type))
 	);
 }

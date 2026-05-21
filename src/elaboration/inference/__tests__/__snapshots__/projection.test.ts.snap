@@ -300,7 +300,8 @@ exports[`inference: projection > \\obj -> obj.x 1`] = `
     "constraints": [
       "Schema [ x: ?2 | ?3 ] ~~ ?1",
     ],
-    "term": "λ(obj: (?1 :: Type)) -> (obj).x",
+    "term": "(λ(obj: (?1 :: Type)) -> (obj).x : Π(obj: ?1) ->
+  (closure: (?2 :: Type) -| Γ: obj))",
     "type": "Π(obj: ?1) -> (closure: (?2 :: Type) -| Γ: obj)",
   },
 }
@@ -405,31 +406,71 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
       },
     },
     "term": {
-      "binding": {
-        "annotation": {
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 1,
+      "ann": {
+        "binder": {
+          "annotation": {
+            "type": "Neutral",
+            "value": {
+              "type": "Var",
+              "variable": {
+                "lvl": 0,
+                "type": "Meta",
+                "val": 1,
+              },
+            },
           },
+          "icit": "Explicit",
+          "type": "Pi",
+          "variable": "obj",
         },
-        "icit": "Explicit",
-        "type": "Lambda",
-        "variable": "obj",
-      },
-      "body": {
-        "label": "x",
-        "term": {
-          "type": "Var",
-          "variable": {
-            "index": 0,
-            "type": "Bound",
+        "closure": {
+          "ctx": {
+            "env": [],
+            "implicits": [],
+            "metas": {},
+            "sigma": {},
+            "zonker": {},
           },
+          "term": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+          "type": "Closure",
         },
-        "type": "Proj",
+        "type": "Abs",
       },
-      "type": "Abs",
+      "term": {
+        "binding": {
+          "annotation": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+          "icit": "Explicit",
+          "type": "Lambda",
+          "variable": "obj",
+        },
+        "body": {
+          "label": "x",
+          "term": {
+            "type": "Var",
+            "variable": {
+              "index": 0,
+              "type": "Bound",
+            },
+          },
+          "type": "Proj",
+        },
+        "type": "Abs",
+      },
+      "type": "Ann",
     },
     "type": {
       "binder": {
@@ -484,7 +525,10 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 1`] = `
   let proj
     : Π(r: Row) =>
       (closure: Π(a: Type) => Π(obj: Schema [ x: a | r ]) -> a -| Γ: r; proj)
-    = λ(r: Row) => λ(a: Type) => λ(obj: Schema [ x: a | r ]) -> (obj).x;
+    = λ(r: Row) =>
+      λ(a: Type) =>
+        (λ(obj: Schema [ x: a | r ]) -> (obj).x : Π(obj: Schema [ x: a | r ]) ->
+          (closure: L2 -| Γ: obj; proj));
   return unit;
 }",
     "type": "Unit",
@@ -1031,56 +1075,131 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                 "variable": "a",
               },
               "body": {
-                "binding": {
-                  "annotation": {
-                    "arg": {
-                      "row": {
-                        "label": "x",
-                        "row": {
-                          "type": "variable",
-                          "variable": {
-                            "lvl": 2,
-                            "type": "Meta",
-                            "val": 4,
-                          },
-                        },
-                        "type": "extension",
-                        "value": {
-                          "type": "Var",
-                          "variable": {
-                            "index": 0,
-                            "type": "Bound",
-                          },
-                        },
-                      },
-                      "type": "Row",
-                    },
-                    "func": {
-                      "type": "Lit",
+                "ann": {
+                  "binder": {
+                    "annotation": {
+                      "type": "Neutral",
                       "value": {
-                        "type": "Atom",
-                        "value": "Schema",
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 1,
+                          "type": "Meta",
+                          "val": 2,
+                        },
                       },
                     },
                     "icit": "Explicit",
-                    "type": "App",
+                    "type": "Pi",
+                    "variable": "obj",
                   },
-                  "icit": "Explicit",
-                  "type": "Lambda",
-                  "variable": "obj",
-                },
-                "body": {
-                  "label": "x",
-                  "term": {
-                    "type": "Var",
-                    "variable": {
-                      "index": 0,
-                      "type": "Bound",
+                  "closure": {
+                    "ctx": {
+                      "env": [
+                        {
+                          "name": {
+                            "type": "Let",
+                            "variable": "proj",
+                          },
+                          "nf": {
+                            "type": "Neutral",
+                            "value": {
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 0,
+                                "type": "Bound",
+                              },
+                            },
+                          },
+                          "type": [
+                            {
+                              "type": "Let",
+                              "variable": "proj",
+                            },
+                            "source",
+                            {
+                              "type": "Neutral",
+                              "value": {
+                                "type": "Var",
+                                "variable": {
+                                  "lvl": 0,
+                                  "type": "Meta",
+                                  "val": 1,
+                                },
+                              },
+                            },
+                          ],
+                        },
+                      ],
+                      "implicits": [],
+                      "metas": {},
+                      "sigma": {},
+                      "zonker": {},
                     },
+                    "term": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 2,
+                        "type": "Meta",
+                        "val": 3,
+                      },
+                    },
+                    "type": "Closure",
                   },
-                  "type": "Proj",
+                  "type": "Abs",
                 },
-                "type": "Abs",
+                "term": {
+                  "binding": {
+                    "annotation": {
+                      "arg": {
+                        "row": {
+                          "label": "x",
+                          "row": {
+                            "type": "variable",
+                            "variable": {
+                              "lvl": 2,
+                              "type": "Meta",
+                              "val": 4,
+                            },
+                          },
+                          "type": "extension",
+                          "value": {
+                            "type": "Var",
+                            "variable": {
+                              "index": 0,
+                              "type": "Bound",
+                            },
+                          },
+                        },
+                        "type": "Row",
+                      },
+                      "func": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Atom",
+                          "value": "Schema",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "App",
+                    },
+                    "icit": "Explicit",
+                    "type": "Lambda",
+                    "variable": "obj",
+                  },
+                  "body": {
+                    "label": "x",
+                    "term": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 0,
+                        "type": "Bound",
+                      },
+                    },
+                    "type": "Proj",
+                  },
+                  "type": "Abs",
+                },
+                "type": "Ann",
               },
               "type": "Abs",
             },

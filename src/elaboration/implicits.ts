@@ -63,84 +63,82 @@ export const wrapLambda = (term: EB.Term, ty: NF.Value, ctx: EB.Context): EB.Ter
  * NOTE: this is more zonking than instantiation, but the name is kept for legacy reasons.
  */
 export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Resolutions): EB.Term => {
-	return (
-		match(term)
-			.with({ type: "Var", variable: { type: "Meta" } }, v => {
-				if (!!resolutions[v.variable.val]) {
-					return resolutions[v.variable.val];
-				}
+	return match(term)
+		.with({ type: "Var", variable: { type: "Meta" } }, v => {
+			if (!!resolutions[v.variable.val]) {
+				return resolutions[v.variable.val];
+			}
 
-				if (!!ctx.zonker[v.variable.val]) {
-					const quoted = NF.quote(ctx, ctx.env.length, ctx.zonker[v.variable.val]);
-					// we still need to instantiate in case the quoted term has metas itself
-					return instantiate(quoted, ctx, resolutions);
-				}
+			if (!!ctx.zonker[v.variable.val]) {
+				const quoted = NF.quote(ctx, ctx.env.length, ctx.zonker[v.variable.val]);
+				// we still need to instantiate in case the quoted term has metas itself
+				return instantiate(quoted, ctx, resolutions);
+			}
 
-				// Don't instantiate metas from outer scopes - they should remain unsolved
-				// and will be handled at their original scope level
-				if (v.variable.lvl < ctx.env.length) {
-					return v;
-				}
-				const { ann } = ctx.metas[v.variable.val];
+			// Don't instantiate metas from outer scopes - they should remain unsolved
+			// and will be handled at their original scope level
+			if (v.variable.lvl < ctx.env.length) {
+				return v;
+			}
+			const { ann } = ctx.metas[v.variable.val];
 
-				return match(ann)
-					.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.Constructors.Row({ type: "empty" }))
-					.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Any" }))
-					.with({ type: "Lit", value: { type: "Atom", value: "Any" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Void" }))
-					.otherwise(() => EB.Constructors.Var(v.variable));
-			})
-			.with({ type: "Abs", binding: { type: "Sigma" } }, sig => {
-				const annotation = instantiate(sig.binding.annotation, ctx, resolutions);
-				const nf = NF.evaluate(ctx, annotation);
-				assert(nf.type === "Row", "Sigma binder annotation must be a Row");
-				const xtended = EB.extendSigmaEnv(ctx, nf.row);
-				return EB.Constructors.Abs({ ...sig.binding, annotation }, instantiate(sig.body, xtended, resolutions));
-			})
-			.with({ type: "Abs" }, abs => {
-				const annotation = instantiate(abs.binding.annotation, ctx, resolutions);
-				const extended = EB.bind(ctx, abs.binding, NF.evaluate(ctx, annotation));
-				return EB.Constructors.Abs({ ...abs.binding, annotation }, instantiate(abs.body, extended, resolutions));
-			})
-			.with({ type: "App" }, app => EB.Constructors.App(app.icit, instantiate(app.func, ctx, resolutions), instantiate(app.arg, ctx, resolutions)))
-			.with({ type: "Row" }, ({ row }) => {
-				const r = R.traverse(
-					row,
-					val => instantiate(val, ctx, resolutions),
-					v => R.Constructors.Variable(v),
-				);
-				return EB.Constructors.Row(r);
-			})
-			.with({ type: "Proj" }, ({ label, term }) => EB.Constructors.Proj(label, instantiate(term, ctx, resolutions)))
-			.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, instantiate(value, ctx, resolutions), instantiate(term, ctx, resolutions)))
-			//.with({ type: "Annotation" }, ({ term, ann }) => EB.Constructors.Annotation(instantiate(term, ctx), instantiate(ann, ctx)))
-			.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
-				EB.Constructors.Match(
-					instantiate(scrutinee, ctx, resolutions),
-					alternatives.map(alt => {
-						const xtended = alt.binders.reduce((acc, [bv, bty]) => EB.bind(acc, { type: "Let", variable: bv }, bty), ctx);
-						return { pattern: alt.pattern, term: instantiate(alt.term, xtended, resolutions), binders: alt.binders };
-					}),
-				),
-			)
-			.with({ type: "Block" }, ({ return: ret, statements }) => {
-				const { stmts, ctx: xtended } = statements.reduce(
-					(acc, s) => {
-						const { stmts, ctx } = acc;
+			return match(ann)
+				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.Constructors.Row({ type: "empty" }))
+				.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Any" }))
+				.with({ type: "Lit", value: { type: "Atom", value: "Any" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Void" }))
+				.otherwise(() => EB.Constructors.Var(v.variable));
+		})
+		.with({ type: "Abs", binding: { type: "Sigma" } }, sig => {
+			const annotation = instantiate(sig.binding.annotation, ctx, resolutions);
+			const nf = NF.evaluate(ctx, annotation);
+			assert(nf.type === "Row", "Sigma binder annotation must be a Row");
+			const xtended = EB.extendSigmaEnv(ctx, nf.row);
+			return EB.Constructors.Abs({ ...sig.binding, annotation }, instantiate(sig.body, xtended, resolutions));
+		})
+		.with({ type: "Abs" }, abs => {
+			const annotation = instantiate(abs.binding.annotation, ctx, resolutions);
+			const extended = EB.bind(ctx, abs.binding, NF.evaluate(ctx, annotation));
+			return EB.Constructors.Abs({ ...abs.binding, annotation }, instantiate(abs.body, extended, resolutions));
+		})
+		.with({ type: "App" }, app => EB.Constructors.App(app.icit, instantiate(app.func, ctx, resolutions), instantiate(app.arg, ctx, resolutions)))
+		.with({ type: "Row" }, ({ row }) => {
+			const r = R.traverse(
+				row,
+				val => instantiate(val, ctx, resolutions),
+				v => R.Constructors.Variable(v),
+			);
+			return EB.Constructors.Row(r);
+		})
+		.with({ type: "Proj" }, ({ label, term }) => EB.Constructors.Proj(label, instantiate(term, ctx, resolutions)))
+		.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, instantiate(value, ctx, resolutions), instantiate(term, ctx, resolutions)))
+		.with({ type: "Ann" }, ({ term, ann }) => EB.Constructors.Ann(instantiate(term, ctx, resolutions), ann))
+		.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
+			EB.Constructors.Match(
+				instantiate(scrutinee, ctx, resolutions),
+				alternatives.map(alt => {
+					const xtended = alt.binders.reduce((acc, [bv, bty]) => EB.bind(acc, { type: "Let", variable: bv }, bty), ctx);
+					return { pattern: alt.pattern, term: instantiate(alt.term, xtended, resolutions), binders: alt.binders };
+				}),
+			),
+		)
+		.with({ type: "Block" }, ({ return: ret, statements }) => {
+			const { stmts, ctx: xtended } = statements.reduce(
+				(acc, s) => {
+					const { stmts, ctx } = acc;
 
-						if (s.type === "Let") {
-							const extended = EB.bind(ctx, { type: "Let", variable: s.variable }, s.annotation);
-							const instantiated = { ...s, value: instantiate(s.value, extended, resolutions) };
-							return { stmts: [...stmts, instantiated], ctx: extended };
-						}
-						const instantiated = { ...s, value: instantiate(s.value, ctx, resolutions) };
-						return { stmts: [...stmts, instantiated], ctx };
-					},
-					{ stmts: [] as EB.Statement[], ctx },
-				);
+					if (s.type === "Let") {
+						const extended = EB.bind(ctx, { type: "Let", variable: s.variable }, s.annotation);
+						const instantiated = { ...s, value: instantiate(s.value, extended, resolutions) };
+						return { stmts: [...stmts, instantiated], ctx: extended };
+					}
+					const instantiated = { ...s, value: instantiate(s.value, ctx, resolutions) };
+					return { stmts: [...stmts, instantiated], ctx };
+				},
+				{ stmts: [] as EB.Statement[], ctx },
+			);
 
-				return EB.Constructors.Block(stmts, instantiate(ret, xtended, resolutions));
-			})
-			.with({ type: "Modal" }, ({ term, modalities }) => EB.Constructors.Modal(instantiate(term, ctx, resolutions), modalities))
-			.otherwise(t => t)
-	);
+			return EB.Constructors.Block(stmts, instantiate(ret, xtended, resolutions));
+		})
+		.with({ type: "Modal" }, ({ term, modalities }) => EB.Constructors.Modal(instantiate(term, ctx, resolutions), modalities))
+		.otherwise(t => t);
 };

@@ -88,7 +88,7 @@ export const collectMetasEB = (tm: EB.Term, zonker: Subst): MetaEB[] => {
 			)
 			.with({ type: "Proj" }, ({ term }) => _metas(term))
 			.with({ type: "Inj" }, ({ value, term }) => [..._metas(value), ..._metas(term)])
-			//.with({ type: "Annotation" }, ({ term, ann }) => [..._metas(term), ..._metas(ann)])
+			.with({ type: "Ann" }, ({ term, ann }) => [..._metas(term), ...collectMetasNF(ann, zonker)])
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => [..._metas(scrutinee), ...alternatives.flatMap(alt => _metas(alt.term))])
 			.with({ type: "Block" }, ({ return: ret, statements }) => [..._metas(ret), ...statements.flatMap(s => _metas(s.value))])
 			.with({ type: "Modal" }, ({ term }) => _metas(term))

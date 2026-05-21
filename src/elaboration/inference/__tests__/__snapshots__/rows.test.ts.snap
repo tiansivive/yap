@@ -7,7 +7,7 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
       "Type ~~ Type",
       "Type ~~ ?2",
     ],
-    "term": "λ(r: Row) -> Schema [ foo: Num | r ]",
+    "term": "(λ(r: Row) -> Schema [ foo: Num | r ] : Π(r: Row) -> (closure: Type -| Γ: r))",
     "type": "Π(r: Row) -> (closure: Type -| Γ: r)",
   },
 }
@@ -107,51 +107,86 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
       },
     },
     "term": {
-      "binding": {
-        "annotation": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Row",
-          },
-        },
-        "icit": "Explicit",
-        "type": "Lambda",
-        "variable": "r",
-      },
-      "body": {
-        "arg": {
-          "row": {
-            "label": "foo",
-            "row": {
-              "type": "variable",
-              "variable": {
-                "index": 0,
-                "type": "Bound",
-              },
-            },
-            "type": "extension",
+      "ann": {
+        "binder": {
+          "annotation": {
+            "type": "Lit",
             "value": {
-              "type": "Var",
-              "variable": {
-                "name": "Num",
-                "type": "Free",
-              },
+              "type": "Atom",
+              "value": "Row",
             },
           },
-          "type": "Row",
+          "icit": "Explicit",
+          "type": "Pi",
+          "variable": "r",
         },
-        "func": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Schema",
+        "closure": {
+          "ctx": {
+            "env": [],
+            "implicits": [],
+            "metas": {},
+            "sigma": {},
+            "zonker": {},
           },
+          "term": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Type",
+            },
+          },
+          "type": "Closure",
         },
-        "icit": "Explicit",
-        "type": "App",
+        "type": "Abs",
       },
-      "type": "Abs",
+      "term": {
+        "binding": {
+          "annotation": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Row",
+            },
+          },
+          "icit": "Explicit",
+          "type": "Lambda",
+          "variable": "r",
+        },
+        "body": {
+          "arg": {
+            "row": {
+              "label": "foo",
+              "row": {
+                "type": "variable",
+                "variable": {
+                  "index": 0,
+                  "type": "Bound",
+                },
+              },
+              "type": "extension",
+              "value": {
+                "type": "Var",
+                "variable": {
+                  "name": "Num",
+                  "type": "Free",
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "type": "App",
+        },
+        "type": "Abs",
+      },
+      "type": "Ann",
     },
     "type": {
       "binder": {
@@ -197,7 +232,8 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       "Type ~~ ?3",
       "?1 ~~ Schema [ | ?5 ]",
     ],
-    "term": "λ(r: (?1 :: Type)) -> Struct [ foo: Num | r ]",
+    "term": "(λ(r: (?1 :: Type)) -> Struct [ foo: Num | r ] : Π(r: ?1) ->
+  (closure: Schema [ foo: Type | (?5 :: Row) ] -| Γ: r))",
     "type": "Π(r: ?1) -> (closure: Schema [ foo: Type | (?5 :: Row) ] -| Γ: r)",
   },
 }
@@ -344,52 +380,117 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       },
     },
     "term": {
-      "binding": {
-        "annotation": {
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 1,
-          },
-        },
-        "icit": "Explicit",
-        "type": "Lambda",
-        "variable": "r",
-      },
-      "body": {
-        "arg": {
-          "row": {
-            "label": "foo",
-            "row": {
-              "type": "variable",
-              "variable": {
-                "index": 0,
-                "type": "Bound",
-              },
-            },
-            "type": "extension",
+      "ann": {
+        "binder": {
+          "annotation": {
+            "type": "Neutral",
             "value": {
               "type": "Var",
               "variable": {
-                "name": "Num",
-                "type": "Free",
+                "lvl": 0,
+                "type": "Meta",
+                "val": 1,
               },
             },
           },
-          "type": "Row",
+          "icit": "Explicit",
+          "type": "Pi",
+          "variable": "r",
         },
-        "func": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Struct",
+        "closure": {
+          "ctx": {
+            "env": [],
+            "implicits": [],
+            "metas": {},
+            "sigma": {},
+            "zonker": {},
           },
+          "term": {
+            "arg": {
+              "row": {
+                "label": "foo",
+                "row": {
+                  "type": "variable",
+                  "variable": {
+                    "lvl": 1,
+                    "type": "Meta",
+                    "val": 5,
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Type",
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Schema",
+              },
+            },
+            "icit": "Explicit",
+            "type": "App",
+          },
+          "type": "Closure",
         },
-        "icit": "Explicit",
-        "type": "App",
+        "type": "Abs",
       },
-      "type": "Abs",
+      "term": {
+        "binding": {
+          "annotation": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+          "icit": "Explicit",
+          "type": "Lambda",
+          "variable": "r",
+        },
+        "body": {
+          "arg": {
+            "row": {
+              "label": "foo",
+              "row": {
+                "type": "variable",
+                "variable": {
+                  "index": 0,
+                  "type": "Bound",
+                },
+              },
+              "type": "extension",
+              "value": {
+                "type": "Var",
+                "variable": {
+                  "name": "Num",
+                  "type": "Free",
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Struct",
+            },
+          },
+          "icit": "Explicit",
+          "type": "App",
+        },
+        "type": "Abs",
+      },
+      "type": "Ann",
     },
     "type": {
       "binder": {

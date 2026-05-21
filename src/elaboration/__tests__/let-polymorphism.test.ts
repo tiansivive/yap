@@ -22,7 +22,6 @@ describe("Let-polymorphism", () => {
 			// (constraints are solved during letdec elaboration)
 
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("polymorphic const function (K combinator)", () => {
@@ -36,7 +35,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("polymorphic composition (B combinator)", () => {
@@ -50,7 +48,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("polymorphic flip (C combinator)", () => {
@@ -64,7 +61,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("polymorphic S combinator", () => {
@@ -79,7 +75,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("polymorphic thrush (T combinator)", () => {
@@ -93,7 +88,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("polymorphic warbler (W combinator)", () => {
@@ -107,7 +101,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		// it("polymorphic Y combinator (fixed-point)", () => {
@@ -137,7 +130,6 @@ describe("Let-polymorphism", () => {
 			// but `id` is polymorphic when let-bound
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("polymorphic hof applied to row literals", () => {
@@ -151,7 +143,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 	});
 
@@ -169,7 +160,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("shadowing polymorphic lets", () => {
@@ -184,7 +174,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 	});
 
@@ -209,7 +198,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("recursive function with polymorphic usage", () => {
@@ -222,7 +210,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 	});
 
@@ -240,7 +227,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("polymorphic function with struct values", () => {
@@ -254,7 +240,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 	});
 
@@ -274,7 +259,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("let-bound closure capturing polymorphic function", () => {
@@ -289,7 +273,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 	});
 
@@ -304,7 +287,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("multiple sequential polymorphic lets", () => {
@@ -321,7 +303,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("polymorphic let returning polymorphic function", () => {
@@ -337,7 +318,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 	});
 });

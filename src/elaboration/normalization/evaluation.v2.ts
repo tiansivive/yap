@@ -421,6 +421,9 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, skolems: V2.MutState["skol
 			// Evaluate the body-lambda; the above continuation receives it.
 			globalWorkStack.push({ type: "Eval", ctx, term: body });
 		})
+		.with({ type: "Ann" }, ({ term }) => {
+			globalWorkStack.push({ type: "Eval", ctx, term });
+		})
 		.otherwise(tm => {
 			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx));
 			throw new Error("Not implemented");

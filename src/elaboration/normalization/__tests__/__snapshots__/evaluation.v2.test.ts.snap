@@ -31,39 +31,46 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
     "term": "{
   let while
     : Π(a: Type) =>
-      (closure: Π(t1: Π(t2: Unit) -> Bool) ->
-        Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)
+      (closure: Π(b: Type) =>
+        Π(t1: Π(t2: Unit) -> Bool) ->
+          Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)
     = λ(a: Type) =>
-      λ(cond: Π(t2: Unit) -> Bool) ->
-        λ(body: Π(t4: Unit) -> Unit) ->
-          reset |{
-            let go
-              : Π(a: Type) =>
-                (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
-              = λ(a: Type) =>
-                λ(u: Unit) ->
-                  shift (λ($k: Π($k: go) -> a) ->
-                    match body unit
-                      | true -> { go unit; $k (a unit); return unit; }
-                      | false -> unit);
-            return go @a unit;
-          }|;
+      λ(b: Type) =>
+        λ(cond: Π(t2: Unit) -> Bool) ->
+          λ(body: Π(t4: Unit) -> Unit) ->
+            reset |{
+              let go
+                : Π(a: Type) =>
+                  (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
+                = λ(a: Type) =>
+                  (λ(u: Unit) ->
+                    shift (λ($k: Π($k: b) -> a) ->
+                      match body unit
+                        | true -> { go unit; $k (a unit); return unit; }
+                        | false -> unit) : Π(u: Unit) ->
+                    (closure: body -| Γ: u; go; body; cond; while));
+              return go @a unit;
+            }|;
   return while;
 }",
     "type": "Π(a: Type) =>
-  (closure: Π(t1: Π(t2: Unit) -> Bool) ->
-    Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)",
+  (closure: Π(b: Type) =>
+    Π(t1: Π(t2: Unit) -> Bool) ->
+      Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)",
   },
   "evaluation": "λ(a: Type) =>
-  (closure: λ(cond: Π(t2: Unit) -> Bool) ->
-    λ(body: Π(t4: Unit) -> Unit) ->
-      reset |{
-        let go
-          : Π(a: Type) =>
-            (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
-          = λ(a: Type) => λ(u: Unit) -> (?6 :: go);
-        return go @a unit;
-      }| -| Γ: a; while)",
+  (closure: λ(b: Type) =>
+    λ(cond: Π(t2: Unit) -> Bool) ->
+      λ(body: Π(t4: Unit) -> Unit) ->
+        reset |{
+          let go
+            : Π(a: Type) =>
+              (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
+            = λ(a: Type) =>
+              (λ(u: Unit) -> (?6 :: b) : Π(u: Unit) ->
+                (closure: body -| Γ: u; go; body; cond; while));
+          return go @a unit;
+        }| -| Γ: a; while)",
 }
 `;
 
@@ -90,10 +97,10 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
     "term": "{
   let test
     : Π(x: Num) -> (closure: Num -| Γ: x; test)
-    = reset |λ(x: Num) ->
+    = reset |(λ(x: Num) ->
       + 1
         shift (λ($k: Π($k: Num) -> Π(x: Num) -> (closure: Num -| Γ: x; test)) ->
-          $k (+ x 10))|;
+          $k (+ x 10)) : Π(x: Num) -> (closure: Num -| Γ: x; test))|;
   return test 5;
 }",
     "type": "Num",

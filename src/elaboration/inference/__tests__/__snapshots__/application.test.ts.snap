@@ -8,7 +8,12 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       "?2 @ ?1",
       "String ~~ String",
     ],
-    "term": "(λ(x: (?1 :: Type)) => λ(y: String) -> y) @(?2 :: ?1) "hello"",
+    "term": "((λ(x: (?1 :: Type)) =>
+  (λ(y: String) -> y : Π(y: String) ->
+    (closure: String -| Γ: y; x)) : Π(x: ?1) =>
+  (closure: Π(y: String) -> String -| Γ: x)))
+  @(?2 :: ?1)
+  "hello"",
     "type": "String",
   },
 }
@@ -127,42 +132,181 @@ exports[`inference: application > implicit insertion > inserts implicit argument
           },
         },
         "func": {
-          "binding": {
-            "annotation": {
-              "type": "Var",
-              "variable": {
-                "lvl": 0,
-                "type": "Meta",
-                "val": 1,
+          "ann": {
+            "binder": {
+              "annotation": {
+                "type": "Neutral",
+                "value": {
+                  "type": "Var",
+                  "variable": {
+                    "lvl": 0,
+                    "type": "Meta",
+                    "val": 1,
+                  },
+                },
               },
+              "icit": "Implicit",
+              "type": "Pi",
+              "variable": "x",
             },
-            "icit": "Implicit",
-            "type": "Lambda",
-            "variable": "x",
+            "closure": {
+              "ctx": {
+                "env": [],
+                "implicits": [],
+                "metas": {},
+                "sigma": {},
+                "zonker": {},
+              },
+              "term": {
+                "binding": {
+                  "annotation": {
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "String",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "type": "Pi",
+                  "variable": "y",
+                },
+                "body": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "String",
+                  },
+                },
+                "type": "Abs",
+              },
+              "type": "Closure",
+            },
+            "type": "Abs",
           },
-          "body": {
+          "term": {
             "binding": {
               "annotation": {
                 "type": "Var",
                 "variable": {
-                  "name": "String",
-                  "type": "Free",
+                  "lvl": 0,
+                  "type": "Meta",
+                  "val": 1,
                 },
               },
-              "icit": "Explicit",
+              "icit": "Implicit",
               "type": "Lambda",
-              "variable": "y",
+              "variable": "x",
             },
             "body": {
-              "type": "Var",
-              "variable": {
-                "index": 0,
-                "type": "Bound",
+              "ann": {
+                "binder": {
+                  "annotation": {
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "String",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "type": "Pi",
+                  "variable": "y",
+                },
+                "closure": {
+                  "ctx": {
+                    "env": [
+                      {
+                        "name": {
+                          "type": "Lambda",
+                          "variable": "x",
+                        },
+                        "nf": {
+                          "type": "Neutral",
+                          "value": {
+                            "type": "Var",
+                            "variable": {
+                              "lvl": 0,
+                              "type": "Bound",
+                            },
+                          },
+                        },
+                        "type": [
+                          {
+                            "type": "Lambda",
+                            "variable": "x",
+                          },
+                          "source",
+                          {
+                            "type": "Neutral",
+                            "value": {
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 0,
+                                "type": "Meta",
+                                "val": 1,
+                              },
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                    "implicits": [],
+                    "metas": {
+                      "1": {
+                        "ann": {
+                          "type": "Lit",
+                          "value": {
+                            "type": "Atom",
+                            "value": "Type",
+                          },
+                        },
+                        "meta": {
+                          "lvl": 0,
+                          "type": "Meta",
+                          "val": 1,
+                        },
+                      },
+                    },
+                    "sigma": {},
+                    "zonker": {},
+                  },
+                  "term": {
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "String",
+                    },
+                  },
+                  "type": "Closure",
+                },
+                "type": "Abs",
               },
+              "term": {
+                "binding": {
+                  "annotation": {
+                    "type": "Var",
+                    "variable": {
+                      "name": "String",
+                      "type": "Free",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "type": "Lambda",
+                  "variable": "y",
+                },
+                "body": {
+                  "type": "Var",
+                  "variable": {
+                    "index": 0,
+                    "type": "Bound",
+                  },
+                },
+                "type": "Abs",
+              },
+              "type": "Ann",
             },
             "type": "Abs",
           },
-          "type": "Abs",
+          "type": "Ann",
         },
         "icit": "Implicit",
         "type": "App",
@@ -191,7 +335,12 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       "?1 @ Num",
       "String ~~ String",
     ],
-    "term": "(λ(x: Num) => λ(y: String) -> y) @(?1 :: Num) "hello"",
+    "term": "((λ(x: Num) =>
+  (λ(y: String) -> y : Π(y: String) ->
+    (closure: String -| Γ: y; x)) : Π(x: Num) =>
+  (closure: Π(y: String) -> String -| Γ: x)))
+  @(?1 :: Num)
+  "hello"",
     "type": "String",
   },
 }
@@ -306,41 +455,157 @@ exports[`inference: application > implicit insertion > inserts implicit argument
           },
         },
         "func": {
-          "binding": {
-            "annotation": {
-              "type": "Var",
-              "variable": {
-                "name": "Num",
-                "type": "Free",
+          "ann": {
+            "binder": {
+              "annotation": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
               },
+              "icit": "Implicit",
+              "type": "Pi",
+              "variable": "x",
             },
-            "icit": "Implicit",
-            "type": "Lambda",
-            "variable": "x",
+            "closure": {
+              "ctx": {
+                "env": [],
+                "implicits": [],
+                "metas": {},
+                "sigma": {},
+                "zonker": {},
+              },
+              "term": {
+                "binding": {
+                  "annotation": {
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "String",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "type": "Pi",
+                  "variable": "y",
+                },
+                "body": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "String",
+                  },
+                },
+                "type": "Abs",
+              },
+              "type": "Closure",
+            },
+            "type": "Abs",
           },
-          "body": {
+          "term": {
             "binding": {
               "annotation": {
                 "type": "Var",
                 "variable": {
-                  "name": "String",
+                  "name": "Num",
                   "type": "Free",
                 },
               },
-              "icit": "Explicit",
+              "icit": "Implicit",
               "type": "Lambda",
-              "variable": "y",
+              "variable": "x",
             },
             "body": {
-              "type": "Var",
-              "variable": {
-                "index": 0,
-                "type": "Bound",
+              "ann": {
+                "binder": {
+                  "annotation": {
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "String",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "type": "Pi",
+                  "variable": "y",
+                },
+                "closure": {
+                  "ctx": {
+                    "env": [
+                      {
+                        "name": {
+                          "type": "Lambda",
+                          "variable": "x",
+                        },
+                        "nf": {
+                          "type": "Neutral",
+                          "value": {
+                            "type": "Var",
+                            "variable": {
+                              "lvl": 0,
+                              "type": "Bound",
+                            },
+                          },
+                        },
+                        "type": [
+                          {
+                            "type": "Lambda",
+                            "variable": "x",
+                          },
+                          "source",
+                          {
+                            "type": "Lit",
+                            "value": {
+                              "type": "Atom",
+                              "value": "Num",
+                            },
+                          },
+                        ],
+                      },
+                    ],
+                    "implicits": [],
+                    "metas": {},
+                    "sigma": {},
+                    "zonker": {},
+                  },
+                  "term": {
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "String",
+                    },
+                  },
+                  "type": "Closure",
+                },
+                "type": "Abs",
               },
+              "term": {
+                "binding": {
+                  "annotation": {
+                    "type": "Var",
+                    "variable": {
+                      "name": "String",
+                      "type": "Free",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "type": "Lambda",
+                  "variable": "y",
+                },
+                "body": {
+                  "type": "Var",
+                  "variable": {
+                    "index": 0,
+                    "type": "Bound",
+                  },
+                },
+                "type": "Abs",
+              },
+              "type": "Ann",
             },
             "type": "Abs",
           },
-          "type": "Abs",
+          "type": "Ann",
         },
         "icit": "Implicit",
         "type": "App",
@@ -369,7 +634,12 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
       "?4 @ ?1",
       "String ~~ String",
     ],
-    "term": "(λ(a: (?1 :: Type)) => (λ(b: (?2 :: Type)) => λ(c: String) -> c) @(?3 :: ?2))
+    "term": "((λ(a: (?1 :: Type)) =>
+  ((λ(b: (?2 :: Type)) =>
+    (λ(c: String) -> c : Π(c: String) ->
+      (closure: String -| Γ: c; b; a)) : Π(b: ?2) =>
+    (closure: Π(c: String) -> String -| Γ: b; a)))
+    @(?3 :: ?2) : Π(a: ?1) => (closure: Π(c: String) -> String -| Γ: a)))
   @(?4 :: ?1)
   "hello"",
     "type": "String",
@@ -542,70 +812,361 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
           },
         },
         "func": {
-          "binding": {
-            "annotation": {
-              "type": "Var",
-              "variable": {
-                "lvl": 0,
-                "type": "Meta",
-                "val": 1,
-              },
-            },
-            "icit": "Implicit",
-            "type": "Lambda",
-            "variable": "a",
-          },
-          "body": {
-            "arg": {
-              "type": "Var",
-              "variable": {
-                "lvl": 1,
-                "type": "Meta",
-                "val": 3,
-              },
-            },
-            "func": {
-              "binding": {
-                "annotation": {
+          "ann": {
+            "binder": {
+              "annotation": {
+                "type": "Neutral",
+                "value": {
                   "type": "Var",
                   "variable": {
-                    "lvl": 1,
+                    "lvl": 0,
                     "type": "Meta",
-                    "val": 2,
+                    "val": 1,
                   },
                 },
-                "icit": "Implicit",
-                "type": "Lambda",
-                "variable": "b",
               },
-              "body": {
+              "icit": "Implicit",
+              "type": "Pi",
+              "variable": "a",
+            },
+            "closure": {
+              "ctx": {
+                "env": [],
+                "implicits": [],
+                "metas": {},
+                "sigma": {},
+                "zonker": {},
+              },
+              "term": {
                 "binding": {
                   "annotation": {
-                    "type": "Var",
-                    "variable": {
-                      "name": "String",
-                      "type": "Free",
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "String",
                     },
                   },
                   "icit": "Explicit",
-                  "type": "Lambda",
+                  "type": "Pi",
                   "variable": "c",
                 },
                 "body": {
-                  "type": "Var",
-                  "variable": {
-                    "index": 0,
-                    "type": "Bound",
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "String",
                   },
                 },
                 "type": "Abs",
               },
-              "type": "Abs",
+              "type": "Closure",
             },
-            "icit": "Implicit",
-            "type": "App",
+            "type": "Abs",
           },
-          "type": "Abs",
+          "term": {
+            "binding": {
+              "annotation": {
+                "type": "Var",
+                "variable": {
+                  "lvl": 0,
+                  "type": "Meta",
+                  "val": 1,
+                },
+              },
+              "icit": "Implicit",
+              "type": "Lambda",
+              "variable": "a",
+            },
+            "body": {
+              "arg": {
+                "type": "Var",
+                "variable": {
+                  "lvl": 1,
+                  "type": "Meta",
+                  "val": 3,
+                },
+              },
+              "func": {
+                "ann": {
+                  "binder": {
+                    "annotation": {
+                      "type": "Neutral",
+                      "value": {
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 1,
+                          "type": "Meta",
+                          "val": 2,
+                        },
+                      },
+                    },
+                    "icit": "Implicit",
+                    "type": "Pi",
+                    "variable": "b",
+                  },
+                  "closure": {
+                    "ctx": {
+                      "env": [
+                        {
+                          "name": {
+                            "type": "Lambda",
+                            "variable": "a",
+                          },
+                          "nf": {
+                            "type": "Neutral",
+                            "value": {
+                              "type": "Var",
+                              "variable": {
+                                "lvl": 0,
+                                "type": "Bound",
+                              },
+                            },
+                          },
+                          "type": [
+                            {
+                              "type": "Lambda",
+                              "variable": "a",
+                            },
+                            "source",
+                            {
+                              "type": "Neutral",
+                              "value": {
+                                "type": "Var",
+                                "variable": {
+                                  "lvl": 0,
+                                  "type": "Meta",
+                                  "val": 1,
+                                },
+                              },
+                            },
+                          ],
+                        },
+                      ],
+                      "implicits": [],
+                      "metas": {
+                        "1": {
+                          "ann": {
+                            "type": "Lit",
+                            "value": {
+                              "type": "Atom",
+                              "value": "Type",
+                            },
+                          },
+                          "meta": {
+                            "lvl": 0,
+                            "type": "Meta",
+                            "val": 1,
+                          },
+                        },
+                      },
+                      "sigma": {},
+                      "zonker": {},
+                    },
+                    "term": {
+                      "binding": {
+                        "annotation": {
+                          "type": "Lit",
+                          "value": {
+                            "type": "Atom",
+                            "value": "String",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "type": "Pi",
+                        "variable": "c",
+                      },
+                      "body": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Atom",
+                          "value": "String",
+                        },
+                      },
+                      "type": "Abs",
+                    },
+                    "type": "Closure",
+                  },
+                  "type": "Abs",
+                },
+                "term": {
+                  "binding": {
+                    "annotation": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 2,
+                      },
+                    },
+                    "icit": "Implicit",
+                    "type": "Lambda",
+                    "variable": "b",
+                  },
+                  "body": {
+                    "ann": {
+                      "binder": {
+                        "annotation": {
+                          "type": "Lit",
+                          "value": {
+                            "type": "Atom",
+                            "value": "String",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "type": "Pi",
+                        "variable": "c",
+                      },
+                      "closure": {
+                        "ctx": {
+                          "env": [
+                            {
+                              "name": {
+                                "type": "Lambda",
+                                "variable": "b",
+                              },
+                              "nf": {
+                                "type": "Neutral",
+                                "value": {
+                                  "type": "Var",
+                                  "variable": {
+                                    "lvl": 1,
+                                    "type": "Bound",
+                                  },
+                                },
+                              },
+                              "type": [
+                                {
+                                  "type": "Lambda",
+                                  "variable": "b",
+                                },
+                                "source",
+                                {
+                                  "type": "Neutral",
+                                  "value": {
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 1,
+                                      "type": "Meta",
+                                      "val": 2,
+                                    },
+                                  },
+                                },
+                              ],
+                            },
+                            {
+                              "name": {
+                                "type": "Lambda",
+                                "variable": "a",
+                              },
+                              "nf": {
+                                "type": "Neutral",
+                                "value": {
+                                  "type": "Var",
+                                  "variable": {
+                                    "lvl": 0,
+                                    "type": "Bound",
+                                  },
+                                },
+                              },
+                              "type": [
+                                {
+                                  "type": "Lambda",
+                                  "variable": "a",
+                                },
+                                "source",
+                                {
+                                  "type": "Neutral",
+                                  "value": {
+                                    "type": "Var",
+                                    "variable": {
+                                      "lvl": 0,
+                                      "type": "Meta",
+                                      "val": 1,
+                                    },
+                                  },
+                                },
+                              ],
+                            },
+                          ],
+                          "implicits": [],
+                          "metas": {
+                            "1": {
+                              "ann": {
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Type",
+                                },
+                              },
+                              "meta": {
+                                "lvl": 0,
+                                "type": "Meta",
+                                "val": 1,
+                              },
+                            },
+                            "2": {
+                              "ann": {
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Type",
+                                },
+                              },
+                              "meta": {
+                                "lvl": 1,
+                                "type": "Meta",
+                                "val": 2,
+                              },
+                            },
+                          },
+                          "sigma": {},
+                          "zonker": {},
+                        },
+                        "term": {
+                          "type": "Lit",
+                          "value": {
+                            "type": "Atom",
+                            "value": "String",
+                          },
+                        },
+                        "type": "Closure",
+                      },
+                      "type": "Abs",
+                    },
+                    "term": {
+                      "binding": {
+                        "annotation": {
+                          "type": "Var",
+                          "variable": {
+                            "name": "String",
+                            "type": "Free",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "type": "Lambda",
+                        "variable": "c",
+                      },
+                      "body": {
+                        "type": "Var",
+                        "variable": {
+                          "index": 0,
+                          "type": "Bound",
+                        },
+                      },
+                      "type": "Abs",
+                    },
+                    "type": "Ann",
+                  },
+                  "type": "Abs",
+                },
+                "type": "Ann",
+              },
+              "icit": "Implicit",
+              "type": "App",
+            },
+            "type": "Abs",
+          },
+          "type": "Ann",
         },
         "icit": "Implicit",
         "type": "App",
@@ -631,7 +1192,7 @@ exports[`inference: application > simple application f x 1`] = `
     "constraints": [
       "Num ~~ ?1",
     ],
-    "term": "(λ(x: (?1 :: Type)) -> x) 1",
+    "term": "((λ(x: (?1 :: Type)) -> x : Π(x: ?1) -> (closure: (?1 :: Type) -| Γ: x))) 1",
     "type": "?1",
   },
 }
@@ -689,27 +1250,67 @@ exports[`inference: application > simple application f x 2`] = `
         },
       },
       "func": {
-        "binding": {
-          "annotation": {
+        "ann": {
+          "binder": {
+            "annotation": {
+              "type": "Neutral",
+              "value": {
+                "type": "Var",
+                "variable": {
+                  "lvl": 0,
+                  "type": "Meta",
+                  "val": 1,
+                },
+              },
+            },
+            "icit": "Explicit",
+            "type": "Pi",
+            "variable": "x",
+          },
+          "closure": {
+            "ctx": {
+              "env": [],
+              "implicits": [],
+              "metas": {},
+              "sigma": {},
+              "zonker": {},
+            },
+            "term": {
+              "type": "Var",
+              "variable": {
+                "lvl": 0,
+                "type": "Meta",
+                "val": 1,
+              },
+            },
+            "type": "Closure",
+          },
+          "type": "Abs",
+        },
+        "term": {
+          "binding": {
+            "annotation": {
+              "type": "Var",
+              "variable": {
+                "lvl": 0,
+                "type": "Meta",
+                "val": 1,
+              },
+            },
+            "icit": "Explicit",
+            "type": "Lambda",
+            "variable": "x",
+          },
+          "body": {
             "type": "Var",
             "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 1,
+              "index": 0,
+              "type": "Bound",
             },
           },
-          "icit": "Explicit",
-          "type": "Lambda",
-          "variable": "x",
+          "type": "Abs",
         },
-        "body": {
-          "type": "Var",
-          "variable": {
-            "index": 0,
-            "type": "Bound",
-          },
-        },
-        "type": "Abs",
+        "type": "Ann",
       },
       "icit": "Explicit",
       "type": "App",

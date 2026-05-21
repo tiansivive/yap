@@ -28,7 +28,8 @@ type Constructor =
 	| { type: "Block"; statements: Array<Statement>; return: Term }
 	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
 	| { type: "Reset"; term: Term }
-	| { type: "Shift"; body: Term };
+	| { type: "Shift"; body: Term }
+	| { type: "Ann"; term: Term; ann: NF.Value };
 
 export type Variable =
 	| { type: "Bound"; index: number }
@@ -131,7 +132,7 @@ export const Constructors = {
 			type: "Lit",
 			value,
 		}),
-	// Annotation: (term: Term, ann: Term): Term => ({ type: "Annotation", term, ann }),
+	Ann: (term: Term, ann: NF.Value): Term => mk({ type: "Ann", term, ann }),
 
 	Row: (row: Row): Term => mk({ type: "Row", row }),
 	Extension: (label: string, value: Term, row: Row): Row => ({ type: "extension", label, value, row }),
@@ -193,7 +194,7 @@ export const CtorPatterns = {
 	Row: { type: "Row" },
 	Proj: { type: "Proj" },
 	Inj: { type: "Inj" },
-	Annotation: { type: "Annotation" },
+	Ann: { type: "Ann" },
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } },
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } },
 	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } },

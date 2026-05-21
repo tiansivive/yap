@@ -298,6 +298,10 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 					return [outTy, { vc: combinedVc }] satisfies SynthResult;
 				})
 
+				.with({ type: "Ann" }, function* (tm) {
+					const artefacts = yield* check.gen(tm.term, tm.ann);
+					return [tm.ann, artefacts] satisfies SynthResult;
+				})
 				.otherwise(function* () {
 					throw new Error("synth: case not implemented for term " + EB.Display.Term(term, ctx));
 				});

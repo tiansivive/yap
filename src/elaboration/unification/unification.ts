@@ -317,36 +317,34 @@ const occursCheck = (ctx: EB.Context, v: Meta, ty: NF.Value): boolean => {
 };
 
 const occursInTerm = (ctx: EB.Context, v: Meta, tm: EB.Term): boolean => {
-	return (
-		match(tm)
-			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
-				if (ctx.zonker[variable.val]) {
-					return occursCheck(ctx, v, ctx.zonker[variable.val]);
-				}
-				return _.isEqual(variable, v);
-			})
-			.with({ type: "Abs" }, ({ binding, body }) => occursInTerm(ctx, v, binding.annotation) || occursInTerm(ctx, v, body))
-			.with({ type: "App" }, ({ func, arg }) => occursInTerm(ctx, v, func) || occursInTerm(ctx, v, arg))
-			//.with({ type: "Annotation" }, ({ term, ann }) => occursInTerm(ctx, v, term) || occursInTerm(ctx, v, ann))
-			.with({ type: "Match" }, ({ scrutinee, alternatives }) => occursInTerm(ctx, v, scrutinee) || alternatives.some(({ term }) => occursInTerm(ctx, v, term)))
-			.with({ type: "Block" }, ({ return: ret, statements }) => occursInTerm(ctx, v, ret) || statements.some(s => occursInTerm(ctx, v, s.value)))
-			.with({ type: "Row" }, ({ row }) =>
-				R.fold(
-					row,
-					(nf, _, acc) => acc || occursInTerm(ctx, v, nf),
-					rv => {
-						if (rv.type === "Meta" && ctx.zonker[rv.val]) {
-							return occursCheck(ctx, v, ctx.zonker[rv.val]);
-						}
-						return _.isEqual(rv, v);
-					},
-					false,
-				),
-			)
-			.with({ type: "Proj" }, ({ term }) => occursInTerm(ctx, v, term))
-			.with({ type: "Inj" }, ({ value, term }) => occursInTerm(ctx, v, value) || occursInTerm(ctx, v, term))
-			.with({ type: "Lit" }, () => false)
-			.with({ type: "Modal" }, ({ term }) => occursInTerm(ctx, v, term))
-			.otherwise(() => false)
-	);
+	return match(tm)
+		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
+			if (ctx.zonker[variable.val]) {
+				return occursCheck(ctx, v, ctx.zonker[variable.val]);
+			}
+			return _.isEqual(variable, v);
+		})
+		.with({ type: "Abs" }, ({ binding, body }) => occursInTerm(ctx, v, binding.annotation) || occursInTerm(ctx, v, body))
+		.with({ type: "App" }, ({ func, arg }) => occursInTerm(ctx, v, func) || occursInTerm(ctx, v, arg))
+		.with({ type: "Ann" }, ({ term }) => occursInTerm(ctx, v, term))
+		.with({ type: "Match" }, ({ scrutinee, alternatives }) => occursInTerm(ctx, v, scrutinee) || alternatives.some(({ term }) => occursInTerm(ctx, v, term)))
+		.with({ type: "Block" }, ({ return: ret, statements }) => occursInTerm(ctx, v, ret) || statements.some(s => occursInTerm(ctx, v, s.value)))
+		.with({ type: "Row" }, ({ row }) =>
+			R.fold(
+				row,
+				(nf, _, acc) => acc || occursInTerm(ctx, v, nf),
+				rv => {
+					if (rv.type === "Meta" && ctx.zonker[rv.val]) {
+						return occursCheck(ctx, v, ctx.zonker[rv.val]);
+					}
+					return _.isEqual(rv, v);
+				},
+				false,
+			),
+		)
+		.with({ type: "Proj" }, ({ term }) => occursInTerm(ctx, v, term))
+		.with({ type: "Inj" }, ({ value, term }) => occursInTerm(ctx, v, value) || occursInTerm(ctx, v, term))
+		.with({ type: "Lit" }, () => false)
+		.with({ type: "Modal" }, ({ term }) => occursInTerm(ctx, v, term))
+		.otherwise(() => false);
 };
