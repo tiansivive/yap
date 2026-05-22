@@ -586,16 +586,12 @@ export const Trace = {
 		};
 		const initialState: ReplayState = { trail: [], assignments: new Map(), allClauses: clauses, theories: initialTheories };
 
-		const preamble: Doc = [
-			"=== Formula ===",
+		// prettier-printer rejects strings with embedded newlines; split into per-line Docs.
+		const formulaLines: Doc = PP.intersperse(
 			NL,
-			`  ${formula}`,
-			BLANK,
-			atomsSection(atoms, proxies, name),
-			BLANK,
-			clauseStateDoc(clauses, name, new Map()),
-			NL,
-		];
+			formula.split("\n").map(l => `  ${l}`),
+		);
+		const preamble: Doc = ["=== Formula ===", NL, formulaLines, BLANK, atomsSection(atoms, proxies, name), BLANK, clauseStateDoc(clauses, name, new Map()), NL];
 
 		const fold = (remaining: readonly Step[], state: ReplayState, acc: Doc[]): Doc[] =>
 			remaining.length === 0

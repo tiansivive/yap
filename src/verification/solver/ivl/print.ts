@@ -1,4 +1,5 @@
 import { match } from "ts-pattern";
+import * as PP from "@yap/shared/pretty";
 import type { IVL } from "./types";
 
 export namespace Print {
@@ -34,21 +35,46 @@ export namespace Print {
 			.with({ tag: "Row" }, ({ row }) => rowTerm(row))
 			.exhaustive();
 
-	export const formula = (f: IVL.Formula): string => {
-		const origin = f.origin ? ` ; ${f.origin}` : "";
-		const inner = match(f)
+	const binder = (b: IVL.Binder): string => `(${b.name} ${sort(b.sort)})`;
+
+	const formulaDoc = (f: IVL.Formula): PP.Doc => {
+		const origin: PP.Doc = f.origin ? ` ; ${f.origin}` : [];
+		const inner: PP.Doc = match(f)
 			.with({ tag: "True" }, () => "true")
 			.with({ tag: "False" }, () => "false")
 			.with({ tag: "Atom" }, ({ op, args: [l, r] }) => `(${op} ${term(l)} ${term(r)})`)
-			.with({ tag: "Not" }, ({ value }) => `(not ${formula(value)})`)
-			.with({ tag: "And" }, ({ values }) => `(and ${values.map(formula).join(" ")})`)
-			.with({ tag: "Or" }, ({ values }) => `(or ${values.map(formula).join(" ")})`)
-			.with({ tag: "Implies" }, ({ left, right }) => `(=> ${formula(left)} ${formula(right)})`)
-			.with({ tag: "Forall" }, ({ binders, body }) => `(forall (${binders.map(binder).join(" ")}) ${formula(body)})`)
-			.with({ tag: "Exists" }, ({ binders, body }) => `(exists (${binders.map(binder).join(" ")}) ${formula(body)})`)
+			.with({ tag: "Not" }, ({ value }) => PP.group(["(not ", PP.nest(5, formulaDoc(value)), ")"]))
+			.with({ tag: "And" }, ({ values }) =>
+				PP.group([
+					"(and",
+					PP.nest(
+						2,
+						values.map(v => [PP.line, formulaDoc(v)]),
+					),
+					")",
+				]),
+			)
+			.with({ tag: "Or" }, ({ values }) =>
+				PP.group([
+					"(or",
+					PP.nest(
+						2,
+						values.map(v => [PP.line, formulaDoc(v)]),
+					),
+					")",
+				]),
+			)
+			.with({ tag: "Implies" }, ({ left, right }) => PP.group(["(=>", PP.nest(2, [PP.line, formulaDoc(left), PP.line, formulaDoc(right)]), ")"]))
+			.with({ tag: "Forall" }, ({ binders: bs, body }) =>
+				PP.group(["(forall (", ...PP.intersperse(" ", bs.map(binder)), ")", PP.nest(2, [PP.line, formulaDoc(body)]), ")"]),
+			)
+			.with({ tag: "Exists" }, ({ binders: bs, body }) =>
+				PP.group(["(exists (", ...PP.intersperse(" ", bs.map(binder)), ")", PP.nest(2, [PP.line, formulaDoc(body)]), ")"]),
+			)
 			.exhaustive();
-		return inner + origin;
+
+		return [inner, origin];
 	};
 
-	const binder = (b: IVL.Binder): string => `(${b.name} ${sort(b.sort)})`;
+	export const formula = (f: IVL.Formula): string => PP.render(formulaDoc(f));
 }

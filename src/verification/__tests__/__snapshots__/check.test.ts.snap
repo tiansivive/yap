@@ -8,15 +8,70 @@ exports[`VerificationService > Dependent Record Types > verifies dependent recor
 
 exports[`VerificationService > Dependent Record Types > verifies dependent record construction failure 1`] = `"(forall ((p Schema)) (forall (($b Real)) (=> (= $b 1) (< 2 $b))))"`;
 
-exports[`VerificationService > Dependent Record Types > verifies ordered list construction 1`] = `"(forall ((ol App_App_Mu_List_Real_Function)) (forall (($b Real)) (=> (= $b 2) (< 1 $b))))"`;
+exports[`VerificationService > Dependent Record Types > verifies ordered list construction 1`] = `
+"(forall ((ol App_App_Mu_List_Real_Function))
+  (forall (($b Real)) (=> (= $b 2) (< 1 $b))))"
+`;
 
-exports[`VerificationService > Dependent Record Types > verifies ordered list construction failure 1`] = `"(forall ((ol App_App_Mu_List_Real_Function)) (forall (($b Real)) (=> (= $b 1) (< 2 $b))))"`;
+exports[`VerificationService > Dependent Record Types > verifies ordered list construction failure 1`] = `
+"(forall ((ol App_App_Mu_List_Real_Function))
+  (forall (($b Real)) (=> (= $b 1) (< 2 $b))))"
+`;
 
-exports[`VerificationService > Flow-sensitive type refinement > refines type in if-then-else branches 1`] = `"(forall ((a Real)) (forall ((b Real)) (=> (> b 0) (and (= a a) (forall ((x Real)) (=> (= x a) (forall ((y Real)) (=> (= y 0) (forall (($fresh1 Bool)) (=> (and (= $fresh1 __external_$gt) (= $fresh1 true)) (and (= a a) (forall ((v Real)) (=> (= v a) (> v 0)))))))))) (= a a) (forall ((x Real)) (=> (= x a) (forall ((y Real)) (=> (= y 0) (forall (($fresh2 Bool)) (=> (and (= $fresh2 __external_$gt) (= $fresh2 false)) (forall (($e Real)) (=> (= $e 42) (> $e 0)))))))))))))"`;
+exports[`VerificationService > Flow-sensitive type refinement > refines type in if-then-else branches 1`] = `
+"(forall ((a Real))
+  (forall ((b Real))
+    (=>
+      (> b 0)
+      (and
+        (= a a)
+        (forall ((x Real))
+          (=>
+            (= x a)
+            (forall ((y Real))
+              (=>
+                (= y 0)
+                (forall (($fresh1 Bool))
+                  (=>
+                    (and (= $fresh1 __external_$gt) (= $fresh1 true))
+                    (and (= a a) (forall ((v Real)) (=> (= v a) (> v 0))))))))))
+        (= a a)
+        (forall ((x Real))
+          (=>
+            (= x a)
+            (forall ((y Real))
+              (=>
+                (= y 0)
+                (forall (($fresh2 Bool))
+                  (=>
+                    (and (= $fresh2 __external_$gt) (= $fresh2 false))
+                    (forall (($e Real)) (=> (= $e 42) (> $e 0)))))))))))))"
+`;
 
-exports[`VerificationService > blocks > verifies block expression with refined result 1`] = `"(and (forall ((o Real)) (=> (> o 0) (and (> o 0) (= o o) (forall ((x Real)) (=> (and (> x 0) (= x x)) (forall ((y Real)) (=> (= y 1) (forall ((r Real)) (=> (= r (+ o 1)) (> r 1)))))))))) (forall (($b Real)) (=> (= $b 1) (> $b 0))) (forall ((t1 Real)) (=> (= t1 1) (forall ((p Real)) (=> (> p 1) (> p 0))))))"`;
+exports[`VerificationService > blocks > verifies block expression with refined result 1`] = `
+"(and
+  (forall ((o Real))
+    (=>
+      (> o 0)
+      (and
+        (> o 0)
+        (= o o)
+        (forall ((x Real))
+          (=>
+            (and (> x 0) (= x x))
+            (forall ((y Real))
+              (=> (= y 1) (forall ((r Real)) (=> (= r (+ o 1)) (> r 1))))))))))
+  (forall (($b Real)) (=> (= $b 1) (> $b 0)))
+  (forall ((t1 Real)) (=> (= t1 1) (forall ((p Real)) (=> (> p 1) (> p 0))))))"
+`;
 
-exports[`VerificationService > blocks > verifies return types are scoped to inner letdecs via existentias 1`] = `"(forall ((x Real)) (forall ((doubled Real)) (and (= x x) (forall ((added Real)) (and (= doubled doubled) (= added added))))))"`;
+exports[`VerificationService > blocks > verifies return types are scoped to inner letdecs via existentias 1`] = `
+"(forall ((x Real))
+  (forall ((doubled Real))
+    (and
+      (= x x)
+      (forall ((added Real)) (and (= doubled doubled) (= added added))))))"
+`;
 
 exports[`VerificationService > declaring refined types > verifies Nat type alias definition 1`] = `"true"`;
 
@@ -24,20 +79,64 @@ exports[`VerificationService > declaring refined types > verifies Pos type alias
 
 exports[`VerificationService > function definitions > verifies function definition fn 1`] = `"true"`;
 
-exports[`VerificationService > function definitions > verifies higher-order function hof 1`] = `"(and (forall (($a Real)) (=> (= $a 1) (> $a 0))) (forall ((t1 Real)) (=> (= t1 1) (forall ((n Real)) (=> (> n 0) (> n 0))))))"`;
+exports[`VerificationService > function definitions > verifies higher-order function hof 1`] = `
+"(and
+  (forall (($a Real)) (=> (= $a 1) (> $a 0)))
+  (forall ((t1 Real)) (=> (= t1 1) (forall ((n Real)) (=> (> n 0) (> n 0))))))"
+`;
 
-exports[`VerificationService > function definitions > verifies higher-order function hof2 1`] = `"(forall ((t2 Real)) (=> (= t2 1) (forall ((x Real)) (=> (> x 0) (forall ((y Real)) (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (> r 1)))))))))"`;
+exports[`VerificationService > function definitions > verifies higher-order function hof2 1`] = `
+"(forall ((t2 Real))
+  (=>
+    (= t2 1)
+    (forall ((x Real))
+      (=>
+        (> x 0)
+        (forall ((y Real))
+          (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (> r 1)))))))))"
+`;
 
 exports[`VerificationService > function definitions > verifies higher-order function hof3 1`] = `"(forall ((x Real)) (= x x))"`;
 
-exports[`VerificationService > function definitions > verifies inc function definition 1`] = `"(forall ((x Real)) (and (= x x) (forall ((x Real)) (=> (= x x) (forall ((y Real)) (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))"`;
+exports[`VerificationService > function definitions > verifies inc function definition 1`] = `
+"(forall ((x Real))
+  (and
+    (= x x)
+    (forall ((x Real))
+      (=>
+        (= x x)
+        (forall ((y Real))
+          (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))"
+`;
 
-exports[`VerificationService > function definitions > verifies lambda with Nat pre and postcondition - identity works 1`] = `"(forall ((x Real)) (=> (> x 0) (and (> x 0) (= x x) (forall ((n Real)) (=> (and (> n 0) (= n n)) (> n 0))))))"`;
+exports[`VerificationService > function definitions > verifies lambda with Nat pre and postcondition - identity works 1`] = `
+"(forall ((x Real))
+  (=>
+    (> x 0)
+    (and
+      (> x 0)
+      (= x x)
+      (forall ((n Real)) (=> (and (> n 0) (= n n)) (> n 0))))))"
+`;
 
 exports[`VerificationService > function definitions > verifies lambda with Nat precondition - identity preserves property 1`] = `"(forall ((x Real)) (=> (> x 0) (and (> x 0) (= x x))))"`;
 
-exports[`VerificationService > function definitions > verifies lambda with dependent refinement on result 1`] = `"(forall ((x Real)) (and (= x x) (forall ((x Real)) (=> (= x x) (forall ((y Real)) (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))"`;
+exports[`VerificationService > function definitions > verifies lambda with dependent refinement on result 1`] = `
+"(forall ((x Real))
+  (and
+    (= x x)
+    (forall ((x Real))
+      (=>
+        (= x x)
+        (forall ((y Real))
+          (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))"
+`;
 
 exports[`VerificationService > function definitions > verifies lambda with postcondition returning constant 1 1`] = `"(forall ((x Real)) (forall (($a Real)) (=> (= $a 1) (= $a 1))))"`;
 
-exports[`VerificationService > function definitions > verifies positive function application 1 + 2 as Nat 1`] = `"(forall ((x Real)) (=> (= x 1) (forall ((y Real)) (=> (= y 2) (forall ((r Real)) (=> (= r 3) (> r 0)))))))"`;
+exports[`VerificationService > function definitions > verifies positive function application 1 + 2 as Nat 1`] = `
+"(forall ((x Real))
+  (=>
+    (= x 1)
+    (forall ((y Real)) (=> (= y 2) (forall ((r Real)) (=> (= r 3) (> r 0)))))))"
+`;

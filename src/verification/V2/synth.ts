@@ -147,7 +147,10 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 							const localCtx = yield* V2.ask();
 							runtime.log("Incorporating argument type", EB.Display.Term(arg, localCtx), "into function type", NF.display(fnTy, localCtx));
 
-							return yield* match(fnTy)
+							return yield* match(NF.force(localCtx, fnTy))
+								.with(NF.Patterns.Modal, function* ({ value }) {
+									return yield* V2.pure(incorporate(arg, value));
+								})
 								.with({ type: "Existential" }, function* (ex) {
 									const [out, artefacts] = yield* V2.local(
 										inner => EB.bind(inner, { type: "Pi", variable: ex.variable }, ex.annotation),
