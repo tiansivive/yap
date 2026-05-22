@@ -12,11 +12,15 @@ import { Liquid } from "../../modalities";
 export type ExtractModalitiesFn = (nf: NF.Value, ctx: EB.Context) => NF.Modalities;
 
 export const selfify = (tm: EB.Term, ty: NF.Value, ctx: EB.Context): NF.Value => {
+	if (!isFirstOrder(ty)) {
+		return ty;
+	}
+
 	const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
 	const nf = NF.evaluate(ctx, tm);
 	const eqTerm = (inner: EB.Context) => EB.DSL.eq(bound, NF.quote(inner, inner.env.length + 1, nf));
 
-	return match(ty)
+	return match(NF.force(ctx, ty))
 		.with({ type: "Modal" }, modal => {
 			const { liquid } = modal.modalities;
 			assert(liquid.type === "Abs" && liquid.binder.type === "Lambda", "Liquid refinement must be an abstraction");
@@ -32,7 +36,6 @@ export const selfify = (tm: EB.Term, ty: NF.Value, ctx: EB.Context): NF.Value =>
 				},
 			});
 		})
-		.with({ type: "Abs" }, () => ty)
 		.otherwise(value => {
 			const liquid = NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, eqTerm(ctx)), value);
 			return NF.Constructors.Modal(value, {
@@ -143,5 +146,6 @@ export const extractModalities: ExtractModalitiesFn = (nf, ctx) =>
 
 export const isFirstOrder = (ty: NF.Value): boolean =>
 	match(NF.unwrapNeutral(ty))
+		.with({ type: "Modal" }, ({ value }) => isFirstOrder(value))
 		.with(NF.Patterns.Pi, NF.Patterns.Lambda, NF.Patterns.Sigma, () => false)
 		.otherwise(() => true);
