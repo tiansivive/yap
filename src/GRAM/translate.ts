@@ -109,6 +109,7 @@ const walk = (term: EB.Term, st: State): [NodeId, State] =>
 		.with({ type: "Modal" }, t => modal(t, st))
 		.with({ type: "Reset" }, t => reset(t, st))
 		.with({ type: "Shift" }, t => shift(t, st))
+		.with({ type: "Ann" }, t => walk(t.term, st))
 		.exhaustive();
 
 // ── Leaves ──
@@ -122,7 +123,7 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 			const target = resolve(st, index);
 			const withRef = target !== undefined ? link(s, id, Labels.REFERS_TO, target) : s;
 			const withScopes = st.binders.reduce((acc, binderId, i) => link(acc, id, Labels.SCOPE, binderId, { level: i }), withRef);
-			return [id, withScopes] as [NodeId, State];
+			return [id, withScopes] satisfies [NodeId, State];
 		})
 		.with({ type: "Free" }, ({ name }) => intern(Tags.VAR_FREE, name, "freeVars", tid, st))
 		.with({ type: "Foreign" }, ({ name }) => intern(Tags.VAR_FOREIGN, name, "foreignVars", tid, st))
@@ -136,7 +137,7 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 			const zonked = st.zonker?.[val];
 
 			if (zonked) {
-				return walk(NF.quote({ env: [], metas: {}, zonker: st.zonker! } as unknown as EB.Context, lvl, zonked), st);
+				return walk(NF.quote({ env: [], metas: {}, zonker: st.zonker } as unknown as EB.Context, lvl, zonked), st);
 			}
 			return emit(st, Tags.VAR_META, { val, lvl }, prov(tid, st));
 		})
