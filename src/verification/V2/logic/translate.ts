@@ -18,7 +18,7 @@ import {
 	OP_NOT,
 	OP_OR,
 	OP_SUB,
-	operatorMap,
+	primopMapping,
 	PrimOps,
 } from "@yap/shared/lib/primitives";
 
@@ -125,7 +125,7 @@ export const createTranslationTools = (runtime: VerificationRuntime, toModalitie
 						if (!(variable.name in PrimOps)) {
 							throw new Error("Foreign variable not supported in logical formulas");
 						}
-						const [, type] = ctx.imports[operatorMap[variable.name]];
+						const [, type] = ctx.imports[primopMapping[variable.name]];
 						return type;
 					}
 					throw new Error("Unsupported variable type in getFnSorts");

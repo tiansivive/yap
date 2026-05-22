@@ -220,7 +220,7 @@ export const OP_CONCAT = "$concat" as const;
 
 
 
-export const operatorMap: Record<string, string> = {
+export const primopMapping: Record<string, string> = {
     [OP_AND]: "&&",
     [OP_OR]: "||",
     [OP_EQ]: "==",

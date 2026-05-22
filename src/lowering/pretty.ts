@@ -1,6 +1,6 @@
 import { match, P } from "ts-pattern";
 import * as Lit from "@yap/shared/literals";
-import { operatorMap } from "@yap/shared/lib/primitives";
+import { primopMapping } from "@yap/shared/lib/primitives";
 import type { Block, Expr, Function, Instr, Module, Terminator } from "./mir";
 
 const INDENT = "  ";
@@ -12,7 +12,7 @@ const d = {
 			.with({ type: "Lit" }, ({ value }) => Lit.display(value))
 			.with({ type: "FuncRef" }, ({ name }) => `&${name}`)
 			.with({ type: "PrimOp" }, ({ op, args }) => {
-				const sym = operatorMap[op] ?? op;
+				const sym = primopMapping[op] ?? op;
 				const argsStr = args.join(", ");
 				return `${sym}(${argsStr})`;
 			})

@@ -16,15 +16,14 @@ export type MatchResult = {
 
 export const EMatch = {
 	single: (pattern: IVL.Term, arena: ArenaState, find: (id: EnodeId) => EnodeId): MatchResult => {
-		const substitutions: Substitution[] = [];
-
-		arena.nodes.forEach(node => {
+		const substitutions = arena.nodes.entries().reduce<Substitution[]>((acc, [, node]) => {
 			const sub = matchTerm(pattern, node.id, arena, find, new Map());
 
 			if (sub) {
-				substitutions.push(sub);
+				return [...acc, sub];
 			}
-		});
+			return acc;
+		}, [] satisfies Substitution[]);
 
 		return { substitutions };
 	},
@@ -58,7 +57,7 @@ const matchTerm = (
 	match(pattern)
 		.with({ tag: "Var" }, ({ name }) => {
 			const existing = current.get(name);
-			if (existing !== undefined) {
+			if (existing) {
 				return find(existing) === find(target) ? new Map(current) : undefined;
 			}
 			const extended = new Map(current);
@@ -69,20 +68,20 @@ const matchTerm = (
 			const node = arena.nodes.get(target);
 
 			if (!node) {
-				return undefined;
+				return;
 			}
 
 			if (node.head !== head) {
-				return undefined;
+				return;
 			}
 
 			if (node.args.length !== args.length) {
-				return undefined;
+				return;
 			}
 
 			return args.reduce<Substitution | undefined>((acc, argPattern, i) => {
 				if (!acc) {
-					return undefined;
+					return;
 				}
 				return matchTerm(argPattern, node.args[i], arena, find, new Map(acc));
 			}, new Map(current));
@@ -91,30 +90,29 @@ const matchTerm = (
 			const node = arena.nodes.get(target);
 
 			if (!node) {
-				return undefined;
+				return;
 			}
+
 			return node.head === name && node.args.length === 0 ? new Map(current) : undefined;
 		})
 		.with({ tag: "Num" }, ({ value }) => {
 			const node = arena.nodes.get(target);
 
 			if (!node) {
-				return undefined;
+				return;
 			}
+
 			return node.head === value && node.args.length === 0 ? new Map(current) : undefined;
 		})
 		.otherwise(() => undefined);
 
 const extendMatch = (pattern: IVL.Term, arena: ArenaState, find: (id: EnodeId) => EnodeId, current: Substitution): readonly Substitution[] => {
-	const results: Substitution[] = [];
-
-	arena.nodes.forEach(node => {
+	return arena.nodes.entries().reduce<Substitution[]>((acc, [, node]) => {
 		const sub = matchTerm(pattern, node.id, arena, find, new Map(current));
 
-		if (sub) {
-			results.push(sub);
+		if (!sub) {
+			return acc;
 		}
-	});
-
-	return results;
+		return [...acc, sub];
+	}, [] satisfies Substitution[]);
 };

@@ -16,6 +16,7 @@ import { extractModalities, selfify } from "./utils/refinements";
 import * as Q from "@yap/shared/modalities/multiplicity";
 import { createCheck } from "./check";
 import { createSubtype } from "./subtype";
+import { primopMapping } from "@yap/shared/lib/primitives";
 import * as E from "fp-ts/lib/Either";
 import assert from "node:assert";
 
@@ -68,6 +69,18 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 					const modalities = extractModalities(entry.ann, ctx);
 					const predicate = NF.reduce(modalities.liquid, NF.evaluate(ctx, term), "Explicit");
 					return [entry.ann, { vc: formula(predicate, ctx) }] satisfies SynthResult;
+				})
+				.with({ type: "Var", variable: { type: "Foreign" } }, function* (tm) {
+					const symbol = primopMapping[tm.variable.name] ?? tm.variable.name;
+					const entry = ctx.imports[symbol];
+					if (!entry) {
+						runtime.log("synth: foreign variable not found in imports", tm.variable.name);
+						return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
+					}
+					const [, ty] = entry;
+					const modalities = extractModalities(ty, ctx);
+					const predicate = NF.reduce(modalities.liquid, NF.evaluate(ctx, tm), "Explicit");
+					return [ty, { vc: formula(predicate, ctx) }] satisfies SynthResult;
 				})
 				.with({ type: "Var" }, function* () {
 					runtime.log("synth: unsupported variable kind");
