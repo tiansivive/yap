@@ -102,6 +102,7 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 						});
 					const nf = NF.evaluate(ctx, ann);
 					const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
+					// Empty env to avoid capturing at the refinement level — we're lifting a primitive value into a refinement predicate
 					const closure = NF.Constructors.Closure(noCapture(ctx), EB.DSL.eq(bound, tm));
 					const fresh = runtime.freshName();
 					const modalities = {
@@ -221,7 +222,7 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 					const [baseTy, baseArtefacts] = yield* synth.gen(proj.term);
 					const projected = (label: string, ty: NF.Value): V2.Elaboration<NF.Value> =>
 						V2.Do(function* () {
-							return yield* match(ty)
+							return yield* match(NF.force(ctx, ty))
 								.with(NF.Patterns.Modal, function* (m) {
 									const proj = yield* V2.pure(projected(label, m.value));
 									return proj;
