@@ -25,6 +25,8 @@ export const inert = (ty: NF.Value): boolean => {
 		.with(Patterns.Pi, () => false)
 		.with(Patterns.Modal, ({ value }) => inert(value))
 		.with(Patterns.StuckMatch, () => false)
+		.with(Patterns.StuckProj, () => false)
+		.with(Patterns.StuckInj, () => false)
 		.with(Patterns.App, app => {
 			const h = head(app.func);
 			return match(h)

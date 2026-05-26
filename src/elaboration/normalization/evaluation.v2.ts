@@ -638,7 +638,7 @@ function projectValue(base: NF.Value, label: string, ctx: EB.Context, originalTe
 		throw new Error(`Projection: label ${label} not found`);
 	}
 
-	const binder = `$proj_${label}`;
+	const binder = `${NF.PROJ_VAR_PREFIX}${label}`;
 	const body = EB.Constructors.Proj(label, EB.Constructors.Var({ type: "Bound", index: 0 }));
 	const lambda = NF.Constructors.Lambda(binder, "Explicit", NF.Constructors.Closure(ctx, body), NF.Any);
 	const app = NF.Constructors.App(lambda, base, "Explicit");
@@ -691,7 +691,7 @@ function injectValue(base: NF.Value, label: string, injected: NF.Value, valueTer
 		return attempt.value;
 	}
 
-	const binder = `$inj_${label}`;
+	const binder = `${NF.INJ_VAR_PREFIX}${label}`;
 	const body = EB.Constructors.Inj(label, valueTerm, EB.Constructors.Var({ type: "Bound", index: 0 }));
 	const lambda = NF.Constructors.Lambda(binder, "Explicit", NF.Constructors.Closure(ctx, body), NF.Any);
 	const app = NF.Constructors.App(lambda, base, "Explicit");

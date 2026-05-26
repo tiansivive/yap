@@ -36,6 +36,16 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 				assert(match.type === "Match");
 				return EB.Constructors.Match(quotedArg, match.alternatives);
 			})
+			.with(NF.Patterns.StuckProj, ({ func, arg }) => {
+				const label = func.binder.variable.slice(NF.PROJ_VAR_PREFIX.length);
+				return EB.Constructors.Proj(label, quote(ctx, lvl, arg));
+			})
+			.with(NF.Patterns.StuckInj, ({ func, arg }) => {
+				const label = func.binder.variable.slice(NF.INJ_VAR_PREFIX.length);
+				const inj = func.closure.term;
+				assert(inj.type === "Inj");
+				return EB.Constructors.Inj(label, inj.value, quote(ctx, lvl, arg));
+			})
 			.with({ type: "App" }, ({ func, arg, icit }) => EB.Constructors.App(icit, quote(ctx, lvl, func), quote(ctx, lvl, arg)))
 			.with({ type: "Abs", binder: { type: "Lambda" } }, ({ binder, closure }) => {
 				const { variable, icit, annotation } = binder;

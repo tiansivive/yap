@@ -4,7 +4,7 @@ import * as EB from "@yap/elaboration";
 import * as Lit from "@yap/shared/literals";
 import { Literal } from "@yap/shared/literals";
 import { Implicitness } from "@yap/shared/implicitness";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { Types, update } from "@yap/utils";
 
 import * as Modal from "@yap/verification/modalities/shared";
@@ -168,6 +168,8 @@ export const Any = mk({
 });
 
 export const SCRUTINEE_VAR = "$scrutinee";
+export const PROJ_VAR_PREFIX = "$proj_";
+export const INJ_VAR_PREFIX = "$inj_";
 
 export const Patterns = {
 	Var: { type: "Var" } as const,
@@ -191,6 +193,14 @@ export const Patterns = {
 		type: "App",
 		func: { type: "Abs", binder: { type: "Lambda", variable: SCRUTINEE_VAR } },
 	} as const,
+	StuckProj: {
+		type: "App",
+		func: { type: "Abs", binder: { type: "Lambda", variable: P.string.startsWith(PROJ_VAR_PREFIX) } },
+	},
+	StuckInj: {
+		type: "App",
+		func: { type: "Abs", binder: { type: "Lambda", variable: P.string.startsWith(INJ_VAR_PREFIX) } },
+	},
 
 	App: { type: "App" } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,
