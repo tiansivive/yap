@@ -35,6 +35,14 @@ export const closure = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx
 			: Block("entry", [], [...instrs], Terminator.Return(result));
 	const fn = Fn(funcName, allParams, "entry", [entryBlock, ...flushed.blocks]);
 
+	// Detect curried returns: if the body returns a FuncRef to a nested closure
+	// that has captures from this scope, a bare FuncRef is insufficient — the
+	// captures need to be bundled into a runtime closure struct.
+	const nestedWithCaptures = flushed.functions.filter(f => f.params.some(p => allParams.includes(p)));
+	if (nestedWithCaptures.length > 0) {
+		throw new Error("Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures");
+	}
+
 	// Register function + any nested functions from body, emit FuncRef at use site
 	const withNested = flushed.functions.reduce<Ctx>((c, f) => C.func(c, f), ctx);
 	const c1 = C.func(withNested, fn);

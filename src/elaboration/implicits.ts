@@ -48,9 +48,12 @@ export const wrapLambda = (term: EB.Term, ty: NF.Value, ctx: EB.Context): EB.Ter
 			_ => term,
 		)
 		.with({ type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, pi => {
-			const ann = NF.quote(ctx, ctx.env.length, pi.binder.annotation);
+			const lvl = ctx.env.length;
+			const ann = NF.quote(ctx, lvl, pi.binder.annotation);
 			const binding: EB.Binding = { type: "Lambda", variable: pi.binder.variable, icit: pi.binder.icit, annotation: ann };
-			return EB.Constructors.Abs(binding, wrapLambda(term, NF.apply(pi.binder, pi.closure, NF.Constructors.Rigid(0)), ctx));
+			const xtended = EB.bind(ctx, binding, pi.binder.annotation);
+			const applied = NF.apply(pi.binder, pi.closure, NF.Constructors.Rigid(lvl));
+			return EB.Constructors.Abs(binding, wrapLambda(term, applied, xtended));
 		})
 		.otherwise(() => term);
 };

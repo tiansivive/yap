@@ -40,6 +40,12 @@ export const foreign = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	return [v, C.bind(c2, id, v)];
 };
 
+export const label = (id: NodeId, ctx: Ctx): [string, Ctx] => {
+	const name = (Nodes.get(id)(ctx.graph)?.payload.name ?? "") as string;
+	const resolved = C.resolveLabel(ctx, name);
+	return resolved !== undefined ? [resolved, ctx] : passthrough(id, ctx);
+};
+
 export const passthrough = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const existing = C.resolve(ctx, id);
 	return existing !== undefined ? [existing, ctx] : C.name(ctx);

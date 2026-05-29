@@ -85,7 +85,9 @@ export const letdec = function* (
 			const nondet = update(withMetas, "zonker", old => ({ ...old, ...z }));
 
 			const { zonker, resolutions } = yield* V2.local(_ => nondet, EB.solve(constraints));
-			const zonked = update(withMetas, "zonker", z => compose(zonker, z));
+			const { metas: postSolveMetas } = yield* V2.listen();
+			const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postSolveMetas }));
+			const zonked = update(withAllMetas, "zonker", z => compose(zonker, z));
 
 			const [generalized, subst] = NF.generalize(
 				NF.force(zonked, dec.annotation),

@@ -114,6 +114,7 @@ function* driver(): M.Glowering<void> {
  * Entry point
  * ================================================================================ */
 
+/** @deprecated Use GRAM.Bridge.emit instead. */
 export function lowerToMir(term: EB.Term, declarations?: Map<string, MIR.Declaration>): MIR.Module {
 	C.resetSupply();
 	MIR.resetId();

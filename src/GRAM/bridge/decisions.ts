@@ -50,6 +50,10 @@ const emitFail = (ctx: Ctx): [string, Ctx] => {
 const emitSwitch = (id: NodeId, scrut: string, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], ctx: Ctx): [string, Ctx] => {
 	const kind = (Nodes.get(id)(ctx.graph)?.payload.kind ?? "tag") as string;
 
+	if (kind === "struct") {
+		throw new Error("Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching");
+	}
+
 	// Discriminant: for variant dispatch read __tag, for literal use value directly
 	const [disc, c1] = kind === "tag" ? readTag(scrut, ctx) : [scrut, ctx];
 

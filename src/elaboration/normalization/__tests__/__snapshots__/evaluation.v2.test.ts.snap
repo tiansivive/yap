@@ -97,10 +97,10 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
     "term": "{
   let test
     : Π(x: Num) -> (closure: Num -| Γ: x; test)
-    = reset |λ(x: Num) ->
+    = reset |(λ(x: Num) ->
       FFI.$add 1
         shift (λ($k: Π($k: Num) -> Π(x: Num) -> (closure: Num -| Γ: x; test)) ->
-          $k (FFI.$add x 10))|;
+          $k (FFI.$add x 10)) : Π(x: Num) -> (closure: Num -| Γ: x; test))|;
   return test 5;
 }",
     "type": "Num",

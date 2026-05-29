@@ -284,7 +284,10 @@ const walkPatternRow = (r: Row<EB.Pattern, string>, parentId: NodeId, tid: numbe
 			return walkPatternRow(r.row, parentId, tid, s2);
 		})
 		.with({ type: "empty" }, () => [parentId, st] as [NodeId, State])
-		.with({ type: "variable" }, () => [parentId, st] as [NodeId, State])
+		.with({ type: "variable" }, () => {
+			const [id, s1] = emit(st, Tags.PAT_WILDCARD, {}, prov(tid, st));
+			return [parentId, push(s1, id)] as [NodeId, State];
+		})
 		.exhaustive();
 
 const matchExpr = (t: EB.Term & { type: "Match" }, st: State): [NodeId, State] => {

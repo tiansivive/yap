@@ -24,17 +24,17 @@ const SNIPPETS = [
 	{ id: "sigma", group: "Row types", label: "Dependent struct", code: "{ x: 1, y: :x + 2 }" },
 	{ id: "nested-sigma", group: "Row types", label: "Nested dependent", code: "{ point: { x: 1, y: 2 }, halved: { a: :point.x / 2, b: :point.y / 2 } }" },
 	{ id: "row-poly", group: "Row types", label: "Row polymorphism", code: "\\(r: Row) -> { foo: Num | r }" },
-	{ id: "tuple", group: "Row types", label: "Tuple", code: '(1, "hello", true)' },
-	{ id: "variant-match", group: "Pattern matching", label: "Variant match", code: "\\(x: Num) -> match x | #nil a -> 0 | #cons {el, rest} -> 1" },
+	{ id: "tuple", group: "Row types", label: "Tuple", code: '{ 1, "hello", true }' },
+	{ id: "variant-match", group: "Pattern matching", label: "Variant match", code: "\\x -> match x | #nil a -> 0 | #cons {el, rest} -> 1" },
 	{ id: "struct-match", group: "Pattern matching", label: "Struct destructure", code: "match { x: 1 } | { x: a } -> a" },
 	{
 		id: "nested-match",
 		group: "Pattern matching",
 		label: "Nested struct match",
-		code: "\\(x: Num) -> match x | { foo: { y: y }, bar: f } -> f y | { z: { w: w } } -> w",
+		code: "\\x -> match x | { foo: { y: y }, bar: f } -> f y | { z: { w: w } } -> w",
 	},
 	{ id: "wildcard", group: "Pattern matching", label: "Wildcard + literal", code: "match 1 | 1 -> 2" },
-	{ id: "block", group: "Blocks", label: "Let binding", code: "{ let id = \\x -> x; id 42 }" },
+	{ id: "block", group: "Blocks", label: "Let binding", code: "{ let id = \\x -> x; return id 42; }" },
 	{ id: "block-proj", group: "Blocks", label: "Let + projection", code: "{ let proj = \\obj -> obj.x; }" },
 ];
 

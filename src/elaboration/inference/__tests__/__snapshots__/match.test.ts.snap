@@ -12,7 +12,8 @@ exports[`inference: match > branch unification > mismatched branch types: match 
       "Num ~~ ?2",
       "String ~~ ?2",
     ],
-    "term": "λ(x: Num) -> match x | 1 -> 2 | 3 -> "hello"",
+    "term": "(λ(x: Num) -> match x | 1 -> 2 | 3 -> "hello" : Π(x: Num) ->
+  (closure: (?2 :: ?1) -| Γ: x))",
     "type": "Π(x: Num) -> (closure: (?2 :: ?1) -| Γ: x)",
   },
 }
@@ -183,65 +184,101 @@ exports[`inference: match > branch unification > mismatched branch types: match 
       },
     },
     "term": {
-      "binding": {
-        "annotation": {
-          "type": "Var",
-          "variable": {
-            "name": "Num",
-            "type": "Free",
+      "ann": {
+        "binder": {
+          "annotation": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
+          "icit": "Explicit",
+          "type": "Pi",
+          "variable": "x",
         },
-        "icit": "Explicit",
-        "type": "Lambda",
-        "variable": "x",
-      },
-      "body": {
-        "alternatives": [
-          {
-            "binders": [],
-            "pattern": {
-              "type": "Lit",
-              "value": {
-                "type": "Num",
-                "value": 1,
-              },
-            },
-            "term": {
-              "type": "Lit",
-              "value": {
-                "type": "Num",
-                "value": 2,
-              },
+        "closure": {
+          "ctx": {
+            "env": [],
+            "implicits": [],
+            "metas": {},
+            "sigma": {},
+            "zonker": {},
+          },
+          "term": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 2,
             },
           },
-          {
-            "binders": [],
-            "pattern": {
-              "type": "Lit",
-              "value": {
-                "type": "Num",
-                "value": 3,
-              },
-            },
-            "term": {
-              "type": "Lit",
-              "value": {
-                "type": "String",
-                "value": "hello",
-              },
-            },
-          },
-        ],
-        "scrutinee": {
-          "type": "Var",
-          "variable": {
-            "index": 0,
-            "type": "Bound",
-          },
+          "type": "Closure",
         },
-        "type": "Match",
+        "type": "Abs",
       },
-      "type": "Abs",
+      "term": {
+        "binding": {
+          "annotation": {
+            "type": "Var",
+            "variable": {
+              "name": "Num",
+              "type": "Free",
+            },
+          },
+          "icit": "Explicit",
+          "type": "Lambda",
+          "variable": "x",
+        },
+        "body": {
+          "alternatives": [
+            {
+              "binders": [],
+              "pattern": {
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 1,
+                },
+              },
+              "term": {
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 2,
+                },
+              },
+            },
+            {
+              "binders": [],
+              "pattern": {
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 3,
+                },
+              },
+              "term": {
+                "type": "Lit",
+                "value": {
+                  "type": "String",
+                  "value": "hello",
+                },
+              },
+            },
+          ],
+          "scrutinee": {
+            "type": "Var",
+            "variable": {
+              "index": 0,
+              "type": "Bound",
+            },
+          },
+          "type": "Match",
+        },
+        "type": "Abs",
+      },
+      "type": "Ann",
     },
     "type": {
       "binder": {
@@ -825,10 +862,11 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
       "?9 ~~ ?15",
       "?11 ~~ ?15",
     ],
-    "term": "λ(x: Num) ->
+    "term": "(λ(x: Num) ->
   match x
     | Struct [ foo: Struct [ y: y | $row_3 ], bar: f | $row_6 ] -> f y
-    | Struct [ z: Struct [ w: w | $row_12 ] | $row_13 ] -> w",
+    | Struct [ z: Struct [ w: w | $row_12 ] | $row_13 ] -> w : Π(x: Num) ->
+  (closure: (?15 :: ?14) -| Γ: x))",
     "type": "Π(x: Num) -> (closure: (?15 :: ?14) -| Γ: x)",
   },
 }
@@ -1586,210 +1624,246 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
       },
     },
     "term": {
-      "binding": {
-        "annotation": {
-          "type": "Var",
-          "variable": {
-            "name": "Num",
-            "type": "Free",
+      "ann": {
+        "binder": {
+          "annotation": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
+          "icit": "Explicit",
+          "type": "Pi",
+          "variable": "x",
         },
-        "icit": "Explicit",
-        "type": "Lambda",
-        "variable": "x",
+        "closure": {
+          "ctx": {
+            "env": [],
+            "implicits": [],
+            "metas": {},
+            "sigma": {},
+            "zonker": {},
+          },
+          "term": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 15,
+            },
+          },
+          "type": "Closure",
+        },
+        "type": "Abs",
       },
-      "body": {
-        "alternatives": [
-          {
-            "binders": [
-              [
-                "y",
-                {
-                  "type": "Neutral",
-                  "value": {
+      "term": {
+        "binding": {
+          "annotation": {
+            "type": "Var",
+            "variable": {
+              "name": "Num",
+              "type": "Free",
+            },
+          },
+          "icit": "Explicit",
+          "type": "Lambda",
+          "variable": "x",
+        },
+        "body": {
+          "alternatives": [
+            {
+              "binders": [
+                [
+                  "y",
+                  {
+                    "type": "Neutral",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 2,
+                      },
+                    },
+                  },
+                ],
+                [
+                  "$row_3",
+                  {
                     "type": "Var",
                     "variable": {
                       "lvl": 1,
                       "type": "Meta",
-                      "val": 2,
+                      "val": 3,
                     },
                   },
-                },
-              ],
-              [
-                "$row_3",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 3,
+                ],
+                [
+                  "f",
+                  {
+                    "type": "Neutral",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 5,
+                      },
+                    },
                   },
-                },
-              ],
-              [
-                "f",
-                {
-                  "type": "Neutral",
-                  "value": {
+                ],
+                [
+                  "$row_6",
+                  {
                     "type": "Var",
                     "variable": {
                       "lvl": 1,
                       "type": "Meta",
-                      "val": 5,
+                      "val": 6,
                     },
                   },
-                },
+                ],
               ],
-              [
-                "$row_6",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 6,
-                  },
-                },
-              ],
-            ],
-            "pattern": {
-              "row": {
-                "label": "foo",
+              "pattern": {
                 "row": {
-                  "label": "bar",
+                  "label": "foo",
                   "row": {
-                    "type": "variable",
-                    "variable": "$row_6",
+                    "label": "bar",
+                    "row": {
+                      "type": "variable",
+                      "variable": "$row_6",
+                    },
+                    "type": "extension",
+                    "value": {
+                      "type": "Binder",
+                      "value": "f",
+                    },
                   },
                   "type": "extension",
                   "value": {
-                    "type": "Binder",
-                    "value": "f",
-                  },
-                },
-                "type": "extension",
-                "value": {
-                  "row": {
-                    "label": "y",
                     "row": {
-                      "type": "variable",
-                      "variable": "$row_3",
+                      "label": "y",
+                      "row": {
+                        "type": "variable",
+                        "variable": "$row_3",
+                      },
+                      "type": "extension",
+                      "value": {
+                        "type": "Binder",
+                        "value": "y",
+                      },
                     },
-                    "type": "extension",
+                    "type": "Struct",
+                  },
+                },
+                "type": "Struct",
+              },
+              "term": {
+                "arg": {
+                  "type": "Var",
+                  "variable": {
+                    "index": 3,
+                    "type": "Bound",
+                  },
+                },
+                "func": {
+                  "type": "Var",
+                  "variable": {
+                    "index": 1,
+                    "type": "Bound",
+                  },
+                },
+                "icit": "Explicit",
+                "type": "App",
+              },
+            },
+            {
+              "binders": [
+                [
+                  "w",
+                  {
+                    "type": "Neutral",
                     "value": {
-                      "type": "Binder",
-                      "value": "y",
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 11,
+                      },
                     },
                   },
-                  "type": "Struct",
-                },
-              },
-              "type": "Struct",
-            },
-            "term": {
-              "arg": {
-                "type": "Var",
-                "variable": {
-                  "index": 3,
-                  "type": "Bound",
-                },
-              },
-              "func": {
-                "type": "Var",
-                "variable": {
-                  "index": 1,
-                  "type": "Bound",
-                },
-              },
-              "icit": "Explicit",
-              "type": "App",
-            },
-          },
-          {
-            "binders": [
-              [
-                "w",
-                {
-                  "type": "Neutral",
-                  "value": {
+                ],
+                [
+                  "$row_12",
+                  {
                     "type": "Var",
                     "variable": {
                       "lvl": 1,
                       "type": "Meta",
-                      "val": 11,
+                      "val": 12,
                     },
                   },
-                },
-              ],
-              [
-                "$row_12",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 12,
+                ],
+                [
+                  "$row_13",
+                  {
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 13,
+                    },
                   },
-                },
+                ],
               ],
-              [
-                "$row_13",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 13,
-                  },
-                },
-              ],
-            ],
-            "pattern": {
-              "row": {
-                "label": "z",
+              "pattern": {
                 "row": {
-                  "type": "variable",
-                  "variable": "$row_13",
-                },
-                "type": "extension",
-                "value": {
+                  "label": "z",
                   "row": {
-                    "label": "w",
-                    "row": {
-                      "type": "variable",
-                      "variable": "$row_12",
-                    },
-                    "type": "extension",
-                    "value": {
-                      "type": "Binder",
-                      "value": "w",
-                    },
+                    "type": "variable",
+                    "variable": "$row_13",
                   },
-                  "type": "Struct",
+                  "type": "extension",
+                  "value": {
+                    "row": {
+                      "label": "w",
+                      "row": {
+                        "type": "variable",
+                        "variable": "$row_12",
+                      },
+                      "type": "extension",
+                      "value": {
+                        "type": "Binder",
+                        "value": "w",
+                      },
+                    },
+                    "type": "Struct",
+                  },
+                },
+                "type": "Struct",
+              },
+              "term": {
+                "type": "Var",
+                "variable": {
+                  "index": 2,
+                  "type": "Bound",
                 },
               },
-              "type": "Struct",
             },
-            "term": {
-              "type": "Var",
-              "variable": {
-                "index": 2,
-                "type": "Bound",
-              },
+          ],
+          "scrutinee": {
+            "type": "Var",
+            "variable": {
+              "index": 0,
+              "type": "Bound",
             },
           },
-        ],
-        "scrutinee": {
-          "type": "Var",
-          "variable": {
-            "index": 0,
-            "type": "Bound",
-          },
+          "type": "Match",
         },
-        "type": "Match",
+        "type": "Abs",
       },
-      "type": "Abs",
+      "type": "Ann",
     },
     "type": {
       "binder": {
@@ -1841,10 +1915,11 @@ exports[`inference: match > struct patterns > struct pattern with literal fields
       "Num ~~ ?4",
       "Num ~~ ?4",
     ],
-    "term": "λ(x: Num) ->
+    "term": "(λ(x: Num) ->
   match x
     | Struct [ x: 1, y: 2 | $row_1 ] -> 11
-    | Struct [ z: 3, w: 4 | $row_2 ] -> 22",
+    | Struct [ z: 3, w: 4 | $row_2 ] -> 22 : Π(x: Num) ->
+  (closure: (?4 :: ?3) -| Γ: x))",
     "type": "Π(x: Num) -> (closure: (?4 :: ?3) -| Γ: x)",
   },
 }
@@ -2123,133 +2198,169 @@ exports[`inference: match > struct patterns > struct pattern with literal fields
       },
     },
     "term": {
-      "binding": {
-        "annotation": {
-          "type": "Var",
-          "variable": {
-            "name": "Num",
-            "type": "Free",
+      "ann": {
+        "binder": {
+          "annotation": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
+          "icit": "Explicit",
+          "type": "Pi",
+          "variable": "x",
         },
-        "icit": "Explicit",
-        "type": "Lambda",
-        "variable": "x",
+        "closure": {
+          "ctx": {
+            "env": [],
+            "implicits": [],
+            "metas": {},
+            "sigma": {},
+            "zonker": {},
+          },
+          "term": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+          "type": "Closure",
+        },
+        "type": "Abs",
       },
-      "body": {
-        "alternatives": [
-          {
-            "binders": [
-              [
-                "$row_1",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 1,
+      "term": {
+        "binding": {
+          "annotation": {
+            "type": "Var",
+            "variable": {
+              "name": "Num",
+              "type": "Free",
+            },
+          },
+          "icit": "Explicit",
+          "type": "Lambda",
+          "variable": "x",
+        },
+        "body": {
+          "alternatives": [
+            {
+              "binders": [
+                [
+                  "$row_1",
+                  {
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 1,
+                    },
                   },
-                },
+                ],
               ],
-            ],
-            "pattern": {
-              "row": {
-                "label": "x",
+              "pattern": {
                 "row": {
-                  "label": "y",
+                  "label": "x",
                   "row": {
-                    "type": "variable",
-                    "variable": "$row_1",
+                    "label": "y",
+                    "row": {
+                      "type": "variable",
+                      "variable": "$row_1",
+                    },
+                    "type": "extension",
+                    "value": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Num",
+                        "value": 2,
+                      },
+                    },
                   },
                   "type": "extension",
                   "value": {
                     "type": "Lit",
                     "value": {
                       "type": "Num",
-                      "value": 2,
+                      "value": 1,
                     },
                   },
                 },
-                "type": "extension",
+                "type": "Struct",
+              },
+              "term": {
+                "type": "Lit",
                 "value": {
-                  "type": "Lit",
-                  "value": {
-                    "type": "Num",
-                    "value": 1,
-                  },
+                  "type": "Num",
+                  "value": 11,
                 },
               },
-              "type": "Struct",
             },
-            "term": {
-              "type": "Lit",
-              "value": {
-                "type": "Num",
-                "value": 11,
-              },
-            },
-          },
-          {
-            "binders": [
-              [
-                "$row_2",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 2,
+            {
+              "binders": [
+                [
+                  "$row_2",
+                  {
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 2,
+                    },
                   },
-                },
+                ],
               ],
-            ],
-            "pattern": {
-              "row": {
-                "label": "z",
+              "pattern": {
                 "row": {
-                  "label": "w",
+                  "label": "z",
                   "row": {
-                    "type": "variable",
-                    "variable": "$row_2",
+                    "label": "w",
+                    "row": {
+                      "type": "variable",
+                      "variable": "$row_2",
+                    },
+                    "type": "extension",
+                    "value": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Num",
+                        "value": 4,
+                      },
+                    },
                   },
                   "type": "extension",
                   "value": {
                     "type": "Lit",
                     "value": {
                       "type": "Num",
-                      "value": 4,
+                      "value": 3,
                     },
                   },
                 },
-                "type": "extension",
+                "type": "Struct",
+              },
+              "term": {
+                "type": "Lit",
                 "value": {
-                  "type": "Lit",
-                  "value": {
-                    "type": "Num",
-                    "value": 3,
-                  },
+                  "type": "Num",
+                  "value": 22,
                 },
               },
-              "type": "Struct",
             },
-            "term": {
-              "type": "Lit",
-              "value": {
-                "type": "Num",
-                "value": 22,
-              },
+          ],
+          "scrutinee": {
+            "type": "Var",
+            "variable": {
+              "index": 0,
+              "type": "Bound",
             },
           },
-        ],
-        "scrutinee": {
-          "type": "Var",
-          "variable": {
-            "index": 0,
-            "type": "Bound",
-          },
+          "type": "Match",
         },
-        "type": "Match",
+        "type": "Abs",
       },
-      "type": "Abs",
+      "type": "Ann",
     },
     "type": {
       "binder": {
@@ -2301,8 +2412,11 @@ exports[`inference: match > struct patterns > struct pattern with row polymorphi
       "?1 ~~ ?4",
       "Num ~~ ?4",
     ],
-    "term": "λ(x: Num) ->
-  match x | Struct [ x: 1, y: 2 | r ] -> r | Struct [ z: 3, w: 4 | r ] -> x",
+    "term": "(λ(x: Num) ->
+  match x
+    | Struct [ x: 1, y: 2 | r ] -> r
+    | Struct [ z: 3, w: 4 | r ] -> x : Π(x: Num) ->
+  (closure: (?4 :: ?3) -| Γ: x))",
     "type": "Π(x: Num) -> (closure: (?4 :: ?3) -| Γ: x)",
   },
 }
@@ -2585,133 +2699,169 @@ exports[`inference: match > struct patterns > struct pattern with row polymorphi
       },
     },
     "term": {
-      "binding": {
-        "annotation": {
-          "type": "Var",
-          "variable": {
-            "name": "Num",
-            "type": "Free",
+      "ann": {
+        "binder": {
+          "annotation": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
+          "icit": "Explicit",
+          "type": "Pi",
+          "variable": "x",
         },
-        "icit": "Explicit",
-        "type": "Lambda",
-        "variable": "x",
+        "closure": {
+          "ctx": {
+            "env": [],
+            "implicits": [],
+            "metas": {},
+            "sigma": {},
+            "zonker": {},
+          },
+          "term": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+          "type": "Closure",
+        },
+        "type": "Abs",
       },
-      "body": {
-        "alternatives": [
-          {
-            "binders": [
-              [
-                "r",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 1,
+      "term": {
+        "binding": {
+          "annotation": {
+            "type": "Var",
+            "variable": {
+              "name": "Num",
+              "type": "Free",
+            },
+          },
+          "icit": "Explicit",
+          "type": "Lambda",
+          "variable": "x",
+        },
+        "body": {
+          "alternatives": [
+            {
+              "binders": [
+                [
+                  "r",
+                  {
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 1,
+                    },
                   },
-                },
+                ],
               ],
-            ],
-            "pattern": {
-              "row": {
-                "label": "x",
+              "pattern": {
                 "row": {
-                  "label": "y",
+                  "label": "x",
                   "row": {
-                    "type": "variable",
-                    "variable": "r",
+                    "label": "y",
+                    "row": {
+                      "type": "variable",
+                      "variable": "r",
+                    },
+                    "type": "extension",
+                    "value": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Num",
+                        "value": 2,
+                      },
+                    },
                   },
                   "type": "extension",
                   "value": {
                     "type": "Lit",
                     "value": {
                       "type": "Num",
-                      "value": 2,
+                      "value": 1,
                     },
                   },
                 },
-                "type": "extension",
-                "value": {
-                  "type": "Lit",
-                  "value": {
-                    "type": "Num",
-                    "value": 1,
-                  },
+                "type": "Struct",
+              },
+              "term": {
+                "type": "Var",
+                "variable": {
+                  "index": 0,
+                  "type": "Bound",
                 },
               },
-              "type": "Struct",
             },
-            "term": {
-              "type": "Var",
-              "variable": {
-                "index": 0,
-                "type": "Bound",
-              },
-            },
-          },
-          {
-            "binders": [
-              [
-                "r",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 2,
+            {
+              "binders": [
+                [
+                  "r",
+                  {
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 2,
+                    },
                   },
-                },
+                ],
               ],
-            ],
-            "pattern": {
-              "row": {
-                "label": "z",
+              "pattern": {
                 "row": {
-                  "label": "w",
+                  "label": "z",
                   "row": {
-                    "type": "variable",
-                    "variable": "r",
+                    "label": "w",
+                    "row": {
+                      "type": "variable",
+                      "variable": "r",
+                    },
+                    "type": "extension",
+                    "value": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Num",
+                        "value": 4,
+                      },
+                    },
                   },
                   "type": "extension",
                   "value": {
                     "type": "Lit",
                     "value": {
                       "type": "Num",
-                      "value": 4,
+                      "value": 3,
                     },
                   },
                 },
-                "type": "extension",
-                "value": {
-                  "type": "Lit",
-                  "value": {
-                    "type": "Num",
-                    "value": 3,
-                  },
+                "type": "Struct",
+              },
+              "term": {
+                "type": "Var",
+                "variable": {
+                  "index": 1,
+                  "type": "Bound",
                 },
               },
-              "type": "Struct",
             },
-            "term": {
-              "type": "Var",
-              "variable": {
-                "index": 1,
-                "type": "Bound",
-              },
+          ],
+          "scrutinee": {
+            "type": "Var",
+            "variable": {
+              "index": 0,
+              "type": "Bound",
             },
           },
-        ],
-        "scrutinee": {
-          "type": "Var",
-          "variable": {
-            "index": 0,
-            "type": "Bound",
-          },
+          "type": "Match",
         },
-        "type": "Match",
+        "type": "Abs",
       },
-      "type": "Abs",
+      "type": "Ann",
     },
     "type": {
       "binder": {
@@ -2763,8 +2913,11 @@ exports[`inference: match > struct patterns > variable binding in struct pattern
       "?2 ~~ ?8",
       "?5 ~~ ?8",
     ],
-    "term": "λ(x: Num) ->
-  match x | Struct [ x: y | $row_3 ] -> y | Struct [ z: w | $row_6 ] -> w",
+    "term": "(λ(x: Num) ->
+  match x
+    | Struct [ x: y | $row_3 ] -> y
+    | Struct [ z: w | $row_6 ] -> w : Π(x: Num) ->
+  (closure: (?8 :: ?7) -| Γ: x))",
     "type": "Π(x: Num) -> (closure: (?8 :: ?7) -| Γ: x)",
   },
 }
@@ -3111,133 +3264,169 @@ exports[`inference: match > struct patterns > variable binding in struct pattern
       },
     },
     "term": {
-      "binding": {
-        "annotation": {
-          "type": "Var",
-          "variable": {
-            "name": "Num",
-            "type": "Free",
+      "ann": {
+        "binder": {
+          "annotation": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
+          "icit": "Explicit",
+          "type": "Pi",
+          "variable": "x",
         },
-        "icit": "Explicit",
-        "type": "Lambda",
-        "variable": "x",
+        "closure": {
+          "ctx": {
+            "env": [],
+            "implicits": [],
+            "metas": {},
+            "sigma": {},
+            "zonker": {},
+          },
+          "term": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 8,
+            },
+          },
+          "type": "Closure",
+        },
+        "type": "Abs",
       },
-      "body": {
-        "alternatives": [
-          {
-            "binders": [
-              [
-                "y",
-                {
-                  "type": "Neutral",
-                  "value": {
+      "term": {
+        "binding": {
+          "annotation": {
+            "type": "Var",
+            "variable": {
+              "name": "Num",
+              "type": "Free",
+            },
+          },
+          "icit": "Explicit",
+          "type": "Lambda",
+          "variable": "x",
+        },
+        "body": {
+          "alternatives": [
+            {
+              "binders": [
+                [
+                  "y",
+                  {
+                    "type": "Neutral",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 2,
+                      },
+                    },
+                  },
+                ],
+                [
+                  "$row_3",
+                  {
                     "type": "Var",
                     "variable": {
                       "lvl": 1,
                       "type": "Meta",
-                      "val": 2,
+                      "val": 3,
                     },
                   },
-                },
+                ],
               ],
-              [
-                "$row_3",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 3,
+              "pattern": {
+                "row": {
+                  "label": "x",
+                  "row": {
+                    "type": "variable",
+                    "variable": "$row_3",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "type": "Binder",
+                    "value": "y",
                   },
                 },
-              ],
-            ],
-            "pattern": {
-              "row": {
-                "label": "x",
-                "row": {
-                  "type": "variable",
-                  "variable": "$row_3",
-                },
-                "type": "extension",
-                "value": {
-                  "type": "Binder",
-                  "value": "y",
+                "type": "Struct",
+              },
+              "term": {
+                "type": "Var",
+                "variable": {
+                  "index": 1,
+                  "type": "Bound",
                 },
               },
-              "type": "Struct",
             },
-            "term": {
-              "type": "Var",
-              "variable": {
-                "index": 1,
-                "type": "Bound",
-              },
-            },
-          },
-          {
-            "binders": [
-              [
-                "w",
-                {
-                  "type": "Neutral",
-                  "value": {
+            {
+              "binders": [
+                [
+                  "w",
+                  {
+                    "type": "Neutral",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 5,
+                      },
+                    },
+                  },
+                ],
+                [
+                  "$row_6",
+                  {
                     "type": "Var",
                     "variable": {
                       "lvl": 1,
                       "type": "Meta",
-                      "val": 5,
+                      "val": 6,
                     },
                   },
-                },
+                ],
               ],
-              [
-                "$row_6",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 6,
+              "pattern": {
+                "row": {
+                  "label": "z",
+                  "row": {
+                    "type": "variable",
+                    "variable": "$row_6",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "type": "Binder",
+                    "value": "w",
                   },
                 },
-              ],
-            ],
-            "pattern": {
-              "row": {
-                "label": "z",
-                "row": {
-                  "type": "variable",
-                  "variable": "$row_6",
-                },
-                "type": "extension",
-                "value": {
-                  "type": "Binder",
-                  "value": "w",
+                "type": "Struct",
+              },
+              "term": {
+                "type": "Var",
+                "variable": {
+                  "index": 1,
+                  "type": "Bound",
                 },
               },
-              "type": "Struct",
             },
-            "term": {
-              "type": "Var",
-              "variable": {
-                "index": 1,
-                "type": "Bound",
-              },
+          ],
+          "scrutinee": {
+            "type": "Var",
+            "variable": {
+              "index": 0,
+              "type": "Bound",
             },
           },
-        ],
-        "scrutinee": {
-          "type": "Var",
-          "variable": {
-            "index": 0,
-            "type": "Bound",
-          },
+          "type": "Match",
         },
-        "type": "Match",
+        "type": "Abs",
       },
-      "type": "Abs",
+      "type": "Ann",
     },
     "type": {
       "binder": {
@@ -3289,7 +3478,8 @@ exports[`inference: match > type patterns > match on type constructors: Num, Str
       "Num ~~ ?6",
       "String ~~ ?6",
     ],
-    "term": "λ(x: Num) -> match x | Num -> 1 | String -> "hello"",
+    "term": "(λ(x: Num) -> match x | Num -> 1 | String -> "hello" : Π(x: Num) ->
+  (closure: (?6 :: ?5) -| Γ: x))",
     "type": "Π(x: Num) -> (closure: (?6 :: ?5) -| Γ: x)",
   },
 }
@@ -3526,89 +3716,125 @@ exports[`inference: match > type patterns > match on type constructors: Num, Str
       },
     },
     "term": {
-      "binding": {
-        "annotation": {
-          "type": "Var",
-          "variable": {
-            "name": "Num",
-            "type": "Free",
-          },
-        },
-        "icit": "Explicit",
-        "type": "Lambda",
-        "variable": "x",
-      },
-      "body": {
-        "alternatives": [
-          {
-            "binders": [
-              [
-                "Num",
-                {
-                  "type": "Neutral",
-                  "value": {
-                    "type": "Var",
-                    "variable": {
-                      "lvl": 1,
-                      "type": "Meta",
-                      "val": 2,
-                    },
-                  },
-                },
-              ],
-            ],
-            "pattern": {
-              "type": "Binder",
+      "ann": {
+        "binder": {
+          "annotation": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
               "value": "Num",
             },
-            "term": {
-              "type": "Lit",
-              "value": {
-                "type": "Num",
-                "value": 1,
-              },
+          },
+          "icit": "Explicit",
+          "type": "Pi",
+          "variable": "x",
+        },
+        "closure": {
+          "ctx": {
+            "env": [],
+            "implicits": [],
+            "metas": {},
+            "sigma": {},
+            "zonker": {},
+          },
+          "term": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
             },
           },
-          {
-            "binders": [
-              [
-                "String",
-                {
-                  "type": "Neutral",
-                  "value": {
-                    "type": "Var",
-                    "variable": {
-                      "lvl": 1,
-                      "type": "Meta",
-                      "val": 4,
+          "type": "Closure",
+        },
+        "type": "Abs",
+      },
+      "term": {
+        "binding": {
+          "annotation": {
+            "type": "Var",
+            "variable": {
+              "name": "Num",
+              "type": "Free",
+            },
+          },
+          "icit": "Explicit",
+          "type": "Lambda",
+          "variable": "x",
+        },
+        "body": {
+          "alternatives": [
+            {
+              "binders": [
+                [
+                  "Num",
+                  {
+                    "type": "Neutral",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 2,
+                      },
                     },
                   },
-                },
+                ],
               ],
-            ],
-            "pattern": {
-              "type": "Binder",
-              "value": "String",
-            },
-            "term": {
-              "type": "Lit",
-              "value": {
-                "type": "String",
-                "value": "hello",
+              "pattern": {
+                "type": "Binder",
+                "value": "Num",
+              },
+              "term": {
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 1,
+                },
               },
             },
+            {
+              "binders": [
+                [
+                  "String",
+                  {
+                    "type": "Neutral",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 4,
+                      },
+                    },
+                  },
+                ],
+              ],
+              "pattern": {
+                "type": "Binder",
+                "value": "String",
+              },
+              "term": {
+                "type": "Lit",
+                "value": {
+                  "type": "String",
+                  "value": "hello",
+                },
+              },
+            },
+          ],
+          "scrutinee": {
+            "type": "Var",
+            "variable": {
+              "index": 0,
+              "type": "Bound",
+            },
           },
-        ],
-        "scrutinee": {
-          "type": "Var",
-          "variable": {
-            "index": 0,
-            "type": "Bound",
-          },
+          "type": "Match",
         },
-        "type": "Match",
+        "type": "Abs",
       },
-      "type": "Abs",
+      "type": "Ann",
     },
     "type": {
       "binder": {
@@ -3660,7 +3886,8 @@ exports[`inference: match > variable patterns > match x | y -> 2 | z -> 4 1`] = 
       "Num ~~ ?6",
       "Num ~~ ?6",
     ],
-    "term": "λ(x: Num) -> match x | y -> 2 | z -> 4",
+    "term": "(λ(x: Num) -> match x | y -> 2 | z -> 4 : Π(x: Num) ->
+  (closure: (?6 :: ?5) -| Γ: x))",
     "type": "Π(x: Num) -> (closure: (?6 :: ?5) -| Γ: x)",
   },
 }
@@ -3897,89 +4124,125 @@ exports[`inference: match > variable patterns > match x | y -> 2 | z -> 4 2`] = 
       },
     },
     "term": {
-      "binding": {
-        "annotation": {
-          "type": "Var",
-          "variable": {
-            "name": "Num",
-            "type": "Free",
+      "ann": {
+        "binder": {
+          "annotation": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
+          "icit": "Explicit",
+          "type": "Pi",
+          "variable": "x",
         },
-        "icit": "Explicit",
-        "type": "Lambda",
-        "variable": "x",
+        "closure": {
+          "ctx": {
+            "env": [],
+            "implicits": [],
+            "metas": {},
+            "sigma": {},
+            "zonker": {},
+          },
+          "term": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 6,
+            },
+          },
+          "type": "Closure",
+        },
+        "type": "Abs",
       },
-      "body": {
-        "alternatives": [
-          {
-            "binders": [
-              [
-                "y",
-                {
-                  "type": "Neutral",
-                  "value": {
-                    "type": "Var",
-                    "variable": {
-                      "lvl": 1,
-                      "type": "Meta",
-                      "val": 2,
+      "term": {
+        "binding": {
+          "annotation": {
+            "type": "Var",
+            "variable": {
+              "name": "Num",
+              "type": "Free",
+            },
+          },
+          "icit": "Explicit",
+          "type": "Lambda",
+          "variable": "x",
+        },
+        "body": {
+          "alternatives": [
+            {
+              "binders": [
+                [
+                  "y",
+                  {
+                    "type": "Neutral",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 2,
+                      },
                     },
                   },
-                },
+                ],
               ],
-            ],
-            "pattern": {
-              "type": "Binder",
-              "value": "y",
-            },
-            "term": {
-              "type": "Lit",
-              "value": {
-                "type": "Num",
-                "value": 2,
+              "pattern": {
+                "type": "Binder",
+                "value": "y",
+              },
+              "term": {
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 2,
+                },
               },
             },
-          },
-          {
-            "binders": [
-              [
-                "z",
-                {
-                  "type": "Neutral",
-                  "value": {
-                    "type": "Var",
-                    "variable": {
-                      "lvl": 1,
-                      "type": "Meta",
-                      "val": 4,
+            {
+              "binders": [
+                [
+                  "z",
+                  {
+                    "type": "Neutral",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 4,
+                      },
                     },
                   },
-                },
+                ],
               ],
-            ],
-            "pattern": {
-              "type": "Binder",
-              "value": "z",
-            },
-            "term": {
-              "type": "Lit",
-              "value": {
-                "type": "Num",
-                "value": 4,
+              "pattern": {
+                "type": "Binder",
+                "value": "z",
+              },
+              "term": {
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 4,
+                },
               },
             },
+          ],
+          "scrutinee": {
+            "type": "Var",
+            "variable": {
+              "index": 0,
+              "type": "Bound",
+            },
           },
-        ],
-        "scrutinee": {
-          "type": "Var",
-          "variable": {
-            "index": 0,
-            "type": "Bound",
-          },
+          "type": "Match",
         },
-        "type": "Match",
+        "type": "Abs",
       },
-      "type": "Abs",
+      "type": "Ann",
     },
     "type": {
       "binder": {
@@ -4031,10 +4294,11 @@ exports[`inference: match > variant patterns > match on variant tags: #nil, #con
       "Num ~~ ?11",
       "Num ~~ ?11",
     ],
-    "term": "λ(x: Num) ->
+    "term": "(λ(x: Num) ->
   match x
     | Variant [ nil: a | $row_3 ] -> 0
-    | Variant [ cons: Struct [ 0: el, 1: rest | $row_8 ] | $row_9 ] -> 1",
+    | Variant [ cons: Struct [ 0: el, 1: rest | $row_8 ] | $row_9 ] ->
+        1 : Π(x: Num) -> (closure: (?11 :: ?10) -| Γ: x))",
     "type": "Π(x: Num) -> (closure: (?11 :: ?10) -| Γ: x)",
   },
 }
@@ -4444,177 +4708,213 @@ exports[`inference: match > variant patterns > match on variant tags: #nil, #con
       },
     },
     "term": {
-      "binding": {
-        "annotation": {
-          "type": "Var",
-          "variable": {
-            "name": "Num",
-            "type": "Free",
+      "ann": {
+        "binder": {
+          "annotation": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
+          "icit": "Explicit",
+          "type": "Pi",
+          "variable": "x",
         },
-        "icit": "Explicit",
-        "type": "Lambda",
-        "variable": "x",
-      },
-      "body": {
-        "alternatives": [
-          {
-            "binders": [
-              [
-                "a",
-                {
-                  "type": "Neutral",
-                  "value": {
-                    "type": "Var",
-                    "variable": {
-                      "lvl": 1,
-                      "type": "Meta",
-                      "val": 2,
-                    },
-                  },
-                },
-              ],
-              [
-                "$row_3",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 3,
-                  },
-                },
-              ],
-            ],
-            "pattern": {
-              "row": {
-                "label": "nil",
-                "row": {
-                  "type": "variable",
-                  "variable": "$row_3",
-                },
-                "type": "extension",
-                "value": {
-                  "type": "Binder",
-                  "value": "a",
-                },
-              },
-              "type": "Variant",
-            },
-            "term": {
-              "type": "Lit",
-              "value": {
-                "type": "Num",
-                "value": 0,
-              },
+        "closure": {
+          "ctx": {
+            "env": [],
+            "implicits": [],
+            "metas": {},
+            "sigma": {},
+            "zonker": {},
+          },
+          "term": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 11,
             },
           },
-          {
-            "binders": [
-              [
-                "el",
-                {
-                  "type": "Neutral",
-                  "value": {
+          "type": "Closure",
+        },
+        "type": "Abs",
+      },
+      "term": {
+        "binding": {
+          "annotation": {
+            "type": "Var",
+            "variable": {
+              "name": "Num",
+              "type": "Free",
+            },
+          },
+          "icit": "Explicit",
+          "type": "Lambda",
+          "variable": "x",
+        },
+        "body": {
+          "alternatives": [
+            {
+              "binders": [
+                [
+                  "a",
+                  {
+                    "type": "Neutral",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 2,
+                      },
+                    },
+                  },
+                ],
+                [
+                  "$row_3",
+                  {
                     "type": "Var",
                     "variable": {
                       "lvl": 1,
                       "type": "Meta",
-                      "val": 5,
+                      "val": 3,
                     },
                   },
-                },
+                ],
               ],
-              [
-                "rest",
-                {
-                  "type": "Neutral",
-                  "value": {
-                    "type": "Var",
-                    "variable": {
-                      "lvl": 1,
-                      "type": "Meta",
-                      "val": 7,
-                    },
-                  },
-                },
-              ],
-              [
-                "$row_8",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 8,
-                  },
-                },
-              ],
-              [
-                "$row_9",
-                {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 9,
-                  },
-                },
-              ],
-            ],
-            "pattern": {
-              "row": {
-                "label": "cons",
+              "pattern": {
                 "row": {
-                  "type": "variable",
-                  "variable": "$row_9",
-                },
-                "type": "extension",
-                "value": {
+                  "label": "nil",
                   "row": {
-                    "label": "0",
+                    "type": "variable",
+                    "variable": "$row_3",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "type": "Binder",
+                    "value": "a",
+                  },
+                },
+                "type": "Variant",
+              },
+              "term": {
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 0,
+                },
+              },
+            },
+            {
+              "binders": [
+                [
+                  "el",
+                  {
+                    "type": "Neutral",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 5,
+                      },
+                    },
+                  },
+                ],
+                [
+                  "rest",
+                  {
+                    "type": "Neutral",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 7,
+                      },
+                    },
+                  },
+                ],
+                [
+                  "$row_8",
+                  {
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 8,
+                    },
+                  },
+                ],
+                [
+                  "$row_9",
+                  {
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 9,
+                    },
+                  },
+                ],
+              ],
+              "pattern": {
+                "row": {
+                  "label": "cons",
+                  "row": {
+                    "type": "variable",
+                    "variable": "$row_9",
+                  },
+                  "type": "extension",
+                  "value": {
                     "row": {
-                      "label": "1",
+                      "label": "0",
                       "row": {
-                        "type": "variable",
-                        "variable": "$row_8",
+                        "label": "1",
+                        "row": {
+                          "type": "variable",
+                          "variable": "$row_8",
+                        },
+                        "type": "extension",
+                        "value": {
+                          "type": "Binder",
+                          "value": "rest",
+                        },
                       },
                       "type": "extension",
                       "value": {
                         "type": "Binder",
-                        "value": "rest",
+                        "value": "el",
                       },
                     },
-                    "type": "extension",
-                    "value": {
-                      "type": "Binder",
-                      "value": "el",
-                    },
+                    "type": "Struct",
                   },
-                  "type": "Struct",
+                },
+                "type": "Variant",
+              },
+              "term": {
+                "type": "Lit",
+                "value": {
+                  "type": "Num",
+                  "value": 1,
                 },
               },
-              "type": "Variant",
             },
-            "term": {
-              "type": "Lit",
-              "value": {
-                "type": "Num",
-                "value": 1,
-              },
+          ],
+          "scrutinee": {
+            "type": "Var",
+            "variable": {
+              "index": 0,
+              "type": "Bound",
             },
           },
-        ],
-        "scrutinee": {
-          "type": "Var",
-          "variable": {
-            "index": 0,
-            "type": "Bound",
-          },
+          "type": "Match",
         },
-        "type": "Match",
+        "type": "Abs",
       },
-      "type": "Abs",
+      "type": "Ann",
     },
     "type": {
       "binder": {

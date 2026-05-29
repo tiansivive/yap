@@ -8,6 +8,7 @@ export type Ctx = {
 	readonly instrs: ReadonlyArray<MIR.Instr>;
 	readonly supply: number;
 	readonly names: ReadonlyMap<NodeId, string>;
+	readonly labels: ReadonlyMap<string, string>;
 };
 
 export const fresh = (graph: Graph): Ctx => ({
@@ -17,6 +18,7 @@ export const fresh = (graph: Graph): Ctx => ({
 	instrs: [],
 	supply: 0,
 	names: new Map(),
+	labels: new Map(),
 });
 
 export const name = (ctx: Ctx, prefix = "v"): [string, Ctx] => {
@@ -30,6 +32,13 @@ export const bind = (ctx: Ctx, id: NodeId, n: string): Ctx => ({
 });
 
 export const resolve = (ctx: Ctx, id: NodeId): string | undefined => ctx.names.get(id);
+
+export const bindLabel = (ctx: Ctx, label: string, n: string): Ctx => ({
+	...ctx,
+	labels: new Map([...ctx.labels, [label, n]]),
+});
+
+export const resolveLabel = (ctx: Ctx, label: string): string | undefined => ctx.labels.get(label);
 
 export const instr = (ctx: Ctx, i: MIR.Instr): Ctx => ({
 	...ctx,
@@ -53,6 +62,7 @@ export const fork = (ctx: Ctx): Ctx => ({
 	instrs: [],
 	supply: ctx.supply,
 	names: ctx.names,
+	labels: ctx.labels,
 });
 
 export const flush = (ctx: Ctx): [ReadonlyArray<MIR.Instr>, Ctx] => [ctx.instrs, { ...ctx, instrs: [] }];

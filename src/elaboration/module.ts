@@ -254,10 +254,12 @@ export type VerificationResult = {
 export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>, ctx: EB.Context) => {
 	const inference = V2.Do(function* () {
 		const [elaborated, ty, us] = yield* EB.infer.gen(stmt.value);
-		const { constraints, metas } = yield* V2.listen();
+		const { constraints, metas, zonker: toldZonker } = yield* V2.listen();
 		const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
 		const { zonker, resolutions } = yield* V2.local(_ => withMetas, EB.solve(constraints));
-		const zonked = update(withMetas, "zonker", z => Sub.compose(zonker, z));
+		const { metas: postSolveMetas } = yield* V2.listen();
+		const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postSolveMetas }));
+		const zonked = update(withAllMetas, "zonker", z => Sub.compose(zonker, Sub.compose(toldZonker, z)));
 
 		const state = yield* V2.getSt();
 

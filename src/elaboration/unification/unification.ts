@@ -13,8 +13,6 @@ import { Subst } from "./substitution";
 import * as Err from "@yap/elaboration/shared/errors";
 import * as R from "@yap/shared/rows";
 
-import { update } from "@yap/utils";
-
 import * as Row from "@yap/elaboration/unification/rows";
 
 export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst): V2.Elaboration<Subst> => {

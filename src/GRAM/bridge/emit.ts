@@ -42,6 +42,10 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.VAR_REF, () => ref(id, ctx))
 		.with(Tags.VAR_FREE, () => Leaves.free(id, ctx))
 		.with(Tags.VAR_FOREIGN, () => Leaves.foreign(id, ctx))
+		.with(Tags.VAR_LABEL, () => Leaves.label(id, ctx))
+		.with(Tags.VAR_META, () => emptyStruct(ctx))
+		.with(Tags.PI, () => emptyStruct(ctx))
+		.with(Tags.SIGMA, () => emptyStruct(ctx))
 		.with(Tags.PROJ, () => Structural.read(id, walk, ctx))
 		.with(Tags.INJ, () => Structural.update(id, walk, ctx))
 		.with(Tags.APP, () => app(id, ctx))
@@ -108,7 +112,7 @@ const struct = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const [pairs, c1] = fields.reduce<[ReadonlyArray<{ label: string; value: string }>, Ctx]>(
 		([acc, c], { label, valueId }) => {
 			const [v, c2] = walk(valueId, c);
-			return [[...acc, { label, value: v }], c2];
+			return [[...acc, { label, value: v }], C.bindLabel(c2, label, v)];
 		},
 		[[], ctx],
 	);
