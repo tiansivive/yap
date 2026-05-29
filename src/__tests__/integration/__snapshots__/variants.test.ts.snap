@@ -8,64 +8,69 @@ exports[`Language Tour — Pattern Matching > list patterns 1`] = `
   match list | [  ] -> 0 | [ x,  | xs ] -> x",
     "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"list","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [12]
-  :env -> [25]
-[3] app {"icit":"Implicit"}
-  :arg -> [11]
-  :func -> [4]
-[4] app {"icit":"Explicit"}
-  :arg -> [9]
+  :entry -> [3]
+[2] stmt:let {"variable":"firstOrZero"}
+[3] lambda {"variable":"list","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [13]
+  :env -> [26]
+[4] app {"icit":"Implicit"}
+  :arg -> [12]
   :func -> [5]
 [5] app {"icit":"Explicit"}
-  :arg -> [8]
-  :func -> [7]
-[6] var:foreign {"name":"Indexed"}
-[7] var:ref {"name":"Indexed"}
-  :refers_to -> [6]
-[8] lit {"value":{"type":"Atom","value":"Num"}}
+  :arg -> [10]
+  :func -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [8]
+[7] var:foreign {"name":"Indexed"}
+[8] var:ref {"name":"Indexed"}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
 [9] lit {"value":{"type":"Atom","value":"Num"}}
-[10] var:foreign {"name":"defaultArray"}
-[11] var:ref {"name":"defaultArray"}
-  :refers_to -> [10]
-[12] match
-  :alt -> [14] {"index":0}
-  :alt -> [17] {"index":1}
-  :decision_tree -> [21]
-  :scrutinee -> [13]
-[13] var:bound {"index":0}
-  :refers_to -> [2]
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[11] var:foreign {"name":"defaultArray"}
+[12] var:ref {"name":"defaultArray"}
+  :refers_to -> [11]
   :scope -> [2] {"level":0}
-[14] case
-  :body -> [16]
-  :next -> [17]
-  :pattern -> [15]
-[15] pat:struct
-[16] lit {"value":{"type":"Num","value":0}}
-[17] case
-  :body -> [20]
-  :pattern -> [18]
-[18] pat:struct
-  :field -> [19] {"label":"0"}
-[19] pat:binder {"name":"x","level":1}
-[20] var:bound {"index":1}
-  :refers_to -> [2]
+[13] match
+  :alt -> [15] {"index":0}
+  :alt -> [18] {"index":1}
+  :decision_tree -> [22]
+  :scrutinee -> [14]
+[14] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-  :scope -> [19] {"level":1}
-[21] switch {"kind":"struct"}
-  :branch -> [24]
-  :inspect -> [13]
-[22] proj {"label":"0"}
-  :target -> [13]
-[23] pat:wildcard
-[24] leaf
-  :body -> [16]
-[25] env
-[26] closure
-  :body -> [2]
-  :env -> [25]",
+  :scope -> [3] {"level":1}
+[15] case
+  :body -> [17]
+  :next -> [18]
+  :pattern -> [16]
+[16] pat:struct
+[17] lit {"value":{"type":"Num","value":0}}
+[18] case
+  :body -> [21]
+  :pattern -> [19]
+[19] pat:struct
+  :field -> [20] {"label":"0"}
+[20] pat:binder {"name":"x","level":2}
+[21] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [20] {"level":2}
+[22] switch {"kind":"struct"}
+  :branch -> [25]
+  :inspect -> [14]
+[23] proj {"label":"0"}
+  :target -> [14]
+[24] pat:wildcard
+[25] leaf
+  :body -> [17]
+[26] env
+[27] closure
+  :body -> [3]
+  :env -> [26]",
     "kind": "let",
     "mir": "",
     "name": "firstOrZero",
@@ -79,68 +84,73 @@ exports[`Language Tour — Pattern Matching > list patterns 1`] = `
   match list | [  ] -> Array [] | [ x,  | xs ] -> xs",
     "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"list","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [12]
-  :env -> [27]
-[3] app {"icit":"Implicit"}
-  :arg -> [11]
-  :func -> [4]
-[4] app {"icit":"Explicit"}
-  :arg -> [9]
+  :entry -> [3]
+[2] stmt:let {"variable":"tail"}
+[3] lambda {"variable":"list","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [13]
+  :env -> [28]
+[4] app {"icit":"Implicit"}
+  :arg -> [12]
   :func -> [5]
 [5] app {"icit":"Explicit"}
-  :arg -> [8]
-  :func -> [7]
-[6] var:foreign {"name":"Indexed"}
-[7] var:ref {"name":"Indexed"}
-  :refers_to -> [6]
-[8] lit {"value":{"type":"Atom","value":"Num"}}
+  :arg -> [10]
+  :func -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [8]
+[7] var:foreign {"name":"Indexed"}
+[8] var:ref {"name":"Indexed"}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
 [9] lit {"value":{"type":"Atom","value":"Num"}}
-[10] var:foreign {"name":"defaultArray"}
-[11] var:ref {"name":"defaultArray"}
-  :refers_to -> [10]
-[12] match
-  :alt -> [14] {"index":0}
-  :alt -> [19] {"index":1}
-  :decision_tree -> [23]
-  :scrutinee -> [13]
-[13] var:bound {"index":0}
-  :refers_to -> [2]
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[11] var:foreign {"name":"defaultArray"}
+[12] var:ref {"name":"defaultArray"}
+  :refers_to -> [11]
   :scope -> [2] {"level":0}
-[14] case
-  :body -> [16]
-  :next -> [19]
-  :pattern -> [15]
-[15] pat:struct
-[16] app {"icit":"Explicit"}
-  :arg -> [18]
-  :func -> [17]
-[17] lit {"value":{"type":"Atom","value":"Array"}}
-[18] row:empty
-[19] case
-  :body -> [22]
-  :pattern -> [20]
-[20] pat:struct
-  :field -> [21] {"label":"0"}
-[21] pat:binder {"name":"x","level":1}
-[22] var:bound {"index":0}
-  :refers_to -> [21]
+[13] match
+  :alt -> [15] {"index":0}
+  :alt -> [20] {"index":1}
+  :decision_tree -> [24]
+  :scrutinee -> [14]
+[14] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-  :scope -> [21] {"level":1}
-[23] switch {"kind":"struct"}
-  :branch -> [26]
-  :inspect -> [13]
-[24] proj {"label":"0"}
-  :target -> [13]
-[25] pat:wildcard
-[26] leaf
-  :body -> [16]
-[27] env
-[28] closure
-  :body -> [2]
-  :env -> [27]",
+  :scope -> [3] {"level":1}
+[15] case
+  :body -> [17]
+  :next -> [20]
+  :pattern -> [16]
+[16] pat:struct
+[17] app {"icit":"Explicit"}
+  :arg -> [19]
+  :func -> [18]
+[18] lit {"value":{"type":"Atom","value":"Array"}}
+[19] row:empty
+[20] case
+  :body -> [23]
+  :pattern -> [21]
+[21] pat:struct
+  :field -> [22] {"label":"0"}
+[22] pat:binder {"name":"x","level":2}
+[23] var:bound {"index":0}
+  :refers_to -> [22]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [22] {"level":2}
+[24] switch {"kind":"struct"}
+  :branch -> [27]
+  :inspect -> [14]
+[25] proj {"label":"0"}
+  :target -> [14]
+[26] pat:wildcard
+[27] leaf
+  :body -> [17]
+[28] env
+[29] closure
+  :body -> [3]
+  :env -> [28]",
     "kind": "let",
     "mir": "",
     "name": "tail",
@@ -156,11 +166,11 @@ exports[`Language Tour — Pattern Matching > literal patterns 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_16;
+  const v0 = closure_17;
   return v0;
 }
 
-function closure_16(n) {
+function closure_17(n) {
   let __block = "entry";
   while (true) {
     switch (__block) {
@@ -198,50 +208,52 @@ return main();
 ",
     "elaborated": "λ(n: Num) -> match n | 0 -> true | _ -> false",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"n","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [4]
-  :env -> [15]
-[3] lit {"value":{"type":"Atom","value":"Num"}}
-[4] match
-  :alt -> [6] {"index":0}
-  :alt -> [9] {"index":1}
-  :decision_tree -> [12]
-  :scrutinee -> [5]
-[5] var:bound {"index":0}
-  :refers_to -> [2]
+  :entry -> [3]
+[2] stmt:let {"variable":"isZero"}
+[3] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [16]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] match
+  :alt -> [7] {"index":0}
+  :alt -> [10] {"index":1}
+  :decision_tree -> [13]
+  :scrutinee -> [6]
+[6] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[6] case
-  :body -> [8]
-  :next -> [9]
-  :pattern -> [7]
-[7] pat:lit {"value":{"type":"Num","value":0}}
-[8] lit {"value":{"type":"Bool","value":true}}
-[9] case
-  :body -> [11]
-  :pattern -> [10]
-[10] pat:wildcard
-[11] lit {"value":{"type":"Bool","value":false}}
-[12] switch {"kind":"lit"}
-  :branch -> [13] {"value":{"type":"Num","value":0}}
-  :default -> [14]
-  :inspect -> [5]
-[13] leaf
-  :body -> [8]
+  :scope -> [3] {"level":1}
+[7] case
+  :body -> [9]
+  :next -> [10]
+  :pattern -> [8]
+[8] pat:lit {"value":{"type":"Num","value":0}}
+[9] lit {"value":{"type":"Bool","value":true}}
+[10] case
+  :body -> [12]
+  :pattern -> [11]
+[11] pat:wildcard
+[12] lit {"value":{"type":"Bool","value":false}}
+[13] switch {"kind":"lit"}
+  :branch -> [14] {"value":{"type":"Num","value":0}}
+  :default -> [15]
+  :inspect -> [6]
 [14] leaf
-  :body -> [11]
-[15] env
-[16] closure
-  :body -> [2]
-  :env -> [15]",
+  :body -> [9]
+[15] leaf
+  :body -> [12]
+[16] env
+[17] closure
+  :body -> [3]
+  :env -> [16]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_16
+      let v0 = &closure_17
       return v0
-  fn closure_16(n) entry=entry
+  fn closure_17(n) entry=entry
     entry:
       jump sw1
     sw1:
@@ -271,73 +283,76 @@ exports[`Language Tour — Pattern Matching > record patterns 1`] = `
   match p | Struct [ x: a, y: b | $row_11 ] -> b",
     "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"p","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [16]
-  :env -> [28]
-[3] sigma {"variable":"$sig","level":0}
+  :entry -> [3]
+[2] stmt:let {"variable":"getY"}
+[3] lambda {"variable":"p","icit":"Explicit","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"y"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Num"}}
-[6] row:ext {"label":"x"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[8] row:empty
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] lit {"value":{"type":"Atom","value":"Schema"}}
-[11] row:ext {"label":"y"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Atom","value":"Num"}}
-[13] row:ext {"label":"x"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"Atom","value":"Num"}}
-[15] row:empty
-[16] match
-  :alt -> [18] {"index":0}
-  :decision_tree -> [24]
-  :scrutinee -> [17]
-[17] var:bound {"index":0}
-  :refers_to -> [2]
+  :body -> [17]
+  :env -> [29]
+[4] sigma {"variable":"$sig","level":1}
+  :annotation -> [5]
+  :body -> [10]
+[5] row:ext {"label":"y"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[7] row:ext {"label":"x"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] row:empty
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Schema"}}
+[12] row:ext {"label":"y"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Atom","value":"Num"}}
+[14] row:ext {"label":"x"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"Atom","value":"Num"}}
+[16] row:empty
+[17] match
+  :alt -> [19] {"index":0}
+  :decision_tree -> [25]
+  :scrutinee -> [18]
+[18] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[18] case
-  :body -> [23]
-  :pattern -> [19]
-[19] pat:struct
-  :field -> [20] {"label":"x"}
-  :field -> [21] {"label":"y"}
-[20] pat:binder {"name":"a","level":1}
-[21] pat:binder {"name":"b","level":2}
-[22] pat:wildcard
-[23] var:bound {"index":1}
-  :refers_to -> [21]
+  :scope -> [3] {"level":1}
+[19] case
+  :body -> [24]
+  :pattern -> [20]
+[20] pat:struct
+  :field -> [21] {"label":"x"}
+  :field -> [22] {"label":"y"}
+[21] pat:binder {"name":"a","level":2}
+[22] pat:binder {"name":"b","level":3}
+[23] pat:wildcard
+[24] var:bound {"index":1}
+  :refers_to -> [22]
   :scope -> [2] {"level":0}
-  :scope -> [20] {"level":1}
+  :scope -> [3] {"level":1}
   :scope -> [21] {"level":2}
   :scope -> [22] {"level":3}
-[24] switch {"kind":"struct"}
-  :branch -> [27]
-  :inspect -> [17]
-[25] proj {"label":"x"}
-  :target -> [17]
-[26] proj {"label":"y"}
-  :target -> [17]
-[27] leaf
-  :bind -> [25] {"name":"a","binder":20}
-  :bind -> [26] {"name":"b","binder":21}
-  :body -> [23]
-[28] env
-[29] closure
-  :body -> [2]
-  :env -> [28]",
+  :scope -> [23] {"level":4}
+[25] switch {"kind":"struct"}
+  :branch -> [28]
+  :inspect -> [18]
+[26] proj {"label":"x"}
+  :target -> [18]
+[27] proj {"label":"y"}
+  :target -> [18]
+[28] leaf
+  :bind -> [26] {"name":"a","binder":21}
+  :bind -> [27] {"name":"b","binder":22}
+  :body -> [24]
+[29] env
+[30] closure
+  :body -> [3]
+  :env -> [29]",
     "kind": "let",
     "mir": "",
     "name": "getY",
@@ -351,67 +366,70 @@ exports[`Language Tour — Pattern Matching > record patterns 1`] = `
   match p | Struct [ y: a | $row_20 ] -> a",
     "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"p","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [16]
-  :env -> [26]
-[3] sigma {"variable":"$sig","level":0}
+  :entry -> [3]
+[2] stmt:let {"variable":"getY2"}
+[3] lambda {"variable":"p","icit":"Explicit","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"y"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Num"}}
-[6] row:ext {"label":"x"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[8] row:empty
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] lit {"value":{"type":"Atom","value":"Schema"}}
-[11] row:ext {"label":"y"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Atom","value":"Num"}}
-[13] row:ext {"label":"x"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"Atom","value":"Num"}}
-[15] row:empty
-[16] match
-  :alt -> [18] {"index":0}
-  :decision_tree -> [23]
-  :scrutinee -> [17]
-[17] var:bound {"index":0}
-  :refers_to -> [2]
+  :body -> [17]
+  :env -> [27]
+[4] sigma {"variable":"$sig","level":1}
+  :annotation -> [5]
+  :body -> [10]
+[5] row:ext {"label":"y"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[7] row:ext {"label":"x"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] row:empty
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Schema"}}
+[12] row:ext {"label":"y"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Atom","value":"Num"}}
+[14] row:ext {"label":"x"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"Atom","value":"Num"}}
+[16] row:empty
+[17] match
+  :alt -> [19] {"index":0}
+  :decision_tree -> [24]
+  :scrutinee -> [18]
+[18] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[18] case
-  :body -> [22]
-  :pattern -> [19]
-[19] pat:struct
-  :field -> [20] {"label":"y"}
-[20] pat:binder {"name":"a","level":1}
-[21] pat:wildcard
-[22] var:bound {"index":1}
-  :refers_to -> [20]
+  :scope -> [3] {"level":1}
+[19] case
+  :body -> [23]
+  :pattern -> [20]
+[20] pat:struct
+  :field -> [21] {"label":"y"}
+[21] pat:binder {"name":"a","level":2}
+[22] pat:wildcard
+[23] var:bound {"index":1}
+  :refers_to -> [21]
   :scope -> [2] {"level":0}
-  :scope -> [20] {"level":1}
+  :scope -> [3] {"level":1}
   :scope -> [21] {"level":2}
-[23] switch {"kind":"struct"}
-  :branch -> [25]
-  :inspect -> [17]
-[24] proj {"label":"y"}
-  :target -> [17]
-[25] leaf
-  :bind -> [24] {"name":"a","binder":20}
-  :body -> [22]
-[26] env
-[27] closure
-  :body -> [2]
-  :env -> [26]",
+  :scope -> [22] {"level":3}
+[24] switch {"kind":"struct"}
+  :branch -> [26]
+  :inspect -> [18]
+[25] proj {"label":"y"}
+  :target -> [18]
+[26] leaf
+  :bind -> [25] {"name":"a","binder":21}
+  :body -> [23]
+[27] env
+[28] closure
+  :body -> [3]
+  :env -> [27]",
     "kind": "let",
     "mir": "",
     "name": "getY2",
@@ -432,63 +450,67 @@ return main();
 ",
     "elaborated": "List",
     "gram": "[1] root
-  :entry -> [2]
-[2] mu {"variable":"x","source":"List","level":0}
-  :annotation -> [3]
-  :body -> [6]
-[3] pi {"variable":"t1","icit":"Explicit","level":0}
+  :entry -> [3]
+[2] stmt:let {"variable":"List"}
+[3] mu {"variable":"x","source":"List","level":1}
   :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Type"}}
-[5] lit {"value":{"type":"Atom","value":"Type"}}
-[6] lambda {"variable":"a","icit":"Explicit","level":1}
-  :annotation -> [7]
-  :body -> [8]
-  :env -> [23]
-[7] lit {"value":{"type":"Atom","value":"Type"}}
-[8] app {"icit":"Explicit"}
-  :arg -> [10]
-  :func -> [9]
-[9] lit {"value":{"type":"Atom","value":"Variant"}}
-[10] row:ext {"label":"cons"}
-  :rest -> [20]
-  :value -> [11]
-[11] app {"icit":"Explicit"}
-  :arg -> [13]
-  :func -> [12]
-[12] lit {"value":{"type":"Atom","value":"Schema"}}
-[13] row:ext {"label":"1"}
-  :rest -> [17]
-  :value -> [14]
-[14] app {"icit":"Explicit"}
-  :arg -> [16]
-  :func -> [15]
-[15] var:bound {"index":1}
-  :refers_to -> [2]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-[16] var:bound {"index":0}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-[17] row:ext {"label":"0"}
-  :rest -> [19]
-  :value -> [18]
-[18] var:bound {"index":0}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-[19] row:empty
-[20] row:ext {"label":"nil"}
-  :rest -> [22]
-  :value -> [21]
-[21] lit {"value":{"type":"Atom","value":"Unit"}}
-[22] row:empty
-[23] env
-  :capture -> [2] {"index":0}
-[24] closure
+  :body -> [7]
+[4] pi {"variable":"t1","icit":"Explicit","level":1}
+  :annotation -> [5]
   :body -> [6]
-  :env -> [23]",
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] lambda {"variable":"a","icit":"Explicit","level":2}
+  :annotation -> [8]
+  :body -> [9]
+  :env -> [24]
+[8] lit {"value":{"type":"Atom","value":"Type"}}
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Variant"}}
+[11] row:ext {"label":"cons"}
+  :rest -> [21]
+  :value -> [12]
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Schema"}}
+[14] row:ext {"label":"1"}
+  :rest -> [18]
+  :value -> [15]
+[15] app {"icit":"Explicit"}
+  :arg -> [17]
+  :func -> [16]
+[16] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[17] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[18] row:ext {"label":"0"}
+  :rest -> [20]
+  :value -> [19]
+[19] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[20] row:empty
+[21] row:ext {"label":"nil"}
+  :rest -> [23]
+  :value -> [22]
+[22] lit {"value":{"type":"Atom","value":"Unit"}}
+[23] row:empty
+[24] env
+  :capture -> [3] {"index":0}
+[25] closure
+  :body -> [7]
+  :env -> [24]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -508,170 +530,189 @@ return main();
           FFI.$add 1 (I6 @a xs)",
     "error": "Unbound bound variable in synth; Unbound bound variable in synth; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"a","icit":"Implicit","level":0}
-  :annotation -> [3]
-  :body -> [4]
-  :env -> [59]
-[3] lit {"value":{"type":"Atom","value":"Type"}}
-[4] lambda {"variable":"list","icit":"Explicit","level":1}
-  :annotation -> [5]
-  :body -> [28]
-  :env -> [60]
-[5] app {"icit":"Explicit"}
-  :arg -> [27]
-  :func -> [6]
-[6] mu {"variable":"x","source":"List","level":1}
-  :annotation -> [7]
-  :body -> [10]
-[7] pi {"variable":"t1","icit":"Explicit","level":1}
+  :entry -> [3]
+[2] stmt:let {"variable":"length"}
+[3] lambda {"variable":"a","icit":"Implicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [62]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] lambda {"variable":"list","icit":"Explicit","level":2}
+  :annotation -> [6]
+  :body -> [29]
+  :env -> [63]
+[6] app {"icit":"Explicit"}
+  :arg -> [28]
+  :func -> [7]
+[7] mu {"variable":"x","source":"List","level":2}
   :annotation -> [8]
-  :body -> [9]
-[8] lit {"value":{"type":"Atom","value":"Type"}}
+  :body -> [11]
+[8] pi {"variable":"t1","icit":"Explicit","level":2}
+  :annotation -> [9]
+  :body -> [10]
 [9] lit {"value":{"type":"Atom","value":"Type"}}
-[10] lambda {"variable":"a","icit":"Explicit","level":2}
-  :annotation -> [11]
-  :body -> [12]
-  :env -> [61]
-[11] lit {"value":{"type":"Atom","value":"Type"}}
-[12] app {"icit":"Explicit"}
-  :arg -> [14]
-  :func -> [13]
-[13] lit {"value":{"type":"Atom","value":"Variant"}}
-[14] row:ext {"label":"cons"}
+[10] lit {"value":{"type":"Atom","value":"Type"}}
+[11] lambda {"variable":"a","icit":"Explicit","level":3}
+  :annotation -> [12]
+  :body -> [13]
+  :env -> [64]
+[12] lit {"value":{"type":"Atom","value":"Type"}}
+[13] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] lit {"value":{"type":"Atom","value":"Variant"}}
+[15] row:ext {"label":"cons"}
+  :rest -> [25]
+  :value -> [16]
+[16] app {"icit":"Explicit"}
+  :arg -> [18]
+  :func -> [17]
+[17] lit {"value":{"type":"Atom","value":"Schema"}}
+[18] row:ext {"label":"1"}
+  :rest -> [22]
+  :value -> [19]
+[19] app {"icit":"Explicit"}
+  :arg -> [21]
+  :func -> [20]
+[20] var:bound {"index":1}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [11] {"level":3}
+[21] var:bound {"index":0}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [11] {"level":3}
+[22] row:ext {"label":"0"}
   :rest -> [24]
-  :value -> [15]
-[15] app {"icit":"Explicit"}
-  :arg -> [17]
-  :func -> [16]
-[16] lit {"value":{"type":"Atom","value":"Schema"}}
-[17] row:ext {"label":"1"}
-  :rest -> [21]
-  :value -> [18]
-[18] app {"icit":"Explicit"}
-  :arg -> [20]
-  :func -> [19]
-[19] var:bound {"index":1}
-  :refers_to -> [6]
+  :value -> [23]
+[23] var:bound {"index":0}
+  :refers_to -> [11]
   :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [10] {"level":2}
-[20] var:bound {"index":0}
-  :refers_to -> [10]
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [11] {"level":3}
+[24] row:empty
+[25] row:ext {"label":"nil"}
+  :rest -> [27]
+  :value -> [26]
+[26] lit {"value":{"type":"Atom","value":"Unit"}}
+[27] row:empty
+[28] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [10] {"level":2}
-[21] row:ext {"label":"0"}
-  :rest -> [23]
-  :value -> [22]
-[22] var:bound {"index":0}
-  :refers_to -> [10]
+  :scope -> [3] {"level":1}
+[29] match
+  :alt -> [31] {"index":0}
+  :alt -> [36] {"index":1}
+  :decision_tree -> [54]
+  :scrutinee -> [30]
+[30] var:bound {"index":0}
+  :refers_to -> [5]
   :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [10] {"level":2}
-[23] row:empty
-[24] row:ext {"label":"nil"}
-  :rest -> [26]
-  :value -> [25]
-[25] lit {"value":{"type":"Atom","value":"Unit"}}
-[26] row:empty
-[27] var:bound {"index":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[31] case
+  :body -> [35]
+  :next -> [36]
+  :pattern -> [32]
+[32] pat:variant {"label":"nil"}
+  :payload -> [33]
+[33] pat:wildcard
+[34] pat:wildcard
+[35] lit {"value":{"type":"Num","value":0}}
+[36] case
+  :body -> [53]
+  :pattern -> [37]
+[37] pat:variant {"label":"cons"}
+  :payload -> [38]
+[38] pat:struct
+  :field -> [39] {"label":"0"}
+  :field -> [40] {"label":"1"}
+[39] pat:binder {"name":"x","level":3}
+[40] pat:binder {"name":"xs","level":4}
+[41] pat:wildcard
+[42] pat:wildcard
+[45] var:foreign {"name":"$add","arity":2}
+[47] lit {"value":{"type":"Num","value":1}}
+  :next -> [48]
+[48] app {"icit":"Explicit"}
+  :arg -> [52]
+  :func -> [49]
+[49] app {"icit":"Implicit"}
+  :arg -> [51]
+  :func -> [50]
+[50] var:bound {"index":6}
   :refers_to -> [2]
   :scope -> [2] {"level":0}
-[28] match
-  :alt -> [30] {"index":0}
-  :alt -> [34] {"index":1}
-  :decision_tree -> [51]
-  :scrutinee -> [29]
-[29] var:bound {"index":0}
-  :refers_to -> [4]
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [39] {"level":3}
+  :scope -> [40] {"level":4}
+  :scope -> [41] {"level":5}
+  :scope -> [42] {"level":6}
+[51] var:bound {"index":5}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-[30] case
-  :body -> [33]
-  :next -> [34]
-  :pattern -> [31]
-[31] pat:variant {"label":"nil"}
-  :payload -> [32]
-[32] pat:wildcard
-[33] lit {"value":{"type":"Num","value":0}}
-[34] case
-  :body -> [50]
-  :pattern -> [35]
-[35] pat:variant {"label":"cons"}
-  :payload -> [36]
-[36] pat:struct
-  :field -> [37] {"label":"0"}
-  :field -> [38] {"label":"1"}
-[37] pat:binder {"name":"x","level":2}
-[38] pat:binder {"name":"xs","level":3}
-[39] pat:wildcard
-[42] var:foreign {"name":"$add","arity":2}
-[44] lit {"value":{"type":"Num","value":1}}
-  :next -> [45]
-[45] app {"icit":"Explicit"}
-  :arg -> [49]
-  :func -> [46]
-[46] app {"icit":"Implicit"}
-  :arg -> [48]
-  :func -> [47]
-[47] var:bound {"index":6}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [39] {"level":3}
+  :scope -> [40] {"level":4}
+  :scope -> [41] {"level":5}
+  :scope -> [42] {"level":6}
+[52] var:bound {"index":2}
+  :refers_to -> [40]
   :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [37] {"level":2}
-  :scope -> [38] {"level":3}
-  :scope -> [39] {"level":4}
-[48] var:bound {"index":5}
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [37] {"level":2}
-  :scope -> [38] {"level":3}
-  :scope -> [39] {"level":4}
-[49] var:bound {"index":2}
-  :refers_to -> [37]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [37] {"level":2}
-  :scope -> [38] {"level":3}
-  :scope -> [39] {"level":4}
-[50] primop {"op":"$add"}
-  :arg -> [44] {"index":0}
-  :arg -> [45] {"index":1}
-  :callee -> [42]
-[51] switch {"kind":"tag"}
-  :branch -> [53] {"label":"nil"}
-  :branch -> [55] {"label":"cons"}
-  :inspect -> [29]
-[52] proj {"label":"nil"}
-  :target -> [29]
-[53] leaf
-  :body -> [33]
-[54] proj {"label":"cons"}
-  :target -> [29]
-[55] switch {"kind":"struct"}
-  :branch -> [58]
-  :inspect -> [54]
-[56] proj {"label":"0"}
-  :target -> [54]
-[57] proj {"label":"1"}
-  :target -> [54]
-[58] leaf
-  :bind -> [56] {"name":"x","binder":37}
-  :bind -> [57] {"name":"xs","binder":38}
-  :body -> [50]
-[59] env
-[60] env
-[61] env
-  :capture -> [6] {"index":0}
-[62] closure
-  :body -> [2]
-  :env -> [59]
-[63] closure
-  :body -> [4]
-  :env -> [60]
-[64] closure
-  :body -> [10]
-  :env -> [61]",
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [39] {"level":3}
+  :scope -> [40] {"level":4}
+  :scope -> [41] {"level":5}
+  :scope -> [42] {"level":6}
+[53] primop {"op":"$add"}
+  :arg -> [47] {"index":0}
+  :arg -> [48] {"index":1}
+  :callee -> [45]
+[54] switch {"kind":"tag"}
+  :branch -> [56] {"label":"nil"}
+  :branch -> [58] {"label":"cons"}
+  :inspect -> [30]
+[55] proj {"label":"nil"}
+  :target -> [30]
+[56] leaf
+  :body -> [35]
+[57] proj {"label":"cons"}
+  :target -> [30]
+[58] switch {"kind":"struct"}
+  :branch -> [61]
+  :inspect -> [57]
+[59] proj {"label":"0"}
+  :target -> [57]
+[60] proj {"label":"1"}
+  :target -> [57]
+[61] leaf
+  :bind -> [59] {"name":"x","binder":39}
+  :bind -> [60] {"name":"xs","binder":40}
+  :body -> [53]
+[62] env
+  :capture -> [2] {"index":0}
+[63] env
+  :capture -> [2] {"index":0}
+  :capture -> [3] {"index":1}
+[64] env
+  :capture -> [7] {"index":0}
+[65] closure
+  :body -> [3]
+  :env -> [62]
+[66] closure
+  :body -> [5]
+  :env -> [63]
+[67] closure
+  :body -> [11]
+  :env -> [64]",
     "kind": "let",
     "mir": "",
     "name": "length",
@@ -697,41 +738,46 @@ return main();
 ",
     "elaborated": "Σ($sig: [ compute: Π(t1: Num) -> Num ]) . Schema [ compute: Π(t1: Num) -> Num ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] sigma {"variable":"$sig","level":0}
-  :annotation -> [3]
-  :body -> [9]
-[3] row:ext {"label":"compute"}
-  :rest -> [8]
-  :value -> [4]
-[4] pi {"variable":"t1","icit":"Explicit","level":0}
-  :annotation -> [6]
-  :body -> [7]
-[5] var:free {"name":"Num"}
-[6] var:ref {"name":"Num"}
-  :refers_to -> [5]
+  :entry -> [3]
+[2] stmt:let {"variable":"Factorial"}
+[3] sigma {"variable":"$sig","level":1}
+  :annotation -> [4]
+  :body -> [10]
+[4] row:ext {"label":"compute"}
+  :rest -> [9]
+  :value -> [5]
+[5] pi {"variable":"t1","icit":"Explicit","level":1}
+  :annotation -> [7]
+  :body -> [8]
+[6] var:free {"name":"Num"}
 [7] var:ref {"name":"Num"}
-  :refers_to -> [5]
-  :scope -> [4] {"level":0}
-[8] row:empty
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] lit {"value":{"type":"Atom","value":"Schema"}}
-[11] row:ext {"label":"compute"}
-  :rest -> [15]
-  :value -> [12]
-[12] pi {"variable":"t1","icit":"Explicit","level":1}
-  :annotation -> [13]
-  :body -> [14]
-[13] var:ref {"name":"Num"}
-  :refers_to -> [5]
+  :refers_to -> [6]
   :scope -> [2] {"level":0}
+[8] var:ref {"name":"Num"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[9] row:empty
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Schema"}}
+[12] row:ext {"label":"compute"}
+  :rest -> [16]
+  :value -> [13]
+[13] pi {"variable":"t1","icit":"Explicit","level":2}
+  :annotation -> [14]
+  :body -> [15]
 [14] var:ref {"name":"Num"}
-  :refers_to -> [5]
+  :refers_to -> [6]
   :scope -> [2] {"level":0}
-  :scope -> [12] {"level":1}
-[15] row:empty",
+  :scope -> [3] {"level":1}
+[15] var:ref {"name":"Num"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [13] {"level":2}
+[16] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -745,14 +791,14 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_34;
+  const v0 = closure_35;
   const v1 = {
     compute: v0
   };
   return v1;
 }
 
-function closure_34(n) {
+function closure_35(n) {
   let __block = "entry";
   while (true) {
     switch (__block) {
@@ -795,84 +841,87 @@ return main();
   [ compute: (λ(n: Num) ->
       match n
         | 0 -> 1
-        | _ -> FFI.$mul n (:compute (FFI.$sub n 1)) : Π(n: Num) ->
-      (closure: Num -| Γ: n; fact)) ]",
+        | _ -> FFI.$mul n (:compute (FFI.$sub n 1)) : Π(n: Num) -> Num) ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"compute"}
-  :rest -> [27]
-  :value -> [5]
-[5] lambda {"variable":"n","icit":"Explicit","level":0}
-  :annotation -> [6]
-  :body -> [7]
-  :env -> [33]
-[6] lit {"value":{"type":"Atom","value":"Num"}}
-[7] match
-  :alt -> [9] {"index":0}
-  :alt -> [12] {"index":1}
-  :decision_tree -> [30]
-  :scrutinee -> [8]
-[8] var:bound {"index":0}
-  :refers_to -> [5]
-  :scope -> [5] {"level":0}
-[9] case
-  :body -> [11]
-  :next -> [12]
-  :pattern -> [10]
-[10] pat:lit {"value":{"type":"Num","value":0}}
-[11] lit {"value":{"type":"Num","value":1}}
-[12] case
-  :body -> [28]
-  :pattern -> [13]
-[13] pat:wildcard
-[16] var:foreign {"name":"$mul","arity":2}
-[18] var:bound {"index":0}
-  :next -> [19]
-  :refers_to -> [5]
-  :scope -> [5] {"level":0}
-[19] app {"icit":"Explicit"}
-  :arg -> [29]
-  :func -> [20]
-[20] var:label {"name":"compute"}
-[23] var:foreign {"name":"$sub","arity":2}
-[25] var:bound {"index":0}
-  :next -> [26]
-  :refers_to -> [5]
-  :scope -> [5] {"level":0}
-[26] lit {"value":{"type":"Num","value":1}}
-[27] row:empty
-[28] primop {"op":"$mul"}
-  :arg -> [18] {"index":0}
-  :arg -> [19] {"index":1}
-  :callee -> [16]
-[29] primop {"op":"$sub"}
-  :arg -> [25] {"index":0}
-  :arg -> [26] {"index":1}
-  :callee -> [23]
-[30] switch {"kind":"lit"}
-  :branch -> [31] {"value":{"type":"Num","value":0}}
-  :default -> [32]
-  :inspect -> [8]
-[31] leaf
-  :body -> [11]
+  :entry -> [3]
+[2] stmt:let {"variable":"fact"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"compute"}
+  :rest -> [28]
+  :value -> [6]
+[6] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [34]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] match
+  :alt -> [10] {"index":0}
+  :alt -> [13] {"index":1}
+  :decision_tree -> [31]
+  :scrutinee -> [9]
+[9] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[10] case
+  :body -> [12]
+  :next -> [13]
+  :pattern -> [11]
+[11] pat:lit {"value":{"type":"Num","value":0}}
+[12] lit {"value":{"type":"Num","value":1}}
+[13] case
+  :body -> [29]
+  :pattern -> [14]
+[14] pat:wildcard
+[17] var:foreign {"name":"$mul","arity":2}
+[19] var:bound {"index":0}
+  :next -> [20]
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[20] app {"icit":"Explicit"}
+  :arg -> [30]
+  :func -> [21]
+[21] var:label {"name":"compute"}
+[24] var:foreign {"name":"$sub","arity":2}
+[26] var:bound {"index":0}
+  :next -> [27]
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[27] lit {"value":{"type":"Num","value":1}}
+[28] row:empty
+[29] primop {"op":"$mul"}
+  :arg -> [19] {"index":0}
+  :arg -> [20] {"index":1}
+  :callee -> [17]
+[30] primop {"op":"$sub"}
+  :arg -> [26] {"index":0}
+  :arg -> [27] {"index":1}
+  :callee -> [24]
+[31] switch {"kind":"lit"}
+  :branch -> [32] {"value":{"type":"Num","value":0}}
+  :default -> [33]
+  :inspect -> [9]
 [32] leaf
-  :body -> [28]
-[33] env
-[34] closure
-  :body -> [5]
-  :env -> [33]",
+  :body -> [12]
+[33] leaf
+  :body -> [29]
+[34] env
+[35] closure
+  :body -> [6]
+  :env -> [34]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_34
+      let v0 = &closure_35
       let v1 = alloc { compute: v0 }
       return v1
-  fn closure_34(n) entry=entry
+  fn closure_35(n) entry=entry
     entry:
       jump sw1
     sw1:
@@ -900,7 +949,7 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = fact;
   const v1 = v0.compute;
   const v2 = 5;
   const v3 = v1(v2);
@@ -910,21 +959,23 @@ return main();
 ",
     "elaborated": "((fact).compute) 5",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [6]
-  :func -> [3]
-[3] proj {"label":"compute"}
-  :target -> [5]
-[4] var:free {"name":"fact"}
-[5] var:ref {"name":"fact"}
-  :refers_to -> [4]
-[6] lit {"value":{"type":"Num","value":5}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"result"}
+[3] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [4]
+[4] proj {"label":"compute"}
+  :target -> [6]
+[5] var:free {"name":"fact"}
+[6] var:ref {"name":"fact"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] lit {"value":{"type":"Num","value":5}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = fact
       let v1 = read v0.compute
       let v2 = 5
       let v3 = call *v1(v2)
@@ -941,7 +992,7 @@ exports[`Language Tour — Pattern Matching > variant patterns 1`] = `
   {
     "codegenJS": "function main() {
   const v0 = {};
-  const v1 = unknown;
+  const v1 = Num;
   const v2 = {
     1: v1,
     0: v1
@@ -960,76 +1011,84 @@ return main();
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Variant"}}
-[4] row:ext {"label":"point"}
+  :entry -> [3]
+[2] stmt:let {"variable":"Shape"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Variant"}}
+[5] row:ext {"label":"point"}
+  :rest -> [20]
+  :value -> [6]
+[6] sigma {"variable":"$sig","level":1}
+  :annotation -> [7]
+  :body -> [13]
+[7] row:ext {"label":"y"}
+  :rest -> [10]
+  :value -> [9]
+[8] var:free {"name":"Num"}
+[9] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[10] row:ext {"label":"x"}
+  :rest -> [12]
+  :value -> [11]
+[11] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[12] row:empty
+[13] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] lit {"value":{"type":"Atom","value":"Schema"}}
+[15] row:ext {"label":"y"}
+  :rest -> [17]
+  :value -> [16]
+[16] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[17] row:ext {"label":"x"}
   :rest -> [19]
-  :value -> [5]
-[5] sigma {"variable":"$sig","level":0}
-  :annotation -> [6]
-  :body -> [12]
-[6] row:ext {"label":"y"}
-  :rest -> [9]
-  :value -> [8]
-[7] var:free {"name":"Num"}
-[8] var:ref {"name":"Num"}
-  :refers_to -> [7]
-[9] row:ext {"label":"x"}
-  :rest -> [11]
-  :value -> [10]
-[10] var:ref {"name":"Num"}
-  :refers_to -> [7]
-[11] row:empty
-[12] app {"icit":"Explicit"}
-  :arg -> [14]
-  :func -> [13]
-[13] lit {"value":{"type":"Atom","value":"Schema"}}
-[14] row:ext {"label":"y"}
-  :rest -> [16]
-  :value -> [15]
-[15] var:ref {"name":"Num"}
-  :refers_to -> [7]
-  :scope -> [5] {"level":0}
-[16] row:ext {"label":"x"}
-  :rest -> [18]
-  :value -> [17]
-[17] var:ref {"name":"Num"}
-  :refers_to -> [7]
-  :scope -> [5] {"level":0}
-[18] row:empty
-[19] row:ext {"label":"rectangle"}
+  :value -> [18]
+[18] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[19] row:empty
+[20] row:ext {"label":"rectangle"}
+  :rest -> [28]
+  :value -> [21]
+[21] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [22]
+[22] lit {"value":{"type":"Atom","value":"Schema"}}
+[23] row:ext {"label":"1"}
+  :rest -> [25]
+  :value -> [24]
+[24] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[25] row:ext {"label":"0"}
   :rest -> [27]
-  :value -> [20]
-[20] app {"icit":"Explicit"}
-  :arg -> [22]
-  :func -> [21]
-[21] lit {"value":{"type":"Atom","value":"Schema"}}
-[22] row:ext {"label":"1"}
-  :rest -> [24]
-  :value -> [23]
-[23] var:ref {"name":"Num"}
-  :refers_to -> [7]
-[24] row:ext {"label":"0"}
-  :rest -> [26]
-  :value -> [25]
-[25] var:ref {"name":"Num"}
-  :refers_to -> [7]
-[26] row:empty
-[27] row:ext {"label":"circle"}
-  :rest -> [29]
-  :value -> [28]
-[28] var:ref {"name":"Num"}
-  :refers_to -> [7]
-[29] row:empty",
+  :value -> [26]
+[26] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[27] row:empty
+[28] row:ext {"label":"circle"}
+  :rest -> [30]
+  :value -> [29]
+[29] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[30] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let v0 = alloc {  }
-      let v1 = unknown
+      let v1 = Num
       let v2 = alloc { 1: v1, 0: v1 }
       let v3 = alloc { point: v0, rectangle: v2, circle: v1 }
       return v3",
@@ -1055,144 +1114,149 @@ return main();
         "Point at coordinates"",
     "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"s","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [30]
-  :env -> [63]
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Variant"}}
-[5] row:ext {"label":"point"}
+  :entry -> [3]
+[2] stmt:let {"variable":"describeShape"}
+[3] lambda {"variable":"s","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [31]
+  :env -> [67]
+[4] app {"icit":"Explicit"}
+  :arg -> [6]
+  :func -> [5]
+[5] lit {"value":{"type":"Atom","value":"Variant"}}
+[6] row:ext {"label":"point"}
+  :rest -> [20]
+  :value -> [7]
+[7] sigma {"variable":"$sig","level":1}
+  :annotation -> [8]
+  :body -> [13]
+[8] row:ext {"label":"y"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] row:ext {"label":"x"}
+  :rest -> [12]
+  :value -> [11]
+[11] lit {"value":{"type":"Atom","value":"Num"}}
+[12] row:empty
+[13] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] lit {"value":{"type":"Atom","value":"Schema"}}
+[15] row:ext {"label":"y"}
+  :rest -> [17]
+  :value -> [16]
+[16] lit {"value":{"type":"Atom","value":"Num"}}
+[17] row:ext {"label":"x"}
   :rest -> [19]
-  :value -> [6]
-[6] sigma {"variable":"$sig","level":0}
-  :annotation -> [7]
-  :body -> [12]
-[7] row:ext {"label":"y"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Atom","value":"Num"}}
-[9] row:ext {"label":"x"}
-  :rest -> [11]
-  :value -> [10]
-[10] lit {"value":{"type":"Atom","value":"Num"}}
-[11] row:empty
-[12] app {"icit":"Explicit"}
-  :arg -> [14]
-  :func -> [13]
-[13] lit {"value":{"type":"Atom","value":"Schema"}}
-[14] row:ext {"label":"y"}
-  :rest -> [16]
-  :value -> [15]
-[15] lit {"value":{"type":"Atom","value":"Num"}}
-[16] row:ext {"label":"x"}
-  :rest -> [18]
-  :value -> [17]
-[17] lit {"value":{"type":"Atom","value":"Num"}}
-[18] row:empty
-[19] row:ext {"label":"rectangle"}
+  :value -> [18]
+[18] lit {"value":{"type":"Atom","value":"Num"}}
+[19] row:empty
+[20] row:ext {"label":"rectangle"}
+  :rest -> [28]
+  :value -> [21]
+[21] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [22]
+[22] lit {"value":{"type":"Atom","value":"Schema"}}
+[23] row:ext {"label":"1"}
+  :rest -> [25]
+  :value -> [24]
+[24] lit {"value":{"type":"Atom","value":"Num"}}
+[25] row:ext {"label":"0"}
   :rest -> [27]
-  :value -> [20]
-[20] app {"icit":"Explicit"}
-  :arg -> [22]
-  :func -> [21]
-[21] lit {"value":{"type":"Atom","value":"Schema"}}
-[22] row:ext {"label":"1"}
-  :rest -> [24]
-  :value -> [23]
-[23] lit {"value":{"type":"Atom","value":"Num"}}
-[24] row:ext {"label":"0"}
-  :rest -> [26]
-  :value -> [25]
-[25] lit {"value":{"type":"Atom","value":"Num"}}
-[26] row:empty
-[27] row:ext {"label":"circle"}
-  :rest -> [29]
-  :value -> [28]
-[28] lit {"value":{"type":"Atom","value":"Num"}}
-[29] row:empty
-[30] match
-  :alt -> [32] {"index":0}
-  :alt -> [36] {"index":1}
-  :alt -> [43] {"index":2}
-  :decision_tree -> [50]
-  :scrutinee -> [31]
-[31] var:bound {"index":0}
-  :refers_to -> [2]
+  :value -> [26]
+[26] lit {"value":{"type":"Atom","value":"Num"}}
+[27] row:empty
+[28] row:ext {"label":"circle"}
+  :rest -> [30]
+  :value -> [29]
+[29] lit {"value":{"type":"Atom","value":"Num"}}
+[30] row:empty
+[31] match
+  :alt -> [33] {"index":0}
+  :alt -> [38] {"index":1}
+  :alt -> [46] {"index":2}
+  :decision_tree -> [54]
+  :scrutinee -> [32]
+[32] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[32] case
-  :body -> [35]
-  :next -> [36]
-  :pattern -> [33]
-[33] pat:variant {"label":"circle"}
-  :payload -> [34]
-[34] pat:binder {"name":"r","level":1}
-[35] lit {"value":{"type":"String","value":"Circle with radius"}}
-[36] case
-  :body -> [42]
-  :next -> [43]
-  :pattern -> [37]
-[37] pat:variant {"label":"rectangle"}
-  :payload -> [38]
-[38] pat:struct
-  :field -> [39] {"label":"0"}
-  :field -> [40] {"label":"1"}
-[39] pat:binder {"name":"w","level":1}
-[40] pat:binder {"name":"h","level":2}
-[41] pat:wildcard
-[42] lit {"value":{"type":"String","value":"Rectangle"}}
-[43] case
-  :body -> [49]
-  :pattern -> [44]
-[44] pat:variant {"label":"point"}
-  :payload -> [45]
-[45] pat:struct
-  :field -> [46] {"label":"x"}
-  :field -> [47] {"label":"y"}
-[46] pat:wildcard
-[47] pat:wildcard
-[48] pat:wildcard
-[49] lit {"value":{"type":"String","value":"Point at coordinates"}}
-[50] switch {"kind":"tag"}
-  :branch -> [52] {"label":"circle"}
-  :branch -> [54] {"label":"rectangle"}
-  :branch -> [59] {"label":"point"}
-  :inspect -> [31]
-[51] proj {"label":"circle"}
-  :target -> [31]
-[52] leaf
-  :bind -> [51] {"name":"r","binder":34}
-  :body -> [35]
-[53] proj {"label":"rectangle"}
-  :target -> [31]
-[54] switch {"kind":"struct"}
-  :branch -> [57]
-  :inspect -> [53]
-[55] proj {"label":"0"}
-  :target -> [53]
-[56] proj {"label":"1"}
-  :target -> [53]
-[57] leaf
-  :bind -> [55] {"name":"w","binder":39}
-  :bind -> [56] {"name":"h","binder":40}
-  :body -> [42]
-[58] proj {"label":"point"}
-  :target -> [31]
-[59] switch {"kind":"struct"}
-  :branch -> [62]
-  :inspect -> [58]
-[60] proj {"label":"x"}
-  :target -> [58]
-[61] proj {"label":"y"}
-  :target -> [58]
-[62] leaf
-  :body -> [49]
-[63] env
-[64] closure
-  :body -> [2]
-  :env -> [63]",
+  :scope -> [3] {"level":1}
+[33] case
+  :body -> [37]
+  :next -> [38]
+  :pattern -> [34]
+[34] pat:variant {"label":"circle"}
+  :payload -> [35]
+[35] pat:binder {"name":"r","level":2}
+[36] pat:wildcard
+[37] lit {"value":{"type":"String","value":"Circle with radius"}}
+[38] case
+  :body -> [45]
+  :next -> [46]
+  :pattern -> [39]
+[39] pat:variant {"label":"rectangle"}
+  :payload -> [40]
+[40] pat:struct
+  :field -> [41] {"label":"0"}
+  :field -> [42] {"label":"1"}
+[41] pat:binder {"name":"w","level":2}
+[42] pat:binder {"name":"h","level":3}
+[43] pat:wildcard
+[44] pat:wildcard
+[45] lit {"value":{"type":"String","value":"Rectangle"}}
+[46] case
+  :body -> [53]
+  :pattern -> [47]
+[47] pat:variant {"label":"point"}
+  :payload -> [48]
+[48] pat:struct
+  :field -> [49] {"label":"x"}
+  :field -> [50] {"label":"y"}
+[49] pat:wildcard
+[50] pat:wildcard
+[51] pat:wildcard
+[52] pat:wildcard
+[53] lit {"value":{"type":"String","value":"Point at coordinates"}}
+[54] switch {"kind":"tag"}
+  :branch -> [56] {"label":"circle"}
+  :branch -> [58] {"label":"rectangle"}
+  :branch -> [63] {"label":"point"}
+  :inspect -> [32]
+[55] proj {"label":"circle"}
+  :target -> [32]
+[56] leaf
+  :bind -> [55] {"name":"r","binder":35}
+  :body -> [37]
+[57] proj {"label":"rectangle"}
+  :target -> [32]
+[58] switch {"kind":"struct"}
+  :branch -> [61]
+  :inspect -> [57]
+[59] proj {"label":"0"}
+  :target -> [57]
+[60] proj {"label":"1"}
+  :target -> [57]
+[61] leaf
+  :bind -> [59] {"name":"w","binder":41}
+  :bind -> [60] {"name":"h","binder":42}
+  :body -> [45]
+[62] proj {"label":"point"}
+  :target -> [32]
+[63] switch {"kind":"struct"}
+  :branch -> [66]
+  :inspect -> [62]
+[64] proj {"label":"x"}
+  :target -> [62]
+[65] proj {"label":"y"}
+  :target -> [62]
+[66] leaf
+  :body -> [53]
+[67] env
+[68] closure
+  :body -> [3]
+  :env -> [67]",
     "kind": "let",
     "mir": "",
     "name": "describeShape",
@@ -1234,24 +1298,25 @@ return main();
 ",
     "elaborated": "Variant [ green: Unit, yellow: Unit, red: Unit ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Variant"}}
-[4] row:ext {"label":"green"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Unit"}}
-[6] row:ext {"label":"yellow"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Unit"}}
-[8] row:ext {"label":"red"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Unit"}}
-[10] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"TrafficLight"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Variant"}}
+[5] row:ext {"label":"green"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Atom","value":"Unit"}}
+[7] row:ext {"label":"yellow"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Unit"}}
+[9] row:ext {"label":"red"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Unit"}}
+[11] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -1277,16 +1342,17 @@ return main();
 ",
     "elaborated": "Struct [ red: unit ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"red"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"unit"}}
-[6] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"light"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"red"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"unit"}}
+[7] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -1306,7 +1372,7 @@ exports[`Language Tour — Variants & Tagged Values > variants with data 1`] = `
   {
     "codegenJS": "function main() {
   const v0 = {};
-  const v1 = unknown;
+  const v1 = Num;
   const v2 = {
     1: v1,
     0: v1
@@ -1325,76 +1391,84 @@ return main();
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Variant"}}
-[4] row:ext {"label":"point"}
+  :entry -> [3]
+[2] stmt:let {"variable":"Shape"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Variant"}}
+[5] row:ext {"label":"point"}
+  :rest -> [20]
+  :value -> [6]
+[6] sigma {"variable":"$sig","level":1}
+  :annotation -> [7]
+  :body -> [13]
+[7] row:ext {"label":"y"}
+  :rest -> [10]
+  :value -> [9]
+[8] var:free {"name":"Num"}
+[9] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[10] row:ext {"label":"x"}
+  :rest -> [12]
+  :value -> [11]
+[11] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[12] row:empty
+[13] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] lit {"value":{"type":"Atom","value":"Schema"}}
+[15] row:ext {"label":"y"}
+  :rest -> [17]
+  :value -> [16]
+[16] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[17] row:ext {"label":"x"}
   :rest -> [19]
-  :value -> [5]
-[5] sigma {"variable":"$sig","level":0}
-  :annotation -> [6]
-  :body -> [12]
-[6] row:ext {"label":"y"}
-  :rest -> [9]
-  :value -> [8]
-[7] var:free {"name":"Num"}
-[8] var:ref {"name":"Num"}
-  :refers_to -> [7]
-[9] row:ext {"label":"x"}
-  :rest -> [11]
-  :value -> [10]
-[10] var:ref {"name":"Num"}
-  :refers_to -> [7]
-[11] row:empty
-[12] app {"icit":"Explicit"}
-  :arg -> [14]
-  :func -> [13]
-[13] lit {"value":{"type":"Atom","value":"Schema"}}
-[14] row:ext {"label":"y"}
-  :rest -> [16]
-  :value -> [15]
-[15] var:ref {"name":"Num"}
-  :refers_to -> [7]
-  :scope -> [5] {"level":0}
-[16] row:ext {"label":"x"}
-  :rest -> [18]
-  :value -> [17]
-[17] var:ref {"name":"Num"}
-  :refers_to -> [7]
-  :scope -> [5] {"level":0}
-[18] row:empty
-[19] row:ext {"label":"rectangle"}
+  :value -> [18]
+[18] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[19] row:empty
+[20] row:ext {"label":"rectangle"}
+  :rest -> [28]
+  :value -> [21]
+[21] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [22]
+[22] lit {"value":{"type":"Atom","value":"Schema"}}
+[23] row:ext {"label":"1"}
+  :rest -> [25]
+  :value -> [24]
+[24] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[25] row:ext {"label":"0"}
   :rest -> [27]
-  :value -> [20]
-[20] app {"icit":"Explicit"}
-  :arg -> [22]
-  :func -> [21]
-[21] lit {"value":{"type":"Atom","value":"Schema"}}
-[22] row:ext {"label":"1"}
-  :rest -> [24]
-  :value -> [23]
-[23] var:ref {"name":"Num"}
-  :refers_to -> [7]
-[24] row:ext {"label":"0"}
-  :rest -> [26]
-  :value -> [25]
-[25] var:ref {"name":"Num"}
-  :refers_to -> [7]
-[26] row:empty
-[27] row:ext {"label":"circle"}
-  :rest -> [29]
-  :value -> [28]
-[28] var:ref {"name":"Num"}
-  :refers_to -> [7]
-[29] row:empty",
+  :value -> [26]
+[26] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[27] row:empty
+[28] row:ext {"label":"circle"}
+  :rest -> [30]
+  :value -> [29]
+[29] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[30] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let v0 = alloc {  }
-      let v1 = unknown
+      let v1 = Num
       let v2 = alloc { 1: v1, 0: v1 }
       let v3 = alloc { point: v0, rectangle: v2, circle: v1 }
       return v3",
@@ -1418,16 +1492,17 @@ return main();
 ",
     "elaborated": "Struct [ circle: 5 ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"circle"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Num","value":5}}
-[6] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"c"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"circle"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Num","value":5}}
+[7] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -1459,28 +1534,29 @@ return main();
 ",
     "elaborated": "Struct [ rectangle: Struct [ 0: 10, 1: 20 ] ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"rectangle"}
+  :entry -> [3]
+[2] stmt:let {"variable":"r"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"rectangle"}
+  :rest -> [13]
+  :value -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [7]
+[7] lit {"value":{"type":"Atom","value":"Struct"}}
+[8] row:ext {"label":"0"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Num","value":10}}
+[10] row:ext {"label":"1"}
   :rest -> [12]
-  :value -> [5]
-[5] app {"icit":"Explicit"}
-  :arg -> [7]
-  :func -> [6]
-[6] lit {"value":{"type":"Atom","value":"Struct"}}
-[7] row:ext {"label":"0"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Num","value":10}}
-[9] row:ext {"label":"1"}
-  :rest -> [11]
-  :value -> [10]
-[10] lit {"value":{"type":"Num","value":20}}
-[11] row:empty
-[12] row:empty",
+  :value -> [11]
+[11] lit {"value":{"type":"Num","value":20}}
+[12] row:empty
+[13] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -1514,28 +1590,29 @@ return main();
 ",
     "elaborated": "Struct [ point: Struct [ x: 0, y: 0 ] ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"point"}
+  :entry -> [3]
+[2] stmt:let {"variable":"p"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"point"}
+  :rest -> [13]
+  :value -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [7]
+[7] lit {"value":{"type":"Atom","value":"Struct"}}
+[8] row:ext {"label":"x"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Num","value":0}}
+[10] row:ext {"label":"y"}
   :rest -> [12]
-  :value -> [5]
-[5] app {"icit":"Explicit"}
-  :arg -> [7]
-  :func -> [6]
-[6] lit {"value":{"type":"Atom","value":"Struct"}}
-[7] row:ext {"label":"x"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Num","value":0}}
-[9] row:ext {"label":"y"}
-  :rest -> [11]
-  :value -> [10]
-[10] lit {"value":{"type":"Num","value":0}}
-[11] row:empty
-[12] row:empty",
+  :value -> [11]
+[11] lit {"value":{"type":"Num","value":0}}
+[12] row:empty
+[13] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry

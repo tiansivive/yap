@@ -39,8 +39,8 @@ export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
 
 					const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm, ann);
 					const pi = NF.Constructors.Pi(lam.variable, lam.icit, ty, NF.closeVal(ctx, bType));
-					// Cache the inferred type in the AST so downstream passes don't duplicate inference work
-					return [EB.Constructors.Ann(tm, pi), pi, bus] satisfies EB.AST;
+					const piTerm = NF.quote(ctx, ctx.env.length, pi);
+					return [EB.Constructors.Ann(tm, piTerm), pi, bus] satisfies EB.AST;
 				}),
 			);
 

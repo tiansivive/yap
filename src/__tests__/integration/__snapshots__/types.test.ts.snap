@@ -4,11 +4,11 @@ exports[`Language Tour — Defining Types > computing types 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_18;
+  const v0 = closure_19;
   return v0;
 }
 
-function closure_18(Num, String, b) {
+function closure_19(Num, String, b) {
   let __block = "entry";
   while (true) {
     switch (__block) {
@@ -46,58 +46,62 @@ return main();
 ",
     "elaborated": "λ(b: Bool) -> match b | true -> Num | false -> String",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"b","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [4]
-  :env -> [17]
-[3] lit {"value":{"type":"Atom","value":"Bool"}}
-[4] match
-  :alt -> [6] {"index":0}
-  :alt -> [10] {"index":1}
-  :decision_tree -> [14]
-  :scrutinee -> [5]
-[5] var:bound {"index":0}
-  :refers_to -> [2]
+  :entry -> [3]
+[2] stmt:let {"variable":"chooseType"}
+[3] lambda {"variable":"b","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [18]
+[4] lit {"value":{"type":"Atom","value":"Bool"}}
+[5] match
+  :alt -> [7] {"index":0}
+  :alt -> [11] {"index":1}
+  :decision_tree -> [15]
+  :scrutinee -> [6]
+[6] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[6] case
-  :body -> [9]
-  :next -> [10]
-  :pattern -> [7]
-[7] pat:lit {"value":{"type":"Bool","value":true}}
-[8] var:free {"name":"Num"}
-[9] var:ref {"name":"Num"}
-  :refers_to -> [8]
+  :scope -> [3] {"level":1}
+[7] case
+  :body -> [10]
+  :next -> [11]
+  :pattern -> [8]
+[8] pat:lit {"value":{"type":"Bool","value":true}}
+[9] var:free {"name":"Num"}
+[10] var:ref {"name":"Num"}
+  :refers_to -> [9]
   :scope -> [2] {"level":0}
-[10] case
-  :body -> [13]
-  :pattern -> [11]
-[11] pat:lit {"value":{"type":"Bool","value":false}}
-[12] var:free {"name":"String"}
-[13] var:ref {"name":"String"}
-  :refers_to -> [12]
+  :scope -> [3] {"level":1}
+[11] case
+  :body -> [14]
+  :pattern -> [12]
+[12] pat:lit {"value":{"type":"Bool","value":false}}
+[13] var:free {"name":"String"}
+[14] var:ref {"name":"String"}
+  :refers_to -> [13]
   :scope -> [2] {"level":0}
-[14] switch {"kind":"lit"}
-  :branch -> [15] {"value":{"type":"Bool","value":true}}
-  :branch -> [16] {"value":{"type":"Bool","value":false}}
-  :inspect -> [5]
-[15] leaf
-  :body -> [9]
+  :scope -> [3] {"level":1}
+[15] switch {"kind":"lit"}
+  :branch -> [16] {"value":{"type":"Bool","value":true}}
+  :branch -> [17] {"value":{"type":"Bool","value":false}}
+  :inspect -> [6]
 [16] leaf
-  :body -> [13]
-[17] env
-  :capture -> [8] {"index":0}
-  :capture -> [12] {"index":1}
-[18] closure
-  :body -> [2]
-  :env -> [17]",
+  :body -> [10]
+[17] leaf
+  :body -> [14]
+[18] env
+  :capture -> [9] {"index":0}
+  :capture -> [13] {"index":1}
+[19] closure
+  :body -> [3]
+  :env -> [18]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_18
+      let v0 = &closure_19
       return v0
-  fn closure_18(Num, String, b) entry=entry
+  fn closure_19(Num, String, b) entry=entry
     entry:
       jump sw1
     sw1:
@@ -116,7 +120,7 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = chooseType;
   const v1 = true;
   const v2 = v0(v1);
   return v2;
@@ -125,19 +129,21 @@ return main();
 ",
     "elaborated": "chooseType true",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[3] var:free {"name":"chooseType"}
-[4] var:ref {"name":"chooseType"}
-  :refers_to -> [3]
-[5] lit {"value":{"type":"Bool","value":true}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"T1"}
+[3] app {"icit":"Explicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"chooseType"}
+[5] var:ref {"name":"chooseType"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[6] lit {"value":{"type":"Bool","value":true}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = chooseType
       let v1 = true
       let v2 = call *v0(v1)
       return v2",
@@ -147,7 +153,7 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = chooseType;
   const v1 = false;
   const v2 = v0(v1);
   return v2;
@@ -156,19 +162,21 @@ return main();
 ",
     "elaborated": "chooseType false",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[3] var:free {"name":"chooseType"}
-[4] var:ref {"name":"chooseType"}
-  :refers_to -> [3]
-[5] lit {"value":{"type":"Bool","value":false}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"T2"}
+[3] app {"icit":"Explicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"chooseType"}
+[5] var:ref {"name":"chooseType"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[6] lit {"value":{"type":"Bool","value":false}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = chooseType
       let v1 = false
       let v2 = call *v0(v1)
       return v2",
@@ -183,22 +191,24 @@ exports[`Language Tour — Defining Types > first-class types 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = Num;
   return v0;
 }
 return main();
 ",
     "elaborated": "Num",
     "gram": "[1] root
-  :entry -> [3]
-[2] var:free {"name":"Num"}
-[3] var:ref {"name":"Num"}
-  :refers_to -> [2]",
+  :entry -> [4]
+[2] stmt:let {"variable":"MyNum"}
+[3] var:free {"name":"Num"}
+[4] var:ref {"name":"Num"}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = Num
       return v0",
     "name": "MyNum",
     "normalized": "Num",
@@ -206,22 +216,24 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = String;
   return v0;
 }
 return main();
 ",
     "elaborated": "String",
     "gram": "[1] root
-  :entry -> [3]
-[2] var:free {"name":"String"}
-[3] var:ref {"name":"String"}
-  :refers_to -> [2]",
+  :entry -> [4]
+[2] stmt:let {"variable":"MyString"}
+[3] var:free {"name":"String"}
+[4] var:ref {"name":"String"}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = String
       return v0",
     "name": "MyString",
     "normalized": "String",
@@ -236,8 +248,9 @@ return main();
 ",
     "elaborated": "42",
     "gram": "[1] root
-  :entry -> [2]
-[2] lit {"value":{"type":"Num","value":42}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"n"}
+[3] lit {"value":{"type":"Num","value":42}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -257,8 +270,9 @@ return main();
 ",
     "elaborated": ""hi"",
     "gram": "[1] root
-  :entry -> [2]
-[2] lit {"value":{"type":"String","value":"hi"}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"s"}
+[3] lit {"value":{"type":"String","value":"hi"}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -283,39 +297,44 @@ return main();
 ",
     "elaborated": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] sigma {"variable":"$sig","level":0}
-  :annotation -> [3]
-  :body -> [9]
-[3] row:ext {"label":"y"}
-  :rest -> [6]
-  :value -> [5]
-[4] var:free {"name":"Num"}
-[5] var:ref {"name":"Num"}
-  :refers_to -> [4]
-[6] row:ext {"label":"x"}
-  :rest -> [8]
-  :value -> [7]
-[7] var:ref {"name":"Num"}
-  :refers_to -> [4]
-[8] row:empty
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] lit {"value":{"type":"Atom","value":"Schema"}}
-[11] row:ext {"label":"y"}
-  :rest -> [13]
-  :value -> [12]
-[12] var:ref {"name":"Num"}
-  :refers_to -> [4]
+  :entry -> [3]
+[2] stmt:let {"variable":"Point"}
+[3] sigma {"variable":"$sig","level":1}
+  :annotation -> [4]
+  :body -> [10]
+[4] row:ext {"label":"y"}
+  :rest -> [7]
+  :value -> [6]
+[5] var:free {"name":"Num"}
+[6] var:ref {"name":"Num"}
+  :refers_to -> [5]
   :scope -> [2] {"level":0}
-[13] row:ext {"label":"x"}
-  :rest -> [15]
-  :value -> [14]
-[14] var:ref {"name":"Num"}
-  :refers_to -> [4]
+[7] row:ext {"label":"x"}
+  :rest -> [9]
+  :value -> [8]
+[8] var:ref {"name":"Num"}
+  :refers_to -> [5]
   :scope -> [2] {"level":0}
-[15] row:empty",
+[9] row:empty
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Schema"}}
+[12] row:ext {"label":"y"}
+  :rest -> [14]
+  :value -> [13]
+[13] var:ref {"name":"Num"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[14] row:ext {"label":"x"}
+  :rest -> [16]
+  :value -> [15]
+[15] var:ref {"name":"Num"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[16] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -340,20 +359,21 @@ return main();
 ",
     "elaborated": "Struct [ x: 0, y: 0 ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"x"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Num","value":0}}
-[6] row:ext {"label":"y"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Num","value":0}}
-[8] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"origin"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"x"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Num","value":0}}
+[7] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Num","value":0}}
+[9] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry

@@ -35,7 +35,7 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 		)
 		.with({ type: "Proj" }, ({ label, term }) => Constructors.Proj(label, traverse(term, onVar)))
 		.with({ type: "Inj" }, ({ label, value, term }) => Constructors.Inj(label, traverse(value, onVar), traverse(term, onVar)))
-		.with({ type: "Ann" }, ({ term, ann }) => Constructors.Ann(traverse(term, onVar), ann))
+		.with({ type: "Ann" }, ({ term, ann }) => Constructors.Ann(traverse(term, onVar), traverse(ann, onVar)))
 		.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
 			Constructors.Match(
 				traverse(scrutinee, onVar),

@@ -9,9 +9,8 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       "String ~~ String",
     ],
     "term": "((λ(x: (?1 :: Type)) =>
-  (λ(y: String) -> y : Π(y: String) ->
-    (closure: String -| Γ: y; x)) : Π(x: ?1) =>
-  (closure: Π(y: String) -> String -| Γ: x)))
+  (λ(y: String) -> y : Π(y: String) -> String) : Π(x: (?1 :: Type)) =>
+  Π(y: String) -> String))
   @(?2 :: ?1)
   "hello"",
     "type": "String",
@@ -133,53 +132,40 @@ exports[`inference: application > implicit insertion > inserts implicit argument
         },
         "func": {
           "ann": {
-            "binder": {
+            "binding": {
               "annotation": {
-                "type": "Neutral",
-                "value": {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 0,
-                    "type": "Meta",
-                    "val": 1,
-                  },
+                "type": "Var",
+                "variable": {
+                  "lvl": 0,
+                  "type": "Meta",
+                  "val": 1,
                 },
               },
               "icit": "Implicit",
               "type": "Pi",
               "variable": "x",
             },
-            "closure": {
-              "ctx": {
-                "env": [],
-                "implicits": [],
-                "metas": {},
-                "sigma": {},
-                "zonker": {},
-              },
-              "term": {
-                "binding": {
-                  "annotation": {
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "String",
-                    },
-                  },
-                  "icit": "Explicit",
-                  "type": "Pi",
-                  "variable": "y",
-                },
-                "body": {
+            "body": {
+              "binding": {
+                "annotation": {
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
                     "value": "String",
                   },
                 },
-                "type": "Abs",
+                "icit": "Explicit",
+                "type": "Pi",
+                "variable": "y",
               },
-              "type": "Closure",
+              "body": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "String",
+                },
+              },
+              "type": "Abs",
             },
             "type": "Abs",
           },
@@ -199,7 +185,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
             },
             "body": {
               "ann": {
-                "binder": {
+                "binding": {
                   "annotation": {
                     "type": "Lit",
                     "value": {
@@ -211,72 +197,12 @@ exports[`inference: application > implicit insertion > inserts implicit argument
                   "type": "Pi",
                   "variable": "y",
                 },
-                "closure": {
-                  "ctx": {
-                    "env": [
-                      {
-                        "name": {
-                          "type": "Lambda",
-                          "variable": "x",
-                        },
-                        "nf": {
-                          "type": "Neutral",
-                          "value": {
-                            "type": "Var",
-                            "variable": {
-                              "lvl": 0,
-                              "type": "Bound",
-                            },
-                          },
-                        },
-                        "type": [
-                          {
-                            "type": "Lambda",
-                            "variable": "x",
-                          },
-                          "source",
-                          {
-                            "type": "Neutral",
-                            "value": {
-                              "type": "Var",
-                              "variable": {
-                                "lvl": 0,
-                                "type": "Meta",
-                                "val": 1,
-                              },
-                            },
-                          },
-                        ],
-                      },
-                    ],
-                    "implicits": [],
-                    "metas": {
-                      "1": {
-                        "ann": {
-                          "type": "Lit",
-                          "value": {
-                            "type": "Atom",
-                            "value": "Type",
-                          },
-                        },
-                        "meta": {
-                          "lvl": 0,
-                          "type": "Meta",
-                          "val": 1,
-                        },
-                      },
-                    },
-                    "sigma": {},
-                    "zonker": {},
+                "body": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "String",
                   },
-                  "term": {
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "String",
-                    },
-                  },
-                  "type": "Closure",
                 },
                 "type": "Abs",
               },
@@ -335,10 +261,8 @@ exports[`inference: application > implicit insertion > inserts implicit argument
       "?1 @ Num",
       "String ~~ String",
     ],
-    "term": "((λ(x: Num) =>
-  (λ(y: String) -> y : Π(y: String) ->
-    (closure: String -| Γ: y; x)) : Π(x: Num) =>
-  (closure: Π(y: String) -> String -| Γ: x)))
+    "term": "((λ(x: Num) => (λ(y: String) -> y : Π(y: String) -> String) : Π(x: Num) =>
+  Π(y: String) -> String))
   @(?1 :: Num)
   "hello"",
     "type": "String",
@@ -456,7 +380,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
         },
         "func": {
           "ann": {
-            "binder": {
+            "binding": {
               "annotation": {
                 "type": "Lit",
                 "value": {
@@ -468,37 +392,27 @@ exports[`inference: application > implicit insertion > inserts implicit argument
               "type": "Pi",
               "variable": "x",
             },
-            "closure": {
-              "ctx": {
-                "env": [],
-                "implicits": [],
-                "metas": {},
-                "sigma": {},
-                "zonker": {},
-              },
-              "term": {
-                "binding": {
-                  "annotation": {
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "String",
-                    },
-                  },
-                  "icit": "Explicit",
-                  "type": "Pi",
-                  "variable": "y",
-                },
-                "body": {
+            "body": {
+              "binding": {
+                "annotation": {
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
                     "value": "String",
                   },
                 },
-                "type": "Abs",
+                "icit": "Explicit",
+                "type": "Pi",
+                "variable": "y",
               },
-              "type": "Closure",
+              "body": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "String",
+                },
+              },
+              "type": "Abs",
             },
             "type": "Abs",
           },
@@ -517,7 +431,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
             },
             "body": {
               "ann": {
-                "binder": {
+                "binding": {
                   "annotation": {
                     "type": "Lit",
                     "value": {
@@ -529,53 +443,12 @@ exports[`inference: application > implicit insertion > inserts implicit argument
                   "type": "Pi",
                   "variable": "y",
                 },
-                "closure": {
-                  "ctx": {
-                    "env": [
-                      {
-                        "name": {
-                          "type": "Lambda",
-                          "variable": "x",
-                        },
-                        "nf": {
-                          "type": "Neutral",
-                          "value": {
-                            "type": "Var",
-                            "variable": {
-                              "lvl": 0,
-                              "type": "Bound",
-                            },
-                          },
-                        },
-                        "type": [
-                          {
-                            "type": "Lambda",
-                            "variable": "x",
-                          },
-                          "source",
-                          {
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Num",
-                            },
-                          },
-                        ],
-                      },
-                    ],
-                    "implicits": [],
-                    "metas": {},
-                    "sigma": {},
-                    "zonker": {},
+                "body": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "String",
                   },
-                  "term": {
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "String",
-                    },
-                  },
-                  "type": "Closure",
                 },
                 "type": "Abs",
               },
@@ -636,10 +509,9 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
     ],
     "term": "((λ(a: (?1 :: Type)) =>
   ((λ(b: (?2 :: Type)) =>
-    (λ(c: String) -> c : Π(c: String) ->
-      (closure: String -| Γ: c; b; a)) : Π(b: ?2) =>
-    (closure: Π(c: String) -> String -| Γ: b; a)))
-    @(?3 :: ?2) : Π(a: ?1) => (closure: Π(c: String) -> String -| Γ: a)))
+    (λ(c: String) -> c : Π(c: String) -> String) : Π(b: (?2 :: Type)) =>
+    Π(c: String) -> String))
+    @(?3 :: ?2) : Π(a: (?1 :: Type)) => Π(c: String) -> String))
   @(?4 :: ?1)
   "hello"",
     "type": "String",
@@ -813,53 +685,40 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
         },
         "func": {
           "ann": {
-            "binder": {
+            "binding": {
               "annotation": {
-                "type": "Neutral",
-                "value": {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 0,
-                    "type": "Meta",
-                    "val": 1,
-                  },
+                "type": "Var",
+                "variable": {
+                  "lvl": 0,
+                  "type": "Meta",
+                  "val": 1,
                 },
               },
               "icit": "Implicit",
               "type": "Pi",
               "variable": "a",
             },
-            "closure": {
-              "ctx": {
-                "env": [],
-                "implicits": [],
-                "metas": {},
-                "sigma": {},
-                "zonker": {},
-              },
-              "term": {
-                "binding": {
-                  "annotation": {
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "String",
-                    },
-                  },
-                  "icit": "Explicit",
-                  "type": "Pi",
-                  "variable": "c",
-                },
-                "body": {
+            "body": {
+              "binding": {
+                "annotation": {
                   "type": "Lit",
                   "value": {
                     "type": "Atom",
                     "value": "String",
                   },
                 },
-                "type": "Abs",
+                "icit": "Explicit",
+                "type": "Pi",
+                "variable": "c",
               },
-              "type": "Closure",
+              "body": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "String",
+                },
+              },
+              "type": "Abs",
             },
             "type": "Abs",
           },
@@ -888,103 +747,40 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
               },
               "func": {
                 "ann": {
-                  "binder": {
+                  "binding": {
                     "annotation": {
-                      "type": "Neutral",
-                      "value": {
-                        "type": "Var",
-                        "variable": {
-                          "lvl": 1,
-                          "type": "Meta",
-                          "val": 2,
-                        },
+                      "type": "Var",
+                      "variable": {
+                        "lvl": 1,
+                        "type": "Meta",
+                        "val": 2,
                       },
                     },
                     "icit": "Implicit",
                     "type": "Pi",
                     "variable": "b",
                   },
-                  "closure": {
-                    "ctx": {
-                      "env": [
-                        {
-                          "name": {
-                            "type": "Lambda",
-                            "variable": "a",
-                          },
-                          "nf": {
-                            "type": "Neutral",
-                            "value": {
-                              "type": "Var",
-                              "variable": {
-                                "lvl": 0,
-                                "type": "Bound",
-                              },
-                            },
-                          },
-                          "type": [
-                            {
-                              "type": "Lambda",
-                              "variable": "a",
-                            },
-                            "source",
-                            {
-                              "type": "Neutral",
-                              "value": {
-                                "type": "Var",
-                                "variable": {
-                                  "lvl": 0,
-                                  "type": "Meta",
-                                  "val": 1,
-                                },
-                              },
-                            },
-                          ],
-                        },
-                      ],
-                      "implicits": [],
-                      "metas": {
-                        "1": {
-                          "ann": {
-                            "type": "Lit",
-                            "value": {
-                              "type": "Atom",
-                              "value": "Type",
-                            },
-                          },
-                          "meta": {
-                            "lvl": 0,
-                            "type": "Meta",
-                            "val": 1,
-                          },
-                        },
-                      },
-                      "sigma": {},
-                      "zonker": {},
-                    },
-                    "term": {
-                      "binding": {
-                        "annotation": {
-                          "type": "Lit",
-                          "value": {
-                            "type": "Atom",
-                            "value": "String",
-                          },
-                        },
-                        "icit": "Explicit",
-                        "type": "Pi",
-                        "variable": "c",
-                      },
-                      "body": {
+                  "body": {
+                    "binding": {
+                      "annotation": {
                         "type": "Lit",
                         "value": {
                           "type": "Atom",
                           "value": "String",
                         },
                       },
-                      "type": "Abs",
+                      "icit": "Explicit",
+                      "type": "Pi",
+                      "variable": "c",
                     },
-                    "type": "Closure",
+                    "body": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "String",
+                      },
+                    },
+                    "type": "Abs",
                   },
                   "type": "Abs",
                 },
@@ -1004,7 +800,7 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
                   },
                   "body": {
                     "ann": {
-                      "binder": {
+                      "binding": {
                         "annotation": {
                           "type": "Lit",
                           "value": {
@@ -1016,120 +812,12 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
                         "type": "Pi",
                         "variable": "c",
                       },
-                      "closure": {
-                        "ctx": {
-                          "env": [
-                            {
-                              "name": {
-                                "type": "Lambda",
-                                "variable": "b",
-                              },
-                              "nf": {
-                                "type": "Neutral",
-                                "value": {
-                                  "type": "Var",
-                                  "variable": {
-                                    "lvl": 1,
-                                    "type": "Bound",
-                                  },
-                                },
-                              },
-                              "type": [
-                                {
-                                  "type": "Lambda",
-                                  "variable": "b",
-                                },
-                                "source",
-                                {
-                                  "type": "Neutral",
-                                  "value": {
-                                    "type": "Var",
-                                    "variable": {
-                                      "lvl": 1,
-                                      "type": "Meta",
-                                      "val": 2,
-                                    },
-                                  },
-                                },
-                              ],
-                            },
-                            {
-                              "name": {
-                                "type": "Lambda",
-                                "variable": "a",
-                              },
-                              "nf": {
-                                "type": "Neutral",
-                                "value": {
-                                  "type": "Var",
-                                  "variable": {
-                                    "lvl": 0,
-                                    "type": "Bound",
-                                  },
-                                },
-                              },
-                              "type": [
-                                {
-                                  "type": "Lambda",
-                                  "variable": "a",
-                                },
-                                "source",
-                                {
-                                  "type": "Neutral",
-                                  "value": {
-                                    "type": "Var",
-                                    "variable": {
-                                      "lvl": 0,
-                                      "type": "Meta",
-                                      "val": 1,
-                                    },
-                                  },
-                                },
-                              ],
-                            },
-                          ],
-                          "implicits": [],
-                          "metas": {
-                            "1": {
-                              "ann": {
-                                "type": "Lit",
-                                "value": {
-                                  "type": "Atom",
-                                  "value": "Type",
-                                },
-                              },
-                              "meta": {
-                                "lvl": 0,
-                                "type": "Meta",
-                                "val": 1,
-                              },
-                            },
-                            "2": {
-                              "ann": {
-                                "type": "Lit",
-                                "value": {
-                                  "type": "Atom",
-                                  "value": "Type",
-                                },
-                              },
-                              "meta": {
-                                "lvl": 1,
-                                "type": "Meta",
-                                "val": 2,
-                              },
-                            },
-                          },
-                          "sigma": {},
-                          "zonker": {},
+                      "body": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Atom",
+                          "value": "String",
                         },
-                        "term": {
-                          "type": "Lit",
-                          "value": {
-                            "type": "Atom",
-                            "value": "String",
-                          },
-                        },
-                        "type": "Closure",
                       },
                       "type": "Abs",
                     },
@@ -1192,7 +880,7 @@ exports[`inference: application > simple application f x 1`] = `
     "constraints": [
       "Num ~~ ?1",
     ],
-    "term": "((λ(x: (?1 :: Type)) -> x : Π(x: ?1) -> (closure: (?1 :: Type) -| Γ: x))) 1",
+    "term": "((λ(x: (?1 :: Type)) -> x : Π(x: (?1 :: Type)) -> (?1 :: Type))) 1",
     "type": "?1",
   },
 }
@@ -1251,31 +939,8 @@ exports[`inference: application > simple application f x 2`] = `
       },
       "func": {
         "ann": {
-          "binder": {
+          "binding": {
             "annotation": {
-              "type": "Neutral",
-              "value": {
-                "type": "Var",
-                "variable": {
-                  "lvl": 0,
-                  "type": "Meta",
-                  "val": 1,
-                },
-              },
-            },
-            "icit": "Explicit",
-            "type": "Pi",
-            "variable": "x",
-          },
-          "closure": {
-            "ctx": {
-              "env": [],
-              "implicits": [],
-              "metas": {},
-              "sigma": {},
-              "zonker": {},
-            },
-            "term": {
               "type": "Var",
               "variable": {
                 "lvl": 0,
@@ -1283,7 +948,17 @@ exports[`inference: application > simple application f x 2`] = `
                 "val": 1,
               },
             },
-            "type": "Closure",
+            "icit": "Explicit",
+            "type": "Pi",
+            "variable": "x",
+          },
+          "body": {
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
+            },
           },
           "type": "Abs",
         },

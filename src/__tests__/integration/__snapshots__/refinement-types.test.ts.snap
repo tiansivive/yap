@@ -10,12 +10,14 @@ return main();
 ",
     "elaborated": "<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]",
     "gram": "[1] root
-  :entry -> [2]
-[2] modal {"quantity":"Many"}
-  :term -> [4]
-[3] var:free {"name":"Num"}
-[4] var:ref {"name":"Num"}
-  :refers_to -> [3]",
+  :entry -> [3]
+[2] stmt:let {"variable":"Nat"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -33,12 +35,14 @@ return main();
 ",
     "elaborated": "<ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]",
     "gram": "[1] root
-  :entry -> [2]
-[2] modal {"quantity":"Many"}
-  :term -> [4]
-[3] var:free {"name":"Num"}
-[4] var:ref {"name":"Num"}
-  :refers_to -> [3]",
+  :entry -> [3]
+[2] stmt:let {"variable":"Pos"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -57,8 +61,9 @@ return main();
 ",
     "elaborated": "42",
     "gram": "[1] root
-  :entry -> [2]
-[2] lit {"value":{"type":"Num","value":42}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"n"}
+[3] lit {"value":{"type":"Num","value":42}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -78,8 +83,9 @@ return main();
 ",
     "elaborated": "42",
     "gram": "[1] root
-  :entry -> [2]
-[2] lit {"value":{"type":"Num","value":42}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"p"}
+[3] lit {"value":{"type":"Num","value":42}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -99,8 +105,9 @@ return main();
 ",
     "elaborated": "0",
     "gram": "[1] root
-  :entry -> [2]
-[2] lit {"value":{"type":"Num","value":0}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"zero"}
+[3] lit {"value":{"type":"Num","value":0}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -124,12 +131,14 @@ return main();
 ",
     "elaborated": "<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]",
     "gram": "[1] root
-  :entry -> [2]
-[2] modal {"quantity":"Many"}
-  :term -> [4]
-[3] var:free {"name":"Num"}
-[4] var:ref {"name":"Num"}
-  :refers_to -> [3]",
+  :entry -> [3]
+[2] stmt:let {"variable":"Nat"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -147,12 +156,14 @@ return main();
 ",
     "elaborated": "<ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]",
     "gram": "[1] root
-  :entry -> [2]
-[2] modal {"quantity":"Many"}
-  :term -> [4]
-[3] var:free {"name":"Num"}
-[4] var:ref {"name":"Num"}
-  :refers_to -> [3]",
+  :entry -> [3]
+[2] stmt:let {"variable":"Pos"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -164,11 +175,11 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_11;
+  const v0 = closure_12;
   return v0;
 }
 
-function closure_11(f) {
+function closure_12(f) {
   const v0 = 10;
   const v1 = f(v0);
   return v1;
@@ -177,36 +188,38 @@ return main();
 ",
     "elaborated": "λ(f: Π(t2: <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]) -> Num) -> f 10",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"f","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [7]
-  :env -> [10]
-[3] pi {"variable":"t2","icit":"Explicit","level":0}
+  :entry -> [3]
+[2] stmt:let {"variable":"takePosFunction"}
+[3] lambda {"variable":"f","icit":"Explicit","level":1}
   :annotation -> [4]
-  :body -> [6]
-[4] modal {"quantity":"Many"}
-  :term -> [5]
-[5] lit {"value":{"type":"Atom","value":"Num"}}
+  :body -> [8]
+  :env -> [11]
+[4] pi {"variable":"t2","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [7]
+[5] modal {"quantity":"Many"}
+  :term -> [6]
 [6] lit {"value":{"type":"Atom","value":"Num"}}
-[7] app {"icit":"Explicit"}
-  :arg -> [9]
-  :func -> [8]
-[8] var:bound {"index":0}
-  :refers_to -> [2]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [9]
+[9] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[9] lit {"value":{"type":"Num","value":10}}
-[10] env
-[11] closure
-  :body -> [2]
-  :env -> [10]",
+  :scope -> [3] {"level":1}
+[10] lit {"value":{"type":"Num","value":10}}
+[11] env
+[12] closure
+  :body -> [3]
+  :env -> [11]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_11
+      let v0 = &closure_12
       return v0
-  fn closure_11(f) entry=entry
+  fn closure_12(f) entry=entry
     entry:
       let v0 = 10
       let v1 = call *f(v0)
@@ -219,39 +232,41 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_7;
+  const v0 = closure_8;
   return v0;
 }
 
-function closure_7(x) {
+function closure_8(x) {
   return x;
 }
 return main();
 ",
     "elaborated": "λ(x: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) -> x",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"x","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [5]
-  :env -> [6]
-[3] modal {"quantity":"Many"}
-  :term -> [4]
-[4] lit {"value":{"type":"Atom","value":"Num"}}
-[5] var:bound {"index":0}
-  :refers_to -> [2]
+  :entry -> [3]
+[2] stmt:let {"variable":"natToNum"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [6]
+  :env -> [7]
+[4] modal {"quantity":"Many"}
+  :term -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[6] env
-[7] closure
-  :body -> [2]
-  :env -> [6]",
+  :scope -> [3] {"level":1}
+[7] env
+[8] closure
+  :body -> [3]
+  :env -> [7]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_7
+      let v0 = &closure_8
       return v0
-  fn closure_7(x) entry=entry
+  fn closure_8(x) entry=entry
     entry:
       return x",
     "name": "natToNum",
@@ -261,39 +276,41 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_7;
+  const v0 = closure_8;
   return v0;
 }
 
-function closure_7(x) {
+function closure_8(x) {
   return x;
 }
 return main();
 ",
     "elaborated": "λ(x: <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]) -> x",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"x","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [5]
-  :env -> [6]
-[3] modal {"quantity":"Many"}
-  :term -> [4]
-[4] lit {"value":{"type":"Atom","value":"Num"}}
-[5] var:bound {"index":0}
-  :refers_to -> [2]
+  :entry -> [3]
+[2] stmt:let {"variable":"posToNum"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [6]
+  :env -> [7]
+[4] modal {"quantity":"Many"}
+  :term -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[6] env
-[7] closure
-  :body -> [2]
-  :env -> [6]",
+  :scope -> [3] {"level":1}
+[7] env
+[8] closure
+  :body -> [3]
+  :env -> [7]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_7
+      let v0 = &closure_8
       return v0
-  fn closure_7(x) entry=entry
+  fn closure_8(x) entry=entry
     entry:
       return x",
     "name": "posToNum",
@@ -303,8 +320,8 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
-  const v1 = unknown;
+  const v0 = takePosFunction;
+  const v1 = natToNum;
   const v2 = v0(v1);
   return v2;
 }
@@ -312,22 +329,25 @@ return main();
 ",
     "elaborated": "takePosFunction natToNum",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [6]
-  :func -> [4]
-[3] var:free {"name":"takePosFunction"}
-[4] var:ref {"name":"takePosFunction"}
-  :refers_to -> [3]
-[5] var:free {"name":"natToNum"}
-[6] var:ref {"name":"natToNum"}
-  :refers_to -> [5]",
+  :entry -> [3]
+[2] stmt:let {"variable":"result1"}
+[3] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [5]
+[4] var:free {"name":"takePosFunction"}
+[5] var:ref {"name":"takePosFunction"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[6] var:free {"name":"natToNum"}
+[7] var:ref {"name":"natToNum"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
-      let v1 = unknown
+      let v0 = takePosFunction
+      let v1 = natToNum
       let v2 = call *v0(v1)
       return v2",
     "name": "result1",
@@ -336,8 +356,8 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
-  const v1 = unknown;
+  const v0 = takePosFunction;
+  const v1 = posToNum;
   const v2 = v0(v1);
   return v2;
 }
@@ -345,22 +365,25 @@ return main();
 ",
     "elaborated": "takePosFunction posToNum",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [6]
-  :func -> [4]
-[3] var:free {"name":"takePosFunction"}
-[4] var:ref {"name":"takePosFunction"}
-  :refers_to -> [3]
-[5] var:free {"name":"posToNum"}
-[6] var:ref {"name":"posToNum"}
-  :refers_to -> [5]",
+  :entry -> [3]
+[2] stmt:let {"variable":"result2"}
+[3] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [5]
+[4] var:free {"name":"takePosFunction"}
+[5] var:ref {"name":"takePosFunction"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[6] var:free {"name":"posToNum"}
+[7] var:ref {"name":"posToNum"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
-      let v1 = unknown
+      let v0 = takePosFunction
+      let v1 = posToNum
       let v2 = call *v0(v1)
       return v2",
     "name": "result2",
@@ -381,8 +404,9 @@ return main();
 ",
     "elaborated": "1",
     "gram": "[1] root
-  :entry -> [2]
-[2] lit {"value":{"type":"Num","value":1}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"exactOne"}
+[3] lit {"value":{"type":"Num","value":1}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -406,12 +430,14 @@ return main();
 ",
     "elaborated": "<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]",
     "gram": "[1] root
-  :entry -> [2]
-[2] modal {"quantity":"Many"}
-  :term -> [4]
-[3] var:free {"name":"Num"}
-[4] var:ref {"name":"Num"}
-  :refers_to -> [3]",
+  :entry -> [3]
+[2] stmt:let {"variable":"Nat"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -429,12 +455,14 @@ return main();
 ",
     "elaborated": "<ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]",
     "gram": "[1] root
-  :entry -> [2]
-[2] modal {"quantity":"Many"}
-  :term -> [4]
-[3] var:free {"name":"Num"}
-[4] var:ref {"name":"Num"}
-  :refers_to -> [3]",
+  :entry -> [3]
+[2] stmt:let {"variable":"Pos"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -446,11 +474,11 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_12;
+  const v0 = closure_13;
   return v0;
 }
 
-function closure_12(f) {
+function closure_13(f) {
   const v0 = 1;
   const v1 = f(v0);
   return v1;
@@ -461,38 +489,40 @@ return main();
   <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) ->
   f 1",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"f","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [8]
-  :env -> [11]
-[3] pi {"variable":"t1","icit":"Explicit","level":0}
+  :entry -> [3]
+[2] stmt:let {"variable":"hof"}
+[3] lambda {"variable":"f","icit":"Explicit","level":1}
   :annotation -> [4]
-  :body -> [6]
-[4] modal {"quantity":"Many"}
-  :term -> [5]
-[5] lit {"value":{"type":"Atom","value":"Num"}}
-[6] modal {"quantity":"Many"}
-  :term -> [7]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[8] app {"icit":"Explicit"}
-  :arg -> [10]
-  :func -> [9]
-[9] var:bound {"index":0}
-  :refers_to -> [2]
+  :body -> [9]
+  :env -> [12]
+[4] pi {"variable":"t1","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [7]
+[5] modal {"quantity":"Many"}
+  :term -> [6]
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[7] modal {"quantity":"Many"}
+  :term -> [8]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[10] lit {"value":{"type":"Num","value":1}}
-[11] env
-[12] closure
-  :body -> [2]
-  :env -> [11]",
+  :scope -> [3] {"level":1}
+[11] lit {"value":{"type":"Num","value":1}}
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [12]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_12
+      let v0 = &closure_13
       return v0
-  fn closure_12(f) entry=entry
+  fn closure_13(f) entry=entry
     entry:
       let v0 = 1
       let v1 = call *f(v0)
@@ -507,11 +537,11 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_17;
+  const v0 = closure_18;
   return v0;
 }
 
-function closure_17(f) {
+function closure_18(f) {
   const v0 = 1;
   const v1 = f(v0);
   const v2 = 1;
@@ -522,43 +552,45 @@ return main();
 ",
     "elaborated": "λ(f: Π(t3: Num) -> <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) -> FFI.$add (f 1) 1",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"f","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [15]
-  :env -> [16]
-[3] pi {"variable":"t3","icit":"Explicit","level":0}
+  :entry -> [3]
+[2] stmt:let {"variable":"hof2"}
+[3] lambda {"variable":"f","icit":"Explicit","level":1}
   :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Num"}}
-[5] modal {"quantity":"Many"}
-  :term -> [6]
-[6] lit {"value":{"type":"Atom","value":"Num"}}
-[9] var:foreign {"name":"$add","arity":2}
-[11] app {"icit":"Explicit"}
-  :arg -> [13]
-  :func -> [12]
-  :next -> [14]
-[12] var:bound {"index":0}
-  :refers_to -> [2]
+  :body -> [16]
+  :env -> [17]
+[4] pi {"variable":"t3","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] modal {"quantity":"Many"}
+  :term -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:foreign {"name":"$add","arity":2}
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+  :next -> [15]
+[13] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[13] lit {"value":{"type":"Num","value":1}}
+  :scope -> [3] {"level":1}
 [14] lit {"value":{"type":"Num","value":1}}
-[15] primop {"op":"$add"}
-  :arg -> [11] {"index":0}
-  :arg -> [14] {"index":1}
-  :callee -> [9]
-[16] env
-[17] closure
-  :body -> [2]
-  :env -> [16]",
+[15] lit {"value":{"type":"Num","value":1}}
+[16] primop {"op":"$add"}
+  :arg -> [12] {"index":0}
+  :arg -> [15] {"index":1}
+  :callee -> [10]
+[17] env
+[18] closure
+  :body -> [3]
+  :env -> [17]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_17
+      let v0 = &closure_18
       return v0
-  fn closure_17(f) entry=entry
+  fn closure_18(f) entry=entry
     entry:
       let v0 = 1
       let v1 = call *f(v0)
@@ -579,11 +611,11 @@ exports[`Language Tour — Refinement Types > input-output relationship 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_12;
+  const v0 = closure_13;
   return v0;
 }
 
-function closure_12(x) {
+function closure_13(x) {
   const v0 = 1;
   const v1 = (x + v0);
   return v1;
@@ -592,33 +624,35 @@ return main();
 ",
     "elaborated": "λ(x: Num) -> FFI.$add x 1",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"x","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [10]
-  :env -> [11]
-[3] lit {"value":{"type":"Atom","value":"Num"}}
-[6] var:foreign {"name":"$add","arity":2}
-[8] var:bound {"index":0}
-  :next -> [9]
-  :refers_to -> [2]
+  :entry -> [3]
+[2] stmt:let {"variable":"inc"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [11]
+  :env -> [12]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[7] var:foreign {"name":"$add","arity":2}
+[9] var:bound {"index":0}
+  :next -> [10]
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[9] lit {"value":{"type":"Num","value":1}}
-[10] primop {"op":"$add"}
-  :arg -> [8] {"index":0}
-  :arg -> [9] {"index":1}
-  :callee -> [6]
-[11] env
-[12] closure
-  :body -> [2]
-  :env -> [11]",
+  :scope -> [3] {"level":1}
+[10] lit {"value":{"type":"Num","value":1}}
+[11] primop {"op":"$add"}
+  :arg -> [9] {"index":0}
+  :arg -> [10] {"index":1}
+  :callee -> [7]
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [12]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_12
+      let v0 = &closure_13
       return v0
-  fn closure_12(x) entry=entry
+  fn closure_13(x) entry=entry
     entry:
       let v0 = 1
       let v1 = +(x, v0)
@@ -640,166 +674,180 @@ return main();
 ",
     "elaborated": "OrderedList",
     "gram": "[1] root
-  :entry -> [2]
-[2] mu {"variable":"x","source":"OrderedList","level":0}
-  :annotation -> [3]
-  :body -> [13]
-[3] pi {"variable":"t","icit":"Explicit","level":0}
+  :entry -> [3]
+[2] stmt:let {"variable":"OrderedList"}
+[3] mu {"variable":"x","source":"OrderedList","level":1}
   :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Type"}}
-[5] pi {"variable":"p","icit":"Explicit","level":1}
-  :annotation -> [6]
-  :body -> [12]
-[6] pi {"variable":"t1","icit":"Explicit","level":1}
+  :body -> [14]
+[4] pi {"variable":"t","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] pi {"variable":"p","icit":"Explicit","level":2}
   :annotation -> [7]
-  :body -> [8]
-[7] var:bound {"index":0}
-  :refers_to -> [3]
-  :scope -> [3] {"level":0}
-[8] pi {"variable":"t2","icit":"Explicit","level":2}
-  :annotation -> [9]
-  :body -> [11]
-[9] var:bound {"index":1}
-  :refers_to -> [3]
-  :scope -> [3] {"level":0}
-  :scope -> [6] {"level":1}
-[10] var:free {"name":"Bool"}
-[11] var:ref {"name":"Bool"}
-  :refers_to -> [10]
-  :scope -> [3] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [8] {"level":2}
-[12] lit {"value":{"type":"Atom","value":"Type"}}
-[13] lambda {"variable":"t","icit":"Explicit","level":1}
-  :annotation -> [14]
-  :body -> [15]
-  :env -> [50]
-[14] lit {"value":{"type":"Atom","value":"Type"}}
-[15] lambda {"variable":"p","icit":"Explicit","level":2}
-  :annotation -> [16]
-  :body -> [21]
-  :env -> [51]
-[16] pi {"variable":"t1","icit":"Explicit","level":2}
-  :annotation -> [17]
-  :body -> [18]
-[17] var:bound {"index":0}
-  :refers_to -> [13]
-  :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-[18] pi {"variable":"t2","icit":"Explicit","level":3}
-  :annotation -> [19]
-  :body -> [20]
-[19] var:bound {"index":1}
-  :refers_to -> [13]
-  :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-  :scope -> [16] {"level":2}
-[20] lit {"value":{"type":"Atom","value":"Bool"}}
-[21] app {"icit":"Explicit"}
-  :arg -> [23]
-  :func -> [22]
-[22] lit {"value":{"type":"Atom","value":"Variant"}}
-[23] row:ext {"label":"cons"}
-  :rest -> [47]
-  :value -> [24]
-[24] sigma {"variable":"$sig","level":3}
-  :annotation -> [25]
-  :body -> [35]
-[25] row:ext {"label":"tail"}
-  :rest -> [32]
-  :value -> [26]
-[26] app {"icit":"Explicit"}
-  :arg -> [31]
-  :func -> [27]
-[27] app {"icit":"Explicit"}
-  :arg -> [29]
-  :func -> [28]
-[28] var:bound {"index":2}
-  :refers_to -> [2]
-  :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-  :scope -> [15] {"level":2}
-[29] modal {"quantity":"Many"}
-  :term -> [30]
-[30] var:bound {"index":1}
-  :refers_to -> [13]
-  :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-  :scope -> [15] {"level":2}
-[31] var:bound {"index":0}
-  :refers_to -> [15]
-  :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-  :scope -> [15] {"level":2}
-[32] row:ext {"label":"head"}
-  :rest -> [34]
-  :value -> [33]
-[33] var:bound {"index":1}
-  :refers_to -> [13]
-  :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-  :scope -> [15] {"level":2}
-[34] row:empty
-[35] app {"icit":"Explicit"}
-  :arg -> [37]
-  :func -> [36]
-[36] lit {"value":{"type":"Atom","value":"Schema"}}
-[37] row:ext {"label":"tail"}
-  :rest -> [44]
-  :value -> [38]
-[38] app {"icit":"Explicit"}
-  :arg -> [43]
-  :func -> [39]
-[39] app {"icit":"Explicit"}
-  :arg -> [41]
-  :func -> [40]
-[40] var:bound {"index":2}
-  :refers_to -> [13]
-  :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-  :scope -> [15] {"level":2}
-  :scope -> [24] {"level":3}
-[41] modal {"quantity":"Many"}
-  :term -> [42]
-[42] var:bound {"index":1}
-  :refers_to -> [15]
-  :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-  :scope -> [15] {"level":2}
-  :scope -> [24] {"level":3}
-[43] var:bound {"index":0}
-  :refers_to -> [24]
-  :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-  :scope -> [15] {"level":2}
-  :scope -> [24] {"level":3}
-[44] row:ext {"label":"head"}
-  :rest -> [46]
-  :value -> [45]
-[45] var:bound {"index":1}
-  :refers_to -> [15]
-  :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-  :scope -> [15] {"level":2}
-  :scope -> [24] {"level":3}
-[46] row:empty
-[47] row:ext {"label":"nil"}
-  :rest -> [49]
-  :value -> [48]
-[48] lit {"value":{"type":"Atom","value":"Unit"}}
-[49] row:empty
-[50] env
-  :capture -> [2] {"index":0}
-[51] env
-  :capture -> [2] {"index":0}
-  :capture -> [13] {"index":1}
-[52] closure
   :body -> [13]
-  :env -> [50]
+[7] pi {"variable":"t1","icit":"Explicit","level":2}
+  :annotation -> [8]
+  :body -> [9]
+[8] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[9] pi {"variable":"t2","icit":"Explicit","level":3}
+  :annotation -> [10]
+  :body -> [12]
+[10] var:bound {"index":1}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [7] {"level":2}
+[11] var:free {"name":"Bool"}
+[12] var:ref {"name":"Bool"}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [9] {"level":3}
+[13] lit {"value":{"type":"Atom","value":"Type"}}
+[14] lambda {"variable":"t","icit":"Explicit","level":2}
+  :annotation -> [15]
+  :body -> [16]
+  :env -> [51]
+[15] lit {"value":{"type":"Atom","value":"Type"}}
+[16] lambda {"variable":"p","icit":"Explicit","level":3}
+  :annotation -> [17]
+  :body -> [22]
+  :env -> [52]
+[17] pi {"variable":"t1","icit":"Explicit","level":3}
+  :annotation -> [18]
+  :body -> [19]
+[18] var:bound {"index":0}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+[19] pi {"variable":"t2","icit":"Explicit","level":4}
+  :annotation -> [20]
+  :body -> [21]
+[20] var:bound {"index":1}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [17] {"level":3}
+[21] lit {"value":{"type":"Atom","value":"Bool"}}
+[22] app {"icit":"Explicit"}
+  :arg -> [24]
+  :func -> [23]
+[23] lit {"value":{"type":"Atom","value":"Variant"}}
+[24] row:ext {"label":"cons"}
+  :rest -> [48]
+  :value -> [25]
+[25] sigma {"variable":"$sig","level":4}
+  :annotation -> [26]
+  :body -> [36]
+[26] row:ext {"label":"tail"}
+  :rest -> [33]
+  :value -> [27]
+[27] app {"icit":"Explicit"}
+  :arg -> [32]
+  :func -> [28]
+[28] app {"icit":"Explicit"}
+  :arg -> [30]
+  :func -> [29]
+[29] var:bound {"index":2}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+[30] modal {"quantity":"Many"}
+  :term -> [31]
+[31] var:bound {"index":1}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+[32] var:bound {"index":0}
+  :refers_to -> [16]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+[33] row:ext {"label":"head"}
+  :rest -> [35]
+  :value -> [34]
+[34] var:bound {"index":1}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+[35] row:empty
+[36] app {"icit":"Explicit"}
+  :arg -> [38]
+  :func -> [37]
+[37] lit {"value":{"type":"Atom","value":"Schema"}}
+[38] row:ext {"label":"tail"}
+  :rest -> [45]
+  :value -> [39]
+[39] app {"icit":"Explicit"}
+  :arg -> [44]
+  :func -> [40]
+[40] app {"icit":"Explicit"}
+  :arg -> [42]
+  :func -> [41]
+[41] var:bound {"index":2}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+  :scope -> [25] {"level":4}
+[42] modal {"quantity":"Many"}
+  :term -> [43]
+[43] var:bound {"index":1}
+  :refers_to -> [16]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+  :scope -> [25] {"level":4}
+[44] var:bound {"index":0}
+  :refers_to -> [25]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+  :scope -> [25] {"level":4}
+[45] row:ext {"label":"head"}
+  :rest -> [47]
+  :value -> [46]
+[46] var:bound {"index":1}
+  :refers_to -> [16]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+  :scope -> [25] {"level":4}
+[47] row:empty
+[48] row:ext {"label":"nil"}
+  :rest -> [50]
+  :value -> [49]
+[49] lit {"value":{"type":"Atom","value":"Unit"}}
+[50] row:empty
+[51] env
+  :capture -> [3] {"index":0}
+[52] env
+  :capture -> [3] {"index":0}
+  :capture -> [14] {"index":1}
 [53] closure
-  :body -> [15]
-  :env -> [51]",
+  :body -> [14]
+  :env -> [51]
+[54] closure
+  :body -> [16]
+  :env -> [52]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -853,76 +901,77 @@ return main();
                   [ cons: Struct
                       [ head: 3, tail: Struct [ nil: unit ] ] ] ] ] ] ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"cons"}
+  :entry -> [3]
+[2] stmt:let {"variable":"ascending"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"cons"}
+  :rest -> [37]
+  :value -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [7]
+[7] lit {"value":{"type":"Atom","value":"Struct"}}
+[8] row:ext {"label":"head"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Num","value":1}}
+[10] row:ext {"label":"tail"}
   :rest -> [36]
-  :value -> [5]
-[5] app {"icit":"Explicit"}
-  :arg -> [7]
-  :func -> [6]
-[6] lit {"value":{"type":"Atom","value":"Struct"}}
-[7] row:ext {"label":"head"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Num","value":1}}
-[9] row:ext {"label":"tail"}
+  :value -> [11]
+[11] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [12]
+[12] lit {"value":{"type":"Atom","value":"Struct"}}
+[13] row:ext {"label":"cons"}
   :rest -> [35]
-  :value -> [10]
-[10] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [11]
-[11] lit {"value":{"type":"Atom","value":"Struct"}}
-[12] row:ext {"label":"cons"}
+  :value -> [14]
+[14] app {"icit":"Explicit"}
+  :arg -> [16]
+  :func -> [15]
+[15] lit {"value":{"type":"Atom","value":"Struct"}}
+[16] row:ext {"label":"head"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"Num","value":2}}
+[18] row:ext {"label":"tail"}
   :rest -> [34]
-  :value -> [13]
-[13] app {"icit":"Explicit"}
-  :arg -> [15]
-  :func -> [14]
-[14] lit {"value":{"type":"Atom","value":"Struct"}}
-[15] row:ext {"label":"head"}
-  :rest -> [17]
-  :value -> [16]
-[16] lit {"value":{"type":"Num","value":2}}
-[17] row:ext {"label":"tail"}
+  :value -> [19]
+[19] app {"icit":"Explicit"}
+  :arg -> [21]
+  :func -> [20]
+[20] lit {"value":{"type":"Atom","value":"Struct"}}
+[21] row:ext {"label":"cons"}
   :rest -> [33]
-  :value -> [18]
-[18] app {"icit":"Explicit"}
-  :arg -> [20]
-  :func -> [19]
-[19] lit {"value":{"type":"Atom","value":"Struct"}}
-[20] row:ext {"label":"cons"}
+  :value -> [22]
+[22] app {"icit":"Explicit"}
+  :arg -> [24]
+  :func -> [23]
+[23] lit {"value":{"type":"Atom","value":"Struct"}}
+[24] row:ext {"label":"head"}
+  :rest -> [26]
+  :value -> [25]
+[25] lit {"value":{"type":"Num","value":3}}
+[26] row:ext {"label":"tail"}
   :rest -> [32]
-  :value -> [21]
-[21] app {"icit":"Explicit"}
-  :arg -> [23]
-  :func -> [22]
-[22] lit {"value":{"type":"Atom","value":"Struct"}}
-[23] row:ext {"label":"head"}
-  :rest -> [25]
-  :value -> [24]
-[24] lit {"value":{"type":"Num","value":3}}
-[25] row:ext {"label":"tail"}
+  :value -> [27]
+[27] app {"icit":"Explicit"}
+  :arg -> [29]
+  :func -> [28]
+[28] lit {"value":{"type":"Atom","value":"Struct"}}
+[29] row:ext {"label":"nil"}
   :rest -> [31]
-  :value -> [26]
-[26] app {"icit":"Explicit"}
-  :arg -> [28]
-  :func -> [27]
-[27] lit {"value":{"type":"Atom","value":"Struct"}}
-[28] row:ext {"label":"nil"}
-  :rest -> [30]
-  :value -> [29]
-[29] lit {"value":{"type":"unit"}}
-[30] row:empty
+  :value -> [30]
+[30] lit {"value":{"type":"unit"}}
 [31] row:empty
 [32] row:empty
 [33] row:empty
 [34] row:empty
 [35] row:empty
-[36] row:empty",
+[36] row:empty
+[37] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -995,76 +1044,77 @@ return main();
                   [ cons: Struct
                       [ head: 1, tail: Struct [ nil: unit ] ] ] ] ] ] ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"cons"}
+  :entry -> [3]
+[2] stmt:let {"variable":"descending"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"cons"}
+  :rest -> [37]
+  :value -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [7]
+[7] lit {"value":{"type":"Atom","value":"Struct"}}
+[8] row:ext {"label":"head"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Num","value":3}}
+[10] row:ext {"label":"tail"}
   :rest -> [36]
-  :value -> [5]
-[5] app {"icit":"Explicit"}
-  :arg -> [7]
-  :func -> [6]
-[6] lit {"value":{"type":"Atom","value":"Struct"}}
-[7] row:ext {"label":"head"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Num","value":3}}
-[9] row:ext {"label":"tail"}
+  :value -> [11]
+[11] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [12]
+[12] lit {"value":{"type":"Atom","value":"Struct"}}
+[13] row:ext {"label":"cons"}
   :rest -> [35]
-  :value -> [10]
-[10] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [11]
-[11] lit {"value":{"type":"Atom","value":"Struct"}}
-[12] row:ext {"label":"cons"}
+  :value -> [14]
+[14] app {"icit":"Explicit"}
+  :arg -> [16]
+  :func -> [15]
+[15] lit {"value":{"type":"Atom","value":"Struct"}}
+[16] row:ext {"label":"head"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"Num","value":2}}
+[18] row:ext {"label":"tail"}
   :rest -> [34]
-  :value -> [13]
-[13] app {"icit":"Explicit"}
-  :arg -> [15]
-  :func -> [14]
-[14] lit {"value":{"type":"Atom","value":"Struct"}}
-[15] row:ext {"label":"head"}
-  :rest -> [17]
-  :value -> [16]
-[16] lit {"value":{"type":"Num","value":2}}
-[17] row:ext {"label":"tail"}
+  :value -> [19]
+[19] app {"icit":"Explicit"}
+  :arg -> [21]
+  :func -> [20]
+[20] lit {"value":{"type":"Atom","value":"Struct"}}
+[21] row:ext {"label":"cons"}
   :rest -> [33]
-  :value -> [18]
-[18] app {"icit":"Explicit"}
-  :arg -> [20]
-  :func -> [19]
-[19] lit {"value":{"type":"Atom","value":"Struct"}}
-[20] row:ext {"label":"cons"}
+  :value -> [22]
+[22] app {"icit":"Explicit"}
+  :arg -> [24]
+  :func -> [23]
+[23] lit {"value":{"type":"Atom","value":"Struct"}}
+[24] row:ext {"label":"head"}
+  :rest -> [26]
+  :value -> [25]
+[25] lit {"value":{"type":"Num","value":1}}
+[26] row:ext {"label":"tail"}
   :rest -> [32]
-  :value -> [21]
-[21] app {"icit":"Explicit"}
-  :arg -> [23]
-  :func -> [22]
-[22] lit {"value":{"type":"Atom","value":"Struct"}}
-[23] row:ext {"label":"head"}
-  :rest -> [25]
-  :value -> [24]
-[24] lit {"value":{"type":"Num","value":1}}
-[25] row:ext {"label":"tail"}
+  :value -> [27]
+[27] app {"icit":"Explicit"}
+  :arg -> [29]
+  :func -> [28]
+[28] lit {"value":{"type":"Atom","value":"Struct"}}
+[29] row:ext {"label":"nil"}
   :rest -> [31]
-  :value -> [26]
-[26] app {"icit":"Explicit"}
-  :arg -> [28]
-  :func -> [27]
-[27] lit {"value":{"type":"Atom","value":"Struct"}}
-[28] row:ext {"label":"nil"}
-  :rest -> [30]
-  :value -> [29]
-[29] lit {"value":{"type":"unit"}}
-[30] row:empty
+  :value -> [30]
+[30] lit {"value":{"type":"unit"}}
 [31] row:empty
 [32] row:empty
 [33] row:empty
 [34] row:empty
 [35] row:empty
-[36] row:empty",
+[36] row:empty
+[37] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -1108,43 +1158,48 @@ return main();
     "elaborated": "Σ($sig: [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ]) .
   Schema [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] sigma {"variable":"$sig","level":0}
-  :annotation -> [3]
-  :body -> [10]
-[3] row:ext {"label":"snd"}
-  :rest -> [7]
-  :value -> [4]
-[4] modal {"quantity":"Many"}
-  :term -> [6]
-[5] var:free {"name":"Num"}
-[6] var:ref {"name":"Num"}
-  :refers_to -> [5]
-[7] row:ext {"label":"fst"}
-  :rest -> [9]
-  :value -> [8]
-[8] var:ref {"name":"Num"}
-  :refers_to -> [5]
-[9] row:empty
-[10] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [11]
-[11] lit {"value":{"type":"Atom","value":"Schema"}}
-[12] row:ext {"label":"snd"}
-  :rest -> [15]
-  :value -> [13]
-[13] modal {"quantity":"Many"}
-  :term -> [14]
-[14] var:ref {"name":"Num"}
-  :refers_to -> [5]
+  :entry -> [3]
+[2] stmt:let {"variable":"OrderedPair"}
+[3] sigma {"variable":"$sig","level":1}
+  :annotation -> [4]
+  :body -> [11]
+[4] row:ext {"label":"snd"}
+  :rest -> [8]
+  :value -> [5]
+[5] modal {"quantity":"Many"}
+  :term -> [7]
+[6] var:free {"name":"Num"}
+[7] var:ref {"name":"Num"}
+  :refers_to -> [6]
   :scope -> [2] {"level":0}
-[15] row:ext {"label":"fst"}
-  :rest -> [17]
-  :value -> [16]
-[16] var:ref {"name":"Num"}
-  :refers_to -> [5]
+[8] row:ext {"label":"fst"}
+  :rest -> [10]
+  :value -> [9]
+[9] var:ref {"name":"Num"}
+  :refers_to -> [6]
   :scope -> [2] {"level":0}
-[17] row:empty",
+[10] row:empty
+[11] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [12]
+[12] lit {"value":{"type":"Atom","value":"Schema"}}
+[13] row:ext {"label":"snd"}
+  :rest -> [16]
+  :value -> [14]
+[14] modal {"quantity":"Many"}
+  :term -> [15]
+[15] var:ref {"name":"Num"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[16] row:ext {"label":"fst"}
+  :rest -> [18]
+  :value -> [17]
+[17] var:ref {"name":"Num"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[18] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -1172,20 +1227,21 @@ return main();
 ",
     "elaborated": "Struct [ fst: 3, snd: 5 ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"fst"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Num","value":3}}
-[6] row:ext {"label":"snd"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Num","value":5}}
-[8] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"valid"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"fst"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Num","value":3}}
+[7] row:ext {"label":"snd"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Num","value":5}}
+[9] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -1212,12 +1268,14 @@ return main();
 ",
     "elaborated": "<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]",
     "gram": "[1] root
-  :entry -> [2]
-[2] modal {"quantity":"Many"}
-  :term -> [4]
-[3] var:free {"name":"Num"}
-[4] var:ref {"name":"Num"}
-  :refers_to -> [3]",
+  :entry -> [3]
+[2] stmt:let {"variable":"Nat"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -1229,39 +1287,41 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_7;
+  const v0 = closure_8;
   return v0;
 }
 
-function closure_7(x) {
+function closure_8(x) {
   return x;
 }
 return main();
 ",
     "elaborated": "λ(x: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) -> x",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"x","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [5]
-  :env -> [6]
-[3] modal {"quantity":"Many"}
-  :term -> [4]
-[4] lit {"value":{"type":"Atom","value":"Num"}}
-[5] var:bound {"index":0}
-  :refers_to -> [2]
+  :entry -> [3]
+[2] stmt:let {"variable":"safe"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [6]
+  :env -> [7]
+[4] modal {"quantity":"Many"}
+  :term -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[6] env
-[7] closure
-  :body -> [2]
-  :env -> [6]",
+  :scope -> [3] {"level":1}
+[7] env
+[8] closure
+  :body -> [3]
+  :env -> [7]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_7
+      let v0 = &closure_8
       return v0
-  fn closure_7(x) entry=entry
+  fn closure_8(x) entry=entry
     entry:
       return x",
     "name": "safe",
@@ -1277,63 +1337,65 @@ exports[`Language Tour — Refinement Types > refinement polymorphism 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_12;
+  const v0 = closure_13;
   return v0;
 }
 
-function closure_13(x) {
+function closure_14(x) {
   return x;
 }
 
-function closure_12(p) {
-  const v0 = closure_13;
+function closure_13(p) {
+  const v0 = closure_14;
   return v0;
 }
 return main();
 ",
     "elaborated": "λ(p: Π(t1: Num) -> Bool) -> λ(x: <ω> Num [| λ(v: Num) -> p v |]) -> x",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"p","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [6]
-  :env -> [10]
-[3] pi {"variable":"t1","icit":"Explicit","level":0}
+  :entry -> [3]
+[2] stmt:let {"variable":"checkNum"}
+[3] lambda {"variable":"p","icit":"Explicit","level":1}
   :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Num"}}
-[5] lit {"value":{"type":"Atom","value":"Bool"}}
-[6] lambda {"variable":"x","icit":"Explicit","level":1}
-  :annotation -> [7]
-  :body -> [9]
+  :body -> [7]
   :env -> [11]
-[7] modal {"quantity":"Many"}
-  :term -> [8]
-[8] lit {"value":{"type":"Atom","value":"Num"}}
-[9] var:bound {"index":0}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-[10] env
-[11] env
-[12] closure
-  :body -> [2]
-  :env -> [10]
-[13] closure
+[4] pi {"variable":"t1","icit":"Explicit","level":1}
+  :annotation -> [5]
   :body -> [6]
-  :env -> [11]",
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] lit {"value":{"type":"Atom","value":"Bool"}}
+[7] lambda {"variable":"x","icit":"Explicit","level":2}
+  :annotation -> [8]
+  :body -> [10]
+  :env -> [12]
+[8] modal {"quantity":"Many"}
+  :term -> [9]
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[11] env
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [11]
+[14] closure
+  :body -> [7]
+  :env -> [12]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_12
+      let v0 = &closure_13
       return v0
-  fn closure_13(x) entry=entry
+  fn closure_14(x) entry=entry
     entry:
       return x
-  fn closure_12(p) entry=entry
+  fn closure_13(p) entry=entry
     entry:
-      let v0 = &closure_13
+      let v0 = &closure_14
       return v0",
     "name": "checkNum",
     "normalized": "λ(p: Π(t1: Num) -> (closure: Bool -| Γ: t1)) ->
@@ -1342,15 +1404,15 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
-  const v1 = closure_17;
+  const v0 = checkNum;
+  const v1 = closure_18;
   const v2 = v0(v1);
   const v3 = 5;
   const v4 = v2(v3);
   return v4;
 }
 
-function closure_17(n) {
+function closure_18(n) {
   const v0 = 0;
   const v1 = (n >= v0);
   return v1;
@@ -1359,47 +1421,50 @@ return main();
 ",
     "elaborated": "checkNum (λ(n: Num) -> FFI.$gte n 0) 5",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [14]
-  :func -> [3]
+  :entry -> [3]
+[2] stmt:let {"variable":"nat5"}
 [3] app {"icit":"Explicit"}
-  :arg -> [6]
-  :func -> [5]
-[4] var:free {"name":"checkNum"}
-[5] var:ref {"name":"checkNum"}
-  :refers_to -> [4]
-[6] lambda {"variable":"n","icit":"Explicit","level":0}
-  :annotation -> [7]
-  :body -> [15]
-  :env -> [16]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[10] var:foreign {"name":"$gte","arity":2}
-[12] var:bound {"index":0}
-  :next -> [13]
-  :refers_to -> [6]
-  :scope -> [6] {"level":0}
-[13] lit {"value":{"type":"Num","value":0}}
-[14] lit {"value":{"type":"Num","value":5}}
-[15] primop {"op":"$gte"}
-  :arg -> [12] {"index":0}
-  :arg -> [13] {"index":1}
-  :callee -> [10]
-[16] env
-[17] closure
-  :body -> [6]
-  :env -> [16]",
+  :arg -> [15]
+  :func -> [4]
+[4] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:free {"name":"checkNum"}
+[6] var:ref {"name":"checkNum"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [8]
+  :body -> [16]
+  :env -> [17]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[11] var:foreign {"name":"$gte","arity":2}
+[13] var:bound {"index":0}
+  :next -> [14]
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [7] {"level":1}
+[14] lit {"value":{"type":"Num","value":0}}
+[15] lit {"value":{"type":"Num","value":5}}
+[16] primop {"op":"$gte"}
+  :arg -> [13] {"index":0}
+  :arg -> [14] {"index":1}
+  :callee -> [11]
+[17] env
+[18] closure
+  :body -> [7]
+  :env -> [17]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
-      let v1 = &closure_17
+      let v0 = checkNum
+      let v1 = &closure_18
       let v2 = call *v0(v1)
       let v3 = 5
       let v4 = call *v2(v3)
       return v4
-  fn closure_17(n) entry=entry
+  fn closure_18(n) entry=entry
     entry:
       let v0 = 0
       let v1 = >=(n, v0)
@@ -1421,12 +1486,14 @@ return main();
 ",
     "elaborated": "<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]",
     "gram": "[1] root
-  :entry -> [2]
-[2] modal {"quantity":"Many"}
-  :term -> [4]
-[3] var:free {"name":"Num"}
-[4] var:ref {"name":"Num"}
-  :refers_to -> [3]",
+  :entry -> [3]
+[2] stmt:let {"variable":"Nat"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -1444,12 +1511,14 @@ return main();
 ",
     "elaborated": "<ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]",
     "gram": "[1] root
-  :entry -> [2]
-[2] modal {"quantity":"Many"}
-  :term -> [4]
-[3] var:free {"name":"Num"}
-[4] var:ref {"name":"Num"}
-  :refers_to -> [3]",
+  :entry -> [3]
+[2] stmt:let {"variable":"Pos"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -1461,39 +1530,41 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_7;
+  const v0 = closure_8;
   return v0;
 }
 
-function closure_7(n) {
+function closure_8(n) {
   return n;
 }
 return main();
 ",
     "elaborated": "λ(n: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) -> n",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"n","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [5]
-  :env -> [6]
-[3] modal {"quantity":"Many"}
-  :term -> [4]
-[4] lit {"value":{"type":"Atom","value":"Num"}}
-[5] var:bound {"index":0}
-  :refers_to -> [2]
+  :entry -> [3]
+[2] stmt:let {"variable":"useNat"}
+[3] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [6]
+  :env -> [7]
+[4] modal {"quantity":"Many"}
+  :term -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[6] env
-[7] closure
-  :body -> [2]
-  :env -> [6]",
+  :scope -> [3] {"level":1}
+[7] env
+[8] closure
+  :body -> [3]
+  :env -> [7]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_7
+      let v0 = &closure_8
       return v0
-  fn closure_7(n) entry=entry
+  fn closure_8(n) entry=entry
     entry:
       return n",
     "name": "useNat",
@@ -1510,8 +1581,9 @@ return main();
 ",
     "elaborated": "42",
     "gram": "[1] root
-  :entry -> [2]
-[2] lit {"value":{"type":"Num","value":42}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"p"}
+[3] lit {"value":{"type":"Num","value":42}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -1524,8 +1596,8 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
-  const v1 = unknown;
+  const v0 = useNat;
+  const v1 = p;
   const v2 = v0(v1);
   return v2;
 }
@@ -1533,22 +1605,25 @@ return main();
 ",
     "elaborated": "useNat p",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [6]
-  :func -> [4]
-[3] var:free {"name":"useNat"}
-[4] var:ref {"name":"useNat"}
-  :refers_to -> [3]
-[5] var:free {"name":"p"}
-[6] var:ref {"name":"p"}
-  :refers_to -> [5]",
+  :entry -> [3]
+[2] stmt:let {"variable":"result"}
+[3] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [5]
+[4] var:free {"name":"useNat"}
+[5] var:ref {"name":"useNat"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[6] var:free {"name":"p"}
+[7] var:ref {"name":"p"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
-      let v1 = unknown
+      let v0 = useNat
+      let v1 = p
       let v2 = call *v0(v1)
       return v2",
     "name": "result",

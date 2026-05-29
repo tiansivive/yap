@@ -316,8 +316,10 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 				})
 
 				.with({ type: "Ann" }, function* (tm) {
-					const artefacts = yield* check.gen(tm.term, tm.ann);
-					return [tm.ann, artefacts] satisfies SynthResult;
+					const ctx = yield* V2.ask();
+					const ann = NF.evaluate(ctx, tm.ann);
+					const artefacts = yield* check.gen(tm.term, ann);
+					return [ann, artefacts] satisfies SynthResult;
 				})
 				.with({ type: "Reset" }, function* (tm) {
 					return yield* synth.gen(tm.term);

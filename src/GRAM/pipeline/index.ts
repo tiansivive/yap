@@ -34,6 +34,7 @@ export type CompileOpts = {
 	readonly arities?: Record<string, number>;
 	readonly skolems?: Record<number, EB.Term>;
 	readonly zonker?: import("@yap/elaboration/unification/substitution").Subst;
+	readonly parentBinders?: ReadonlyArray<string>;
 };
 
 export const defaultPipeline: E.Either<ReadonlyArray<Inconsistency>, Pipeline> = configure(eta, saturate, shiftReset, pattern, closure);

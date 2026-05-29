@@ -21,14 +21,12 @@ exports[`Let-polymorphism > basic polymorphic let bindings > higher-order polymo
       (closure: Π(b: Type) => Π(f: Π(x: a) -> b) -> Π(x: a) -> b -| Γ: a; apply)
     = λ(a: Type) =>
       λ(b: Type) =>
-        (λ(f: Π(x: a) -> b) ->
-          (λ(x: a) -> f x : Π(x: a) ->
-            (closure: x -| Γ: x; f; apply)) : Π(f: Π(x: a) ->
-          (closure: x -| Γ: x; x; f; apply)) ->
-          (closure: Π(x: f) -> x -| Γ: f; apply));
+        (λ(f: Π(x: a) -> b) -> (λ(x: a) -> f x : Π(x: a) -> b) : Π(f: Π(x: a) ->
+          b) ->
+          Π(x: a) -> b);
   let id
     : Π(a: Type) => (closure: Π(y: a) -> a -| Γ: a; id; apply)
-    = λ(a: Type) => (λ(y: a) -> y : Π(y: a) -> (closure: y -| Γ: y; id; apply));
+    = λ(a: Type) => (λ(y: a) -> y : Π(y: a) -> a);
   let result : Num = apply @Num @Num (id @Num) 5;
   return unit;
 }",
@@ -75,27 +73,18 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic S combi
         λ(c: Type) =>
           (λ(f: Π(x: a) -> Π(x: b) -> c) ->
             (λ(g: Π(x: a) -> b) ->
-              (λ(x: a) -> f x (g x) : Π(x: a) ->
-                (closure: x -| Γ: x; g; f; s)) : Π(g: Π(x: a) ->
-              (closure: g -| Γ: x; x; g; f; s)) ->
-              (closure: Π(x: f) -> x -| Γ: g; f; s)) : Π(f: Π(x: a) ->
-            (closure: Π(x: g) ->
-              (closure: x -| Γ: x; x; g; f; s) -| Γ: x; x; g; f; s)) ->
-            (closure: Π(g: Π(x: f) -> (closure: g -| Γ: x; x; g; f; s)) ->
-              Π(x: f) -> x -| Γ: f; s));
+              (λ(x: a) -> f x (g x) : Π(x: a) -> c) : Π(g: Π(x: a) -> b) ->
+              Π(x: a) -> c) : Π(f: Π(x: a) -> Π(x: b) -> c) ->
+            Π(g: Π(x: a) -> b) -> Π(x: a) -> c);
   let const
     : Π(a: Type) =>
       (closure: Π(b: Type) => Π(a: a) -> Π(b: b) -> a -| Γ: a; const; s)
     = λ(a: Type) =>
       λ(b: Type) =>
-        (λ(a: a) ->
-          (λ(b: b) -> a : Π(b: b) ->
-            (closure: a -| Γ: b; a; const; s)) : Π(a: a) ->
-          (closure: Π(b: L3) -> a -| Γ: a; const; s));
+        (λ(a: a) -> (λ(b: b) -> a : Π(b: b) -> a) : Π(a: a) -> Π(b: b) -> a);
   let id
     : Π(a: Type) => (closure: Π(n: a) -> a -| Γ: a; id; const; s)
-    = λ(a: Type) =>
-      (λ(n: a) -> n : Π(n: a) -> (closure: n -| Γ: n; id; const; s));
+    = λ(a: Type) => (λ(n: a) -> n : Π(n: a) -> a);
   let result : Num = s @Num @Num @Num (const @Num @Num) (id @Num) 42;
   return unit;
 }",
@@ -137,18 +126,12 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic composi
         λ(c: Type) =>
           (λ(f: Π(x: a) -> b) ->
             (λ(g: Π(x: c) -> a) ->
-              (λ(x: c) -> f (g x) : Π(x: c) ->
-                (closure: g -| Γ: x; g; f; compose)) : Π(g: Π(x: c) ->
-              (closure: f -| Γ: x; x; g; f; compose)) ->
-              (closure: Π(x: L3) -> g -| Γ: g; f; compose)) : Π(f: Π(x: a) ->
-            (closure: g -| Γ: x; x; g; f; compose)) ->
-            (closure: Π(g: Π(x: L3) ->
-              (closure: f -| Γ: x; x; g; f; compose)) ->
-              Π(x: L3) -> g -| Γ: f; compose));
+              (λ(x: c) -> f (g x) : Π(x: c) -> b) : Π(g: Π(x: c) -> a) ->
+              Π(x: c) -> b) : Π(f: Π(x: a) -> b) ->
+            Π(g: Π(x: c) -> a) -> Π(x: c) -> b);
   let id
     : Π(a: Type) => (closure: Π(n: a) -> a -| Γ: a; id; compose)
-    = λ(a: Type) =>
-      (λ(n: a) -> n : Π(n: a) -> (closure: n -| Γ: n; id; compose));
+    = λ(a: Type) => (λ(n: a) -> n : Π(n: a) -> a);
   let result
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; result; id; compose)
     = λ(a: Type) => id @a @a @a (result @a) (result @a);
@@ -181,10 +164,7 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic const f
       (closure: Π(b: Type) => Π(x: a) -> Π(y: b) -> a -| Γ: a; const)
     = λ(a: Type) =>
       λ(b: Type) =>
-        (λ(x: a) ->
-          (λ(y: b) -> x : Π(y: b) ->
-            (closure: x -| Γ: y; x; const)) : Π(x: a) ->
-          (closure: Π(y: L2) -> x -| Γ: x; const));
+        (λ(x: a) -> (λ(y: b) -> x : Π(y: b) -> a) : Π(x: a) -> Π(y: b) -> a);
   let numResult : Num = const @Num @Num 5 42;
   let strResult : String = const @String @Num "kept" 100;
   return unit;
@@ -228,22 +208,15 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic flip (C
       λ(b: Type) =>
         λ(c: Type) =>
           (λ(f: Π(x: a) -> Π(x: b) -> c) ->
-            (λ(x: b) ->
-              (λ(y: a) -> f y x : Π(y: a) ->
-                (closure: y -| Γ: y; x; f; flip)) : Π(x: b) ->
-              (closure: Π(y: f) -> y -| Γ: x; f; flip)) : Π(f: Π(x: a) ->
-            (closure: Π(x: x) ->
-              (closure: y -| Γ: x; y; x; f; flip) -| Γ: x; y; x; f; flip)) ->
-            (closure: Π(x: L2) -> Π(y: f) -> y -| Γ: f; flip));
+            (λ(x: b) -> (λ(y: a) -> f y x : Π(y: a) -> c) : Π(x: b) ->
+              Π(y: a) -> c) : Π(f: Π(x: a) -> Π(x: b) -> c) ->
+            Π(x: b) -> Π(y: a) -> c);
   let const
     : Π(a: Type) =>
       (closure: Π(b: Type) => Π(a: a) -> Π(b: b) -> a -| Γ: a; const; flip)
     = λ(a: Type) =>
       λ(b: Type) =>
-        (λ(a: a) ->
-          (λ(b: b) -> a : Π(b: b) ->
-            (closure: a -| Γ: b; a; const; flip)) : Π(a: a) ->
-          (closure: Π(b: L3) -> a -| Γ: a; const; flip));
+        (λ(a: a) -> (λ(b: b) -> a : Π(b: b) -> a) : Π(a: a) -> Π(b: b) -> a);
   let result
     : String
     = flip @String @Num @String (const @String @Num) 5 "hello";
@@ -276,14 +249,12 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic hof app
       (closure: Π(b: Type) => Π(f: Π(x: a) -> b) -> Π(x: a) -> b -| Γ: a; apply)
     = λ(a: Type) =>
       λ(b: Type) =>
-        (λ(f: Π(x: a) -> b) ->
-          (λ(x: a) -> f x : Π(x: a) ->
-            (closure: x -| Γ: x; f; apply)) : Π(f: Π(x: a) ->
-          (closure: x -| Γ: x; x; f; apply)) ->
-          (closure: Π(x: f) -> x -| Γ: f; apply));
+        (λ(f: Π(x: a) -> b) -> (λ(x: a) -> f x : Π(x: a) -> b) : Π(f: Π(x: a) ->
+          b) ->
+          Π(x: a) -> b);
   let id
     : Π(a: Type) => (closure: Π(y: a) -> a -| Γ: a; id; apply)
-    = λ(a: Type) => (λ(y: a) -> y : Π(y: a) -> (closure: y -| Γ: y; id; apply));
+    = λ(a: Type) => (λ(y: a) -> y : Π(y: a) -> a);
   let result : Row = apply @Row @Row (id @Row) [ bar: Num ];
   return unit;
 }",
@@ -307,7 +278,7 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic identit
     "term": "{
   let id
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; id)
-    = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> (closure: x -| Γ: x; id));
+    = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> a);
   let a : Num = id @Num 5;
   let b : String = id @String "hello";
   return unit;
@@ -340,15 +311,11 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic thrush 
     = λ(a: Type) =>
       λ(b: Type) =>
         (λ(x: a) ->
-          (λ(f: Π(x: a) -> b) -> f x : Π(f: Π(x: a) ->
-            (closure: f -| Γ: x; f; x; thrush)) ->
-            (closure: f -| Γ: f; x; thrush)) : Π(x: a) ->
-          (closure: Π(f: Π(x: x) -> (closure: f -| Γ: x; f; x; thrush)) ->
-            f -| Γ: x; thrush));
+          (λ(f: Π(x: a) -> b) -> f x : Π(f: Π(x: a) -> b) -> b) : Π(x: a) ->
+          Π(f: Π(x: a) -> b) -> b);
   let id
     : Π(a: Type) => (closure: Π(n: a) -> a -| Γ: a; id; thrush)
-    = λ(a: Type) =>
-      (λ(n: a) -> n : Π(n: a) -> (closure: n -| Γ: n; id; thrush));
+    = λ(a: Type) => (λ(n: a) -> n : Π(n: a) -> a);
   let result : Num = thrush @Num @Num 5 (id @Num);
   return unit;
 }",
@@ -384,20 +351,14 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic warbler
     = λ(a: Type) =>
       λ(b: Type) =>
         (λ(f: Π(x: a) -> Π(x: a) -> b) ->
-          (λ(x: a) -> f x x : Π(x: a) ->
-            (closure: x -| Γ: x; f; warbler)) : Π(f: Π(x: a) ->
-          (closure: Π(x: f) ->
-            (closure: x -| Γ: x; x; f; warbler) -| Γ: x; x; f; warbler)) ->
-          (closure: Π(x: f) -> x -| Γ: f; warbler));
+          (λ(x: a) -> f x x : Π(x: a) -> b) : Π(f: Π(x: a) -> Π(x: a) -> b) ->
+          Π(x: a) -> b);
   let const
     : Π(a: Type) =>
       (closure: Π(b: Type) => Π(a: a) -> Π(b: b) -> a -| Γ: a; const; warbler)
     = λ(a: Type) =>
       λ(b: Type) =>
-        (λ(a: a) ->
-          (λ(b: b) -> a : Π(b: b) ->
-            (closure: a -| Γ: b; a; const; warbler)) : Π(a: a) ->
-          (closure: Π(b: L3) -> a -| Γ: a; const; warbler));
+        (λ(a: a) -> (λ(b: b) -> a : Π(b: b) -> a) : Π(a: a) -> Π(b: b) -> a);
   let result : Num = warbler @Num @Num (const @Num @Num) 42;
   return unit;
 }",
@@ -416,7 +377,7 @@ exports[`Let-polymorphism > edge cases > let with unused polymorphic binding 1`]
     "term": "{
   let id
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; id)
-    = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> (closure: x -| Γ: x; id));
+    = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> a);
   let result : Num = 42;
   return unit;
 }",
@@ -445,14 +406,13 @@ exports[`Let-polymorphism > edge cases > multiple sequential polymorphic lets 1`
     "term": "{
   let id1
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; id1)
-    = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> (closure: x -| Γ: x; id1));
+    = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> a);
   let id2
     : Π(a: Type) => (closure: Π(y: a) -> a -| Γ: a; id2; id1)
-    = λ(a: Type) => (λ(y: a) -> y : Π(y: a) -> (closure: y -| Γ: y; id2; id1));
+    = λ(a: Type) => (λ(y: a) -> y : Π(y: a) -> a);
   let id3
     : Π(a: Type) => (closure: Π(z: a) -> a -| Γ: a; id3; id2; id1)
-    = λ(a: Type) =>
-      (λ(z: a) -> z : Π(z: a) -> (closure: z -| Γ: z; id3; id2; id1));
+    = λ(a: Type) => (λ(z: a) -> z : Π(z: a) -> a);
   let a : Num = id1 @Num 1;
   let b : Bool = id2 @Bool true;
   let c : Num = id3 @Num 42;
@@ -489,10 +449,7 @@ exports[`Let-polymorphism > edge cases > polymorphic let returning polymorphic f
       (closure: Π(b: Type) => Π(u: a) -> Π(x: b) -> b -| Γ: a; makeId)
     = λ(a: Type) =>
       λ(b: Type) =>
-        (λ(u: a) ->
-          (λ(x: b) -> x : Π(x: b) ->
-            (closure: x -| Γ: x; u; makeId)) : Π(u: a) ->
-          (closure: Π(x: L2) -> x -| Γ: u; makeId));
+        (λ(u: a) -> (λ(x: b) -> x : Π(x: b) -> b) : Π(u: a) -> Π(x: b) -> b);
   let id1
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; id1; makeId)
     = λ(a: Type) => id1 @Num @a 1;
@@ -526,12 +483,10 @@ exports[`Let-polymorphism > let-polymorphism scope and capture > let-bound closu
     "term": "{
   let id
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; id)
-    = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> (closure: x -| Γ: x; id));
+    = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> a);
   let makeApply
     : Π(a: Type) => (closure: Π(y: a) -> a -| Γ: a; makeApply; id)
-    = λ(a: Type) =>
-      (λ(y: a) -> makeApply @a y : Π(y: a) ->
-        (closure: y -| Γ: y; makeApply; id));
+    = λ(a: Type) => (λ(y: a) -> makeApply @a y : Π(y: a) -> a);
   let a : Num = makeApply @Num 5;
   let b : String = makeApply @String "hello";
   return unit;
@@ -559,20 +514,17 @@ exports[`Let-polymorphism > let-polymorphism scope and capture > polymorphic let
     "term": "{
   let outer : Num = 42;
   let inner
-    : Π(a: Type) => (closure: Π(b: Type) => Π(x: a) -> a -| Γ: a; inner; outer)
+    : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; inner; outer)
     = λ(a: Type) =>
-      λ(b: Type) =>
-        ({
-          let poly
-            : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; poly; inner; outer)
-            = λ(a: Type) =>
-              (λ(x: a) -> x : Π(x: b) ->
-                (closure: x -| Γ: x; poly; inner; outer));
-          let a : Num = poly @Num a;
-          let b : String = poly @String "test";
-          return poly;
-        })
-          @a;
+      ({
+        let poly
+          : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; poly; inner; outer)
+          = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> a);
+        let a : Num = poly @Num inner;
+        let b : String = poly @String "test";
+        return poly;
+      })
+        @a;
   return unit;
 }",
     "type": "Unit",
@@ -607,8 +559,7 @@ exports[`Let-polymorphism > let-polymorphism with complex types > polymorphic fu
       (closure: Π(a: Type) => Π(p: Schema [ x: a | r ]) -> a -| Γ: r; fst)
     = λ(r: Row) =>
       λ(a: Type) =>
-        (λ(p: Schema [ x: a | r ]) -> (p).x : Π(p: Schema [ x: a | r ]) ->
-          (closure: L2 -| Γ: p; fst));
+        (λ(p: Schema [ x: a | r ]) -> (p).x : Π(p: Schema [ x: a | r ]) -> a);
   let val1 : Schema [ x: Num, y: Num ] = Struct [ x: 1, y: 2 ];
   let val2 : Schema [ x: Bool, y: Bool ] = Struct [ x: true, y: false ];
   let a : Num = fst @[ y: Num ] @Num val1;
@@ -649,7 +600,7 @@ exports[`Let-polymorphism > let-polymorphism with complex types > polymorphic fu
       λ(a: Type) =>
         (λ(obj: Schema [ name: a | r ]) -> (obj).name : Π(obj: Schema
           [ name: a | r ]) ->
-          (closure: L2 -| Γ: obj; getName));
+          a);
   let alice : String = getName @[] @String (Struct [ name: "Alice" ]);
   let bob
     : String
@@ -676,20 +627,17 @@ exports[`Let-polymorphism > nested let bindings > nested polymorphic lets 1`] = 
     ],
     "term": "{
   let outer
-    : Π(a: Type) => (closure: Π(b: Type) => Π(x: a) -> Unit -| Γ: a; outer)
+    : Π(a: Type) => (closure: Π(x: a) -> Unit -| Γ: a; outer)
     = λ(a: Type) =>
-      λ(b: Type) =>
-        (λ(x: a) ->
-          {
-            let inner
-              : Π(a: Type) => (closure: Π(y: a) -> a -| Γ: a; inner; x; outer)
-              = λ(a: Type) =>
-                (λ(y: a) -> y : Π(y: b) ->
-                  (closure: inner -| Γ: y; inner; x; outer));
-            let x2 : a = inner @a x;
-            let n : Num = inner @Num 42;
-            return unit;
-          } : Π(x: a) -> (closure: Unit -| Γ: x; outer));
+      (λ(x: a) ->
+        {
+          let inner
+            : Π(a: Type) => (closure: Π(y: a) -> a -| Γ: a; inner; x; outer)
+            = λ(a: Type) => (λ(y: a) -> y : Π(y: a) -> a);
+          let x2 : a = inner @a x;
+          let n : Num = inner @Num 42;
+          return unit;
+        } : Π(x: a) -> Unit);
   return unit;
 }",
     "type": "Unit",
@@ -713,11 +661,11 @@ exports[`Let-polymorphism > nested let bindings > shadowing polymorphic lets 1`]
     "term": "{
   let id
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; id)
-    = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> (closure: x -| Γ: x; id));
+    = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> a);
   let a : Num = id @Num 5;
   let id
     : Π(a: Type) => (closure: Π(y: a) -> a -| Γ: a; id; a; id)
-    = λ(a: Type) => (λ(y: a) -> y : Π(y: a) -> (closure: y -| Γ: y; id; a; id));
+    = λ(a: Type) => (λ(y: a) -> y : Π(y: a) -> a);
   let b : String = id @String "hello";
   return unit;
 }",
@@ -749,10 +697,8 @@ exports[`Let-polymorphism > recursive bindings > recursive function with polymor
     = λ(a: Type) =>
       λ(b: Type) =>
         λ(c: Type) =>
-          (λ(x: a) ->
-            (λ(y: b) -> c x y : Π(y: b) ->
-              (closure: L3 -| Γ: y; x; rec)) : Π(x: a) ->
-            (closure: Π(y: L2) -> L3 -| Γ: x; rec));
+          (λ(x: a) -> (λ(y: b) -> c x y : Π(y: b) -> c) : Π(x: a) ->
+            Π(y: b) -> c);
   let r
     : Π(a: Type) => (closure: Π(b: Type) => Π(x: a) -> b -| Γ: a; r; rec)
     = λ(a: Type) => λ(b: Type) => a @Num @a @b 5;
@@ -774,8 +720,7 @@ exports[`Let-polymorphism > recursive bindings > simple recursive function 1`] =
     "term": "{
   let rec
     : Π(a: Type) => (closure: Π(b: Type) => Π(x: a) -> b -| Γ: a; rec)
-    = λ(a: Type) =>
-      λ(b: Type) => (λ(x: a) -> b x : Π(x: a) -> (closure: L2 -| Γ: x; rec));
+    = λ(a: Type) => λ(b: Type) => (λ(x: a) -> b x : Π(x: a) -> b);
   return unit;
 }",
     "type": "Unit",

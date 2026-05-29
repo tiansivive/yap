@@ -29,7 +29,7 @@ type Constructor =
 	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
 	| { type: "Reset"; term: Term }
 	| { type: "Shift"; body: Term }
-	| { type: "Ann"; term: Term; ann: NF.Value };
+	| { type: "Ann"; term: Term; ann: Term };
 
 export type Variable =
 	| { type: "Bound"; index: number }
@@ -132,7 +132,7 @@ export const Constructors = {
 			type: "Lit",
 			value,
 		}),
-	Ann: (term: Term, ann: NF.Value): Term => mk({ type: "Ann", term, ann }),
+	Ann: (term: Term, ann: Term): Term => mk({ type: "Ann", term, ann }),
 
 	Row: (row: Row): Term => mk({ type: "Row", row }),
 	Extension: (label: string, value: Term, row: Row): Row => ({ type: "extension", label, value, row }),

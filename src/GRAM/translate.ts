@@ -30,17 +30,29 @@ const mkState = (opts?: {
 	arities?: Record<string, number>;
 	skolems?: Record<number, EB.Term>;
 	zonker?: Subst;
-}): State => ({
-	graph: mkGraph(),
-	binders: [],
-	freeVars: new Map(),
-	foreignVars: new Map(),
-	locations: opts?.locations ?? new Map(),
-	types: opts?.types ?? {},
-	arities: opts?.arities ?? {},
-	skolems: opts?.skolems ?? {},
-	zonker: opts?.zonker,
-});
+	parentBinders?: ReadonlyArray<string>;
+}): State => {
+	let graph = mkGraph();
+	const binders: NodeId[] = [];
+
+	for (const name of opts?.parentBinders ?? []) {
+		const [id, g] = Nodes.add(Tags.STMT_LET, { variable: name }, { created_by: TRANSLATE })(graph);
+		graph = g;
+		binders.push(id);
+	}
+
+	return {
+		graph,
+		binders,
+		freeVars: new Map(),
+		foreignVars: new Map(),
+		locations: opts?.locations ?? new Map(),
+		types: opts?.types ?? {},
+		arities: opts?.arities ?? {},
+		skolems: opts?.skolems ?? {},
+		zonker: opts?.zonker,
+	};
+};
 
 // ── Helpers ──
 
@@ -81,6 +93,7 @@ export const translate = (
 		arities?: Record<string, number>;
 		skolems?: Record<number, EB.Term>;
 		zonker?: Subst;
+		parentBinders?: ReadonlyArray<string>;
 	},
 ): Graph => {
 	resetId();
@@ -244,7 +257,8 @@ const walkPattern = (pat: EB.Pattern, tid: number, st: State): [NodeId, State] =
 			const ext = p.row as Row<EB.Pattern, string> & { type: "extension" };
 			const [id, s1] = emit(st, Tags.PAT_VARIANT, { label: ext.label }, prov(tid, st));
 			const [payload, s2] = walkPattern(ext.value, tid, s1);
-			return [id, link(s2, id, Labels.PAYLOAD, payload)] as [NodeId, State];
+			const [, s3] = walkPatternRow(ext.row, id, tid, link(s2, id, Labels.PAYLOAD, payload));
+			return [id, s3] as [NodeId, State];
 		})
 		.with({ type: "Struct" }, p => {
 			const [id, s1] = emit(st, Tags.PAT_STRUCT, {}, prov(tid, st));

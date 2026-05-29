@@ -114,7 +114,7 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 		})
 		.with({ type: "Proj" }, ({ label, term }) => EB.Constructors.Proj(label, instantiate(term, ctx, resolutions)))
 		.with({ type: "Inj" }, ({ label, value, term }) => EB.Constructors.Inj(label, instantiate(value, ctx, resolutions), instantiate(term, ctx, resolutions)))
-		.with({ type: "Ann" }, ({ term, ann }) => EB.Constructors.Ann(instantiate(term, ctx, resolutions), ann))
+		.with({ type: "Ann" }, ({ term, ann }) => EB.Constructors.Ann(instantiate(term, ctx, resolutions), instantiate(ann, ctx, resolutions)))
 		.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
 			EB.Constructors.Match(
 				instantiate(scrutinee, ctx, resolutions),

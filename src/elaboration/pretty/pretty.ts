@@ -114,7 +114,7 @@ const doc = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; prin
 			.with({ type: "Modal" }, ({ term: tm, modalities }) => ["<", Q.display(modalities.quantity), "> ", go(tm), " [| ", go(modalities.liquid), " |]"])
 			.with({ type: "Reset" }, ({ term: tm }) => ["reset |", go(tm), "|"])
 			.with({ type: "Shift" }, ({ body }) => ["shift (", go(body), ")"])
-			.with({ type: "Ann" }, ({ term, ann }) => ["(", go(term), " : ", NF.doc(ann, ctx, opts), ")"])
+			.with({ type: "Ann" }, ({ term, ann }) => ["(", go(term), " : ", go(ann), ")"])
 			.exhaustive();
 
 	return go(term);

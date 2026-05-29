@@ -12,8 +12,7 @@ exports[`inference: match > branch unification > mismatched branch types: match 
       "Num ~~ ?2",
       "String ~~ ?2",
     ],
-    "term": "(λ(x: Num) -> match x | 1 -> 2 | 3 -> "hello" : Π(x: Num) ->
-  (closure: (?2 :: ?1) -| Γ: x))",
+    "term": "(λ(x: Num) -> match x | 1 -> 2 | 3 -> "hello" : Π(x: Num) -> (?2 :: ?1))",
     "type": "Π(x: Num) -> (closure: (?2 :: ?1) -| Γ: x)",
   },
 }
@@ -185,7 +184,7 @@ exports[`inference: match > branch unification > mismatched branch types: match 
     },
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
             "type": "Lit",
             "value": {
@@ -197,23 +196,13 @@ exports[`inference: match > branch unification > mismatched branch types: match 
           "type": "Pi",
           "variable": "x",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Var",
+          "variable": {
+            "lvl": 1,
+            "type": "Meta",
+            "val": 2,
           },
-          "term": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 2,
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },
@@ -866,7 +855,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
   match x
     | Struct [ foo: Struct [ y: y | $row_3 ], bar: f | $row_6 ] -> f y
     | Struct [ z: Struct [ w: w | $row_12 ] | $row_13 ] -> w : Π(x: Num) ->
-  (closure: (?15 :: ?14) -| Γ: x))",
+  (?15 :: ?14))",
     "type": "Π(x: Num) -> (closure: (?15 :: ?14) -| Γ: x)",
   },
 }
@@ -1625,7 +1614,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
     },
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
             "type": "Lit",
             "value": {
@@ -1637,23 +1626,13 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
           "type": "Pi",
           "variable": "x",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Var",
+          "variable": {
+            "lvl": 1,
+            "type": "Meta",
+            "val": 15,
           },
-          "term": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 15,
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },
@@ -1918,8 +1897,7 @@ exports[`inference: match > struct patterns > struct pattern with literal fields
     "term": "(λ(x: Num) ->
   match x
     | Struct [ x: 1, y: 2 | $row_1 ] -> 11
-    | Struct [ z: 3, w: 4 | $row_2 ] -> 22 : Π(x: Num) ->
-  (closure: (?4 :: ?3) -| Γ: x))",
+    | Struct [ z: 3, w: 4 | $row_2 ] -> 22 : Π(x: Num) -> (?4 :: ?3))",
     "type": "Π(x: Num) -> (closure: (?4 :: ?3) -| Γ: x)",
   },
 }
@@ -2199,7 +2177,7 @@ exports[`inference: match > struct patterns > struct pattern with literal fields
     },
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
             "type": "Lit",
             "value": {
@@ -2211,23 +2189,13 @@ exports[`inference: match > struct patterns > struct pattern with literal fields
           "type": "Pi",
           "variable": "x",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Var",
+          "variable": {
+            "lvl": 1,
+            "type": "Meta",
+            "val": 4,
           },
-          "term": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 4,
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },
@@ -2415,8 +2383,7 @@ exports[`inference: match > struct patterns > struct pattern with row polymorphi
     "term": "(λ(x: Num) ->
   match x
     | Struct [ x: 1, y: 2 | r ] -> r
-    | Struct [ z: 3, w: 4 | r ] -> x : Π(x: Num) ->
-  (closure: (?4 :: ?3) -| Γ: x))",
+    | Struct [ z: 3, w: 4 | r ] -> x : Π(x: Num) -> (?4 :: ?3))",
     "type": "Π(x: Num) -> (closure: (?4 :: ?3) -| Γ: x)",
   },
 }
@@ -2700,7 +2667,7 @@ exports[`inference: match > struct patterns > struct pattern with row polymorphi
     },
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
             "type": "Lit",
             "value": {
@@ -2712,23 +2679,13 @@ exports[`inference: match > struct patterns > struct pattern with row polymorphi
           "type": "Pi",
           "variable": "x",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Var",
+          "variable": {
+            "lvl": 1,
+            "type": "Meta",
+            "val": 4,
           },
-          "term": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 4,
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },
@@ -2916,8 +2873,7 @@ exports[`inference: match > struct patterns > variable binding in struct pattern
     "term": "(λ(x: Num) ->
   match x
     | Struct [ x: y | $row_3 ] -> y
-    | Struct [ z: w | $row_6 ] -> w : Π(x: Num) ->
-  (closure: (?8 :: ?7) -| Γ: x))",
+    | Struct [ z: w | $row_6 ] -> w : Π(x: Num) -> (?8 :: ?7))",
     "type": "Π(x: Num) -> (closure: (?8 :: ?7) -| Γ: x)",
   },
 }
@@ -3265,7 +3221,7 @@ exports[`inference: match > struct patterns > variable binding in struct pattern
     },
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
             "type": "Lit",
             "value": {
@@ -3277,23 +3233,13 @@ exports[`inference: match > struct patterns > variable binding in struct pattern
           "type": "Pi",
           "variable": "x",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Var",
+          "variable": {
+            "lvl": 1,
+            "type": "Meta",
+            "val": 8,
           },
-          "term": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 8,
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },
@@ -3478,8 +3424,7 @@ exports[`inference: match > type patterns > match on type constructors: Num, Str
       "Num ~~ ?6",
       "String ~~ ?6",
     ],
-    "term": "(λ(x: Num) -> match x | Num -> 1 | String -> "hello" : Π(x: Num) ->
-  (closure: (?6 :: ?5) -| Γ: x))",
+    "term": "(λ(x: Num) -> match x | Num -> 1 | String -> "hello" : Π(x: Num) -> (?6 :: ?5))",
     "type": "Π(x: Num) -> (closure: (?6 :: ?5) -| Γ: x)",
   },
 }
@@ -3717,7 +3662,7 @@ exports[`inference: match > type patterns > match on type constructors: Num, Str
     },
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
             "type": "Lit",
             "value": {
@@ -3729,23 +3674,13 @@ exports[`inference: match > type patterns > match on type constructors: Num, Str
           "type": "Pi",
           "variable": "x",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Var",
+          "variable": {
+            "lvl": 1,
+            "type": "Meta",
+            "val": 6,
           },
-          "term": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },
@@ -3886,8 +3821,7 @@ exports[`inference: match > variable patterns > match x | y -> 2 | z -> 4 1`] = 
       "Num ~~ ?6",
       "Num ~~ ?6",
     ],
-    "term": "(λ(x: Num) -> match x | y -> 2 | z -> 4 : Π(x: Num) ->
-  (closure: (?6 :: ?5) -| Γ: x))",
+    "term": "(λ(x: Num) -> match x | y -> 2 | z -> 4 : Π(x: Num) -> (?6 :: ?5))",
     "type": "Π(x: Num) -> (closure: (?6 :: ?5) -| Γ: x)",
   },
 }
@@ -4125,7 +4059,7 @@ exports[`inference: match > variable patterns > match x | y -> 2 | z -> 4 2`] = 
     },
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
             "type": "Lit",
             "value": {
@@ -4137,23 +4071,13 @@ exports[`inference: match > variable patterns > match x | y -> 2 | z -> 4 2`] = 
           "type": "Pi",
           "variable": "x",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Var",
+          "variable": {
+            "lvl": 1,
+            "type": "Meta",
+            "val": 6,
           },
-          "term": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 6,
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },
@@ -4298,7 +4222,7 @@ exports[`inference: match > variant patterns > match on variant tags: #nil, #con
   match x
     | Variant [ nil: a | $row_3 ] -> 0
     | Variant [ cons: Struct [ 0: el, 1: rest | $row_8 ] | $row_9 ] ->
-        1 : Π(x: Num) -> (closure: (?11 :: ?10) -| Γ: x))",
+        1 : Π(x: Num) -> (?11 :: ?10))",
     "type": "Π(x: Num) -> (closure: (?11 :: ?10) -| Γ: x)",
   },
 }
@@ -4709,7 +4633,7 @@ exports[`inference: match > variant patterns > match on variant tags: #nil, #con
     },
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
             "type": "Lit",
             "value": {
@@ -4721,23 +4645,13 @@ exports[`inference: match > variant patterns > match on variant tags: #nil, #con
           "type": "Pi",
           "variable": "x",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Var",
+          "variable": {
+            "lvl": 1,
+            "type": "Meta",
+            "val": 11,
           },
-          "term": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 11,
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },

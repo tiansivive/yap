@@ -4,11 +4,11 @@ exports[`Language Tour — Type Constructors > maybe type 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_12;
+  const v0 = closure_13;
   return v0;
 }
 
-function closure_12(a) {
+function closure_13(a) {
   const v0 = "Unit";
   const v1 = {
     just: a,
@@ -20,38 +20,40 @@ return main();
 ",
     "elaborated": "λ(a: Type) -> Variant [ just: a, nothing: Unit ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"a","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [4]
-  :env -> [11]
-[3] lit {"value":{"type":"Atom","value":"Type"}}
-[4] app {"icit":"Explicit"}
-  :arg -> [6]
-  :func -> [5]
-[5] lit {"value":{"type":"Atom","value":"Variant"}}
-[6] row:ext {"label":"just"}
-  :rest -> [8]
-  :value -> [7]
-[7] var:bound {"index":0}
-  :refers_to -> [2]
+  :entry -> [3]
+[2] stmt:let {"variable":"Maybe"}
+[3] lambda {"variable":"a","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [12]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [6]
+[6] lit {"value":{"type":"Atom","value":"Variant"}}
+[7] row:ext {"label":"just"}
+  :rest -> [9]
+  :value -> [8]
+[8] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[8] row:ext {"label":"nothing"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Unit"}}
-[10] row:empty
-[11] env
-[12] closure
-  :body -> [2]
-  :env -> [11]",
+  :scope -> [3] {"level":1}
+[9] row:ext {"label":"nothing"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Unit"}}
+[11] row:empty
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [12]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_12
+      let v0 = &closure_13
       return v0
-  fn closure_12(a) entry=entry
+  fn closure_13(a) entry=entry
     entry:
       let v0 = Unit
       let v1 = alloc { just: a, nothing: v0 }
@@ -72,16 +74,17 @@ return main();
 ",
     "elaborated": "Struct [ just: 42 ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"just"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Num","value":42}}
-[6] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"maybeNum"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"just"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Num","value":42}}
+[7] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -105,16 +108,17 @@ return main();
 ",
     "elaborated": "Struct [ nothing: unit ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"nothing"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"unit"}}
-[6] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"maybeStr"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"nothing"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"unit"}}
+[7] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -139,63 +143,67 @@ return main();
 ",
     "elaborated": "List",
     "gram": "[1] root
-  :entry -> [2]
-[2] mu {"variable":"x","source":"List","level":0}
-  :annotation -> [3]
-  :body -> [6]
-[3] pi {"variable":"t1","icit":"Explicit","level":0}
+  :entry -> [3]
+[2] stmt:let {"variable":"List"}
+[3] mu {"variable":"x","source":"List","level":1}
   :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Type"}}
-[5] lit {"value":{"type":"Atom","value":"Type"}}
-[6] lambda {"variable":"a","icit":"Explicit","level":1}
-  :annotation -> [7]
-  :body -> [8]
-  :env -> [23]
-[7] lit {"value":{"type":"Atom","value":"Type"}}
-[8] app {"icit":"Explicit"}
-  :arg -> [10]
-  :func -> [9]
-[9] lit {"value":{"type":"Atom","value":"Variant"}}
-[10] row:ext {"label":"cons"}
-  :rest -> [20]
-  :value -> [11]
-[11] app {"icit":"Explicit"}
-  :arg -> [13]
-  :func -> [12]
-[12] lit {"value":{"type":"Atom","value":"Schema"}}
-[13] row:ext {"label":"1"}
-  :rest -> [17]
-  :value -> [14]
-[14] app {"icit":"Explicit"}
-  :arg -> [16]
-  :func -> [15]
-[15] var:bound {"index":1}
-  :refers_to -> [2]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-[16] var:bound {"index":0}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-[17] row:ext {"label":"0"}
-  :rest -> [19]
-  :value -> [18]
-[18] var:bound {"index":0}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-[19] row:empty
-[20] row:ext {"label":"nil"}
-  :rest -> [22]
-  :value -> [21]
-[21] lit {"value":{"type":"Atom","value":"Unit"}}
-[22] row:empty
-[23] env
-  :capture -> [2] {"index":0}
-[24] closure
+  :body -> [7]
+[4] pi {"variable":"t1","icit":"Explicit","level":1}
+  :annotation -> [5]
   :body -> [6]
-  :env -> [23]",
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] lambda {"variable":"a","icit":"Explicit","level":2}
+  :annotation -> [8]
+  :body -> [9]
+  :env -> [24]
+[8] lit {"value":{"type":"Atom","value":"Type"}}
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Variant"}}
+[11] row:ext {"label":"cons"}
+  :rest -> [21]
+  :value -> [12]
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Schema"}}
+[14] row:ext {"label":"1"}
+  :rest -> [18]
+  :value -> [15]
+[15] app {"icit":"Explicit"}
+  :arg -> [17]
+  :func -> [16]
+[16] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[17] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[18] row:ext {"label":"0"}
+  :rest -> [20]
+  :value -> [19]
+[19] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[20] row:empty
+[21] row:ext {"label":"nil"}
+  :rest -> [23]
+  :value -> [22]
+[22] lit {"value":{"type":"Atom","value":"Unit"}}
+[23] row:empty
+[24] env
+  :capture -> [3] {"index":0}
+[25] closure
+  :body -> [7]
+  :env -> [24]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -217,16 +225,17 @@ return main();
 ",
     "elaborated": "Struct [ nil: unit ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"nil"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"unit"}}
-[6] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"empty"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"nil"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"unit"}}
+[7] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -258,36 +267,37 @@ return main();
 ",
     "elaborated": "Struct [ cons: Struct [ 0: 1, 1: Struct [ nil: unit ] ] ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"cons"}
+  :entry -> [3]
+[2] stmt:let {"variable":"listOf1"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"cons"}
+  :rest -> [17]
+  :value -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [7]
+[7] lit {"value":{"type":"Atom","value":"Struct"}}
+[8] row:ext {"label":"0"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Num","value":1}}
+[10] row:ext {"label":"1"}
   :rest -> [16]
-  :value -> [5]
-[5] app {"icit":"Explicit"}
-  :arg -> [7]
-  :func -> [6]
-[6] lit {"value":{"type":"Atom","value":"Struct"}}
-[7] row:ext {"label":"0"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Num","value":1}}
-[9] row:ext {"label":"1"}
+  :value -> [11]
+[11] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [12]
+[12] lit {"value":{"type":"Atom","value":"Struct"}}
+[13] row:ext {"label":"nil"}
   :rest -> [15]
-  :value -> [10]
-[10] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [11]
-[11] lit {"value":{"type":"Atom","value":"Struct"}}
-[12] row:ext {"label":"nil"}
-  :rest -> [14]
-  :value -> [13]
-[13] lit {"value":{"type":"unit"}}
-[14] row:empty
+  :value -> [14]
+[14] lit {"value":{"type":"unit"}}
 [15] row:empty
-[16] row:empty",
+[16] row:empty
+[17] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -345,76 +355,77 @@ return main();
                 1: Struct
                   [ cons: Struct [ 0: 3, 1: Struct [ nil: unit ] ] ] ] ] ] ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"cons"}
+  :entry -> [3]
+[2] stmt:let {"variable":"listOf3"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"cons"}
+  :rest -> [37]
+  :value -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [7]
+[7] lit {"value":{"type":"Atom","value":"Struct"}}
+[8] row:ext {"label":"0"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Num","value":1}}
+[10] row:ext {"label":"1"}
   :rest -> [36]
-  :value -> [5]
-[5] app {"icit":"Explicit"}
-  :arg -> [7]
-  :func -> [6]
-[6] lit {"value":{"type":"Atom","value":"Struct"}}
-[7] row:ext {"label":"0"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Num","value":1}}
-[9] row:ext {"label":"1"}
+  :value -> [11]
+[11] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [12]
+[12] lit {"value":{"type":"Atom","value":"Struct"}}
+[13] row:ext {"label":"cons"}
   :rest -> [35]
-  :value -> [10]
-[10] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [11]
-[11] lit {"value":{"type":"Atom","value":"Struct"}}
-[12] row:ext {"label":"cons"}
+  :value -> [14]
+[14] app {"icit":"Explicit"}
+  :arg -> [16]
+  :func -> [15]
+[15] lit {"value":{"type":"Atom","value":"Struct"}}
+[16] row:ext {"label":"0"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"Num","value":2}}
+[18] row:ext {"label":"1"}
   :rest -> [34]
-  :value -> [13]
-[13] app {"icit":"Explicit"}
-  :arg -> [15]
-  :func -> [14]
-[14] lit {"value":{"type":"Atom","value":"Struct"}}
-[15] row:ext {"label":"0"}
-  :rest -> [17]
-  :value -> [16]
-[16] lit {"value":{"type":"Num","value":2}}
-[17] row:ext {"label":"1"}
+  :value -> [19]
+[19] app {"icit":"Explicit"}
+  :arg -> [21]
+  :func -> [20]
+[20] lit {"value":{"type":"Atom","value":"Struct"}}
+[21] row:ext {"label":"cons"}
   :rest -> [33]
-  :value -> [18]
-[18] app {"icit":"Explicit"}
-  :arg -> [20]
-  :func -> [19]
-[19] lit {"value":{"type":"Atom","value":"Struct"}}
-[20] row:ext {"label":"cons"}
+  :value -> [22]
+[22] app {"icit":"Explicit"}
+  :arg -> [24]
+  :func -> [23]
+[23] lit {"value":{"type":"Atom","value":"Struct"}}
+[24] row:ext {"label":"0"}
+  :rest -> [26]
+  :value -> [25]
+[25] lit {"value":{"type":"Num","value":3}}
+[26] row:ext {"label":"1"}
   :rest -> [32]
-  :value -> [21]
-[21] app {"icit":"Explicit"}
-  :arg -> [23]
-  :func -> [22]
-[22] lit {"value":{"type":"Atom","value":"Struct"}}
-[23] row:ext {"label":"0"}
-  :rest -> [25]
-  :value -> [24]
-[24] lit {"value":{"type":"Num","value":3}}
-[25] row:ext {"label":"1"}
+  :value -> [27]
+[27] app {"icit":"Explicit"}
+  :arg -> [29]
+  :func -> [28]
+[28] lit {"value":{"type":"Atom","value":"Struct"}}
+[29] row:ext {"label":"nil"}
   :rest -> [31]
-  :value -> [26]
-[26] app {"icit":"Explicit"}
-  :arg -> [28]
-  :func -> [27]
-[27] lit {"value":{"type":"Atom","value":"Struct"}}
-[28] row:ext {"label":"nil"}
-  :rest -> [30]
-  :value -> [29]
-[29] lit {"value":{"type":"unit"}}
-[30] row:empty
+  :value -> [30]
+[30] lit {"value":{"type":"unit"}}
 [31] row:empty
 [32] row:empty
 [33] row:empty
 [34] row:empty
 [35] row:empty
-[36] row:empty",
+[36] row:empty
+[37] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -455,26 +466,28 @@ return main();
 ",
     "elaborated": "Peano",
     "gram": "[1] root
-  :entry -> [2]
-[2] mu {"variable":"x","source":"Peano","level":0}
-  :annotation -> [3]
-  :body -> [4]
-[3] lit {"value":{"type":"Atom","value":"Type"}}
-[4] app {"icit":"Explicit"}
-  :arg -> [6]
-  :func -> [5]
-[5] lit {"value":{"type":"Atom","value":"Variant"}}
-[6] row:ext {"label":"succ"}
-  :rest -> [8]
-  :value -> [7]
-[7] var:bound {"index":0}
-  :refers_to -> [2]
+  :entry -> [3]
+[2] stmt:let {"variable":"Peano"}
+[3] mu {"variable":"x","source":"Peano","level":1}
+  :annotation -> [4]
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [6]
+[6] lit {"value":{"type":"Atom","value":"Variant"}}
+[7] row:ext {"label":"succ"}
+  :rest -> [9]
+  :value -> [8]
+[8] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[8] row:ext {"label":"zero"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Unit"}}
-[10] row:empty",
+  :scope -> [3] {"level":1}
+[9] row:ext {"label":"zero"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Unit"}}
+[11] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -496,16 +509,17 @@ return main();
 ",
     "elaborated": "Struct [ zero: unit ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"zero"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"unit"}}
-[6] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"zero"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"zero"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"unit"}}
+[7] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -519,7 +533,7 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = zero;
   const v1 = {
     succ: v0
   };
@@ -529,23 +543,25 @@ return main();
 ",
     "elaborated": "Struct [ succ: zero ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"succ"}
-  :rest -> [7]
-  :value -> [6]
-[5] var:free {"name":"zero"}
-[6] var:ref {"name":"zero"}
-  :refers_to -> [5]
-[7] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"first"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"succ"}
+  :rest -> [8]
+  :value -> [7]
+[6] var:free {"name":"zero"}
+[7] var:ref {"name":"zero"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+[8] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = zero
       let v1 = alloc { succ: v0 }
       return v1",
     "name": "first",
@@ -554,7 +570,7 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = first;
   const v1 = {
     succ: v0
   };
@@ -564,23 +580,25 @@ return main();
 ",
     "elaborated": "Struct [ succ: first ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"succ"}
-  :rest -> [7]
-  :value -> [6]
-[5] var:free {"name":"first"}
-[6] var:ref {"name":"first"}
-  :refers_to -> [5]
-[7] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"second"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"succ"}
+  :rest -> [8]
+  :value -> [7]
+[6] var:free {"name":"first"}
+[7] var:ref {"name":"first"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+[8] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = first
       let v1 = alloc { succ: v0 }
       return v1",
     "name": "second",

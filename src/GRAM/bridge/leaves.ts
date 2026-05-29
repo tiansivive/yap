@@ -23,9 +23,7 @@ export const bound = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 };
 
 export const free = (id: NodeId, ctx: Ctx): [string, Ctx] => {
-	const target = Edges.one(id, Labels.REFERS_TO)(ctx.graph)?.target;
-	const payload = target !== undefined ? Nodes.get(target)(ctx.graph)?.payload : undefined;
-	const n = (payload?.name as string) ?? "unknown";
+	const n = (Nodes.get(id)(ctx.graph)?.payload.name as string) ?? "unknown";
 	const [v, c1] = C.name(ctx);
 	const c2 = C.instr(c1, Instr.Let(v, Expr.Var(n)));
 	return [v, C.bind(c2, id, v)];

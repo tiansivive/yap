@@ -6,7 +6,7 @@ exports[`Inference: lambdas > explicit lambda with param annotation 1`] = `
     "constraints": [
       "Type ~~ Type",
     ],
-    "term": "(λ(x: String) -> 1 : Π(x: String) -> (closure: Num -| Γ: x))",
+    "term": "(λ(x: String) -> 1 : Π(x: String) -> Num)",
     "type": "Π(x: String) -> (closure: Num -| Γ: x)",
   },
 }
@@ -38,7 +38,7 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
     "metas": {},
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
             "type": "Lit",
             "value": {
@@ -50,22 +50,12 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
           "type": "Pi",
           "variable": "x",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
           },
-          "term": {
-            "type": "Lit",
-            "value": {
-              "type": "Atom",
-              "value": "Num",
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },
@@ -134,7 +124,7 @@ exports[`Inference: lambdas > explicit lambda without annotation 1`] = `
 {
   "displays": {
     "constraints": [],
-    "term": "(λ(x: (?1 :: Type)) -> 1 : Π(x: ?1) -> (closure: Num -| Γ: x))",
+    "term": "(λ(x: (?1 :: Type)) -> 1 : Π(x: (?1 :: Type)) -> Num)",
     "type": "Π(x: ?1) -> (closure: Num -| Γ: x)",
   },
 }
@@ -162,38 +152,25 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
     },
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
-            "type": "Neutral",
-            "value": {
-              "type": "Var",
-              "variable": {
-                "lvl": 0,
-                "type": "Meta",
-                "val": 1,
-              },
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
             },
           },
           "icit": "Explicit",
           "type": "Pi",
           "variable": "x",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
           },
-          "term": {
-            "type": "Lit",
-            "value": {
-              "type": "Atom",
-              "value": "Num",
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },
@@ -270,7 +247,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
       "?1 ~~ Π(x: ?2) -> (closure: (?4 :: Type) -| Γ: x; f)",
       "Num ~~ ?2",
     ],
-    "term": "(λ(f: (?1 :: Type)) => f 1 : Π(f: ?1) => (closure: (?4 :: Type) -| Γ: f))",
+    "term": "(λ(f: (?1 :: Type)) => f 1 : Π(f: (?1 :: Type)) => (?4 :: Type))",
     "type": "Π(f: ?1) => (closure: (?4 :: Type) -| Γ: f)",
   },
 }
@@ -465,39 +442,26 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
     },
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
-            "type": "Neutral",
-            "value": {
-              "type": "Var",
-              "variable": {
-                "lvl": 0,
-                "type": "Meta",
-                "val": 1,
-              },
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
             },
           },
           "icit": "Implicit",
           "type": "Pi",
           "variable": "f",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Var",
+          "variable": {
+            "lvl": 2,
+            "type": "Meta",
+            "val": 4,
           },
-          "term": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 4,
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },
@@ -586,7 +550,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
       "?1 ~~ Π(x: ?2) -> (closure: (?4 :: Type) -| Γ: x; f)",
       "Num ~~ ?2",
     ],
-    "term": "(λ(f: (?1 :: Type)) -> f 1 : Π(f: ?1) -> (closure: (?4 :: Type) -| Γ: f))",
+    "term": "(λ(f: (?1 :: Type)) -> f 1 : Π(f: (?1 :: Type)) -> (?4 :: Type))",
     "type": "Π(f: ?1) -> (closure: (?4 :: Type) -| Γ: f)",
   },
 }
@@ -781,39 +745,26 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
     },
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
-            "type": "Neutral",
-            "value": {
-              "type": "Var",
-              "variable": {
-                "lvl": 0,
-                "type": "Meta",
-                "val": 1,
-              },
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
             },
           },
           "icit": "Explicit",
           "type": "Pi",
           "variable": "f",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Var",
+          "variable": {
+            "lvl": 2,
+            "type": "Meta",
+            "val": 4,
           },
-          "term": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 4,
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },
@@ -899,7 +850,7 @@ exports[`Inference: lambdas > implicit lambda without annotation 1`] = `
 {
   "displays": {
     "constraints": [],
-    "term": "(λ(x: (?1 :: Type)) => 1 : Π(x: ?1) => (closure: Num -| Γ: x))",
+    "term": "(λ(x: (?1 :: Type)) => 1 : Π(x: (?1 :: Type)) => Num)",
     "type": "Π(x: ?1) => (closure: Num -| Γ: x)",
   },
 }
@@ -927,38 +878,25 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
     },
     "term": {
       "ann": {
-        "binder": {
+        "binding": {
           "annotation": {
-            "type": "Neutral",
-            "value": {
-              "type": "Var",
-              "variable": {
-                "lvl": 0,
-                "type": "Meta",
-                "val": 1,
-              },
+            "type": "Var",
+            "variable": {
+              "lvl": 0,
+              "type": "Meta",
+              "val": 1,
             },
           },
           "icit": "Implicit",
           "type": "Pi",
           "variable": "x",
         },
-        "closure": {
-          "ctx": {
-            "env": [],
-            "implicits": [],
-            "metas": {},
-            "sigma": {},
-            "zonker": {},
+        "body": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
           },
-          "term": {
-            "type": "Lit",
-            "value": {
-              "type": "Atom",
-              "value": "Num",
-            },
-          },
-          "type": "Closure",
         },
         "type": "Abs",
       },

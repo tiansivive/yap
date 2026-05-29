@@ -12,11 +12,11 @@ exports[`Language Tour — Foreign Function Interface > basic FFI 1`] = `
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_18;
+  const v0 = closure_19;
   return v0;
 }
 
-function closure_18(print, name) {
+function closure_19(print, name) {
   const v0 = "Hello, ";
   const v1 = (v0 + name);
   const v2 = print(v1);
@@ -27,47 +27,50 @@ return main();
 ",
     "elaborated": "λ(name: String) -> { FFI.print (FFI.$concat "Hello, " name); return unit; }",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"name","icit":"Explicit","level":0}
-  :annotation -> [3]
-  :body -> [4]
-  :env -> [17]
-[3] lit {"value":{"type":"Atom","value":"String"}}
-[4] block
-  :return -> [15]
-  :stmt -> [5] {"index":0}
-[5] stmt:expr
-  :value -> [6]
-[6] app {"icit":"Explicit"}
-  :arg -> [16]
-  :func -> [8]
-[7] var:foreign {"name":"print"}
-[8] var:ref {"name":"print"}
-  :refers_to -> [7]
+  :entry -> [3]
+[2] stmt:let {"variable":"greet"}
+[3] lambda {"variable":"name","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [18]
+[4] lit {"value":{"type":"Atom","value":"String"}}
+[5] block
+  :return -> [16]
+  :stmt -> [6] {"index":0}
+[6] stmt:expr
+  :value -> [7]
+[7] app {"icit":"Explicit"}
+  :arg -> [17]
+  :func -> [9]
+[8] var:foreign {"name":"print"}
+[9] var:ref {"name":"print"}
+  :refers_to -> [8]
   :scope -> [2] {"level":0}
-[11] var:foreign {"name":"$concat","arity":2}
-[13] lit {"value":{"type":"String","value":"Hello, "}}
-  :next -> [14]
-[14] var:bound {"index":0}
-  :refers_to -> [2]
+  :scope -> [3] {"level":1}
+[12] var:foreign {"name":"$concat","arity":2}
+[14] lit {"value":{"type":"String","value":"Hello, "}}
+  :next -> [15]
+[15] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[15] lit {"value":{"type":"unit"}}
-[16] primop {"op":"$concat"}
-  :arg -> [13] {"index":0}
-  :arg -> [14] {"index":1}
-  :callee -> [11]
-[17] env
-  :capture -> [7] {"index":0}
-[18] closure
-  :body -> [2]
-  :env -> [17]",
+  :scope -> [3] {"level":1}
+[16] lit {"value":{"type":"unit"}}
+[17] primop {"op":"$concat"}
+  :arg -> [14] {"index":0}
+  :arg -> [15] {"index":1}
+  :callee -> [12]
+[18] env
+  :capture -> [8] {"index":0}
+[19] closure
+  :body -> [3]
+  :env -> [18]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_18
+      let v0 = &closure_19
       return v0
-  fn closure_18(print, name) entry=entry
+  fn closure_19(print, name) entry=entry
     entry:
       let v0 = "Hello, "
       let v1 = ++(v0, name)
@@ -115,38 +118,40 @@ return main();
     "elaborated": "FFI.prepend @Num 42 (Array [ 0: 1, 1: 2, 2: 3 ])",
     "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [9]
-  :func -> [3]
+  :entry -> [3]
+[2] stmt:let {"variable":"nums"}
 [3] app {"icit":"Explicit"}
-  :arg -> [8]
+  :arg -> [10]
   :func -> [4]
-[4] app {"icit":"Implicit"}
-  :arg -> [7]
-  :func -> [6]
-[5] var:foreign {"name":"prepend"}
-[6] var:ref {"name":"prepend"}
-  :refers_to -> [5]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[8] lit {"value":{"type":"Num","value":42}}
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] lit {"value":{"type":"Atom","value":"Array"}}
-[11] row:ext {"label":"0"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Num","value":1}}
-[13] row:ext {"label":"1"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"Num","value":2}}
-[15] row:ext {"label":"2"}
-  :rest -> [17]
-  :value -> [16]
-[16] lit {"value":{"type":"Num","value":3}}
-[17] row:empty",
+[4] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [5]
+[5] app {"icit":"Implicit"}
+  :arg -> [8]
+  :func -> [7]
+[6] var:foreign {"name":"prepend"}
+[7] var:ref {"name":"prepend"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] lit {"value":{"type":"Num","value":42}}
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Array"}}
+[12] row:ext {"label":"0"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Num","value":1}}
+[14] row:ext {"label":"1"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"Num","value":2}}
+[16] row:ext {"label":"2"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"Num","value":3}}
+[18] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -187,34 +192,36 @@ return main();
     "elaborated": "FFI.prepend @String "a" (Array [ 0: "b", 1: "c" ])",
     "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [9]
-  :func -> [3]
+  :entry -> [3]
+[2] stmt:let {"variable":"strs"}
 [3] app {"icit":"Explicit"}
-  :arg -> [8]
+  :arg -> [10]
   :func -> [4]
-[4] app {"icit":"Implicit"}
-  :arg -> [7]
-  :func -> [6]
-[5] var:foreign {"name":"prepend"}
-[6] var:ref {"name":"prepend"}
-  :refers_to -> [5]
-[7] lit {"value":{"type":"Atom","value":"String"}}
-[8] lit {"value":{"type":"String","value":"a"}}
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] lit {"value":{"type":"Atom","value":"Array"}}
-[11] row:ext {"label":"0"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"String","value":"b"}}
-[13] row:ext {"label":"1"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"String","value":"c"}}
-[15] row:empty",
+[4] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [5]
+[5] app {"icit":"Implicit"}
+  :arg -> [8]
+  :func -> [7]
+[6] var:foreign {"name":"prepend"}
+[7] var:ref {"name":"prepend"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+[8] lit {"value":{"type":"Atom","value":"String"}}
+[9] lit {"value":{"type":"String","value":"a"}}
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Array"}}
+[12] row:ext {"label":"0"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"String","value":"b"}}
+[14] row:ext {"label":"1"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"String","value":"c"}}
+[16] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry

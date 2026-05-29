@@ -65,7 +65,13 @@ const errs = (rs: ReadonlyArray<E.Either<string, unknown>>): ReadonlyArray<strin
 
 const toThese = <A>(errors: ReadonlyArray<string>, value: A): T.These<ReadonlyArray<string>, A> => T.rightOrBoth(value)(RNEA.fromReadonlyArray(errors));
 
-const pipeline = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, skolems: V2.MutState["skolems"] = {}): T.These<ReadonlyArray<string>, StageResults> => {
+const pipeline = (
+	tm: EB.Term,
+	ty: NF.Value,
+	ctx: EB.Context,
+	skolems: V2.MutState["skolems"] = {},
+	parentBinders?: ReadonlyArray<string>,
+): T.These<ReadonlyArray<string>, StageResults> => {
 	const db = { deBruijn: false };
 	const displayCtx = { ...ctx, skolems };
 
@@ -112,7 +118,7 @@ const pipeline = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, skolems: V2.MutSta
 			(e: GRAM.Pipeline.CompileError) => E.left<string, GRAM.Graph>(`GRAM: ${JSON.stringify(e)}`),
 			(g: GRAM.Graph) => E.right<string, GRAM.Graph>(g),
 		),
-	)(safe(() => GRAM.Pipeline.compile(tm, { skolems, zonker: ctx.zonker, arities: ARITIES })));
+	)(safe(() => GRAM.Pipeline.compile(tm, { skolems, zonker: ctx.zonker, arities: ARITIES, parentBinders })));
 	const gram = E.chain((g: GRAM.Graph) => safe(() => GRAM.display(g)))(gramGraph);
 	const mod = E.chain((g: GRAM.Graph) => safe(() => GRAM.Bridge.emit(g)))(gramGraph);
 	const mir = E.chain((m: Module) => safe(() => MIR.display.module(m)))(mod);
@@ -236,7 +242,7 @@ const withStages = (acc: Acc, name: string, kind: DeclarationResult["kind"], res
 				(errors: ReadonlyArray<string>) => advance(acc, { name, kind, error: errors.join("; ") }, ctx),
 				(stages: StageResults) => advance(acc, { name, kind, stages }, ctx),
 				(errors: ReadonlyArray<string>, stages: StageResults) => advance(acc, { name, kind, stages, error: errors.join("; ") }, ctx),
-			)(pipeline(tm, ty, ctx, skolems)),
+			)(pipeline(tm, ty, ctx, skolems, kind === "let" ? [name] : undefined)),
 	)(result);
 
 const process = (acc: Acc, stmt: Src.Statement): Acc =>

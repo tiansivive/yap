@@ -166,6 +166,14 @@ const comparison = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => bool
     return NF.Constructors.Lit(Lit.Bool(val));
 }
 
+const typecheckLit = (val: NF.Value): val is NF.Value & { type: "Lit" } => val.type === "Lit"
+
+const equality = (x: NF.Value, y: NF.Value, fn: (a: boolean) => boolean): NF.Value => {
+    if (!typecheckLit(x)) throw new Error(`Expected literal, got ${NF.display(x, { zonker: Sub.empty, metas: {}, env: [] })}`);
+    if (!typecheckLit(y)) throw new Error(`Expected literal, got ${NF.display(y, { zonker: Sub.empty, metas: {}, env: [] })}`);
+    return NF.Constructors.Lit(Lit.Bool(fn(isEqual(x.value, y.value))));
+}
+
 const typecheckString = (val: NF.Value): val is NF.Value & { type: "Lit", value: { type: "String", value: string } } => val.type === "Lit" && val.value.type === "String"
 
 const concatenate = (x: NF.Value, y: NF.Value): NF.Value => {
@@ -183,8 +191,8 @@ export const PrimOps: EB.Context['ffi'] = {
     $div: { arity: 2, compute: (x: NF.Value, y: NF.Value) => arithmetic(x, y, (a, b) => a / b) },
     $and: { arity: 2, compute: (x: NF.Value, y: NF.Value) => logical(x, y, (a, b) => a && b) },
     $or: { arity: 2, compute: (x: NF.Value, y: NF.Value) => logical(x, y, (a, b) => a || b) },
-    $eq: { arity: 2, compute: (x: NF.Value, y: NF.Value) => NF.Constructors.Lit(Lit.Bool(isEqual(x, y))) },
-    $neq: { arity: 2, compute: (x: NF.Value, y: NF.Value) => NF.Constructors.Lit(Lit.Bool(!isEqual(x, y))) },
+    $eq: { arity: 2, compute: (x: NF.Value, y: NF.Value) => equality(x, y, v => v) },
+    $neq: { arity: 2, compute: (x: NF.Value, y: NF.Value) => equality(x, y, v => !v) },
     $lt: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a < b) },
     $gt: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a > b) },
     $lte: { arity: 2, compute: (x: NF.Value, y: NF.Value) => comparison(x, y, (a, b) => a <= b) },

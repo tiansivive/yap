@@ -4,17 +4,17 @@ exports[`Language Tour — Row Polymorphism > open records 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_18;
+  const v0 = closure_19;
   return v0;
 }
 
-function closure_19(record) {
+function closure_20(record) {
   const v0 = record.x;
   return v0;
 }
 
-function closure_18(r) {
-  const v0 = closure_19;
+function closure_19(r) {
+  const v0 = closure_20;
   return v0;
 }
 return main();
@@ -22,65 +22,69 @@ return main();
     "elaborated": "λ(r: Row) =>
   λ(record: Σ($sig: [ x: Num | r ]) . Schema [ x: Num | r ]) -> (record).x",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"r","icit":"Implicit","level":0}
-  :annotation -> [3]
-  :body -> [4]
-  :env -> [16]
-[3] lit {"value":{"type":"Atom","value":"Row"}}
-[4] lambda {"variable":"record","icit":"Explicit","level":1}
-  :annotation -> [5]
-  :body -> [14]
+  :entry -> [3]
+[2] stmt:let {"variable":"getX"}
+[3] lambda {"variable":"r","icit":"Implicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
   :env -> [17]
-[5] sigma {"variable":"$sig","level":1}
+[4] lit {"value":{"type":"Atom","value":"Row"}}
+[5] lambda {"variable":"record","icit":"Explicit","level":2}
   :annotation -> [6]
-  :body -> [9]
-[6] row:ext {"label":"x"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[8] var:bound {"index":0}
-  :refers_to -> [2]
+  :body -> [15]
+  :env -> [18]
+[6] sigma {"variable":"$sig","level":2}
+  :annotation -> [7]
+  :body -> [10]
+[7] row:ext {"label":"x"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] lit {"value":{"type":"Atom","value":"Schema"}}
-[11] row:ext {"label":"x"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Atom","value":"Num"}}
-[13] var:bound {"index":0}
+  :scope -> [3] {"level":1}
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Schema"}}
+[12] row:ext {"label":"x"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Atom","value":"Num"}}
+[14] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [6] {"level":2}
+[15] proj {"label":"x"}
+  :target -> [16]
+[16] var:bound {"index":0}
   :refers_to -> [5]
   :scope -> [2] {"level":0}
-  :scope -> [5] {"level":1}
-[14] proj {"label":"x"}
-  :target -> [15]
-[15] var:bound {"index":0}
-  :refers_to -> [4]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-[16] env
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
 [17] env
-[18] closure
-  :body -> [2]
-  :env -> [16]
+[18] env
 [19] closure
-  :body -> [4]
-  :env -> [17]",
+  :body -> [3]
+  :env -> [17]
+[20] closure
+  :body -> [5]
+  :env -> [18]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_18
+      let v0 = &closure_19
       return v0
-  fn closure_19(record) entry=entry
+  fn closure_20(record) entry=entry
     entry:
       let v0 = read record.x
       return v0
-  fn closure_18(r) entry=entry
+  fn closure_19(r) entry=entry
     entry:
-      let v0 = &closure_19
+      let v0 = &closure_20
       return v0",
     "name": "getX",
     "normalized": "λ(r: Row) =>
@@ -90,7 +94,7 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = getX;
   const v1 = "Num";
   const v2 = {
     y: v1
@@ -109,39 +113,41 @@ return main();
 ",
     "elaborated": "getX @[ y: Num ] (Struct [ x: 10, y: 20 ])",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [9]
-  :func -> [3]
-[3] app {"icit":"Implicit"}
-  :arg -> [6]
-  :func -> [5]
-[4] var:free {"name":"getX"}
-[5] var:ref {"name":"getX"}
-  :refers_to -> [4]
-[6] row:ext {"label":"y"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[8] row:empty
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] lit {"value":{"type":"Atom","value":"Struct"}}
-[11] row:ext {"label":"x"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Num","value":10}}
-[13] row:ext {"label":"y"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"Num","value":20}}
-[15] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"p1"}
+[3] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [4]
+[4] app {"icit":"Implicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:free {"name":"getX"}
+[6] var:ref {"name":"getX"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] row:empty
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Struct"}}
+[12] row:ext {"label":"x"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Num","value":10}}
+[14] row:ext {"label":"y"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"Num","value":20}}
+[16] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = getX
       let v1 = Num
       let v2 = alloc { y: v1 }
       let v3 = call *v0(v2)
@@ -156,7 +162,7 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = getX;
   const v1 = "Num";
   const v2 = "Num";
   const v3 = {
@@ -179,47 +185,49 @@ return main();
 ",
     "elaborated": "getX @[ y: Num, z: Num ] (Struct [ x: 5, y: 3, z: 7 ])",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [3]
-[3] app {"icit":"Implicit"}
-  :arg -> [6]
-  :func -> [5]
-[4] var:free {"name":"getX"}
-[5] var:ref {"name":"getX"}
-  :refers_to -> [4]
-[6] row:ext {"label":"y"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[8] row:ext {"label":"z"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Num"}}
-[10] row:empty
-[11] app {"icit":"Explicit"}
-  :arg -> [13]
-  :func -> [12]
-[12] lit {"value":{"type":"Atom","value":"Struct"}}
-[13] row:ext {"label":"x"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"Num","value":5}}
-[15] row:ext {"label":"y"}
-  :rest -> [17]
-  :value -> [16]
-[16] lit {"value":{"type":"Num","value":3}}
-[17] row:ext {"label":"z"}
-  :rest -> [19]
-  :value -> [18]
-[18] lit {"value":{"type":"Num","value":7}}
-[19] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"p2"}
+[3] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [4]
+[4] app {"icit":"Implicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:free {"name":"getX"}
+[6] var:ref {"name":"getX"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] row:ext {"label":"z"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[11] row:empty
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Struct"}}
+[14] row:ext {"label":"x"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"Num","value":5}}
+[16] row:ext {"label":"y"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"Num","value":3}}
+[18] row:ext {"label":"z"}
+  :rest -> [20]
+  :value -> [19]
+[19] lit {"value":{"type":"Num","value":7}}
+[20] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = getX
       let v1 = Num
       let v2 = Num
       let v3 = alloc { y: v1, z: v2 }
@@ -236,7 +244,7 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = getX;
   const v1 = "String";
   const v2 = {
     name: v1
@@ -255,39 +263,41 @@ return main();
 ",
     "elaborated": "getX @[ name: String ] (Struct [ x: 100, name: "point" ])",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [9]
-  :func -> [3]
-[3] app {"icit":"Implicit"}
-  :arg -> [6]
-  :func -> [5]
-[4] var:free {"name":"getX"}
-[5] var:ref {"name":"getX"}
-  :refers_to -> [4]
-[6] row:ext {"label":"name"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"String"}}
-[8] row:empty
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] lit {"value":{"type":"Atom","value":"Struct"}}
-[11] row:ext {"label":"x"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Num","value":100}}
-[13] row:ext {"label":"name"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"String","value":"point"}}
-[15] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"p3"}
+[3] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [4]
+[4] app {"icit":"Implicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:free {"name":"getX"}
+[6] var:ref {"name":"getX"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] row:ext {"label":"name"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"String"}}
+[9] row:empty
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Struct"}}
+[12] row:ext {"label":"x"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Num","value":100}}
+[14] row:ext {"label":"name"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"String","value":"point"}}
+[16] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = getX
       let v1 = String
       let v2 = alloc { name: v1 }
       let v3 = call *v0(v2)
@@ -307,11 +317,11 @@ exports[`Language Tour — Row Polymorphism > polymorphic extension 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_23;
+  const v0 = closure_24;
   return v0;
 }
 
-function closure_24(rec) {
+function closure_25(rec) {
   const v0 = 0;
   const v1 = {
     ...rec,
@@ -320,8 +330,8 @@ function closure_24(rec) {
   return v1;
 }
 
-function closure_23(r) {
-  const v0 = closure_24;
+function closure_24(r) {
+  const v0 = closure_25;
   return v0;
 }
 return main();
@@ -330,76 +340,80 @@ return main();
   λ(rec: Σ($sig: [ y: Num, x: Num | r ]) . Schema [ y: Num, x: Num | r ]) ->
     { rec | z = 0 }",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"r","icit":"Implicit","level":0}
-  :annotation -> [3]
-  :body -> [4]
-  :env -> [21]
-[3] lit {"value":{"type":"Atom","value":"Row"}}
-[4] lambda {"variable":"rec","icit":"Explicit","level":1}
-  :annotation -> [5]
-  :body -> [18]
+  :entry -> [3]
+[2] stmt:let {"variable":"addZ"}
+[3] lambda {"variable":"r","icit":"Implicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
   :env -> [22]
-[5] sigma {"variable":"$sig","level":1}
+[4] lit {"value":{"type":"Atom","value":"Row"}}
+[5] lambda {"variable":"rec","icit":"Explicit","level":2}
   :annotation -> [6]
-  :body -> [11]
-[6] row:ext {"label":"y"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[8] row:ext {"label":"x"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Num"}}
-[10] var:bound {"index":0}
-  :refers_to -> [2]
+  :body -> [19]
+  :env -> [23]
+[6] sigma {"variable":"$sig","level":2}
+  :annotation -> [7]
+  :body -> [12]
+[7] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] row:ext {"label":"x"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[11] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[11] app {"icit":"Explicit"}
-  :arg -> [13]
-  :func -> [12]
-[12] lit {"value":{"type":"Atom","value":"Schema"}}
-[13] row:ext {"label":"y"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"Atom","value":"Num"}}
-[15] row:ext {"label":"x"}
-  :rest -> [17]
-  :value -> [16]
-[16] lit {"value":{"type":"Atom","value":"Num"}}
-[17] var:bound {"index":0}
+  :scope -> [3] {"level":1}
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Schema"}}
+[14] row:ext {"label":"y"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"Atom","value":"Num"}}
+[16] row:ext {"label":"x"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"Atom","value":"Num"}}
+[18] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [6] {"level":2}
+[19] inj {"label":"z"}
+  :target -> [21]
+  :value -> [20]
+[20] lit {"value":{"type":"Num","value":0}}
+[21] var:bound {"index":0}
   :refers_to -> [5]
   :scope -> [2] {"level":0}
-  :scope -> [5] {"level":1}
-[18] inj {"label":"z"}
-  :target -> [20]
-  :value -> [19]
-[19] lit {"value":{"type":"Num","value":0}}
-[20] var:bound {"index":0}
-  :refers_to -> [4]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-[21] env
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
 [22] env
-[23] closure
-  :body -> [2]
-  :env -> [21]
+[23] env
 [24] closure
-  :body -> [4]
-  :env -> [22]",
+  :body -> [3]
+  :env -> [22]
+[25] closure
+  :body -> [5]
+  :env -> [23]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_23
+      let v0 = &closure_24
       return v0
-  fn closure_24(rec) entry=entry
+  fn closure_25(rec) entry=entry
     entry:
       let v0 = 0
       let v1 = update-immutable rec { z: v0 }
       return v1
-  fn closure_23(r) entry=entry
+  fn closure_24(r) entry=entry
     entry:
-      let v0 = &closure_24
+      let v0 = &closure_25
       return v0",
     "name": "addZ",
     "normalized": "λ(r: Row) =>
@@ -413,7 +427,7 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = addZ;
   const v1 = {};
   const v2 = v0(v1);
   const v3 = 1;
@@ -429,35 +443,37 @@ return main();
 ",
     "elaborated": "addZ @[] (Struct [ x: 1, y: 2 ])",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
+  :entry -> [3]
+[2] stmt:let {"variable":"p1"}
+[3] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [4]
+[4] app {"icit":"Implicit"}
   :arg -> [7]
-  :func -> [3]
-[3] app {"icit":"Implicit"}
-  :arg -> [6]
-  :func -> [5]
-[4] var:free {"name":"addZ"}
-[5] var:ref {"name":"addZ"}
-  :refers_to -> [4]
-[6] row:empty
-[7] app {"icit":"Explicit"}
-  :arg -> [9]
-  :func -> [8]
-[8] lit {"value":{"type":"Atom","value":"Struct"}}
-[9] row:ext {"label":"x"}
-  :rest -> [11]
-  :value -> [10]
-[10] lit {"value":{"type":"Num","value":1}}
-[11] row:ext {"label":"y"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Num","value":2}}
-[13] row:empty",
+  :func -> [6]
+[5] var:free {"name":"addZ"}
+[6] var:ref {"name":"addZ"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] row:empty
+[8] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [9]
+[9] lit {"value":{"type":"Atom","value":"Struct"}}
+[10] row:ext {"label":"x"}
+  :rest -> [12]
+  :value -> [11]
+[11] lit {"value":{"type":"Num","value":1}}
+[12] row:ext {"label":"y"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Num","value":2}}
+[14] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = addZ
       let v1 = alloc {  }
       let v2 = call *v0(v1)
       let v3 = 1
@@ -472,7 +488,7 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = addZ;
   const v1 = "String";
   const v2 = {
     color: v1
@@ -493,43 +509,45 @@ return main();
 ",
     "elaborated": "addZ @[ color: String ] (Struct [ x: 5, y: 10, color: "red" ])",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [9]
-  :func -> [3]
-[3] app {"icit":"Implicit"}
-  :arg -> [6]
-  :func -> [5]
-[4] var:free {"name":"addZ"}
-[5] var:ref {"name":"addZ"}
-  :refers_to -> [4]
-[6] row:ext {"label":"color"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"String"}}
-[8] row:empty
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] lit {"value":{"type":"Atom","value":"Struct"}}
-[11] row:ext {"label":"x"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Num","value":5}}
-[13] row:ext {"label":"y"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"Num","value":10}}
-[15] row:ext {"label":"color"}
-  :rest -> [17]
-  :value -> [16]
-[16] lit {"value":{"type":"String","value":"red"}}
-[17] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"p2"}
+[3] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [4]
+[4] app {"icit":"Implicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:free {"name":"addZ"}
+[6] var:ref {"name":"addZ"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] row:ext {"label":"color"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"String"}}
+[9] row:empty
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Struct"}}
+[12] row:ext {"label":"x"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Num","value":5}}
+[14] row:ext {"label":"y"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"Num","value":10}}
+[16] row:ext {"label":"color"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"String","value":"red"}}
+[18] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = addZ
       let v1 = String
       let v2 = alloc { color: v1 }
       let v3 = call *v0(v2)
@@ -551,17 +569,17 @@ exports[`Language Tour — Row Polymorphism > polymorphic projection 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_18;
+  const v0 = closure_19;
   return v0;
 }
 
-function closure_19(obj) {
+function closure_20(obj) {
   const v0 = obj.name;
   return v0;
 }
 
-function closure_18(r) {
-  const v0 = closure_19;
+function closure_19(r) {
+  const v0 = closure_20;
   return v0;
 }
 return main();
@@ -570,65 +588,69 @@ return main();
   λ(obj: Σ($sig: [ name: String | r ]) . Schema [ name: String | r ]) ->
     (obj).name",
     "gram": "[1] root
-  :entry -> [2]
-[2] lambda {"variable":"r","icit":"Implicit","level":0}
-  :annotation -> [3]
-  :body -> [4]
-  :env -> [16]
-[3] lit {"value":{"type":"Atom","value":"Row"}}
-[4] lambda {"variable":"obj","icit":"Explicit","level":1}
-  :annotation -> [5]
-  :body -> [14]
+  :entry -> [3]
+[2] stmt:let {"variable":"getName"}
+[3] lambda {"variable":"r","icit":"Implicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
   :env -> [17]
-[5] sigma {"variable":"$sig","level":1}
+[4] lit {"value":{"type":"Atom","value":"Row"}}
+[5] lambda {"variable":"obj","icit":"Explicit","level":2}
   :annotation -> [6]
-  :body -> [9]
-[6] row:ext {"label":"name"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"String"}}
-[8] var:bound {"index":0}
-  :refers_to -> [2]
+  :body -> [15]
+  :env -> [18]
+[6] sigma {"variable":"$sig","level":2}
+  :annotation -> [7]
+  :body -> [10]
+[7] row:ext {"label":"name"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"String"}}
+[9] var:bound {"index":0}
+  :refers_to -> [3]
   :scope -> [2] {"level":0}
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] lit {"value":{"type":"Atom","value":"Schema"}}
-[11] row:ext {"label":"name"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Atom","value":"String"}}
-[13] var:bound {"index":0}
+  :scope -> [3] {"level":1}
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Schema"}}
+[12] row:ext {"label":"name"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Atom","value":"String"}}
+[14] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [6] {"level":2}
+[15] proj {"label":"name"}
+  :target -> [16]
+[16] var:bound {"index":0}
   :refers_to -> [5]
   :scope -> [2] {"level":0}
-  :scope -> [5] {"level":1}
-[14] proj {"label":"name"}
-  :target -> [15]
-[15] var:bound {"index":0}
-  :refers_to -> [4]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-[16] env
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
 [17] env
-[18] closure
-  :body -> [2]
-  :env -> [16]
+[18] env
 [19] closure
-  :body -> [4]
-  :env -> [17]",
+  :body -> [3]
+  :env -> [17]
+[20] closure
+  :body -> [5]
+  :env -> [18]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_18
+      let v0 = &closure_19
       return v0
-  fn closure_19(obj) entry=entry
+  fn closure_20(obj) entry=entry
     entry:
       let v0 = read obj.name
       return v0
-  fn closure_18(r) entry=entry
+  fn closure_19(r) entry=entry
     entry:
-      let v0 = &closure_19
+      let v0 = &closure_20
       return v0",
     "name": "getName",
     "normalized": "λ(r: Row) =>
@@ -652,20 +674,21 @@ return main();
 ",
     "elaborated": "Struct [ name: "Alice", age: 30 ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"name"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"String","value":"Alice"}}
-[6] row:ext {"label":"age"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Num","value":30}}
-[8] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"person"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"name"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"String","value":"Alice"}}
+[7] row:ext {"label":"age"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Num","value":30}}
+[9] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -694,24 +717,25 @@ return main();
 ",
     "elaborated": "Struct [ name: "1984", author: "Orwell", pages: 328 ]",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"name"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"String","value":"1984"}}
-[6] row:ext {"label":"author"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"String","value":"Orwell"}}
-[8] row:ext {"label":"pages"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Num","value":328}}
-[10] row:empty",
+  :entry -> [3]
+[2] stmt:let {"variable":"book"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"name"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"String","value":"1984"}}
+[7] row:ext {"label":"author"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"String","value":"Orwell"}}
+[9] row:ext {"label":"pages"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Num","value":328}}
+[11] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -727,13 +751,13 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = getName;
   const v1 = "Num";
   const v2 = {
     age: v1
   };
   const v3 = v0(v2);
-  const v4 = unknown;
+  const v4 = person;
   const v5 = v3(v4);
   return v5;
 }
@@ -741,33 +765,36 @@ return main();
 ",
     "elaborated": "getName @[ age: Num ] person",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [10]
-  :func -> [3]
-[3] app {"icit":"Implicit"}
-  :arg -> [6]
-  :func -> [5]
-[4] var:free {"name":"getName"}
-[5] var:ref {"name":"getName"}
-  :refers_to -> [4]
-[6] row:ext {"label":"age"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[8] row:empty
-[9] var:free {"name":"person"}
-[10] var:ref {"name":"person"}
-  :refers_to -> [9]",
+  :entry -> [3]
+[2] stmt:let {"variable":"n1"}
+[3] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [4]
+[4] app {"icit":"Implicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:free {"name":"getName"}
+[6] var:ref {"name":"getName"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] row:ext {"label":"age"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] row:empty
+[10] var:free {"name":"person"}
+[11] var:ref {"name":"person"}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = getName
       let v1 = Num
       let v2 = alloc { age: v1 }
       let v3 = call *v0(v2)
-      let v4 = unknown
+      let v4 = person
       let v5 = call *v3(v4)
       return v5",
     "name": "n1",
@@ -776,7 +803,7 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
+  const v0 = getName;
   const v1 = "String";
   const v2 = "Num";
   const v3 = {
@@ -784,7 +811,7 @@ return main();
     pages: v2
   };
   const v4 = v0(v3);
-  const v5 = unknown;
+  const v5 = book;
   const v6 = v4(v5);
   return v6;
 }
@@ -792,38 +819,41 @@ return main();
 ",
     "elaborated": "getName @[ author: String, pages: Num ] book",
     "gram": "[1] root
-  :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [3]
-[3] app {"icit":"Implicit"}
-  :arg -> [6]
-  :func -> [5]
-[4] var:free {"name":"getName"}
-[5] var:ref {"name":"getName"}
-  :refers_to -> [4]
-[6] row:ext {"label":"author"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"String"}}
-[8] row:ext {"label":"pages"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Num"}}
-[10] row:empty
-[11] var:free {"name":"book"}
-[12] var:ref {"name":"book"}
-  :refers_to -> [11]",
+  :entry -> [3]
+[2] stmt:let {"variable":"n2"}
+[3] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [4]
+[4] app {"icit":"Implicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:free {"name":"getName"}
+[6] var:ref {"name":"getName"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] row:ext {"label":"author"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"String"}}
+[9] row:ext {"label":"pages"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[11] row:empty
+[12] var:free {"name":"book"}
+[13] var:ref {"name":"book"}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unknown
+      let v0 = getName
       let v1 = String
       let v2 = Num
       let v3 = alloc { author: v1, pages: v2 }
       let v4 = call *v0(v3)
-      let v5 = unknown
+      let v5 = book
       let v6 = call *v4(v5)
       return v6",
     "name": "n2",

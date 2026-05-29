@@ -44,9 +44,6 @@ export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
 						);
 						const { binders } = yield* V2.listen();
 
-						// TODO: This binders array is not overly useful for now
-						// // In theory, all we need is to emit a flag signalling the letdec var has been used
-						// FIXME: We should really leverage the `check` function to understand when to wrap in a mu
 						const tm = binders.find(b => b.type === "Mu" && b.variable === dec.variable)
 							? EB.Constructors.Mu("x", dec.variable, ann[0], inferred[0])
 							: inferred[0];

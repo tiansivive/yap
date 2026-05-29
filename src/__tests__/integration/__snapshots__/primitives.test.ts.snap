@@ -11,8 +11,9 @@ return main();
 ",
     "elaborated": ""Hello, Yap!"",
     "gram": "[1] root
-  :entry -> [2]
-[2] lit {"value":{"type":"String","value":"Hello, Yap!"}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"greeting"}
+[3] lit {"value":{"type":"String","value":"Hello, Yap!"}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -32,8 +33,9 @@ return main();
 ",
     "elaborated": "42",
     "gram": "[1] root
-  :entry -> [2]
-[2] lit {"value":{"type":"Num","value":42}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"life"}
+[3] lit {"value":{"type":"Num","value":42}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -53,8 +55,9 @@ return main();
 ",
     "elaborated": "true",
     "gram": "[1] root
-  :entry -> [2]
-[2] lit {"value":{"type":"Bool","value":true}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"b"}
+[3] lit {"value":{"type":"Bool","value":true}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -74,8 +77,9 @@ return main();
 ",
     "elaborated": "unit",
     "gram": "[1] root
-  :entry -> [2]
-[2] lit {"value":{"type":"unit"}}",
+  :entry -> [3]
+[2] stmt:let {"variable":"u"}
+[3] lit {"value":{"type":"unit"}}",
     "kind": "let",
     "mir": "module
   fn main entry=entry
