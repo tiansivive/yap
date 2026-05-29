@@ -1,0 +1,1556 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Language Tour — Pattern Matching > list patterns 1`] = `
+[
+  {
+    "codegenJS": "",
+    "elaborated": "λ(list: FFI.Indexed Num Num @FFI.defaultArray) ->
+  match list | [  ] -> 0 | [ x,  | xs ] -> x",
+    "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"list","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [12]
+  :env -> [25]
+[3] app {"icit":"Implicit"}
+  :arg -> [11]
+  :func -> [4]
+[4] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [5]
+[5] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [7]
+[6] var:foreign {"name":"Indexed"}
+[7] var:ref {"name":"Indexed"}
+  :refers_to -> [6]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:foreign {"name":"defaultArray"}
+[11] var:ref {"name":"defaultArray"}
+  :refers_to -> [10]
+[12] match
+  :alt -> [14] {"index":0}
+  :alt -> [17] {"index":1}
+  :decision_tree -> [21]
+  :scrutinee -> [13]
+[13] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[14] case
+  :body -> [16]
+  :next -> [17]
+  :pattern -> [15]
+[15] pat:struct
+[16] lit {"value":{"type":"Num","value":0}}
+[17] case
+  :body -> [20]
+  :pattern -> [18]
+[18] pat:struct
+  :field -> [19] {"label":"0"}
+[19] pat:binder {"name":"x","level":1}
+[20] var:bound {"index":1}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [19] {"level":1}
+[21] switch {"kind":"struct"}
+  :branch -> [24]
+  :inspect -> [13]
+[22] proj {"label":"0"}
+  :target -> [13]
+[23] pat:wildcard
+[24] leaf
+  :body -> [16]
+[25] env
+[26] closure
+  :body -> [2]
+  :env -> [25]",
+    "kind": "let",
+    "mir": "",
+    "name": "firstOrZero",
+    "normalized": "λ(list: FFI.Indexed Num Num @FFI.defaultArray) ->
+  (closure: match list | [  ] -> 0 | [ x,  | xs ] -> x -| Γ: list)",
+    "type": "Π(t1: FFI.Indexed Num Num @FFI.defaultArray) -> Num",
+  },
+  {
+    "codegenJS": "",
+    "elaborated": "λ(list: FFI.Indexed Num Num @FFI.defaultArray) ->
+  match list | [  ] -> Array [] | [ x,  | xs ] -> xs",
+    "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"list","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [12]
+  :env -> [27]
+[3] app {"icit":"Implicit"}
+  :arg -> [11]
+  :func -> [4]
+[4] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [5]
+[5] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [7]
+[6] var:foreign {"name":"Indexed"}
+[7] var:ref {"name":"Indexed"}
+  :refers_to -> [6]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:foreign {"name":"defaultArray"}
+[11] var:ref {"name":"defaultArray"}
+  :refers_to -> [10]
+[12] match
+  :alt -> [14] {"index":0}
+  :alt -> [19] {"index":1}
+  :decision_tree -> [23]
+  :scrutinee -> [13]
+[13] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[14] case
+  :body -> [16]
+  :next -> [19]
+  :pattern -> [15]
+[15] pat:struct
+[16] app {"icit":"Explicit"}
+  :arg -> [18]
+  :func -> [17]
+[17] lit {"value":{"type":"Atom","value":"Array"}}
+[18] row:empty
+[19] case
+  :body -> [22]
+  :pattern -> [20]
+[20] pat:struct
+  :field -> [21] {"label":"0"}
+[21] pat:binder {"name":"x","level":1}
+[22] var:bound {"index":0}
+  :refers_to -> [21]
+  :scope -> [2] {"level":0}
+  :scope -> [21] {"level":1}
+[23] switch {"kind":"struct"}
+  :branch -> [26]
+  :inspect -> [13]
+[24] proj {"label":"0"}
+  :target -> [13]
+[25] pat:wildcard
+[26] leaf
+  :body -> [16]
+[27] env
+[28] closure
+  :body -> [2]
+  :env -> [27]",
+    "kind": "let",
+    "mir": "",
+    "name": "tail",
+    "normalized": "λ(list: FFI.Indexed Num Num @FFI.defaultArray) ->
+  (closure: match list | [  ] -> Array [] | [ x,  | xs ] -> xs -| Γ: list)",
+    "type": "Π(t4: FFI.Indexed Num Num @FFI.defaultArray) ->
+  FFI.Indexed Num Num @FFI.defaultArray",
+  },
+]
+`;
+
+exports[`Language Tour — Pattern Matching > literal patterns 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_16;
+  return v0;
+}
+
+function closure_16(n) {
+  let __block = "entry";
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        (__block = "sw1");
+        break;
+      }
+      case "sw1": {
+        if ((String(n) === "0")) {
+          (__block = "case3");
+          break;
+        }
+        (__block = "default4");
+        break;
+      }
+      case "case3": {
+        const v4 = true;
+        const match0 = v4;
+        (__block = "join2");
+        break;
+      }
+      case "default4": {
+        const v5 = false;
+        const match0 = v5;
+        (__block = "join2");
+        break;
+      }
+      case "join2": {
+        return match0;
+      }
+    }
+  }
+}
+return main();
+",
+    "elaborated": "λ(n: Num) -> match n | 0 -> true | _ -> false",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"n","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [15]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] match
+  :alt -> [6] {"index":0}
+  :alt -> [9] {"index":1}
+  :decision_tree -> [12]
+  :scrutinee -> [5]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] case
+  :body -> [8]
+  :next -> [9]
+  :pattern -> [7]
+[7] pat:lit {"value":{"type":"Num","value":0}}
+[8] lit {"value":{"type":"Bool","value":true}}
+[9] case
+  :body -> [11]
+  :pattern -> [10]
+[10] pat:wildcard
+[11] lit {"value":{"type":"Bool","value":false}}
+[12] switch {"kind":"lit"}
+  :branch -> [13] {"value":{"type":"Num","value":0}}
+  :default -> [14]
+  :inspect -> [5]
+[13] leaf
+  :body -> [8]
+[14] leaf
+  :body -> [11]
+[15] env
+[16] closure
+  :body -> [2]
+  :env -> [15]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_16
+      return v0
+  fn closure_16(n) entry=entry
+    entry:
+      jump sw1
+    sw1:
+      branch n { 0 -> case3; default -> default4 }
+    case3:
+      let v4 = true
+      let match0 = v4
+      jump join2
+    default4:
+      let v5 = false
+      let match0 = v5
+      jump join2
+    join2:
+      return match0",
+    "name": "isZero",
+    "normalized": "λ(n: Num) -> (closure: match n | 0 -> true | _ -> false -| Γ: n)",
+    "type": "Π(t1: Num) -> Bool",
+  },
+]
+`;
+
+exports[`Language Tour — Pattern Matching > record patterns 1`] = `
+[
+  {
+    "codegenJS": "",
+    "elaborated": "λ(p: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) ->
+  match p | Struct [ x: a, y: b | $row_11 ] -> b",
+    "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"p","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [16]
+  :env -> [28]
+[3] sigma {"variable":"$sig","level":0}
+  :annotation -> [4]
+  :body -> [9]
+[4] row:ext {"label":"y"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] row:ext {"label":"x"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"y"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Atom","value":"Num"}}
+[13] row:ext {"label":"x"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"Atom","value":"Num"}}
+[15] row:empty
+[16] match
+  :alt -> [18] {"index":0}
+  :decision_tree -> [24]
+  :scrutinee -> [17]
+[17] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[18] case
+  :body -> [23]
+  :pattern -> [19]
+[19] pat:struct
+  :field -> [20] {"label":"x"}
+  :field -> [21] {"label":"y"}
+[20] pat:binder {"name":"a","level":1}
+[21] pat:binder {"name":"b","level":2}
+[22] pat:wildcard
+[23] var:bound {"index":1}
+  :refers_to -> [21]
+  :scope -> [2] {"level":0}
+  :scope -> [20] {"level":1}
+  :scope -> [21] {"level":2}
+  :scope -> [22] {"level":3}
+[24] switch {"kind":"struct"}
+  :branch -> [27]
+  :inspect -> [17]
+[25] proj {"label":"x"}
+  :target -> [17]
+[26] proj {"label":"y"}
+  :target -> [17]
+[27] leaf
+  :bind -> [25] {"name":"a","binder":20}
+  :bind -> [26] {"name":"b","binder":21}
+  :body -> [23]
+[28] env
+[29] closure
+  :body -> [2]
+  :env -> [28]",
+    "kind": "let",
+    "mir": "",
+    "name": "getY",
+    "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
+  (closure: match p | Struct [ x: a, y: b | $row_11 ] -> b -| Γ: p)",
+    "type": "Π(t1: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
+  },
+  {
+    "codegenJS": "",
+    "elaborated": "λ(p: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) ->
+  match p | Struct [ y: a | $row_20 ] -> a",
+    "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"p","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [16]
+  :env -> [26]
+[3] sigma {"variable":"$sig","level":0}
+  :annotation -> [4]
+  :body -> [9]
+[4] row:ext {"label":"y"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] row:ext {"label":"x"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"y"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Atom","value":"Num"}}
+[13] row:ext {"label":"x"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"Atom","value":"Num"}}
+[15] row:empty
+[16] match
+  :alt -> [18] {"index":0}
+  :decision_tree -> [23]
+  :scrutinee -> [17]
+[17] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[18] case
+  :body -> [22]
+  :pattern -> [19]
+[19] pat:struct
+  :field -> [20] {"label":"y"}
+[20] pat:binder {"name":"a","level":1}
+[21] pat:wildcard
+[22] var:bound {"index":1}
+  :refers_to -> [20]
+  :scope -> [2] {"level":0}
+  :scope -> [20] {"level":1}
+  :scope -> [21] {"level":2}
+[23] switch {"kind":"struct"}
+  :branch -> [25]
+  :inspect -> [17]
+[24] proj {"label":"y"}
+  :target -> [17]
+[25] leaf
+  :bind -> [24] {"name":"a","binder":20}
+  :body -> [22]
+[26] env
+[27] closure
+  :body -> [2]
+  :env -> [26]",
+    "kind": "let",
+    "mir": "",
+    "name": "getY2",
+    "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
+  (closure: match p | Struct [ y: a | $row_20 ] -> a -| Γ: p)",
+    "type": "Π(t3: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
+  },
+]
+`;
+
+exports[`Language Tour — Pattern Matching > recursive functions 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  return v0;
+}
+return main();
+",
+    "elaborated": "List",
+    "gram": "[1] root
+  :entry -> [2]
+[2] mu {"variable":"x","source":"List","level":0}
+  :annotation -> [3]
+  :body -> [6]
+[3] pi {"variable":"t1","icit":"Explicit","level":0}
+  :annotation -> [4]
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lambda {"variable":"a","icit":"Explicit","level":1}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [23]
+[7] lit {"value":{"type":"Atom","value":"Type"}}
+[8] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [9]
+[9] lit {"value":{"type":"Atom","value":"Variant"}}
+[10] row:ext {"label":"cons"}
+  :rest -> [20]
+  :value -> [11]
+[11] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [12]
+[12] lit {"value":{"type":"Atom","value":"Schema"}}
+[13] row:ext {"label":"1"}
+  :rest -> [17]
+  :value -> [14]
+[14] app {"icit":"Explicit"}
+  :arg -> [16]
+  :func -> [15]
+[15] var:bound {"index":1}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[16] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[17] row:ext {"label":"0"}
+  :rest -> [19]
+  :value -> [18]
+[18] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[19] row:empty
+[20] row:ext {"label":"nil"}
+  :rest -> [22]
+  :value -> [21]
+[21] lit {"value":{"type":"Atom","value":"Unit"}}
+[22] row:empty
+[23] env
+  :capture -> [2] {"index":0}
+[24] closure
+  :body -> [6]
+  :env -> [23]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      return v0",
+    "name": "List",
+    "normalized": "List",
+    "type": "Π(t1: Type) -> Type",
+  },
+  {
+    "codegenJS": "",
+    "elaborated": "λ(a: Type) =>
+  λ(list: (List) a) ->
+    match list
+      | Variant [ nil: _ | $row_15 ] -> 0
+      | Variant [ cons: Struct [ 0: x, 1: xs | $row_20 ] | $row_21 ] ->
+          FFI.$add 1 (I6 @a xs)",
+    "error": "Unbound bound variable in synth; Unbound bound variable in synth; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"a","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [59]
+[3] lit {"value":{"type":"Atom","value":"Type"}}
+[4] lambda {"variable":"list","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [28]
+  :env -> [60]
+[5] app {"icit":"Explicit"}
+  :arg -> [27]
+  :func -> [6]
+[6] mu {"variable":"x","source":"List","level":1}
+  :annotation -> [7]
+  :body -> [10]
+[7] pi {"variable":"t1","icit":"Explicit","level":1}
+  :annotation -> [8]
+  :body -> [9]
+[8] lit {"value":{"type":"Atom","value":"Type"}}
+[9] lit {"value":{"type":"Atom","value":"Type"}}
+[10] lambda {"variable":"a","icit":"Explicit","level":2}
+  :annotation -> [11]
+  :body -> [12]
+  :env -> [61]
+[11] lit {"value":{"type":"Atom","value":"Type"}}
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Variant"}}
+[14] row:ext {"label":"cons"}
+  :rest -> [24]
+  :value -> [15]
+[15] app {"icit":"Explicit"}
+  :arg -> [17]
+  :func -> [16]
+[16] lit {"value":{"type":"Atom","value":"Schema"}}
+[17] row:ext {"label":"1"}
+  :rest -> [21]
+  :value -> [18]
+[18] app {"icit":"Explicit"}
+  :arg -> [20]
+  :func -> [19]
+[19] var:bound {"index":1}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+  :scope -> [10] {"level":2}
+[20] var:bound {"index":0}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+  :scope -> [10] {"level":2}
+[21] row:ext {"label":"0"}
+  :rest -> [23]
+  :value -> [22]
+[22] var:bound {"index":0}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+  :scope -> [10] {"level":2}
+[23] row:empty
+[24] row:ext {"label":"nil"}
+  :rest -> [26]
+  :value -> [25]
+[25] lit {"value":{"type":"Atom","value":"Unit"}}
+[26] row:empty
+[27] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[28] match
+  :alt -> [30] {"index":0}
+  :alt -> [34] {"index":1}
+  :decision_tree -> [51]
+  :scrutinee -> [29]
+[29] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[30] case
+  :body -> [33]
+  :next -> [34]
+  :pattern -> [31]
+[31] pat:variant {"label":"nil"}
+  :payload -> [32]
+[32] pat:wildcard
+[33] lit {"value":{"type":"Num","value":0}}
+[34] case
+  :body -> [50]
+  :pattern -> [35]
+[35] pat:variant {"label":"cons"}
+  :payload -> [36]
+[36] pat:struct
+  :field -> [37] {"label":"0"}
+  :field -> [38] {"label":"1"}
+[37] pat:binder {"name":"x","level":2}
+[38] pat:binder {"name":"xs","level":3}
+[39] pat:wildcard
+[42] var:foreign {"name":"$add","arity":2}
+[44] lit {"value":{"type":"Num","value":1}}
+  :next -> [45]
+[45] app {"icit":"Explicit"}
+  :arg -> [49]
+  :func -> [46]
+[46] app {"icit":"Implicit"}
+  :arg -> [48]
+  :func -> [47]
+[47] var:bound {"index":6}
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [37] {"level":2}
+  :scope -> [38] {"level":3}
+  :scope -> [39] {"level":4}
+[48] var:bound {"index":5}
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [37] {"level":2}
+  :scope -> [38] {"level":3}
+  :scope -> [39] {"level":4}
+[49] var:bound {"index":2}
+  :refers_to -> [37]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [37] {"level":2}
+  :scope -> [38] {"level":3}
+  :scope -> [39] {"level":4}
+[50] primop {"op":"$add"}
+  :arg -> [44] {"index":0}
+  :arg -> [45] {"index":1}
+  :callee -> [42]
+[51] switch {"kind":"tag"}
+  :branch -> [53] {"label":"nil"}
+  :branch -> [55] {"label":"cons"}
+  :inspect -> [29]
+[52] proj {"label":"nil"}
+  :target -> [29]
+[53] leaf
+  :body -> [33]
+[54] proj {"label":"cons"}
+  :target -> [29]
+[55] switch {"kind":"struct"}
+  :branch -> [58]
+  :inspect -> [54]
+[56] proj {"label":"0"}
+  :target -> [54]
+[57] proj {"label":"1"}
+  :target -> [54]
+[58] leaf
+  :bind -> [56] {"name":"x","binder":37}
+  :bind -> [57] {"name":"xs","binder":38}
+  :body -> [50]
+[59] env
+[60] env
+[61] env
+  :capture -> [6] {"index":0}
+[62] closure
+  :body -> [2]
+  :env -> [59]
+[63] closure
+  :body -> [4]
+  :env -> [60]
+[64] closure
+  :body -> [10]
+  :env -> [61]",
+    "kind": "let",
+    "mir": "",
+    "name": "length",
+    "normalized": "λ(a: Type) =>
+  (closure: λ(list: (List) a) ->
+    match list
+      | Variant [ nil: _ | $row_15 ] -> 0
+      | Variant [ cons: Struct [ 0: x, 1: xs | $row_20 ] | $row_21 ] ->
+          FFI.$add 1 (I6 @a xs) -| Γ: a)",
+    "type": "Π(a: Type) => Π(t2: (List) a) -> Num",
+  },
+]
+`;
+
+exports[`Language Tour — Pattern Matching > recursive record fields 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = {};
+  return v0;
+}
+return main();
+",
+    "elaborated": "Σ($sig: [ compute: Π(t1: Num) -> Num ]) . Schema [ compute: Π(t1: Num) -> Num ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] sigma {"variable":"$sig","level":0}
+  :annotation -> [3]
+  :body -> [9]
+[3] row:ext {"label":"compute"}
+  :rest -> [8]
+  :value -> [4]
+[4] pi {"variable":"t1","icit":"Explicit","level":0}
+  :annotation -> [6]
+  :body -> [7]
+[5] var:free {"name":"Num"}
+[6] var:ref {"name":"Num"}
+  :refers_to -> [5]
+[7] var:ref {"name":"Num"}
+  :refers_to -> [5]
+  :scope -> [4] {"level":0}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"compute"}
+  :rest -> [15]
+  :value -> [12]
+[12] pi {"variable":"t1","icit":"Explicit","level":1}
+  :annotation -> [13]
+  :body -> [14]
+[13] var:ref {"name":"Num"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[14] var:ref {"name":"Num"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [12] {"level":1}
+[15] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }
+      return v0",
+    "name": "Factorial",
+    "normalized": "Σ($sig: [ compute: Π(t1: Num) -> (closure: Num -| Γ: t1) ]) .
+  (closure: Schema [ compute: Π(t1: Num) -> Num ] -| ·)",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_34;
+  const v1 = {
+    compute: v0
+  };
+  return v1;
+}
+
+function closure_34(n) {
+  let __block = "entry";
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        (__block = "sw1");
+        break;
+      }
+      case "sw1": {
+        if ((String(n) === "0")) {
+          (__block = "case3");
+          break;
+        }
+        (__block = "default4");
+        break;
+      }
+      case "case3": {
+        const v4 = 1;
+        const match0 = v4;
+        (__block = "join2");
+        break;
+      }
+      case "default4": {
+        const v6 = 1;
+        const v7 = (n - v6);
+        const v8 = v5(v7);
+        const v9 = (n * v8);
+        const match0 = v9;
+        (__block = "join2");
+        break;
+      }
+      case "join2": {
+        return match0;
+      }
+    }
+  }
+}
+return main();
+",
+    "elaborated": "Struct
+  [ compute: (λ(n: Num) ->
+      match n
+        | 0 -> 1
+        | _ -> FFI.$mul n (:compute (FFI.$sub n 1)) : Π(n: Num) ->
+      (closure: Num -| Γ: n; fact)) ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"compute"}
+  :rest -> [27]
+  :value -> [5]
+[5] lambda {"variable":"n","icit":"Explicit","level":0}
+  :annotation -> [6]
+  :body -> [7]
+  :env -> [33]
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[7] match
+  :alt -> [9] {"index":0}
+  :alt -> [12] {"index":1}
+  :decision_tree -> [30]
+  :scrutinee -> [8]
+[8] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [5] {"level":0}
+[9] case
+  :body -> [11]
+  :next -> [12]
+  :pattern -> [10]
+[10] pat:lit {"value":{"type":"Num","value":0}}
+[11] lit {"value":{"type":"Num","value":1}}
+[12] case
+  :body -> [28]
+  :pattern -> [13]
+[13] pat:wildcard
+[16] var:foreign {"name":"$mul","arity":2}
+[18] var:bound {"index":0}
+  :next -> [19]
+  :refers_to -> [5]
+  :scope -> [5] {"level":0}
+[19] app {"icit":"Explicit"}
+  :arg -> [29]
+  :func -> [20]
+[20] var:label {"name":"compute"}
+[23] var:foreign {"name":"$sub","arity":2}
+[25] var:bound {"index":0}
+  :next -> [26]
+  :refers_to -> [5]
+  :scope -> [5] {"level":0}
+[26] lit {"value":{"type":"Num","value":1}}
+[27] row:empty
+[28] primop {"op":"$mul"}
+  :arg -> [18] {"index":0}
+  :arg -> [19] {"index":1}
+  :callee -> [16]
+[29] primop {"op":"$sub"}
+  :arg -> [25] {"index":0}
+  :arg -> [26] {"index":1}
+  :callee -> [23]
+[30] switch {"kind":"lit"}
+  :branch -> [31] {"value":{"type":"Num","value":0}}
+  :default -> [32]
+  :inspect -> [8]
+[31] leaf
+  :body -> [11]
+[32] leaf
+  :body -> [28]
+[33] env
+[34] closure
+  :body -> [5]
+  :env -> [33]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_34
+      let v1 = alloc { compute: v0 }
+      return v1
+  fn closure_34(n) entry=entry
+    entry:
+      jump sw1
+    sw1:
+      branch n { 0 -> case3; default -> default4 }
+    case3:
+      let v4 = 1
+      let match0 = v4
+      jump join2
+    default4:
+      let v6 = 1
+      let v7 = -(n, v6)
+      let v8 = call *v5(v7)
+      let v9 = *(n, v8)
+      let match0 = v9
+      jump join2
+    join2:
+      return match0",
+    "name": "fact",
+    "normalized": "Struct
+  [ compute: λ(n: Num) ->
+      (closure: match n
+        | 0 -> 1
+        | _ -> FFI.$mul n (:compute (FFI.$sub n 1)) -| Γ: n) ]",
+    "type": "Σ($sig: [ compute: Π(t1: Num) -> Num ]) . Schema [ compute: Π(t1: Num) -> Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = v0.compute;
+  const v2 = 5;
+  const v3 = v1(v2);
+  return v3;
+}
+return main();
+",
+    "elaborated": "((fact).compute) 5",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [6]
+  :func -> [3]
+[3] proj {"label":"compute"}
+  :target -> [5]
+[4] var:free {"name":"fact"}
+[5] var:ref {"name":"fact"}
+  :refers_to -> [4]
+[6] lit {"value":{"type":"Num","value":5}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = read v0.compute
+      let v2 = 5
+      let v3 = call *v1(v2)
+      return v3",
+    "name": "result",
+    "normalized": "120",
+    "type": "Num",
+  },
+]
+`;
+
+exports[`Language Tour — Pattern Matching > variant patterns 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = {};
+  const v1 = unknown;
+  const v2 = {
+    1: v1,
+    0: v1
+  };
+  const v3 = {
+    point: v0,
+    rectangle: v2,
+    circle: v1
+  };
+  return v3;
+}
+return main();
+",
+    "elaborated": "Variant
+  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Variant"}}
+[4] row:ext {"label":"point"}
+  :rest -> [19]
+  :value -> [5]
+[5] sigma {"variable":"$sig","level":0}
+  :annotation -> [6]
+  :body -> [12]
+[6] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[7] var:free {"name":"Num"}
+[8] var:ref {"name":"Num"}
+  :refers_to -> [7]
+[9] row:ext {"label":"x"}
+  :rest -> [11]
+  :value -> [10]
+[10] var:ref {"name":"Num"}
+  :refers_to -> [7]
+[11] row:empty
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Schema"}}
+[14] row:ext {"label":"y"}
+  :rest -> [16]
+  :value -> [15]
+[15] var:ref {"name":"Num"}
+  :refers_to -> [7]
+  :scope -> [5] {"level":0}
+[16] row:ext {"label":"x"}
+  :rest -> [18]
+  :value -> [17]
+[17] var:ref {"name":"Num"}
+  :refers_to -> [7]
+  :scope -> [5] {"level":0}
+[18] row:empty
+[19] row:ext {"label":"rectangle"}
+  :rest -> [27]
+  :value -> [20]
+[20] app {"icit":"Explicit"}
+  :arg -> [22]
+  :func -> [21]
+[21] lit {"value":{"type":"Atom","value":"Schema"}}
+[22] row:ext {"label":"1"}
+  :rest -> [24]
+  :value -> [23]
+[23] var:ref {"name":"Num"}
+  :refers_to -> [7]
+[24] row:ext {"label":"0"}
+  :rest -> [26]
+  :value -> [25]
+[25] var:ref {"name":"Num"}
+  :refers_to -> [7]
+[26] row:empty
+[27] row:ext {"label":"circle"}
+  :rest -> [29]
+  :value -> [28]
+[28] var:ref {"name":"Num"}
+  :refers_to -> [7]
+[29] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }
+      let v1 = unknown
+      let v2 = alloc { 1: v1, 0: v1 }
+      let v3 = alloc { point: v0, rectangle: v2, circle: v1 }
+      return v3",
+    "name": "Shape",
+    "normalized": "Variant
+  [ point: Σ($sig: [ y: Num, x: Num ]) .
+      (closure: Schema [ y: Num, x: Num ] -| ·),
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "",
+    "elaborated": "λ(s: Variant
+  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]) ->
+  match s
+    | Variant [ circle: r | $row_24 ] -> "Circle with radius"
+    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_29 ] | $row_30 ] ->
+        "Rectangle"
+    | Variant [ point: Struct [ x: _, y: _ | $row_35 ] | $row_36 ] ->
+        "Point at coordinates"",
+    "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"s","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [30]
+  :env -> [63]
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Variant"}}
+[5] row:ext {"label":"point"}
+  :rest -> [19]
+  :value -> [6]
+[6] sigma {"variable":"$sig","level":0}
+  :annotation -> [7]
+  :body -> [12]
+[7] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] row:ext {"label":"x"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[11] row:empty
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Schema"}}
+[14] row:ext {"label":"y"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"Atom","value":"Num"}}
+[16] row:ext {"label":"x"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"Atom","value":"Num"}}
+[18] row:empty
+[19] row:ext {"label":"rectangle"}
+  :rest -> [27]
+  :value -> [20]
+[20] app {"icit":"Explicit"}
+  :arg -> [22]
+  :func -> [21]
+[21] lit {"value":{"type":"Atom","value":"Schema"}}
+[22] row:ext {"label":"1"}
+  :rest -> [24]
+  :value -> [23]
+[23] lit {"value":{"type":"Atom","value":"Num"}}
+[24] row:ext {"label":"0"}
+  :rest -> [26]
+  :value -> [25]
+[25] lit {"value":{"type":"Atom","value":"Num"}}
+[26] row:empty
+[27] row:ext {"label":"circle"}
+  :rest -> [29]
+  :value -> [28]
+[28] lit {"value":{"type":"Atom","value":"Num"}}
+[29] row:empty
+[30] match
+  :alt -> [32] {"index":0}
+  :alt -> [36] {"index":1}
+  :alt -> [43] {"index":2}
+  :decision_tree -> [50]
+  :scrutinee -> [31]
+[31] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[32] case
+  :body -> [35]
+  :next -> [36]
+  :pattern -> [33]
+[33] pat:variant {"label":"circle"}
+  :payload -> [34]
+[34] pat:binder {"name":"r","level":1}
+[35] lit {"value":{"type":"String","value":"Circle with radius"}}
+[36] case
+  :body -> [42]
+  :next -> [43]
+  :pattern -> [37]
+[37] pat:variant {"label":"rectangle"}
+  :payload -> [38]
+[38] pat:struct
+  :field -> [39] {"label":"0"}
+  :field -> [40] {"label":"1"}
+[39] pat:binder {"name":"w","level":1}
+[40] pat:binder {"name":"h","level":2}
+[41] pat:wildcard
+[42] lit {"value":{"type":"String","value":"Rectangle"}}
+[43] case
+  :body -> [49]
+  :pattern -> [44]
+[44] pat:variant {"label":"point"}
+  :payload -> [45]
+[45] pat:struct
+  :field -> [46] {"label":"x"}
+  :field -> [47] {"label":"y"}
+[46] pat:wildcard
+[47] pat:wildcard
+[48] pat:wildcard
+[49] lit {"value":{"type":"String","value":"Point at coordinates"}}
+[50] switch {"kind":"tag"}
+  :branch -> [52] {"label":"circle"}
+  :branch -> [54] {"label":"rectangle"}
+  :branch -> [59] {"label":"point"}
+  :inspect -> [31]
+[51] proj {"label":"circle"}
+  :target -> [31]
+[52] leaf
+  :bind -> [51] {"name":"r","binder":34}
+  :body -> [35]
+[53] proj {"label":"rectangle"}
+  :target -> [31]
+[54] switch {"kind":"struct"}
+  :branch -> [57]
+  :inspect -> [53]
+[55] proj {"label":"0"}
+  :target -> [53]
+[56] proj {"label":"1"}
+  :target -> [53]
+[57] leaf
+  :bind -> [55] {"name":"w","binder":39}
+  :bind -> [56] {"name":"h","binder":40}
+  :body -> [42]
+[58] proj {"label":"point"}
+  :target -> [31]
+[59] switch {"kind":"struct"}
+  :branch -> [62]
+  :inspect -> [58]
+[60] proj {"label":"x"}
+  :target -> [58]
+[61] proj {"label":"y"}
+  :target -> [58]
+[62] leaf
+  :body -> [49]
+[63] env
+[64] closure
+  :body -> [2]
+  :env -> [63]",
+    "kind": "let",
+    "mir": "",
+    "name": "describeShape",
+    "normalized": "λ(s: Variant
+  [ point: Σ($sig: [ y: Num, x: Num ]) .
+      (closure: Schema [ y: Num, x: Num ] -| ·),
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]) ->
+  (closure: match s
+    | Variant [ circle: r | $row_24 ] -> "Circle with radius"
+    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_29 ] | $row_30 ] ->
+        "Rectangle"
+    | Variant [ point: Struct [ x: _, y: _ | $row_35 ] | $row_36 ] ->
+        "Point at coordinates" -| Γ: s)",
+    "type": "Π(t1: Variant
+  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]) ->
+  String",
+  },
+]
+`;
+
+exports[`Language Tour — Variants & Tagged Values > simple variants 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = "Unit";
+  const v1 = "Unit";
+  const v2 = "Unit";
+  const v3 = {
+    green: v0,
+    yellow: v1,
+    red: v2
+  };
+  return v3;
+}
+return main();
+",
+    "elaborated": "Variant [ green: Unit, yellow: Unit, red: Unit ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Variant"}}
+[4] row:ext {"label":"green"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Unit"}}
+[6] row:ext {"label":"yellow"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Unit"}}
+[8] row:ext {"label":"red"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Unit"}}
+[10] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = Unit
+      let v1 = Unit
+      let v2 = Unit
+      let v3 = alloc { green: v0, yellow: v1, red: v2 }
+      return v3",
+    "name": "TrafficLight",
+    "normalized": "Variant [ green: Unit, yellow: Unit, red: Unit ]",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = null;
+  const v1 = {
+    red: v0
+  };
+  return v1;
+}
+return main();
+",
+    "elaborated": "Struct [ red: unit ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"red"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"unit"}}
+[6] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unit
+      let v1 = alloc { red: v0 }
+      return v1",
+    "name": "light",
+    "normalized": "Struct [ red: unit ]",
+    "type": "Variant [ green: Unit, yellow: Unit, red: Unit ]",
+  },
+]
+`;
+
+exports[`Language Tour — Variants & Tagged Values > variants with data 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = {};
+  const v1 = unknown;
+  const v2 = {
+    1: v1,
+    0: v1
+  };
+  const v3 = {
+    point: v0,
+    rectangle: v2,
+    circle: v1
+  };
+  return v3;
+}
+return main();
+",
+    "elaborated": "Variant
+  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Variant"}}
+[4] row:ext {"label":"point"}
+  :rest -> [19]
+  :value -> [5]
+[5] sigma {"variable":"$sig","level":0}
+  :annotation -> [6]
+  :body -> [12]
+[6] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[7] var:free {"name":"Num"}
+[8] var:ref {"name":"Num"}
+  :refers_to -> [7]
+[9] row:ext {"label":"x"}
+  :rest -> [11]
+  :value -> [10]
+[10] var:ref {"name":"Num"}
+  :refers_to -> [7]
+[11] row:empty
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Schema"}}
+[14] row:ext {"label":"y"}
+  :rest -> [16]
+  :value -> [15]
+[15] var:ref {"name":"Num"}
+  :refers_to -> [7]
+  :scope -> [5] {"level":0}
+[16] row:ext {"label":"x"}
+  :rest -> [18]
+  :value -> [17]
+[17] var:ref {"name":"Num"}
+  :refers_to -> [7]
+  :scope -> [5] {"level":0}
+[18] row:empty
+[19] row:ext {"label":"rectangle"}
+  :rest -> [27]
+  :value -> [20]
+[20] app {"icit":"Explicit"}
+  :arg -> [22]
+  :func -> [21]
+[21] lit {"value":{"type":"Atom","value":"Schema"}}
+[22] row:ext {"label":"1"}
+  :rest -> [24]
+  :value -> [23]
+[23] var:ref {"name":"Num"}
+  :refers_to -> [7]
+[24] row:ext {"label":"0"}
+  :rest -> [26]
+  :value -> [25]
+[25] var:ref {"name":"Num"}
+  :refers_to -> [7]
+[26] row:empty
+[27] row:ext {"label":"circle"}
+  :rest -> [29]
+  :value -> [28]
+[28] var:ref {"name":"Num"}
+  :refers_to -> [7]
+[29] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }
+      let v1 = unknown
+      let v2 = alloc { 1: v1, 0: v1 }
+      let v3 = alloc { point: v0, rectangle: v2, circle: v1 }
+      return v3",
+    "name": "Shape",
+    "normalized": "Variant
+  [ point: Σ($sig: [ y: Num, x: Num ]) .
+      (closure: Schema [ y: Num, x: Num ] -| ·),
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 5;
+  const v1 = {
+    circle: v0
+  };
+  return v1;
+}
+return main();
+",
+    "elaborated": "Struct [ circle: 5 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"circle"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":5}}
+[6] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 5
+      let v1 = alloc { circle: v0 }
+      return v1",
+    "name": "c",
+    "normalized": "Struct [ circle: 5 ]",
+    "type": "Variant
+  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 10;
+  const v1 = 20;
+  const v2 = {
+    0: v0,
+    1: v1
+  };
+  const v3 = {
+    rectangle: v2
+  };
+  return v3;
+}
+return main();
+",
+    "elaborated": "Struct [ rectangle: Struct [ 0: 10, 1: 20 ] ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"rectangle"}
+  :rest -> [12]
+  :value -> [5]
+[5] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [6]
+[6] lit {"value":{"type":"Atom","value":"Struct"}}
+[7] row:ext {"label":"0"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Num","value":10}}
+[9] row:ext {"label":"1"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Num","value":20}}
+[11] row:empty
+[12] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 10
+      let v1 = 20
+      let v2 = alloc { 0: v0, 1: v1 }
+      let v3 = alloc { rectangle: v2 }
+      return v3",
+    "name": "r",
+    "normalized": "Struct [ rectangle: Struct [ 0: 10, 1: 20 ] ]",
+    "type": "Variant
+  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 0;
+  const v1 = 0;
+  const v2 = {
+    x: v0,
+    y: v1
+  };
+  const v3 = {
+    point: v2
+  };
+  return v3;
+}
+return main();
+",
+    "elaborated": "Struct [ point: Struct [ x: 0, y: 0 ] ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"point"}
+  :rest -> [12]
+  :value -> [5]
+[5] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [6]
+[6] lit {"value":{"type":"Atom","value":"Struct"}}
+[7] row:ext {"label":"x"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Num","value":0}}
+[9] row:ext {"label":"y"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Num","value":0}}
+[11] row:empty
+[12] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 0
+      let v1 = 0
+      let v2 = alloc { x: v0, y: v1 }
+      let v3 = alloc { point: v2 }
+      return v3",
+    "name": "p",
+    "normalized": "Struct [ point: Struct [ x: 0, y: 0 ] ]",
+    "type": "Variant
+  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]",
+  },
+]
+`;

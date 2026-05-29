@@ -251,3 +251,20 @@ export const runScript = (source: string): ScriptResult => {
 	reset();
 	return parse(source).reduce(process, { ctx: { ...defaultContext }, declarations: [] });
 };
+
+export const snap = (result: ScriptResult) =>
+	result.declarations.map(d => ({
+		name: d.name,
+		kind: d.kind,
+		...(d.error ? { error: d.error } : {}),
+		...(d.stages
+			? {
+					type: d.stages.type,
+					elaborated: d.stages.elaborated,
+					normalized: d.stages.normalized,
+					gram: d.stages.gram,
+					mir: d.stages.mir,
+					codegenJS: d.stages.codegenJS,
+				}
+			: {}),
+	}));

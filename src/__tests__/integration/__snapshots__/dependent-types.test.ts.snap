@@ -1,0 +1,771 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Language Tour — Dependent Types > dependent functions 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_18;
+  return v0;
+}
+
+function closure_18(Num, String, b) {
+  let __block = "entry";
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        (__block = "sw1");
+        break;
+      }
+      case "sw1": {
+        if ((String(b) === "true")) {
+          (__block = "case3");
+          break;
+        }
+        if ((String(b) === "false")) {
+          (__block = "case4");
+          break;
+        }
+      }
+      case "case3": {
+        const match0 = Num;
+        (__block = "join2");
+        break;
+      }
+      case "case4": {
+        const match0 = String;
+        (__block = "join2");
+        break;
+      }
+      case "join2": {
+        return match0;
+      }
+    }
+  }
+}
+return main();
+",
+    "elaborated": "λ(b: Bool) -> match b | true -> Num | false -> String",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"b","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [17]
+[3] lit {"value":{"type":"Atom","value":"Bool"}}
+[4] match
+  :alt -> [6] {"index":0}
+  :alt -> [10] {"index":1}
+  :decision_tree -> [14]
+  :scrutinee -> [5]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] case
+  :body -> [9]
+  :next -> [10]
+  :pattern -> [7]
+[7] pat:lit {"value":{"type":"Bool","value":true}}
+[8] var:free {"name":"Num"}
+[9] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[10] case
+  :body -> [13]
+  :pattern -> [11]
+[11] pat:lit {"value":{"type":"Bool","value":false}}
+[12] var:free {"name":"String"}
+[13] var:ref {"name":"String"}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+[14] switch {"kind":"lit"}
+  :branch -> [15] {"value":{"type":"Bool","value":true}}
+  :branch -> [16] {"value":{"type":"Bool","value":false}}
+  :inspect -> [5]
+[15] leaf
+  :body -> [9]
+[16] leaf
+  :body -> [13]
+[17] env
+  :capture -> [8] {"index":0}
+  :capture -> [12] {"index":1}
+[18] closure
+  :body -> [2]
+  :env -> [17]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_18
+      return v0
+  fn closure_18(Num, String, b) entry=entry
+    entry:
+      jump sw1
+    sw1:
+      branch b { true -> case3 | false -> case4 }
+    case3:
+      let match0 = Num
+      jump join2
+    case4:
+      let match0 = String
+      jump join2
+    join2:
+      return match0",
+    "name": "makeType",
+    "normalized": "λ(b: Bool) -> (closure: match b | true -> Num | false -> String -| Γ: b)",
+    "type": "Π(t1: Bool) -> Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = true;
+  const v2 = v0(v1);
+  return v2;
+}
+return main();
+",
+    "elaborated": "makeType true",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[3] var:free {"name":"makeType"}
+[4] var:ref {"name":"makeType"}
+  :refers_to -> [3]
+[5] lit {"value":{"type":"Bool","value":true}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = true
+      let v2 = call *v0(v1)
+      return v2",
+    "name": "T1",
+    "normalized": "Num",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = false;
+  const v2 = v0(v1);
+  return v2;
+}
+return main();
+",
+    "elaborated": "makeType false",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[3] var:free {"name":"makeType"}
+[4] var:ref {"name":"makeType"}
+  :refers_to -> [3]
+[5] lit {"value":{"type":"Bool","value":false}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = false
+      let v2 = call *v0(v1)
+      return v2",
+    "name": "T2",
+    "normalized": "String",
+    "type": "Type",
+  },
+]
+`;
+
+exports[`Language Tour — Dependent Types > dependent records (sigma types) 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = {};
+  return v0;
+}
+return main();
+",
+    "elaborated": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: :fst, fst: Type ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] sigma {"variable":"$sig","level":0}
+  :annotation -> [3]
+  :body -> [8]
+[3] row:ext {"label":"snd"}
+  :rest -> [5]
+  :value -> [4]
+[4] var:label {"name":"fst"}
+[5] row:ext {"label":"fst"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] row:empty
+[8] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [9]
+[9] lit {"value":{"type":"Atom","value":"Schema"}}
+[10] row:ext {"label":"snd"}
+  :rest -> [12]
+  :value -> [11]
+[11] var:label {"name":"fst"}
+[12] row:ext {"label":"fst"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Atom","value":"Type"}}
+[14] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }
+      return v0",
+    "name": "DependentPair",
+    "normalized": "Σ($sig: [ snd: :fst, fst: Type ]) .
+  (closure: Schema [ snd: :fst, fst: Type ] -| ·)",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = 42;
+  const v2 = {
+    fst: v0,
+    snd: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ fst: Num, snd: 42 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"fst"}
+  :rest -> [7]
+  :value -> [6]
+[5] var:free {"name":"Num"}
+[6] var:ref {"name":"Num"}
+  :refers_to -> [5]
+[7] row:ext {"label":"snd"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Num","value":42}}
+[9] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = 42
+      let v2 = alloc { fst: v0, snd: v1 }
+      return v2",
+    "name": "numPair",
+    "normalized": "Struct [ fst: Num, snd: 42 ]",
+    "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: Type, fst: Type ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "hello";
+  const v2 = {
+    fst: v0,
+    snd: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ fst: String, snd: "hello" ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"fst"}
+  :rest -> [7]
+  :value -> [6]
+[5] var:free {"name":"String"}
+[6] var:ref {"name":"String"}
+  :refers_to -> [5]
+[7] row:ext {"label":"snd"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"String","value":"hello"}}
+[9] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = "hello"
+      let v2 = alloc { fst: v0, snd: v1 }
+      return v2",
+    "name": "strPair",
+    "normalized": "Struct [ fst: String, snd: "hello" ]",
+    "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: Type, fst: Type ]",
+  },
+]
+`;
+
+exports[`Language Tour — Dependent Types > generic dependent pairs 1`] = `
+[
+  {
+    "codegenJS": "",
+    "elaborated": "λ(a: Type) ->
+  λ(p: Π(t1: a) -> Type) ->
+    Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ]",
+    "error": "Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"a","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [25]
+[3] lit {"value":{"type":"Atom","value":"Type"}}
+[4] lambda {"variable":"p","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [8]
+  :env -> [26]
+[5] pi {"variable":"t1","icit":"Explicit","level":1}
+  :annotation -> [6]
+  :body -> [7]
+[6] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[7] lit {"value":{"type":"Atom","value":"Type"}}
+[8] sigma {"variable":"$sig","level":2}
+  :annotation -> [9]
+  :body -> [16]
+[9] row:ext {"label":"snd"}
+  :rest -> [13]
+  :value -> [10]
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[12] var:label {"name":"fst"}
+[13] row:ext {"label":"fst"}
+  :rest -> [15]
+  :value -> [14]
+[14] var:bound {"index":1}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[15] row:empty
+[16] app {"icit":"Explicit"}
+  :arg -> [18]
+  :func -> [17]
+[17] lit {"value":{"type":"Atom","value":"Schema"}}
+[18] row:ext {"label":"snd"}
+  :rest -> [22]
+  :value -> [19]
+[19] app {"icit":"Explicit"}
+  :arg -> [21]
+  :func -> [20]
+[20] var:bound {"index":0}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [8] {"level":2}
+[21] var:label {"name":"fst"}
+[22] row:ext {"label":"fst"}
+  :rest -> [24]
+  :value -> [23]
+[23] var:bound {"index":1}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [8] {"level":2}
+[24] row:empty
+[25] env
+[26] env
+  :capture -> [2] {"index":0}
+[27] closure
+  :body -> [2]
+  :env -> [25]
+[28] closure
+  :body -> [4]
+  :env -> [26]",
+    "kind": "let",
+    "mir": "",
+    "name": "Pair",
+    "normalized": "λ(a: Type) ->
+  (closure: λ(p: Π(t1: a) -> Type) ->
+    Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ] -| Γ: a)",
+    "type": "Π(a: Type) -> Π(p: Π(t1: a) -> Type) -> Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 42;
+  const v1 = "hello";
+  const v2 = {
+    fst: v0,
+    snd: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ fst: 42, snd: "hello" ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"fst"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":42}}
+[6] row:ext {"label":"snd"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"String","value":"hello"}}
+[8] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 42
+      let v1 = "hello"
+      let v2 = alloc { fst: v0, snd: v1 }
+      return v2",
+    "name": "exampleP1",
+    "normalized": "Struct [ fst: 42, snd: "hello" ]",
+    "type": "Σ($sig: [ snd: String, fst: Num ]) . Schema [ snd: String, fst: Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = true;
+  const v1 = 100;
+  const v2 = {
+    fst: v0,
+    snd: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ fst: true, snd: 100 ]",
+    "error": "Match: No alternative matched",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"fst"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Bool","value":true}}
+[6] row:ext {"label":"snd"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Num","value":100}}
+[8] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = true
+      let v1 = 100
+      let v2 = alloc { fst: v0, snd: v1 }
+      return v2",
+    "name": "exampleP2",
+    "normalized": "Struct [ fst: true, snd: 100 ]",
+    "type": "",
+  },
+]
+`;
+
+exports[`Language Tour — Dependent Types > length-indexed vectors 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  return v0;
+}
+return main();
+",
+    "elaborated": "Vec",
+    "gram": "[1] root
+  :entry -> [2]
+[2] mu {"variable":"x","source":"Vec","level":0}
+  :annotation -> [3]
+  :body -> [9]
+[3] pi {"variable":"t1","icit":"Explicit","level":0}
+  :annotation -> [5]
+  :body -> [6]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+[6] pi {"variable":"t2","icit":"Explicit","level":1}
+  :annotation -> [7]
+  :body -> [8]
+[7] lit {"value":{"type":"Atom","value":"Type"}}
+[8] lit {"value":{"type":"Atom","value":"Type"}}
+[9] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [10]
+  :body -> [11]
+  :env -> [40]
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[11] lambda {"variable":"t","icit":"Explicit","level":2}
+  :annotation -> [12]
+  :body -> [13]
+  :env -> [41]
+[12] lit {"value":{"type":"Atom","value":"Type"}}
+[13] match
+  :alt -> [15] {"index":0}
+  :alt -> [18] {"index":1}
+  :decision_tree -> [37]
+  :scrutinee -> [14]
+[14] var:bound {"index":1}
+  :refers_to -> [9]
+  :scope -> [2] {"level":0}
+  :scope -> [9] {"level":1}
+  :scope -> [11] {"level":2}
+[15] case
+  :body -> [17]
+  :next -> [18]
+  :pattern -> [16]
+[16] pat:lit {"value":{"type":"Num","value":0}}
+[17] lit {"value":{"type":"Atom","value":"Unit"}}
+[18] case
+  :body -> [20]
+  :pattern -> [19]
+[19] pat:binder {"name":"l","level":3}
+[20] app {"icit":"Explicit"}
+  :arg -> [22]
+  :func -> [21]
+[21] lit {"value":{"type":"Atom","value":"Schema"}}
+[22] row:ext {"label":"1"}
+  :rest -> [33]
+  :value -> [23]
+[23] app {"icit":"Explicit"}
+  :arg -> [32]
+  :func -> [24]
+[24] app {"icit":"Explicit"}
+  :arg -> [36]
+  :func -> [25]
+[25] var:bound {"index":3}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [9] {"level":1}
+  :scope -> [11] {"level":2}
+  :scope -> [19] {"level":3}
+[28] var:foreign {"name":"$sub","arity":2}
+[30] var:bound {"index":0}
+  :next -> [31]
+  :refers_to -> [19]
+  :scope -> [2] {"level":0}
+  :scope -> [9] {"level":1}
+  :scope -> [11] {"level":2}
+  :scope -> [19] {"level":3}
+[31] lit {"value":{"type":"Num","value":1}}
+[32] var:bound {"index":1}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [9] {"level":1}
+  :scope -> [11] {"level":2}
+  :scope -> [19] {"level":3}
+[33] row:ext {"label":"0"}
+  :rest -> [35]
+  :value -> [34]
+[34] var:bound {"index":1}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [9] {"level":1}
+  :scope -> [11] {"level":2}
+  :scope -> [19] {"level":3}
+[35] row:empty
+[36] primop {"op":"$sub"}
+  :arg -> [30] {"index":0}
+  :arg -> [31] {"index":1}
+  :callee -> [28]
+[37] switch {"kind":"lit"}
+  :branch -> [38] {"value":{"type":"Num","value":0}}
+  :default -> [39]
+  :inspect -> [14]
+[38] leaf
+  :body -> [17]
+[39] leaf
+  :bind -> [14] {"name":"l","binder":19}
+  :body -> [20]
+[40] env
+  :capture -> [2] {"index":0}
+[41] env
+  :capture -> [9] {"index":0}
+  :capture -> [2] {"index":1}
+[42] closure
+  :body -> [9]
+  :env -> [40]
+[43] closure
+  :body -> [11]
+  :env -> [41]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      return v0",
+    "name": "Vec",
+    "normalized": "Vec",
+    "type": "Π(t1: Num) -> Π(t2: Type) -> Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = null;
+  return v0;
+}
+return main();
+",
+    "elaborated": "unit",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"unit"}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unit
+      return v0",
+    "name": "vec0",
+    "normalized": "unit",
+    "type": "(Vec) 0 Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 10;
+  const v1 = unknown;
+  const v2 = {
+    0: v0,
+    1: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ 0: 10, 1: vec0 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"0"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":10}}
+[6] row:ext {"label":"1"}
+  :rest -> [9]
+  :value -> [8]
+[7] var:free {"name":"vec0"}
+[8] var:ref {"name":"vec0"}
+  :refers_to -> [7]
+[9] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 10
+      let v1 = unknown
+      let v2 = alloc { 0: v0, 1: v1 }
+      return v2",
+    "name": "vec1",
+    "normalized": "Struct [ 0: 10, 1: unit ]",
+    "type": "(Vec) 1 Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 20;
+  const v1 = unknown;
+  const v2 = {
+    0: v0,
+    1: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ 0: 20, 1: vec1 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"0"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":20}}
+[6] row:ext {"label":"1"}
+  :rest -> [9]
+  :value -> [8]
+[7] var:free {"name":"vec1"}
+[8] var:ref {"name":"vec1"}
+  :refers_to -> [7]
+[9] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 20
+      let v1 = unknown
+      let v2 = alloc { 0: v0, 1: v1 }
+      return v2",
+    "name": "vec2",
+    "normalized": "Struct [ 0: 20, 1: Struct [ 0: 10, 1: unit ] ]",
+    "type": "(Vec) 2 Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 30;
+  const v1 = unknown;
+  const v2 = {
+    0: v0,
+    1: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ 0: 30, 1: vec2 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"0"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":30}}
+[6] row:ext {"label":"1"}
+  :rest -> [9]
+  :value -> [8]
+[7] var:free {"name":"vec2"}
+[8] var:ref {"name":"vec2"}
+  :refers_to -> [7]
+[9] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 30
+      let v1 = unknown
+      let v2 = alloc { 0: v0, 1: v1 }
+      return v2",
+    "name": "vec3",
+    "normalized": "Struct [ 0: 30, 1: Struct [ 0: 20, 1: Struct [ 0: 10, 1: unit ] ] ]",
+    "type": "(Vec) 3 Num",
+  },
+]
+`;

@@ -1,0 +1,90 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Language Tour — Primitives & Literals > primitive bindings 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = "Hello, Yap!";
+  return v0;
+}
+return main();
+",
+    "elaborated": ""Hello, Yap!"",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"String","value":"Hello, Yap!"}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = "Hello, Yap!"
+      return v0",
+    "name": "greeting",
+    "normalized": ""Hello, Yap!"",
+    "type": "String",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 42;
+  return v0;
+}
+return main();
+",
+    "elaborated": "42",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"Num","value":42}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 42
+      return v0",
+    "name": "life",
+    "normalized": "42",
+    "type": "Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = true;
+  return v0;
+}
+return main();
+",
+    "elaborated": "true",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"Bool","value":true}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = true
+      return v0",
+    "name": "b",
+    "normalized": "true",
+    "type": "Bool",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = null;
+  return v0;
+}
+return main();
+",
+    "elaborated": "unit",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"unit"}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unit
+      return v0",
+    "name": "u",
+    "normalized": "unit",
+    "type": "Unit",
+  },
+]
+`;

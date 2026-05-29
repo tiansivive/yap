@@ -1,0 +1,1960 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Language Tour — Defining Types > computing types 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_18;
+  return v0;
+}
+
+function closure_18(Num, String, b) {
+  let __block = "entry";
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        (__block = "sw1");
+        break;
+      }
+      case "sw1": {
+        if ((String(b) === "true")) {
+          (__block = "case3");
+          break;
+        }
+        if ((String(b) === "false")) {
+          (__block = "case4");
+          break;
+        }
+      }
+      case "case3": {
+        const match0 = Num;
+        (__block = "join2");
+        break;
+      }
+      case "case4": {
+        const match0 = String;
+        (__block = "join2");
+        break;
+      }
+      case "join2": {
+        return match0;
+      }
+    }
+  }
+}
+return main();
+",
+    "elaborated": "λ(b: Bool) -> match b | true -> Num | false -> String",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"b","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [17]
+[3] lit {"value":{"type":"Atom","value":"Bool"}}
+[4] match
+  :alt -> [6] {"index":0}
+  :alt -> [10] {"index":1}
+  :decision_tree -> [14]
+  :scrutinee -> [5]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] case
+  :body -> [9]
+  :next -> [10]
+  :pattern -> [7]
+[7] pat:lit {"value":{"type":"Bool","value":true}}
+[8] var:free {"name":"Num"}
+[9] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[10] case
+  :body -> [13]
+  :pattern -> [11]
+[11] pat:lit {"value":{"type":"Bool","value":false}}
+[12] var:free {"name":"String"}
+[13] var:ref {"name":"String"}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+[14] switch {"kind":"lit"}
+  :branch -> [15] {"value":{"type":"Bool","value":true}}
+  :branch -> [16] {"value":{"type":"Bool","value":false}}
+  :inspect -> [5]
+[15] leaf
+  :body -> [9]
+[16] leaf
+  :body -> [13]
+[17] env
+  :capture -> [8] {"index":0}
+  :capture -> [12] {"index":1}
+[18] closure
+  :body -> [2]
+  :env -> [17]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_18
+      return v0
+  fn closure_18(Num, String, b) entry=entry
+    entry:
+      jump sw1
+    sw1:
+      branch b { true -> case3 | false -> case4 }
+    case3:
+      let match0 = Num
+      jump join2
+    case4:
+      let match0 = String
+      jump join2
+    join2:
+      return match0",
+    "name": "chooseType",
+    "normalized": "λ(b: Bool) -> (closure: match b | true -> Num | false -> String -| Γ: b)",
+    "type": "Π(t1: Bool) -> Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = true;
+  const v2 = v0(v1);
+  return v2;
+}
+return main();
+",
+    "elaborated": "chooseType true",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[3] var:free {"name":"chooseType"}
+[4] var:ref {"name":"chooseType"}
+  :refers_to -> [3]
+[5] lit {"value":{"type":"Bool","value":true}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = true
+      let v2 = call *v0(v1)
+      return v2",
+    "name": "T1",
+    "normalized": "Num",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = false;
+  const v2 = v0(v1);
+  return v2;
+}
+return main();
+",
+    "elaborated": "chooseType false",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[3] var:free {"name":"chooseType"}
+[4] var:ref {"name":"chooseType"}
+  :refers_to -> [3]
+[5] lit {"value":{"type":"Bool","value":false}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = false
+      let v2 = call *v0(v1)
+      return v2",
+    "name": "T2",
+    "normalized": "String",
+    "type": "Type",
+  },
+]
+`;
+
+exports[`Language Tour — Defining Types > first-class types 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  return v0;
+}
+return main();
+",
+    "elaborated": "Num",
+    "gram": "[1] root
+  :entry -> [3]
+[2] var:free {"name":"Num"}
+[3] var:ref {"name":"Num"}
+  :refers_to -> [2]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      return v0",
+    "name": "MyNum",
+    "normalized": "Num",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  return v0;
+}
+return main();
+",
+    "elaborated": "String",
+    "gram": "[1] root
+  :entry -> [3]
+[2] var:free {"name":"String"}
+[3] var:ref {"name":"String"}
+  :refers_to -> [2]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      return v0",
+    "name": "MyString",
+    "normalized": "String",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 42;
+  return v0;
+}
+return main();
+",
+    "elaborated": "42",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"Num","value":42}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 42
+      return v0",
+    "name": "n",
+    "normalized": "42",
+    "type": "Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = "hi";
+  return v0;
+}
+return main();
+",
+    "elaborated": ""hi"",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"String","value":"hi"}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = "hi"
+      return v0",
+    "name": "s",
+    "normalized": ""hi"",
+    "type": "String",
+  },
+]
+`;
+
+exports[`Language Tour — Defining Types > type aliases 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = {};
+  return v0;
+}
+return main();
+",
+    "elaborated": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] sigma {"variable":"$sig","level":0}
+  :annotation -> [3]
+  :body -> [9]
+[3] row:ext {"label":"y"}
+  :rest -> [6]
+  :value -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+[6] row:ext {"label":"x"}
+  :rest -> [8]
+  :value -> [7]
+[7] var:ref {"name":"Num"}
+  :refers_to -> [4]
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"y"}
+  :rest -> [13]
+  :value -> [12]
+[12] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[13] row:ext {"label":"x"}
+  :rest -> [15]
+  :value -> [14]
+[14] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[15] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }
+      return v0",
+    "name": "Point",
+    "normalized": "Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 0;
+  const v1 = 0;
+  const v2 = {
+    x: v0,
+    y: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ x: 0, y: 0 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"x"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":0}}
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Num","value":0}}
+[8] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 0
+      let v1 = 0
+      let v2 = alloc { x: v0, y: v1 }
+      return v2",
+    "name": "origin",
+    "normalized": "Struct [ x: 0, y: 0 ]",
+    "type": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
+  },
+]
+`;
+
+exports[`Language Tour — Polymorphism > forcing implicits 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_9;
+  return v0;
+}
+
+function closure_10(x) {
+  return x;
+}
+
+function closure_9(a) {
+  const v0 = closure_10;
+  return v0;
+}
+return main();
+",
+    "elaborated": "λ(a: Type) => λ(x: a) -> x",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"a","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [7]
+[3] lit {"value":{"type":"Atom","value":"Type"}}
+[4] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [8]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[7] env
+[8] env
+[9] closure
+  :body -> [2]
+  :env -> [7]
+[10] closure
+  :body -> [4]
+  :env -> [8]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_9
+      return v0
+  fn closure_10(x) entry=entry
+    entry:
+      return x
+  fn closure_9(a) entry=entry
+    entry:
+      let v0 = &closure_10
+      return v0",
+    "name": "id",
+    "normalized": "λ(a: Type) => (closure: λ(x: a) -> x -| Γ: a)",
+    "type": "Π(a: Type) => Π(t1: a) -> a",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = unknown;
+  const v2 = v0(v1);
+  const v3 = "hello";
+  const v4 = v2(v3);
+  return v4;
+}
+return main();
+",
+    "elaborated": "id @String "hello"",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [7]
+  :func -> [5]
+[4] var:free {"name":"id"}
+[5] var:ref {"name":"id"}
+  :refers_to -> [4]
+[6] var:free {"name":"String"}
+[7] var:ref {"name":"String"}
+  :refers_to -> [6]
+[8] lit {"value":{"type":"String","value":"hello"}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = unknown
+      let v2 = call *v0(v1)
+      let v3 = "hello"
+      let v4 = call *v2(v3)
+      return v4",
+    "name": "forcedStr",
+    "normalized": ""hello"",
+    "type": "String",
+  },
+]
+`;
+
+exports[`Language Tour — Polymorphism > implicit parameters 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_9;
+  return v0;
+}
+
+function closure_10(x) {
+  return x;
+}
+
+function closure_9(a) {
+  const v0 = closure_10;
+  return v0;
+}
+return main();
+",
+    "elaborated": "λ(a: Type) => λ(x: a) -> x",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"a","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [7]
+[3] lit {"value":{"type":"Atom","value":"Type"}}
+[4] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [8]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[7] env
+[8] env
+[9] closure
+  :body -> [2]
+  :env -> [7]
+[10] closure
+  :body -> [4]
+  :env -> [8]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_9
+      return v0
+  fn closure_10(x) entry=entry
+    entry:
+      return x
+  fn closure_9(a) entry=entry
+    entry:
+      let v0 = &closure_10
+      return v0",
+    "name": "id",
+    "normalized": "λ(a: Type) => (closure: λ(x: a) -> x -| Γ: a)",
+    "type": "Π(a: Type) => Π(t1: a) -> a",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "Num";
+  const v2 = v0(v1);
+  const v3 = 42;
+  const v4 = v2(v3);
+  return v4;
+}
+return main();
+",
+    "elaborated": "id @Num 42",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"id"}
+[5] var:ref {"name":"id"}
+  :refers_to -> [4]
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[7] lit {"value":{"type":"Num","value":42}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = Num
+      let v2 = call *v0(v1)
+      let v3 = 42
+      let v4 = call *v2(v3)
+      return v4",
+    "name": "n2",
+    "normalized": "42",
+    "type": "Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "String";
+  const v2 = v0(v1);
+  const v3 = "hello";
+  const v4 = v2(v3);
+  return v4;
+}
+return main();
+",
+    "elaborated": "id @String "hello"",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"id"}
+[5] var:ref {"name":"id"}
+  :refers_to -> [4]
+[6] lit {"value":{"type":"Atom","value":"String"}}
+[7] lit {"value":{"type":"String","value":"hello"}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = String
+      let v2 = call *v0(v1)
+      let v3 = "hello"
+      let v4 = call *v2(v3)
+      return v4",
+    "name": "s2",
+    "normalized": ""hello"",
+    "type": "String",
+  },
+]
+`;
+
+exports[`Language Tour — Polymorphism > implicit resolution with using 1`] = `
+[
+  {
+    "codegenJS": "",
+    "elaborated": "λ(n: Num) => λ(x: Num) -> FFI.$add x n",
+    "error": "Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"n","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [13]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [12]
+  :env -> [14]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[8] var:foreign {"name":"$add","arity":2}
+[10] var:bound {"index":0}
+  :next -> [11]
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[11] var:bound {"index":1}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[12] primop {"op":"$add"}
+  :arg -> [10] {"index":0}
+  :arg -> [11] {"index":1}
+  :callee -> [8]
+[13] env
+[14] env
+  :capture -> [2] {"index":0}
+[15] closure
+  :body -> [2]
+  :env -> [13]
+[16] closure
+  :body -> [4]
+  :env -> [14]",
+    "kind": "let",
+    "mir": "",
+    "name": "addImplicit",
+    "normalized": "λ(n: Num) => (closure: λ(x: Num) -> FFI.$add x n -| Γ: n)",
+    "type": "Π(n: Num) => Π(t1: Num) -> Num",
+  },
+  {
+    "kind": "using",
+    "name": "(using)",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = 10;
+  const v2 = v0(v1);
+  const v3 = 1;
+  const v4 = v2(v3);
+  return v4;
+}
+return main();
+",
+    "elaborated": "addImplicit @10 1",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"addImplicit"}
+[5] var:ref {"name":"addImplicit"}
+  :refers_to -> [4]
+[6] lit {"value":{"type":"Num","value":10}}
+[7] lit {"value":{"type":"Num","value":1}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = 10
+      let v2 = call *v0(v1)
+      let v3 = 1
+      let v4 = call *v2(v3)
+      return v4",
+    "name": "eleven",
+    "normalized": "11",
+    "type": "Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = 10;
+  const v2 = v0(v1);
+  const v3 = 5;
+  const v4 = v2(v3);
+  return v4;
+}
+return main();
+",
+    "elaborated": "addImplicit @10 5",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"addImplicit"}
+[5] var:ref {"name":"addImplicit"}
+  :refers_to -> [4]
+[6] lit {"value":{"type":"Num","value":10}}
+[7] lit {"value":{"type":"Num","value":5}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = 10
+      let v2 = call *v0(v1)
+      let v3 = 5
+      let v4 = call *v2(v3)
+      return v4",
+    "name": "fifteen",
+    "normalized": "15",
+    "type": "Num",
+  },
+]
+`;
+
+exports[`Language Tour — Polymorphism > inference and generalization 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_12;
+  return v0;
+}
+
+function closure_12(x) {
+  const v0 = 1;
+  const v1 = (x + v0);
+  return v1;
+}
+return main();
+",
+    "elaborated": "(λ(x: Num) -> FFI.$add x 1 : Π(x: Num) -> (closure: Num -| Γ: x; inc))",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [10]
+  :env -> [11]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:foreign {"name":"$add","arity":2}
+[8] var:bound {"index":0}
+  :next -> [9]
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[9] lit {"value":{"type":"Num","value":1}}
+[10] primop {"op":"$add"}
+  :arg -> [8] {"index":0}
+  :arg -> [9] {"index":1}
+  :callee -> [6]
+[11] env
+[12] closure
+  :body -> [2]
+  :env -> [11]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_12
+      return v0
+  fn closure_12(x) entry=entry
+    entry:
+      let v0 = 1
+      let v1 = +(x, v0)
+      return v1",
+    "name": "inc",
+    "normalized": "λ(x: Num) -> (closure: FFI.$add x 1 -| Γ: x)",
+    "type": "Π(x: Num) -> Num",
+  },
+  {
+    "codegenJS": "",
+    "elaborated": "λ(a: Type) =>
+  λ(b: Type) =>
+    (λ(x: a) ->
+      (λ(y: b) -> x : Π(y: x) -> (closure: x -| Γ: y; x; fst)) : Π(x: b) ->
+      (closure: Π(y: L2) -> x -| Γ: x; fst))",
+    "error": "Rigid variables do not match in subtype; Rigid variables do not match in subtype; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"a","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [11]
+[3] lit {"value":{"type":"Atom","value":"Type"}}
+[4] lambda {"variable":"b","icit":"Implicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [12]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lambda {"variable":"x","icit":"Explicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [13]
+[7] var:bound {"index":1}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[8] lambda {"variable":"y","icit":"Explicit","level":3}
+  :annotation -> [9]
+  :body -> [10]
+  :env -> [14]
+[9] var:bound {"index":1}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[10] var:bound {"index":1}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+[11] env
+[12] env
+  :capture -> [2] {"index":0}
+[13] env
+  :capture -> [4] {"index":0}
+[14] env
+  :capture -> [6] {"index":0}
+[15] closure
+  :body -> [2]
+  :env -> [11]
+[16] closure
+  :body -> [4]
+  :env -> [12]
+[17] closure
+  :body -> [6]
+  :env -> [13]
+[18] closure
+  :body -> [8]
+  :env -> [14]",
+    "kind": "let",
+    "mir": "",
+    "name": "fst",
+    "normalized": "λ(a: Type) =>
+  (closure: λ(b: Type) =>
+    (λ(x: a) ->
+      (λ(y: b) -> x : Π(y: x) -> (closure: x -| Γ: y; x; fst)) : Π(x: b) ->
+      (closure: Π(y: L2) -> x -| Γ: x; fst)) -| Γ: a)",
+    "type": "Π(a: Type) => Π(b: Type) => Π(x: a) -> Π(y: b) -> a",
+  },
+]
+`;
+
+exports[`Language Tour — Polymorphism > let-polymorphism in blocks 1`] = `
+[
+  {
+    "codegenJS": "",
+    "elaborated": "λ(a: Type) =>
+  {
+    let innerID
+      : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; innerID; letpoly)
+      = λ(a: Type) =>
+        (λ(x: a) -> x : Π(x: innerID) ->
+          (closure: innerID -| Γ: x; innerID; letpoly));
+    let n : Num = innerID @Num 42;
+    let s : String = innerID @String "hi";
+    return n;
+  }",
+    "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"a","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [24]
+[3] lit {"value":{"type":"Atom","value":"Type"}}
+[4] block
+  :return -> [23]
+  :stmt -> [5] {"index":0}
+  :stmt -> [11] {"index":1}
+  :stmt -> [17] {"index":2}
+[5] stmt:let {"variable":"innerID"}
+  :next -> [11]
+  :value -> [6]
+[6] lambda {"variable":"a","icit":"Implicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [25]
+[7] lit {"value":{"type":"Atom","value":"Type"}}
+[8] lambda {"variable":"x","icit":"Explicit","level":3}
+  :annotation -> [9]
+  :body -> [10]
+  :env -> [26]
+[9] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+  :scope -> [6] {"level":2}
+[10] var:bound {"index":0}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+[11] stmt:let {"variable":"n"}
+  :next -> [17]
+  :value -> [12]
+[12] app {"icit":"Explicit"}
+  :arg -> [16]
+  :func -> [13]
+[13] app {"icit":"Implicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] var:bound {"index":1}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+  :scope -> [11] {"level":2}
+[15] lit {"value":{"type":"Atom","value":"Num"}}
+[16] lit {"value":{"type":"Num","value":42}}
+[17] stmt:let {"variable":"s"}
+  :value -> [18]
+[18] app {"icit":"Explicit"}
+  :arg -> [22]
+  :func -> [19]
+[19] app {"icit":"Implicit"}
+  :arg -> [21]
+  :func -> [20]
+[20] var:bound {"index":2}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+  :scope -> [11] {"level":2}
+  :scope -> [17] {"level":3}
+[21] lit {"value":{"type":"Atom","value":"String"}}
+[22] lit {"value":{"type":"String","value":"hi"}}
+[23] var:bound {"index":1}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+  :scope -> [11] {"level":2}
+  :scope -> [17] {"level":3}
+[24] env
+[25] env
+[26] env
+[27] closure
+  :body -> [2]
+  :env -> [24]
+[28] closure
+  :body -> [6]
+  :env -> [25]
+[29] closure
+  :body -> [8]
+  :env -> [26]",
+    "kind": "let",
+    "mir": "",
+    "name": "letpoly",
+    "normalized": "λ(a: Type) =>
+  (closure: {
+    let innerID
+      : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; innerID; letpoly)
+      = λ(a: Type) =>
+        (λ(x: a) -> x : Π(x: innerID) ->
+          (closure: innerID -| Γ: x; innerID; letpoly));
+    let n : Num = innerID @Num 42;
+    let s : String = innerID @String "hi";
+    return n;
+  } -| Γ: a)",
+    "type": "Π(a: Type) => Num",
+  },
+]
+`;
+
+exports[`Language Tour — Polymorphism > parametric polymorphism 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_9;
+  return v0;
+}
+
+function closure_10(x) {
+  return x;
+}
+
+function closure_9(a) {
+  const v0 = closure_10;
+  return v0;
+}
+return main();
+",
+    "elaborated": "λ(a: Type) -> λ(x: a) -> x",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"a","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [7]
+[3] lit {"value":{"type":"Atom","value":"Type"}}
+[4] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [8]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[7] env
+[8] env
+[9] closure
+  :body -> [2]
+  :env -> [7]
+[10] closure
+  :body -> [4]
+  :env -> [8]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_9
+      return v0
+  fn closure_10(x) entry=entry
+    entry:
+      return x
+  fn closure_9(a) entry=entry
+    entry:
+      let v0 = &closure_10
+      return v0",
+    "name": "id",
+    "normalized": "λ(a: Type) -> (closure: λ(x: a) -> x -| Γ: a)",
+    "type": "Π(a: Type) -> Π(t1: a) -> a",
+  },
+  {
+    "codegenJS": "",
+    "elaborated": "λ(a: Type) -> λ(b: Type) -> λ(x: a) -> λ(y: b) -> x",
+    "error": "Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"a","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [11]
+[3] lit {"value":{"type":"Atom","value":"Type"}}
+[4] lambda {"variable":"b","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [12]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lambda {"variable":"x","icit":"Explicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [13]
+[7] var:bound {"index":1}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[8] lambda {"variable":"y","icit":"Explicit","level":3}
+  :annotation -> [9]
+  :body -> [10]
+  :env -> [14]
+[9] var:bound {"index":1}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[10] var:bound {"index":1}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+[11] env
+[12] env
+  :capture -> [2] {"index":0}
+[13] env
+  :capture -> [4] {"index":0}
+[14] env
+  :capture -> [6] {"index":0}
+[15] closure
+  :body -> [2]
+  :env -> [11]
+[16] closure
+  :body -> [4]
+  :env -> [12]
+[17] closure
+  :body -> [6]
+  :env -> [13]
+[18] closure
+  :body -> [8]
+  :env -> [14]",
+    "kind": "let",
+    "mir": "",
+    "name": "const",
+    "normalized": "λ(a: Type) -> (closure: λ(b: Type) -> λ(x: a) -> λ(y: b) -> x -| Γ: a)",
+    "type": "Π(a: Type) -> Π(b: Type) -> Π(t2: a) -> Π(t3: b) -> a",
+  },
+]
+`;
+
+exports[`Language Tour — Row Polymorphism > open records 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_18;
+  return v0;
+}
+
+function closure_19(record) {
+  const v0 = record.x;
+  return v0;
+}
+
+function closure_18(r) {
+  const v0 = closure_19;
+  return v0;
+}
+return main();
+",
+    "elaborated": "λ(r: Row) =>
+  λ(record: Σ($sig: [ x: Num | r ]) . Schema [ x: Num | r ]) -> (record).x",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"r","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [16]
+[3] lit {"value":{"type":"Atom","value":"Row"}}
+[4] lambda {"variable":"record","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [14]
+  :env -> [17]
+[5] sigma {"variable":"$sig","level":1}
+  :annotation -> [6]
+  :body -> [9]
+[6] row:ext {"label":"x"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"x"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Atom","value":"Num"}}
+[13] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[14] proj {"label":"x"}
+  :target -> [15]
+[15] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[16] env
+[17] env
+[18] closure
+  :body -> [2]
+  :env -> [16]
+[19] closure
+  :body -> [4]
+  :env -> [17]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_18
+      return v0
+  fn closure_19(record) entry=entry
+    entry:
+      let v0 = read record.x
+      return v0
+  fn closure_18(r) entry=entry
+    entry:
+      let v0 = &closure_19
+      return v0",
+    "name": "getX",
+    "normalized": "λ(r: Row) =>
+  (closure: λ(record: Σ($sig: [ x: Num | r ]) . Schema [ x: Num | r ]) ->
+    (record).x -| Γ: r)",
+    "type": "Π(r: Row) => Π(t1: Σ($sig: [ x: Num | r ]) . Schema [ x: Num | r ]) -> Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "Num";
+  const v2 = {
+    y: v1
+  };
+  const v3 = v0(v2);
+  const v4 = 10;
+  const v5 = 20;
+  const v6 = {
+    x: v4,
+    y: v5
+  };
+  const v7 = v3(v6);
+  return v7;
+}
+return main();
+",
+    "elaborated": "getX @[ y: Num ] (Struct [ x: 10, y: 20 ])",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"getX"}
+[5] var:ref {"name":"getX"}
+  :refers_to -> [4]
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Struct"}}
+[11] row:ext {"label":"x"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Num","value":10}}
+[13] row:ext {"label":"y"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"Num","value":20}}
+[15] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = Num
+      let v2 = alloc { y: v1 }
+      let v3 = call *v0(v2)
+      let v4 = 10
+      let v5 = 20
+      let v6 = alloc { x: v4, y: v5 }
+      let v7 = call *v3(v6)
+      return v7",
+    "name": "p1",
+    "normalized": "10",
+    "type": "Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "Num";
+  const v2 = "Num";
+  const v3 = {
+    y: v1,
+    z: v2
+  };
+  const v4 = v0(v3);
+  const v5 = 5;
+  const v6 = 3;
+  const v7 = 7;
+  const v8 = {
+    x: v5,
+    y: v6,
+    z: v7
+  };
+  const v9 = v4(v8);
+  return v9;
+}
+return main();
+",
+    "elaborated": "getX @[ y: Num, z: Num ] (Struct [ x: 5, y: 3, z: 7 ])",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"getX"}
+[5] var:ref {"name":"getX"}
+  :refers_to -> [4]
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] row:ext {"label":"z"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] row:empty
+[11] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [12]
+[12] lit {"value":{"type":"Atom","value":"Struct"}}
+[13] row:ext {"label":"x"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"Num","value":5}}
+[15] row:ext {"label":"y"}
+  :rest -> [17]
+  :value -> [16]
+[16] lit {"value":{"type":"Num","value":3}}
+[17] row:ext {"label":"z"}
+  :rest -> [19]
+  :value -> [18]
+[18] lit {"value":{"type":"Num","value":7}}
+[19] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = Num
+      let v2 = Num
+      let v3 = alloc { y: v1, z: v2 }
+      let v4 = call *v0(v3)
+      let v5 = 5
+      let v6 = 3
+      let v7 = 7
+      let v8 = alloc { x: v5, y: v6, z: v7 }
+      let v9 = call *v4(v8)
+      return v9",
+    "name": "p2",
+    "normalized": "5",
+    "type": "Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "String";
+  const v2 = {
+    name: v1
+  };
+  const v3 = v0(v2);
+  const v4 = 100;
+  const v5 = "point";
+  const v6 = {
+    x: v4,
+    name: v5
+  };
+  const v7 = v3(v6);
+  return v7;
+}
+return main();
+",
+    "elaborated": "getX @[ name: String ] (Struct [ x: 100, name: "point" ])",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"getX"}
+[5] var:ref {"name":"getX"}
+  :refers_to -> [4]
+[6] row:ext {"label":"name"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"String"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Struct"}}
+[11] row:ext {"label":"x"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Num","value":100}}
+[13] row:ext {"label":"name"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"String","value":"point"}}
+[15] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = String
+      let v2 = alloc { name: v1 }
+      let v3 = call *v0(v2)
+      let v4 = 100
+      let v5 = "point"
+      let v6 = alloc { x: v4, name: v5 }
+      let v7 = call *v3(v6)
+      return v7",
+    "name": "p3",
+    "normalized": "100",
+    "type": "Num",
+  },
+]
+`;
+
+exports[`Language Tour — Row Polymorphism > polymorphic extension 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_23;
+  return v0;
+}
+
+function closure_24(rec) {
+  const v0 = 0;
+  const v1 = {
+    ...rec,
+    z: v0
+  };
+  return v1;
+}
+
+function closure_23(r) {
+  const v0 = closure_24;
+  return v0;
+}
+return main();
+",
+    "elaborated": "λ(r: Row) =>
+  λ(rec: Σ($sig: [ y: Num, x: Num | r ]) . Schema [ y: Num, x: Num | r ]) ->
+    { rec | z = 0 }",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"r","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [21]
+[3] lit {"value":{"type":"Atom","value":"Row"}}
+[4] lambda {"variable":"rec","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [18]
+  :env -> [22]
+[5] sigma {"variable":"$sig","level":1}
+  :annotation -> [6]
+  :body -> [11]
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] row:ext {"label":"x"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[11] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [12]
+[12] lit {"value":{"type":"Atom","value":"Schema"}}
+[13] row:ext {"label":"y"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"Atom","value":"Num"}}
+[15] row:ext {"label":"x"}
+  :rest -> [17]
+  :value -> [16]
+[16] lit {"value":{"type":"Atom","value":"Num"}}
+[17] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[18] inj {"label":"z"}
+  :target -> [20]
+  :value -> [19]
+[19] lit {"value":{"type":"Num","value":0}}
+[20] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[21] env
+[22] env
+[23] closure
+  :body -> [2]
+  :env -> [21]
+[24] closure
+  :body -> [4]
+  :env -> [22]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_23
+      return v0
+  fn closure_24(rec) entry=entry
+    entry:
+      let v0 = 0
+      let v1 = update-immutable rec { z: v0 }
+      return v1
+  fn closure_23(r) entry=entry
+    entry:
+      let v0 = &closure_24
+      return v0",
+    "name": "addZ",
+    "normalized": "λ(r: Row) =>
+  (closure: λ(rec: Σ($sig: [ y: Num, x: Num | r ]) .
+    Schema [ y: Num, x: Num | r ]) ->
+    { rec | z = 0 } -| Γ: r)",
+    "type": "Π(r: Row) =>
+  Π(t1: Σ($sig: [ y: Num, x: Num | r ]) . Schema [ y: Num, x: Num | r ]) ->
+    Σ($sig: [ z: Num, y: Num, x: Num | r ]) .
+      Schema [ z: Num, y: Num, x: Num | r ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = {};
+  const v2 = v0(v1);
+  const v3 = 1;
+  const v4 = 2;
+  const v5 = {
+    x: v3,
+    y: v4
+  };
+  const v6 = v2(v5);
+  return v6;
+}
+return main();
+",
+    "elaborated": "addZ @[] (Struct [ x: 1, y: 2 ])",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"addZ"}
+[5] var:ref {"name":"addZ"}
+  :refers_to -> [4]
+[6] row:empty
+[7] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [8]
+[8] lit {"value":{"type":"Atom","value":"Struct"}}
+[9] row:ext {"label":"x"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Num","value":1}}
+[11] row:ext {"label":"y"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Num","value":2}}
+[13] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = alloc {  }
+      let v2 = call *v0(v1)
+      let v3 = 1
+      let v4 = 2
+      let v5 = alloc { x: v3, y: v4 }
+      let v6 = call *v2(v5)
+      return v6",
+    "name": "p1",
+    "normalized": "Struct [ x: 1, y: 2, z: 0 ]",
+    "type": "Σ($sig: [ z: Num, y: Num, x: Num | [] ]) .
+  Schema [ z: Num, y: Num, x: Num | [] ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "String";
+  const v2 = {
+    color: v1
+  };
+  const v3 = v0(v2);
+  const v4 = 5;
+  const v5 = 10;
+  const v6 = "red";
+  const v7 = {
+    x: v4,
+    y: v5,
+    color: v6
+  };
+  const v8 = v3(v7);
+  return v8;
+}
+return main();
+",
+    "elaborated": "addZ @[ color: String ] (Struct [ x: 5, y: 10, color: "red" ])",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"addZ"}
+[5] var:ref {"name":"addZ"}
+  :refers_to -> [4]
+[6] row:ext {"label":"color"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"String"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Struct"}}
+[11] row:ext {"label":"x"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Num","value":5}}
+[13] row:ext {"label":"y"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"Num","value":10}}
+[15] row:ext {"label":"color"}
+  :rest -> [17]
+  :value -> [16]
+[16] lit {"value":{"type":"String","value":"red"}}
+[17] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = String
+      let v2 = alloc { color: v1 }
+      let v3 = call *v0(v2)
+      let v4 = 5
+      let v5 = 10
+      let v6 = "red"
+      let v7 = alloc { x: v4, y: v5, color: v6 }
+      let v8 = call *v3(v7)
+      return v8",
+    "name": "p2",
+    "normalized": "Struct [ x: 5, y: 10, color: "red", z: 0 ]",
+    "type": "Σ($sig: [ z: Num, y: Num, x: Num | [ color: String ] ]) .
+  Schema [ z: Num, y: Num, x: Num | [ color: String ] ]",
+  },
+]
+`;
+
+exports[`Language Tour — Row Polymorphism > polymorphic projection 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_18;
+  return v0;
+}
+
+function closure_19(obj) {
+  const v0 = obj.name;
+  return v0;
+}
+
+function closure_18(r) {
+  const v0 = closure_19;
+  return v0;
+}
+return main();
+",
+    "elaborated": "λ(r: Row) =>
+  λ(obj: Σ($sig: [ name: String | r ]) . Schema [ name: String | r ]) ->
+    (obj).name",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"r","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [16]
+[3] lit {"value":{"type":"Atom","value":"Row"}}
+[4] lambda {"variable":"obj","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [14]
+  :env -> [17]
+[5] sigma {"variable":"$sig","level":1}
+  :annotation -> [6]
+  :body -> [9]
+[6] row:ext {"label":"name"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"String"}}
+[8] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"name"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Atom","value":"String"}}
+[13] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[14] proj {"label":"name"}
+  :target -> [15]
+[15] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[16] env
+[17] env
+[18] closure
+  :body -> [2]
+  :env -> [16]
+[19] closure
+  :body -> [4]
+  :env -> [17]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_18
+      return v0
+  fn closure_19(obj) entry=entry
+    entry:
+      let v0 = read obj.name
+      return v0
+  fn closure_18(r) entry=entry
+    entry:
+      let v0 = &closure_19
+      return v0",
+    "name": "getName",
+    "normalized": "λ(r: Row) =>
+  (closure: λ(obj: Σ($sig: [ name: String | r ]) .
+    Schema [ name: String | r ]) ->
+    (obj).name -| Γ: r)",
+    "type": "Π(r: Row) =>
+  Π(t1: Σ($sig: [ name: String | r ]) . Schema [ name: String | r ]) -> String",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = "Alice";
+  const v1 = 30;
+  const v2 = {
+    name: v0,
+    age: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ name: "Alice", age: 30 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"name"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"String","value":"Alice"}}
+[6] row:ext {"label":"age"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Num","value":30}}
+[8] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = "Alice"
+      let v1 = 30
+      let v2 = alloc { name: v0, age: v1 }
+      return v2",
+    "name": "person",
+    "normalized": "Struct [ name: "Alice", age: 30 ]",
+    "type": "Schema [ name: String, age: Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = "1984";
+  const v1 = "Orwell";
+  const v2 = 328;
+  const v3 = {
+    name: v0,
+    author: v1,
+    pages: v2
+  };
+  return v3;
+}
+return main();
+",
+    "elaborated": "Struct [ name: "1984", author: "Orwell", pages: 328 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"name"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"String","value":"1984"}}
+[6] row:ext {"label":"author"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"String","value":"Orwell"}}
+[8] row:ext {"label":"pages"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Num","value":328}}
+[10] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = "1984"
+      let v1 = "Orwell"
+      let v2 = 328
+      let v3 = alloc { name: v0, author: v1, pages: v2 }
+      return v3",
+    "name": "book",
+    "normalized": "Struct [ name: "1984", author: "Orwell", pages: 328 ]",
+    "type": "Schema [ name: String, author: String, pages: Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "Num";
+  const v2 = {
+    age: v1
+  };
+  const v3 = v0(v2);
+  const v4 = unknown;
+  const v5 = v3(v4);
+  return v5;
+}
+return main();
+",
+    "elaborated": "getName @[ age: Num ] person",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"getName"}
+[5] var:ref {"name":"getName"}
+  :refers_to -> [4]
+[6] row:ext {"label":"age"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] row:empty
+[9] var:free {"name":"person"}
+[10] var:ref {"name":"person"}
+  :refers_to -> [9]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = Num
+      let v2 = alloc { age: v1 }
+      let v3 = call *v0(v2)
+      let v4 = unknown
+      let v5 = call *v3(v4)
+      return v5",
+    "name": "n1",
+    "normalized": ""Alice"",
+    "type": "String",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "String";
+  const v2 = "Num";
+  const v3 = {
+    author: v1,
+    pages: v2
+  };
+  const v4 = v0(v3);
+  const v5 = unknown;
+  const v6 = v4(v5);
+  return v6;
+}
+return main();
+",
+    "elaborated": "getName @[ author: String, pages: Num ] book",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"getName"}
+[5] var:ref {"name":"getName"}
+  :refers_to -> [4]
+[6] row:ext {"label":"author"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"String"}}
+[8] row:ext {"label":"pages"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] row:empty
+[11] var:free {"name":"book"}
+[12] var:ref {"name":"book"}
+  :refers_to -> [11]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = String
+      let v2 = Num
+      let v3 = alloc { author: v1, pages: v2 }
+      let v4 = call *v0(v3)
+      let v5 = unknown
+      let v6 = call *v4(v5)
+      return v6",
+    "name": "n2",
+    "normalized": ""1984"",
+    "type": "String",
+  },
+]
+`;

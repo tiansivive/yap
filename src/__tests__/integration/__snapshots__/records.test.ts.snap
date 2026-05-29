@@ -1,0 +1,587 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Language Tour — Records & Tuples > arrays and dictionaries 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = 1;
+  const v1 = 2;
+  const v2 = 3;
+  const v3 = {
+    0: v0,
+    1: v1,
+    2: v2
+  };
+  return v3;
+}
+return main();
+",
+    "elaborated": "Array [ 0: 1, 1: 2, 2: 3 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Array"}}
+[4] row:ext {"label":"0"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":1}}
+[6] row:ext {"label":"1"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Num","value":2}}
+[8] row:ext {"label":"2"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Num","value":3}}
+[10] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 1
+      let v1 = 2
+      let v2 = 3
+      let v3 = alloc { 0: v0, 1: v1, 2: v2 }
+      return v3",
+    "name": "array",
+    "normalized": "Array [ 0: 1, 1: 2, 2: 3 ]",
+    "type": "FFI.Indexed Num Num @FFI.defaultArray",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 3;
+  const v1 = 2;
+  const v2 = 1;
+  const v3 = {
+    three: v0,
+    two: v1,
+    one: v2
+  };
+  return v3;
+}
+return main();
+",
+    "elaborated": "Struct [ three: 3, two: 2, one: 1 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"three"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":3}}
+[6] row:ext {"label":"two"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Num","value":2}}
+[8] row:ext {"label":"one"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Num","value":1}}
+[10] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 3
+      let v1 = 2
+      let v2 = 1
+      let v3 = alloc { three: v0, two: v1, one: v2 }
+      return v3",
+    "name": "dict",
+    "normalized": "Struct [ three: 3, two: 2, one: 1 ]",
+    "type": "FFI.Indexed String Num @FFI.defaultHashMap",
+  },
+]
+`;
+
+exports[`Language Tour — Records & Tuples > field access 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = 10;
+  const v1 = 20;
+  const v2 = {
+    x: v0,
+    y: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ x: 10, y: 20 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"x"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":10}}
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Num","value":20}}
+[8] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 10
+      let v1 = 20
+      let v2 = alloc { x: v0, y: v1 }
+      return v2",
+    "name": "point",
+    "normalized": "Struct [ x: 10, y: 20 ]",
+    "type": "Schema [ x: Num, y: Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = v0.x;
+  return v1;
+}
+return main();
+",
+    "elaborated": "(point).x",
+    "gram": "[1] root
+  :entry -> [2]
+[2] proj {"label":"x"}
+  :target -> [4]
+[3] var:free {"name":"point"}
+[4] var:ref {"name":"point"}
+  :refers_to -> [3]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = read v0.x
+      return v1",
+    "name": "xCoord",
+    "normalized": "10",
+    "type": "Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_19;
+  return v0;
+}
+
+function closure_19(p) {
+  const v0 = p.x;
+  return v0;
+}
+return main();
+",
+    "elaborated": "λ(p: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> (p).x",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"p","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [16]
+  :env -> [18]
+[3] sigma {"variable":"$sig","level":0}
+  :annotation -> [4]
+  :body -> [9]
+[4] row:ext {"label":"y"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] row:ext {"label":"x"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"y"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Atom","value":"Num"}}
+[13] row:ext {"label":"x"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"Atom","value":"Num"}}
+[15] row:empty
+[16] proj {"label":"x"}
+  :target -> [17]
+[17] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[18] env
+[19] closure
+  :body -> [2]
+  :env -> [18]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_19
+      return v0
+  fn closure_19(p) entry=entry
+    entry:
+      let v0 = read p.x
+      return v0",
+    "name": "getX",
+    "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
+  (closure: (p).x -| Γ: p)",
+    "type": "Π(t1: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
+  },
+]
+`;
+
+exports[`Language Tour — Records & Tuples > field extension 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = 10;
+  const v1 = {
+    x: v0
+  };
+  return v1;
+}
+return main();
+",
+    "elaborated": "Struct [ x: 10 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"x"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":10}}
+[6] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 10
+      let v1 = alloc { x: v0 }
+      return v1",
+    "name": "point",
+    "normalized": "Struct [ x: 10 ]",
+    "type": "Schema [ x: Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 30;
+  const v1 = 20;
+  const v2 = unknown;
+  const v3 = {
+    ...v2,
+    y: v1
+  };
+  const v4 = {
+    ...v3,
+    z: v0
+  };
+  return v4;
+}
+return main();
+",
+    "elaborated": "{ { point | y = 20 } | z = 30 }",
+    "gram": "[1] root
+  :entry -> [2]
+[2] inj {"label":"z"}
+  :target -> [4]
+  :value -> [3]
+[3] lit {"value":{"type":"Num","value":30}}
+[4] inj {"label":"y"}
+  :target -> [7]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":20}}
+[6] var:free {"name":"point"}
+[7] var:ref {"name":"point"}
+  :refers_to -> [6]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 30
+      let v1 = 20
+      let v2 = unknown
+      let v3 = update-immutable v2 { y: v1 }
+      let v4 = update-immutable v3 { z: v0 }
+      return v4",
+    "name": "point3d",
+    "normalized": "Struct [ x: 10, y: 20, z: 30 ]",
+    "type": "Schema [ z: Num, y: Num, x: Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 100;
+  const v1 = unknown;
+  const v2 = {
+    ...v1,
+    x: v0
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "{ point | x = 100 }",
+    "gram": "[1] root
+  :entry -> [2]
+[2] inj {"label":"x"}
+  :target -> [5]
+  :value -> [3]
+[3] lit {"value":{"type":"Num","value":100}}
+[4] var:free {"name":"point"}
+[5] var:ref {"name":"point"}
+  :refers_to -> [4]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 100
+      let v1 = unknown
+      let v2 = update-immutable v1 { x: v0 }
+      return v2",
+    "name": "updated",
+    "normalized": "Struct [ x: 100 ]",
+    "type": "Schema [ x: Num ]",
+  },
+]
+`;
+
+exports[`Language Tour — Records & Tuples > records 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = 0;
+  const v1 = 10;
+  const v2 = {
+    x: v0,
+    y: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ x: 0, y: 10 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"x"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":0}}
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Num","value":10}}
+[8] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 0
+      let v1 = 10
+      let v2 = alloc { x: v0, y: v1 }
+      return v2",
+    "name": "point",
+    "normalized": "Struct [ x: 0, y: 10 ]",
+    "type": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = "Alice";
+  const v1 = 30;
+  const v2 = {
+    name: v0,
+    age: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ name: "Alice", age: 30 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"name"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"String","value":"Alice"}}
+[6] row:ext {"label":"age"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Num","value":30}}
+[8] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = "Alice"
+      let v1 = 30
+      let v2 = alloc { name: v0, age: v1 }
+      return v2",
+    "name": "person",
+    "normalized": "Struct [ name: "Alice", age: 30 ]",
+    "type": "Σ($sig: [ age: Num, name: String ]) . Schema [ age: Num, name: String ]",
+  },
+]
+`;
+
+exports[`Language Tour — Records & Tuples > self-referencing fields 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = 10;
+  const v1 = 20;
+  const v2 = (v0 * v1);
+  const v3 = {
+    width: v0,
+    height: v1,
+    area: v2
+  };
+  return v3;
+}
+return main();
+",
+    "elaborated": "Struct [ width: 10, height: 20, area: FFI.$mul :width :height ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"width"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":10}}
+[6] row:ext {"label":"height"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Num","value":20}}
+[8] row:ext {"label":"area"}
+  :rest -> [15]
+  :value -> [16]
+[11] var:foreign {"name":"$mul","arity":2}
+[13] var:label {"name":"width"}
+  :next -> [14]
+[14] var:label {"name":"height"}
+[15] row:empty
+[16] primop {"op":"$mul"}
+  :arg -> [13] {"index":0}
+  :arg -> [14] {"index":1}
+  :callee -> [11]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 10
+      let v1 = 20
+      let v2 = *(v0, v1)
+      let v3 = alloc { width: v0, height: v1, area: v2 }
+      return v3",
+    "name": "rectangle",
+    "normalized": "Struct [ width: 10, height: 20, area: 200 ]",
+    "type": "Σ($sig: [ area: Num, height: Num, width: Num ]) .
+  Schema [ area: Num, height: Num, width: Num ]",
+  },
+]
+`;
+
+exports[`Language Tour — Records & Tuples > tuples 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = 42;
+  const v1 = "answer";
+  const v2 = {
+    0: v0,
+    1: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ 0: 42, 1: "answer" ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"0"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":42}}
+[6] row:ext {"label":"1"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"String","value":"answer"}}
+[8] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 42
+      let v1 = "answer"
+      let v2 = alloc { 0: v0, 1: v1 }
+      return v2",
+    "name": "pair",
+    "normalized": "Struct [ 0: 42, 1: "answer" ]",
+    "type": "Schema [ 1: String, 0: Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 42;
+  const v1 = "answer";
+  const v2 = {
+    0: v0,
+    1: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ 0: 42, 1: "answer" ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"0"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":42}}
+[6] row:ext {"label":"1"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"String","value":"answer"}}
+[8] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 42
+      let v1 = "answer"
+      let v2 = alloc { 0: v0, 1: v1 }
+      return v2",
+    "name": "pairExplicit",
+    "normalized": "Struct [ 0: 42, 1: "answer" ]",
+    "type": "Σ($sig: [ 1: String, 0: Num ]) . Schema [ 1: String, 0: Num ]",
+  },
+]
+`;

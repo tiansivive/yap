@@ -1,0 +1,762 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Language Tour — Functions & Application > function application 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_6;
+  return v0;
+}
+
+function closure_6(x) {
+  return x;
+}
+return main();
+",
+    "elaborated": "λ(x: Num) -> x",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [5]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[5] env
+[6] closure
+  :body -> [2]
+  :env -> [5]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_6
+      return v0
+  fn closure_6(x) entry=entry
+    entry:
+      return x",
+    "name": "identity",
+    "normalized": "λ(x: Num) -> (closure: x -| Γ: x)",
+    "type": "Π(t1: Num) -> Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  return v0;
+}
+return main();
+",
+    "elaborated": "λ(x: Num) -> λ(y: Num) -> FFI.$add x y",
+    "error": "emit_erl: unknown function arity for "unknown"",
+    "gram": "[1] root
+  :entry -> [9]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[8] var:foreign {"name":"$add","arity":2}
+[9] var:ref {"name":"$add"}
+  :refers_to -> [8]
+  :scope -> [9] {"level":0}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &unknown
+      return v0",
+    "name": "add",
+    "normalized": "λ(x: Num) -> (closure: λ(y: Num) -> FFI.$add x y -| Γ: x)",
+    "type": "Π(t2: Num) -> Π(t3: Num) -> Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = 42;
+  const v2 = v0(v1);
+  return v2;
+}
+return main();
+",
+    "elaborated": "identity 42",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[3] var:free {"name":"identity"}
+[4] var:ref {"name":"identity"}
+  :refers_to -> [3]
+[5] lit {"value":{"type":"Num","value":42}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = 42
+      let v2 = call *v0(v1)
+      return v2",
+    "name": "forty2",
+    "normalized": "42",
+    "type": "Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = 10;
+  const v2 = v0(v1);
+  const v3 = 20;
+  const v4 = v2(v3);
+  return v4;
+}
+return main();
+",
+    "elaborated": "add 10 20",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [3]
+[3] app {"icit":"Explicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"add"}
+[5] var:ref {"name":"add"}
+  :refers_to -> [4]
+[6] lit {"value":{"type":"Num","value":10}}
+[7] lit {"value":{"type":"Num","value":20}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = 10
+      let v2 = call *v0(v1)
+      let v3 = 20
+      let v4 = call *v2(v3)
+      return v4",
+    "name": "added",
+    "normalized": "30",
+    "type": "Num",
+  },
+]
+`;
+
+exports[`Language Tour — Functions & Application > higher-order functions 1`] = `
+[
+  {
+    "codegenJS": "",
+    "elaborated": "λ(f: Π(t2: Num) -> Num) -> λ(g: Π(t4: Num) -> Num) -> λ(x: Num) -> f (g x)",
+    "error": "Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"f","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [6]
+  :env -> [17]
+[3] pi {"variable":"t2","icit":"Explicit","level":0}
+  :annotation -> [4]
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] lambda {"variable":"g","icit":"Explicit","level":1}
+  :annotation -> [7]
+  :body -> [10]
+  :env -> [18]
+[7] pi {"variable":"t4","icit":"Explicit","level":1}
+  :annotation -> [8]
+  :body -> [9]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] lambda {"variable":"x","icit":"Explicit","level":2}
+  :annotation -> [11]
+  :body -> [12]
+  :env -> [19]
+[11] lit {"value":{"type":"Atom","value":"Num"}}
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] var:bound {"index":2}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+  :scope -> [10] {"level":2}
+[14] app {"icit":"Explicit"}
+  :arg -> [16]
+  :func -> [15]
+[15] var:bound {"index":1}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+  :scope -> [10] {"level":2}
+[16] var:bound {"index":0}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+  :scope -> [10] {"level":2}
+[17] env
+[18] env
+  :capture -> [2] {"index":0}
+[19] env
+  :capture -> [2] {"index":0}
+  :capture -> [6] {"index":1}
+[20] closure
+  :body -> [2]
+  :env -> [17]
+[21] closure
+  :body -> [6]
+  :env -> [18]
+[22] closure
+  :body -> [10]
+  :env -> [19]",
+    "kind": "let",
+    "mir": "",
+    "name": "compose",
+    "normalized": "λ(f: Π(t2: Num) -> (closure: Num -| Γ: t2)) ->
+  (closure: λ(g: Π(t4: Num) -> Num) -> λ(x: Num) -> f (g x) -| Γ: f)",
+    "type": "Π(t1: Π(t2: Num) -> Num) -> Π(t3: Π(t4: Num) -> Num) -> Π(t5: Num) -> Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_12;
+  return v0;
+}
+
+function closure_12(x) {
+  const v0 = 1;
+  const v1 = (x + v0);
+  return v1;
+}
+return main();
+",
+    "elaborated": "(λ(x: Num) -> FFI.$add x 1 : Π(x: Num) -> (closure: Num -| Γ: x; add1))",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [10]
+  :env -> [11]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:foreign {"name":"$add","arity":2}
+[8] var:bound {"index":0}
+  :next -> [9]
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[9] lit {"value":{"type":"Num","value":1}}
+[10] primop {"op":"$add"}
+  :arg -> [8] {"index":0}
+  :arg -> [9] {"index":1}
+  :callee -> [6]
+[11] env
+[12] closure
+  :body -> [2]
+  :env -> [11]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_12
+      return v0
+  fn closure_12(x) entry=entry
+    entry:
+      let v0 = 1
+      let v1 = +(x, v0)
+      return v1",
+    "name": "add1",
+    "normalized": "λ(x: Num) -> (closure: FFI.$add x 1 -| Γ: x)",
+    "type": "Π(x: Num) -> Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_12;
+  return v0;
+}
+
+function closure_12(x) {
+  const v0 = 5;
+  const v1 = (x + v0);
+  return v1;
+}
+return main();
+",
+    "elaborated": "(λ(x: Num) -> FFI.$add x 5 : Π(x: Num) -> (closure: Num -| Γ: x; add5))",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [10]
+  :env -> [11]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:foreign {"name":"$add","arity":2}
+[8] var:bound {"index":0}
+  :next -> [9]
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[9] lit {"value":{"type":"Num","value":5}}
+[10] primop {"op":"$add"}
+  :arg -> [8] {"index":0}
+  :arg -> [9] {"index":1}
+  :callee -> [6]
+[11] env
+[12] closure
+  :body -> [2]
+  :env -> [11]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_12
+      return v0
+  fn closure_12(x) entry=entry
+    entry:
+      let v0 = 5
+      let v1 = +(x, v0)
+      return v1",
+    "name": "add5",
+    "normalized": "λ(x: Num) -> (closure: FFI.$add x 5 -| Γ: x)",
+    "type": "Π(x: Num) -> Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_12;
+  return v0;
+}
+
+function closure_12(x) {
+  const v0 = 2;
+  const v1 = (x * v0);
+  return v1;
+}
+return main();
+",
+    "elaborated": "(λ(x: Num) -> FFI.$mul x 2 : Π(x: Num) -> (closure: Num -| Γ: x; double))",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [10]
+  :env -> [11]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:foreign {"name":"$mul","arity":2}
+[8] var:bound {"index":0}
+  :next -> [9]
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[9] lit {"value":{"type":"Num","value":2}}
+[10] primop {"op":"$mul"}
+  :arg -> [8] {"index":0}
+  :arg -> [9] {"index":1}
+  :callee -> [6]
+[11] env
+[12] closure
+  :body -> [2]
+  :env -> [11]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_12
+      return v0
+  fn closure_12(x) entry=entry
+    entry:
+      let v0 = 2
+      let v1 = *(x, v0)
+      return v1",
+    "name": "double",
+    "normalized": "λ(x: Num) -> (closure: FFI.$mul x 2 -| Γ: x)",
+    "type": "Π(x: Num) -> Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = unknown;
+  const v2 = v0(v1);
+  const v3 = unknown;
+  const v4 = v2(v3);
+  return v4;
+}
+return main();
+",
+    "elaborated": "compose double add1",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [3]
+[3] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [5]
+[4] var:free {"name":"compose"}
+[5] var:ref {"name":"compose"}
+  :refers_to -> [4]
+[6] var:free {"name":"double"}
+[7] var:ref {"name":"double"}
+  :refers_to -> [6]
+[8] var:free {"name":"add1"}
+[9] var:ref {"name":"add1"}
+  :refers_to -> [8]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = unknown
+      let v2 = call *v0(v1)
+      let v3 = unknown
+      let v4 = call *v2(v3)
+      return v4",
+    "name": "add1ThenDouble",
+    "normalized": "λ(x: Num) -> (closure: f (g x) -| Γ: x; g; f; compose)",
+    "type": "Π(t5: Num) -> Num",
+  },
+]
+`;
+
+exports[`Language Tour — Functions & Application > lambda expressions 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_6;
+  return v0;
+}
+
+function closure_6(x) {
+  return x;
+}
+return main();
+",
+    "elaborated": "λ(x: Num) -> x",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [5]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[5] env
+[6] closure
+  :body -> [2]
+  :env -> [5]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_6
+      return v0
+  fn closure_6(x) entry=entry
+    entry:
+      return x",
+    "name": "identity",
+    "normalized": "λ(x: Num) -> (closure: x -| Γ: x)",
+    "type": "Π(t1: Num) -> Num",
+  },
+  {
+    "codegenJS": "",
+    "elaborated": "λ(x: Num) -> λ(y: String) -> x",
+    "error": "Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [7]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] lambda {"variable":"y","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [8]
+[5] lit {"value":{"type":"Atom","value":"String"}}
+[6] var:bound {"index":1}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[7] env
+[8] env
+  :capture -> [2] {"index":0}
+[9] closure
+  :body -> [2]
+  :env -> [7]
+[10] closure
+  :body -> [4]
+  :env -> [8]",
+    "kind": "let",
+    "mir": "",
+    "name": "const",
+    "normalized": "λ(x: Num) -> (closure: λ(y: String) -> x -| Γ: x)",
+    "type": "Π(t2: Num) -> Π(t3: String) -> Num",
+  },
+]
+`;
+
+exports[`Language Tour — Statement Blocks > block with local bindings 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_23;
+  return v0;
+}
+
+function closure_23(x) {
+  const v0 = 2;
+  const v1 = (x * v0);
+  const doubled2 = v1;
+  const v3 = 10;
+  const v4 = (doubled2 + v3);
+  const added5 = v4;
+  return added5;
+}
+return main();
+",
+    "elaborated": "λ(x: Num) ->
+  {
+    let doubled : Num = FFI.$mul x 2;
+    let added : Num = FFI.$add doubled 10;
+    return added;
+  }",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [22]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] block
+  :return -> [19]
+  :stmt -> [5] {"index":0}
+  :stmt -> [12] {"index":1}
+[5] stmt:let {"variable":"doubled"}
+  :next -> [12]
+  :value -> [20]
+[8] var:foreign {"name":"$mul","arity":2}
+[10] var:bound {"index":1}
+  :next -> [11]
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[11] lit {"value":{"type":"Num","value":2}}
+[12] stmt:let {"variable":"added"}
+  :value -> [21]
+[15] var:foreign {"name":"$add","arity":2}
+[17] var:bound {"index":1}
+  :next -> [18]
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+  :scope -> [12] {"level":2}
+[18] lit {"value":{"type":"Num","value":10}}
+[19] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+  :scope -> [12] {"level":2}
+[20] primop {"op":"$mul"}
+  :arg -> [10] {"index":0}
+  :arg -> [11] {"index":1}
+  :callee -> [8]
+[21] primop {"op":"$add"}
+  :arg -> [17] {"index":0}
+  :arg -> [18] {"index":1}
+  :callee -> [15]
+[22] env
+[23] closure
+  :body -> [2]
+  :env -> [22]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_23
+      return v0
+  fn closure_23(x) entry=entry
+    entry:
+      let v0 = 2
+      let v1 = *(x, v0)
+      let doubled2 = v1
+      let v3 = 10
+      let v4 = +(doubled2, v3)
+      let added5 = v4
+      return added5",
+    "name": "compute",
+    "normalized": "λ(x: Num) ->
+  (closure: {
+    let doubled : Num = FFI.$mul x 2;
+    let added : Num = FFI.$add doubled 10;
+    return added;
+  } -| Γ: x)",
+    "type": "Π(t1: Num) -> Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = 5;
+  const v2 = v0(v1);
+  return v2;
+}
+return main();
+",
+    "elaborated": "compute 5",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[3] var:free {"name":"compute"}
+[4] var:ref {"name":"compute"}
+  :refers_to -> [3]
+[5] lit {"value":{"type":"Num","value":5}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = 5
+      let v2 = call *v0(v1)
+      return v2",
+    "name": "result",
+    "normalized": "20",
+    "type": "Num",
+  },
+]
+`;
+
+exports[`Language Tour — Statement Blocks > side effects in blocks 1`] = `
+[
+  {
+    "kind": "foreign",
+    "name": "print",
+  },
+  {
+    "kind": "foreign",
+    "name": "stringify",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_29;
+  return v0;
+}
+
+function closure_29(print, stringify, x) {
+  const v0 = "Computing...";
+  const v1 = print(v0);
+  const v2 = 2;
+  const v3 = (x * v2);
+  const result4 = v3;
+  const v5 = "Num";
+  const v6 = stringify(v5);
+  const v7 = v6(result4);
+  const v8 = print(v7);
+  return result4;
+}
+return main();
+",
+    "elaborated": "λ(x: Num) ->
+  {
+    FFI.print "Computing...";
+    let result : Num = FFI.$mul x 2;
+    FFI.print (FFI.stringify @Num result);
+    return result;
+  }",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [28]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[4] block
+  :return -> [26]
+  :stmt -> [5] {"index":0}
+  :stmt -> [10] {"index":1}
+  :stmt -> [17] {"index":2}
+[5] stmt:expr
+  :next -> [10]
+  :value -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [8]
+[7] var:foreign {"name":"print"}
+[8] var:ref {"name":"print"}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+[9] lit {"value":{"type":"String","value":"Computing..."}}
+[10] stmt:let {"variable":"result"}
+  :next -> [17]
+  :value -> [27]
+[13] var:foreign {"name":"$mul","arity":2}
+[15] var:bound {"index":1}
+  :next -> [16]
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [10] {"level":1}
+[16] lit {"value":{"type":"Num","value":2}}
+[17] stmt:expr
+  :value -> [18]
+[18] app {"icit":"Explicit"}
+  :arg -> [20]
+  :func -> [19]
+[19] var:ref {"name":"print"}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [10] {"level":1}
+[20] app {"icit":"Explicit"}
+  :arg -> [25]
+  :func -> [21]
+[21] app {"icit":"Implicit"}
+  :arg -> [24]
+  :func -> [23]
+[22] var:foreign {"name":"stringify"}
+[23] var:ref {"name":"stringify"}
+  :refers_to -> [22]
+  :scope -> [2] {"level":0}
+  :scope -> [10] {"level":1}
+[24] lit {"value":{"type":"Atom","value":"Num"}}
+[25] var:bound {"index":0}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [10] {"level":1}
+[26] var:bound {"index":0}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [10] {"level":1}
+[27] primop {"op":"$mul"}
+  :arg -> [15] {"index":0}
+  :arg -> [16] {"index":1}
+  :callee -> [13]
+[28] env
+  :capture -> [7] {"index":0}
+  :capture -> [22] {"index":1}
+[29] closure
+  :body -> [2]
+  :env -> [28]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_29
+      return v0
+  fn closure_29(print, stringify, x) entry=entry
+    entry:
+      let v0 = "Computing..."
+      let v1 = call *print(v0)
+      let v2 = 2
+      let v3 = *(x, v2)
+      let result4 = v3
+      let v5 = Num
+      let v6 = call *stringify(v5)
+      let v7 = call *v6(result4)
+      let v8 = call *print(v7)
+      return result4",
+    "name": "debug",
+    "normalized": "λ(x: Num) ->
+  (closure: {
+    FFI.print "Computing...";
+    let result : Num = FFI.$mul x 2;
+    FFI.print (FFI.stringify @Num result);
+    return result;
+  } -| Γ: x)",
+    "type": "Π(t3: Num) -> Num",
+  },
+]
+`;
