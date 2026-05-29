@@ -51,6 +51,7 @@ const TABS = [
 	{ key: "solverTrace", label: "Trace", mode: null },
 	{ key: "mir", label: "MIR", mode: mir },
 	{ key: "gram", label: "GRAM", mode: gram },
+	{ key: "gramDot", label: "DOT", mode: null },
 	{ key: "codegenJS", label: "JS", mode: javascript },
 	{ key: "codegenC", label: "C", mode: c },
 	{ key: "codegenErlang", label: "Erlang", mode: erlang },

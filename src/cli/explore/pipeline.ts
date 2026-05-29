@@ -48,6 +48,7 @@ export type Result = {
 	solverTrace: string;
 	mir: string;
 	gram: string;
+	gramDot: string;
 	codegenJS: string;
 	codegenC: string;
 	codegenErlang: string;
@@ -67,6 +68,7 @@ const empty: Result = {
 	solverTrace: "",
 	mir: "",
 	gram: "",
+	gramDot: "",
 	codegenJS: "",
 	codegenC: "",
 	codegenErlang: "",
@@ -259,6 +261,7 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 
 	const gramGraph = gramResult && E.isRight(gramResult) ? gramResult.right : undefined;
 	result.gram = gramGraph ? (attempt(() => GRAM.display(gramGraph), errors) ?? "") : "";
+	result.gramDot = gramGraph ? (attempt(() => GRAM.dot(gramGraph), errors) ?? "") : "";
 
 	if (gramResult && E.isLeft(gramResult)) {
 		errors.push(`GRAM: ${JSON.stringify(gramResult.left)}`);
