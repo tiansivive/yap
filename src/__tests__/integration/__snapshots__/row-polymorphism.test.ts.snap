@@ -1,0 +1,834 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Language Tour — Row Polymorphism > open records 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_18;
+  return v0;
+}
+
+function closure_19(record) {
+  const v0 = record.x;
+  return v0;
+}
+
+function closure_18(r) {
+  const v0 = closure_19;
+  return v0;
+}
+return main();
+",
+    "elaborated": "λ(r: Row) =>
+  λ(record: Σ($sig: [ x: Num | r ]) . Schema [ x: Num | r ]) -> (record).x",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"r","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [16]
+[3] lit {"value":{"type":"Atom","value":"Row"}}
+[4] lambda {"variable":"record","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [14]
+  :env -> [17]
+[5] sigma {"variable":"$sig","level":1}
+  :annotation -> [6]
+  :body -> [9]
+[6] row:ext {"label":"x"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"x"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Atom","value":"Num"}}
+[13] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[14] proj {"label":"x"}
+  :target -> [15]
+[15] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[16] env
+[17] env
+[18] closure
+  :body -> [2]
+  :env -> [16]
+[19] closure
+  :body -> [4]
+  :env -> [17]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_18
+      return v0
+  fn closure_19(record) entry=entry
+    entry:
+      let v0 = read record.x
+      return v0
+  fn closure_18(r) entry=entry
+    entry:
+      let v0 = &closure_19
+      return v0",
+    "name": "getX",
+    "normalized": "λ(r: Row) =>
+  (closure: λ(record: Σ($sig: [ x: Num | r ]) . Schema [ x: Num | r ]) ->
+    (record).x -| Γ: r)",
+    "type": "Π(r: Row) => Π(t1: Σ($sig: [ x: Num | r ]) . Schema [ x: Num | r ]) -> Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "Num";
+  const v2 = {
+    y: v1
+  };
+  const v3 = v0(v2);
+  const v4 = 10;
+  const v5 = 20;
+  const v6 = {
+    x: v4,
+    y: v5
+  };
+  const v7 = v3(v6);
+  return v7;
+}
+return main();
+",
+    "elaborated": "getX @[ y: Num ] (Struct [ x: 10, y: 20 ])",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"getX"}
+[5] var:ref {"name":"getX"}
+  :refers_to -> [4]
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Struct"}}
+[11] row:ext {"label":"x"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Num","value":10}}
+[13] row:ext {"label":"y"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"Num","value":20}}
+[15] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = Num
+      let v2 = alloc { y: v1 }
+      let v3 = call *v0(v2)
+      let v4 = 10
+      let v5 = 20
+      let v6 = alloc { x: v4, y: v5 }
+      let v7 = call *v3(v6)
+      return v7",
+    "name": "p1",
+    "normalized": "10",
+    "type": "Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "Num";
+  const v2 = "Num";
+  const v3 = {
+    y: v1,
+    z: v2
+  };
+  const v4 = v0(v3);
+  const v5 = 5;
+  const v6 = 3;
+  const v7 = 7;
+  const v8 = {
+    x: v5,
+    y: v6,
+    z: v7
+  };
+  const v9 = v4(v8);
+  return v9;
+}
+return main();
+",
+    "elaborated": "getX @[ y: Num, z: Num ] (Struct [ x: 5, y: 3, z: 7 ])",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"getX"}
+[5] var:ref {"name":"getX"}
+  :refers_to -> [4]
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] row:ext {"label":"z"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] row:empty
+[11] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [12]
+[12] lit {"value":{"type":"Atom","value":"Struct"}}
+[13] row:ext {"label":"x"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"Num","value":5}}
+[15] row:ext {"label":"y"}
+  :rest -> [17]
+  :value -> [16]
+[16] lit {"value":{"type":"Num","value":3}}
+[17] row:ext {"label":"z"}
+  :rest -> [19]
+  :value -> [18]
+[18] lit {"value":{"type":"Num","value":7}}
+[19] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = Num
+      let v2 = Num
+      let v3 = alloc { y: v1, z: v2 }
+      let v4 = call *v0(v3)
+      let v5 = 5
+      let v6 = 3
+      let v7 = 7
+      let v8 = alloc { x: v5, y: v6, z: v7 }
+      let v9 = call *v4(v8)
+      return v9",
+    "name": "p2",
+    "normalized": "5",
+    "type": "Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "String";
+  const v2 = {
+    name: v1
+  };
+  const v3 = v0(v2);
+  const v4 = 100;
+  const v5 = "point";
+  const v6 = {
+    x: v4,
+    name: v5
+  };
+  const v7 = v3(v6);
+  return v7;
+}
+return main();
+",
+    "elaborated": "getX @[ name: String ] (Struct [ x: 100, name: "point" ])",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"getX"}
+[5] var:ref {"name":"getX"}
+  :refers_to -> [4]
+[6] row:ext {"label":"name"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"String"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Struct"}}
+[11] row:ext {"label":"x"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Num","value":100}}
+[13] row:ext {"label":"name"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"String","value":"point"}}
+[15] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = String
+      let v2 = alloc { name: v1 }
+      let v3 = call *v0(v2)
+      let v4 = 100
+      let v5 = "point"
+      let v6 = alloc { x: v4, name: v5 }
+      let v7 = call *v3(v6)
+      return v7",
+    "name": "p3",
+    "normalized": "100",
+    "type": "Num",
+  },
+]
+`;
+
+exports[`Language Tour — Row Polymorphism > polymorphic extension 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_23;
+  return v0;
+}
+
+function closure_24(rec) {
+  const v0 = 0;
+  const v1 = {
+    ...rec,
+    z: v0
+  };
+  return v1;
+}
+
+function closure_23(r) {
+  const v0 = closure_24;
+  return v0;
+}
+return main();
+",
+    "elaborated": "λ(r: Row) =>
+  λ(rec: Σ($sig: [ y: Num, x: Num | r ]) . Schema [ y: Num, x: Num | r ]) ->
+    { rec | z = 0 }",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"r","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [21]
+[3] lit {"value":{"type":"Atom","value":"Row"}}
+[4] lambda {"variable":"rec","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [18]
+  :env -> [22]
+[5] sigma {"variable":"$sig","level":1}
+  :annotation -> [6]
+  :body -> [11]
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] row:ext {"label":"x"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[11] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [12]
+[12] lit {"value":{"type":"Atom","value":"Schema"}}
+[13] row:ext {"label":"y"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"Atom","value":"Num"}}
+[15] row:ext {"label":"x"}
+  :rest -> [17]
+  :value -> [16]
+[16] lit {"value":{"type":"Atom","value":"Num"}}
+[17] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[18] inj {"label":"z"}
+  :target -> [20]
+  :value -> [19]
+[19] lit {"value":{"type":"Num","value":0}}
+[20] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[21] env
+[22] env
+[23] closure
+  :body -> [2]
+  :env -> [21]
+[24] closure
+  :body -> [4]
+  :env -> [22]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_23
+      return v0
+  fn closure_24(rec) entry=entry
+    entry:
+      let v0 = 0
+      let v1 = update-immutable rec { z: v0 }
+      return v1
+  fn closure_23(r) entry=entry
+    entry:
+      let v0 = &closure_24
+      return v0",
+    "name": "addZ",
+    "normalized": "λ(r: Row) =>
+  (closure: λ(rec: Σ($sig: [ y: Num, x: Num | r ]) .
+    Schema [ y: Num, x: Num | r ]) ->
+    { rec | z = 0 } -| Γ: r)",
+    "type": "Π(r: Row) =>
+  Π(t1: Σ($sig: [ y: Num, x: Num | r ]) . Schema [ y: Num, x: Num | r ]) ->
+    Σ($sig: [ z: Num, y: Num, x: Num | r ]) .
+      Schema [ z: Num, y: Num, x: Num | r ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = {};
+  const v2 = v0(v1);
+  const v3 = 1;
+  const v4 = 2;
+  const v5 = {
+    x: v3,
+    y: v4
+  };
+  const v6 = v2(v5);
+  return v6;
+}
+return main();
+",
+    "elaborated": "addZ @[] (Struct [ x: 1, y: 2 ])",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"addZ"}
+[5] var:ref {"name":"addZ"}
+  :refers_to -> [4]
+[6] row:empty
+[7] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [8]
+[8] lit {"value":{"type":"Atom","value":"Struct"}}
+[9] row:ext {"label":"x"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Num","value":1}}
+[11] row:ext {"label":"y"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Num","value":2}}
+[13] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = alloc {  }
+      let v2 = call *v0(v1)
+      let v3 = 1
+      let v4 = 2
+      let v5 = alloc { x: v3, y: v4 }
+      let v6 = call *v2(v5)
+      return v6",
+    "name": "p1",
+    "normalized": "Struct [ x: 1, y: 2, z: 0 ]",
+    "type": "Σ($sig: [ z: Num, y: Num, x: Num | [] ]) .
+  Schema [ z: Num, y: Num, x: Num | [] ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "String";
+  const v2 = {
+    color: v1
+  };
+  const v3 = v0(v2);
+  const v4 = 5;
+  const v5 = 10;
+  const v6 = "red";
+  const v7 = {
+    x: v4,
+    y: v5,
+    color: v6
+  };
+  const v8 = v3(v7);
+  return v8;
+}
+return main();
+",
+    "elaborated": "addZ @[ color: String ] (Struct [ x: 5, y: 10, color: "red" ])",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"addZ"}
+[5] var:ref {"name":"addZ"}
+  :refers_to -> [4]
+[6] row:ext {"label":"color"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"String"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Struct"}}
+[11] row:ext {"label":"x"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Num","value":5}}
+[13] row:ext {"label":"y"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"Num","value":10}}
+[15] row:ext {"label":"color"}
+  :rest -> [17]
+  :value -> [16]
+[16] lit {"value":{"type":"String","value":"red"}}
+[17] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = String
+      let v2 = alloc { color: v1 }
+      let v3 = call *v0(v2)
+      let v4 = 5
+      let v5 = 10
+      let v6 = "red"
+      let v7 = alloc { x: v4, y: v5, color: v6 }
+      let v8 = call *v3(v7)
+      return v8",
+    "name": "p2",
+    "normalized": "Struct [ x: 5, y: 10, color: "red", z: 0 ]",
+    "type": "Σ($sig: [ z: Num, y: Num, x: Num | [ color: String ] ]) .
+  Schema [ z: Num, y: Num, x: Num | [ color: String ] ]",
+  },
+]
+`;
+
+exports[`Language Tour — Row Polymorphism > polymorphic projection 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_18;
+  return v0;
+}
+
+function closure_19(obj) {
+  const v0 = obj.name;
+  return v0;
+}
+
+function closure_18(r) {
+  const v0 = closure_19;
+  return v0;
+}
+return main();
+",
+    "elaborated": "λ(r: Row) =>
+  λ(obj: Σ($sig: [ name: String | r ]) . Schema [ name: String | r ]) ->
+    (obj).name",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"r","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [16]
+[3] lit {"value":{"type":"Atom","value":"Row"}}
+[4] lambda {"variable":"obj","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [14]
+  :env -> [17]
+[5] sigma {"variable":"$sig","level":1}
+  :annotation -> [6]
+  :body -> [9]
+[6] row:ext {"label":"name"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"String"}}
+[8] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"name"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Atom","value":"String"}}
+[13] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[14] proj {"label":"name"}
+  :target -> [15]
+[15] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[16] env
+[17] env
+[18] closure
+  :body -> [2]
+  :env -> [16]
+[19] closure
+  :body -> [4]
+  :env -> [17]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_18
+      return v0
+  fn closure_19(obj) entry=entry
+    entry:
+      let v0 = read obj.name
+      return v0
+  fn closure_18(r) entry=entry
+    entry:
+      let v0 = &closure_19
+      return v0",
+    "name": "getName",
+    "normalized": "λ(r: Row) =>
+  (closure: λ(obj: Σ($sig: [ name: String | r ]) .
+    Schema [ name: String | r ]) ->
+    (obj).name -| Γ: r)",
+    "type": "Π(r: Row) =>
+  Π(t1: Σ($sig: [ name: String | r ]) . Schema [ name: String | r ]) -> String",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = "Alice";
+  const v1 = 30;
+  const v2 = {
+    name: v0,
+    age: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ name: "Alice", age: 30 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"name"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"String","value":"Alice"}}
+[6] row:ext {"label":"age"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Num","value":30}}
+[8] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = "Alice"
+      let v1 = 30
+      let v2 = alloc { name: v0, age: v1 }
+      return v2",
+    "name": "person",
+    "normalized": "Struct [ name: "Alice", age: 30 ]",
+    "type": "Schema [ name: String, age: Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = "1984";
+  const v1 = "Orwell";
+  const v2 = 328;
+  const v3 = {
+    name: v0,
+    author: v1,
+    pages: v2
+  };
+  return v3;
+}
+return main();
+",
+    "elaborated": "Struct [ name: "1984", author: "Orwell", pages: 328 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"name"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"String","value":"1984"}}
+[6] row:ext {"label":"author"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"String","value":"Orwell"}}
+[8] row:ext {"label":"pages"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Num","value":328}}
+[10] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = "1984"
+      let v1 = "Orwell"
+      let v2 = 328
+      let v3 = alloc { name: v0, author: v1, pages: v2 }
+      return v3",
+    "name": "book",
+    "normalized": "Struct [ name: "1984", author: "Orwell", pages: 328 ]",
+    "type": "Schema [ name: String, author: String, pages: Num ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "Num";
+  const v2 = {
+    age: v1
+  };
+  const v3 = v0(v2);
+  const v4 = unknown;
+  const v5 = v3(v4);
+  return v5;
+}
+return main();
+",
+    "elaborated": "getName @[ age: Num ] person",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"getName"}
+[5] var:ref {"name":"getName"}
+  :refers_to -> [4]
+[6] row:ext {"label":"age"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] row:empty
+[9] var:free {"name":"person"}
+[10] var:ref {"name":"person"}
+  :refers_to -> [9]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = Num
+      let v2 = alloc { age: v1 }
+      let v3 = call *v0(v2)
+      let v4 = unknown
+      let v5 = call *v3(v4)
+      return v5",
+    "name": "n1",
+    "normalized": ""Alice"",
+    "type": "String",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = "String";
+  const v2 = "Num";
+  const v3 = {
+    author: v1,
+    pages: v2
+  };
+  const v4 = v0(v3);
+  const v5 = unknown;
+  const v6 = v4(v5);
+  return v6;
+}
+return main();
+",
+    "elaborated": "getName @[ author: String, pages: Num ] book",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [3]
+[3] app {"icit":"Implicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"getName"}
+[5] var:ref {"name":"getName"}
+  :refers_to -> [4]
+[6] row:ext {"label":"author"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"String"}}
+[8] row:ext {"label":"pages"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] row:empty
+[11] var:free {"name":"book"}
+[12] var:ref {"name":"book"}
+  :refers_to -> [11]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = String
+      let v2 = Num
+      let v3 = alloc { author: v1, pages: v2 }
+      let v4 = call *v0(v3)
+      let v5 = unknown
+      let v6 = call *v4(v5)
+      return v6",
+    "name": "n2",
+    "normalized": ""1984"",
+    "type": "String",
+  },
+]
+`;

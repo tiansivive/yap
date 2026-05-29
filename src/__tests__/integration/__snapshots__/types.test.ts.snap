@@ -1,0 +1,370 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Language Tour — Defining Types > computing types 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_18;
+  return v0;
+}
+
+function closure_18(Num, String, b) {
+  let __block = "entry";
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        (__block = "sw1");
+        break;
+      }
+      case "sw1": {
+        if ((String(b) === "true")) {
+          (__block = "case3");
+          break;
+        }
+        if ((String(b) === "false")) {
+          (__block = "case4");
+          break;
+        }
+      }
+      case "case3": {
+        const match0 = Num;
+        (__block = "join2");
+        break;
+      }
+      case "case4": {
+        const match0 = String;
+        (__block = "join2");
+        break;
+      }
+      case "join2": {
+        return match0;
+      }
+    }
+  }
+}
+return main();
+",
+    "elaborated": "λ(b: Bool) -> match b | true -> Num | false -> String",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"b","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [17]
+[3] lit {"value":{"type":"Atom","value":"Bool"}}
+[4] match
+  :alt -> [6] {"index":0}
+  :alt -> [10] {"index":1}
+  :decision_tree -> [14]
+  :scrutinee -> [5]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] case
+  :body -> [9]
+  :next -> [10]
+  :pattern -> [7]
+[7] pat:lit {"value":{"type":"Bool","value":true}}
+[8] var:free {"name":"Num"}
+[9] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+[10] case
+  :body -> [13]
+  :pattern -> [11]
+[11] pat:lit {"value":{"type":"Bool","value":false}}
+[12] var:free {"name":"String"}
+[13] var:ref {"name":"String"}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+[14] switch {"kind":"lit"}
+  :branch -> [15] {"value":{"type":"Bool","value":true}}
+  :branch -> [16] {"value":{"type":"Bool","value":false}}
+  :inspect -> [5]
+[15] leaf
+  :body -> [9]
+[16] leaf
+  :body -> [13]
+[17] env
+  :capture -> [8] {"index":0}
+  :capture -> [12] {"index":1}
+[18] closure
+  :body -> [2]
+  :env -> [17]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_18
+      return v0
+  fn closure_18(Num, String, b) entry=entry
+    entry:
+      jump sw1
+    sw1:
+      branch b { true -> case3 | false -> case4 }
+    case3:
+      let match0 = Num
+      jump join2
+    case4:
+      let match0 = String
+      jump join2
+    join2:
+      return match0",
+    "name": "chooseType",
+    "normalized": "λ(b: Bool) -> (closure: match b | true -> Num | false -> String -| Γ: b)",
+    "type": "Π(t1: Bool) -> Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = true;
+  const v2 = v0(v1);
+  return v2;
+}
+return main();
+",
+    "elaborated": "chooseType true",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[3] var:free {"name":"chooseType"}
+[4] var:ref {"name":"chooseType"}
+  :refers_to -> [3]
+[5] lit {"value":{"type":"Bool","value":true}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = true
+      let v2 = call *v0(v1)
+      return v2",
+    "name": "T1",
+    "normalized": "Num",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  const v1 = false;
+  const v2 = v0(v1);
+  return v2;
+}
+return main();
+",
+    "elaborated": "chooseType false",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[3] var:free {"name":"chooseType"}
+[4] var:ref {"name":"chooseType"}
+  :refers_to -> [3]
+[5] lit {"value":{"type":"Bool","value":false}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      let v1 = false
+      let v2 = call *v0(v1)
+      return v2",
+    "name": "T2",
+    "normalized": "String",
+    "type": "Type",
+  },
+]
+`;
+
+exports[`Language Tour — Defining Types > first-class types 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  return v0;
+}
+return main();
+",
+    "elaborated": "Num",
+    "gram": "[1] root
+  :entry -> [3]
+[2] var:free {"name":"Num"}
+[3] var:ref {"name":"Num"}
+  :refers_to -> [2]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      return v0",
+    "name": "MyNum",
+    "normalized": "Num",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = unknown;
+  return v0;
+}
+return main();
+",
+    "elaborated": "String",
+    "gram": "[1] root
+  :entry -> [3]
+[2] var:free {"name":"String"}
+[3] var:ref {"name":"String"}
+  :refers_to -> [2]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = unknown
+      return v0",
+    "name": "MyString",
+    "normalized": "String",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 42;
+  return v0;
+}
+return main();
+",
+    "elaborated": "42",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"Num","value":42}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 42
+      return v0",
+    "name": "n",
+    "normalized": "42",
+    "type": "Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = "hi";
+  return v0;
+}
+return main();
+",
+    "elaborated": ""hi"",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lit {"value":{"type":"String","value":"hi"}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = "hi"
+      return v0",
+    "name": "s",
+    "normalized": ""hi"",
+    "type": "String",
+  },
+]
+`;
+
+exports[`Language Tour — Defining Types > type aliases 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = {};
+  return v0;
+}
+return main();
+",
+    "elaborated": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] sigma {"variable":"$sig","level":0}
+  :annotation -> [3]
+  :body -> [9]
+[3] row:ext {"label":"y"}
+  :rest -> [6]
+  :value -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+[6] row:ext {"label":"x"}
+  :rest -> [8]
+  :value -> [7]
+[7] var:ref {"name":"Num"}
+  :refers_to -> [4]
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"y"}
+  :rest -> [13]
+  :value -> [12]
+[12] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[13] row:ext {"label":"x"}
+  :rest -> [15]
+  :value -> [14]
+[14] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[15] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }
+      return v0",
+    "name": "Point",
+    "normalized": "Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)",
+    "type": "Type",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = 0;
+  const v1 = 0;
+  const v2 = {
+    x: v0,
+    y: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ x: 0, y: 0 ]",
+    "gram": "[1] root
+  :entry -> [2]
+[2] app {"icit":"Explicit"}
+  :arg -> [4]
+  :func -> [3]
+[3] lit {"value":{"type":"Atom","value":"Struct"}}
+[4] row:ext {"label":"x"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":0}}
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Num","value":0}}
+[8] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 0
+      let v1 = 0
+      let v2 = alloc { x: v0, y: v1 }
+      return v2",
+    "name": "origin",
+    "normalized": "Struct [ x: 0, y: 0 ]",
+    "type": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
+  },
+]
+`;
