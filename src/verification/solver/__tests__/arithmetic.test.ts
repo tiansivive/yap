@@ -46,25 +46,25 @@ describe("Rational", () => {
 
 describe("Simplex", () => {
 	it("satisfies trivial bounds", () => {
-		const tab = Simplex.addVariable(Simplex.create(), "x");
-		const result = Simplex.assertLower(tab, "x", { value: Rational.of(-1n), strict: false, reason: 1 });
+		const tab = Simplex.Variable.add(Simplex.create(), "x");
+		const result = Simplex.Assert.lower(tab, "x", { value: Rational.of(-1n), strict: false, reason: 1 });
 		expect(E.isRight(result)).toBe(true);
 	});
 
 	it("detects direct bound conflict", () => {
-		const tab = Simplex.addVariable(Simplex.create(), "x");
-		const step1 = Simplex.assertLower(tab, "x", { value: Rational.of(5n), strict: false, reason: 1 });
+		const tab = Simplex.Variable.add(Simplex.create(), "x");
+		const step1 = Simplex.Assert.lower(tab, "x", { value: Rational.of(5n), strict: false, reason: 1 });
 		expect(E.isRight(step1)).toBe(true);
 
-		const step2 = Simplex.assertUpper((step1 as E.Right<typeof tab>).right, "x", { value: Rational.of(3n), strict: false, reason: 2 });
+		const step2 = Simplex.Assert.upper((step1 as E.Right<typeof tab>).right, "x", { value: Rational.of(3n), strict: false, reason: 2 });
 		expect(E.isLeft(step2)).toBe(true);
 	});
 
 	it("repairs basic variable via pivot", () => {
-		const t0 = Simplex.addVariable(Simplex.create(), "x");
-		const t1 = Simplex.addVariable(t0, "y");
+		const t0 = Simplex.Variable.add(Simplex.create(), "x");
+		const t1 = Simplex.Variable.add(t0, "y");
 		// slack = x + y, assert slack <= 5, x >= 3, y >= 3
-		const t2 = Simplex.addRow(
+		const t2 = Simplex.Row.add(
 			t1,
 			"s",
 			new Map([
@@ -72,9 +72,9 @@ describe("Simplex", () => {
 				["y", Rational.one],
 			]),
 		);
-		const t3 = E.getOrElse(() => t2)(Simplex.assertUpper(t2, "s", { value: Rational.of(5n), strict: false, reason: 1 }));
-		const t4 = E.getOrElse(() => t3)(Simplex.assertLower(t3, "x", { value: Rational.of(3n), strict: false, reason: 2 }));
-		const t5 = E.getOrElse(() => t4)(Simplex.assertLower(t4, "y", { value: Rational.of(3n), strict: false, reason: 3 }));
+		const t3 = E.getOrElse(() => t2)(Simplex.Assert.upper(t2, "s", { value: Rational.of(5n), strict: false, reason: 1 }));
+		const t4 = E.getOrElse(() => t3)(Simplex.Assert.lower(t3, "x", { value: Rational.of(3n), strict: false, reason: 2 }));
+		const t5 = E.getOrElse(() => t4)(Simplex.Assert.lower(t4, "y", { value: Rational.of(3n), strict: false, reason: 3 }));
 
 		const result = Simplex.check(t5);
 		expect(E.isLeft(result)).toBe(true);

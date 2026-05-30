@@ -61,7 +61,7 @@ export const CDCL = {
 			.with({ tag: "conflict" }, function* ({ clause }): Generator<Step, CDCLResult> {
 				yield { tag: "conflict", clause };
 				const result: CDCLResult = { tag: "unsat", core: initialClauses };
-				yield { tag: "unsat", core: initialClauses };
+				yield result;
 				return result;
 			})
 			.with({ tag: "ok" }, function* ({ state: propagated }): Generator<Step, CDCLResult> {

@@ -45,8 +45,8 @@ export const Bounds = {
 			fold(tab, (acc, reg) => {
 				const bound: Bound = { value: reg.value, strict: reg.strict, reason: literal };
 				return match(reg.kind)
-					.with("lower", () => Simplex.assertLower(acc, reg.variable, bound))
-					.with("upper", () => Simplex.assertUpper(acc, reg.variable, bound))
+					.with("lower", () => Simplex.Assert.lower(acc, reg.variable, bound))
+					.with("upper", () => Simplex.Assert.upper(acc, reg.variable, bound))
 					.exhaustive();
 			}),
 		);
@@ -68,22 +68,17 @@ export const Bounds = {
 			const bound: Bound = { value: head.value, strict: head.strict, reason: literal };
 			yield { tag: "bound", variable: head.variable, kind: head.kind, value: head.value, strict: head.strict } satisfies ArithTrace.Step;
 
-			const result = pipe(
-				current,
-				E.chain(t =>
-					match(head.kind)
-						.with("lower", () => Simplex.assertLower(t, head.variable, bound))
-						.with("upper", () => Simplex.assertUpper(t, head.variable, bound))
-						.exhaustive(),
-				),
+			const result = E.Monad.chain(current, t =>
+				match(head.kind)
+					.with("lower", () => Simplex.Assert.lower(t, head.variable, bound))
+					.with("upper", () => Simplex.Assert.upper(t, head.variable, bound))
+					.exhaustive(),
 			);
 
 			if (E.isLeft(result)) {
 				const bp = current.right.bounds.get(head.variable);
-				const existingLower = bp?.lower;
-				const existingUpper = bp?.upper;
-				const lower = head.kind === "lower" ? head.value : existingLower && existingLower._tag === "Some" ? existingLower.value.value : Rational.zero;
-				const upper = head.kind === "upper" ? head.value : existingUpper && existingUpper._tag === "Some" ? existingUpper.value.value : Rational.zero;
+				const lower = head.kind === "lower" ? head.value : (bp?.lower?.value ?? Rational.zero);
+				const upper = head.kind === "upper" ? head.value : (bp?.upper?.value ?? Rational.zero);
 				yield { tag: "bound-conflict", variable: head.variable, lower, upper } satisfies ArithTrace.Step;
 				return result;
 			}

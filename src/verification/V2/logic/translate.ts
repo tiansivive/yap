@@ -131,9 +131,9 @@ export const createTranslationTools = (runtime: VerificationRuntime, toModalitie
 					throw new Error("Unsupported variable type in getFnSorts");
 				})
 				.with({ type: "External" }, e => {
-					const sorts = e.args.map(a => mkSort(a, ctx));
-					const ret = Build.uninterpreted(`External:${e.name}:ret`);
-					return NF.Any; // unused—we derive sorts from args directly
+					// External nodes are fully applied — they carry their own args and are
+					// dispatched directly in `term` and `formula`, never via getFnSorts.
+					throw new Error(`getType reached External "${e.name}" — this node should be handled before getFnSorts`);
 				})
 				.with(NF.Patterns.App, a => getType(a.func))
 				.otherwise(() => {

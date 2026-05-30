@@ -5,7 +5,7 @@
 
 import * as E from "fp-ts/Either";
 import { Literal } from "../../cdcl/core";
-import type { Clause, Conflict } from "../../cdcl/core";
+import type { Clause } from "../../cdcl/core";
 import type { Theory, TheoryCheck, TheoryPropagation, TracedTheoryCheck } from "../theory";
 import { EUFTrace } from "../theory";
 import type { EnodeId, ArenaState } from "./arena";
@@ -72,10 +72,6 @@ const initState = (arena: ArenaState): CCState => {
 		stateStack: [],
 	};
 };
-
-// Justification for let: Union-find requires path compression (in-place parent updates)
-// for amortized O(α(n)) find. Push/pop snapshots the UF for incremental backtracking.
-// Future: generator-based effect system would isolate this behind a pure interface.
 
 const buildTheory = (state: CCState, arena: ArenaState): Theory => ({
 	name: "euf",

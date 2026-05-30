@@ -20,12 +20,6 @@ export type ArenaState = {
 	readonly nextId: number;
 };
 
-// Justification for let: The arena accumulates interned terms over the solver's
-// lifetime. Each intern call must check the hash index and conditionally add a new
-// node. This is an append-only data structure that grows monotonically — expressing
-// it as pure recursion would require threading the arena state through every caller.
-// Internal mutability with a pure lookup API is standard for hash-consing.
-
 export const Arena = {
 	create: (): ArenaState => ({
 		nodes: new Map(),
@@ -37,7 +31,7 @@ export const Arena = {
 		const key = hashKey(head, args);
 		const existing = state.hashIndex.get(key);
 
-		if (existing !== undefined) {
+		if (existing) {
 			return { id: existing, state };
 		}
 

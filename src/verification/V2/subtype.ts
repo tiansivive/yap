@@ -13,11 +13,11 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import { Liquid } from "../modalities";
-import { extractModalities, isFirstOrder, type ExtractModalitiesFn } from "./utils/refinements";
+import { extractModalities, isFirstOrder } from "./utils/refinements";
 import { noCapture } from "./utils/context";
 import type { VerificationRuntime } from "./utils/context";
 import type { TranslationTools } from "./logic/translate";
-import type { SubtypeFn, VerificationResult } from "./types";
+import type { VerificationResult } from "./types";
 
 type SubtypeDeps = {
 	runtime: VerificationRuntime;
@@ -25,7 +25,7 @@ type SubtypeDeps = {
 };
 
 export const createSubtype = ({ runtime, translation }: SubtypeDeps) => {
-	const { term: translate, formula, mkSort, quantify } = translation;
+	const { formula, mkSort, quantify } = translation;
 
 	const subtype = (left: NF.Value, right: NF.Value): VerificationResult<IVL.Formula> =>
 		V2.Do(function* () {
