@@ -184,7 +184,6 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 						// 	return [inferred[0], inferred[2]] satisfies Result;
 						// }
 
-						const quoted = NF.quote(ctx, ctx.env.length, ty);
 						const narrow = (nf: NF.Value, ctx: EB.Context) => {
 							const next = match(scrutinee)
 								.with({ type: "Var", variable: { type: "Bound" } }, bound =>
@@ -230,8 +229,8 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 											c => narrow(val, c),
 											V2.Do(function* () {
 												const ctx = yield* V2.ask();
-												const r = yield* EB.check.gen(src, NF.evaluate(ctx, quoted));
-												return r;
+												const branchTy = NF.evaluate(ctx, NF.quote(ctx, ctx.env.length, ty));
+												return yield* EB.check.gen(src, branchTy);
 											}),
 										);
 

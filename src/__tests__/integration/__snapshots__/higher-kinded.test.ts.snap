@@ -291,196 +291,394 @@ return main();
     "type": "Π(t3: Π(t4: Type) -> Type) -> Type",
   },
   {
-    "error": "Variable Mismatch: Cannot unify L2 with L6
-
-Trace:
-
-While unifying:
-	
-	L2
-with:
-	L6
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	[ 0: L2, 1: (List) L2 ]
-with:
-	[ 1: (List) L6, 0: L6 ]
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	[ 0: L2, 1: (List) L2 ]
-with:
-	[ 1: (List) L6, 0: L6 ]
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	Schema [ 0: L2, 1: (List) L2 ]
-with:
-	Schema [ 1: (List) L6, 0: L6 ]
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	[ cons: Schema [ 0: L2, 1: (List) L2 ] | ?34 ]
-with:
-	[ cons: Schema [ 1: (List) L6, 0: L6 ], nil: Unit ]
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	[ cons: Schema [ 0: L2, 1: (List) L2 ] | ?34 ]
-with:
-	[ cons: Schema [ 1: (List) L6, 0: L6 ], nil: Unit ]
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	Variant [ cons: Schema [ 0: L2, 1: (List) L2 ] | ?34 ]
-with:
-	Variant [ cons: Schema [ 1: (List) L6, 0: L6 ], nil: Unit ]
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	Variant [ cons: Schema [ 0: L2, 1: (List) L2 ] | ?34 ]
-with:
-	(List) L6
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	(tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-against:
-	(List) L6
-
-@ line: 8, col: 30
-
---------------------------------------------------------------------------------------------
-
-In alternative:
-	| Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-    (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-with type:
-	(List) L1
-While: elaborating pattern
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	match list
-  | Variant [ nil: Pattern Display: Not implemented ] -> (tagged nil: unit)
-  | Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-      (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-against:
-	(List) L2
-
-@ line: 6, col: 22
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	λ(list) ->
-  match list
-    | Variant [ nil: Pattern Display: Not implemented ] -> (tagged nil: unit)
-    | Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-        (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-against:
-	Π(t10: (List) L1) -> (closure: List b -| Γ: t10; t8; b; a)
-
-@ line: 6, col: 14
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	λ(f) ->
-  λ(list) ->
-    match list
-      | Variant [ nil: Pattern Display: Not implemented ] -> (tagged nil: unit)
-      | Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-          (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-against:
-	Π(t8: Π(t9: L1) -> (closure: b -| Γ: t9; b; a)) ->
-  (closure: Π(t10: List a) -> List b -| Γ: t8; b; a)
-
-@ line: 6, col: 8
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	λ(f) ->
-  λ(list) ->
-    match list
-      | Variant [ nil: Pattern Display: Not implemented ] -> (tagged nil: unit)
-      | Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-          (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-against:
-	Π(b: Type) =>
-  (closure: Π(t8: Π(t9: a) -> b) -> Π(t10: List a) -> List b -| Γ: b; a)
-
-@ line: 6, col: 8
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	λ(f) ->
-  λ(list) ->
-    match list
-      | Variant [ nil: Pattern Display: Not implemented ] -> (tagged nil: unit)
-      | Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-          (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-against:
-	Π(a: Type) =>
-  (closure: Π(b: Type) =>
-    Π(t8: Π(t9: a) -> b) -> Π(t10: List a) -> List b -| Γ: a)
-
-@ line: 6, col: 8
-
---------------------------------------------------------------------------------------------
-
-While inferring:
-	let mapList
-  : Π(a: Type) => Π(b: Type) => a -> b -> List a -> List b
-  = λ(f) ->
-    λ(list) ->
-      match list
-        | Variant [ nil: Pattern Display: Not implemented ] ->
-            (tagged nil: unit)
-        | Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-            (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-
-Reason: Statement
-
-@ line: 5, col: 5
-",
+    "codegenJS": "",
+    "elaborated": "λ(a: Type) =>
+  λ(b: Type) =>
+    λ(f: Π(t9: a) -> b) ->
+      λ(list: (List) a) ->
+        match list
+          | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
+          | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+              Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ]",
+    "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"mapList"}
+[3] lambda {"variable":"a","icit":"Implicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [82]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] lambda {"variable":"b","icit":"Implicit","level":2}
+  :annotation -> [6]
+  :body -> [7]
+  :env -> [83]
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] lambda {"variable":"f","icit":"Explicit","level":3}
+  :annotation -> [8]
+  :body -> [11]
+  :env -> [84]
+[8] pi {"variable":"t9","icit":"Explicit","level":3}
+  :annotation -> [9]
+  :body -> [10]
+[9] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[10] var:bound {"index":1}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [8] {"level":3}
+[11] lambda {"variable":"list","icit":"Explicit","level":4}
+  :annotation -> [12]
+  :body -> [35]
+  :env -> [85]
+[12] app {"icit":"Explicit"}
+  :arg -> [34]
+  :func -> [13]
+[13] mu {"variable":"x","source":"List","level":4}
+  :annotation -> [14]
+  :body -> [17]
+[14] pi {"variable":"t2","icit":"Explicit","level":4}
+  :annotation -> [15]
+  :body -> [16]
+[15] lit {"value":{"type":"Atom","value":"Type"}}
+[16] lit {"value":{"type":"Atom","value":"Type"}}
+[17] lambda {"variable":"a","icit":"Explicit","level":5}
+  :annotation -> [18]
+  :body -> [19]
+  :env -> [86]
+[18] lit {"value":{"type":"Atom","value":"Type"}}
+[19] app {"icit":"Explicit"}
+  :arg -> [21]
+  :func -> [20]
+[20] lit {"value":{"type":"Atom","value":"Variant"}}
+[21] row:ext {"label":"cons"}
+  :rest -> [31]
+  :value -> [22]
+[22] app {"icit":"Explicit"}
+  :arg -> [24]
+  :func -> [23]
+[23] lit {"value":{"type":"Atom","value":"Schema"}}
+[24] row:ext {"label":"1"}
+  :rest -> [28]
+  :value -> [25]
+[25] app {"icit":"Explicit"}
+  :arg -> [27]
+  :func -> [26]
+[26] var:bound {"index":1}
+  :refers_to -> [13]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [13] {"level":4}
+  :scope -> [17] {"level":5}
+[27] var:bound {"index":0}
+  :refers_to -> [17]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [13] {"level":4}
+  :scope -> [17] {"level":5}
+[28] row:ext {"label":"0"}
+  :rest -> [30]
+  :value -> [29]
+[29] var:bound {"index":0}
+  :refers_to -> [17]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [13] {"level":4}
+  :scope -> [17] {"level":5}
+[30] row:empty
+[31] row:ext {"label":"nil"}
+  :rest -> [33]
+  :value -> [32]
+[32] lit {"value":{"type":"Atom","value":"Unit"}}
+[33] row:empty
+[34] var:bound {"index":2}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+[35] match
+  :alt -> [37] {"index":0}
+  :alt -> [46] {"index":1}
+  :decision_tree -> [74]
+  :scrutinee -> [36]
+[36] var:bound {"index":0}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+[37] case
+  :body -> [41]
+  :next -> [46]
+  :pattern -> [38]
+[38] pat:variant {"label":"nil"}
+  :payload -> [39]
+[39] pat:wildcard
+[40] pat:wildcard
+[41] app {"icit":"Explicit"}
+  :arg -> [43]
+  :func -> [42]
+[42] lit {"value":{"type":"Atom","value":"Struct"}}
+[43] row:ext {"label":"nil"}
+  :rest -> [45]
+  :value -> [44]
+[44] lit {"value":{"type":"unit"}}
+[45] row:empty
+[46] case
+  :body -> [53]
+  :pattern -> [47]
+[47] pat:variant {"label":"cons"}
+  :payload -> [48]
+[48] pat:struct
+  :field -> [49] {"label":"0"}
+  :field -> [50] {"label":"1"}
+[49] pat:binder {"name":"x","level":5}
+[50] pat:binder {"name":"xs","level":6}
+[51] pat:wildcard
+[52] pat:wildcard
+[53] app {"icit":"Explicit"}
+  :arg -> [55]
+  :func -> [54]
+[54] lit {"value":{"type":"Atom","value":"Struct"}}
+[55] row:ext {"label":"cons"}
+  :rest -> [73]
+  :value -> [56]
+[56] app {"icit":"Explicit"}
+  :arg -> [58]
+  :func -> [57]
+[57] lit {"value":{"type":"Atom","value":"Struct"}}
+[58] row:ext {"label":"0"}
+  :rest -> [62]
+  :value -> [59]
+[59] app {"icit":"Explicit"}
+  :arg -> [61]
+  :func -> [60]
+[60] var:bound {"index":5}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[61] var:bound {"index":3}
+  :refers_to -> [49]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[62] row:ext {"label":"1"}
+  :rest -> [72]
+  :value -> [63]
+[63] app {"icit":"Explicit"}
+  :arg -> [71]
+  :func -> [64]
+[64] app {"icit":"Explicit"}
+  :arg -> [70]
+  :func -> [65]
+[65] app {"icit":"Implicit"}
+  :arg -> [69]
+  :func -> [66]
+[66] app {"icit":"Implicit"}
+  :arg -> [68]
+  :func -> [67]
+[67] var:bound {"index":8}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[68] var:bound {"index":7}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[69] var:bound {"index":6}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[70] var:bound {"index":5}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[71] var:bound {"index":2}
+  :refers_to -> [50]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[72] row:empty
+[73] row:empty
+[74] switch {"kind":"tag"}
+  :branch -> [76] {"label":"nil"}
+  :branch -> [78] {"label":"cons"}
+  :inspect -> [36]
+[75] proj {"label":"nil"}
+  :target -> [36]
+[76] leaf
+  :body -> [41]
+[77] proj {"label":"cons"}
+  :target -> [36]
+[78] switch {"kind":"struct"}
+  :branch -> [81]
+  :inspect -> [77]
+[79] proj {"label":"0"}
+  :target -> [77]
+[80] proj {"label":"1"}
+  :target -> [77]
+[81] leaf
+  :bind -> [79] {"name":"x","binder":49}
+  :bind -> [80] {"name":"xs","binder":50}
+  :body -> [53]
+[82] env
+  :capture -> [2] {"index":0}
+[83] env
+  :capture -> [3] {"index":0}
+  :capture -> [2] {"index":1}
+[84] env
+  :capture -> [3] {"index":0}
+  :capture -> [2] {"index":1}
+  :capture -> [5] {"index":2}
+[85] env
+  :capture -> [7] {"index":0}
+  :capture -> [2] {"index":1}
+  :capture -> [3] {"index":2}
+  :capture -> [5] {"index":3}
+[86] env
+  :capture -> [13] {"index":0}
+[87] closure
+  :body -> [3]
+  :env -> [82]
+[88] closure
+  :body -> [5]
+  :env -> [83]
+[89] closure
+  :body -> [7]
+  :env -> [84]
+[90] closure
+  :body -> [11]
+  :env -> [85]
+[91] closure
+  :body -> [17]
+  :env -> [86]",
     "kind": "let",
+    "mir": "",
     "name": "mapList",
+    "normalized": "λ(a: Type) =>
+  (closure: λ(b: Type) =>
+    λ(f: Π(t9: a) -> b) ->
+      λ(list: (List) a) ->
+        match list
+          | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
+          | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+              Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ] -| Γ: a)",
+    "type": "Π(a: Type) => Π(b: Type) => Π(t8: Π(t9: a) -> b) -> Π(t10: (List) a) -> (List) b",
   },
   {
-    "error": "Variable not found: mapList",
+    "codegenJS": "function main() {
+  const v0 = mapList;
+  const v1 = {
+    map: v0
+  };
+  return v1;
+}
+return main();
+",
+    "elaborated": "Struct [ map: mapList ]",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"ListFunctor"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"map"}
+  :rest -> [8]
+  :value -> [7]
+[6] var:free {"name":"mapList"}
+[7] var:ref {"name":"mapList"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+[8] row:empty",
     "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = mapList
+      let v1 = alloc { map: v0 }
+      return v1",
     "name": "ListFunctor",
+    "normalized": "Struct
+  [ map: λ(a: Type) =>
+      (closure: λ(b: Type) =>
+        λ(f: Π(t9: a) -> b) ->
+          λ(list: (List) a) ->
+            match list
+              | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
+              | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+                  Struct
+                    [ cons: Struct
+                        [ 0: f x, 1: mapList @a @b f xs ] ] -| Γ: a; mapList) ]",
+    "type": "Σ($sig: [ map: Π(a: Type) =>
+    Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: (List) a) -> (List) b ]) .
+  Schema
+    [ map: Π(a: Type) =>
+        Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: (List) a) -> (List) b ]",
   },
   {
     "codegenJS": "",
-    "elaborated": "λ(f: Π(t11: Type) -> Type) =>
+    "elaborated": "λ(f: Π(t12: Type) -> Type) =>
   λ(functor: Σ($sig: [ map: Π(a: Type) =>
       Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) .
     Schema
@@ -488,7 +686,7 @@ Reason: Statement
           Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) =>
     λ(a: Type) =>
       λ(b: Type) =>
-        λ(fn: Π(t13: a) -> b) ->
+        λ(fn: Π(t14: a) -> b) ->
           λ(container: f a) -> ((functor).map) @a @b fn container",
     "error": "Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures",
     "gram": "[1] root
@@ -498,7 +696,7 @@ Reason: Statement
   :annotation -> [4]
   :body -> [7]
   :env -> [67]
-[4] pi {"variable":"t11","icit":"Explicit","level":1}
+[4] pi {"variable":"t12","icit":"Explicit","level":1}
   :annotation -> [5]
   :body -> [6]
 [5] lit {"value":{"type":"Atom","value":"Type"}}
@@ -666,7 +864,7 @@ Reason: Statement
   :env -> [69]
 [46] lit {"value":{"type":"Atom","value":"Type"}}
 [48] lit {"value":{"type":"Atom","value":"Type"}}
-[50] pi {"variable":"t13","icit":"Explicit","level":5}
+[50] pi {"variable":"t14","icit":"Explicit","level":5}
   :annotation -> [51]
   :body -> [52]
 [51] var:bound {"index":0}
@@ -735,7 +933,7 @@ Reason: Statement
     "kind": "let",
     "mir": "",
     "name": "fmap",
-    "normalized": "λ(f: Π(t11: Type) -> (closure: Type -| Γ: t11)) =>
+    "normalized": "λ(f: Π(t12: Type) -> (closure: Type -| Γ: t12)) =>
   (closure: λ(functor: Σ($sig: [ map: Π(a: Type) =>
       Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) .
     Schema
@@ -743,24 +941,23 @@ Reason: Statement
           Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) =>
     λ(a: Type) =>
       λ(b: Type) =>
-        λ(fn: Π(t13: a) -> b) ->
+        λ(fn: Π(t14: a) -> b) ->
           λ(container: f a) -> ((functor).map) @a @b fn container -| Γ: f)",
-    "type": "Π(f: Π(t11: Type) -> Type) =>
+    "type": "Π(f: Π(t12: Type) -> Type) =>
   Π(functor: Σ($sig: [ map: Π(a: Type) =>
       Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) .
     Schema
       [ map: Π(a: Type) =>
           Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) =>
-    Π(a: Type) => Π(b: Type) => Π(t12: Π(t13: a) -> b) -> Π(t14: f a) -> f b",
+    Π(a: Type) => Π(b: Type) => Π(t13: Π(t14: a) -> b) -> Π(t15: f a) -> f b",
   },
   {
-    "error": "Variable not found: ListFunctor",
     "kind": "using",
     "name": "(using)",
   },
   {
     "codegenJS": "",
-    "elaborated": "λ(F: Π(t11: Type) -> Type) =>
+    "elaborated": "λ(F: Π(t12: Type) -> Type) =>
   λ(a: Type) =>
     λ(A: Σ($sig: [ map: Π(a: Type) =>
         Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: F a) -> F b ]) .
@@ -776,7 +973,7 @@ Reason: Statement
   :annotation -> [4]
   :body -> [7]
   :env -> [62]
-[4] pi {"variable":"t11","icit":"Explicit","level":1}
+[4] pi {"variable":"t12","icit":"Explicit","level":1}
   :annotation -> [5]
   :body -> [6]
 [5] lit {"value":{"type":"Atom","value":"Type"}}
@@ -1036,7 +1233,7 @@ Reason: Statement
     "kind": "let",
     "mir": "",
     "name": "strmap",
-    "normalized": "λ(F: Π(t11: Type) -> (closure: Type -| Γ: t11)) =>
+    "normalized": "λ(F: Π(t12: Type) -> (closure: Type -| Γ: t12)) =>
   (closure: λ(a: Type) =>
     λ(A: Σ($sig: [ map: Π(a: Type) =>
         Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: F a) -> F b ]) .
@@ -1044,14 +1241,14 @@ Reason: Statement
         [ map: Π(a: Type) =>
             Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: F a) -> F b ]) =>
       fmap @F @A @a @String (FFI.stringify @a) -| Γ: F)",
-    "type": "Π(F: Π(t11: Type) -> Type) =>
+    "type": "Π(F: Π(t12: Type) -> Type) =>
   Π(a: Type) =>
     Π(A: Σ($sig: [ map: Π(a: Type) =>
         Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: F a) -> F b ]) .
       Schema
         [ map: Π(a: Type) =>
             Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: F a) -> F b ]) =>
-      Π(t14: F a) -> F String",
+      Π(t15: F a) -> F String",
   },
   {
     "codegenJS": "function main() {
@@ -1120,554 +1317,122 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_158;
-  return v0;
-}
-
-function closure_158(strmap, listOf1, A) {
-  const v1 = strmap(v0);
-  const v2 = "Num";
-  const v3 = v1(v2);
-  const v4 = v3(A);
-  const v5 = v4(listOf1);
-  return v5;
+  const v0 = strmap;
+  const v2 = v0(v1);
+  const v3 = "Num";
+  const v4 = v2(v3);
+  const v5 = ListFunctor;
+  const v6 = v4(v5);
+  const v7 = listOf1;
+  const v8 = v6(v7);
+  return v8;
 }
 return main();
 ",
-    "elaborated": "λ(A: Σ($sig: [ map: Π(a: Type) =>
-    Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: (List) a) -> (List) b ]) .
-  Schema
-    [ map: Π(a: Type) =>
-        Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: (List) a) -> (List) b ]) =>
-  strmap @(List) @Num @A listOf1",
+    "elaborated": "strmap @(List) @Num @ListFunctor listOf1",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"strList"}
-[3] lambda {"variable":"A","icit":"Implicit","level":1}
-  :annotation -> [4]
-  :body -> [121]
-  :env -> [152]
-[4] sigma {"variable":"$sig","level":1}
-  :annotation -> [5]
-  :body -> [62]
-[5] row:ext {"label":"map"}
-  :rest -> [61]
-  :value -> [6]
-[6] pi {"variable":"a","icit":"Implicit","level":1}
-  :annotation -> [7]
-  :body -> [8]
-[7] lit {"value":{"type":"Atom","value":"Type"}}
-[8] pi {"variable":"b","icit":"Implicit","level":2}
-  :annotation -> [9]
-  :body -> [10]
-[9] lit {"value":{"type":"Atom","value":"Type"}}
-[10] pi {"variable":"t5","icit":"Explicit","level":3}
-  :annotation -> [11]
-  :body -> [14]
-[11] pi {"variable":"t6","icit":"Explicit","level":3}
-  :annotation -> [12]
-  :body -> [13]
-[12] var:bound {"index":1}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [8] {"level":2}
-[13] var:bound {"index":1}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [8] {"level":2}
-  :scope -> [11] {"level":3}
-[14] pi {"variable":"t7","icit":"Explicit","level":4}
-  :annotation -> [15]
-  :body -> [38]
-[15] app {"icit":"Explicit"}
-  :arg -> [37]
-  :func -> [16]
-[16] mu {"variable":"x","source":"List","level":4}
-  :annotation -> [17]
-  :body -> [20]
-[17] pi {"variable":"t2","icit":"Explicit","level":4}
-  :annotation -> [18]
-  :body -> [19]
-[18] lit {"value":{"type":"Atom","value":"Type"}}
-[19] lit {"value":{"type":"Atom","value":"Type"}}
-[20] lambda {"variable":"a","icit":"Explicit","level":5}
-  :annotation -> [21]
-  :body -> [22]
-  :env -> [153]
-[21] lit {"value":{"type":"Atom","value":"Type"}}
-[22] app {"icit":"Explicit"}
-  :arg -> [24]
-  :func -> [23]
-[23] lit {"value":{"type":"Atom","value":"Variant"}}
-[24] row:ext {"label":"cons"}
-  :rest -> [34]
-  :value -> [25]
-[25] app {"icit":"Explicit"}
-  :arg -> [27]
-  :func -> [26]
-[26] lit {"value":{"type":"Atom","value":"Schema"}}
-[27] row:ext {"label":"1"}
-  :rest -> [31]
-  :value -> [28]
-[28] app {"icit":"Explicit"}
+[3] app {"icit":"Explicit"}
+  :arg -> [34]
+  :func -> [4]
+[4] app {"icit":"Implicit"}
+  :arg -> [32]
+  :func -> [5]
+[5] app {"icit":"Implicit"}
   :arg -> [30]
-  :func -> [29]
-[29] var:bound {"index":1}
-  :refers_to -> [16]
+  :func -> [6]
+[6] app {"icit":"Implicit"}
+  :arg -> [9]
+  :func -> [8]
+[7] var:free {"name":"strmap"}
+[8] var:ref {"name":"strmap"}
+  :refers_to -> [7]
   :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [8] {"level":2}
-  :scope -> [10] {"level":3}
-  :scope -> [16] {"level":4}
-  :scope -> [20] {"level":5}
-[30] var:bound {"index":0}
-  :refers_to -> [20]
+[9] mu {"variable":"x","source":"List","level":1}
+  :annotation -> [10]
+  :body -> [13]
+[10] pi {"variable":"t2","icit":"Explicit","level":1}
+  :annotation -> [11]
+  :body -> [12]
+[11] lit {"value":{"type":"Atom","value":"Type"}}
+[12] lit {"value":{"type":"Atom","value":"Type"}}
+[13] lambda {"variable":"a","icit":"Explicit","level":2}
+  :annotation -> [14]
+  :body -> [15]
+  :env -> [35]
+[14] lit {"value":{"type":"Atom","value":"Type"}}
+[15] app {"icit":"Explicit"}
+  :arg -> [17]
+  :func -> [16]
+[16] lit {"value":{"type":"Atom","value":"Variant"}}
+[17] row:ext {"label":"cons"}
+  :rest -> [27]
+  :value -> [18]
+[18] app {"icit":"Explicit"}
+  :arg -> [20]
+  :func -> [19]
+[19] lit {"value":{"type":"Atom","value":"Schema"}}
+[20] row:ext {"label":"1"}
+  :rest -> [24]
+  :value -> [21]
+[21] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [22]
+[22] var:bound {"index":1}
+  :refers_to -> [9]
   :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [8] {"level":2}
-  :scope -> [10] {"level":3}
-  :scope -> [16] {"level":4}
-  :scope -> [20] {"level":5}
-[31] row:ext {"label":"0"}
-  :rest -> [33]
-  :value -> [32]
-[32] var:bound {"index":0}
-  :refers_to -> [20]
+  :scope -> [9] {"level":1}
+  :scope -> [13] {"level":2}
+[23] var:bound {"index":0}
+  :refers_to -> [13]
   :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [8] {"level":2}
-  :scope -> [10] {"level":3}
-  :scope -> [16] {"level":4}
-  :scope -> [20] {"level":5}
-[33] row:empty
-[34] row:ext {"label":"nil"}
-  :rest -> [36]
-  :value -> [35]
-[35] lit {"value":{"type":"Atom","value":"Unit"}}
-[36] row:empty
-[37] var:bound {"index":2}
-  :refers_to -> [6]
+  :scope -> [9] {"level":1}
+  :scope -> [13] {"level":2}
+[24] row:ext {"label":"0"}
+  :rest -> [26]
+  :value -> [25]
+[25] var:bound {"index":0}
+  :refers_to -> [13]
   :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [8] {"level":2}
-  :scope -> [10] {"level":3}
-[38] app {"icit":"Explicit"}
-  :arg -> [60]
-  :func -> [39]
-[39] mu {"variable":"x","source":"List","level":5}
-  :annotation -> [40]
-  :body -> [43]
-[40] pi {"variable":"t2","icit":"Explicit","level":5}
-  :annotation -> [41]
-  :body -> [42]
-[41] lit {"value":{"type":"Atom","value":"Type"}}
-[42] lit {"value":{"type":"Atom","value":"Type"}}
-[43] lambda {"variable":"a","icit":"Explicit","level":6}
-  :annotation -> [44]
-  :body -> [45]
-  :env -> [154]
-[44] lit {"value":{"type":"Atom","value":"Type"}}
-[45] app {"icit":"Explicit"}
-  :arg -> [47]
-  :func -> [46]
-[46] lit {"value":{"type":"Atom","value":"Variant"}}
-[47] row:ext {"label":"cons"}
-  :rest -> [57]
-  :value -> [48]
-[48] app {"icit":"Explicit"}
-  :arg -> [50]
-  :func -> [49]
-[49] lit {"value":{"type":"Atom","value":"Schema"}}
-[50] row:ext {"label":"1"}
-  :rest -> [54]
-  :value -> [51]
-[51] app {"icit":"Explicit"}
-  :arg -> [53]
-  :func -> [52]
-[52] var:bound {"index":1}
-  :refers_to -> [39]
+  :scope -> [9] {"level":1}
+  :scope -> [13] {"level":2}
+[26] row:empty
+[27] row:ext {"label":"nil"}
+  :rest -> [29]
+  :value -> [28]
+[28] lit {"value":{"type":"Atom","value":"Unit"}}
+[29] row:empty
+[30] lit {"value":{"type":"Atom","value":"Num"}}
+[31] var:free {"name":"ListFunctor"}
+[32] var:ref {"name":"ListFunctor"}
+  :refers_to -> [31]
   :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [8] {"level":2}
-  :scope -> [10] {"level":3}
-  :scope -> [14] {"level":4}
-  :scope -> [39] {"level":5}
-  :scope -> [43] {"level":6}
-[53] var:bound {"index":0}
-  :refers_to -> [43]
+[33] var:free {"name":"listOf1"}
+[34] var:ref {"name":"listOf1"}
+  :refers_to -> [33]
   :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [8] {"level":2}
-  :scope -> [10] {"level":3}
-  :scope -> [14] {"level":4}
-  :scope -> [39] {"level":5}
-  :scope -> [43] {"level":6}
-[54] row:ext {"label":"0"}
-  :rest -> [56]
-  :value -> [55]
-[55] var:bound {"index":0}
-  :refers_to -> [43]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [8] {"level":2}
-  :scope -> [10] {"level":3}
-  :scope -> [14] {"level":4}
-  :scope -> [39] {"level":5}
-  :scope -> [43] {"level":6}
-[56] row:empty
-[57] row:ext {"label":"nil"}
-  :rest -> [59]
-  :value -> [58]
-[58] lit {"value":{"type":"Atom","value":"Unit"}}
-[59] row:empty
-[60] var:bound {"index":2}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-  :scope -> [8] {"level":2}
-  :scope -> [10] {"level":3}
-  :scope -> [14] {"level":4}
-[61] row:empty
-[62] app {"icit":"Explicit"}
-  :arg -> [64]
-  :func -> [63]
-[63] lit {"value":{"type":"Atom","value":"Schema"}}
-[64] row:ext {"label":"map"}
-  :rest -> [120]
-  :value -> [65]
-[65] pi {"variable":"a","icit":"Implicit","level":2}
-  :annotation -> [66]
-  :body -> [67]
-[66] lit {"value":{"type":"Atom","value":"Type"}}
-[67] pi {"variable":"b","icit":"Implicit","level":3}
-  :annotation -> [68]
-  :body -> [69]
-[68] lit {"value":{"type":"Atom","value":"Type"}}
-[69] pi {"variable":"t5","icit":"Explicit","level":4}
-  :annotation -> [70]
-  :body -> [73]
-[70] pi {"variable":"t6","icit":"Explicit","level":4}
-  :annotation -> [71]
-  :body -> [72]
-[71] var:bound {"index":1}
-  :refers_to -> [65]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [65] {"level":2}
-  :scope -> [67] {"level":3}
-[72] var:bound {"index":1}
-  :refers_to -> [67]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [65] {"level":2}
-  :scope -> [67] {"level":3}
-  :scope -> [70] {"level":4}
-[73] pi {"variable":"t7","icit":"Explicit","level":5}
-  :annotation -> [74]
-  :body -> [97]
-[74] app {"icit":"Explicit"}
-  :arg -> [96]
-  :func -> [75]
-[75] mu {"variable":"x","source":"List","level":5}
-  :annotation -> [76]
-  :body -> [79]
-[76] pi {"variable":"t2","icit":"Explicit","level":5}
-  :annotation -> [77]
-  :body -> [78]
-[77] lit {"value":{"type":"Atom","value":"Type"}}
-[78] lit {"value":{"type":"Atom","value":"Type"}}
-[79] lambda {"variable":"a","icit":"Explicit","level":6}
-  :annotation -> [80]
-  :body -> [81]
-  :env -> [155]
-[80] lit {"value":{"type":"Atom","value":"Type"}}
-[81] app {"icit":"Explicit"}
-  :arg -> [83]
-  :func -> [82]
-[82] lit {"value":{"type":"Atom","value":"Variant"}}
-[83] row:ext {"label":"cons"}
-  :rest -> [93]
-  :value -> [84]
-[84] app {"icit":"Explicit"}
-  :arg -> [86]
-  :func -> [85]
-[85] lit {"value":{"type":"Atom","value":"Schema"}}
-[86] row:ext {"label":"1"}
-  :rest -> [90]
-  :value -> [87]
-[87] app {"icit":"Explicit"}
-  :arg -> [89]
-  :func -> [88]
-[88] var:bound {"index":1}
-  :refers_to -> [75]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [65] {"level":2}
-  :scope -> [67] {"level":3}
-  :scope -> [69] {"level":4}
-  :scope -> [75] {"level":5}
-  :scope -> [79] {"level":6}
-[89] var:bound {"index":0}
-  :refers_to -> [79]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [65] {"level":2}
-  :scope -> [67] {"level":3}
-  :scope -> [69] {"level":4}
-  :scope -> [75] {"level":5}
-  :scope -> [79] {"level":6}
-[90] row:ext {"label":"0"}
-  :rest -> [92]
-  :value -> [91]
-[91] var:bound {"index":0}
-  :refers_to -> [79]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [65] {"level":2}
-  :scope -> [67] {"level":3}
-  :scope -> [69] {"level":4}
-  :scope -> [75] {"level":5}
-  :scope -> [79] {"level":6}
-[92] row:empty
-[93] row:ext {"label":"nil"}
-  :rest -> [95]
-  :value -> [94]
-[94] lit {"value":{"type":"Atom","value":"Unit"}}
-[95] row:empty
-[96] var:bound {"index":2}
-  :refers_to -> [65]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [65] {"level":2}
-  :scope -> [67] {"level":3}
-  :scope -> [69] {"level":4}
-[97] app {"icit":"Explicit"}
-  :arg -> [119]
-  :func -> [98]
-[98] mu {"variable":"x","source":"List","level":6}
-  :annotation -> [99]
-  :body -> [102]
-[99] pi {"variable":"t2","icit":"Explicit","level":6}
-  :annotation -> [100]
-  :body -> [101]
-[100] lit {"value":{"type":"Atom","value":"Type"}}
-[101] lit {"value":{"type":"Atom","value":"Type"}}
-[102] lambda {"variable":"a","icit":"Explicit","level":7}
-  :annotation -> [103]
-  :body -> [104]
-  :env -> [156]
-[103] lit {"value":{"type":"Atom","value":"Type"}}
-[104] app {"icit":"Explicit"}
-  :arg -> [106]
-  :func -> [105]
-[105] lit {"value":{"type":"Atom","value":"Variant"}}
-[106] row:ext {"label":"cons"}
-  :rest -> [116]
-  :value -> [107]
-[107] app {"icit":"Explicit"}
-  :arg -> [109]
-  :func -> [108]
-[108] lit {"value":{"type":"Atom","value":"Schema"}}
-[109] row:ext {"label":"1"}
-  :rest -> [113]
-  :value -> [110]
-[110] app {"icit":"Explicit"}
-  :arg -> [112]
-  :func -> [111]
-[111] var:bound {"index":1}
-  :refers_to -> [98]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [65] {"level":2}
-  :scope -> [67] {"level":3}
-  :scope -> [69] {"level":4}
-  :scope -> [73] {"level":5}
-  :scope -> [98] {"level":6}
-  :scope -> [102] {"level":7}
-[112] var:bound {"index":0}
-  :refers_to -> [102]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [65] {"level":2}
-  :scope -> [67] {"level":3}
-  :scope -> [69] {"level":4}
-  :scope -> [73] {"level":5}
-  :scope -> [98] {"level":6}
-  :scope -> [102] {"level":7}
-[113] row:ext {"label":"0"}
-  :rest -> [115]
-  :value -> [114]
-[114] var:bound {"index":0}
-  :refers_to -> [102]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [65] {"level":2}
-  :scope -> [67] {"level":3}
-  :scope -> [69] {"level":4}
-  :scope -> [73] {"level":5}
-  :scope -> [98] {"level":6}
-  :scope -> [102] {"level":7}
-[115] row:empty
-[116] row:ext {"label":"nil"}
-  :rest -> [118]
-  :value -> [117]
-[117] lit {"value":{"type":"Atom","value":"Unit"}}
-[118] row:empty
-[119] var:bound {"index":2}
-  :refers_to -> [67]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [65] {"level":2}
-  :scope -> [67] {"level":3}
-  :scope -> [69] {"level":4}
-  :scope -> [73] {"level":5}
-[120] row:empty
-[121] app {"icit":"Explicit"}
-  :arg -> [151]
-  :func -> [122]
-[122] app {"icit":"Implicit"}
-  :arg -> [149]
-  :func -> [123]
-[123] app {"icit":"Implicit"}
-  :arg -> [148]
-  :func -> [124]
-[124] app {"icit":"Implicit"}
-  :arg -> [127]
-  :func -> [126]
-[125] var:free {"name":"strmap"}
-[126] var:ref {"name":"strmap"}
-  :refers_to -> [125]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-[127] mu {"variable":"x","source":"List","level":2}
-  :annotation -> [128]
-  :body -> [131]
-[128] pi {"variable":"t2","icit":"Explicit","level":2}
-  :annotation -> [129]
-  :body -> [130]
-[129] lit {"value":{"type":"Atom","value":"Type"}}
-[130] lit {"value":{"type":"Atom","value":"Type"}}
-[131] lambda {"variable":"a","icit":"Explicit","level":3}
-  :annotation -> [132]
-  :body -> [133]
-  :env -> [157]
-[132] lit {"value":{"type":"Atom","value":"Type"}}
-[133] app {"icit":"Explicit"}
-  :arg -> [135]
-  :func -> [134]
-[134] lit {"value":{"type":"Atom","value":"Variant"}}
-[135] row:ext {"label":"cons"}
-  :rest -> [145]
-  :value -> [136]
-[136] app {"icit":"Explicit"}
-  :arg -> [138]
-  :func -> [137]
-[137] lit {"value":{"type":"Atom","value":"Schema"}}
-[138] row:ext {"label":"1"}
-  :rest -> [142]
-  :value -> [139]
-[139] app {"icit":"Explicit"}
-  :arg -> [141]
-  :func -> [140]
-[140] var:bound {"index":1}
-  :refers_to -> [127]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [127] {"level":2}
-  :scope -> [131] {"level":3}
-[141] var:bound {"index":0}
-  :refers_to -> [131]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [127] {"level":2}
-  :scope -> [131] {"level":3}
-[142] row:ext {"label":"0"}
-  :rest -> [144]
-  :value -> [143]
-[143] var:bound {"index":0}
-  :refers_to -> [131]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [127] {"level":2}
-  :scope -> [131] {"level":3}
-[144] row:empty
-[145] row:ext {"label":"nil"}
-  :rest -> [147]
-  :value -> [146]
-[146] lit {"value":{"type":"Atom","value":"Unit"}}
-[147] row:empty
-[148] lit {"value":{"type":"Atom","value":"Num"}}
-[149] var:bound {"index":0}
-  :refers_to -> [3]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-[150] var:free {"name":"listOf1"}
-[151] var:ref {"name":"listOf1"}
-  :refers_to -> [150]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-[152] env
-  :capture -> [125] {"index":0}
-  :capture -> [150] {"index":1}
-[153] env
-  :capture -> [16] {"index":0}
-[154] env
-  :capture -> [39] {"index":0}
-[155] env
-  :capture -> [75] {"index":0}
-[156] env
-  :capture -> [98] {"index":0}
-[157] env
-  :capture -> [127] {"index":0}
-[158] closure
-  :body -> [3]
-  :env -> [152]
-[159] closure
-  :body -> [20]
-  :env -> [153]
-[160] closure
-  :body -> [43]
-  :env -> [154]
-[161] closure
-  :body -> [79]
-  :env -> [155]
-[162] closure
-  :body -> [102]
-  :env -> [156]
-[163] closure
-  :body -> [131]
-  :env -> [157]",
+[35] env
+  :capture -> [9] {"index":0}
+[36] closure
+  :body -> [13]
+  :env -> [35]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_158
-      return v0
-  fn closure_158(strmap, listOf1, A) entry=entry
-    entry:
-      let v1 = call *strmap(v0)
-      let v2 = Num
-      let v3 = call *v1(v2)
-      let v4 = call *v3(A)
-      let v5 = call *v4(listOf1)
-      return v5",
+      let v0 = strmap
+      let v2 = call *v0(v1)
+      let v3 = Num
+      let v4 = call *v2(v3)
+      let v5 = ListFunctor
+      let v6 = call *v4(v5)
+      let v7 = listOf1
+      let v8 = call *v6(v7)
+      return v8",
     "name": "strList",
-    "normalized": "λ(A: Σ($sig: [ map: Π(a: Type) =>
-    (closure: Π(b: Type) =>
-      Π(t5: Π(t6: a) -> b) -> Π(t7: (List) a) -> (List) b -| Γ: a) ]) .
-  (closure: Schema
-    [ map: Π(a: Type) =>
-        Π(b: Type) =>
-          Π(t5: Π(t6: a) -> b) -> Π(t7: (List) a) -> (List) b ] -| ·)) =>
-  (closure: strmap @(List) @Num @A listOf1 -| Γ: A)",
-    "type": "Π(A: Σ($sig: [ map: Π(a: Type) =>
-    Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: List a) -> List b ]) .
-  Schema
-    [ map: Π(a: Type) =>
-        Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: List a) -> List b ]) =>
-  (List) String",
+    "normalized": "Struct [ cons: Struct [ 0: FFI.stringify @Num 1, 1: Struct [ nil: unit ] ] ]",
+    "type": "(List) String",
   },
 ]
 `;
@@ -1959,192 +1724,390 @@ return main();
     "type": "Π(t2: Π(t3: Type) -> Type) -> Type",
   },
   {
-    "error": "Variable Mismatch: Cannot unify L2 with L6
-
-Trace:
-
-While unifying:
-	
-	L2
-with:
-	L6
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	[ 0: L2, 1: (List) L2 ]
-with:
-	[ 1: (List) L6, 0: L6 ]
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	[ 0: L2, 1: (List) L2 ]
-with:
-	[ 1: (List) L6, 0: L6 ]
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	Schema [ 0: L2, 1: (List) L2 ]
-with:
-	Schema [ 1: (List) L6, 0: L6 ]
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	[ cons: Schema [ 0: L2, 1: (List) L2 ] | ?34 ]
-with:
-	[ cons: Schema [ 1: (List) L6, 0: L6 ], nil: Unit ]
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	[ cons: Schema [ 0: L2, 1: (List) L2 ] | ?34 ]
-with:
-	[ cons: Schema [ 1: (List) L6, 0: L6 ], nil: Unit ]
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	Variant [ cons: Schema [ 0: L2, 1: (List) L2 ] | ?34 ]
-with:
-	Variant [ cons: Schema [ 1: (List) L6, 0: L6 ], nil: Unit ]
-
---------------------------------------------------------------------------------------------
-
-
-While unifying:
-	
-	Variant [ cons: Schema [ 0: L2, 1: (List) L2 ] | ?34 ]
-with:
-	(List) L6
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	(tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-against:
-	(List) L6
-
-@ line: 7, col: 30
-
---------------------------------------------------------------------------------------------
-
-In alternative:
-	| Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-    (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-with type:
-	(List) L1
-While: elaborating pattern
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	match list
-  | Variant [ nil: Pattern Display: Not implemented ] -> (tagged nil: unit)
-  | Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-      (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-against:
-	(List) L2
-
-@ line: 5, col: 22
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	λ(list) ->
-  match list
-    | Variant [ nil: Pattern Display: Not implemented ] -> (tagged nil: unit)
-    | Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-        (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-against:
-	Π(t9: (List) L1) -> (closure: List b -| Γ: t9; t7; b; a)
-
-@ line: 5, col: 14
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	λ(f) ->
-  λ(list) ->
-    match list
-      | Variant [ nil: Pattern Display: Not implemented ] -> (tagged nil: unit)
-      | Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-          (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-against:
-	Π(t7: Π(t8: L1) -> (closure: b -| Γ: t8; b; a)) ->
-  (closure: Π(t9: List a) -> List b -| Γ: t7; b; a)
-
-@ line: 5, col: 8
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	λ(f) ->
-  λ(list) ->
-    match list
-      | Variant [ nil: Pattern Display: Not implemented ] -> (tagged nil: unit)
-      | Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-          (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-against:
-	Π(b: Type) =>
-  (closure: Π(t7: Π(t8: a) -> b) -> Π(t9: List a) -> List b -| Γ: b; a)
-
-@ line: 5, col: 8
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	λ(f) ->
-  λ(list) ->
-    match list
-      | Variant [ nil: Pattern Display: Not implemented ] -> (tagged nil: unit)
-      | Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-          (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-against:
-	Π(a: Type) =>
-  (closure: Π(b: Type) =>
-    Π(t7: Π(t8: a) -> b) -> Π(t9: List a) -> List b -| Γ: a)
-
-@ line: 5, col: 8
-
---------------------------------------------------------------------------------------------
-
-While inferring:
-	let mapList
-  : Π(a: Type) => Π(b: Type) => a -> b -> List a -> List b
-  = λ(f) ->
-    λ(list) ->
-      match list
-        | Variant [ nil: Pattern Display: Not implemented ] ->
-            (tagged nil: unit)
-        | Variant [ cons: Tuple [ 0: x, 1: xs ] ] ->
-            (tagged cons: tuple [ 0: f x, 1: mapList f xs ])
-
-Reason: Statement
-
-@ line: 4, col: 5
-",
+    "codegenJS": "",
+    "elaborated": "λ(a: Type) =>
+  λ(b: Type) =>
+    λ(f: Π(t8: a) -> b) ->
+      λ(list: (List) a) ->
+        match list
+          | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
+          | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+              Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ]",
+    "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"mapList"}
+[3] lambda {"variable":"a","icit":"Implicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [82]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] lambda {"variable":"b","icit":"Implicit","level":2}
+  :annotation -> [6]
+  :body -> [7]
+  :env -> [83]
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] lambda {"variable":"f","icit":"Explicit","level":3}
+  :annotation -> [8]
+  :body -> [11]
+  :env -> [84]
+[8] pi {"variable":"t8","icit":"Explicit","level":3}
+  :annotation -> [9]
+  :body -> [10]
+[9] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[10] var:bound {"index":1}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [8] {"level":3}
+[11] lambda {"variable":"list","icit":"Explicit","level":4}
+  :annotation -> [12]
+  :body -> [35]
+  :env -> [85]
+[12] app {"icit":"Explicit"}
+  :arg -> [34]
+  :func -> [13]
+[13] mu {"variable":"x","source":"List","level":4}
+  :annotation -> [14]
+  :body -> [17]
+[14] pi {"variable":"t1","icit":"Explicit","level":4}
+  :annotation -> [15]
+  :body -> [16]
+[15] lit {"value":{"type":"Atom","value":"Type"}}
+[16] lit {"value":{"type":"Atom","value":"Type"}}
+[17] lambda {"variable":"a","icit":"Explicit","level":5}
+  :annotation -> [18]
+  :body -> [19]
+  :env -> [86]
+[18] lit {"value":{"type":"Atom","value":"Type"}}
+[19] app {"icit":"Explicit"}
+  :arg -> [21]
+  :func -> [20]
+[20] lit {"value":{"type":"Atom","value":"Variant"}}
+[21] row:ext {"label":"cons"}
+  :rest -> [31]
+  :value -> [22]
+[22] app {"icit":"Explicit"}
+  :arg -> [24]
+  :func -> [23]
+[23] lit {"value":{"type":"Atom","value":"Schema"}}
+[24] row:ext {"label":"1"}
+  :rest -> [28]
+  :value -> [25]
+[25] app {"icit":"Explicit"}
+  :arg -> [27]
+  :func -> [26]
+[26] var:bound {"index":1}
+  :refers_to -> [13]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [13] {"level":4}
+  :scope -> [17] {"level":5}
+[27] var:bound {"index":0}
+  :refers_to -> [17]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [13] {"level":4}
+  :scope -> [17] {"level":5}
+[28] row:ext {"label":"0"}
+  :rest -> [30]
+  :value -> [29]
+[29] var:bound {"index":0}
+  :refers_to -> [17]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [13] {"level":4}
+  :scope -> [17] {"level":5}
+[30] row:empty
+[31] row:ext {"label":"nil"}
+  :rest -> [33]
+  :value -> [32]
+[32] lit {"value":{"type":"Atom","value":"Unit"}}
+[33] row:empty
+[34] var:bound {"index":2}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+[35] match
+  :alt -> [37] {"index":0}
+  :alt -> [46] {"index":1}
+  :decision_tree -> [74]
+  :scrutinee -> [36]
+[36] var:bound {"index":0}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+[37] case
+  :body -> [41]
+  :next -> [46]
+  :pattern -> [38]
+[38] pat:variant {"label":"nil"}
+  :payload -> [39]
+[39] pat:wildcard
+[40] pat:wildcard
+[41] app {"icit":"Explicit"}
+  :arg -> [43]
+  :func -> [42]
+[42] lit {"value":{"type":"Atom","value":"Struct"}}
+[43] row:ext {"label":"nil"}
+  :rest -> [45]
+  :value -> [44]
+[44] lit {"value":{"type":"unit"}}
+[45] row:empty
+[46] case
+  :body -> [53]
+  :pattern -> [47]
+[47] pat:variant {"label":"cons"}
+  :payload -> [48]
+[48] pat:struct
+  :field -> [49] {"label":"0"}
+  :field -> [50] {"label":"1"}
+[49] pat:binder {"name":"x","level":5}
+[50] pat:binder {"name":"xs","level":6}
+[51] pat:wildcard
+[52] pat:wildcard
+[53] app {"icit":"Explicit"}
+  :arg -> [55]
+  :func -> [54]
+[54] lit {"value":{"type":"Atom","value":"Struct"}}
+[55] row:ext {"label":"cons"}
+  :rest -> [73]
+  :value -> [56]
+[56] app {"icit":"Explicit"}
+  :arg -> [58]
+  :func -> [57]
+[57] lit {"value":{"type":"Atom","value":"Struct"}}
+[58] row:ext {"label":"0"}
+  :rest -> [62]
+  :value -> [59]
+[59] app {"icit":"Explicit"}
+  :arg -> [61]
+  :func -> [60]
+[60] var:bound {"index":5}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[61] var:bound {"index":3}
+  :refers_to -> [49]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[62] row:ext {"label":"1"}
+  :rest -> [72]
+  :value -> [63]
+[63] app {"icit":"Explicit"}
+  :arg -> [71]
+  :func -> [64]
+[64] app {"icit":"Explicit"}
+  :arg -> [70]
+  :func -> [65]
+[65] app {"icit":"Implicit"}
+  :arg -> [69]
+  :func -> [66]
+[66] app {"icit":"Implicit"}
+  :arg -> [68]
+  :func -> [67]
+[67] var:bound {"index":8}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[68] var:bound {"index":7}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[69] var:bound {"index":6}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[70] var:bound {"index":5}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[71] var:bound {"index":2}
+  :refers_to -> [50]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [49] {"level":5}
+  :scope -> [50] {"level":6}
+  :scope -> [51] {"level":7}
+  :scope -> [52] {"level":8}
+[72] row:empty
+[73] row:empty
+[74] switch {"kind":"tag"}
+  :branch -> [76] {"label":"nil"}
+  :branch -> [78] {"label":"cons"}
+  :inspect -> [36]
+[75] proj {"label":"nil"}
+  :target -> [36]
+[76] leaf
+  :body -> [41]
+[77] proj {"label":"cons"}
+  :target -> [36]
+[78] switch {"kind":"struct"}
+  :branch -> [81]
+  :inspect -> [77]
+[79] proj {"label":"0"}
+  :target -> [77]
+[80] proj {"label":"1"}
+  :target -> [77]
+[81] leaf
+  :bind -> [79] {"name":"x","binder":49}
+  :bind -> [80] {"name":"xs","binder":50}
+  :body -> [53]
+[82] env
+  :capture -> [2] {"index":0}
+[83] env
+  :capture -> [3] {"index":0}
+  :capture -> [2] {"index":1}
+[84] env
+  :capture -> [3] {"index":0}
+  :capture -> [2] {"index":1}
+  :capture -> [5] {"index":2}
+[85] env
+  :capture -> [7] {"index":0}
+  :capture -> [2] {"index":1}
+  :capture -> [3] {"index":2}
+  :capture -> [5] {"index":3}
+[86] env
+  :capture -> [13] {"index":0}
+[87] closure
+  :body -> [3]
+  :env -> [82]
+[88] closure
+  :body -> [5]
+  :env -> [83]
+[89] closure
+  :body -> [7]
+  :env -> [84]
+[90] closure
+  :body -> [11]
+  :env -> [85]
+[91] closure
+  :body -> [17]
+  :env -> [86]",
     "kind": "let",
+    "mir": "",
     "name": "mapList",
+    "normalized": "λ(a: Type) =>
+  (closure: λ(b: Type) =>
+    λ(f: Π(t8: a) -> b) ->
+      λ(list: (List) a) ->
+        match list
+          | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
+          | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+              Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ] -| Γ: a)",
+    "type": "Π(a: Type) => Π(b: Type) => Π(t7: Π(t8: a) -> b) -> Π(t9: (List) a) -> (List) b",
   },
   {
-    "error": "Variable not found: mapList",
+    "codegenJS": "function main() {
+  const v0 = mapList;
+  const v1 = {
+    map: v0
+  };
+  return v1;
+}
+return main();
+",
+    "elaborated": "Struct [ map: mapList ]",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"ListFunctor"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"map"}
+  :rest -> [8]
+  :value -> [7]
+[6] var:free {"name":"mapList"}
+[7] var:ref {"name":"mapList"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+[8] row:empty",
     "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = mapList
+      let v1 = alloc { map: v0 }
+      return v1",
     "name": "ListFunctor",
+    "normalized": "Struct
+  [ map: λ(a: Type) =>
+      (closure: λ(b: Type) =>
+        λ(f: Π(t8: a) -> b) ->
+          λ(list: (List) a) ->
+            match list
+              | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
+              | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+                  Struct
+                    [ cons: Struct
+                        [ 0: f x, 1: mapList @a @b f xs ] ] -| Γ: a; mapList) ]",
+    "type": "Σ($sig: [ map: Π(a: Type) =>
+    Π(b: Type) => Π(t4: Π(t5: a) -> b) -> Π(t6: (List) a) -> (List) b ]) .
+  Schema
+    [ map: Π(a: Type) =>
+        Π(b: Type) => Π(t4: Π(t5: a) -> b) -> Π(t6: (List) a) -> (List) b ]",
   },
 ]
 `;
