@@ -208,7 +208,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct [ show: (λ(n: Num) -> FFI.stringify @Num n : Π(n: Num) -> String) ]",
+    "elaborated": "Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]",
     "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
   :entry -> [3]
@@ -291,9 +291,7 @@ function closure_21(b) {
 }
 return main();
 ",
-    "elaborated": "Struct
-  [ show: (λ(b: Bool) ->
-      match b | true -> "true" | false -> "false" : Π(b: Bool) -> String) ]",
+    "elaborated": "Struct [ show: λ(b: Bool) -> match b | true -> "true" | false -> "false" ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ShowBool"}
@@ -381,10 +379,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct
-  [ eq: (λ(x: Num) ->
-      (λ(y: Num) -> FFI.$eq x y : Π(y: Num) -> Bool) : Π(x: Num) ->
-      Π(y: Num) -> Bool) ]",
+    "elaborated": "Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ]",
     "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
   :entry -> [3]
@@ -412,9 +407,7 @@ return main();
       let v1 = alloc { eq: v0 }
       return v1",
     "name": "EqNum",
-    "normalized": "Struct
-  [ eq: λ(x: Num) ->
-      (closure: (λ(y: Num) -> FFI.$eq x y : Π(y: Num) -> Bool) -| Γ: x) ]",
+    "normalized": "Struct [ eq: λ(x: Num) -> (closure: λ(y: Num) -> FFI.$eq x y -| Γ: x) ]",
     "type": "Σ($sig: [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]) .
   Schema [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]",
   },
@@ -629,7 +622,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct [ show: (λ(n: Num) -> FFI.stringify @Num n : Π(n: Num) -> String) ]",
+    "elaborated": "Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]",
     "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
   :entry -> [3]
@@ -675,10 +668,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct
-  [ eq: (λ(x: Num) ->
-      (λ(y: Num) -> FFI.$eq x y : Π(y: Num) -> Bool) : Π(x: Num) ->
-      Π(y: Num) -> Bool) ]",
+    "elaborated": "Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ]",
     "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
   :entry -> [3]
@@ -706,9 +696,7 @@ return main();
       let v1 = alloc { eq: v0 }
       return v1",
     "name": "EqNum",
-    "normalized": "Struct
-  [ eq: λ(x: Num) ->
-      (closure: (λ(y: Num) -> FFI.$eq x y : Π(y: Num) -> Bool) -| Γ: x) ]",
+    "normalized": "Struct [ eq: λ(x: Num) -> (closure: λ(y: Num) -> FFI.$eq x y -| Γ: x) ]",
     "type": "Σ($sig: [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]) .
   Schema [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]",
   },
@@ -1269,7 +1257,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct [ show: (λ(n: Num) -> FFI.stringify @Num n : Π(n: Num) -> String) ]",
+    "elaborated": "Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]",
     "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
   :entry -> [3]
@@ -1315,10 +1303,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct
-  [ eq: (λ(x: Num) ->
-      (λ(y: Num) -> FFI.$eq x y : Π(y: Num) -> Bool) : Π(x: Num) ->
-      Π(y: Num) -> Bool) ]",
+    "elaborated": "Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ]",
     "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
   :entry -> [3]
@@ -1346,9 +1331,7 @@ return main();
       let v1 = alloc { eq: v0 }
       return v1",
     "name": "EqNum",
-    "normalized": "Struct
-  [ eq: λ(x: Num) ->
-      (closure: (λ(y: Num) -> FFI.$eq x y : Π(y: Num) -> Bool) -| Γ: x) ]",
+    "normalized": "Struct [ eq: λ(x: Num) -> (closure: λ(y: Num) -> FFI.$eq x y -| Γ: x) ]",
     "type": "Σ($sig: [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]) .
   Schema [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]",
   },

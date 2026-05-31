@@ -1,5 +1,1083 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Dependent Records > dependent pairs with path-dependent types > Dependent pair: matching singleton values pass 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "?2 ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Num ~~ ?11",
+      "Num ~~ ?8",
+      "1 ~~ ?17",
+      "Num ~~ Num",
+      "1 ~~ ?14",
+    ],
+    "term": "{
+  let Pair
+    : Type
+    = Σ($sig: [ snd: :fst, fst: Num ]) . Schema [ snd: :fst, fst: Num ];
+  let p
+    : Σ($sig: [ snd: :fst, fst: Num ]) .
+      (closure: Schema [ snd: :fst, fst: Num ] -| Γ: Pair)
+    = Struct [ snd: 1, fst: 1 ];
+  return p;
+}",
+    "type": "Σ($sig: [ snd: :fst, fst: Num ]) .
+  (closure: Schema [ snd: :fst, fst: Num ] -| Γ: Pair)",
+  },
+}
+`;
+
+exports[`Dependent Records > dependent pairs with path-dependent types > Dependent pair: matching singleton values pass 2`] = `
+{
+  "structure": {
+    "constraints": [
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 0,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 2,
+            },
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "lvl": 1,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 11,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 8,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 17,
+            },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 14,
+            },
+          },
+        },
+        "type": "assign",
+      },
+    ],
+    "metas": {
+      "1": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 1,
+        },
+      },
+      "10": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 10,
+        },
+      },
+      "11": {
+        "ann": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 10,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 11,
+        },
+      },
+      "12": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 12,
+        },
+      },
+      "13": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 13,
+        },
+      },
+      "14": {
+        "ann": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 13,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 14,
+        },
+      },
+      "15": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 15,
+        },
+      },
+      "16": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 16,
+        },
+      },
+      "17": {
+        "ann": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 16,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 17,
+        },
+      },
+      "18": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 18,
+        },
+      },
+      "2": {
+        "ann": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 1,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 2,
+        },
+      },
+      "3": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 3,
+        },
+      },
+      "4": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 4,
+        },
+      },
+      "5": {
+        "ann": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 1,
+              "type": "Meta",
+              "val": 4,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 5,
+        },
+      },
+      "6": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 1,
+          "type": "Meta",
+          "val": 6,
+        },
+      },
+      "7": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 7,
+        },
+      },
+      "8": {
+        "ann": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 7,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 8,
+        },
+      },
+      "9": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 9,
+        },
+      },
+    },
+    "term": {
+      "return": {
+        "type": "Var",
+        "variable": {
+          "index": 0,
+          "type": "Bound",
+        },
+      },
+      "statements": [
+        {
+          "annotation": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Type",
+            },
+          },
+          "type": "Let",
+          "value": {
+            "binding": {
+              "annotation": {
+                "row": {
+                  "label": "snd",
+                  "row": {
+                    "label": "fst",
+                    "row": {
+                      "type": "empty",
+                    },
+                    "type": "extension",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "name": "Num",
+                        "type": "Free",
+                      },
+                    },
+                  },
+                  "type": "extension",
+                  "value": {
+                    "type": "Var",
+                    "variable": {
+                      "name": "fst",
+                      "type": "Label",
+                    },
+                  },
+                },
+                "type": "Row",
+              },
+              "type": "Sigma",
+              "variable": "$sig",
+            },
+            "body": {
+              "arg": {
+                "row": {
+                  "label": "snd",
+                  "row": {
+                    "label": "fst",
+                    "row": {
+                      "type": "empty",
+                    },
+                    "type": "extension",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "name": "Num",
+                        "type": "Free",
+                      },
+                    },
+                  },
+                  "type": "extension",
+                  "value": {
+                    "type": "Var",
+                    "variable": {
+                      "name": "fst",
+                      "type": "Label",
+                    },
+                  },
+                },
+                "type": "Row",
+              },
+              "func": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Schema",
+                },
+              },
+              "icit": "Explicit",
+              "type": "App",
+            },
+            "type": "Abs",
+          },
+          "variable": "Pair",
+        },
+        {
+          "annotation": {
+            "binder": {
+              "annotation": {
+                "row": {
+                  "label": "snd",
+                  "row": {
+                    "label": "fst",
+                    "row": {
+                      "type": "empty",
+                    },
+                    "type": "extension",
+                    "value": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Num",
+                      },
+                    },
+                  },
+                  "type": "extension",
+                  "value": {
+                    "type": "Neutral",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "name": "fst",
+                        "type": "Label",
+                      },
+                    },
+                  },
+                },
+                "type": "Row",
+              },
+              "type": "Sigma",
+              "variable": "$sig",
+            },
+            "closure": {
+              "ctx": {
+                "env": [
+                  {
+                    "name": {
+                      "type": "Let",
+                      "variable": "Pair",
+                    },
+                    "nf": {
+                      "type": "Neutral",
+                      "value": {
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 0,
+                          "type": "Bound",
+                        },
+                      },
+                    },
+                    "type": [
+                      {
+                        "type": "Let",
+                        "variable": "Pair",
+                      },
+                      "source",
+                      {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Atom",
+                          "value": "Type",
+                        },
+                      },
+                    ],
+                  },
+                ],
+                "implicits": [],
+                "metas": {
+                  "1": {
+                    "ann": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 1,
+                    },
+                  },
+                  "2": {
+                    "ann": {
+                      "type": "Neutral",
+                      "value": {
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 1,
+                          "type": "Meta",
+                          "val": 1,
+                        },
+                      },
+                    },
+                    "meta": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 2,
+                    },
+                  },
+                  "3": {
+                    "ann": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 3,
+                    },
+                  },
+                  "4": {
+                    "ann": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 4,
+                    },
+                  },
+                  "5": {
+                    "ann": {
+                      "type": "Neutral",
+                      "value": {
+                        "type": "Var",
+                        "variable": {
+                          "lvl": 1,
+                          "type": "Meta",
+                          "val": 4,
+                        },
+                      },
+                    },
+                    "meta": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 5,
+                    },
+                  },
+                  "6": {
+                    "ann": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Type",
+                      },
+                    },
+                    "meta": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 6,
+                    },
+                  },
+                },
+                "sigma": {},
+                "zonker": {
+                  "2": {
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "Type",
+                    },
+                  },
+                },
+              },
+              "term": {
+                "arg": {
+                  "row": {
+                    "label": "snd",
+                    "row": {
+                      "label": "fst",
+                      "row": {
+                        "type": "empty",
+                      },
+                      "type": "extension",
+                      "value": {
+                        "type": "Var",
+                        "variable": {
+                          "name": "Num",
+                          "type": "Free",
+                        },
+                      },
+                    },
+                    "type": "extension",
+                    "value": {
+                      "type": "Var",
+                      "variable": {
+                        "name": "fst",
+                        "type": "Label",
+                      },
+                    },
+                  },
+                  "type": "Row",
+                },
+                "func": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Schema",
+                  },
+                },
+                "icit": "Explicit",
+                "type": "App",
+              },
+              "type": "Closure",
+            },
+            "type": "Abs",
+          },
+          "type": "Let",
+          "value": {
+            "arg": {
+              "row": {
+                "label": "snd",
+                "row": {
+                  "label": "fst",
+                  "row": {
+                    "type": "empty",
+                  },
+                  "type": "extension",
+                  "value": {
+                    "type": "Lit",
+                    "value": {
+                      "type": "Num",
+                      "value": 1,
+                    },
+                  },
+                },
+                "type": "extension",
+                "value": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Num",
+                    "value": 1,
+                  },
+                },
+              },
+              "type": "Row",
+            },
+            "func": {
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Struct",
+              },
+            },
+            "icit": "Explicit",
+            "type": "App",
+          },
+          "variable": "p",
+        },
+      ],
+      "type": "Block",
+    },
+    "type": {
+      "binder": {
+        "annotation": {
+          "row": {
+            "label": "snd",
+            "row": {
+              "label": "fst",
+              "row": {
+                "type": "empty",
+              },
+              "type": "extension",
+              "value": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
+              },
+            },
+            "type": "extension",
+            "value": {
+              "type": "Neutral",
+              "value": {
+                "type": "Var",
+                "variable": {
+                  "name": "fst",
+                  "type": "Label",
+                },
+              },
+            },
+          },
+          "type": "Row",
+        },
+        "type": "Sigma",
+        "variable": "$sig",
+      },
+      "closure": {
+        "ctx": {
+          "env": [
+            {
+              "name": {
+                "type": "Let",
+                "variable": "Pair",
+              },
+              "nf": {
+                "type": "Neutral",
+                "value": {
+                  "type": "Var",
+                  "variable": {
+                    "lvl": 0,
+                    "type": "Bound",
+                  },
+                },
+              },
+              "type": [
+                {
+                  "type": "Let",
+                  "variable": "Pair",
+                },
+                "source",
+                {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Type",
+                  },
+                },
+              ],
+            },
+          ],
+          "implicits": [],
+          "metas": {
+            "1": {
+              "ann": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Type",
+                },
+              },
+              "meta": {
+                "lvl": 1,
+                "type": "Meta",
+                "val": 1,
+              },
+            },
+            "2": {
+              "ann": {
+                "type": "Neutral",
+                "value": {
+                  "type": "Var",
+                  "variable": {
+                    "lvl": 1,
+                    "type": "Meta",
+                    "val": 1,
+                  },
+                },
+              },
+              "meta": {
+                "lvl": 1,
+                "type": "Meta",
+                "val": 2,
+              },
+            },
+            "3": {
+              "ann": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Type",
+                },
+              },
+              "meta": {
+                "lvl": 1,
+                "type": "Meta",
+                "val": 3,
+              },
+            },
+            "4": {
+              "ann": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Type",
+                },
+              },
+              "meta": {
+                "lvl": 1,
+                "type": "Meta",
+                "val": 4,
+              },
+            },
+            "5": {
+              "ann": {
+                "type": "Neutral",
+                "value": {
+                  "type": "Var",
+                  "variable": {
+                    "lvl": 1,
+                    "type": "Meta",
+                    "val": 4,
+                  },
+                },
+              },
+              "meta": {
+                "lvl": 1,
+                "type": "Meta",
+                "val": 5,
+              },
+            },
+            "6": {
+              "ann": {
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Type",
+                },
+              },
+              "meta": {
+                "lvl": 1,
+                "type": "Meta",
+                "val": 6,
+              },
+            },
+          },
+          "sigma": {},
+          "zonker": {
+            "2": {
+              "type": "Lit",
+              "value": {
+                "type": "Atom",
+                "value": "Type",
+              },
+            },
+          },
+        },
+        "term": {
+          "arg": {
+            "row": {
+              "label": "snd",
+              "row": {
+                "label": "fst",
+                "row": {
+                  "type": "empty",
+                },
+                "type": "extension",
+                "value": {
+                  "type": "Var",
+                  "variable": {
+                    "name": "Num",
+                    "type": "Free",
+                  },
+                },
+              },
+              "type": "extension",
+              "value": {
+                "type": "Var",
+                "variable": {
+                  "name": "fst",
+                  "type": "Label",
+                },
+              },
+            },
+            "type": "Row",
+          },
+          "func": {
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Schema",
+            },
+          },
+          "icit": "Explicit",
+          "type": "App",
+        },
+        "type": "Closure",
+      },
+      "type": "Abs",
+    },
+    "typedTerms": {},
+  },
+}
+`;
+
 exports[`Dependent Records > dependent pairs with path-dependent types > Pair instantiated with Num and String 1`] = `
 {
   "displays": {
@@ -19,7 +1097,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       "Type ~~ Type",
       "String ~~ ?11",
       "Num ~~ ?8",
-      "Schema [ snd: String, fst: Num ] ~~ Schema [ fst: Num, snd: String ]",
+      "String ~~ String",
+      ""hello" ~~ ?17",
+      "Num ~~ Num",
+      "1 ~~ ?14",
     ],
     "term": "{
   let Pair
@@ -30,7 +1111,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
   let p
     : Σ($sig: [ snd: String, fst: Num ]) .
       (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p; a; Pair)
-    = Struct [ fst: 1, snd: "hello" ];
+    = Struct [ snd: "hello", fst: 1 ];
   return unit;
 }",
     "type": "Unit",
@@ -329,85 +1410,80 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       },
       {
         "left": {
-          "arg": {
-            "row": {
-              "label": "snd",
-              "row": {
-                "label": "fst",
-                "row": {
-                  "type": "empty",
-                },
-                "type": "extension",
-                "value": {
-                  "type": "Lit",
-                  "value": {
-                    "type": "Atom",
-                    "value": "Num",
-                  },
-                },
-              },
-              "type": "extension",
-              "value": {
-                "type": "Lit",
-                "value": {
-                  "type": "Atom",
-                  "value": "String",
-                },
-              },
-            },
-            "type": "Row",
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
           },
-          "func": {
-            "type": "Lit",
-            "value": {
-              "type": "Atom",
-              "value": "Schema",
-            },
+        },
+        "lvl": 2,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
           },
-          "icit": "Explicit",
-          "type": "App",
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "String",
+            "value": "hello",
+          },
         },
         "lvl": 2,
         "right": {
           "type": "Neutral",
           "value": {
-            "arg": {
-              "row": {
-                "label": "fst",
-                "row": {
-                  "label": "snd",
-                  "row": {
-                    "type": "empty",
-                  },
-                  "type": "extension",
-                  "value": {
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "String",
-                    },
-                  },
-                },
-                "type": "extension",
-                "value": {
-                  "type": "Lit",
-                  "value": {
-                    "type": "Atom",
-                    "value": "Num",
-                  },
-                },
-              },
-              "type": "Row",
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 17,
             },
-            "func": {
-              "type": "Lit",
-              "value": {
-                "type": "Atom",
-                "value": "Schema",
-              },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 14,
             },
-            "icit": "Explicit",
-            "type": "App",
           },
         },
         "type": "assign",
@@ -472,6 +1548,98 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           "lvl": 2,
           "type": "Meta",
           "val": 12,
+        },
+      },
+      "13": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 13,
+        },
+      },
+      "14": {
+        "ann": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 13,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 14,
+        },
+      },
+      "15": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 15,
+        },
+      },
+      "16": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 16,
+        },
+      },
+      "17": {
+        "ann": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 16,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 17,
+        },
+      },
+      "18": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 18,
         },
       },
       "2": {
@@ -2213,9 +3381,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           "value": {
             "arg": {
               "row": {
-                "label": "fst",
+                "label": "snd",
                 "row": {
-                  "label": "snd",
+                  "label": "fst",
                   "row": {
                     "type": "empty",
                   },
@@ -2223,8 +3391,8 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                   "value": {
                     "type": "Lit",
                     "value": {
-                      "type": "String",
-                      "value": "hello",
+                      "type": "Num",
+                      "value": 1,
                     },
                   },
                 },
@@ -2232,8 +3400,8 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                 "value": {
                   "type": "Lit",
                   "value": {
-                    "type": "Num",
-                    "value": 1,
+                    "type": "String",
+                    "value": "hello",
                   },
                 },
               },

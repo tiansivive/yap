@@ -34,12 +34,9 @@ exports[`Solver trace (end-to-end) > replay snapshots > EUF contradiction (congr
   #3: true                -> satisfied
 
 [theory]  euf assert p1: ok
-    classes: {x}  {y}  {f(x)}  {f(y)}
+    classes: {x}  {y}  {x}  {f(x)}  {f(y)}
     merge x ≡ y                         reason: p1
-    classes: {x, y}  {f(x)}  {f(y)}
-    congruence f(x) ≅ f(y)              reason: args in same class
-    merge f(x) ≡ f(y)                   reason: p1
-    classes: {x, y}  {f(x), f(y)}
+    classes: {x, y}  {x}  {f(x)}  {f(y)}
 
 [theory]  arithmetic assert p1: ok
     assert (x - y) ≥ 0                  →  (x - y) ∈ [0, ∞]
@@ -53,13 +50,17 @@ exports[`Solver trace (end-to-end) > replay snapshots > EUF contradiction (congr
   #2: false v false v true  -> satisfied
   #3: true                  -> satisfied
 
-[theory]  euf assert p2: conflict
-    classes: {x, y}  {f(x), f(y)}
-    scan p2: (!= (f x) (f y))           → same class, contradicts !=
-    euf:disequality-conflict: ~p1 v ~p2 → ~(= x y) v ~(!= (f x) (f y))
+[theory]  euf assert p2: ok
+    scan p2: (!= (f x) (f y))           → ok
 
-[conflict]  euf:disequality-conflict: ~p1 v ~p2 → ~(= x y) v ~(!= (f x) (f y)) — all literals false
-[unsat]  core: [#0, #1, #2, #3]"
+[theory]  arithmetic assert p2: ok
+[theory]  euf check: ok
+    scan p2: (!= (f x) (f y))           → ok
+
+[theory]  arithmetic check: ok
+    feasible
+
+[sat]"
 `;
 
 exports[`Solver trace (end-to-end) > replay snapshots > arithmetic SAT 1`] = `

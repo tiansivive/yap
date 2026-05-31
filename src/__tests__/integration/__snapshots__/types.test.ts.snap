@@ -350,14 +350,14 @@ return main();
   const v0 = 0;
   const v1 = 0;
   const v2 = {
-    x: v0,
-    y: v1
+    y: v0,
+    x: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ x: 0, y: 0 ]",
+    "elaborated": "Struct [ y: 0, x: 0 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"origin"}
@@ -365,11 +365,11 @@ return main();
   :arg -> [5]
   :func -> [4]
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"x"}
+[5] row:ext {"label":"y"}
   :rest -> [7]
   :value -> [6]
 [6] lit {"value":{"type":"Num","value":0}}
-[7] row:ext {"label":"y"}
+[7] row:ext {"label":"x"}
   :rest -> [9]
   :value -> [8]
 [8] lit {"value":{"type":"Num","value":0}}
@@ -380,10 +380,10 @@ return main();
     entry:
       let v0 = 0
       let v1 = 0
-      let v2 = alloc { x: v0, y: v1 }
+      let v2 = alloc { y: v0, x: v1 }
       return v2",
     "name": "origin",
-    "normalized": "Struct [ x: 0, y: 0 ]",
+    "normalized": "Struct [ y: 0, x: 0 ]",
     "type": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
   },
 ]

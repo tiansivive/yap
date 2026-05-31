@@ -372,17 +372,17 @@ exports[`Language Tour — Records & Tuples > records 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = 0;
-  const v1 = 10;
+  const v0 = 10;
+  const v1 = 0;
   const v2 = {
-    x: v0,
-    y: v1
+    y: v0,
+    x: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ x: 0, y: 10 ]",
+    "elaborated": "Struct [ y: 10, x: 0 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"point"}
@@ -390,40 +390,40 @@ return main();
   :arg -> [5]
   :func -> [4]
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"x"}
+[5] row:ext {"label":"y"}
   :rest -> [7]
   :value -> [6]
-[6] lit {"value":{"type":"Num","value":0}}
-[7] row:ext {"label":"y"}
+[6] lit {"value":{"type":"Num","value":10}}
+[7] row:ext {"label":"x"}
   :rest -> [9]
   :value -> [8]
-[8] lit {"value":{"type":"Num","value":10}}
+[8] lit {"value":{"type":"Num","value":0}}
 [9] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 0
-      let v1 = 10
-      let v2 = alloc { x: v0, y: v1 }
+      let v0 = 10
+      let v1 = 0
+      let v2 = alloc { y: v0, x: v1 }
       return v2",
     "name": "point",
-    "normalized": "Struct [ x: 0, y: 10 ]",
+    "normalized": "Struct [ y: 10, x: 0 ]",
     "type": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
   },
   {
     "codegenJS": "function main() {
-  const v0 = "Alice";
-  const v1 = 30;
+  const v0 = 30;
+  const v1 = "Alice";
   const v2 = {
-    name: v0,
-    age: v1
+    age: v0,
+    name: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ name: "Alice", age: 30 ]",
+    "elaborated": "Struct [ age: 30, name: "Alice" ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"person"}
@@ -431,25 +431,25 @@ return main();
   :arg -> [5]
   :func -> [4]
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"name"}
+[5] row:ext {"label":"age"}
   :rest -> [7]
   :value -> [6]
-[6] lit {"value":{"type":"String","value":"Alice"}}
-[7] row:ext {"label":"age"}
+[6] lit {"value":{"type":"Num","value":30}}
+[7] row:ext {"label":"name"}
   :rest -> [9]
   :value -> [8]
-[8] lit {"value":{"type":"Num","value":30}}
+[8] lit {"value":{"type":"String","value":"Alice"}}
 [9] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = "Alice"
-      let v1 = 30
-      let v2 = alloc { name: v0, age: v1 }
+      let v0 = 30
+      let v1 = "Alice"
+      let v2 = alloc { age: v0, name: v1 }
       return v2",
     "name": "person",
-    "normalized": "Struct [ name: "Alice", age: 30 ]",
+    "normalized": "Struct [ age: 30, name: "Alice" ]",
     "type": "Σ($sig: [ age: Num, name: String ]) . Schema [ age: Num, name: String ]",
   },
 ]
@@ -458,60 +458,48 @@ return main();
 exports[`Language Tour — Records & Tuples > self-referencing fields 1`] = `
 [
   {
-    "codegenJS": "function main() {
-  const v0 = 10;
-  const v1 = 20;
-  const v2 = (v0 * v1);
-  const v3 = {
-    width: v0,
-    height: v1,
-    area: v2
-  };
-  return v3;
-}
-return main();
+    "error": "Unification Failure: Cannot unify 20 with Num
+
+Trace:
+
+While unifying:
+	
+	20
+with:
+	Num
+
+--------------------------------------------------------------------------------------------
+
+While checking:
+	struct [ width: 10, height: 20, area: * width height ]
+against:
+	Schema [ area: Num, height: Num, width: Num ]
+
+@ line: 3, col: 9
+
+--------------------------------------------------------------------------------------------
+
+While checking:
+	struct [ width: 10, height: 20, area: * width height ]
+against:
+	Σ($sig: [ area: Num, height: Num, width: Num ]) .
+  (closure: Schema [ area: Num, height: Num, width: Num ] -| ·)
+
+@ line: 3, col: 9
+
+--------------------------------------------------------------------------------------------
+
+While inferring:
+	let rectangle
+  : struct [ width: Num, height: Num, area: Num ]
+  = struct [ width: 10, height: 20, area: * width height ]
+
+Reason: Statement
+
+@ line: 2, col: 5
 ",
-    "elaborated": "Struct [ width: 10, height: 20, area: FFI.$mul :width :height ]",
-    "gram": "[1] root
-  :entry -> [3]
-[2] stmt:let {"variable":"rectangle"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"width"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"Num","value":10}}
-[7] row:ext {"label":"height"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Num","value":20}}
-[9] row:ext {"label":"area"}
-  :rest -> [16]
-  :value -> [17]
-[12] var:foreign {"name":"$mul","arity":2}
-[14] var:label {"name":"width"}
-  :next -> [15]
-[15] var:label {"name":"height"}
-[16] row:empty
-[17] primop {"op":"$mul"}
-  :arg -> [14] {"index":0}
-  :arg -> [15] {"index":1}
-  :callee -> [12]",
     "kind": "let",
-    "mir": "module
-  fn main entry=entry
-    entry:
-      let v0 = 10
-      let v1 = 20
-      let v2 = *(v0, v1)
-      let v3 = alloc { width: v0, height: v1, area: v2 }
-      return v3",
     "name": "rectangle",
-    "normalized": "Struct [ width: 10, height: 20, area: 200 ]",
-    "type": "Σ($sig: [ area: Num, height: Num, width: Num ]) .
-  Schema [ area: Num, height: Num, width: Num ]",
   },
 ]
 `;
@@ -561,17 +549,17 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = 42;
-  const v1 = "answer";
+  const v0 = "answer";
+  const v1 = 42;
   const v2 = {
-    0: v0,
-    1: v1
+    1: v0,
+    0: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ 0: 42, 1: "answer" ]",
+    "elaborated": "Struct [ 1: "answer", 0: 42 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"pairExplicit"}
@@ -579,25 +567,25 @@ return main();
   :arg -> [5]
   :func -> [4]
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"0"}
+[5] row:ext {"label":"1"}
   :rest -> [7]
   :value -> [6]
-[6] lit {"value":{"type":"Num","value":42}}
-[7] row:ext {"label":"1"}
+[6] lit {"value":{"type":"String","value":"answer"}}
+[7] row:ext {"label":"0"}
   :rest -> [9]
   :value -> [8]
-[8] lit {"value":{"type":"String","value":"answer"}}
+[8] lit {"value":{"type":"Num","value":42}}
 [9] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 42
-      let v1 = "answer"
-      let v2 = alloc { 0: v0, 1: v1 }
+      let v0 = "answer"
+      let v1 = 42
+      let v2 = alloc { 1: v0, 0: v1 }
       return v2",
     "name": "pairExplicit",
-    "normalized": "Struct [ 0: 42, 1: "answer" ]",
+    "normalized": "Struct [ 1: "answer", 0: 42 ]",
     "type": "Σ($sig: [ 1: String, 0: Num ]) . Schema [ 1: String, 0: Num ]",
   },
 ]

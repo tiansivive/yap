@@ -4,9 +4,9 @@ exports[`VerificationService > Basic refinements > verifies a literal against a 
 
 exports[`VerificationService > Basic refinements > verifies exact types - literal equals 1 1`] = `"(forall (($a Real)) (=> (= $a 1) (= $a 1)))"`;
 
-exports[`VerificationService > Dependent Record Types > verifies dependent record construction 1`] = `"(forall ((p Schema)) (forall (($b Real)) (=> (= $b 2) (< 1 $b))))"`;
+exports[`VerificationService > Dependent Record Types > verifies dependent record construction 1`] = `"(forall ((p Schema)) (forall (($a Real)) (=> (= $a 2) (< 1 $a))))"`;
 
-exports[`VerificationService > Dependent Record Types > verifies dependent record construction failure 1`] = `"(forall ((p Schema)) (forall (($b Real)) (=> (= $b 1) (< 2 $b))))"`;
+exports[`VerificationService > Dependent Record Types > verifies dependent record construction failure 1`] = `"(forall ((p Schema)) (forall (($a Real)) (=> (= $a 1) (< 2 $a))))"`;
 
 exports[`VerificationService > Dependent Record Types > verifies ordered list construction 1`] = `
 "(forall ((ol App_App_Mu_List_Real_Function))

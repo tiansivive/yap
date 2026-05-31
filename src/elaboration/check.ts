@@ -138,16 +138,18 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 					}),
 				)
 				.with([{ type: "struct" }, NF.Patterns.Sigma], ([tm, sig]) =>
+					// Infer the struct to get the value row, apply the sigma closure, then re-check
+					// the source struct against the resulting type. This elaborates the source struct
+					// twice: once to infer (for the value row), once to check (preserving bidir checking).
+					// TODO:QUESTION: can we avoid the double elaboration? e.g. extract values without full inference
 					V2.Do(function* () {
-						const [rtm, rty, rus] = yield* EB.infer.gen(tm);
+						const [rtm] = yield* EB.infer.gen(tm);
 
 						const rv = NF.evaluate(ctx, rtm);
 						assert(rv.type === "App" && rv.arg.type === "Row", "Expected struct term to evaluate to an application of a Row");
 						const ty = NF.apply(sig.binder, sig.closure, NF.Constructors.Row(rv.arg.row));
 
-						yield* V2.tell("constraint", { type: "assign", left: ty, right: rty });
-
-						return [rtm, rus] satisfies Result;
+						return yield* Check.val.gen(tm, ty);
 					}),
 				)
 				.with([{ type: "match" }, NF.Patterns.Type], ([match, ty]) => {

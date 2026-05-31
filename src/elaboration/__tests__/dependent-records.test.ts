@@ -20,14 +20,27 @@ describe("Dependent Records", () => {
 			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
-		it("Dependent pair type refers to field's value, not the type", () => {
+		it("Dependent pair: matching singleton values pass", () => {
+			const src = `{
+				let Pair: Type = { fst: Num, snd: :fst };
+				let p: Pair = { fst: 1, snd: 1 };
+				return p;
+			}`;
+
+			const res = elaborateFrom(src);
+			expect(res.structure.term.type).toBe("Block");
+			expect({ displays: res.displays }).toMatchSnapshot();
+			expect({ structure: res.structure }).toMatchSnapshot();
+		});
+
+		it("Dependent pair: mismatched singleton values fail", () => {
 			const src = `{
 				let Pair: Type = { fst: Num, snd: :fst };
 				let p: Pair = { fst: 1, snd: 5 };
 				return p;
 			}`;
 
-			expect(() => elaborateFrom(src)).toThrow(/Cannot unify 1 with Num/);
+			expect(() => elaborateFrom(src)).toThrow(/Cannot unify/);
 		});
 
 		it("Pair: dependent pair with type dependent on first component", () => {

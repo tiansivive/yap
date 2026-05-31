@@ -1203,7 +1203,10 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       "Type ~~ Type",
       "String ~~ ?11",
       "Num ~~ ?8",
-      "Schema [ snd: String, fst: Num ] ~~ Schema [ fst: Num, snd: String ]",
+      "String ~~ String",
+      ""hello" ~~ ?17",
+      "Num ~~ Num",
+      "1 ~~ ?14",
     ],
     "term": "{
   let Pair
@@ -1214,7 +1217,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
   let p
     : Σ($sig: [ snd: String, fst: Num ]) .
       (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p; a; Pair)
-    = Struct [ fst: 1, snd: "hello" ];
+    = Struct [ snd: "hello", fst: 1 ];
   return (p).snd;
 }",
     "type": "String",
@@ -1513,85 +1516,80 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       },
       {
         "left": {
-          "arg": {
-            "row": {
-              "label": "snd",
-              "row": {
-                "label": "fst",
-                "row": {
-                  "type": "empty",
-                },
-                "type": "extension",
-                "value": {
-                  "type": "Lit",
-                  "value": {
-                    "type": "Atom",
-                    "value": "Num",
-                  },
-                },
-              },
-              "type": "extension",
-              "value": {
-                "type": "Lit",
-                "value": {
-                  "type": "Atom",
-                  "value": "String",
-                },
-              },
-            },
-            "type": "Row",
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
           },
-          "func": {
-            "type": "Lit",
-            "value": {
-              "type": "Atom",
-              "value": "Schema",
-            },
+        },
+        "lvl": 2,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "String",
           },
-          "icit": "Explicit",
-          "type": "App",
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "String",
+            "value": "hello",
+          },
         },
         "lvl": 2,
         "right": {
           "type": "Neutral",
           "value": {
-            "arg": {
-              "row": {
-                "label": "fst",
-                "row": {
-                  "label": "snd",
-                  "row": {
-                    "type": "empty",
-                  },
-                  "type": "extension",
-                  "value": {
-                    "type": "Lit",
-                    "value": {
-                      "type": "Atom",
-                      "value": "String",
-                    },
-                  },
-                },
-                "type": "extension",
-                "value": {
-                  "type": "Lit",
-                  "value": {
-                    "type": "Atom",
-                    "value": "Num",
-                  },
-                },
-              },
-              "type": "Row",
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 17,
             },
-            "func": {
-              "type": "Lit",
-              "value": {
-                "type": "Atom",
-                "value": "Schema",
-              },
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Num",
+          },
+        },
+        "type": "assign",
+      },
+      {
+        "left": {
+          "type": "Lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
+        "lvl": 2,
+        "right": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 14,
             },
-            "icit": "Explicit",
-            "type": "App",
           },
         },
         "type": "assign",
@@ -1656,6 +1654,98 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           "lvl": 2,
           "type": "Meta",
           "val": 12,
+        },
+      },
+      "13": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 13,
+        },
+      },
+      "14": {
+        "ann": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 13,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 14,
+        },
+      },
+      "15": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 15,
+        },
+      },
+      "16": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 16,
+        },
+      },
+      "17": {
+        "ann": {
+          "type": "Neutral",
+          "value": {
+            "type": "Var",
+            "variable": {
+              "lvl": 2,
+              "type": "Meta",
+              "val": 16,
+            },
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 17,
+        },
+      },
+      "18": {
+        "ann": {
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
+          },
+        },
+        "meta": {
+          "lvl": 2,
+          "type": "Meta",
+          "val": 18,
         },
       },
       "2": {
@@ -3402,9 +3492,9 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           "value": {
             "arg": {
               "row": {
-                "label": "fst",
+                "label": "snd",
                 "row": {
-                  "label": "snd",
+                  "label": "fst",
                   "row": {
                     "type": "empty",
                   },
@@ -3412,8 +3502,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   "value": {
                     "type": "Lit",
                     "value": {
-                      "type": "String",
-                      "value": "hello",
+                      "type": "Num",
+                      "value": 1,
                     },
                   },
                 },
@@ -3421,8 +3511,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                 "value": {
                   "type": "Lit",
                   "value": {
-                    "type": "Num",
-                    "value": 1,
+                    "type": "String",
+                    "value": "hello",
                   },
                 },
               },
