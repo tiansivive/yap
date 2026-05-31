@@ -4,7 +4,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 1`] = `
 {
   "displays": {
     "constraints": [
-      "Num ~~ ?2",
+      "Num ~~ ?1",
     ],
     "term": "{ Struct [ x: 1 ] | y = 2 }",
     "type": "Schema [ y: Num, x: Num ]",
@@ -32,7 +32,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -52,38 +52,6 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 2`] = `
           "lvl": 0,
           "type": "Meta",
           "val": 1,
-        },
-      },
-      "2": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 1,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 2,
-        },
-      },
-      "3": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 3,
         },
       },
     },

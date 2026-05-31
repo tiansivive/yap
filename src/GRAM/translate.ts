@@ -20,7 +20,6 @@ type State = {
 	readonly locations: ReadonlyMap<number, Location>;
 	readonly types: Readonly<Record<number, { nf: NF.Value }>>;
 	readonly arities: Readonly<Record<string, number>>;
-	readonly skolems: Readonly<Record<number, EB.Term>>;
 	readonly zonker: Subst | undefined;
 };
 
@@ -28,7 +27,6 @@ const mkState = (opts?: {
 	locations?: ReadonlyMap<number, Location>;
 	types?: Record<number, { nf: NF.Value }>;
 	arities?: Record<string, number>;
-	skolems?: Record<number, EB.Term>;
 	zonker?: Subst;
 	parentBinders?: ReadonlyArray<string>;
 }): State => {
@@ -49,7 +47,6 @@ const mkState = (opts?: {
 		locations: opts?.locations ?? new Map(),
 		types: opts?.types ?? {},
 		arities: opts?.arities ?? {},
-		skolems: opts?.skolems ?? {},
 		zonker: opts?.zonker,
 	};
 };
@@ -91,7 +88,6 @@ export const translate = (
 		locations?: ReadonlyMap<number, Location>;
 		types?: Record<number, { nf: NF.Value }>;
 		arities?: Record<string, number>;
-		skolems?: Record<number, EB.Term>;
 		zonker?: Subst;
 		parentBinders?: ReadonlyArray<string>;
 	},
@@ -122,6 +118,7 @@ const walk = (term: EB.Term, st: State): [NodeId, State] =>
 		.with({ type: "Modal" }, t => modal(t, st))
 		.with({ type: "Reset" }, t => reset(t, st))
 		.with({ type: "Shift" }, t => shift(t, st))
+		.with({ type: "Bubble" }, t => walk(t.shift, st))
 		.with({ type: "Ann" }, t => walk(t.term, st))
 		.exhaustive();
 
@@ -142,11 +139,6 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 		.with({ type: "Foreign" }, ({ name }) => intern(Tags.VAR_FOREIGN, name, "foreignVars", tid, st))
 		.with({ type: "Label" }, ({ name }) => emit(st, Tags.VAR_LABEL, { name }, prov(tid, st)))
 		.with({ type: "Meta" }, ({ val, lvl }) => {
-			const stashed = st.skolems[val];
-
-			if (stashed) {
-				return walk(stashed, st);
-			}
 			const zonked = st.zonker?.[val];
 
 			if (zonked) {

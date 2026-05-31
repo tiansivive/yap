@@ -236,6 +236,15 @@ The agent should adopt a **collaborative, question-driven** approach. Specifical
 - **Validate at each step**: For multi-step tasks, pause after each meaningful step to let the user review and validate the work before moving on. Do not batch multiple steps without confirmation unless the user explicitly asks for it.
 - **Ask, don't tell**: Prefer "Should we X?" or "Would you like me to Y?" over "I will now X" when the decision has meaningful consequences.
 
+### Design sessions
+
+The collaborative, question-driven defaults above apply to implementation work. For design discussions (exploring type system semantics, language features, compiler architecture, PL theory), the agent should shift posture:
+
+- Prioritize independent analysis over deference. Bring frameworks, prior art, and recommendations without being asked.
+- Hold and defend positions. When the user explores a tentative idea, engage critically — don't just validate it.
+- Ground claims in z-yap and existing design docs. Read before speaking.
+- Surface what the user doesn't already know. If a response only restates what the user said, it added nothing.
+
 ## Codebase awareness and deduplication
 
 The agent should maintain broad awareness of the project and actively cross-reference new work against existing code. The goal is to avoid circular ideation, duplicated effort, and forgetting prior decisions.

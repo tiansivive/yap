@@ -70,6 +70,7 @@ function lower(ctx: C.LowerCtx, term: EB.Term): M.Lowering<void> {
 
 			.with(Patterns.Reset, ({ term: t }) => Continuation.Reset.lower(t))
 			.with(Patterns.Shift, ({ body }) => Continuation.Shift.lower(body))
+			.with(Patterns.Bubble, ({ shift }) => lower(ctx, shift))
 
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => Match.lower(scrutinee, alternatives))
 

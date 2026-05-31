@@ -130,7 +130,7 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 					V2.Do(function* () {
 						const bindings = yield* extract(tm.row, ctx.env.length);
 						const [r, us] = yield* V2.local(
-							ctx => entries(bindings).reduce((ctx, [label, mv]) => EB.extendSigma(ctx, label, mv), ctx),
+							ctx => entries(bindings).reduce((ctx, [label, type]) => EB.extendLabel(ctx, label, type), ctx),
 							Check.row.traverse(tm.row, val.arg.row, Q.noUsage(ctx.env.length), bindings),
 						);
 
@@ -138,16 +138,18 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 					}),
 				)
 				.with([{ type: "struct" }, NF.Patterns.Sigma], ([tm, sig]) =>
+					// Infer the struct to get the value row, apply the sigma closure, then re-check
+					// the source struct against the resulting type. This elaborates the source struct
+					// twice: once to infer (for the value row), once to check (preserving bidir checking).
+					// TODO:QUESTION: can we avoid the double elaboration? e.g. extract values without full inference
 					V2.Do(function* () {
-						const [rtm, rty, rus] = yield* EB.infer.gen(tm);
+						const [rtm] = yield* EB.infer.gen(tm);
 
 						const rv = NF.evaluate(ctx, rtm);
 						assert(rv.type === "App" && rv.arg.type === "Row", "Expected struct term to evaluate to an application of a Row");
 						const ty = NF.apply(sig.binder, sig.closure, NF.Constructors.Row(rv.arg.row));
 
-						yield* V2.tell("constraint", { type: "assign", left: ty, right: rty });
-
-						return [rtm, rus] satisfies Result;
+						return yield* Check.val.gen(tm, ty);
 					}),
 				)
 				.with([{ type: "match" }, NF.Patterns.Type], ([match, ty]) => {
@@ -209,7 +211,7 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 									update(ctx, "sigma", sigma =>
 										F.pipe(
 											sigma,
-											Rec.modifyAt(label.variable.name, set("nf", nf)),
+											Rec.modifyAt(label.variable.name, set("value", nf)),
 											O.getOrElse(() => sigma),
 										),
 									),
@@ -303,7 +305,7 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
  * Checks that the given row values all conform to the given type.
  */
 const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.Row, Q.Usages]> =>
-	EB.Rows.inSigmaContext(
+	EB.Rows.withLabelContext(
 		row,
 		R.fold(
 			row,
@@ -329,12 +331,9 @@ const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.R
 				}),
 			V2.of<[EB.Row, Q.Usages]>([{ type: "empty" }, Q.noUsage(lvl)]),
 		),
-		match(ty)
-			.with(NF.Patterns.Type, () => true)
-			.otherwise(() => false),
 	);
 
-const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<string, EB.Sigma>): V2.Elaboration<[EB.Row, Q.Usages]> =>
+const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<string, NF.Value>): V2.Elaboration<[EB.Row, Q.Usages]> =>
 	V2.Do(function* () {
 		const result = match([r2, r1])
 			.with([{ type: "empty" }, { type: "empty" }], () => V2.lift([{ type: "empty" }, us] satisfies [EB.Row, Q.Usages]))
@@ -353,22 +352,16 @@ const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<str
 				const { value: rv, row: rr } = rewritten.right;
 
 				return V2.local(
-					ctx => set(ctx, `sigma.${label}.ann`, value),
+					ctx => EB.extendLabel(ctx, label, value),
 					V2.Do(function* () {
 						const [tm, tus] = yield* Check.val.gen(rv, value);
-						const sigma = bindings[label];
-						if (!sigma) {
+						const type = bindings[label];
+						if (!type) {
 							throw new Error("Elaborating Row Extension: Label not found");
 						}
 						const ctx = yield* V2.ask();
 						const nf = NF.evaluate(ctx, tm);
-						yield* V2.tell("constraint", [
-							{ type: "assign", left: nf, right: sigma.nf, lvl: ctx.env.length },
-							// NOTE: Since in this case, we already know the type, we can remove the sigma check.
-							// This also prevents emitting constraints of lambdas without inserted implicits against implicit pi types
-							// QUESTION: Can we simplify the bindings extraction?
-							//{ type: "assign", left: rv, right: sigma.ann, lvl: ctx.env.length }
-						]);
+						yield* V2.tell("constraint", [{ type: "assign", left: nf, right: type, lvl: ctx.env.length }]);
 
 						const [rt, rus] = yield* Check.row.traverse.gen(rr as Src.Row, row, us, bindings);
 						const q = Q.add(tus, rus);

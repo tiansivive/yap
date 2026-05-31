@@ -5,7 +5,7 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
   "displays": {
     "constraints": [
       "Type ~~ Type",
-      "Type ~~ ?2",
+      "Type ~~ ?1",
     ],
     "term": "(λ(r: Row) -> Schema [ foo: Num | r ] : Π(r: Row) -> Type)",
     "type": "Π(r: Row) -> (closure: Type -| Γ: r)",
@@ -51,7 +51,7 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
             "variable": {
               "lvl": 1,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -71,38 +71,6 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
           "lvl": 1,
           "type": "Meta",
           "val": 1,
-        },
-      },
-      "2": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 1,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 1,
-          "type": "Meta",
-          "val": 2,
-        },
-      },
-      "3": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 1,
-          "type": "Meta",
-          "val": 3,
         },
       },
     },
@@ -195,7 +163,9 @@ exports[`Inference: type-level rows > Record type polymorphism \\r:Row -> { foo:
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -219,12 +189,12 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
 {
   "displays": {
     "constraints": [
-      "Type ~~ ?3",
-      "?1 ~~ Schema [ | ?5 ]",
+      "Type ~~ ?2",
+      "?1 ~~ Schema [ | ?3 ]",
     ],
     "term": "(λ(r: (?1 :: Type)) -> Struct [ foo: Num | r ] : Π(r: (?1 :: Type)) ->
-  Schema [ foo: Type | (?5 :: Row) ])",
-    "type": "Π(r: ?1) -> (closure: Schema [ foo: Type | (?5 :: Row) ] -| Γ: r)",
+  Schema [ foo: Type | (?3 :: Row) ])",
+    "type": "Π(r: ?1) -> (closure: Schema [ foo: Type | (?3 :: Row) ] -| Γ: r)",
   },
 }
 `;
@@ -249,7 +219,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
             "variable": {
               "lvl": 1,
               "type": "Meta",
-              "val": 3,
+              "val": 2,
             },
           },
         },
@@ -274,7 +244,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
                 "variable": {
                   "lvl": 1,
                   "type": "Meta",
-                  "val": 5,
+                  "val": 3,
                 },
               },
               "type": "Row",
@@ -324,38 +294,6 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
       },
       "3": {
         "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 2,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 1,
-          "type": "Meta",
-          "val": 3,
-        },
-      },
-      "4": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 1,
-          "type": "Meta",
-          "val": 4,
-        },
-      },
-      "5": {
-        "ann": {
           "type": "Lit",
           "value": {
             "type": "Atom",
@@ -365,7 +303,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
         "meta": {
           "lvl": 1,
           "type": "Meta",
-          "val": 5,
+          "val": 3,
         },
       },
     },
@@ -393,7 +331,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
                 "variable": {
                   "lvl": 1,
                   "type": "Meta",
-                  "val": 5,
+                  "val": 3,
                 },
               },
               "type": "extension",
@@ -490,7 +428,9 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -503,7 +443,7 @@ exports[`Inference: type-level rows > Record value extension \\r -> { foo: Num |
                 "variable": {
                   "lvl": 1,
                   "type": "Meta",
-                  "val": 5,
+                  "val": 3,
                 },
               },
               "type": "extension",
@@ -540,8 +480,8 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 1`] = `
 {
   "displays": {
     "constraints": [
-      "Type ~~ ?5",
       "Type ~~ ?2",
+      "Type ~~ ?1",
     ],
     "term": "[ y: String, x: Num ]",
     "type": "Row",
@@ -569,7 +509,7 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 5,
+              "val": 2,
             },
           },
         },
@@ -591,7 +531,7 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -615,80 +555,16 @@ exports[`Inference: type-level rows > Row extension: [x: Num, y: String] 2`] = `
       },
       "2": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 1,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
           "lvl": 0,
           "type": "Meta",
           "val": 2,
-        },
-      },
-      "3": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 3,
-        },
-      },
-      "4": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 4,
-        },
-      },
-      "5": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 4,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 5,
-        },
-      },
-      "6": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 6,
         },
       },
     },

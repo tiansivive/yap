@@ -1215,17 +1215,17 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = 3;
-  const v1 = 5;
+  const v0 = 5;
+  const v1 = 3;
   const v2 = {
-    fst: v0,
-    snd: v1
+    snd: v0,
+    fst: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ fst: 3, snd: 5 ]",
+    "elaborated": "Struct [ snd: 5, fst: 3 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"valid"}
@@ -1233,27 +1233,27 @@ return main();
   :arg -> [5]
   :func -> [4]
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"fst"}
+[5] row:ext {"label":"snd"}
   :rest -> [7]
   :value -> [6]
-[6] lit {"value":{"type":"Num","value":3}}
-[7] row:ext {"label":"snd"}
+[6] lit {"value":{"type":"Num","value":5}}
+[7] row:ext {"label":"fst"}
   :rest -> [9]
   :value -> [8]
-[8] lit {"value":{"type":"Num","value":5}}
+[8] lit {"value":{"type":"Num","value":3}}
 [9] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 3
-      let v1 = 5
-      let v2 = alloc { fst: v0, snd: v1 }
+      let v0 = 5
+      let v1 = 3
+      let v2 = alloc { snd: v0, fst: v1 }
       return v2",
     "name": "valid",
-    "normalized": "Struct [ fst: 3, snd: 5 ]",
+    "normalized": "Struct [ snd: 5, fst: 3 ]",
     "type": "Σ($sig: [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ]) .
-  Schema [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v Num |], fst: Num ]",
+  Schema [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ]",
   },
 ]
 `;

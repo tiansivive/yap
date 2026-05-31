@@ -8,7 +8,6 @@ import * as Src from "@yap/src/index";
 import * as F from "fp-ts/function";
 import * as R from "@yap/shared/rows";
 
-import { match } from "ts-pattern";
 import { entries, setProp } from "@yap/utils";
 
 type TRow = Extract<Src.Term, { type: "row" }>;
@@ -20,7 +19,7 @@ export const infer = (term: TRow): V2.Elaboration<EB.AST> =>
 			V2.local(
 				EB.muContext,
 				V2.Do(function* () {
-					const { fields, tail } = yield* inSigmaContext.gen(term.row, collect(term.row));
+					const { fields, tail } = yield* withLabelContext.gen(term.row, collect(term.row));
 
 					if (tail) {
 						throw new Error("Row literals with tails are not supported");
@@ -34,14 +33,22 @@ export const infer = (term: TRow): V2.Elaboration<EB.AST> =>
 	);
 infer.gen = F.flow(infer, V2.pure);
 
-// TODO:FIXME update the sigma env to a stack of sigma records to properly handle nested row types
-export const inSigmaContext = <A>(row: Src.Row, f: V2.Elaboration<A>, isAnnotation = false): V2.Elaboration<A> =>
+// TODO:FIXME update the label env to a stack to properly handle nested row types
+export const withLabelContext = <A>(row: Src.Row, f: V2.Elaboration<A>): V2.Elaboration<A> =>
 	V2.Do(function* () {
 		const ctx = yield* V2.ask();
 		const bindings = yield* extract(row, ctx.env.length);
-		return yield* V2.local(ctx_ => entries(bindings).reduce((ctx, [label, mv]) => EB.extendSigma(ctx, label, mv, isAnnotation), ctx_), f);
+		return yield* V2.local(
+			ctx_ =>
+				entries(bindings).reduce((ctx, [label, type]) => {
+					const withLabel = EB.extendLabel(ctx, label, type);
+					const neutral = NF.Constructors.Neutral(NF.Constructors.Var({ type: "Label", name: label }));
+					return { ...withLabel, sigma: { ...withLabel.sigma, [label]: { value: neutral } } };
+				}, ctx_),
+			f,
+		);
 	});
-inSigmaContext.gen = <A>(row: Src.Row, f: V2.Elaboration<A>, isAnnotation = false) => V2.pure(inSigmaContext(row, f, isAnnotation));
+withLabelContext.gen = <A>(row: Src.Row, f: V2.Elaboration<A>) => V2.pure(withLabelContext(row, f));
 
 type Collected = { fields: { label: string; term: EB.Term; value: NF.Value }[]; tail?: { variable: EB.Variable; ty: NF.Value } };
 export const collect = (row: Src.Row): V2.Elaboration<Collected> =>
@@ -54,16 +61,13 @@ export const collect = (row: Src.Row): V2.Elaboration<Collected> =>
 			(val, lbl, acc) =>
 				V2.Do(function* () {
 					const [vtm, vty, qs] = yield* EB.infer.gen(val);
-					const sigma = ctx.sigma[lbl];
-					if (!sigma) {
+					const type = ctx.labels[lbl];
+					if (!type) {
 						throw new Error("Elaborating Row Extension: Label not found");
 					}
 
 					const nf = NF.evaluate(ctx, vtm);
-					yield* V2.tell("constraint", [
-						//{ type: "assign", left: nf, right: sigma.nf },
-						{ type: "assign", left: vty, right: sigma.nf },
-					]);
+					yield* V2.tell("constraint", [{ type: "assign", left: vty, right: type }]);
 
 					const accumulated: Collected = yield acc;
 					return { fields: [...accumulated.fields, { label: lbl, term: vtm, value: vty }], tail: accumulated.tail };
@@ -87,7 +91,7 @@ export const collect = (row: Src.Row): V2.Elaboration<Collected> =>
 	});
 collect.gen = F.flow(collect, V2.pure);
 
-export const extract = function* (row: Src.Row, lvl: number, types?: NF.Row): Generator<V2.Elaboration<any>, Record<string, EB.Sigma>, any> {
+export const extract = function* (row: Src.Row, lvl: number): Generator<V2.Elaboration<any>, Record<string, NF.Value>, any> {
 	if (row.type === "empty") {
 		return {};
 	}
@@ -96,16 +100,8 @@ export const extract = function* (row: Src.Row, lvl: number, types?: NF.Row): Ge
 		return {};
 	}
 
-	const ktm = NF.Constructors.Flex(yield* EB.freshMeta(lvl, NF.Type));
-	const tm = NF.Constructors.Flex(yield* EB.freshMeta(lvl, ktm));
-
-	//const kty = NF.Constructors.Flex(yield* EB.freshMeta(lvl, NF.Type));
-	const ty = NF.Constructors.Flex(yield* EB.freshMeta(lvl, NF.Type));
-
-	const ctx = yield* V2.ask();
-	const info: EB.Sigma = { term: NF.quote(ctx, ctx.env.length, tm), nf: tm, ann: ty, multiplicity: Q.Many };
+	const type = NF.Constructors.Flex(yield* EB.freshMeta(lvl, NF.Type));
 
 	const rest = yield* extract({ ...row.row, location: row.location }, lvl);
-	return setProp(rest, row.label, info);
-	// return [[row.label, [v, Q.Many]], ...extract({ ...row.row, location: row.location }, lvl + 1)]
+	return setProp(rest, row.label, type);
 };

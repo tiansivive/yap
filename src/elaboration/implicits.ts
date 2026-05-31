@@ -95,7 +95,7 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 			const annotation = instantiate(sig.binding.annotation, ctx, resolutions);
 			const nf = NF.evaluate(ctx, annotation);
 			assert(nf.type === "Row", "Sigma binder annotation must be a Row");
-			const xtended = EB.extendSigmaEnv(ctx, nf.row);
+			const xtended = EB.extendSigma(ctx, nf.row);
 			return EB.Constructors.Abs({ ...sig.binding, annotation }, instantiate(sig.body, xtended, resolutions));
 		})
 		.with({ type: "Abs" }, abs => {

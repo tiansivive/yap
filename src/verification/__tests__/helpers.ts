@@ -55,9 +55,7 @@ export const elaborate = (src: string) => {
 			set("zonker", Sub.compose(solution.zonker, ctx.zonker)),
 		);
 
-		const state = yield* V2.getSt();
-
-		const [generalized, zonker] = NF.generalize(ty, elaborated.value, zonked, solution.resolutions, state.skolems);
+		const [generalized, zonker] = NF.generalize(ty, elaborated.value, zonked, solution.resolutions);
 		const next = update(zonked, "zonker", z => ({ ...z, ...zonker }));
 		const instantiated = NF.instantiate(generalized, next);
 

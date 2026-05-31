@@ -297,8 +297,8 @@ return main();
     λ(f: Π(t9: a) -> b) ->
       λ(list: (List) a) ->
         match list
-          | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
-          | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+          | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
+          | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
               Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ]",
     "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
@@ -620,8 +620,8 @@ return main();
     λ(f: Π(t9: a) -> b) ->
       λ(list: (List) a) ->
         match list
-          | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
-          | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+          | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
+          | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
               Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ] -| Γ: a)",
     "type": "Π(a: Type) => Π(b: Type) => Π(t8: Π(t9: a) -> b) -> Π(t10: (List) a) -> (List) b",
   },
@@ -635,7 +635,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct [ map: mapList ]",
+    "elaborated": "Struct [ map: λ(a: Type) => λ(b: Type) => mapList @a @b ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ListFunctor"}
@@ -644,13 +644,16 @@ return main();
   :func -> [4]
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
 [5] row:ext {"label":"map"}
-  :rest -> [8]
-  :value -> [7]
-[6] var:free {"name":"mapList"}
-[7] var:ref {"name":"mapList"}
-  :refers_to -> [6]
+  :rest -> [16]
+  :value -> [13]
+[7] lit {"value":{"type":"Atom","value":"Type"}}
+[9] lit {"value":{"type":"Atom","value":"Type"}}
+[12] var:free {"name":"mapList"}
+[13] var:ref {"name":"mapList"}
+  :refers_to -> [12]
   :scope -> [2] {"level":0}
-[8] row:empty",
+  :scope -> [13] {"level":1}
+[16] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -659,17 +662,7 @@ return main();
       let v1 = alloc { map: v0 }
       return v1",
     "name": "ListFunctor",
-    "normalized": "Struct
-  [ map: λ(a: Type) =>
-      (closure: λ(b: Type) =>
-        λ(f: Π(t9: a) -> b) ->
-          λ(list: (List) a) ->
-            match list
-              | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
-              | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
-                  Struct
-                    [ cons: Struct
-                        [ 0: f x, 1: mapList @a @b f xs ] ] -| Γ: a; mapList) ]",
+    "normalized": "Struct [ map: λ(a: Type) => (closure: λ(b: Type) => mapList @a @b -| Γ: a) ]",
     "type": "Σ($sig: [ map: Π(a: Type) =>
     Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: (List) a) -> (List) b ]) .
   Schema
@@ -1730,8 +1723,8 @@ return main();
     λ(f: Π(t8: a) -> b) ->
       λ(list: (List) a) ->
         match list
-          | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
-          | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+          | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
+          | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
               Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ]",
     "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
@@ -2053,8 +2046,8 @@ return main();
     λ(f: Π(t8: a) -> b) ->
       λ(list: (List) a) ->
         match list
-          | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
-          | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+          | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
+          | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
               Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ] -| Γ: a)",
     "type": "Π(a: Type) => Π(b: Type) => Π(t7: Π(t8: a) -> b) -> Π(t9: (List) a) -> (List) b",
   },
@@ -2068,7 +2061,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct [ map: mapList ]",
+    "elaborated": "Struct [ map: λ(a: Type) => λ(b: Type) => mapList @a @b ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ListFunctor"}
@@ -2077,13 +2070,16 @@ return main();
   :func -> [4]
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
 [5] row:ext {"label":"map"}
-  :rest -> [8]
-  :value -> [7]
-[6] var:free {"name":"mapList"}
-[7] var:ref {"name":"mapList"}
-  :refers_to -> [6]
+  :rest -> [16]
+  :value -> [13]
+[7] lit {"value":{"type":"Atom","value":"Type"}}
+[9] lit {"value":{"type":"Atom","value":"Type"}}
+[12] var:free {"name":"mapList"}
+[13] var:ref {"name":"mapList"}
+  :refers_to -> [12]
   :scope -> [2] {"level":0}
-[8] row:empty",
+  :scope -> [13] {"level":1}
+[16] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -2092,17 +2088,7 @@ return main();
       let v1 = alloc { map: v0 }
       return v1",
     "name": "ListFunctor",
-    "normalized": "Struct
-  [ map: λ(a: Type) =>
-      (closure: λ(b: Type) =>
-        λ(f: Π(t8: a) -> b) ->
-          λ(list: (List) a) ->
-            match list
-              | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
-              | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
-                  Struct
-                    [ cons: Struct
-                        [ 0: f x, 1: mapList @a @b f xs ] ] -| Γ: a; mapList) ]",
+    "normalized": "Struct [ map: λ(a: Type) => (closure: λ(b: Type) => mapList @a @b -| Γ: a) ]",
     "type": "Σ($sig: [ map: Π(a: Type) =>
     Π(b: Type) => Π(t4: Π(t5: a) -> b) -> Π(t6: (List) a) -> (List) b ]) .
   Schema

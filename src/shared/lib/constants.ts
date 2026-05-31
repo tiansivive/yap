@@ -5,7 +5,9 @@ import * as Sub from "@yap/elaboration/unification/substitution";
 export const defaultContext: EB.Context = {
     env: [],
     implicits: [],
+    labels: {},
     sigma: {},
+    record: {},
     trace: [],
     imports: { ...Lib.Elaborated() },
     zonker: Sub.empty,

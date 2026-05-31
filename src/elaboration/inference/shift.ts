@@ -2,8 +2,6 @@ import * as F from "fp-ts/lib/function";
 
 import * as EB from "@yap/elaboration";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
-import * as Q from "@yap/shared/modalities/multiplicity";
-
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 import assert from "node:assert";
@@ -34,16 +32,9 @@ export const infer = (shift: Shift): V2.Elaboration<EB.AST> =>
 			const A = NF.Constructors.Flex(ma);
 
 			const skolem = yield* EB.freshMeta(ctx.env.length, A);
-			const out = EB.Constructors.Var(skolem);
 
 			const kBinder = "$k";
 			const kTy = NF.Constructors.Pi(kBinder, "Explicit", A, NF.closeVal(ctx, answer.initial));
-			// const expected = NF.Constructors.Pi(
-			// 	"$k",
-			// 	"Explicit",
-			// 	kTy,
-			// 	NF.closeVal(ctx, answer.final),
-			// )
 
 			yield* V2.modifySt(F.flow(set("delimitations.0.shifted", true), set("delimitations.0.answer.initial", answer.final)));
 
@@ -55,8 +46,10 @@ export const infer = (shift: Shift): V2.Elaboration<EB.AST> =>
 
 			const body = EB.Constructors.Lambda(kBinder, "Explicit", ktm, NF.quote(ctx, ctx.env.length, kTy));
 			const tm = EB.Constructors.Shift(body);
+			const { nondeterminism } = yield* V2.getSt();
+			const values = nondeterminism.solution[skolem.val] ?? [];
+			const out = EB.Constructors.Bubble(skolem.val, A, values, tm);
 
-			yield* V2.modifySt(set(`skolems.${skolem.val}`, tm));
 			return [out, A, us] satisfies EB.AST;
 		}),
 	);

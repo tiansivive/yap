@@ -238,17 +238,17 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = Num;
-  const v1 = 42;
+  const v0 = 42;
+  const v1 = Num;
   const v2 = {
-    fst: v0,
-    snd: v1
+    snd: v0,
+    fst: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ fst: Num, snd: 42 ]",
+    "elaborated": "Struct [ snd: 42, fst: Num ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"numPair"}
@@ -256,43 +256,43 @@ return main();
   :arg -> [5]
   :func -> [4]
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"fst"}
-  :rest -> [8]
-  :value -> [7]
-[6] var:free {"name":"Num"}
-[7] var:ref {"name":"Num"}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-[8] row:ext {"label":"snd"}
+[5] row:ext {"label":"snd"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Num","value":42}}
+[7] row:ext {"label":"fst"}
   :rest -> [10]
   :value -> [9]
-[9] lit {"value":{"type":"Num","value":42}}
+[8] var:free {"name":"Num"}
+[9] var:ref {"name":"Num"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
 [10] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = Num
-      let v1 = 42
-      let v2 = alloc { fst: v0, snd: v1 }
+      let v0 = 42
+      let v1 = Num
+      let v2 = alloc { snd: v0, fst: v1 }
       return v2",
     "name": "numPair",
-    "normalized": "Struct [ fst: Num, snd: 42 ]",
-    "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: Type, fst: Type ]",
+    "normalized": "Struct [ snd: 42, fst: Num ]",
+    "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: :fst, fst: Type ]",
   },
   {
     "codegenJS": "function main() {
-  const v0 = String;
-  const v1 = "hello";
+  const v0 = "hello";
+  const v1 = String;
   const v2 = {
-    fst: v0,
-    snd: v1
+    snd: v0,
+    fst: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ fst: String, snd: "hello" ]",
+    "elaborated": "Struct [ snd: "hello", fst: String ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"strPair"}
@@ -300,29 +300,29 @@ return main();
   :arg -> [5]
   :func -> [4]
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"fst"}
-  :rest -> [8]
-  :value -> [7]
-[6] var:free {"name":"String"}
-[7] var:ref {"name":"String"}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-[8] row:ext {"label":"snd"}
+[5] row:ext {"label":"snd"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"String","value":"hello"}}
+[7] row:ext {"label":"fst"}
   :rest -> [10]
   :value -> [9]
-[9] lit {"value":{"type":"String","value":"hello"}}
+[8] var:free {"name":"String"}
+[9] var:ref {"name":"String"}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
 [10] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = String
-      let v1 = "hello"
-      let v2 = alloc { fst: v0, snd: v1 }
+      let v0 = "hello"
+      let v1 = String
+      let v2 = alloc { snd: v0, fst: v1 }
       return v2",
     "name": "strPair",
-    "normalized": "Struct [ fst: String, snd: "hello" ]",
-    "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: Type, fst: Type ]",
+    "normalized": "Struct [ snd: "hello", fst: String ]",
+    "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: :fst, fst: Type ]",
   },
 ]
 `;
@@ -425,17 +425,17 @@ exports[`Language Tour — Dependent Types > generic dependent pairs 1`] = `
   },
   {
     "codegenJS": "function main() {
-  const v0 = 42;
-  const v1 = "hello";
+  const v0 = "hello";
+  const v1 = 42;
   const v2 = {
-    fst: v0,
-    snd: v1
+    snd: v0,
+    fst: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ fst: 42, snd: "hello" ]",
+    "elaborated": "Struct [ snd: "hello", fst: 42 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"exampleP1"}
@@ -443,41 +443,40 @@ return main();
   :arg -> [5]
   :func -> [4]
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"fst"}
+[5] row:ext {"label":"snd"}
   :rest -> [7]
   :value -> [6]
-[6] lit {"value":{"type":"Num","value":42}}
-[7] row:ext {"label":"snd"}
+[6] lit {"value":{"type":"String","value":"hello"}}
+[7] row:ext {"label":"fst"}
   :rest -> [9]
   :value -> [8]
-[8] lit {"value":{"type":"String","value":"hello"}}
+[8] lit {"value":{"type":"Num","value":42}}
 [9] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 42
-      let v1 = "hello"
-      let v2 = alloc { fst: v0, snd: v1 }
+      let v0 = "hello"
+      let v1 = 42
+      let v2 = alloc { snd: v0, fst: v1 }
       return v2",
     "name": "exampleP1",
-    "normalized": "Struct [ fst: 42, snd: "hello" ]",
+    "normalized": "Struct [ snd: "hello", fst: 42 ]",
     "type": "Σ($sig: [ snd: String, fst: Num ]) . Schema [ snd: String, fst: Num ]",
   },
   {
     "codegenJS": "function main() {
-  const v0 = true;
-  const v1 = 100;
+  const v0 = 100;
+  const v1 = true;
   const v2 = {
-    fst: v0,
-    snd: v1
+    snd: v0,
+    fst: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ fst: true, snd: 100 ]",
-    "error": "Match: No alternative matched",
+    "elaborated": "Struct [ snd: 100, fst: true ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"exampleP2"}
@@ -485,26 +484,27 @@ return main();
   :arg -> [5]
   :func -> [4]
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"fst"}
+[5] row:ext {"label":"snd"}
   :rest -> [7]
   :value -> [6]
-[6] lit {"value":{"type":"Bool","value":true}}
-[7] row:ext {"label":"snd"}
+[6] lit {"value":{"type":"Num","value":100}}
+[7] row:ext {"label":"fst"}
   :rest -> [9]
   :value -> [8]
-[8] lit {"value":{"type":"Num","value":100}}
+[8] lit {"value":{"type":"Bool","value":true}}
 [9] row:empty",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = true
-      let v1 = 100
-      let v2 = alloc { fst: v0, snd: v1 }
+      let v0 = 100
+      let v1 = true
+      let v2 = alloc { snd: v0, fst: v1 }
       return v2",
     "name": "exampleP2",
-    "normalized": "Struct [ fst: true, snd: 100 ]",
-    "type": "",
+    "normalized": "Struct [ snd: 100, fst: true ]",
+    "type": "Σ($sig: [ snd: match :fst | true -> Num | false -> String, fst: Bool ]) .
+  Schema [ snd: match :fst | true -> Num | false -> String, fst: Bool ]",
   },
 ]
 `;

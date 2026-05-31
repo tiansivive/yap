@@ -46,6 +46,7 @@ export function freeVars(term: EB.Term, depth: number): Set<number> {
 		.with({ type: "Modal" }, ({ term: t }) => freeVars(t, depth))
 		.with({ type: "Reset" }, ({ term: t }) => freeVars(t, depth))
 		.with({ type: "Shift" }, ({ body }) => freeVars(body, depth))
+		.with({ type: "Bubble" }, ({ shift }) => freeVars(shift, depth))
 		.with({ type: "Ann" }, ({ term }) => freeVars(term, depth))
 		.exhaustive();
 }

@@ -280,7 +280,7 @@ exports[`Language Tour — Pattern Matching > record patterns 1`] = `
   {
     "codegenJS": "",
     "elaborated": "λ(p: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) ->
-  match p | Struct [ x: a, y: b | $row_11 ] -> b",
+  match p | Struct [ x: a, y: b | $row_7 ] -> b",
     "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
   :entry -> [3]
@@ -357,13 +357,13 @@ exports[`Language Tour — Pattern Matching > record patterns 1`] = `
     "mir": "",
     "name": "getY",
     "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
-  (closure: match p | Struct [ x: a, y: b | $row_11 ] -> b -| Γ: p)",
+  (closure: match p | Struct [ x: a, y: b | $row_7 ] -> b -| Γ: p)",
     "type": "Π(t1: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
   },
   {
     "codegenJS": "",
     "elaborated": "λ(p: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) ->
-  match p | Struct [ y: a | $row_20 ] -> a",
+  match p | Struct [ y: a | $row_12 ] -> a",
     "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
   :entry -> [3]
@@ -434,7 +434,7 @@ exports[`Language Tour — Pattern Matching > record patterns 1`] = `
     "mir": "",
     "name": "getY2",
     "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
-  (closure: match p | Struct [ y: a | $row_20 ] -> a -| Γ: p)",
+  (closure: match p | Struct [ y: a | $row_12 ] -> a -| Γ: p)",
     "type": "Π(t3: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
   },
 ]
@@ -525,8 +525,8 @@ return main();
     "elaborated": "λ(a: Type) =>
   λ(list: (List) a) ->
     match list
-      | Variant [ nil: _ | $row_15 ] -> 0
-      | Variant [ cons: Struct [ 0: x, 1: xs | $row_20 ] | $row_21 ] ->
+      | Variant [ nil: _ | $row_7 ] -> 0
+      | Variant [ cons: Struct [ 0: x, 1: xs | $row_12 ] | $row_13 ] ->
           FFI.$add 1 (I6 @a xs)",
     "error": "Unbound bound variable in synth; Unbound bound variable in synth; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
@@ -719,8 +719,8 @@ return main();
     "normalized": "λ(a: Type) =>
   (closure: λ(list: (List) a) ->
     match list
-      | Variant [ nil: _ | $row_15 ] -> 0
-      | Variant [ cons: Struct [ 0: x, 1: xs | $row_20 ] | $row_21 ] ->
+      | Variant [ nil: _ | $row_7 ] -> 0
+      | Variant [ cons: Struct [ 0: x, 1: xs | $row_12 ] | $row_13 ] ->
           FFI.$add 1 (I6 @a xs) -| Γ: a)",
     "type": "Π(a: Type) => Π(t2: (List) a) -> Num",
   },
@@ -790,199 +790,14 @@ return main();
     "type": "Type",
   },
   {
-    "codegenJS": "function main() {
-  const v0 = closure_35;
-  const v1 = {
-    compute: v0
-  };
-  return v1;
-}
-
-function closure_35(n) {
-  let __block = "entry";
-  while (true) {
-    switch (__block) {
-      case "entry": {
-        (__block = "sw1");
-        break;
-      }
-      case "sw1": {
-        if ((String(n) === "0")) {
-          (__block = "case3");
-          break;
-        }
-        (__block = "default4");
-        break;
-      }
-      case "case3": {
-        const v4 = 1;
-        const match0 = v4;
-        (__block = "join2");
-        break;
-      }
-      case "default4": {
-        const v6 = 1;
-        const v7 = (n - v6);
-        const v8 = v5(v7);
-        const v9 = (n * v8);
-        const match0 = v9;
-        (__block = "join2");
-        break;
-      }
-      case "join2": {
-        return match0;
-      }
-    }
-  }
-}
-return main();
-",
-    "elaborated": "Struct
-  [ compute: (λ(n: Num) ->
-      match n
-        | 0 -> 1
-        | _ -> FFI.$mul n (:compute (FFI.$sub n 1)) : Π(n: Num) -> Num) ]",
-    "gram": "[1] root
-  :entry -> [3]
-[2] stmt:let {"variable":"fact"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"compute"}
-  :rest -> [28]
-  :value -> [6]
-[6] lambda {"variable":"n","icit":"Explicit","level":1}
-  :annotation -> [7]
-  :body -> [8]
-  :env -> [34]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[8] match
-  :alt -> [10] {"index":0}
-  :alt -> [13] {"index":1}
-  :decision_tree -> [31]
-  :scrutinee -> [9]
-[9] var:bound {"index":0}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-[10] case
-  :body -> [12]
-  :next -> [13]
-  :pattern -> [11]
-[11] pat:lit {"value":{"type":"Num","value":0}}
-[12] lit {"value":{"type":"Num","value":1}}
-[13] case
-  :body -> [29]
-  :pattern -> [14]
-[14] pat:wildcard
-[17] var:foreign {"name":"$mul","arity":2}
-[19] var:bound {"index":0}
-  :next -> [20]
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-[20] app {"icit":"Explicit"}
-  :arg -> [30]
-  :func -> [21]
-[21] var:label {"name":"compute"}
-[24] var:foreign {"name":"$sub","arity":2}
-[26] var:bound {"index":0}
-  :next -> [27]
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-[27] lit {"value":{"type":"Num","value":1}}
-[28] row:empty
-[29] primop {"op":"$mul"}
-  :arg -> [19] {"index":0}
-  :arg -> [20] {"index":1}
-  :callee -> [17]
-[30] primop {"op":"$sub"}
-  :arg -> [26] {"index":0}
-  :arg -> [27] {"index":1}
-  :callee -> [24]
-[31] switch {"kind":"lit"}
-  :branch -> [32] {"value":{"type":"Num","value":0}}
-  :default -> [33]
-  :inspect -> [9]
-[32] leaf
-  :body -> [12]
-[33] leaf
-  :body -> [29]
-[34] env
-[35] closure
-  :body -> [6]
-  :env -> [34]",
+    "error": "Expected number, got wildcard",
     "kind": "let",
-    "mir": "module
-  fn main entry=entry
-    entry:
-      let v0 = &closure_35
-      let v1 = alloc { compute: v0 }
-      return v1
-  fn closure_35(n) entry=entry
-    entry:
-      jump sw1
-    sw1:
-      branch n { 0 -> case3; default -> default4 }
-    case3:
-      let v4 = 1
-      let match0 = v4
-      jump join2
-    default4:
-      let v6 = 1
-      let v7 = -(n, v6)
-      let v8 = call *v5(v7)
-      let v9 = *(n, v8)
-      let match0 = v9
-      jump join2
-    join2:
-      return match0",
     "name": "fact",
-    "normalized": "Struct
-  [ compute: λ(n: Num) ->
-      (closure: match n
-        | 0 -> 1
-        | _ -> FFI.$mul n (:compute (FFI.$sub n 1)) -| Γ: n) ]",
-    "type": "Σ($sig: [ compute: Π(t1: Num) -> Num ]) . Schema [ compute: Π(t1: Num) -> Num ]",
   },
   {
-    "codegenJS": "function main() {
-  const v0 = fact;
-  const v1 = v0.compute;
-  const v2 = 5;
-  const v3 = v1(v2);
-  return v3;
-}
-return main();
-",
-    "elaborated": "((fact).compute) 5",
-    "gram": "[1] root
-  :entry -> [3]
-[2] stmt:let {"variable":"result"}
-[3] app {"icit":"Explicit"}
-  :arg -> [7]
-  :func -> [4]
-[4] proj {"label":"compute"}
-  :target -> [6]
-[5] var:free {"name":"fact"}
-[6] var:ref {"name":"fact"}
-  :refers_to -> [5]
-  :scope -> [2] {"level":0}
-[7] lit {"value":{"type":"Num","value":5}}",
+    "error": "Variable not found: fact",
     "kind": "let",
-    "mir": "module
-  fn main entry=entry
-    entry:
-      let v0 = fact
-      let v1 = read v0.compute
-      let v2 = 5
-      let v3 = call *v1(v2)
-      return v3",
     "name": "result",
-    "normalized": "120",
-    "type": "Num",
   },
 ]
 `;
@@ -1107,10 +922,10 @@ return main();
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]) ->
   match s
-    | Variant [ circle: r | $row_24 ] -> "Circle with radius"
-    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_29 ] | $row_30 ] ->
+    | Variant [ circle: r | $row_10 ] -> "Circle with radius"
+    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_15 ] | $row_16 ] ->
         "Rectangle"
-    | Variant [ point: Struct [ x: _, y: _ | $row_35 ] | $row_36 ] ->
+    | Variant [ point: Struct [ x: _, y: _ | $row_21 ] | $row_22 ] ->
         "Point at coordinates"",
     "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
@@ -1266,10 +1081,10 @@ return main();
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]) ->
   (closure: match s
-    | Variant [ circle: r | $row_24 ] -> "Circle with radius"
-    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_29 ] | $row_30 ] ->
+    | Variant [ circle: r | $row_10 ] -> "Circle with radius"
+    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_15 ] | $row_16 ] ->
         "Rectangle"
-    | Variant [ point: Struct [ x: _, y: _ | $row_35 ] | $row_36 ] ->
+    | Variant [ point: Struct [ x: _, y: _ | $row_21 ] | $row_22 ] ->
         "Point at coordinates" -| Γ: s)",
     "type": "Π(t1: Variant
   [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],

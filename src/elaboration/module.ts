@@ -132,103 +132,103 @@ export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Co
 		if (!zCtx) {
 			throw new Error("Z3 context not set");
 		}
-		const Verification = VerificationServiceV2(zCtx, { logging: stmt.variable === "ascending" });
-		const xtended = EB.bind(next, { type: "Let", variable: stmt.variable }, ty);
 		const ast: EB.AST = [r.value, r.annotation, us];
 		const final = [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
-		try {
-			const [{ result: res }] = Verification.check(r.value, r.annotation)(xtended);
+		// const Verification = VerificationServiceV2(zCtx, { logging: stmt.variable === "ascending" });
+		// const xtended = EB.bind(next, { type: "Let", variable: stmt.variable }, ty);
+		// try {
+		// 	const [{ result: res }] = Verification.check(r.value, r.annotation)(xtended);
 
-			if (res._tag === "Left") {
-				console.log("Verification failure");
-				console.log(res.left);
+		// 	if (res._tag === "Left") {
+		// 		console.log("Verification failure");
+		// 		console.log(res.left);
 
-				return final;
-			}
-			const artefacts = res.right;
+		// 		return final;
+		// 	}
+		// 	const artefacts = res.right;
 
-			const solver = new zCtx.Solver();
+		// 	const solver = new zCtx.Solver();
 
-			solver.add(artefacts.vc.eq(true));
-			solver
-				.check()
-				.then(res => {
-					if (res === "sat") {
-						return [];
-					}
+		// 	solver.add(artefacts.vc.eq(true));
+		// 	solver
+		// 		.check()
+		// 		.then(res => {
+		// 			if (res === "sat") {
+		// 				return [];
+		// 			}
 
-					console.log("\nCould not verify obligations for dec: ", stmt.variable);
-					console.log(artefacts.vc.sexpr());
-					const obligations = Verification.getObligations?.() ?? [];
-					return Promise.all(
-						obligations.map(async ({ label, expr, context }) => {
-							const s = new zCtx.Solver();
-							s.add(expr.eq(true));
-							const r = await s.check();
-							let model: Model | undefined;
-							if (r === "unsat") {
-								// Try to extract a counterexample by solving the negation
-								const neg = new zCtx.Solver();
-								// Negate obligation by equating it to false to obtain a witness
-								neg.add(expr.eq(false));
-								const rn = await neg.check();
-								if (rn === "sat") {
-									model = neg.model();
-								}
-							}
-							return { label, result: r, expr, model, context };
-						}),
-					);
-				})
-				.then(async rs => {
-					rs.forEach(({ label, result, expr, model, context }, i) => {
-						console.log(` - [${result}] ${label}`);
-						if (context) {
-							if (context.description) {
-								if (Array.isArray(context.description)) {
-									console.log(`   description:`);
-									for (const line of context.description) {
-										console.log(`     ${line}`);
-									}
-								} else {
-									console.log(`   description: ${context.description}`);
-								}
-							}
+		// 			console.log("\nCould not verify obligations for dec: ", stmt.variable);
+		// 			console.log(artefacts.vc.sexpr());
+		// 			const obligations = Verification.getObligations?.() ?? [];
+		// 			return Promise.all(
+		// 				obligations.map(async ({ label, expr, context }) => {
+		// 					const s = new zCtx.Solver();
+		// 					s.add(expr.eq(true));
+		// 					const r = await s.check();
+		// 					let model: Model | undefined;
+		// 					if (r === "unsat") {
+		// 						// Try to extract a counterexample by solving the negation
+		// 						const neg = new zCtx.Solver();
+		// 						// Negate obligation by equating it to false to obtain a witness
+		// 						neg.add(expr.eq(false));
+		// 						const rn = await neg.check();
+		// 						if (rn === "sat") {
+		// 							model = neg.model();
+		// 						}
+		// 					}
+		// 					return { label, result: r, expr, model, context };
+		// 				}),
+		// 			);
+		// 		})
+		// 		.then(async rs => {
+		// 			rs.forEach(({ label, result, expr, model, context }, i) => {
+		// 				console.log(` - [${result}] ${label}`);
+		// 				if (context) {
+		// 					if (context.description) {
+		// 						if (Array.isArray(context.description)) {
+		// 							console.log(`   description:`);
+		// 							for (const line of context.description) {
+		// 								console.log(`     ${line}`);
+		// 							}
+		// 						} else {
+		// 							console.log(`   description: ${context.description}`);
+		// 						}
+		// 					}
 
-							if (context.term) {
-								console.log(`   term: ${context.term}`);
-							}
+		// 					if (context.term) {
+		// 						console.log(`   term: ${context.term}`);
+		// 					}
 
-							if (context.type) {
-								console.log(`   type: ${context.type}`);
-							}
-						}
-						if (result === "unsat") {
-							//console.log("   expr:", expr.sexpr());
-							if (model) {
-								// Try to extract variable values from the model
-								console.log("   counterexample:");
-								const decls = model.decls();
-								if (decls && decls.length > 0) {
-									for (const decl of decls) {
-										const name = decl.name();
-										const value = model.get(decl);
-										console.log(`     ${name} = ${value}`);
-									}
-								} else {
-									// Fallback: print the entire model
-									console.log("     ", model.sexpr());
-								}
-							}
-						}
-					});
-				});
-		} catch (e) {
-			console.log(`Verification error in letdec ${stmt.variable}`);
-			console.log(e);
-			return final;
-		}
-
+		// 					if (context.type) {
+		// 						console.log(`   type: ${context.type}`);
+		// 					}
+		// 				}
+		// 				if (result === "unsat") {
+		// 					//console.log("   expr:", expr.sexpr());
+		// 					if (model) {
+		// 						// Try to extract variable values from the model
+		// 						console.log("   counterexample:");
+		// 						const decls = model.decls();
+		// 						if (decls && decls.length > 0) {
+		// 							for (const decl of decls) {
+		// 								const name = decl.name();
+		// 								const value = model.get(decl);
+		// 								console.log(`     ${name} = ${value}`);
+		// 							}
+		// 						} else {
+		// 							// Fallback: print the entire model
+		// 							console.log("     ", model.sexpr());
+		// 						}
+		// 					}
+		// 				}
+		// 			});
+		// 		});
+		// } catch (e) {
+		// 	console.log(`Verification error in letdec ${stmt.variable}`);
+		// 	console.log(e);
+		// 	return final;
+		// }
+		console.warn("Verification skipped for letdec: ", stmt.variable, " Needs to be replaced by IVL solver");
 		console.log("Elaborated letdec:", stmt.variable);
 		return final;
 	});
@@ -241,7 +241,6 @@ export type ElaborationDebug = {
 	constraints: WithProvenance<Constraint>[];
 	zonker: Sub.Subst;
 	resolutions: Resolutions;
-	skolems: V2.MutState["skolems"];
 };
 
 export type VerificationResult = {
@@ -261,15 +260,13 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 		const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postSolveMetas }));
 		const zonked = update(withAllMetas, "zonker", z => Sub.compose(zonker, Sub.compose(toldZonker, z)));
 
-		const state = yield* V2.getSt();
-
-		const [generalized, subst] = NF.generalize(NF.force(zonked, ty), elaborated, zonked, resolutions, state.skolems);
+		const [generalized, subst] = NF.generalize(NF.force(zonked, ty), elaborated, zonked, resolutions);
 		const next = update(zonked, "zonker", z => ({ ...z, ...subst }));
 		const instantiated = NF.instantiate(generalized, next);
 
 		const wrapped = F.pipe(EB.Icit.wrapLambda(elaborated, instantiated, next), tm => EB.Icit.instantiate(tm, next, resolutions));
 
-		const debug: ElaborationDebug = { constraints, zonker, resolutions, skolems: state.skolems };
+		const debug: ElaborationDebug = { constraints, zonker, resolutions };
 		return [wrapped, instantiated, us, next, debug] as const;
 	});
 
@@ -277,46 +274,48 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 	return result;
 };
 
-export const verify = async (term: EB.Term, type: NF.Value, ctx: EB.Context): Promise<VerificationResult> => {
+export const verify = async (term: EB.Term, type: NF.Value, ctx: EB.Context): Promise<VerificationResult | undefined> => {
 	const zCtx = getZ3Context();
 
 	if (!zCtx) {
 		return { error: "Z3 context not set" };
 	}
 
-	try {
-		const Verification = VerificationServiceV2(zCtx, {});
-		const [{ result: res }] = Verification.check(term, type)(ctx);
+	console.warn("Verification skipped for expression. Needs to be replaced by IVL solver");
 
-		if (res._tag === "Left") {
-			return { error: `Verification failure: ${V2.display(res.left)}` };
-		}
+	// try {
+	// 	const Verification = VerificationServiceV2(zCtx, {});
+	// 	const [{ result: res }] = Verification.check(term, type)(ctx);
 
-		const artefacts = res.right;
-		const vc = artefacts.vc;
-		const allObligations = Verification.getObligations();
-		const obligations = allObligations.map(({ label, expr, context }) => ({ label, result: "pending", expr, context }));
+	// 	if (res._tag === "Left") {
+	// 		return { error: `Verification failure: ${V2.display(res.left)}` };
+	// 	}
 
-		const solver = new zCtx.Solver();
-		solver.add(artefacts.vc.eq(true));
-		const solverResult = (await solver.check()) as "sat" | "unsat" | "unknown";
+	// 	const artefacts = res.right;
+	// 	const vc = artefacts.vc;
+	// 	const allObligations = Verification.getObligations();
+	// 	const obligations = allObligations.map(({ label, expr, context }) => ({ label, result: "pending", expr, context }));
 
-		if (solverResult !== "sat") {
-			await Promise.all(
-				allObligations.map(async ({ label, expr, context }, i) => {
-					const s = new zCtx.Solver();
-					s.add(expr.eq(true));
-					obligations[i].result = await s.check();
-				}),
-			);
-		} else {
-			obligations.forEach(o => {
-				o.result = "sat";
-			});
-		}
+	// 	const solver = new zCtx.Solver();
+	// 	solver.add(artefacts.vc.eq(true));
+	// 	const solverResult = (await solver.check()) as "sat" | "unsat" | "unknown";
 
-		return { vc, result: solverResult, obligations };
-	} catch (e) {
-		return { error: e instanceof Error ? e.message : String(e) };
-	}
+	// 	if (solverResult !== "sat") {
+	// 		await Promise.all(
+	// 			allObligations.map(async ({ label, expr, context }, i) => {
+	// 				const s = new zCtx.Solver();
+	// 				s.add(expr.eq(true));
+	// 				obligations[i].result = await s.check();
+	// 			}),
+	// 		);
+	// 	} else {
+	// 		obligations.forEach(o => {
+	// 			o.result = "sat";
+	// 		});
+	// 	}
+
+	// 	return { vc, result: solverResult, obligations };
+	// } catch (e) {
+	// 	return { error: e instanceof Error ? e.message : String(e) };
+	// }
 };

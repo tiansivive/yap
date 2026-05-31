@@ -286,7 +286,9 @@ exports[`inference: match > branch unification > mismatched branch types: match 
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -311,13 +313,13 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 1`] = `
 {
   "displays": {
     "constraints": [
-      "Num ~~ ?2",
-      "Schema [ x: ?5 | ?6 ] ~~ Schema [ x: Num ]",
-      "?5 ~~ ?5",
-      "?5 ~~ ?8",
+      "Num ~~ ?1",
+      "Schema [ x: ?3 | ?4 ] ~~ Schema [ x: Num ]",
+      "?3 ~~ ?3",
+      "?3 ~~ ?6",
     ],
-    "term": "match Struct [ x: 1 ] | Struct [ x: a | $row_6 ] -> a",
-    "type": "?8",
+    "term": "match Struct [ x: 1 ] | Struct [ x: a | $row_4 ] -> a",
+    "type": "?6",
   },
 }
 `;
@@ -342,7 +344,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -360,7 +362,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
                   "variable": {
                     "lvl": 0,
                     "type": "Meta",
-                    "val": 6,
+                    "val": 4,
                   },
                 },
                 "type": "extension",
@@ -371,7 +373,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
                     "variable": {
                       "lvl": 0,
                       "type": "Meta",
-                      "val": 5,
+                      "val": 3,
                     },
                   },
                 },
@@ -431,7 +433,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 5,
+              "val": 3,
             },
           },
         },
@@ -443,7 +445,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 5,
+              "val": 3,
             },
           },
         },
@@ -457,7 +459,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 5,
+              "val": 3,
             },
           },
         },
@@ -467,7 +469,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
           "variable": {
             "lvl": 0,
             "type": "Meta",
-            "val": 8,
+            "val": 6,
           },
         },
         "type": "assign",
@@ -490,14 +492,10 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       "2": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 1,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
@@ -508,10 +506,11 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       "3": {
         "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 2,
           },
         },
         "meta": {
@@ -525,7 +524,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
           "type": "Lit",
           "value": {
             "type": "Atom",
-            "value": "Type",
+            "value": "Row",
           },
         },
         "meta": {
@@ -536,11 +535,10 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       "5": {
         "ann": {
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 4,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
@@ -551,45 +549,17 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       },
       "6": {
         "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Row",
+          "type": "Var",
+          "variable": {
+            "lvl": 0,
+            "type": "Meta",
+            "val": 5,
           },
         },
         "meta": {
           "lvl": 0,
           "type": "Meta",
           "val": 6,
-        },
-      },
-      "7": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 7,
-        },
-      },
-      "8": {
-        "ann": {
-          "type": "Var",
-          "variable": {
-            "lvl": 0,
-            "type": "Meta",
-            "val": 7,
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 8,
         },
       },
     },
@@ -606,19 +576,19 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
                   "variable": {
                     "lvl": 0,
                     "type": "Meta",
-                    "val": 5,
+                    "val": 3,
                   },
                 },
               },
             ],
             [
-              "$row_6",
+              "$row_4",
               {
                 "type": "Var",
                 "variable": {
                   "lvl": 0,
                   "type": "Meta",
-                  "val": 6,
+                  "val": 4,
                 },
               },
             ],
@@ -628,7 +598,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
               "label": "x",
               "row": {
                 "type": "variable",
-                "variable": "$row_6",
+                "variable": "$row_4",
               },
               "type": "extension",
               "value": {
@@ -682,7 +652,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 2`] = `
       "variable": {
         "lvl": 0,
         "type": "Meta",
-        "val": 8,
+        "val": 6,
       },
     },
     "typedTerms": {},
@@ -1173,7 +1143,9 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
                 },
               ],
               "implicits": [],
+              "labels": {},
               "metas": {},
+              "record": {},
               "sigma": {},
               "zonker": {},
             },
@@ -1861,7 +1833,9 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -2347,7 +2321,9 @@ exports[`inference: match > struct patterns > struct pattern with literal fields
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -2837,7 +2813,9 @@ exports[`inference: match > struct patterns > struct pattern with row polymorphi
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -3391,7 +3369,9 @@ exports[`inference: match > struct patterns > variable binding in struct pattern
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -3788,7 +3768,9 @@ exports[`inference: match > type patterns > match on type constructors: Num, Str
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -4185,7 +4167,9 @@ exports[`inference: match > variable patterns > match x | y -> 2 | z -> 4 2`] = 
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -4847,7 +4831,9 @@ exports[`inference: match > variant patterns > match on variant tags: #nil, #con
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },

@@ -42,10 +42,10 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
                 (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
               = λ(a: Type) =>
                 (λ(u: Unit) ->
-                  shift (λ($k: Π($k: go) -> a) ->
+                  bubble#1327 (shift (λ($k: Π($k: go) -> a) ->
                     match body unit
                       | true -> { go unit; $k (a unit); return unit; }
-                      | false -> unit) : Π(u: Unit) -> a);
+                      | false -> unit)) : Π(u: Unit) -> a);
             return go @a unit;
           }|;
   return while;
@@ -61,7 +61,12 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
         let go
           : Π(a: Type) =>
             (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
-          = λ(a: Type) => (λ(u: Unit) -> (?6 :: go) : Π(u: Unit) -> a);
+          = λ(a: Type) =>
+            (λ(u: Unit) ->
+              bubble#1327 (shift (λ($k: Π($k: go) -> a) ->
+                match body unit
+                  | true -> { go unit; $k (a unit); return unit; }
+                  | false -> unit)) : Π(u: Unit) -> a);
         return go @a unit;
       }| -| Γ: a; while)",
 }
@@ -73,8 +78,9 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
 }
 `;
 
-exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimited continuations (shift/reset) > shifts under a lambda 1`] = `
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimited continuations (shift/reset) > shifts under a lambda (Bubble produces neutral without delimiter) 1`] = `
 {
+  "nfType": "Neutral",
   "pretty": {
     "constraints": [
       "Num ~~ Num",
@@ -92,8 +98,9 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
     : Π(x: Num) -> (closure: Num -| Γ: x; test)
     = reset |(λ(x: Num) ->
       FFI.$add 1
-        shift (λ($k: Π($k: Num) -> Π(x: Num) -> (closure: Num -| Γ: x; test)) ->
-          $k (FFI.$add x 10)) : Π(x: Num) -> Num)|;
+        bubble#1303 (shift (λ($k: Π($k: Num) ->
+          Π(x: Num) -> (closure: Num -| Γ: x; test)) ->
+          $k (FFI.$add x 10))) : Π(x: Num) -> Num)|;
   return test 5;
 }",
     "type": "Num",
@@ -120,7 +127,7 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > evalua
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -168,7 +175,7 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > evalua
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 5,
+              "val": 2,
             },
           },
         },
@@ -190,7 +197,7 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > evalua
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -296,80 +303,16 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > evalua
       },
       "2": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 1,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
           "lvl": 0,
           "type": "Meta",
           "val": 2,
-        },
-      },
-      "3": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 3,
-        },
-      },
-      "4": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 4,
-        },
-      },
-      "5": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 4,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 5,
-        },
-      },
-      "6": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 6,
         },
       },
     },

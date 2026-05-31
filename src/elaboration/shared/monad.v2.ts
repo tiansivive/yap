@@ -38,7 +38,6 @@ const empty: Accumulator = { constraints: [], binders: [], metas: {}, types: {},
 
 export type MutState = {
 	delimitations: Array<Delimitation>;
-	skolems: Record<number, EB.Term>;
 	nondeterminism: {
 		solution: Record<number, EB.NF.Value[]>;
 	};
@@ -57,7 +56,7 @@ export type Delimitation = {
 	shifted: boolean;
 };
 
-export const initialState: MutState = { delimitations: [], skolems: {}, nondeterminism: { solution: {} } };
+export const initialState: MutState = { delimitations: [], nondeterminism: { solution: {} } };
 
 export type Err = Cause & { provenance?: P.Provenance[]; ctx: EB.Context };
 

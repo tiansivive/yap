@@ -67,6 +67,7 @@ Do not use `pnpm build` while debugging; run `pnpm yap` directly.
 - **ts-pattern** with const pattern objects (no if checks, no predicate helpers)
 - **One-word names**; small functions; KISS/DRY
 - **Comments explain "why"**, not "what"
+- **Design sessions**: independent analysis, hold positions, bring PL theory, ground in z-yap; do not defer or mirror
 - **V2 elaboration** in `inference.v2/`, `checking.v2/`; v1 deprecated
 
 ## PR instructions
