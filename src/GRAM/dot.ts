@@ -1,6 +1,6 @@
 import type { Graph, Edge, Node, Payload } from "./graph";
 import { isStructural } from "./vocabulary";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 // ── Payload ──
 
@@ -15,12 +15,12 @@ const escape = (s: string): string => s.replace(/"/g, '\\"');
 
 const summary = (p: Payload): string =>
 	match(p)
-		.with({ variable: String }, p => String(p.variable))
-		.with({ name: String }, p => String(p.name))
-		.with({ label: String }, p => String(p.label))
-		.with({ op: String }, p => String(p.op))
-		.with({ value: Object }, p => JSON.stringify(p.value))
-		.otherwise(() => "");
+		.with({ variable: P.string }, p => String(p.variable))
+		.with({ name: P.string }, p => String(p.name))
+		.with({ label: P.string }, p => String(p.label))
+		.with({ op: P.string }, p => String(p.op))
+		.with({ value: P.any }, p => JSON.stringify(p.value))
+		.otherwise(() => "<unknown payload>");
 
 const label = (n: Node): string => {
 	const s = summary(n.payload);

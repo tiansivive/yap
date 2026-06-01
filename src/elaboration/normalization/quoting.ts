@@ -108,7 +108,7 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 
 				return EB.Constructors.Row(_quote(row));
 			})
-			.with({ type: "External" }, ({ name, arity, compute, args }) => {
+			.with({ type: "External" }, ({ name, args }) => {
 				return args.reduce((acc, arg) => EB.Constructors.App("Explicit", acc, quote(ctx, lvl, arg)), EB.Constructors.Var({ type: "Foreign", name }));
 			})
 			.with({ type: "Modal" }, ({ value, modalities }) =>

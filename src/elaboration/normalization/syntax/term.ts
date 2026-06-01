@@ -196,11 +196,11 @@ export const Patterns = {
 	StuckProj: {
 		type: "App",
 		func: { type: "Abs", binder: { type: "Lambda", variable: P.string.startsWith(PROJ_VAR_PREFIX) } },
-	},
+	} as const,
 	StuckInj: {
 		type: "App",
 		func: { type: "Abs", binder: { type: "Lambda", variable: P.string.startsWith(INJ_VAR_PREFIX) } },
-	},
+	} as const,
 
 	App: { type: "App" } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,
