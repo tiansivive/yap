@@ -12,7 +12,9 @@ import { isEqual } from "lodash"
 export const defaultContext = () => ({
     env: [],
     implicits: [],
+    labels: {},
     sigma: {},
+    record: {},
     trace: [],
     imports: Elaborated(),
     zonker: Sub.empty,
@@ -71,7 +73,9 @@ export const Elaborated: () => EB.Context['imports'] = () => {
     const dummyContext: EB.Context = {
         env: [],
         implicits: [],
+        labels: {},
         sigma: {},
+        record: {},
         trace: [],
         imports: PrimTypes,
         zonker: Sub.empty,

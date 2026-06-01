@@ -458,46 +458,7 @@ return main();
 exports[`Language Tour — Records & Tuples > self-referencing fields 1`] = `
 [
   {
-    "error": "Unification Failure: Cannot unify 20 with Num
-
-Trace:
-
-While unifying:
-	
-	20
-with:
-	Num
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	struct [ width: 10, height: 20, area: * width height ]
-against:
-	Schema [ area: Num, height: Num, width: Num ]
-
-@ line: 3, col: 9
-
---------------------------------------------------------------------------------------------
-
-While checking:
-	struct [ width: 10, height: 20, area: * width height ]
-against:
-	Σ($sig: [ area: Num, height: Num, width: Num ]) .
-  (closure: Schema [ area: Num, height: Num, width: Num ] -| ·)
-
-@ line: 3, col: 9
-
---------------------------------------------------------------------------------------------
-
-While inferring:
-	let rectangle
-  : struct [ width: Num, height: Num, area: Num ]
-  = struct [ width: 10, height: 20, area: * width height ]
-
-Reason: Statement
-
-@ line: 2, col: 5
-",
+    "error": "Unbound label: width",
     "kind": "let",
     "name": "rectangle",
   },

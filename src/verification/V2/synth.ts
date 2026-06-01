@@ -61,14 +61,14 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 					return [ty, { vc: formula(predicate, ctx) }] satisfies SynthResult;
 				})
 				.with({ type: "Var", variable: { type: "Label" } }, function* ({ variable }) {
-					const entry = ctx.sigma[variable.name];
-					if (!entry) {
+					const type = ctx.labels[variable.name];
+					if (!type) {
 						throw new Error(`Unbound label variable: ${variable.name}`);
 					}
 
-					const modalities = extractModalities(entry.ann, ctx);
+					const modalities = extractModalities(type, ctx);
 					const predicate = NF.reduce(modalities.liquid, NF.evaluate(ctx, term), "Explicit");
-					return [entry.ann, { vc: formula(predicate, ctx) }] satisfies SynthResult;
+					return [type, { vc: formula(predicate, ctx) }] satisfies SynthResult;
 				})
 				.with({ type: "Var", variable: { type: "Foreign" } }, function* (tm) {
 					const symbol = primopMapping[tm.variable.name] ?? tm.variable.name;

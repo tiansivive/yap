@@ -3,7 +3,6 @@ import * as NF from "@yap/elaboration/normalization";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as R from "@yap/shared/rows";
 import * as E from "fp-ts/Either";
-import * as Q from "@yap/shared/modalities/multiplicity";
 import { match } from "ts-pattern";
 
 import * as Err from "@yap/elaboration/shared/errors";
@@ -104,24 +103,25 @@ export const applyClosure = (binder: EB.Binder, closure: NF.Closure, value: NF.V
 	return closure.compute(...args);
 };
 
-export const collectSigmaBindings = (r1: NF.Row, r2: NF.Row): V2.Elaboration<EB.Context["sigma"]> =>
-	match<[NF.Row, NF.Row], V2.Elaboration<EB.Context["sigma"]>>([r1, r2])
-		.with([{ type: "empty" }, { type: "empty" }], () => V2.of({}))
-		.with([{ type: "empty" }, { type: "variable" }], () => V2.of({}))
+type LabelBindings = { labels: EB.Context["labels"]; sigma: EB.Context["sigma"] };
+
+export const collectSigmaBindings = (r1: NF.Row, r2: NF.Row): V2.Elaboration<LabelBindings> =>
+	match<[NF.Row, NF.Row], V2.Elaboration<LabelBindings>>([r1, r2])
+		.with([{ type: "empty" }, { type: "empty" }], () => V2.of({ labels: {}, sigma: {} }))
+		.with([{ type: "empty" }, { type: "variable" }], () => V2.of({ labels: {}, sigma: {} }))
 		.with([{ type: "extension" }, { type: "extension" }], ([{ label, value, row }, r]) =>
 			V2.Do(function* () {
 				const rewritten = R.rewrite(r, label);
 				if (E.isLeft(rewritten)) {
-					return yield* V2.fail<EB.Context["sigma"]>(Err.MissingLabel(label, r));
+					return yield* V2.fail<LabelBindings>(Err.MissingLabel(label, r));
 				}
 				if (rewritten.right.type !== "extension") {
-					return yield* V2.fail<EB.Context["sigma"]>({ type: "Impossible", message: "Row rewrite must yield extension" });
+					return yield* V2.fail<LabelBindings>({ type: "Impossible", message: "Row rewrite must yield extension" });
 				}
 				const acc = yield* V2.pure(collectSigmaBindings(row, rewritten.right.row));
-				const ctx = yield* V2.ask();
 				return {
-					...acc,
-					[label]: { nf: value, ann: rewritten.right.value, term: NF.quote(ctx, ctx.env.length, value), multiplicity: Q.Many },
+					labels: { ...acc.labels, [label]: rewritten.right.value },
+					sigma: { ...acc.sigma, [label]: { value } },
 				};
 			}),
 		)

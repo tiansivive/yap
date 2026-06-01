@@ -4,8 +4,8 @@ exports[`inference: tuple > {1, 2} 1`] = `
 {
   "displays": {
     "constraints": [
-      "Num ~~ ?5",
       "Num ~~ ?2",
+      "Num ~~ ?1",
     ],
     "term": "Struct [ 0: 1, 1: 2 ]",
     "type": "Schema [ 0: Num, 1: Num ]",
@@ -33,7 +33,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 5,
+              "val": 2,
             },
           },
         },
@@ -55,7 +55,7 @@ exports[`inference: tuple > {1, 2} 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -79,80 +79,16 @@ exports[`inference: tuple > {1, 2} 2`] = `
       },
       "2": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 1,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
           "lvl": 0,
           "type": "Meta",
           "val": 2,
-        },
-      },
-      "3": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 3,
-        },
-      },
-      "4": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 4,
-        },
-      },
-      "5": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 4,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 5,
-        },
-      },
-      "6": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 6,
         },
       },
     },

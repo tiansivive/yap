@@ -11,7 +11,6 @@ import * as O from "fp-ts/Option";
 
 import { nextCount } from "@yap/elaboration/shared/supply";
 import * as Err from "@yap/elaboration/shared/errors";
-import { update } from "@yap/utils";
 
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
@@ -157,7 +156,11 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 							V2.Do(function* () {
 								const bindings = yield* V2.pure(collectSigmaBindings(struct.arg.row, type.arg.row));
 								return yield* V2.local(
-									update("sigma", sigma => ({ ...sigma, ...bindings })),
+									ctx => ({
+										...ctx,
+										labels: { ...ctx.labels, ...bindings.labels },
+										sigma: { ...ctx.sigma, ...bindings.sigma },
+									}),
 									traverse(term.arg.row, type.arg.row),
 								);
 							}),

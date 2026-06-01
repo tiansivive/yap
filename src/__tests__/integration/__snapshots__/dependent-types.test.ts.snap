@@ -278,7 +278,7 @@ return main();
       return v2",
     "name": "numPair",
     "normalized": "Struct [ snd: 42, fst: Num ]",
-    "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: Type, fst: Type ]",
+    "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: :fst, fst: Type ]",
   },
   {
     "codegenJS": "function main() {
@@ -322,7 +322,7 @@ return main();
       return v2",
     "name": "strPair",
     "normalized": "Struct [ snd: "hello", fst: String ]",
-    "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: Type, fst: Type ]",
+    "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: :fst, fst: Type ]",
   },
 ]
 `;
@@ -477,7 +477,6 @@ return main();
 return main();
 ",
     "elaborated": "Struct [ snd: 100, fst: true ]",
-    "error": "Match: No alternative matched",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"exampleP2"}
@@ -504,7 +503,8 @@ return main();
       return v2",
     "name": "exampleP2",
     "normalized": "Struct [ snd: 100, fst: true ]",
-    "type": "",
+    "type": "Σ($sig: [ snd: match :fst | true -> Num | false -> String, fst: Bool ]) .
+  Schema [ snd: match :fst | true -> Num | false -> String, fst: Bool ]",
   },
 ]
 `;

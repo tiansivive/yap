@@ -71,80 +71,16 @@ exports[`inference: variant type > | #x Num | #y Num 2`] = `
       },
       "2": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 1,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
           "lvl": 0,
           "type": "Meta",
           "val": 2,
-        },
-      },
-      "3": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 3,
-        },
-      },
-      "4": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 4,
-        },
-      },
-      "5": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 4,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 5,
-        },
-      },
-      "6": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 6,
         },
       },
     },

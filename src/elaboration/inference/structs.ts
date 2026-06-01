@@ -19,8 +19,7 @@ infer.gen = F.flow(infer, V2.pure);
 export const commonStructInference = (row: Src.Row): V2.Elaboration<EB.AST> =>
 	V2.Do(function* () {
 		const ctx = yield* V2.ask();
-		// const [row, ty, qs] = yield* EB.Rows.inSigmaContext.gen(struct.row, collect(struct.row));
-		const { fields, tail } = yield* EB.Rows.inSigmaContext.gen(row, EB.Rows.collect(row));
+		const { fields, tail } = yield* EB.Rows.withLabelContext.gen(row, EB.Rows.collect(row));
 
 		const mkRows = (start: [EB.Row, NF.Row]) =>
 			fields.reduceRight<[EB.Row, NF.Row]>(

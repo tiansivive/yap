@@ -280,7 +280,7 @@ exports[`Language Tour — Pattern Matching > record patterns 1`] = `
   {
     "codegenJS": "",
     "elaborated": "λ(p: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) ->
-  match p | Struct [ x: a, y: b | $row_11 ] -> b",
+  match p | Struct [ x: a, y: b | $row_7 ] -> b",
     "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
   :entry -> [3]
@@ -357,13 +357,13 @@ exports[`Language Tour — Pattern Matching > record patterns 1`] = `
     "mir": "",
     "name": "getY",
     "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
-  (closure: match p | Struct [ x: a, y: b | $row_11 ] -> b -| Γ: p)",
+  (closure: match p | Struct [ x: a, y: b | $row_7 ] -> b -| Γ: p)",
     "type": "Π(t1: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
   },
   {
     "codegenJS": "",
     "elaborated": "λ(p: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) ->
-  match p | Struct [ y: a | $row_20 ] -> a",
+  match p | Struct [ y: a | $row_12 ] -> a",
     "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
   :entry -> [3]
@@ -434,7 +434,7 @@ exports[`Language Tour — Pattern Matching > record patterns 1`] = `
     "mir": "",
     "name": "getY2",
     "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
-  (closure: match p | Struct [ y: a | $row_20 ] -> a -| Γ: p)",
+  (closure: match p | Struct [ y: a | $row_12 ] -> a -| Γ: p)",
     "type": "Π(t3: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
   },
 ]
@@ -525,8 +525,8 @@ return main();
     "elaborated": "λ(a: Type) =>
   λ(list: (List) a) ->
     match list
-      | Variant [ nil: _ | $row_15 ] -> 0
-      | Variant [ cons: Struct [ 0: x, 1: xs | $row_20 ] | $row_21 ] ->
+      | Variant [ nil: _ | $row_7 ] -> 0
+      | Variant [ cons: Struct [ 0: x, 1: xs | $row_12 ] | $row_13 ] ->
           FFI.$add 1 (I6 @a xs)",
     "error": "Unbound bound variable in synth; Unbound bound variable in synth; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
@@ -719,8 +719,8 @@ return main();
     "normalized": "λ(a: Type) =>
   (closure: λ(list: (List) a) ->
     match list
-      | Variant [ nil: _ | $row_15 ] -> 0
-      | Variant [ cons: Struct [ 0: x, 1: xs | $row_20 ] | $row_21 ] ->
+      | Variant [ nil: _ | $row_7 ] -> 0
+      | Variant [ cons: Struct [ 0: x, 1: xs | $row_12 ] | $row_13 ] ->
           FFI.$add 1 (I6 @a xs) -| Γ: a)",
     "type": "Π(a: Type) => Π(t2: (List) a) -> Num",
   },
@@ -922,10 +922,10 @@ return main();
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]) ->
   match s
-    | Variant [ circle: r | $row_24 ] -> "Circle with radius"
-    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_29 ] | $row_30 ] ->
+    | Variant [ circle: r | $row_10 ] -> "Circle with radius"
+    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_15 ] | $row_16 ] ->
         "Rectangle"
-    | Variant [ point: Struct [ x: _, y: _ | $row_35 ] | $row_36 ] ->
+    | Variant [ point: Struct [ x: _, y: _ | $row_21 ] | $row_22 ] ->
         "Point at coordinates"",
     "error": "Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
@@ -1081,10 +1081,10 @@ return main();
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]) ->
   (closure: match s
-    | Variant [ circle: r | $row_24 ] -> "Circle with radius"
-    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_29 ] | $row_30 ] ->
+    | Variant [ circle: r | $row_10 ] -> "Circle with radius"
+    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_15 ] | $row_16 ] ->
         "Rectangle"
-    | Variant [ point: Struct [ x: _, y: _ | $row_35 ] | $row_36 ] ->
+    | Variant [ point: Struct [ x: _, y: _ | $row_21 ] | $row_22 ] ->
         "Point at coordinates" -| Γ: s)",
     "type": "Π(t1: Variant
   [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],

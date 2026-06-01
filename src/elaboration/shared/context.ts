@@ -27,36 +27,29 @@ export type Context = {
 		name: Binder;
 	}>;
 	implicits: Array<[EB.Term, NF.Value]>;
-	sigma: Record<string, Sigma>;
+
+	labels: Record<string, NF.Value>;
+	sigma: Record<string, { value: NF.Value }>;
+	record: Record<string, { term?: EB.Term; value?: NF.Value }>;
 
 	zonker: Sub.Subst;
 	metas: Record<number, { meta: EB.Meta; ann: NF.Value }>;
 	imports: Record<string, EB.AST>;
 	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
 	trace: P.Stack<Provenance>;
-
-	//control: Array<{ continuation: { binder: string, annotation: Pi, lvl: number }; resumption: { meta: EB.Meta } }>;
 };
-type Pi = EB.NF.Value & { type: "Abs"; binder: Extract<NF.Binder, { type: "Pi" }> };
 
 export type Zonker = Context["zonker"];
-
-export type Sigma = { term: EB.Term; nf: NF.Value; ann: NF.Value; multiplicity: Q.Multiplicity; isAnnotation?: boolean };
 
 export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
 export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.AST> => {
 	const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
-	// labels are different syntax (:varname), so we can check them before bound variables as the latter will never shadow the former
 	if (variable.type === "label") {
-		const key = ctx.sigma[variable.value];
-		if (key) {
-			const { ann, multiplicity, isAnnotation, nf } = key;
+		const type = ctx.labels[variable.value];
+		if (type) {
 			const tm = EB.Constructors.Var({ type: "Label", name: variable.value });
-			// // if it's an annotation, then the field value describes the type of the field
-			// // if it's a value, the the field's type is given by the stored ann
-			// const ty = isAnnotation ? nf : ann;
-			return V2.of<EB.AST>([tm, nf, zeros]); // QUESTION: need to somehow handle multiplicity?
+			return V2.of<EB.AST>([tm, type, zeros]);
 		}
 		throw new Error(`Label not found: ${variable.value}`);
 	}
@@ -151,33 +144,18 @@ export const extend = (context: Context, binder: Binder, value: NF.Value, origin
 	};
 };
 
-export const extendSigmaEnv = (ctx: Context, row: NF.Row): Context => {
-	const collect = (r: NF.Row): Context["sigma"] => {
-		if (r.type === "empty") {
-			return {};
-		}
+export const extendSigma = (ctx: Context, row: NF.Row): Context => {
+	const collect = (r: NF.Row): Context["sigma"] =>
+		match(r)
+			.with({ type: "empty" }, (): Context["sigma"] => ({}))
+			.with({ type: "variable" }, (): Context["sigma"] => ({}))
+			.with({ type: "extension" }, ({ label, value, row }): Context["sigma"] => ({
+				[label]: { value },
+				...collect(row),
+			}))
+			.exhaustive();
 
-		if (r.type === "variable") {
-			return {};
-		}
-
-		const fieldSigma: Context["sigma"] = {
-			[r.label]: {
-				term: new Error("Dont think I need this") as any,
-				nf: r.value,
-				ann: new Error("Same problem as normal extend above. Must pass val annotation in apply/extend to fix this") as any,
-				multiplicity: Q.Many,
-			},
-			...collect(r.row),
-		};
-
-		return fieldSigma;
-	};
-
-	return update(ctx, "sigma", s => ({
-		...s,
-		...collect(row),
-	}));
+	return update(ctx, "sigma", s => ({ ...s, ...collect(row) }));
 };
 
 export const augment = (context: Context, binder: Binder, annotation: NF.Value, origin: Origin = "inserted") => {
@@ -207,9 +185,9 @@ export const unfoldMu = (context: Context, binder: Binder, annotation: NF.Value,
 	};
 };
 
-export const extendSigma = (ctx: Context, variable: string, sigma: Sigma, isAnnotation = false): Context => {
-	return set(ctx, ["sigma", variable] as const, { ...sigma, isAnnotation });
-};
+export const extendLabel = (ctx: Context, label: string, type: NF.Value): Context => set(ctx, ["labels", label] as const, type);
+
+export const extendRecord = (ctx: Context, label: string, entry: { term?: EB.Term; value?: NF.Value }): Context => set(ctx, ["record", label] as const, entry);
 
 export const muContext = (ctx: Context): Context => {
 	return {

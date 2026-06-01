@@ -1,7 +1,5 @@
 import { match, P } from "ts-pattern";
 
-import * as Q from "@yap/shared/modalities/multiplicity";
-
 import * as EB from "@yap/elaboration";
 import * as NF from ".";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
@@ -95,20 +93,22 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, skolems: V2.MutState["skol
 		})
 		.with({ type: "Var", variable: { type: "Label" } }, ({ variable }) => {
 			const sig = ctx.sigma[variable.name];
-			if (!sig) {
-				throw new Error("Unbound label: " + variable.name);
-			}
-
-			if (sig.nf) {
-				globalResultStack.push(sig.nf);
+			if (sig) {
+				globalResultStack.push(sig.value);
 				return;
 			}
-			if (!sig.term) {
-				throw new Error("Label has no term or normal form: " + variable.name);
+			const rec = ctx.record[variable.name];
+			if (rec) {
+				if (rec.value) {
+					globalResultStack.push(rec.value);
+					return;
+				}
+				if (rec.term) {
+					globalWorkStack.push({ type: "Eval", ctx, term: rec.term });
+					return;
+				}
 			}
-
-			// Need to evaluate the label's term
-			globalWorkStack.push({ type: "Eval", ctx, term: sig.term });
+			throw new Error("Unbound label: " + variable.name);
 		})
 		.with({ type: "Var", variable: { type: "Free" } }, ({ variable }) => {
 			const val = ctx.imports[variable.name];
@@ -205,23 +205,21 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, skolems: V2.MutState["skol
 		.with({ type: "Abs", binding: { type: "Sigma" } }, ({ body, binding }) => {
 			assert(binding.annotation.type === "Row", "Sigma binder annotation must be a Row");
 
-			const extract = (r: EB.Row): { [key: string]: EB.Term } => {
+			const extractLabels = (r: EB.Row): { [key: string]: EB.Term } => {
 				if (r.type === "empty" || r.type === "variable") {
 					return {};
 				}
 				const { label, value, row } = r;
-				return { [label]: value, ...extract(row) };
+				return { [label]: value, ...extractLabels(row) };
 			};
-			const bindings = extract(binding.annotation.row);
+			const bindings = extractLabels(binding.annotation.row);
 
-			// Setup sigma context with neutral label vars
-			const sigma = Object.entries(bindings).reduce<EB.Context["sigma"]>((sig, b) => {
-				const [label, term] = b;
+			const sigma = Object.entries(bindings).reduce<EB.Context["sigma"]>((sig, [label]) => {
 				if (sig[label]) {
 					return sig;
 				}
 				const v = NF.Constructors.Var({ type: "Label", name: label });
-				return { ...sig, [label]: { nf: NF.Constructors.Neutral(v) } as EB.Sigma };
+				return { ...sig, [label]: { value: NF.Constructors.Neutral(v) } };
 			}, ctx.sigma);
 
 			const xtended = { ...ctx, sigma };
@@ -262,24 +260,23 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, skolems: V2.MutState["skol
 			globalWorkStack.push({ type: "Eval", ctx, term: func });
 		})
 		.with({ type: "Row" }, ({ row }) => {
-			const extract = (r: EB.Row): { [key: string]: EB.Term } => {
+			const extractLabels = (r: EB.Row): { [key: string]: EB.Term } => {
 				if (r.type === "empty" || r.type === "variable") {
 					return {};
 				}
 				const { label, value, row } = r;
-				return { [label]: value, ...extract(row) };
+				return { [label]: value, ...extractLabels(row) };
 			};
-			const bindings = extract(row);
+			const bindings = extractLabels(row);
 
-			const sigma = Object.entries(bindings).reduce<EB.Context["sigma"]>((sig, b) => {
-				const [label, term] = b;
-				if (sig[label]) {
-					return sig;
+			const record = Object.entries(bindings).reduce<EB.Context["record"]>((rec, [label, term]) => {
+				if (rec[label]) {
+					return rec;
 				}
-				return { ...sig, [label]: { term, multiplicity: Q.Many } as EB.Sigma };
-			}, ctx.sigma);
+				return { ...rec, [label]: { term } };
+			}, ctx.record);
 
-			const xtended = { ...ctx, sigma };
+			const xtended = { ...ctx, record };
 
 			// Evaluate row and wrap in Row constructor
 			globalWorkStack.push({
@@ -726,7 +723,7 @@ function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): v
 					return EB.extend(cls.ctx, binder, nfa);
 				}
 				assert(nfa.type === "Row", "Sigma binder should be applied to a Row");
-				return EB.extendSigmaEnv(cls.ctx, nfa.row);
+				return EB.extendSigma(cls.ctx, nfa.row);
 			};
 			match(closure)
 				.with({ type: "Closure" }, cls => globalWorkStack.push({ type: "Eval", ctx: extended(cls), term: cls.term }))
@@ -923,7 +920,7 @@ export function apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): 
 			return EB.extend(ctx, binder, value);
 		}
 		assert(value.type === "Row", "Sigma binder should be applied to a Row");
-		return EB.extendSigmaEnv(ctx, value.row);
+		return EB.extendSigma(ctx, value.row);
 	})();
 
 	if (closure.type === "Closure") {

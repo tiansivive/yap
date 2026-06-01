@@ -1253,7 +1253,7 @@ return main();
     "name": "valid",
     "normalized": "Struct [ snd: 5, fst: 3 ]",
     "type": "Σ($sig: [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ]) .
-  Schema [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v Num |], fst: Num ]",
+  Schema [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ]",
   },
 ]
 `;

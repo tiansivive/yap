@@ -4,8 +4,8 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 1`] = `
 {
   "displays": {
     "constraints": [
-      "Num ~~ ?5",
       "Num ~~ ?2",
+      "Num ~~ ?1",
       "Schema [ x: Num, y: Num ] ~~ Schema [ x: Num, y: Num ]",
     ],
     "term": "(Struct [ x: 1, y: 2 ]).x",
@@ -34,7 +34,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 5,
+              "val": 2,
             },
           },
         },
@@ -56,7 +56,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
             "variable": {
               "lvl": 0,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -162,80 +162,16 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 2`] = `
       },
       "2": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 1,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
           "lvl": 0,
           "type": "Meta",
           "val": 2,
-        },
-      },
-      "3": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 3,
-        },
-      },
-      "4": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 4,
-        },
-      },
-      "5": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 0,
-              "type": "Meta",
-              "val": 4,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 5,
-        },
-      },
-      "6": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 0,
-          "type": "Meta",
-          "val": 6,
         },
       },
     },
@@ -479,7 +415,9 @@ exports[`inference: projection > \\obj -> obj.x 2`] = `
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -632,7 +570,9 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                 },
               ],
               "implicits": [],
+              "labels": {},
               "metas": {},
+              "record": {},
               "sigma": {},
               "zonker": {},
             },
@@ -782,6 +722,7 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                   },
                 ],
                 "implicits": [],
+                "labels": {},
                 "metas": {
                   "1": {
                     "ann": {
@@ -840,6 +781,7 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                     },
                   },
                 },
+                "record": {},
                 "sigma": {},
                 "zonker": {
                   "1": {
@@ -898,7 +840,9 @@ exports[`inference: projection > { let proj = \\obj -> obj.x; } 2`] = `
                           },
                         ],
                         "implicits": [],
+                        "labels": {},
                         "metas": {},
+                        "record": {},
                         "sigma": {},
                         "zonker": {},
                       },
@@ -1195,18 +1139,18 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "?2 ~~ L1",
+      "?1 ~~ L1",
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "String ~~ ?11",
-      "Num ~~ ?8",
+      "String ~~ ?4",
+      "Num ~~ ?3",
       "String ~~ String",
-      ""hello" ~~ ?17",
+      ""hello" ~~ ?6",
       "Num ~~ Num",
-      "1 ~~ ?14",
+      "1 ~~ ?5",
     ],
     "term": "{
   let Pair
@@ -1363,7 +1307,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
             "variable": {
               "lvl": 3,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -1486,7 +1430,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 11,
+              "val": 4,
             },
           },
         },
@@ -1508,7 +1452,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 8,
+              "val": 3,
             },
           },
         },
@@ -1548,7 +1492,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 17,
+              "val": 6,
             },
           },
         },
@@ -1588,7 +1532,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 14,
+              "val": 5,
             },
           },
         },
@@ -1610,154 +1554,12 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           "val": 1,
         },
       },
-      "10": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 10,
-        },
-      },
-      "11": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 10,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 11,
-        },
-      },
-      "12": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 12,
-        },
-      },
-      "13": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 13,
-        },
-      },
-      "14": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 13,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 14,
-        },
-      },
-      "15": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 15,
-        },
-      },
-      "16": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 16,
-        },
-      },
-      "17": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 16,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 17,
-        },
-      },
-      "18": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 18,
-        },
-      },
       "2": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 3,
-              "type": "Meta",
-              "val": 1,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
@@ -1775,7 +1577,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 3,
         },
@@ -1789,25 +1591,21 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 4,
         },
       },
       "5": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 3,
-              "type": "Meta",
-              "val": 4,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 5,
         },
@@ -1821,55 +1619,9 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 6,
-        },
-      },
-      "7": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 7,
-        },
-      },
-      "8": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 7,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 8,
-        },
-      },
-      "9": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 9,
         },
       },
     },
@@ -1904,7 +1656,9 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
               "ctx": {
                 "env": [],
                 "implicits": [],
+                "labels": {},
                 "metas": {},
+                "record": {},
                 "sigma": {},
                 "zonker": {},
               },
@@ -2223,7 +1977,9 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                       "ctx": {
                                         "env": [],
                                         "implicits": [],
+                                        "labels": {},
                                         "metas": {},
+                                        "record": {},
                                         "sigma": {},
                                         "zonker": {},
                                       },
@@ -2272,6 +2028,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               },
                             ],
                             "implicits": [],
+                            "labels": {},
                             "metas": {
                               "1": {
                                 "ann": {
@@ -2289,14 +2046,10 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                               },
                               "2": {
                                 "ann": {
-                                  "type": "Neutral",
+                                  "type": "Lit",
                                   "value": {
-                                    "type": "Var",
-                                    "variable": {
-                                      "lvl": 3,
-                                      "type": "Meta",
-                                      "val": 1,
-                                    },
+                                    "type": "Atom",
+                                    "value": "Type",
                                   },
                                 },
                                 "meta": {
@@ -2305,70 +2058,11 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                   "val": 2,
                                 },
                               },
-                              "3": {
-                                "ann": {
-                                  "type": "Lit",
-                                  "value": {
-                                    "type": "Atom",
-                                    "value": "Type",
-                                  },
-                                },
-                                "meta": {
-                                  "lvl": 3,
-                                  "type": "Meta",
-                                  "val": 3,
-                                },
-                              },
-                              "4": {
-                                "ann": {
-                                  "type": "Lit",
-                                  "value": {
-                                    "type": "Atom",
-                                    "value": "Type",
-                                  },
-                                },
-                                "meta": {
-                                  "lvl": 3,
-                                  "type": "Meta",
-                                  "val": 4,
-                                },
-                              },
-                              "5": {
-                                "ann": {
-                                  "type": "Neutral",
-                                  "value": {
-                                    "type": "Var",
-                                    "variable": {
-                                      "lvl": 3,
-                                      "type": "Meta",
-                                      "val": 4,
-                                    },
-                                  },
-                                },
-                                "meta": {
-                                  "lvl": 3,
-                                  "type": "Meta",
-                                  "val": 5,
-                                },
-                              },
-                              "6": {
-                                "ann": {
-                                  "type": "Lit",
-                                  "value": {
-                                    "type": "Atom",
-                                    "value": "Type",
-                                  },
-                                },
-                                "meta": {
-                                  "lvl": 3,
-                                  "type": "Meta",
-                                  "val": 6,
-                                },
-                              },
                             },
+                            "record": {},
                             "sigma": {},
                             "zonker": {
-                              "2": {
+                              "1": {
                                 "type": "Var",
                                 "variable": {
                                   "lvl": 1,
@@ -2467,7 +2161,9 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                               "ctx": {
                                                 "env": [],
                                                 "implicits": [],
+                                                "labels": {},
                                                 "metas": {},
+                                                "record": {},
                                                 "sigma": {},
                                                 "zonker": {},
                                               },
@@ -2516,6 +2212,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                       },
                                     ],
                                     "implicits": [],
+                                    "labels": {},
                                     "metas": {
                                       "1": {
                                         "ann": {
@@ -2533,14 +2230,10 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                       },
                                       "2": {
                                         "ann": {
-                                          "type": "Neutral",
+                                          "type": "Lit",
                                           "value": {
-                                            "type": "Var",
-                                            "variable": {
-                                              "lvl": 3,
-                                              "type": "Meta",
-                                              "val": 1,
-                                            },
+                                            "type": "Atom",
+                                            "value": "Type",
                                           },
                                         },
                                         "meta": {
@@ -2549,70 +2242,11 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                           "val": 2,
                                         },
                                       },
-                                      "3": {
-                                        "ann": {
-                                          "type": "Lit",
-                                          "value": {
-                                            "type": "Atom",
-                                            "value": "Type",
-                                          },
-                                        },
-                                        "meta": {
-                                          "lvl": 3,
-                                          "type": "Meta",
-                                          "val": 3,
-                                        },
-                                      },
-                                      "4": {
-                                        "ann": {
-                                          "type": "Lit",
-                                          "value": {
-                                            "type": "Atom",
-                                            "value": "Type",
-                                          },
-                                        },
-                                        "meta": {
-                                          "lvl": 3,
-                                          "type": "Meta",
-                                          "val": 4,
-                                        },
-                                      },
-                                      "5": {
-                                        "ann": {
-                                          "type": "Neutral",
-                                          "value": {
-                                            "type": "Var",
-                                            "variable": {
-                                              "lvl": 3,
-                                              "type": "Meta",
-                                              "val": 4,
-                                            },
-                                          },
-                                        },
-                                        "meta": {
-                                          "lvl": 3,
-                                          "type": "Meta",
-                                          "val": 5,
-                                        },
-                                      },
-                                      "6": {
-                                        "ann": {
-                                          "type": "Lit",
-                                          "value": {
-                                            "type": "Atom",
-                                            "value": "Type",
-                                          },
-                                        },
-                                        "meta": {
-                                          "lvl": 3,
-                                          "type": "Meta",
-                                          "val": 6,
-                                        },
-                                      },
                                     },
+                                    "record": {},
                                     "sigma": {},
                                     "zonker": {
-                                      "2": {
+                                      "1": {
                                         "type": "Var",
                                         "variable": {
                                           "lvl": 1,
@@ -2774,7 +2408,9 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                     "ctx": {
                                       "env": [],
                                       "implicits": [],
+                                      "labels": {},
                                       "metas": {},
+                                      "record": {},
                                       "sigma": {},
                                       "zonker": {},
                                     },
@@ -2823,6 +2459,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                             },
                           ],
                           "implicits": [],
+                          "labels": {},
                           "metas": {
                             "1": {
                               "ann": {
@@ -2840,14 +2477,10 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                             },
                             "2": {
                               "ann": {
-                                "type": "Neutral",
+                                "type": "Lit",
                                 "value": {
-                                  "type": "Var",
-                                  "variable": {
-                                    "lvl": 3,
-                                    "type": "Meta",
-                                    "val": 1,
-                                  },
+                                  "type": "Atom",
+                                  "value": "Type",
                                 },
                               },
                               "meta": {
@@ -2856,70 +2489,11 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 "val": 2,
                               },
                             },
-                            "3": {
-                              "ann": {
-                                "type": "Lit",
-                                "value": {
-                                  "type": "Atom",
-                                  "value": "Type",
-                                },
-                              },
-                              "meta": {
-                                "lvl": 3,
-                                "type": "Meta",
-                                "val": 3,
-                              },
-                            },
-                            "4": {
-                              "ann": {
-                                "type": "Lit",
-                                "value": {
-                                  "type": "Atom",
-                                  "value": "Type",
-                                },
-                              },
-                              "meta": {
-                                "lvl": 3,
-                                "type": "Meta",
-                                "val": 4,
-                              },
-                            },
-                            "5": {
-                              "ann": {
-                                "type": "Neutral",
-                                "value": {
-                                  "type": "Var",
-                                  "variable": {
-                                    "lvl": 3,
-                                    "type": "Meta",
-                                    "val": 4,
-                                  },
-                                },
-                              },
-                              "meta": {
-                                "lvl": 3,
-                                "type": "Meta",
-                                "val": 5,
-                              },
-                            },
-                            "6": {
-                              "ann": {
-                                "type": "Lit",
-                                "value": {
-                                  "type": "Atom",
-                                  "value": "Type",
-                                },
-                              },
-                              "meta": {
-                                "lvl": 3,
-                                "type": "Meta",
-                                "val": 6,
-                              },
-                            },
                           },
+                          "record": {},
                           "sigma": {},
                           "zonker": {
-                            "2": {
+                            "1": {
                               "type": "Var",
                               "variable": {
                                 "lvl": 1,
@@ -3032,7 +2606,9 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                         "ctx": {
                                           "env": [],
                                           "implicits": [],
+                                          "labels": {},
                                           "metas": {},
+                                          "record": {},
                                           "sigma": {},
                                           "zonker": {},
                                         },
@@ -3081,6 +2657,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 },
                               ],
                               "implicits": [],
+                              "labels": {},
                               "metas": {
                                 "1": {
                                   "ann": {
@@ -3098,14 +2675,10 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                 },
                                 "2": {
                                   "ann": {
-                                    "type": "Neutral",
+                                    "type": "Lit",
                                     "value": {
-                                      "type": "Var",
-                                      "variable": {
-                                        "lvl": 3,
-                                        "type": "Meta",
-                                        "val": 1,
-                                      },
+                                      "type": "Atom",
+                                      "value": "Type",
                                     },
                                   },
                                   "meta": {
@@ -3114,70 +2687,11 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                                     "val": 2,
                                   },
                                 },
-                                "3": {
-                                  "ann": {
-                                    "type": "Lit",
-                                    "value": {
-                                      "type": "Atom",
-                                      "value": "Type",
-                                    },
-                                  },
-                                  "meta": {
-                                    "lvl": 3,
-                                    "type": "Meta",
-                                    "val": 3,
-                                  },
-                                },
-                                "4": {
-                                  "ann": {
-                                    "type": "Lit",
-                                    "value": {
-                                      "type": "Atom",
-                                      "value": "Type",
-                                    },
-                                  },
-                                  "meta": {
-                                    "lvl": 3,
-                                    "type": "Meta",
-                                    "val": 4,
-                                  },
-                                },
-                                "5": {
-                                  "ann": {
-                                    "type": "Neutral",
-                                    "value": {
-                                      "type": "Var",
-                                      "variable": {
-                                        "lvl": 3,
-                                        "type": "Meta",
-                                        "val": 4,
-                                      },
-                                    },
-                                  },
-                                  "meta": {
-                                    "lvl": 3,
-                                    "type": "Meta",
-                                    "val": 5,
-                                  },
-                                },
-                                "6": {
-                                  "ann": {
-                                    "type": "Lit",
-                                    "value": {
-                                      "type": "Atom",
-                                      "value": "Type",
-                                    },
-                                  },
-                                  "meta": {
-                                    "lvl": 3,
-                                    "type": "Meta",
-                                    "val": 6,
-                                  },
-                                },
                               },
+                              "record": {},
                               "sigma": {},
                               "zonker": {
-                                "2": {
+                                "1": {
                                   "type": "Var",
                                   "variable": {
                                     "lvl": 1,
@@ -3280,7 +2794,9 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                           "ctx": {
                             "env": [],
                             "implicits": [],
+                            "labels": {},
                             "metas": {},
+                            "record": {},
                             "sigma": {},
                             "zonker": {},
                           },
@@ -3329,6 +2845,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   },
                 ],
                 "implicits": [],
+                "labels": {},
                 "metas": {
                   "1": {
                     "ann": {
@@ -3346,14 +2863,10 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                   },
                   "2": {
                     "ann": {
-                      "type": "Neutral",
+                      "type": "Lit",
                       "value": {
-                        "type": "Var",
-                        "variable": {
-                          "lvl": 3,
-                          "type": "Meta",
-                          "val": 1,
-                        },
+                        "type": "Atom",
+                        "value": "Type",
                       },
                     },
                     "meta": {
@@ -3362,70 +2875,11 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
                       "val": 2,
                     },
                   },
-                  "3": {
-                    "ann": {
-                      "type": "Lit",
-                      "value": {
-                        "type": "Atom",
-                        "value": "Type",
-                      },
-                    },
-                    "meta": {
-                      "lvl": 3,
-                      "type": "Meta",
-                      "val": 3,
-                    },
-                  },
-                  "4": {
-                    "ann": {
-                      "type": "Lit",
-                      "value": {
-                        "type": "Atom",
-                        "value": "Type",
-                      },
-                    },
-                    "meta": {
-                      "lvl": 3,
-                      "type": "Meta",
-                      "val": 4,
-                    },
-                  },
-                  "5": {
-                    "ann": {
-                      "type": "Neutral",
-                      "value": {
-                        "type": "Var",
-                        "variable": {
-                          "lvl": 3,
-                          "type": "Meta",
-                          "val": 4,
-                        },
-                      },
-                    },
-                    "meta": {
-                      "lvl": 3,
-                      "type": "Meta",
-                      "val": 5,
-                    },
-                  },
-                  "6": {
-                    "ann": {
-                      "type": "Lit",
-                      "value": {
-                        "type": "Atom",
-                        "value": "Type",
-                      },
-                    },
-                    "meta": {
-                      "lvl": 3,
-                      "type": "Meta",
-                      "val": 6,
-                    },
-                  },
                 },
+                "record": {},
                 "sigma": {},
                 "zonker": {
-                  "2": {
+                  "1": {
                     "type": "Var",
                     "variable": {
                       "lvl": 1,

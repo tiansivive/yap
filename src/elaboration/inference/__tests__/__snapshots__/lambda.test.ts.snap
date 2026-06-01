@@ -100,7 +100,9 @@ exports[`Inference: lambdas > explicit lambda with param annotation 2`] = `
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -220,7 +222,9 @@ exports[`Inference: lambdas > explicit lambda without annotation 2`] = `
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -326,6 +330,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
                 },
               ],
               "implicits": [],
+              "labels": {},
               "metas": {
                 "1": {
                   "ann": {
@@ -342,6 +347,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
                   },
                 },
               },
+              "record": {},
               "sigma": {},
               "zonker": {},
             },
@@ -522,7 +528,9 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -629,6 +637,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
                 },
               ],
               "implicits": [],
+              "labels": {},
               "metas": {
                 "1": {
                   "ann": {
@@ -645,6 +654,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
                   },
                 },
               },
+              "record": {},
               "sigma": {},
               "zonker": {},
             },
@@ -825,7 +835,9 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },
@@ -946,7 +958,9 @@ exports[`Inference: lambdas > implicit lambda without annotation 2`] = `
         "ctx": {
           "env": [],
           "implicits": [],
+          "labels": {},
           "metas": {},
+          "record": {},
           "sigma": {},
           "zonker": {},
         },

@@ -297,8 +297,8 @@ return main();
     λ(f: Π(t9: a) -> b) ->
       λ(list: (List) a) ->
         match list
-          | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
-          | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+          | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
+          | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
               Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ]",
     "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
@@ -620,8 +620,8 @@ return main();
     λ(f: Π(t9: a) -> b) ->
       λ(list: (List) a) ->
         match list
-          | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
-          | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+          | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
+          | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
               Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ] -| Γ: a)",
     "type": "Π(a: Type) => Π(b: Type) => Π(t8: Π(t9: a) -> b) -> Π(t10: (List) a) -> (List) b",
   },
@@ -1723,8 +1723,8 @@ return main();
     λ(f: Π(t8: a) -> b) ->
       λ(list: (List) a) ->
         match list
-          | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
-          | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+          | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
+          | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
               Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ]",
     "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
@@ -2046,8 +2046,8 @@ return main();
     λ(f: Π(t8: a) -> b) ->
       λ(list: (List) a) ->
         match list
-          | Variant [ nil: _ | $row_18 ] -> Struct [ nil: unit ]
-          | Variant [ cons: Struct [ 0: x, 1: xs | $row_24 ] | $row_25 ] ->
+          | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
+          | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
               Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ] -| Γ: a)",
     "type": "Π(a: Type) => Π(b: Type) => Π(t7: Π(t8: a) -> b) -> Π(t9: (List) a) -> (List) b",
   },

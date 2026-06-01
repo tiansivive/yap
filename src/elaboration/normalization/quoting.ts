@@ -4,6 +4,21 @@ import * as NF from ".";
 import { match } from "ts-pattern";
 import assert from "node:assert";
 
+const symbolicRow = (annotation: NF.Value): NF.Row => {
+	const go = (r: NF.Row): NF.Row =>
+		match(r)
+			.with({ type: "empty" }, (): NF.Row => ({ type: "empty" }))
+			.with(
+				{ type: "extension" },
+				({ label, row }): NF.Row => NF.Constructors.Extension(label, NF.Constructors.Neutral(NF.Constructors.Var({ type: "Label", name: label })), go(row)),
+			)
+			.with({ type: "variable" }, (v): NF.Row => v)
+			.exhaustive();
+
+	assert(annotation.type === "Row", "Sigma annotation should be a Row");
+	return go(annotation.row);
+};
+
 /**
  * Quotes a value in the given context and level.
  * We explicitly pass the level to avoid extending the context when quoting under binders.
@@ -70,8 +85,10 @@ export const quote = (ctx: EB.Context, lvl: number, val: NF.Value): EB.Term => {
 			})
 			.with({ type: "Abs", binder: { type: "Sigma" } }, ({ binder, closure }) => {
 				const { variable, annotation } = binder;
-				const val = NF.apply(binder, closure, binder.annotation);
-				// Sigma bodies are not under a deBruijn binder. Applying sigmas does not increase the lvl, it extends the sigma env.
+				// Apply with symbolic label neutrals so matches get stuck instead of crashing.
+				// Analogous to Pi quoting applying with Rigid(lvl).
+				const symbolic = NF.Constructors.Row(symbolicRow(annotation));
+				const val = NF.apply(binder, closure, symbolic);
 				const body = quote(closure.ctx, lvl, val);
 				const ann = NF.quote(ctx, lvl, annotation);
 				return EB.Constructors.Sigma(variable, ann, body);

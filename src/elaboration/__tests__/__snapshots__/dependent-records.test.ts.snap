@@ -5,14 +5,14 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
   "displays": {
     "constraints": [
       "Type ~~ Type",
-      "?2 ~~ Type",
+      "?1 ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "Num ~~ ?11",
-      "Num ~~ ?8",
-      "1 ~~ ?17",
+      "Num ~~ ?4",
+      "Num ~~ ?3",
+      "1 ~~ ?6",
       "Num ~~ Num",
-      "1 ~~ ?14",
+      "1 ~~ ?5",
     ],
     "term": "{
   let Pair
@@ -60,7 +60,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
             "variable": {
               "lvl": 1,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -126,7 +126,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 11,
+              "val": 4,
             },
           },
         },
@@ -148,7 +148,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 8,
+              "val": 3,
             },
           },
         },
@@ -170,7 +170,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 17,
+              "val": 6,
             },
           },
         },
@@ -210,7 +210,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 14,
+              "val": 5,
             },
           },
         },
@@ -232,154 +232,12 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
           "val": 1,
         },
       },
-      "10": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 10,
-        },
-      },
-      "11": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 10,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 11,
-        },
-      },
-      "12": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 12,
-        },
-      },
-      "13": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 13,
-        },
-      },
-      "14": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 13,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 14,
-        },
-      },
-      "15": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 15,
-        },
-      },
-      "16": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 16,
-        },
-      },
-      "17": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 16,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 17,
-        },
-      },
-      "18": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 18,
-        },
-      },
       "2": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 1,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
@@ -397,7 +255,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 2,
           "type": "Meta",
           "val": 3,
         },
@@ -411,25 +269,21 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 2,
           "type": "Meta",
           "val": 4,
         },
       },
       "5": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 4,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 2,
           "type": "Meta",
           "val": 5,
         },
@@ -443,55 +297,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
           },
         },
         "meta": {
-          "lvl": 1,
+          "lvl": 2,
           "type": "Meta",
           "val": 6,
-        },
-      },
-      "7": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 7,
-        },
-      },
-      "8": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 7,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 8,
-        },
-      },
-      "9": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 9,
         },
       },
     },
@@ -661,6 +469,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
                   },
                 ],
                 "implicits": [],
+                "labels": {},
                 "metas": {
                   "1": {
                     "ann": {
@@ -678,14 +487,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
                   },
                   "2": {
                     "ann": {
-                      "type": "Neutral",
+                      "type": "Lit",
                       "value": {
-                        "type": "Var",
-                        "variable": {
-                          "lvl": 1,
-                          "type": "Meta",
-                          "val": 1,
-                        },
+                        "type": "Atom",
+                        "value": "Type",
                       },
                     },
                     "meta": {
@@ -694,70 +499,11 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
                       "val": 2,
                     },
                   },
-                  "3": {
-                    "ann": {
-                      "type": "Lit",
-                      "value": {
-                        "type": "Atom",
-                        "value": "Type",
-                      },
-                    },
-                    "meta": {
-                      "lvl": 1,
-                      "type": "Meta",
-                      "val": 3,
-                    },
-                  },
-                  "4": {
-                    "ann": {
-                      "type": "Lit",
-                      "value": {
-                        "type": "Atom",
-                        "value": "Type",
-                      },
-                    },
-                    "meta": {
-                      "lvl": 1,
-                      "type": "Meta",
-                      "val": 4,
-                    },
-                  },
-                  "5": {
-                    "ann": {
-                      "type": "Neutral",
-                      "value": {
-                        "type": "Var",
-                        "variable": {
-                          "lvl": 1,
-                          "type": "Meta",
-                          "val": 4,
-                        },
-                      },
-                    },
-                    "meta": {
-                      "lvl": 1,
-                      "type": "Meta",
-                      "val": 5,
-                    },
-                  },
-                  "6": {
-                    "ann": {
-                      "type": "Lit",
-                      "value": {
-                        "type": "Atom",
-                        "value": "Type",
-                      },
-                    },
-                    "meta": {
-                      "lvl": 1,
-                      "type": "Meta",
-                      "val": 6,
-                    },
-                  },
                 },
+                "record": {},
                 "sigma": {},
                 "zonker": {
-                  "2": {
+                  "1": {
                     "type": "Lit",
                     "value": {
                       "type": "Atom",
@@ -925,6 +671,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
             },
           ],
           "implicits": [],
+          "labels": {},
           "metas": {
             "1": {
               "ann": {
@@ -942,14 +689,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
             },
             "2": {
               "ann": {
-                "type": "Neutral",
+                "type": "Lit",
                 "value": {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 1,
-                  },
+                  "type": "Atom",
+                  "value": "Type",
                 },
               },
               "meta": {
@@ -958,70 +701,11 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
                 "val": 2,
               },
             },
-            "3": {
-              "ann": {
-                "type": "Lit",
-                "value": {
-                  "type": "Atom",
-                  "value": "Type",
-                },
-              },
-              "meta": {
-                "lvl": 1,
-                "type": "Meta",
-                "val": 3,
-              },
-            },
-            "4": {
-              "ann": {
-                "type": "Lit",
-                "value": {
-                  "type": "Atom",
-                  "value": "Type",
-                },
-              },
-              "meta": {
-                "lvl": 1,
-                "type": "Meta",
-                "val": 4,
-              },
-            },
-            "5": {
-              "ann": {
-                "type": "Neutral",
-                "value": {
-                  "type": "Var",
-                  "variable": {
-                    "lvl": 1,
-                    "type": "Meta",
-                    "val": 4,
-                  },
-                },
-              },
-              "meta": {
-                "lvl": 1,
-                "type": "Meta",
-                "val": 5,
-              },
-            },
-            "6": {
-              "ann": {
-                "type": "Lit",
-                "value": {
-                  "type": "Atom",
-                  "value": "Type",
-                },
-              },
-              "meta": {
-                "lvl": 1,
-                "type": "Meta",
-                "val": 6,
-              },
-            },
           },
+          "record": {},
           "sigma": {},
           "zonker": {
-            "2": {
+            "1": {
               "type": "Lit",
               "value": {
                 "type": "Atom",
@@ -1089,18 +773,18 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "?2 ~~ L1",
+      "?1 ~~ L1",
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "String ~~ ?11",
-      "Num ~~ ?8",
+      "String ~~ ?4",
+      "Num ~~ ?3",
       "String ~~ String",
-      ""hello" ~~ ?17",
+      ""hello" ~~ ?6",
       "Num ~~ Num",
-      "1 ~~ ?14",
+      "1 ~~ ?5",
     ],
     "term": "{
   let Pair
@@ -1257,7 +941,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
             "variable": {
               "lvl": 3,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -1380,7 +1064,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 11,
+              "val": 4,
             },
           },
         },
@@ -1402,7 +1086,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 8,
+              "val": 3,
             },
           },
         },
@@ -1442,7 +1126,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 17,
+              "val": 6,
             },
           },
         },
@@ -1482,7 +1166,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
             "variable": {
               "lvl": 2,
               "type": "Meta",
-              "val": 14,
+              "val": 5,
             },
           },
         },
@@ -1504,154 +1188,12 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           "val": 1,
         },
       },
-      "10": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 10,
-        },
-      },
-      "11": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 10,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 11,
-        },
-      },
-      "12": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 12,
-        },
-      },
-      "13": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 13,
-        },
-      },
-      "14": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 13,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 14,
-        },
-      },
-      "15": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 15,
-        },
-      },
-      "16": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 16,
-        },
-      },
-      "17": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 16,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 17,
-        },
-      },
-      "18": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 18,
-        },
-      },
       "2": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 3,
-              "type": "Meta",
-              "val": 1,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
@@ -1669,7 +1211,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 3,
         },
@@ -1683,25 +1225,21 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 4,
         },
       },
       "5": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 3,
-              "type": "Meta",
-              "val": 4,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 5,
         },
@@ -1715,55 +1253,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
           },
         },
         "meta": {
-          "lvl": 3,
+          "lvl": 2,
           "type": "Meta",
           "val": 6,
-        },
-      },
-      "7": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 7,
-        },
-      },
-      "8": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 2,
-              "type": "Meta",
-              "val": 7,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 8,
-        },
-      },
-      "9": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 2,
-          "type": "Meta",
-          "val": 9,
         },
       },
     },
@@ -1793,7 +1285,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
               "ctx": {
                 "env": [],
                 "implicits": [],
+                "labels": {},
                 "metas": {},
+                "record": {},
                 "sigma": {},
                 "zonker": {},
               },
@@ -2112,7 +1606,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                       "ctx": {
                                         "env": [],
                                         "implicits": [],
+                                        "labels": {},
                                         "metas": {},
+                                        "record": {},
                                         "sigma": {},
                                         "zonker": {},
                                       },
@@ -2161,6 +1657,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                               },
                             ],
                             "implicits": [],
+                            "labels": {},
                             "metas": {
                               "1": {
                                 "ann": {
@@ -2178,14 +1675,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                               },
                               "2": {
                                 "ann": {
-                                  "type": "Neutral",
+                                  "type": "Lit",
                                   "value": {
-                                    "type": "Var",
-                                    "variable": {
-                                      "lvl": 3,
-                                      "type": "Meta",
-                                      "val": 1,
-                                    },
+                                    "type": "Atom",
+                                    "value": "Type",
                                   },
                                 },
                                 "meta": {
@@ -2194,70 +1687,11 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                   "val": 2,
                                 },
                               },
-                              "3": {
-                                "ann": {
-                                  "type": "Lit",
-                                  "value": {
-                                    "type": "Atom",
-                                    "value": "Type",
-                                  },
-                                },
-                                "meta": {
-                                  "lvl": 3,
-                                  "type": "Meta",
-                                  "val": 3,
-                                },
-                              },
-                              "4": {
-                                "ann": {
-                                  "type": "Lit",
-                                  "value": {
-                                    "type": "Atom",
-                                    "value": "Type",
-                                  },
-                                },
-                                "meta": {
-                                  "lvl": 3,
-                                  "type": "Meta",
-                                  "val": 4,
-                                },
-                              },
-                              "5": {
-                                "ann": {
-                                  "type": "Neutral",
-                                  "value": {
-                                    "type": "Var",
-                                    "variable": {
-                                      "lvl": 3,
-                                      "type": "Meta",
-                                      "val": 4,
-                                    },
-                                  },
-                                },
-                                "meta": {
-                                  "lvl": 3,
-                                  "type": "Meta",
-                                  "val": 5,
-                                },
-                              },
-                              "6": {
-                                "ann": {
-                                  "type": "Lit",
-                                  "value": {
-                                    "type": "Atom",
-                                    "value": "Type",
-                                  },
-                                },
-                                "meta": {
-                                  "lvl": 3,
-                                  "type": "Meta",
-                                  "val": 6,
-                                },
-                              },
                             },
+                            "record": {},
                             "sigma": {},
                             "zonker": {
-                              "2": {
+                              "1": {
                                 "type": "Var",
                                 "variable": {
                                   "lvl": 1,
@@ -2356,7 +1790,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                               "ctx": {
                                                 "env": [],
                                                 "implicits": [],
+                                                "labels": {},
                                                 "metas": {},
+                                                "record": {},
                                                 "sigma": {},
                                                 "zonker": {},
                                               },
@@ -2405,6 +1841,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                       },
                                     ],
                                     "implicits": [],
+                                    "labels": {},
                                     "metas": {
                                       "1": {
                                         "ann": {
@@ -2422,14 +1859,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                       },
                                       "2": {
                                         "ann": {
-                                          "type": "Neutral",
+                                          "type": "Lit",
                                           "value": {
-                                            "type": "Var",
-                                            "variable": {
-                                              "lvl": 3,
-                                              "type": "Meta",
-                                              "val": 1,
-                                            },
+                                            "type": "Atom",
+                                            "value": "Type",
                                           },
                                         },
                                         "meta": {
@@ -2438,70 +1871,11 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                           "val": 2,
                                         },
                                       },
-                                      "3": {
-                                        "ann": {
-                                          "type": "Lit",
-                                          "value": {
-                                            "type": "Atom",
-                                            "value": "Type",
-                                          },
-                                        },
-                                        "meta": {
-                                          "lvl": 3,
-                                          "type": "Meta",
-                                          "val": 3,
-                                        },
-                                      },
-                                      "4": {
-                                        "ann": {
-                                          "type": "Lit",
-                                          "value": {
-                                            "type": "Atom",
-                                            "value": "Type",
-                                          },
-                                        },
-                                        "meta": {
-                                          "lvl": 3,
-                                          "type": "Meta",
-                                          "val": 4,
-                                        },
-                                      },
-                                      "5": {
-                                        "ann": {
-                                          "type": "Neutral",
-                                          "value": {
-                                            "type": "Var",
-                                            "variable": {
-                                              "lvl": 3,
-                                              "type": "Meta",
-                                              "val": 4,
-                                            },
-                                          },
-                                        },
-                                        "meta": {
-                                          "lvl": 3,
-                                          "type": "Meta",
-                                          "val": 5,
-                                        },
-                                      },
-                                      "6": {
-                                        "ann": {
-                                          "type": "Lit",
-                                          "value": {
-                                            "type": "Atom",
-                                            "value": "Type",
-                                          },
-                                        },
-                                        "meta": {
-                                          "lvl": 3,
-                                          "type": "Meta",
-                                          "val": 6,
-                                        },
-                                      },
                                     },
+                                    "record": {},
                                     "sigma": {},
                                     "zonker": {
-                                      "2": {
+                                      "1": {
                                         "type": "Var",
                                         "variable": {
                                           "lvl": 1,
@@ -2663,7 +2037,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                     "ctx": {
                                       "env": [],
                                       "implicits": [],
+                                      "labels": {},
                                       "metas": {},
+                                      "record": {},
                                       "sigma": {},
                                       "zonker": {},
                                     },
@@ -2712,6 +2088,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                             },
                           ],
                           "implicits": [],
+                          "labels": {},
                           "metas": {
                             "1": {
                               "ann": {
@@ -2729,14 +2106,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                             },
                             "2": {
                               "ann": {
-                                "type": "Neutral",
+                                "type": "Lit",
                                 "value": {
-                                  "type": "Var",
-                                  "variable": {
-                                    "lvl": 3,
-                                    "type": "Meta",
-                                    "val": 1,
-                                  },
+                                  "type": "Atom",
+                                  "value": "Type",
                                 },
                               },
                               "meta": {
@@ -2745,70 +2118,11 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                 "val": 2,
                               },
                             },
-                            "3": {
-                              "ann": {
-                                "type": "Lit",
-                                "value": {
-                                  "type": "Atom",
-                                  "value": "Type",
-                                },
-                              },
-                              "meta": {
-                                "lvl": 3,
-                                "type": "Meta",
-                                "val": 3,
-                              },
-                            },
-                            "4": {
-                              "ann": {
-                                "type": "Lit",
-                                "value": {
-                                  "type": "Atom",
-                                  "value": "Type",
-                                },
-                              },
-                              "meta": {
-                                "lvl": 3,
-                                "type": "Meta",
-                                "val": 4,
-                              },
-                            },
-                            "5": {
-                              "ann": {
-                                "type": "Neutral",
-                                "value": {
-                                  "type": "Var",
-                                  "variable": {
-                                    "lvl": 3,
-                                    "type": "Meta",
-                                    "val": 4,
-                                  },
-                                },
-                              },
-                              "meta": {
-                                "lvl": 3,
-                                "type": "Meta",
-                                "val": 5,
-                              },
-                            },
-                            "6": {
-                              "ann": {
-                                "type": "Lit",
-                                "value": {
-                                  "type": "Atom",
-                                  "value": "Type",
-                                },
-                              },
-                              "meta": {
-                                "lvl": 3,
-                                "type": "Meta",
-                                "val": 6,
-                              },
-                            },
                           },
+                          "record": {},
                           "sigma": {},
                           "zonker": {
-                            "2": {
+                            "1": {
                               "type": "Var",
                               "variable": {
                                 "lvl": 1,
@@ -2921,7 +2235,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                         "ctx": {
                                           "env": [],
                                           "implicits": [],
+                                          "labels": {},
                                           "metas": {},
+                                          "record": {},
                                           "sigma": {},
                                           "zonker": {},
                                         },
@@ -2970,6 +2286,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                 },
                               ],
                               "implicits": [],
+                              "labels": {},
                               "metas": {
                                 "1": {
                                   "ann": {
@@ -2987,14 +2304,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                 },
                                 "2": {
                                   "ann": {
-                                    "type": "Neutral",
+                                    "type": "Lit",
                                     "value": {
-                                      "type": "Var",
-                                      "variable": {
-                                        "lvl": 3,
-                                        "type": "Meta",
-                                        "val": 1,
-                                      },
+                                      "type": "Atom",
+                                      "value": "Type",
                                     },
                                   },
                                   "meta": {
@@ -3003,70 +2316,11 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                                     "val": 2,
                                   },
                                 },
-                                "3": {
-                                  "ann": {
-                                    "type": "Lit",
-                                    "value": {
-                                      "type": "Atom",
-                                      "value": "Type",
-                                    },
-                                  },
-                                  "meta": {
-                                    "lvl": 3,
-                                    "type": "Meta",
-                                    "val": 3,
-                                  },
-                                },
-                                "4": {
-                                  "ann": {
-                                    "type": "Lit",
-                                    "value": {
-                                      "type": "Atom",
-                                      "value": "Type",
-                                    },
-                                  },
-                                  "meta": {
-                                    "lvl": 3,
-                                    "type": "Meta",
-                                    "val": 4,
-                                  },
-                                },
-                                "5": {
-                                  "ann": {
-                                    "type": "Neutral",
-                                    "value": {
-                                      "type": "Var",
-                                      "variable": {
-                                        "lvl": 3,
-                                        "type": "Meta",
-                                        "val": 4,
-                                      },
-                                    },
-                                  },
-                                  "meta": {
-                                    "lvl": 3,
-                                    "type": "Meta",
-                                    "val": 5,
-                                  },
-                                },
-                                "6": {
-                                  "ann": {
-                                    "type": "Lit",
-                                    "value": {
-                                      "type": "Atom",
-                                      "value": "Type",
-                                    },
-                                  },
-                                  "meta": {
-                                    "lvl": 3,
-                                    "type": "Meta",
-                                    "val": 6,
-                                  },
-                                },
                               },
+                              "record": {},
                               "sigma": {},
                               "zonker": {
-                                "2": {
+                                "1": {
                                   "type": "Var",
                                   "variable": {
                                     "lvl": 1,
@@ -3169,7 +2423,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                           "ctx": {
                             "env": [],
                             "implicits": [],
+                            "labels": {},
                             "metas": {},
+                            "record": {},
                             "sigma": {},
                             "zonker": {},
                           },
@@ -3218,6 +2474,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                   },
                 ],
                 "implicits": [],
+                "labels": {},
                 "metas": {
                   "1": {
                     "ann": {
@@ -3235,14 +2492,10 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                   },
                   "2": {
                     "ann": {
-                      "type": "Neutral",
+                      "type": "Lit",
                       "value": {
-                        "type": "Var",
-                        "variable": {
-                          "lvl": 3,
-                          "type": "Meta",
-                          "val": 1,
-                        },
+                        "type": "Atom",
+                        "value": "Type",
                       },
                     },
                     "meta": {
@@ -3251,70 +2504,11 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
                       "val": 2,
                     },
                   },
-                  "3": {
-                    "ann": {
-                      "type": "Lit",
-                      "value": {
-                        "type": "Atom",
-                        "value": "Type",
-                      },
-                    },
-                    "meta": {
-                      "lvl": 3,
-                      "type": "Meta",
-                      "val": 3,
-                    },
-                  },
-                  "4": {
-                    "ann": {
-                      "type": "Lit",
-                      "value": {
-                        "type": "Atom",
-                        "value": "Type",
-                      },
-                    },
-                    "meta": {
-                      "lvl": 3,
-                      "type": "Meta",
-                      "val": 4,
-                    },
-                  },
-                  "5": {
-                    "ann": {
-                      "type": "Neutral",
-                      "value": {
-                        "type": "Var",
-                        "variable": {
-                          "lvl": 3,
-                          "type": "Meta",
-                          "val": 4,
-                        },
-                      },
-                    },
-                    "meta": {
-                      "lvl": 3,
-                      "type": "Meta",
-                      "val": 5,
-                    },
-                  },
-                  "6": {
-                    "ann": {
-                      "type": "Lit",
-                      "value": {
-                        "type": "Atom",
-                        "value": "Type",
-                      },
-                    },
-                    "meta": {
-                      "lvl": 3,
-                      "type": "Meta",
-                      "val": 6,
-                    },
-                  },
                 },
+                "record": {},
                 "sigma": {},
                 "zonker": {
-                  "2": {
+                  "1": {
                     "type": "Var",
                     "variable": {
                       "lvl": 1,
@@ -3445,7 +2639,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "?2 ~~ L1",
+      "?1 ~~ L1",
       "Type ~~ Type",
       "Type ~~ Type",
     ],
@@ -3600,7 +2794,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
             "variable": {
               "lvl": 3,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -3671,80 +2865,16 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
       },
       "2": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 3,
-              "type": "Meta",
-              "val": 1,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
           "lvl": 3,
           "type": "Meta",
           "val": 2,
-        },
-      },
-      "3": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 3,
-          "type": "Meta",
-          "val": 3,
-        },
-      },
-      "4": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 3,
-          "type": "Meta",
-          "val": 4,
-        },
-      },
-      "5": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 3,
-              "type": "Meta",
-              "val": 4,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 3,
-          "type": "Meta",
-          "val": 5,
-        },
-      },
-      "6": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 3,
-          "type": "Meta",
-          "val": 6,
         },
       },
     },
@@ -3774,7 +2904,9 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
               "ctx": {
                 "env": [],
                 "implicits": [],
+                "labels": {},
                 "metas": {},
+                "record": {},
                 "sigma": {},
                 "zonker": {},
               },
@@ -3983,7 +3115,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Simple 
   "displays": {
     "constraints": [
       "Type ~~ Type",
-      "?2 ~~ Type",
+      "?1 ~~ Type",
       "Type ~~ Type",
     ],
     "term": "{
@@ -4027,7 +3159,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Simple 
             "variable": {
               "lvl": 1,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -4077,80 +3209,16 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Simple 
       },
       "2": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 1,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
           "lvl": 1,
           "type": "Meta",
           "val": 2,
-        },
-      },
-      "3": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 1,
-          "type": "Meta",
-          "val": 3,
-        },
-      },
-      "4": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 1,
-          "type": "Meta",
-          "val": 4,
-        },
-      },
-      "5": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 1,
-              "type": "Meta",
-              "val": 4,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 1,
-          "type": "Meta",
-          "val": 5,
-        },
-      },
-      "6": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 1,
-          "type": "Meta",
-          "val": 6,
         },
       },
     },
@@ -4278,7 +3346,7 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "?2 ~~ L1",
+      "?1 ~~ L1",
       "L2 ~~ L2",
       "Bool ~~ Bool",
       "Type ~~ Type",
@@ -4528,7 +3596,7 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
             "variable": {
               "lvl": 4,
               "type": "Meta",
-              "val": 2,
+              "val": 1,
             },
           },
         },
@@ -4623,80 +3691,16 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
       },
       "2": {
         "ann": {
-          "type": "Neutral",
+          "type": "Lit",
           "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 4,
-              "type": "Meta",
-              "val": 1,
-            },
+            "type": "Atom",
+            "value": "Type",
           },
         },
         "meta": {
           "lvl": 4,
           "type": "Meta",
           "val": 2,
-        },
-      },
-      "3": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 4,
-          "type": "Meta",
-          "val": 3,
-        },
-      },
-      "4": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 4,
-          "type": "Meta",
-          "val": 4,
-        },
-      },
-      "5": {
-        "ann": {
-          "type": "Neutral",
-          "value": {
-            "type": "Var",
-            "variable": {
-              "lvl": 4,
-              "type": "Meta",
-              "val": 4,
-            },
-          },
-        },
-        "meta": {
-          "lvl": 4,
-          "type": "Meta",
-          "val": 5,
-        },
-      },
-      "6": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
-          "lvl": 4,
-          "type": "Meta",
-          "val": 6,
         },
       },
     },
@@ -4726,7 +3730,9 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
               "ctx": {
                 "env": [],
                 "implicits": [],
+                "labels": {},
                 "metas": {},
+                "record": {},
                 "sigma": {},
                 "zonker": {},
               },
