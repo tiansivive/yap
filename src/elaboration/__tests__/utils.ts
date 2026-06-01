@@ -56,17 +56,11 @@ export const elaborate = (src: string) => {
 	const { term, type, solution, resolutions } = result.right;
 
 	const pretty = {
-		term: EB.Display.Statement(term, { zonker: solution, metas, env: [], skolems: state.skolems }),
+		term: EB.Display.Statement(term, { zonker: solution, metas, env: [] }),
 		type: NF.display(type, { zonker: solution, metas, env: [] }),
 		solution: Sub.display(solution, metas),
 		constraints: constraints.map(c => EB.Display.Constraint(c, { zonker: Sub.empty, metas, env: [] })),
 		state: {
-			skolems: F.pipe(
-				state.skolems,
-				R.toEntries,
-				A.map(([k, v]): [string, string] => [k, EB.Display.Term(v, { zonker: solution, metas, env: [] })]),
-				R.fromEntries,
-			),
 			nondeterminism: F.pipe(
 				state.nondeterminism.solution,
 				R.toEntries,

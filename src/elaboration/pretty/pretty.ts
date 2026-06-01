@@ -13,8 +13,6 @@ import { options } from "@yap/shared/config/options";
 
 import * as Null from "@yap/utils";
 
-import * as V2 from "@yap/elaboration/shared/monad.v2";
-
 const doc = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; printEnv?: boolean } = { deBruijn: false, printEnv: false }): PP.Doc => {
 	const go = (term: EB.Term): PP.Doc =>
 		match(term)
@@ -29,10 +27,6 @@ const doc = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; prin
 					.with({ type: "Foreign" }, ({ name }) => `FFI.${name}`)
 					.with({ type: "Label" }, ({ name }) => `:${name}`)
 					.with({ type: "Meta" }, ({ val }) => {
-						if (ctx.skolems && ctx.skolems[val]) {
-							return go(ctx.skolems[val]);
-						}
-
 						if (ctx.zonker[val]) {
 							return NF.doc(ctx.zonker[val], ctx, opts);
 						}
@@ -114,6 +108,7 @@ const doc = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; prin
 			.with({ type: "Modal" }, ({ term: tm, modalities }) => ["<", Q.display(modalities.quantity), "> ", go(tm), " [| ", go(modalities.liquid), " |]"])
 			.with({ type: "Reset" }, ({ term: tm }) => ["reset |", go(tm), "|"])
 			.with({ type: "Shift" }, ({ body }) => ["shift (", go(body), ")"])
+			.with({ type: "Bubble" }, ({ id, shift }) => ["bubble#", `${id}`, " (", go(shift), ")"])
 			.with({ type: "Ann" }, ({ term, ann }) => ["(", go(term), " : ", go(ann), ")"])
 			.exhaustive();
 
@@ -206,4 +201,4 @@ export const Display = {
 	doc,
 };
 
-export type DisplayContext = Pick<EB.Context, "env" | "zonker" | "metas"> & { resolutions?: EB.Resolutions; skolems?: V2.MutState["skolems"] };
+export type DisplayContext = Pick<EB.Context, "env" | "zonker" | "metas"> & { resolutions?: EB.Resolutions };

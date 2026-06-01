@@ -93,6 +93,7 @@ export const collectMetasEB = (tm: EB.Term, zonker: Subst): MetaEB[] => {
 			.with({ type: "Block" }, ({ return: ret, statements }) => [..._metas(ret), ...statements.flatMap(s => _metas(s.value))])
 			.with({ type: "Modal" }, ({ term }) => _metas(term))
 			.with({ type: "Shift" }, ({ body }) => _metas(body))
+			.with({ type: "Bubble" }, ({ shift }) => _metas(shift))
 			.with({ type: "Reset" }, ({ term }) => _metas(term))
 			.otherwise(() => {
 				throw new Error("metas: Not implemented yet");

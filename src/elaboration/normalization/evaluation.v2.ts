@@ -2,7 +2,7 @@ import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as NF from ".";
-import * as V2 from "@yap/elaboration/shared/monad.v2";
+
 import _ from "lodash";
 
 import * as E from "fp-ts/lib/Either";
@@ -41,7 +41,7 @@ export type StackFrame =
 const globalWorkStack: StackFrame[] = [];
 const globalResultStack: NF.Value[] = [];
 
-export function evaluate(ctx: EB.Context, term: EB.Term, maxSteps = 10000000, skolems: V2.MutState["skolems"] = {}): NF.Value {
+export function evaluate(ctx: EB.Context, term: EB.Term, maxSteps = 10000000): NF.Value {
 	// Track where this call's work starts in the global stack
 	const initialWorkSize = globalWorkStack.length;
 	const initialResultSize = globalResultStack.length;
@@ -73,7 +73,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term, maxSteps = 10000000, sk
 			continue;
 		} else {
 			// Evaluate term
-			evaluateTerm(frame.ctx, frame.term, skolems);
+			evaluateTerm(frame.ctx, frame.term);
 		}
 	}
 
@@ -86,7 +86,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term, maxSteps = 10000000, sk
 	return globalResultStack.pop()!;
 }
 
-function evaluateTerm(ctx: EB.Context, term: EB.Term, skolems: V2.MutState["skolems"]): void {
+function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 	match(term)
 		.with({ type: "Lit" }, ({ value }) => {
 			globalResultStack.push(NF.Constructors.Lit(value));
@@ -143,10 +143,6 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, skolems: V2.MutState["skol
 			globalWorkStack.push({ type: "Eval", ctx: xtended, term: val[0] });
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
-			if (skolems[variable.val]) {
-				globalWorkStack.push({ type: "Eval", ctx, term: skolems[variable.val] });
-				return;
-			}
 			if (!ctx.zonker[variable.val]) {
 				const v = NF.Constructors.Var(variable);
 				globalResultStack.push(NF.Constructors.Neutral(v));
@@ -417,6 +413,15 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, skolems: V2.MutState["skol
 			});
 			// Evaluate the body-lambda; the above continuation receives it.
 			globalWorkStack.push({ type: "Eval", ctx, term: body });
+		})
+		.with({ type: "Bubble" }, ({ id, shift }) => {
+			const delimiterIndex = globalWorkStack.findLastIndex(frame => frame.type === "Delimiter");
+			if (delimiterIndex >= 0) {
+				globalWorkStack.push({ type: "Eval", ctx, term: shift });
+			} else {
+				const v = NF.Constructors.Var({ type: "Meta", val: id, lvl: 0 });
+				globalResultStack.push(NF.Constructors.Neutral(v));
+			}
 		})
 		.with({ type: "Ann" }, ({ term }) => {
 			globalWorkStack.push({ type: "Eval", ctx, term });
@@ -900,7 +905,7 @@ export function apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): 
 			} else if (frame.type === "Delimiter") {
 				continue;
 			} else {
-				evaluateTerm(frame.ctx, frame.term, {});
+				evaluateTerm(frame.ctx, frame.term);
 			}
 		}
 

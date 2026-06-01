@@ -156,10 +156,10 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 
 	const [tm, ty, _us, ctx, debug] = elaborated.right;
 
-	result.elaborated = attempt(() => EB.Display.Term(tm, { ...ctx, skolems: debug?.skolems }, db), errors) ?? "";
+	result.elaborated = attempt(() => EB.Display.Term(tm, ctx, db), errors) ?? "";
 
 	if (debug) {
-		const displayCtx = { zonker: ctx.zonker, metas: ctx.metas, env: ctx.env, skolems: debug.skolems };
+		const displayCtx = { zonker: ctx.zonker, metas: ctx.metas, env: ctx.env };
 		result.constraints =
 			attempt(() => {
 				if (debug.constraints.length === 0) {
@@ -187,11 +187,6 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 				if (resKeys.length > 0) {
 					const resStr = resKeys.map(k => `  ?${k} |=> ${EB.Display.Term(debug.resolutions[Number(k)], displayCtx, db)}`).join("\n");
 					sections.push(`\nResolutions:\n${resStr}`);
-				}
-				const skolemKeys = Object.keys(debug.skolems);
-				if (skolemKeys.length > 0) {
-					const skolemStr = skolemKeys.map(k => `  ?${k} := ${EB.Display.Term(debug.skolems[Number(k)], displayCtx, db)}`).join("\n");
-					sections.push(`\nSkolems (${skolemKeys.length}):\n${skolemStr}`);
 				}
 				const metaKeys = Object.keys(ctx.metas);
 				if (metaKeys.length > 0) {
@@ -257,7 +252,7 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 			}, errors) ?? "";
 	}
 
-	const gramResult = attempt(() => GRAM.Pipeline.compile(tm, { skolems: debug?.skolems, zonker: ctx.zonker, arities: ARITIES }), errors);
+	const gramResult = attempt(() => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities: ARITIES }), errors);
 
 	const gramGraph = gramResult && E.isRight(gramResult) ? gramResult.right : undefined;
 	result.gram = gramGraph ? (attempt(() => GRAM.display(gramGraph), errors) ?? "") : "";

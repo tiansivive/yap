@@ -48,7 +48,7 @@ export const elaborateFrom = (src: string) => {
 	const { tm, ty, constraints, metas, types, zonker } = out.result.right;
 
 	const pretty = {
-		term: EB.Display.Term(tm, { env: ctx.env, zonker, metas: { ...ctx.metas, ...metas }, skolems: state.skolems }),
+		term: EB.Display.Term(tm, { env: ctx.env, zonker, metas: { ...ctx.metas, ...metas } }),
 		type: NF.display(ty, { env: ctx.env, zonker, metas: { ...ctx.metas, ...metas } }),
 		// use context zonker to display metas in constraints
 		constraints: constraints.map((c: any) => EB.Display.Constraint(c, { env: ctx.env, zonker: ctx.zonker, metas: { ...ctx.metas, ...metas } })),

@@ -29,6 +29,7 @@ type Constructor =
 	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
 	| { type: "Reset"; term: Term }
 	| { type: "Shift"; body: Term }
+	| { type: "Bubble"; id: number; ann: NF.Value; values: NF.Value[]; shift: Term }
 	| { type: "Ann"; term: Term; ann: Term };
 
 export type Variable =
@@ -160,6 +161,7 @@ export const Constructors = {
 
 	Reset: (term: Term): Term => mk({ type: "Reset", term }),
 	Shift: (body: Term): Term => mk({ type: "Shift", body }),
+	Bubble: (id: number, ann: NF.Value, values: NF.Value[], shift: Term): Term => mk({ type: "Bubble", id, ann, values, shift }),
 
 	Patterns: {
 		Binder: (value: string): Pattern => ({ type: "Binder", value }),
@@ -195,6 +197,7 @@ export const CtorPatterns = {
 	Proj: { type: "Proj" },
 	Inj: { type: "Inj" },
 	Ann: { type: "Ann" },
+	Bubble: { type: "Bubble" },
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } },
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } },
 	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } },

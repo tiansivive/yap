@@ -58,7 +58,6 @@ exports[`dependent types elaboration > simple dependent match expression type 1`
 ?4 |=> Num",
   "state": {
     "nondeterminism": {},
-    "skolems": {},
   },
   "term": "let f
   : Π(x: Num) -> (closure: match x | 0 -> Num | _ -> String -| Γ: x)

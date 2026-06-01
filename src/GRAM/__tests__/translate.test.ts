@@ -237,20 +237,15 @@ describe("GRAM translate", () => {
 		expect(refTargets).toContainEqual([2, xLam]);
 	});
 
-	it("skolem meta resolves to stashed term", () => {
+	it("Bubble walks its shift subterm", () => {
 		const shiftBody = EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(42)), EB.DSL.type("Num"));
 		const shiftTerm = EB.Constructors.Shift(shiftBody);
-		const skolemMeta: EB.Variable = { type: "Meta", val: 99, lvl: 0 };
-		const term = EB.Constructors.Reset(EB.Constructors.Var(skolemMeta));
+		const bubble = EB.Constructors.Bubble(99, NF.Any, [], shiftTerm);
+		const term = EB.Constructors.Reset(bubble);
 
-		const withSkolems = translate(term, { skolems: { 99: shiftTerm } });
-		expect(Query.byTag(Tags.SHIFT)(withSkolems).size).toBe(1);
-		expect(Query.byTag(Tags.LAMBDA)(withSkolems).size).toBe(1);
-		expect(Query.byTag(Tags.VAR_META)(withSkolems).size).toBe(0);
-
-		const withoutSkolems = translate(term);
-		expect(Query.byTag(Tags.SHIFT)(withoutSkolems).size).toBe(0);
-		expect(Query.byTag(Tags.VAR_META)(withoutSkolems).size).toBe(1);
+		const g = translate(term);
+		expect(Query.byTag(Tags.SHIFT)(g).size).toBe(1);
+		expect(Query.byTag(Tags.LAMBDA)(g).size).toBe(1);
 	});
 
 	it("foreign variable interning across nested apps", () => {

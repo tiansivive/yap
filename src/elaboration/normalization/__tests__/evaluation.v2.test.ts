@@ -105,10 +105,10 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 				return test;
 			}`;
 
-			const { structure, state } = elaborateFrom(src);
+			const { structure } = elaborateFrom(src);
 			const ctx = ctxFor(mkCtx(), structure.metas);
 
-			const nf = Eval.evaluate(ctx, structure.term, undefined, state.skolems);
+			const nf = Eval.evaluate(ctx, structure.term);
 			expect(nf.type).toBe("Lit");
 			expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
 		});
@@ -119,25 +119,24 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 				return test;
 			}`;
 
-			const { structure, state } = elaborateFrom(src);
+			const { structure } = elaborateFrom(src);
 			const ctx = ctxFor(mkCtx(), structure.metas);
 
-			const nf = Eval.evaluate(ctx, structure.term, undefined, state.skolems);
+			const nf = Eval.evaluate(ctx, structure.term);
 			expect(nf.type).toBe("Lit");
 			expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
 		});
 
-		it("shifts under a lambda", () => {
+		it("shifts under a lambda (Bubble produces neutral without delimiter)", () => {
 			const src = `{
 				let test = reset (\\x -> 1 + (shift (resume (x + 10))));
 				return (test 5);
 			}`;
 
-			const { structure, displays, state } = elaborateFrom(src);
+			const { structure, displays } = elaborateFrom(src);
 			const ctx = ctxFor(mkCtx(), structure.metas);
-			expect(() => Eval.evaluate(ctx, structure.term, undefined, state.skolems)).toThrow("Shift without enclosing reset");
-
-			expect({ pretty: displays }).toMatchSnapshot();
+			const nf = Eval.evaluate(ctx, structure.term);
+			expect({ pretty: displays, nfType: nf.type }).toMatchSnapshot();
 		});
 
 		it("models looping continuation", () => {
@@ -168,10 +167,10 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 				return while;
 			}`;
 
-			const { structure, state, displays, zonker } = elaborateFrom(src);
+			const { structure, displays, zonker } = elaborateFrom(src);
 			const ctx = update(ctxFor(mkCtx(), structure.metas), "zonker", z => ({ ...z, ...zonker }));
 
-			const nf = Eval.evaluate(ctx, structure.term, undefined, state.skolems);
+			const nf = Eval.evaluate(ctx, structure.term);
 			//expect(nf.type).toBe("Lit");
 			expect({
 				displays,

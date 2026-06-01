@@ -26,15 +26,11 @@ exports[`Shift-reset > multiple shifts within reset > invoking continuations 1`]
         "20",
       ],
     },
-    "skolems": {
-      "5": "shift (λ($k: Π($k: Num) -> Num) -> $k 10)",
-      "7": "shift (λ($k: Π($k: Num) -> Num) -> $k 20)",
-    },
   },
   "term": "let test
   : Num
-  = reset |FFI.$add shift (λ($k: Π($k: Num) -> Num) -> $k 10)
-    shift (λ($k: Π($k: Num) -> Num) -> $k 20)|",
+  = reset |FFI.$add bubble#1296 (shift (λ($k: Π($k: Num) -> Num) -> $k 10))
+    bubble#1307 (shift (λ($k: Π($k: Num) -> Num) -> $k 20))|",
   "type": "Num",
 }
 `;
@@ -77,18 +73,14 @@ exports[`Shift-reset > multiple shifts within reset > multiple shifts and multip
         "1",
       ],
     },
-    "skolems": {
-      "5": "shift (λ($k: Π($k: Num) -> Num) -> $k 3)",
-      "7": "shift (λ($k: Π($k: Num) -> Num) -> $k 2)",
-      "9": "shift (λ($k: Π($k: Num) -> Num) -> $k ($k 1))",
-    },
   },
   "term": "let test
   : Num
   = reset |FFI.$add
-    (FFI.$add (FFI.$add 4 shift (λ($k: Π($k: Num) -> Num) -> $k 3))
-      shift (λ($k: Π($k: Num) -> Num) -> $k 2))
-    shift (λ($k: Π($k: Num) -> Num) -> $k ($k 1))|",
+    (FFI.$add
+      (FFI.$add 4 bubble#1300 (shift (λ($k: Π($k: Num) -> Num) -> $k 3)))
+      bubble#1312 (shift (λ($k: Π($k: Num) -> Num) -> $k 2)))
+    bubble#1326 (shift (λ($k: Π($k: Num) -> Num) -> $k ($k 1)))|",
   "type": "Num",
 }
 `;
@@ -111,11 +103,10 @@ exports[`Shift-reset > only one shift within reset > invoking id continuation 1`
         ""hello"",
       ],
     },
-    "skolems": {
-      "5": "shift (λ($k: Π($k: String) -> String) -> $k "hello")",
-    },
   },
-  "term": "let test : String = reset |shift (λ($k: Π($k: String) -> String) -> $k "hello")|",
+  "term": "let test
+  : String
+  = reset |bubble#1295 (shift (λ($k: Π($k: String) -> String) -> $k "hello"))|",
   "type": "String",
 }
 `;
@@ -140,11 +131,10 @@ exports[`Shift-reset > only one shift within reset > invoking simple continuatio
         "1",
       ],
     },
-    "skolems": {
-      "5": "shift (λ($k: Π($k: Num) -> Num) -> $k 1)",
-    },
   },
-  "term": "let test : Num = reset |FFI.$add 1 shift (λ($k: Π($k: Num) -> Num) -> $k 1)|",
+  "term": "let test
+  : Num
+  = reset |FFI.$add 1 bubble#1298 (shift (λ($k: Π($k: Num) -> Num) -> $k 1))|",
   "type": "Num",
 }
 `;
@@ -171,13 +161,11 @@ exports[`Shift-reset > only one shift within reset > multiple resumptions 1`] = 
         "1",
       ],
     },
-    "skolems": {
-      "5": "shift (λ($k: Π($k: Num) -> Num) -> FFI.$add ($k 1) ($k 2))",
-    },
   },
   "term": "let test
   : Num
-  = reset |shift (λ($k: Π($k: Num) -> Num) -> FFI.$add ($k 1) ($k 2))|",
+  = reset |bubble#1301 (shift (λ($k: Π($k: Num) -> Num) ->
+    FFI.$add ($k 1) ($k 2)))|",
   "type": "Num",
 }
 `;
@@ -202,11 +190,10 @@ exports[`Shift-reset > only one shift within reset > nested resumption 1`] = `
         "10",
       ],
     },
-    "skolems": {
-      "5": "shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10))",
-    },
   },
-  "term": "let test : Num = reset |shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10))|",
+  "term": "let test
+  : Num
+  = reset |bubble#1297 (shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10)))|",
   "type": "Num",
 }
 `;
@@ -233,13 +220,11 @@ exports[`Shift-reset > only one shift within reset > nested resumption with non-
         "10",
       ],
     },
-    "skolems": {
-      "5": "shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10))",
-    },
   },
   "term": "let test
   : Num
-  = reset |FFI.$add 1 shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10))|",
+  = reset |FFI.$add 1
+    bubble#1300 (shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10)))|",
   "type": "Num",
 }
 `;
@@ -256,11 +241,10 @@ exports[`Shift-reset > only one shift within reset > not invoking continuation 1
 ?4 |=> ?2",
   "state": {
     "nondeterminism": {},
-    "skolems": {
-      "5": "shift (λ($k: Π($k: ?2) -> ?2) -> "world")",
-    },
   },
-  "term": "let test : String = reset |shift (λ($k: Π($k: ?2) -> ?2) -> "world")|",
+  "term": "let test
+  : String
+  = reset |bubble#1293 (shift (λ($k: Π($k: ?2) -> ?2) -> "world"))|",
   "type": "String",
 }
 `;
@@ -280,13 +264,10 @@ exports[`Shift-reset > only one shift within reset > overriding continuation ret
 ?4 |=> Num",
   "state": {
     "nondeterminism": {},
-    "skolems": {
-      "5": "shift (λ($k: Π($k: Num) -> Num) -> "hello")",
-    },
   },
   "term": "let test
   : String
-  = reset |FFI.$add 1 shift (λ($k: Π($k: Num) -> Num) -> "hello")|",
+  = reset |FFI.$add 1 bubble#1296 (shift (λ($k: Π($k: Num) -> Num) -> "hello"))|",
   "type": "String",
 }
 `;
@@ -303,7 +284,6 @@ exports[`Shift-reset > resets without shifts > literal value 1`] = `
 ?3 |=> Num",
   "state": {
     "nondeterminism": {},
-    "skolems": {},
   },
   "term": "let test : Num = reset |10|",
   "type": "Num",
@@ -330,7 +310,7 @@ exports[`Shift-reset > resumption of dependent continuation > resuming continuat
   (closure: match $scrutinee
     | 0 -> Num
     | _ -> String -| Γ: $scrutinee; x; test))
-  ?10 ~~ ?7",
+  ?1316 ~~ ?7",
     "?8 ~~ ?6",
     "Unit ~~ ?1",
   ],
@@ -341,32 +321,23 @@ exports[`Shift-reset > resumption of dependent continuation > resuming continuat
   (closure: match $scrutinee
     | 0 -> Num
     | _ -> String -| Γ: $scrutinee; $scrutinee; $scrutinee; x; test))
-  ?10
+  ?1316
 ?7 |=> (λ($scrutinee: Any) ->
   (closure: match $scrutinee
     | 0 -> Num
     | _ -> String -| Γ: $scrutinee; $scrutinee; x; test))
-  ?10
+  ?1316
 ?8 |=> (λ($scrutinee: Any) ->
   (closure: match $scrutinee
     | 0 -> Num
     | _ -> String -| Γ: $scrutinee; $scrutinee; x; test))
-  ?10
+  ?1316
 ?9 |=> Num",
   "state": {
     "nondeterminism": {
       "10": [
         "10",
       ],
-    },
-    "skolems": {
-      "10": "shift (λ($k: Π($k: Num) ->
-  (λ($scrutinee: Any) ->
-    (closure: match $scrutinee
-      | 0 -> Num
-      | _ -> String -| Γ: $scrutinee; $scrutinee; x; test))
-    ?10) ->
-  $k 10)",
     },
   },
   "term": "let test
@@ -376,15 +347,19 @@ exports[`Shift-reset > resumption of dependent continuation > resuming continuat
       : Π(x: Num) -> (closure: match x | 0 -> Num | _ -> String -| Γ: x; test)
       = λ(x: Num) -> match x | 0 -> 0 | _ -> "hello";
     let foo
-      : String
+      : (λ($scrutinee: Any) ->
+        (closure: match $scrutinee
+          | 0 -> Num
+          | _ -> String -| Γ: $scrutinee; $scrutinee; $scrutinee; x; test))
+        ?1316
       = reset |f
-        shift (λ($k: Π($k: Num) ->
+        bubble#1316 (shift (λ($k: Π($k: Num) ->
           (λ($scrutinee: Any) ->
             (closure: match $scrutinee
               | 0 -> Num
               | _ -> String -| Γ: $scrutinee; $scrutinee; x; test))
-            ?10) ->
-          $k 10)|;
+            ?1316) ->
+          $k 10))|;
     return unit;
   }",
   "type": "Unit",

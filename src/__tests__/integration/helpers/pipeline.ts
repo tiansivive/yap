@@ -46,7 +46,6 @@ type Elaborated = {
 	readonly tm: EB.Term;
 	readonly ty: NF.Value;
 	readonly ctx: EB.Context;
-	readonly skolems: V2.MutState["skolems"];
 };
 
 const safe = <A>(fn: () => A): E.Either<string, A> => E.tryCatch(fn, e => (e instanceof Error ? e.message : String(e)));
@@ -65,17 +64,10 @@ const errs = (rs: ReadonlyArray<E.Either<string, unknown>>): ReadonlyArray<strin
 
 const toThese = <A>(errors: ReadonlyArray<string>, value: A): T.These<ReadonlyArray<string>, A> => T.rightOrBoth(value)(RNEA.fromReadonlyArray(errors));
 
-const pipeline = (
-	tm: EB.Term,
-	ty: NF.Value,
-	ctx: EB.Context,
-	skolems: V2.MutState["skolems"] = {},
-	parentBinders?: ReadonlyArray<string>,
-): T.These<ReadonlyArray<string>, StageResults> => {
+const pipeline = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, parentBinders?: ReadonlyArray<string>): T.These<ReadonlyArray<string>, StageResults> => {
 	const db = { deBruijn: false };
-	const displayCtx = { ...ctx, skolems };
 
-	const elaborated = safe(() => EB.Display.Term(tm, displayCtx, db));
+	const elaborated = safe(() => EB.Display.Term(tm, ctx, db));
 	const type = E.chain((q: EB.Term) => safe(() => EB.Display.Term(q, ctx, db)))(safe(() => EB.NF.quote(ctx, ctx.env.length, ty)));
 	const normalized = E.chain((nf: NF.Value) => safe(() => EB.NF.display(nf, ctx, db)))(safe(() => EB.NF.evaluate(ctx, tm)));
 
@@ -118,7 +110,7 @@ const pipeline = (
 			(e: GRAM.Pipeline.CompileError) => E.left<string, GRAM.Graph>(`GRAM: ${JSON.stringify(e)}`),
 			(g: GRAM.Graph) => E.right<string, GRAM.Graph>(g),
 		),
-	)(safe(() => GRAM.Pipeline.compile(tm, { skolems, zonker: ctx.zonker, arities: ARITIES, parentBinders })));
+	)(safe(() => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities: ARITIES, parentBinders })));
 	const gram = E.chain((g: GRAM.Graph) => safe(() => GRAM.display(g)))(gramGraph);
 	const mod = E.chain((g: GRAM.Graph) => safe(() => GRAM.Bridge.emit(g)))(gramGraph);
 	const mir = E.chain((m: Module) => safe(() => MIR.display.module(m)))(mod);
@@ -173,16 +165,14 @@ const Elaborate = {
 						throw new Error("Expected Let from let inference");
 					}
 					const [r, next] = yield* EB.Stmt.letdec(elaborated);
-					const state = yield* V2.getSt();
-					return { r, us, next, skolems: state.skolems };
+					return { r, us, next };
 				})(ctx),
 			),
 			E.chain(([{ result }]) => flatten(result)),
-			E.map(({ r, us, next, skolems }) => ({
+			E.map(({ r, us, next }) => ({
 				tm: r.value,
 				ty: r.annotation,
 				ctx: set(next, ["imports", stmt.variable] as const, [r.value, r.annotation, us] satisfies EB.AST),
-				skolems,
 			})),
 		),
 
@@ -190,7 +180,7 @@ const Elaborate = {
 		pipe(
 			safe(() => EB.Mod.expression(stmt, ctx)),
 			E.chain(flatten),
-			E.map(([tm, ty, , next, debug]) => ({ tm, ty, ctx: next, skolems: debug.skolems })),
+			E.map(([tm, ty, , next]) => ({ tm, ty, ctx: next })),
 		),
 };
 
@@ -237,12 +227,12 @@ const withContext = (acc: Acc, name: string, kind: DeclarationResult["kind"], re
 const withStages = (acc: Acc, name: string, kind: DeclarationResult["kind"], result: E.Either<string, Elaborated>): Acc =>
 	E.fold(
 		(error: string) => keep(acc, { name, kind, error }),
-		({ tm, ty, ctx, skolems }: Elaborated) =>
+		({ tm, ty, ctx }: Elaborated) =>
 			T.fold(
 				(errors: ReadonlyArray<string>) => advance(acc, { name, kind, error: errors.join("; ") }, ctx),
 				(stages: StageResults) => advance(acc, { name, kind, stages }, ctx),
 				(errors: ReadonlyArray<string>, stages: StageResults) => advance(acc, { name, kind, stages, error: errors.join("; ") }, ctx),
-			)(pipeline(tm, ty, ctx, skolems, kind === "let" ? [name] : undefined)),
+			)(pipeline(tm, ty, ctx, kind === "let" ? [name] : undefined)),
 	)(result);
 
 const process = (acc: Acc, stmt: Src.Statement): Acc =>

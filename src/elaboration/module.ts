@@ -241,7 +241,6 @@ export type ElaborationDebug = {
 	constraints: WithProvenance<Constraint>[];
 	zonker: Sub.Subst;
 	resolutions: Resolutions;
-	skolems: V2.MutState["skolems"];
 };
 
 export type VerificationResult = {
@@ -261,15 +260,13 @@ export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>,
 		const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postSolveMetas }));
 		const zonked = update(withAllMetas, "zonker", z => Sub.compose(zonker, Sub.compose(toldZonker, z)));
 
-		const state = yield* V2.getSt();
-
-		const [generalized, subst] = NF.generalize(NF.force(zonked, ty), elaborated, zonked, resolutions, state.skolems);
+		const [generalized, subst] = NF.generalize(NF.force(zonked, ty), elaborated, zonked, resolutions);
 		const next = update(zonked, "zonker", z => ({ ...z, ...subst }));
 		const instantiated = NF.instantiate(generalized, next);
 
 		const wrapped = F.pipe(EB.Icit.wrapLambda(elaborated, instantiated, next), tm => EB.Icit.instantiate(tm, next, resolutions));
 
-		const debug: ElaborationDebug = { constraints, zonker, resolutions, skolems: state.skolems };
+		const debug: ElaborationDebug = { constraints, zonker, resolutions };
 		return [wrapped, instantiated, us, next, debug] as const;
 	});
 

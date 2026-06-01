@@ -328,6 +328,10 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 					runtime.log("synth: shift expression treated as opaque (stub)");
 					return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
 				})
+				.with({ type: "Bubble" }, function* (tm) {
+					runtime.log("synth: bubble treated as opaque (neutral true)");
+					return [tm.ann, { vc: Build.true_() }] satisfies SynthResult;
+				})
 				.otherwise(function* () {
 					throw new Error("synth: case not implemented for term " + EB.Display.Term(term, ctx));
 				});
