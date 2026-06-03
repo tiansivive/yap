@@ -29,8 +29,8 @@ exports[`Shift-reset > multiple shifts within reset > invoking continuations 1`]
   },
   "term": "let test
   : Num
-  = reset |FFI.$add bubble#1296 (shift (λ($k: Π($k: Num) -> Num) -> $k 10))
-    bubble#1307 (shift (λ($k: Π($k: Num) -> Num) -> $k 20))|",
+  = reset |FFI.$add bubble#1328 (shift (λ($k: Π($k: Num) -> Num) -> $k 10))
+    bubble#1339 (shift (λ($k: Π($k: Num) -> Num) -> $k 20))|",
   "type": "Num",
 }
 `;
@@ -78,9 +78,9 @@ exports[`Shift-reset > multiple shifts within reset > multiple shifts and multip
   : Num
   = reset |FFI.$add
     (FFI.$add
-      (FFI.$add 4 bubble#1300 (shift (λ($k: Π($k: Num) -> Num) -> $k 3)))
-      bubble#1312 (shift (λ($k: Π($k: Num) -> Num) -> $k 2)))
-    bubble#1326 (shift (λ($k: Π($k: Num) -> Num) -> $k ($k 1)))|",
+      (FFI.$add 4 bubble#1332 (shift (λ($k: Π($k: Num) -> Num) -> $k 3)))
+      bubble#1344 (shift (λ($k: Π($k: Num) -> Num) -> $k 2)))
+    bubble#1358 (shift (λ($k: Π($k: Num) -> Num) -> $k ($k 1)))|",
   "type": "Num",
 }
 `;
@@ -106,7 +106,7 @@ exports[`Shift-reset > only one shift within reset > invoking id continuation 1`
   },
   "term": "let test
   : String
-  = reset |bubble#1295 (shift (λ($k: Π($k: String) -> String) -> $k "hello"))|",
+  = reset |bubble#1327 (shift (λ($k: Π($k: String) -> String) -> $k "hello"))|",
   "type": "String",
 }
 `;
@@ -134,7 +134,7 @@ exports[`Shift-reset > only one shift within reset > invoking simple continuatio
   },
   "term": "let test
   : Num
-  = reset |FFI.$add 1 bubble#1298 (shift (λ($k: Π($k: Num) -> Num) -> $k 1))|",
+  = reset |FFI.$add 1 bubble#1330 (shift (λ($k: Π($k: Num) -> Num) -> $k 1))|",
   "type": "Num",
 }
 `;
@@ -164,7 +164,7 @@ exports[`Shift-reset > only one shift within reset > multiple resumptions 1`] = 
   },
   "term": "let test
   : Num
-  = reset |bubble#1301 (shift (λ($k: Π($k: Num) -> Num) ->
+  = reset |bubble#1333 (shift (λ($k: Π($k: Num) -> Num) ->
     FFI.$add ($k 1) ($k 2)))|",
   "type": "Num",
 }
@@ -193,7 +193,7 @@ exports[`Shift-reset > only one shift within reset > nested resumption 1`] = `
   },
   "term": "let test
   : Num
-  = reset |bubble#1297 (shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10)))|",
+  = reset |bubble#1329 (shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10)))|",
   "type": "Num",
 }
 `;
@@ -224,7 +224,7 @@ exports[`Shift-reset > only one shift within reset > nested resumption with non-
   "term": "let test
   : Num
   = reset |FFI.$add 1
-    bubble#1300 (shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10)))|",
+    bubble#1332 (shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10)))|",
   "type": "Num",
 }
 `;
@@ -244,7 +244,7 @@ exports[`Shift-reset > only one shift within reset > not invoking continuation 1
   },
   "term": "let test
   : String
-  = reset |bubble#1293 (shift (λ($k: Π($k: ?2) -> ?2) -> "world"))|",
+  = reset |bubble#1325 (shift (λ($k: Π($k: ?2) -> ?2) -> "world"))|",
   "type": "String",
 }
 `;
@@ -267,7 +267,7 @@ exports[`Shift-reset > only one shift within reset > overriding continuation ret
   },
   "term": "let test
   : String
-  = reset |FFI.$add 1 bubble#1296 (shift (λ($k: Π($k: Num) -> Num) -> "hello"))|",
+  = reset |FFI.$add 1 bubble#1328 (shift (λ($k: Π($k: Num) -> Num) -> "hello"))|",
   "type": "String",
 }
 `;
@@ -310,7 +310,7 @@ exports[`Shift-reset > resumption of dependent continuation > resuming continuat
   (closure: match $scrutinee
     | 0 -> Num
     | _ -> String -| Γ: $scrutinee; x; test))
-  ?1316 ~~ ?7",
+  ?1348 ~~ ?7",
     "?8 ~~ ?6",
     "Unit ~~ ?1",
   ],
@@ -321,17 +321,17 @@ exports[`Shift-reset > resumption of dependent continuation > resuming continuat
   (closure: match $scrutinee
     | 0 -> Num
     | _ -> String -| Γ: $scrutinee; $scrutinee; $scrutinee; x; test))
-  ?1316
+  ?1348
 ?7 |=> (λ($scrutinee: Any) ->
   (closure: match $scrutinee
     | 0 -> Num
     | _ -> String -| Γ: $scrutinee; $scrutinee; x; test))
-  ?1316
+  ?1348
 ?8 |=> (λ($scrutinee: Any) ->
   (closure: match $scrutinee
     | 0 -> Num
     | _ -> String -| Γ: $scrutinee; $scrutinee; x; test))
-  ?1316
+  ?1348
 ?9 |=> Num",
   "state": {
     "nondeterminism": {
@@ -351,14 +351,14 @@ exports[`Shift-reset > resumption of dependent continuation > resuming continuat
         (closure: match $scrutinee
           | 0 -> Num
           | _ -> String -| Γ: $scrutinee; $scrutinee; $scrutinee; x; test))
-        ?1316
+        ?1348
       = reset |f
-        bubble#1316 (shift (λ($k: Π($k: Num) ->
+        bubble#1348 (shift (λ($k: Π($k: Num) ->
           (λ($scrutinee: Any) ->
             (closure: match $scrutinee
               | 0 -> Num
               | _ -> String -| Γ: $scrutinee; $scrutinee; x; test))
-            ?1316) ->
+            ?1348) ->
           $k 10))|;
     return unit;
   }",

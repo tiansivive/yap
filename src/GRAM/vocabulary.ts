@@ -114,6 +114,7 @@ export const Labels = {
 	HANDLER: ":handler",
 	PARAM: ":param",
 	INVOKES: ":invokes",
+	REWRITE_RULE: ":rewrite_rule",
 } as const;
 
 export type Label = string;

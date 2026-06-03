@@ -45,7 +45,8 @@ const doc = (term: Src.Term): PP.Doc =>
 		.with({ type: "modal" }, ({ term: tm, modalities }) => {
 			const q = modalities.quantity ? [Q.display(modalities.quantity), " "] : "";
 			const l = modalities.liquid ? [" [| ", doc(modalities.liquid), " |]"] : "";
-			return [q, doc(tm), l];
+			const g = modalities.gram ? [" %", doc(modalities.gram)] : "";
+			return [q, doc(tm), l, g];
 		})
 		.otherwise(tm => `Display Term ${tm.type}: Not implemented`);
 

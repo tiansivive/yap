@@ -126,6 +126,14 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 						return [EB.Constructors.Struct(r), us] satisfies Result;
 					}),
 				)
+				.with([{ type: "lit", value: { type: "String" } }, NF.Patterns.JSON], ([lit]) => {
+					try {
+						JSON.parse(lit.value.value);
+						return V2.of([EB.Constructors.Lit(lit.value), Q.noUsage(ctx.env.length)] satisfies Result);
+					} catch (e) {
+						return V2.Do(() => V2.fail(Err.TypeMismatch(NF.Constructors.Lit(lit.value), NF.Constructors.Lit({ type: "Atom", value: "JSON" }))));
+					}
+				})
 				.with([{ type: "struct" }, NF.Patterns.Schema], ([tm, val]) =>
 					V2.Do(function* () {
 						const bindings = yield* extract(tm.row, ctx.env.length);
@@ -275,8 +283,9 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 							? yield* EB.Liquid.typecheck(tm.modalities.liquid, NF.evaluate(ctx, checked))
 							: Liquid.Predicate.Neutral(checked);
 						const quantity = tm.modalities.quantity ?? Q.Many;
+						const gram = tm.modalities.gram ? yield* EB.Gram.typecheck(tm.modalities.gram) : undefined;
 
-						return [EB.Constructors.Modal(checked, { liquid, quantity }), us] satisfies Result;
+						return [EB.Constructors.Modal(checked, { liquid, quantity, gram }), us] satisfies Result;
 					}),
 				)
 

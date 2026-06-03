@@ -80,6 +80,7 @@ export const Initial: Vocabulary = {
 		Labels.PATTERN,
 		Labels.PAYLOAD,
 		Labels.FIELD,
+		Labels.REWRITE_RULE,
 	),
 };
 

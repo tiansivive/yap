@@ -367,7 +367,13 @@ const block = (t: EB.Term & { type: "Block" }, st: State): [NodeId, State] => {
 const modal = (t: EB.Term & { type: "Modal" }, st: State): [NodeId, State] => {
 	const [id, s1] = emit(st, Tags.MODAL, { quantity: t.modalities.quantity }, prov(t.id, st));
 	const [body, s2] = walk(t.term, s1);
-	return [id, link(s2, id, Labels.TERM, body)];
+	const s3 = link(s2, id, Labels.TERM, body);
+	return t.modalities.gram
+		? (() => {
+				const [rule, s4] = walk(t.modalities.gram, s3);
+				return [id, link(s4, id, Labels.REWRITE_RULE, rule)] as const;
+			})()
+		: [id, s3];
 };
 
 const reset = (t: EB.Term & { type: "Reset" }, st: State): [NodeId, State] => {

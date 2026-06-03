@@ -3,6 +3,41 @@
 exports[`parser: usage annotations (multiplicities) > combined usage and refinement: <1> Num [|\\n -> n >= 0|] 1`] = `
 {
   "modalities": {
+    "liquid": {
+      "annotation": undefined,
+      "body": {
+        "arg": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 0,
+          },
+        },
+        "fn": {
+          "arg": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "n",
+            },
+          },
+          "fn": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": ">=",
+            },
+          },
+          "icit": "Explicit",
+          "type": "application",
+        },
+        "icit": "Explicit",
+        "type": "application",
+      },
+      "icit": "Explicit",
+      "type": "lambda",
+      "variable": "n",
+    },
     "quantity": "One",
   },
   "term": {
@@ -115,6 +150,41 @@ exports[`parser: usage annotations (multiplicities) > usage in pi type: <1> (x: 
 exports[`parser: usage annotations (multiplicities) > usage with refinement: <1> Num [|\\n -> n > 0|] 1`] = `
 {
   "modalities": {
+    "liquid": {
+      "annotation": undefined,
+      "body": {
+        "arg": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 0,
+          },
+        },
+        "fn": {
+          "arg": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "n",
+            },
+          },
+          "fn": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": ">",
+            },
+          },
+          "icit": "Explicit",
+          "type": "application",
+        },
+        "icit": "Explicit",
+        "type": "application",
+      },
+      "icit": "Explicit",
+      "type": "lambda",
+      "variable": "n",
+    },
     "quantity": "One",
   },
   "term": {

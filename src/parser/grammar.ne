@@ -32,7 +32,7 @@
 		star: /\*/,
 		concat: /<>/,
 		concat2: /\+\+/,
-		op: /[\+\-\/\%]|(?:==)|(?:!=)|(?:<=)|(?:>=)|(?:\|>)|(?:<\|)/,
+		op: /[\+\-\/]|(?:==)|(?:!=)|(?:<=)|(?:>=)|(?:\|>)|(?:<\|)/,
 		langle: /</,
 		rangle: />/,
 		not: /!/,
@@ -51,6 +51,8 @@
 		bar: /\|/,
 		at: /@/,
 		hash: /#/,
+		gram: /%[a-zA-Z_][a-zA-Z0-9_]*/,
+		percent: /%/,
 		hole: /_/,
 		space: { match: /[ \n\t]+/, lineBreaks: true },
 
@@ -100,10 +102,14 @@ Ann -> Ann %space:? %colon %space:? TypeExpr 							{% P.Annotation %}
 TypeExpr -> Pi 				{% id %}
 		  | ModalType 		{% id %}
 
-ModalType -> Angle[ Quantity ] %space:? Type 												{% P.Modal %}
-		   | Angle[ Quantity ] %space:? Type %space:? DoubleBracket[ %space:? Lambda ] 		{% P.Modal %}
-		   | Type %space:? DoubleBracket[ %space:? Lambda ] 								{% P.Modal %}
-		   | Type 																			{% id %}
+ModalType -> Angle[ Quantity ] %space:? Type %space:? DoubleBracket[ %space:? Lambda ] %space:? %gram 	{% P.Modal %}
+		   | Angle[ Quantity ] %space:? Type %space:? DoubleBracket[ %space:? Lambda ] 						{% P.Modal %}
+		   | Angle[ Quantity ] %space:? Type %space:? %gram 												{% P.Modal %}
+		   | Angle[ Quantity ] %space:? Type 																{% P.Modal %}
+		   | Type %space:? DoubleBracket[ %space:? Lambda ] %space:? %gram 									{% P.Modal %}
+		   | Type %space:? DoubleBracket[ %space:? Lambda ] 												{% P.Modal %}
+		   | Type %space:? %gram 																			{% P.Modal %}
+		   | Type 																							{% id %}
 
 Type -> Mu 				{% id %}
 	  | Variant 		{% id %} 
@@ -119,7 +125,7 @@ Expr -> Lambda		{% id %}
 	  | Resume 		{% id %}
 	  | Op 			{% id %}
 
-Op -> Op %space:? (%op | %concat | %concat2 | %rangle | %langle | %star ) %space:? Atom 	{% P.Operation %}
+Op -> Op %space:? (%op | %concat | %concat2 | %rangle | %langle | %star | %percent ) %space:? Atom 	{% P.Operation %}
 	| App 																		{% id %}
 
 App -> App %space Atom 															{% P.Application("Explicit") %}

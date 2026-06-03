@@ -543,25 +543,73 @@ export const LetDec: PostProcessor<LetDec, Statement> = ([, , variable, ...rest]
  * Modal processors
  ***********************************************************/
 
+type GramToken = Token & { value: string };
+
+const isGramToken = (x: unknown): x is GramToken =>
+	x !== null && typeof x === "object" && "value" in x && typeof (x as GramToken).value === "string" && (x as GramToken).value.startsWith("%");
+
+const gramToVar = (tok: GramToken): Term => {
+	const name = tok.value.slice(1);
+	const loc = { from: { line: tok.line, column: tok.col }, to: { line: tok.line, column: tok.col + tok.value.length } };
+	return { type: "var", variable: { type: "name", value: name, location: loc }, location: loc };
+};
+
 type Modal =
+	| [[Q.Multiplicity], Whitespace, Term, Whitespace, [Whitespace, Term], Whitespace, GramToken]
+	| [[Q.Multiplicity], Whitespace, Term, Whitespace, [Whitespace, Term]]
+	| [[Q.Multiplicity], Whitespace, Term, Whitespace, GramToken]
 	| [[Q.Multiplicity], Whitespace, Term]
-	| [[Q.Multiplicity], Whitespace, Term, Whitespace, LAngle, Whitespace, Term, RAngle]
-	| [Term, Whitespace, [Whitespace, Term]];
+	| [Term, Whitespace, [Whitespace, Term], Whitespace, GramToken]
+	| [Term, Whitespace, [Whitespace, Term]]
+	| [Term, Whitespace, GramToken];
 
 export const Modal: PostProcessor<Modal, Term> = (data: Modal): Term => {
-	if (data.length === 8) {
-		const [[q], , term, , , , liquid] = data;
+	const hasQuantity = Array.isArray(data[0]);
+	const len = data.length;
 
-		return { type: "modal", term, modalities: { quantity: q, liquid }, location: term.location };
-	}
+	if (hasQuantity) {
+		const [[q], , term] = data as [[Q.Multiplicity], Whitespace, Term, ...unknown[]];
 
-	if (Array.isArray(data[0])) {
-		const [[q], , term] = data as [[Q.Multiplicity], Whitespace, Term];
+		if (len === 7) {
+			const liquid = (data as unknown[])[4] as [Whitespace, Term];
+			const gramTok = data[6] as GramToken;
+			const gram = gramToVar(gramTok);
+			return { type: "modal", term, modalities: { quantity: q, liquid: liquid[1], gram }, location: locSpan(term.location, gram.location) };
+		}
+
+		if (len === 5) {
+			const last = data[4];
+			if (isGramToken(last)) {
+				const gram = gramToVar(last);
+				return { type: "modal", term, modalities: { quantity: q, gram }, location: locSpan(term.location, gram.location) };
+			}
+			const liquid = last as [Whitespace, Term];
+			return { type: "modal", term, modalities: { quantity: q, liquid: liquid[1] }, location: locSpan(term.location, liquid[1].location) };
+		}
+
 		return { type: "modal", term, modalities: { quantity: q }, location: term.location };
 	}
 
-	const [term, , [, liquid]] = data as [Term, Whitespace, [Whitespace, Term]];
-	return { type: "modal", term, modalities: { liquid }, location: locSpan(term.location, liquid.location) };
+	const [term] = data as [Term, ...unknown[]];
+
+	if (len === 5) {
+		const liquid = data[2] as [Whitespace, Term];
+		const gramTok = data[4] as GramToken;
+		const gram = gramToVar(gramTok);
+		return { type: "modal", term, modalities: { liquid: liquid[1], gram }, location: locSpan(term.location, gram.location) };
+	}
+
+	if (len === 3) {
+		const last = data[2];
+		if (isGramToken(last)) {
+			const gram = gramToVar(last);
+			return { type: "modal", term, modalities: { gram }, location: locSpan(term.location, gram.location) };
+		}
+		const liquid = last as [Whitespace, Term];
+		return { type: "modal", term, modalities: { liquid: liquid[1] }, location: locSpan(term.location, liquid[1].location) };
+	}
+
+	throw new Error("Unexpected Modal data shape");
 };
 
 /***********************************************************

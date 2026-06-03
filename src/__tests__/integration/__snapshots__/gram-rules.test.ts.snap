@@ -1,0 +1,693 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Programmable GRAM passes > gram modality without rule is a no-op 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_7;
+  return v0;
+}
+
+function closure_7(x) {
+  return x;
+}
+return main();
+",
+    "elaborated": "λ(x: Num) -> x",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"f"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [6]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[6] env
+[7] closure
+  :body -> [3]
+  :env -> [6]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_7
+      return v0
+  fn closure_7(x) entry=entry
+    entry:
+      return x",
+    "name": "f",
+    "normalized": "λ(x: Num) -> (closure: x -| Γ: x)",
+    "type": "Π(t1: Num) -> Num",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = f;
+  return v0;
+}
+return main();
+",
+    "elaborated": "λ(y: Num) -> f y",
+    "gram": "[1] root
+  :entry -> [7]
+[2] stmt:let {"variable":"plain"}
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:free {"name":"f"}
+[7] var:ref {"name":"f"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [7] {"level":1}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = f
+      return v0",
+    "name": "plain",
+    "normalized": "λ(y: Num) -> (closure: f y -| Γ: y)",
+    "type": "Π(t2: Num) -> Num",
+  },
+]
+`;
+
+exports[`Programmable GRAM passes > gram rule on literal 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = "n";
+  const v1 = "lit";
+  const v2 = {
+    bind: v0,
+    tag: v1
+  };
+  const v3 = {
+    0: v2
+  };
+  const v4 = {};
+  const v5 = {
+    nodes: v3,
+    edges: v4
+  };
+  const v6 = "n";
+  const v7 = "lit";
+  const v8 = "{\\\\\\"marked\\\\\\": true}";
+  const v9 = {
+    bind: v6,
+    tag: v7,
+    payload: v8
+  };
+  const v10 = {
+    0: v9
+  };
+  const v11 = {};
+  const v12 = {
+    nodes: v10,
+    edges: v11
+  };
+  const v13 = {
+    lhs: v5,
+    rhs: v12
+  };
+  return v13;
+}
+return main();
+",
+    "elaborated": "Struct
+  [ lhs: Struct
+      [ nodes: Array [ 0: Struct [ bind: "n", tag: "lit" ] ], edges: Array [] ],
+    rhs: Struct
+      [ nodes: Array
+          [ 0: Struct
+              [ bind: "n", tag: "lit", payload: "{\\"marked\\": true}" ] ],
+        edges: Array [] ] ]",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"markLit"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"lhs"}
+  :rest -> [25]
+  :value -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [7]
+[7] lit {"value":{"type":"Atom","value":"Struct"}}
+[8] row:ext {"label":"nodes"}
+  :rest -> [20]
+  :value -> [9]
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Array"}}
+[11] row:ext {"label":"0"}
+  :rest -> [19]
+  :value -> [12]
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Struct"}}
+[14] row:ext {"label":"bind"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"String","value":"n"}}
+[16] row:ext {"label":"tag"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"String","value":"lit"}}
+[18] row:empty
+[19] row:empty
+[20] row:ext {"label":"edges"}
+  :rest -> [24]
+  :value -> [21]
+[21] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [22]
+[22] lit {"value":{"type":"Atom","value":"Array"}}
+[23] row:empty
+[24] row:empty
+[25] row:ext {"label":"rhs"}
+  :rest -> [47]
+  :value -> [26]
+[26] app {"icit":"Explicit"}
+  :arg -> [28]
+  :func -> [27]
+[27] lit {"value":{"type":"Atom","value":"Struct"}}
+[28] row:ext {"label":"nodes"}
+  :rest -> [42]
+  :value -> [29]
+[29] app {"icit":"Explicit"}
+  :arg -> [31]
+  :func -> [30]
+[30] lit {"value":{"type":"Atom","value":"Array"}}
+[31] row:ext {"label":"0"}
+  :rest -> [41]
+  :value -> [32]
+[32] app {"icit":"Explicit"}
+  :arg -> [34]
+  :func -> [33]
+[33] lit {"value":{"type":"Atom","value":"Struct"}}
+[34] row:ext {"label":"bind"}
+  :rest -> [36]
+  :value -> [35]
+[35] lit {"value":{"type":"String","value":"n"}}
+[36] row:ext {"label":"tag"}
+  :rest -> [38]
+  :value -> [37]
+[37] lit {"value":{"type":"String","value":"lit"}}
+[38] row:ext {"label":"payload"}
+  :rest -> [40]
+  :value -> [39]
+[39] lit {"value":{"type":"String","value":"{\\\\\\"marked\\\\\\": true}"}}
+[40] row:empty
+[41] row:empty
+[42] row:ext {"label":"edges"}
+  :rest -> [46]
+  :value -> [43]
+[43] app {"icit":"Explicit"}
+  :arg -> [45]
+  :func -> [44]
+[44] lit {"value":{"type":"Atom","value":"Array"}}
+[45] row:empty
+[46] row:empty
+[47] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = "n"
+      let v1 = "lit"
+      let v2 = alloc { bind: v0, tag: v1 }
+      let v3 = alloc { 0: v2 }
+      let v4 = alloc {  }
+      let v5 = alloc { nodes: v3, edges: v4 }
+      let v6 = "n"
+      let v7 = "lit"
+      let v8 = "{\\"marked\\": true}"
+      let v9 = alloc { bind: v6, tag: v7, payload: v8 }
+      let v10 = alloc { 0: v9 }
+      let v11 = alloc {  }
+      let v12 = alloc { nodes: v10, edges: v11 }
+      let v13 = alloc { lhs: v5, rhs: v12 }
+      return v13",
+    "name": "markLit",
+    "normalized": "Struct
+  [ lhs: Struct
+      [ nodes: Array [ 0: Struct [ bind: "n", tag: "lit" ] ], edges: Array [] ],
+    rhs: Struct
+      [ nodes: Array
+          [ 0: Struct
+              [ bind: "n", tag: "lit", payload: "{\\"marked\\": true}" ] ],
+        edges: Array [] ] ]",
+    "type": "Schema
+  [ lhs: Schema
+      [ nodes: FFI.Indexed Num (Schema [ bind: String, tag: String ])
+          @FFI.defaultArray,
+        edges: FFI.Indexed Num
+          (Schema [ source: String, label: String, target: String ])
+          @FFI.defaultArray ],
+    rhs: Schema
+      [ nodes: FFI.Indexed Num
+          (Schema [ bind: String, tag: String, payload: String ])
+          @FFI.defaultArray,
+        edges: FFI.Indexed Num
+          (Schema [ source: String, label: String, target: String ])
+          @FFI.defaultArray ] ]",
+  },
+  {
+    "codegenJS": "function main() {
+  return v0;
+}
+return main();
+",
+    "elaborated": "<ω> 42 [| λ($r9: 42) -> true |] %markLit",
+    "error": "synth: case not implemented for term <ω> 42 [| λ($r9: 42) -> true |] %markLit; synth: case not implemented for term <ω> 42 [| λ($r9: 42) -> true |] %markLit",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"result"}
+[3] modal {"quantity":"Many"}
+  :rewrite_rule -> [6]
+  :term -> [4]
+[4] lit {"value":{"type":"Num","value":42}}
+[5] var:free {"name":"markLit"}
+[6] var:ref {"name":"markLit"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      return v0",
+    "name": "result",
+    "normalized": "<ω> 42 [| λ($r9: 42) -> (closure: true -| Γ: $r9) |]",
+    "type": "Num",
+  },
+]
+`;
+
+exports[`Programmable GRAM passes > tailcall identification rule marks app in tail position 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = "lam";
+  const v1 = "lambda";
+  const v2 = {
+    bind: v0,
+    tag: v1
+  };
+  const v3 = "app";
+  const v4 = "app";
+  const v5 = {
+    bind: v3,
+    tag: v4
+  };
+  const v6 = {
+    0: v2,
+    1: v5
+  };
+  const v7 = "lam";
+  const v8 = ":body";
+  const v9 = "app";
+  const v10 = {
+    source: v7,
+    label: v8,
+    target: v9
+  };
+  const v11 = {
+    0: v10
+  };
+  const v12 = {
+    nodes: v6,
+    edges: v11
+  };
+  const v13 = "lam";
+  const v14 = "lambda";
+  const v15 = "{}";
+  const v16 = {
+    bind: v13,
+    tag: v14,
+    payload: v15
+  };
+  const v17 = "app";
+  const v18 = "app";
+  const v19 = "{\\\\\\"tailcall\\\\\\": true}";
+  const v20 = {
+    bind: v17,
+    tag: v18,
+    payload: v19
+  };
+  const v21 = {
+    0: v16,
+    1: v20
+  };
+  const v22 = "lam";
+  const v23 = ":body";
+  const v24 = "app";
+  const v25 = {
+    source: v22,
+    label: v23,
+    target: v24
+  };
+  const v26 = {
+    0: v25
+  };
+  const v27 = {
+    nodes: v21,
+    edges: v26
+  };
+  const v28 = {
+    lhs: v12,
+    rhs: v27
+  };
+  return v28;
+}
+return main();
+",
+    "elaborated": "Struct
+  [ lhs: Struct
+      [ nodes: Array
+          [ 0: Struct [ bind: "lam", tag: "lambda" ],
+            1: Struct [ bind: "app", tag: "app" ] ],
+        edges: Array
+          [ 0: Struct [ source: "lam", label: ":body", target: "app" ] ] ],
+    rhs: Struct
+      [ nodes: Array
+          [ 0: Struct [ bind: "lam", tag: "lambda", payload: "{}" ],
+            1: Struct
+              [ bind: "app", tag: "app", payload: "{\\"tailcall\\": true}" ] ],
+        edges: Array
+          [ 0: Struct [ source: "lam", label: ":body", target: "app" ] ] ] ]",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"tailcallRule"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Struct"}}
+[5] row:ext {"label":"lhs"}
+  :rest -> [43]
+  :value -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [7]
+[7] lit {"value":{"type":"Atom","value":"Struct"}}
+[8] row:ext {"label":"nodes"}
+  :rest -> [28]
+  :value -> [9]
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Array"}}
+[11] row:ext {"label":"0"}
+  :rest -> [19]
+  :value -> [12]
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Struct"}}
+[14] row:ext {"label":"bind"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"String","value":"lam"}}
+[16] row:ext {"label":"tag"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"String","value":"lambda"}}
+[18] row:empty
+[19] row:ext {"label":"1"}
+  :rest -> [27]
+  :value -> [20]
+[20] app {"icit":"Explicit"}
+  :arg -> [22]
+  :func -> [21]
+[21] lit {"value":{"type":"Atom","value":"Struct"}}
+[22] row:ext {"label":"bind"}
+  :rest -> [24]
+  :value -> [23]
+[23] lit {"value":{"type":"String","value":"app"}}
+[24] row:ext {"label":"tag"}
+  :rest -> [26]
+  :value -> [25]
+[25] lit {"value":{"type":"String","value":"app"}}
+[26] row:empty
+[27] row:empty
+[28] row:ext {"label":"edges"}
+  :rest -> [42]
+  :value -> [29]
+[29] app {"icit":"Explicit"}
+  :arg -> [31]
+  :func -> [30]
+[30] lit {"value":{"type":"Atom","value":"Array"}}
+[31] row:ext {"label":"0"}
+  :rest -> [41]
+  :value -> [32]
+[32] app {"icit":"Explicit"}
+  :arg -> [34]
+  :func -> [33]
+[33] lit {"value":{"type":"Atom","value":"Struct"}}
+[34] row:ext {"label":"source"}
+  :rest -> [36]
+  :value -> [35]
+[35] lit {"value":{"type":"String","value":"lam"}}
+[36] row:ext {"label":"label"}
+  :rest -> [38]
+  :value -> [37]
+[37] lit {"value":{"type":"String","value":":body"}}
+[38] row:ext {"label":"target"}
+  :rest -> [40]
+  :value -> [39]
+[39] lit {"value":{"type":"String","value":"app"}}
+[40] row:empty
+[41] row:empty
+[42] row:empty
+[43] row:ext {"label":"rhs"}
+  :rest -> [85]
+  :value -> [44]
+[44] app {"icit":"Explicit"}
+  :arg -> [46]
+  :func -> [45]
+[45] lit {"value":{"type":"Atom","value":"Struct"}}
+[46] row:ext {"label":"nodes"}
+  :rest -> [70]
+  :value -> [47]
+[47] app {"icit":"Explicit"}
+  :arg -> [49]
+  :func -> [48]
+[48] lit {"value":{"type":"Atom","value":"Array"}}
+[49] row:ext {"label":"0"}
+  :rest -> [59]
+  :value -> [50]
+[50] app {"icit":"Explicit"}
+  :arg -> [52]
+  :func -> [51]
+[51] lit {"value":{"type":"Atom","value":"Struct"}}
+[52] row:ext {"label":"bind"}
+  :rest -> [54]
+  :value -> [53]
+[53] lit {"value":{"type":"String","value":"lam"}}
+[54] row:ext {"label":"tag"}
+  :rest -> [56]
+  :value -> [55]
+[55] lit {"value":{"type":"String","value":"lambda"}}
+[56] row:ext {"label":"payload"}
+  :rest -> [58]
+  :value -> [57]
+[57] lit {"value":{"type":"String","value":"{}"}}
+[58] row:empty
+[59] row:ext {"label":"1"}
+  :rest -> [69]
+  :value -> [60]
+[60] app {"icit":"Explicit"}
+  :arg -> [62]
+  :func -> [61]
+[61] lit {"value":{"type":"Atom","value":"Struct"}}
+[62] row:ext {"label":"bind"}
+  :rest -> [64]
+  :value -> [63]
+[63] lit {"value":{"type":"String","value":"app"}}
+[64] row:ext {"label":"tag"}
+  :rest -> [66]
+  :value -> [65]
+[65] lit {"value":{"type":"String","value":"app"}}
+[66] row:ext {"label":"payload"}
+  :rest -> [68]
+  :value -> [67]
+[67] lit {"value":{"type":"String","value":"{\\\\\\"tailcall\\\\\\": true}"}}
+[68] row:empty
+[69] row:empty
+[70] row:ext {"label":"edges"}
+  :rest -> [84]
+  :value -> [71]
+[71] app {"icit":"Explicit"}
+  :arg -> [73]
+  :func -> [72]
+[72] lit {"value":{"type":"Atom","value":"Array"}}
+[73] row:ext {"label":"0"}
+  :rest -> [83]
+  :value -> [74]
+[74] app {"icit":"Explicit"}
+  :arg -> [76]
+  :func -> [75]
+[75] lit {"value":{"type":"Atom","value":"Struct"}}
+[76] row:ext {"label":"source"}
+  :rest -> [78]
+  :value -> [77]
+[77] lit {"value":{"type":"String","value":"lam"}}
+[78] row:ext {"label":"label"}
+  :rest -> [80]
+  :value -> [79]
+[79] lit {"value":{"type":"String","value":":body"}}
+[80] row:ext {"label":"target"}
+  :rest -> [82]
+  :value -> [81]
+[81] lit {"value":{"type":"String","value":"app"}}
+[82] row:empty
+[83] row:empty
+[84] row:empty
+[85] row:empty",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = "lam"
+      let v1 = "lambda"
+      let v2 = alloc { bind: v0, tag: v1 }
+      let v3 = "app"
+      let v4 = "app"
+      let v5 = alloc { bind: v3, tag: v4 }
+      let v6 = alloc { 0: v2, 1: v5 }
+      let v7 = "lam"
+      let v8 = ":body"
+      let v9 = "app"
+      let v10 = alloc { source: v7, label: v8, target: v9 }
+      let v11 = alloc { 0: v10 }
+      let v12 = alloc { nodes: v6, edges: v11 }
+      let v13 = "lam"
+      let v14 = "lambda"
+      let v15 = "{}"
+      let v16 = alloc { bind: v13, tag: v14, payload: v15 }
+      let v17 = "app"
+      let v18 = "app"
+      let v19 = "{\\"tailcall\\": true}"
+      let v20 = alloc { bind: v17, tag: v18, payload: v19 }
+      let v21 = alloc { 0: v16, 1: v20 }
+      let v22 = "lam"
+      let v23 = ":body"
+      let v24 = "app"
+      let v25 = alloc { source: v22, label: v23, target: v24 }
+      let v26 = alloc { 0: v25 }
+      let v27 = alloc { nodes: v21, edges: v26 }
+      let v28 = alloc { lhs: v12, rhs: v27 }
+      return v28",
+    "name": "tailcallRule",
+    "normalized": "Struct
+  [ lhs: Struct
+      [ nodes: Array
+          [ 0: Struct [ bind: "lam", tag: "lambda" ],
+            1: Struct [ bind: "app", tag: "app" ] ],
+        edges: Array
+          [ 0: Struct [ source: "lam", label: ":body", target: "app" ] ] ],
+    rhs: Struct
+      [ nodes: Array
+          [ 0: Struct [ bind: "lam", tag: "lambda", payload: "{}" ],
+            1: Struct
+              [ bind: "app", tag: "app", payload: "{\\"tailcall\\": true}" ] ],
+        edges: Array
+          [ 0: Struct [ source: "lam", label: ":body", target: "app" ] ] ] ]",
+    "type": "Schema
+  [ lhs: Schema
+      [ nodes: FFI.Indexed Num (Schema [ bind: String, tag: String ])
+          @FFI.defaultArray,
+        edges: FFI.Indexed Num
+          (Schema [ source: String, label: String, target: String ])
+          @FFI.defaultArray ],
+    rhs: Schema
+      [ nodes: FFI.Indexed Num
+          (Schema [ bind: String, tag: String, payload: String ])
+          @FFI.defaultArray,
+        edges: FFI.Indexed Num
+          (Schema [ source: String, label: String, target: String ])
+          @FFI.defaultArray ] ]",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = closure_7;
+  return v0;
+}
+
+function closure_7(x) {
+  return x;
+}
+return main();
+",
+    "elaborated": "λ(x: Num) -> x",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"f"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [6]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[6] env
+[7] closure
+  :body -> [3]
+  :env -> [6]",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = &closure_7
+      return v0
+  fn closure_7(x) entry=entry
+    entry:
+      return x",
+    "name": "f",
+    "normalized": "λ(x: Num) -> (closure: x -| Γ: x)",
+    "type": "Π(t1: Num) -> Num",
+  },
+  {
+    "codegenJS": "function main() {
+  return v0;
+}
+return main();
+",
+    "elaborated": "<ω> λ(x: Num) -> f x [| λ($r3: λ(x: Num) -> f x) -> true |] %tailcallRule",
+    "error": "synth: case not implemented for term <ω> λ(x: Num) -> f x [| λ($r3: λ(x: Num) -> f x) -> true |] %tailcallRule; synth: case not implemented for term <ω> λ(x: Num) -> f x [| λ($r3: λ(x: Num) -> f x) -> true |] %tailcallRule",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"annotated"}
+[3] modal {"quantity":"Many"}
+  :rewrite_rule -> [11]
+  :term -> [8]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[7] var:free {"name":"f"}
+[8] var:ref {"name":"f"}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [8] {"level":1}
+[10] var:free {"name":"tailcallRule"}
+[11] var:ref {"name":"tailcallRule"}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      return v0",
+    "name": "annotated",
+    "normalized": "<ω> λ(x: Num) -> (closure: f x -| Γ: x) [| λ($r3: λ(x: Num) ->
+  (closure: f x -| Γ: x)) ->
+  (closure: true -| Γ: $r3) |]",
+    "type": "Π(t2: Num) -> Num",
+  },
+]
+`;

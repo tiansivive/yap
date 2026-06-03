@@ -1,0 +1,149 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`inference: gram annotations (%rule syntax) > gram only: (r: Rule) -> Num %r 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Schema
+  [ lhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ],
+    rhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String, payload: JSON ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ] ] ~~ Schema
+  [ lhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ],
+    rhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String, payload: JSON ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ] ]",
+    ],
+    "term": "Π(r: Rule) -> <ω> Num [| λ($r1: Num) -> true |] %r",
+    "type": "Type",
+  },
+}
+`;
+
+exports[`inference: gram annotations (%rule syntax) > gram type error: non-Rule produces unification constraint 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Num ~~ Schema
+  [ lhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ],
+    rhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String, payload: JSON ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ] ]",
+    ],
+    "term": "Π(x: Num) -> <ω> Num [| λ($r5: Num) -> true |] %x",
+    "type": "Type",
+  },
+}
+`;
+
+exports[`inference: gram annotations (%rule syntax) > liquid + gram: (r: Rule) -> Num [|\\n -> n > 0|] %r 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Num ~~ Num",
+      "Num ~~ Num",
+      "Bool ~~ Bool",
+      "Schema
+  [ lhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ],
+    rhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String, payload: JSON ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ] ] ~~ Schema
+  [ lhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ],
+    rhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String, payload: JSON ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ] ]",
+    ],
+    "term": "Π(r: Rule) -> <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |] %r",
+    "type": "Type",
+  },
+}
+`;
+
+exports[`inference: gram annotations (%rule syntax) > quantity + gram: (r: Rule) -> <1> Num %r 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Schema
+  [ lhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ],
+    rhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String, payload: JSON ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ] ] ~~ Schema
+  [ lhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ],
+    rhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String, payload: JSON ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ] ]",
+    ],
+    "term": "Π(r: Rule) -> <1> Num [| λ($r2: Num) -> true |] %r",
+    "type": "Type",
+  },
+}
+`;
+
+exports[`inference: gram annotations (%rule syntax) > quantity + liquid + gram: (r: Rule) -> <1> Num [|\\n -> n > 0|] %r 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Num ~~ Num",
+      "Num ~~ Num",
+      "Bool ~~ Bool",
+      "Schema
+  [ lhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ],
+    rhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String, payload: JSON ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ] ] ~~ Schema
+  [ lhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ],
+    rhs: Schema
+      [ nodes: Array [ 0: Schema [ bind: String, tag: String, payload: JSON ] ],
+        edges: Array
+          [ 0: Schema [ source: String, label: String, target: String ] ] ] ]",
+    ],
+    "term": "Π(r: Rule) -> <1> Num [| λ(n: Num) -> FFI.$gt n 0 |] %r",
+    "type": "Type",
+  },
+}
+`;

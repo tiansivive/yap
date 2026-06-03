@@ -13,3 +13,13 @@ export const Liquid = {
 		return tm;
 	},
 };
+
+export const Gram = {
+	typecheck: function* (gramTerm: Src.Term) {
+		const ctx = yield* V2.ask();
+		const ruleEntry = ctx.imports["Rule"];
+		const ruleType = NF.evaluate(ctx, ruleEntry[0]);
+		const [checked] = yield* EB.Check.val.gen(gramTerm, ruleType);
+		return checked;
+	},
+};

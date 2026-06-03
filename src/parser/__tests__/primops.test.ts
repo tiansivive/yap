@@ -40,6 +40,12 @@ describe("parser: primitive operations", () => {
 		expect(data.results[0]).toMatchSnapshot();
 	});
 
+	it("modulo: 10 % 3", () => {
+		const data = parser.feed("10 % 3");
+		expect(data.results.length).toBe(1);
+		expect(data.results[0]).toMatchSnapshot();
+	});
+
 	it("equality: x == y", () => {
 		const data = parser.feed("x == y");
 		expect(data.results.length).toBe(1);

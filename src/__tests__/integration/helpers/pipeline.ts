@@ -110,7 +110,7 @@ const pipeline = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, parentBinders?: Re
 			(e: GRAM.Pipeline.CompileError) => E.left<string, GRAM.Graph>(`GRAM: ${JSON.stringify(e)}`),
 			(g: GRAM.Graph) => E.right<string, GRAM.Graph>(g),
 		),
-	)(safe(() => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities: ARITIES, parentBinders })));
+	)(safe(() => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities: ARITIES, parentBinders, ctx })));
 	const gram = E.chain((g: GRAM.Graph) => safe(() => GRAM.display(g)))(gramGraph);
 	const mod = E.chain((g: GRAM.Graph) => safe(() => GRAM.Bridge.emit(g)))(gramGraph);
 	const mir = E.chain((m: Module) => safe(() => MIR.display.module(m)))(mod);

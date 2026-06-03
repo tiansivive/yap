@@ -42,7 +42,7 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
                 (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
               = λ(a: Type) =>
                 (λ(u: Unit) ->
-                  bubble#1327 (shift (λ($k: Π($k: go) -> a) ->
+                  bubble#1359 (shift (λ($k: Π($k: go) -> a) ->
                     match body unit
                       | true -> { go unit; $k (a unit); return unit; }
                       | false -> unit)) : Π(u: Unit) -> a);
@@ -63,7 +63,7 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
             (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
           = λ(a: Type) =>
             (λ(u: Unit) ->
-              bubble#1327 (shift (λ($k: Π($k: go) -> a) ->
+              bubble#1359 (shift (λ($k: Π($k: go) -> a) ->
                 match body unit
                   | true -> { go unit; $k (a unit); return unit; }
                   | false -> unit)) : Π(u: Unit) -> a);
@@ -98,7 +98,7 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
     : Π(x: Num) -> (closure: Num -| Γ: x; test)
     = reset |(λ(x: Num) ->
       FFI.$add 1
-        bubble#1303 (shift (λ($k: Π($k: Num) ->
+        bubble#1335 (shift (λ($k: Π($k: Num) ->
           Π(x: Num) -> (closure: Num -| Γ: x; test)) ->
           $k (FFI.$add x 10))) : Π(x: Num) -> Num)|;
   return test 5;

@@ -262,4 +262,40 @@ describe("GRAM translate", () => {
 		expect(Nodes.get(defId)(g)?.payload.name).toBe("$add");
 		[...refs].forEach(r => expect(Query.follow(r, Labels.REFERS_TO)(g)).toBe(defId));
 	});
+
+	it("Modal with gram annotation emits :rewrite_rule edge", () => {
+		const rule = EB.DSL.free("myRule");
+		const term = EB.Constructors.Modal(EB.DSL.num(42), {
+			quantity: "Many",
+			liquid: EB.DSL.bool(true),
+			gram: rule,
+		});
+		const g = translate(term);
+		expect(display(g)).toMatchSnapshot();
+
+		const modals = Query.byTag(Tags.MODAL)(g);
+		expect(modals.size).toBe(1);
+		const modalId = [...modals][0];
+
+		const ruleId = Query.follow(modalId, Labels.REWRITE_RULE)(g);
+		expect(ruleId).toBeDefined();
+		const ruleNode = Nodes.get(ruleId ?? -1)(g);
+		expect([Tags.VAR_FREE, Tags.VAR_REF]).toContain(ruleNode?.tag);
+	});
+
+	it("Modal without gram annotation has no :rewrite_rule edge", () => {
+		const term = EB.Constructors.Modal(EB.DSL.num(42), {
+			quantity: "Many",
+			liquid: EB.DSL.bool(true),
+		});
+		const g = translate(term);
+		expect(display(g)).toMatchSnapshot();
+
+		const modals = Query.byTag(Tags.MODAL)(g);
+		expect(modals.size).toBe(1);
+		const modalId = [...modals][0];
+
+		const ruleId = Query.follow(modalId, Labels.REWRITE_RULE)(g);
+		expect(ruleId).toBeUndefined();
+	});
 });

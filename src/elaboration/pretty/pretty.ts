@@ -105,7 +105,10 @@ const doc = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; prin
 				);
 				return PP.block(stmtDocs, doc(ret, next, opts));
 			})
-			.with({ type: "Modal" }, ({ term: tm, modalities }) => ["<", Q.display(modalities.quantity), "> ", go(tm), " [| ", go(modalities.liquid), " |]"])
+			.with({ type: "Modal" }, ({ term: tm, modalities }) => {
+				const g = modalities.gram ? [" %", go(modalities.gram)] : [];
+				return ["<", Q.display(modalities.quantity), "> ", go(tm), " [| ", go(modalities.liquid), " |]", ...g];
+			})
 			.with({ type: "Reset" }, ({ term: tm }) => ["reset |", go(tm), "|"])
 			.with({ type: "Shift" }, ({ body }) => ["shift (", go(body), ")"])
 			.with({ type: "Bubble" }, ({ id, shift }) => ["bubble#", `${id}`, " (", go(shift), ")"])

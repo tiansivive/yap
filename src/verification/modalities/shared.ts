@@ -7,6 +7,7 @@ import assert from "node:assert";
 export type Annotations<T> = {
 	quantity: Q.Multiplicity;
 	liquid: T;
+	gram?: T;
 };
 
 export type Artefacts = {
@@ -49,6 +50,6 @@ export const combine = (a: Annotations<NF.Value>, b: Annotations<NF.Value>, ctx:
 
 		const body = NF.DSL.Binop.and(anf, bnf);
 		return NF.Constructors.Lambda(name, "Explicit", NF.Constructors.Closure(ctx, NF.quote(ctx, lvl + 1, body)), a.liquid.binder.annotation);
-		// return NF.DSL.Binop.and(a.liquid, b.liquid);
 	})(),
+	gram: a.gram ?? b.gram,
 });

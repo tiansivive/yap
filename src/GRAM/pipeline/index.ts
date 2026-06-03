@@ -12,6 +12,7 @@ import { descriptor as saturate } from "../passes/saturate";
 import { descriptor as shiftReset } from "../passes/shift-reset";
 import { descriptor as pattern } from "../passes/pattern";
 import { descriptor as closure } from "../passes/closure";
+import * as Kernel from "../passes/kernel";
 import type { Inconsistency, Pipeline } from "./configure";
 import { configure } from "./configure";
 import type { Violation } from "./verify";
@@ -34,6 +35,7 @@ export type CompileOpts = {
 	readonly arities?: Record<string, number>;
 	readonly zonker?: import("@yap/elaboration/unification/substitution").Subst;
 	readonly parentBinders?: ReadonlyArray<string>;
+	readonly ctx?: EB.Context;
 };
 
 export const defaultPipeline: E.Either<ReadonlyArray<Inconsistency>, Pipeline> = configure(eta, saturate, shiftReset, pattern, closure);
@@ -44,7 +46,9 @@ export const compile = (term: EB.Term, opts?: CompileOpts): E.Either<CompileErro
 		E.mapLeft((errors): CompileError => ({ type: "PipelineConfig", errors })),
 		E.map(p => {
 			const g = translate(term, opts);
-			return { graph: p.run(g), vocabulary: p.finalVocabulary };
+			const afterStatic = p.run(g);
+			const afterKernel = Kernel.run(afterStatic, opts?.ctx);
+			return { graph: afterKernel, vocabulary: p.finalVocabulary };
 		}),
 		E.chain(({ graph, vocabulary }) =>
 			pipe(

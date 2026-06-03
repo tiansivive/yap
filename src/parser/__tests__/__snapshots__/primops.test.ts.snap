@@ -342,6 +342,38 @@ exports[`parser: primitive operations > less than: x < y 1`] = `
 }
 `;
 
+exports[`parser: primitive operations > modulo: 10 % 3 1`] = `
+{
+  "arg": {
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 3,
+    },
+  },
+  "fn": {
+    "arg": {
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 10,
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "%",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "icit": "Explicit",
+  "type": "application",
+}
+`;
+
 exports[`parser: primitive operations > multiplication: 4 * 2 1`] = `
 {
   "arg": {

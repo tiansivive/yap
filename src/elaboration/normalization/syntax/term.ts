@@ -183,6 +183,7 @@ export const Patterns = {
 	Type: { type: "Lit", value: { type: "Atom", value: "Type" } } as const,
 	Unit: { type: "Lit", value: { type: "Atom", value: "Unit" } } as const,
 	Any: { type: "Lit", value: { type: "Atom", value: "Any" } } as const,
+	JSON: { type: "Lit", value: { type: "Atom", value: "JSON" } } as const,
 
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } } as const,
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } } as const,

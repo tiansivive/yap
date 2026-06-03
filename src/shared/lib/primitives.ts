@@ -7,6 +7,8 @@ import * as Lit from "@yap/shared/literals"
 
 import * as Sub from "@yap/elaboration/unification/substitution"
 
+import * as Gram from "./gram"
+
 import { isEqual } from "lodash"
 
 export const defaultContext = () => ({
@@ -124,6 +126,7 @@ export const Elaborated: () => EB.Context['imports'] = () => {
 
     return {
         ...PrimTypes,
+        ...Gram.Elaborated(),
         //"->": [Terms()["->"], Type_Type_Type, []],
         "+": [Terms()["+"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.add)]), []],
         "-": [Terms()["-"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.sub)]), []],

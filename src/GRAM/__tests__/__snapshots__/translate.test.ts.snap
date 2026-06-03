@@ -106,6 +106,26 @@ exports[`GRAM translate > Lit(true) 1`] = `
 [2] lit {"value":{"type":"Bool","value":true}}"
 `;
 
+exports[`GRAM translate > Modal with gram annotation emits :rewrite_rule edge 1`] = `
+"[1] root
+  :entry -> [2]
+[2] modal {"quantity":"Many"}
+  :rewrite_rule -> [5]
+  :term -> [3]
+[3] lit {"value":{"type":"Num","value":42}}
+[4] var:free {"name":"myRule"}
+[5] var:ref {"name":"myRule"}
+  :refers_to -> [4]"
+`;
+
+exports[`GRAM translate > Modal without gram annotation has no :rewrite_rule edge 1`] = `
+"[1] root
+  :entry -> [2]
+[2] modal {"quantity":"Many"}
+  :term -> [3]
+[3] lit {"value":{"type":"Num","value":42}}"
+`;
+
 exports[`GRAM translate > add(1, 2) — curried foreign primop 1`] = `
 "[1] root
   :entry -> [2]

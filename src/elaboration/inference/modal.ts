@@ -16,11 +16,12 @@ export const infer = (modal: Modal): V2.Elaboration<EB.AST> =>
 			const ctx = yield* V2.ask();
 			const [tm, ty, us] = yield* EB.infer.gen(modal.term);
 
-			const nf = NF.evaluate(ctx, tm); // Modalities work on the term (in normal form), not on its type
+			const nf = NF.evaluate(ctx, tm);
 			const liquid = modal.modalities.liquid ? yield* EB.Liquid.typecheck(modal.modalities.liquid, nf) : Liquid.Predicate.Neutral(tm);
 			const quantity = modal.modalities.quantity ?? Q.Many;
+			const gram = modal.modalities.gram ? yield* EB.Gram.typecheck(modal.modalities.gram) : undefined;
 
-			return [EB.Constructors.Modal(tm, { quantity, liquid }), nf, us] satisfies EB.AST;
+			return [EB.Constructors.Modal(tm, { quantity, liquid, gram }), nf, us] satisfies EB.AST;
 		}),
 	);
 

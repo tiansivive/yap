@@ -1,4 +1,6 @@
 import * as NF from "@yap/elaboration/normalization";
+import * as R from "@yap/shared/rows";
+import * as Lit from "@yap/shared/literals";
 import { Implicitness } from "@yap/shared/implicitness";
 import { OP_ADD, OP_AND, OP_DIV, OP_EQ, OP_GT, OP_GTE, OP_LT, OP_LTE, OP_MUL, OP_NEQ, OP_NOT, OP_OR, OP_SUB, PrimOps } from "@yap/shared/lib/primitives";
 import { NonEmptyArray } from "fp-ts/NonEmptyArray";
@@ -72,4 +74,34 @@ export const Binop = { and, or, lt, gt, lte, gte, eq, neq, add, sub, mul, div };
 
 export const Apply = (icit: Implicitness, func: NF.Value, ...args: NonEmptyArray<NF.Value>): NF.Value => {
 	return args.reduce((f, a) => NF.Constructors.App(f, a, icit), func);
+};
+
+export const str = (s: string): NF.Value => NF.Constructors.Lit(Lit.String(s));
+export const num = (n: number): NF.Value => NF.Constructors.Lit(Lit.Num(n));
+export const bool = (b: boolean): NF.Value => NF.Constructors.Lit(Lit.Bool(b));
+
+const mkRow = (...fields: ReadonlyArray<[string, NF.Value]>): NF.Row =>
+	fields.reduceRight<NF.Row>((acc, [label, value]) => R.Constructors.Extension(label, value, acc), R.Constructors.Empty());
+
+export const schema = (...fields: ReadonlyArray<[string, NF.Value]>): NF.Value =>
+	NF.Constructors.App(NF.Constructors.Lit(Lit.Atom("Schema")), NF.Constructors.Row(mkRow(...fields)), "Explicit");
+
+export const array = (...elements: ReadonlyArray<NF.Value>): NF.Value => {
+	const row = elements.reduceRight<NF.Row>((acc, el, idx) => R.Constructors.Extension(String(idx), el, acc), R.Constructors.Empty());
+	return NF.Constructors.App(NF.Constructors.Lit(Lit.Atom("Array")), NF.Constructors.Row(row), "Explicit");
+};
+
+export const Rule = {
+	pattern: (bind: string, tag: string): NF.Value => schema(["bind", str(bind)], ["tag", str(tag)]),
+
+	constructor: (bind: string, tag: string, payload: Record<string, unknown> = {}): NF.Value =>
+		schema(["bind", str(bind)], ["tag", str(tag)], ["payload", str(JSON.stringify(payload))]),
+
+	edge: (source: string, label: string, target: string): NF.Value => schema(["source", str(source)], ["label", str(label)], ["target", str(target)]),
+
+	lhs: (nodes: ReadonlyArray<NF.Value>, edges: ReadonlyArray<NF.Value> = []): NF.Value => schema(["nodes", array(...nodes)], ["edges", array(...edges)]),
+
+	rhs: (nodes: ReadonlyArray<NF.Value>, edges: ReadonlyArray<NF.Value> = []): NF.Value => schema(["nodes", array(...nodes)], ["edges", array(...edges)]),
+
+	rule: (lhs: NF.Value, rhs: NF.Value): NF.Value => schema(["lhs", lhs], ["rhs", rhs]),
 };
