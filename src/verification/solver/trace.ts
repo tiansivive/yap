@@ -581,7 +581,7 @@ export const Trace = {
 		const theoryArena = arena ?? defaultArena;
 
 		const initialTheories: TheoryReplayState = {
-			euf: { classes: initEqClasses(theoryArena), initialized: true },
+			euf: { classes: initEqClasses(theoryArena), initialized: false },
 			arith: { bounds: new Map() },
 		};
 		const initialState: ReplayState = { trail: [], assignments: new Map(), allClauses: clauses, theories: initialTheories };
