@@ -1,5 +1,21 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`GRAM Bridge: PAP — partial application objects > snapshot: $add 1 — unsaturated PAP 1`] = `
+"module
+  fn main entry=entry
+    entry:
+      let v0 = 1
+      let env_pap1 = alloc { v0: v0 }
+      let fnref_pap1 = &pap_fn1
+      let closure_pap1 = alloc { __fn: fnref_pap1, __env: env_pap1 }
+      return closure_pap1
+  fn pap_fn1(env2, arg3) entry=pap_fn1_entry
+    pap_fn1_entry:
+      let cap_0 = read env2.v0
+      let result_pap_fn1 = +(cap_0, arg3)
+      return result_pap_fn1"
+`;
+
 exports[`GRAM Bridge: Phase 1 — leaves and structural ops > snapshot: proj('x', struct { x: 42 }) 1`] = `
 "module
   fn main entry=entry

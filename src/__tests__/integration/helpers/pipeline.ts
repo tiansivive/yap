@@ -105,12 +105,14 @@ const pipeline = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, parentBinders?: Re
 		),
 	)(artefacts);
 
+	const ffiArities = Object.fromEntries(Object.entries(ctx.ffi).map(([k, v]) => [k, v.arity]));
+	const arities = { ...ARITIES, ...ffiArities };
 	const gramGraph = E.chain(
 		E.fold(
 			(e: GRAM.Pipeline.CompileError) => E.left<string, GRAM.Graph>(`GRAM: ${JSON.stringify(e)}`),
 			(g: GRAM.Graph) => E.right<string, GRAM.Graph>(g),
 		),
-	)(safe(() => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities: ARITIES, parentBinders })));
+	)(safe(() => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities, parentBinders })));
 	const gram = E.chain((g: GRAM.Graph) => safe(() => GRAM.display(g)))(gramGraph);
 	const mod = E.chain((g: GRAM.Graph) => safe(() => GRAM.Bridge.emit(g)))(gramGraph);
 	const mir = E.chain((m: Module) => safe(() => MIR.display.module(m)))(mod);
@@ -143,7 +145,13 @@ const Elaborate = {
 				safe(() => {
 					const nf = NF.evaluate(ctx, tm);
 					const v = EB.Constructors.Var({ type: "Foreign", name: stmt.variable });
-					return set(ctx, ["imports", stmt.variable] as const, [v, nf, []] satisfies EB.AST);
+					const ar = NF.arity(ctx, nf);
+					const compute = (...args: NF.Value[]) => {
+						const ext = NF.Constructors.External(stmt.variable, ar, compute, args);
+						return NF.Constructors.Neutral(ext);
+					};
+					const c1 = set(ctx, ["imports", stmt.variable] as const, [v, nf, []] satisfies EB.AST);
+					return set(c1, ["ffi", stmt.variable] as const, { arity: ar, compute });
 				}),
 			),
 		),

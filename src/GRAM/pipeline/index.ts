@@ -9,6 +9,7 @@ import { translate } from "../translate";
 import type { Location } from "../provenance";
 import { descriptor as eta } from "../passes/eta";
 import { descriptor as saturate } from "../passes/saturate";
+import { descriptor as pap } from "../passes/pap";
 import { descriptor as shiftReset } from "../passes/shift-reset";
 import { descriptor as pattern } from "../passes/pattern";
 import { descriptor as closure } from "../passes/closure";
@@ -36,7 +37,7 @@ export type CompileOpts = {
 	readonly parentBinders?: ReadonlyArray<string>;
 };
 
-export const defaultPipeline: E.Either<ReadonlyArray<Inconsistency>, Pipeline> = configure(eta, saturate, shiftReset, pattern, closure);
+export const defaultPipeline: E.Either<ReadonlyArray<Inconsistency>, Pipeline> = configure(eta, saturate, pap, shiftReset, pattern, closure);
 
 export const compile = (term: EB.Term, opts?: CompileOpts): E.Either<CompileError, Graph> =>
 	pipe(

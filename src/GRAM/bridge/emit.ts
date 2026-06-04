@@ -12,6 +12,7 @@ import * as Structural from "./structural";
 import * as Blocks from "./blocks";
 import * as Closures from "./closures";
 import * as Primops from "./primops";
+import * as Paps from "./pap";
 import * as Decisions from "./decisions";
 import * as Continuations from "./continuations";
 
@@ -55,6 +56,7 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.LAMBDA, () => lambda(id, ctx))
 		.with(Tags.PRIMOP, () => Primops.primop(id, walk, ctx))
 		.with(Tags.EXTERNAL, () => Primops.external(id, walk, ctx))
+		.with(Tags.PAP, () => Paps.pap(id, walk, ctx))
 		.with(Tags.MATCH, () => Decisions.decision(id, walk, ctx))
 		.with(Tags.RESET, () => Continuations.reset(id, walk, ctx))
 		.with(Tags.RESUMPTION, () => Continuations.resume(id, walk, ctx))

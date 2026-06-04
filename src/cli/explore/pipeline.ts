@@ -252,7 +252,9 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 			}, errors) ?? "";
 	}
 
-	const gramResult = attempt(() => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities: ARITIES }), errors);
+	const ffiArities = Object.fromEntries(Object.entries(ctx.ffi).map(([k, v]) => [k, v.arity]));
+	const arities = { ...ARITIES, ...ffiArities };
+	const gramResult = attempt(() => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities }), errors);
 
 	const gramGraph = gramResult && E.isRight(gramResult) ? gramResult.right : undefined;
 	result.gram = gramGraph ? (attempt(() => GRAM.display(gramGraph), errors) ?? "") : "";

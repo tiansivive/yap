@@ -965,7 +965,7 @@ return main();
 [3] lambda {"variable":"F","icit":"Implicit","level":1}
   :annotation -> [4]
   :body -> [7]
-  :env -> [62]
+  :env -> [64]
 [4] pi {"variable":"t12","icit":"Explicit","level":1}
   :annotation -> [5]
   :body -> [6]
@@ -974,12 +974,12 @@ return main();
 [7] lambda {"variable":"a","icit":"Implicit","level":2}
   :annotation -> [8]
   :body -> [9]
-  :env -> [63]
+  :env -> [65]
 [8] lit {"value":{"type":"Atom","value":"Type"}}
 [9] lambda {"variable":"A","icit":"Implicit","level":3}
   :annotation -> [10]
   :body -> [47]
-  :env -> [64]
+  :env -> [66]
 [10] sigma {"variable":"$sig","level":3}
   :annotation -> [11]
   :body -> [28]
@@ -1146,7 +1146,7 @@ return main();
   :scope -> [39] {"level":7}
 [46] row:empty
 [47] app {"icit":"Explicit"}
-  :arg -> [58]
+  :arg -> [62]
   :func -> [48]
 [48] app {"icit":"Implicit"}
   :arg -> [57]
@@ -1186,43 +1186,37 @@ return main();
   :scope -> [7] {"level":2}
   :scope -> [9] {"level":3}
 [57] lit {"value":{"type":"Atom","value":"String"}}
-[58] app {"icit":"Implicit"}
-  :arg -> [61]
-  :func -> [60]
-[59] var:foreign {"name":"stringify"}
-[60] var:ref {"name":"stringify"}
-  :refers_to -> [59]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [7] {"level":2}
-  :scope -> [9] {"level":3}
+[59] var:foreign {"name":"stringify","arity":2}
 [61] var:bound {"index":1}
   :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [7] {"level":2}
   :scope -> [9] {"level":3}
-[62] env
+[62] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [61] {"index":0}
+  :callee -> [59]
+[63] pap {"remaining":1}
+  :captured -> [61] {"index":0}
+  :materializes -> [62]
+[64] env
   :capture -> [52] {"index":0}
-  :capture -> [59] {"index":1}
-[63] env
+[65] env
   :capture -> [3] {"index":0}
   :capture -> [52] {"index":1}
-  :capture -> [59] {"index":2}
-[64] env
+[66] env
   :capture -> [52] {"index":0}
   :capture -> [3] {"index":1}
   :capture -> [7] {"index":2}
-  :capture -> [59] {"index":3}
-[65] closure
-  :body -> [3]
-  :env -> [62]
-[66] closure
-  :body -> [7]
-  :env -> [63]
 [67] closure
+  :body -> [3]
+  :env -> [64]
+[68] closure
+  :body -> [7]
+  :env -> [65]
+[69] closure
   :body -> [9]
-  :env -> [64]",
+  :env -> [66]",
     "kind": "let",
     "mir": "",
     "name": "strmap",
@@ -1424,7 +1418,7 @@ return main();
       let v8 = call *v6(v7)
       return v8",
     "name": "strList",
-    "normalized": "Struct [ cons: Struct [ 0: FFI.stringify @Num 1, 1: Struct [ nil: unit ] ] ]",
+    "normalized": "Struct [ cons: Struct [ 0: (stringify: (Num) (1)), 1: Struct [ nil: unit ] ] ]",
     "type": "(List) String",
   },
 ]
