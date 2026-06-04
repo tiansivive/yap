@@ -9,9 +9,14 @@ type Env = Map<string, Value>;
 type Ctx = {
 	functions: Map<string, Function>;
 	ffi: Record<string, (...args: any[]) => any>;
+	globals: Map<string, Value>;
 };
 
 export function interpret(mod: Module, ffi?: Record<string, (...args: any[]) => any>): Value {
+	return interpretWithGlobals(mod, ffi ?? {}, new Map());
+}
+
+export function interpretWithGlobals(mod: Module, ffi: Record<string, (...args: any[]) => any>, globals: Map<string, Value>): Value {
 	const functions = new Map(mod.functions.map(f => [f.name, f] as const));
 	const main = functions.get("main");
 
@@ -20,7 +25,8 @@ export function interpret(mod: Module, ffi?: Record<string, (...args: any[]) => 
 	}
 	const ctx: Ctx = {
 		functions,
-		ffi: ffi ?? {},
+		ffi,
+		globals,
 	};
 	return execFunction(main, [], ctx);
 }
@@ -40,65 +46,67 @@ function execFunction(fn: Function, args: Value[], ctx: Ctx): Value {
 		const t = current.terminator;
 
 		if (t.type === "Return") {
-			return lookup(env, t.value);
+			return lookup(env, t.value, ctx.globals);
 		}
 
 		if (t.type === "Jump") {
-			const jump = resolveJump(blocks, env, t.target, t.args);
+			const jump = resolveJump(blocks, env, t.target, t.args, ctx.globals);
 			enterBlock(env, jump);
 			current = jump.block;
 			continue;
 		}
 
 		// Branch
-		const scrutinee = lookup(env, t.scrutinee);
+		const scrutinee = lookup(env, t.scrutinee, ctx.globals);
 		const matched = t.cases.find(c => c.value === String(scrutinee));
 		const dest = matched ?? t.default;
 
 		if (!dest) {
 			throw new Error(`interpret: non-exhaustive branch on "${scrutinee}"`);
 		}
-		const jump = resolveJump(blocks, env, dest.target, dest.args);
+		const jump = resolveJump(blocks, env, dest.target, dest.args, ctx.globals);
 		enterBlock(env, jump);
 		current = jump.block;
 	}
 }
 
 const execInstr = (env: Env, instr: Instr, ctx: Ctx): void => {
+	const lkp = (name: string) => lookup(env, name, ctx.globals);
+
 	match(instr)
 		.with({ type: "Let" }, ({ name, expr }) => {
-			env.set(name, evalExpr(env, expr));
+			env.set(name, evalExpr(env, expr, ctx.globals));
 		})
 		.with({ type: "Read" }, ({ label, target, result }) => {
-			const obj = lookup(env, target) as Record<string, Value>;
+			const obj = lkp(target) as Record<string, Value>;
 			env.set(result, obj[label]);
 		})
 		.with({ type: "Alloc" }, ({ alloc, result }) => {
 			const obj: Record<string, Value> = {};
 
 			for (const f of alloc.fields) {
-				obj[f.label] = lookup(env, f.value);
+				obj[f.label] = lkp(f.value);
 			}
 			env.set(result, obj);
 		})
 		.with({ type: "Update", mode: "immutable" }, ({ into, result, alloc }) => {
-			const base = lookup(env, into) as Record<string, Value>;
+			const base = lkp(into) as Record<string, Value>;
 			const obj = { ...base };
 
 			for (const f of alloc.fields) {
-				obj[f.label] = lookup(env, f.value);
+				obj[f.label] = lkp(f.value);
 			}
 			env.set(result, obj);
 		})
 		.with({ type: "Update", mode: "fbip" }, ({ into, updates }) => {
-			const obj = lookup(env, into) as Record<string, Value>;
+			const obj = lkp(into) as Record<string, Value>;
 
 			for (const u of updates) {
-				obj[u.label] = lookup(env, u.value);
+				obj[u.label] = lkp(u.value);
 			}
 		})
 		.with({ type: "Call" }, ({ target, args, result }) => {
-			const resolvedArgs = args.map(a => lookup(env, a));
+			const resolvedArgs = args.map(a => lkp(a));
 			match(target)
 				.with({ type: "direct" }, ({ func }) => {
 					const fn = ctx.ffi[func];
@@ -109,7 +117,7 @@ const execInstr = (env: Env, instr: Instr, ctx: Ctx): void => {
 					env.set(result, fn(...resolvedArgs));
 				})
 				.with({ type: "indirect" }, ({ callee }) => {
-					const ref = lookup(env, callee) as { __funcref: string };
+					const ref = lkp(callee) as { __funcref: string };
 					const fn = ctx.functions.get(ref.__funcref);
 
 					if (!fn) {
@@ -123,19 +131,23 @@ const execInstr = (env: Env, instr: Instr, ctx: Ctx): void => {
 		.exhaustive();
 };
 
-const evalExpr = (env: Env, expr: Expr): Value =>
+const evalExpr = (env: Env, expr: Expr, globals?: Map<string, Value>): Value =>
 	match(expr)
-		.with({ type: "Var" }, ({ name }) => lookup(env, name))
+		.with({ type: "Var" }, ({ name }) => lookup(env, name, globals))
 		.with({ type: "Lit" }, ({ value }) => evalLiteral(value))
 		.with({ type: "FuncRef" }, ({ name }) => ({ __funcref: name }) as Value)
-		.with({ type: "PrimOp" }, ({ op, args }) => evalPrimOp(env, op, args))
+		.with({ type: "PrimOp" }, ({ op, args }) => evalPrimOp(env, op, args, globals))
 		.exhaustive();
 
-const lookup = (env: Env, name: string): Value => {
+const lookup = (env: Env, name: string, globals?: Map<string, Value>): Value => {
 	const v = env.get(name);
 
 	if (v === undefined) {
-		throw new Error(`interpret: unbound variable "${name}"`);
+		const g = globals?.get(name);
+		if (g === undefined) {
+			throw new Error(`interpret: unbound variable "${name}"`);
+		}
+		return g;
 	}
 	return v;
 };
@@ -149,8 +161,8 @@ const evalLiteral = (lit: Literal): Value =>
 		.with({ type: "Atom" }, l => l.value)
 		.exhaustive();
 
-const evalPrimOp = (env: Env, op: string, args: string[]): Value => {
-	const vals = args.map(a => lookup(env, a));
+const evalPrimOp = (env: Env, op: string, args: string[], globals?: Map<string, Value>): Value => {
+	const vals = args.map(a => lookup(env, a, globals));
 	switch (op) {
 		case "$add":
 			return (vals[0] as number) + (vals[1] as number);
@@ -189,13 +201,13 @@ const evalPrimOp = (env: Env, op: string, args: string[]): Value => {
 
 type JumpTarget = { block: Block; args: Value[] };
 
-const resolveJump = (blocks: Map<Label, Block>, env: Env, target: Label, args: string[]): JumpTarget => {
+const resolveJump = (blocks: Map<Label, Block>, env: Env, target: Label, args: string[], globals?: Map<string, Value>): JumpTarget => {
 	const block = blocks.get(target);
 
 	if (!block) {
 		throw new Error(`interpret: unknown block "${target}"`);
 	}
-	return { block, args: args.map(a => lookup(env, a)) };
+	return { block, args: args.map(a => lookup(env, a, globals)) };
 };
 
 const enterBlock = (env: Env, jump: JumpTarget): void => {

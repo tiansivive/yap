@@ -11,7 +11,7 @@ import fs from "fs";
 import { resolve } from "path";
 
 import { defaultContext } from "@yap/shared/lib/constants";
-import { ARITIES } from "../../lowering/shared/primops";
+import * as Pipeline from "@yap/pipeline";
 import * as MIR from "../../lowering/pretty";
 import { emit as emitJS } from "../../Codegen/v2/js/emit";
 import { print as printJS } from "../../Codegen/v2/js/print";
@@ -252,8 +252,7 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 			}, errors) ?? "";
 	}
 
-	const ffiArities = Object.fromEntries(Object.entries(ctx.ffi).map(([k, v]) => [k, v.arity]));
-	const arities = { ...ARITIES, ...ffiArities };
+	const arities = Pipeline.deriveAritiesFromContext(ctx);
 	const gramResult = attempt(() => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities }), errors);
 
 	const gramGraph = gramResult && E.isRight(gramResult) ? gramResult.right : undefined;

@@ -22,7 +22,9 @@
 			"@yap/shared/*": ["./src/shared/*"],
 			"@yap/utils": ["./src/utils/index"],
 			"@yap/gram": ["./src/GRAM/index"],
-			"@yap/gram/*": ["./src/GRAM/*"]
+			"@yap/gram/*": ["./src/GRAM/*"],
+			"@yap/pipeline": ["./src/pipeline/index"],
+			"@yap/pipeline/*": ["./src/pipeline/*"]
 		}
 	},
 	"include": ["src", "scripts/cli.ts", "integration-tests"],

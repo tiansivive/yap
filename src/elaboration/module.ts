@@ -25,22 +25,27 @@ import { Bool, Expr, init, Model } from "z3-solver";
 import { getZ3Context } from "@yap/shared/config/options";
 import type { WithProvenance } from "./shared/provenance";
 
-export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
-	const maybeExport = (name: string) => (result: Omit<Interface, "imports">) => {
-		if (
-			mod.exports.type === "*" ||
-			(mod.exports.type === "explicit" && mod.exports.names.includes(name)) ||
-			(mod.exports.type === "partial" && !mod.exports.hiding.includes(name))
-		) {
-			return update(result, "exports", A.append(name));
-		}
-		return result;
-	};
+type InterfaceFields = Omit<Interface, "imports" | "zonker">;
+type WithCtx = [InterfaceFields, EB.Context];
+
+export const elaborate = (mod: Src.Module, ctx: EB.Context): Omit<Interface, "imports"> => {
+	const maybeExport =
+		(name: string) =>
+		([result, c]: WithCtx): WithCtx => {
+			if (
+				mod.exports.type === "*" ||
+				(mod.exports.type === "explicit" && mod.exports.names.includes(name)) ||
+				(mod.exports.type === "partial" && !mod.exports.hiding.includes(name))
+			) {
+				return [update(result, "exports", A.append(name)), c];
+			}
+			return [result, c];
+		};
 
 	type Pair = [string, Either<EB.V2.Err, EB.AST>];
-	const next = (stmts: Src.Statement[], ctx: EB.Context): Omit<Interface, "imports"> => {
+	const next = (stmts: Src.Statement[], ctx: EB.Context): WithCtx => {
 		if (stmts.length === 0) {
-			return { foreign: [], exports: [], letdecs: [], errors: [], declarations: {} };
+			return [{ foreign: [], exports: [], letdecs: [], errors: [], declarations: {} }, ctx];
 		}
 
 		const [head, ...tail] = stmts;
@@ -49,7 +54,10 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 			return F.pipe(
 				using(head, ctx),
 				E.match(
-					e => update(next(tail, ctx), "errors", A.prepend(e)),
+					e => {
+						const [r, c] = next(tail, ctx);
+						return [update(r, "errors", A.prepend(e)), c] as WithCtx;
+					},
 					ctx => next(tail, ctx),
 				),
 			);
@@ -60,12 +68,22 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 			return F.pipe(
 				result,
 				E.match(
-					e => update(next(tail, ctx), "foreign", A.prepend<Pair>([name, E.left(e)])),
-					([ast, ctx, decl]) =>
+					e => {
+						const [r, c] = next(tail, ctx);
+						return [update(r, "foreign", A.prepend<Pair>([name, E.left(e)])), c] as WithCtx;
+					},
+					([ast, nextCtx, decl]) =>
 						F.pipe(
-							next(tail, ctx),
-							update("foreign", A.prepend<Pair>([name, E.right(ast)])),
-							update("declarations", (d: Record<string, Declaration>) => ({ ...d, [name]: decl })),
+							next(tail, nextCtx),
+							([r, c]) =>
+								[
+									F.pipe(
+										r,
+										update("foreign", A.prepend<Pair>([name, E.right(ast)])),
+										update("declarations", (d: Record<string, Declaration>) => ({ ...d, [name]: decl })),
+									),
+									c,
+								] as WithCtx,
 							maybeExport(name),
 						),
 				),
@@ -78,8 +96,12 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 			return F.pipe(
 				result,
 				E.match(
-					e => update(next(tail, ctx), "letdecs", A.prepend<Pair>([name, E.left(e)])),
-					([ast, ctx]) => F.pipe(next(tail, ctx), update("letdecs", A.prepend<Pair>([name, E.right(ast)])), maybeExport(name)),
+					e => {
+						const [r, c] = next(tail, ctx);
+						return [update(r, "letdecs", A.prepend<Pair>([name, E.left(e)])), c] as WithCtx;
+					},
+					([ast, nextCtx]) =>
+						F.pipe(next(tail, nextCtx), ([r, c]) => [update(r, "letdecs", A.prepend<Pair>([name, E.right(ast)])), c] as WithCtx, maybeExport(name)),
 				),
 			);
 		}
@@ -88,7 +110,7 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 		return next(tail, ctx);
 	};
 
-	const result = next(mod.content.script, ctx);
+	const [result, finalCtx] = next(mod.content.script, ctx);
 	console.log("\n================ Module Elaboration ================\n");
 	console.log("Exports:");
 	console.log(result.exports);
@@ -99,7 +121,7 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context) => {
 	console.log("Errors:");
 	console.log(result.errors);
 	console.log("\n===================================================\n");
-	return result;
+	return { ...result, zonker: finalCtx.zonker };
 };
 
 export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context, Declaration]>] => {
@@ -125,13 +147,8 @@ export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.C
 export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context]>] => {
 	const inference = V2.Do(function* () {
 		const [elaborated, ty, us] = yield* EB.Stmt.infer.gen(stmt);
-		// console.log("\n------------------ LETDEC --------------------------------");
 		const [r, next] = yield* EB.Stmt.letdec(elaborated as Extract<EB.Statement, { type: "Let" }>);
 
-		const zCtx = getZ3Context();
-		if (!zCtx) {
-			throw new Error("Z3 context not set");
-		}
 		const ast: EB.AST = [r.value, r.annotation, us];
 		const final = [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
 		// const Verification = VerificationServiceV2(zCtx, { logging: stmt.variable === "ascending" });

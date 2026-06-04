@@ -22,7 +22,8 @@ import * as A from "fp-ts/lib/Array";
 import * as P from "@yap/elaboration/shared/provenance";
 
 import { set, setProp, update } from "@yap/utils";
-import { GlobalDefaults } from "../compile";
+type LoadOpts = { outDir: string; baseUrl: string };
+const LoadDefaults: LoadOpts = { outDir: "./bin/", baseUrl: "./yap/" };
 import { defaultContext } from "@yap/shared/lib/constants";
 
 type ModuleName = string;
@@ -38,11 +39,12 @@ export type Interface = {
 	letdecs: [string, Either<V2.Err, EB.AST>][];
 	errors: V2.Err[];
 	declarations: Record<string, Declaration>;
+	zonker: Sub.Subst;
 };
 
 type Separated = [Array<[string, V2.Err]>, Array<[string, EB.AST]>];
 
-export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts = GlobalDefaults): Interface => {
+export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts: LoadOpts = LoadDefaults): Interface => {
 	if (globalModules[moduleName]) {
 		return globalModules[moduleName];
 	}
