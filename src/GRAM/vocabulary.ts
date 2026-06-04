@@ -49,6 +49,7 @@ export const Tags = {
 
 	EXTERNAL: "external",
 	PRIMOP: "primop",
+	PAP: "pap",
 	CLOSURE: "closure",
 	ENV: "env",
 	FUNC: "func",
@@ -114,6 +115,9 @@ export const Labels = {
 	HANDLER: ":handler",
 	PARAM: ":param",
 	INVOKES: ":invokes",
+
+	MATERIALIZES: ":materializes",
+	CAPTURED: ":captured",
 } as const;
 
 export type Label = string;

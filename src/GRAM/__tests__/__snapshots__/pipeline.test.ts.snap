@@ -16,7 +16,10 @@ exports[`compile > block with let — let a = 1; λx. a + x (eta-reduces) 1`] = 
   :scope -> [3] {"level":0}
 [13] external {"name":"$add","arity":2,"args":1,"saturated":false}
   :arg -> [11] {"index":0}
-  :callee -> [9]"
+  :callee -> [9]
+[14] pap {"remaining":1}
+  :captured -> [11] {"index":0}
+  :materializes -> [13]"
 `;
 
 exports[`compile > block with let — non-eta-reducible closure 1`] = `
@@ -70,7 +73,10 @@ exports[`compile > complex — nested lambdas + free vars + foreigns + let + mat
   :scope -> [3] {"level":0}
 [17] external {"name":"$add","arity":2,"args":1,"saturated":false}
   :arg -> [16] {"index":0}
-  :callee -> [12]"
+  :callee -> [12]
+[18] pap {"remaining":1}
+  :captured -> [16] {"index":0}
+  :materializes -> [17]"
 `;
 
 exports[`compile > curried closure — (λx.λy. x+y) 3 4 1`] = `

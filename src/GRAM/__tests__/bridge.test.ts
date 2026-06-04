@@ -188,6 +188,33 @@ describe("GRAM Bridge: Phase 3 — pattern matching", () => {
 	});
 });
 
+describe("GRAM Bridge: PAP — partial application objects", () => {
+	beforeEach(() => {
+		EB.resetId();
+		resetId();
+		MIR.resetId();
+	});
+
+	it("($add 1) 2 — apply PAP then call", () => {
+		const pap = EB.DSL.app(EB.DSL.foreign("$add"), EB.DSL.num(1));
+		const term = EB.DSL.app(pap, EB.DSL.num(2));
+		const result = via(term);
+		expect(result).toBe(3);
+	});
+
+	it("snapshot: $add 1 — unsaturated PAP", () => {
+		const term = EB.DSL.app(EB.DSL.foreign("$add"), EB.DSL.num(1));
+		expect(display.module(bridge(term))).toMatchSnapshot();
+	});
+
+	it("(λx. $add x) 1 2 — PAP in closure body", () => {
+		const lam = EB.DSL.lambda("x", EB.DSL.app(EB.DSL.foreign("$add"), EB.DSL.bound(0)), EB.DSL.type("Num"));
+		const term = EB.DSL.app(EB.DSL.app(lam, EB.DSL.num(5)), EB.DSL.num(3));
+		const result = via(term);
+		expect(result).toBe(8);
+	});
+});
+
 describe("GRAM Bridge: Phase 4 — shift/reset", () => {
 	beforeEach(() => {
 		EB.resetId();

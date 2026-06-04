@@ -1,9 +1,10 @@
 import { Nodes, Edges } from "../graph";
 import type { NodeId } from "../graph";
-import { Labels } from "../vocabulary";
+import { Tags, Labels } from "../vocabulary";
 import { Constructors } from "../../lowering/mir";
 import type { Ctx } from "./context";
 import * as C from "./context";
+import * as Paps from "./pap";
 
 const { Instr, Expr } = Constructors;
 
@@ -16,6 +17,12 @@ export const primop = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx]
 };
 
 export const external = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], ctx: Ctx): [string, Ctx] => {
+	const papEdge = Edges.to(id)(ctx.graph).find(e => e.label === Labels.MATERIALIZES && Nodes.get(e.source)(ctx.graph)?.tag === Tags.PAP);
+
+	if (papEdge !== undefined) {
+		return Paps.pap(papEdge.source, walk, ctx);
+	}
+
 	const payload = Nodes.get(id)(ctx.graph)?.payload;
 	const name = (payload?.name ?? "") as string;
 	const [argNames, c1] = walkArgs(id, walk, ctx);

@@ -1,0 +1,33 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`pap pass > transformation > snapshot — unsaturated $add with 1 arg 1`] = `
+"[1] root
+  :entry -> [6]
+[3] var:foreign {"name":"$add","arity":2}
+[5] lit {"value":{"type":"Num","value":1}}
+[6] external {"name":"$add","arity":2,"args":1,"saturated":false}
+  :arg -> [5] {"index":0}
+  :callee -> [3]
+[7] pap {"remaining":1}
+  :captured -> [5] {"index":0}
+  :materializes -> [6]"
+`;
+
+exports[`pap pass > transformation > snapshot — unsaturated inside lambda body 1`] = `
+"[1] root
+  :entry -> [2]
+[2] lambda {"variable":"x","icit":"Explicit","level":0}
+  :annotation -> [3]
+  :body -> [8]
+[3] lit {"value":{"type":"Atom","value":"Num"}}
+[5] var:foreign {"name":"$add","arity":2}
+[7] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[8] external {"name":"$add","arity":2,"args":1,"saturated":false}
+  :arg -> [7] {"index":0}
+  :callee -> [5]
+[9] pap {"remaining":1}
+  :captured -> [7] {"index":0}
+  :materializes -> [8]"
+`;
