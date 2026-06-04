@@ -1,14 +1,8 @@
 #!/usr/bin/env ts-node -T
 import { Command } from "commander";
 
-import { createInterface } from "readline";
 import * as Compiler from "../src/compile";
-
-import * as EB from "@yap/elaboration";
-import { getZ3Context, options, setZ3Context } from "@yap/shared/config/options";
-
-import { defaultContext } from "@yap/shared/lib/constants";
-import { init } from "z3-solver";
+import { options } from "@yap/shared/config/options";
 import { repl } from "../src/cli/repl";
 import { start as startExplorer } from "../src/cli/explore";
 import { Build } from "../src/verification/solver/ivl/build";
@@ -17,91 +11,77 @@ const program = new Command();
 
 program
 	.arguments("<filepath>")
-	.option("-o, --outDir <output>", "Output directory")
-	.option("--srcDir <source>", "Source directory")
+	.option("-o, --outDir <output>", "Output directory", Compiler.GlobalDefaults.outDir)
+	.option("--srcDir <source>", "Source directory", Compiler.GlobalDefaults.baseUrl)
+	.option("-t, --target <target>", "Codegen target: js, c, or erlang", "js")
+	.option("--no-gram", "Skip .gram file output")
+	.option("--no-mir", "Skip .mir file output")
 	.option("--verbose", "Enable verbose output")
 	.description("Compile a Yap file")
 	.action((file, cmd) => {
 		console.log(`Compiling Yap file: ${file}`);
-		console.log("Options:", cmd);
 
 		options.verbose = cmd.verbose || false;
-		console.log("Verbose mode:", options.verbose);
 
-		const opts: Compiler.Options = {
-			outDir: cmd.outDir || Compiler.GlobalDefaults.outDir,
-			baseUrl: cmd.srcDir || Compiler.GlobalDefaults.baseUrl,
+		const target = cmd.target as Compiler.Target;
+		if (!["js", "c", "erlang"].includes(target)) {
+			console.error(`Unknown target: ${target}. Use 'js', 'c', or 'erlang'.`);
+			process.exit(1);
+		}
+
+		const opts: Partial<Compiler.Options> = {
+			outDir: cmd.outDir,
+			baseUrl: cmd.srcDir,
+			target,
+			emitGram: cmd.gram !== false,
+			emitMir: cmd.mir !== false,
 		};
 
-		const z3Ctx = getZ3Context();
-		if (z3Ctx) {
-			Compiler.compile(file, opts);
-			return;
-		}
-		init().then(z3 => {
-			z3.enableTrace("main");
-			const z3Ctx = z3.Context("main");
-			setZ3Context(z3Ctx);
-			Compiler.compile(file, opts);
-		});
+		Compiler.compile(file, opts);
 	});
 
 program
 	.command("repl")
 	.description("Start a Yap REPL")
 	.option("--verbose", "Enable verbose output")
-	.option("--mir", "Use MIR-based interpreter instead of NbE")
-	.option("--codegen", "Use MIR-to-JS codegen instead of MIR interpreter (implies --mir)")
-	.option("--target <target>", "Codegen target: js, c, or erlang (requires --codegen)", "js")
-	.action(async cmd => {
-		console.log("Yap REPL started. Type :exit to quit.");
+	.option("--codegen", "Use codegen instead of MIR interpreter")
+	.option("-t, --target <target>", "Codegen target: js, c, or erlang (requires --codegen)", "js")
+	.option("--no-verify", "Skip verification")
+	.action(cmd => {
+		console.log("Yap REPL started. Type :help for commands, :exit to quit.");
 		options.verbose = cmd.verbose || false;
-		console.log("Verbose mode:", options.verbose);
 
 		const target = cmd.target as "js" | "c" | "erlang";
-		const codegen = cmd.codegen || false;
-		const mir = cmd.mir || codegen;
-
-		if (target !== "js" && target !== "c" && target !== "erlang") {
+		if (!["js", "c", "erlang"].includes(target)) {
 			console.error(`Unknown target: ${target}. Use 'js', 'c', or 'erlang'.`);
 			process.exit(1);
 		}
+
+		const codegen = cmd.codegen || false;
 		if (target !== "js" && !codegen) {
 			console.error(`--target=${target} requires --codegen`);
 			process.exit(1);
 		}
 
 		if (codegen) {
-			console.log(`MIR codegen active (target: ${target})`);
-		} else if (mir) {
-			console.log("MIR interpreter active");
+			console.log(`Codegen mode active (target: ${target})`);
+		} else {
+			console.log("MIR interpreter mode active");
 		}
 
-		let z3Ctx = getZ3Context();
-		if (!z3Ctx) {
-			const z3 = await init();
-			z3.enableTrace("main");
-			z3Ctx = z3.Context("main");
-			setZ3Context(z3Ctx);
+		if (cmd.verify === false) {
+			console.log("Verification disabled");
 		}
 
-		repl({ mir, codegen, target });
+		repl({ codegen, target, verify: cmd.verify !== false });
 	});
 
 program
 	.command("explore")
 	.description("Open pipeline explorer dashboard")
 	.option("-p, --port <number>", "port", "3333")
-	.option("--ivl-no-simplify", "disable IVL algebraic simplification")
-	.action(async cmd => {
-		let z3Ctx = getZ3Context();
-		if (!z3Ctx) {
-			const z3 = await init();
-			z3.enableTrace("main");
-			z3Ctx = z3.Context("main");
-			setZ3Context(z3Ctx);
-		}
-
+	.option("--ivl-no-simplify", "Disable IVL algebraic simplification")
+	.action(cmd => {
 		if (cmd.ivlNoSimplify) {
 			Build.simplify = false;
 		}
