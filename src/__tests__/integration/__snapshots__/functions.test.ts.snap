@@ -667,20 +667,19 @@ exports[`Language Tour — Statement Blocks > side effects in blocks 1`] = `
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_30;
+  const v0 = closure_33;
   return v0;
 }
 
-function closure_30(print, stringify, result, x) {
+function closure_33(result, x) {
   const v0 = "Computing...";
   const v1 = print(v0);
   const v2 = 2;
   const v3 = (x * v2);
   const result4 = v3;
   const v5 = "Num";
-  const v6 = stringify(v5);
-  const v7 = v6(result4);
-  const v8 = print(v7);
+  const v6 = stringify(v5, result4);
+  const v7 = print(v6);
   return result4;
 }
 return main();
@@ -698,7 +697,7 @@ return main();
 [3] lambda {"variable":"x","icit":"Explicit","level":1}
   :annotation -> [4]
   :body -> [5]
-  :env -> [29]
+  :env -> [32]
 [4] lit {"value":{"type":"Atom","value":"Num"}}
 [5] block
   :return -> [27]
@@ -707,19 +706,12 @@ return main();
   :stmt -> [18] {"index":2}
 [6] stmt:expr
   :next -> [11]
-  :value -> [7]
-[7] app {"icit":"Explicit"}
-  :arg -> [10]
-  :func -> [9]
-[8] var:foreign {"name":"print"}
-[9] var:ref {"name":"print"}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
+  :value -> [28]
+[8] var:foreign {"name":"print","arity":1}
 [10] lit {"value":{"type":"String","value":"Computing..."}}
 [11] stmt:let {"variable":"result"}
   :next -> [18]
-  :value -> [28]
+  :value -> [29]
 [14] var:foreign {"name":"$mul","arity":2}
 [16] var:bound {"index":1}
   :next -> [17]
@@ -729,28 +721,10 @@ return main();
   :scope -> [11] {"level":2}
 [17] lit {"value":{"type":"Num","value":2}}
 [18] stmt:expr
-  :value -> [19]
-[19] app {"icit":"Explicit"}
-  :arg -> [21]
-  :func -> [20]
-[20] var:ref {"name":"print"}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [11] {"level":2}
-[21] app {"icit":"Explicit"}
-  :arg -> [26]
-  :func -> [22]
-[22] app {"icit":"Implicit"}
-  :arg -> [25]
-  :func -> [24]
-[23] var:foreign {"name":"stringify"}
-[24] var:ref {"name":"stringify"}
-  :refers_to -> [23]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [11] {"level":2}
+  :value -> [30]
+[23] var:foreign {"name":"stringify","arity":2}
 [25] lit {"value":{"type":"Atom","value":"Num"}}
+  :next -> [26]
 [26] var:bound {"index":0}
   :refers_to -> [11]
   :scope -> [2] {"level":0}
@@ -761,34 +735,41 @@ return main();
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [11] {"level":2}
-[28] primop {"op":"$mul"}
+[28] external {"name":"print","arity":1,"args":1,"saturated":true}
+  :arg -> [10] {"index":0}
+  :callee -> [8]
+[29] primop {"op":"$mul"}
   :arg -> [16] {"index":0}
   :arg -> [17] {"index":1}
   :callee -> [14]
-[29] env
-  :capture -> [8] {"index":0}
-  :capture -> [23] {"index":1}
-  :capture -> [11] {"index":2}
-[30] closure
+[30] external {"name":"print","arity":1,"args":1,"saturated":true}
+  :arg -> [31] {"index":0}
+  :callee -> [8]
+[31] external {"name":"stringify","arity":2,"args":2,"saturated":true}
+  :arg -> [25] {"index":0}
+  :arg -> [26] {"index":1}
+  :callee -> [23]
+[32] env
+  :capture -> [11] {"index":0}
+[33] closure
   :body -> [3]
-  :env -> [29]",
+  :env -> [32]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_30
+      let v0 = &closure_33
       return v0
-  fn closure_30(print, stringify, result, x) entry=entry
+  fn closure_33(result, x) entry=entry
     entry:
       let v0 = "Computing..."
-      let v1 = call *print(v0)
+      let v1 = call print(v0)
       let v2 = 2
       let v3 = *(x, v2)
       let result4 = v3
       let v5 = Num
-      let v6 = call *stringify(v5)
-      let v7 = call *v6(result4)
-      let v8 = call *print(v7)
+      let v6 = call stringify(v5, result4)
+      let v7 = call print(v6)
       return result4",
     "name": "debug",
     "normalized": "λ(x: Num) ->

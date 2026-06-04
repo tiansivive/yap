@@ -12,11 +12,11 @@ exports[`Language Tour — Foreign Function Interface > basic FFI 1`] = `
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_19;
+  const v0 = closure_20;
   return v0;
 }
 
-function closure_19(print, name) {
+function closure_20(name) {
   const v0 = "Hello, ";
   const v1 = (v0 + name);
   const v2 = print(v1);
@@ -32,21 +32,14 @@ return main();
 [3] lambda {"variable":"name","icit":"Explicit","level":1}
   :annotation -> [4]
   :body -> [5]
-  :env -> [18]
+  :env -> [19]
 [4] lit {"value":{"type":"Atom","value":"String"}}
 [5] block
   :return -> [16]
   :stmt -> [6] {"index":0}
 [6] stmt:expr
-  :value -> [7]
-[7] app {"icit":"Explicit"}
-  :arg -> [17]
-  :func -> [9]
-[8] var:foreign {"name":"print"}
-[9] var:ref {"name":"print"}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
+  :value -> [17]
+[8] var:foreign {"name":"print","arity":1}
 [12] var:foreign {"name":"$concat","arity":2}
 [14] lit {"value":{"type":"String","value":"Hello, "}}
   :next -> [15]
@@ -55,26 +48,28 @@ return main();
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
 [16] lit {"value":{"type":"unit"}}
-[17] primop {"op":"$concat"}
+[17] external {"name":"print","arity":1,"args":1,"saturated":true}
+  :arg -> [18] {"index":0}
+  :callee -> [8]
+[18] primop {"op":"$concat"}
   :arg -> [14] {"index":0}
   :arg -> [15] {"index":1}
   :callee -> [12]
-[18] env
-  :capture -> [8] {"index":0}
-[19] closure
+[19] env
+[20] closure
   :body -> [3]
-  :env -> [18]",
+  :env -> [19]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_19
+      let v0 = &closure_20
       return v0
-  fn closure_19(print, name) entry=entry
+  fn closure_20(name) entry=entry
     entry:
       let v0 = "Hello, "
       let v1 = ++(v0, name)
-      let v2 = call *print(v1)
+      let v2 = call print(v1)
       let v3 = unit
       return v3",
     "name": "greet",
@@ -97,44 +92,30 @@ exports[`Language Tour — Foreign Function Interface > polymorphic FFI 1`] = `
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
-  const v1 = "Num";
-  const v2 = v0(v1);
-  const v3 = 42;
-  const v4 = v2(v3);
-  const v5 = 1;
-  const v6 = 2;
-  const v7 = 3;
-  const v8 = {
-    0: v5,
-    1: v6,
-    2: v7
+  const v0 = "Num";
+  const v1 = 42;
+  const v2 = 1;
+  const v3 = 2;
+  const v4 = 3;
+  const v5 = {
+    0: v2,
+    1: v3,
+    2: v4
   };
-  const v9 = v4(v8);
-  return v9;
+  const v6 = prepend(v0, v1, v5);
+  return v6;
 }
 return main();
 ",
     "elaborated": "FFI.prepend @Num 42 (Array [ 0: 1, 1: 2, 2: 3 ])",
-    "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
-  :entry -> [3]
+  :entry -> [19]
 [2] stmt:let {"variable":"nums"}
-[3] app {"icit":"Explicit"}
-  :arg -> [10]
-  :func -> [4]
-[4] app {"icit":"Explicit"}
-  :arg -> [9]
-  :func -> [5]
-[5] app {"icit":"Implicit"}
-  :arg -> [8]
-  :func -> [7]
-[6] var:foreign {"name":"prepend"}
-[7] var:ref {"name":"prepend"}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
+[6] var:foreign {"name":"prepend","arity":3}
 [8] lit {"value":{"type":"Atom","value":"Num"}}
+  :next -> [9]
 [9] lit {"value":{"type":"Num","value":42}}
+  :next -> [10]
 [10] app {"icit":"Explicit"}
   :arg -> [12]
   :func -> [11]
@@ -151,64 +132,52 @@ return main();
   :rest -> [18]
   :value -> [17]
 [17] lit {"value":{"type":"Num","value":3}}
-[18] row:empty",
+[18] row:empty
+[19] external {"name":"prepend","arity":3,"args":3,"saturated":true}
+  :arg -> [8] {"index":0}
+  :arg -> [9] {"index":1}
+  :arg -> [10] {"index":2}
+  :callee -> [6]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &unknown
-      let v1 = Num
-      let v2 = call *v0(v1)
-      let v3 = 42
-      let v4 = call *v2(v3)
-      let v5 = 1
-      let v6 = 2
-      let v7 = 3
-      let v8 = alloc { 0: v5, 1: v6, 2: v7 }
-      let v9 = call *v4(v8)
-      return v9",
+      let v0 = Num
+      let v1 = 42
+      let v2 = 1
+      let v3 = 2
+      let v4 = 3
+      let v5 = alloc { 0: v2, 1: v3, 2: v4 }
+      let v6 = call prepend(v0, v1, v5)
+      return v6",
     "name": "nums",
-    "normalized": "FFI.prepend @Num 42 (Array [ 0: 1, 1: 2, 2: 3 ])",
+    "normalized": "(prepend: (Num) (42) (Array [ 0: 1, 1: 2, 2: 3 ]))",
     "type": "FFI.Indexed Num Num @FFI.defaultArray",
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
-  const v1 = "String";
-  const v2 = v0(v1);
-  const v3 = "a";
-  const v4 = v2(v3);
-  const v5 = "b";
-  const v6 = "c";
-  const v7 = {
-    0: v5,
-    1: v6
+  const v0 = "String";
+  const v1 = "a";
+  const v2 = "b";
+  const v3 = "c";
+  const v4 = {
+    0: v2,
+    1: v3
   };
-  const v8 = v4(v7);
-  return v8;
+  const v5 = prepend(v0, v1, v4);
+  return v5;
 }
 return main();
 ",
     "elaborated": "FFI.prepend @String "a" (Array [ 0: "b", 1: "c" ])",
-    "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
-  :entry -> [3]
+  :entry -> [17]
 [2] stmt:let {"variable":"strs"}
-[3] app {"icit":"Explicit"}
-  :arg -> [10]
-  :func -> [4]
-[4] app {"icit":"Explicit"}
-  :arg -> [9]
-  :func -> [5]
-[5] app {"icit":"Implicit"}
-  :arg -> [8]
-  :func -> [7]
-[6] var:foreign {"name":"prepend"}
-[7] var:ref {"name":"prepend"}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
+[6] var:foreign {"name":"prepend","arity":3}
 [8] lit {"value":{"type":"Atom","value":"String"}}
+  :next -> [9]
 [9] lit {"value":{"type":"String","value":"a"}}
+  :next -> [10]
 [10] app {"icit":"Explicit"}
   :arg -> [12]
   :func -> [11]
@@ -221,23 +190,25 @@ return main();
   :rest -> [16]
   :value -> [15]
 [15] lit {"value":{"type":"String","value":"c"}}
-[16] row:empty",
+[16] row:empty
+[17] external {"name":"prepend","arity":3,"args":3,"saturated":true}
+  :arg -> [8] {"index":0}
+  :arg -> [9] {"index":1}
+  :arg -> [10] {"index":2}
+  :callee -> [6]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &unknown
-      let v1 = String
-      let v2 = call *v0(v1)
-      let v3 = "a"
-      let v4 = call *v2(v3)
-      let v5 = "b"
-      let v6 = "c"
-      let v7 = alloc { 0: v5, 1: v6 }
-      let v8 = call *v4(v7)
-      return v8",
+      let v0 = String
+      let v1 = "a"
+      let v2 = "b"
+      let v3 = "c"
+      let v4 = alloc { 0: v2, 1: v3 }
+      let v5 = call prepend(v0, v1, v4)
+      return v5",
     "name": "strs",
-    "normalized": "FFI.prepend @String "a" (Array [ 0: "b", 1: "c" ])",
+    "normalized": "(prepend: (String) ("a") (Array [ 0: "b", 1: "c" ]))",
     "type": "FFI.Indexed Num String @FFI.defaultArray",
   },
 ]

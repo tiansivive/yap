@@ -198,18 +198,29 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
-  const v1 = "Num";
-  const v2 = v0(v1);
-  const v3 = {
-    show: v2
+  const v0 = "Num";
+  const env_pap1 = {
+    v0: v0
   };
-  return v3;
+  const fnref_pap1 = pap_fn1;
+  const closure_pap1 = {
+    __fn: fnref_pap1,
+    __env: env_pap1
+  };
+  const v2 = {
+    show: closure_pap1
+  };
+  return v2;
+}
+
+function pap_fn1(env2, arg3) {
+  const cap_0 = env2.v0;
+  const result_pap_fn1 = stringify(cap_0, arg3);
+  return result_pap_fn1;
 }
 return main();
 ",
     "elaborated": "Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]",
-    "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ShowNum"}
@@ -219,27 +230,32 @@ return main();
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
 [5] row:ext {"label":"show"}
   :rest -> [14]
-  :value -> [9]
+  :value -> [15]
 [7] lit {"value":{"type":"Atom","value":"Num"}}
-[9] app {"icit":"Implicit"}
-  :arg -> [12]
-  :func -> [11]
-[10] var:foreign {"name":"stringify"}
-[11] var:ref {"name":"stringify"}
-  :refers_to -> [10]
-  :scope -> [2] {"level":0}
-  :scope -> [9] {"level":1}
+[10] var:foreign {"name":"stringify","arity":2}
 [12] lit {"value":{"type":"Atom","value":"Num"}}
-[14] row:empty",
+[14] row:empty
+[15] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [12] {"index":0}
+  :callee -> [10]
+[16] pap {"remaining":1}
+  :captured -> [12] {"index":0}
+  :materializes -> [15]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &unknown
-      let v1 = Num
-      let v2 = call *v0(v1)
-      let v3 = alloc { show: v2 }
-      return v3",
+      let v0 = Num
+      let env_pap1 = alloc { v0: v0 }
+      let fnref_pap1 = &pap_fn1
+      let closure_pap1 = alloc { __fn: fnref_pap1, __env: env_pap1 }
+      let v2 = alloc { show: closure_pap1 }
+      return v2
+  fn pap_fn1(env2, arg3) entry=pap_fn1_entry
+    pap_fn1_entry:
+      let cap_0 = read env2.v0
+      let result_pap_fn1 = call stringify(cap_0, arg3)
+      return result_pap_fn1",
     "name": "ShowNum",
     "normalized": "Struct [ show: λ(n: Num) -> (closure: FFI.stringify @Num n -| Γ: n) ]",
     "type": "Σ($sig: [ show: Π(t3: Num) -> String ]) . Schema [ show: Π(t3: Num) -> String ]",
@@ -612,18 +628,29 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
-  const v1 = "Num";
-  const v2 = v0(v1);
-  const v3 = {
-    show: v2
+  const v0 = "Num";
+  const env_pap1 = {
+    v0: v0
   };
-  return v3;
+  const fnref_pap1 = pap_fn1;
+  const closure_pap1 = {
+    __fn: fnref_pap1,
+    __env: env_pap1
+  };
+  const v2 = {
+    show: closure_pap1
+  };
+  return v2;
+}
+
+function pap_fn1(env2, arg3) {
+  const cap_0 = env2.v0;
+  const result_pap_fn1 = stringify(cap_0, arg3);
+  return result_pap_fn1;
 }
 return main();
 ",
     "elaborated": "Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]",
-    "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ShowNum"}
@@ -633,27 +660,32 @@ return main();
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
 [5] row:ext {"label":"show"}
   :rest -> [14]
-  :value -> [9]
+  :value -> [15]
 [7] lit {"value":{"type":"Atom","value":"Num"}}
-[9] app {"icit":"Implicit"}
-  :arg -> [12]
-  :func -> [11]
-[10] var:foreign {"name":"stringify"}
-[11] var:ref {"name":"stringify"}
-  :refers_to -> [10]
-  :scope -> [2] {"level":0}
-  :scope -> [9] {"level":1}
+[10] var:foreign {"name":"stringify","arity":2}
 [12] lit {"value":{"type":"Atom","value":"Num"}}
-[14] row:empty",
+[14] row:empty
+[15] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [12] {"index":0}
+  :callee -> [10]
+[16] pap {"remaining":1}
+  :captured -> [12] {"index":0}
+  :materializes -> [15]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &unknown
-      let v1 = Num
-      let v2 = call *v0(v1)
-      let v3 = alloc { show: v2 }
-      return v3",
+      let v0 = Num
+      let env_pap1 = alloc { v0: v0 }
+      let fnref_pap1 = &pap_fn1
+      let closure_pap1 = alloc { __fn: fnref_pap1, __env: env_pap1 }
+      let v2 = alloc { show: closure_pap1 }
+      return v2
+  fn pap_fn1(env2, arg3) entry=pap_fn1_entry
+    pap_fn1_entry:
+      let cap_0 = read env2.v0
+      let result_pap_fn1 = call stringify(cap_0, arg3)
+      return result_pap_fn1",
     "name": "ShowNum",
     "normalized": "Struct [ show: λ(n: Num) -> (closure: FFI.stringify @Num n -| Γ: n) ]",
     "type": "Σ($sig: [ show: Π(t3: Num) -> String ]) . Schema [ show: Π(t3: Num) -> String ]",
@@ -1043,7 +1075,7 @@ return main();
       let v10 = call *v8(v9)
       return v10",
     "name": "msg",
-    "normalized": "($concat: ("Equal: ") (FFI.stringify @Num 5))",
+    "normalized": "($concat: ("Equal: ") ((stringify: (Num) (5))))",
     "type": "String",
   },
 ]
@@ -1247,18 +1279,29 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = unknown;
-  const v1 = "Num";
-  const v2 = v0(v1);
-  const v3 = {
-    show: v2
+  const v0 = "Num";
+  const env_pap1 = {
+    v0: v0
   };
-  return v3;
+  const fnref_pap1 = pap_fn1;
+  const closure_pap1 = {
+    __fn: fnref_pap1,
+    __env: env_pap1
+  };
+  const v2 = {
+    show: closure_pap1
+  };
+  return v2;
+}
+
+function pap_fn1(env2, arg3) {
+  const cap_0 = env2.v0;
+  const result_pap_fn1 = stringify(cap_0, arg3);
+  return result_pap_fn1;
 }
 return main();
 ",
     "elaborated": "Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]",
-    "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ShowNum"}
@@ -1268,27 +1311,32 @@ return main();
 [4] lit {"value":{"type":"Atom","value":"Struct"}}
 [5] row:ext {"label":"show"}
   :rest -> [14]
-  :value -> [9]
+  :value -> [15]
 [7] lit {"value":{"type":"Atom","value":"Num"}}
-[9] app {"icit":"Implicit"}
-  :arg -> [12]
-  :func -> [11]
-[10] var:foreign {"name":"stringify"}
-[11] var:ref {"name":"stringify"}
-  :refers_to -> [10]
-  :scope -> [2] {"level":0}
-  :scope -> [9] {"level":1}
+[10] var:foreign {"name":"stringify","arity":2}
 [12] lit {"value":{"type":"Atom","value":"Num"}}
-[14] row:empty",
+[14] row:empty
+[15] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [12] {"index":0}
+  :callee -> [10]
+[16] pap {"remaining":1}
+  :captured -> [12] {"index":0}
+  :materializes -> [15]",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &unknown
-      let v1 = Num
-      let v2 = call *v0(v1)
-      let v3 = alloc { show: v2 }
-      return v3",
+      let v0 = Num
+      let env_pap1 = alloc { v0: v0 }
+      let fnref_pap1 = &pap_fn1
+      let closure_pap1 = alloc { __fn: fnref_pap1, __env: env_pap1 }
+      let v2 = alloc { show: closure_pap1 }
+      return v2
+  fn pap_fn1(env2, arg3) entry=pap_fn1_entry
+    pap_fn1_entry:
+      let cap_0 = read env2.v0
+      let result_pap_fn1 = call stringify(cap_0, arg3)
+      return result_pap_fn1",
     "name": "ShowNum",
     "normalized": "Struct [ show: λ(n: Num) -> (closure: FFI.stringify @Num n -| Γ: n) ]",
     "type": "Σ($sig: [ show: Π(t3: Num) -> String ]) . Schema [ show: Π(t3: Num) -> String ]",
@@ -1582,7 +1630,7 @@ return main();
       let v6 = call *v4(v5)
       return v6",
     "name": "shown",
-    "normalized": "FFI.stringify @Num 42",
+    "normalized": "(stringify: (Num) (42))",
     "type": "String",
   },
   {
