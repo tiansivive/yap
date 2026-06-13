@@ -2,6 +2,10 @@
 // CDCL boolean core, EUF theory, arithmetic theory, and quantifier instantiation
 // into a single assert/check interface for IVL formulas.
 // Generator-based: solveTrace yields Step events for tracing/debugging.
+// CDCL = Conflict-Driven Clause Learning; EUF = Equality with Uninterpreted Functions;
+// CNF = Conjunctive Normal Form; IVL = Intermediate Verification Language;
+// MBQI = Model-Based Quantifier Instantiation
+// https://github.com/tiansivive/z-yap/blob/main/zettels/cdcl-t-solver.md
 
 import * as O from "fp-ts/Option";
 import * as A from "fp-ts/Array";
@@ -17,6 +21,7 @@ import { Arena, type ArenaState, type EnodeId } from "./theories/euf/arena";
 import { EUF, type CCState } from "./theories/euf/cc";
 import { Arithmetic } from "./theories/arithmetic/solver";
 import { QuantifierEngine, type QuantifierState } from "./quantifiers/solver";
+import { MBQI } from "./quantifiers/mbqi";
 import type { Theory } from "./theories/theory";
 import { Trace, type Step } from "./trace";
 
@@ -63,7 +68,7 @@ export type TracedSolverInstance = {
 const createBase = () => {
 	// Justification for let: incremental solver API boundary (assert/push/pop)
 	let formulas: IVL.Formula[] = [];
-	let stack: IVL.Formula[][] = [];
+	const stack: IVL.Formula[][] = [];
 
 	return {
 		assert: (formula: IVL.Formula, origin?: string) => {
@@ -102,6 +107,23 @@ const prepare = (formula: IVL.Formula): TracedCheck => {
 	const normalized = normalize(formula);
 	const skolemized = skolemize(normalized);
 	const { propositional, quantifiers } = separate(skolemized);
+
+	const isPureQuantifier = match(propositional)
+		.with({ tag: "True" }, () => quantifiers.length > 0)
+		.otherwise(() => false);
+
+	if (isPureQuantifier) {
+		const qEngine = QuantifierEngine.create(Build.and(...quantifiers));
+		return {
+			formula,
+			trace: pureQuantifierTrace(qEngine, 0),
+			atoms: new Map(),
+			proxies: new Map(),
+			clauses: [],
+			arena: Arena.create(),
+		};
+	}
+
 	const cnfResult = tseitin(propositional);
 	const setup = buildSetup(cnfResult);
 
@@ -111,7 +133,7 @@ const prepare = (formula: IVL.Formula): TracedCheck => {
 	setup.arithmetics.forEach(entry => Arithmetic.register(setup.arithState, entry.literal, entry.info, entry.positive));
 
 	const theories: Theory[] = [setup.eufTheory, setup.arithTheory];
-	const qEngine = quantifiers.length > 0 ? O.some(QuantifierEngine.create(Build.and(...quantifiers.map(q => q as IVL.Formula)))) : O.none;
+	const qEngine = quantifiers.length > 0 ? O.some(QuantifierEngine.create(Build.and(...quantifiers))) : O.none;
 
 	return {
 		formula,
@@ -159,7 +181,28 @@ function* quantifierLoopTrace(
 						yield { tag: "quantifier-round", round, lemmas: lemmas.length };
 
 						if (lemmas.length === 0) {
-							return { tag: "sat", model: createModel(assignments, cnfResult, setup.arena) };
+							const mbqiResult = MBQI.round(engine.quantifiers, setup.arena, engine.instantiated, engine.generation, () => nextId++, encodeLemma(cnfResult));
+
+							yield { tag: "mbqi-round", round, instantiations: mbqiResult.instantiations };
+
+							if (mbqiResult.lemmas.length === 0) {
+								return { tag: "sat", model: createModel(assignments, cnfResult, setup.arena) };
+							}
+
+							const mbqiUpdatedEngine: QuantifierState = {
+								...engine,
+								instantiated: new Set([...engine.instantiated, ...mbqiResult.newKeys]),
+								generation: engine.generation + 1,
+							};
+
+							return yield* quantifierLoopTrace(
+								[...clauses, ...mbqiResult.lemmas.map(l => l.clause)],
+								theories,
+								O.some(mbqiUpdatedEngine),
+								setup,
+								cnfResult,
+								round + 1,
+							);
 						}
 
 						return yield* quantifierLoopTrace([...clauses, ...lemmas.map(l => l.clause)], theories, O.some(updatedEngine), setup, cnfResult, round + 1);
@@ -168,6 +211,54 @@ function* quantifierLoopTrace(
 			);
 		})
 		.exhaustive();
+}
+
+function* pureQuantifierTrace(engine: QuantifierState, round: number): Generator<Step, SolveResult> {
+	if (round === 0) {
+		yield { tag: "pure-quantifier", quantifiers: engine.quantifiers.length };
+	}
+
+	if (round >= MAX_QUANTIFIER_ROUNDS) {
+		return { tag: "unknown", reason: "quantifier instantiation limit reached" };
+	}
+
+	const arena = Arena.create();
+	// Justification for let: MBQI.round requires a mutable ID generator
+	let nextId = 1;
+
+	const mbqiResult = MBQI.round(
+		engine.quantifiers,
+		arena,
+		engine.instantiated,
+		engine.generation,
+		() => nextId++,
+		() => [],
+	);
+
+	yield { tag: "mbqi-round", round, instantiations: mbqiResult.instantiations };
+
+	const hasContradiction = mbqiResult.instantiations.some(i => i.simplified === "false");
+	if (hasContradiction) {
+		yield { tag: "unsat", core: mbqiResult.lemmas.map(l => l.clause) };
+		return { tag: "unsat", core: mbqiResult.lemmas.map(l => l.origin) };
+	}
+
+	if (mbqiResult.lemmas.length === 0) {
+		const allTrue = mbqiResult.instantiations.every(i => i.simplified === "true");
+		if (allTrue || mbqiResult.instantiations.length === 0) {
+			yield { tag: "sat", assignments: new Map() };
+			return { tag: "sat", model: { evaluate: () => O.none } };
+		}
+		return { tag: "unknown", reason: "no lemmas generated but not all instantiations satisfied" };
+	}
+
+	const updatedEngine: QuantifierState = {
+		...engine,
+		instantiated: new Set([...engine.instantiated, ...mbqiResult.newKeys]),
+		generation: engine.generation + 1,
+	};
+
+	return yield* pureQuantifierTrace(updatedEngine, round + 1);
 }
 
 const encodeLemma =

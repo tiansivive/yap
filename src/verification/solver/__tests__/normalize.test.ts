@@ -62,12 +62,7 @@ describe("normalize", () => {
 	describe("ground arithmetic folding", () => {
 		it("folds constant addition", () => {
 			const result = normalize(DSL.eq(DSL.add(DSL.int(2), DSL.int(3)), DSL.int(5)));
-			expect(result.tag).toBe("Atom");
-			match(result)
-				.with({ tag: "Atom" }, ({ args }) => {
-					expect(args[0]).toEqual(Build.num(5, Build.Int));
-				})
-				.otherwise(() => {});
+			expect(result.tag).toBe("True");
 		});
 	});
 

@@ -85,6 +85,26 @@ let valid: OrderedPair = { fst: 3, snd: 5 };
 		expect(snap(result)).toMatchSnapshot();
 	});
 
+	test("arithmetic refinement contradiction requiring MBQI", () => {
+		const result = runScript(`
+let badOne: Num [| \\v -> v > 10 |] = 1;
+		`);
+		const [decl] = result.declarations;
+		expect(decl.stages?.solverTrace).toContain("[mbqi]");
+		expect(decl.stages?.solverTrace).toContain("[unsat]");
+		expect(snap(result)).toMatchSnapshot();
+	});
+
+	test("arithmetic refinement validated via MBQI", () => {
+		const result = runScript(`
+let goodOne: Num [| \\v -> v < 10 |] = 1;
+		`);
+		const [decl] = result.declarations;
+		expect(decl.stages?.solverTrace).toContain("[mbqi]");
+		expect(decl.stages?.solverTrace).toContain("[sat]");
+		expect(snap(result)).toMatchSnapshot();
+	});
+
 	test("ordered lists with refinement polymorphism", () => {
 		const result = runScript(`
 let OrderedList: (t: Type) -> (p: t -> t -> Bool) -> Type = \\t -> \\p -> | #nil Unit | #cons { head: t, tail: OrderedList (t[| \\v -> p :head v |]) p };

@@ -1,5 +1,59 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Language Tour — Refinement Types > arithmetic refinement contradiction requiring MBQI 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = 1;
+  return v0;
+}
+return main();
+",
+    "elaborated": "1",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"badOne"}
+[3] lit {"value":{"type":"Num","value":1}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 1
+      return v0",
+    "name": "badOne",
+    "normalized": "1",
+    "type": "<ω> Num [| λ(v: Num) -> FFI.$gt v 10 |]",
+  },
+]
+`;
+
+exports[`Language Tour — Refinement Types > arithmetic refinement validated via MBQI 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = 1;
+  return v0;
+}
+return main();
+",
+    "elaborated": "1",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"goodOne"}
+[3] lit {"value":{"type":"Num","value":1}}",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 1
+      return v0",
+    "name": "goodOne",
+    "normalized": "1",
+    "type": "<ω> Num [| λ(v: Num) -> FFI.$lt v 10 |]",
+  },
+]
+`;
+
 exports[`Language Tour — Refinement Types > basic refinements 1`] = `
 [
   {

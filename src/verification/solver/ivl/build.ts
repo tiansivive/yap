@@ -1,6 +1,18 @@
+// Smart constructors for IVL formulas and terms, with optional algebraic
+// simplification (constant folding, double-negation elimination, And/Or
+// flattening and unit collapse) applied at construction time.
+// IVL = Intermediate Verification Language
+// https://github.com/tiansivive/z-yap/blob/main/zettels/vc-ir.md
+// https://github.com/tiansivive/z-yap/blob/main/zettels/build-simplify-toggle.md
+
+import { match, P } from "ts-pattern";
 import type { IVL } from "./types";
 
 export namespace Build {
+	// Justification for let: global per-run toggle set by the CLI, explorer config,
+	// and test harnesses; threading it as a parameter would change every smart
+	// constructor call site across translation, solving, and tests.
+	// eslint-disable-next-line no-restricted-syntax, prefer-const
 	export let simplify = true;
 
 	// --- Sorts ---
@@ -38,47 +50,35 @@ export namespace Build {
 	export const true_ = (origin?: string): IVL.Formula => ({ tag: "True", origin });
 	export const false_ = (origin?: string): IVL.Formula => ({ tag: "False", origin });
 
-	export const atom = (op: IVL.AtomOp, left: IVL.Term, right: IVL.Term, origin?: string): IVL.Formula => ({
-		tag: "Atom",
-		op,
-		args: [left, right],
-		origin,
-	});
-
-	export const not = (value: IVL.Formula, origin?: string): IVL.Formula => {
-		if (simplify && value.tag === "Not") {
-			return { ...value.value, origin: origin ?? value.value.origin };
-		}
-
-		if (simplify && value.tag === "True") {
-			return false_(origin);
-		}
-
-		if (simplify && value.tag === "False") {
-			return true_(origin);
-		}
-		return { tag: "Not", value, origin };
+	export const atom = (op: IVL.AtomOp, left: IVL.Term, right: IVL.Term, origin?: string): IVL.Formula => {
+		const folded = simplify ? foldNumericAtom(op, left, right, origin) : undefined;
+		return folded ?? { tag: "Atom", op, args: [left, right], origin };
 	};
+
+	export const not = (value: IVL.Formula, origin?: string): IVL.Formula =>
+		!simplify
+			? { tag: "Not", value, origin }
+			: match<IVL.Formula, IVL.Formula>(value)
+					.with({ tag: "Not" }, ({ value: inner }) => ({ ...inner, origin: origin ?? inner.origin }))
+					.with({ tag: "True" }, () => false_(origin))
+					.with({ tag: "False" }, () => true_(origin))
+					.otherwise(v => ({ tag: "Not", value: v, origin }));
 
 	export const and = (...formulas: IVL.Formula[]): IVL.Formula => andWithOrigin(formulas);
 
 	export const andWithOrigin = (formulas: IVL.Formula[], origin?: string): IVL.Formula => {
-		const flat: IVL.Formula[] = [];
-		for (const f of formulas) {
-			if (simplify && f.tag === "False") {
-				return false_(origin);
-			}
-
-			if (simplify && f.tag === "True") {
-				continue;
-			}
-
-			if (simplify && f.tag === "And") {
-				flat.push(...f.values);
-			} else {
-				flat.push(f);
-			}
+		if (simplify && formulas.some(f => f.tag === "False")) {
+			return false_(origin);
 		}
+
+		const flat = simplify
+			? formulas.flatMap(f =>
+					match<IVL.Formula, IVL.Formula[]>(f)
+						.with({ tag: "True" }, () => [])
+						.with({ tag: "And" }, ({ values }) => values)
+						.otherwise(g => [g]),
+				)
+			: [...formulas];
 
 		if (flat.length === 0) {
 			return true_(origin);
@@ -93,22 +93,18 @@ export namespace Build {
 	export const or = (...formulas: IVL.Formula[]): IVL.Formula => orWithOrigin(formulas);
 
 	export const orWithOrigin = (formulas: IVL.Formula[], origin?: string): IVL.Formula => {
-		const flat: IVL.Formula[] = [];
-		for (const f of formulas) {
-			if (simplify && f.tag === "True") {
-				return true_(origin);
-			}
-
-			if (simplify && f.tag === "False") {
-				continue;
-			}
-
-			if (simplify && f.tag === "Or") {
-				flat.push(...f.values);
-			} else {
-				flat.push(f);
-			}
+		if (simplify && formulas.some(f => f.tag === "True")) {
+			return true_(origin);
 		}
+
+		const flat = simplify
+			? formulas.flatMap(f =>
+					match<IVL.Formula, IVL.Formula[]>(f)
+						.with({ tag: "False" }, () => [])
+						.with({ tag: "Or" }, ({ values }) => values)
+						.otherwise(g => [g]),
+				)
+			: [...formulas];
 
 		if (flat.length === 0) {
 			return false_(origin);
@@ -120,40 +116,57 @@ export namespace Build {
 		return { tag: "Or", values: flat, origin };
 	};
 
-	export const implies = (left: IVL.Formula, right: IVL.Formula, origin?: string): IVL.Formula => {
-		if (simplify && left.tag === "True") {
-			return { ...right, origin: origin ?? right.origin };
-		}
-
-		if (simplify && left.tag === "False") {
-			return true_(origin);
-		}
-
-		if (simplify && right.tag === "True") {
-			return true_(origin);
-		}
-		return { tag: "Implies", left, right, origin };
-	};
+	export const implies = (left: IVL.Formula, right: IVL.Formula, origin?: string): IVL.Formula =>
+		!simplify
+			? { tag: "Implies", left, right, origin }
+			: match<readonly [IVL.Formula, IVL.Formula], IVL.Formula>([left, right])
+					.with([{ tag: "True" }, P._], () => ({ ...right, origin: origin ?? right.origin }))
+					.with([{ tag: "False" }, P._], () => true_(origin))
+					.with([P._, { tag: "True" }], () => true_(origin))
+					.otherwise(() => ({ tag: "Implies", left, right, origin }));
 
 	export const forall = (binders: IVL.Binder[], body: IVL.Formula, origin?: string, triggers?: IVL.Trigger[]): IVL.Formula => {
 		if (binders.length === 0) {
 			return { ...body, origin: origin ?? body.origin };
 		}
-
-		if (simplify && body.tag === "True") {
-			return true_(origin);
-		}
-		return { tag: "Forall", binders, body, triggers, origin };
+		return !simplify
+			? { tag: "Forall", binders, body, triggers, origin }
+			: match<IVL.Formula, IVL.Formula>(body)
+					.with({ tag: "True" }, () => true_(origin))
+					.otherwise(b => ({ tag: "Forall", binders, body: b, triggers, origin }));
 	};
 
 	export const exists = (binders: IVL.Binder[], body: IVL.Formula, origin?: string): IVL.Formula => {
 		if (binders.length === 0) {
 			return { ...body, origin: origin ?? body.origin };
 		}
-
-		if (simplify && body.tag === "True") {
-			return true_(origin);
-		}
-		return { tag: "Exists", binders, body, origin };
+		return !simplify
+			? { tag: "Exists", binders, body, origin }
+			: match<IVL.Formula, IVL.Formula>(body)
+					.with({ tag: "True" }, () => true_(origin))
+					.otherwise(b => ({ tag: "Exists", binders, body: b, origin }));
 	};
+
+	// Precision boundary: numeric folding compares via float, matching Number(value)
+	// parsing in normalize.ts and Rational.fromNumber in the arithmetic theory.
+	const foldNumericAtom = (op: IVL.AtomOp, left: IVL.Term, right: IVL.Term, origin?: string): IVL.Formula | undefined =>
+		match<readonly [IVL.Term, IVL.Term], IVL.Formula | undefined>([left, right])
+			.with([{ tag: "Num" }, { tag: "Num" }], ([l, r]) => {
+				const ln = parseFloat(l.value);
+				const rn = parseFloat(r.value);
+
+				if (Number.isNaN(ln) || Number.isNaN(rn)) {
+					return undefined;
+				}
+				const result = match(op)
+					.with("=", () => ln === rn)
+					.with("!=", () => ln !== rn)
+					.with("<", () => ln < rn)
+					.with("<=", () => ln <= rn)
+					.with(">", () => ln > rn)
+					.with(">=", () => ln >= rn)
+					.exhaustive();
+				return result ? true_(origin) : false_(origin);
+			})
+			.otherwise(() => undefined);
 }
