@@ -28,6 +28,7 @@
 	"typescript.tsserver.nodePath": "node",
 	"typescript.tsserver.maxTsServerMemory": 4096,
 	"cSpell.words": [
+		"backjump",
 		"Ctaint",
 		"keyval",
 		"langle",
@@ -43,6 +44,7 @@
 		"Nearley",
 		"rangle",
 		"rvar",
+		"RWSE",
 		"scuty",
 		"tmnf",
 		"toks"

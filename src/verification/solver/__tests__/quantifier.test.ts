@@ -2,9 +2,10 @@ import { describe, it, expect } from "vitest";
 import { Solver } from "../solver";
 import * as DSL from "../ivl/dsl";
 import { Build } from "../ivl/build";
-import { Triggers, type QuantifierInfo } from "../quantifiers/triggers";
-import { EMatch, type Substitution } from "../quantifiers/ematch";
-import { Arena, type ArenaState } from "../theories/euf/arena";
+import { Triggers } from "../quantifiers/triggers";
+import { EMatch } from "../quantifiers/ematch";
+import { Arena } from "../theories/euf/arena";
+import { Trace } from "../trace";
 
 describe("Triggers", () => {
 	it("extracts trigger from forall with function application", () => {
@@ -30,11 +31,8 @@ describe("Triggers", () => {
 
 describe("EMatch", () => {
 	it("matches a known function application", () => {
-		let arena = Arena.create();
-		const { id: aId, state: s1 } = Arena.intern(arena, "a", [], Build.Int);
-		arena = s1;
-		const { id: fId, state: s2 } = Arena.intern(arena, "f", [aId], Build.Int);
-		arena = s2;
+		const { id: aId, state: s1 } = Arena.intern(Arena.create(), "a", [], Build.Int);
+		const { state: arena } = Arena.intern(s1, "f", [aId], Build.Int);
 
 		const trigger = Build.app("f", [DSL.x], Build.Int);
 		const { substitutions } = EMatch.multi([trigger], arena, id => id);
@@ -49,9 +47,7 @@ describe("Solver with quantifiers", () => {
 		const f_a = Build.app("f", [Build.const_("a", Build.Int)], Build.Int);
 		const f_x = Build.app("f", [DSL.x], Build.Int);
 
-		// f(a) = 1
 		solver.assert(DSL.eq(f_a, DSL.int(1), "f_a_is_1"));
-		// forall x. f(x) != 1 (contradicts f(a) = 1)
 		solver.assert(DSL.forall([{ name: "x", sort: Build.Int }], DSL.neq(f_x, DSL.int(1)), "forall_f_neq_1", [{ terms: [f_x] }]));
 
 		const result = solver.check();
@@ -63,9 +59,7 @@ describe("Solver with quantifiers", () => {
 		const f_a = Build.app("f", [Build.const_("a", Build.Int)], Build.Int);
 		const f_x = Build.app("f", [DSL.x], Build.Int);
 
-		// f(a) = 1
 		solver.assert(DSL.eq(f_a, DSL.int(1), "f_a_is_1"));
-		// forall x. f(x) = f(x) (trivially true)
 		solver.assert(DSL.forall([{ name: "x", sort: Build.Int }], DSL.eq(f_x, f_x), "forall_reflexive", [{ terms: [f_x] }]));
 
 		const result = solver.check();
@@ -84,10 +78,60 @@ describe("Solver with arithmetic + quantifiers", () => {
 
 	it("satisfies disjunction with arithmetic", () => {
 		const solver = Solver.create();
-		// (x > 5 OR y < 3) AND x >= 0 — satisfiable
 		solver.assert(DSL.or(DSL.gt(DSL.x, DSL.int(5)), DSL.lt(DSL.y, DSL.int(3))));
 		solver.assert(DSL.gte(DSL.x, DSL.int(0)));
 		const result = solver.check();
 		expect(result.tag).toBe("sat");
+	});
+});
+
+describe("MBQI (Model-Based Quantifier Instantiation)", () => {
+	it("detects arithmetic quantifier contradiction via MBQI", () => {
+		const solver = Solver.create();
+		const v = Build.var_("v", Build.Real);
+
+		// No triggers exist (no function applications), so E-matching finds nothing;
+		// MBQI must enumerate the body constant 1, grounding to (1 = 1 => 1 > 10) = false
+		solver.assert(DSL.forall([{ name: "v", sort: Build.Real }], DSL.implies(DSL.eq(v, DSL.int(1)), DSL.gt(v, DSL.int(10))), "arithmetic_forall"));
+
+		const result = solver.check();
+		expect(result.tag).toBe("unsat");
+	});
+
+	it("satisfies valid arithmetic quantifier", () => {
+		const solver = Solver.create();
+		const v = Build.var_("v", Build.Real);
+
+		solver.assert(DSL.forall([{ name: "v", sort: Build.Real }], DSL.implies(DSL.eq(v, DSL.int(5)), DSL.gte(v, DSL.int(0))), "valid_arithmetic_forall"));
+
+		const result = solver.check();
+		expect(result.tag).toBe("sat");
+	});
+
+	it("MBQI trace shows mbqi-round event for triggerless quantifiers", () => {
+		const solver = Solver.createTraced();
+		const v = Build.var_("v", Build.Real);
+
+		solver.assert(DSL.forall([{ name: "v", sort: Build.Real }], DSL.implies(DSL.eq(v, DSL.int(1)), DSL.gt(v, DSL.int(10))), "triggerless_forall"));
+
+		const { trace } = solver.check();
+		const { steps, result } = Trace.collect(trace);
+
+		expect(result.tag).toBe("unsat");
+		const mbqiRounds = steps.filter(s => s.tag === "mbqi-round");
+		expect(mbqiRounds.length).toBeGreaterThan(0);
+	});
+
+	it("detects contradiction with multiple arithmetic constants", () => {
+		const solver = Solver.create();
+		const v = Build.var_("v", Build.Real);
+
+		// Seeds the arena with ground constant 2 for MBQI enumeration
+		solver.assert(DSL.eq(DSL.int(2), DSL.int(2), "two_exists"));
+
+		solver.assert(DSL.forall([{ name: "v", sort: Build.Real }], DSL.implies(DSL.eq(v, DSL.int(2)), DSL.lt(v, DSL.int(1))), "multi_const_forall"));
+
+		const result = solver.check();
+		expect(result.tag).toBe("unsat");
 	});
 });

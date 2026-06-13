@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { match } from "ts-pattern";
+import { Build } from "../../../ivl/build";
+import * as DSL from "../../../ivl/dsl";
 import { normalize } from "../normalize";
-import { Build } from "../ivl/build";
-import * as DSL from "../ivl/dsl";
 
 describe("normalize", () => {
 	describe("trivial elimination", () => {
