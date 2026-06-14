@@ -4,7 +4,7 @@
 import type { IVL } from "../../ivl/types";
 import type * as Enc from "../encoding";
 import * as CNF from "./cnf";
-import * as Lemma from "./lemma";
+import * as Lookup from "./lookup";
 
 export const run = (propositional: IVL.Formula, lemmas: IVL.Formula[] = []): Result => ({
 	encoding: CNF.encode(propositional),
@@ -16,4 +16,4 @@ export type Result = {
 	lemmas: IVL.Formula[];
 };
 
-export { CNF, Lemma };
+export { CNF, Lookup };
