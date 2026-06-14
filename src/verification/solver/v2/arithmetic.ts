@@ -103,3 +103,5 @@ export namespace Event {
 		| { tag: "infeasible"; variable: string }
 		| { tag: "feasible" };
 }
+
+export type Event = Event.T;

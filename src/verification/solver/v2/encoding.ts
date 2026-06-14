@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 // Encoding v2 domain model: boolean abstraction of IVL formulas.
 // CNF = Conjunctive Normal Form; Tseitin proxies preserve formula structure.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/tseitin-cnf.md
@@ -10,26 +11,26 @@ export namespace Atom {
 	export type Key = string;
 
 	export type T = {
-		readonly op: IVL.AtomOp;
-		readonly args: readonly [IVL.Term, IVL.Term];
+		op: IVL.AtomOp;
+		args: [IVL.Term, IVL.Term];
 	};
 }
 
 export type Proxy =
-	| { readonly tag: "and"; readonly operands: readonly Literal[] }
-	| { readonly tag: "or"; readonly operands: readonly Literal[] }
-	| { readonly tag: "implies"; readonly operands: readonly Literal[] }
-	| { readonly tag: "true"; readonly operands: readonly [] }
-	| { readonly tag: "false"; readonly operands: readonly [] }
-	| { readonly tag: "forall"; readonly operands: readonly [] }
-	| { readonly tag: "exists"; readonly operands: readonly [] };
+	| { tag: "and"; operands: Literal[] }
+	| { tag: "or"; operands: Literal[] }
+	| { tag: "implies"; operands: Literal[] }
+	| { tag: "true"; operands: [] }
+	| { tag: "false"; operands: [] }
+	| { tag: "forall"; operands: [] }
+	| { tag: "exists"; operands: [] };
 
 export type State = {
-	readonly clauses: readonly Clause.T[];
-	readonly keyIndex: ReadonlyMap<Atom.Key, Literal>;
-	readonly atoms: ReadonlyMap<Literal, Atom.T>;
-	readonly proxies: ReadonlyMap<Variable, Proxy>;
-	readonly nextVar: Variable;
+	clauses: Clause.T[];
+	keyIndex: Map<Atom.Key, Literal>;
+	atoms: Map<Literal, Atom.T>;
+	proxies: Map<Variable, Proxy>;
+	nextVar: Variable;
 };
 
 export const Encoding = {

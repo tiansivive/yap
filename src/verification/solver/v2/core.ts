@@ -61,20 +61,20 @@ export namespace Reader {
 }
 
 export type Config = {
-	readonly maxQuantifierRounds: number;
-	readonly maxMbqiTermsPerSort: number;
-	readonly trace: "silent" | "collect";
+	maxQuantifierRounds: number;
+	maxMbqiTermsPerSort: number;
+	trace: "silent" | "collect";
 };
 
 export type Env = {
-	readonly config: Config;
-	readonly problem?: Problem;
+	config: Config;
+	problem?: Problem;
 };
 
 export type Problem = {
-	readonly original: IVL.Formula;
-	readonly normalized?: IVL.Formula;
-	readonly skolemized?: IVL.Formula;
+	original: IVL.Formula;
+	normalized?: IVL.Formula;
+	skolemized?: IVL.Formula;
 };
 
 export const Config = {
@@ -97,13 +97,13 @@ export namespace Writer {
 	};
 }
 export type Collector<A> = Accumulator & {
-	readonly result: Either<Err, A>;
+	result: Either<Err, A>;
 };
 export type Accumulator = {
-	readonly steps: readonly Trace.Event.T[];
-	readonly diagnostics: readonly Trace.Diagnostic[];
-	readonly proof: readonly Trace.Proof.Event[];
-	readonly stats: Trace.Stats;
+	steps: Trace.Event.T[];
+	diagnostics: Trace.Diagnostic[];
+	proof: Trace.Proof.Event[];
+	stats: Trace.Stats;
 };
 
 export const Collector = {
@@ -145,13 +145,13 @@ export const Accumulator = {
 };
 
 export type State = {
-	readonly cdcl: CDCL.State;
-	readonly encoding: Encoding.State;
-	readonly arena: EUF.Arena.State;
-	readonly theories: Theory.State;
-	readonly quantifiers: Quantifier.State;
-	readonly assertions: readonly IVL.Formula[];
-	readonly stack: readonly (readonly IVL.Formula[])[];
+	cdcl: CDCL.State;
+	encoding: Encoding.State;
+	arena: EUF.Arena.State;
+	theories: Theory.State;
+	quantifiers: Quantifier.State;
+	assertions: IVL.Formula[];
+	stack: IVL.Formula[][];
 };
 
 export const State = {
@@ -224,13 +224,10 @@ export const localSt = function* <A>(modify: (state: State) => State, ma: Solver
 };
 
 export type Err = {
-	readonly cause: Cause;
-	readonly env: Env;
+	cause: Cause;
+	env: Env;
 };
-export type Cause =
-	| { readonly tag: "Invariant"; readonly message: string }
-	| { readonly tag: "Unsupported"; readonly feature: string }
-	| { readonly tag: "ResourceLimit"; readonly resource: string; readonly limit: number };
+export type Cause = { tag: "Invariant"; message: string } | { tag: "Unsupported"; feature: string } | { tag: "ResourceLimit"; resource: string; limit: number };
 
 export namespace Error {
 	export const fail = function* <A>(cause: Cause): G<A> {

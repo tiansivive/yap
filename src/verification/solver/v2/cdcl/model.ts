@@ -3,7 +3,7 @@
 // CDCL = Conflict-Driven Clause Learning; BCP = Boolean Constraint Propagation.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/cdcl-t-solver.md
 
-import * as Core from "./core";
+import * as Core from "../core";
 
 export type Variable = number;
 export type Literal = number;
@@ -48,6 +48,8 @@ export namespace Clause {
 	};
 }
 
+export type Clause = Clause.T;
+
 export type Conflict = {
 	clause: Clause.T;
 };
@@ -70,7 +72,7 @@ export namespace Trail {
 	export const assign = (literal: Literal, reason: Reason.T) =>
 		Core.State.modify(s => ({
 			...s,
-			cdcl: push(s.cdcl, literal, reason),
+			cdcl: State.assign(s.cdcl, literal, reason),
 		}));
 
 	export const clear = Core.State.modify(s => ({
@@ -107,8 +109,16 @@ export const Literal = {
 	assignment: (lit: Literal): Assignment => (Literal.polarity(lit) ? "true" : "false"),
 };
 
-export const Search = {
-	initial: {
+export const State = {
+	initial: (clauses: Clause.T[]): State => ({
+		trail: [],
+		assignments: new Map(variables(clauses).map(v => [v, "unassigned" as const])),
+		level: 0,
+		clauses: { ...Clause.empty, base: clauses },
+		nextClauseId: clauses.reduce((max, c) => Math.max(max, c.id), 0) + 1,
+	}),
+
+	empty: {
 		trail: [],
 		assignments: new Map(),
 		level: 0,
@@ -118,30 +128,38 @@ export const Search = {
 
 	replace: (cdcl: State) => Core.State.modify(s => ({ ...s, cdcl })),
 
-	enter: Core.State.modify(s => ({ ...s, cdcl: { ...s.cdcl, level: s.cdcl.level + 1 } })),
+	enter: (state: State): State => ({ ...state, level: state.level + 1 }),
 
-	jump: (level: number) => Core.State.modify(s => ({ ...s, cdcl: backjump(s.cdcl, level) })),
-};
-
-const push = (state: State, literal: Literal, reason: Trail.Reason.T): State => ({
-	...state,
-	trail: [...state.trail, { literal, level: state.level, reason }],
-	assignments: new Map([...state.assignments, [Literal.variable(literal), Literal.assignment(literal)]]),
-});
-
-const backjump = (state: State, level: number): State => {
-	const trail = state.trail.filter(entry => entry.level <= level);
-	const assigned = trail.reduce<Map<Variable, Assignment>>(
-		(acc, entry) => new Map([...acc, [Literal.variable(entry.literal), Literal.assignment(entry.literal)]]),
-		new Map(),
-	);
-
-	return {
+	assign: (state: State, literal: Literal, reason: Trail.Reason.T): State => ({
 		...state,
-		trail,
-		assignments: new Map([...state.assignments.keys()].map(v => [v, assigned.get(v) ?? "unassigned"])),
-		level,
-	};
+		trail: [...state.trail, { literal, level: state.level, reason }],
+		assignments: new Map([...state.assignments, [Literal.variable(literal), Literal.assignment(literal)]]),
+	}),
+
+	learn: (state: State, clause: Clause.T): State => ({
+		...state,
+		clauses: Clause.insert(state.clauses, "learned", clause),
+		nextClauseId: Math.max(state.nextClauseId, clause.id + 1),
+	}),
+
+	backjump: (state: State, level: number): State => {
+		const trail = state.trail.filter(entry => entry.level <= level);
+		const assigned = trail.reduce<Map<Variable, Assignment>>(
+			(acc, entry) => new Map([...acc, [Literal.variable(entry.literal), Literal.assignment(entry.literal)]]),
+			new Map(),
+		);
+
+		return {
+			...state,
+			trail,
+			assignments: new Map([...state.assignments.keys()].map(v => [v, assigned.get(v) ?? "unassigned"])),
+			level,
+		};
+	},
+
+	jump: (level: number) => Core.State.modify(s => ({ ...s, cdcl: State.backjump(s.cdcl, level) })),
 };
 
 const reset = (assignments: Map<Variable, Assignment>): Map<Variable, Assignment> => new Map([...assignments.keys()].map(v => [v, "unassigned" as const]));
+
+const variables = (clauses: Clause.T[]): Variable[] => [...new Set(clauses.flatMap(c => c.literals.map(Literal.variable)))];
