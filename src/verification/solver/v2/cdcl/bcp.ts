@@ -3,30 +3,14 @@
 // https://github.com/tiansivive/z-yap/blob/main/zettels/cdcl-t-solver.md
 
 import { match, P } from "ts-pattern";
-import * as Core from "../core";
-import { Trace } from "../trace";
-import { Clause, type Assignment, type Literal, Literal as Lit, State, Trail, type Variable } from "./model";
+import { Clause, type Assignment, type Literal, Literal as Lit, type State, type Variable } from "./model";
 
-export const propagate = function* (state: State): Core.G<Result> {
-	const unit = classify(state);
-	return yield* match(unit)
-		.with({ tag: "none" }, () => Core.lift<Result>({ tag: "ok", state }))
-		.with({ tag: "conflict" }, ({ clause }) => Core.lift<Result>({ tag: "conflict", state, clause }))
-		.with({ tag: "unit" }, function* ({ literal, reason }): Core.G<Result> {
-			yield* Trace.emit({ tag: "propagate", literal, reason });
-			return yield* propagate(State.assign(state, literal, Trail.Reason.clause(reason)));
-		})
-		.exhaustive();
-};
-
-export type Result = { tag: "ok"; state: State } | { tag: "conflict"; state: State; clause: Clause.T };
-
-type Unit = { tag: "none" } | { tag: "conflict"; clause: Clause.T } | { tag: "unit"; literal: Literal; reason: Clause.T };
-
-const classify = (state: State): Unit =>
+export const classify = (state: State): Unit =>
 	Clause.all(state.clauses)
 		.map(clause => classifyClause(state.assignments, clause))
 		.find((unit): unit is Exclude<Unit, { tag: "none" }> => unit.tag !== "none") ?? { tag: "none" };
+
+export type Unit = { tag: "none" } | { tag: "conflict"; clause: Clause.T } | { tag: "unit"; literal: Literal; reason: Clause.T };
 
 const classifyClause = (assignments: Map<Variable, Assignment>, clause: Clause.T): Unit =>
 	match(satisfied(assignments, clause))

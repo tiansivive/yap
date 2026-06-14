@@ -6,7 +6,7 @@
 import * as E from "fp-ts/Either";
 import type { Either } from "fp-ts/lib/Either";
 import { match, P } from "ts-pattern";
-import { type Clause, type Conflict, type Literal, Literal as Lit } from "../cdcl";
+import { type Clause, type Conflict, type Literal, Literal as Lit } from "../cdcl/model";
 import type { Arena, Enode } from "./intern";
 
 const THEORY_CLAUSE_ID = -1;

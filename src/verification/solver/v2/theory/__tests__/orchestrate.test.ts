@@ -17,6 +17,9 @@ const literal = (encoding: Encoding.State, op: Encoding.Atom.T["op"]): Literal =
 		})
 		.exhaustive();
 
+const run = <A>(prepared: Theory.Setup, gen: () => Core.G<A>): [Core.Collector<A>, Core.State] =>
+	Core.run(Core.Do(gen), Core.Env.default, { ...Core.State.initial, arena: prepared.arena, theories: prepared.state });
+
 describe("Theory orchestration", () => {
 	it("registers equality atoms with both literal polarities", () => {
 		const encoding = CNF.encode(DSL.eq(DSL.x, DSL.y));
@@ -34,10 +37,13 @@ describe("Theory orchestration", () => {
 		const prepared = Theory.setup(encoding);
 		const eq = literal(encoding, "=");
 		const neq = literal(encoding, "!=");
-		const asserted = conflictValue(Theory.assert(prepared.state, prepared.arena, eq)).state;
-		const conflict = Theory.assert(asserted, prepared.arena, neq);
+		const [collector] = run(prepared, function* () {
+			yield* Theory.assert(eq);
+			return yield* Theory.assert(neq);
+		});
+		const conflict = conflictValue(collector.result);
 
-		expect(tag(conflict)).toBe("Left");
+		expect(conflict).toBeDefined();
 	});
 
 	it("detects EUF contradiction during theory check", () => {
@@ -46,10 +52,13 @@ describe("Theory orchestration", () => {
 		const encoding = CNF.encode(DSL.and(DSL.eq(DSL.x, DSL.y), DSL.neq(fx, fy)));
 		const prepared = Theory.setup(encoding);
 		const eq = literal(encoding, "=");
-		const asserted = conflictValue(Theory.assert(prepared.state, prepared.arena, eq)).state;
-		const conflict = Theory.check(asserted, prepared.arena);
+		const [collector] = run(prepared, function* () {
+			yield* Theory.assert(eq);
+			return yield* Theory.check();
+		});
+		const conflict = conflictValue(collector.result);
 
-		expect(tag(conflict)).toBe("Left");
+		expect(conflict).toBeDefined();
 	});
 
 	it("registers arithmetic atoms into the arithmetic state", () => {
@@ -67,10 +76,13 @@ describe("Theory orchestration", () => {
 		const prepared = Theory.setup(encoding);
 		const gt = literal(encoding, ">");
 		const lt = literal(encoding, "<");
-		const assertedLower = conflictValue(Theory.assert(prepared.state, prepared.arena, gt)).state;
-		const conflict = Theory.assert(assertedLower, prepared.arena, lt);
+		const [collector] = run(prepared, function* () {
+			yield* Theory.assert(gt);
+			return yield* Theory.assert(lt);
+		});
+		const conflict = conflictValue(collector.result);
 
-		expect(tag(conflict)).toBe("Left");
+		expect(conflict).toBeDefined();
 	});
 
 	it("installs setup into the core solver state", () => {
@@ -90,13 +102,18 @@ describe("Theory orchestration", () => {
 		const encoding = CNF.encode(DSL.eq(DSL.x, DSL.y));
 		const prepared = Theory.setup(encoding);
 		const eq = literal(encoding, "=");
-		const entered = Theory.enter(prepared.state);
-		const merged = conflictValue(Theory.assert(entered, prepared.arena, eq)).state;
+		const [collector] = run(prepared, function* () {
+			yield* Theory.enter(1);
+			yield* Theory.assert(eq);
+			const merged = yield* Core.State.get();
+			yield* Theory.backtrack(1, 0);
+			const backtracked = yield* Core.State.get();
+			return { merged: merged.theories, backtracked: backtracked.theories };
+		});
+		const { merged, backtracked } = conflictValue(collector.result);
 
 		expect(merged.euf.stack.length).toBe(1);
 		expect(merged.arithmetic.stack.length).toBe(1);
-
-		const backtracked = Theory.backtrack(merged);
 
 		expect(backtracked.euf.stack.length).toBe(0);
 		expect(backtracked.arithmetic.stack.length).toBe(0);

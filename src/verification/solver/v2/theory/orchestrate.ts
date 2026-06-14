@@ -7,21 +7,16 @@ import * as E from "fp-ts/Either";
 import type { Either } from "fp-ts/lib/Either";
 import { match } from "ts-pattern";
 import * as Arithmetic from "../arithmetic";
-import type { Conflict, Literal } from "../cdcl";
+import type { Conflict, Literal } from "../cdcl/model";
 import * as Core from "../core";
 import type * as Encoding from "../encoding";
 import * as EUF from "../euf";
+import { Trace } from "../trace";
+import * as F from "fp-ts/lib/function";
 
 export type State = {
 	readonly euf: EUF.CC.State;
 	readonly arithmetic: Arithmetic.State;
-};
-
-export const State = {
-	empty: {
-		euf: EUF.CC.empty,
-		arithmetic: Arithmetic.State.empty,
-	} satisfies State,
 };
 
 export const setup = (encoding: Encoding.State): Setup => {
@@ -40,33 +35,84 @@ export const install = function* (encoding: Encoding.State): Core.G<Setup> {
 	return prepared;
 };
 
-export const assert = (state: State, arena: EUF.Arena.State, literal: Literal): Check =>
-	E.Monad.chain(EUF.CC.assert(state.euf, arena, literal), euf =>
-		E.Functor.map(Arithmetic.State.assert(state.arithmetic, literal), arithmetic => ({
+export const assert = function* (literal: Literal): Core.G<Conflict | undefined> {
+	const s = yield* Core.State.get();
+	return yield* E.match(
+		function* (conflict: Conflict): Core.G<Conflict | undefined> {
+			yield* Trace.emit({ tag: "assert", theory: "all", literal, result: "conflict", detail: [] });
+			return conflict;
+		},
+		function* (update: Update): Core.G<Conflict | undefined> {
+			yield* Core.State.modify(st => ({ ...st, theories: update.state }));
+			yield* Trace.emit({ tag: "assert", theory: "all", literal, result: "ok", detail: [] });
+			return undefined;
+		},
+	)(asserted(s.theories, s.arena, literal));
+};
+
+const asserted = (state: State, arena: EUF.Arena.State, literal: Literal): Check =>
+	F.pipe(
+		E.Do,
+		E.bind("euf", () => EUF.CC.assert(state.euf, arena, literal)),
+		E.bind("arithmetic", () => Arithmetic.State.assert(state.arithmetic, literal)),
+		E.map(({ euf, arithmetic }) => ({
 			state: { ...state, euf: euf.state, arithmetic: arithmetic.state },
 			propagations: [...euf.propagations, ...arithmetic.propagations],
 		})),
 	);
 
-export const check = (state: State, arena: EUF.Arena.State): Check =>
-	E.Monad.chain(EUF.CC.check(state.euf), euf =>
-		E.Functor.map(Arithmetic.State.check(state.arithmetic), arithmetic => ({
-			state: { ...state, euf: euf.state, arithmetic: arithmetic.state },
-			propagations: [...euf.propagations, ...arithmetic.propagations],
-		})),
-	);
+export const check = function* (): Core.G<Conflict | undefined> {
+	const s = yield* Core.State.get();
+	return yield* E.match(
+		function* (conflict: Conflict): Core.G<Conflict | undefined> {
+			yield* Trace.emit({ tag: "check", theory: "all", result: "conflict", detail: [] });
+			return conflict;
+		},
+		function* (update: Update): Core.G<Conflict | undefined> {
+			yield* Core.State.modify(st => ({ ...st, theories: update.state }));
+			yield* Trace.emit({ tag: "check", theory: "all", result: "ok", detail: [] });
+			return undefined;
+		},
+	)(State.check(s.theories, s.arena));
+};
 
-export const enter = (state: State): State => ({
-	...state,
-	euf: EUF.CC.push(state.euf),
-	arithmetic: Arithmetic.State.push(state.arithmetic),
-});
+export const enter = function* (level: number): Core.G<void> {
+	yield* Core.State.modify(s => ({ ...s, theories: State.enter(s.theories) }));
+	yield* Trace.emit({ tag: "enter", level });
+};
 
-export const backtrack = (state: State): State => ({
-	...state,
-	euf: EUF.CC.pop(state.euf),
-	arithmetic: Arithmetic.State.pop(state.arithmetic),
-});
+export const backtrack = function* (from: number, to: number): Core.G<void> {
+	const count = Math.max(0, from - to);
+	yield* Core.State.modify(s => ({ ...s, theories: Array.from({ length: count }).reduce(State.backtrack, s.theories) }));
+	yield* Trace.emit({ tag: "backtrack", to });
+};
+
+export const State = {
+	empty: {
+		euf: EUF.CC.empty,
+		arithmetic: Arithmetic.State.empty,
+	} satisfies State,
+	check: (state: State, arena: EUF.Arena.State): Check =>
+		F.pipe(
+			E.Do,
+			E.bind("euf", () => EUF.CC.check(state.euf)),
+			E.bind("arithmetic", () => Arithmetic.State.check(state.arithmetic)),
+			E.map(({ euf, arithmetic }) => ({
+				state: { ...state, euf: euf.state, arithmetic: arithmetic.state },
+				propagations: [...euf.propagations, ...arithmetic.propagations],
+			})),
+		),
+	enter: (state: State): State => ({
+		...state,
+		euf: EUF.CC.push(state.euf),
+		arithmetic: Arithmetic.State.push(state.arithmetic),
+	}),
+	backtrack: (state: State): State => ({
+		...state,
+		euf: EUF.CC.pop(state.euf),
+		arithmetic: Arithmetic.State.pop(state.arithmetic),
+	}),
+};
 
 export type Setup = {
 	readonly arena: EUF.Arena.State;
