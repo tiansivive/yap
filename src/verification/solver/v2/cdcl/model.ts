@@ -5,6 +5,57 @@
 
 import * as Core from "../core";
 
+export const State = {
+	initial: (clauses: Clause.T[]): State => ({
+		trail: [],
+		assignments: new Map(variables(clauses).map(v => [v, "unassigned" as const])),
+		level: 0,
+		clauses: { ...Clause.empty, base: clauses },
+		nextClauseId: clauses.reduce((max, c) => Math.max(max, c.id), 0) + 1,
+	}),
+
+	empty: {
+		trail: [],
+		assignments: new Map(),
+		level: 0,
+		clauses: { base: [], learned: [], lemmas: [] },
+		nextClauseId: 0,
+	} satisfies State,
+
+	replace: (cdcl: State) => Core.State.modify(s => ({ ...s, cdcl })),
+
+	enter: (state: State): State => ({ ...state, level: state.level + 1 }),
+
+	assign: (state: State, literal: Literal, reason: Trail.Reason.T): State => ({
+		...state,
+		trail: [...state.trail, { literal, level: state.level, reason }],
+		assignments: new Map([...state.assignments, [Literal.variable(literal), Literal.assignment(literal)]]),
+	}),
+
+	learn: (state: State, clause: Clause.T): State => ({
+		...state,
+		clauses: Clause.insert(state.clauses, "learned", clause),
+		nextClauseId: Math.max(state.nextClauseId, clause.id + 1),
+	}),
+
+	backjump: (state: State, level: number): State => {
+		const trail = state.trail.filter(entry => entry.level <= level);
+		const assigned = trail.reduce<Map<Variable, Assignment>>(
+			(acc, entry) => new Map([...acc, [Literal.variable(entry.literal), Literal.assignment(entry.literal)]]),
+			new Map(),
+		);
+
+		return {
+			...state,
+			trail,
+			assignments: new Map([...state.assignments.keys()].map(v => [v, assigned.get(v) ?? "unassigned"])),
+			level,
+		};
+	},
+
+	jump: (level: number) => Core.State.modify(s => ({ ...s, cdcl: State.backjump(s.cdcl, level) })),
+};
+
 export type Variable = number;
 export type Literal = number;
 
@@ -47,8 +98,6 @@ export namespace Clause {
 		return id;
 	};
 }
-
-export type Clause = Clause.T;
 
 export type Conflict = {
 	clause: Clause.T;
@@ -109,57 +158,6 @@ export const Literal = {
 	assignment: (lit: Literal): Assignment => (Literal.polarity(lit) ? "true" : "false"),
 };
 
-export const State = {
-	initial: (clauses: Clause.T[]): State => ({
-		trail: [],
-		assignments: new Map(variables(clauses).map(v => [v, "unassigned" as const])),
-		level: 0,
-		clauses: { ...Clause.empty, base: clauses },
-		nextClauseId: clauses.reduce((max, c) => Math.max(max, c.id), 0) + 1,
-	}),
+const reset = (assignments: Map<Variable, Assignment>): Map<Variable, Assignment> => new Map(assignments.keys().map(v => [v, "unassigned" as const]));
 
-	empty: {
-		trail: [],
-		assignments: new Map(),
-		level: 0,
-		clauses: Clause.empty,
-		nextClauseId: 0,
-	} satisfies State,
-
-	replace: (cdcl: State) => Core.State.modify(s => ({ ...s, cdcl })),
-
-	enter: (state: State): State => ({ ...state, level: state.level + 1 }),
-
-	assign: (state: State, literal: Literal, reason: Trail.Reason.T): State => ({
-		...state,
-		trail: [...state.trail, { literal, level: state.level, reason }],
-		assignments: new Map([...state.assignments, [Literal.variable(literal), Literal.assignment(literal)]]),
-	}),
-
-	learn: (state: State, clause: Clause.T): State => ({
-		...state,
-		clauses: Clause.insert(state.clauses, "learned", clause),
-		nextClauseId: Math.max(state.nextClauseId, clause.id + 1),
-	}),
-
-	backjump: (state: State, level: number): State => {
-		const trail = state.trail.filter(entry => entry.level <= level);
-		const assigned = trail.reduce<Map<Variable, Assignment>>(
-			(acc, entry) => new Map([...acc, [Literal.variable(entry.literal), Literal.assignment(entry.literal)]]),
-			new Map(),
-		);
-
-		return {
-			...state,
-			trail,
-			assignments: new Map([...state.assignments.keys()].map(v => [v, assigned.get(v) ?? "unassigned"])),
-			level,
-		};
-	},
-
-	jump: (level: number) => Core.State.modify(s => ({ ...s, cdcl: State.backjump(s.cdcl, level) })),
-};
-
-const reset = (assignments: Map<Variable, Assignment>): Map<Variable, Assignment> => new Map([...assignments.keys()].map(v => [v, "unassigned" as const]));
-
-const variables = (clauses: Clause.T[]): Variable[] => [...new Set(clauses.flatMap(c => c.literals.map(Literal.variable)))];
+const variables = (clauses: Clause.T[]): Variable[] => Array.from(new Set(clauses.flatMap(c => c.literals.map(Literal.variable))));

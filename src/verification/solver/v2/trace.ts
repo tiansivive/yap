@@ -9,6 +9,14 @@ import * as Core from "./core";
 import type * as Quantifier from "./quantifier";
 import type * as Theory from "./theory";
 
+export const Trace = {
+	emit: (step: Event.T) => Trace.emitMany([step]),
+
+	emitMany: function* (steps: Event.T[]): Core.G<void> {
+		yield (_env, _w, st = Core.State.initial) => [{ ...Core.Accumulator.empty, steps, result: E.right(undefined) }, st];
+	},
+};
+
 export namespace Event {
 	export type Result = { tag: "sat"; assignments: Map<CDCL.Variable, CDCL.Assignment> } | { tag: "unsat"; core: CDCL.Clause.T[] };
 
@@ -48,12 +56,4 @@ export const Stats = {
 		conflicts: a.conflicts + b.conflicts,
 		quantifierRounds: a.quantifierRounds + b.quantifierRounds,
 	}),
-};
-
-export const Trace = {
-	emit: (step: Event.T) => Trace.emitMany([step]),
-
-	emitMany: function* (steps: Event.T[]): Core.G<void> {
-		yield (_env, _w, st = Core.State.initial) => [{ ...Core.Accumulator.empty, steps, result: E.right(undefined) }, st];
-	},
 };

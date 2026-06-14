@@ -5,11 +5,6 @@
 import { match, P } from "ts-pattern";
 import { type Clause, type Conflict, Literal, type State, Trail } from "./model";
 
-export type Result = {
-	learned: Clause.T;
-	backtrackLevel: number;
-};
-
 export const analyze = (state: State, conflict: Conflict): Result => {
 	const resolvent = compute(state.trail, conflict.clause.literals, state.level);
 	const learned: Clause.T = {
@@ -20,6 +15,11 @@ export const analyze = (state: State, conflict: Conflict): Result => {
 	const backtrackLevel = resolvent.filter(lit => level(state.trail, lit) !== state.level).reduce((max, lit) => Math.max(max, level(state.trail, lit)), 0);
 
 	return { learned, backtrackLevel };
+};
+
+export type Result = {
+	learned: Clause.T;
+	backtrackLevel: number;
 };
 
 const compute = (trail: Trail.Entry[], initial: Literal[], level: number): Literal[] => {

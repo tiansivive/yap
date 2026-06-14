@@ -7,10 +7,6 @@ import * as Core from "../core";
 import { Trace } from "../trace";
 import { Clause, type Assignment, type Literal, Literal as Lit, State, Trail, type Variable } from "./model";
 
-export type Result = { tag: "ok"; state: State } | { tag: "conflict"; state: State; clause: Clause.T };
-
-type Unit = { tag: "none" } | { tag: "conflict"; clause: Clause.T } | { tag: "unit"; literal: Literal; reason: Clause.T };
-
 export const propagate = function* (state: State): Core.G<Result> {
 	const unit = classify(state);
 	return yield* match(unit)
@@ -22,6 +18,10 @@ export const propagate = function* (state: State): Core.G<Result> {
 		})
 		.exhaustive();
 };
+
+export type Result = { tag: "ok"; state: State } | { tag: "conflict"; state: State; clause: Clause.T };
+
+type Unit = { tag: "none" } | { tag: "conflict"; clause: Clause.T } | { tag: "unit"; literal: Literal; reason: Clause.T };
 
 const classify = (state: State): Unit =>
 	Clause.all(state.clauses)
