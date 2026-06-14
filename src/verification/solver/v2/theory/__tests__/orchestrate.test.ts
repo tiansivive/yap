@@ -52,6 +52,27 @@ describe("Theory orchestration", () => {
 		expect(tag(conflict)).toBe("Left");
 	});
 
+	it("registers arithmetic atoms into the arithmetic state", () => {
+		const encoding = CNF.encode(DSL.gte(DSL.x, DSL.int(0)));
+		const prepared = Theory.setup(encoding);
+		const gte = literal(encoding, ">=");
+
+		expect(prepared.arithmetics.some(entry => entry.literal === gte)).toBe(true);
+		expect(prepared.state.arithmetic.constraints.has(gte)).toBe(true);
+		expect(prepared.state.arithmetic.constraints.has(-gte)).toBe(true);
+	});
+
+	it("detects arithmetic contradiction at the theory boundary", () => {
+		const encoding = CNF.encode(DSL.and(DSL.gt(DSL.x, DSL.int(0)), DSL.lt(DSL.x, DSL.int(0))));
+		const prepared = Theory.setup(encoding);
+		const gt = literal(encoding, ">");
+		const lt = literal(encoding, "<");
+		const assertedLower = conflictValue(Theory.assert(prepared.state, prepared.arena, gt)).state;
+		const conflict = Theory.assert(assertedLower, prepared.arena, lt);
+
+		expect(tag(conflict)).toBe("Left");
+	});
+
 	it("installs setup into the core solver state", () => {
 		const encoding = CNF.encode(DSL.eq(DSL.x, DSL.y));
 		const [collector, state] = Core.run(

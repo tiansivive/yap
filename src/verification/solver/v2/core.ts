@@ -198,7 +198,7 @@ export const State = {
 				stack: [],
 			},
 			arithmetic: {
-				tableau: { rows: new Map(), assignment: new Map() },
+				tableau: { rows: new Map(), basic: new Set(), assignment: new Map(), bounds: new Map() },
 				bounds: new Map(),
 				integerVars: new Set(),
 				constraints: new Map(),

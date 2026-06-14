@@ -12,10 +12,26 @@ import * as Core from "../core";
 import type * as Encoding from "../encoding";
 import * as EUF from "../euf";
 
+export type State = {
+	readonly euf: EUF.CC.State;
+	readonly arithmetic: Arithmetic.State;
+};
+
+export const State = {
+	empty: {
+		euf: EUF.CC.empty,
+		arithmetic: Arithmetic.State.empty,
+	} satisfies State,
+};
+
 export const setup = (encoding: Encoding.State): Setup => {
 	const registered = Registration.from(encoding);
 	const euf = registered.equalities.reduce((state, equality) => EUF.CC.register(state, equality.literal, equality.equality), EUF.CC.init(registered.arena));
-	return { arena: registered.arena, state: { ...State.empty, euf }, equalities: registered.equalities };
+	const arithmetic = registered.arithmetics.reduce<Arithmetic.State>(
+		(state, arithmetic) => Arithmetic.State.register(state, arithmetic.literal, arithmetic.atom),
+		Arithmetic.State.empty,
+	);
+	return { arena: registered.arena, state: { ...State.empty, euf, arithmetic }, equalities: registered.equalities, arithmetics: registered.arithmetics };
 };
 
 export const install = function* (encoding: Encoding.State): Core.G<Setup> {
@@ -25,16 +41,20 @@ export const install = function* (encoding: Encoding.State): Core.G<Setup> {
 };
 
 export const assert = (state: State, arena: EUF.Arena.State, literal: Literal): Check =>
-	E.Functor.map(EUF.CC.assert(state.euf, arena, literal), right => ({
-		state: { ...state, euf: right.state },
-		propagations: right.propagations,
-	}));
+	E.Monad.chain(EUF.CC.assert(state.euf, arena, literal), euf =>
+		E.Functor.map(Arithmetic.State.assert(state.arithmetic, literal), arithmetic => ({
+			state: { ...state, euf: euf.state, arithmetic: arithmetic.state },
+			propagations: [...euf.propagations, ...arithmetic.propagations],
+		})),
+	);
 
 export const check = (state: State, arena: EUF.Arena.State): Check =>
-	E.Functor.map(EUF.CC.check(state.euf), right => ({
-		state: { ...state, euf: right.state },
-		propagations: right.propagations,
-	}));
+	E.Monad.chain(EUF.CC.check(state.euf), euf =>
+		E.Functor.map(Arithmetic.State.check(state.arithmetic), arithmetic => ({
+			state: { ...state, euf: euf.state, arithmetic: arithmetic.state },
+			propagations: [...euf.propagations, ...arithmetic.propagations],
+		})),
+	);
 
 export const enter = (state: State): State => ({
 	...state,
@@ -48,22 +68,11 @@ export const backtrack = (state: State): State => ({
 	arithmetic: Arithmetic.State.pop(state.arithmetic),
 });
 
-export const State = {
-	empty: {
-		euf: EUF.CC.empty,
-		arithmetic: Arithmetic.State.empty,
-	} satisfies State,
-};
-
 export type Setup = {
 	readonly arena: EUF.Arena.State;
 	readonly state: State;
 	readonly equalities: readonly Equality.Entry[];
-};
-
-export type State = {
-	readonly euf: EUF.CC.State;
-	readonly arithmetic: Arithmetic.State;
+	readonly arithmetics: readonly Arithmetic.Entry[];
 };
 
 export type Update = {
@@ -101,10 +110,11 @@ const Registration = {
 				const pair = EUF.Intern.pair(acc.arena, atom.args[0], atom.args[1]);
 				return {
 					arena: pair.state,
-					equalities: [...acc.equalities, ...Entries.from(literal, atom.op, pair.left, pair.right)],
+					equalities: [...acc.equalities, ...Entries.equality(literal, atom.op, pair.left, pair.right)],
+					arithmetics: [...acc.arithmetics, ...Entries.arithmetic(literal, atom)],
 				};
 			},
-			{ arena: EUF.Intern.empty, equalities: [] },
+			{ arena: EUF.Intern.empty, equalities: [], arithmetics: [] },
 		),
 };
 
@@ -112,15 +122,26 @@ namespace Registration {
 	export type State = {
 		readonly arena: EUF.Arena.State;
 		readonly equalities: readonly Equality.Entry[];
+		readonly arithmetics: readonly Arithmetic.Entry[];
 	};
 }
 
 const Entries = {
-	from: (literal: Literal, op: Encoding.Atom.T["op"], a: EUF.Enode.Id, b: EUF.Enode.Id): Equality.Entry[] =>
+	equality: (literal: Literal, op: Encoding.Atom.T["op"], a: EUF.Enode.Id, b: EUF.Enode.Id): Equality.Entry[] =>
 		match(op)
 			.with("=", () => [Entries.one(literal, a, b, true), Entries.one(-literal, a, b, false)])
 			.with("!=", () => [Entries.one(literal, a, b, false), Entries.one(-literal, a, b, true)])
 			.otherwise(() => []),
+
+	arithmetic: (literal: Literal, atom: Encoding.Atom.T): Arithmetic.Entry[] =>
+		match(atom.op)
+			.with("=", () => [{ literal, atom }])
+			.with("!=", () => [{ literal, atom }])
+			.with("<", () => [{ literal, atom }])
+			.with("<=", () => [{ literal, atom }])
+			.with(">", () => [{ literal, atom }])
+			.with(">=", () => [{ literal, atom }])
+			.exhaustive(),
 
 	one: (literal: Literal, a: EUF.Enode.Id, b: EUF.Enode.Id, positive: boolean): Equality.Entry => ({
 		literal,
