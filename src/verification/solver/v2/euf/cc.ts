@@ -16,8 +16,9 @@ export const CC = {
 		uf: new Map(),
 		parents: new Map(),
 		mergeLog: [],
-		literalMap: new Map(),
-		pending: [],
+		registry: new Map(),
+		active: new Set(),
+		conclusions: [],
 		stack: [],
 	} satisfies CC.State,
 
@@ -29,19 +30,21 @@ export const CC = {
 
 	register: (state: CC.State, literal: Literal, equality: Equality): CC.State => ({
 		...state,
-		literalMap: new Map([...state.literalMap, [literal, equality]]),
+		registry: new Map([...state.registry, [literal, equality]]),
 	}),
 
 	assert: (state: CC.State, arena: Arena.State, literal: Literal): CC.Check =>
-		match(state.literalMap.get(literal))
+		match(state.registry.get(literal))
 			.with(undefined, () => E.right({ state, propagations: [] }))
 			.otherwise(equality =>
 				match(equality.positive)
-					.with(true, () => merge(state, arena, equality.a, equality.b, literal))
+					.with(true, () =>
+						E.Functor.map(merge(state, arena, equality.a, equality.b, literal), update => ({ ...update, state: Active.add(update.state, literal) })),
+					)
 					.with(false, () =>
 						match(equivalent(state, equality.a, equality.b))
 							.with(true, () => E.left({ clause: ConflictClause.from(literal, CC.explain(state, equality.a, equality.b)) }))
-							.with(false, () => E.right({ state, propagations: [] }))
+							.with(false, () => E.right({ state: Active.add(state, literal), propagations: [] }))
 							.exhaustive(),
 					)
 					.exhaustive(),
@@ -49,12 +52,12 @@ export const CC = {
 
 	check: (state: CC.State): CC.Check =>
 		match(Disequality.find(state))
-			.with(undefined, () => E.right({ state: { ...state, pending: [] }, propagations: state.pending }))
+			.with(undefined, () => E.right({ state: { ...state, conclusions: [] }, propagations: state.conclusions }))
 			.otherwise(({ literal, equality }) => E.left({ clause: ConflictClause.from(literal, CC.explain(state, equality.a, equality.b)) })),
 
 	push: (state: CC.State): CC.State => ({
 		...state,
-		stack: [...state.stack, { uf: state.uf, mergeLog: state.mergeLog }],
+		stack: [...state.stack, { uf: state.uf, mergeLog: state.mergeLog, active: state.active }],
 	}),
 
 	pop: (state: CC.State): CC.State =>
@@ -64,6 +67,7 @@ export const CC = {
 				...state,
 				uf: snapshot.uf,
 				mergeLog: snapshot.mergeLog,
+				active: snapshot.active,
 				stack: state.stack.slice(0, -1),
 			})),
 
@@ -88,14 +92,16 @@ export namespace CC {
 	export type Snapshot = {
 		readonly uf: Map<Enode.Id, UF.Entry>;
 		readonly mergeLog: readonly Merge.Reason[];
+		readonly active: ReadonlySet<Literal>;
 	};
 
 	export type State = {
 		readonly uf: Map<Enode.Id, UF.Entry>;
 		readonly parents: Map<Enode.Id, Set<Enode.Id>>;
 		readonly mergeLog: readonly Merge.Reason[];
-		readonly literalMap: Map<Literal, Equality>;
-		readonly pending: readonly Propagation[];
+		readonly registry: Map<Literal, Equality>;
+		readonly active: ReadonlySet<Literal>;
+		readonly conclusions: readonly Propagation[];
 		readonly stack: readonly Snapshot[];
 	};
 
@@ -224,9 +230,17 @@ const Congruence = {
 
 const Disequality = {
 	find: (state: CC.State): { literal: Literal; equality: Equality } | undefined =>
-		[...state.literalMap.entries()]
-			.map(([literal, equality]) => ({ literal, equality }))
+		[...state.active]
+			.map(literal => ({ literal, equality: state.registry.get(literal) }))
+			.filter((entry): entry is { literal: Literal; equality: Equality } => entry.equality !== undefined)
 			.find(({ equality }) => !equality.positive && equivalent(state, equality.a, equality.b)),
+};
+
+const Active = {
+	add: (state: CC.State, literal: Literal): CC.State => ({
+		...state,
+		active: new Set([...state.active, literal]),
+	}),
 };
 
 const ConflictClause = {

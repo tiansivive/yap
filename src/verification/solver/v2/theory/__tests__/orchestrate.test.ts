@@ -9,6 +9,9 @@ import { CNF } from "../../encoding/index";
 import { conflictValue, tag } from "../../__tests__/either";
 import * as Theory from "../index";
 
+const BASE_LEVEL = 0;
+const CHILD_LEVEL = 1;
+
 const literal = (encoding: Encoding.State, op: Encoding.Atom.T["op"]): Literal =>
 	match([...encoding.atoms.entries()].find(([, atom]) => atom.op === op))
 		.with([P.number, P._], ([lit]) => lit)
@@ -52,7 +55,9 @@ describe("Theory orchestration", () => {
 		const encoding = CNF.encode(DSL.and(DSL.eq(DSL.x, DSL.y), DSL.neq(fx, fy)));
 		const prepared = Theory.setup(encoding);
 		const eq = literal(encoding, "=");
+		const neq = literal(encoding, "!=");
 		const [collector] = run(prepared, function* () {
+			yield* Theory.assert(neq);
 			yield* Theory.assert(eq);
 			return yield* Theory.check();
 		});
@@ -95,7 +100,7 @@ describe("Theory orchestration", () => {
 
 		expect(tag(collector.result)).toBe("Right");
 		expect(state.arena.nodes.size).toBeGreaterThan(0);
-		expect(state.theories.euf.literalMap.size).toBeGreaterThan(0);
+		expect(state.theories.euf.registry.size).toBeGreaterThan(0);
 	});
 
 	it("enters and backtracks theory decision levels", () => {
@@ -103,10 +108,10 @@ describe("Theory orchestration", () => {
 		const prepared = Theory.setup(encoding);
 		const eq = literal(encoding, "=");
 		const [collector] = run(prepared, function* () {
-			yield* Theory.enter(1);
+			yield* Theory.enter(CHILD_LEVEL);
 			yield* Theory.assert(eq);
 			const merged = yield* Core.State.get();
-			yield* Theory.backtrack(1, 0);
+			yield* Theory.backtrack(CHILD_LEVEL, BASE_LEVEL);
 			const backtracked = yield* Core.State.get();
 			return { merged: merged.theories, backtracked: backtracked.theories };
 		});

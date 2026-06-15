@@ -56,7 +56,8 @@ describe("EUF congruence closure", () => {
 		const initial = EUF.CC.init(f.arena);
 		const withEquality = EUF.CC.register(initial, EQ_XY, { a: f.x, b: f.y, positive: true });
 		const withDisequality = EUF.CC.register(withEquality, NEQ_FX_FY, { a: f.fx, b: f.fy, positive: false });
-		const merged = conflictValue(EUF.CC.assert(withDisequality, f.arena, EQ_XY)).state;
+		const active = conflictValue(EUF.CC.assert(withDisequality, f.arena, NEQ_FX_FY)).state;
+		const merged = conflictValue(EUF.CC.assert(active, f.arena, EQ_XY)).state;
 		const conflict = EUF.CC.check(merged);
 
 		expect(tag(conflict)).toBe("Left");

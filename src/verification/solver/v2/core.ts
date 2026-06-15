@@ -193,8 +193,9 @@ export const State = {
 				uf: new Map(),
 				parents: new Map(),
 				mergeLog: [],
-				literalMap: new Map(),
-				pending: [],
+				registry: new Map(),
+				active: new Set(),
+				conclusions: [],
 				stack: [],
 			},
 			arithmetic: {

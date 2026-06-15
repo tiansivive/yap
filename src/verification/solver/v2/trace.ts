@@ -18,7 +18,10 @@ export const Trace = {
 };
 
 export namespace Event {
-	export type Result = { tag: "sat"; assignments: Map<CDCL.Variable, CDCL.Assignment> } | { tag: "unsat"; core: CDCL.Clause.T[] };
+	export type Result =
+		| { tag: "sat"; assignments: Map<CDCL.Variable, CDCL.Assignment> }
+		| { tag: "unsat"; core: CDCL.Clause.T[] }
+		| { tag: "unknown"; reason: string };
 
 	export type T = CDCL.Event | Theory.Event | Quantifier.Event.T | Result;
 }
@@ -57,3 +60,6 @@ export const Stats = {
 		quantifierRounds: a.quantifierRounds + b.quantifierRounds,
 	}),
 };
+
+export * as Print from "./trace/print";
+export * as Replay from "./trace/replay";

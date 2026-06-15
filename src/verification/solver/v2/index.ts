@@ -6,6 +6,7 @@ export * as Encode from "./encoding/index";
 export * as EUF from "./euf";
 export * as Formulas from "./formulas/index";
 export * as Quantifier from "./quantifier";
+export * as Solver from "./solver";
 export * as Theory from "./theory";
 export * as Trace from "./trace";
 export { CNF } from "./encoding/index";
