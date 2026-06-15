@@ -9,6 +9,7 @@ import * as Replay from "../replay";
 
 const contradiction = DSL.and(DSL.eq(DSL.x, DSL.int(1)), DSL.not(DSL.eq(DSL.x, DSL.int(1))));
 const eufContradiction = DSL.and(DSL.eq(DSL.x, DSL.y), DSL.neq(DSL.x, DSL.y));
+const eufCongruence = DSL.and(DSL.eq(DSL.x, DSL.y), DSL.neq(Build.app("f", [DSL.x], Build.Int), Build.app("f", [DSL.y], Build.Int)));
 const replay = (formula: IVL.Formula): string => {
 	const check = Solver.run(formula);
 	return Replay.replay({
@@ -85,8 +86,8 @@ describe("v2 trace presentation", () => {
 			expect(replay(contradiction)).toMatchSnapshot();
 		});
 
-		it("EUF contradiction", () => {
-			expect(replay(eufContradiction)).toMatchSnapshot();
+		it("EUF congruence contradiction", () => {
+			expect(replay(eufCongruence)).toMatchSnapshot();
 		});
 
 		it("arithmetic UNSAT", () => {

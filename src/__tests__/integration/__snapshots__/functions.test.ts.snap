@@ -30,6 +30,7 @@ return main();
 [7] closure
   :body -> [3]
   :env -> [6]",
+    "ivl": "(forall ((x Real)) (= x x))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -41,6 +42,42 @@ return main();
       return x",
     "name": "identity",
     "normalized": "λ(x: Num) -> (closure: x -| Γ: x)",
+    "solverTrace": "=== Formula ===
+  (forall ((x Real)) (= x x))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
     "type": "Π(t1: Num) -> Num",
   },
   {
@@ -62,6 +99,7 @@ return main();
   :refers_to -> [9]
   :scope -> [2] {"level":0}
   :scope -> [10] {"level":1}",
+    "ivl": "(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -70,6 +108,45 @@ return main();
       return v0",
     "name": "add",
     "normalized": "λ(x: Num) -> (closure: λ(y: Num) -> FFI.$add x y -| Γ: x)",
+    "solverTrace": "=== Formula ===
+  (forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+  x=y -> residual
+  y=x -> residual
+  y=y -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
     "type": "Π(t2: Num) -> Π(t3: Num) -> Num",
   },
   {
@@ -93,6 +170,7 @@ return main();
   :refers_to -> [4]
   :scope -> [2] {"level":0}
 [6] lit {"value":{"type":"Num","value":42}}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -103,6 +181,31 @@ return main();
       return v2",
     "name": "forty2",
     "normalized": "42",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Num",
   },
   {
@@ -132,6 +235,7 @@ return main();
   :scope -> [2] {"level":0}
 [7] lit {"value":{"type":"Num","value":10}}
 [8] lit {"value":{"type":"Num","value":20}}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -144,6 +248,31 @@ return main();
       return v4",
     "name": "added",
     "normalized": "30",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Num",
   },
 ]
@@ -220,11 +349,48 @@ exports[`Language Tour — Functions & Application > higher-order functions 1`] 
 [23] closure
   :body -> [11]
   :env -> [20]",
+    "ivl": "(forall ((x Real)) (= x x))",
     "kind": "let",
     "mir": "",
     "name": "compose",
     "normalized": "λ(f: Π(t2: Num) -> (closure: Num -| Γ: t2)) ->
   (closure: λ(g: Π(t4: Num) -> Num) -> λ(x: Num) -> f (g x) -| Γ: f)",
+    "solverTrace": "=== Formula ===
+  (forall ((x Real)) (= x x))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
     "type": "Π(t1: Π(t2: Num) -> Num) -> Π(t3: Π(t4: Num) -> Num) -> Π(t5: Num) -> Num",
   },
   {
@@ -240,7 +406,8 @@ function closure_13(x) {
 }
 return main();
 ",
-    "elaborated": "(λ(x: Num) -> FFI.$add x 1 : Π(x: Num) -> Num)",
+    "elaborated": "(λ(x: Num) -> FFI.$add x 1 : Π(x: Num) ->
+  <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add x 1) |])",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"add1"}
@@ -264,6 +431,18 @@ return main();
 [13] closure
   :body -> [3]
   :env -> [12]",
+    "ivl": "(and
+  (forall ((x Real))
+    (and
+      (= x x)
+      (forall ((x Real))
+        (=>
+          (= x x)
+          (forall ((y Real))
+            (=>
+              (= y 1)
+              (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))
+  (forall ((x Real)) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -277,7 +456,59 @@ return main();
       return v1",
     "name": "add1",
     "normalized": "λ(x: Num) -> (closure: FFI.$add x 1 -| Γ: x)",
-    "type": "Π(x: Num) -> Num",
+    "solverTrace": "=== Formula ===
+  (and
+    (forall ((x Real))
+      (and
+        (= x x)
+        (forall ((x Real))
+          (=>
+            (= x x)
+            (forall ((y Real))
+              (=>
+                (= y 1)
+                (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))
+    (forall ((x Real)) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+  x=1 -> residual
+  y=x -> residual
+  y=1 -> residual
+  r=x -> residual
+  r=1 -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
+    "type": "Π(x: Num) -> <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add x 1) |]",
   },
   {
     "codegenJS": "function main() {
@@ -292,7 +523,8 @@ function closure_13(x) {
 }
 return main();
 ",
-    "elaborated": "(λ(x: Num) -> FFI.$add x 5 : Π(x: Num) -> Num)",
+    "elaborated": "(λ(x: Num) -> FFI.$add x 5 : Π(x: Num) ->
+  <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add x 5) |])",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"add5"}
@@ -316,6 +548,18 @@ return main();
 [13] closure
   :body -> [3]
   :env -> [12]",
+    "ivl": "(and
+  (forall ((x Real))
+    (and
+      (= x x)
+      (forall ((x Real))
+        (=>
+          (= x x)
+          (forall ((y Real))
+            (=>
+              (= y 5)
+              (forall ((r Real)) (=> (= r (+ x 5)) (= r (+ x 5))))))))))
+  (forall ((x Real)) (forall ((r Real)) (=> (= r (+ x 5)) (= r (+ x 5))))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -329,7 +573,59 @@ return main();
       return v1",
     "name": "add5",
     "normalized": "λ(x: Num) -> (closure: FFI.$add x 5 -| Γ: x)",
-    "type": "Π(x: Num) -> Num",
+    "solverTrace": "=== Formula ===
+  (and
+    (forall ((x Real))
+      (and
+        (= x x)
+        (forall ((x Real))
+          (=>
+            (= x x)
+            (forall ((y Real))
+              (=>
+                (= y 5)
+                (forall ((r Real)) (=> (= r (+ x 5)) (= r (+ x 5))))))))))
+    (forall ((x Real)) (forall ((r Real)) (=> (= r (+ x 5)) (= r (+ x 5))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+  x=5 -> residual
+  y=x -> residual
+  y=5 -> residual
+  r=x -> residual
+  r=5 -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
+    "type": "Π(x: Num) -> <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add x 5) |]",
   },
   {
     "codegenJS": "function main() {
@@ -344,7 +640,8 @@ function closure_13(x) {
 }
 return main();
 ",
-    "elaborated": "(λ(x: Num) -> FFI.$mul x 2 : Π(x: Num) -> Num)",
+    "elaborated": "(λ(x: Num) -> FFI.$mul x 2 : Π(x: Num) ->
+  <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$mul x 2) |])",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"double"}
@@ -368,6 +665,18 @@ return main();
 [13] closure
   :body -> [3]
   :env -> [12]",
+    "ivl": "(and
+  (forall ((x Real))
+    (and
+      (= x x)
+      (forall ((x Real))
+        (=>
+          (= x x)
+          (forall ((y Real))
+            (=>
+              (= y 2)
+              (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))))))
+  (forall ((x Real)) (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -381,7 +690,59 @@ return main();
       return v1",
     "name": "double",
     "normalized": "λ(x: Num) -> (closure: FFI.$mul x 2 -| Γ: x)",
-    "type": "Π(x: Num) -> Num",
+    "solverTrace": "=== Formula ===
+  (and
+    (forall ((x Real))
+      (and
+        (= x x)
+        (forall ((x Real))
+          (=>
+            (= x x)
+            (forall ((y Real))
+              (=>
+                (= y 2)
+                (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))))))
+    (forall ((x Real)) (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+  x=2 -> residual
+  y=x -> residual
+  y=2 -> residual
+  r=x -> residual
+  r=2 -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
+    "type": "Π(x: Num) -> <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$mul x 2) |]",
   },
   {
     "codegenJS": "function main() {
@@ -416,6 +777,7 @@ return main();
 [10] var:ref {"name":"add1"}
   :refers_to -> [9]
   :scope -> [2] {"level":0}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -428,6 +790,31 @@ return main();
       return v4",
     "name": "add1ThenDouble",
     "normalized": "λ(x: Num) -> (closure: f (g x) -| Γ: x; g; f; compose)",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Π(t5: Num) -> Num",
   },
 ]
@@ -463,6 +850,7 @@ return main();
 [7] closure
   :body -> [3]
   :env -> [6]",
+    "ivl": "(forall ((x Real)) (= x x))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -474,6 +862,42 @@ return main();
       return x",
     "name": "identity",
     "normalized": "λ(x: Num) -> (closure: x -| Γ: x)",
+    "solverTrace": "=== Formula ===
+  (forall ((x Real)) (= x x))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
     "type": "Π(t1: Num) -> Num",
   },
   {
@@ -507,10 +931,47 @@ return main();
 [11] closure
   :body -> [5]
   :env -> [9]",
+    "ivl": "(forall ((x Real)) (forall ((y String)) (= x x)))",
     "kind": "let",
     "mir": "",
     "name": "const",
     "normalized": "λ(x: Num) -> (closure: λ(y: String) -> x -| Γ: x)",
+    "solverTrace": "=== Formula ===
+  (forall ((x Real)) (forall ((y String)) (= x x)))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
     "type": "Π(t2: Num) -> Π(t3: String) -> Num",
   },
 ]
@@ -537,8 +998,14 @@ return main();
 ",
     "elaborated": "λ(x: Num) ->
   {
-    let doubled : Num = FFI.$mul x 2;
-    let added : Num = FFI.$add doubled 10;
+    let doubled
+      : <ω> Num [| λ(r: Num) ->
+        (closure: FFI.$eq r (FFI.$mul x y) -| Γ: r; y; x) |]
+      = FFI.$mul x 2;
+    let added
+      : <ω> Num [| λ(r: Num) ->
+        (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
+      = FFI.$add doubled 10;
     return added;
   }",
     "gram": "[1] root
@@ -595,6 +1062,37 @@ return main();
 [24] closure
   :body -> [3]
   :env -> [23]",
+    "ivl": "(forall ((x Real))
+  (forall ((doubled Real))
+    (=>
+      (= doubled (* doubled 2))
+      (and
+        (= x x)
+        (forall ((x Real))
+          (=>
+            (= x x)
+            (forall ((y Real))
+              (=>
+                (= y 2)
+                (forall ((r Real)) (=> (= r (* x 2)) (= r (* doubled 2))))))))
+        (forall ((added Real))
+          (=>
+            (= added (+ (* doubled 2) 10))
+            (and
+              (= doubled (* doubled 2))
+              (= doubled 2)
+              (forall ((x Real))
+                (=>
+                  (and (= x (* doubled 2)) (= x 2))
+                  (forall ((y Real))
+                    (=>
+                      (= y 10)
+                      (forall ((r Real))
+                        (=>
+                          (= r (+ doubled 10))
+                          (= r (+ (* doubled 2) 10))))))))
+              (= added (+ (* doubled 2) 10))
+              (= added added))))))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -613,10 +1111,106 @@ return main();
     "name": "compute",
     "normalized": "λ(x: Num) ->
   (closure: {
-    let doubled : Num = FFI.$mul x 2;
-    let added : Num = FFI.$add doubled 10;
+    let doubled
+      : <ω> Num [| λ(r: Num) ->
+        (closure: FFI.$eq r (FFI.$mul x y) -| Γ: r; y; x) |]
+      = FFI.$mul x 2;
+    let added
+      : <ω> Num [| λ(r: Num) ->
+        (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
+      = FFI.$add doubled 10;
     return added;
   } -| Γ: x)",
+    "solverTrace": "=== Formula ===
+  (forall ((x Real))
+    (forall ((doubled Real))
+      (=>
+        (= doubled (* doubled 2))
+        (and
+          (= x x)
+          (forall ((x Real))
+            (=>
+              (= x x)
+              (forall ((y Real))
+                (=>
+                  (= y 2)
+                  (forall ((r Real)) (=> (= r (* x 2)) (= r (* doubled 2))))))))
+          (forall ((added Real))
+            (=>
+              (= added (+ (* doubled 2) 10))
+              (and
+                (= doubled (* doubled 2))
+                (= doubled 2)
+                (forall ((x Real))
+                  (=>
+                    (and (= x (* doubled 2)) (= x 2))
+                    (forall ((y Real))
+                      (=>
+                        (= y 10)
+                        (forall ((r Real))
+                          (=>
+                            (= r (+ doubled 10))
+                            (= r (+ (* doubled 2) 10))))))))
+                (= added (+ (* doubled 2) 10))
+                (= added added))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=doubled -> residual
+  x=2 -> residual
+  x=x -> residual
+  x=10 -> residual
+  x=added -> residual
+  doubled=doubled -> residual
+  doubled=2 -> residual
+  doubled=x -> residual
+  doubled=10 -> residual
+  doubled=added -> residual
+  y=doubled -> residual
+  y=2 -> residual
+  y=x -> residual
+  y=10 -> tautology
+  y=added -> residual
+  r=doubled -> residual
+  r=2 -> residual
+  r=x -> residual
+  r=10 -> residual
+  r=added -> residual
+  added=doubled -> residual
+  added=2 -> residual
+  added=x -> residual
+  added=10 -> residual
+  added=added -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
     "type": "Π(t1: Num) -> Num",
   },
   {
@@ -640,6 +1234,7 @@ return main();
   :refers_to -> [4]
   :scope -> [2] {"level":0}
 [6] lit {"value":{"type":"Num","value":5}}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -650,6 +1245,31 @@ return main();
       return v2",
     "name": "result",
     "normalized": "20",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Num",
   },
 ]
@@ -667,17 +1287,16 @@ exports[`Language Tour — Statement Blocks > side effects in blocks 1`] = `
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_33;
+  const v0 = closure_34;
   return v0;
 }
 
-function closure_33(result, x) {
+function closure_34(result, x) {
   const v0 = "Computing...";
   const v1 = print(v0);
   const v2 = 2;
   const v3 = (x * v2);
   const result4 = v3;
-  const v5 = "Num";
   const v6 = stringify(v5, result4);
   const v7 = print(v6);
   return result4;
@@ -687,8 +1306,13 @@ return main();
     "elaborated": "λ(x: Num) ->
   {
     FFI.print "Computing...";
-    let result : Num = FFI.$mul x 2;
-    FFI.print (FFI.stringify @Num result);
+    let result
+      : <ω> Num [| λ(r: Num) ->
+        (closure: FFI.$eq r (FFI.$mul x y) -| Γ: r; y; x) |]
+      = FFI.$mul x 2;
+    FFI.print
+      (FFI.stringify @<ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$mul x 2) |]
+        result);
     return result;
   }",
     "gram": "[1] root
@@ -697,21 +1321,21 @@ return main();
 [3] lambda {"variable":"x","icit":"Explicit","level":1}
   :annotation -> [4]
   :body -> [5]
-  :env -> [32]
+  :env -> [33]
 [4] lit {"value":{"type":"Atom","value":"Num"}}
 [5] block
-  :return -> [27]
+  :return -> [28]
   :stmt -> [6] {"index":0}
   :stmt -> [11] {"index":1}
   :stmt -> [18] {"index":2}
 [6] stmt:expr
   :next -> [11]
-  :value -> [28]
+  :value -> [29]
 [8] var:foreign {"name":"print","arity":1}
 [10] lit {"value":{"type":"String","value":"Computing..."}}
 [11] stmt:let {"variable":"result"}
   :next -> [18]
-  :value -> [29]
+  :value -> [30]
 [14] var:foreign {"name":"$mul","arity":2}
 [16] var:bound {"index":1}
   :next -> [17]
@@ -721,53 +1345,72 @@ return main();
   :scope -> [11] {"level":2}
 [17] lit {"value":{"type":"Num","value":2}}
 [18] stmt:expr
-  :value -> [30]
+  :value -> [31]
 [23] var:foreign {"name":"stringify","arity":2}
-[25] lit {"value":{"type":"Atom","value":"Num"}}
-  :next -> [26]
-[26] var:bound {"index":0}
-  :refers_to -> [11]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [11] {"level":2}
+[25] modal {"quantity":"Many"}
+  :next -> [27]
+  :term -> [26]
+[26] lit {"value":{"type":"Atom","value":"Num"}}
 [27] var:bound {"index":0}
   :refers_to -> [11]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [11] {"level":2}
-[28] external {"name":"print","arity":1,"args":1,"saturated":true}
+[28] var:bound {"index":0}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [11] {"level":2}
+[29] external {"name":"print","arity":1,"args":1,"saturated":true}
   :arg -> [10] {"index":0}
   :callee -> [8]
-[29] primop {"op":"$mul"}
+[30] primop {"op":"$mul"}
   :arg -> [16] {"index":0}
   :arg -> [17] {"index":1}
   :callee -> [14]
-[30] external {"name":"print","arity":1,"args":1,"saturated":true}
-  :arg -> [31] {"index":0}
+[31] external {"name":"print","arity":1,"args":1,"saturated":true}
+  :arg -> [32] {"index":0}
   :callee -> [8]
-[31] external {"name":"stringify","arity":2,"args":2,"saturated":true}
+[32] external {"name":"stringify","arity":2,"args":2,"saturated":true}
   :arg -> [25] {"index":0}
-  :arg -> [26] {"index":1}
+  :arg -> [27] {"index":1}
   :callee -> [23]
-[32] env
+[33] env
   :capture -> [11] {"index":0}
-[33] closure
+[34] closure
   :body -> [3]
-  :env -> [32]",
+  :env -> [33]",
+    "ivl": "(forall ((x Real))
+  (forall ((result Real))
+    (=>
+      (= result (* result 2))
+      (and
+        (= x x)
+        (forall ((x Real))
+          (=>
+            (= x x)
+            (forall ((y Real))
+              (=>
+                (= y 2)
+                (forall ((r Real)) (=> (= r (* x 2)) (= r (* result 2))))))))
+        (= result (* result 2))
+        (= result 2)
+        (forall ((r Real)) (=> (and (= r (* result 2)) (= r 2)) (= r (* x 2))))
+        (= result (* result 2))
+        (= result 2)))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_33
+      let v0 = &closure_34
       return v0
-  fn closure_33(result, x) entry=entry
+  fn closure_34(result, x) entry=entry
     entry:
       let v0 = "Computing..."
       let v1 = call print(v0)
       let v2 = 2
       let v3 = *(x, v2)
       let result4 = v3
-      let v5 = Num
       let v6 = call stringify(v5, result4)
       let v7 = call print(v6)
       return result4",
@@ -775,10 +1418,79 @@ return main();
     "normalized": "λ(x: Num) ->
   (closure: {
     FFI.print "Computing...";
-    let result : Num = FFI.$mul x 2;
-    FFI.print (FFI.stringify @Num result);
+    let result
+      : <ω> Num [| λ(r: Num) ->
+        (closure: FFI.$eq r (FFI.$mul x y) -| Γ: r; y; x) |]
+      = FFI.$mul x 2;
+    FFI.print
+      (FFI.stringify @<ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$mul x 2) |]
+        result);
     return result;
   } -| Γ: x)",
+    "solverTrace": "=== Formula ===
+  (forall ((x Real))
+    (forall ((result Real))
+      (=>
+        (= result (* result 2))
+        (and
+          (= x x)
+          (forall ((x Real))
+            (=>
+              (= x x)
+              (forall ((y Real))
+                (=>
+                  (= y 2)
+                  (forall ((r Real)) (=> (= r (* x 2)) (= r (* result 2))))))))
+          (= result (* result 2))
+          (= result 2)
+          (forall ((r Real)) (=> (and (= r (* result 2)) (= r 2)) (= r (* x 2))))
+          (= result (* result 2))
+          (= result 2)))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=result -> residual
+  x=2 -> residual
+  x=x -> residual
+  result=result -> residual
+  result=2 -> residual
+  result=x -> residual
+  y=result -> residual
+  y=2 -> residual
+  y=x -> residual
+  r=result -> residual
+  r=2 -> residual
+  r=x -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
     "type": "Π(t3: Num) -> Num",
   },
 ]

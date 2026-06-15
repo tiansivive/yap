@@ -1,33 +1,33 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`v2 trace presentation > replay snapshots > EUF contradiction 1`] = `
+exports[`v2 trace presentation > replay snapshots > EUF congruence contradiction 1`] = `
 "=== Formula ===
-  (and (= x y) (!= x y))
+  (and (= x y) (!= (f x) (f y)))
 
 === Variables ===
   p1: = x y
-  p2: != x y
+  p2: != (f x) (f y)
   proxy p3: and p1 p2
 
 === Registry ===
   (= x y): euf = x y; arithmetic =
   ~(= x y): euf != x y; arithmetic not =
-  (!= x y): euf != x y; arithmetic !=
-  ~(!= x y): euf = x y; arithmetic not !=
+  (!= (f x) (f y)): euf != (f x) (f y); arithmetic !=
+  ~(!= (f x) (f y)): euf = (f x) (f y); arithmetic not !=
 
 === Trace ===
 [clauses]
   #0: ~p3 v (= x y) -> 2 open
-  #1: ~p3 v (!= x y) -> 2 open
-  #2: ~(= x y) v ~(!= x y) v p3 -> 3 open
+  #1: ~p3 v (!= (f x) (f y)) -> 2 open
+  #2: ~(= x y) v ~(!= (f x) (f y)) v p3 -> 3 open
   #3: p3 -> unit: p3
 
 [propagate] p3 = true (forced by #3: p3 (top))
   trail: { p3@0 }
 [clauses]
   #0: false v (= x y) -> unit: (= x y)
-  #1: false v (!= x y) -> unit: (!= x y)
-  #2: ~(= x y) v ~(!= x y) v true -> satisfied
+  #1: false v (!= (f x) (f y)) -> unit: (!= (f x) (f y))
+  #2: ~(= x y) v ~(!= (f x) (f y)) v true -> satisfied
   #3: true -> satisfied
 
 [theory] all assert p3: ok
@@ -36,19 +36,21 @@ exports[`v2 trace presentation > replay snapshots > EUF contradiction 1`] = `
   trail: { p3@0, p1@0 }
 [clauses]
   #0: false v true -> satisfied
-  #1: false v (!= x y) -> unit: (!= x y)
-  #2: false v ~(!= x y) v true -> satisfied
+  #1: false v (!= (f x) (f y)) -> unit: (!= (f x) (f y))
+  #2: false v ~(!= (f x) (f y)) v true -> satisfied
   #3: true -> satisfied
 
 [theory] all assert (= x y): ok
-  classes: {x}  {y}
+  classes: {x}  {y}  {f(x)}  {f(y)}
   active (= x y)
   merge x = y    reason: (= x y)
-  classes: {x, y}
+  classes: {x, y}  {f(x)}  {f(y)}
+  merge f(x) = f(y)    reason: (= x y)
+  classes: {x, y}  {f(x), f(y)}
   assert $slack((= x y)) >= 0 -> $slack((= x y)) in [0, inf]
   assert $slack((= x y)) <= 0 -> $slack((= x y)) in [0, 0]
 
-[propagate] (!= x y) = true (forced by #1: ~p3 v (!= x y) (and))
+[propagate] (!= (f x) (f y)) = true (forced by #1: ~p3 v (!= (f x) (f y)) (and))
   trail: { p3@0, p1@0, p2@0 }
 [clauses]
   #0: false v true -> satisfied
@@ -56,10 +58,10 @@ exports[`v2 trace presentation > replay snapshots > EUF contradiction 1`] = `
   #2: false v false v true -> satisfied
   #3: true -> satisfied
 
-[theory] all assert (!= x y): conflict
-  active (!= x y)
-  scan active (!= x y) -> same class, conflict
-  euf:disequality-conflict: ~(= x y) v ~(!= x y)
+[theory] all assert (!= (f x) (f y)): conflict
+  active (!= (f x) (f y))
+  scan active (!= (f x) (f y)) -> same class, conflict
+  euf:disequality-conflict: ~(= x y) v ~(!= (f x) (f y))
 
 [unsat] core: [#0, #1, #2, #3]"
 `;
