@@ -1,19 +1,11 @@
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
-import { Solver, Expr } from "z3-solver";
 import assert from "node:assert";
 
 export type Annotations<T> = {
 	quantity: Q.Multiplicity;
 	liquid: T;
-};
-
-export type Artefacts = {
-	/** Usage information for each variable in the context */
-	usages: Q.Usages;
-	/** Verification Condition */
-	vc: Expr;
 };
 
 export const Verification = {
