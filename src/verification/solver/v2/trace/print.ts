@@ -2,7 +2,7 @@ import { match } from "ts-pattern";
 import { Print } from "../../ivl/print";
 import type * as CDCL from "../cdcl";
 import type * as Encoding from "../encoding";
-import type { Event } from "../trace";
+import type { Event } from "./index";
 
 export const print = (step: Event.T, encoding: Encoding.State = Empty.encoding): string =>
 	match(step)

@@ -5,7 +5,7 @@ import { match, P } from "ts-pattern";
 import { Patterns } from "../../ivl/patterns";
 import type { IVL } from "../../ivl/types";
 import type * as CDCL from "../cdcl";
-import type * as Enc from "../encoding";
+import type * as Enc from "./model";
 
 const COMPLEMENT: ReadonlyMap<IVL.AtomOp, IVL.AtomOp> = new Map([
 	["=", "!="],

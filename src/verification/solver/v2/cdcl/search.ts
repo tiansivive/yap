@@ -9,7 +9,7 @@ import { match, P } from "ts-pattern";
 import * as E from "fp-ts/Either";
 import * as Core from "../core";
 import * as Theory from "../theory";
-import { Trace } from "../trace";
+import * as Trace from "../trace";
 import { analyze } from "./analyze";
 import * as BCP from "./bcp";
 import { Clause, type Conflict, type Literal, type Result, type State, Trail, State as Search } from "./model";

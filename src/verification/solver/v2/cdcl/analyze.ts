@@ -8,7 +8,6 @@ import { type Clause, type Conflict, Literal, type State, Trail } from "./model"
 export const analyze = (state: State, conflict: Conflict): Result => {
 	const resolvent = compute(state.trail, conflict.clause.literals, state.level);
 	const learned: Clause.T = {
-		id: state.nextClauseId,
 		literals: resolvent,
 		origin: `learned:${conflict.clause.origin}`,
 	};

@@ -5,7 +5,7 @@ import * as DSL from "../../../ivl/dsl";
 import type { Literal } from "../../cdcl";
 import * as Core from "../../core";
 import type * as Encoding from "../../encoding";
-import { CNF } from "../../encoding/index";
+import { CNF } from "../../encoding";
 import { conflictValue, tag } from "../../__tests__/either";
 import * as Theory from "../index";
 

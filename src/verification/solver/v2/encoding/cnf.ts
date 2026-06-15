@@ -6,15 +6,13 @@
 import { match, P } from "ts-pattern";
 import type { IVL } from "../../ivl/types";
 import type * as CDCL from "../cdcl";
-import type * as Enc from "../encoding";
 import * as Keys from "./keys";
+import type * as Enc from "./model";
 
 export const encode = (formula: IVL.Formula): Enc.State => Tseitin.encode(formula);
 
 namespace Tseitin {
-	type State = Enc.State & {
-		nextClauseId: number;
-	};
+	type State = Enc.State;
 
 	type Result = {
 		literal: CDCL.Literal;
@@ -27,7 +25,6 @@ namespace Tseitin {
 		atoms: new Map(),
 		proxies: new Map(),
 		nextVar: 1,
-		nextClauseId: 0,
 	};
 
 	export const encode = (formula: IVL.Formula): Enc.State => {
@@ -116,8 +113,7 @@ namespace Tseitin {
 	namespace Clause {
 		export const add = (state: State, literals: CDCL.Literal[], origin: string): State => ({
 			...state,
-			clauses: [...state.clauses, { id: state.nextClauseId, literals: [...literals], origin }],
-			nextClauseId: state.nextClauseId + 1,
+			clauses: [...state.clauses, { literals: [...literals], origin }],
 		});
 	}
 

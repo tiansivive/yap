@@ -9,9 +9,7 @@ const contradiction = DSL.and(DSL.eq(DSL.x, DSL.int(1)), DSL.not(DSL.eq(DSL.x, D
 
 describe("v2 trace presentation", () => {
 	it("formats solver events with atom text", () => {
-		const solver = Solver.createTraced();
-		solver.assert(contradiction);
-		const check = solver.check();
+		const check = Solver.run(contradiction);
 
 		const output = Print.format(check.steps, check.encoding);
 
@@ -21,9 +19,7 @@ describe("v2 trace presentation", () => {
 	});
 
 	it("replays a run with formula and trace sections", () => {
-		const solver = Solver.createTraced();
-		solver.assert(contradiction);
-		const check = solver.check();
+		const check = Solver.run(contradiction);
 
 		const output = Replay.replay({
 			formula: IVLPrint.formula(contradiction),

@@ -3,9 +3,9 @@
 // CNF = Conjunctive Normal Form; Tseitin proxies preserve formula structure.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/tseitin-cnf.md
 
-import type { IVL } from "../ivl/types";
-import type { Clause, Literal, Variable } from "./cdcl";
-import * as Core from "./core";
+import type { IVL } from "../../ivl/types";
+import type { Clause, Literal, Variable } from "../cdcl";
+import * as Core from "../core";
 
 export namespace Atom {
 	export type Key = string;
@@ -33,7 +33,7 @@ export type State = {
 	nextVar: Variable;
 };
 
-export const Encoding = {
+export const State = {
 	empty: {
 		clauses: [],
 		keyIndex: new Map(),

@@ -9,8 +9,6 @@ import { match, P } from "ts-pattern";
 import { type Clause, type Conflict, type Literal, Literal as Lit } from "../cdcl/model";
 import type { Arena, Enode } from "./intern";
 
-const THEORY_CLAUSE_ID = -1;
-
 export const CC = {
 	empty: {
 		uf: new Map(),
@@ -245,7 +243,6 @@ const Active = {
 
 const ConflictClause = {
 	from: (literal: Literal, justification: readonly Literal[]): Clause.T => ({
-		id: THEORY_CLAUSE_ID,
 		literals: [...justification.map(Lit.negate), Lit.negate(literal)],
 		origin: "euf:disequality-conflict",
 	}),

@@ -4,25 +4,39 @@
 // https://github.com/tiansivive/z-yap/blob/main/zettels/ge-de-moura-quantifiers.md
 
 import { match } from "ts-pattern";
-import type { IVL } from "../../../ivl/types";
 import type { Literal } from "../../cdcl";
-import type { Arena } from "../../euf";
+import * as Core from "../../core";
+import * as Encoding from "../../encoding";
+import * as Trace from "../../trace";
 import type { Info, Lemma, Simplification } from "../model";
 import * as Candidates from "./candidates";
 import type { Candidate } from "./grounding";
 import * as Grounding from "./grounding";
 import * as Universe from "./universe";
 
-export const round = (quantifiers: Info[], arena: Arena.State, instantiated: Set<string>, generation: number, next: Next, encode: Encode): Result => {
-	const universe = Universe.from(arena, quantifiers);
-	return quantifiers.reduce<Accumulator>(
-		(acc, info) =>
-			Candidates.enumerate(info.binders, universe).reduce(
-				(subAcc, candidate) => grounded(info, candidate, subAcc, instantiated, generation, next, encode),
-				acc,
-			),
+export const round = function* (): Core.G<Result> {
+	const state = yield* Core.State.get();
+	const universe = Universe.from(state.arena, state.quantifiers.quantifiers);
+	const result = state.quantifiers.quantifiers.reduce<Accumulator>(
+		(acc, info) => Candidates.enumerate(info.binders, universe).reduce((subAcc, candidate) => grounded(info, candidate, subAcc, state), acc),
 		{ lemmas: [], newKeys: new Set(), instantiations: [] },
 	);
+	const next = yield* match(result.lemmas)
+		.with([], () => Core.lift(result))
+		.otherwise(function* (lemmas): Core.G<Result> {
+			yield* Core.State.modify(s => ({
+				...s,
+				quantifiers: {
+					...s.quantifiers,
+					instantiated: new Set([...s.quantifiers.instantiated, ...result.newKeys]),
+					generation: s.quantifiers.generation + 1,
+					phase: { round: s.quantifiers.phase.round + 1, pending: lemmas },
+				},
+			}));
+			return result;
+		});
+	yield* Trace.emit({ tag: "mbqi", round: state.quantifiers.phase.round, instantiations: next.instantiations });
+	return next;
 };
 
 export type Result = {
@@ -36,56 +50,34 @@ export type Instantiation = {
 	simplification: Simplification;
 };
 
-export type Next = () => number;
-
-export type Encode = (formula: IVL.Formula) => Literal[];
-
 type Accumulator = Result;
 
-const grounded = (
-	info: Info,
-	candidate: Candidate,
-	acc: Accumulator,
-	instantiated: Set<string>,
-	generation: number,
-	next: Next,
-	encode: Encode,
-): Accumulator => {
+const grounded = (info: Info, candidate: Candidate, acc: Accumulator, state: Core.State): Accumulator => {
 	const id = `mbqi:${info.origin ?? "q"}[${Candidates.key(info.binders, candidate)}]`;
-	return match(instantiated.has(id) || acc.newKeys.has(id))
+	return match(state.quantifiers.instantiated.has(id) || acc.newKeys.has(id))
 		.with(true, () => acc)
-		.with(false, () => process(Grounding.ground(info.body, candidate), id, info, candidate, acc, generation, next, encode))
+		.with(false, () => process(Grounding.ground(info.body, candidate), id, info, candidate, acc, state))
 		.exhaustive();
 };
 
-const process = (
-	simplification: Simplification,
-	id: string,
-	info: Info,
-	candidate: Candidate,
-	acc: Accumulator,
-	generation: number,
-	next: Next,
-	encode: Encode,
-): Accumulator => {
+const process = (simplification: Simplification, id: string, info: Info, candidate: Candidate, acc: Accumulator, state: Core.State): Accumulator => {
 	const tracked = {
 		newKeys: new Set([...acc.newKeys, id]),
 		instantiations: [...acc.instantiations, { substitution: Candidates.strings(candidate), simplification }],
 	};
 	return match(simplification)
 		.with({ tag: "tautology" }, () => ({ ...acc, ...tracked }))
-		.with({ tag: "contradiction" }, () => ({ lemmas: [...acc.lemmas, lemma(info, generation, next, [])], ...tracked }))
+		.with({ tag: "contradiction" }, () => ({ lemmas: [...acc.lemmas, lemma(info, state.quantifiers.generation, [])], ...tracked }))
 		.with({ tag: "residual" }, ({ formula }) =>
-			match(encode(formula))
+			match(Encoding.Lookup.literals(state.encoding, formula))
 				.with([], () => ({ ...acc, ...tracked }))
-				.otherwise(literals => ({ lemmas: [...acc.lemmas, lemma(info, generation, next, literals)], ...tracked })),
+				.otherwise(literals => ({ lemmas: [...acc.lemmas, lemma(info, state.quantifiers.generation, literals)], ...tracked })),
 		)
 		.exhaustive();
 };
 
-const lemma = (info: Info, generation: number, next: Next, literals: Literal[]): Lemma => ({
+const lemma = (info: Info, generation: number, literals: readonly Literal[]): Lemma => ({
 	clause: {
-		id: next(),
 		literals: [...literals],
 		origin: `mbqi:${info.origin ?? "forall"}:gen${generation}`,
 	},

@@ -11,7 +11,6 @@ export const State = {
 		assignments: new Map(variables(clauses).map(v => [v, "unassigned" as const])),
 		level: 0,
 		clauses: { ...Clause.empty, base: clauses },
-		nextClauseId: clauses.reduce((max, c) => Math.max(max, c.id), 0) + 1,
 	}),
 
 	empty: {
@@ -19,7 +18,6 @@ export const State = {
 		assignments: new Map(),
 		level: 0,
 		clauses: { base: [], learned: [], lemmas: [] },
-		nextClauseId: 0,
 	} satisfies State,
 
 	replace: (cdcl: State) => Core.State.modify(s => ({ ...s, cdcl })),
@@ -35,7 +33,6 @@ export const State = {
 	learn: (state: State, clause: Clause.T): State => ({
 		...state,
 		clauses: Clause.insert(state.clauses, "learned", clause),
-		nextClauseId: Math.max(state.nextClauseId, clause.id + 1),
 	}),
 
 	backjump: (state: State, level: number): State => {
@@ -63,7 +60,6 @@ export type Assignment = "true" | "false" | "unassigned";
 
 export namespace Clause {
 	export type T = {
-		id: number;
 		literals: Literal[];
 		origin: string;
 	};
@@ -90,13 +86,6 @@ export namespace Clause {
 		...db,
 		[kind]: [...db[kind], clause],
 	});
-
-	export const next = function* (): Core.G<number> {
-		const s = yield* Core.State.get();
-		const id = s.cdcl.nextClauseId;
-		yield* Core.State.modify(st => ({ ...st, cdcl: { ...st.cdcl, nextClauseId: id + 1 } }));
-		return id;
-	};
 }
 
 export type Conflict = {
@@ -135,7 +124,6 @@ export type State = {
 	assignments: Map<Variable, Assignment>;
 	level: number;
 	clauses: Clause.DB;
-	nextClauseId: number;
 };
 
 export type Result = { tag: "sat"; assignments: Map<Variable, Assignment> } | { tag: "unsat"; core: Clause.T[] } | { tag: "unknown"; reason: string };

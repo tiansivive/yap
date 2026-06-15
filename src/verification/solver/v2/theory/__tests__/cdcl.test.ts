@@ -4,7 +4,7 @@ import { Build } from "../../../ivl/build";
 import * as DSL from "../../../ivl/dsl";
 import * as CDCL from "../../cdcl";
 import * as Core from "../../core";
-import { CNF } from "../../encoding/index";
+import { CNF } from "../../encoding";
 import * as Theory from "../index";
 
 const ten = DSL.int(10);

@@ -9,7 +9,6 @@ import { match, P } from "ts-pattern";
 import type { Conflict, Literal } from "../cdcl";
 import { Rational } from "./rational";
 
-const THEORY_CLAUSE_ID = -2;
 const MAX_PIVOTS = 100;
 
 export const Simplex = {
@@ -316,7 +315,7 @@ const Row = {
 
 const Conflicts = {
 	bound: (r1: Literal, r2: Literal, variable: string): Conflict => ({
-		clause: { id: THEORY_CLAUSE_ID, literals: [-r1, -r2], origin: `arith:bound-conflict:${variable}` },
+		clause: { literals: [-r1, -r2], origin: `arith:bound-conflict:${variable}` },
 	}),
 
 	infeasible: (tab: Tableau, v: Violation): Conflict => {
@@ -324,7 +323,7 @@ const Conflicts = {
 		const row = tab.rows.get(v.variable);
 		const rowLiterals = row ? [...row.keys()].flatMap(nbv => Reasons.from(tab.bounds.get(nbv) ?? Bound.Pair.empty)) : [];
 		return {
-			clause: { id: THEORY_CLAUSE_ID, literals: [...new Set([...Reasons.from(bp), ...rowLiterals])], origin: `arith:infeasible:${v.variable}` },
+			clause: { literals: [...new Set([...Reasons.from(bp), ...rowLiterals])], origin: `arith:infeasible:${v.variable}` },
 		};
 	},
 };

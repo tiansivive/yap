@@ -4,17 +4,15 @@
 // https://github.com/tiansivive/z-yap/blob/main/zettels/solver-trace.md
 
 import * as E from "fp-ts/Either";
-import type * as CDCL from "./cdcl";
-import * as Core from "./core";
-import type * as Quantifier from "./quantifier";
-import type * as Theory from "./theory";
+import type * as CDCL from "../cdcl";
+import * as Core from "../core";
+import type * as Quantifier from "../quantifier";
+import type * as Theory from "../theory";
 
-export const Trace = {
-	emit: (step: Event.T) => Trace.emitMany([step]),
+export const emit = (step: Event.T) => emitMany([step]);
 
-	emitMany: function* (steps: Event.T[]): Core.G<void> {
-		yield (_env, _w, st = Core.State.initial) => [{ ...Core.Accumulator.empty, steps, result: E.right(undefined) }, st];
-	},
+export const emitMany = function* (steps: Event.T[]): Core.G<void> {
+	yield (_env, _w, st = Core.State.initial) => [{ ...Core.Accumulator.empty, steps, result: E.right(undefined) }, st];
 };
 
 export namespace Event {
@@ -61,5 +59,5 @@ export const Stats = {
 	}),
 };
 
-export * as Print from "./trace/print";
-export * as Replay from "./trace/replay";
+export * as Print from "./print";
+export * as Replay from "./replay";

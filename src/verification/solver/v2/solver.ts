@@ -4,53 +4,29 @@
 
 import * as E from "fp-ts/Either";
 import * as O from "fp-ts/Option";
-import { match, P } from "ts-pattern";
-import { Build } from "../ivl/build";
+import { match } from "ts-pattern";
 import type { IVL } from "../ivl/types";
 import { CDCL, Clause, type Result as CDCLResult } from "./cdcl";
 import * as Core from "./core";
 import type * as Encoding from "./encoding";
-import { CNF, Lookup } from "./encoding/index";
-import * as EUF from "./euf";
+import { CNF } from "./encoding";
+import type * as EUF from "./euf";
 import * as Formulas from "./formulas";
 import * as Quantifier from "./quantifier";
-import * as EMatch from "./quantifier/ematch";
-import * as MBQI from "./quantifier/mbqi";
-import { Trace, type Event as TraceEvent } from "./trace";
+import * as Trace from "./trace";
 import * as Theory from "./theory";
 
+const LIMIT = 5;
+
 export const Solver = {
-	create: (): Instance => {
-		const base = Base.create();
-		return { ...base, check: () => run(base.combined()).result };
-	},
-
-	createTraced: (): Traced => {
-		const base = Base.create();
-		return { ...base, check: () => run(base.combined()) };
-	},
-
-	check: (formula: IVL.Formula): Result => run(formula).result,
-};
-
-export type Instance = {
-	assert: (formula: IVL.Formula, origin?: string) => void;
-	check: () => Result;
-	push: () => void;
-	pop: () => void;
-};
-
-export type Traced = {
-	assert: (formula: IVL.Formula, origin?: string) => void;
-	check: () => Check;
-	push: () => void;
-	pop: () => void;
+	run: (formula: IVL.Formula): Check => run(formula),
+	check: (formula: IVL.Formula): Result => Solver.run(formula).result,
 };
 
 export type Check = {
 	formula: IVL.Formula;
 	result: Result;
-	steps: TraceEvent.T[];
+	steps: Trace.Event.T[];
 	encoding: Encoding.State;
 	clauses: Clause.T[];
 	arena: EUF.Arena.State;
@@ -61,8 +37,6 @@ export type Result = { tag: "sat"; model: Model } | { tag: "unsat"; core: string
 export type Model = {
 	evaluate: (term: IVL.Term) => O.Option<IVL.Term>;
 };
-
-const LIMIT = 5;
 
 const run = (formula: IVL.Formula): Check => {
 	const [collector, state] = Core.run(trace(formula), { ...Core.Env.default, problem: { original: formula } });
@@ -85,17 +59,18 @@ const trace = (formula: IVL.Formula): Core.Solver<Result> =>
 		const prepared = Formulas.run(formula);
 		const encoding = CNF.encode(prepared.propositional);
 		const quantifiers = prepared.quantifiers.flatMap(Quantifier.extract);
-		return yield* loop(encoding, encoding.clauses, Quantifier.State.from(quantifiers), 0);
+		yield* Core.State.modify(s => ({ ...s, encoding, quantifiers: Quantifier.State.from(quantifiers) }));
+		return yield* loop(encoding.clauses);
 	});
 
-const loop = function* (encoding: Encoding.State, clauses: Clause.T[], quantifiers: Quantifier.State, round: number): Core.G<Result> {
-	yield* Core.State.modify(s => ({ ...s, quantifiers }));
-	yield* Theory.install(encoding);
+const loop = function* (clauses: Clause.T[]): Core.G<Result> {
+	const state = yield* Core.State.get();
+	yield* Theory.install(state.encoding);
 	const result: CDCLResult = yield CDCL.solveTrace(clauses);
-	return yield* settle(encoding, clauses, quantifiers, round, result);
+	return yield* settle(clauses, result);
 };
 
-const settle = function* (encoding: Encoding.State, clauses: Clause.T[], quantifiers: Quantifier.State, round: number, result: CDCLResult): Core.G<Result> {
+const settle = function* (clauses: Clause.T[], result: CDCLResult): Core.G<Result> {
 	return yield* match(result)
 		.with({ tag: "unsat" }, function* ({ core }): Core.G<Result> {
 			return { tag: "unsat", core: core.map(clause => clause.origin) };
@@ -106,65 +81,12 @@ const settle = function* (encoding: Encoding.State, clauses: Clause.T[], quantif
 			return unknown;
 		})
 		.with({ tag: "sat" }, function* (): Core.G<Result> {
-			return yield* match(quantifiers.quantifiers)
+			const state = yield* Core.State.get();
+			return yield* match(state.quantifiers.quantifiers)
 				.with([], () => sat())
-				.otherwise(() => instantiate(encoding, clauses, quantifiers, round));
+				.otherwise(() => instantiate(clauses));
 		})
 		.exhaustive();
-};
-
-const sat = function* (): Core.G<Result> {
-	return { tag: "sat", model: Model.empty };
-};
-
-const instantiate = (encoding: Encoding.State, clauses: Clause.T[], quantifiers: Quantifier.State, round: number): Core.G<Result> =>
-	match(round >= LIMIT)
-		.with(true, function* (): Core.G<Result> {
-			const result: Result = { tag: "unknown", reason: "quantifier instantiation limit reached" };
-			yield* Trace.emit(result);
-			return result;
-		})
-		.with(false, () => ematch(encoding, clauses, quantifiers, round))
-		.exhaustive();
-
-const ematch = function* (encoding: Encoding.State, clauses: Clause.T[], quantifiers: Quantifier.State, round: number): Core.G<Result> {
-	const s = yield* Core.State.get();
-	const next = Ids.from(clauses);
-	const result = EMatch.round(
-		quantifiers,
-		s.arena,
-		id => EUF.CC.find(s.theories.euf, id),
-		next,
-		formula => [...Lookup.literals(encoding, formula)],
-	);
-	yield* Trace.emit({ tag: "round", round, lemmas: result.lemmas.length });
-	return yield* match(result.lemmas)
-		.with([], () => mbqi(encoding, clauses, quantifiers, round, s.arena, next))
-		.otherwise(lemmas => loop(encoding, [...clauses, ...lemmas.map(lemma => lemma.clause)], result.state, round + 1));
-};
-
-const mbqi = function* (
-	encoding: Encoding.State,
-	clauses: Clause.T[],
-	quantifiers: Quantifier.State,
-	round: number,
-	arena: EUF.Arena.State,
-	next: EMatch.Next,
-): Core.G<Result> {
-	const result = MBQI.round(quantifiers.quantifiers, arena, quantifiers.instantiated, quantifiers.generation, next, formula => [
-		...Lookup.literals(encoding, formula),
-	]);
-	yield* Trace.emit({ tag: "mbqi", round, instantiations: result.instantiations });
-	return yield* match(result.lemmas)
-		.with([], () => sat())
-		.otherwise(lemmas =>
-			loop(
-				encoding,
-				[...clauses, ...lemmas.map(lemma => lemma.clause)],
-				{ ...quantifiers, instantiated: new Set([...quantifiers.instantiated, ...result.newKeys]), generation: quantifiers.generation + 1 },
-				round + 1,
-			),
-		);
 };
 
 const Model = {
@@ -173,55 +95,24 @@ const Model = {
 	} satisfies Model,
 };
 
-const Base = {
-	create: (): Base.T => {
-		// Justification for let: this is the public incremental solver API boundary;
-		// assertions and scopes must persist across calls before a pure check run.
-		let formulas: IVL.Formula[] = [];
-		let stack: IVL.Formula[][] = [];
-		return {
-			assert: (formula: IVL.Formula, origin?: string) => {
-				formulas = [
-					...formulas,
-					match(origin)
-						.with(P.string, o => ({ ...formula, origin: o }))
-						.with(undefined, () => formula)
-						.exhaustive(),
-				];
-			},
-			push: () => {
-				stack = [...stack, [...formulas]];
-			},
-			pop: () => {
-				const top = stack.at(-1);
-				stack = stack.slice(0, -1);
-				formulas = match(top)
-					.with(undefined, () => formulas)
-					.otherwise(f => f);
-			},
-			combined: () => Build.and(...formulas),
-		};
-	},
+const sat = function* (): Core.G<Result> {
+	return { tag: "sat", model: Model.empty };
 };
 
-namespace Base {
-	export type T = {
-		assert: (formula: IVL.Formula, origin?: string) => void;
-		push: () => void;
-		pop: () => void;
-		combined: () => IVL.Formula;
-	};
-}
-
-const Ids = {
-	from: (clauses: Clause.T[]): EMatch.Next => {
-		// Justification for let: quantifier round APIs request fresh clause ids through
-		// a callback while preserving deterministic left-to-right allocation.
-		let id = clauses.reduce((max, clause) => Math.max(max, clause.id), 0) + 1;
-		return () => {
-			const next = id;
-			id += 1;
-			return next;
-		};
-	},
+const instantiate = function* (clauses: Clause.T[]): Core.G<Result> {
+	const state = yield* Core.State.get();
+	return yield* match(state.quantifiers.phase.round >= LIMIT)
+		.with(true, function* (): Core.G<Result> {
+			const result: Result = { tag: "unknown", reason: "quantifier instantiation limit reached" };
+			yield* Trace.emit(result);
+			return result;
+		})
+		.with(false, function* (): Core.G<Result> {
+			const step = yield* Quantifier.Round.step();
+			return yield* match(step)
+				.with({ tag: "saturated" }, () => sat())
+				.with({ tag: "lemmas" }, ({ clauses: additions }) => loop([...clauses, ...additions]))
+				.exhaustive();
+		})
+		.exhaustive();
 };

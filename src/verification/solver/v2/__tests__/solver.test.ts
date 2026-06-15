@@ -19,43 +19,23 @@ describe("v2 solver API", () => {
 		},
 	])("matches v1 result for $name", ({ formula }) => {
 		const v1 = V1.create();
-		const v2 = Solver.create();
 
 		v1.assert(formula);
-		v2.assert(formula);
 
-		expect(v2.check().tag).toBe(v1.check().tag);
+		expect(Solver.check(formula).tag).toBe(v1.check().tag);
 	});
 
 	it("detects an EUF congruence contradiction v1 misses", () => {
-		const solver = Solver.create();
 		const f_x = Build.app("f", [DSL.x], Build.Int);
 		const f_y = Build.app("f", [DSL.y], Build.Int);
 
-		solver.assert(DSL.and(DSL.eq(DSL.x, DSL.y), DSL.neq(f_x, f_y)));
-
-		expect(solver.check().tag).toBe("unsat");
-	});
-
-	it("restores assertions after pop", () => {
-		const solver = Solver.create();
-		solver.assert(DSL.eq(DSL.x, DSL.int(1)));
-		solver.push();
-		solver.assert(DSL.F);
-
-		expect(solver.check().tag).toBe("unsat");
-
-		solver.pop();
-
-		expect(solver.check().tag).toBe("sat");
+		expect(Solver.check(DSL.and(DSL.eq(DSL.x, DSL.y), DSL.neq(f_x, f_y))).tag).toBe("unsat");
 	});
 
 	it("collects quantifier round trace events", () => {
-		const solver = Solver.createTraced();
-		solver.assert(DSL.eq(fa, DSL.int(1), "f_a_is_1"));
-		solver.assert(DSL.forall([{ name: "x", sort: Build.Int }], DSL.neq(fx, DSL.int(1)), "forall_f_neq_1", [{ terms: [fx] }]));
-
-		const check = solver.check();
+		const check = Solver.run(
+			DSL.and(DSL.eq(fa, DSL.int(1), "f_a_is_1"), DSL.forall([{ name: "x", sort: Build.Int }], DSL.neq(fx, DSL.int(1)), "forall_f_neq_1", [{ terms: [fx] }])),
+		);
 
 		expect(check.result.tag).toBe("unsat");
 		expect(check.steps.some(step => step.tag === "round")).toBe(true);

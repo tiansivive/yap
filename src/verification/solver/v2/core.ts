@@ -150,8 +150,6 @@ export type State = {
 	arena: EUF.Arena.State;
 	theories: Theory.State;
 	quantifiers: Quantifier.State;
-	assertions: IVL.Formula[];
-	stack: IVL.Formula[][];
 };
 
 export const State = {
@@ -174,7 +172,6 @@ export const State = {
 			assignments: new Map(),
 			level: 0,
 			clauses: { base: [], learned: [], lemmas: [] },
-			nextClauseId: 0,
 		},
 		encoding: {
 			clauses: [],
@@ -212,8 +209,6 @@ export const State = {
 			instantiated: new Set(),
 			phase: { round: 0, pending: [] },
 		},
-		assertions: [],
-		stack: [],
 	} satisfies State,
 };
 

@@ -11,7 +11,7 @@ import type { Conflict, Literal } from "../cdcl/model";
 import * as Core from "../core";
 import type * as Encoding from "../encoding";
 import * as EUF from "../euf";
-import { Trace } from "../trace";
+import * as Trace from "../trace";
 import * as F from "fp-ts/lib/function";
 
 export type State = {

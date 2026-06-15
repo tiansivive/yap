@@ -1,5 +1,5 @@
 import type * as Encoding from "../encoding";
-import type { Event } from "../trace";
+import type { Event } from "./index";
 import * as Print from "./print";
 
 export const replay = (opts: Options): string => ["=== Formula ===", opts.formula, "", "=== Trace ===", Print.format(opts.steps, opts.encoding)].join("\n");
