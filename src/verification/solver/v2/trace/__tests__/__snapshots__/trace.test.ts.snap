@@ -1,0 +1,307 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`v2 trace presentation > replay snapshots > EUF contradiction 1`] = `
+"=== Formula ===
+  (and (= x y) (!= x y))
+
+=== Variables ===
+  p1: = x y
+  p2: != x y
+  proxy p3: and p1 p2
+
+=== Registry ===
+  (= x y): euf = x y; arithmetic =
+  ~(= x y): euf != x y; arithmetic not =
+  (!= x y): euf != x y; arithmetic !=
+  ~(!= x y): euf = x y; arithmetic not !=
+
+=== Trace ===
+[clauses]
+  #0: ~p3 v (= x y) -> 2 open
+  #1: ~p3 v (!= x y) -> 2 open
+  #2: ~(= x y) v ~(!= x y) v p3 -> 3 open
+  #3: p3 -> unit: p3
+
+[propagate] p3 = true (forced by #3: p3 (top))
+  trail: { p3@0 }
+[clauses]
+  #0: false v (= x y) -> unit: (= x y)
+  #1: false v (!= x y) -> unit: (!= x y)
+  #2: ~(= x y) v ~(!= x y) v true -> satisfied
+  #3: true -> satisfied
+
+[theory] all assert p3: ok
+
+[propagate] (= x y) = true (forced by #0: ~p3 v (= x y) (and))
+  trail: { p3@0, p1@0 }
+[clauses]
+  #0: false v true -> satisfied
+  #1: false v (!= x y) -> unit: (!= x y)
+  #2: false v ~(!= x y) v true -> satisfied
+  #3: true -> satisfied
+
+[theory] all assert (= x y): ok
+  classes: {x}  {y}
+  active (= x y)
+  merge x = y    reason: (= x y)
+  classes: {x, y}
+  assert $slack((= x y)) >= 0 -> $slack((= x y)) in [0, inf]
+  assert $slack((= x y)) <= 0 -> $slack((= x y)) in [0, 0]
+
+[propagate] (!= x y) = true (forced by #1: ~p3 v (!= x y) (and))
+  trail: { p3@0, p1@0, p2@0 }
+[clauses]
+  #0: false v true -> satisfied
+  #1: false v true -> satisfied
+  #2: false v false v true -> satisfied
+  #3: true -> satisfied
+
+[theory] all assert (!= x y): conflict
+  active (!= x y)
+  scan active (!= x y) -> same class, conflict
+  euf:disequality-conflict: ~(= x y) v ~(!= x y)
+
+[unsat] core: [#0, #1, #2, #3]"
+`;
+
+exports[`v2 trace presentation > replay snapshots > arithmetic SAT 1`] = `
+"=== Formula ===
+  (and (>= x 0) (<= x 10))
+
+=== Variables ===
+  p1: >= x 0
+  p2: <= x 10
+  proxy p3: and p1 p2
+
+=== Registry ===
+  (>= x 0): euf (none) x 0; arithmetic >=
+  ~(>= x 0): euf (none) x 0; arithmetic not >=
+  (<= x 10): euf (none) x 10; arithmetic <=
+  ~(<= x 10): euf (none) x 10; arithmetic not <=
+
+=== Trace ===
+[clauses]
+  #0: ~p3 v (>= x 0) -> 2 open
+  #1: ~p3 v (<= x 10) -> 2 open
+  #2: ~(>= x 0) v ~(<= x 10) v p3 -> 3 open
+  #3: p3 -> unit: p3
+
+[propagate] p3 = true (forced by #3: p3 (top))
+  trail: { p3@0 }
+[clauses]
+  #0: false v (>= x 0) -> unit: (>= x 0)
+  #1: false v (<= x 10) -> unit: (<= x 10)
+  #2: ~(>= x 0) v ~(<= x 10) v true -> satisfied
+  #3: true -> satisfied
+
+[theory] all assert p3: ok
+
+[propagate] (>= x 0) = true (forced by #0: ~p3 v (>= x 0) (and))
+  trail: { p3@0, p1@0 }
+[clauses]
+  #0: false v true -> satisfied
+  #1: false v (<= x 10) -> unit: (<= x 10)
+  #2: false v ~(<= x 10) v true -> satisfied
+  #3: true -> satisfied
+
+[theory] all assert (>= x 0): ok
+  assert x >= 0 -> x in [0, inf]
+
+[propagate] (<= x 10) = true (forced by #1: ~p3 v (<= x 10) (and))
+  trail: { p3@0, p1@0, p2@0 }
+[clauses]
+  #0: false v true -> satisfied
+  #1: false v true -> satisfied
+  #2: false v false v true -> satisfied
+  #3: true -> satisfied
+
+[theory] all assert (<= x 10): ok
+  assert x <= 10 -> x in [0, 10]
+
+[theory] all check: ok
+  feasible
+
+[sat]"
+`;
+
+exports[`v2 trace presentation > replay snapshots > arithmetic UNSAT 1`] = `
+"=== Formula ===
+  (and (<= (+ x y) 5) (>= x 3) (>= y 3))
+
+=== Variables ===
+  p1: <= (+ x y) 5
+  p2: >= x 3
+  p3: >= y 3
+  proxy p4: and p1 p2 p3
+
+=== Registry ===
+  (<= (+ x y) 5): euf (none) (+ x y) 5; arithmetic <=
+  ~(<= (+ x y) 5): euf (none) (+ x y) 5; arithmetic not <=
+  (>= x 3): euf (none) x 3; arithmetic >=
+  ~(>= x 3): euf (none) x 3; arithmetic not >=
+  (>= y 3): euf (none) y 3; arithmetic >=
+  ~(>= y 3): euf (none) y 3; arithmetic not >=
+
+=== Trace ===
+[clauses]
+  #0: ~p4 v (<= (+ x y) 5) -> 2 open
+  #1: ~p4 v (>= x 3) -> 2 open
+  #2: ~p4 v (>= y 3) -> 2 open
+  #3: ~(<= (+ x y) 5) v ~(>= x 3) v ~(>= y 3) v p4 -> 4 open
+  #4: p4 -> unit: p4
+
+[propagate] p4 = true (forced by #4: p4 (top))
+  trail: { p4@0 }
+[clauses]
+  #0: false v (<= (+ x y) 5) -> unit: (<= (+ x y) 5)
+  #1: false v (>= x 3) -> unit: (>= x 3)
+  #2: false v (>= y 3) -> unit: (>= y 3)
+  #3: ~(<= (+ x y) 5) v ~(>= x 3) v ~(>= y 3) v true -> satisfied
+  #4: true -> satisfied
+
+[theory] all assert p4: ok
+
+[propagate] (<= (+ x y) 5) = true (forced by #0: ~p4 v (<= (+ x y) 5) (and))
+  trail: { p4@0, p1@0 }
+[clauses]
+  #0: false v true -> satisfied
+  #1: false v (>= x 3) -> unit: (>= x 3)
+  #2: false v (>= y 3) -> unit: (>= y 3)
+  #3: false v ~(>= x 3) v ~(>= y 3) v true -> satisfied
+  #4: true -> satisfied
+
+[theory] all assert (<= (+ x y) 5): ok
+  assert $slack((<= (+ x y) 5)) <= 5 -> $slack((<= (+ x y) 5)) in [-inf, 5]
+
+[propagate] (>= x 3) = true (forced by #1: ~p4 v (>= x 3) (and))
+  trail: { p4@0, p1@0, p2@0 }
+[clauses]
+  #0: false v true -> satisfied
+  #1: false v true -> satisfied
+  #2: false v (>= y 3) -> unit: (>= y 3)
+  #3: false v false v ~(>= y 3) v true -> satisfied
+  #4: true -> satisfied
+
+[theory] all assert (>= x 3): ok
+  assert x >= 3 -> $slack((<= (+ x y) 5)) in [-inf, 5], x in [3, inf]
+
+[propagate] (>= y 3) = true (forced by #2: ~p4 v (>= y 3) (and))
+  trail: { p4@0, p1@0, p2@0, p3@0 }
+[clauses]
+  #0: false v true -> satisfied
+  #1: false v true -> satisfied
+  #2: false v true -> satisfied
+  #3: false v false v false v true -> satisfied
+  #4: true -> satisfied
+
+[theory] all assert (>= y 3): ok
+  assert y >= 3 -> $slack((<= (+ x y) 5)) in [-inf, 5], x in [3, inf], y in [3, inf]
+
+[theory] all check: conflict
+  infeasible no pivot candidate for $slack((<= (+ x y) 5))
+
+[unsat] core: [#0, #1, #2, #3, #4]"
+`;
+
+exports[`v2 trace presentation > replay snapshots > propositional contradiction 1`] = `
+"=== Formula ===
+  (and (= x 1) (not (= x 1)))
+
+=== Variables ===
+  p1: = x 1
+  proxy p2: and p1 ~p1
+
+=== Registry ===
+  (= x 1): euf = x 1; arithmetic =
+  ~(= x 1): euf != x 1; arithmetic not =
+
+=== Trace ===
+[clauses]
+  #0: ~p2 v (= x 1) -> 2 open
+  #1: ~p2 v ~(= x 1) -> 2 open
+  #2: ~(= x 1) v (= x 1) v p2 -> 3 open
+  #3: p2 -> unit: p2
+
+[propagate] p2 = true (forced by #3: p2 (top))
+  trail: { p2@0 }
+[clauses]
+  #0: false v (= x 1) -> unit: (= x 1)
+  #1: false v ~(= x 1) -> unit: ~(= x 1)
+  #2: ~(= x 1) v (= x 1) v true -> satisfied
+  #3: true -> satisfied
+
+[theory] all assert p2: ok
+
+[propagate] (= x 1) = true (forced by #0: ~p2 v (= x 1) (and))
+  trail: { p2@0, p1@0 }
+[clauses]
+  #0: false v true -> satisfied
+  #1: false v false -> empty!
+  #2: false v true v true -> satisfied
+  #3: true -> satisfied
+
+[theory] all assert (= x 1): ok
+  classes: {x}  {1}
+  active (= x 1)
+  merge x = 1    reason: (= x 1)
+  classes: {x, 1}
+  assert x >= 1 -> x in [1, inf]
+  assert x <= 1 -> x in [1, 1]
+
+[conflict] #1: ~p2 v ~(= x 1) (and) -- all literals false
+
+[unsat] core: [#0, #1, #2, #3]"
+`;
+
+exports[`v2 trace presentation > replay snapshots > quantifier UNSAT 1`] = `
+"=== Formula ===
+  (and (= (f a) 1) ; f_a_is_1 (forall ((x Int)) (!= (f x) 1)) ; forall_f_neq_1)
+
+=== Variables ===
+  p1: = (f a) 1
+
+=== Registry ===
+  (= (f a) 1): euf = (f a) 1; arithmetic =
+  ~(= (f a) 1): euf != (f a) 1; arithmetic not =
+
+=== Trace ===
+[clauses]
+  #0: (= (f a) 1) -> unit: (= (f a) 1)
+
+[propagate] (= (f a) 1) = true (forced by #0: (= (f a) 1) (f_a_is_1))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+
+[theory] all assert (= (f a) 1): ok
+  classes: {a}  {f(a)}  {1}
+  active (= (f a) 1)
+  merge f(a) = 1    reason: (= (f a) 1)
+  classes: {a}  {f(a), 1}
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 1 lemmas
+  lemma ematch:forall_f_neq_1: #1: ~(= (f a) 1) (quantifier:forall_f_neq_1:gen0)
+[clauses]
+  #0: (= (f a) 1) -> unit: (= (f a) 1)
+  #1: ~(= (f a) 1) -> unit: ~(= (f a) 1)
+
+[propagate] (= (f a) 1) = true (forced by #0: (= (f a) 1) (f_a_is_1))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: false -> empty!
+
+[theory] all assert (= (f a) 1): ok
+  active (= (f a) 1)
+  merge f(a) = 1    reason: (= (f a) 1)
+  classes: {a}  {f(a), 1}
+
+[conflict] #1: ~(= (f a) 1) (quantifier:forall_f_neq_1:gen0) -- all literals false
+
+[unsat] core: [#0, #1]"
+`;

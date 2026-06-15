@@ -27,7 +27,7 @@ export const round = function* (): Core.G<Result> {
 		.with(true, () => Core.lift({ lemmas: [] }))
 		.with(false, () => instantiate())
 		.exhaustive();
-	yield* Trace.emit({ tag: "round", round: state.quantifiers.phase.round, lemmas: result.lemmas.length });
+	yield* Trace.emit({ tag: "round", round: state.quantifiers.phase.round, lemmas: result.lemmas });
 	return result;
 };
 

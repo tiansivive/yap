@@ -15,8 +15,11 @@ export const print = (step: Event.T, encoding: Encoding.State = Empty.encoding):
 		.with({ tag: "check" }, ({ theory, result }) => `[theory] ${theory} check: ${result}`)
 		.with({ tag: "enter" }, ({ level }) => `[theory] enter ${level}`)
 		.with({ tag: "backtrack" }, ({ to }) => `[theory] backtrack ${to}`)
-		.with({ tag: "round" }, ({ round, lemmas }) => `[quantifier] round ${round}: ${lemmas} lemmas`)
-		.with({ tag: "mbqi" }, ({ round, instantiations }) => `[mbqi] round ${round}: ${instantiations.map(sample).join(", ") || "none"}`)
+		.with({ tag: "round" }, ({ round, lemmas }) => `[quantifier] round ${round}: ${lemmas.length} lemmas`)
+		.with(
+			{ tag: "mbqi" },
+			({ round, lemmas, instantiations }) => `[mbqi] round ${round}: ${lemmas.length} lemmas; ${instantiations.map(sample).join(", ") || "none"}`,
+		)
 		.with({ tag: "pure" }, ({ quantifiers }) => `[quantifier] pure ${quantifiers}`)
 		.with({ tag: "sat" }, () => "[sat]")
 		.with({ tag: "unsat" }, ({ core }) => `[unsat] ${core.map(c => c.origin).join(", ")}`)

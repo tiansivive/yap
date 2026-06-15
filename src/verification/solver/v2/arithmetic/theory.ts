@@ -11,39 +11,8 @@ import type { Conflict, Literal } from "../cdcl";
 import type * as Encoding from "../encoding";
 import { Bounds } from "./bounds";
 import { type Constraint, type Linear, Normalize } from "./normalize";
+import type { Event as ArithmeticEvent } from "./simplex";
 import { Simplex, type Tableau } from "./simplex";
-
-export type State = {
-	readonly tableau: Tableau;
-	readonly bounds: Bounds.Map;
-	readonly integerVars: ReadonlySet<string>;
-	readonly constraints: ReadonlyMap<Literal, Constraint.Info>;
-	readonly stack: readonly Snapshot[];
-};
-
-export type Snapshot = {
-	readonly tableau: Tableau;
-	readonly bounds: Bounds.Map;
-};
-
-export type Update = {
-	readonly state: State;
-	readonly propagations: readonly Propagation[];
-};
-
-export type Check = Either<Conflict, Update>;
-
-export type Propagation = {
-	readonly literals: readonly Literal[];
-	readonly justification: readonly Literal[];
-};
-
-export type Entry = {
-	readonly literal: Literal;
-	readonly atom: Encoding.Atom.T;
-};
-
-export type { Event } from "./simplex";
 
 export const State = {
 	empty: {
@@ -91,6 +60,55 @@ export const State = {
 				stack: state.stack.slice(0, -1),
 			})),
 };
+
+export const Events = {
+	assert: (state: State, literal: Literal): ArithmeticEvent[] =>
+		(state.bounds.get(literal) ?? []).map(({ variable, kind, value, strict }) => ({
+			tag: "bound" as const,
+			variable,
+			direction: kind,
+			bound: { value, strict, reason: literal },
+		})),
+
+	check: (): ArithmeticEvent[] => [{ tag: "feasible" }],
+
+	conflict: (conflict: Conflict): ArithmeticEvent[] =>
+		match(/^arith:infeasible:(.+)$/.exec(conflict.clause.origin))
+			.with(P.nonNullable, ([, variable]) => [{ tag: "infeasible" as const, variable }])
+			.otherwise(() => []),
+};
+
+export type State = {
+	readonly tableau: Tableau;
+	readonly bounds: Bounds.Map;
+	readonly integerVars: ReadonlySet<string>;
+	readonly constraints: ReadonlyMap<Literal, Constraint.Info>;
+	readonly stack: readonly Snapshot[];
+};
+
+export type Snapshot = {
+	readonly tableau: Tableau;
+	readonly bounds: Bounds.Map;
+};
+
+export type Update = {
+	readonly state: State;
+	readonly propagations: readonly Propagation[];
+};
+
+export type Check = Either<Conflict, Update>;
+
+export type Propagation = {
+	readonly literals: readonly Literal[];
+	readonly justification: readonly Literal[];
+};
+
+export type Entry = {
+	readonly literal: Literal;
+	readonly atom: Encoding.Atom.T;
+};
+
+export type { Event } from "./simplex";
 
 const Registration = {
 	apply: (state: State, literal: Literal, constraint: Constraint, sort: IVL.NumSort): State => {

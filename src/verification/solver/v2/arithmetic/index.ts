@@ -9,5 +9,5 @@ export type { Bound, Event as ArithmeticEvent, Row, Tableau } from "./simplex";
 
 export { Bounds } from "./bounds";
 
-export { State } from "./theory";
+export { Events, State } from "./theory";
 export type { Check, Entry, Propagation, Snapshot, State as ArithmeticState, Update } from "./theory";

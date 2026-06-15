@@ -5,13 +5,6 @@
 import type { IVL } from "../../ivl/types";
 import type { Clause } from "../cdcl";
 
-export type State = {
-	quantifiers: Info[];
-	generation: number;
-	instantiated: Set<string>;
-	phase: Phase;
-};
-
 export const State = {
 	empty: {
 		quantifiers: [],
@@ -24,6 +17,13 @@ export const State = {
 		...State.empty,
 		quantifiers,
 	}),
+};
+
+export type State = {
+	quantifiers: Info[];
+	generation: number;
+	instantiated: Set<string>;
+	phase: Phase;
 };
 
 export type Phase = {
@@ -61,7 +61,7 @@ export type Sample = {
 
 export namespace Event {
 	export type T =
-		| { tag: "round"; round: number; lemmas: number }
-		| { tag: "mbqi"; round: number; instantiations: Sample[] }
+		| { tag: "round"; round: number; lemmas: Lemma[] }
+		| { tag: "mbqi"; round: number; lemmas: Lemma[]; instantiations: Sample[] }
 		| { tag: "pure"; quantifiers: number };
 }

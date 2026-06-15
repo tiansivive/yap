@@ -100,7 +100,7 @@ export type Tableau = {
 
 export namespace Event {
 	export type T =
-		| { readonly tag: "bound"; readonly variable: string; readonly bound: Bound }
+		| { readonly tag: "bound"; readonly variable: string; readonly direction: "lower" | "upper"; readonly bound: Bound }
 		| { readonly tag: "conflict"; readonly variable: string; readonly lower: Rational; readonly upper: Rational }
 		| { readonly tag: "violation"; readonly variable: string; readonly direction: "below" | "above" }
 		| { readonly tag: "pivot"; readonly leaving: string; readonly entering: string }

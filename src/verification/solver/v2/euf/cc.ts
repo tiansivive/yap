@@ -139,7 +139,8 @@ export type Propagation = {
 
 export namespace Event {
 	export type T =
-		| { tag: "merge"; a: Enode.Id; b: Enode.Id; reason: Literal; winner: Enode.Id; loser: Enode.Id }
+		| { tag: "active"; literal: Literal }
+		| { tag: "merge"; a: Enode.Id; b: Enode.Id; reason: Literal }
 		| { tag: "skip"; root: Enode.Id }
 		| { tag: "congruence"; left: Enode.Id; right: Enode.Id }
 		| { tag: "conflict"; clause: Clause.T }
@@ -147,6 +148,34 @@ export namespace Event {
 }
 
 export type Event = Event.T;
+
+export const Events = {
+	assert: (before: CC.State, after: CC.State, literal: Literal): Event.T[] =>
+		match(before.registry.get(literal))
+			.with(undefined, () => [])
+			.otherwise(equality => [
+				{ tag: "active", literal },
+				...match(equality.positive)
+					.with(true, () => Events.equality(before, after, equality))
+					.with(false, () => [{ tag: "scan" as const, literal, equal: equivalent(before, equality.a, equality.b) }])
+					.exhaustive(),
+			]),
+
+	check: (state: CC.State): Event.T[] =>
+		[...state.active]
+			.map(literal => ({ literal, equality: state.registry.get(literal) }))
+			.filter((entry): entry is { literal: Literal; equality: Equality } => entry.equality !== undefined && !entry.equality.positive)
+			.map(({ literal, equality }) => ({ tag: "scan", literal, equal: equivalent(state, equality.a, equality.b) })),
+
+	conflict: (clause: Clause.T): Event.T => ({ tag: "conflict", clause }),
+
+	equality: (before: CC.State, after: CC.State, equality: Equality): Event.T[] => {
+		const added = after.mergeLog.slice(before.mergeLog.length);
+		return match(added)
+			.with([], () => [{ tag: "skip" as const, root: CC.find(before, equality.a) }])
+			.otherwise(events => events.map(({ a, b, reason }) => ({ tag: "merge", a, b, reason })));
+	},
+};
 
 const merge = (state: CC.State, arena: Arena.State, a: Enode.Id, b: Enode.Id, reason: Literal): CC.Check => {
 	const rootA = CC.find(state, a);

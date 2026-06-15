@@ -29,7 +29,7 @@ export function Do<R>(gen: () => G<R>): Solver<R> {
 		let step = it.next();
 
 		while (!step.done) {
-			const [collector, next] = step.value(env, collected, current);
+			const [collector, next] = step.value(env, Accumulator.empty, current);
 			collected = Accumulator.concat(collected, collector);
 			current = next;
 

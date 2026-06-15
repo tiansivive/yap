@@ -35,7 +35,7 @@ export const round = function* (): Core.G<Result> {
 			}));
 			return result;
 		});
-	yield* Trace.emit({ tag: "mbqi", round: state.quantifiers.phase.round, instantiations: next.instantiations });
+	yield* Trace.emit({ tag: "mbqi", round: state.quantifiers.phase.round, lemmas: next.lemmas, instantiations: next.instantiations });
 	return next;
 };
 

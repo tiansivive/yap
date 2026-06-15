@@ -12,12 +12,6 @@ import * as Core from "../core";
 import type * as Encoding from "../encoding";
 import * as EUF from "../euf";
 import * as Trace from "../trace";
-import * as F from "fp-ts/lib/function";
-
-export type State = {
-	readonly euf: EUF.CC.State;
-	readonly arithmetic: Arithmetic.State;
-};
 
 export const setup = (encoding: Encoding.State): Setup => {
 	const registered = Registration.from(encoding);
@@ -38,39 +32,55 @@ export const install = function* (encoding: Encoding.State): Core.G<Setup> {
 export const assert = function* (literal: Literal): Core.G<Conflict | undefined> {
 	const s = yield* Core.State.get();
 	return yield* E.match(
-		function* (conflict: Conflict): Core.G<Conflict | undefined> {
-			yield* Trace.emit({ tag: "assert", theory: "all", literal, result: "conflict", detail: [] });
-			return conflict;
+		function* (failure: Failure): Core.G<Conflict | undefined> {
+			yield* Trace.emit({ tag: "assert", theory: "all", literal, result: "conflict", detail: failure.detail });
+			return failure.conflict;
 		},
 		function* (update: Update): Core.G<Conflict | undefined> {
 			yield* Core.State.modify(st => ({ ...st, theories: update.state }));
-			yield* Trace.emit({ tag: "assert", theory: "all", literal, result: "ok", detail: [] });
+			yield* Trace.emit({ tag: "assert", theory: "all", literal, result: "ok", detail: update.detail });
 			return undefined;
 		},
 	)(asserted(s.theories, s.arena, literal));
 };
 
 const asserted = (state: State, arena: EUF.Arena.State, literal: Literal): Check =>
-	F.pipe(
-		E.Do,
-		E.bind("euf", () => EUF.CC.assert(state.euf, arena, literal)),
-		E.bind("arithmetic", () => Arithmetic.State.assert(state.arithmetic, literal)),
-		E.map(({ euf, arithmetic }) => ({
-			state: { ...state, euf: euf.state, arithmetic: arithmetic.state },
-			propagations: [...euf.propagations, ...arithmetic.propagations],
-		})),
+	E.Monad.chain(
+		E.mapLeft(
+			(conflict: Conflict): Failure => ({
+				conflict,
+				detail: [...EUF.Events.assert(state.euf, state.euf, literal).map(Event.euf), Event.euf(EUF.Events.conflict(conflict.clause))],
+			}),
+		)(EUF.CC.assert(state.euf, arena, literal)),
+		euf =>
+			E.Functor.map(
+				E.mapLeft(
+					(conflict: Conflict): Failure => ({
+						conflict,
+						detail: [...EUF.Events.assert(state.euf, euf.state, literal).map(Event.euf), ...Arithmetic.Events.conflict(conflict).map(Event.arithmetic)],
+					}),
+				)(Arithmetic.State.assert(state.arithmetic, literal)),
+				arithmetic => ({
+					state: { ...state, euf: euf.state, arithmetic: arithmetic.state },
+					propagations: [...euf.propagations, ...arithmetic.propagations],
+					detail: [
+						...EUF.Events.assert(state.euf, euf.state, literal).map(Event.euf),
+						...Arithmetic.Events.assert(state.arithmetic, literal).map(Event.arithmetic),
+					],
+				}),
+			),
 	);
 
 export const check = function* (): Core.G<Conflict | undefined> {
 	const s = yield* Core.State.get();
 	return yield* E.match(
-		function* (conflict: Conflict): Core.G<Conflict | undefined> {
-			yield* Trace.emit({ tag: "check", theory: "all", result: "conflict", detail: [] });
-			return conflict;
+		function* (failure: Failure): Core.G<Conflict | undefined> {
+			yield* Trace.emit({ tag: "check", theory: "all", result: "conflict", detail: failure.detail });
+			return failure.conflict;
 		},
 		function* (update: Update): Core.G<Conflict | undefined> {
 			yield* Core.State.modify(st => ({ ...st, theories: update.state }));
-			yield* Trace.emit({ tag: "check", theory: "all", result: "ok", detail: [] });
+			yield* Trace.emit({ tag: "check", theory: "all", result: "ok", detail: update.detail });
 			return undefined;
 		},
 	)(State.check(s.theories, s.arena));
@@ -93,14 +103,27 @@ export const State = {
 		arithmetic: Arithmetic.State.empty,
 	} satisfies State,
 	check: (state: State, arena: EUF.Arena.State): Check =>
-		F.pipe(
-			E.Do,
-			E.bind("euf", () => EUF.CC.check(state.euf)),
-			E.bind("arithmetic", () => Arithmetic.State.check(state.arithmetic)),
-			E.map(({ euf, arithmetic }) => ({
-				state: { ...state, euf: euf.state, arithmetic: arithmetic.state },
-				propagations: [...euf.propagations, ...arithmetic.propagations],
-			})),
+		E.Monad.chain(
+			E.mapLeft(
+				(conflict: Conflict): Failure => ({
+					conflict,
+					detail: [...EUF.Events.check(state.euf).map(Event.euf), Event.euf(EUF.Events.conflict(conflict.clause))],
+				}),
+			)(EUF.CC.check(state.euf)),
+			euf =>
+				E.Functor.map(
+					E.mapLeft(
+						(conflict: Conflict): Failure => ({
+							conflict,
+							detail: [...EUF.Events.check(state.euf).map(Event.euf), ...Arithmetic.Events.conflict(conflict).map(Event.arithmetic)],
+						}),
+					)(Arithmetic.State.check(state.arithmetic)),
+					arithmetic => ({
+						state: { ...state, euf: euf.state, arithmetic: arithmetic.state },
+						propagations: [...euf.propagations, ...arithmetic.propagations],
+						detail: [...EUF.Events.check(state.euf).map(Event.euf), ...Arithmetic.Events.check().map(Event.arithmetic)],
+					}),
+				),
 		),
 	enter: (state: State): State => ({
 		...state,
@@ -114,6 +137,11 @@ export const State = {
 	}),
 };
 
+export type State = {
+	readonly euf: EUF.CC.State;
+	readonly arithmetic: Arithmetic.State;
+};
+
 export type Setup = {
 	readonly arena: EUF.Arena.State;
 	readonly state: State;
@@ -124,9 +152,15 @@ export type Setup = {
 export type Update = {
 	readonly state: State;
 	readonly propagations: readonly Propagation[];
+	readonly detail: readonly Event.Local[];
 };
 
-export type Check = Either<Conflict, Update>;
+export type Failure = {
+	readonly conflict: Conflict;
+	readonly detail: readonly Event.Local[];
+};
+
+export type Check = Either<Failure, Update>;
 
 export type Propagation = EUF.Propagation;
 
@@ -141,10 +175,13 @@ export namespace Event {
 	export type Local = { tag: "euf"; event: EUF.Event } | { tag: "arithmetic"; event: Arithmetic.Event };
 
 	export type T =
-		| { tag: "assert"; theory: string; literal: Literal; result: "ok" | "conflict"; detail: Local[] }
-		| { tag: "check"; theory: string; result: "ok" | "conflict"; detail: Local[] }
+		| { tag: "assert"; theory: string; literal: Literal; result: "ok" | "conflict"; detail: readonly Local[] }
+		| { tag: "check"; theory: string; result: "ok" | "conflict"; detail: readonly Local[] }
 		| { tag: "enter"; level: number }
 		| { tag: "backtrack"; to: number };
+
+	export const euf = (event: EUF.Event): Local => ({ tag: "euf", event });
+	export const arithmetic = (event: Arithmetic.Event): Local => ({ tag: "arithmetic", event });
 }
 
 export type Event = Event.T;
