@@ -95,6 +95,7 @@ return main();
 [19] closure
   :body -> [3]
   :env -> [18]",
+    "ivl": "(forall ((b Bool)) (and (= b b) (= b b)))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -116,6 +117,42 @@ return main();
       return match0",
     "name": "chooseType",
     "normalized": "λ(b: Bool) -> (closure: match b | true -> Num | false -> String -| Γ: b)",
+    "solverTrace": "=== Formula ===
+  (forall ((b Bool)) (and (= b b) (= b b)))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  b=b -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
     "type": "Π(t1: Bool) -> Type",
   },
   {
@@ -139,6 +176,7 @@ return main();
   :refers_to -> [4]
   :scope -> [2] {"level":0}
 [6] lit {"value":{"type":"Bool","value":true}}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -149,6 +187,31 @@ return main();
       return v2",
     "name": "T1",
     "normalized": "Num",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Type",
   },
   {
@@ -172,6 +235,7 @@ return main();
   :refers_to -> [4]
   :scope -> [2] {"level":0}
 [6] lit {"value":{"type":"Bool","value":false}}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -182,6 +246,31 @@ return main();
       return v2",
     "name": "T2",
     "normalized": "String",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Type",
   },
 ]
@@ -204,6 +293,7 @@ return main();
 [4] var:ref {"name":"Num"}
   :refers_to -> [3]
   :scope -> [2] {"level":0}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -212,6 +302,31 @@ return main();
       return v0",
     "name": "MyNum",
     "normalized": "Num",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Type",
   },
   {
@@ -229,6 +344,7 @@ return main();
 [4] var:ref {"name":"String"}
   :refers_to -> [3]
   :scope -> [2] {"level":0}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -237,6 +353,31 @@ return main();
       return v0",
     "name": "MyString",
     "normalized": "String",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Type",
   },
   {
@@ -251,6 +392,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"n"}
 [3] lit {"value":{"type":"Num","value":42}}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -259,6 +401,31 @@ return main();
       return v0",
     "name": "n",
     "normalized": "42",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Num",
   },
   {
@@ -273,6 +440,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"s"}
 [3] lit {"value":{"type":"String","value":"hi"}}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -281,6 +449,31 @@ return main();
       return v0",
     "name": "s",
     "normalized": ""hi"",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "String",
   },
 ]
@@ -335,6 +528,7 @@ return main();
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
 [16] row:empty",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -343,6 +537,31 @@ return main();
       return v0",
     "name": "Point",
     "normalized": "Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Type",
   },
   {
@@ -374,6 +593,7 @@ return main();
   :value -> [8]
 [8] lit {"value":{"type":"Num","value":0}}
 [9] row:empty",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -384,6 +604,31 @@ return main();
       return v2",
     "name": "origin",
     "normalized": "Struct [ y: 0, x: 0 ]",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
   },
 ]

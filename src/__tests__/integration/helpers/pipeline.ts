@@ -27,8 +27,8 @@ import { VerificationServiceV2 } from "../../../verification/V2/service";
 import type { VerificationArtefacts } from "../../../verification/V2/types";
 import { Build } from "../../../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../../../verification/solver/ivl/print";
-import { Solver } from "../../../verification/solver/solver";
-import { Trace } from "../../../verification/solver/trace";
+import { Solver } from "../../../verification/solver/v2/solver";
+import * as Replay from "../../../verification/solver/v2/trace/replay";
 
 type StageName = "elaborated" | "type" | "normalized" | "ivl" | "solverTrace" | "gram" | "mir" | "codegenJS" | "codegenC" | "codegenErlang";
 export type StageResults = { readonly [K in StageName]: string };
@@ -89,16 +89,11 @@ const pipeline = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, parentBinders?: Re
 			() => E.right<string, string>(""),
 			(a: VerificationArtefacts) =>
 				safe(() => {
-					const solver = Solver.createTraced();
-					solver.assert(a.vc);
-					const checked = solver.check();
-					const { steps } = Trace.collect(checked.trace);
-					return Trace.replay({
+					const checked = Solver.run(a.vc);
+					return Replay.replay({
 						formula: IVLPrint.formula(a.vc),
-						steps,
-						atoms: checked.atoms,
-						proxies: checked.proxies,
-						clauses: checked.clauses,
+						steps: checked.steps,
+						encoding: checked.encoding,
 						arena: checked.arena,
 					});
 				}),
@@ -266,6 +261,8 @@ export const snap = (result: ScriptResult) =>
 					type: d.stages.type,
 					elaborated: d.stages.elaborated,
 					normalized: d.stages.normalized,
+					ivl: d.stages.ivl,
+					solverTrace: d.stages.solverTrace,
 					gram: d.stages.gram,
 					mir: d.stages.mir,
 					codegenJS: d.stages.codegenJS,

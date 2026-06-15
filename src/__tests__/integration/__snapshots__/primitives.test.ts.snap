@@ -14,6 +14,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"greeting"}
 [3] lit {"value":{"type":"String","value":"Hello, Yap!"}}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -22,6 +23,31 @@ return main();
       return v0",
     "name": "greeting",
     "normalized": ""Hello, Yap!"",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "String",
   },
   {
@@ -36,6 +62,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"life"}
 [3] lit {"value":{"type":"Num","value":42}}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -44,6 +71,31 @@ return main();
       return v0",
     "name": "life",
     "normalized": "42",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Num",
   },
   {
@@ -58,6 +110,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"b"}
 [3] lit {"value":{"type":"Bool","value":true}}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -66,6 +119,31 @@ return main();
       return v0",
     "name": "b",
     "normalized": "true",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Bool",
   },
   {
@@ -80,6 +158,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"u"}
 [3] lit {"value":{"type":"unit"}}",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -88,6 +167,31 @@ return main();
       return v0",
     "name": "u",
     "normalized": "unit",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Unit",
   },
 ]

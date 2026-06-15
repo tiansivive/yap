@@ -23,8 +23,8 @@ import * as Sub from "../../elaboration/unification/substitution";
 import { VerificationServiceV2 } from "../../verification/V2/service";
 import { Build } from "../../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../../verification/solver/ivl/print";
-import { Solver } from "../../verification/solver/solver";
-import { Trace } from "../../verification/solver/trace";
+import { Solver } from "../../verification/solver/v2/solver";
+import * as Replay from "../../verification/solver/v2/trace/replay";
 
 export type DeBruijnMode = "off" | "index" | "level" | "both";
 export type ParserRule = "Ann" | "Script";
@@ -244,11 +244,8 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 
 		result.solverTrace =
 			attempt(() => {
-				const solver = Solver.createTraced();
-				solver.assert(ivlArtefacts.vc);
-				const { trace, atoms, proxies, clauses, arena } = solver.check();
-				const { steps } = Trace.collect(trace);
-				return Trace.replay({ formula: IVLPrint.formula(ivlArtefacts.vc), steps, atoms, proxies, clauses, arena });
+				const checked = Solver.run(ivlArtefacts.vc);
+				return Replay.replay({ formula: IVLPrint.formula(ivlArtefacts.vc), steps: checked.steps, encoding: checked.encoding, arena: checked.arena });
 			}, errors) ?? "";
 	}
 

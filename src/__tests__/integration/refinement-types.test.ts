@@ -1,6 +1,13 @@
 import { describe, expect, test } from "vitest";
 import { runScript, snap } from "./helpers/pipeline";
 
+type Verdict = "sat" | "unsat";
+
+const Verdict = {
+	trace: (result: ReturnType<typeof runScript>, name: string): string | undefined => result.declarations.find(d => d.name === name)?.stages?.solverTrace,
+	expect: (result: ReturnType<typeof runScript>, name: string, expected: Verdict) => expect(Verdict.trace(result, name)).toContain(`[${expected}]`),
+};
+
 describe("Language Tour — Refinement Types", () => {
 	test("basic refinements", () => {
 		const result = runScript(`
@@ -17,6 +24,44 @@ let zero: Nat = 0;
 		const result = runScript(`
 let exactOne: Num [| \\v -> v == 1 |] = 1;
 		`);
+		expect(snap(result)).toMatchSnapshot();
+	});
+
+	test("negative refinement obligations", () => {
+		const result = runScript(`
+let negTestCheckLiteral: Num [| \\v -> v == 1 |] = 2;
+let negFnApp: Num [| \\v -> v == 0 |] = 1 + 2;
+let negTestCheckLambdaPreAndPostCondition: (n: Num [| \\n -> n > 0 |]) -> Num [| \\n -> n > 0 |] = \\x -> 0;
+		`);
+		Verdict.expect(result, "negTestCheckLiteral", "unsat");
+		Verdict.expect(result, "negFnApp", "unsat");
+		Verdict.expect(result, "negTestCheckLambdaPreAndPostCondition", "unsat");
+		expect(snap(result)).toMatchSnapshot();
+	});
+
+	test.fails("unconstrained identity fails positive postcondition", () => {
+		const result = runScript(`
+let negTestCheckLambdaPostCondition: Num -> Num [| \\n -> n > 0|] = \\x -> x;
+		`);
+		expect(snap(result)).toMatchSnapshot();
+		Verdict.expect(result, "negTestCheckLambdaPostCondition", "unsat");
+	});
+
+	test("function refinement obligations", () => {
+		const result = runScript(`
+let fn: Num -> Num = \\x -> 2;
+let posTestCheckLambdaPostCondition: Num -> Num [| \\v -> v == 1 |] = \\x -> 1;
+let posTestCheckLambdaPreCondition: (n: Num [| \\n -> n > 0|]) -> Num = \\x -> x;
+let posTestCheckLambdaPreAndPostCondition: (n: Num [| \\n -> n > 0|]) -> Num [| \\n -> n > 0|] = \\x -> x;
+let posTestCheckRefinedResultLambda: (n: Num) -> Num [| \\o -> o == (n + 1) |] = \\x -> x + 1;
+let inc: (x: Num) -> Num [| \\v -> v == (x + 1) |] = \\x -> x + 1;
+		`);
+		Verdict.expect(result, "fn", "sat");
+		Verdict.expect(result, "posTestCheckLambdaPostCondition", "sat");
+		Verdict.expect(result, "posTestCheckLambdaPreCondition", "sat");
+		Verdict.expect(result, "posTestCheckLambdaPreAndPostCondition", "sat");
+		Verdict.expect(result, "posTestCheckRefinedResultLambda", "sat");
+		Verdict.expect(result, "inc", "sat");
 		expect(snap(result)).toMatchSnapshot();
 	});
 
@@ -105,12 +150,103 @@ let goodOne: Num [| \\v -> v < 10 |] = 1;
 		expect(snap(result)).toMatchSnapshot();
 	});
 
+	test("block refinement obligations", () => {
+		const result = runScript(`
+let block: Num [| \\n -> n > 0 |] = {
+	let f: Num [| \\n -> n > 0 |] -> Num [| \\p -> p > 1 |] = \\o -> o + 1;
+	return (f 1);
+};
+		`);
+		Verdict.expect(result, "block", "sat");
+		expect(snap(result)).toMatchSnapshot();
+	});
+
+	test.fails("block-local let obligations expose scoped arithmetic contradiction", () => {
+		const result = runScript(`
+let compute: Num -> Num
+	= \\x -> {
+		let doubled = x * 2;
+		let added = doubled + 10;
+		return added;
+	};
+		`);
+		expect(snap(result)).toMatchSnapshot();
+		Verdict.expect(result, "compute", "unsat");
+	});
+
+	test("dependent record construction", () => {
+		const result = runScript(`
+let test = {
+	let Pair
+	: (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
+	= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p :fst v |] };
+
+	let p
+	: Pair Num Num (\\x -> \\y -> x < y )
+	= { fst: 1, snd: 2 };
+};
+		`);
+		Verdict.expect(result, "test", "sat");
+		expect(snap(result)).toMatchSnapshot();
+	});
+
+	test("dependent record construction rejects invalid field", () => {
+		const result = runScript(`
+let testFail = {
+	let Pair
+	: (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
+	= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p :fst v |] };
+
+	let p
+	: Pair Num Num (\\x -> \\y -> x < y )
+	= { fst: 2, snd: 1 };
+
+	return 1;
+};
+		`);
+		Verdict.expect(result, "testFail", "unsat");
+		expect(snap(result)).toMatchSnapshot();
+	});
+
 	test("ordered lists with refinement polymorphism", () => {
 		const result = runScript(`
 let OrderedList: (t: Type) -> (p: t -> t -> Bool) -> Type = \\t -> \\p -> | #nil Unit | #cons { head: t, tail: OrderedList (t[| \\v -> p :head v |]) p };
 let ascending: OrderedList Num (\\x -> \\y -> x < y) = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
 let descending: OrderedList Num (\\x -> \\y -> x > y) = #cons { head: 3, tail: #cons { head: 2, tail: #cons { head: 1, tail: #nil ! } } };
 		`);
+		expect(snap(result)).toMatchSnapshot();
+	});
+
+	test("ordered list construction rejects descending tail", () => {
+		const result = runScript(`
+let orderedListTestFail = {
+	let List
+	: (a: Type) -> (p: a -> a -> Bool) -> Type
+	= \\t -> \\p -> | #nil Unit
+	| #cons { head: t, tail: List (t[| \\v -> p :head v |]) p };
+
+	let ol
+	: List Num (\\x -> \\y -> x < y )
+	= #cons { head: 2, tail: #cons { head: 1, tail: #nil ! } };
+
+	return 1;
+};
+		`);
+		Verdict.expect(result, "orderedListTestFail", "unsat");
+		expect(snap(result)).toMatchSnapshot();
+	});
+
+	test("flow-sensitive refinements preserve branch facts", () => {
+		const result = runScript(`
+let test = {
+	let a = 1;
+	let b: Num[| \\n -> n > 0 |] = match (a > 0)
+		| true  -> a
+		| false -> 42;
+	return 1;
+};
+		`);
+		Verdict.expect(result, "test", "sat");
 		expect(snap(result)).toMatchSnapshot();
 	});
 });

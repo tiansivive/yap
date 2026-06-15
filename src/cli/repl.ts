@@ -35,7 +35,7 @@ import { print as printErl } from "../Codegen/v2/erlang/print";
 import { VerificationServiceV2 } from "../verification/V2/service";
 import { Build } from "../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../verification/solver/ivl/print";
-import { Solver } from "../verification/solver/solver";
+import { Solver } from "../verification/solver/v2/solver";
 
 export type ReplOpts = {
 	codegen: boolean;
@@ -326,9 +326,7 @@ const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, display: Di
 				console.log("-------------------------------------\n");
 			}
 
-			const solver = Solver.create();
-			solver.assert(vc);
-			const solveResult = solver.check();
+			const solveResult = Solver.check(vc);
 
 			switch (solveResult.tag) {
 				case "sat":

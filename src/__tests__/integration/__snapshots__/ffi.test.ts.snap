@@ -59,6 +59,7 @@ return main();
 [20] closure
   :body -> [3]
   :env -> [19]",
+    "ivl": "(forall ((name String)) (= name name))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -75,6 +76,42 @@ return main();
     "name": "greet",
     "normalized": "λ(name: String) ->
   (closure: { FFI.print (FFI.$concat "Hello, " name); return unit; } -| Γ: name)",
+    "solverTrace": "=== Formula ===
+  (forall ((name String)) (= name name))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  name=name -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
     "type": "Π(t3: String) -> Unit",
   },
 ]
@@ -138,6 +175,7 @@ return main();
   :arg -> [9] {"index":1}
   :arg -> [10] {"index":2}
   :callee -> [6]",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -152,6 +190,31 @@ return main();
       return v6",
     "name": "nums",
     "normalized": "(prepend: (Num) (42) (Array [ 0: 1, 1: 2, 2: 3 ]))",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "FFI.Indexed Num Num @FFI.defaultArray",
   },
   {
@@ -196,6 +259,7 @@ return main();
   :arg -> [9] {"index":1}
   :arg -> [10] {"index":2}
   :callee -> [6]",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -209,6 +273,31 @@ return main();
       return v5",
     "name": "strs",
     "normalized": "(prepend: (String) ("a") (Array [ 0: "b", 1: "c" ]))",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "FFI.Indexed Num String @FFI.defaultArray",
   },
 ]
