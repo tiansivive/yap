@@ -102,6 +102,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(a: Type) => Π(t1: a) -> a",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -172,6 +173,7 @@ return main();
 
 [sat]",
     "type": "String",
+    "validity": "valid",
   },
 ]
 `;
@@ -278,6 +280,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(a: Type) => Π(t1: a) -> a",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -345,6 +348,7 @@ return main();
 
 [sat]",
     "type": "Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -412,6 +416,7 @@ return main();
 
 [sat]",
     "type": "String",
+    "validity": "valid",
   },
 ]
 `;
@@ -505,6 +510,7 @@ exports[`Language Tour — Polymorphism > implicit resolution with using 1`] = `
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(n: Num) => Π(t1: Num) -> Num",
+    "validity": "valid",
   },
   {
     "kind": "using",
@@ -576,6 +582,7 @@ return main();
 
 [sat]",
     "type": "Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -643,6 +650,7 @@ return main();
 
 [sat]",
     "type": "Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -765,6 +773,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(x: Num) -> <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add x 1) |]",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -880,6 +889,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(a: Type) => Π(b: Type) => Π(x: a) -> Π(y: b) -> a",
+    "validity": "valid",
   },
 ]
 `;
@@ -1068,6 +1078,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -1174,6 +1185,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(a: Type) -> Π(t1: a) -> a",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -1284,6 +1296,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(a: Type) -> Π(b: Type) -> Π(t2: a) -> Π(t3: b) -> a",
+    "validity": "valid",
   },
 ]
 `;

@@ -48,6 +48,7 @@ const TABS = [
 	{ key: "constraints", label: "Constraints", mode: null },
 	{ key: "metas", label: "Metas", mode: null },
 	{ key: "ivl", label: "IVL", mode: smtlib },
+	{ key: "validity", label: "Validity", mode: null },
 	{ key: "solverTrace", label: "Trace", mode: null },
 	{ key: "mir", label: "MIR", mode: mir },
 	{ key: "gram", label: "GRAM", mode: gram },

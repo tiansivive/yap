@@ -49,6 +49,7 @@ return main();
 
 [sat]",
     "type": "String",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -97,6 +98,7 @@ return main();
 
 [sat]",
     "type": "Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -145,6 +147,7 @@ return main();
 
 [sat]",
     "type": "Bool",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -193,6 +196,7 @@ return main();
 
 [sat]",
     "type": "Unit",
+    "validity": "valid",
   },
 ]
 `;

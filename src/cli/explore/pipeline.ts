@@ -25,6 +25,7 @@ import { Build } from "../../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../../verification/solver/ivl/print";
 import { Solver } from "../../verification/solver/v2/solver";
 import * as Replay from "../../verification/solver/v2/trace/replay";
+import { Validity } from "../../verification/validity";
 
 export type DeBruijnMode = "off" | "index" | "level" | "both";
 export type ParserRule = "Ann" | "Script";
@@ -45,6 +46,7 @@ export type Result = {
 	constraints: string;
 	metas: string;
 	ivl: string;
+	validity: string;
 	solverTrace: string;
 	mir: string;
 	gram: string;
@@ -65,6 +67,7 @@ const empty: Result = {
 	constraints: "",
 	metas: "",
 	ivl: "",
+	validity: "",
 	solverTrace: "",
 	mir: "",
 	gram: "",
@@ -241,6 +244,7 @@ export const run = async (source: string, opts: Options): Promise<Result> => {
 
 	if (ivlArtefacts) {
 		result.ivl = attempt(() => IVLPrint.formula(ivlArtefacts.vc), errors) ?? "";
+		result.validity = attempt(() => Validity.display(Validity.check(ivlArtefacts.vc)), errors) ?? "";
 
 		result.solverTrace =
 			attempt(() => {
