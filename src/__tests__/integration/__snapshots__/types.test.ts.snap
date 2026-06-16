@@ -154,6 +154,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Bool) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -213,6 +214,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -272,6 +274,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
 ]
 `;
@@ -328,6 +331,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -379,6 +383,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -427,6 +432,7 @@ return main();
 
 [sat]",
     "type": "Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -475,6 +481,7 @@ return main();
 
 [sat]",
     "type": "String",
+    "validity": "valid",
   },
 ]
 `;
@@ -563,6 +570,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -630,6 +638,7 @@ return main();
 
 [sat]",
     "type": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
+    "validity": "valid",
   },
 ]
 `;

@@ -154,6 +154,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Bool) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -213,6 +214,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -272,6 +274,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
 ]
 `;
@@ -350,6 +353,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -420,6 +424,7 @@ return main();
 
 [sat]",
     "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: :fst, fst: Type ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -490,6 +495,7 @@ return main();
 
 [sat]",
     "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: :fst, fst: Type ]",
+    "validity": "valid",
   },
 ]
 `;
@@ -615,6 +621,7 @@ exports[`Language Tour — Dependent Types > generic dependent pairs 1`] = `
 
 [sat]",
     "type": "Π(a: Type) -> Π(p: Π(t1: a) -> Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -682,6 +689,7 @@ return main();
 
 [sat]",
     "type": "Σ($sig: [ snd: String, fst: Num ]) . Schema [ snd: String, fst: Num ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -750,6 +758,7 @@ return main();
 [sat]",
     "type": "Σ($sig: [ snd: match :fst | true -> Num | false -> String, fst: Bool ]) .
   Schema [ snd: match :fst | true -> Num | false -> String, fst: Bool ]",
+    "validity": "valid",
   },
 ]
 `;
@@ -929,6 +938,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Num) -> Π(t2: Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -977,6 +987,7 @@ return main();
 
 [sat]",
     "type": "(Vec) 0 Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1047,6 +1058,7 @@ return main();
 
 [sat]",
     "type": "(Vec) 1 Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1117,6 +1129,7 @@ return main();
 
 [sat]",
     "type": "(Vec) 2 Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1187,6 +1200,7 @@ return main();
 
 [sat]",
     "type": "(Vec) 3 Num",
+    "validity": "valid",
   },
 ]
 `;

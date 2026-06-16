@@ -87,6 +87,7 @@ return main();
 
 [sat]",
     "type": "Π(t1: Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -147,6 +148,7 @@ return main();
 
 [sat]",
     "type": "Variant [ just: Num, nothing: Unit ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -207,6 +209,7 @@ return main();
 
 [sat]",
     "type": "Variant [ just: String, nothing: Unit ]",
+    "validity": "valid",
   },
 ]
 `;
@@ -316,6 +319,7 @@ return main();
 
 [sat]",
     "type": "Π(t1: Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -376,6 +380,7 @@ return main();
 
 [sat]",
     "type": "(List) Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -467,6 +472,7 @@ return main();
 
 [sat]",
     "type": "(List) Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -634,6 +640,7 @@ return main();
 
 [sat]",
     "type": "(List) Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -704,6 +711,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -764,6 +772,7 @@ return main();
 
 [sat]",
     "type": "Peano",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -827,6 +836,7 @@ return main();
 
 [sat]",
     "type": "Peano",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -890,6 +900,7 @@ return main();
 
 [sat]",
     "type": "Peano",
+    "validity": "valid",
   },
 ]
 `;

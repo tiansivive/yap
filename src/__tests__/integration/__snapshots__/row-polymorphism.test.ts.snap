@@ -117,6 +117,7 @@ return main();
 
 [sat]",
     "type": "Π(r: Row) => Π(t1: Σ($sig: [ x: Num | r ]) . Schema [ x: Num | r ]) -> Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -211,6 +212,7 @@ return main();
 
 [sat]",
     "type": "Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -319,6 +321,7 @@ return main();
 
 [sat]",
     "type": "Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -413,6 +416,7 @@ return main();
 
 [sat]",
     "type": "Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -554,6 +558,7 @@ return main();
   Π(t1: Σ($sig: [ y: Num, x: Num | r ]) . Schema [ y: Num, x: Num | r ]) ->
     Σ($sig: [ z: Num, y: Num, x: Num | r ]) .
       Schema [ z: Num, y: Num, x: Num | r ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -641,6 +646,7 @@ return main();
 [sat]",
     "type": "Σ($sig: [ z: Num, y: Num, x: Num | [] ]) .
   Schema [ z: Num, y: Num, x: Num | [] ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -719,6 +725,7 @@ return main();
     "solverTrace": "",
     "type": "Σ($sig: [ z: Num, y: Num, x: Num | [ color: String ] ]) .
   Schema [ z: Num, y: Num, x: Num | [ color: String ] ]",
+    "validity": "",
   },
 ]
 `;
@@ -843,6 +850,7 @@ return main();
 [sat]",
     "type": "Π(r: Row) =>
   Π(t1: Σ($sig: [ name: String | r ]) . Schema [ name: String | r ]) -> String",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -910,6 +918,7 @@ return main();
 
 [sat]",
     "type": "Schema [ name: String, age: Num ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -984,6 +993,7 @@ return main();
 
 [sat]",
     "type": "Schema [ name: String, author: String, pages: Num ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1062,6 +1072,7 @@ return main();
 
 [sat]",
     "type": "String",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1147,6 +1158,7 @@ return main();
 
 [sat]",
     "type": "String",
+    "validity": "valid",
   },
 ]
 `;

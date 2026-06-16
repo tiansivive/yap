@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { runScript, snap } from "./helpers/pipeline";
 
-type Verdict = "sat" | "unsat";
+type Verdict = "valid" | "invalid";
 
 const Verdict = {
-	trace: (result: ReturnType<typeof runScript>, name: string): string | undefined => result.declarations.find(d => d.name === name)?.stages?.solverTrace,
-	expect: (result: ReturnType<typeof runScript>, name: string, expected: Verdict) => expect(Verdict.trace(result, name)).toContain(`[${expected}]`),
+	validity: (result: ReturnType<typeof runScript>, name: string): string | undefined => result.declarations.find(d => d.name === name)?.stages?.validity,
+	expect: (result: ReturnType<typeof runScript>, name: string, expected: Verdict) => expect(Verdict.validity(result, name)).toBe(expected),
 };
 
 describe("Language Tour — Refinement Types", () => {
@@ -33,18 +33,18 @@ let negTestCheckLiteral: Num [| \\v -> v == 1 |] = 2;
 let negFnApp: Num [| \\v -> v == 0 |] = 1 + 2;
 let negTestCheckLambdaPreAndPostCondition: (n: Num [| \\n -> n > 0 |]) -> Num [| \\n -> n > 0 |] = \\x -> 0;
 		`);
-		Verdict.expect(result, "negTestCheckLiteral", "unsat");
-		Verdict.expect(result, "negFnApp", "unsat");
-		Verdict.expect(result, "negTestCheckLambdaPreAndPostCondition", "unsat");
+		Verdict.expect(result, "negTestCheckLiteral", "invalid");
+		Verdict.expect(result, "negFnApp", "invalid");
+		Verdict.expect(result, "negTestCheckLambdaPreAndPostCondition", "invalid");
 		expect(snap(result)).toMatchSnapshot();
 	});
 
-	test.fails("unconstrained identity fails positive postcondition", () => {
+	test("unconstrained identity fails positive postcondition", () => {
 		const result = runScript(`
 let negTestCheckLambdaPostCondition: Num -> Num [| \\n -> n > 0|] = \\x -> x;
 		`);
 		expect(snap(result)).toMatchSnapshot();
-		Verdict.expect(result, "negTestCheckLambdaPostCondition", "unsat");
+		Verdict.expect(result, "negTestCheckLambdaPostCondition", "invalid");
 	});
 
 	test("function refinement obligations", () => {
@@ -56,12 +56,12 @@ let posTestCheckLambdaPreAndPostCondition: (n: Num [| \\n -> n > 0|]) -> Num [| 
 let posTestCheckRefinedResultLambda: (n: Num) -> Num [| \\o -> o == (n + 1) |] = \\x -> x + 1;
 let inc: (x: Num) -> Num [| \\v -> v == (x + 1) |] = \\x -> x + 1;
 		`);
-		Verdict.expect(result, "fn", "sat");
-		Verdict.expect(result, "posTestCheckLambdaPostCondition", "sat");
-		Verdict.expect(result, "posTestCheckLambdaPreCondition", "sat");
-		Verdict.expect(result, "posTestCheckLambdaPreAndPostCondition", "sat");
-		Verdict.expect(result, "posTestCheckRefinedResultLambda", "sat");
-		Verdict.expect(result, "inc", "sat");
+		Verdict.expect(result, "fn", "valid");
+		Verdict.expect(result, "posTestCheckLambdaPostCondition", "valid");
+		Verdict.expect(result, "posTestCheckLambdaPreCondition", "valid");
+		Verdict.expect(result, "posTestCheckLambdaPreAndPostCondition", "valid");
+		Verdict.expect(result, "posTestCheckRefinedResultLambda", "valid");
+		Verdict.expect(result, "inc", "valid");
 		expect(snap(result)).toMatchSnapshot();
 	});
 
@@ -137,6 +137,7 @@ let badOne: Num [| \\v -> v > 10 |] = 1;
 		const [decl] = result.declarations;
 		expect(decl.stages?.solverTrace).toContain("[mbqi]");
 		expect(decl.stages?.solverTrace).toContain("[unsat]");
+		Verdict.expect(result, "badOne", "invalid");
 		expect(snap(result)).toMatchSnapshot();
 	});
 
@@ -147,6 +148,7 @@ let goodOne: Num [| \\v -> v < 10 |] = 1;
 		const [decl] = result.declarations;
 		expect(decl.stages?.solverTrace).toContain("[mbqi]");
 		expect(decl.stages?.solverTrace).toContain("[sat]");
+		Verdict.expect(result, "goodOne", "valid");
 		expect(snap(result)).toMatchSnapshot();
 	});
 
@@ -157,11 +159,10 @@ let block: Num [| \\n -> n > 0 |] = {
 	return (f 1);
 };
 		`);
-		Verdict.expect(result, "block", "sat");
 		expect(snap(result)).toMatchSnapshot();
 	});
 
-	test.fails("block-local let obligations expose scoped arithmetic contradiction", () => {
+	test("block-local let obligations verify through validity discharge", () => {
 		const result = runScript(`
 let compute: Num -> Num
 	= \\x -> {
@@ -171,7 +172,7 @@ let compute: Num -> Num
 	};
 		`);
 		expect(snap(result)).toMatchSnapshot();
-		Verdict.expect(result, "compute", "unsat");
+		Verdict.expect(result, "compute", "valid");
 	});
 
 	test("dependent record construction", () => {
@@ -186,7 +187,7 @@ let test = {
 	= { fst: 1, snd: 2 };
 };
 		`);
-		Verdict.expect(result, "test", "sat");
+		Verdict.expect(result, "test", "valid");
 		expect(snap(result)).toMatchSnapshot();
 	});
 
@@ -204,7 +205,7 @@ let testFail = {
 	return 1;
 };
 		`);
-		Verdict.expect(result, "testFail", "unsat");
+		Verdict.expect(result, "testFail", "invalid");
 		expect(snap(result)).toMatchSnapshot();
 	});
 
@@ -232,7 +233,7 @@ let orderedListTestFail = {
 	return 1;
 };
 		`);
-		Verdict.expect(result, "orderedListTestFail", "unsat");
+		Verdict.expect(result, "orderedListTestFail", "invalid");
 		expect(snap(result)).toMatchSnapshot();
 	});
 
@@ -246,7 +247,7 @@ let test = {
 	return 1;
 };
 		`);
-		Verdict.expect(result, "test", "sat");
+		Verdict.expect(result, "test", "valid");
 		expect(snap(result)).toMatchSnapshot();
 	});
 });

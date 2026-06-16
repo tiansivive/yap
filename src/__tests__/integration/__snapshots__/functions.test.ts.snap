@@ -79,6 +79,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Num) -> Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -148,6 +149,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t2: Num) -> Π(t3: Num) -> Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -207,6 +209,7 @@ return main();
 
 [sat]",
     "type": "Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -274,6 +277,7 @@ return main();
 
 [sat]",
     "type": "Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -392,6 +396,7 @@ exports[`Language Tour — Functions & Application > higher-order functions 1`] 
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Π(t2: Num) -> Num) -> Π(t3: Π(t4: Num) -> Num) -> Π(t5: Num) -> Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -509,6 +514,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(x: Num) -> <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add x 1) |]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -626,6 +632,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(x: Num) -> <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add x 5) |]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -743,6 +750,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(x: Num) -> <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$mul x 2) |]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -816,6 +824,7 @@ return main();
 
 [sat]",
     "type": "Π(t5: Num) -> Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -899,6 +908,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Num) -> Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -973,6 +983,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t2: Num) -> Π(t3: String) -> Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -1212,6 +1223,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Num) -> Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1271,6 +1283,7 @@ return main();
 
 [sat]",
     "type": "Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -1492,6 +1505,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t3: Num) -> Num",
+    "validity": "valid",
   },
 ]
 `;

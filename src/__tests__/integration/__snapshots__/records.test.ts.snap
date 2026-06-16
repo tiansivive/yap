@@ -75,6 +75,7 @@ return main();
 
 [sat]",
     "type": "FFI.Indexed Num Num @FFI.defaultArray",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -149,6 +150,7 @@ return main();
 
 [sat]",
     "type": "FFI.Indexed String Num @FFI.defaultHashMap",
+    "validity": "valid",
   },
 ]
 `;
@@ -221,6 +223,7 @@ return main();
 
 [sat]",
     "type": "Schema [ x: Num, y: Num ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -276,6 +279,7 @@ return main();
 
 [sat]",
     "type": "Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -372,6 +376,7 @@ return main();
 
 [sat]",
     "type": "Π(t1: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -437,6 +442,7 @@ return main();
 
 [sat]",
     "type": "Schema [ x: Num ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -510,6 +516,7 @@ return main();
 
 [sat]",
     "type": "Schema [ z: Num, y: Num, x: Num ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -572,6 +579,7 @@ return main();
 
 [sat]",
     "type": "Schema [ x: Num ]",
+    "validity": "valid",
   },
 ]
 `;
@@ -644,6 +652,7 @@ return main();
 
 [sat]",
     "type": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -711,6 +720,7 @@ return main();
 
 [sat]",
     "type": "Σ($sig: [ age: Num, name: String ]) . Schema [ age: Num, name: String ]",
+    "validity": "valid",
   },
 ]
 `;
@@ -793,6 +803,7 @@ return main();
 
 [sat]",
     "type": "Schema [ 1: String, 0: Num ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -860,6 +871,7 @@ return main();
 
 [sat]",
     "type": "Σ($sig: [ 1: String, 0: Num ]) . Schema [ 1: String, 0: Num ]",
+    "validity": "valid",
   },
 ]
 `;

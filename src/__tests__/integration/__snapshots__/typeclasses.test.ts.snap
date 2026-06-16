@@ -116,6 +116,7 @@ return main();
 
 [sat]",
     "type": "Π(t2: Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -247,6 +248,7 @@ return main();
 
 [sat]",
     "type": "Π(t4: Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -348,6 +350,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Σ($sig: [ show: Π(t3: Num) -> String ]) . Schema [ show: Π(t3: Num) -> String ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -510,6 +513,7 @@ return main();
   #1: p1 -> unit: p1",
     "type": "Σ($sig: [ show: Π(t3: Bool) -> String ]) .
   Schema [ show: Π(t3: Bool) -> String ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -592,6 +596,7 @@ return main();
   #1: p1 -> unit: p1",
     "type": "Σ($sig: [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]) .
   Schema [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]",
+    "validity": "valid",
   },
 ]
 `;
@@ -712,6 +717,7 @@ return main();
 
 [sat]",
     "type": "Π(t2: Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -843,6 +849,7 @@ return main();
 
 [sat]",
     "type": "Π(t4: Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -944,6 +951,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Σ($sig: [ show: Π(t3: Num) -> String ]) . Schema [ show: Π(t3: Num) -> String ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1026,6 +1034,7 @@ return main();
   #1: p1 -> unit: p1",
     "type": "Σ($sig: [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]) .
   Schema [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -1368,6 +1377,7 @@ return main();
     Π(eq: Σ($sig: [ eq: Π(t5: t) -> Π(t6: t) -> Bool ]) .
       Schema [ eq: Π(t5: t) -> Π(t6: t) -> Bool ]) =>
       Π(x: t) -> Π(y: t) -> String",
+    "validity": "valid",
   },
   {
     "kind": "using",
@@ -1473,6 +1483,7 @@ return main();
 
 [sat]",
     "type": "String",
+    "validity": "valid",
   },
 ]
 `;
@@ -1593,6 +1604,7 @@ return main();
 
 [sat]",
     "type": "Π(t2: Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1724,6 +1736,7 @@ return main();
 
 [sat]",
     "type": "Π(t4: Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1825,6 +1838,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Σ($sig: [ show: Π(t3: Num) -> String ]) . Schema [ show: Π(t3: Num) -> String ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1907,6 +1921,7 @@ return main();
   #1: p1 -> unit: p1",
     "type": "Σ($sig: [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]) .
   Schema [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -2029,6 +2044,7 @@ return main();
   Π(show: Σ($sig: [ show: Π(t3: t) -> String ]) .
     Schema [ show: Π(t3: t) -> String ]) =>
     Π(x: t) -> String",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -2179,6 +2195,7 @@ return main();
   Π(eq: Σ($sig: [ eq: Π(t5: t) -> Π(t6: t) -> Bool ]) .
     Schema [ eq: Π(t5: t) -> Π(t6: t) -> Bool ]) =>
     Π(x: t) -> Π(y: t) -> Bool",
+    "validity": "valid",
   },
   {
     "kind": "using",
@@ -2265,6 +2282,7 @@ return main();
 
 [sat]",
     "type": "String",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -2351,6 +2369,7 @@ return main();
 
 [sat]",
     "type": "Bool",
+    "validity": "valid",
   },
 ]
 `;

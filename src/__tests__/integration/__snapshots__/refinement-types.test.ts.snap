@@ -76,6 +76,7 @@ return main();
 
 [unsat] core: [#0, #1, #2]",
     "type": "<ω> Num [| λ(v: Num) -> FFI.$gt v 10 |]",
+    "validity": "invalid",
   },
 ]
 `;
@@ -141,6 +142,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "<ω> Num [| λ(v: Num) -> FFI.$lt v 10 |]",
+    "validity": "valid",
   },
 ]
 `;
@@ -197,6 +199,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -248,6 +251,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -308,6 +312,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -368,6 +373,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "<ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -427,6 +433,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]",
+    "validity": "valid",
   },
 ]
 `;
@@ -595,11 +602,12 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "<ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]",
+    "validity": "invalid",
   },
 ]
 `;
 
-exports[`Language Tour — Refinement Types > block-local let obligations expose scoped arithmetic contradiction 1`] = `
+exports[`Language Tour — Refinement Types > block-local let obligations verify through validity discharge 1`] = `
 [
   {
     "codegenJS": "function main() {
@@ -834,6 +842,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Num) -> Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -890,6 +899,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -941,6 +951,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1036,6 +1047,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Π(t2: <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]) -> Num) -> Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1118,6 +1130,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t3: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) -> Num",
+    "validity": "invalid",
   },
   {
     "codegenJS": "function main() {
@@ -1200,6 +1213,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t4: <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]) -> Num",
+    "validity": "invalid",
   },
   {
     "codegenJS": "function main() {
@@ -1273,6 +1287,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1346,6 +1361,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -1548,6 +1564,7 @@ exports[`Language Tour — Refinement Types > dependent record construction 1`] 
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Unit",
+    "validity": "valid",
   },
 ]
 `;
@@ -1765,6 +1782,7 @@ exports[`Language Tour — Refinement Types > dependent record construction reje
 
 [unsat] core: [#0, #1, #2]",
     "type": "Num",
+    "validity": "invalid",
   },
 ]
 `;
@@ -1829,6 +1847,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "<ω> Num [| λ(v: Num) -> FFI.$eq v 1 |]",
+    "validity": "valid",
   },
 ]
 `;
@@ -2077,6 +2096,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -2148,6 +2168,7 @@ return main();
 
 [sat]",
     "type": "Π(t1: Num) -> Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -2226,6 +2247,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t2: Num) -> <ω> Num [| λ(v: Num) -> FFI.$eq v 1 |]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -2308,6 +2330,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(n: <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]) -> Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -2405,6 +2428,7 @@ return main();
   #1: p1 -> unit: p1",
     "type": "Π(n: <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]) ->
   <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -2513,6 +2537,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(n: Num) -> <ω> Num [| λ(o: Num) -> FFI.$eq o (FFI.$add n 1) |]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -2621,6 +2646,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(x: Num) -> <ω> Num [| λ(v: Num) -> FFI.$eq v (FFI.$add x 1) |]",
+    "validity": "valid",
   },
 ]
 `;
@@ -2677,6 +2703,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -2728,6 +2755,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -2837,6 +2865,7 @@ return main();
     "type": "Π(f: Π(t1: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) ->
   <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) ->
   <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -2968,6 +2997,7 @@ return main();
   #1: p1 -> unit: p1",
     "type": "Π(t2: Π(t3: Num) -> <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) ->
   <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]",
+    "validity": "valid",
   },
 ]
 `;
@@ -3081,6 +3111,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(x: Num) -> <ω> Num [| λ(v: Num) -> FFI.$eq v (FFI.$add x 1) |]",
+    "validity": "valid",
   },
 ]
 `;
@@ -3161,6 +3192,7 @@ return main();
 
 [unsat] core: [#0, #1, #2]",
     "type": "<ω> Num [| λ(v: Num) -> FFI.$eq v 1 |]",
+    "validity": "invalid",
   },
   {
     "codegenJS": "function main() {
@@ -3263,6 +3295,7 @@ return main();
 
 [unsat] core: [#0, #1, #2]",
     "type": "<ω> Num [| λ(v: Num) -> FFI.$eq v 0 |]",
+    "validity": "invalid",
   },
   {
     "codegenJS": "function main() {
@@ -3360,6 +3393,7 @@ return main();
 [unsat] core: [#0, #1, #2]",
     "type": "Π(n: <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]) ->
   <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]",
+    "validity": "invalid",
   },
 ]
 `;
@@ -3733,6 +3767,7 @@ return main();
 
 [unsat] core: [#0, #1, #2]",
     "type": "Num",
+    "validity": "invalid",
   },
 ]
 `;
@@ -3955,6 +3990,7 @@ return main();
 
 [sat]",
     "type": "Π(t: Type) -> Π(p: Π(t1: t) -> Π(t2: t) -> Bool) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -4144,6 +4180,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "(OrderedList) Num (λ(x: Num) -> λ(y: Num) -> FFI.$lt x y)",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -4333,6 +4370,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "(OrderedList) Num (λ(x: Num) -> λ(y: Num) -> FFI.$gt x y)",
+    "validity": "valid",
   },
 ]
 `;
@@ -4429,6 +4467,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -4509,6 +4548,7 @@ return main();
   #1: p1 -> unit: p1",
     "type": "Σ($sig: [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ]) .
   Schema [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ]",
+    "validity": "valid",
   },
 ]
 `;
@@ -4565,6 +4605,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -4662,6 +4703,7 @@ return main();
   #1: p1 -> unit: p1",
     "type": "Π(n: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) ->
   <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]",
+    "validity": "valid",
   },
 ]
 `;
@@ -4773,6 +4815,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(p: Π(t1: Num) -> Bool) -> Π(t2: <ω> Num [| λ(v: Num) -> p v |]) -> Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -4886,6 +4929,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -4942,6 +4986,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -4993,6 +5038,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -5075,6 +5121,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) -> Num",
+    "validity": "invalid",
   },
   {
     "codegenJS": "function main() {
@@ -5135,6 +5182,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "<ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -5208,6 +5256,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -5294,6 +5343,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Num) -> <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]",
+    "validity": "invalid",
   },
 ]
 `;

@@ -109,6 +109,7 @@ return main();
 
 [sat]",
     "type": "Π(t2: Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -341,6 +342,7 @@ return main();
 
 [sat]",
     "type": "Π(t3: Π(t4: Type) -> Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -352,7 +354,7 @@ return main();
           | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
           | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
               Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ]",
-    "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+    "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"mapList"}
@@ -678,6 +680,7 @@ return main();
               Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ] -| Γ: a)",
     "solverTrace": "",
     "type": "Π(a: Type) => Π(b: Type) => Π(t8: Π(t9: a) -> b) -> Π(t10: (List) a) -> (List) b",
+    "validity": "",
   },
   {
     "codegenJS": "function main() {
@@ -762,6 +765,7 @@ return main();
   Schema
     [ map: Π(a: Type) =>
         Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: (List) a) -> (List) b ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -1084,6 +1088,7 @@ return main();
       [ map: Π(a: Type) =>
           Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) =>
     Π(a: Type) => Π(b: Type) => Π(t13: Π(t14: a) -> b) -> Π(t15: f a) -> f b",
+    "validity": "valid",
   },
   {
     "kind": "using",
@@ -1414,6 +1419,7 @@ return main();
         [ map: Π(a: Type) =>
             Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: F a) -> F b ]) =>
       Π(t15: F a) -> F String",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1505,6 +1511,7 @@ return main();
 
 [sat]",
     "type": "(List) Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1650,6 +1657,7 @@ return main();
 
 [sat]",
     "type": "(List) String",
+    "validity": "valid",
   },
 ]
 `;
@@ -1759,6 +1767,7 @@ return main();
 
 [sat]",
     "type": "Π(t1: Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1991,6 +2000,7 @@ return main();
 
 [sat]",
     "type": "Π(t2: Π(t3: Type) -> Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -2002,7 +2012,7 @@ return main();
           | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
           | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
               Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ]",
-    "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+    "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"mapList"}
@@ -2328,6 +2338,7 @@ return main();
               Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ] -| Γ: a)",
     "solverTrace": "",
     "type": "Π(a: Type) => Π(b: Type) => Π(t7: Π(t8: a) -> b) -> Π(t9: (List) a) -> (List) b",
+    "validity": "",
   },
   {
     "codegenJS": "function main() {
@@ -2412,6 +2423,7 @@ return main();
   Schema
     [ map: Π(a: Type) =>
         Π(b: Type) => Π(t4: Π(t5: a) -> b) -> Π(t6: (List) a) -> (List) b ]",
+    "validity": "valid",
   },
 ]
 `;

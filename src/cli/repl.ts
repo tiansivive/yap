@@ -35,7 +35,7 @@ import { print as printErl } from "../Codegen/v2/erlang/print";
 import { VerificationServiceV2 } from "../verification/V2/service";
 import { Build } from "../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../verification/solver/ivl/print";
-import { Solver } from "../verification/solver/v2/solver";
+import { Validity } from "../verification/validity";
 
 export type ReplOpts = {
 	codegen: boolean;
@@ -326,23 +326,20 @@ const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, display: Di
 				console.log("-------------------------------------\n");
 			}
 
-			const solveResult = Solver.check(vc);
+			const validity = Validity.check(vc);
 
-			switch (solveResult.tag) {
-				case "sat":
+			match(validity)
+				.with({ tag: "valid" }, () => {
 					console.log("✓ Verified\n");
-					break;
-				case "unsat":
+				})
+				.with({ tag: "invalid" }, () => {
 					console.log("✗ Verification failed");
-					if (solveResult.core.length > 0) {
-						console.log("  Unsat core:", solveResult.core.join(", "));
-					}
 					console.log("");
-					break;
-				case "unknown":
-					console.log(`? Verification inconclusive: ${solveResult.reason}\n`);
-					break;
-			}
+				})
+				.with({ tag: "unknown" }, ({ reason }) => {
+					console.log(`? Verification inconclusive: ${reason}\n`);
+				})
+				.exhaustive();
 		} else {
 			console.warn("Verification error:", EB.V2.display(result.left));
 		}

@@ -131,6 +131,7 @@ exports[`Language Tour — Pattern Matching > list patterns 1`] = `
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: FFI.Indexed Num Num @FFI.defaultArray) -> Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -268,6 +269,7 @@ exports[`Language Tour — Pattern Matching > list patterns 1`] = `
   #1: p1 -> unit: p1",
     "type": "Π(t4: FFI.Indexed Num Num @FFI.defaultArray) ->
   FFI.Indexed Num Num @FFI.defaultArray",
+    "validity": "valid",
   },
 ]
 `;
@@ -418,6 +420,7 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Num) -> Bool",
+    "validity": "valid",
   },
 ]
 `;
@@ -546,6 +549,7 @@ exports[`Language Tour — Pattern Matching > record patterns 1`] = `
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -660,6 +664,7 @@ exports[`Language Tour — Pattern Matching > record patterns 1`] = `
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t3: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
+    "validity": "valid",
   },
 ]
 `;
@@ -769,6 +774,7 @@ return main();
 
 [sat]",
     "type": "Π(t1: Type) -> Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -778,7 +784,7 @@ return main();
       | Variant [ nil: _ | $row_7 ] -> 0
       | Variant [ cons: Struct [ 0: x, 1: xs | $row_12 ] | $row_13 ] ->
           FFI.$add 1 (I6 @a xs)",
-    "error": "Unbound bound variable in synth; Unbound bound variable in synth; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+    "error": "Unbound bound variable in synth; Unbound bound variable in synth; Unbound bound variable in synth; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"length"}
@@ -975,6 +981,7 @@ return main();
           FFI.$add 1 (I6 @a xs) -| Γ: a)",
     "solverTrace": "",
     "type": "Π(a: Type) => Π(t2: (List) a) -> Num",
+    "validity": "",
   },
 ]
 `;
@@ -1066,6 +1073,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "error": "Expected number, got wildcard",
@@ -1218,6 +1226,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "",
@@ -1432,6 +1441,7 @@ return main();
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]) ->
   String",
+    "validity": "valid",
   },
 ]
 `;
@@ -1511,6 +1521,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1571,6 +1582,7 @@ return main();
 
 [sat]",
     "type": "Variant [ green: Unit, yellow: Unit, red: Unit ]",
+    "validity": "valid",
   },
 ]
 `;
@@ -1713,6 +1725,7 @@ return main();
 
 [sat]",
     "type": "Type",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1776,6 +1789,7 @@ return main();
   [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1858,6 +1872,7 @@ return main();
   [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -1940,6 +1955,7 @@ return main();
   [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]",
+    "validity": "valid",
   },
 ]
 `;

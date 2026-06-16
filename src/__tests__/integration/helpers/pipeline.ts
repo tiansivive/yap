@@ -29,8 +29,9 @@ import { Build } from "../../../verification/solver/ivl/build";
 import { Print as IVLPrint } from "../../../verification/solver/ivl/print";
 import { Solver } from "../../../verification/solver/v2/solver";
 import * as Replay from "../../../verification/solver/v2/trace/replay";
+import { Validity } from "../../../verification/validity";
 
-type StageName = "elaborated" | "type" | "normalized" | "ivl" | "solverTrace" | "gram" | "mir" | "codegenJS" | "codegenC" | "codegenErlang";
+type StageName = "elaborated" | "type" | "normalized" | "ivl" | "validity" | "solverTrace" | "gram" | "mir" | "codegenJS" | "codegenC" | "codegenErlang";
 export type StageResults = { readonly [K in StageName]: string };
 
 export type DeclarationResult = {
@@ -84,6 +85,12 @@ const pipeline = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, parentBinders?: Re
 			(a: VerificationArtefacts) => safe(() => IVLPrint.formula(a.vc)),
 		),
 	)(artefacts);
+	const validity = E.chain(
+		O.fold(
+			() => E.right<string, string>(""),
+			(a: VerificationArtefacts) => safe(() => Validity.display(Validity.check(a.vc))),
+		),
+	)(artefacts);
 	const solverTrace = E.chain(
 		O.fold(
 			() => E.right<string, string>(""),
@@ -115,13 +122,14 @@ const pipeline = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, parentBinders?: Re
 	const codegenC = E.chain((m: Module) => safe(() => printC(emitC(m))))(mod);
 	const codegenErlang = E.chain((m: Module) => safe(() => printErl(emitErl(m))))(mod);
 
-	const all = [elaborated, type, normalized, ivl, solverTrace, gram, mir, codegenJS, codegenC, codegenErlang];
+	const all = [elaborated, type, normalized, ivl, validity, solverTrace, gram, mir, codegenJS, codegenC, codegenErlang];
 
 	return toThese(errs(all), {
 		elaborated: get(elaborated),
 		type: get(type),
 		normalized: get(normalized),
 		ivl: get(ivl),
+		validity: get(validity),
 		solverTrace: get(solverTrace),
 		gram: get(gram),
 		mir: get(mir),
@@ -262,6 +270,7 @@ export const snap = (result: ScriptResult) =>
 					elaborated: d.stages.elaborated,
 					normalized: d.stages.normalized,
 					ivl: d.stages.ivl,
+					validity: d.stages.validity,
 					solverTrace: d.stages.solverTrace,
 					gram: d.stages.gram,
 					mir: d.stages.mir,
