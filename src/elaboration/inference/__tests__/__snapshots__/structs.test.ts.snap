@@ -7,10 +7,13 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
       "Num ~~ ?2",
       "?2 ~~ Num",
       "Num ~~ Num",
-      "Num ~~ ?1",
+      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?1",
     ],
     "term": "Struct [ y: FFI.$add :x 2, x: 1 ]",
-    "type": "Schema [ y: Num, x: Num ]",
+    "type": "Schema
+  [ y: <ω> Num [| λ(r: Num) ->
+      (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |],
+    x: Num ]",
   },
 }
 `;
@@ -83,10 +86,140 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
       },
       {
         "left": {
-          "type": "Lit",
+          "modalities": {
+            "liquid": {
+              "binder": {
+                "annotation": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+                "icit": "Explicit",
+                "type": "Lambda",
+                "variable": "r",
+              },
+              "closure": {
+                "ctx": {
+                  "env": [
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "y",
+                      },
+                      "nf": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Num",
+                          "value": 2,
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "y",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "x",
+                      },
+                      "nf": {
+                        "type": "Neutral",
+                        "value": {
+                          "type": "Var",
+                          "variable": {
+                            "name": "x",
+                            "type": "Label",
+                          },
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "x",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                  ],
+                  "implicits": [],
+                  "labels": {},
+                  "metas": {},
+                  "record": {},
+                  "sigma": {},
+                  "zonker": {},
+                },
+                "term": {
+                  "arg": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 1,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "arg": {
+                        "type": "Var",
+                        "variable": {
+                          "index": 2,
+                          "type": "Bound",
+                        },
+                      },
+                      "func": {
+                        "type": "Var",
+                        "variable": {
+                          "name": "$add",
+                          "type": "Foreign",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "App",
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "func": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 0,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "type": "Var",
+                      "variable": {
+                        "name": "$eq",
+                        "type": "Foreign",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "icit": "Explicit",
+                  "type": "App",
+                },
+                "type": "Closure",
+              },
+              "type": "Abs",
+            },
+            "quantity": "Many",
+          },
+          "type": "Modal",
           "value": {
-            "type": "Atom",
-            "value": "Num",
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
         },
         "lvl": 0,
@@ -217,10 +350,140 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
             },
             "type": "extension",
             "value": {
-              "type": "Lit",
+              "modalities": {
+                "liquid": {
+                  "binder": {
+                    "annotation": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Num",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "Lambda",
+                    "variable": "r",
+                  },
+                  "closure": {
+                    "ctx": {
+                      "env": [
+                        {
+                          "name": {
+                            "type": "Pi",
+                            "variable": "y",
+                          },
+                          "nf": {
+                            "type": "Lit",
+                            "value": {
+                              "type": "Num",
+                              "value": 2,
+                            },
+                          },
+                          "type": [
+                            {
+                              "type": "Pi",
+                              "variable": "y",
+                            },
+                            "source",
+                            {},
+                          ],
+                        },
+                        {
+                          "name": {
+                            "type": "Pi",
+                            "variable": "x",
+                          },
+                          "nf": {
+                            "type": "Neutral",
+                            "value": {
+                              "type": "Var",
+                              "variable": {
+                                "name": "x",
+                                "type": "Label",
+                              },
+                            },
+                          },
+                          "type": [
+                            {
+                              "type": "Pi",
+                              "variable": "x",
+                            },
+                            "source",
+                            {},
+                          ],
+                        },
+                      ],
+                      "implicits": [],
+                      "labels": {},
+                      "metas": {},
+                      "record": {},
+                      "sigma": {},
+                      "zonker": {},
+                    },
+                    "term": {
+                      "arg": {
+                        "arg": {
+                          "type": "Var",
+                          "variable": {
+                            "index": 1,
+                            "type": "Bound",
+                          },
+                        },
+                        "func": {
+                          "arg": {
+                            "type": "Var",
+                            "variable": {
+                              "index": 2,
+                              "type": "Bound",
+                            },
+                          },
+                          "func": {
+                            "type": "Var",
+                            "variable": {
+                              "name": "$add",
+                              "type": "Foreign",
+                            },
+                          },
+                          "icit": "Explicit",
+                          "type": "App",
+                        },
+                        "icit": "Explicit",
+                        "type": "App",
+                      },
+                      "func": {
+                        "arg": {
+                          "type": "Var",
+                          "variable": {
+                            "index": 0,
+                            "type": "Bound",
+                          },
+                        },
+                        "func": {
+                          "type": "Var",
+                          "variable": {
+                            "name": "$eq",
+                            "type": "Foreign",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "type": "App",
+                      },
+                      "icit": "Explicit",
+                      "type": "App",
+                    },
+                    "type": "Closure",
+                  },
+                  "type": "Abs",
+                },
+                "quantity": "Many",
+              },
+              "type": "Modal",
               "value": {
-                "type": "Atom",
-                "value": "Num",
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
               },
             },
           },
@@ -248,11 +511,14 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
     "constraints": [
       "?1 ~~ Num",
       "Num ~~ Num",
-      "Num ~~ ?2",
+      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?2",
       "Num ~~ ?1",
     ],
     "term": "Struct [ x: 1, y: FFI.$add :x 2 ]",
-    "type": "Schema [ x: Num, y: Num ]",
+    "type": "Schema
+  [ x: Num,
+    y: <ω> Num [| λ(r: Num) ->
+      (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ]",
   },
 }
 `;
@@ -303,10 +569,140 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
       },
       {
         "left": {
-          "type": "Lit",
+          "modalities": {
+            "liquid": {
+              "binder": {
+                "annotation": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+                "icit": "Explicit",
+                "type": "Lambda",
+                "variable": "r",
+              },
+              "closure": {
+                "ctx": {
+                  "env": [
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "y",
+                      },
+                      "nf": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Num",
+                          "value": 2,
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "y",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "x",
+                      },
+                      "nf": {
+                        "type": "Neutral",
+                        "value": {
+                          "type": "Var",
+                          "variable": {
+                            "name": "x",
+                            "type": "Label",
+                          },
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "x",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                  ],
+                  "implicits": [],
+                  "labels": {},
+                  "metas": {},
+                  "record": {},
+                  "sigma": {},
+                  "zonker": {},
+                },
+                "term": {
+                  "arg": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 1,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "arg": {
+                        "type": "Var",
+                        "variable": {
+                          "index": 2,
+                          "type": "Bound",
+                        },
+                      },
+                      "func": {
+                        "type": "Var",
+                        "variable": {
+                          "name": "$add",
+                          "type": "Foreign",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "App",
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "func": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 0,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "type": "Var",
+                      "variable": {
+                        "name": "$eq",
+                        "type": "Foreign",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "icit": "Explicit",
+                  "type": "App",
+                },
+                "type": "Closure",
+              },
+              "type": "Abs",
+            },
+            "quantity": "Many",
+          },
+          "type": "Modal",
           "value": {
-            "type": "Atom",
-            "value": "Num",
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
         },
         "lvl": 0,
@@ -450,10 +846,140 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
               },
               "type": "extension",
               "value": {
-                "type": "Lit",
+                "modalities": {
+                  "liquid": {
+                    "binder": {
+                      "annotation": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Atom",
+                          "value": "Num",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "Lambda",
+                      "variable": "r",
+                    },
+                    "closure": {
+                      "ctx": {
+                        "env": [
+                          {
+                            "name": {
+                              "type": "Pi",
+                              "variable": "y",
+                            },
+                            "nf": {
+                              "type": "Lit",
+                              "value": {
+                                "type": "Num",
+                                "value": 2,
+                              },
+                            },
+                            "type": [
+                              {
+                                "type": "Pi",
+                                "variable": "y",
+                              },
+                              "source",
+                              {},
+                            ],
+                          },
+                          {
+                            "name": {
+                              "type": "Pi",
+                              "variable": "x",
+                            },
+                            "nf": {
+                              "type": "Neutral",
+                              "value": {
+                                "type": "Var",
+                                "variable": {
+                                  "name": "x",
+                                  "type": "Label",
+                                },
+                              },
+                            },
+                            "type": [
+                              {
+                                "type": "Pi",
+                                "variable": "x",
+                              },
+                              "source",
+                              {},
+                            ],
+                          },
+                        ],
+                        "implicits": [],
+                        "labels": {},
+                        "metas": {},
+                        "record": {},
+                        "sigma": {},
+                        "zonker": {},
+                      },
+                      "term": {
+                        "arg": {
+                          "arg": {
+                            "type": "Var",
+                            "variable": {
+                              "index": 1,
+                              "type": "Bound",
+                            },
+                          },
+                          "func": {
+                            "arg": {
+                              "type": "Var",
+                              "variable": {
+                                "index": 2,
+                                "type": "Bound",
+                              },
+                            },
+                            "func": {
+                              "type": "Var",
+                              "variable": {
+                                "name": "$add",
+                                "type": "Foreign",
+                              },
+                            },
+                            "icit": "Explicit",
+                            "type": "App",
+                          },
+                          "icit": "Explicit",
+                          "type": "App",
+                        },
+                        "func": {
+                          "arg": {
+                            "type": "Var",
+                            "variable": {
+                              "index": 0,
+                              "type": "Bound",
+                            },
+                          },
+                          "func": {
+                            "type": "Var",
+                            "variable": {
+                              "name": "$eq",
+                              "type": "Foreign",
+                            },
+                          },
+                          "icit": "Explicit",
+                          "type": "App",
+                        },
+                        "icit": "Explicit",
+                        "type": "App",
+                      },
+                      "type": "Closure",
+                    },
+                    "type": "Abs",
+                  },
+                  "quantity": "Many",
+                },
+                "type": "Modal",
                 "value": {
-                  "type": "Atom",
-                  "value": "Num",
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
                 },
               },
             },
@@ -490,13 +1016,17 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
     "constraints": [
       "?1 ~~ Num",
       "Num ~~ Num",
-      "Num ~~ ?2",
+      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?2",
       "?2 ~~ Num",
       "Num ~~ Num",
-      "Num ~~ ?1",
+      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?1",
     ],
     "term": "Struct [ a: FFI.$add :b 1, b: FFI.$add :a 1 ]",
-    "type": "Schema [ a: Num, b: Num ]",
+    "type": "Schema
+  [ a: <ω> Num [| λ(r: Num) ->
+      (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |],
+    b: <ω> Num [| λ(r: Num) ->
+      (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ]",
   },
 }
 `;
@@ -547,10 +1077,140 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
       },
       {
         "left": {
-          "type": "Lit",
+          "modalities": {
+            "liquid": {
+              "binder": {
+                "annotation": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+                "icit": "Explicit",
+                "type": "Lambda",
+                "variable": "r",
+              },
+              "closure": {
+                "ctx": {
+                  "env": [
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "y",
+                      },
+                      "nf": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Num",
+                          "value": 1,
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "y",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "x",
+                      },
+                      "nf": {
+                        "type": "Neutral",
+                        "value": {
+                          "type": "Var",
+                          "variable": {
+                            "name": "a",
+                            "type": "Label",
+                          },
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "x",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                  ],
+                  "implicits": [],
+                  "labels": {},
+                  "metas": {},
+                  "record": {},
+                  "sigma": {},
+                  "zonker": {},
+                },
+                "term": {
+                  "arg": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 1,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "arg": {
+                        "type": "Var",
+                        "variable": {
+                          "index": 2,
+                          "type": "Bound",
+                        },
+                      },
+                      "func": {
+                        "type": "Var",
+                        "variable": {
+                          "name": "$add",
+                          "type": "Foreign",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "App",
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "func": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 0,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "type": "Var",
+                      "variable": {
+                        "name": "$eq",
+                        "type": "Foreign",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "icit": "Explicit",
+                  "type": "App",
+                },
+                "type": "Closure",
+              },
+              "type": "Abs",
+            },
+            "quantity": "Many",
+          },
+          "type": "Modal",
           "value": {
-            "type": "Atom",
-            "value": "Num",
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
         },
         "lvl": 0,
@@ -609,10 +1269,140 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
       },
       {
         "left": {
-          "type": "Lit",
+          "modalities": {
+            "liquid": {
+              "binder": {
+                "annotation": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+                "icit": "Explicit",
+                "type": "Lambda",
+                "variable": "r",
+              },
+              "closure": {
+                "ctx": {
+                  "env": [
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "y",
+                      },
+                      "nf": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Num",
+                          "value": 1,
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "y",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "x",
+                      },
+                      "nf": {
+                        "type": "Neutral",
+                        "value": {
+                          "type": "Var",
+                          "variable": {
+                            "name": "b",
+                            "type": "Label",
+                          },
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "x",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                  ],
+                  "implicits": [],
+                  "labels": {},
+                  "metas": {},
+                  "record": {},
+                  "sigma": {},
+                  "zonker": {},
+                },
+                "term": {
+                  "arg": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 1,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "arg": {
+                        "type": "Var",
+                        "variable": {
+                          "index": 2,
+                          "type": "Bound",
+                        },
+                      },
+                      "func": {
+                        "type": "Var",
+                        "variable": {
+                          "name": "$add",
+                          "type": "Foreign",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "App",
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "func": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 0,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "type": "Var",
+                      "variable": {
+                        "name": "$eq",
+                        "type": "Foreign",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "icit": "Explicit",
+                  "type": "App",
+                },
+                "type": "Closure",
+              },
+              "type": "Abs",
+            },
+            "quantity": "Many",
+          },
+          "type": "Modal",
           "value": {
-            "type": "Atom",
-            "value": "Num",
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
         },
         "lvl": 0,
@@ -756,19 +1546,279 @@ exports[`Inference: Structs > dependent structs > mutually dependent fields: { a
               },
               "type": "extension",
               "value": {
-                "type": "Lit",
+                "modalities": {
+                  "liquid": {
+                    "binder": {
+                      "annotation": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Atom",
+                          "value": "Num",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "Lambda",
+                      "variable": "r",
+                    },
+                    "closure": {
+                      "ctx": {
+                        "env": [
+                          {
+                            "name": {
+                              "type": "Pi",
+                              "variable": "y",
+                            },
+                            "nf": {
+                              "type": "Lit",
+                              "value": {
+                                "type": "Num",
+                                "value": 1,
+                              },
+                            },
+                            "type": [
+                              {
+                                "type": "Pi",
+                                "variable": "y",
+                              },
+                              "source",
+                              {},
+                            ],
+                          },
+                          {
+                            "name": {
+                              "type": "Pi",
+                              "variable": "x",
+                            },
+                            "nf": {
+                              "type": "Neutral",
+                              "value": {
+                                "type": "Var",
+                                "variable": {
+                                  "name": "a",
+                                  "type": "Label",
+                                },
+                              },
+                            },
+                            "type": [
+                              {
+                                "type": "Pi",
+                                "variable": "x",
+                              },
+                              "source",
+                              {},
+                            ],
+                          },
+                        ],
+                        "implicits": [],
+                        "labels": {},
+                        "metas": {},
+                        "record": {},
+                        "sigma": {},
+                        "zonker": {},
+                      },
+                      "term": {
+                        "arg": {
+                          "arg": {
+                            "type": "Var",
+                            "variable": {
+                              "index": 1,
+                              "type": "Bound",
+                            },
+                          },
+                          "func": {
+                            "arg": {
+                              "type": "Var",
+                              "variable": {
+                                "index": 2,
+                                "type": "Bound",
+                              },
+                            },
+                            "func": {
+                              "type": "Var",
+                              "variable": {
+                                "name": "$add",
+                                "type": "Foreign",
+                              },
+                            },
+                            "icit": "Explicit",
+                            "type": "App",
+                          },
+                          "icit": "Explicit",
+                          "type": "App",
+                        },
+                        "func": {
+                          "arg": {
+                            "type": "Var",
+                            "variable": {
+                              "index": 0,
+                              "type": "Bound",
+                            },
+                          },
+                          "func": {
+                            "type": "Var",
+                            "variable": {
+                              "name": "$eq",
+                              "type": "Foreign",
+                            },
+                          },
+                          "icit": "Explicit",
+                          "type": "App",
+                        },
+                        "icit": "Explicit",
+                        "type": "App",
+                      },
+                      "type": "Closure",
+                    },
+                    "type": "Abs",
+                  },
+                  "quantity": "Many",
+                },
+                "type": "Modal",
                 "value": {
-                  "type": "Atom",
-                  "value": "Num",
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
                 },
               },
             },
             "type": "extension",
             "value": {
-              "type": "Lit",
+              "modalities": {
+                "liquid": {
+                  "binder": {
+                    "annotation": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Num",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "Lambda",
+                    "variable": "r",
+                  },
+                  "closure": {
+                    "ctx": {
+                      "env": [
+                        {
+                          "name": {
+                            "type": "Pi",
+                            "variable": "y",
+                          },
+                          "nf": {
+                            "type": "Lit",
+                            "value": {
+                              "type": "Num",
+                              "value": 1,
+                            },
+                          },
+                          "type": [
+                            {
+                              "type": "Pi",
+                              "variable": "y",
+                            },
+                            "source",
+                            {},
+                          ],
+                        },
+                        {
+                          "name": {
+                            "type": "Pi",
+                            "variable": "x",
+                          },
+                          "nf": {
+                            "type": "Neutral",
+                            "value": {
+                              "type": "Var",
+                              "variable": {
+                                "name": "b",
+                                "type": "Label",
+                              },
+                            },
+                          },
+                          "type": [
+                            {
+                              "type": "Pi",
+                              "variable": "x",
+                            },
+                            "source",
+                            {},
+                          ],
+                        },
+                      ],
+                      "implicits": [],
+                      "labels": {},
+                      "metas": {},
+                      "record": {},
+                      "sigma": {},
+                      "zonker": {},
+                    },
+                    "term": {
+                      "arg": {
+                        "arg": {
+                          "type": "Var",
+                          "variable": {
+                            "index": 1,
+                            "type": "Bound",
+                          },
+                        },
+                        "func": {
+                          "arg": {
+                            "type": "Var",
+                            "variable": {
+                              "index": 2,
+                              "type": "Bound",
+                            },
+                          },
+                          "func": {
+                            "type": "Var",
+                            "variable": {
+                              "name": "$add",
+                              "type": "Foreign",
+                            },
+                          },
+                          "icit": "Explicit",
+                          "type": "App",
+                        },
+                        "icit": "Explicit",
+                        "type": "App",
+                      },
+                      "func": {
+                        "arg": {
+                          "type": "Var",
+                          "variable": {
+                            "index": 0,
+                            "type": "Bound",
+                          },
+                        },
+                        "func": {
+                          "type": "Var",
+                          "variable": {
+                            "name": "$eq",
+                            "type": "Foreign",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "type": "App",
+                      },
+                      "icit": "Explicit",
+                      "type": "App",
+                    },
+                    "type": "Closure",
+                  },
+                  "type": "Abs",
+                },
+                "quantity": "Many",
+              },
+              "type": "Modal",
               "value": {
-                "type": "Atom",
-                "value": "Num",
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
               },
             },
           },
@@ -797,12 +1847,16 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
       "Schema [ y: ?5 | ?6 ] ~~ ?1",
       "?5 ~~ Num",
       "Num ~~ Num",
-      "Num ~~ ?4",
+      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$div x y) -| Γ: r; y; x) |] ~~ ?4",
       "Schema [ x: ?7 | ?8 ] ~~ ?1",
       "?7 ~~ Num",
       "Num ~~ Num",
-      "Num ~~ ?3",
-      "Schema [ a: Num, b: Num ] ~~ ?2",
+      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$div x y) -| Γ: r; y; x) |] ~~ ?3",
+      "Schema
+  [ a: <ω> Num [| λ(r: Num) ->
+      (closure: FFI.$eq r (FFI.$div x y) -| Γ: r; y; x) |],
+    b: <ω> Num [| λ(r: Num) ->
+      (closure: FFI.$eq r (FFI.$div x y) -| Γ: r; y; x) |] ] ~~ ?2",
       "Num ~~ ?10",
       "Num ~~ ?9",
       "Schema [ x: Num, y: Num ] ~~ ?1",
@@ -810,7 +1864,13 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
     "term": "Struct
   [ point: Struct [ x: 1, y: 2 ],
     halved: Struct [ a: FFI.$div (:point).x 2, b: FFI.$div (:point).y 2 ] ]",
-    "type": "Schema [ point: Schema [ x: Num, y: Num ], halved: Schema [ a: Num, b: Num ] ]",
+    "type": "Schema
+  [ point: Schema [ x: Num, y: Num ],
+    halved: Schema
+      [ a: <ω> Num [| λ(r: Num) ->
+          (closure: FFI.$eq r (FFI.$div x y) -| Γ: r; y; x) |],
+        b: <ω> Num [| λ(r: Num) ->
+          (closure: FFI.$eq r (FFI.$div x y) -| Γ: r; y; x) |] ] ]",
   },
 }
 `;
@@ -910,10 +1970,279 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
       },
       {
         "left": {
-          "type": "Lit",
+          "modalities": {
+            "liquid": {
+              "binder": {
+                "annotation": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+                "icit": "Explicit",
+                "type": "Lambda",
+                "variable": "r",
+              },
+              "closure": {
+                "ctx": {
+                  "env": [
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "y",
+                      },
+                      "nf": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Num",
+                          "value": 2,
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "y",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "x",
+                      },
+                      "nf": {
+                        "type": "Neutral",
+                        "value": {
+                          "arg": {
+                            "type": "Neutral",
+                            "value": {
+                              "type": "Var",
+                              "variable": {
+                                "name": "point",
+                                "type": "Label",
+                              },
+                            },
+                          },
+                          "func": {
+                            "binder": {
+                              "annotation": {
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Any",
+                                },
+                              },
+                              "icit": "Explicit",
+                              "type": "Lambda",
+                              "variable": "$proj_y",
+                            },
+                            "closure": {
+                              "ctx": {
+                                "env": [],
+                                "implicits": [],
+                                "labels": {
+                                  "a": {
+                                    "type": "Neutral",
+                                    "value": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 0,
+                                        "type": "Meta",
+                                        "val": 3,
+                                      },
+                                    },
+                                  },
+                                  "b": {
+                                    "type": "Neutral",
+                                    "value": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 0,
+                                        "type": "Meta",
+                                        "val": 4,
+                                      },
+                                    },
+                                  },
+                                  "halved": {
+                                    "type": "Neutral",
+                                    "value": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 0,
+                                        "type": "Meta",
+                                        "val": 2,
+                                      },
+                                    },
+                                  },
+                                  "point": {
+                                    "type": "Neutral",
+                                    "value": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 0,
+                                        "type": "Meta",
+                                        "val": 1,
+                                      },
+                                    },
+                                  },
+                                },
+                                "metas": {},
+                                "record": {},
+                                "sigma": {
+                                  "a": {
+                                    "value": {
+                                      "type": "Neutral",
+                                      "value": {
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "a",
+                                          "type": "Label",
+                                        },
+                                      },
+                                    },
+                                  },
+                                  "b": {
+                                    "value": {
+                                      "type": "Neutral",
+                                      "value": {
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "b",
+                                          "type": "Label",
+                                        },
+                                      },
+                                    },
+                                  },
+                                  "halved": {
+                                    "value": {
+                                      "type": "Neutral",
+                                      "value": {
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "halved",
+                                          "type": "Label",
+                                        },
+                                      },
+                                    },
+                                  },
+                                  "point": {
+                                    "value": {
+                                      "type": "Neutral",
+                                      "value": {
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "point",
+                                          "type": "Label",
+                                        },
+                                      },
+                                    },
+                                  },
+                                },
+                                "zonker": {},
+                              },
+                              "term": {
+                                "label": "y",
+                                "term": {
+                                  "type": "Var",
+                                  "variable": {
+                                    "index": 0,
+                                    "type": "Bound",
+                                  },
+                                },
+                                "type": "Proj",
+                              },
+                              "type": "Closure",
+                            },
+                            "type": "Abs",
+                          },
+                          "icit": "Explicit",
+                          "type": "App",
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "x",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                  ],
+                  "implicits": [],
+                  "labels": {},
+                  "metas": {},
+                  "record": {},
+                  "sigma": {},
+                  "zonker": {},
+                },
+                "term": {
+                  "arg": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 1,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "arg": {
+                        "type": "Var",
+                        "variable": {
+                          "index": 2,
+                          "type": "Bound",
+                        },
+                      },
+                      "func": {
+                        "type": "Var",
+                        "variable": {
+                          "name": "$div",
+                          "type": "Foreign",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "App",
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "func": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 0,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "type": "Var",
+                      "variable": {
+                        "name": "$eq",
+                        "type": "Foreign",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "icit": "Explicit",
+                  "type": "App",
+                },
+                "type": "Closure",
+              },
+              "type": "Abs",
+            },
+            "quantity": "Many",
+          },
+          "type": "Modal",
           "value": {
-            "type": "Atom",
-            "value": "Num",
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
         },
         "lvl": 0,
@@ -1021,10 +2350,279 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
       },
       {
         "left": {
-          "type": "Lit",
+          "modalities": {
+            "liquid": {
+              "binder": {
+                "annotation": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+                "icit": "Explicit",
+                "type": "Lambda",
+                "variable": "r",
+              },
+              "closure": {
+                "ctx": {
+                  "env": [
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "y",
+                      },
+                      "nf": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Num",
+                          "value": 2,
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "y",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "x",
+                      },
+                      "nf": {
+                        "type": "Neutral",
+                        "value": {
+                          "arg": {
+                            "type": "Neutral",
+                            "value": {
+                              "type": "Var",
+                              "variable": {
+                                "name": "point",
+                                "type": "Label",
+                              },
+                            },
+                          },
+                          "func": {
+                            "binder": {
+                              "annotation": {
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Any",
+                                },
+                              },
+                              "icit": "Explicit",
+                              "type": "Lambda",
+                              "variable": "$proj_x",
+                            },
+                            "closure": {
+                              "ctx": {
+                                "env": [],
+                                "implicits": [],
+                                "labels": {
+                                  "a": {
+                                    "type": "Neutral",
+                                    "value": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 0,
+                                        "type": "Meta",
+                                        "val": 3,
+                                      },
+                                    },
+                                  },
+                                  "b": {
+                                    "type": "Neutral",
+                                    "value": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 0,
+                                        "type": "Meta",
+                                        "val": 4,
+                                      },
+                                    },
+                                  },
+                                  "halved": {
+                                    "type": "Neutral",
+                                    "value": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 0,
+                                        "type": "Meta",
+                                        "val": 2,
+                                      },
+                                    },
+                                  },
+                                  "point": {
+                                    "type": "Neutral",
+                                    "value": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "lvl": 0,
+                                        "type": "Meta",
+                                        "val": 1,
+                                      },
+                                    },
+                                  },
+                                },
+                                "metas": {},
+                                "record": {},
+                                "sigma": {
+                                  "a": {
+                                    "value": {
+                                      "type": "Neutral",
+                                      "value": {
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "a",
+                                          "type": "Label",
+                                        },
+                                      },
+                                    },
+                                  },
+                                  "b": {
+                                    "value": {
+                                      "type": "Neutral",
+                                      "value": {
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "b",
+                                          "type": "Label",
+                                        },
+                                      },
+                                    },
+                                  },
+                                  "halved": {
+                                    "value": {
+                                      "type": "Neutral",
+                                      "value": {
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "halved",
+                                          "type": "Label",
+                                        },
+                                      },
+                                    },
+                                  },
+                                  "point": {
+                                    "value": {
+                                      "type": "Neutral",
+                                      "value": {
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "point",
+                                          "type": "Label",
+                                        },
+                                      },
+                                    },
+                                  },
+                                },
+                                "zonker": {},
+                              },
+                              "term": {
+                                "label": "x",
+                                "term": {
+                                  "type": "Var",
+                                  "variable": {
+                                    "index": 0,
+                                    "type": "Bound",
+                                  },
+                                },
+                                "type": "Proj",
+                              },
+                              "type": "Closure",
+                            },
+                            "type": "Abs",
+                          },
+                          "icit": "Explicit",
+                          "type": "App",
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "x",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                  ],
+                  "implicits": [],
+                  "labels": {},
+                  "metas": {},
+                  "record": {},
+                  "sigma": {},
+                  "zonker": {},
+                },
+                "term": {
+                  "arg": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 1,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "arg": {
+                        "type": "Var",
+                        "variable": {
+                          "index": 2,
+                          "type": "Bound",
+                        },
+                      },
+                      "func": {
+                        "type": "Var",
+                        "variable": {
+                          "name": "$div",
+                          "type": "Foreign",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "App",
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "func": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 0,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "type": "Var",
+                      "variable": {
+                        "name": "$eq",
+                        "type": "Foreign",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "icit": "Explicit",
+                  "type": "App",
+                },
+                "type": "Closure",
+              },
+              "type": "Abs",
+            },
+            "quantity": "Many",
+          },
+          "type": "Modal",
           "value": {
-            "type": "Atom",
-            "value": "Num",
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
         },
         "lvl": 0,
@@ -1055,19 +2653,557 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                   },
                   "type": "extension",
                   "value": {
-                    "type": "Lit",
+                    "modalities": {
+                      "liquid": {
+                        "binder": {
+                          "annotation": {
+                            "type": "Lit",
+                            "value": {
+                              "type": "Atom",
+                              "value": "Num",
+                            },
+                          },
+                          "icit": "Explicit",
+                          "type": "Lambda",
+                          "variable": "r",
+                        },
+                        "closure": {
+                          "ctx": {
+                            "env": [
+                              {
+                                "name": {
+                                  "type": "Pi",
+                                  "variable": "y",
+                                },
+                                "nf": {
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Num",
+                                    "value": 2,
+                                  },
+                                },
+                                "type": [
+                                  {
+                                    "type": "Pi",
+                                    "variable": "y",
+                                  },
+                                  "source",
+                                  {},
+                                ],
+                              },
+                              {
+                                "name": {
+                                  "type": "Pi",
+                                  "variable": "x",
+                                },
+                                "nf": {
+                                  "type": "Neutral",
+                                  "value": {
+                                    "arg": {
+                                      "type": "Neutral",
+                                      "value": {
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "point",
+                                          "type": "Label",
+                                        },
+                                      },
+                                    },
+                                    "func": {
+                                      "binder": {
+                                        "annotation": {
+                                          "type": "Lit",
+                                          "value": {
+                                            "type": "Atom",
+                                            "value": "Any",
+                                          },
+                                        },
+                                        "icit": "Explicit",
+                                        "type": "Lambda",
+                                        "variable": "$proj_y",
+                                      },
+                                      "closure": {
+                                        "ctx": {
+                                          "env": [],
+                                          "implicits": [],
+                                          "labels": {
+                                            "a": {
+                                              "type": "Neutral",
+                                              "value": {
+                                                "type": "Var",
+                                                "variable": {
+                                                  "lvl": 0,
+                                                  "type": "Meta",
+                                                  "val": 3,
+                                                },
+                                              },
+                                            },
+                                            "b": {
+                                              "type": "Neutral",
+                                              "value": {
+                                                "type": "Var",
+                                                "variable": {
+                                                  "lvl": 0,
+                                                  "type": "Meta",
+                                                  "val": 4,
+                                                },
+                                              },
+                                            },
+                                            "halved": {
+                                              "type": "Neutral",
+                                              "value": {
+                                                "type": "Var",
+                                                "variable": {
+                                                  "lvl": 0,
+                                                  "type": "Meta",
+                                                  "val": 2,
+                                                },
+                                              },
+                                            },
+                                            "point": {
+                                              "type": "Neutral",
+                                              "value": {
+                                                "type": "Var",
+                                                "variable": {
+                                                  "lvl": 0,
+                                                  "type": "Meta",
+                                                  "val": 1,
+                                                },
+                                              },
+                                            },
+                                          },
+                                          "metas": {},
+                                          "record": {},
+                                          "sigma": {
+                                            "a": {
+                                              "value": {
+                                                "type": "Neutral",
+                                                "value": {
+                                                  "type": "Var",
+                                                  "variable": {
+                                                    "name": "a",
+                                                    "type": "Label",
+                                                  },
+                                                },
+                                              },
+                                            },
+                                            "b": {
+                                              "value": {
+                                                "type": "Neutral",
+                                                "value": {
+                                                  "type": "Var",
+                                                  "variable": {
+                                                    "name": "b",
+                                                    "type": "Label",
+                                                  },
+                                                },
+                                              },
+                                            },
+                                            "halved": {
+                                              "value": {
+                                                "type": "Neutral",
+                                                "value": {
+                                                  "type": "Var",
+                                                  "variable": {
+                                                    "name": "halved",
+                                                    "type": "Label",
+                                                  },
+                                                },
+                                              },
+                                            },
+                                            "point": {
+                                              "value": {
+                                                "type": "Neutral",
+                                                "value": {
+                                                  "type": "Var",
+                                                  "variable": {
+                                                    "name": "point",
+                                                    "type": "Label",
+                                                  },
+                                                },
+                                              },
+                                            },
+                                          },
+                                          "zonker": {},
+                                        },
+                                        "term": {
+                                          "label": "y",
+                                          "term": {
+                                            "type": "Var",
+                                            "variable": {
+                                              "index": 0,
+                                              "type": "Bound",
+                                            },
+                                          },
+                                          "type": "Proj",
+                                        },
+                                        "type": "Closure",
+                                      },
+                                      "type": "Abs",
+                                    },
+                                    "icit": "Explicit",
+                                    "type": "App",
+                                  },
+                                },
+                                "type": [
+                                  {
+                                    "type": "Pi",
+                                    "variable": "x",
+                                  },
+                                  "source",
+                                  {},
+                                ],
+                              },
+                            ],
+                            "implicits": [],
+                            "labels": {},
+                            "metas": {},
+                            "record": {},
+                            "sigma": {},
+                            "zonker": {},
+                          },
+                          "term": {
+                            "arg": {
+                              "arg": {
+                                "type": "Var",
+                                "variable": {
+                                  "index": 1,
+                                  "type": "Bound",
+                                },
+                              },
+                              "func": {
+                                "arg": {
+                                  "type": "Var",
+                                  "variable": {
+                                    "index": 2,
+                                    "type": "Bound",
+                                  },
+                                },
+                                "func": {
+                                  "type": "Var",
+                                  "variable": {
+                                    "name": "$div",
+                                    "type": "Foreign",
+                                  },
+                                },
+                                "icit": "Explicit",
+                                "type": "App",
+                              },
+                              "icit": "Explicit",
+                              "type": "App",
+                            },
+                            "func": {
+                              "arg": {
+                                "type": "Var",
+                                "variable": {
+                                  "index": 0,
+                                  "type": "Bound",
+                                },
+                              },
+                              "func": {
+                                "type": "Var",
+                                "variable": {
+                                  "name": "$eq",
+                                  "type": "Foreign",
+                                },
+                              },
+                              "icit": "Explicit",
+                              "type": "App",
+                            },
+                            "icit": "Explicit",
+                            "type": "App",
+                          },
+                          "type": "Closure",
+                        },
+                        "type": "Abs",
+                      },
+                      "quantity": "Many",
+                    },
+                    "type": "Modal",
                     "value": {
-                      "type": "Atom",
-                      "value": "Num",
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Num",
+                      },
                     },
                   },
                 },
                 "type": "extension",
                 "value": {
-                  "type": "Lit",
+                  "modalities": {
+                    "liquid": {
+                      "binder": {
+                        "annotation": {
+                          "type": "Lit",
+                          "value": {
+                            "type": "Atom",
+                            "value": "Num",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "type": "Lambda",
+                        "variable": "r",
+                      },
+                      "closure": {
+                        "ctx": {
+                          "env": [
+                            {
+                              "name": {
+                                "type": "Pi",
+                                "variable": "y",
+                              },
+                              "nf": {
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Num",
+                                  "value": 2,
+                                },
+                              },
+                              "type": [
+                                {
+                                  "type": "Pi",
+                                  "variable": "y",
+                                },
+                                "source",
+                                {},
+                              ],
+                            },
+                            {
+                              "name": {
+                                "type": "Pi",
+                                "variable": "x",
+                              },
+                              "nf": {
+                                "type": "Neutral",
+                                "value": {
+                                  "arg": {
+                                    "type": "Neutral",
+                                    "value": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "name": "point",
+                                        "type": "Label",
+                                      },
+                                    },
+                                  },
+                                  "func": {
+                                    "binder": {
+                                      "annotation": {
+                                        "type": "Lit",
+                                        "value": {
+                                          "type": "Atom",
+                                          "value": "Any",
+                                        },
+                                      },
+                                      "icit": "Explicit",
+                                      "type": "Lambda",
+                                      "variable": "$proj_x",
+                                    },
+                                    "closure": {
+                                      "ctx": {
+                                        "env": [],
+                                        "implicits": [],
+                                        "labels": {
+                                          "a": {
+                                            "type": "Neutral",
+                                            "value": {
+                                              "type": "Var",
+                                              "variable": {
+                                                "lvl": 0,
+                                                "type": "Meta",
+                                                "val": 3,
+                                              },
+                                            },
+                                          },
+                                          "b": {
+                                            "type": "Neutral",
+                                            "value": {
+                                              "type": "Var",
+                                              "variable": {
+                                                "lvl": 0,
+                                                "type": "Meta",
+                                                "val": 4,
+                                              },
+                                            },
+                                          },
+                                          "halved": {
+                                            "type": "Neutral",
+                                            "value": {
+                                              "type": "Var",
+                                              "variable": {
+                                                "lvl": 0,
+                                                "type": "Meta",
+                                                "val": 2,
+                                              },
+                                            },
+                                          },
+                                          "point": {
+                                            "type": "Neutral",
+                                            "value": {
+                                              "type": "Var",
+                                              "variable": {
+                                                "lvl": 0,
+                                                "type": "Meta",
+                                                "val": 1,
+                                              },
+                                            },
+                                          },
+                                        },
+                                        "metas": {},
+                                        "record": {},
+                                        "sigma": {
+                                          "a": {
+                                            "value": {
+                                              "type": "Neutral",
+                                              "value": {
+                                                "type": "Var",
+                                                "variable": {
+                                                  "name": "a",
+                                                  "type": "Label",
+                                                },
+                                              },
+                                            },
+                                          },
+                                          "b": {
+                                            "value": {
+                                              "type": "Neutral",
+                                              "value": {
+                                                "type": "Var",
+                                                "variable": {
+                                                  "name": "b",
+                                                  "type": "Label",
+                                                },
+                                              },
+                                            },
+                                          },
+                                          "halved": {
+                                            "value": {
+                                              "type": "Neutral",
+                                              "value": {
+                                                "type": "Var",
+                                                "variable": {
+                                                  "name": "halved",
+                                                  "type": "Label",
+                                                },
+                                              },
+                                            },
+                                          },
+                                          "point": {
+                                            "value": {
+                                              "type": "Neutral",
+                                              "value": {
+                                                "type": "Var",
+                                                "variable": {
+                                                  "name": "point",
+                                                  "type": "Label",
+                                                },
+                                              },
+                                            },
+                                          },
+                                        },
+                                        "zonker": {},
+                                      },
+                                      "term": {
+                                        "label": "x",
+                                        "term": {
+                                          "type": "Var",
+                                          "variable": {
+                                            "index": 0,
+                                            "type": "Bound",
+                                          },
+                                        },
+                                        "type": "Proj",
+                                      },
+                                      "type": "Closure",
+                                    },
+                                    "type": "Abs",
+                                  },
+                                  "icit": "Explicit",
+                                  "type": "App",
+                                },
+                              },
+                              "type": [
+                                {
+                                  "type": "Pi",
+                                  "variable": "x",
+                                },
+                                "source",
+                                {},
+                              ],
+                            },
+                          ],
+                          "implicits": [],
+                          "labels": {},
+                          "metas": {},
+                          "record": {},
+                          "sigma": {},
+                          "zonker": {},
+                        },
+                        "term": {
+                          "arg": {
+                            "arg": {
+                              "type": "Var",
+                              "variable": {
+                                "index": 1,
+                                "type": "Bound",
+                              },
+                            },
+                            "func": {
+                              "arg": {
+                                "type": "Var",
+                                "variable": {
+                                  "index": 2,
+                                  "type": "Bound",
+                                },
+                              },
+                              "func": {
+                                "type": "Var",
+                                "variable": {
+                                  "name": "$div",
+                                  "type": "Foreign",
+                                },
+                              },
+                              "icit": "Explicit",
+                              "type": "App",
+                            },
+                            "icit": "Explicit",
+                            "type": "App",
+                          },
+                          "func": {
+                            "arg": {
+                              "type": "Var",
+                              "variable": {
+                                "index": 0,
+                                "type": "Bound",
+                              },
+                            },
+                            "func": {
+                              "type": "Var",
+                              "variable": {
+                                "name": "$eq",
+                                "type": "Foreign",
+                              },
+                            },
+                            "icit": "Explicit",
+                            "type": "App",
+                          },
+                          "icit": "Explicit",
+                          "type": "App",
+                        },
+                        "type": "Closure",
+                      },
+                      "type": "Abs",
+                    },
+                    "quantity": "Many",
+                  },
+                  "type": "Modal",
                   "value": {
-                    "type": "Atom",
-                    "value": "Num",
+                    "type": "Lit",
+                    "value": {
+                      "type": "Atom",
+                      "value": "Num",
+                    },
                   },
                 },
               },
@@ -1522,19 +3658,557 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
                         },
                         "type": "extension",
                         "value": {
-                          "type": "Lit",
+                          "modalities": {
+                            "liquid": {
+                              "binder": {
+                                "annotation": {
+                                  "type": "Lit",
+                                  "value": {
+                                    "type": "Atom",
+                                    "value": "Num",
+                                  },
+                                },
+                                "icit": "Explicit",
+                                "type": "Lambda",
+                                "variable": "r",
+                              },
+                              "closure": {
+                                "ctx": {
+                                  "env": [
+                                    {
+                                      "name": {
+                                        "type": "Pi",
+                                        "variable": "y",
+                                      },
+                                      "nf": {
+                                        "type": "Lit",
+                                        "value": {
+                                          "type": "Num",
+                                          "value": 2,
+                                        },
+                                      },
+                                      "type": [
+                                        {
+                                          "type": "Pi",
+                                          "variable": "y",
+                                        },
+                                        "source",
+                                        {},
+                                      ],
+                                    },
+                                    {
+                                      "name": {
+                                        "type": "Pi",
+                                        "variable": "x",
+                                      },
+                                      "nf": {
+                                        "type": "Neutral",
+                                        "value": {
+                                          "arg": {
+                                            "type": "Neutral",
+                                            "value": {
+                                              "type": "Var",
+                                              "variable": {
+                                                "name": "point",
+                                                "type": "Label",
+                                              },
+                                            },
+                                          },
+                                          "func": {
+                                            "binder": {
+                                              "annotation": {
+                                                "type": "Lit",
+                                                "value": {
+                                                  "type": "Atom",
+                                                  "value": "Any",
+                                                },
+                                              },
+                                              "icit": "Explicit",
+                                              "type": "Lambda",
+                                              "variable": "$proj_y",
+                                            },
+                                            "closure": {
+                                              "ctx": {
+                                                "env": [],
+                                                "implicits": [],
+                                                "labels": {
+                                                  "a": {
+                                                    "type": "Neutral",
+                                                    "value": {
+                                                      "type": "Var",
+                                                      "variable": {
+                                                        "lvl": 0,
+                                                        "type": "Meta",
+                                                        "val": 3,
+                                                      },
+                                                    },
+                                                  },
+                                                  "b": {
+                                                    "type": "Neutral",
+                                                    "value": {
+                                                      "type": "Var",
+                                                      "variable": {
+                                                        "lvl": 0,
+                                                        "type": "Meta",
+                                                        "val": 4,
+                                                      },
+                                                    },
+                                                  },
+                                                  "halved": {
+                                                    "type": "Neutral",
+                                                    "value": {
+                                                      "type": "Var",
+                                                      "variable": {
+                                                        "lvl": 0,
+                                                        "type": "Meta",
+                                                        "val": 2,
+                                                      },
+                                                    },
+                                                  },
+                                                  "point": {
+                                                    "type": "Neutral",
+                                                    "value": {
+                                                      "type": "Var",
+                                                      "variable": {
+                                                        "lvl": 0,
+                                                        "type": "Meta",
+                                                        "val": 1,
+                                                      },
+                                                    },
+                                                  },
+                                                },
+                                                "metas": {},
+                                                "record": {},
+                                                "sigma": {
+                                                  "a": {
+                                                    "value": {
+                                                      "type": "Neutral",
+                                                      "value": {
+                                                        "type": "Var",
+                                                        "variable": {
+                                                          "name": "a",
+                                                          "type": "Label",
+                                                        },
+                                                      },
+                                                    },
+                                                  },
+                                                  "b": {
+                                                    "value": {
+                                                      "type": "Neutral",
+                                                      "value": {
+                                                        "type": "Var",
+                                                        "variable": {
+                                                          "name": "b",
+                                                          "type": "Label",
+                                                        },
+                                                      },
+                                                    },
+                                                  },
+                                                  "halved": {
+                                                    "value": {
+                                                      "type": "Neutral",
+                                                      "value": {
+                                                        "type": "Var",
+                                                        "variable": {
+                                                          "name": "halved",
+                                                          "type": "Label",
+                                                        },
+                                                      },
+                                                    },
+                                                  },
+                                                  "point": {
+                                                    "value": {
+                                                      "type": "Neutral",
+                                                      "value": {
+                                                        "type": "Var",
+                                                        "variable": {
+                                                          "name": "point",
+                                                          "type": "Label",
+                                                        },
+                                                      },
+                                                    },
+                                                  },
+                                                },
+                                                "zonker": {},
+                                              },
+                                              "term": {
+                                                "label": "y",
+                                                "term": {
+                                                  "type": "Var",
+                                                  "variable": {
+                                                    "index": 0,
+                                                    "type": "Bound",
+                                                  },
+                                                },
+                                                "type": "Proj",
+                                              },
+                                              "type": "Closure",
+                                            },
+                                            "type": "Abs",
+                                          },
+                                          "icit": "Explicit",
+                                          "type": "App",
+                                        },
+                                      },
+                                      "type": [
+                                        {
+                                          "type": "Pi",
+                                          "variable": "x",
+                                        },
+                                        "source",
+                                        {},
+                                      ],
+                                    },
+                                  ],
+                                  "implicits": [],
+                                  "labels": {},
+                                  "metas": {},
+                                  "record": {},
+                                  "sigma": {},
+                                  "zonker": {},
+                                },
+                                "term": {
+                                  "arg": {
+                                    "arg": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "index": 1,
+                                        "type": "Bound",
+                                      },
+                                    },
+                                    "func": {
+                                      "arg": {
+                                        "type": "Var",
+                                        "variable": {
+                                          "index": 2,
+                                          "type": "Bound",
+                                        },
+                                      },
+                                      "func": {
+                                        "type": "Var",
+                                        "variable": {
+                                          "name": "$div",
+                                          "type": "Foreign",
+                                        },
+                                      },
+                                      "icit": "Explicit",
+                                      "type": "App",
+                                    },
+                                    "icit": "Explicit",
+                                    "type": "App",
+                                  },
+                                  "func": {
+                                    "arg": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "index": 0,
+                                        "type": "Bound",
+                                      },
+                                    },
+                                    "func": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "name": "$eq",
+                                        "type": "Foreign",
+                                      },
+                                    },
+                                    "icit": "Explicit",
+                                    "type": "App",
+                                  },
+                                  "icit": "Explicit",
+                                  "type": "App",
+                                },
+                                "type": "Closure",
+                              },
+                              "type": "Abs",
+                            },
+                            "quantity": "Many",
+                          },
+                          "type": "Modal",
                           "value": {
-                            "type": "Atom",
-                            "value": "Num",
+                            "type": "Lit",
+                            "value": {
+                              "type": "Atom",
+                              "value": "Num",
+                            },
                           },
                         },
                       },
                       "type": "extension",
                       "value": {
-                        "type": "Lit",
+                        "modalities": {
+                          "liquid": {
+                            "binder": {
+                              "annotation": {
+                                "type": "Lit",
+                                "value": {
+                                  "type": "Atom",
+                                  "value": "Num",
+                                },
+                              },
+                              "icit": "Explicit",
+                              "type": "Lambda",
+                              "variable": "r",
+                            },
+                            "closure": {
+                              "ctx": {
+                                "env": [
+                                  {
+                                    "name": {
+                                      "type": "Pi",
+                                      "variable": "y",
+                                    },
+                                    "nf": {
+                                      "type": "Lit",
+                                      "value": {
+                                        "type": "Num",
+                                        "value": 2,
+                                      },
+                                    },
+                                    "type": [
+                                      {
+                                        "type": "Pi",
+                                        "variable": "y",
+                                      },
+                                      "source",
+                                      {},
+                                    ],
+                                  },
+                                  {
+                                    "name": {
+                                      "type": "Pi",
+                                      "variable": "x",
+                                    },
+                                    "nf": {
+                                      "type": "Neutral",
+                                      "value": {
+                                        "arg": {
+                                          "type": "Neutral",
+                                          "value": {
+                                            "type": "Var",
+                                            "variable": {
+                                              "name": "point",
+                                              "type": "Label",
+                                            },
+                                          },
+                                        },
+                                        "func": {
+                                          "binder": {
+                                            "annotation": {
+                                              "type": "Lit",
+                                              "value": {
+                                                "type": "Atom",
+                                                "value": "Any",
+                                              },
+                                            },
+                                            "icit": "Explicit",
+                                            "type": "Lambda",
+                                            "variable": "$proj_x",
+                                          },
+                                          "closure": {
+                                            "ctx": {
+                                              "env": [],
+                                              "implicits": [],
+                                              "labels": {
+                                                "a": {
+                                                  "type": "Neutral",
+                                                  "value": {
+                                                    "type": "Var",
+                                                    "variable": {
+                                                      "lvl": 0,
+                                                      "type": "Meta",
+                                                      "val": 3,
+                                                    },
+                                                  },
+                                                },
+                                                "b": {
+                                                  "type": "Neutral",
+                                                  "value": {
+                                                    "type": "Var",
+                                                    "variable": {
+                                                      "lvl": 0,
+                                                      "type": "Meta",
+                                                      "val": 4,
+                                                    },
+                                                  },
+                                                },
+                                                "halved": {
+                                                  "type": "Neutral",
+                                                  "value": {
+                                                    "type": "Var",
+                                                    "variable": {
+                                                      "lvl": 0,
+                                                      "type": "Meta",
+                                                      "val": 2,
+                                                    },
+                                                  },
+                                                },
+                                                "point": {
+                                                  "type": "Neutral",
+                                                  "value": {
+                                                    "type": "Var",
+                                                    "variable": {
+                                                      "lvl": 0,
+                                                      "type": "Meta",
+                                                      "val": 1,
+                                                    },
+                                                  },
+                                                },
+                                              },
+                                              "metas": {},
+                                              "record": {},
+                                              "sigma": {
+                                                "a": {
+                                                  "value": {
+                                                    "type": "Neutral",
+                                                    "value": {
+                                                      "type": "Var",
+                                                      "variable": {
+                                                        "name": "a",
+                                                        "type": "Label",
+                                                      },
+                                                    },
+                                                  },
+                                                },
+                                                "b": {
+                                                  "value": {
+                                                    "type": "Neutral",
+                                                    "value": {
+                                                      "type": "Var",
+                                                      "variable": {
+                                                        "name": "b",
+                                                        "type": "Label",
+                                                      },
+                                                    },
+                                                  },
+                                                },
+                                                "halved": {
+                                                  "value": {
+                                                    "type": "Neutral",
+                                                    "value": {
+                                                      "type": "Var",
+                                                      "variable": {
+                                                        "name": "halved",
+                                                        "type": "Label",
+                                                      },
+                                                    },
+                                                  },
+                                                },
+                                                "point": {
+                                                  "value": {
+                                                    "type": "Neutral",
+                                                    "value": {
+                                                      "type": "Var",
+                                                      "variable": {
+                                                        "name": "point",
+                                                        "type": "Label",
+                                                      },
+                                                    },
+                                                  },
+                                                },
+                                              },
+                                              "zonker": {},
+                                            },
+                                            "term": {
+                                              "label": "x",
+                                              "term": {
+                                                "type": "Var",
+                                                "variable": {
+                                                  "index": 0,
+                                                  "type": "Bound",
+                                                },
+                                              },
+                                              "type": "Proj",
+                                            },
+                                            "type": "Closure",
+                                          },
+                                          "type": "Abs",
+                                        },
+                                        "icit": "Explicit",
+                                        "type": "App",
+                                      },
+                                    },
+                                    "type": [
+                                      {
+                                        "type": "Pi",
+                                        "variable": "x",
+                                      },
+                                      "source",
+                                      {},
+                                    ],
+                                  },
+                                ],
+                                "implicits": [],
+                                "labels": {},
+                                "metas": {},
+                                "record": {},
+                                "sigma": {},
+                                "zonker": {},
+                              },
+                              "term": {
+                                "arg": {
+                                  "arg": {
+                                    "type": "Var",
+                                    "variable": {
+                                      "index": 1,
+                                      "type": "Bound",
+                                    },
+                                  },
+                                  "func": {
+                                    "arg": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "index": 2,
+                                        "type": "Bound",
+                                      },
+                                    },
+                                    "func": {
+                                      "type": "Var",
+                                      "variable": {
+                                        "name": "$div",
+                                        "type": "Foreign",
+                                      },
+                                    },
+                                    "icit": "Explicit",
+                                    "type": "App",
+                                  },
+                                  "icit": "Explicit",
+                                  "type": "App",
+                                },
+                                "func": {
+                                  "arg": {
+                                    "type": "Var",
+                                    "variable": {
+                                      "index": 0,
+                                      "type": "Bound",
+                                    },
+                                  },
+                                  "func": {
+                                    "type": "Var",
+                                    "variable": {
+                                      "name": "$eq",
+                                      "type": "Foreign",
+                                    },
+                                  },
+                                  "icit": "Explicit",
+                                  "type": "App",
+                                },
+                                "icit": "Explicit",
+                                "type": "App",
+                              },
+                              "type": "Closure",
+                            },
+                            "type": "Abs",
+                          },
+                          "quantity": "Many",
+                        },
+                        "type": "Modal",
                         "value": {
-                          "type": "Atom",
-                          "value": "Num",
+                          "type": "Lit",
+                          "value": {
+                            "type": "Atom",
+                            "value": "Num",
+                          },
                         },
                       },
                     },
@@ -2702,10 +5376,13 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
       "String ~~ ?2",
       "Num ~~ Num",
       "Num ~~ Num",
-      "Num ~~ ?1",
+      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?1",
     ],
     "term": "Struct [ x: FFI.$add 1 2, y: "hello" ]",
-    "type": "Schema [ x: Num, y: String ]",
+    "type": "Schema
+  [ x: <ω> Num [| λ(r: Num) ->
+      (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |],
+    y: String ]",
   },
 }
 `;
@@ -2774,10 +5451,137 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
       },
       {
         "left": {
-          "type": "Lit",
+          "modalities": {
+            "liquid": {
+              "binder": {
+                "annotation": {
+                  "type": "Lit",
+                  "value": {
+                    "type": "Atom",
+                    "value": "Num",
+                  },
+                },
+                "icit": "Explicit",
+                "type": "Lambda",
+                "variable": "r",
+              },
+              "closure": {
+                "ctx": {
+                  "env": [
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "y",
+                      },
+                      "nf": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Num",
+                          "value": 2,
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "y",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                    {
+                      "name": {
+                        "type": "Pi",
+                        "variable": "x",
+                      },
+                      "nf": {
+                        "type": "Lit",
+                        "value": {
+                          "type": "Num",
+                          "value": 1,
+                        },
+                      },
+                      "type": [
+                        {
+                          "type": "Pi",
+                          "variable": "x",
+                        },
+                        "source",
+                        {},
+                      ],
+                    },
+                  ],
+                  "implicits": [],
+                  "labels": {},
+                  "metas": {},
+                  "record": {},
+                  "sigma": {},
+                  "zonker": {},
+                },
+                "term": {
+                  "arg": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 1,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "arg": {
+                        "type": "Var",
+                        "variable": {
+                          "index": 2,
+                          "type": "Bound",
+                        },
+                      },
+                      "func": {
+                        "type": "Var",
+                        "variable": {
+                          "name": "$add",
+                          "type": "Foreign",
+                        },
+                      },
+                      "icit": "Explicit",
+                      "type": "App",
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "func": {
+                    "arg": {
+                      "type": "Var",
+                      "variable": {
+                        "index": 0,
+                        "type": "Bound",
+                      },
+                    },
+                    "func": {
+                      "type": "Var",
+                      "variable": {
+                        "name": "$eq",
+                        "type": "Foreign",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "App",
+                  },
+                  "icit": "Explicit",
+                  "type": "App",
+                },
+                "type": "Closure",
+              },
+              "type": "Abs",
+            },
+            "quantity": "Many",
+          },
+          "type": "Modal",
           "value": {
-            "type": "Atom",
-            "value": "Num",
+            "type": "Lit",
+            "value": {
+              "type": "Atom",
+              "value": "Num",
+            },
           },
         },
         "lvl": 0,
@@ -2908,10 +5712,137 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
             },
             "type": "extension",
             "value": {
-              "type": "Lit",
+              "modalities": {
+                "liquid": {
+                  "binder": {
+                    "annotation": {
+                      "type": "Lit",
+                      "value": {
+                        "type": "Atom",
+                        "value": "Num",
+                      },
+                    },
+                    "icit": "Explicit",
+                    "type": "Lambda",
+                    "variable": "r",
+                  },
+                  "closure": {
+                    "ctx": {
+                      "env": [
+                        {
+                          "name": {
+                            "type": "Pi",
+                            "variable": "y",
+                          },
+                          "nf": {
+                            "type": "Lit",
+                            "value": {
+                              "type": "Num",
+                              "value": 2,
+                            },
+                          },
+                          "type": [
+                            {
+                              "type": "Pi",
+                              "variable": "y",
+                            },
+                            "source",
+                            {},
+                          ],
+                        },
+                        {
+                          "name": {
+                            "type": "Pi",
+                            "variable": "x",
+                          },
+                          "nf": {
+                            "type": "Lit",
+                            "value": {
+                              "type": "Num",
+                              "value": 1,
+                            },
+                          },
+                          "type": [
+                            {
+                              "type": "Pi",
+                              "variable": "x",
+                            },
+                            "source",
+                            {},
+                          ],
+                        },
+                      ],
+                      "implicits": [],
+                      "labels": {},
+                      "metas": {},
+                      "record": {},
+                      "sigma": {},
+                      "zonker": {},
+                    },
+                    "term": {
+                      "arg": {
+                        "arg": {
+                          "type": "Var",
+                          "variable": {
+                            "index": 1,
+                            "type": "Bound",
+                          },
+                        },
+                        "func": {
+                          "arg": {
+                            "type": "Var",
+                            "variable": {
+                              "index": 2,
+                              "type": "Bound",
+                            },
+                          },
+                          "func": {
+                            "type": "Var",
+                            "variable": {
+                              "name": "$add",
+                              "type": "Foreign",
+                            },
+                          },
+                          "icit": "Explicit",
+                          "type": "App",
+                        },
+                        "icit": "Explicit",
+                        "type": "App",
+                      },
+                      "func": {
+                        "arg": {
+                          "type": "Var",
+                          "variable": {
+                            "index": 0,
+                            "type": "Bound",
+                          },
+                        },
+                        "func": {
+                          "type": "Var",
+                          "variable": {
+                            "name": "$eq",
+                            "type": "Foreign",
+                          },
+                        },
+                        "icit": "Explicit",
+                        "type": "App",
+                      },
+                      "icit": "Explicit",
+                      "type": "App",
+                    },
+                    "type": "Closure",
+                  },
+                  "type": "Abs",
+                },
+                "quantity": "Many",
+              },
+              "type": "Modal",
               "value": {
-                "type": "Atom",
-                "value": "Num",
+                "type": "Lit",
+                "value": {
+                  "type": "Atom",
+                  "value": "Num",
+                },
               },
             },
           },

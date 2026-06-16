@@ -6,6 +6,7 @@ import * as NF from "@yap/elaboration/normalization";
 import * as Lib from "@yap/shared/lib/primitives";
 import { omit } from "lodash/fp";
 import { options } from "@yap/shared/config/options";
+import { match } from "ts-pattern";
 
 // Create a fresh parser for expressions (Ann grammar start)
 export const mkParser = () => {
@@ -23,6 +24,29 @@ export const parseExpr = (src: string) => {
 };
 
 export const mkCtx = (): EB.Context => Lib.defaultContext();
+
+const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+export const TypeText = {
+	lit: (name: "Num" | "String" | "Bool" | "Unit" | "Type" | "Row"): string => escapeRegExp(name),
+	meta: String.raw`\?\d+`,
+	schema: "Schema",
+} as const;
+
+export const Field = {
+	bare: (label: string, ty: string): RegExp => new RegExp(String.raw`\b${escapeRegExp(label)}:\s+${ty}\b`),
+	modal: (label: string, ty: string): RegExp => new RegExp(String.raw`\b${escapeRegExp(label)}:\s+<[^>]+>\s+${ty}\b`),
+	type: (label: string, ty: string): RegExp => new RegExp(String.raw`\b${escapeRegExp(label)}:\s+(?:<[^>]+>\s+)?${ty}\b`),
+	schema: (label: string, ...fields: readonly RegExp[]): RegExp =>
+		match(fields)
+			.with([], () => new RegExp(String.raw`\b${escapeRegExp(label)}:\s+Schema\b`))
+			.otherwise(fs => new RegExp(String.raw`\b${escapeRegExp(label)}:\s+Schema\s+\[\s*${fs.map(f => f.source).join(String.raw`[\s\S]*?`)}[\s\S]*?\]`)),
+	meta: (label: string): RegExp => new RegExp(String.raw`\b${escapeRegExp(label)}:\s+${TypeText.meta}\b`),
+} as const;
+
+export const Liquid = {
+	mentions: (symbol: string): RegExp => new RegExp(escapeRegExp(symbol)),
+} as const;
 
 // Run elaboration/inference for a source string; returns elaborated term, type, usages, constraints and displays.
 export const elaborateFrom = (src: string) => {

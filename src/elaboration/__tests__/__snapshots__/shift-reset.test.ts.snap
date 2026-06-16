@@ -9,12 +9,12 @@ exports[`Shift-reset > multiple shifts within reset > invoking continuations 1`]
     "Num ~~ ?6",
     "?2 ~~ ?3",
     "?6 ~~ Num",
-    "Num ~~ ?2",
+    "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?2",
     "?3 ~~ ?1",
   ],
-  "solution": "?1 |=> Num
-?2 |=> Num
-?3 |=> Num
+  "solution": "?1 |=> <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
+?2 |=> <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
+?3 |=> <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
 ?4 |=> Num
 ?6 |=> Num",
   "state": {
@@ -28,10 +28,17 @@ exports[`Shift-reset > multiple shifts within reset > invoking continuations 1`]
     },
   },
   "term": "let test
-  : Num
-  = reset |FFI.$add bubble#1296 (shift (λ($k: Π($k: Num) -> Num) -> $k 10))
-    bubble#1307 (shift (λ($k: Π($k: Num) -> Num) -> $k 20))|",
-  "type": "Num",
+  : <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
+  = reset |FFI.$add
+    bubble#1296 (shift (λ($k: Π($k: Num) ->
+      <ω> Num [| λ(r: Num) ->
+        (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]) ->
+      $k 10))
+    bubble#1307 (shift (λ($k: Π($k: Num) ->
+      <ω> Num [| λ(r: Num) ->
+        (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]) ->
+      $k 20))|",
+  "type": "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]",
 }
 `;
 
@@ -42,16 +49,16 @@ exports[`Shift-reset > multiple shifts within reset > multiple shifts and multip
     "Num ~~ ?4",
     "?2 ~~ ?3",
     "?4 ~~ Num",
-    "Num ~~ Num",
+    "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ Num",
     "Num ~~ ?6",
     "?2 ~~ ?3",
     "?6 ~~ Num",
-    "Num ~~ Num",
+    "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ Num",
     "Num ~~ ?8",
     "?2 ~~ ?8",
     "?2 ~~ ?3",
     "?8 ~~ Num",
-    "Num ~~ ?2",
+    "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?2",
     "?3 ~~ ?1",
   ],
   "solution": "?1 |=> Num
@@ -118,12 +125,12 @@ exports[`Shift-reset > only one shift within reset > invoking simple continuatio
     "Num ~~ ?4",
     "?2 ~~ ?3",
     "?4 ~~ Num",
-    "Num ~~ ?2",
+    "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?2",
     "?3 ~~ ?1",
   ],
-  "solution": "?1 |=> Num
-?2 |=> Num
-?3 |=> Num
+  "solution": "?1 |=> <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
+?2 |=> <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
+?3 |=> <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
 ?4 |=> Num",
   "state": {
     "nondeterminism": {
@@ -133,9 +140,13 @@ exports[`Shift-reset > only one shift within reset > invoking simple continuatio
     },
   },
   "term": "let test
-  : Num
-  = reset |FFI.$add 1 bubble#1298 (shift (λ($k: Π($k: Num) -> Num) -> $k 1))|",
-  "type": "Num",
+  : <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
+  = reset |FFI.$add 1
+    bubble#1298 (shift (λ($k: Π($k: Num) ->
+      <ω> Num [| λ(r: Num) ->
+        (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]) ->
+      $k 1))|",
+  "type": "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]",
 }
 `;
 
@@ -146,13 +157,13 @@ exports[`Shift-reset > only one shift within reset > multiple resumptions 1`] = 
     "?2 ~~ Num",
     "Num ~~ ?4",
     "?2 ~~ Num",
-    "Num ~~ ?3",
+    "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?3",
     "?4 ~~ ?2",
     "?3 ~~ ?1",
   ],
-  "solution": "?1 |=> Num
+  "solution": "?1 |=> <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
 ?2 |=> Num
-?3 |=> Num
+?3 |=> <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
 ?4 |=> Num",
   "state": {
     "nondeterminism": {
@@ -163,10 +174,10 @@ exports[`Shift-reset > only one shift within reset > multiple resumptions 1`] = 
     },
   },
   "term": "let test
-  : Num
+  : <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
   = reset |bubble#1301 (shift (λ($k: Π($k: Num) -> Num) ->
     FFI.$add ($k 1) ($k 2)))|",
-  "type": "Num",
+  "type": "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]",
 }
 `;
 
@@ -206,7 +217,7 @@ exports[`Shift-reset > only one shift within reset > nested resumption with non-
     "?2 ~~ ?4",
     "?2 ~~ ?3",
     "?4 ~~ Num",
-    "Num ~~ ?2",
+    "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?2",
     "?3 ~~ ?1",
   ],
   "solution": "?1 |=> Num
@@ -255,11 +266,11 @@ exports[`Shift-reset > only one shift within reset > overriding continuation ret
     "Num ~~ Num",
     "String ~~ ?3",
     "?4 ~~ Num",
-    "Num ~~ ?2",
+    "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?2",
     "?3 ~~ ?1",
   ],
   "solution": "?1 |=> String
-?2 |=> Num
+?2 |=> <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
 ?3 |=> String
 ?4 |=> Num",
   "state": {
@@ -267,7 +278,11 @@ exports[`Shift-reset > only one shift within reset > overriding continuation ret
   },
   "term": "let test
   : String
-  = reset |FFI.$add 1 bubble#1296 (shift (λ($k: Π($k: Num) -> Num) -> "hello"))|",
+  = reset |FFI.$add 1
+    bubble#1296 (shift (λ($k: Π($k: Num) ->
+      <ω> Num [| λ(r: Num) ->
+        (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]) ->
+      "hello"))|",
   "type": "String",
 }
 `;
