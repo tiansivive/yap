@@ -45,6 +45,7 @@ export type ReplOpts = {
 
 type DisplayOpts = {
 	elaboration: boolean;
+	nf: boolean;
 	gram: boolean;
 	mir: boolean;
 	ivl: boolean;
@@ -81,7 +82,7 @@ const computeArity = (fn: Function): number => {
 const initialState = (): ReplState => ({
 	ctx: defaultContext,
 	runtime: Pipeline.emptyRuntime(),
-	display: { elaboration: false, gram: false, mir: false, ivl: false },
+	display: { elaboration: false, nf: false, gram: false, mir: false, ivl: false },
 });
 
 export function repl(opts: ReplOpts = { codegen: false, target: "js", verify: true }) {
@@ -114,6 +115,7 @@ export function repl(opts: ReplOpts = { codegen: false, target: "js", verify: tr
 				console.log("  :exit, :quit, :q    Exit the REPL");
 				console.log("  :load <filepath>    Load a Yap module from the specified file");
 				console.log("  :set elaboration    Toggle showing elaboration output");
+				console.log("  :set nf             Toggle showing the normal form (via NbE)");
 				console.log("  :set gram           Toggle showing GRAM output");
 				console.log("  :set mir            Toggle showing MIR output");
 				console.log("  :set ivl            Toggle showing IVL verification output");
@@ -133,6 +135,9 @@ export function repl(opts: ReplOpts = { codegen: false, target: "js", verify: tr
 				if (option === "elaboration") {
 					state.display.elaboration = !state.display.elaboration;
 					console.log(`Show elaboration: ${state.display.elaboration}`);
+				} else if (option === "nf") {
+					state.display.nf = !state.display.nf;
+					console.log(`Show normal form: ${state.display.nf}`);
 				} else if (option === "gram") {
 					state.display.gram = !state.display.gram;
 					console.log(`Show GRAM: ${state.display.gram}`);
@@ -391,6 +396,13 @@ const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplS
 				console.log("-------------------------------------\n");
 			}
 
+			if (state.display.nf) {
+				const normal = NF.quote(next, next.env.length, NF.evaluate(next, tm));
+				console.log("\n--------------- NF ------------------");
+				console.log(EB.Display.Term(normal, next));
+				console.log("-------------------------------------\n");
+			}
+
 			if (opts.verify) {
 				runVerification(tm, ty, next, state.display);
 			}
@@ -446,6 +458,13 @@ const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplS
 				console.log("\n------------ Elaboration ------------");
 				console.log(`let ${name} = ${EB.Display.Term(tm, next)}`);
 				console.log(`  : ${NF.display(ty, next)}`);
+				console.log("-------------------------------------\n");
+			}
+
+			if (state.display.nf) {
+				const normal = NF.quote(next, next.env.length, NF.evaluate(next, tm));
+				console.log("\n--------------- NF ------------------");
+				console.log(`let ${name} = ${EB.Display.Term(normal, next)}`);
 				console.log("-------------------------------------\n");
 			}
 

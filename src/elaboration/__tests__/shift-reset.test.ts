@@ -112,7 +112,7 @@ describe("Shift-reset", () => {
 				let foo = reset (f (shift (resume 10)));
 			}`;
 
-			const { pretty, structure } = elaborate(src);
+			const { pretty } = elaborate(src);
 
 			expect(pretty).toMatchSnapshot();
 			//expect(structure).toMatchSnapshot();

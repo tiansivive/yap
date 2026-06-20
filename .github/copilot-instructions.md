@@ -5,22 +5,18 @@ It contains a Nearley-based parser and an elaboration/inference pipeline which u
 
 ## Architecture
 
-For the full architecture overview, see `docs/ARCHITECTURE.md`. It covers the compiler pipeline, module map, key data types (`Src.Term`, `EB.Term`, `NF.Value`, `Context`), cross-cutting concerns (monad, metas, constraint flow, primitives), and design decisions.
+Design authority lives in `z-yap/` plus source paths. At session start, read `z-yap/init.md` and use the ZK scripts there to find the relevant thread or zettel.
 
-Per-module architecture documents:
+Core entry points:
 
-- `src/parser/ARCHITECTURE.md` — Dual parser backends, grammar, AST vs CST
-- `src/elaboration/ARCHITECTURE.md` — Bidirectional inference, dispatch, monad, context, solver
-- `src/elaboration/normalization/ARCHITECTURE.md` — NbE engine, values, closures, evaluator
-- `src/verification/ARCHITECTURE.md` — Liquid refinements, SMT translation, Z3
+- Project hub: `z-yap/zettels/yap.md`
+- Parser migration: `z-yap/zettels/parser-migration.thread.md`
+- Elaboration: `z-yap/zettels/elaboration-v2.thread.md`
+- Normalization/NbE: `z-yap/zettels/nbe.md`
+- Verification: `z-yap/zettels/verification-backend.thread.md`, `z-yap/zettels/verification-pipeline.md`
+- GRAM/MIR/codegen: `z-yap/zettels/gram-evolution.thread.md`, `z-yap/zettels/gram-canonical-ir.adr.md`
 
 Migration tracking: `brainstorming/yap/V2-MIGRATION.md`
-
-MIR and lowering: `docs/MIR-LOWERING.md` — Design plan for lowering EB.Term to MIR (SSA, shift/reset, CRUD, FBIP). Consult when working on `src/lowering/` or backend pipeline. Phase 1 implemented: Lit, Var, prim App, Struct/Proj/Inj, Lambda (closure conversion), App (indirect), Match, Block, Shift/Reset (Alloc + Read + Jump, multishot: Branch + resume blocks). Returns `Module` (see §5, §7.6).
-
-The agent should read `docs/ARCHITECTURE.md` at session start and consult the relevant per-module doc when working in a specific subsystem.
-
-> **Important**: These linked documents are NOT automatically provided to the agent. The agent MUST use `read_file` to load them. At minimum, read `docs/ARCHITECTURE.md` early in any session. When entering a subsystem, read its `ARCHITECTURE.md` before making changes.
 
 ## How to build and test
 
@@ -218,10 +214,10 @@ These instructions are a living document. During any session, the agent should b
 - **Flag outdated info**: If v2 code has matured beyond the "migration" framing (e.g., `tmp.ts` stubs are replaced with real dispatchers, v1 files are removed, new patterns have emerged), proactively note that the instructions should be updated to reflect the new baseline.
 - **Flag missing info**: If you discover important patterns, conventions, or architectural decisions during the session that are not documented here, suggest adding them.
 - **How to flag**: Briefly state what is outdated/conflicting, what the current state is, and propose a concrete update. Ask the user whether to apply it.
-- **Project documentation**: When a session introduces changes that affect user-facing documentation—`README.md`, `FAQ.md`, `docs/`, or `examples/`—check whether those documents are still accurate. Flag any drift (e.g., outdated CLI usage, missing features, stale examples, incorrect API descriptions) and propose updates.
-- **Architecture docs**: When a session changes compiler pipeline structure, adds/removes modules, modifies key data types, or alters cross-cutting concerns (monad, context, constraint flow), check whether `docs/ARCHITECTURE.md` and the relevant per-module `ARCHITECTURE.md` are still accurate. Propose updates if they have drifted.
+- **Project documentation**: When a session introduces changes that affect user-facing documentation—`README.md`, `FAQ.md`, or `examples/`—check whether those documents are still accurate. Flag any drift (e.g., outdated CLI usage, missing features, stale examples, incorrect API descriptions) and propose updates.
+- **Architecture records**: When a session changes compiler pipeline structure, adds/removes modules, modifies key data types, or alters cross-cutting concerns (monad, context, constraint flow), check whether the relevant `z-yap` records and thread hubs are still accurate. Propose updates if they have drifted.
 - **Examples and README alignment**: The `examples/` folder, `examples/README.md` (the language tour), `README.md`, and `FAQ.md` must stay in sync with each other and with the actual language capabilities. When a session implements, removes, or changes a language feature, check whether these documents reflect the new reality. Flag stale feature statuses, broken code snippets, dead file references, and undocumented examples. The integration test `src/__tests__/integration/examples-readme.repl.test.ts` validates README snippets — changes to README examples must stay in sync with this test.
-- **Known documentation issues**: Discovered documentation drift should be added to `brainstorming/yap/KNOWN-DOC-ISSUES.md` when it cannot be fixed in the current session. Use `read_file` to load this file at session start and surface any issues relevant to the current work.
+- **Known documentation issues**: Discovered documentation drift should be recorded in `z-yap/zettels/documentation-debt.md` or a more specific ZK work item when it cannot be fixed in the current session.
 
 ## Agent interaction style
 
