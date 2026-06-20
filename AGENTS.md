@@ -27,15 +27,14 @@ Then ask the agent to read and apply them for the session. This ensures the guid
 
 - **Parser**: Nearley (legacy) + tree-sitter (v2 migration in progress)
 - **Elaboration**: Bidirectional inference, NbE, constraint solving via unification
-- **Verification**: Liquid refinements, SMT translation, Z3
+- **Verification**: Liquid refinements, IVL, in-tree CDCL(T), validity discharge
 - **Stack**: TypeScript (strict), pnpm, Vitest
 
-Architecture: `docs/ARCHITECTURE.md`, `src/elaboration/ARCHITECTURE.md`, `brainstorming/yap/V2-MIGRATION.md`
+Architecture and design authority live in `z-yap/` plus source paths. Start with `z-yap/init.md`, `z-yap/zettels/yap.md`, and the relevant thread hubs.
 
 ## Dev environment
 
 - Use `pnpm` for all commands (Node ≥ 18.3)
-- Install z3: `brew install z3` (macOS)
 - Path aliases: `@yap/elaboration/*`, `@yap/src/*`, `@yap/shared/*` (see `tsconfig.json`)
 - After editing `src/parser/grammar.ne` → `pnpm nearley`
 - After grammar changes in tree-sitter-yap → `pnpm ts-dts`
@@ -78,13 +77,13 @@ Do not use `pnpm build` while debugging; run `pnpm yap` directly.
 
 ## Key references
 
-| Topic                   | Location                            |
-| ----------------------- | ----------------------------------- |
-| Full agent instructions | `.github/copilot-instructions.md`   |
-| Architecture            | `docs/ARCHITECTURE.md`              |
-| V2 migration            | `brainstorming/yap/V2-MIGRATION.md` |
-| MIR / lowering          | `docs/MIR-LOWERING.md`              |
-| Design specs, roadmap   | `brainstorming/yap/`                |
-| Cursor rules            | `.cursor/rules/*.mdc`               |
+| Topic                   | Location                                                                           |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| Full agent instructions | `.github/copilot-instructions.md`                                                  |
+| Architecture            | `z-yap/zettels/yap.md`                                                             |
+| V2 migration            | `brainstorming/yap/V2-MIGRATION.md`                                                |
+| GRAM / MIR lowering     | `z-yap/zettels/gram-evolution.thread.md`, `z-yap/zettels/gram-canonical-ir.adr.md` |
+| Design specs, roadmap   | `brainstorming/yap/`                                                               |
+| Cursor rules            | `.cursor/rules/*.mdc`                                                              |
 
-Lowering (`src/lowering/`): Lit, Var, prim App, Struct/Proj/Inj, Lambda (closure conversion), App (indirect), Match, Block, Reset/Shift. Shift/reset in `delimited_continuation/` (Alloc + Read + Jump, multishot: Branch + resume blocks). Returns `Module`. See MIR-LOWERING.md §5, §7.6.
+Lowering: canonical compilation flows EB.Term -> GRAM -> MIR -> codegen. See `z-yap/zettels/gram-canonical-ir.adr.md`, `z-yap/zettels/gram-to-mir-bridge.md`, and `z-yap/zettels/shift-reset-bridge-lowering.md`.

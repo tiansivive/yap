@@ -23,7 +23,7 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 
 		// WHNF check: should be a literal after computing FFI op
 		expect(nf.type).toBe("Lit");
-		expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
+		expect(show(nf, ctx)).toBe("3");
 	});
 
 	it("evaluates lambda application via reduce to WHNF", () => {
@@ -32,7 +32,7 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 
 		const nf = Eval.evaluate(ctx, structure.term);
 		expect(nf.type).toBe("Lit");
-		expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
+		expect(show(nf, ctx)).toBe("1");
 	});
 
 	it("evaluates rows + projection", () => {
@@ -41,7 +41,7 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 
 		const nf = Eval.evaluate(ctx, structure.term);
 		expect(nf.type).toBe("Lit");
-		expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
+		expect(show(nf, ctx)).toBe("1");
 	});
 
 	it("pattern matches on a struct", () => {
@@ -51,7 +51,7 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 
 		const nf = Eval.evaluate(ctx, structure.term);
 		expect(nf.type).toBe("Lit");
-		expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
+		expect(show(nf, ctx)).toBe("1");
 	});
 
 	it("evaluates dependent record projection", () => {
@@ -61,7 +61,7 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 
 		const nf = Eval.evaluate(ctx, structure.term);
 		expect(nf.type).toBe("Lit");
-		expect({ structure, pretty: show(nf, ctx) }).toMatchSnapshot();
+		expect(show(nf, ctx)).toBe("2");
 	});
 
 	it("handles deeply nested recursion without stack overflow", () => {
@@ -79,7 +79,7 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 		const nf = Eval.evaluate(ctx, structure.term);
 		expect(nf.type).toBe("Lit");
 
-		expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
+		expect(show(nf, ctx)).toBe("10000");
 	});
 
 	it("handles simple recursion", () => {
@@ -95,7 +95,7 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 
 		const nf = Eval.evaluate(ctx, structure.term);
 		expect(nf.type).toBe("Lit");
-		expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
+		expect(show(nf, ctx)).toBe("0");
 	});
 
 	describe("delimited continuations (shift/reset)", () => {
@@ -110,7 +110,7 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 
 			const nf = Eval.evaluate(ctx, structure.term);
 			expect(nf.type).toBe("Lit");
-			expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
+			expect(show(nf, ctx)).toBe("10");
 		});
 
 		it("resumption with computation", () => {
@@ -124,7 +124,7 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 
 			const nf = Eval.evaluate(ctx, structure.term);
 			expect(nf.type).toBe("Lit");
-			expect({ pretty: show(nf, ctx) }).toMatchSnapshot();
+			expect(show(nf, ctx)).toBe("32");
 		});
 
 		it("shifts under a lambda (Bubble produces neutral without delimiter)", () => {

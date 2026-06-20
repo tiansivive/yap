@@ -414,12 +414,12 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 			// Evaluate the body-lambda; the above continuation receives it.
 			globalWorkStack.push({ type: "Eval", ctx, term: body });
 		})
-		.with({ type: "Bubble" }, ({ id, shift }) => {
+		.with({ type: "Bubble" }, ({ meta, shift }) => {
 			const delimiterIndex = globalWorkStack.findLastIndex(frame => frame.type === "Delimiter");
 			if (delimiterIndex >= 0) {
 				globalWorkStack.push({ type: "Eval", ctx, term: shift });
 			} else {
-				const v = NF.Constructors.Var({ type: "Meta", val: id, lvl: 0 });
+				const v = NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 });
 				globalResultStack.push(NF.Constructors.Neutral(v));
 			}
 		})
