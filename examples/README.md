@@ -16,6 +16,7 @@ Welcome to Yap! This guide walks through all the language features currently imp
 - [Type Constructors](#type-constructors)
 - [Dependent Types](#dependent-types)
 - [Refinement Types](#refinement-types)
+- [Delimited Continuations](#delimited-continuations)
 - [Foreign Function Interface (FFI)](#foreign-function-interface-ffi)
 
 ---
@@ -1017,18 +1018,21 @@ This combines:
 
 Powerful!
 
-### How It Works
-
-The compiler:
-
-1. Collects refinement constraints during type checking
-2. Translates predicates to SMT-LIB logical formulas
-3. Queries an SMT solver (Z3) to verify the constraints
-4. Reports type errors if verification fails
-
-> **Learn more about SMT:** Satisfiability Modulo Theories (SMT) solvers are tools that can automatically reason about logical formulas. See [Z3 documentation](https://github.com/Z3Prover/z3) for details.
-
 ---
+
+## Delimited Continuations
+
+Delimited Continuations are Yap's control flow primitive. Users might already be familiar with typical `try/catch` exceptions and "abort" semantics via exceptions. `shift/reset` in Yap generalize the idea, by capturing the continuation (the remaining code up to the delimiter) and allowing one to resume said continuation.
+
+## Shift/Reset/Resume
+
+```ts
+let plain = reset 10; // 10
+let resumed = reset (1 + (shift (resume 10))); // 11
+let many = reset (10 + shift ((resume 1) + (resume 2))); // (10 + 1) + (10 + 2) = 23
+```
+
+--
 
 ## Foreign Function Interface (FFI)
 
@@ -1115,12 +1119,10 @@ import "lib.yap";
 This guide covers the currently implemented features of Yap. The language is under active development, so expect:
 
 - More syntactic sugar (infix operators, where clauses, destructuring, shorthand match, etc.)
-- Resource usage semantics for handling mutation.
-- Delimited continuations
-  - Possibly an effect system on top
+- Resource usage semantics (multiplicities) for handling mutation.
+- Possibly an effect system on top
 - Reflection for runtime type information
 - Better tooling (LSP, debugger, syntax highlighting)
-- Additional backends (C, and beyond)
 
 Check out the example files:
 
