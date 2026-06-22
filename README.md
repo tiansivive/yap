@@ -8,9 +8,9 @@
 	<a href="#contributors" target="_blank"><img alt="👪 All Contributors: 2" src="https://img.shields.io/badge/%F0%9F%91%AA_all_contributors-2-21bb42.svg" /></a>
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 	<!-- prettier-ignore-end -->
-	<a href="https://github.com/tiansivive/lama/blob/main/.github/CODE_OF_CONDUCT.md" target="_blank"><img alt="🤝 Code of Conduct: Kept" src="https://img.shields.io/badge/%F0%9F%A4%9D_code_of_conduct-kept-21bb42" /></a>
-	<a href="https://codecov.io/gh/tiansivive/lama" target="_blank"><img alt="🧪 Coverage" src="https://img.shields.io/codecov/c/github/tiansivive/lama?label=%F0%9F%A7%AA%20coverage" /></a>
-	<a href="https://github.com/tiansivive/lama/blob/main/LICENSE.md" target="_blank"><img alt="📝 License: MIT" src="https://img.shields.io/badge/%F0%9F%93%9D_license-MIT-21bb42.svg"></a>
+	<a href="https://github.com/tiansivive/yap/blob/main/.github/CODE_OF_CONDUCT.md" target="_blank"><img alt="🤝 Code of Conduct: Kept" src="https://img.shields.io/badge/%F0%9F%A4%9D_code_of_conduct-kept-21bb42" /></a>
+	<a href="https://codecov.io/gh/tiansivive/yap" target="_blank"><img alt="🧪 Coverage" src="https://img.shields.io/codecov/c/github/tiansivive/yap?label=%F0%9F%A7%AA%20coverage" /></a>
+	<a href="https://github.com/tiansivive/yap/blob/main/LICENSE.md" target="_blank"><img alt="📝 License: MIT" src="https://img.shields.io/badge/%F0%9F%93%9D_license-MIT-21bb42.svg"></a>
 	<img alt="💪 TypeScript: Strict" src="https://img.shields.io/badge/%F0%9F%92%AA_typescript-strict-21bb42.svg" />
 </p>
 
@@ -36,7 +36,6 @@ It’s still early days, so expect **broken things, missing features, a nonsensi
 - **Evaluator** - It does things like `1 + 2` and `(\x -> x + 1) 2`
 - **Foreign function interface** - Just an excuse to write JS instead of actual yap code
 - **Module system** - because you have a file system
-- **JS codegen** - sue me (also, it's broken)
 
 Check out the [examples](./examples/README.md) folder to get a more in depth overview of what is currently available. But for the TLDR crowd:
 
@@ -59,14 +58,12 @@ Yes, this is actual, working syntax! Ensue bikeshedding.
 
 `Yap` isn’t quite "usable" yet unless you enjoy debugging the compiler. If you're a masochist though, you'll need some groundwork:
 
-1. [Install `z3` ](https://github.com/Z3Prover/z3/releases)
-   - On macOS, use `brew install z3` like a normal person
-2. Clone the repo
-3. Install `node`
+1. Clone the repo
+2. Install `node`
    - Easiest [via `nvm`](https://github.com/nvm-sh/nvm). Either `nvm use` or `nvm install`
-4. [Install `pnpm`](https://pnpm.io/installation)
-5. `pnpm install`
-6. `pnpm nearley` builds the parser
+3. [Install `pnpm`](https://pnpm.io/installation)
+4. `pnpm install`
+5. `pnpm nearley` builds the parser
 
 That wasn't so hard!
 Now chop chop, fun part is coming
@@ -104,12 +101,10 @@ See more in the [`FAQ`](./FAQ.md)
 
 ## The Plan
 
-In case it wasn't obviours, this here is a work in progress (read: broken, just like my last relationship), so here's a list of things that still need to be done:
+In case it wasn't obvious, this here is a work in progress (read: broken, just like my last relationship), so here's a list of things that still need to be done:
 
 ### Currently in the works
 
-- Delimited continuations
-  - It already supports basic shift/reset and type inference/checking
 - Resource usage semantics
   - For those pesky mutations, references and IO handles
 
@@ -125,10 +120,6 @@ In case it wasn't obviours, this here is a work in progress (read: broken, just 
 
 - Reflection (for runtime type-driven pattern matching)
 - Recursive infinite data (Coinduction)
-- Delimited continuations
-  - Effect system on top
-- Lowered IR
-  - For annoying things like type erasure, monomorphization, FBIP optimizations, customizable data types, fusion, etc
 
 ### Tooling (This Is Important!)
 
@@ -156,7 +147,6 @@ In case it wasn't obviours, this here is a work in progress (read: broken, just 
 - **Testing** - because I keep breaking everything every other day
 - **Comments** - I forgot, ok?
 - **Tech debt** 💀
-  - Well, **lowering** isn't a thing yet (but hey, at least it’s not _not_ a thing, right?)
   - The generator-monad-look-alike stuff... I wanted to be creative, k?
 
 Improvements are coming, but for now, just squint and pretend everything is fine.
