@@ -1018,17 +1018,6 @@ This combines:
 
 Powerful!
 
-### How It Works
-
-The compiler:
-
-1. Collects refinement constraints during type checking
-2. Translates predicates to SMT-LIB logical formulas
-3. Queries an SMT solver (Z3) to verify the constraints
-4. Reports type errors if verification fails
-
-> **Learn more about SMT:** Satisfiability Modulo Theories (SMT) solvers are tools that can automatically reason about logical formulas. See [Z3 documentation](https://github.com/Z3Prover/z3) for details.
-
 ---
 
 ## Delimited Continuations
@@ -1130,12 +1119,10 @@ import "lib.yap";
 This guide covers the currently implemented features of Yap. The language is under active development, so expect:
 
 - More syntactic sugar (infix operators, where clauses, destructuring, shorthand match, etc.)
-- Resource usage semantics for handling mutation.
-- Delimited continuations
-  - Possibly an effect system on top
+- Resource usage semantics (multiplicities) for handling mutation.
+- Possibly an effect system on top
 - Reflection for runtime type information
 - Better tooling (LSP, debugger, syntax highlighting)
-- Additional backends (C, and beyond)
 
 Check out the example files:
 
