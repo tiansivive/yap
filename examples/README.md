@@ -16,6 +16,7 @@ Welcome to Yap! This guide walks through all the language features currently imp
 - [Type Constructors](#type-constructors)
 - [Dependent Types](#dependent-types)
 - [Refinement Types](#refinement-types)
+- [Delimited Continuations](#delimited-continuations)
 - [Foreign Function Interface (FFI)](#foreign-function-interface-ffi)
 
 ---
@@ -1029,6 +1030,20 @@ The compiler:
 > **Learn more about SMT:** Satisfiability Modulo Theories (SMT) solvers are tools that can automatically reason about logical formulas. See [Z3 documentation](https://github.com/Z3Prover/z3) for details.
 
 ---
+
+## Delimited Continuations
+
+Delimited Continuations are Yap's control flow primitive. Users might already be familiar with typical `try/catch` exceptions and "abort" semantics via exceptions. `shift/reset` in Yap generalize the idea, by capturing the continuation (the remaining code up to the delimiter) and allowing one to resume said continuation.
+
+## Shift/Reset/Resume
+
+```ts
+let plain = reset 10; // 10
+let resumed = reset (1 + (shift (resume 10))); // 11
+let many = reset (10 + shift ((resume 1) + (resume 2))); // (10 + 1) + (10 + 2) = 23
+```
+
+--
 
 ## Foreign Function Interface (FFI)
 
