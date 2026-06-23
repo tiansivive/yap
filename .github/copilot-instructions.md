@@ -25,20 +25,19 @@ We use `pnpm` and `vitest`.
 `package.json` scripts:
 
 ```json
-	  "build": "tsup",
-		"format": "prettier .",
-		"lint": "eslint . --max-warnings 0",
-		"lint:knip": "knip",
-		"nearley": "nearleyc src/parser/grammar.ne -o src/parser/grammar.ts && echo '// @ts-nocheck' | cat - src/parser/grammar.ts > temp && mv temp src/parser/grammar.ts",
-		"parse": "tsc src/parser/grammar.ts --skipLibCheck --noEmitOnError --allowJs && nearley-test bin/grammar.js",
-		"prepare": "husky",
-		"railroad": "nearley-railroad src/parser/grammar.ne -o gen/parser/grammar.html",
-		"script": "TS_NODE_TRANSPILE_ONLY=true node --require ts-node/register ./scripts/test.ts",
-		"test": "vitest",
-		"ts-dts": "@asgerf/dts-tree-sitter tree-sitter-yap > ./src/parser/types/generated.d.ts",
-		"tsc": "tsc -p ./tsc.tsconfig.json",
-		"typecheck": "tsc --noEmit -p ./tsc.tsconfig.json",
-		"yap": "TS_NODE_TRANSPILE_ONLY=true node --stack-size=131072 --require ts-node/register ./scripts/cli.ts"
+  "build": "tsup",
+  "format": "prettier .",
+  "lint": "eslint . --max-warnings 0",
+  "lint:knip": "knip",
+  "nearley": "nearleyc src/parser/grammar.ne -o src/parser/grammar.ts && echo '// @ts-nocheck' | cat - src/parser/grammar.ts > temp && mv temp src/parser/grammar.ts",
+  "parse": "tsc src/parser/grammar.ts --skipLibCheck --noEmitOnError --allowJs && nearley-test bin/grammar.js",
+  "prepare": "husky",
+  "railroad": "nearley-railroad src/parser/grammar.ne -o gen/parser/grammar.html",
+  "release": "release-it",
+  "test": "vitest",
+  "tsc": "tsc -p ./tsc.tsconfig.json",
+  "typecheck": "tsc --noEmit -p ./tsc.tsconfig.json",
+  "yap": "TS_NODE_TRANSPILE_ONLY=true node --stack-size=131072 --require ts-node/register ./scripts/cli.ts"
 ```
 
 We should NOT use `build` while debugging.

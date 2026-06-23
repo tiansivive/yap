@@ -1,19 +1,19 @@
 {
-	"name": "lama",
+	"name": "yap",
 	"version": "0.6.0-alpha.1",
 	"description": "A small TT core lang with liquid types",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/tiansivive/lama"
+		"url": "https://github.com/tiansivive/yap"
 	},
 	"license": "MIT",
 	"author": {
 		"email": "tiago.vilaverde@elastic.co"
 	},
 	"type": "commonjs",
-	"main": "./lib/index.js",
+	"main": "./lib/scripts/cli.js",
 	"bin": {
-		"yap": "./scripts/cli.ts"
+		"yap": "./lib/scripts/cli.js"
 	},
 	"files": [
 		"lib/",
@@ -30,6 +30,7 @@
 		"parse": "tsc src/parser/grammar.ts --skipLibCheck --noEmitOnError --allowJs && nearley-test bin/grammar.js",
 		"prepare": "husky",
 		"railroad": "nearley-railroad src/parser/grammar.ne -o gen/parser/grammar.html",
+		"release": "release-it",
 		"test": "vitest",
 		"tsc": "tsc -p ./tsc.tsconfig.json",
 		"typecheck": "tsc --noEmit -p ./tsc.tsconfig.json",

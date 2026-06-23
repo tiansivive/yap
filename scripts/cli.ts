@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node -T
+#!/usr/bin/env node
 import { Command } from "commander";
 
 import * as Compiler from "../src/compile";

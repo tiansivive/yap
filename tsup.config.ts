@@ -1,14 +1,22 @@
 import { defineConfig } from "tsup";
 
-export default defineConfig({
-	bundle: false,
-	clean: true,
-	dts: true,
-	entry: ["src/**/*.ts", "!src/**/*.test.*"],
-	format: "esm",
-	outDir: "lib",
-	sourcemap: true,
-	loader: {
-		".lama": "text",
+const loader = {
+	".lama": "text",
+} as const;
+
+export default defineConfig([
+	{
+		bundle: true,
+		clean: true,
+		dts: false,
+		entry: {
+			"scripts/cli": "scripts/cli.ts",
+		},
+		format: "cjs",
+		outDir: "lib",
+		platform: "node",
+		sourcemap: true,
+		target: "node18",
+		loader,
 	},
-});
+]);

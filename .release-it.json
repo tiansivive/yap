@@ -1,14 +1,22 @@
 {
 	"git": {
 		"commitMessage": "chore: release v${version}",
-		"requireCommits": true
+		"requireCommits": true,
+		"tagName": "v${version}"
 	},
 	"github": {
 		"autoGenerate": true,
-		"release": true,
+		"release": false,
 		"releaseName": "v${version}"
 	},
-	"npm": { "publishArgs": ["--access public", "--provenance"] },
+	"hooks": {
+		"after:bump": "pnpm build && mkdir -p dist && pnpm pack --pack-destination dist",
+		"before:init": "pnpm test && pnpm typecheck"
+	},
+	"npm": {
+		"publish": false,
+		"publishArgs": ["--access", "public", "--provenance"]
+	},
 	"plugins": {
 		"@release-it/conventional-changelog": {
 			"infile": "CHANGELOG.md",

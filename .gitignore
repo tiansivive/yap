@@ -2,6 +2,7 @@ coverage/
 
 node_modules/
 gen/
+lib/
 .logs/
 debug-*.log
 
