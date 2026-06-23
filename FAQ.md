@@ -53,24 +53,27 @@ Think of the platform as just another library: something you can ignore until yo
 
 In any case, Yap ain't there yet. These are just my wild fantasies.
 
+## Stop dodging!
+
+Fine! There's an FFI. You wanna do C pointers? expose a wrapper in C, link the C file, describe and define the type and value/constructor in Yap. Boom. Nice doing business with you.
+Just know, you've now introduced all that impurity into my tiny core so be sure to type things appropriately!
+
 ## What’s the roadmap?
 
 There is none. There are intentions.
 
 ### Coming soon
 
-- Delimited continuations (because they’re absurdly powerful and fun).
 - Multiplicities for mutation, references and other such unimportant things like IO
+- Treesitter Parser migration
 
 ### Coming eventually (real intentions)
 
+- Better error reporting throughout the compiler pipeline
 - LSP
-- A proper IVL to structure verification.
-- Better error reporting from the verifier: counterexamples and unsat cores
-- Coinductivity
 - Proper module system
 - Type erasure
-- C Codegen
+- Coinductivity
 - Packages
 
 ### Maybe someday, maybe never
@@ -79,7 +82,7 @@ There is none. There are intentions.
 - Refinement inference
 - Termination metrics
 - Dependent pattern matching
-- A custom solver to replace the current Z3 duct tape.
+- Gradual/dynamic boundaries
 
 ### Never happening
 
@@ -104,6 +107,50 @@ let debug = \x -> {
 without summoning a dozen type constructors.  
 A sane effect system should let you print to the console without doing religious rituals. Consequently, I'm leaning heavily on relying purely on `shift/reset` and letting the good folks in library land deal with it. Power to the people!
 
+## Flow's too wet, Control move it!
+
+Sometimes control flow should leave, come back, leave again, apologize badly, and then somehow still have opinions about the rest of the program, like a toxic relationship. Because we're masochists, in programming languages we call it a feature.
+Yap has delimited continuations: `reset`, `shift`, and `resume`. `reset` draws a boundary around a computation, `shift` captures the rest of that computation up to the nearest `reset`, `resume` jumps back into that captured computation.
+
+If the `shift` body returns a value directly, it behaves a lot like an early exit:
+
+```ts
+let checkedDivide: Num -> Num -> Num
+    = \x y -> reset ({
+        let divisor = match y
+            | 0 -> shift 0
+            | _ -> y;
+        return x / divisor;
+    });
+```
+
+When `y` is `0`, `shift 0` skips the remaining computation inside the `reset` and the whole `reset` produces `0`. This is the exception-shaped part: you leave and ghost your partner. Rude.
+
+The emotionally available versions use `resume`
+
+```ts
+let recovered: Num
+    = reset ({
+        let x = shift (resume 10);
+        return x + 1;
+    });
+```
+
+The captured continuation is essentially `\x -> x + 1`. Calling `resume 10` continues the computation as if `x` had been `10`, so the result is `11`.
+But Yap is freaky and supports multishot resumptions; you can technically resume multiple relationships:
+
+```ts
+let many: Num
+    = reset ({
+        let x = shift ((resume 1) + (resume 2));
+        return x * 10;
+    });
+```
+
+Here the captured continuation is `\x -> x * 10`. Resuming with `1` gives `10`; resuming with `2` gives `20`; the shift body adds them and the result is `30`. Not advisable in real life... trust me?
+
+Underneath, Yap lowers this to ordinary blocks, jumps, captured environments, and branch dispatch. It's all good, don't worry about it.
+
 ## Quick dependent types crash course
 
 Yap has full-spectrum dependent types: types can depend on values, and values can appear inside types. This is powerful, dangerous, and extremely fun.
@@ -126,8 +173,22 @@ In Yap, a refinement is basically a predicate `a -> Bool` wrapped around a base 
 
 1. Type‑check the predicate itself.
 2. Normalize it via NbE when possible.
-3. Translate the resulting condition into SMT land.
-4. Using Z3 to check satisfiability
+3. Lower the resulting obligation into Yap’s IVL (Intermediate Verification Language)
+4. Ask the custom SMT solver pipeline whether the VC (verification condition) is valid.
+5. The solver runs a CDCL-style Boolean core with theory reasoning attached:
+
+- **EUF** handles equality and uninterpreted functions.
+- **Arithmetic** handles numeric constraints.
+- **Quantifier handling** deals with universally quantified obligations
+
+### Validity
+
+**Validity** means the VC holds for every allowed case.
+A VC like `forall x. x = 1 => x > 0` must hold for every possible value of `x`. In this case, it does: whenever `x = 1`, it follows that `x > 0`.
+SMT solvers check satisfiability: whether at least one model exists for a formula. Refinement verification needs validity, so Yap negates the VC and checks whether that negation is unsatisfiable. If no counterexample exists, the original VC holds.
+If words like SMT, VC, CDCL, Liquid Types, or “why is validity not satisfiability” sound like cursed alphabet soup, then you're a happy person. Please remain so.
+The short version is: Yap turns refinements into logic problems and asks a solver to find holes in them.
+However, if you've ever wondered what sadness and exasperation are, go read about [Liquid Types](https://dl.acm.org/doi/10.1145/1375581.1375602), [SMT solving](https://z3prover.github.io/papers/programmingz3.html), [verification conditions](https://arxiv.org/abs/2010.07763), and [CDCL(T)](http://www.math.tau.ac.il/~maon/teaching/2017-2018/seminar-sem-B/jacm06.pdf).
 
 ## Here be dragons
 
@@ -153,7 +214,7 @@ Yes! Please do!
 
 ## How do I use it?
 
-`pnpm run repl` is your sacred artefact. Once launched run `:help`.
+`pnpm yap repl` is your sacred artefact. Once launched run `:help`.
 
 ## So there's a runtime?
 
@@ -162,26 +223,23 @@ It doesn’t assume anything about memory layouts or platforms. You should (even
 
 ## What about compiling code?
 
-I woulnd't bother.  
-There's a very broken, outdated (read: ignored), mess of a JS codegen. At most you can generate some JS, scream in despair, load it up in `node` and then break your computer because you're coding in JS.
+I wouldn't bother unless you're happy to debug IRs. It's very must WIP.
+The easiest way is to `pnpm yap explorer`. This starts up a server on `localhost:3333` with an editor-like interface. Write yap code on the left, see the various IRs on the right. Get mind-blown!
 
-Try it out with
+There's 3 current (test) codegens: JS, Erlang and C. C links up a small, dumb, inefficient runtime - but hey, it works! But it is a runtime, which, by the law above, I will progressively nuke.
 
-```
-pnpm run yap <path_to_file>
-```
-
-Output will go to `bin/`.
+Technically `pnpm yap` is the compile command. Run it with `--help` to see options. But you've been warned - not much love has gone into that flow yet.
 
 ## What's the point then?
 
 Are you the Inquisitor?  
-The JS codegen is there to experiment and guide what the frontend should be doing.  
+The JS codegen is there to experiment and guide what the frontend should be doing. The C codegen is there to guide how to model or represent low-level peculiarities. The Erlang codegen is there... cuz i like it, k? Also, it's sufficiently different to stress test this mess. In any case, they aren't meant to be final, and it's unclear if yap will ship any codegen.
+
 I'm spending an ungodly amount of time ironing out the kinks of what I'd like the (typing) semantics to be, so they're general/flexible/abstract enough to then translate to whatever platform floats your boat.
 
 ## Is the project alive?
 
-As alive as I am. If I lose interest tomorrow, it dies. If I get obsessed for a month, everything changes. That’s the deal.
+As alive as I am. If I lose interest tomorrow, it dies. If I get obsessed for a month, everything changes. That’s the deal. It's happened before.
 If you need guarantees, use Elm.
 
 ## TypeScript? You're not serious
