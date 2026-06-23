@@ -10,8 +10,8 @@
 		"releaseName": "v${version}"
 	},
 	"hooks": {
-		"after:bump": "pnpm build && mkdir -p dist && pnpm pack --pack-destination dist",
-		"before:init": "pnpm test && pnpm typecheck"
+		"after:bump": "pnpm nearley && pnpm build && mkdir -p dist && pnpm pack --pack-destination dist",
+		"before:init": "pnpm nearley && pnpm test && pnpm typecheck"
 	},
 	"npm": {
 		"publish": false,

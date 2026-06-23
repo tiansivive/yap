@@ -10,6 +10,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./.github/actions/prepare
+      - run: pnpm nearley
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
