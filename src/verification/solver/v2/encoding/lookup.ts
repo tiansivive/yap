@@ -42,6 +42,6 @@ const complement = (state: Enc.State, op: IVL.AtomOp, args: readonly [IVL.Term, 
 		.exhaustive();
 
 const find = (state: Enc.State, op: IVL.AtomOp, args: readonly [IVL.Term, IVL.Term]): CDCL.Literal | undefined =>
-	Array.from(state.atoms.entries()).find(([, atom]) => atom.op === op && equal(atom.args[0], args[0]) && equal(atom.args[1], args[1]))?.[0];
+	state.atoms.entries().find(([, atom]) => atom.op === op && equal(atom.args[0], args[0]) && equal(atom.args[1], args[1]))?.[0];
 
 const equal = (a: IVL.Term, b: IVL.Term): boolean => a.tag === b.tag && JSON.stringify(a) === JSON.stringify(b);
