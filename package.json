@@ -1,6 +1,6 @@
 {
 	"name": "lama",
-	"version": "0.0.0",
+	"version": "0.6.0-alpha.1",
 	"description": "A small TT core lang with liquid types",
 	"repository": {
 		"type": "git",
