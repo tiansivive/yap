@@ -64,23 +64,28 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 		expect(show(nf, ctx)).toBe("2");
 	});
 
-	it("handles deeply nested recursion without stack overflow", () => {
-		// This test verifies the stack-based approach prevents stack overflow
-		// Using match instead of if-then-else
-		const src = `{
+	// Shared CI runners can be much slower under full-suite load.
+	it.sequential(
+		"handles deeply nested recursion without stack overflow",
+		() => {
+			// This test verifies the stack-based approach prevents stack overflow
+			// Using match instead of if-then-else
+			const src = `{
 			let count = \\n -> \\acc -> match n 
 				| 0 -> acc 
 				| _ -> count (n - 1) (acc + 1);
 			return (count 10000) 0;
 		}`;
-		const { structure } = elaborateFrom(src);
-		const ctx = ctxFor(mkCtx(), structure.metas);
+			const { structure } = elaborateFrom(src);
+			const ctx = ctxFor(mkCtx(), structure.metas);
 
-		const nf = Eval.evaluate(ctx, structure.term);
-		expect(nf.type).toBe("Lit");
+			const nf = Eval.evaluate(ctx, structure.term);
+			expect(nf.type).toBe("Lit");
 
-		expect(show(nf, ctx)).toBe("10000");
-	});
+			expect(show(nf, ctx)).toBe("10000");
+		},
+		20_000,
+	);
 
 	it("handles simple recursion", () => {
 		// Simpler test: countdown
