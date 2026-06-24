@@ -1,6 +1,6 @@
 {
 	"name": "yap",
-	"version": "0.6.0-alpha.2",
+	"version": "0.6.0-alpha.3",
 	"description": "A small TT core lang with liquid types",
 	"repository": {
 		"type": "git",
