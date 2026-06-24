@@ -14,6 +14,7 @@ import { resetSupply } from "../../../../lowering/context";
 import type { Declaration } from "../../../../lowering/mir";
 import { emit } from "../emit";
 import { print } from "../print";
+import { Runtime } from "../runtime";
 
 const emitC = (term: EB.Term, declarations?: Map<string, Declaration>) => print(emit(lowerToMir(term, declarations)));
 
@@ -93,6 +94,7 @@ const compileAndRun = (term: EB.Term, declarations?: Map<string, Declaration>): 
 	const dir = fs.mkdtempSync(path.join(os.tmpdir(), "yap-c-"));
 	const srcPath = path.join(dir, "test.c");
 	const binPath = path.join(dir, "test");
+	Runtime.copy(dir);
 	fs.writeFileSync(srcPath, code);
 	try {
 		execSync(`gcc -o "${binPath}" "${srcPath}" -lm`, { encoding: "utf-8", timeout: 10000, stdio: ["pipe", "pipe", "pipe"] });

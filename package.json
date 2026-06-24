@@ -18,6 +18,7 @@
 	"files": [
 		"lib/",
 		"package.json",
+		"src/Codegen/v2/c/rt/yap_rt.h",
 		"LICENSE.md",
 		"README.md"
 	],

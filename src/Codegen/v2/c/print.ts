@@ -1,18 +1,8 @@
 import { match } from "ts-pattern";
-import { execSync } from "child_process";
 import type { Expr, Stmt, Function, Program, TopLevel } from "./ast";
 
 export function print(program: Program): string {
-	const raw = program.items.map(printTopLevel).join("\n\n");
-	return format(raw);
-}
-
-function format(code: string): string {
-	try {
-		return execSync("clang-format", { input: code, encoding: "utf-8", timeout: 3000 });
-	} catch {
-		return code;
-	}
+	return program.items.map(printTopLevel).join("\n\n");
 }
 
 function printTopLevel(item: TopLevel): string {

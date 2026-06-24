@@ -1,10 +1,8 @@
 import { match } from "ts-pattern";
 import type * as MIR from "../../../lowering/mir";
 import type { Literal } from "@yap/shared/literals";
-import path from "path";
 import * as C from "./ast";
-
-const RT_DIR = path.resolve(__dirname, "rt");
+import { Runtime } from "./runtime";
 
 const PRIMOP_C: Record<string, { fn: string; kind: "binary" | "unary" }> = {
 	$add: { fn: "yap_add", kind: "binary" },
@@ -30,11 +28,9 @@ const V = (name: string, init?: C.Expr) => C.Var("YapValue", s(name), init);
 export function emit(mod: MIR.Module): C.Program {
 	const fns = mod.functions.map(emitFunction);
 	const main = emitMain();
-	const items: C.TopLevel[] = [C.Include(path.join(RT_DIR, "yap_rt.h")), ...fns.map(C.Forward), ...fns, main];
+	const items: C.TopLevel[] = [C.Include(Runtime.include), ...fns.map(C.Forward), ...fns, main];
 	return C.Program(items);
 }
-
-export { RT_DIR };
 
 function emitMain(): C.Function {
 	return C.Fn(

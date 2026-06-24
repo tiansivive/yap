@@ -12,6 +12,7 @@ import { emit as emitJS } from "./Codegen/v2/js/emit";
 import { print as printJS } from "./Codegen/v2/js/print";
 import { emit as emitC } from "./Codegen/v2/c/emit";
 import { print as printC } from "./Codegen/v2/c/print";
+import { Runtime as CRuntime } from "./Codegen/v2/c/runtime";
 import { emit as emitErl } from "./Codegen/v2/erlang/emit";
 import { print as printErl } from "./Codegen/v2/erlang/print";
 
@@ -39,6 +40,12 @@ const ensureDir = (dir: string): void => {
 	}
 };
 
+const prepare: Record<Target, (outDir: string) => void> = {
+	c: CRuntime.copy,
+	erlang: () => undefined,
+	js: () => undefined,
+};
+
 const ext = (target: Target): string => {
 	switch (target) {
 		case "js":
@@ -57,6 +64,7 @@ export const compile = (file: string, options: Partial<Options> = {}) => {
 		Mod.mkInterface(file, [], { outDir: opts.outDir, baseUrl: opts.baseUrl });
 
 		ensureDir(opts.outDir);
+		prepare[opts.target](opts.outDir);
 
 		Object.entries(Mod.globalModules).forEach(([filepath, iface]) => {
 			console.log("Processing module: " + filepath);

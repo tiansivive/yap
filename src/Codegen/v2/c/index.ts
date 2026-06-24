@@ -1,3 +1,4 @@
 export * as AST from "./ast";
-export { emit, RT_DIR } from "./emit";
+export { emit } from "./emit";
 export { print } from "./print";
+export { Runtime } from "./runtime";
