@@ -1,0 +1,45 @@
+name: Fly Deploy
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy_next:
+    name: Deploy try-yap-next
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - if: env.FLY_API_TOKEN == ''
+        run: echo "FLY_API_TOKEN is not set; skipping try-yap-next deployment."
+      - if: env.FLY_API_TOKEN != ''
+        run: flyctl apps create try-yap-next || true
+      - if: env.FLY_API_TOKEN != ''
+        run: flyctl deploy --remote-only --config fly.try-yap-next.toml --app try-yap-next
+
+  deploy_stable:
+    name: Deploy try-yap
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - if: env.FLY_API_TOKEN == ''
+        run: echo "FLY_API_TOKEN is not set; skipping try-yap deployment."
+      - if: env.FLY_API_TOKEN != ''
+        run: flyctl apps create try-yap || true
+      - if: env.FLY_API_TOKEN != ''
+        run: flyctl deploy --remote-only --config fly.try-yap.toml --app try-yap

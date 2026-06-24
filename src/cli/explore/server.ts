@@ -6,8 +6,27 @@ import { run, type DeBruijnMode, type ParserRule } from "./pipeline";
 
 type Options = { port: number };
 
-const STATIC = path.join(__dirname, "static");
-const SYNTAX = path.resolve(__dirname, "../../../tooling/syntax-highlighting");
+const first = (paths: readonly string[]): string => {
+	const found = paths.find(fs.existsSync);
+
+	if (found === undefined) {
+		throw new Error(`explore: asset directory not found (${paths.join(", ")})`);
+	}
+
+	return found;
+};
+
+const STATIC = first([
+	path.join(__dirname, "static"),
+	path.resolve(__dirname, "../../src/cli/explore/static"),
+	path.resolve(process.cwd(), "src/cli/explore/static"),
+]);
+
+const SYNTAX = first([
+	path.resolve(__dirname, "../../../tooling/syntax-highlighting"),
+	path.resolve(__dirname, "../../tooling/syntax-highlighting"),
+	path.resolve(process.cwd(), "tooling/syntax-highlighting"),
+]);
 
 const MIME: Record<string, string> = {
 	".html": "text/html",

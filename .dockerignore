@@ -1,0 +1,12 @@
+node_modules
+lib
+dist
+coverage
+gen
+tmp
+bin
+.git
+.logs
+.cursor
+.claude
+z-yap
