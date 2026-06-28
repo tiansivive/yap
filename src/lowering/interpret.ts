@@ -4,6 +4,20 @@ import type { Literal } from "@yap/shared/literals";
 
 export type Value = null | number | boolean | string | { [k: string]: Value } | { __funcref: string };
 
+const isRecord = (v: Value): v is { [k: string]: Value } => typeof v === "object" && v !== null && !("__funcref" in v);
+
+const fnRefName = (v: Value): string =>
+	match(v)
+		.when(isRecord, r => {
+			const fn = r.__fn;
+			return fn !== undefined && typeof fn === "object" && fn !== null && "__funcref" in fn ? String((fn as { __funcref: string }).__funcref) : "";
+		})
+		.when(
+			(x): x is { __funcref: string } => typeof x === "object" && x !== null && "__funcref" in x,
+			r => r.__funcref,
+		)
+		.otherwise(() => "");
+
 type Env = Map<string, Value>;
 
 type Ctx = {
@@ -117,11 +131,15 @@ const execInstr = (env: Env, instr: Instr, ctx: Ctx): void => {
 					env.set(result, fn(...resolvedArgs));
 				})
 				.with({ type: "indirect" }, ({ callee }) => {
-					const ref = lkp(callee) as { __funcref: string };
-					const fn = ctx.functions.get(ref.__funcref);
+					const name = fnRefName(lkp(callee));
+
+					if (!name) {
+						throw new Error(`interpret: indirect call callee is not a function reference`);
+					}
+					const fn = ctx.functions.get(name);
 
 					if (!fn) {
-						throw new Error(`interpret: unknown function "${ref.__funcref}"`);
+						throw new Error(`interpret: unknown function "${name}"`);
 					}
 					env.set(result, execFunction(fn, resolvedArgs, ctx));
 				})

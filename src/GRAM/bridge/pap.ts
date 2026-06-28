@@ -5,6 +5,7 @@ import { Constructors } from "../../lowering/mir";
 import type * as MIR from "../../lowering/mir";
 import type { Ctx } from "./context";
 import * as C from "./context";
+import * as Bundle from "./bundle";
 import { ARITIES } from "../../lowering/shared/primops";
 
 const { Terminator, Block, Function: Fn, Instr, Expr } = Constructors;
@@ -52,7 +53,7 @@ export const pap = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], c
 	const wrappers = buildWrappers(remaining, c1);
 	const c2 = emitWrapperFunctions(callee, arity, capturedNames.length, remaining, isPrimop, wrappers, c1);
 
-	return emitClosureBundle(wrappers[0]?.fnName ?? "pap_fn", capturedNames, c2);
+	return Bundle.emitAtSite(wrappers[0]?.fnName ?? "pap_fn", capturedNames, c2);
 };
 
 type Wrapper = { readonly fnName: string; readonly envParam: string; readonly freshParam: string };
@@ -87,7 +88,7 @@ const emitWrapperFunctions = (
 	}, ctx);
 
 const buildInvokeWrapper = (callee: string, arity: number, w: Wrapper, numCaptured: number, isPrimop: boolean): MIR.Function => {
-	const reads = unpackEnv(numCaptured, w.envParam);
+	const reads = Bundle.unpackEnv(numCaptured, w.envParam);
 	const allArgs = [...reads.vars, w.freshParam];
 	const result = `result_${w.fnName}`;
 
@@ -99,57 +100,12 @@ const buildInvokeWrapper = (callee: string, arity: number, w: Wrapper, numCaptur
 };
 
 const buildCurryWrapper = (w: Wrapper, numCaptured: number, nextFnName: string): MIR.Function => {
-	const reads = unpackEnv(numCaptured, w.envParam);
+	const reads = Bundle.unpackEnv(numCaptured, w.envParam);
 	const allArgs = [...reads.vars, w.freshParam];
 
-	const bundle = bundleClosure(nextFnName, allArgs, w.fnName);
+	const bundle = Bundle.bundleClosure(nextFnName, allArgs, w.fnName);
 
 	const block = Block(`${w.fnName}_entry`, [], [...reads.instrs, ...bundle.instrs], Terminator.Return(bundle.closureRef));
 
 	return Fn(w.fnName, [w.envParam, w.freshParam], block.label, [block]);
-};
-
-const unpackEnv = (count: number, envParam: string): { vars: ReadonlyArray<string>; instrs: ReadonlyArray<MIR.Instr> } =>
-	Array(count)
-		.fill(0)
-		.reduce<{ vars: ReadonlyArray<string>; instrs: ReadonlyArray<MIR.Instr> }>(
-			(acc, _, j) => {
-				const v = `cap_${j}`;
-				return {
-					vars: [...acc.vars, v],
-					instrs: [...acc.instrs, Instr.Read(`v${j}`, envParam, v)],
-				};
-			},
-			{ vars: [], instrs: [] },
-		);
-
-const bundleClosure = (fnName: string, captured: ReadonlyArray<string>, prefix: string): { instrs: ReadonlyArray<MIR.Instr>; closureRef: string } => {
-	const envRef = `env_${prefix}`;
-	const fnRef = `fnref_${prefix}`;
-	const closureRef = `closure_${prefix}`;
-
-	return {
-		instrs: [
-			Instr.Alloc({ type: "Record", fields: captured.map((a, i) => ({ label: `v${i}`, value: a })) }, envRef),
-			Instr.Let(fnRef, Expr.FuncRef(fnName)),
-			Instr.Alloc(
-				{
-					type: "Record",
-					fields: [
-						{ label: "__fn", value: fnRef },
-						{ label: "__env", value: envRef },
-					],
-				},
-				closureRef,
-			),
-		],
-		closureRef,
-	};
-};
-
-const emitClosureBundle = (outerFnName: string, capturedNames: ReadonlyArray<string>, ctx: Ctx): [string, Ctx] => {
-	const [prefix, c1] = C.name(ctx, "pap");
-	const bundle = bundleClosure(outerFnName, capturedNames, prefix);
-	const c2 = bundle.instrs.reduce((c, i) => C.instr(c, i), c1);
-	return [bundle.closureRef, C.bind(c2, -1, bundle.closureRef)];
 };
