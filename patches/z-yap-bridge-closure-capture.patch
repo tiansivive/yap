@@ -1,0 +1,330 @@
+From 921e7f8b7c23089b2d179812b6b087c5b8e983a3 Mon Sep 17 00:00:00 2001
+From: Cursor Agent <cursoragent@cursor.com>
+Date: Mon, 29 Jun 2026 17:22:08 +0000
+Subject: [PATCH] docs(zk): resolve bridge-closure-capture after yap#8 merge
+
+Retag [[bridge-closure-capture]] implemented with durable bundle-ABI
+design prose. Close pipeline-stabilization #12 and explorer-audit #9;
+remove from gram-to-mir-bridge known gaps; refresh pulse narratives.
+
+Add compilation-abi-selection design zettel and queue item (deferred
+per-backend ABI discussion). Append thread.md session blocks.
+---
+ connections.md                           | 11 +++++-
+ thread.md                                | 42 ++++++++++++++++++++++
+ zettels/bridge-closure-capture.md        | 20 +++++++----
+ zettels/compilation-abi-selection.md     | 44 ++++++++++++++++++++++++
+ zettels/explorer-audit.thread.md         |  5 ++-
+ zettels/global-pending-queue.md          |  5 +++
+ zettels/gram-to-mir-bridge.md            |  4 +--
+ zettels/pipeline-stabilization.thread.md |  6 ++--
+ zettels/pulse.md                         |  6 ++--
+ 9 files changed, 125 insertions(+), 18 deletions(-)
+ create mode 100644 zettels/compilation-abi-selection.md
+
+diff --git a/connections.md b/connections.md
+index aa7283d..db4fee8 100644
+--- a/connections.md
++++ b/connections.md
+@@ -2079,6 +2079,8 @@
+ 
+ [[bridge-closure-capture]] --[:ADDRESSES]--> [[gram-to-mir-bridge]]  -- Curried return calling convention
+ [[bridge-closure-capture]] --[:ADDRESSES]--> [[closures]]  -- Capture threading for nested closures
++[[bridge-closure-capture]] --[:RELIES_ON]--> [[closure-conversion]]  -- Shared bundle ABI convention  @2026-06-28
++[[gram-to-mir-bridge]] --[:RESOLVES]--> [[bridge-closure-capture]]  -- Bridge emits bundle ABI for curried returns  @2026-06-28
+ 
+ [[bridge-struct-dispatch]] --[:ADDRESSES]--> [[gram-to-mir-bridge]]  -- Struct pattern compilation
+ [[bridge-struct-dispatch]] --[:ADDRESSES]--> [[pattern-matching]]  -- Struct vs variant dispatch paths
+@@ -2285,7 +2287,7 @@
+ [[pipeline-stabilization.thread]] --[:INCLUDES]--> [[bridge-free-var-unknown]]  -- Bridge var:free → unknown
+ [[pipeline-stabilization.thread]] --[:INCLUDES]--> [[bridge-label-closure-gap]]  -- Label self-ref under match scope
+ [[pipeline-stabilization.thread]] --[:INCLUDES]--> [[bridge-struct-dispatch]]  -- Backlog: struct pattern dispatch
+-[[pipeline-stabilization.thread]] --[:INCLUDES]--> [[bridge-closure-capture]]  -- Backlog: curried closure capture
++[[pipeline-stabilization.thread]] --[:INCLUDES]--> [[bridge-closure-capture]]  -- Curried closure capture (implemented)
+ [[pipeline-stabilization.thread]] --[:INCLUDES]--> [[type-erasure]]  -- Backlog: type-only let erasure
+ [[pipeline-stabilization.thread]] --[:INCLUDES]--> [[bridge-unsaturated-external]]  -- Bug: unsaturated externals need closure wrappers  @2026-06-03
+ 
+@@ -3071,3 +3073,10 @@
+ [[pattern-matching.thread]] --[:INCLUDES]--> [[tagged-dispatch]]  @2026-06-26
+ [[gram-evolution.thread]] --[:INCLUDES]--> [[tagged-dispatch]]  @2026-06-26
+ [[gram-evolution.thread]] --[:INCLUDES]--> [[icurry]]  @2026-06-26
++
++# compilation-abi-selection
++[[compilation-abi-selection]] --[:ADDRESSES]--> [[compilation-by-selection]]  -- Backend-specific convention choice  @2026-06-28
++[[compilation-abi-selection]] --[:ADDRESSES]--> [[package-artifact-distribution]]  -- Package boundary must carry ABI assumptions  @2026-06-28
++[[compilation-abi-selection]] --[:CONTRASTS_WITH]--> [[mir]]  -- Single MIR contract vs per-target conventions  @2026-06-28
++[[compilation-abi-selection]] --[:RELIES_ON]--> [[closures]]  -- Closure representation is the primary ABI fork  @2026-06-28
++[[global-pending-queue]] --[:INCLUDES]--> [[compilation-abi-selection]]  -- Deferred design discussion  @2026-06-28
+diff --git a/thread.md b/thread.md
+index 4c32a63..93f2f1d 100644
+--- a/thread.md
++++ b/thread.md
+@@ -1945,3 +1945,45 @@ Deferred to a later QC pass: status-in-prose cleanup (scoped to content zettels
+ - [[gram]], [[gram-next-steps]] — bridge de-speculated / marked done; lambda-lifting de-duplicated.
+ - [[delimited-continuations.thread]], [[verification-backend.thread]], [[gram-evolution.thread]] — hub sequence lines reconciled to the retags.
+ - [[test-coverage-gaps]] — three edge notes corrected to current file layout.
++
++---
++
++## Session: Closure capture investigation + ABI queue item — @2026-06-28 [lowering, mir, closure, bridge, compiler, codegen, queue]
++
++Investigated [[pipeline-stabilization.thread]] closure-capture gaps against the canonical GRAM → bridge pipeline. Confirmed [[gram-pap-pass]] applies only to unsaturated `EXTERNAL` nodes (FFI partial application), not user `:CLOSURE` / `:LAMBDA` nodes — PAP and lexical closure capture are separate tracks. The GRAM `closure` pass already records per-lambda `:ENV` and `:CAPTURE`; the gap is bridge emission (currently extra formals + bare `FuncRef`, not the `{ __fn, __env }` bundle convention used by legacy `lowerToMir` and `pap.ts`). Fix for curried returns under the bundle ABI is bridge-side, not a new GRAM pass. Lambda lifting ([[lambda-lifting]]) is a separate planned enrichment and not required for the bundle fix.
++
++Deferred cross-cutting design: per-backend ABI choice and package/module reconciliation when targets or dependencies diverge on calling convention.
++
++### Enqueued
++
++ENQUEUE [[compilation-abi-selection]] — discuss bundle vs lifting vs native conventions per target, and package boundary coherence
++
++### Spawned
++
++SPAWN [[compilation-abi-selection]] — design-space zettel for ABI selection and package reconciliation
++
++### Edges
++
++[[compilation-abi-selection]] --[:ADDRESSES]--> [[compilation-by-selection]]  -- Backend-specific convention choice
++[[compilation-abi-selection]] --[:ADDRESSES]--> [[package-artifact-distribution]]  -- Package boundary must carry ABI assumptions
++[[global-pending-queue]] --[:INCLUDES]--> [[compilation-abi-selection]]  -- Deferred design discussion
++
++---
++
++## Session: Bridge closure capture resolved — @2026-06-28 [lowering, mir, closure, bridge, compiler, documentation]
++
++Yap PR [#8](https://github.com/tiansivive/yap/pull/8) merged the bridge bundle ABI fix for curried returns: lifted functions take `[env, formal]`, first-class function values are `{ __fn, __env }`, and application reads the bundle before indirect call. GRAM's closure pass already records `:ENV` / `:CAPTURE`; the gap was bridge emission (extra formals + bare `FuncRef`), now aligned with [[closure-conversion]] and the legacy lowering path. Retagged [[bridge-closure-capture]] `implemented`; struck through on [[pipeline-stabilization.thread]] #12 and [[explorer-audit.thread]] #9; removed from [[gram-to-mir-bridge]] known gaps; updated [[pulse]] Explorer Audit, GRAM Evolution, and Pipeline Stabilization narratives.
++
++### Resolved
++
++RESOLVED [[bridge-closure-capture]] — yap#8 lands shared bundle ABI in GRAM→MIR bridge emission
++
++### Updates
++
++- [[bridge-closure-capture]] — durable bundle-ABI design prose; `implemented` retag; `code:tiansivive/yap#8` ref.
++- [[pipeline-stabilization.thread]], [[explorer-audit.thread]], [[gram-to-mir-bridge]], [[pulse]] — closure capture closed across threads and editorial snapshot.
++
++### Edges
++
++[[bridge-closure-capture]] --[:RELIES_ON]--> [[closure-conversion]]  -- Shared bundle ABI convention
++[[gram-to-mir-bridge]] --[:RESOLVES]--> [[bridge-closure-capture]]  -- Bridge emits bundle ABI for curried returns
+diff --git a/zettels/bridge-closure-capture.md b/zettels/bridge-closure-capture.md
+index 4069241..3625728 100644
+--- a/zettels/bridge-closure-capture.md
++++ b/zettels/bridge-closure-capture.md
+@@ -1,7 +1,7 @@
+ ---
+ tags:
+-  - needs-design
+-  - incomplete
++  - implemented
++  - bugfix
+   - lowering
+   - graph
+   - mir
+@@ -9,16 +9,22 @@ tags:
+   - compiler
+   - closure
+   - ir
++  - bridge
+   - pattern
++refs:
++  - thread:pipeline-stabilization
++  - code:tiansivive/yap#8
+ ---
+ 
+ # Bridge closure capture
+ 
+-`\f -> \x -> f (f x)` — the inner closure's MIR emits a bare `FuncRef` for the returned lambda without bundling the captured `f` into a closure environment. The outer function returns a `FuncRef` to an inner function that references `f`, but the bridge doesn't thread the capture through.
++When a curried function returns an inner lambda that references a parameter from an outer scope, the returned value is a **closure** — not a bare function pointer. The GRAM closure pass records each lambda's free-variable set as `:ENV` / `:CAPTURE` metadata on `:CLOSURE` nodes; the bridge translates that metadata into the runtime bundle convention shared with legacy lowering.
+ 
+-The GRAM closure pass (`src/GRAM/passes/closure.ts`) identifies free variables, but the bridge's calling convention for curried returns doesn't translate capture sets into runtime closure structs. A curried function that returns a closure needs the bridge to emit `MkClosure(func, {f})` rather than `FuncRef(func)`.
++**Bundle ABI:** lifted functions take `[env, formal]` parameters; first-class function **values** are records `{ __fn, __env }`. Application reads `__fn` and `__env` off the callee bundle, then performs an indirect call with `[env, arg]`. Curried returns bundle the inner lifted function together with the captured environment at the return site.
+ 
+-The bridge now throws explicitly when nested closures reference outer captures (`src/GRAM/bridge/closures.ts`), surfacing the gap in test snapshots rather than silently emitting incorrect MIR.
++**Distinction from PAP:** [[gram-pap-pass]] handles unsaturated **externals** (FFI partial application), a separate track from lexical closure capture on user `:CLOSURE` nodes.
++
++**Relation to closure conversion:** [[closure-conversion]] documents the same bundle ABI on the legacy `lowerToMir` path. The bridge emits captures via the shared bundle primitive rather than extra formals plus a bare `FuncRef`. Lambda lifting ([[lambda-lifting]]) is an orthogonal enrichment and not required for bundle correctness.
+ 
+ <!-- connections:start -->
+ 
+@@ -27,10 +33,12 @@ The bridge now throws explicitly when nested closures reference outer captures (
+ **Outgoing**
+ - ADDRESSES → [[gram-to-mir-bridge]] — Curried return calling convention
+ - ADDRESSES → [[closures]] — Capture threading for nested closures
++- RELIES_ON → [[closure-conversion]] — Shared bundle ABI convention
+ 
+ **Incoming**
+ - [[explorer-audit.thread]] ← INCLUDES — Thread member
+ - [[bridge-unsaturated-external]] ← MIRRORS — Sibling bridge closure gap
+-- [[pipeline-stabilization.thread]] ← INCLUDES — Backlog: curried closure capture
++- [[pipeline-stabilization.thread]] ← INCLUDES — Curried closure capture
++- [[gram-to-mir-bridge]] ← RESOLVES — Bridge emits bundle ABI for curried returns
+ 
+ <!-- connections:end -->
+diff --git a/zettels/compilation-abi-selection.md b/zettels/compilation-abi-selection.md
+new file mode 100644
+index 0000000..5edfcaa
+--- /dev/null
++++ b/zettels/compilation-abi-selection.md
+@@ -0,0 +1,44 @@
++---
++tags:
++  - planned
++  - needs-design
++  - concept
++  - decision
++  - compiler
++  - codegen
++  - backend
++  - mir
++  - closure
++  - package
++  - infrastructure
++  - distribution
++---
++
++# Compilation ABI selection
++
++Different compilation targets may require different **calling conventions** for the same semantic program — how closure values are represented, how partial application is materialized, and how indirect calls dispatch.
++
++**Bundle convention** — function pointer plus environment record (`{ __fn, __env }`), with captures read from the env inside the lifted function body.
++
++**Lifting convention** — top-level functions with captures passed as explicit extra parameters at every call and return site, avoiding heap-allocated env records.
++
++**Native convention** — target source preserves host lambdas and lexical capture (JavaScript, Erlang), with minimal or no closure conversion in the emitted IR.
++
++[[compilation-by-selection]] assigns these preferences per backend at the GRAM pass level: C wants lifting and bundle paths; JS and Erlang prefer native closures; GPU/HVM paths diverge further. D-006 ([[gram-canonical-ir.adr]]) currently routes all targets through one bridge emission into a single [[mir]] shape consumed identically by JS, C, and Erlang codegen — a deliberate stabilisation choice that defers backend-specific ABI divergence.
++
++The open design question is reconciliation at **package and module boundaries**: when a project selects a target (or multiple targets), when dependencies mix backends, and when programmable GRAM passes change representation locally — how is ABI choice declared, composed, and kept coherent across linked units? [[package-artifact-distribution]] defines what ships in an installable artifact; ABI selection defines what calling convention that artifact assumes downstream code must speak.
++
++<!-- connections:start -->
++
++## Connections
++
++**Outgoing**
++- ADDRESSES → [[compilation-by-selection]] — Backend-specific convention choice
++- ADDRESSES → [[package-artifact-distribution]] — Package boundary must carry ABI assumptions
++- CONTRASTS_WITH → [[mir]] — Single MIR contract vs per-target conventions
++- RELIES_ON → [[closures]] — Closure representation is the primary ABI fork
++
++**Incoming**
++- [[global-pending-queue]] ← INCLUDES — Deferred design discussion
++
++<!-- connections:end -->
+diff --git a/zettels/explorer-audit.thread.md b/zettels/explorer-audit.thread.md
+index d601fb2..194c4ab 100644
+--- a/zettels/explorer-audit.thread.md
++++ b/zettels/explorer-audit.thread.md
+@@ -52,9 +52,8 @@ pattern-matching (struct dispatch), explorer-evolution (snippet syntax)_
+ 8. **Module zonker propagation** [[module-zonker-fix]] — implemented
+    Told zonker from `letdec` dropped by `module.ts` `listen()` destructuring.
+ 
+-9. **Bridge closure capture** [[bridge-closure-capture]] — needs-design
+-   Curried closures return bare `FuncRef` without bundling captures.
+-   _Tracked on [[pipeline-stabilization.thread]] #12._
++9. ~~**Bridge closure capture** [[bridge-closure-capture]] — **implemented**~~
++   Curried returns emit the shared bundle ABI (`{ __fn, __env }`) at return sites.
+ 
+ 10. **Bridge struct dispatch** [[bridge-struct-dispatch]] — needs-design
+     Struct match emits empty-string branch test; multi-alt struct patterns need field projection.
+diff --git a/zettels/global-pending-queue.md b/zettels/global-pending-queue.md
+index 984e5bb..e49f992 100644
+--- a/zettels/global-pending-queue.md
++++ b/zettels/global-pending-queue.md
+@@ -61,6 +61,10 @@ See [[delimited-continuations.thread]], [[row-types.thread]],
+ 
+ - [ ] Document how Yap structures testing — unit tests per pass/transformation, integration tests when composing them. Methodology note; scope carefully (the Core→codegen pipeline shape is lowering-specific, not a general principle).
+ 
++## Compilation ABI (2026-06-28)
++
++- [ ] [[compilation-abi-selection]] — discuss per-backend/target closure calling conventions (bundle vs lifting vs native), and how package/module boundaries reconcile when projects or dependencies pick different ABIs
++
+ <!-- connections:start -->
+ 
+ ## Connections
+@@ -85,6 +89,7 @@ See [[delimited-continuations.thread]], [[row-types.thread]],
+ - INCLUDES → [[z-yap-agent-skill]] — Planned Cursor skill for z-yap interaction protocol
+ - INCLUDES → [[surface-syntax-backlog]] — Deferred syntax backlog
+ - INCLUDES → [[euf-congruence-propagation-bug]] — Resolved solver parity bug
++- INCLUDES → [[compilation-abi-selection]] — Per-target ABI choice and package reconciliation
+ 
+ **Incoming**
+ - [[thread-queue-system.thread]] ← INFORMS — System design
+diff --git a/zettels/gram-to-mir-bridge.md b/zettels/gram-to-mir-bridge.md
+index 512f1f6..bef47e1 100644
+--- a/zettels/gram-to-mir-bridge.md
++++ b/zettels/gram-to-mir-bridge.md
+@@ -27,7 +27,7 @@ The enriched GRAM graph (after all passes) contains enough information to mechan
+ 
+ **Status:** Implemented. The bridge (`src/GRAM/bridge/emit.ts`) is the canonical MIR source across the explorer, REPL, and file-compile pipelines. The direct `lowerToMir` path ([[mir-lowering]]) is deprecated and has no production callers.
+ 
+-**Known gaps:** Closure capture for curried returns ([[bridge-closure-capture]]), struct match dispatch ([[bridge-struct-dispatch]]).
++**Known gaps:** Struct match dispatch ([[bridge-struct-dispatch]]).
+ 
+ <!-- connections:start -->
+ 
+@@ -53,7 +53,7 @@ The enriched GRAM graph (after all passes) contains enough information to mechan
+ - [[gram-crud-enrichment]] ← FOLLOWS — After bridge validates graph
+ - [[bridge-type-erasure]] ← FIXES — PI/SIGMA/VAR_META dispatch
+ - [[bridge-label-resolution]] ← FIXES — VAR_LABEL dispatch
+-- [[bridge-closure-capture]] ← ADDRESSES — Curried return calling convention
++- [[bridge-closure-capture]] ← RESOLVES — Curried return bundle ABI
+ - [[bridge-struct-dispatch]] ← ADDRESSES — Struct pattern compilation
+ - [[bridge-unsaturated-external]] ← ADDRESSES — Bridge lacks partial application handling
+ - [[gram-pap-pass]] ← PRESERVES — Keeps bridge mechanical: GRAM adds semantics, bridge translates
+diff --git a/zettels/pipeline-stabilization.thread.md b/zettels/pipeline-stabilization.thread.md
+index 1a62998..1c144c0 100644
+--- a/zettels/pipeline-stabilization.thread.md
++++ b/zettels/pipeline-stabilization.thread.md
+@@ -61,8 +61,8 @@ invisible when each pass was tested in isolation._
+ 11. **Bridge struct dispatch** [[bridge-struct-dispatch]] — backlog
+     Already tracked. List/struct pattern dispatch in the bridge.
+ 
+-12. **Bridge closure capture** [[bridge-closure-capture]] — backlog
+-    Already tracked. Curried returns with outer captures.
++12. ~~**Bridge closure capture** [[bridge-closure-capture]] — bug, **implemented**~~
++    Curried returns bundle inner lifted functions with captured environments per the shared `{ __fn, __env }` ABI.
+ 
+ 13. ~~**Bridge unsaturated external** [[bridge-unsaturated-external]] — bug, **implemented**~~
+     `external()` in `bridge/primops.ts` emits `Call(direct)` for all externals without
+@@ -84,7 +84,7 @@ invisible when each pass was tested in isolation._
+ - INCLUDES → [[bridge-free-var-unknown]] — Bridge var:free → unknown
+ - INCLUDES → [[bridge-label-closure-gap]] — Label self-ref under match scope
+ - INCLUDES → [[bridge-struct-dispatch]] — Backlog: struct pattern dispatch
+-- INCLUDES → [[bridge-closure-capture]] — Backlog: curried closure capture
++- INCLUDES → [[bridge-closure-capture]] — Curried closure capture (implemented)
+ - INCLUDES → [[type-erasure]] — Backlog: type-only let erasure
+ - INCLUDES → [[bridge-unsaturated-external]] — Bug: unsaturated externals need closure wrappers
+ - SHARED_WITH → [[gram-evolution.thread]] — Bridge bugs overlap
+diff --git a/zettels/pulse.md b/zettels/pulse.md
+index 51d93dc..b6daf34 100644
+--- a/zettels/pulse.md
++++ b/zettels/pulse.md
+@@ -19,7 +19,7 @@ The generator-based pipeline is the live elaboration path: inference dispatches
+ 
+ ## Explorer Audit
+ 
+-A systematic pass ran all 19 explorer snippets through the full pipeline (parse → elaborate → type → NF → IVL → solver trace → GRAM → MIR → codegen), surfacing crashes, undeclared MIR variables, wrong types, and semantic codegen errors. The thread is archived: most findings landed as fixes spanning NF quoting ([[stuck-quoting-fix]]), bridge type-level erasure and label resolution ([[bridge-type-erasure]], [[bridge-label-resolution]]), pattern row binders ([[pattern-row-binder-fix]]), implicit Pi wrapping ([[wraplambda-fix]]), module zonker propagation ([[module-zonker-fix]]), and two verification gaps ([[verification-unconstrained-meta]], [[verification-rigid-mismatch]]); four snippets were corrected surface-syntax errors, not compiler bugs ([[explorer-snippet-syntax-fixes]]). The audit forced one language-level decision — unconstrained implicits generalize rather than defaulting to `Type` ([[implicit-generalization-semantics]]). Two findings remain open as design work, now carried on [[pipeline-stabilization.thread]]: curried closures returning an inner lambda emit a bare `FuncRef` without bundling captures ([[bridge-closure-capture]]), and struct `match` emits a variant-style empty-string tag test instead of field projection and dispatch ([[bridge-struct-dispatch]]). The bridge now throws explicitly on both so the gaps surface in snapshots rather than miscompiling silently. The IVL and Trace tabs that instrumented the audit are stable; forward tooling is tracked under [[explorer-evolution.thread]].
++A systematic pass ran all 19 explorer snippets through the full pipeline (parse → elaborate → type → NF → IVL → solver trace → GRAM → MIR → codegen), surfacing crashes, undeclared MIR variables, wrong types, and semantic codegen errors. The thread is archived: most findings landed as fixes spanning NF quoting ([[stuck-quoting-fix]]), bridge type-level erasure and label resolution ([[bridge-type-erasure]], [[bridge-label-resolution]]), pattern row binders ([[pattern-row-binder-fix]]), implicit Pi wrapping ([[wraplambda-fix]]), module zonker propagation ([[module-zonker-fix]]), closure capture for curried returns ([[bridge-closure-capture]]), and two verification gaps ([[verification-unconstrained-meta]], [[verification-rigid-mismatch]]); four snippets were corrected surface-syntax errors, not compiler bugs ([[explorer-snippet-syntax-fixes]]). The audit forced one language-level decision — unconstrained implicits generalize rather than defaulting to `Type` ([[implicit-generalization-semantics]]). One finding remains open as design work on [[pipeline-stabilization.thread]]: struct `match` emits a variant-style empty-string tag test instead of field projection and dispatch ([[bridge-struct-dispatch]]). The IVL and Trace tabs that instrumented the audit are stable; forward tooling is tracked under [[explorer-evolution.thread]].
+ 
+ ## Explorer Evolution
+ 
+@@ -27,7 +27,7 @@ Beyond the shipped explorer ([[pipeline-explorer]], `pnpm yap explore`) and its
+ 
+ ## GRAM Evolution
+ 
+-GRAM is the canonical compilation IR: per D-006 ([[gram-canonical-ir.adr]]) all compilation flows `EB.Term → GRAM → MIR → codegen`, with `GRAM.Bridge.emit` the sole MIR source for explorer, REPL, and file-compile, and direct `lowerToMir` deprecated with no production callers. The substrate ([[gram]], D-002) and its static pipeline are complete and tested — `translate` plus `eta`, `saturate`, `shiftReset`, `pattern`, `closure`, refined by the DPO engine. The [[gram-to-mir-bridge]] emits MIR mechanically; remaining gaps are narrow (curried-return closure capture, struct match dispatch). Programmable GRAM passes ([[programmable-gram-passes]]) shipped an MVP (phases 1–6): user DPO rules carried as a `gram` modal annotation, discovered and topologically ordered by the implemented [[gram-kernel-pass]]. That work is implemented-but-incomplete — the retrospective ([[programmable-gram-passes-mvp-retrospective]]) surfaced four follow-ups, of which [[gram-string-escaping.bug]] and [[gram-rule-scoping.design]] BLOCK completion and phase 7 is deferred behind them. The [[gram-pap-pass]] is a shipped builtin resolving unsaturated externals into PAP nodes upstream of the bridge. Next step is the static-pass roadmap in [[gram-next-steps]] — defunctionalization, lambda lifting, phased CRUD enrichment ([[gram-crud-enrichment]]) — alongside the two blockers; v2 payload-predicate features ([[pap-analysis-payload-predicates]]) remain needs-design. LoGRAM, the GRAM interpreter, and self-hosted passes are speculative.
++GRAM is the canonical compilation IR: per D-006 ([[gram-canonical-ir.adr]]) all compilation flows `EB.Term → GRAM → MIR → codegen`, with `GRAM.Bridge.emit` the sole MIR source for explorer, REPL, and file-compile, and direct `lowerToMir` deprecated with no production callers. The substrate ([[gram]], D-002) and its static pipeline are complete and tested — `translate` plus `eta`, `saturate`, `shiftReset`, `pattern`, `closure`, refined by the DPO engine. The [[gram-to-mir-bridge]] emits MIR mechanically; the remaining gap is struct match dispatch ([[bridge-struct-dispatch]]). Programmable GRAM passes ([[programmable-gram-passes]]) shipped an MVP (phases 1–6): user DPO rules carried as a `gram` modal annotation, discovered and topologically ordered by the implemented [[gram-kernel-pass]]. That work is implemented-but-incomplete — the retrospective ([[programmable-gram-passes-mvp-retrospective]]) surfaced four follow-ups, of which [[gram-string-escaping.bug]] and [[gram-rule-scoping.design]] BLOCK completion and phase 7 is deferred behind them. The [[gram-pap-pass]] is a shipped builtin resolving unsaturated externals into PAP nodes upstream of the bridge; [[bridge-closure-capture]] resolved curried-return bundle emission on the bridge side. Next step is the static-pass roadmap in [[gram-next-steps]] — defunctionalization, lambda lifting, phased CRUD enrichment ([[gram-crud-enrichment]]) — alongside the two blockers; v2 payload-predicate features ([[pap-analysis-payload-predicates]]) remain needs-design. LoGRAM, the GRAM interpreter, and self-hosted passes are speculative.
+ 
+ ## Parser Migration
+ 
+@@ -39,7 +39,7 @@ The compilation backbone is implemented end to end: surface `match` elaborates e
+ 
+ ## Pipeline Stabilization
+ 
+-This thread tracks bugs surfaced when [[language-tour]]'s integration test gave end-to-end visibility across all passes — issues invisible while each pass was tested in isolation. Frontend and middle-end fixes have largely landed: `$eq` normalization ([[eq-normalization-bug]]), let-poly implicit escape ([[letpoly-implicit-escape]], [[module-zonker-fix]], [[fst-closure-annotation]]), `mapList` schema unification ([[maplist-schema-unification]]), the `length` recursive de Bruijn bug ([[length-recursive-debruijn]]), and both Sigma-quoting bugs ([[sigma-quoting-match]], [[sigma-quoting-field-ref]]). The remaining surface is the GRAM→MIR bridge. The most recent change resolved unsaturated externals via [[gram-pap-pass]] → explicit PAP nodes ([[bridge-unsaturated-external]]), keeping the bridge mechanical. What remains is bridge calling/dispatch design: struct match emits string-equality dispatch instead of field projection ([[bridge-struct-dispatch]]); curried returns emit a bare `FuncRef` without bundling captures ([[bridge-closure-capture]]); `:label` self-references nested under match in struct fields resolve to undefined MIR vars ([[bridge-label-closure-gap]]), with the forward-reference case needing a topological-sort pass ([[bridge-forward-label-refs]]). Type erasure is partial — `Leaf.erase()` strips type-only shapes at the MIR boundary, but principled cross-backend erasure of `∀`, proofs, and refinement witnesses is open and tied to QTT ([[type-erasure]]). Next step is the bridge struct/closure dispatch design; both currently throw explicitly to surface the gap.
++This thread tracks bugs surfaced when [[language-tour]]'s integration test gave end-to-end visibility across all passes — issues invisible while each pass was tested in isolation. Frontend and middle-end fixes have largely landed: `$eq` normalization ([[eq-normalization-bug]]), let-poly implicit escape ([[letpoly-implicit-escape]], [[module-zonker-fix]], [[fst-closure-annotation]]), `mapList` schema unification ([[maplist-schema-unification]]), the `length` recursive de Bruijn bug ([[length-recursive-debruijn]]), and both Sigma-quoting bugs ([[sigma-quoting-match]], [[sigma-quoting-field-ref]]). The remaining surface is the GRAM→MIR bridge. The most recent changes resolved unsaturated externals via [[gram-pap-pass]] → explicit PAP nodes ([[bridge-unsaturated-external]]) and curried-return closure capture via the shared bundle ABI ([[bridge-closure-capture]]), keeping the bridge mechanical. What remains is bridge calling/dispatch design: struct match emits string-equality dispatch instead of field projection ([[bridge-struct-dispatch]]); `:label` self-references nested under match in struct fields resolve to undefined MIR vars ([[bridge-label-closure-gap]]), with the forward-reference case needing a topological-sort pass ([[bridge-forward-label-refs]]). Type erasure is partial — `Leaf.erase()` strips type-only shapes at the MIR boundary, but principled cross-backend erasure of `∀`, proofs, and refinement witnesses is open and tied to QTT ([[type-erasure]]). Next step is bridge struct dispatch design.
+ 
+ ## Recursion
+ 
+-- 
+2.43.0
+
