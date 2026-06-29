@@ -39,9 +39,6 @@
 		"typecheck": "tsc --noEmit -p ./tsc.tsconfig.json",
 		"yap": "TS_NODE_TRANSPILE_ONLY=true node --stack-size=131072 --require ts-node/register ./scripts/cli.ts"
 	},
-	"lint-staged": {
-		"*": "prettier --ignore-unknown --write"
-	},
 	"dependencies": {
 		"@types/js-beautify": "^1.14.3",
 		"commander": "^13.1.0",
