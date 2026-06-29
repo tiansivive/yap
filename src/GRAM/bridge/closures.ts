@@ -1,16 +1,14 @@
-import { Nodes, Edges, Query } from "../graph";
+import { Nodes, Edges } from "../graph";
 import type { NodeId } from "../graph";
-import { Tags, Labels } from "../vocabulary";
+import { Labels } from "../vocabulary";
 import { Constructors } from "../../lowering/mir";
-import type * as MIR from "../../lowering/mir";
 import type { Ctx } from "./context";
 import * as C from "./context";
+import * as Closure from "./bundle";
 
-const { Terminator, Block, Function: Fn, Instr, Expr } = Constructors;
+const { Terminator, Block, Function: Fn } = Constructors;
 
-// Closure → MIR.Function + FuncRef at use site
-// The closure node wraps a lambda; the env holds captures.
-// We emit a function whose params = [env captures..., lambda param].
+// Closure → MIR.Function(env, formal) + { __fn, __env } bundle at the use site.
 export const closure = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], ctx: Ctx): [string, Ctx] => {
 	const bodyEdge = Edges.one(id, Labels.BODY)(ctx.graph);
 	const envEdge = Edges.one(id, Labels.ENV)(ctx.graph);
@@ -18,37 +16,37 @@ export const closure = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx
 	const envId = envEdge?.target;
 	const lamNode = lamId !== undefined ? Nodes.get(lamId)(ctx.graph) : undefined;
 	const funcName = `closure_${id}`;
-	const paramName = (lamNode?.payload.variable ?? "arg") as string;
+	const formal = (lamNode?.payload.variable ?? "arg") as string;
 	const captures = envId !== undefined ? captureParams(envId, ctx) : [];
-	const allParams = [...captures.map(c => c.name), paramName];
 
-	// Build function body in a fresh context
-	const inner = C.fresh(ctx.graph);
-	const bound = captures.reduce<Ctx>((c, cap) => C.bind(c, cap.target, cap.name), inner);
-	const withLam = lamId !== undefined ? C.bind(bound, lamId, paramName) : bound;
+	const [envParam, c0] = C.name(ctx, "env");
+	const [formalParam, c1] = C.name(c0, formal);
+	const { vars: capVars, instrs: envReads } = Closure.read(captures.length, envParam);
+
+	const bodyCtx = captures.reduce(
+		(c, cap, i) => {
+			const v = capVars[i];
+			return v !== undefined ? C.bind(c, cap.target, v) : c;
+		},
+		C.bind(C.fork(ctx), lamId ?? -1, formalParam),
+	);
+
 	const lamBody = lamId !== undefined ? Edges.one(lamId, Labels.BODY)(ctx.graph) : undefined;
-	const [result, final] = lamBody !== undefined ? walk(lamBody.target, withLam) : C.name(withLam);
-	const [instrs, flushed] = C.flush(final);
+	const [bodyResult, final] = lamBody !== undefined ? walk(lamBody.target, bodyCtx) : C.name(bodyCtx);
+	const [bodyInstrs, flushed] = C.flush(final);
+
 	const entryBlock =
 		flushed.blocks.length > 0
-			? Block("entry", [], [...instrs], Terminator.Jump(flushed.blocks[0].label, []))
-			: Block("entry", [], [...instrs], Terminator.Return(result));
-	const fn = Fn(funcName, allParams, "entry", [entryBlock, ...flushed.blocks]);
+			? Block("entry", [], [...envReads, ...bodyInstrs], Terminator.Jump(flushed.blocks[0].label, []))
+			: Block("entry", [], [...envReads, ...bodyInstrs], Terminator.Return(bodyResult));
 
-	// Detect curried returns: if the body returns a FuncRef to a nested closure
-	// that has captures from this scope, a bare FuncRef is insufficient — the
-	// captures need to be bundled into a runtime closure struct.
-	const nestedWithCaptures = flushed.functions.filter(f => f.params.some(p => allParams.includes(p)));
-	if (nestedWithCaptures.length > 0) {
-		throw new Error("Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures");
-	}
+	const fn = Fn(funcName, [envParam, formalParam], "entry", [entryBlock, ...flushed.blocks]);
 
-	// Register function + any nested functions from body, emit FuncRef at use site
-	const withNested = flushed.functions.reduce<Ctx>((c, f) => C.func(c, f), ctx);
-	const c1 = C.func(withNested, fn);
-	const [ref, c2] = C.name(c1);
-	const c3 = C.instr(c2, Instr.Let(ref, Expr.FuncRef(funcName)));
-	return [ref, C.bind(c3, id, ref)];
+	const withNested = flushed.functions.reduce<Ctx>((c, f) => C.func(c, f), c1);
+	const withFn = C.func(withNested, fn);
+
+	const capturedValues = captures.map(cap => C.resolve(ctx, cap.target) ?? cap.name);
+	return Closure.emit(funcName, capturedValues, withFn, id);
 };
 
 type Capture = { readonly name: string; readonly target: NodeId };

@@ -96,9 +96,13 @@ const application = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const argEdge = Edges.one(id, Labels.ARG)(ctx.graph);
 	const [fn, c1] = funcEdge !== undefined ? walk(funcEdge.target, ctx) : C.name(ctx);
 	const [arg, c2] = argEdge !== undefined ? walk(argEdge.target, c1) : C.name(c1);
-	const [result, c3] = C.name(c2);
-	const c4 = C.instr(c3, Constructors.Instr.Call({ type: "indirect", callee: fn }, [arg], result));
-	return [result, C.bind(c4, id, result)];
+	const [fnRef, c3] = C.name(c2, "fnref");
+	const [envRef, c4] = C.name(c3, "env");
+	const [result, c5] = C.name(c4);
+	const c6 = C.instr(c5, Constructors.Instr.Read("__fn", fn, fnRef));
+	const c7 = C.instr(c6, Constructors.Instr.Read("__env", fn, envRef));
+	const c8 = C.instr(c7, Constructors.Instr.Call({ type: "indirect", callee: fnRef }, [envRef, arg], result));
+	return [result, C.bind(c8, id, result)];
 };
 
 const letNode = (id: NodeId, ctx: Ctx): [string, Ctx] => {

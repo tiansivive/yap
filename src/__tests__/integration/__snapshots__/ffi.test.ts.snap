@@ -12,13 +12,18 @@ exports[`Language Tour — Foreign Function Interface > basic FFI 1`] = `
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_20;
-  return v0;
+  const env_cls2 = {};
+  const fnref_cls2 = closure_20;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 
-function closure_20(name) {
+function closure_20(env0, name1) {
   const v0 = "Hello, ";
-  const v1 = (v0 + name);
+  const v1 = (v0 + name1);
   const v2 = print(v1);
   const v3 = null;
   return v3;
@@ -64,12 +69,14 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_20
-      return v0
-  fn closure_20(name) entry=entry
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_20
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_20(env0, name1) entry=entry
     entry:
       let v0 = "Hello, "
-      let v1 = ++(v0, name)
+      let v1 = ++(v0, name1)
       let v2 = call print(v1)
       let v3 = unit
       return v3",

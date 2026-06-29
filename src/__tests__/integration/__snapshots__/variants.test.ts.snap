@@ -278,11 +278,16 @@ exports[`Language Tour — Pattern Matching > literal patterns 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_17;
-  return v0;
+  const env_cls2 = {};
+  const fnref_cls2 = closure_17;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 
-function closure_17(n) {
+function closure_17(env0, n1) {
   let __block = "entry";
   while (true) {
     switch (__block) {
@@ -291,7 +296,7 @@ function closure_17(n) {
         break;
       }
       case "sw1": {
-        if ((String(n) === "0")) {
+        if ((String(n1) === "0")) {
           (__block = "case3");
           break;
         }
@@ -364,13 +369,15 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_17
-      return v0
-  fn closure_17(n) entry=entry
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_17
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_17(env0, n1) entry=entry
     entry:
       jump sw1
     sw1:
-      branch n { 0 -> case3; default -> default4 }
+      branch n1 { 0 -> case3; default -> default4 }
     case3:
       let v4 = true
       let match0 = v4

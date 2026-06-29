@@ -4,14 +4,19 @@ exports[`Language Tour — Type Constructors > maybe type 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_13;
-  return v0;
+  const env_cls2 = {};
+  const fnref_cls2 = closure_13;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 
-function closure_13(a) {
+function closure_13(env0, a1) {
   const v0 = "Unit";
   const v1 = {
-    just: a,
+    just: a1,
     nothing: v0
   };
   return v1;
@@ -52,12 +57,14 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_13
-      return v0
-  fn closure_13(a) entry=entry
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_13
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_13(env0, a1) entry=entry
     entry:
       let v0 = Unit
-      let v1 = alloc { just: a, nothing: v0 }
+      let v1 = alloc { just: a1, nothing: v0 }
       return v1",
     "name": "Maybe",
     "normalized": "λ(a: Type) -> (closure: Variant [ just: a, nothing: Unit ] -| Γ: a)",

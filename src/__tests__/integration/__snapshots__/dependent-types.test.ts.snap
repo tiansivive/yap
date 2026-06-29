@@ -4,35 +4,45 @@ exports[`Language Tour — Dependent Types > dependent functions 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_19;
-  return v0;
+  const env_cls2 = {
+    v0: Num,
+    v1: String
+  };
+  const fnref_cls2 = closure_19;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 
-function closure_19(Num, String, b) {
+function closure_19(env0, b1) {
   let __block = "entry";
   while (true) {
     switch (__block) {
       case "entry": {
+        const cap_0 = env0.v0;
+        const cap_1 = env0.v1;
         (__block = "sw1");
         break;
       }
       case "sw1": {
-        if ((String(b) === "true")) {
+        if ((String(b1) === "true")) {
           (__block = "case3");
           break;
         }
-        if ((String(b) === "false")) {
+        if ((String(b1) === "false")) {
           (__block = "case4");
           break;
         }
       }
       case "case3": {
-        const match0 = Num;
+        const match0 = cap_0;
         (__block = "join2");
         break;
       }
       case "case4": {
-        const match0 = String;
+        const match0 = cap_1;
         (__block = "join2");
         break;
       }
@@ -100,18 +110,22 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_19
-      return v0
-  fn closure_19(Num, String, b) entry=entry
+      let env_cls2 = alloc { v0: Num, v1: String }
+      let fnref_cls2 = &closure_19
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_19(env0, b1) entry=entry
     entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
       jump sw1
     sw1:
-      branch b { true -> case3 | false -> case4 }
+      branch b1 { true -> case3 | false -> case4 }
     case3:
-      let match0 = Num
+      let match0 = cap_0
       jump join2
     case4:
-      let match0 = String
+      let match0 = cap_1
       jump join2
     join2:
       return match0",
@@ -160,8 +174,10 @@ return main();
     "codegenJS": "function main() {
   const v0 = makeType;
   const v1 = true;
-  const v2 = v0(v1);
-  return v2;
+  const fnref2 = v0.__fn;
+  const env3 = v0.__env;
+  const v4 = fnref2(env3, v1);
+  return v4;
 }
 return main();
 ",
@@ -184,8 +200,10 @@ return main();
     entry:
       let v0 = makeType
       let v1 = true
-      let v2 = call *v0(v1)
-      return v2",
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      return v4",
     "name": "T1",
     "normalized": "Num",
     "solverTrace": "=== Formula ===
@@ -220,8 +238,10 @@ return main();
     "codegenJS": "function main() {
   const v0 = makeType;
   const v1 = false;
-  const v2 = v0(v1);
-  return v2;
+  const fnref2 = v0.__fn;
+  const env3 = v0.__env;
+  const v4 = fnref2(env3, v1);
+  return v4;
 }
 return main();
 ",
@@ -244,8 +264,10 @@ return main();
     entry:
       let v0 = makeType
       let v1 = false
-      let v2 = call *v0(v1)
-      return v2",
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      return v4",
     "name": "T2",
     "normalized": "String",
     "solverTrace": "=== Formula ===
@@ -503,11 +525,38 @@ return main();
 exports[`Language Tour — Dependent Types > generic dependent pairs 1`] = `
 [
   {
-    "codegenJS": "",
+    "codegenJS": "function main() {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_28;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_29(env0, p1) {
+  const cap_0 = env0.v0;
+  const v0 = {};
+  return v0;
+}
+
+function closure_28(env0, a1) {
+  const env_cls2 = {
+    v0: a1
+  };
+  const fnref_cls2 = closure_29;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+return main();
+",
     "elaborated": "λ(a: Type) ->
   λ(p: Π(t1: a) -> Type) ->
     Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ]",
-    "error": "Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"Pair"}
@@ -590,7 +639,24 @@ exports[`Language Tour — Dependent Types > generic dependent pairs 1`] = `
   :env -> [27]",
     "ivl": "true",
     "kind": "let",
-    "mir": "",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_28
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_29(env0, p1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let v0 = alloc {  }
+      return v0
+  fn closure_28(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: a1 }
+      let fnref_cls2 = &closure_29
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
     "name": "Pair",
     "normalized": "λ(a: Type) ->
   (closure: λ(p: Π(t1: a) -> Type) ->

@@ -283,12 +283,17 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = closure_20;
-  return v0;
+  const env_cls2 = {};
+  const fnref_cls2 = closure_20;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 
-function closure_20(p) {
-  const v0 = p.x;
+function closure_20(env0, p1) {
+  const v0 = p1.x;
   return v0;
 }
 return main();
@@ -341,11 +346,13 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_20
-      return v0
-  fn closure_20(p) entry=entry
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_20
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_20(env0, p1) entry=entry
     entry:
-      let v0 = read p.x
+      let v0 = read p1.x
       return v0",
     "name": "getX",
     "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->

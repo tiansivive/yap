@@ -1,4 +1,4 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import type { Module, Function, Block, Instr, Expr, Terminator, Label } from "./mir";
 import type { Literal } from "@yap/shared/literals";
 
@@ -117,11 +117,17 @@ const execInstr = (env: Env, instr: Instr, ctx: Ctx): void => {
 					env.set(result, fn(...resolvedArgs));
 				})
 				.with({ type: "indirect" }, ({ callee }) => {
-					const ref = lkp(callee) as { __funcref: string };
-					const fn = ctx.functions.get(ref.__funcref);
+					const name = match(lkp(callee))
+						.with({ __funcref: P.string }, ({ __funcref }) => __funcref)
+						.otherwise(() => "");
+
+					if (!name) {
+						throw new Error(`interpret: indirect call callee is not a function reference`);
+					}
+					const fn = ctx.functions.get(name);
 
 					if (!fn) {
-						throw new Error(`interpret: unknown function "${ref.__funcref}"`);
+						throw new Error(`interpret: unknown function "${name}"`);
 					}
 					env.set(result, execFunction(fn, resolvedArgs, ctx));
 				})

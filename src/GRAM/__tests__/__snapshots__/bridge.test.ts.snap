@@ -5,10 +5,10 @@ exports[`GRAM Bridge: PAP — partial application objects > snapshot: $add 1 —
   fn main entry=entry
     entry:
       let v0 = 1
-      let env_pap1 = alloc { v0: v0 }
-      let fnref_pap1 = &pap_fn1
-      let closure_pap1 = alloc { __fn: fnref_pap1, __env: env_pap1 }
-      return closure_pap1
+      let env_cls1 = alloc { v0: v0 }
+      let fnref_cls1 = &pap_fn1
+      let closure_cls1 = alloc { __fn: fnref_cls1, __env: env_cls1 }
+      return closure_cls1
   fn pap_fn1(env2, arg3) entry=pap_fn1_entry
     pap_fn1_entry:
       let cap_0 = read env2.v0
@@ -39,13 +39,17 @@ exports[`GRAM Bridge: Phase 2 — closures and primops > (λx. x) 42 — identit
 "module
   fn main entry=entry
     entry:
-      let v0 = &closure_8
-      let v1 = 42
-      let v2 = call *v0(v1)
-      return v2
-  fn closure_8(x) entry=entry
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_8
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      let v3 = 42
+      let fnref4 = read closure_cls2.__fn
+      let env5 = read closure_cls2.__env
+      let v6 = call *fnref4(env5, v3)
+      return v6
+  fn closure_8(env0, x1) entry=entry
     entry:
-      return x"
+      return x1"
 `;
 
 exports[`GRAM Bridge: Phase 2 — closures and primops > snapshot: add(1, 2) 1`] = `
@@ -62,15 +66,19 @@ exports[`GRAM Bridge: Phase 3 — pattern matching > snapshot: match 0 / _ 1`] =
 "module
   fn main entry=entry
     entry:
-      let v0 = &closure_18
-      let v1 = 5
-      let v2 = call *v0(v1)
-      return v2
-  fn closure_18(x) entry=entry
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_18
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      let v3 = 5
+      let fnref4 = read closure_cls2.__fn
+      let env5 = read closure_cls2.__env
+      let v6 = call *fnref4(env5, v3)
+      return v6
+  fn closure_18(env0, x1) entry=entry
     entry:
       jump sw1
     sw1:
-      branch x { 0 -> case3; default -> default4 }
+      branch x1 { 0 -> case3; default -> default4 }
     case3:
       let v4 = 1
       let match0 = v4
