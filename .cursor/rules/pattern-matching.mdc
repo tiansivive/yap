@@ -1,0 +1,51 @@
+---
+description: Prefer ts-pattern over if checks for structural dispatch
+globs: "**/*.ts"
+alwaysApply: true
+---
+
+# Pattern matching over if checks
+
+For structural or dispatch logic (e.g. "is this a Struct?", "is this type-level?", "which variant is this?"), **use `ts-pattern` `.with()` patterns** — do **not** use `if (isX(term))` or predicate helpers.
+
+## Pattern objects (follow elaboration style)
+
+Create **const pattern objects** to use in `.with()`, like `NF.Patterns` and `EB.CtorPatterns` in elaboration. Define them once, reuse across matches.
+
+```ts
+// patterns.ts — use literal values only; P.union for multiple literals, not P.when
+const TypeLevelSchema = { type: "App" as const, func: { type: "Lit" as const, value: { type: "Atom" as const, value: "Schema" } }, arg: { type: "Row" as const } } as const;
+const TypeLevelVariant = { type: "App" as const, func: { type: "Lit" as const, value: { type: "Atom" as const, value: "Variant" } }, arg: { type: "Row" as const } } as const;
+const TypeLevelArray = { type: "App" as const, func: { type: "Lit" as const, value: { type: "Atom" as const, value: "Array" } }, arg: { type: "Row" as const } } as const;
+
+export const Patterns = {
+  Proj: { type: "Proj" } as const,
+  Inj: { type: "Inj" } as const,
+  Vars: { Bound: ..., Free: ..., Foreign: ... },   // Var patterns
+  Rows: { Extension: ..., Variable: ..., Empty: ... },  // R.Row structure
+  Pats: { Variant: ..., Binder: ..., Wildcard: ..., Lit: ... },  // EB.Pattern
+} as const;
+
+// usage — grouped by logical unit
+match(term)
+  .with(Patterns.StructApp, ({ arg }) => ...)
+  .with(Patterns.Proj, ({ label, term: t }) => ...)
+  .with(Patterns.Vars.Bound, ({ variable }) => ...)
+  .with(Patterns.Rows.Extension, ({ label, value, row }) => ...)
+  .with(Patterns.Pats.Variant, ({ row }) => ...)
+  .otherwise(() => fallback);
+```
+
+## Why
+
+- Pattern objects are reusable, readable, and match elaboration conventions.
+- Predicate helpers (`isStructApp`, etc.) hide structure and encourage if/else chains.
+- See `src/elaboration/normalization/syntax/term.ts` (NF.Patterns), `src/elaboration/syntax/term.ts` (CtorPatterns), `src/lowering/patterns.ts` (Patterns).
+
+## Don't
+
+```ts
+if (isStructApp(term)) { ... }
+.with({ type: "App", func: { type: "Lit", ... } }, handler)  // inline; prefer pattern object
+value: P.when((v) => [...].includes(v))  // no P.when in pattern objects; use literal + P.union
+```

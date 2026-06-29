@@ -7,8 +7,6 @@ lib/
 debug-*.log
 
 .vscode/
-.cursor/
-.claude/skills/
 bin/
 
 src/parser/grammar.ts
