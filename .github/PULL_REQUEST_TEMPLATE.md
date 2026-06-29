@@ -1,13 +1,10 @@
-<!-- 👋 Hi, thanks for sending a PR to lama! 💖.
-Please fill out all fields below and make sure each item is true and [x] checked.
-Otherwise we may not be able to review your PR. -->
+<!-- Keep it tight. Explain *why*, not *what* — the diff already shows what changed.
+     No prose restatement of the diff. 1–2 short paragraphs, a couple of sentences each. -->
 
-## PR Checklist
+## Summary
 
-- [ ] Addresses an existing open issue: fixes #000
-- [ ] That issue was marked as [`status: accepting prs`](https://github.com/tiansivive/lama/issues?q=is%3Aopen+is%3Aissue+label%3A%22status%3A+accepting+prs%22)
-- [ ] Steps in [CONTRIBUTING.md](https://github.com/tiansivive/lama/blob/main/.github/CONTRIBUTING.md) were taken
+<!-- Why was this change needed, and what's the approach? -->
 
-## Overview
+## How to test
 
-<!-- Description of what is changed and how the code change does that. -->
+<!-- Steps to verify the change. Include example commands or input/output where useful. -->
