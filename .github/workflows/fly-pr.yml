@@ -1,0 +1,64 @@
+name: Fly PR Explorer
+
+on:
+  pull_request:
+    types: [labeled, synchronize, closed, unlabeled]
+
+concurrency:
+  group: fly-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy explorer preview
+    if: >-
+      github.event.action != 'closed'
+      && github.event.action != 'unlabeled'
+      && contains(github.event.pull_request.labels.*.name, 'deploy:explorer')
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      APP: try-yap-pr-${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - if: env.FLY_API_TOKEN == ''
+        run: echo "FLY_API_TOKEN is not set; skipping explorer preview deployment."
+      - if: env.FLY_API_TOKEN != ''
+        run: flyctl apps create "$APP" || true
+      - if: env.FLY_API_TOKEN != ''
+        run: flyctl deploy --remote-only --config fly.try-yap-next.toml --app "$APP"
+      - if: env.FLY_API_TOKEN != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: fly-pr-explorer
+          message: |
+            🚀 Explorer preview deployed: **https://${{ env.APP }}.fly.dev**
+
+            Updates on each push while the `deploy:explorer` label is present. Torn down when the PR closes or the label is removed.
+
+  destroy:
+    name: Destroy explorer preview
+    if: >-
+      github.event.action == 'closed'
+      || (github.event.action == 'unlabeled' && github.event.label.name == 'deploy:explorer')
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      APP: try-yap-pr-${{ github.event.pull_request.number }}
+    steps:
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - if: env.FLY_API_TOKEN == ''
+        run: echo "FLY_API_TOKEN is not set; skipping explorer preview teardown."
+      - if: env.FLY_API_TOKEN != ''
+        run: flyctl apps destroy "$APP" --yes || true
+      - if: env.FLY_API_TOKEN != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: fly-pr-explorer
+          message: |
+            🧹 Explorer preview torn down.
