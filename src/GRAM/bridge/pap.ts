@@ -5,7 +5,7 @@ import { Constructors } from "../../lowering/mir";
 import type * as MIR from "../../lowering/mir";
 import type { Ctx } from "./context";
 import * as C from "./context";
-import * as Bundle from "./bundle";
+import * as Closure from "./bundle";
 import { ARITIES } from "../../lowering/shared/primops";
 
 const { Terminator, Block, Function: Fn, Instr, Expr } = Constructors;
@@ -53,7 +53,7 @@ export const pap = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], c
 	const wrappers = buildWrappers(remaining, c1);
 	const c2 = emitWrapperFunctions(callee, arity, capturedNames.length, remaining, isPrimop, wrappers, c1);
 
-	return Bundle.emitAtSite(wrappers[0]?.fnName ?? "pap_fn", capturedNames, c2);
+	return Closure.emit(wrappers[0]?.fnName ?? "pap_fn", capturedNames, c2);
 };
 
 type Wrapper = { readonly fnName: string; readonly envParam: string; readonly freshParam: string };
@@ -88,7 +88,7 @@ const emitWrapperFunctions = (
 	}, ctx);
 
 const buildInvokeWrapper = (callee: string, arity: number, w: Wrapper, numCaptured: number, isPrimop: boolean): MIR.Function => {
-	const reads = Bundle.unpackEnv(numCaptured, w.envParam);
+	const reads = Closure.read(numCaptured, w.envParam);
 	const allArgs = [...reads.vars, w.freshParam];
 	const result = `result_${w.fnName}`;
 
@@ -100,12 +100,12 @@ const buildInvokeWrapper = (callee: string, arity: number, w: Wrapper, numCaptur
 };
 
 const buildCurryWrapper = (w: Wrapper, numCaptured: number, nextFnName: string): MIR.Function => {
-	const reads = Bundle.unpackEnv(numCaptured, w.envParam);
+	const reads = Closure.read(numCaptured, w.envParam);
 	const allArgs = [...reads.vars, w.freshParam];
 
-	const bundle = Bundle.bundleClosure(nextFnName, allArgs, w.fnName);
+	const packed = Closure.bundle(nextFnName, allArgs, w.fnName);
 
-	const block = Block(`${w.fnName}_entry`, [], [...reads.instrs, ...bundle.instrs], Terminator.Return(bundle.closureRef));
+	const block = Block(`${w.fnName}_entry`, [], [...reads.instrs, ...packed.instrs], Terminator.Return(packed.ref));
 
 	return Fn(w.fnName, [w.envParam, w.freshParam], block.label, [block]);
 };

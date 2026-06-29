@@ -1,22 +1,8 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import type { Module, Function, Block, Instr, Expr, Terminator, Label } from "./mir";
 import type { Literal } from "@yap/shared/literals";
 
 export type Value = null | number | boolean | string | { [k: string]: Value } | { __funcref: string };
-
-const isRecord = (v: Value): v is { [k: string]: Value } => typeof v === "object" && v !== null && !("__funcref" in v);
-
-const fnRefName = (v: Value): string =>
-	match(v)
-		.when(isRecord, r => {
-			const fn = r.__fn;
-			return fn !== undefined && typeof fn === "object" && fn !== null && "__funcref" in fn ? String((fn as { __funcref: string }).__funcref) : "";
-		})
-		.when(
-			(x): x is { __funcref: string } => typeof x === "object" && x !== null && "__funcref" in x,
-			r => r.__funcref,
-		)
-		.otherwise(() => "");
 
 type Env = Map<string, Value>;
 
@@ -131,7 +117,9 @@ const execInstr = (env: Env, instr: Instr, ctx: Ctx): void => {
 					env.set(result, fn(...resolvedArgs));
 				})
 				.with({ type: "indirect" }, ({ callee }) => {
-					const name = fnRefName(lkp(callee));
+					const name = match(lkp(callee))
+						.with({ __funcref: P.string }, ({ __funcref }) => __funcref)
+						.otherwise(() => "");
 
 					if (!name) {
 						throw new Error(`interpret: indirect call callee is not a function reference`);

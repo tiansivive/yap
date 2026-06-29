@@ -4,7 +4,7 @@ import { Labels } from "../vocabulary";
 import { Constructors } from "../../lowering/mir";
 import type { Ctx } from "./context";
 import * as C from "./context";
-import * as Bundle from "./bundle";
+import * as Closure from "./bundle";
 
 const { Terminator, Block, Function: Fn } = Constructors;
 
@@ -21,7 +21,7 @@ export const closure = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx
 
 	const [envParam, c0] = C.name(ctx, "env");
 	const [formalParam, c1] = C.name(c0, formal);
-	const { vars: capVars, instrs: envReads } = Bundle.unpackEnv(captures.length, envParam);
+	const { vars: capVars, instrs: envReads } = Closure.read(captures.length, envParam);
 
 	const bodyCtx = captures.reduce(
 		(c, cap, i) => {
@@ -46,7 +46,7 @@ export const closure = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx
 	const withFn = C.func(withNested, fn);
 
 	const capturedValues = captures.map(cap => C.resolve(ctx, cap.target) ?? cap.name);
-	return Bundle.emitAtSite(funcName, capturedValues, withFn, id);
+	return Closure.emit(funcName, capturedValues, withFn, id);
 };
 
 type Capture = { readonly name: string; readonly target: NodeId };
