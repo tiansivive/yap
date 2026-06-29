@@ -4,17 +4,27 @@ exports[`Language Tour — Polymorphism > forcing implicits 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_10;
-  return v0;
+  const env_cls2 = {};
+  const fnref_cls2 = closure_10;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 
-function closure_11(x) {
-  return x;
+function closure_11(env0, x1) {
+  return x1;
 }
 
-function closure_10(a) {
-  const v0 = closure_11;
-  return v0;
+function closure_10(env0, a1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_11;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 return main();
 ",
@@ -53,15 +63,19 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_10
-      return v0
-  fn closure_11(x) entry=entry
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_10
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_11(env0, x1) entry=entry
     entry:
-      return x
-  fn closure_10(a) entry=entry
+      return x1
+  fn closure_10(env0, a1) entry=entry
     entry:
-      let v0 = &closure_11
-      return v0",
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_11
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
     "name": "id",
     "normalized": "λ(a: Type) => (closure: λ(x: a) -> x -| Γ: a)",
     "solverTrace": "=== Formula ===
@@ -108,10 +122,14 @@ return main();
     "codegenJS": "function main() {
   const v0 = id;
   const v1 = String;
-  const v2 = v0(v1);
-  const v3 = "hello";
-  const v4 = v2(v3);
-  return v4;
+  const fnref2 = v0.__fn;
+  const env3 = v0.__env;
+  const v4 = fnref2(env3, v1);
+  const v5 = "hello";
+  const fnref6 = v4.__fn;
+  const env7 = v4.__env;
+  const v8 = fnref6(env7, v5);
+  return v8;
 }
 return main();
 ",
@@ -141,10 +159,14 @@ return main();
     entry:
       let v0 = id
       let v1 = String
-      let v2 = call *v0(v1)
-      let v3 = "hello"
-      let v4 = call *v2(v3)
-      return v4",
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      let v5 = "hello"
+      let fnref6 = read v4.__fn
+      let env7 = read v4.__env
+      let v8 = call *fnref6(env7, v5)
+      return v8",
     "name": "forcedStr",
     "normalized": ""hello"",
     "solverTrace": "=== Formula ===
@@ -182,17 +204,27 @@ exports[`Language Tour — Polymorphism > implicit parameters 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_10;
-  return v0;
+  const env_cls2 = {};
+  const fnref_cls2 = closure_10;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 
-function closure_11(x) {
-  return x;
+function closure_11(env0, x1) {
+  return x1;
 }
 
-function closure_10(a) {
-  const v0 = closure_11;
-  return v0;
+function closure_10(env0, a1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_11;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 return main();
 ",
@@ -231,15 +263,19 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_10
-      return v0
-  fn closure_11(x) entry=entry
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_10
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_11(env0, x1) entry=entry
     entry:
-      return x
-  fn closure_10(a) entry=entry
+      return x1
+  fn closure_10(env0, a1) entry=entry
     entry:
-      let v0 = &closure_11
-      return v0",
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_11
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
     "name": "id",
     "normalized": "λ(a: Type) => (closure: λ(x: a) -> x -| Γ: a)",
     "solverTrace": "=== Formula ===
@@ -286,10 +322,14 @@ return main();
     "codegenJS": "function main() {
   const v0 = id;
   const v1 = "Num";
-  const v2 = v0(v1);
-  const v3 = 42;
-  const v4 = v2(v3);
-  return v4;
+  const fnref2 = v0.__fn;
+  const env3 = v0.__env;
+  const v4 = fnref2(env3, v1);
+  const v5 = 42;
+  const fnref6 = v4.__fn;
+  const env7 = v4.__env;
+  const v8 = fnref6(env7, v5);
+  return v8;
 }
 return main();
 ",
@@ -316,10 +356,14 @@ return main();
     entry:
       let v0 = id
       let v1 = Num
-      let v2 = call *v0(v1)
-      let v3 = 42
-      let v4 = call *v2(v3)
-      return v4",
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      let v5 = 42
+      let fnref6 = read v4.__fn
+      let env7 = read v4.__env
+      let v8 = call *fnref6(env7, v5)
+      return v8",
     "name": "n2",
     "normalized": "42",
     "solverTrace": "=== Formula ===
@@ -354,10 +398,14 @@ return main();
     "codegenJS": "function main() {
   const v0 = id;
   const v1 = "String";
-  const v2 = v0(v1);
-  const v3 = "hello";
-  const v4 = v2(v3);
-  return v4;
+  const fnref2 = v0.__fn;
+  const env3 = v0.__env;
+  const v4 = fnref2(env3, v1);
+  const v5 = "hello";
+  const fnref6 = v4.__fn;
+  const env7 = v4.__env;
+  const v8 = fnref6(env7, v5);
+  return v8;
 }
 return main();
 ",
@@ -384,10 +432,14 @@ return main();
     entry:
       let v0 = id
       let v1 = String
-      let v2 = call *v0(v1)
-      let v3 = "hello"
-      let v4 = call *v2(v3)
-      return v4",
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      let v5 = "hello"
+      let fnref6 = read v4.__fn
+      let env7 = read v4.__env
+      let v8 = call *fnref6(env7, v5)
+      return v8",
     "name": "s2",
     "normalized": ""hello"",
     "solverTrace": "=== Formula ===
@@ -424,9 +476,36 @@ return main();
 exports[`Language Tour — Polymorphism > implicit resolution with using 1`] = `
 [
   {
-    "codegenJS": "",
+    "codegenJS": "function main() {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_16;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_17(env0, x1) {
+  const cap_0 = env0.v0;
+  const v0 = (x1 + cap_0);
+  return v0;
+}
+
+function closure_16(env0, n1) {
+  const env_cls2 = {
+    v0: n1
+  };
+  const fnref_cls2 = closure_17;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+return main();
+",
     "elaborated": "λ(n: Num) => λ(x: Num) -> FFI.$add x n",
-    "error": "Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"addImplicit"}
@@ -467,7 +546,24 @@ exports[`Language Tour — Polymorphism > implicit resolution with using 1`] = `
   :env -> [15]",
     "ivl": "(forall ((n Real)) (forall ((x Real)) (and (= x x) (= n n))))",
     "kind": "let",
-    "mir": "",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_16
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_17(env0, x1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let v0 = +(x1, cap_0)
+      return v0
+  fn closure_16(env0, n1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: n1 }
+      let fnref_cls2 = &closure_17
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
     "name": "addImplicit",
     "normalized": "λ(n: Num) => (closure: λ(x: Num) -> FFI.$add x n -| Γ: n)",
     "solverTrace": "=== Formula ===
@@ -520,10 +616,14 @@ exports[`Language Tour — Polymorphism > implicit resolution with using 1`] = `
     "codegenJS": "function main() {
   const v0 = addImplicit;
   const v1 = 10;
-  const v2 = v0(v1);
-  const v3 = 1;
-  const v4 = v2(v3);
-  return v4;
+  const fnref2 = v0.__fn;
+  const env3 = v0.__env;
+  const v4 = fnref2(env3, v1);
+  const v5 = 1;
+  const fnref6 = v4.__fn;
+  const env7 = v4.__env;
+  const v8 = fnref6(env7, v5);
+  return v8;
 }
 return main();
 ",
@@ -550,10 +650,14 @@ return main();
     entry:
       let v0 = addImplicit
       let v1 = 10
-      let v2 = call *v0(v1)
-      let v3 = 1
-      let v4 = call *v2(v3)
-      return v4",
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      let v5 = 1
+      let fnref6 = read v4.__fn
+      let env7 = read v4.__env
+      let v8 = call *fnref6(env7, v5)
+      return v8",
     "name": "eleven",
     "normalized": "11",
     "solverTrace": "=== Formula ===
@@ -588,10 +692,14 @@ return main();
     "codegenJS": "function main() {
   const v0 = addImplicit;
   const v1 = 10;
-  const v2 = v0(v1);
-  const v3 = 5;
-  const v4 = v2(v3);
-  return v4;
+  const fnref2 = v0.__fn;
+  const env3 = v0.__env;
+  const v4 = fnref2(env3, v1);
+  const v5 = 5;
+  const fnref6 = v4.__fn;
+  const env7 = v4.__env;
+  const v8 = fnref6(env7, v5);
+  return v8;
 }
 return main();
 ",
@@ -618,10 +726,14 @@ return main();
     entry:
       let v0 = addImplicit
       let v1 = 10
-      let v2 = call *v0(v1)
-      let v3 = 5
-      let v4 = call *v2(v3)
-      return v4",
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      let v5 = 5
+      let fnref6 = read v4.__fn
+      let env7 = read v4.__env
+      let v8 = call *fnref6(env7, v5)
+      return v8",
     "name": "fifteen",
     "normalized": "15",
     "solverTrace": "=== Formula ===
@@ -659,13 +771,18 @@ exports[`Language Tour — Polymorphism > inference and generalization 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_13;
-  return v0;
+  const env_cls2 = {};
+  const fnref_cls2 = closure_13;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 
-function closure_13(x) {
+function closure_13(env0, x1) {
   const v0 = 1;
-  const v1 = (x + v0);
+  const v1 = (x1 + v0);
   return v1;
 }
 return main();
@@ -711,12 +828,14 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_13
-      return v0
-  fn closure_13(x) entry=entry
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_13
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_13(env0, x1) entry=entry
     entry:
       let v0 = 1
-      let v1 = +(x, v0)
+      let v1 = +(x1, v0)
       return v1",
     "name": "inc",
     "normalized": "λ(x: Num) -> (closure: FFI.$add x 1 -| Γ: x)",
@@ -776,11 +895,63 @@ return main();
     "validity": "valid",
   },
   {
-    "codegenJS": "",
+    "codegenJS": "function main() {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_16;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_19(env0, y1) {
+  const cap_0 = env0.v0;
+  return cap_0;
+}
+
+function closure_18(env0, x1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: x1
+  };
+  const fnref_cls2 = closure_19;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_17(env0, b1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: b1
+  };
+  const fnref_cls2 = closure_18;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_16(env0, a1) {
+  const env_cls2 = {
+    v0: a1
+  };
+  const fnref_cls2 = closure_17;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+return main();
+",
     "elaborated": "λ(a: Type) =>
   λ(b: Type) =>
     (λ(x: a) -> (λ(y: b) -> x : Π(y: b) -> a) : Π(x: a) -> Π(y: b) -> a)",
-    "error": "Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"fst"}
@@ -842,7 +1013,37 @@ return main();
     "ivl": "(forall ((a Type))
   (forall ((b Type)) (forall ((x Type)) (forall ((y Type)) (= x x)))))",
     "kind": "let",
-    "mir": "",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_16
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_19(env0, y1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      return cap_0
+  fn closure_18(env0, x1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: x1 }
+      let fnref_cls2 = &closure_19
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_17(env0, b1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: b1 }
+      let fnref_cls2 = &closure_18
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_16(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: a1 }
+      let fnref_cls2 = &closure_17
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
     "name": "fst",
     "normalized": "λ(a: Type) =>
   (closure: λ(b: Type) =>
@@ -898,28 +1099,46 @@ exports[`Language Tour — Polymorphism > let-polymorphism in blocks 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_25;
-  const innerID1 = v0;
-  const v2 = "Num";
-  const v3 = innerID1(v2);
-  const v4 = 42;
-  const v5 = v3(v4);
-  const n6 = v5;
-  const v7 = "String";
-  const v8 = innerID1(v7);
-  const v9 = "hi";
-  const v10 = v8(v9);
-  const s11 = v10;
-  return n6;
+  const env_cls2 = {};
+  const fnref_cls2 = closure_25;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  const innerID3 = closure_cls2;
+  const v4 = "Num";
+  const fnref5 = innerID3.__fn;
+  const env6 = innerID3.__env;
+  const v7 = fnref5(env6, v4);
+  const v8 = 42;
+  const fnref9 = v7.__fn;
+  const env10 = v7.__env;
+  const v11 = fnref9(env10, v8);
+  const n12 = v11;
+  const v13 = "String";
+  const fnref14 = innerID3.__fn;
+  const env15 = innerID3.__env;
+  const v16 = fnref14(env15, v13);
+  const v17 = "hi";
+  const fnref18 = v16.__fn;
+  const env19 = v16.__env;
+  const v20 = fnref18(env19, v17);
+  const s21 = v20;
+  return n12;
 }
 
-function closure_26(x) {
-  return x;
+function closure_26(env0, x1) {
+  return x1;
 }
 
-function closure_25(a) {
-  const v0 = closure_26;
-  return v0;
+function closure_25(env0, a1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_26;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 return main();
 ",
@@ -1015,26 +1234,38 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_25
-      let innerID1 = v0
-      let v2 = Num
-      let v3 = call *innerID1(v2)
-      let v4 = 42
-      let v5 = call *v3(v4)
-      let n6 = v5
-      let v7 = String
-      let v8 = call *innerID1(v7)
-      let v9 = "hi"
-      let v10 = call *v8(v9)
-      let s11 = v10
-      return n6
-  fn closure_26(x) entry=entry
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_25
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      let innerID3 = closure_cls2
+      let v4 = Num
+      let fnref5 = read innerID3.__fn
+      let env6 = read innerID3.__env
+      let v7 = call *fnref5(env6, v4)
+      let v8 = 42
+      let fnref9 = read v7.__fn
+      let env10 = read v7.__env
+      let v11 = call *fnref9(env10, v8)
+      let n12 = v11
+      let v13 = String
+      let fnref14 = read innerID3.__fn
+      let env15 = read innerID3.__env
+      let v16 = call *fnref14(env15, v13)
+      let v17 = "hi"
+      let fnref18 = read v16.__fn
+      let env19 = read v16.__env
+      let v20 = call *fnref18(env19, v17)
+      let s21 = v20
+      return n12
+  fn closure_26(env0, x1) entry=entry
     entry:
-      return x
-  fn closure_25(a) entry=entry
+      return x1
+  fn closure_25(env0, a1) entry=entry
     entry:
-      let v0 = &closure_26
-      return v0",
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_26
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
     "name": "letpoly",
     "normalized": "42",
     "solverTrace": "=== Formula ===
@@ -1087,17 +1318,27 @@ exports[`Language Tour — Polymorphism > parametric polymorphism 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = closure_10;
-  return v0;
+  const env_cls2 = {};
+  const fnref_cls2 = closure_10;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 
-function closure_11(x) {
-  return x;
+function closure_11(env0, x1) {
+  return x1;
 }
 
-function closure_10(a) {
-  const v0 = closure_11;
-  return v0;
+function closure_10(env0, a1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_11;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
 }
 return main();
 ",
@@ -1136,15 +1377,19 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = &closure_10
-      return v0
-  fn closure_11(x) entry=entry
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_10
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_11(env0, x1) entry=entry
     entry:
-      return x
-  fn closure_10(a) entry=entry
+      return x1
+  fn closure_10(env0, a1) entry=entry
     entry:
-      let v0 = &closure_11
-      return v0",
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_11
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
     "name": "id",
     "normalized": "λ(a: Type) -> (closure: λ(x: a) -> x -| Γ: a)",
     "solverTrace": "=== Formula ===
@@ -1188,9 +1433,61 @@ return main();
     "validity": "valid",
   },
   {
-    "codegenJS": "",
+    "codegenJS": "function main() {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_16;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_19(env0, y1) {
+  const cap_0 = env0.v0;
+  return cap_0;
+}
+
+function closure_18(env0, x1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: x1
+  };
+  const fnref_cls2 = closure_19;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_17(env0, b1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: b1
+  };
+  const fnref_cls2 = closure_18;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_16(env0, a1) {
+  const env_cls2 = {
+    v0: a1
+  };
+  const fnref_cls2 = closure_17;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+return main();
+",
     "elaborated": "λ(a: Type) -> λ(b: Type) -> λ(x: a) -> λ(y: b) -> x",
-    "error": "Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures; Bridge: closure capture not yet implemented for curried returns — nested closures reference outer captures",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"const"}
@@ -1252,7 +1549,37 @@ return main();
     "ivl": "(forall ((a Type))
   (forall ((b Type)) (forall ((x Type)) (forall ((y Type)) (= x x)))))",
     "kind": "let",
-    "mir": "",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_16
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_19(env0, y1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      return cap_0
+  fn closure_18(env0, x1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: x1 }
+      let fnref_cls2 = &closure_19
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_17(env0, b1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: b1 }
+      let fnref_cls2 = &closure_18
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_16(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: a1 }
+      let fnref_cls2 = &closure_17
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
     "name": "const",
     "normalized": "λ(a: Type) -> (closure: λ(b: Type) -> λ(x: a) -> λ(y: b) -> x -| Γ: a)",
     "solverTrace": "=== Formula ===
