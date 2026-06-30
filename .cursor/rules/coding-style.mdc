@@ -35,10 +35,10 @@ alwaysApply: true
 
 ## Elaboration monad
 
-- **V2 is canonical** — V1 is deprecated, kept for reference
+- **V2 is canonical** — V1 (fp-ts-centric API style) is deprecated, kept for reference
 - `V2.Do()` takes a generator; yields use ReaderWriterEither semantics
-- Inference v2: `src/elaboration/inference.v2/`
-- Checking v2: `src/elaboration/checking.v2/`
+- Inference: `src/elaboration/infer.ts` + `src/elaboration/inference/*` (per-construct handlers)
+- Checking: `src/elaboration/check.ts` (dispatches on `[term, type]`)
 
 ## Comments
 

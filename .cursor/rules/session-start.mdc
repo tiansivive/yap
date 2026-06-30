@@ -5,13 +5,15 @@ alwaysApply: true
 
 # Session start
 
-At the start of every session, read and apply these guidelines to all code you write:
+Run **`/load`** at the start of every session (`.cursor/skills/load/`) — it loads project + z-yap state. **AGENTS.md** is the canonical session contract (start / during / close-out, ZK awareness, rule routing); read it if you skipped `/load`.
 
-- **AGENTS.md** — project overview, key references, style summary
-- **.github/copilot-instructions.md** — architecture, detailed guidelines, testing patterns, V2 migration, agent interaction style
-- **.cursor/rules/coding-style.mdc** — immutable, declarative, recursion, map/reduce, function composition
-- **.cursor/rules/pattern-matching.mdc** — ts-pattern with const pattern objects; no if checks
-- **.cursor/rules/conventions.mdc** — path aliases, pitfalls, tree-sitter, v2
-- **.cursor/rules/agent-behavior.mdc** — collaborative, validate, surface issues
+Apply these rules to all code you write:
+
+- **coding-style.mdc** — immutable, declarative, recursion, map/reduce, function composition
+- **pattern-matching.mdc** — ts-pattern with const pattern objects; no if checks
+- **conventions.mdc** — path aliases, pitfalls, tree-sitter, v2
+- **agent-behavior.mdc** — collaborative, validate, surface issues, self-maintenance
+- **communication.mdc** — prose: density, variation, forward progress
+- **testing.mdc** — when touching tests
 
 Do not default to imperative loops or if/else chains. Follow the project's style from the start.
