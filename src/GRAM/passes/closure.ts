@@ -1,6 +1,6 @@
 import { match } from "ts-pattern";
 
-import { Nodes, Edges, Query } from "../graph";
+import { Nodes, Edges, Query, structOf } from "../graph";
 import type { Graph, NodeId } from "../graph";
 import { Tags, Labels } from "../vocabulary";
 import type { Pass } from "../grs/strategy";
@@ -22,9 +22,6 @@ const isCapture =
 	(lamId: NodeId, lamLvl: number, g: Graph) =>
 	(e: { target: NodeId }): boolean =>
 		e.target !== lamId && (isGlobal(e.target, g) || level(e.target, g) < lamLvl);
-
-// The struct that owns a field value — reverse the :field edge.
-const structOf = (target: NodeId, g: Graph): NodeId | undefined => Edges.to(target)(g).find(e => e.label === Labels.FIELD)?.source;
 
 const capturesOf = (lamId: NodeId, g: Graph): ReadonlyArray<NodeId> => {
 	const lamLvl = level(lamId, g);

@@ -1,6 +1,6 @@
 import { match } from "ts-pattern";
 
-import { Nodes, Edges, entry } from "../graph";
+import { Nodes, Edges, entry, structOf } from "../graph";
 import type { Graph, NodeId } from "../graph";
 import { Tags, Labels } from "../vocabulary";
 import { Constructors } from "../../lowering/mir";
@@ -77,9 +77,6 @@ const ref = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const target = Edges.one(id, Labels.REFERS_TO)(ctx.graph)?.target;
 	return target !== undefined ? walk(target, ctx) : Leaves.passthrough(id, ctx);
 };
-
-// The struct owning a field value — reverse the :field edge.
-const structOf = (target: NodeId, g: Graph): NodeId | undefined => Edges.to(target)(g).find(e => e.label === Labels.FIELD)?.source;
 
 // VAR_LABEL nodes resolve through :refers_to (wired by the resolve-labels pass). When the
 // owning record is in scope as a value — captured into this closure's env, or already
