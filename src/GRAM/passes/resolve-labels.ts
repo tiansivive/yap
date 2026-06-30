@@ -31,22 +31,20 @@ const frameOf = (id: NodeId, g: Graph): Scope => ({
 // Nearest enclosing frame binding `name`, plus the lambdas crossed to reach it.
 const find = (scopes: ReadonlyArray<Scope>, name: string): { readonly target?: NodeId; readonly lambdas: ReadonlyArray<NodeId> } =>
 	scopes.reduceRight<{ target?: NodeId; lambdas: ReadonlyArray<NodeId> }>(
-		(acc, s) => {
-			if (acc.target !== undefined) {
-				return acc;
-			}
-
-			if (s.kind === "lambda") {
-				return { target: acc.target, lambdas: [...acc.lambdas, s.lam] };
-			}
-			const t = s.frame.get(name);
-			return t !== undefined ? { target: t, lambdas: acc.lambdas } : acc;
-		},
+		(acc, s) =>
+			acc.target !== undefined
+				? acc
+				: match(s)
+						.with({ kind: "lambda" }, ({ lam }) => ({ target: acc.target, lambdas: [...acc.lambdas, lam] }))
+						.with({ kind: "frame" }, ({ frame }) => {
+							const t = frame.get(name);
+							return t !== undefined ? { target: t, lambdas: acc.lambdas } : acc;
+						})
+						.exhaustive(),
 		{ lambdas: [] },
 	);
 
-const descend = (ids: ReadonlyArray<NodeId>, scopes: ReadonlyArray<Scope>, g: Graph, seen: Set<NodeId>): Graph =>
-	ids.reduce((acc, c) => walk(c, scopes, acc, seen), g);
+const descend = (ids: ReadonlyArray<NodeId>, scopes: ReadonlyArray<Scope>, g: Graph): Graph => ids.reduce((acc, c) => walk(c, scopes, acc), g);
 
 const resolve = (id: NodeId, name: string, scopes: ReadonlyArray<Scope>, g: Graph): Graph => {
 	const { target, lambdas } = find(scopes, name);
@@ -58,27 +56,24 @@ const resolve = (id: NodeId, name: string, scopes: ReadonlyArray<Scope>, g: Grap
 	return lambdas.reduce((acc, lam, i) => Edges.add(id, Labels.SCOPE, lam, { level: i })(acc), g1);
 };
 
-const sigma = (id: NodeId, scopes: ReadonlyArray<Scope>, g: Graph, seen: Set<NodeId>): Graph => {
+const sigma = (id: NodeId, scopes: ReadonlyArray<Scope>, g: Graph): Graph => {
 	const ann = Edges.one(id, Labels.ANNOTATION)(g)?.target;
 	const body = Edges.one(id, Labels.BODY)(g)?.target;
 	const variable = String(Nodes.get(id)(g)?.payload.variable ?? "");
-	const g1 = ann !== undefined ? walk(ann, scopes, g, seen) : g;
+	const g1 = ann !== undefined ? walk(ann, scopes, g) : g;
 	const inner: Scope = { kind: "frame", frame: new Map([[variable, id]]) };
-	return body !== undefined ? walk(body, [...scopes, inner], g1, seen) : g1;
+	return body !== undefined ? walk(body, [...scopes, inner], g1) : g1;
 };
 
-const lambda = (id: NodeId, scopes: ReadonlyArray<Scope>, g: Graph, seen: Set<NodeId>): Graph => {
+const lambda = (id: NodeId, scopes: ReadonlyArray<Scope>, g: Graph): Graph => {
 	const ann = Edges.one(id, Labels.ANNOTATION)(g)?.target;
 	const body = Edges.one(id, Labels.BODY)(g)?.target;
-	const g1 = ann !== undefined ? walk(ann, scopes, g, seen) : g;
-	return body !== undefined ? walk(body, [...scopes, { kind: "lambda", lam: id }], g1, seen) : g1;
+	const g1 = ann !== undefined ? walk(ann, scopes, g) : g;
+	return body !== undefined ? walk(body, [...scopes, { kind: "lambda", lam: id }], g1) : g1;
 };
 
-const walk = (id: NodeId, scopes: ReadonlyArray<Scope>, g: Graph, seen: Set<NodeId>): Graph => {
-	if (seen.has(id)) {
-		return g;
-	}
-	seen.add(id);
+// Structural edges form a tree, so the descent needs no visited guard.
+const walk = (id: NodeId, scopes: ReadonlyArray<Scope>, g: Graph): Graph => {
 	const node = Nodes.get(id)(g);
 
 	if (node === undefined) {
@@ -86,15 +81,15 @@ const walk = (id: NodeId, scopes: ReadonlyArray<Scope>, g: Graph, seen: Set<Node
 	}
 	return match(node.tag)
 		.with(Tags.VAR_LABEL, () => resolve(id, String(node.payload.name ?? ""), scopes, g))
-		.with(Tags.STRUCT, () => descend(children(id, g), [...scopes, frameOf(id, g)], g, seen))
-		.with(Tags.SIGMA, () => sigma(id, scopes, g, seen))
-		.with(Tags.LAMBDA, () => lambda(id, scopes, g, seen))
-		.otherwise(() => descend(children(id, g), scopes, g, seen));
+		.with(Tags.STRUCT, () => descend(children(id, g), [...scopes, frameOf(id, g)], g))
+		.with(Tags.SIGMA, () => sigma(id, scopes, g))
+		.with(Tags.LAMBDA, () => lambda(id, scopes, g))
+		.otherwise(() => descend(children(id, g), scopes, g));
 };
 
 export const resolveLabels: Pass = (g: Graph): Graph => {
 	const root = entry(g);
-	return root !== undefined ? walk(root, [], g, new Set<NodeId>()) : g;
+	return root !== undefined ? walk(root, [], g) : g;
 };
 
 export const descriptor: Descriptor = {

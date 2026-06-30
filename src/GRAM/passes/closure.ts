@@ -40,11 +40,12 @@ const capturesOf = (lamId: NodeId, g: Graph): ReadonlyArray<NodeId> => {
 			// A label crossing this lambda captures the whole record (the struct owning the
 			// referenced field), so the label reads its field off the captured record. The
 			// de Bruijn level filter applies only to bound-variable captures.
-			if (Nodes.get(e.source)(g)?.tag === Tags.VAR_LABEL) {
-				const s = structOf(ref.target, g);
-				return s !== undefined ? [s] : [];
-			}
-			return isCapture(lamId, lamLvl, g)(ref) ? [ref.target] : [];
+			return match(Nodes.get(e.source)(g)?.tag)
+				.with(Tags.VAR_LABEL, () => {
+					const s = structOf(ref.target, g);
+					return s !== undefined ? [s] : [];
+				})
+				.otherwise(() => (isCapture(lamId, lamLvl, g)(ref) ? [ref.target] : []));
 		});
 	return [...new Set(targets)];
 };

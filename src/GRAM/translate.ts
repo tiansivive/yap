@@ -230,10 +230,10 @@ const fields = (r: Row<EB.Term, EB.Variable>, parent: NodeId, tid: number, st: S
 			const [child, s1] = walk(r.value, st);
 			return fields(r.row, parent, tid, link(s1, parent, Labels.FIELD, child, { label: r.label }));
 		})
-		.with({ type: "empty" }, () => [parent, st] as [NodeId, State])
-		.with({ type: "variable" }, r => {
+		.with({ type: "empty" }, (): [NodeId, State] => [parent, st])
+		.with({ type: "variable" }, (r): [NodeId, State] => {
 			const [tail, s1] = variable(r.variable, tid, st);
-			return [parent, link(s1, parent, Labels.TAIL, tail)] as [NodeId, State];
+			return [parent, link(s1, parent, Labels.TAIL, tail)];
 		})
 		.exhaustive();
 

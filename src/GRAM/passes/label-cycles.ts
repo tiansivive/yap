@@ -1,3 +1,5 @@
+import { match } from "ts-pattern";
+
 import { Nodes, Edges, Query } from "../graph";
 import type { Graph, NodeId } from "../graph";
 import { Tags, Labels, isStructural } from "../vocabulary";
@@ -19,54 +21,51 @@ const structuralChildren = (id: NodeId, g: Graph): ReadonlyArray<NodeId> =>
 		.filter(e => isStructural(e.label) || e.label === Labels.TAIL)
 		.map(e => e.target);
 
-const collectRefs = (id: NodeId, guarded: boolean, fields: ReadonlyMap<NodeId, string>, g: Graph, seen: Set<NodeId>): ReadonlyArray<Ref> => {
-	if (seen.has(id)) {
-		return [];
-	}
-	seen.add(id);
+// Structural edges form a tree, so the descent needs no visited guard. A reference under a
+// lambda is guarded — read at call time; every other node carries the guard inward unchanged.
+const collectRefs = (id: NodeId, guarded: boolean, fields: ReadonlyMap<NodeId, string>, g: Graph): ReadonlyArray<Ref> => {
 	const node = Nodes.get(id)(g);
 
 	if (node === undefined) {
 		return [];
 	}
-
-	if (node.tag === Tags.VAR_LABEL) {
-		const target = Edges.one(id, Labels.REFERS_TO)(g)?.target;
-		const to = target !== undefined ? fields.get(target) : undefined;
-		return to !== undefined ? [{ to, guarded }] : [];
-	}
-	const next = guarded || node.tag === Tags.LAMBDA;
-	return structuralChildren(id, g).flatMap(c => collectRefs(c, next, fields, g, seen));
+	return match(node.tag)
+		.with(Tags.VAR_LABEL, () => {
+			const target = Edges.one(id, Labels.REFERS_TO)(g)?.target;
+			const to = target !== undefined ? fields.get(target) : undefined;
+			return to !== undefined ? [{ to, guarded }] : [];
+		})
+		.with(Tags.LAMBDA, () => structuralChildren(id, g).flatMap(c => collectRefs(c, true, fields, g)))
+		.otherwise(() => structuralChildren(id, g).flatMap(c => collectRefs(c, guarded, fields, g)));
 };
 
 const adjacency = (edges: ReadonlyArray<Edge>): ReadonlyMap<string, ReadonlyArray<string>> =>
-	edges.reduce<Map<string, string[]>>((m, e) => m.set(e.from, [...(m.get(e.from) ?? []), e.to]), new Map());
+	edges.reduce<ReadonlyMap<string, ReadonlyArray<string>>>((m, e) => new Map([...m, [e.from, [...(m.get(e.from) ?? []), e.to]]]), new Map());
 
-const hasCycle = (graph: ReadonlyMap<string, ReadonlyArray<string>>): boolean => {
-	const visiting = new Set<string>();
-	const done = new Set<string>();
-	const dfs = (n: string): boolean => {
-		if (visiting.has(n)) {
-			return true;
-		}
+type Search = { readonly cycle: boolean; readonly done: ReadonlySet<string> };
 
-		if (done.has(n)) {
-			return false;
-		}
-		visiting.add(n);
-		const found = (graph.get(n) ?? []).some(dfs);
-		visiting.delete(n);
-		done.add(n);
-		return found;
-	};
-	return [...graph.keys()].some(dfs);
+const hasCycle = (graph: ReadonlyMap<string, ReadonlyArray<string>>): boolean =>
+	[...graph.keys()].reduce<Search>((acc, k) => (acc.cycle ? acc : visit(k, new Set(), acc.done, graph)), { cycle: false, done: new Set() }).cycle;
+
+// path = nodes on the current DFS stack (a back-edge into it is a cycle); done = fully explored.
+const visit = (node: string, path: ReadonlySet<string>, done: ReadonlySet<string>, graph: ReadonlyMap<string, ReadonlyArray<string>>): Search => {
+	if (path.has(node)) {
+		return { cycle: true, done };
+	}
+
+	if (done.has(node)) {
+		return { cycle: false, done };
+	}
+	const next = new Set([...path, node]);
+	const result = (graph.get(node) ?? []).reduce<Search>((acc, n) => (acc.cycle ? acc : visit(n, next, acc.done, graph)), { cycle: false, done });
+	return { cycle: result.cycle, done: new Set([...result.done, node]) };
 };
 
 const flagStruct = (s: NodeId, g: Graph): Graph => {
 	const fieldEdges = Edges.byLabel(s, Labels.FIELD)(g);
 	const fields = new Map(fieldEdges.map(e => [e.target, String(e.payload.label ?? "")] as const));
 	const edges = fieldEdges.flatMap(e =>
-		collectRefs(e.target, false, fields, g, new Set<NodeId>()).map((r): Edge => ({ from: String(e.payload.label ?? ""), to: r.to, guarded: r.guarded })),
+		collectRefs(e.target, false, fields, g).map((r): Edge => ({ from: String(e.payload.label ?? ""), to: r.to, guarded: r.guarded })),
 	);
 
 	// A cycle made only of eager references (value-level codata / ill-founded) has no
