@@ -205,12 +205,37 @@ const letBinding = (t: EB.Term & { type: "Abs"; binding: { type: "Let" } }, st: 
 
 // ── Application ──
 
-const app = (t: EB.Term & { type: "App" }, st: State): [NodeId, State] => {
+const app = (t: EB.Term & { type: "App" }, st: State): [NodeId, State] =>
+	match(t)
+		.with({ func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } }, t => structValue(t.arg.row, t.id, st))
+		.otherwise(() => generic(t, st));
+
+const generic = (t: EB.Term & { type: "App" }, st: State): [NodeId, State] => {
 	const [id, s1] = emit(st, Tags.APP, { icit: t.icit }, prov(t.id, st));
 	const [fn, s2] = walk(t.func, s1);
 	const [arg, s3] = walk(t.arg, link(s2, id, Labels.FUNC, fn));
 	return [id, link(s3, id, Labels.ARG, arg)];
 };
+
+// Struct value → a flat struct node with :field{label} edges (value-side twin of pat:struct).
+// An open row tail becomes a :tail edge to the row variable; types keep the row:ext cons-list.
+const structValue = (r: Row<EB.Term, EB.Variable>, tid: number, st: State): [NodeId, State] => {
+	const [id, s1] = emit(st, Tags.STRUCT, {}, prov(tid, st));
+	return fields(r, id, tid, s1);
+};
+
+const fields = (r: Row<EB.Term, EB.Variable>, parent: NodeId, tid: number, st: State): [NodeId, State] =>
+	match(r)
+		.with({ type: "extension" }, r => {
+			const [child, s1] = walk(r.value, st);
+			return fields(r.row, parent, tid, link(s1, parent, Labels.FIELD, child, { label: r.label }));
+		})
+		.with({ type: "empty" }, (): [NodeId, State] => [parent, st])
+		.with({ type: "variable" }, (r): [NodeId, State] => {
+			const [tail, s1] = variable(r.variable, tid, st);
+			return [parent, link(s1, parent, Labels.TAIL, tail)];
+		})
+		.exhaustive();
 
 // ── Rows ──
 

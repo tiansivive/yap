@@ -368,17 +368,17 @@ return main();
 [3] lambda {"variable":"a","icit":"Implicit","level":1}
   :annotation -> [4]
   :body -> [5]
-  :env -> [82]
+  :env -> [72]
 [4] lit {"value":{"type":"Atom","value":"Type"}}
 [5] lambda {"variable":"b","icit":"Implicit","level":2}
   :annotation -> [6]
   :body -> [7]
-  :env -> [83]
+  :env -> [73]
 [6] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lambda {"variable":"f","icit":"Explicit","level":3}
   :annotation -> [8]
   :body -> [11]
-  :env -> [84]
+  :env -> [74]
 [8] pi {"variable":"t9","icit":"Explicit","level":3}
   :annotation -> [9]
   :body -> [10]
@@ -396,7 +396,7 @@ return main();
 [11] lambda {"variable":"list","icit":"Explicit","level":4}
   :annotation -> [12]
   :body -> [35]
-  :env -> [85]
+  :env -> [75]
 [12] app {"icit":"Explicit"}
   :arg -> [34]
   :func -> [13]
@@ -411,7 +411,7 @@ return main();
 [17] lambda {"variable":"a","icit":"Explicit","level":5}
   :annotation -> [18]
   :body -> [19]
-  :env -> [86]
+  :env -> [76]
 [18] lit {"value":{"type":"Atom","value":"Type"}}
 [19] app {"icit":"Explicit"}
   :arg -> [21]
@@ -471,8 +471,8 @@ return main();
   :scope -> [7] {"level":3}
 [35] match
   :alt -> [37] {"index":0}
-  :alt -> [46] {"index":1}
-  :decision_tree -> [74]
+  :alt -> [43] {"index":1}
+  :decision_tree -> [64]
   :scrutinee -> [36]
 [36] var:bound {"index":0}
   :refers_to -> [11]
@@ -483,196 +483,176 @@ return main();
   :scope -> [11] {"level":4}
 [37] case
   :body -> [41]
-  :next -> [46]
+  :next -> [43]
   :pattern -> [38]
 [38] pat:variant {"label":"nil"}
   :payload -> [39]
 [39] pat:wildcard
 [40] pat:wildcard
-[41] app {"icit":"Explicit"}
-  :arg -> [43]
-  :func -> [42]
-[42] lit {"value":{"type":"Atom","value":"Struct"}}
-[43] row:ext {"label":"nil"}
-  :rest -> [45]
-  :value -> [44]
-[44] lit {"value":{"type":"unit"}}
-[45] row:empty
-[46] case
-  :body -> [53]
-  :pattern -> [47]
-[47] pat:variant {"label":"cons"}
-  :payload -> [48]
-[48] pat:struct
-  :field -> [49] {"label":"0"}
-  :field -> [50] {"label":"1"}
-[49] pat:binder {"name":"x","level":5}
-[50] pat:binder {"name":"xs","level":6}
-[51] pat:wildcard
-[52] pat:wildcard
-[53] app {"icit":"Explicit"}
-  :arg -> [55]
-  :func -> [54]
-[54] lit {"value":{"type":"Atom","value":"Struct"}}
-[55] row:ext {"label":"cons"}
-  :rest -> [73]
-  :value -> [56]
-[56] app {"icit":"Explicit"}
-  :arg -> [58]
-  :func -> [57]
-[57] lit {"value":{"type":"Atom","value":"Struct"}}
-[58] row:ext {"label":"0"}
-  :rest -> [62]
-  :value -> [59]
-[59] app {"icit":"Explicit"}
-  :arg -> [61]
-  :func -> [60]
-[60] var:bound {"index":5}
+[41] struct
+  :field -> [42] {"label":"nil"}
+[42] lit {"value":{"type":"unit"}}
+[43] case
+  :body -> [50]
+  :pattern -> [44]
+[44] pat:variant {"label":"cons"}
+  :payload -> [45]
+[45] pat:struct
+  :field -> [46] {"label":"0"}
+  :field -> [47] {"label":"1"}
+[46] pat:binder {"name":"x","level":5}
+[47] pat:binder {"name":"xs","level":6}
+[48] pat:wildcard
+[49] pat:wildcard
+[50] struct
+  :field -> [51] {"label":"cons"}
+[51] struct
+  :field -> [52] {"label":"0"}
+  :field -> [55] {"label":"1"}
+[52] app {"icit":"Explicit"}
+  :arg -> [54]
+  :func -> [53]
+[53] var:bound {"index":5}
   :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[61] var:bound {"index":3}
-  :refers_to -> [49]
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[54] var:bound {"index":3}
+  :refers_to -> [46]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[62] row:ext {"label":"1"}
-  :rest -> [72]
-  :value -> [63]
-[63] app {"icit":"Explicit"}
-  :arg -> [71]
-  :func -> [64]
-[64] app {"icit":"Explicit"}
-  :arg -> [70]
-  :func -> [65]
-[65] app {"icit":"Implicit"}
-  :arg -> [69]
-  :func -> [66]
-[66] app {"icit":"Implicit"}
-  :arg -> [68]
-  :func -> [67]
-[67] var:bound {"index":8}
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[55] app {"icit":"Explicit"}
+  :arg -> [63]
+  :func -> [56]
+[56] app {"icit":"Explicit"}
+  :arg -> [62]
+  :func -> [57]
+[57] app {"icit":"Implicit"}
+  :arg -> [61]
+  :func -> [58]
+[58] app {"icit":"Implicit"}
+  :arg -> [60]
+  :func -> [59]
+[59] var:bound {"index":8}
   :refers_to -> [2]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[68] var:bound {"index":7}
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[60] var:bound {"index":7}
   :refers_to -> [3]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[69] var:bound {"index":6}
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[61] var:bound {"index":6}
   :refers_to -> [5]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[70] var:bound {"index":5}
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[62] var:bound {"index":5}
   :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[71] var:bound {"index":2}
-  :refers_to -> [50]
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[63] var:bound {"index":2}
+  :refers_to -> [47]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[72] row:empty
-[73] row:empty
-[74] switch {"kind":"tag"}
-  :branch -> [76] {"label":"nil"}
-  :branch -> [78] {"label":"cons"}
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[64] switch {"kind":"tag"}
+  :branch -> [66] {"label":"nil"}
+  :branch -> [68] {"label":"cons"}
   :inspect -> [36]
-[75] proj {"label":"nil"}
+[65] proj {"label":"nil"}
   :target -> [36]
-[76] leaf
+[66] leaf
   :body -> [41]
-[77] proj {"label":"cons"}
+[67] proj {"label":"cons"}
   :target -> [36]
-[78] switch {"kind":"struct"}
-  :branch -> [81]
-  :inspect -> [77]
-[79] proj {"label":"0"}
-  :target -> [77]
-[80] proj {"label":"1"}
-  :target -> [77]
-[81] leaf
-  :bind -> [79] {"name":"x","binder":49}
-  :bind -> [80] {"name":"xs","binder":50}
-  :body -> [53]
-[82] env
+[68] switch {"kind":"struct"}
+  :branch -> [71]
+  :inspect -> [67]
+[69] proj {"label":"0"}
+  :target -> [67]
+[70] proj {"label":"1"}
+  :target -> [67]
+[71] leaf
+  :bind -> [69] {"name":"x","binder":46}
+  :bind -> [70] {"name":"xs","binder":47}
+  :body -> [50]
+[72] env
   :capture -> [2] {"index":0}
-[83] env
+[73] env
   :capture -> [3] {"index":0}
   :capture -> [2] {"index":1}
-[84] env
+[74] env
   :capture -> [3] {"index":0}
   :capture -> [2] {"index":1}
   :capture -> [5] {"index":2}
-[85] env
+[75] env
   :capture -> [7] {"index":0}
   :capture -> [2] {"index":1}
   :capture -> [3] {"index":2}
   :capture -> [5] {"index":3}
-[86] env
+[76] env
   :capture -> [13] {"index":0}
-[87] closure
+[77] closure
   :body -> [3]
-  :env -> [82]
-[88] closure
+  :env -> [72]
+[78] closure
   :body -> [5]
-  :env -> [83]
-[89] closure
+  :env -> [73]
+[79] closure
   :body -> [7]
-  :env -> [84]
-[90] closure
+  :env -> [74]
+[80] closure
   :body -> [11]
-  :env -> [85]
-[91] closure
+  :env -> [75]
+[81] closure
   :body -> [17]
-  :env -> [86]",
+  :env -> [76]",
     "ivl": "",
     "kind": "let",
     "mir": "",
@@ -703,21 +683,15 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ListFunctor"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"map"}
-  :rest -> [16]
-  :value -> [13]
+[3] struct
+  :field -> [11] {"label":"map"}
+[5] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lit {"value":{"type":"Atom","value":"Type"}}
-[9] lit {"value":{"type":"Atom","value":"Type"}}
-[12] var:free {"name":"mapList"}
-[13] var:ref {"name":"mapList"}
-  :refers_to -> [12]
+[10] var:free {"name":"mapList"}
+[11] var:ref {"name":"mapList"}
+  :refers_to -> [10]
   :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-[16] row:empty",
+  :scope -> [11] {"level":1}",
     "ivl": "(forall ((a Type)) (forall ((b Type)) (and (= a a) (= b b))))",
     "kind": "let",
     "mir": "module
@@ -1654,35 +1628,15 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"listOf1"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"cons"}
-  :rest -> [17]
-  :value -> [6]
-[6] app {"icit":"Explicit"}
-  :arg -> [8]
-  :func -> [7]
-[7] lit {"value":{"type":"Atom","value":"Struct"}}
-[8] row:ext {"label":"0"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Num","value":1}}
-[10] row:ext {"label":"1"}
-  :rest -> [16]
-  :value -> [11]
-[11] app {"icit":"Explicit"}
-  :arg -> [13]
-  :func -> [12]
-[12] lit {"value":{"type":"Atom","value":"Struct"}}
-[13] row:ext {"label":"nil"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"unit"}}
-[15] row:empty
-[16] row:empty
-[17] row:empty",
+[3] struct
+  :field -> [4] {"label":"cons"}
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [6] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":1}}
+[6] struct
+  :field -> [7] {"label":"nil"}
+[7] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -2253,17 +2207,17 @@ return main();
 [3] lambda {"variable":"a","icit":"Implicit","level":1}
   :annotation -> [4]
   :body -> [5]
-  :env -> [82]
+  :env -> [72]
 [4] lit {"value":{"type":"Atom","value":"Type"}}
 [5] lambda {"variable":"b","icit":"Implicit","level":2}
   :annotation -> [6]
   :body -> [7]
-  :env -> [83]
+  :env -> [73]
 [6] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lambda {"variable":"f","icit":"Explicit","level":3}
   :annotation -> [8]
   :body -> [11]
-  :env -> [84]
+  :env -> [74]
 [8] pi {"variable":"t8","icit":"Explicit","level":3}
   :annotation -> [9]
   :body -> [10]
@@ -2281,7 +2235,7 @@ return main();
 [11] lambda {"variable":"list","icit":"Explicit","level":4}
   :annotation -> [12]
   :body -> [35]
-  :env -> [85]
+  :env -> [75]
 [12] app {"icit":"Explicit"}
   :arg -> [34]
   :func -> [13]
@@ -2296,7 +2250,7 @@ return main();
 [17] lambda {"variable":"a","icit":"Explicit","level":5}
   :annotation -> [18]
   :body -> [19]
-  :env -> [86]
+  :env -> [76]
 [18] lit {"value":{"type":"Atom","value":"Type"}}
 [19] app {"icit":"Explicit"}
   :arg -> [21]
@@ -2356,8 +2310,8 @@ return main();
   :scope -> [7] {"level":3}
 [35] match
   :alt -> [37] {"index":0}
-  :alt -> [46] {"index":1}
-  :decision_tree -> [74]
+  :alt -> [43] {"index":1}
+  :decision_tree -> [64]
   :scrutinee -> [36]
 [36] var:bound {"index":0}
   :refers_to -> [11]
@@ -2368,196 +2322,176 @@ return main();
   :scope -> [11] {"level":4}
 [37] case
   :body -> [41]
-  :next -> [46]
+  :next -> [43]
   :pattern -> [38]
 [38] pat:variant {"label":"nil"}
   :payload -> [39]
 [39] pat:wildcard
 [40] pat:wildcard
-[41] app {"icit":"Explicit"}
-  :arg -> [43]
-  :func -> [42]
-[42] lit {"value":{"type":"Atom","value":"Struct"}}
-[43] row:ext {"label":"nil"}
-  :rest -> [45]
-  :value -> [44]
-[44] lit {"value":{"type":"unit"}}
-[45] row:empty
-[46] case
-  :body -> [53]
-  :pattern -> [47]
-[47] pat:variant {"label":"cons"}
-  :payload -> [48]
-[48] pat:struct
-  :field -> [49] {"label":"0"}
-  :field -> [50] {"label":"1"}
-[49] pat:binder {"name":"x","level":5}
-[50] pat:binder {"name":"xs","level":6}
-[51] pat:wildcard
-[52] pat:wildcard
-[53] app {"icit":"Explicit"}
-  :arg -> [55]
-  :func -> [54]
-[54] lit {"value":{"type":"Atom","value":"Struct"}}
-[55] row:ext {"label":"cons"}
-  :rest -> [73]
-  :value -> [56]
-[56] app {"icit":"Explicit"}
-  :arg -> [58]
-  :func -> [57]
-[57] lit {"value":{"type":"Atom","value":"Struct"}}
-[58] row:ext {"label":"0"}
-  :rest -> [62]
-  :value -> [59]
-[59] app {"icit":"Explicit"}
-  :arg -> [61]
-  :func -> [60]
-[60] var:bound {"index":5}
+[41] struct
+  :field -> [42] {"label":"nil"}
+[42] lit {"value":{"type":"unit"}}
+[43] case
+  :body -> [50]
+  :pattern -> [44]
+[44] pat:variant {"label":"cons"}
+  :payload -> [45]
+[45] pat:struct
+  :field -> [46] {"label":"0"}
+  :field -> [47] {"label":"1"}
+[46] pat:binder {"name":"x","level":5}
+[47] pat:binder {"name":"xs","level":6}
+[48] pat:wildcard
+[49] pat:wildcard
+[50] struct
+  :field -> [51] {"label":"cons"}
+[51] struct
+  :field -> [52] {"label":"0"}
+  :field -> [55] {"label":"1"}
+[52] app {"icit":"Explicit"}
+  :arg -> [54]
+  :func -> [53]
+[53] var:bound {"index":5}
   :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[61] var:bound {"index":3}
-  :refers_to -> [49]
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[54] var:bound {"index":3}
+  :refers_to -> [46]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[62] row:ext {"label":"1"}
-  :rest -> [72]
-  :value -> [63]
-[63] app {"icit":"Explicit"}
-  :arg -> [71]
-  :func -> [64]
-[64] app {"icit":"Explicit"}
-  :arg -> [70]
-  :func -> [65]
-[65] app {"icit":"Implicit"}
-  :arg -> [69]
-  :func -> [66]
-[66] app {"icit":"Implicit"}
-  :arg -> [68]
-  :func -> [67]
-[67] var:bound {"index":8}
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[55] app {"icit":"Explicit"}
+  :arg -> [63]
+  :func -> [56]
+[56] app {"icit":"Explicit"}
+  :arg -> [62]
+  :func -> [57]
+[57] app {"icit":"Implicit"}
+  :arg -> [61]
+  :func -> [58]
+[58] app {"icit":"Implicit"}
+  :arg -> [60]
+  :func -> [59]
+[59] var:bound {"index":8}
   :refers_to -> [2]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[68] var:bound {"index":7}
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[60] var:bound {"index":7}
   :refers_to -> [3]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[69] var:bound {"index":6}
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[61] var:bound {"index":6}
   :refers_to -> [5]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[70] var:bound {"index":5}
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[62] var:bound {"index":5}
   :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[71] var:bound {"index":2}
-  :refers_to -> [50]
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[63] var:bound {"index":2}
+  :refers_to -> [47]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [49] {"level":5}
-  :scope -> [50] {"level":6}
-  :scope -> [51] {"level":7}
-  :scope -> [52] {"level":8}
-[72] row:empty
-[73] row:empty
-[74] switch {"kind":"tag"}
-  :branch -> [76] {"label":"nil"}
-  :branch -> [78] {"label":"cons"}
+  :scope -> [46] {"level":5}
+  :scope -> [47] {"level":6}
+  :scope -> [48] {"level":7}
+  :scope -> [49] {"level":8}
+[64] switch {"kind":"tag"}
+  :branch -> [66] {"label":"nil"}
+  :branch -> [68] {"label":"cons"}
   :inspect -> [36]
-[75] proj {"label":"nil"}
+[65] proj {"label":"nil"}
   :target -> [36]
-[76] leaf
+[66] leaf
   :body -> [41]
-[77] proj {"label":"cons"}
+[67] proj {"label":"cons"}
   :target -> [36]
-[78] switch {"kind":"struct"}
-  :branch -> [81]
-  :inspect -> [77]
-[79] proj {"label":"0"}
-  :target -> [77]
-[80] proj {"label":"1"}
-  :target -> [77]
-[81] leaf
-  :bind -> [79] {"name":"x","binder":49}
-  :bind -> [80] {"name":"xs","binder":50}
-  :body -> [53]
-[82] env
+[68] switch {"kind":"struct"}
+  :branch -> [71]
+  :inspect -> [67]
+[69] proj {"label":"0"}
+  :target -> [67]
+[70] proj {"label":"1"}
+  :target -> [67]
+[71] leaf
+  :bind -> [69] {"name":"x","binder":46}
+  :bind -> [70] {"name":"xs","binder":47}
+  :body -> [50]
+[72] env
   :capture -> [2] {"index":0}
-[83] env
+[73] env
   :capture -> [3] {"index":0}
   :capture -> [2] {"index":1}
-[84] env
+[74] env
   :capture -> [3] {"index":0}
   :capture -> [2] {"index":1}
   :capture -> [5] {"index":2}
-[85] env
+[75] env
   :capture -> [7] {"index":0}
   :capture -> [2] {"index":1}
   :capture -> [3] {"index":2}
   :capture -> [5] {"index":3}
-[86] env
+[76] env
   :capture -> [13] {"index":0}
-[87] closure
+[77] closure
   :body -> [3]
-  :env -> [82]
-[88] closure
+  :env -> [72]
+[78] closure
   :body -> [5]
-  :env -> [83]
-[89] closure
+  :env -> [73]
+[79] closure
   :body -> [7]
-  :env -> [84]
-[90] closure
+  :env -> [74]
+[80] closure
   :body -> [11]
-  :env -> [85]
-[91] closure
+  :env -> [75]
+[81] closure
   :body -> [17]
-  :env -> [86]",
+  :env -> [76]",
     "ivl": "",
     "kind": "let",
     "mir": "",
@@ -2588,21 +2522,15 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ListFunctor"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"map"}
-  :rest -> [16]
-  :value -> [13]
+[3] struct
+  :field -> [11] {"label":"map"}
+[5] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lit {"value":{"type":"Atom","value":"Type"}}
-[9] lit {"value":{"type":"Atom","value":"Type"}}
-[12] var:free {"name":"mapList"}
-[13] var:ref {"name":"mapList"}
-  :refers_to -> [12]
+[10] var:free {"name":"mapList"}
+[11] var:ref {"name":"mapList"}
+  :refers_to -> [10]
   :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-[16] row:empty",
+  :scope -> [11] {"level":1}",
     "ivl": "(forall ((a Type)) (forall ((b Type)) (and (= a a) (= b b))))",
     "kind": "let",
     "mir": "module

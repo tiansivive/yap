@@ -173,39 +173,31 @@ exports[`GRAM translate > match on variant (Some 42) 1`] = `
 "[1] root
   :entry -> [2]
 [2] match
-  :alt -> [10] {"index":0}
-  :alt -> [14] {"index":1}
+  :alt -> [6] {"index":0}
+  :alt -> [10] {"index":1}
   :scrutinee -> [3]
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"__tag"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"String","value":"Some"}}
-[7] row:ext {"label":"Some"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Num","value":42}}
-[9] row:empty
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"Some"}
+[4] lit {"value":{"type":"String","value":"Some"}}
+[5] lit {"value":{"type":"Num","value":42}}
+[6] case
+  :body -> [9]
+  :next -> [10]
+  :pattern -> [7]
+[7] pat:variant {"label":"Some"}
+  :payload -> [8]
+[8] pat:binder {"name":"x","level":0}
+[9] var:bound {"index":0}
+  :refers_to -> [8]
+  :scope -> [8] {"level":0}
 [10] case
   :body -> [13]
-  :next -> [14]
   :pattern -> [11]
-[11] pat:variant {"label":"Some"}
+[11] pat:variant {"label":"None"}
   :payload -> [12]
-[12] pat:binder {"name":"x","level":0}
-[13] var:bound {"index":0}
-  :refers_to -> [12]
-  :scope -> [12] {"level":0}
-[14] case
-  :body -> [17]
-  :pattern -> [15]
-[15] pat:variant {"label":"None"}
-  :payload -> [16]
-[16] pat:wildcard
-[17] lit {"value":{"type":"Num","value":0}}"
+[12] pat:wildcard
+[13] lit {"value":{"type":"Num","value":0}}"
 `;
 
 exports[`GRAM translate > match with alternatives 1`] = `
@@ -263,15 +255,9 @@ exports[`GRAM translate > proj('x', struct({ x: 42 })) 1`] = `
   :entry -> [2]
 [2] proj {"label":"x"}
   :target -> [3]
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"x"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"Num","value":42}}
-[7] row:empty"
+[3] struct
+  :field -> [4] {"label":"x"}
+[4] lit {"value":{"type":"Num","value":42}}"
 `;
 
 exports[`GRAM translate > projection 1`] = `
@@ -344,19 +330,11 @@ exports[`GRAM translate > reset(shift k -> k 42) — single resume 1`] = `
 exports[`GRAM translate > struct — row extension chain 1`] = `
 "[1] root
   :entry -> [2]
-[2] app {"icit":"Explicit"}
-  :arg -> [4]
-  :func -> [3]
-[3] lit {"value":{"type":"Atom","value":"Struct"}}
-[4] row:ext {"label":"x"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Num","value":1}}
-[6] row:ext {"label":"y"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Num","value":2}}
-[8] row:empty"
+[2] struct
+  :field -> [3] {"label":"x"}
+  :field -> [4] {"label":"y"}
+[3] lit {"value":{"type":"Num","value":1}}
+[4] lit {"value":{"type":"Num","value":2}}"
 `;
 
 exports[`GRAM translate > triple nested lambda — de Bruijn indices at all depths 1`] = `

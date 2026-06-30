@@ -1544,15 +1544,9 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"light"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"red"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"unit"}}
-[7] row:empty",
+[3] struct
+  :field -> [4] {"label":"red"}
+[4] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1748,15 +1742,9 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"c"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"circle"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"Num","value":5}}
-[7] row:empty",
+[3] struct
+  :field -> [4] {"label":"circle"}
+[4] lit {"value":{"type":"Num","value":5}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1817,27 +1805,13 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"r"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"rectangle"}
-  :rest -> [13]
-  :value -> [6]
-[6] app {"icit":"Explicit"}
-  :arg -> [8]
-  :func -> [7]
-[7] lit {"value":{"type":"Atom","value":"Struct"}}
-[8] row:ext {"label":"0"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Num","value":10}}
-[10] row:ext {"label":"1"}
-  :rest -> [12]
-  :value -> [11]
-[11] lit {"value":{"type":"Num","value":20}}
-[12] row:empty
-[13] row:empty",
+[3] struct
+  :field -> [4] {"label":"rectangle"}
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [6] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":10}}
+[6] lit {"value":{"type":"Num","value":20}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1900,27 +1874,13 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"p"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"point"}
-  :rest -> [13]
-  :value -> [6]
-[6] app {"icit":"Explicit"}
-  :arg -> [8]
-  :func -> [7]
-[7] lit {"value":{"type":"Atom","value":"Struct"}}
-[8] row:ext {"label":"x"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Num","value":0}}
-[10] row:ext {"label":"y"}
-  :rest -> [12]
-  :value -> [11]
-[11] lit {"value":{"type":"Num","value":0}}
-[12] row:empty
-[13] row:empty",
+[3] struct
+  :field -> [4] {"label":"point"}
+[4] struct
+  :field -> [5] {"label":"x"}
+  :field -> [6] {"label":"y"}
+[5] lit {"value":{"type":"Num","value":0}}
+[6] lit {"value":{"type":"Num","value":0}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module

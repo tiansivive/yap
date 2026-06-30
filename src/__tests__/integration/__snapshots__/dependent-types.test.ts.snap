@@ -393,22 +393,14 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"numPair"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"snd"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"Num","value":42}}
-[7] row:ext {"label":"fst"}
-  :rest -> [10]
-  :value -> [9]
-[8] var:free {"name":"Num"}
-[9] var:ref {"name":"Num"}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-[10] row:empty",
+[3] struct
+  :field -> [4] {"label":"snd"}
+  :field -> [6] {"label":"fst"}
+[4] lit {"value":{"type":"Num","value":42}}
+[5] var:free {"name":"Num"}
+[6] var:ref {"name":"Num"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -464,22 +456,14 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"strPair"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"snd"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"String","value":"hello"}}
-[7] row:ext {"label":"fst"}
-  :rest -> [10]
-  :value -> [9]
-[8] var:free {"name":"String"}
-[9] var:ref {"name":"String"}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-[10] row:empty",
+[3] struct
+  :field -> [4] {"label":"snd"}
+  :field -> [6] {"label":"fst"}
+[4] lit {"value":{"type":"String","value":"hello"}}
+[5] var:free {"name":"String"}
+[6] var:ref {"name":"String"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -705,19 +689,11 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"exampleP1"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"snd"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"String","value":"hello"}}
-[7] row:ext {"label":"fst"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Num","value":42}}
-[9] row:empty",
+[3] struct
+  :field -> [4] {"label":"snd"}
+  :field -> [5] {"label":"fst"}
+[4] lit {"value":{"type":"String","value":"hello"}}
+[5] lit {"value":{"type":"Num","value":42}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -773,19 +749,11 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"exampleP2"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"snd"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"Num","value":100}}
-[7] row:ext {"label":"fst"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Bool","value":true}}
-[9] row:empty",
+[3] struct
+  :field -> [4] {"label":"snd"}
+  :field -> [5] {"label":"fst"}
+[4] lit {"value":{"type":"Num","value":100}}
+[5] lit {"value":{"type":"Bool","value":true}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1071,22 +1039,14 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"vec1"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"0"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"Num","value":10}}
-[7] row:ext {"label":"1"}
-  :rest -> [10]
-  :value -> [9]
-[8] var:free {"name":"vec0"}
-[9] var:ref {"name":"vec0"}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-[10] row:empty",
+[3] struct
+  :field -> [4] {"label":"0"}
+  :field -> [6] {"label":"1"}
+[4] lit {"value":{"type":"Num","value":10}}
+[5] var:free {"name":"vec0"}
+[6] var:ref {"name":"vec0"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1142,22 +1102,14 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"vec2"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"0"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"Num","value":20}}
-[7] row:ext {"label":"1"}
-  :rest -> [10]
-  :value -> [9]
-[8] var:free {"name":"vec1"}
-[9] var:ref {"name":"vec1"}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-[10] row:empty",
+[3] struct
+  :field -> [4] {"label":"0"}
+  :field -> [6] {"label":"1"}
+[4] lit {"value":{"type":"Num","value":20}}
+[5] var:free {"name":"vec1"}
+[6] var:ref {"name":"vec1"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1213,22 +1165,14 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"vec3"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"0"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"Num","value":30}}
-[7] row:ext {"label":"1"}
-  :rest -> [10]
-  :value -> [9]
-[8] var:free {"name":"vec2"}
-[9] var:ref {"name":"vec2"}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-[10] row:empty",
+[3] struct
+  :field -> [4] {"label":"0"}
+  :field -> [6] {"label":"1"}
+[4] lit {"value":{"type":"Num","value":30}}
+[5] var:free {"name":"vec2"}
+[6] var:ref {"name":"vec2"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}",
     "ivl": "true",
     "kind": "let",
     "mir": "module

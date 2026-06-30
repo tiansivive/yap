@@ -291,3 +291,6 @@ export const Query = {
 // ── Root ──
 
 export const entry = (g: Graph): NodeId | undefined => g.edges.get(g.root)?.get(Labels.ENTRY)?.[0]?.target;
+
+// The struct that owns a field value — reverse the :field edge.
+export const structOf = (target: NodeId, g: Graph): NodeId | undefined => Edges.to(target)(g).find(e => e.label === Labels.FIELD)?.source;

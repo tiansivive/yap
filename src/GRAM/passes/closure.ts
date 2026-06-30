@@ -1,13 +1,12 @@
 import { match } from "ts-pattern";
 
-import { Nodes, Edges, Query } from "../graph";
+import { Nodes, Edges, Query, structOf } from "../graph";
 import type { Graph, NodeId } from "../graph";
 import { Tags, Labels } from "../vocabulary";
 import type { Pass } from "../grs/strategy";
 import type { Rule } from "../grs/rule";
 import * as Strategy from "../grs/strategy";
 import type { Descriptor } from "../pipeline/descriptor";
-import { none } from "../pipeline/descriptor";
 
 const PASS_CAPTURE = { created_by: "capture" } as const;
 
@@ -30,7 +29,20 @@ const capturesOf = (lamId: NodeId, g: Graph): ReadonlyArray<NodeId> => {
 		.filter(e => e.label === Labels.SCOPE)
 		.flatMap(e => {
 			const ref = Edges.one(e.source, Labels.REFERS_TO)(g);
-			return ref !== undefined && isCapture(lamId, lamLvl, g)(ref) ? [ref.target] : [];
+
+			if (ref === undefined) {
+				return [];
+			}
+
+			// A label crossing this lambda captures the whole record (the struct owning the
+			// referenced field), so the label reads its field off the captured record. The
+			// de Bruijn level filter applies only to bound-variable captures.
+			return match(Nodes.get(e.source)(g)?.tag)
+				.with(Tags.VAR_LABEL, () => {
+					const s = structOf(ref.target, g);
+					return s !== undefined ? [s] : [];
+				})
+				.otherwise(() => (isCapture(lamId, lamLvl, g)(ref) ? [ref.target] : []));
 		});
 	return [...new Set(targets)];
 };

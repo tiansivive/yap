@@ -23,16 +23,18 @@ alwaysApply: true
 - **Track deferred work** — TODO, FIXME, HACK, skipped tests; surface when relevant
 - **Reference brainstorming** — `brainstorming/yap` has specs, sketches; check for prior art
 - **Warn on drift** — flag if user reintroduces refactored-away patterns or re-implements existing code
+- **Don't re-propose dropped ideas** — check z-yap for `superseded`/`rejected`/`deprecated` zettels and `SUPERSEDES`/`REJECTS` edges before raising an idea; if re-raising, say why it was dropped and what changed
 
 ## Instruction self-maintenance
 
-- **Validate claims** — spot-check paths, modules, APIs against codebase
-- **Sync package.json scripts** — flag if instructions list outdated scripts
-- **Flag conflicts** — instruction vs code; propose update
-- **Flag outdated info** — v2 maturity, new patterns; propose doc updates
-- **Flag missing info** — suggest adding discovered patterns
-- **Architecture docs** — when pipeline/modules/types change, propose `docs/ARCHITECTURE.md` updates
-- **Known issues** — add drift to `brainstorming/yap/KNOWN-DOC-ISSUES.md` when not fixable now
+These guidance files — `AGENTS.md`, `.cursor/rules/*.mdc`, `.github/copilot-instructions.md` — must track code and design reality. Keeping them honest is part of every session's close-out.
+
+- **Validate claims** — spot-check paths, modules, APIs against the codebase as you encounter them
+- **Sync package.json scripts** — flag outdated script listings
+- **Flag conflicts** — instruction vs code; propose the fix
+- **Recommend cleanup when a change lands** — when work makes a rule stale (e.g. removing the deprecated elaboration usage threading once usage-semantics lands), proactively recommend updating these files in the same session; don't leave the docs describing the old world
+- **Flag missing info** — suggest documenting newly discovered patterns and conventions
+- **Record drift in z-yap** when it can't be fixed in the current session
 
 ## V2 migration awareness
 
@@ -49,7 +51,7 @@ When the session is exploratory or design-oriented (not implementation):
 
 - **Lead with analysis, not options** — bring a framework or recommendation before asking for direction
 - **Hold positions with justification** — do not abandon a position just because the user pushes back; explain why you hold it, or explain specifically what changed your mind
-- **Bring cross-cutting knowledge** — connect the problem to PL theory, prior art, and other systems unprompted; do not wait to be asked
+- **Bring cross-cutting knowledge** — connect the problem to PL theory, prior art, and other systems unprompted; do not wait to be asked. Reach beyond PL too: when an analogous problem in an unrelated field has a transferable solution, surface it
 - **Do not mirror** — if the user says something tentative or exploratory, do not treat it as a final decision; probe it, challenge it, or build on it
 - **Ground in the knowledge base** — read z-yap zettels and existing design docs before responding to design questions; do not generate from first principles when prior art exists in the project
 - **Resist sycophancy** — "you're right" must be followed by a specific explanation of what was wrong in the prior position; empty agreement is worse than disagreement

@@ -7,12 +7,15 @@ import type * as NF from "@yap/elaboration/normalization";
 import type { Graph } from "../graph";
 import { translate } from "../translate";
 import type { Location } from "../provenance";
+import { descriptor as resolveLabels } from "../passes/resolve-labels";
+import { descriptor as labelCycles } from "../passes/label-cycles";
 import { descriptor as eta } from "../passes/eta";
 import { descriptor as saturate } from "../passes/saturate";
 import { descriptor as pap } from "../passes/pap";
 import { descriptor as shiftReset } from "../passes/shift-reset";
 import { descriptor as pattern } from "../passes/pattern";
 import { descriptor as closure } from "../passes/closure";
+import { descriptor as knot } from "../passes/knot";
 import type { Inconsistency, Pipeline } from "./configure";
 import { configure } from "./configure";
 import type { Violation } from "./verify";
@@ -37,7 +40,17 @@ export type CompileOpts = {
 	readonly parentBinders?: ReadonlyArray<string>;
 };
 
-export const defaultPipeline: E.Either<ReadonlyArray<Inconsistency>, Pipeline> = configure(eta, saturate, pap, shiftReset, pattern, closure);
+export const defaultPipeline: E.Either<ReadonlyArray<Inconsistency>, Pipeline> = configure(
+	resolveLabels,
+	eta,
+	saturate,
+	pap,
+	shiftReset,
+	pattern,
+	labelCycles,
+	closure,
+	knot,
+);
 
 export const compile = (term: EB.Term, opts?: CompileOpts): E.Either<CompileError, Graph> =>
 	pipe(

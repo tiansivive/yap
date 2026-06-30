@@ -64,6 +64,42 @@ describe("GRAM Bridge: Phase 1 — leaves and structural ops", () => {
 		expect(result.x).toBe(1);
 	});
 
+	const label = (name: string): EB.Term => EB.Constructors.Var({ type: "Label", name });
+
+	it("backward label ref { b: 10, a: :b + 1 }", () => {
+		const term = EB.DSL.struct([
+			{ label: "b", value: EB.DSL.num(10) },
+			{ label: "a", value: EB.DSL.add(label("b"), EB.DSL.num(1)) },
+		]);
+		expect(via(term)).toEqual({ b: 10, a: 11 });
+	});
+
+	it("forward label ref { a: :b + 1, b: 10 }", () => {
+		const term = EB.DSL.struct([
+			{ label: "a", value: EB.DSL.add(label("b"), EB.DSL.num(1)) },
+			{ label: "b", value: EB.DSL.num(10) },
+		]);
+		expect(via(term)).toEqual({ a: 11, b: 10 });
+	});
+
+	it("label captured into a closure reads off the record: ({ x: 10, f: \\n -> :x }).f 0 == 10", () => {
+		const rec = EB.DSL.struct([
+			{ label: "x", value: EB.DSL.num(10) },
+			{ label: "f", value: EB.DSL.lambda("n", label("x"), EB.DSL.type("Num")) },
+		]);
+		expect(via(EB.DSL.app(EB.DSL.proj("f", rec), EB.DSL.num(0)))).toBe(10);
+	});
+
+	it("self-recursive field ties via the record without looping", () => {
+		const mod = bridge(EB.DSL.struct([{ label: "f", value: EB.DSL.lambda("n", label("f"), EB.DSL.type("Num")) }]));
+		const main = mod.functions.find(f => f.name === "main");
+		const backpatched = (main?.blocks ?? []).flatMap(b => b.instrs).some(i => i.type === "Update" && i.mode === "fbip");
+		const closure = mod.functions.find(f => f.name.startsWith("closure_"));
+		const readsRecord = (closure?.blocks ?? []).flatMap(b => b.instrs).some(i => i.type === "Read");
+		expect(backpatched).toBe(true);
+		expect(readsRecord).toBe(true);
+	});
+
 	it("let x = 42 in x", () => {
 		const term = EB.mk({
 			type: "Abs",
