@@ -7,7 +7,6 @@ import type { Pass } from "../grs/strategy";
 import type { Rule } from "../grs/rule";
 import * as Strategy from "../grs/strategy";
 import type { Descriptor } from "../pipeline/descriptor";
-import { none } from "../pipeline/descriptor";
 
 const PASS_CAPTURE = { created_by: "capture" } as const;
 
@@ -24,13 +23,28 @@ const isCapture =
 	(e: { target: NodeId }): boolean =>
 		e.target !== lamId && (isGlobal(e.target, g) || level(e.target, g) < lamLvl);
 
+// The struct that owns a field value — reverse the :field edge.
+const structOf = (target: NodeId, g: Graph): NodeId | undefined => Edges.to(target)(g).find(e => e.label === Labels.FIELD)?.source;
+
 const capturesOf = (lamId: NodeId, g: Graph): ReadonlyArray<NodeId> => {
 	const lamLvl = level(lamId, g);
 	const targets = Edges.to(lamId)(g)
 		.filter(e => e.label === Labels.SCOPE)
 		.flatMap(e => {
 			const ref = Edges.one(e.source, Labels.REFERS_TO)(g);
-			return ref !== undefined && isCapture(lamId, lamLvl, g)(ref) ? [ref.target] : [];
+
+			if (ref === undefined) {
+				return [];
+			}
+
+			// A label crossing this lambda captures the whole record (the struct owning the
+			// referenced field), so the label reads its field off the captured record. The
+			// de Bruijn level filter applies only to bound-variable captures.
+			if (Nodes.get(e.source)(g)?.tag === Tags.VAR_LABEL) {
+				const s = structOf(ref.target, g);
+				return s !== undefined ? [s] : [];
+			}
+			return isCapture(lamId, lamLvl, g)(ref) ? [ref.target] : [];
 		});
 	return [...new Set(targets)];
 };

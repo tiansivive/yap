@@ -120,53 +120,45 @@ exports[`pattern compilation pass > variant patterns > Some/None — switch on t
 "[1] root
   :entry -> [2]
 [2] match
-  :alt -> [10] {"index":0}
-  :alt -> [14] {"index":1}
-  :decision_tree -> [18]
+  :alt -> [6] {"index":0}
+  :alt -> [10] {"index":1}
+  :decision_tree -> [14]
   :scrutinee -> [3]
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"__tag"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"String","value":"Some"}}
-[7] row:ext {"label":"Some"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Num","value":42}}
-[9] row:empty
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"Some"}
+[4] lit {"value":{"type":"String","value":"Some"}}
+[5] lit {"value":{"type":"Num","value":42}}
+[6] case
+  :body -> [9]
+  :next -> [10]
+  :pattern -> [7]
+[7] pat:variant {"label":"Some"}
+  :payload -> [8]
+[8] pat:binder {"name":"x","level":0}
+[9] var:bound {"index":0}
+  :refers_to -> [8]
+  :scope -> [8] {"level":0}
 [10] case
   :body -> [13]
-  :next -> [14]
   :pattern -> [11]
-[11] pat:variant {"label":"Some"}
+[11] pat:variant {"label":"None"}
   :payload -> [12]
-[12] pat:binder {"name":"x","level":0}
-[13] var:bound {"index":0}
-  :refers_to -> [12]
-  :scope -> [12] {"level":0}
-[14] case
-  :body -> [17]
-  :pattern -> [15]
-[15] pat:variant {"label":"None"}
-  :payload -> [16]
-[16] pat:wildcard
-[17] lit {"value":{"type":"Num","value":0}}
-[18] switch {"kind":"tag"}
-  :branch -> [20] {"label":"Some"}
-  :branch -> [22] {"label":"None"}
+[12] pat:wildcard
+[13] lit {"value":{"type":"Num","value":0}}
+[14] switch {"kind":"tag"}
+  :branch -> [16] {"label":"Some"}
+  :branch -> [18] {"label":"None"}
   :inspect -> [3]
-[19] proj {"label":"Some"}
+[15] proj {"label":"Some"}
   :target -> [3]
-[20] leaf
-  :bind -> [19] {"name":"x","binder":12}
-  :body -> [13]
-[21] proj {"label":"None"}
+[16] leaf
+  :bind -> [15] {"name":"x","binder":8}
+  :body -> [9]
+[17] proj {"label":"None"}
   :target -> [3]
-[22] leaf
-  :body -> [17]"
+[18] leaf
+  :body -> [13]"
 `;
 
 exports[`pattern compilation pass > variant patterns > variant with wildcard default — default branch present 1`] = `

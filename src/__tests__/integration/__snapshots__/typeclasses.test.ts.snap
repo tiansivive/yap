@@ -300,23 +300,17 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ShowNum"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"show"}
-  :rest -> [14]
-  :value -> [15]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[10] var:foreign {"name":"stringify","arity":2}
-[12] lit {"value":{"type":"Atom","value":"Num"}}
-[14] row:empty
-[15] external {"name":"stringify","arity":2,"args":1,"saturated":false}
-  :arg -> [12] {"index":0}
-  :callee -> [10]
-[16] pap {"remaining":1}
-  :captured -> [12] {"index":0}
-  :materializes -> [15]",
+[3] struct
+  :field -> [12] {"label":"show"}
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[8] var:foreign {"name":"stringify","arity":2}
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[12] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [10] {"index":0}
+  :callee -> [8]
+[13] pap {"remaining":1}
+  :captured -> [10] {"index":0}
+  :materializes -> [12]",
     "ivl": "(forall ((n Real)) (= n n))",
     "kind": "let",
     "mir": "module
@@ -377,7 +371,7 @@ return main();
   {
     "codegenJS": "function main() {
   const env_cls2 = {};
-  const fnref_cls2 = closure_21;
+  const fnref_cls2 = closure_18;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -388,7 +382,7 @@ return main();
   return v3;
 }
 
-function closure_21(env0, b1) {
+function closure_18(env0, b1) {
   let __block = "entry";
   while (true) {
     switch (__block) {
@@ -430,62 +424,56 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ShowBool"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"show"}
-  :rest -> [16]
-  :value -> [6]
-[6] lambda {"variable":"b","icit":"Explicit","level":1}
-  :annotation -> [7]
-  :body -> [8]
-  :env -> [20]
-[7] lit {"value":{"type":"Atom","value":"Bool"}}
-[8] match
-  :alt -> [10] {"index":0}
-  :alt -> [13] {"index":1}
-  :decision_tree -> [17]
-  :scrutinee -> [9]
-[9] var:bound {"index":0}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-  :scope -> [6] {"level":1}
-[10] case
-  :body -> [12]
-  :next -> [13]
-  :pattern -> [11]
-[11] pat:lit {"value":{"type":"Bool","value":true}}
-[12] lit {"value":{"type":"String","value":"true"}}
-[13] case
-  :body -> [15]
-  :pattern -> [14]
-[14] pat:lit {"value":{"type":"Bool","value":false}}
-[15] lit {"value":{"type":"String","value":"false"}}
-[16] row:empty
-[17] switch {"kind":"lit"}
-  :branch -> [18] {"value":{"type":"Bool","value":true}}
-  :branch -> [19] {"value":{"type":"Bool","value":false}}
-  :inspect -> [9]
-[18] leaf
-  :body -> [12]
-[19] leaf
-  :body -> [15]
-[20] env
-[21] closure
+[3] struct
+  :field -> [4] {"label":"show"}
+[4] lambda {"variable":"b","icit":"Explicit","level":1}
+  :annotation -> [5]
   :body -> [6]
-  :env -> [20]",
+  :env -> [17]
+[5] lit {"value":{"type":"Atom","value":"Bool"}}
+[6] match
+  :alt -> [8] {"index":0}
+  :alt -> [11] {"index":1}
+  :decision_tree -> [14]
+  :scrutinee -> [7]
+[7] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[8] case
+  :body -> [10]
+  :next -> [11]
+  :pattern -> [9]
+[9] pat:lit {"value":{"type":"Bool","value":true}}
+[10] lit {"value":{"type":"String","value":"true"}}
+[11] case
+  :body -> [13]
+  :pattern -> [12]
+[12] pat:lit {"value":{"type":"Bool","value":false}}
+[13] lit {"value":{"type":"String","value":"false"}}
+[14] switch {"kind":"lit"}
+  :branch -> [15] {"value":{"type":"Bool","value":true}}
+  :branch -> [16] {"value":{"type":"Bool","value":false}}
+  :inspect -> [7]
+[15] leaf
+  :body -> [10]
+[16] leaf
+  :body -> [13]
+[17] env
+[18] closure
+  :body -> [4]
+  :env -> [17]",
     "ivl": "(forall ((b Bool)) (and (= b b) (= b b)))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_21
+      let fnref_cls2 = &closure_18
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       let v3 = alloc { show: closure_cls2 }
       return v3
-  fn closure_21(env0, b1) entry=entry
+  fn closure_18(env0, b1) entry=entry
     entry:
       jump sw1
     sw1:
@@ -559,21 +547,15 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"EqNum"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"eq"}
-  :rest -> [16]
-  :value -> [13]
+[3] struct
+  :field -> [11] {"label":"eq"}
+[5] lit {"value":{"type":"Atom","value":"Num"}}
 [7] lit {"value":{"type":"Atom","value":"Num"}}
-[9] lit {"value":{"type":"Atom","value":"Num"}}
-[12] var:foreign {"name":"$eq","arity":2}
-[13] var:ref {"name":"$eq"}
-  :refers_to -> [12]
+[10] var:foreign {"name":"$eq","arity":2}
+[11] var:ref {"name":"$eq"}
+  :refers_to -> [10]
   :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-[16] row:empty",
+  :scope -> [11] {"level":1}",
     "ivl": "(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))",
     "kind": "let",
     "mir": "module
@@ -930,23 +912,17 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ShowNum"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"show"}
-  :rest -> [14]
-  :value -> [15]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[10] var:foreign {"name":"stringify","arity":2}
-[12] lit {"value":{"type":"Atom","value":"Num"}}
-[14] row:empty
-[15] external {"name":"stringify","arity":2,"args":1,"saturated":false}
-  :arg -> [12] {"index":0}
-  :callee -> [10]
-[16] pap {"remaining":1}
-  :captured -> [12] {"index":0}
-  :materializes -> [15]",
+[3] struct
+  :field -> [12] {"label":"show"}
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[8] var:foreign {"name":"stringify","arity":2}
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[12] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [10] {"index":0}
+  :callee -> [8]
+[13] pap {"remaining":1}
+  :captured -> [10] {"index":0}
+  :materializes -> [12]",
     "ivl": "(forall ((n Real)) (= n n))",
     "kind": "let",
     "mir": "module
@@ -1019,21 +995,15 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"EqNum"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"eq"}
-  :rest -> [16]
-  :value -> [13]
+[3] struct
+  :field -> [11] {"label":"eq"}
+[5] lit {"value":{"type":"Atom","value":"Num"}}
 [7] lit {"value":{"type":"Atom","value":"Num"}}
-[9] lit {"value":{"type":"Atom","value":"Num"}}
-[12] var:foreign {"name":"$eq","arity":2}
-[13] var:ref {"name":"$eq"}
-  :refers_to -> [12]
+[10] var:foreign {"name":"$eq","arity":2}
+[11] var:ref {"name":"$eq"}
+  :refers_to -> [10]
   :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-[16] row:empty",
+  :scope -> [11] {"level":1}",
     "ivl": "(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))",
     "kind": "let",
     "mir": "module
@@ -2045,23 +2015,17 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ShowNum"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"show"}
-  :rest -> [14]
-  :value -> [15]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[10] var:foreign {"name":"stringify","arity":2}
-[12] lit {"value":{"type":"Atom","value":"Num"}}
-[14] row:empty
-[15] external {"name":"stringify","arity":2,"args":1,"saturated":false}
-  :arg -> [12] {"index":0}
-  :callee -> [10]
-[16] pap {"remaining":1}
-  :captured -> [12] {"index":0}
-  :materializes -> [15]",
+[3] struct
+  :field -> [12] {"label":"show"}
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[8] var:foreign {"name":"stringify","arity":2}
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[12] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [10] {"index":0}
+  :callee -> [8]
+[13] pap {"remaining":1}
+  :captured -> [10] {"index":0}
+  :materializes -> [12]",
     "ivl": "(forall ((n Real)) (= n n))",
     "kind": "let",
     "mir": "module
@@ -2134,21 +2098,15 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"EqNum"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"eq"}
-  :rest -> [16]
-  :value -> [13]
+[3] struct
+  :field -> [11] {"label":"eq"}
+[5] lit {"value":{"type":"Atom","value":"Num"}}
 [7] lit {"value":{"type":"Atom","value":"Num"}}
-[9] lit {"value":{"type":"Atom","value":"Num"}}
-[12] var:foreign {"name":"$eq","arity":2}
-[13] var:ref {"name":"$eq"}
-  :refers_to -> [12]
+[10] var:foreign {"name":"$eq","arity":2}
+[11] var:ref {"name":"$eq"}
+  :refers_to -> [10]
   :scope -> [2] {"level":0}
-  :scope -> [13] {"level":1}
-[16] row:empty",
+  :scope -> [11] {"level":1}",
     "ivl": "(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))",
     "kind": "let",
     "mir": "module

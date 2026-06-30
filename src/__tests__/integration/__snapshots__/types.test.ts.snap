@@ -610,19 +610,11 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"origin"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"y"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"Num","value":0}}
-[7] row:ext {"label":"x"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Num","value":0}}
-[9] row:empty",
+[3] struct
+  :field -> [4] {"label":"y"}
+  :field -> [5] {"label":"x"}
+[4] lit {"value":{"type":"Num","value":0}}
+[5] lit {"value":{"type":"Num","value":0}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module

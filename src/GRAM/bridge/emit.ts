@@ -43,7 +43,7 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.VAR_REF, () => ref(id, ctx))
 		.with(Tags.VAR_FREE, () => Leaves.free(id, ctx))
 		.with(Tags.VAR_FOREIGN, () => Leaves.foreign(id, ctx))
-		.with(Tags.VAR_LABEL, () => Leaves.label(id, ctx))
+		.with(Tags.VAR_LABEL, () => labelRef(id, ctx))
 		.with(Tags.VAR_META, () => emptyStruct(ctx))
 		.with(Tags.PI, () => emptyStruct(ctx))
 		.with(Tags.SIGMA, () => emptyStruct(ctx))
@@ -61,7 +61,8 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.RESET, () => Continuations.reset(id, walk, ctx))
 		.with(Tags.RESUMPTION, () => Continuations.resume(id, walk, ctx))
 		.with(Tags.BUBBLE, () => Leaves.passthrough(id, ctx))
-		.with(Tags.ROW_EXT, () => struct(id, ctx))
+		.with(Tags.STRUCT, () => struct(id, ctx))
+		.with(Tags.ROW_EXT, () => structFromRow(id, ctx))
 		.with(Tags.ROW_EMPTY, () => emptyStruct(ctx))
 		.otherwise(() => Leaves.passthrough(id, ctx));
 
@@ -75,6 +76,30 @@ const lambda = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 const ref = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const target = Edges.one(id, Labels.REFERS_TO)(ctx.graph)?.target;
 	return target !== undefined ? walk(target, ctx) : Leaves.passthrough(id, ctx);
+};
+
+// The struct owning a field value — reverse the :field edge.
+const structOf = (target: NodeId, g: Graph): NodeId | undefined => Edges.to(target)(g).find(e => e.label === Labels.FIELD)?.source;
+
+// VAR_LABEL nodes resolve through :refers_to (wired by the resolve-labels pass). When the
+// owning record is in scope as a value — captured into this closure's env, or already
+// allocated — read the field off it. Otherwise the record is still being built at its own
+// level, so demand-walk the field directly. The name-map fallback covers unresolved labels.
+const labelRef = (id: NodeId, ctx: Ctx): [string, Ctx] => {
+	const target = Edges.one(id, Labels.REFERS_TO)(ctx.graph)?.target;
+
+	if (target === undefined) {
+		return Leaves.label(id, ctx);
+	}
+	const owner = structOf(target, ctx.graph);
+	const ownerVar = owner !== undefined ? C.resolve(ctx, owner) : undefined;
+
+	if (ownerVar !== undefined) {
+		const name = String(Nodes.get(id)(ctx.graph)?.payload.name ?? "");
+		const [v, c1] = C.name(ctx);
+		return [v, C.instr(c1, Constructors.Instr.Read(name, ownerVar, v))];
+	}
+	return walk(target, ctx);
 };
 
 // App dispatches: struct constructor (App(Lit("Struct"), Row)) vs generic application
@@ -113,7 +138,37 @@ const letNode = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	return bodyEdge !== undefined ? walk(bodyEdge.target, c2) : [val, c2];
 };
 
+// Struct value → Alloc Record. Fields a closure captures the record through are marked
+// `backpatch` by the knot pass: allocate the record without them, bind it, then fbip-fill
+// once those closures (which now reference the allocated record) are built.
 const struct = (id: NodeId, ctx: Ctx): [string, Ctx] => {
+	const fields = Edges.byLabel(id, Labels.FIELD)(ctx.graph);
+	const plain = fields.filter(e => e.payload.backpatch !== true);
+	const knotted = fields.filter(e => e.payload.backpatch === true);
+
+	const [pairs, c1] = plain.reduce<[ReadonlyArray<{ label: string; value: string }>, Ctx]>(
+		([acc, c], e) => {
+			const [v, c2] = walk(e.target, c);
+			const label = String(e.payload.label ?? "");
+			return [[...acc, { label, value: v }], C.bindLabel(c2, label, v)];
+		},
+		[[], ctx],
+	);
+	const [result, c2] = C.name(c1);
+	const c3 = C.bind(C.instr(c2, Constructors.Instr.Alloc({ type: "Record", fields: [...pairs] }, result)), id, result);
+
+	return knotted.reduce<[string, Ctx]>(
+		([res, c], e) => {
+			const [v, cc] = walk(e.target, c);
+			const label = String(e.payload.label ?? "");
+			return [res, C.instr(cc, Constructors.Instr.UpdateFbip(result, [{ label, value: v }]))];
+		},
+		[result, c3],
+	);
+};
+
+// @deprecated cons-list rows survive only for type-level forms; record values use Tags.STRUCT.
+const structFromRow = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const fields = collectFields(id, ctx);
 	const [pairs, c1] = fields.reduce<[ReadonlyArray<{ label: string; value: string }>, Ctx]>(
 		([acc, c], { label, valueId }) => {

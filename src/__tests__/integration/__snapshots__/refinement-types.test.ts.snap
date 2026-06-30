@@ -1429,7 +1429,7 @@ exports[`Language Tour — Refinement Types > dependent record construction 1`] 
   {
     "codegenJS": "function main() {
   const env_cls2 = {};
-  const fnref_cls2 = closure_42;
+  const fnref_cls2 = closure_38;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1446,20 +1446,20 @@ exports[`Language Tour — Refinement Types > dependent record construction 1`] 
   return v8;
 }
 
-function closure_44(env0, p1) {
+function closure_40(env0, p1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const v0 = {};
   return v0;
 }
 
-function closure_43(env0, b1) {
+function closure_39(env0, b1) {
   const cap_0 = env0.v0;
   const env_cls2 = {
     v0: b1,
     v1: cap_0
   };
-  const fnref_cls2 = closure_44;
+  const fnref_cls2 = closure_40;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1467,11 +1467,11 @@ function closure_43(env0, b1) {
   return closure_cls2;
 }
 
-function closure_42(env0, a1) {
+function closure_38(env0, a1) {
   const env_cls2 = {
     v0: a1
   };
-  const fnref_cls2 = closure_43;
+  const fnref_cls2 = closure_39;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1504,7 +1504,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"test"}
 [3] block
-  :return -> [38]
+  :return -> [34]
   :stmt -> [4] {"index":0}
   :stmt -> [30] {"index":1}
 [4] stmt:let {"variable":"Pair"}
@@ -1513,17 +1513,17 @@ return main();
 [5] lambda {"variable":"a","icit":"Explicit","level":2}
   :annotation -> [6]
   :body -> [7]
-  :env -> [39]
+  :env -> [35]
 [6] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lambda {"variable":"b","icit":"Explicit","level":3}
   :annotation -> [8]
   :body -> [9]
-  :env -> [40]
+  :env -> [36]
 [8] lit {"value":{"type":"Atom","value":"Type"}}
 [9] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [10]
   :body -> [15]
-  :env -> [41]
+  :env -> [37]
 [10] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [11]
   :body -> [12]
@@ -1601,42 +1601,34 @@ return main();
 [29] row:empty
 [30] stmt:let {"variable":"p"}
   :value -> [31]
-[31] app {"icit":"Explicit"}
-  :arg -> [33]
-  :func -> [32]
-[32] lit {"value":{"type":"Atom","value":"Struct"}}
-[33] row:ext {"label":"snd"}
-  :rest -> [35]
-  :value -> [34]
-[34] lit {"value":{"type":"Num","value":2}}
-[35] row:ext {"label":"fst"}
-  :rest -> [37]
-  :value -> [36]
-[36] lit {"value":{"type":"Num","value":1}}
-[37] row:empty
-[38] lit {"value":{"type":"unit"}}
-[39] env
-[40] env
+[31] struct
+  :field -> [32] {"label":"snd"}
+  :field -> [33] {"label":"fst"}
+[32] lit {"value":{"type":"Num","value":2}}
+[33] lit {"value":{"type":"Num","value":1}}
+[34] lit {"value":{"type":"unit"}}
+[35] env
+[36] env
   :capture -> [5] {"index":0}
-[41] env
+[37] env
   :capture -> [7] {"index":0}
   :capture -> [5] {"index":1}
-[42] closure
+[38] closure
   :body -> [5]
-  :env -> [39]
-[43] closure
+  :env -> [35]
+[39] closure
   :body -> [7]
-  :env -> [40]
-[44] closure
+  :env -> [36]
+[40] closure
   :body -> [9]
-  :env -> [41]",
+  :env -> [37]",
     "ivl": "(forall ((p Schema)) (forall (($a Real)) (=> (= $a 2) (< 1 $a))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_42
+      let fnref_cls2 = &closure_38
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       let Pair3 = closure_cls2
       let v4 = 2
@@ -1645,23 +1637,23 @@ return main();
       let p7 = v6
       let v8 = unit
       return v8
-  fn closure_44(env0, p1) entry=entry
+  fn closure_40(env0, p1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
       let v0 = alloc {  }
       return v0
-  fn closure_43(env0, b1) entry=entry
+  fn closure_39(env0, b1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let env_cls2 = alloc { v0: b1, v1: cap_0 }
-      let fnref_cls2 = &closure_44
+      let fnref_cls2 = &closure_40
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_42(env0, a1) entry=entry
+  fn closure_38(env0, a1) entry=entry
     entry:
       let env_cls2 = alloc { v0: a1 }
-      let fnref_cls2 = &closure_43
+      let fnref_cls2 = &closure_39
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2",
     "name": "test",
@@ -1714,7 +1706,7 @@ exports[`Language Tour — Refinement Types > dependent record construction reje
   {
     "codegenJS": "function main() {
   const env_cls2 = {};
-  const fnref_cls2 = closure_42;
+  const fnref_cls2 = closure_38;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1731,20 +1723,20 @@ exports[`Language Tour — Refinement Types > dependent record construction reje
   return v8;
 }
 
-function closure_44(env0, p1) {
+function closure_40(env0, p1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const v0 = {};
   return v0;
 }
 
-function closure_43(env0, b1) {
+function closure_39(env0, b1) {
   const cap_0 = env0.v0;
   const env_cls2 = {
     v0: b1,
     v1: cap_0
   };
-  const fnref_cls2 = closure_44;
+  const fnref_cls2 = closure_40;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1752,11 +1744,11 @@ function closure_43(env0, b1) {
   return closure_cls2;
 }
 
-function closure_42(env0, a1) {
+function closure_38(env0, a1) {
   const env_cls2 = {
     v0: a1
   };
-  const fnref_cls2 = closure_43;
+  const fnref_cls2 = closure_39;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1789,7 +1781,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"testFail"}
 [3] block
-  :return -> [38]
+  :return -> [34]
   :stmt -> [4] {"index":0}
   :stmt -> [30] {"index":1}
 [4] stmt:let {"variable":"Pair"}
@@ -1798,17 +1790,17 @@ return main();
 [5] lambda {"variable":"a","icit":"Explicit","level":2}
   :annotation -> [6]
   :body -> [7]
-  :env -> [39]
+  :env -> [35]
 [6] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lambda {"variable":"b","icit":"Explicit","level":3}
   :annotation -> [8]
   :body -> [9]
-  :env -> [40]
+  :env -> [36]
 [8] lit {"value":{"type":"Atom","value":"Type"}}
 [9] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [10]
   :body -> [15]
-  :env -> [41]
+  :env -> [37]
 [10] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [11]
   :body -> [12]
@@ -1886,42 +1878,34 @@ return main();
 [29] row:empty
 [30] stmt:let {"variable":"p"}
   :value -> [31]
-[31] app {"icit":"Explicit"}
-  :arg -> [33]
-  :func -> [32]
-[32] lit {"value":{"type":"Atom","value":"Struct"}}
-[33] row:ext {"label":"snd"}
-  :rest -> [35]
-  :value -> [34]
+[31] struct
+  :field -> [32] {"label":"snd"}
+  :field -> [33] {"label":"fst"}
+[32] lit {"value":{"type":"Num","value":1}}
+[33] lit {"value":{"type":"Num","value":2}}
 [34] lit {"value":{"type":"Num","value":1}}
-[35] row:ext {"label":"fst"}
-  :rest -> [37]
-  :value -> [36]
-[36] lit {"value":{"type":"Num","value":2}}
-[37] row:empty
-[38] lit {"value":{"type":"Num","value":1}}
-[39] env
-[40] env
+[35] env
+[36] env
   :capture -> [5] {"index":0}
-[41] env
+[37] env
   :capture -> [7] {"index":0}
   :capture -> [5] {"index":1}
-[42] closure
+[38] closure
   :body -> [5]
-  :env -> [39]
-[43] closure
+  :env -> [35]
+[39] closure
   :body -> [7]
-  :env -> [40]
-[44] closure
+  :env -> [36]
+[40] closure
   :body -> [9]
-  :env -> [41]",
+  :env -> [37]",
     "ivl": "(forall ((p Schema)) (forall (($a Real)) (=> (= $a 1) (< 2 $a))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_42
+      let fnref_cls2 = &closure_38
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       let Pair3 = closure_cls2
       let v4 = 1
@@ -1930,23 +1914,23 @@ return main();
       let p7 = v6
       let v8 = 1
       return v8
-  fn closure_44(env0, p1) entry=entry
+  fn closure_40(env0, p1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
       let v0 = alloc {  }
       return v0
-  fn closure_43(env0, b1) entry=entry
+  fn closure_39(env0, b1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let env_cls2 = alloc { v0: b1, v1: cap_0 }
-      let fnref_cls2 = &closure_44
+      let fnref_cls2 = &closure_40
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_42(env0, a1) entry=entry
+  fn closure_38(env0, a1) entry=entry
     entry:
       let env_cls2 = alloc { v0: a1 }
-      let fnref_cls2 = &closure_43
+      let fnref_cls2 = &closure_39
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2",
     "name": "testFail",
@@ -3750,7 +3734,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"orderedListTestFail"}
 [3] block
-  :return -> [79]
+  :return -> [62]
   :stmt -> [4] {"index":0}
   :stmt -> [53] {"index":1}
 [4] stmt:let {"variable":"List"}
@@ -3795,12 +3779,12 @@ return main();
 [16] lambda {"variable":"t","icit":"Explicit","level":3}
   :annotation -> [17]
   :body -> [18]
-  :env -> [80]
+  :env -> [63]
 [17] lit {"value":{"type":"Atom","value":"Type"}}
 [18] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [19]
   :body -> [24]
-  :env -> [81]
+  :env -> [64]
 [19] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [20]
   :body -> [21]
@@ -3932,67 +3916,33 @@ return main();
 [52] row:empty
 [53] stmt:let {"variable":"ol"}
   :value -> [54]
-[54] app {"icit":"Explicit"}
-  :arg -> [56]
-  :func -> [55]
-[55] lit {"value":{"type":"Atom","value":"Struct"}}
-[56] row:ext {"label":"cons"}
-  :rest -> [78]
-  :value -> [57]
-[57] app {"icit":"Explicit"}
-  :arg -> [59]
-  :func -> [58]
-[58] lit {"value":{"type":"Atom","value":"Struct"}}
-[59] row:ext {"label":"head"}
-  :rest -> [61]
-  :value -> [60]
-[60] lit {"value":{"type":"Num","value":2}}
-[61] row:ext {"label":"tail"}
-  :rest -> [77]
-  :value -> [62]
-[62] app {"icit":"Explicit"}
-  :arg -> [64]
-  :func -> [63]
-[63] lit {"value":{"type":"Atom","value":"Struct"}}
-[64] row:ext {"label":"cons"}
-  :rest -> [76]
-  :value -> [65]
-[65] app {"icit":"Explicit"}
-  :arg -> [67]
-  :func -> [66]
-[66] lit {"value":{"type":"Atom","value":"Struct"}}
-[67] row:ext {"label":"head"}
-  :rest -> [69]
-  :value -> [68]
-[68] lit {"value":{"type":"Num","value":1}}
-[69] row:ext {"label":"tail"}
-  :rest -> [75]
-  :value -> [70]
-[70] app {"icit":"Explicit"}
-  :arg -> [72]
-  :func -> [71]
-[71] lit {"value":{"type":"Atom","value":"Struct"}}
-[72] row:ext {"label":"nil"}
-  :rest -> [74]
-  :value -> [73]
-[73] lit {"value":{"type":"unit"}}
-[74] row:empty
-[75] row:empty
-[76] row:empty
-[77] row:empty
-[78] row:empty
-[79] lit {"value":{"type":"Num","value":1}}
-[80] env
+[54] struct
+  :field -> [55] {"label":"cons"}
+[55] struct
+  :field -> [56] {"label":"head"}
+  :field -> [57] {"label":"tail"}
+[56] lit {"value":{"type":"Num","value":2}}
+[57] struct
+  :field -> [58] {"label":"cons"}
+[58] struct
+  :field -> [59] {"label":"head"}
+  :field -> [60] {"label":"tail"}
+[59] lit {"value":{"type":"Num","value":1}}
+[60] struct
+  :field -> [61] {"label":"nil"}
+[61] lit {"value":{"type":"unit"}}
+[62] lit {"value":{"type":"Num","value":1}}
+[63] env
   :capture -> [5] {"index":0}
-[81] env
+[64] env
   :capture -> [5] {"index":0}
   :capture -> [16] {"index":1}
-[82] closure
+[65] closure
   :body -> [16]
-  :env -> [80]
-[83] closure
+  :env -> [63]
+[66] closure
   :body -> [18]
-  :env -> [81]",
+  :env -> [64]",
     "ivl": "(forall ((ol App_App_Mu_List_Real_Function))
   (forall (($b Real)) (=> (= $b 1) (< 2 $b))))",
     "kind": "let",
@@ -4338,75 +4288,27 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ascending"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"cons"}
-  :rest -> [37]
-  :value -> [6]
-[6] app {"icit":"Explicit"}
-  :arg -> [8]
-  :func -> [7]
-[7] lit {"value":{"type":"Atom","value":"Struct"}}
-[8] row:ext {"label":"head"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Num","value":1}}
-[10] row:ext {"label":"tail"}
-  :rest -> [36]
-  :value -> [11]
-[11] app {"icit":"Explicit"}
-  :arg -> [13]
-  :func -> [12]
-[12] lit {"value":{"type":"Atom","value":"Struct"}}
-[13] row:ext {"label":"cons"}
-  :rest -> [35]
-  :value -> [14]
-[14] app {"icit":"Explicit"}
-  :arg -> [16]
-  :func -> [15]
-[15] lit {"value":{"type":"Atom","value":"Struct"}}
-[16] row:ext {"label":"head"}
-  :rest -> [18]
-  :value -> [17]
-[17] lit {"value":{"type":"Num","value":2}}
-[18] row:ext {"label":"tail"}
-  :rest -> [34]
-  :value -> [19]
-[19] app {"icit":"Explicit"}
-  :arg -> [21]
-  :func -> [20]
-[20] lit {"value":{"type":"Atom","value":"Struct"}}
-[21] row:ext {"label":"cons"}
-  :rest -> [33]
-  :value -> [22]
-[22] app {"icit":"Explicit"}
-  :arg -> [24]
-  :func -> [23]
-[23] lit {"value":{"type":"Atom","value":"Struct"}}
-[24] row:ext {"label":"head"}
-  :rest -> [26]
-  :value -> [25]
-[25] lit {"value":{"type":"Num","value":3}}
-[26] row:ext {"label":"tail"}
-  :rest -> [32]
-  :value -> [27]
-[27] app {"icit":"Explicit"}
-  :arg -> [29]
-  :func -> [28]
-[28] lit {"value":{"type":"Atom","value":"Struct"}}
-[29] row:ext {"label":"nil"}
-  :rest -> [31]
-  :value -> [30]
-[30] lit {"value":{"type":"unit"}}
-[31] row:empty
-[32] row:empty
-[33] row:empty
-[34] row:empty
-[35] row:empty
-[36] row:empty
-[37] row:empty",
+[3] struct
+  :field -> [4] {"label":"cons"}
+[4] struct
+  :field -> [5] {"label":"head"}
+  :field -> [6] {"label":"tail"}
+[5] lit {"value":{"type":"Num","value":1}}
+[6] struct
+  :field -> [7] {"label":"cons"}
+[7] struct
+  :field -> [8] {"label":"head"}
+  :field -> [9] {"label":"tail"}
+[8] lit {"value":{"type":"Num","value":2}}
+[9] struct
+  :field -> [10] {"label":"cons"}
+[10] struct
+  :field -> [11] {"label":"head"}
+  :field -> [12] {"label":"tail"}
+[11] lit {"value":{"type":"Num","value":3}}
+[12] struct
+  :field -> [13] {"label":"nil"}
+[13] lit {"value":{"type":"unit"}}",
     "ivl": "(and
   (forall (($b Real)) (=> (= $b 2) (< 1 $b)))
   (forall (($c Real)) (=> (= $c 3) (and (< 1 $c) (< 2 $c)))))",
@@ -4528,75 +4430,27 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"descending"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"cons"}
-  :rest -> [37]
-  :value -> [6]
-[6] app {"icit":"Explicit"}
-  :arg -> [8]
-  :func -> [7]
-[7] lit {"value":{"type":"Atom","value":"Struct"}}
-[8] row:ext {"label":"head"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Num","value":3}}
-[10] row:ext {"label":"tail"}
-  :rest -> [36]
-  :value -> [11]
-[11] app {"icit":"Explicit"}
-  :arg -> [13]
-  :func -> [12]
-[12] lit {"value":{"type":"Atom","value":"Struct"}}
-[13] row:ext {"label":"cons"}
-  :rest -> [35]
-  :value -> [14]
-[14] app {"icit":"Explicit"}
-  :arg -> [16]
-  :func -> [15]
-[15] lit {"value":{"type":"Atom","value":"Struct"}}
-[16] row:ext {"label":"head"}
-  :rest -> [18]
-  :value -> [17]
-[17] lit {"value":{"type":"Num","value":2}}
-[18] row:ext {"label":"tail"}
-  :rest -> [34]
-  :value -> [19]
-[19] app {"icit":"Explicit"}
-  :arg -> [21]
-  :func -> [20]
-[20] lit {"value":{"type":"Atom","value":"Struct"}}
-[21] row:ext {"label":"cons"}
-  :rest -> [33]
-  :value -> [22]
-[22] app {"icit":"Explicit"}
-  :arg -> [24]
-  :func -> [23]
-[23] lit {"value":{"type":"Atom","value":"Struct"}}
-[24] row:ext {"label":"head"}
-  :rest -> [26]
-  :value -> [25]
-[25] lit {"value":{"type":"Num","value":1}}
-[26] row:ext {"label":"tail"}
-  :rest -> [32]
-  :value -> [27]
-[27] app {"icit":"Explicit"}
-  :arg -> [29]
-  :func -> [28]
-[28] lit {"value":{"type":"Atom","value":"Struct"}}
-[29] row:ext {"label":"nil"}
-  :rest -> [31]
-  :value -> [30]
-[30] lit {"value":{"type":"unit"}}
-[31] row:empty
-[32] row:empty
-[33] row:empty
-[34] row:empty
-[35] row:empty
-[36] row:empty
-[37] row:empty",
+[3] struct
+  :field -> [4] {"label":"cons"}
+[4] struct
+  :field -> [5] {"label":"head"}
+  :field -> [6] {"label":"tail"}
+[5] lit {"value":{"type":"Num","value":3}}
+[6] struct
+  :field -> [7] {"label":"cons"}
+[7] struct
+  :field -> [8] {"label":"head"}
+  :field -> [9] {"label":"tail"}
+[8] lit {"value":{"type":"Num","value":2}}
+[9] struct
+  :field -> [10] {"label":"cons"}
+[10] struct
+  :field -> [11] {"label":"head"}
+  :field -> [12] {"label":"tail"}
+[11] lit {"value":{"type":"Num","value":1}}
+[12] struct
+  :field -> [13] {"label":"nil"}
+[13] lit {"value":{"type":"unit"}}",
     "ivl": "(and
   (forall (($b Real)) (=> (= $b 2) (> 3 $b)))
   (forall (($c Real)) (=> (= $c 1) (and (> 3 $c) (> 2 $c)))))",
@@ -4785,19 +4639,11 @@ return main();
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"valid"}
-[3] app {"icit":"Explicit"}
-  :arg -> [5]
-  :func -> [4]
-[4] lit {"value":{"type":"Atom","value":"Struct"}}
-[5] row:ext {"label":"snd"}
-  :rest -> [7]
-  :value -> [6]
-[6] lit {"value":{"type":"Num","value":5}}
-[7] row:ext {"label":"fst"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Num","value":3}}
-[9] row:empty",
+[3] struct
+  :field -> [4] {"label":"snd"}
+  :field -> [5] {"label":"fst"}
+[4] lit {"value":{"type":"Num","value":5}}
+[5] lit {"value":{"type":"Num","value":3}}",
     "ivl": "(forall (($a Real)) (=> (= $a 5) (> $a 3)))",
     "kind": "let",
     "mir": "module

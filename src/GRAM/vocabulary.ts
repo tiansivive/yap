@@ -19,6 +19,7 @@ export const Tags = {
 	ROW_EXT: "row:ext",
 	ROW_EMPTY: "row:empty",
 	ROW_VAR: "row:var",
+	STRUCT: "struct",
 
 	PROJ: "proj",
 	INJ: "inj",
@@ -82,6 +83,7 @@ export const Labels = {
 	ANNOTATION: ":annotation",
 	VALUE: ":value",
 	REST: ":rest",
+	TAIL: ":tail",
 	TARGET: ":target",
 	SCRUTINEE: ":scrutinee",
 	RETURN: ":return",
