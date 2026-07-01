@@ -318,21 +318,21 @@ exports[`Lowering: match > lowers match on variant (Some/None) 1`] = `
       let __match_fail = "non-exhaustive match"
       return __match_fail
     entry:
-      let x1 = "Some"
+      let x1 = Some
       let x2 = 42
-      let x3 = alloc { __tag: x1, Some: x2 }
+      let x3 = alloc { __tag: x1, payload: x2 }
       let x6 = read x3.__tag
       branch x6 { Some -> c0(x3) | None -> c1(x3); default -> e0 }
     c0(scrut_0):
-      let x4 = read scrut_0.Some
+      let x4 = read scrut_0.payload
       jump j0(x4)
     c1(scrut_1):
-      let x5 = read scrut_1.None
+      let x5 = read scrut_1.payload
       let x7 = 0
       jump j0(x7)
     j0(x0):
       return x0",
-  "term": "match Struct [ __tag: "Some", Some: 42 ]
+  "term": "match Struct [ __tag: Some, payload: 42 ]
   | Variant [ Some: x ] -> _
   | Variant [ None: _ ] -> 0",
 }
@@ -346,27 +346,27 @@ exports[`Lowering: match > lowers match on variant with struct payload (Some(Poi
       let __match_fail = "non-exhaustive match"
       return __match_fail
     entry:
-      let x1 = "Some"
+      let x1 = Some
       let x2 = 1
       let x3 = 2
       let x4 = alloc { x: x2, y: x3 }
-      let x5 = alloc { __tag: x1, Some: x4 }
+      let x5 = alloc { __tag: x1, payload: x4 }
       let x8 = read x5.__tag
       branch x8 { Some -> c0(x5) | None -> c1(x5); default -> e0 }
     c0(scrut_0):
-      let x6 = read scrut_0.Some
+      let x6 = read scrut_0.payload
       let x9 = read x6.x
       let x10 = read x6.y
       branch x9 { 1 -> c2; default -> e0 }
     c2:
       jump j0(x10)
     c1(scrut_1):
-      let x7 = read scrut_1.None
+      let x7 = read scrut_1.payload
       let x11 = 0
       jump j0(x11)
     j0(x0):
       return x0",
-  "term": "match Struct [ __tag: "Some", Some: Struct [ x: 1, y: 2 ] ]
+  "term": "match Struct [ __tag: Some, payload: Struct [ x: 1, y: 2 ] ]
   | Variant [ Some: Struct [ x: 1, y: b ] ] -> _
   | Variant [ None: _ ] -> 0",
 }

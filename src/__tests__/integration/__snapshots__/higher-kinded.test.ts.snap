@@ -352,33 +352,169 @@ return main();
     "validity": "valid",
   },
   {
-    "codegenJS": "",
+    "codegenJS": "function main() {
+  const env_cls2 = {
+    v0: mapList
+  };
+  const fnref_cls2 = closure_79;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_82(env0, list1) {
+  let __block = "entry";
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        const cap_0 = env0.v0;
+        const cap_1 = env0.v1;
+        const cap_2 = env0.v2;
+        const cap_3 = env0.v3;
+        (__block = "sw2");
+        break;
+      }
+      case "sw2": {
+        const tag0 = list1.__tag;
+        if ((String(tag0) === "nil")) {
+          (__block = "case4");
+          break;
+        }
+        if ((String(tag0) === "cons")) {
+          (__block = "case5");
+          break;
+        }
+      }
+      case "case4": {
+        const v5 = "nil";
+        const v6 = null;
+        const v7 = {
+          __tag: v5,
+          payload: v6
+        };
+        const match1 = v7;
+        (__block = "join3");
+        break;
+      }
+      case "case5": {
+        const v6 = list1.payload;
+        const v7 = v6 .0;
+        const x = v7;
+        const v8 = v6 .1;
+        const xs = v8;
+        const v9 = "cons";
+        const fnref10 = cap_0.__fn;
+        const env11 = cap_0.__env;
+        const v12 = fnref10(env11, x);
+        const fnref13 = cap_1.__fn;
+        const env14 = cap_1.__env;
+        const v15 = fnref13(env14, cap_2);
+        const fnref16 = v15.__fn;
+        const env17 = v15.__env;
+        const v18 = fnref16(env17, cap_3);
+        const fnref19 = v18.__fn;
+        const env20 = v18.__env;
+        const v21 = fnref19(env20, cap_0);
+        const fnref22 = v21.__fn;
+        const env23 = v21.__env;
+        const v24 = fnref22(env23, xs);
+        const v25 = {
+          0: v12,
+          1: v24
+        };
+        const v26 = {
+          __tag: v9,
+          payload: v25
+        };
+        const match1 = v26;
+        (__block = "join3");
+        break;
+      }
+      case "join3": {
+        return match1;
+      }
+    }
+  }
+}
+
+function closure_81(env0, f1) {
+  const cap_0 = env0.v0;
+  const cap_1 = env0.v1;
+  const cap_2 = env0.v2;
+  const env_cls2 = {
+    v0: f1,
+    v1: cap_1,
+    v2: cap_0,
+    v3: cap_2
+  };
+  const fnref_cls2 = closure_82;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_80(env0, b1) {
+  const cap_0 = env0.v0;
+  const cap_1 = env0.v1;
+  const env_cls2 = {
+    v0: cap_0,
+    v1: cap_1,
+    v2: b1
+  };
+  const fnref_cls2 = closure_81;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_79(env0, a1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: a1,
+    v1: cap_0
+  };
+  const fnref_cls2 = closure_80;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+return main();
+",
     "elaborated": "λ(a: Type) =>
   λ(b: Type) =>
     λ(f: Π(t9: a) -> b) ->
       λ(list: (List) a) ->
         match list
-          | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
+          | Variant [ nil: _ | $row_8 ] -> Struct [ __tag: nil, payload: unit ]
           | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
-              Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ]",
-    "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+              Struct
+                [ __tag: cons, payload: Struct [ 0: f x, 1: I8 @a @b f xs ] ]",
+    "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type')",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"mapList"}
 [3] lambda {"variable":"a","icit":"Implicit","level":1}
   :annotation -> [4]
   :body -> [5]
-  :env -> [72]
+  :env -> [74]
 [4] lit {"value":{"type":"Atom","value":"Type"}}
 [5] lambda {"variable":"b","icit":"Implicit","level":2}
   :annotation -> [6]
   :body -> [7]
-  :env -> [73]
+  :env -> [75]
 [6] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lambda {"variable":"f","icit":"Explicit","level":3}
   :annotation -> [8]
   :body -> [11]
-  :env -> [74]
+  :env -> [76]
 [8] pi {"variable":"t9","icit":"Explicit","level":3}
   :annotation -> [9]
   :body -> [10]
@@ -396,7 +532,7 @@ return main();
 [11] lambda {"variable":"list","icit":"Explicit","level":4}
   :annotation -> [12]
   :body -> [35]
-  :env -> [75]
+  :env -> [77]
 [12] app {"icit":"Explicit"}
   :arg -> [34]
   :func -> [13]
@@ -411,7 +547,7 @@ return main();
 [17] lambda {"variable":"a","icit":"Explicit","level":5}
   :annotation -> [18]
   :body -> [19]
-  :env -> [76]
+  :env -> [78]
 [18] lit {"value":{"type":"Atom","value":"Type"}}
 [19] app {"icit":"Explicit"}
   :arg -> [21]
@@ -471,8 +607,8 @@ return main();
   :scope -> [7] {"level":3}
 [35] match
   :alt -> [37] {"index":0}
-  :alt -> [43] {"index":1}
-  :decision_tree -> [64]
+  :alt -> [44] {"index":1}
+  :decision_tree -> [66]
   :scrutinee -> [36]
 [36] var:bound {"index":0}
   :refers_to -> [11]
@@ -483,188 +619,268 @@ return main();
   :scope -> [11] {"level":4}
 [37] case
   :body -> [41]
-  :next -> [43]
+  :next -> [44]
   :pattern -> [38]
 [38] pat:variant {"label":"nil"}
   :payload -> [39]
 [39] pat:wildcard
 [40] pat:wildcard
 [41] struct
-  :field -> [42] {"label":"nil"}
-[42] lit {"value":{"type":"unit"}}
-[43] case
-  :body -> [50]
-  :pattern -> [44]
-[44] pat:variant {"label":"cons"}
-  :payload -> [45]
-[45] pat:struct
-  :field -> [46] {"label":"0"}
-  :field -> [47] {"label":"1"}
-[46] pat:binder {"name":"x","level":5}
-[47] pat:binder {"name":"xs","level":6}
-[48] pat:wildcard
+  :field -> [42] {"label":"__tag"}
+  :field -> [43] {"label":"payload"}
+[42] lit {"value":{"type":"Atom","value":"nil"}}
+[43] lit {"value":{"type":"unit"}}
+[44] case
+  :body -> [51]
+  :pattern -> [45]
+[45] pat:variant {"label":"cons"}
+  :payload -> [46]
+[46] pat:struct
+  :field -> [47] {"label":"0"}
+  :field -> [48] {"label":"1"}
+[47] pat:binder {"name":"x","level":5}
+[48] pat:binder {"name":"xs","level":6}
 [49] pat:wildcard
-[50] struct
-  :field -> [51] {"label":"cons"}
+[50] pat:wildcard
 [51] struct
-  :field -> [52] {"label":"0"}
-  :field -> [55] {"label":"1"}
-[52] app {"icit":"Explicit"}
-  :arg -> [54]
-  :func -> [53]
-[53] var:bound {"index":5}
+  :field -> [52] {"label":"__tag"}
+  :field -> [53] {"label":"payload"}
+[52] lit {"value":{"type":"Atom","value":"cons"}}
+[53] struct
+  :field -> [54] {"label":"0"}
+  :field -> [57] {"label":"1"}
+[54] app {"icit":"Explicit"}
+  :arg -> [56]
+  :func -> [55]
+[55] var:bound {"index":5}
   :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[54] var:bound {"index":3}
-  :refers_to -> [46]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[55] app {"icit":"Explicit"}
-  :arg -> [63]
-  :func -> [56]
-[56] app {"icit":"Explicit"}
-  :arg -> [62]
-  :func -> [57]
-[57] app {"icit":"Implicit"}
-  :arg -> [61]
-  :func -> [58]
-[58] app {"icit":"Implicit"}
-  :arg -> [60]
-  :func -> [59]
-[59] var:bound {"index":8}
-  :refers_to -> [2]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[60] var:bound {"index":7}
-  :refers_to -> [3]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[61] var:bound {"index":6}
-  :refers_to -> [5]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[62] var:bound {"index":5}
-  :refers_to -> [7]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[63] var:bound {"index":2}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[56] var:bound {"index":3}
   :refers_to -> [47]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[64] switch {"kind":"tag"}
-  :branch -> [66] {"label":"nil"}
-  :branch -> [68] {"label":"cons"}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[57] app {"icit":"Explicit"}
+  :arg -> [65]
+  :func -> [58]
+[58] app {"icit":"Explicit"}
+  :arg -> [64]
+  :func -> [59]
+[59] app {"icit":"Implicit"}
+  :arg -> [63]
+  :func -> [60]
+[60] app {"icit":"Implicit"}
+  :arg -> [62]
+  :func -> [61]
+[61] var:bound {"index":8}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[62] var:bound {"index":7}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[63] var:bound {"index":6}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[64] var:bound {"index":5}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[65] var:bound {"index":2}
+  :refers_to -> [48]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[66] switch {"kind":"tag"}
+  :branch -> [68] {"label":"nil"}
+  :branch -> [70] {"label":"cons"}
   :inspect -> [36]
-[65] proj {"label":"nil"}
+[67] proj {"label":"payload"}
   :target -> [36]
-[66] leaf
+[68] leaf
   :body -> [41]
-[67] proj {"label":"cons"}
+[69] proj {"label":"payload"}
   :target -> [36]
-[68] switch {"kind":"struct"}
-  :branch -> [71]
-  :inspect -> [67]
-[69] proj {"label":"0"}
-  :target -> [67]
-[70] proj {"label":"1"}
-  :target -> [67]
-[71] leaf
-  :bind -> [69] {"name":"x","binder":46}
-  :bind -> [70] {"name":"xs","binder":47}
-  :body -> [50]
-[72] env
+[70] switch {"kind":"struct"}
+  :branch -> [73]
+  :inspect -> [69]
+[71] proj {"label":"0"}
+  :target -> [69]
+[72] proj {"label":"1"}
+  :target -> [69]
+[73] leaf
+  :bind -> [71] {"name":"x","binder":47}
+  :bind -> [72] {"name":"xs","binder":48}
+  :body -> [51]
+[74] env
   :capture -> [2] {"index":0}
-[73] env
+[75] env
   :capture -> [3] {"index":0}
   :capture -> [2] {"index":1}
-[74] env
+[76] env
   :capture -> [3] {"index":0}
   :capture -> [2] {"index":1}
   :capture -> [5] {"index":2}
-[75] env
+[77] env
   :capture -> [7] {"index":0}
   :capture -> [2] {"index":1}
   :capture -> [3] {"index":2}
   :capture -> [5] {"index":3}
-[76] env
+[78] env
   :capture -> [13] {"index":0}
-[77] closure
-  :body -> [3]
-  :env -> [72]
-[78] closure
-  :body -> [5]
-  :env -> [73]
 [79] closure
-  :body -> [7]
+  :body -> [3]
   :env -> [74]
 [80] closure
-  :body -> [11]
+  :body -> [5]
   :env -> [75]
 [81] closure
+  :body -> [7]
+  :env -> [76]
+[82] closure
+  :body -> [11]
+  :env -> [77]
+[83] closure
   :body -> [17]
-  :env -> [76]",
+  :env -> [78]",
     "ivl": "",
     "kind": "let",
-    "mir": "",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc { v0: mapList }
+      let fnref_cls2 = &closure_79
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_82(env0, list1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let cap_2 = read env0.v2
+      let cap_3 = read env0.v3
+      jump sw2
+    sw2:
+      let tag0 = read list1.__tag
+      branch tag0 { nil -> case4 | cons -> case5 }
+    case4:
+      let v5 = nil
+      let v6 = unit
+      let v7 = alloc { __tag: v5, payload: v6 }
+      let match1 = v7
+      jump join3
+    case5:
+      let v6 = read list1.payload
+      let v7 = read v6.0
+      let x = v7
+      let v8 = read v6.1
+      let xs = v8
+      let v9 = cons
+      let fnref10 = read cap_0.__fn
+      let env11 = read cap_0.__env
+      let v12 = call *fnref10(env11, x)
+      let fnref13 = read cap_1.__fn
+      let env14 = read cap_1.__env
+      let v15 = call *fnref13(env14, cap_2)
+      let fnref16 = read v15.__fn
+      let env17 = read v15.__env
+      let v18 = call *fnref16(env17, cap_3)
+      let fnref19 = read v18.__fn
+      let env20 = read v18.__env
+      let v21 = call *fnref19(env20, cap_0)
+      let fnref22 = read v21.__fn
+      let env23 = read v21.__env
+      let v24 = call *fnref22(env23, xs)
+      let v25 = alloc { 0: v12, 1: v24 }
+      let v26 = alloc { __tag: v9, payload: v25 }
+      let match1 = v26
+      jump join3
+    join3:
+      return match1
+  fn closure_81(env0, f1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let cap_2 = read env0.v2
+      let env_cls2 = alloc { v0: f1, v1: cap_1, v2: cap_0, v3: cap_2 }
+      let fnref_cls2 = &closure_82
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_80(env0, b1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let env_cls2 = alloc { v0: cap_0, v1: cap_1, v2: b1 }
+      let fnref_cls2 = &closure_81
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_79(env0, a1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: a1, v1: cap_0 }
+      let fnref_cls2 = &closure_80
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
     "name": "mapList",
     "normalized": "λ(a: Type) =>
   (closure: λ(b: Type) =>
     λ(f: Π(t9: a) -> b) ->
       λ(list: (List) a) ->
         match list
-          | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
+          | Variant [ nil: _ | $row_8 ] -> Struct [ __tag: nil, payload: unit ]
           | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
-              Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ] -| Γ: a)",
+              Struct
+                [ __tag: cons,
+                  payload: Struct [ 0: f x, 1: I8 @a @b f xs ] ] -| Γ: a)",
     "solverTrace": "",
     "type": "Π(a: Type) => Π(b: Type) => Π(t8: Π(t9: a) -> b) -> Π(t10: (List) a) -> (List) b",
     "validity": "",
@@ -1608,48 +1824,62 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = 1;
-  const v1 = null;
-  const v2 = {
-    nil: v1
-  };
-  const v3 = {
-    0: v0,
-    1: v2
-  };
+  const v0 = "cons";
+  const v1 = 1;
+  const v2 = "nil";
+  const v3 = null;
   const v4 = {
-    cons: v3
+    __tag: v2,
+    payload: v3
   };
-  return v4;
+  const v5 = {
+    0: v1,
+    1: v4
+  };
+  const v6 = {
+    __tag: v0,
+    payload: v5
+  };
+  return v6;
 }
 return main();
 ",
-    "elaborated": "Struct [ cons: Struct [ 0: 1, 1: Struct [ nil: unit ] ] ]",
+    "elaborated": "Struct
+  [ __tag: cons,
+    payload: Struct [ 0: 1, 1: Struct [ __tag: nil, payload: unit ] ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"listOf1"}
 [3] struct
-  :field -> [4] {"label":"cons"}
-[4] struct
-  :field -> [5] {"label":"0"}
-  :field -> [6] {"label":"1"}
-[5] lit {"value":{"type":"Num","value":1}}
-[6] struct
-  :field -> [7] {"label":"nil"}
-[7] lit {"value":{"type":"unit"}}",
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"cons"}}
+[5] struct
+  :field -> [6] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[6] lit {"value":{"type":"Num","value":1}}
+[7] struct
+  :field -> [8] {"label":"__tag"}
+  :field -> [9] {"label":"payload"}
+[8] lit {"value":{"type":"Atom","value":"nil"}}
+[9] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 1
-      let v1 = unit
-      let v2 = alloc { nil: v1 }
-      let v3 = alloc { 0: v0, 1: v2 }
-      let v4 = alloc { cons: v3 }
-      return v4",
+      let v0 = cons
+      let v1 = 1
+      let v2 = nil
+      let v3 = unit
+      let v4 = alloc { __tag: v2, payload: v3 }
+      let v5 = alloc { 0: v1, 1: v4 }
+      let v6 = alloc { __tag: v0, payload: v5 }
+      return v6",
     "name": "listOf1",
-    "normalized": "Struct [ cons: Struct [ 0: 1, 1: Struct [ nil: unit ] ] ]",
+    "normalized": "Struct
+  [ __tag: cons,
+    payload: Struct [ 0: 1, 1: Struct [ __tag: nil, payload: unit ] ] ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -1701,6 +1931,7 @@ return main();
 return main();
 ",
     "elaborated": "strmap @(List) @Num @ListFunctor listOf1",
+    "error": "Maximum call stack size exceeded",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"strList"}
@@ -1811,7 +2042,7 @@ return main();
       let v16 = call *fnref14(env15, v13)
       return v16",
     "name": "strList",
-    "normalized": "Struct [ cons: Struct [ 0: (stringify: (Num) (1)), 1: Struct [ nil: unit ] ] ]",
+    "normalized": "",
     "solverTrace": "=== Formula ===
   true
 
@@ -2191,33 +2422,169 @@ return main();
     "validity": "valid",
   },
   {
-    "codegenJS": "",
+    "codegenJS": "function main() {
+  const env_cls2 = {
+    v0: mapList
+  };
+  const fnref_cls2 = closure_79;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_82(env0, list1) {
+  let __block = "entry";
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        const cap_0 = env0.v0;
+        const cap_1 = env0.v1;
+        const cap_2 = env0.v2;
+        const cap_3 = env0.v3;
+        (__block = "sw2");
+        break;
+      }
+      case "sw2": {
+        const tag0 = list1.__tag;
+        if ((String(tag0) === "nil")) {
+          (__block = "case4");
+          break;
+        }
+        if ((String(tag0) === "cons")) {
+          (__block = "case5");
+          break;
+        }
+      }
+      case "case4": {
+        const v5 = "nil";
+        const v6 = null;
+        const v7 = {
+          __tag: v5,
+          payload: v6
+        };
+        const match1 = v7;
+        (__block = "join3");
+        break;
+      }
+      case "case5": {
+        const v6 = list1.payload;
+        const v7 = v6 .0;
+        const x = v7;
+        const v8 = v6 .1;
+        const xs = v8;
+        const v9 = "cons";
+        const fnref10 = cap_0.__fn;
+        const env11 = cap_0.__env;
+        const v12 = fnref10(env11, x);
+        const fnref13 = cap_1.__fn;
+        const env14 = cap_1.__env;
+        const v15 = fnref13(env14, cap_2);
+        const fnref16 = v15.__fn;
+        const env17 = v15.__env;
+        const v18 = fnref16(env17, cap_3);
+        const fnref19 = v18.__fn;
+        const env20 = v18.__env;
+        const v21 = fnref19(env20, cap_0);
+        const fnref22 = v21.__fn;
+        const env23 = v21.__env;
+        const v24 = fnref22(env23, xs);
+        const v25 = {
+          0: v12,
+          1: v24
+        };
+        const v26 = {
+          __tag: v9,
+          payload: v25
+        };
+        const match1 = v26;
+        (__block = "join3");
+        break;
+      }
+      case "join3": {
+        return match1;
+      }
+    }
+  }
+}
+
+function closure_81(env0, f1) {
+  const cap_0 = env0.v0;
+  const cap_1 = env0.v1;
+  const cap_2 = env0.v2;
+  const env_cls2 = {
+    v0: f1,
+    v1: cap_1,
+    v2: cap_0,
+    v3: cap_2
+  };
+  const fnref_cls2 = closure_82;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_80(env0, b1) {
+  const cap_0 = env0.v0;
+  const cap_1 = env0.v1;
+  const env_cls2 = {
+    v0: cap_0,
+    v1: cap_1,
+    v2: b1
+  };
+  const fnref_cls2 = closure_81;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_79(env0, a1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: a1,
+    v1: cap_0
+  };
+  const fnref_cls2 = closure_80;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+return main();
+",
     "elaborated": "λ(a: Type) =>
   λ(b: Type) =>
     λ(f: Π(t8: a) -> b) ->
       λ(list: (List) a) ->
         match list
-          | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
+          | Variant [ nil: _ | $row_8 ] -> Struct [ __tag: nil, payload: unit ]
           | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
-              Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ]",
-    "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching; Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching",
+              Struct
+                [ __tag: cons, payload: Struct [ 0: f x, 1: I8 @a @b f xs ] ]",
+    "error": "Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type'); Cannot read properties of undefined (reading 'type')",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"mapList"}
 [3] lambda {"variable":"a","icit":"Implicit","level":1}
   :annotation -> [4]
   :body -> [5]
-  :env -> [72]
+  :env -> [74]
 [4] lit {"value":{"type":"Atom","value":"Type"}}
 [5] lambda {"variable":"b","icit":"Implicit","level":2}
   :annotation -> [6]
   :body -> [7]
-  :env -> [73]
+  :env -> [75]
 [6] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lambda {"variable":"f","icit":"Explicit","level":3}
   :annotation -> [8]
   :body -> [11]
-  :env -> [74]
+  :env -> [76]
 [8] pi {"variable":"t8","icit":"Explicit","level":3}
   :annotation -> [9]
   :body -> [10]
@@ -2235,7 +2602,7 @@ return main();
 [11] lambda {"variable":"list","icit":"Explicit","level":4}
   :annotation -> [12]
   :body -> [35]
-  :env -> [75]
+  :env -> [77]
 [12] app {"icit":"Explicit"}
   :arg -> [34]
   :func -> [13]
@@ -2250,7 +2617,7 @@ return main();
 [17] lambda {"variable":"a","icit":"Explicit","level":5}
   :annotation -> [18]
   :body -> [19]
-  :env -> [76]
+  :env -> [78]
 [18] lit {"value":{"type":"Atom","value":"Type"}}
 [19] app {"icit":"Explicit"}
   :arg -> [21]
@@ -2310,8 +2677,8 @@ return main();
   :scope -> [7] {"level":3}
 [35] match
   :alt -> [37] {"index":0}
-  :alt -> [43] {"index":1}
-  :decision_tree -> [64]
+  :alt -> [44] {"index":1}
+  :decision_tree -> [66]
   :scrutinee -> [36]
 [36] var:bound {"index":0}
   :refers_to -> [11]
@@ -2322,188 +2689,268 @@ return main();
   :scope -> [11] {"level":4}
 [37] case
   :body -> [41]
-  :next -> [43]
+  :next -> [44]
   :pattern -> [38]
 [38] pat:variant {"label":"nil"}
   :payload -> [39]
 [39] pat:wildcard
 [40] pat:wildcard
 [41] struct
-  :field -> [42] {"label":"nil"}
-[42] lit {"value":{"type":"unit"}}
-[43] case
-  :body -> [50]
-  :pattern -> [44]
-[44] pat:variant {"label":"cons"}
-  :payload -> [45]
-[45] pat:struct
-  :field -> [46] {"label":"0"}
-  :field -> [47] {"label":"1"}
-[46] pat:binder {"name":"x","level":5}
-[47] pat:binder {"name":"xs","level":6}
-[48] pat:wildcard
+  :field -> [42] {"label":"__tag"}
+  :field -> [43] {"label":"payload"}
+[42] lit {"value":{"type":"Atom","value":"nil"}}
+[43] lit {"value":{"type":"unit"}}
+[44] case
+  :body -> [51]
+  :pattern -> [45]
+[45] pat:variant {"label":"cons"}
+  :payload -> [46]
+[46] pat:struct
+  :field -> [47] {"label":"0"}
+  :field -> [48] {"label":"1"}
+[47] pat:binder {"name":"x","level":5}
+[48] pat:binder {"name":"xs","level":6}
 [49] pat:wildcard
-[50] struct
-  :field -> [51] {"label":"cons"}
+[50] pat:wildcard
 [51] struct
-  :field -> [52] {"label":"0"}
-  :field -> [55] {"label":"1"}
-[52] app {"icit":"Explicit"}
-  :arg -> [54]
-  :func -> [53]
-[53] var:bound {"index":5}
+  :field -> [52] {"label":"__tag"}
+  :field -> [53] {"label":"payload"}
+[52] lit {"value":{"type":"Atom","value":"cons"}}
+[53] struct
+  :field -> [54] {"label":"0"}
+  :field -> [57] {"label":"1"}
+[54] app {"icit":"Explicit"}
+  :arg -> [56]
+  :func -> [55]
+[55] var:bound {"index":5}
   :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[54] var:bound {"index":3}
-  :refers_to -> [46]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[55] app {"icit":"Explicit"}
-  :arg -> [63]
-  :func -> [56]
-[56] app {"icit":"Explicit"}
-  :arg -> [62]
-  :func -> [57]
-[57] app {"icit":"Implicit"}
-  :arg -> [61]
-  :func -> [58]
-[58] app {"icit":"Implicit"}
-  :arg -> [60]
-  :func -> [59]
-[59] var:bound {"index":8}
-  :refers_to -> [2]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[60] var:bound {"index":7}
-  :refers_to -> [3]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[61] var:bound {"index":6}
-  :refers_to -> [5]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[62] var:bound {"index":5}
-  :refers_to -> [7]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[63] var:bound {"index":2}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[56] var:bound {"index":3}
   :refers_to -> [47]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [11] {"level":4}
-  :scope -> [46] {"level":5}
-  :scope -> [47] {"level":6}
-  :scope -> [48] {"level":7}
-  :scope -> [49] {"level":8}
-[64] switch {"kind":"tag"}
-  :branch -> [66] {"label":"nil"}
-  :branch -> [68] {"label":"cons"}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[57] app {"icit":"Explicit"}
+  :arg -> [65]
+  :func -> [58]
+[58] app {"icit":"Explicit"}
+  :arg -> [64]
+  :func -> [59]
+[59] app {"icit":"Implicit"}
+  :arg -> [63]
+  :func -> [60]
+[60] app {"icit":"Implicit"}
+  :arg -> [62]
+  :func -> [61]
+[61] var:bound {"index":8}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[62] var:bound {"index":7}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[63] var:bound {"index":6}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[64] var:bound {"index":5}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[65] var:bound {"index":2}
+  :refers_to -> [48]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [47] {"level":5}
+  :scope -> [48] {"level":6}
+  :scope -> [49] {"level":7}
+  :scope -> [50] {"level":8}
+[66] switch {"kind":"tag"}
+  :branch -> [68] {"label":"nil"}
+  :branch -> [70] {"label":"cons"}
   :inspect -> [36]
-[65] proj {"label":"nil"}
+[67] proj {"label":"payload"}
   :target -> [36]
-[66] leaf
+[68] leaf
   :body -> [41]
-[67] proj {"label":"cons"}
+[69] proj {"label":"payload"}
   :target -> [36]
-[68] switch {"kind":"struct"}
-  :branch -> [71]
-  :inspect -> [67]
-[69] proj {"label":"0"}
-  :target -> [67]
-[70] proj {"label":"1"}
-  :target -> [67]
-[71] leaf
-  :bind -> [69] {"name":"x","binder":46}
-  :bind -> [70] {"name":"xs","binder":47}
-  :body -> [50]
-[72] env
+[70] switch {"kind":"struct"}
+  :branch -> [73]
+  :inspect -> [69]
+[71] proj {"label":"0"}
+  :target -> [69]
+[72] proj {"label":"1"}
+  :target -> [69]
+[73] leaf
+  :bind -> [71] {"name":"x","binder":47}
+  :bind -> [72] {"name":"xs","binder":48}
+  :body -> [51]
+[74] env
   :capture -> [2] {"index":0}
-[73] env
+[75] env
   :capture -> [3] {"index":0}
   :capture -> [2] {"index":1}
-[74] env
+[76] env
   :capture -> [3] {"index":0}
   :capture -> [2] {"index":1}
   :capture -> [5] {"index":2}
-[75] env
+[77] env
   :capture -> [7] {"index":0}
   :capture -> [2] {"index":1}
   :capture -> [3] {"index":2}
   :capture -> [5] {"index":3}
-[76] env
+[78] env
   :capture -> [13] {"index":0}
-[77] closure
-  :body -> [3]
-  :env -> [72]
-[78] closure
-  :body -> [5]
-  :env -> [73]
 [79] closure
-  :body -> [7]
+  :body -> [3]
   :env -> [74]
 [80] closure
-  :body -> [11]
+  :body -> [5]
   :env -> [75]
 [81] closure
+  :body -> [7]
+  :env -> [76]
+[82] closure
+  :body -> [11]
+  :env -> [77]
+[83] closure
   :body -> [17]
-  :env -> [76]",
+  :env -> [78]",
     "ivl": "",
     "kind": "let",
-    "mir": "",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc { v0: mapList }
+      let fnref_cls2 = &closure_79
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_82(env0, list1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let cap_2 = read env0.v2
+      let cap_3 = read env0.v3
+      jump sw2
+    sw2:
+      let tag0 = read list1.__tag
+      branch tag0 { nil -> case4 | cons -> case5 }
+    case4:
+      let v5 = nil
+      let v6 = unit
+      let v7 = alloc { __tag: v5, payload: v6 }
+      let match1 = v7
+      jump join3
+    case5:
+      let v6 = read list1.payload
+      let v7 = read v6.0
+      let x = v7
+      let v8 = read v6.1
+      let xs = v8
+      let v9 = cons
+      let fnref10 = read cap_0.__fn
+      let env11 = read cap_0.__env
+      let v12 = call *fnref10(env11, x)
+      let fnref13 = read cap_1.__fn
+      let env14 = read cap_1.__env
+      let v15 = call *fnref13(env14, cap_2)
+      let fnref16 = read v15.__fn
+      let env17 = read v15.__env
+      let v18 = call *fnref16(env17, cap_3)
+      let fnref19 = read v18.__fn
+      let env20 = read v18.__env
+      let v21 = call *fnref19(env20, cap_0)
+      let fnref22 = read v21.__fn
+      let env23 = read v21.__env
+      let v24 = call *fnref22(env23, xs)
+      let v25 = alloc { 0: v12, 1: v24 }
+      let v26 = alloc { __tag: v9, payload: v25 }
+      let match1 = v26
+      jump join3
+    join3:
+      return match1
+  fn closure_81(env0, f1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let cap_2 = read env0.v2
+      let env_cls2 = alloc { v0: f1, v1: cap_1, v2: cap_0, v3: cap_2 }
+      let fnref_cls2 = &closure_82
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_80(env0, b1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let env_cls2 = alloc { v0: cap_0, v1: cap_1, v2: b1 }
+      let fnref_cls2 = &closure_81
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_79(env0, a1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: a1, v1: cap_0 }
+      let fnref_cls2 = &closure_80
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
     "name": "mapList",
     "normalized": "λ(a: Type) =>
   (closure: λ(b: Type) =>
     λ(f: Π(t8: a) -> b) ->
       λ(list: (List) a) ->
         match list
-          | Variant [ nil: _ | $row_8 ] -> Struct [ nil: unit ]
+          | Variant [ nil: _ | $row_8 ] -> Struct [ __tag: nil, payload: unit ]
           | Variant [ cons: Struct [ 0: x, 1: xs | $row_14 ] | $row_15 ] ->
-              Struct [ cons: Struct [ 0: f x, 1: I8 @a @b f xs ] ] -| Γ: a)",
+              Struct
+                [ __tag: cons,
+                  payload: Struct [ 0: f x, 1: I8 @a @b f xs ] ] -| Γ: a)",
     "solverTrace": "",
     "type": "Π(a: Type) => Π(b: Type) => Π(t7: Π(t8: a) -> b) -> Π(t9: (List) a) -> (List) b",
     "validity": "",

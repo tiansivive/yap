@@ -121,9 +121,9 @@ attributes []
     in __match_fail
 
   'entry'/0 = fun () ->
-    let <X1> = "Some"
+    let <X1> = 'Some'
     in let <X2> = 42
-    in let <X3> = call 'maps':'from_list'([{'__tag', X1}, {'Some', X2}])
+    in let <X3> = call 'maps':'from_list'([{'__tag', X1}, {'payload', X2}])
     in let <X6> = call 'maps':'get'('__tag', X3)
     in case case X6 of
   <_A> when call 'erlang':'is_atom'(_A) ->
@@ -142,11 +142,11 @@ end of
     end
 
   'c0'/1 = fun (Scrut_0) ->
-    let <X4> = call 'maps':'get'('Some', Scrut_0)
+    let <X4> = call 'maps':'get'('payload', Scrut_0)
     in apply 'j0'/1(X4)
 
   'c1'/1 = fun (Scrut_1) ->
-    let <X5> = call 'maps':'get'('None', Scrut_1)
+    let <X5> = call 'maps':'get'('payload', Scrut_1)
     in let <X7> = 0
     in apply 'j0'/1(X7)
 

@@ -3687,29 +3687,35 @@ exports[`Language Tour — Refinement Types > ordered list construction rejects 
   {
     "codegenJS": "function main() {
   const List1 = v0;
-  const v2 = 2;
-  const v3 = 1;
-  const v4 = null;
-  const v5 = {
-    nil: v4
-  };
-  const v6 = {
-    head: v3,
-    tail: v5
-  };
-  const v7 = {
-    cons: v6
-  };
+  const v2 = "cons";
+  const v3 = 2;
+  const v4 = "cons";
+  const v5 = 1;
+  const v6 = "nil";
+  const v7 = null;
   const v8 = {
-    head: v2,
-    tail: v7
+    __tag: v6,
+    payload: v7
   };
   const v9 = {
-    cons: v8
+    head: v5,
+    tail: v8
   };
-  const ol10 = v9;
-  const v11 = 1;
-  return v11;
+  const v10 = {
+    __tag: v4,
+    payload: v9
+  };
+  const v11 = {
+    head: v3,
+    tail: v10
+  };
+  const v12 = {
+    __tag: v2,
+    payload: v11
+  };
+  const ol13 = v12;
+  const v14 = 1;
+  return v14;
 }
 return main();
 ",
@@ -3724,17 +3730,20 @@ return main();
       (λ(x: Num) ->
         (closure: λ(y: Num) -> FFI.$lt x y -| Γ: x; List; orderedListTestFail))
     = Struct
-      [ cons: Struct
+      [ __tag: cons,
+        payload: Struct
           [ head: 2,
             tail: Struct
-              [ cons: Struct [ head: 1, tail: Struct [ nil: unit ] ] ] ] ];
+              [ __tag: cons,
+                payload: Struct
+                  [ head: 1, tail: Struct [ __tag: nil, payload: unit ] ] ] ] ];
   return 1;
 }",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"orderedListTestFail"}
 [3] block
-  :return -> [62]
+  :return -> [65]
   :stmt -> [4] {"index":0}
   :stmt -> [53] {"index":1}
 [4] stmt:let {"variable":"List"}
@@ -3779,12 +3788,12 @@ return main();
 [16] lambda {"variable":"t","icit":"Explicit","level":3}
   :annotation -> [17]
   :body -> [18]
-  :env -> [63]
+  :env -> [66]
 [17] lit {"value":{"type":"Atom","value":"Type"}}
 [18] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [19]
   :body -> [24]
-  :env -> [64]
+  :env -> [67]
 [19] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [20]
   :body -> [21]
@@ -3917,32 +3926,38 @@ return main();
 [53] stmt:let {"variable":"ol"}
   :value -> [54]
 [54] struct
-  :field -> [55] {"label":"cons"}
-[55] struct
-  :field -> [56] {"label":"head"}
-  :field -> [57] {"label":"tail"}
-[56] lit {"value":{"type":"Num","value":2}}
-[57] struct
-  :field -> [58] {"label":"cons"}
+  :field -> [55] {"label":"__tag"}
+  :field -> [56] {"label":"payload"}
+[55] lit {"value":{"type":"Atom","value":"cons"}}
+[56] struct
+  :field -> [57] {"label":"head"}
+  :field -> [58] {"label":"tail"}
+[57] lit {"value":{"type":"Num","value":2}}
 [58] struct
-  :field -> [59] {"label":"head"}
-  :field -> [60] {"label":"tail"}
-[59] lit {"value":{"type":"Num","value":1}}
+  :field -> [59] {"label":"__tag"}
+  :field -> [60] {"label":"payload"}
+[59] lit {"value":{"type":"Atom","value":"cons"}}
 [60] struct
-  :field -> [61] {"label":"nil"}
-[61] lit {"value":{"type":"unit"}}
-[62] lit {"value":{"type":"Num","value":1}}
-[63] env
+  :field -> [61] {"label":"head"}
+  :field -> [62] {"label":"tail"}
+[61] lit {"value":{"type":"Num","value":1}}
+[62] struct
+  :field -> [63] {"label":"__tag"}
+  :field -> [64] {"label":"payload"}
+[63] lit {"value":{"type":"Atom","value":"nil"}}
+[64] lit {"value":{"type":"unit"}}
+[65] lit {"value":{"type":"Num","value":1}}
+[66] env
   :capture -> [5] {"index":0}
-[64] env
+[67] env
   :capture -> [5] {"index":0}
   :capture -> [16] {"index":1}
-[65] closure
+[68] closure
   :body -> [16]
-  :env -> [63]
-[66] closure
+  :env -> [66]
+[69] closure
   :body -> [18]
-  :env -> [64]",
+  :env -> [67]",
     "ivl": "(forall ((ol App_App_Mu_List_Real_Function))
   (forall (($b Real)) (=> (= $b 1) (< 2 $b))))",
     "kind": "let",
@@ -3950,17 +3965,20 @@ return main();
   fn main entry=entry
     entry:
       let List1 = v0
-      let v2 = 2
-      let v3 = 1
-      let v4 = unit
-      let v5 = alloc { nil: v4 }
-      let v6 = alloc { head: v3, tail: v5 }
-      let v7 = alloc { cons: v6 }
-      let v8 = alloc { head: v2, tail: v7 }
-      let v9 = alloc { cons: v8 }
-      let ol10 = v9
-      let v11 = 1
-      return v11",
+      let v2 = cons
+      let v3 = 2
+      let v4 = cons
+      let v5 = 1
+      let v6 = nil
+      let v7 = unit
+      let v8 = alloc { __tag: v6, payload: v7 }
+      let v9 = alloc { head: v5, tail: v8 }
+      let v10 = alloc { __tag: v4, payload: v9 }
+      let v11 = alloc { head: v3, tail: v10 }
+      let v12 = alloc { __tag: v2, payload: v11 }
+      let ol13 = v12
+      let v14 = 1
+      return v14",
     "name": "orderedListTestFail",
     "normalized": "1",
     "solverTrace": "=== Formula ===
@@ -4244,71 +4262,91 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = 1;
-  const v1 = 2;
-  const v2 = 3;
-  const v3 = null;
-  const v4 = {
-    nil: v3
-  };
-  const v5 = {
-    head: v2,
-    tail: v4
-  };
-  const v6 = {
-    cons: v5
-  };
-  const v7 = {
-    head: v1,
-    tail: v6
-  };
+  const v0 = "cons";
+  const v1 = 1;
+  const v2 = "cons";
+  const v3 = 2;
+  const v4 = "cons";
+  const v5 = 3;
+  const v6 = "nil";
+  const v7 = null;
   const v8 = {
-    cons: v7
+    __tag: v6,
+    payload: v7
   };
   const v9 = {
-    head: v0,
+    head: v5,
     tail: v8
   };
   const v10 = {
-    cons: v9
+    __tag: v4,
+    payload: v9
   };
-  return v10;
+  const v11 = {
+    head: v3,
+    tail: v10
+  };
+  const v12 = {
+    __tag: v2,
+    payload: v11
+  };
+  const v13 = {
+    head: v1,
+    tail: v12
+  };
+  const v14 = {
+    __tag: v0,
+    payload: v13
+  };
+  return v14;
 }
 return main();
 ",
     "elaborated": "Struct
-  [ cons: Struct
+  [ __tag: cons,
+    payload: Struct
       [ head: 1,
         tail: Struct
-          [ cons: Struct
+          [ __tag: cons,
+            payload: Struct
               [ head: 2,
                 tail: Struct
-                  [ cons: Struct
-                      [ head: 3, tail: Struct [ nil: unit ] ] ] ] ] ] ]",
+                  [ __tag: cons,
+                    payload: Struct
+                      [ head: 3,
+                        tail: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ascending"}
 [3] struct
-  :field -> [4] {"label":"cons"}
-[4] struct
-  :field -> [5] {"label":"head"}
-  :field -> [6] {"label":"tail"}
-[5] lit {"value":{"type":"Num","value":1}}
-[6] struct
-  :field -> [7] {"label":"cons"}
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"cons"}}
+[5] struct
+  :field -> [6] {"label":"head"}
+  :field -> [7] {"label":"tail"}
+[6] lit {"value":{"type":"Num","value":1}}
 [7] struct
-  :field -> [8] {"label":"head"}
-  :field -> [9] {"label":"tail"}
-[8] lit {"value":{"type":"Num","value":2}}
+  :field -> [8] {"label":"__tag"}
+  :field -> [9] {"label":"payload"}
+[8] lit {"value":{"type":"Atom","value":"cons"}}
 [9] struct
-  :field -> [10] {"label":"cons"}
-[10] struct
-  :field -> [11] {"label":"head"}
-  :field -> [12] {"label":"tail"}
-[11] lit {"value":{"type":"Num","value":3}}
-[12] struct
-  :field -> [13] {"label":"nil"}
-[13] lit {"value":{"type":"unit"}}",
+  :field -> [10] {"label":"head"}
+  :field -> [11] {"label":"tail"}
+[10] lit {"value":{"type":"Num","value":2}}
+[11] struct
+  :field -> [12] {"label":"__tag"}
+  :field -> [13] {"label":"payload"}
+[12] lit {"value":{"type":"Atom","value":"cons"}}
+[13] struct
+  :field -> [14] {"label":"head"}
+  :field -> [15] {"label":"tail"}
+[14] lit {"value":{"type":"Num","value":3}}
+[15] struct
+  :field -> [16] {"label":"__tag"}
+  :field -> [17] {"label":"payload"}
+[16] lit {"value":{"type":"Atom","value":"nil"}}
+[17] lit {"value":{"type":"unit"}}",
     "ivl": "(and
   (forall (($b Real)) (=> (= $b 2) (< 1 $b)))
   (forall (($c Real)) (=> (= $c 3) (and (< 1 $c) (< 2 $c)))))",
@@ -4316,28 +4354,36 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 1
-      let v1 = 2
-      let v2 = 3
-      let v3 = unit
-      let v4 = alloc { nil: v3 }
-      let v5 = alloc { head: v2, tail: v4 }
-      let v6 = alloc { cons: v5 }
-      let v7 = alloc { head: v1, tail: v6 }
-      let v8 = alloc { cons: v7 }
-      let v9 = alloc { head: v0, tail: v8 }
-      let v10 = alloc { cons: v9 }
-      return v10",
+      let v0 = cons
+      let v1 = 1
+      let v2 = cons
+      let v3 = 2
+      let v4 = cons
+      let v5 = 3
+      let v6 = nil
+      let v7 = unit
+      let v8 = alloc { __tag: v6, payload: v7 }
+      let v9 = alloc { head: v5, tail: v8 }
+      let v10 = alloc { __tag: v4, payload: v9 }
+      let v11 = alloc { head: v3, tail: v10 }
+      let v12 = alloc { __tag: v2, payload: v11 }
+      let v13 = alloc { head: v1, tail: v12 }
+      let v14 = alloc { __tag: v0, payload: v13 }
+      return v14",
     "name": "ascending",
     "normalized": "Struct
-  [ cons: Struct
+  [ __tag: cons,
+    payload: Struct
       [ head: 1,
         tail: Struct
-          [ cons: Struct
+          [ __tag: cons,
+            payload: Struct
               [ head: 2,
                 tail: Struct
-                  [ cons: Struct
-                      [ head: 3, tail: Struct [ nil: unit ] ] ] ] ] ] ]",
+                  [ __tag: cons,
+                    payload: Struct
+                      [ head: 3,
+                        tail: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
     "solverTrace": "=== Formula ===
   (and
     (forall (($b Real)) (=> (= $b 2) (< 1 $b)))
@@ -4386,71 +4432,91 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = 3;
-  const v1 = 2;
-  const v2 = 1;
-  const v3 = null;
-  const v4 = {
-    nil: v3
-  };
-  const v5 = {
-    head: v2,
-    tail: v4
-  };
-  const v6 = {
-    cons: v5
-  };
-  const v7 = {
-    head: v1,
-    tail: v6
-  };
+  const v0 = "cons";
+  const v1 = 3;
+  const v2 = "cons";
+  const v3 = 2;
+  const v4 = "cons";
+  const v5 = 1;
+  const v6 = "nil";
+  const v7 = null;
   const v8 = {
-    cons: v7
+    __tag: v6,
+    payload: v7
   };
   const v9 = {
-    head: v0,
+    head: v5,
     tail: v8
   };
   const v10 = {
-    cons: v9
+    __tag: v4,
+    payload: v9
   };
-  return v10;
+  const v11 = {
+    head: v3,
+    tail: v10
+  };
+  const v12 = {
+    __tag: v2,
+    payload: v11
+  };
+  const v13 = {
+    head: v1,
+    tail: v12
+  };
+  const v14 = {
+    __tag: v0,
+    payload: v13
+  };
+  return v14;
 }
 return main();
 ",
     "elaborated": "Struct
-  [ cons: Struct
+  [ __tag: cons,
+    payload: Struct
       [ head: 3,
         tail: Struct
-          [ cons: Struct
+          [ __tag: cons,
+            payload: Struct
               [ head: 2,
                 tail: Struct
-                  [ cons: Struct
-                      [ head: 1, tail: Struct [ nil: unit ] ] ] ] ] ] ]",
+                  [ __tag: cons,
+                    payload: Struct
+                      [ head: 1,
+                        tail: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"descending"}
 [3] struct
-  :field -> [4] {"label":"cons"}
-[4] struct
-  :field -> [5] {"label":"head"}
-  :field -> [6] {"label":"tail"}
-[5] lit {"value":{"type":"Num","value":3}}
-[6] struct
-  :field -> [7] {"label":"cons"}
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"cons"}}
+[5] struct
+  :field -> [6] {"label":"head"}
+  :field -> [7] {"label":"tail"}
+[6] lit {"value":{"type":"Num","value":3}}
 [7] struct
-  :field -> [8] {"label":"head"}
-  :field -> [9] {"label":"tail"}
-[8] lit {"value":{"type":"Num","value":2}}
+  :field -> [8] {"label":"__tag"}
+  :field -> [9] {"label":"payload"}
+[8] lit {"value":{"type":"Atom","value":"cons"}}
 [9] struct
-  :field -> [10] {"label":"cons"}
-[10] struct
-  :field -> [11] {"label":"head"}
-  :field -> [12] {"label":"tail"}
-[11] lit {"value":{"type":"Num","value":1}}
-[12] struct
-  :field -> [13] {"label":"nil"}
-[13] lit {"value":{"type":"unit"}}",
+  :field -> [10] {"label":"head"}
+  :field -> [11] {"label":"tail"}
+[10] lit {"value":{"type":"Num","value":2}}
+[11] struct
+  :field -> [12] {"label":"__tag"}
+  :field -> [13] {"label":"payload"}
+[12] lit {"value":{"type":"Atom","value":"cons"}}
+[13] struct
+  :field -> [14] {"label":"head"}
+  :field -> [15] {"label":"tail"}
+[14] lit {"value":{"type":"Num","value":1}}
+[15] struct
+  :field -> [16] {"label":"__tag"}
+  :field -> [17] {"label":"payload"}
+[16] lit {"value":{"type":"Atom","value":"nil"}}
+[17] lit {"value":{"type":"unit"}}",
     "ivl": "(and
   (forall (($b Real)) (=> (= $b 2) (> 3 $b)))
   (forall (($c Real)) (=> (= $c 1) (and (> 3 $c) (> 2 $c)))))",
@@ -4458,28 +4524,36 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 3
-      let v1 = 2
-      let v2 = 1
-      let v3 = unit
-      let v4 = alloc { nil: v3 }
-      let v5 = alloc { head: v2, tail: v4 }
-      let v6 = alloc { cons: v5 }
-      let v7 = alloc { head: v1, tail: v6 }
-      let v8 = alloc { cons: v7 }
-      let v9 = alloc { head: v0, tail: v8 }
-      let v10 = alloc { cons: v9 }
-      return v10",
+      let v0 = cons
+      let v1 = 3
+      let v2 = cons
+      let v3 = 2
+      let v4 = cons
+      let v5 = 1
+      let v6 = nil
+      let v7 = unit
+      let v8 = alloc { __tag: v6, payload: v7 }
+      let v9 = alloc { head: v5, tail: v8 }
+      let v10 = alloc { __tag: v4, payload: v9 }
+      let v11 = alloc { head: v3, tail: v10 }
+      let v12 = alloc { __tag: v2, payload: v11 }
+      let v13 = alloc { head: v1, tail: v12 }
+      let v14 = alloc { __tag: v0, payload: v13 }
+      return v14",
     "name": "descending",
     "normalized": "Struct
-  [ cons: Struct
+  [ __tag: cons,
+    payload: Struct
       [ head: 3,
         tail: Struct
-          [ cons: Struct
+          [ __tag: cons,
+            payload: Struct
               [ head: 2,
                 tail: Struct
-                  [ cons: Struct
-                      [ head: 1, tail: Struct [ nil: unit ] ] ] ] ] ] ]",
+                  [ __tag: cons,
+                    payload: Struct
+                      [ head: 1,
+                        tail: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
     "solverTrace": "=== Formula ===
   (and
     (forall (($b Real)) (=> (= $b 2) (> 3 $b)))

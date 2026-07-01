@@ -38,9 +38,16 @@ export const evaluate = (pat: EB.Pattern, ctx: EB.Context, binders: EB.Patterns.
 			return NF.Constructors.Struct(toRow(row));
 		})
 
-		.with({ type: "Variant" }, ({ row }) => {
-			return NF.Constructors.Variant(toRow(row));
-		})
+		.with({ type: "Variant", row: { type: "extension" } }, ({ row }) =>
+			NF.Constructors.Struct(
+				NF.Constructors.Extension(
+					"__tag",
+					NF.Constructors.Lit(Lit.Atom(row.label)),
+					NF.Constructors.Extension("payload", evaluate(row.value, ctx, binders), R.Constructors.Empty()),
+				),
+			),
+		)
+		.with({ type: "Variant" }, ({ row }) => NF.Constructors.Variant(toRow(row)))
 
 		.with({ type: "List" }, ({ patterns, rest }) => {
 			const vs = patterns.map(p => evaluate(p, ctx, binders));

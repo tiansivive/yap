@@ -4,7 +4,7 @@ exports[`inference: tagged > #x 1 1`] = `
 {
   "displays": {
     "constraints": [],
-    "term": "Struct [ x: 1 ]",
+    "term": "Struct [ __tag: x, payload: 1 ]",
     "type": "Variant [ x: Num | ?1 ]",
   },
 }
@@ -33,16 +33,27 @@ exports[`inference: tagged > #x 1 2`] = `
     "term": {
       "arg": {
         "row": {
-          "label": "x",
+          "label": "__tag",
           "row": {
-            "type": "empty",
+            "label": "payload",
+            "row": {
+              "type": "empty",
+            },
+            "type": "extension",
+            "value": {
+              "type": "Lit",
+              "value": {
+                "type": "Num",
+                "value": 1,
+              },
+            },
           },
           "type": "extension",
           "value": {
             "type": "Lit",
             "value": {
-              "type": "Num",
-              "value": 1,
+              "type": "Atom",
+              "value": "x",
             },
           },
         },

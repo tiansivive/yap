@@ -963,6 +963,13 @@ export const ignoraModal = (value: NF.Value): NF.Value => {
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];
 
 export type MeetResult = { binder: EB.Binder; nf: NF.Value };
+
+const lookupRow = (row: NF.Row, label: string): NF.Value | undefined =>
+	match(row)
+		.with({ type: "extension", label }, r => r.value)
+		.with({ type: "extension" }, r => lookupRow(r.row, label))
+		.otherwise(() => undefined);
+
 export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetResult[]> => {
 	return match([unwrapNeutral(nf), pattern])
 		.with([P._, { type: "Wildcard" }], () => O.some([]))
@@ -1016,9 +1023,15 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 		.with([NF.Patterns.Row, { type: "Row" }], ([v, p]) => {
 			return meetAll(ctx, p.row, v.row);
 		})
-		.with([NF.Patterns.Variant, { type: "Variant" }], [NF.Patterns.Struct, { type: "Variant" }], ([{ arg }, p]) => {
-			return meetAll(ctx, p.row, arg.row);
-		})
+		.with([NF.Patterns.Variant, { type: "Variant" }], [NF.Patterns.Struct, { type: "Variant" }], ([{ arg }, p]) =>
+			match(p.row)
+				.with({ type: "extension" }, ({ label, value }) => {
+					const tag = lookupRow(arg.row, "__tag");
+					const payload = lookupRow(arg.row, "payload");
+					return tag?.type === "Lit" && tag.value.type === "Atom" && tag.value.value === label && payload !== undefined ? meet(ctx, value, payload) : O.none;
+				})
+				.otherwise(() => O.none),
+		)
 		.with([NF.Patterns.HashMap, { type: "List" }], ([v, p]) => {
 			console.warn("List pattern matching not yet implemented");
 			return O.some([]);

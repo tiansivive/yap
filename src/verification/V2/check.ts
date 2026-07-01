@@ -104,28 +104,36 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 					return check(term, schema);
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Variant], ([term, type]) => {
-					const nf = NF.evaluate(ctx, term);
-					assert(nf.type === "App" && nf.arg.type === "Row", "Expected struct term to evaluate to an application of a row");
-					const contains = (a: NF.Row, b: EB.Row): V2.Elaboration<IVL.Formula> => {
-						const onVal = (t: EB.Term, lbl: string, acc: V2.Elaboration<IVL.Formula>): V2.Elaboration<IVL.Formula> => {
-							const rewritten = Row.rewrite(a, lbl, () => E.left({ tag: "Other", message: `Label ${lbl} not found.` }));
-							return E.fold<any, any, V2.Elaboration<IVL.Formula>>(
-								() => V2.Do(() => V2.fail<IVL.Formula>({ type: "MissingLabel", label: lbl, row: a })),
-								(rewriteRes: any) =>
-									V2.Do(function* () {
-										assert(rewriteRes.type === "extension", "Expected extension after rewriting row");
-										const combined = yield* V2.pure(acc);
-										const { vc } = yield* check.gen(t, rewriteRes.value);
-										return Build.and(combined, vc);
-									}),
-							)(rewritten);
-						};
-						return Row.fold(b, onVal, (_rv, acc) => acc, V2.of(Build.true_()));
-					};
+					const lookup = (row: EB.Row, label: string): EB.Term | undefined =>
+						match(row)
+							.with({ type: "extension", label }, r => r.value)
+							.with({ type: "extension" }, r => lookup(r.row, label))
+							.otherwise(() => undefined);
 
 					return V2.Do(function* () {
-						const vc = yield* V2.pure(contains(type.arg.row, term.arg.row));
-						return { vc } satisfies VerificationArtefacts;
+						const tag = lookup(term.arg.row, "__tag");
+						const payload = lookup(term.arg.row, "payload");
+						const label = match(tag)
+							.with({ type: "Lit", value: { type: "Atom" } }, t => t.value.value)
+							.otherwise(() => undefined);
+
+						if (label === undefined) {
+							return yield* V2.fail<VerificationArtefacts>({ type: "MissingLabel", label: "__tag", row: type.arg.row });
+						}
+						if (payload === undefined) {
+							return yield* V2.fail<VerificationArtefacts>({ type: "MissingLabel", label: "payload", row: type.arg.row });
+						}
+
+						const arm = E.fold(
+							() => undefined,
+							(row: NF.Row) => (row.type === "extension" ? row.value : undefined),
+						)(Row.rewrite(type.arg.row, label, () => E.left({ tag: "Other", message: `Label ${label} not found.` })));
+
+						if (arm === undefined) {
+							return yield* V2.fail<VerificationArtefacts>({ type: "MissingLabel", label, row: type.arg.row });
+						}
+
+						return yield* check.gen(payload, arm);
 					});
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], ([term, type]) => {

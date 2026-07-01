@@ -126,8 +126,8 @@ exports[`pattern compilation pass > variant patterns > Some/None — switch on t
   :scrutinee -> [3]
 [3] struct
   :field -> [4] {"label":"__tag"}
-  :field -> [5] {"label":"Some"}
-[4] lit {"value":{"type":"String","value":"Some"}}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"Some"}}
 [5] lit {"value":{"type":"Num","value":42}}
 [6] case
   :body -> [9]
@@ -150,12 +150,12 @@ exports[`pattern compilation pass > variant patterns > Some/None — switch on t
   :branch -> [16] {"label":"Some"}
   :branch -> [18] {"label":"None"}
   :inspect -> [3]
-[15] proj {"label":"Some"}
+[15] proj {"label":"payload"}
   :target -> [3]
 [16] leaf
   :bind -> [15] {"name":"x","binder":8}
   :body -> [9]
-[17] proj {"label":"None"}
+[17] proj {"label":"payload"}
   :target -> [3]
 [18] leaf
   :body -> [13]"
@@ -189,7 +189,7 @@ exports[`pattern compilation pass > variant patterns > variant with wildcard def
   :branch -> [14] {"label":"Some"}
   :default -> [15]
   :inspect -> [3]
-[12] proj {"label":"Some"}
+[12] proj {"label":"payload"}
   :target -> [3]
 [13] pat:wildcard
 [14] leaf

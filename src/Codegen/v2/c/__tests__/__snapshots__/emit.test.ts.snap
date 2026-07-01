@@ -191,11 +191,11 @@ static YapValue yap_main(void) {
     return __match_fail;
   }
   case 1: {
-    YapValue x1 = yap_str("Some");
+    YapValue x1 = yap_atom("Some");
     YapValue x2 = yap_num(42);
     YapValue x3 = yap_alloc_record(2);
     yap_record_set(&x3, "__tag", x1);
-    yap_record_set(&x3, "Some", x2);
+    yap_record_set(&x3, "payload", x2);
     YapValue x6 = yap_record_get(x3, "__tag");
     if (yap_streq(yap_to_str(x6), "Some")) {
   YapValue __t0 = x3;
@@ -215,14 +215,14 @@ static YapValue yap_main(void) {
 }
   }
   case 2: {
-    YapValue x4 = yap_record_get(scrut_0, "Some");
+    YapValue x4 = yap_record_get(scrut_0, "payload");
     YapValue __t0 = x4;
     x0 = __t0;
     yap_pc = 4;
     break;
   }
   case 3: {
-    YapValue x5 = yap_record_get(scrut_1, "None");
+    YapValue x5 = yap_record_get(scrut_1, "payload");
     YapValue x7 = yap_num(0);
     YapValue __t0 = x7;
     x0 = __t0;

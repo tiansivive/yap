@@ -98,31 +98,36 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = 42;
-  const v1 = {
-    just: v0
+  const v0 = "just";
+  const v1 = 42;
+  const v2 = {
+    __tag: v0,
+    payload: v1
   };
-  return v1;
+  return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ just: 42 ]",
+    "elaborated": "Struct [ __tag: just, payload: 42 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"maybeNum"}
 [3] struct
-  :field -> [4] {"label":"just"}
-[4] lit {"value":{"type":"Num","value":42}}",
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"just"}}
+[5] lit {"value":{"type":"Num","value":42}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 42
-      let v1 = alloc { just: v0 }
-      return v1",
+      let v0 = just
+      let v1 = 42
+      let v2 = alloc { __tag: v0, payload: v1 }
+      return v2",
     "name": "maybeNum",
-    "normalized": "Struct [ just: 42 ]",
+    "normalized": "Struct [ __tag: just, payload: 42 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -153,31 +158,36 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = null;
-  const v1 = {
-    nothing: v0
+  const v0 = "nothing";
+  const v1 = null;
+  const v2 = {
+    __tag: v0,
+    payload: v1
   };
-  return v1;
+  return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ nothing: unit ]",
+    "elaborated": "Struct [ __tag: nothing, payload: unit ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"maybeStr"}
 [3] struct
-  :field -> [4] {"label":"nothing"}
-[4] lit {"value":{"type":"unit"}}",
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"nothing"}}
+[5] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unit
-      let v1 = alloc { nothing: v0 }
-      return v1",
+      let v0 = nothing
+      let v1 = unit
+      let v2 = alloc { __tag: v0, payload: v1 }
+      return v2",
     "name": "maybeStr",
-    "normalized": "Struct [ nothing: unit ]",
+    "normalized": "Struct [ __tag: nothing, payload: unit ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -318,103 +328,36 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = null;
-  const v1 = {
-    nil: v0
+  const v0 = "nil";
+  const v1 = null;
+  const v2 = {
+    __tag: v0,
+    payload: v1
   };
-  return v1;
+  return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ nil: unit ]",
+    "elaborated": "Struct [ __tag: nil, payload: unit ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"empty"}
 [3] struct
-  :field -> [4] {"label":"nil"}
-[4] lit {"value":{"type":"unit"}}",
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"nil"}}
+[5] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = unit
-      let v1 = alloc { nil: v0 }
-      return v1",
-    "name": "empty",
-    "normalized": "Struct [ nil: unit ]",
-    "solverTrace": "=== Formula ===
-  true
-
-=== Variables ===
-  proxy p1: true
-
-=== Registry ===
-
-=== Trace ===
-[clauses]
-  #0: p1 -> unit: p1
-  #1: p1 -> unit: p1
-
-[propagate] p1 = true (forced by #0: p1 (true))
-  trail: { p1@0 }
-[clauses]
-  #0: true -> satisfied
-  #1: true -> satisfied
-
-[theory] all assert p1: ok
-
-[theory] all check: ok
-  feasible
-
-[sat]",
-    "type": "(List) Num",
-    "validity": "valid",
-  },
-  {
-    "codegenJS": "function main() {
-  const v0 = 1;
-  const v1 = null;
-  const v2 = {
-    nil: v1
-  };
-  const v3 = {
-    0: v0,
-    1: v2
-  };
-  const v4 = {
-    cons: v3
-  };
-  return v4;
-}
-return main();
-",
-    "elaborated": "Struct [ cons: Struct [ 0: 1, 1: Struct [ nil: unit ] ] ]",
-    "gram": "[1] root
-  :entry -> [3]
-[2] stmt:let {"variable":"listOf1"}
-[3] struct
-  :field -> [4] {"label":"cons"}
-[4] struct
-  :field -> [5] {"label":"0"}
-  :field -> [6] {"label":"1"}
-[5] lit {"value":{"type":"Num","value":1}}
-[6] struct
-  :field -> [7] {"label":"nil"}
-[7] lit {"value":{"type":"unit"}}",
-    "ivl": "true",
-    "kind": "let",
-    "mir": "module
-  fn main entry=entry
-    entry:
-      let v0 = 1
+      let v0 = nil
       let v1 = unit
-      let v2 = alloc { nil: v1 }
-      let v3 = alloc { 0: v0, 1: v2 }
-      let v4 = alloc { cons: v3 }
-      return v4",
-    "name": "listOf1",
-    "normalized": "Struct [ cons: Struct [ 0: 1, 1: Struct [ nil: unit ] ] ]",
+      let v2 = alloc { __tag: v0, payload: v1 }
+      return v2",
+    "name": "empty",
+    "normalized": "Struct [ __tag: nil, payload: unit ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -445,96 +388,212 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = 1;
-  const v1 = 2;
-  const v2 = 3;
+  const v0 = "cons";
+  const v1 = 1;
+  const v2 = "nil";
   const v3 = null;
   const v4 = {
-    nil: v3
+    __tag: v2,
+    payload: v3
   };
   const v5 = {
-    0: v2,
+    0: v1,
     1: v4
   };
   const v6 = {
-    cons: v5
+    __tag: v0,
+    payload: v5
   };
-  const v7 = {
-    0: v1,
-    1: v6
-  };
-  const v8 = {
-    cons: v7
-  };
-  const v9 = {
-    0: v0,
-    1: v8
-  };
-  const v10 = {
-    cons: v9
-  };
-  return v10;
+  return v6;
 }
 return main();
 ",
     "elaborated": "Struct
-  [ cons: Struct
-      [ 0: 1,
-        1: Struct
-          [ cons: Struct
-              [ 0: 2,
-                1: Struct
-                  [ cons: Struct [ 0: 3, 1: Struct [ nil: unit ] ] ] ] ] ] ]",
+  [ __tag: cons,
+    payload: Struct [ 0: 1, 1: Struct [ __tag: nil, payload: unit ] ] ]",
     "gram": "[1] root
   :entry -> [3]
-[2] stmt:let {"variable":"listOf3"}
+[2] stmt:let {"variable":"listOf1"}
 [3] struct
-  :field -> [4] {"label":"cons"}
-[4] struct
-  :field -> [5] {"label":"0"}
-  :field -> [6] {"label":"1"}
-[5] lit {"value":{"type":"Num","value":1}}
-[6] struct
-  :field -> [7] {"label":"cons"}
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"cons"}}
+[5] struct
+  :field -> [6] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[6] lit {"value":{"type":"Num","value":1}}
 [7] struct
-  :field -> [8] {"label":"0"}
-  :field -> [9] {"label":"1"}
-[8] lit {"value":{"type":"Num","value":2}}
-[9] struct
-  :field -> [10] {"label":"cons"}
-[10] struct
-  :field -> [11] {"label":"0"}
-  :field -> [12] {"label":"1"}
-[11] lit {"value":{"type":"Num","value":3}}
-[12] struct
-  :field -> [13] {"label":"nil"}
-[13] lit {"value":{"type":"unit"}}",
+  :field -> [8] {"label":"__tag"}
+  :field -> [9] {"label":"payload"}
+[8] lit {"value":{"type":"Atom","value":"nil"}}
+[9] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 1
-      let v1 = 2
-      let v2 = 3
+      let v0 = cons
+      let v1 = 1
+      let v2 = nil
       let v3 = unit
-      let v4 = alloc { nil: v3 }
-      let v5 = alloc { 0: v2, 1: v4 }
-      let v6 = alloc { cons: v5 }
-      let v7 = alloc { 0: v1, 1: v6 }
-      let v8 = alloc { cons: v7 }
-      let v9 = alloc { 0: v0, 1: v8 }
-      let v10 = alloc { cons: v9 }
-      return v10",
-    "name": "listOf3",
+      let v4 = alloc { __tag: v2, payload: v3 }
+      let v5 = alloc { 0: v1, 1: v4 }
+      let v6 = alloc { __tag: v0, payload: v5 }
+      return v6",
+    "name": "listOf1",
     "normalized": "Struct
-  [ cons: Struct
+  [ __tag: cons,
+    payload: Struct [ 0: 1, 1: Struct [ __tag: nil, payload: unit ] ] ]",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
+    "type": "(List) Num",
+    "validity": "valid",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = "cons";
+  const v1 = 1;
+  const v2 = "cons";
+  const v3 = 2;
+  const v4 = "cons";
+  const v5 = 3;
+  const v6 = "nil";
+  const v7 = null;
+  const v8 = {
+    __tag: v6,
+    payload: v7
+  };
+  const v9 = {
+    0: v5,
+    1: v8
+  };
+  const v10 = {
+    __tag: v4,
+    payload: v9
+  };
+  const v11 = {
+    0: v3,
+    1: v10
+  };
+  const v12 = {
+    __tag: v2,
+    payload: v11
+  };
+  const v13 = {
+    0: v1,
+    1: v12
+  };
+  const v14 = {
+    __tag: v0,
+    payload: v13
+  };
+  return v14;
+}
+return main();
+",
+    "elaborated": "Struct
+  [ __tag: cons,
+    payload: Struct
       [ 0: 1,
         1: Struct
-          [ cons: Struct
+          [ __tag: cons,
+            payload: Struct
               [ 0: 2,
                 1: Struct
-                  [ cons: Struct [ 0: 3, 1: Struct [ nil: unit ] ] ] ] ] ] ]",
+                  [ __tag: cons,
+                    payload: Struct
+                      [ 0: 3,
+                        1: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"listOf3"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"cons"}}
+[5] struct
+  :field -> [6] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[6] lit {"value":{"type":"Num","value":1}}
+[7] struct
+  :field -> [8] {"label":"__tag"}
+  :field -> [9] {"label":"payload"}
+[8] lit {"value":{"type":"Atom","value":"cons"}}
+[9] struct
+  :field -> [10] {"label":"0"}
+  :field -> [11] {"label":"1"}
+[10] lit {"value":{"type":"Num","value":2}}
+[11] struct
+  :field -> [12] {"label":"__tag"}
+  :field -> [13] {"label":"payload"}
+[12] lit {"value":{"type":"Atom","value":"cons"}}
+[13] struct
+  :field -> [14] {"label":"0"}
+  :field -> [15] {"label":"1"}
+[14] lit {"value":{"type":"Num","value":3}}
+[15] struct
+  :field -> [16] {"label":"__tag"}
+  :field -> [17] {"label":"payload"}
+[16] lit {"value":{"type":"Atom","value":"nil"}}
+[17] lit {"value":{"type":"unit"}}",
+    "ivl": "true",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = cons
+      let v1 = 1
+      let v2 = cons
+      let v3 = 2
+      let v4 = cons
+      let v5 = 3
+      let v6 = nil
+      let v7 = unit
+      let v8 = alloc { __tag: v6, payload: v7 }
+      let v9 = alloc { 0: v5, 1: v8 }
+      let v10 = alloc { __tag: v4, payload: v9 }
+      let v11 = alloc { 0: v3, 1: v10 }
+      let v12 = alloc { __tag: v2, payload: v11 }
+      let v13 = alloc { 0: v1, 1: v12 }
+      let v14 = alloc { __tag: v0, payload: v13 }
+      return v14",
+    "name": "listOf3",
+    "normalized": "Struct
+  [ __tag: cons,
+    payload: Struct
+      [ 0: 1,
+        1: Struct
+          [ __tag: cons,
+            payload: Struct
+              [ 0: 2,
+                1: Struct
+                  [ __tag: cons,
+                    payload: Struct
+                      [ 0: 3,
+                        1: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -636,174 +695,123 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = null;
-  const v1 = {
-    zero: v0
+  const v0 = "zero";
+  const v1 = null;
+  const v2 = {
+    __tag: v0,
+    payload: v1
   };
-  return v1;
+  return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ zero: unit ]",
+    "elaborated": "Struct [ __tag: zero, payload: unit ]",
+    "error": "Unsupported literal type in synthesis; Unsupported literal type in synthesis; Unsupported literal type in synthesis",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"zero"}
 [3] struct
-  :field -> [4] {"label":"zero"}
-[4] lit {"value":{"type":"unit"}}",
-    "ivl": "true",
-    "kind": "let",
-    "mir": "module
-  fn main entry=entry
-    entry:
-      let v0 = unit
-      let v1 = alloc { zero: v0 }
-      return v1",
-    "name": "zero",
-    "normalized": "Struct [ zero: unit ]",
-    "solverTrace": "=== Formula ===
-  true
-
-=== Variables ===
-  proxy p1: true
-
-=== Registry ===
-
-=== Trace ===
-[clauses]
-  #0: p1 -> unit: p1
-  #1: p1 -> unit: p1
-
-[propagate] p1 = true (forced by #0: p1 (true))
-  trail: { p1@0 }
-[clauses]
-  #0: true -> satisfied
-  #1: true -> satisfied
-
-[theory] all assert p1: ok
-
-[theory] all check: ok
-  feasible
-
-[sat]",
-    "type": "Peano",
-    "validity": "valid",
-  },
-  {
-    "codegenJS": "function main() {
-  const v0 = zero;
-  const v1 = {
-    succ: v0
-  };
-  return v1;
-}
-return main();
-",
-    "elaborated": "Struct [ succ: zero ]",
-    "gram": "[1] root
-  :entry -> [3]
-[2] stmt:let {"variable":"first"}
-[3] struct
-  :field -> [5] {"label":"succ"}
-[4] var:free {"name":"zero"}
-[5] var:ref {"name":"zero"}
-  :refers_to -> [4]
-  :scope -> [2] {"level":0}",
-    "ivl": "true",
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"zero"}}
+[5] lit {"value":{"type":"unit"}}",
+    "ivl": "",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let v0 = zero
-      let v1 = alloc { succ: v0 }
-      return v1",
-    "name": "first",
-    "normalized": "Struct [ succ: Struct [ zero: unit ] ]",
-    "solverTrace": "=== Formula ===
-  true
-
-=== Variables ===
-  proxy p1: true
-
-=== Registry ===
-
-=== Trace ===
-[clauses]
-  #0: p1 -> unit: p1
-  #1: p1 -> unit: p1
-
-[propagate] p1 = true (forced by #0: p1 (true))
-  trail: { p1@0 }
-[clauses]
-  #0: true -> satisfied
-  #1: true -> satisfied
-
-[theory] all assert p1: ok
-
-[theory] all check: ok
-  feasible
-
-[sat]",
+      let v1 = unit
+      let v2 = alloc { __tag: v0, payload: v1 }
+      return v2",
+    "name": "zero",
+    "normalized": "Struct [ __tag: zero, payload: unit ]",
+    "solverTrace": "",
     "type": "Peano",
-    "validity": "valid",
+    "validity": "",
   },
   {
     "codegenJS": "function main() {
-  const v0 = first;
-  const v1 = {
-    succ: v0
+  const v0 = "succ";
+  const v1 = zero;
+  const v2 = {
+    __tag: v0,
+    payload: v1
   };
-  return v1;
+  return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ succ: first ]",
+    "elaborated": "Struct [ __tag: succ, payload: zero ]",
+    "error": "Unsupported literal type in synthesis; Unsupported literal type in synthesis; Unsupported literal type in synthesis",
     "gram": "[1] root
   :entry -> [3]
-[2] stmt:let {"variable":"second"}
+[2] stmt:let {"variable":"first"}
 [3] struct
-  :field -> [5] {"label":"succ"}
-[4] var:free {"name":"first"}
-[5] var:ref {"name":"first"}
-  :refers_to -> [4]
+  :field -> [4] {"label":"__tag"}
+  :field -> [6] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"succ"}}
+[5] var:free {"name":"zero"}
+[6] var:ref {"name":"zero"}
+  :refers_to -> [5]
   :scope -> [2] {"level":0}",
-    "ivl": "true",
+    "ivl": "",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = first
-      let v1 = alloc { succ: v0 }
-      return v1",
-    "name": "second",
-    "normalized": "Struct [ succ: Struct [ succ: Struct [ zero: unit ] ] ]",
-    "solverTrace": "=== Formula ===
-  true
-
-=== Variables ===
-  proxy p1: true
-
-=== Registry ===
-
-=== Trace ===
-[clauses]
-  #0: p1 -> unit: p1
-  #1: p1 -> unit: p1
-
-[propagate] p1 = true (forced by #0: p1 (true))
-  trail: { p1@0 }
-[clauses]
-  #0: true -> satisfied
-  #1: true -> satisfied
-
-[theory] all assert p1: ok
-
-[theory] all check: ok
-  feasible
-
-[sat]",
+      let v0 = succ
+      let v1 = zero
+      let v2 = alloc { __tag: v0, payload: v1 }
+      return v2",
+    "name": "first",
+    "normalized": "Struct [ __tag: succ, payload: Struct [ __tag: zero, payload: unit ] ]",
+    "solverTrace": "",
     "type": "Peano",
-    "validity": "valid",
+    "validity": "",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = "succ";
+  const v1 = first;
+  const v2 = {
+    __tag: v0,
+    payload: v1
+  };
+  return v2;
+}
+return main();
+",
+    "elaborated": "Struct [ __tag: succ, payload: first ]",
+    "error": "Unsupported literal type in synthesis; Unsupported literal type in synthesis; Unsupported literal type in synthesis",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"second"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [6] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"succ"}}
+[5] var:free {"name":"first"}
+[6] var:ref {"name":"first"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}",
+    "ivl": "",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = succ
+      let v1 = first
+      let v2 = alloc { __tag: v0, payload: v1 }
+      return v2",
+    "name": "second",
+    "normalized": "Struct
+  [ __tag: succ,
+    payload: Struct
+      [ __tag: succ, payload: Struct [ __tag: zero, payload: unit ] ] ]",
+    "solverTrace": "",
+    "type": "Peano",
+    "validity": "",
   },
 ]
 `;

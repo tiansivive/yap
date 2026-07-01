@@ -6,6 +6,7 @@ import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
+import * as Lit from "@yap/shared/literals";
 import * as R from "@yap/shared/rows";
 
 type Tagged = Extract<Src.Term, { type: "tagged" }>;
@@ -22,7 +23,7 @@ export const infer = (tagged: Tagged): V2.Elaboration<EB.AST> =>
 			const row: NF.Row = NF.Constructors.Extension(tag, ty, rvar);
 			const variant = NF.Constructors.Variant(row);
 
-			const trow = EB.Constructors.Extension(tag, tm, { type: "empty" });
+			const trow = EB.Constructors.Extension("__tag", EB.Constructors.Lit(Lit.Atom(tag)), EB.Constructors.Extension("payload", tm, { type: "empty" }));
 			const tagtm = EB.Constructors.Struct(trow);
 			return [tagtm, variant, us] satisfies EB.AST;
 		}),
