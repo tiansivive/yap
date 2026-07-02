@@ -66,8 +66,8 @@ describe("Erlang Codegen: snapshot tests", () => {
 
 	it("match on variant (Some 42)", () => {
 		const scrutinee = EB.DSL.struct([
-			{ label: "__tag", value: EB.DSL.str("Some") },
-			{ label: "Some", value: EB.DSL.num(42) },
+			{ label: "__tag", value: EB.DSL.type("Some") },
+			{ label: "payload", value: EB.DSL.num(42) },
 		]);
 		const term = EB.DSL.match(scrutinee, [
 			{ pattern: EB.DSL.Pat.variant("Some", EB.Constructors.Patterns.Binder("x")), term: EB.DSL.bound(0) },
@@ -173,8 +173,8 @@ describe.runIf(process.env.RUN_ERLANG_TESTS)("Erlang Codegen: integration tests 
 
 	it("match on variant (Some 42) => 42", () => {
 		const scrutinee = EB.DSL.struct([
-			{ label: "__tag", value: EB.DSL.str("Some") },
-			{ label: "Some", value: EB.DSL.num(42) },
+			{ label: "__tag", value: EB.DSL.type("Some") },
+			{ label: "payload", value: EB.DSL.num(42) },
 		]);
 		const term = EB.DSL.match(scrutinee, [
 			{ pattern: EB.DSL.Pat.variant("Some", EB.Constructors.Patterns.Binder("x")), term: EB.DSL.bound(0) },

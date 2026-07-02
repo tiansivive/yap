@@ -323,7 +323,10 @@ const Pat = {
 		return match(node.tag)
 			.with(Tags.PAT_VARIANT, () => {
 				const edge = Edges.one(pid, Labels.PAYLOAD)(g);
-				return edge !== undefined ? [{ label: "", node: edge.target }] : [];
+				if (!edge) {
+					return [];
+				}
+				return [{ label: "payload", node: edge.target }];
 			})
 			.with(Tags.PAT_STRUCT, () =>
 				Edges.byLabel(

@@ -178,8 +178,8 @@ exports[`GRAM translate > match on variant (Some 42) 1`] = `
   :scrutinee -> [3]
 [3] struct
   :field -> [4] {"label":"__tag"}
-  :field -> [5] {"label":"Some"}
-[4] lit {"value":{"type":"String","value":"Some"}}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"Some"}}
 [5] lit {"value":{"type":"Num","value":42}}
 [6] case
   :body -> [9]

@@ -73,7 +73,7 @@ export function* lower(
 			arity: 0,
 			handler: () =>
 				M.Do(function* () {
-					yield* M.Pending.open(caseLabel, [scrutParam.name], [Instr.Read(tag, scrutParam.name, payloadVar.name)]);
+					yield* M.Pending.open(caseLabel, [scrutParam.name], [Instr.Read("payload", scrutParam.name, payloadVar.name)]);
 					yield* compileSubMatrix(payloadVar, payloadBranches, mergeLabel, failLabel, ctx, columnBindings);
 				}),
 		});

@@ -103,29 +103,19 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 					const schema = NF.apply(type.binder, type.closure, NF.Constructors.Row(value.arg.row));
 					return check(term, schema);
 				})
-				.with([EB.CtorPatterns.Struct, NF.Patterns.Variant], ([term, type]) => {
-					const nf = NF.evaluate(ctx, term);
-					assert(nf.type === "App" && nf.arg.type === "Row", "Expected struct term to evaluate to an application of a row");
-					const contains = (a: NF.Row, b: EB.Row): V2.Elaboration<IVL.Formula> => {
-						const onVal = (t: EB.Term, lbl: string, acc: V2.Elaboration<IVL.Formula>): V2.Elaboration<IVL.Formula> => {
-							const rewritten = Row.rewrite(a, lbl, () => E.left({ tag: "Other", message: `Label ${lbl} not found.` }));
-							return E.fold<any, any, V2.Elaboration<IVL.Formula>>(
-								() => V2.Do(() => V2.fail<IVL.Formula>({ type: "MissingLabel", label: lbl, row: a })),
-								(rewriteRes: any) =>
-									V2.Do(function* () {
-										assert(rewriteRes.type === "extension", "Expected extension after rewriting row");
-										const combined = yield* V2.pure(acc);
-										const { vc } = yield* check.gen(t, rewriteRes.value);
-										return Build.and(combined, vc);
-									}),
-							)(rewritten);
-						};
-						return Row.fold(b, onVal, (_rv, acc) => acc, V2.of(Build.true_()));
-					};
-
+				.with([EB.CtorPatterns.Tagged, NF.Patterns.Variant], ([term, type]) => {
 					return V2.Do(function* () {
-						const vc = yield* V2.pure(contains(type.arg.row, term.arg.row));
-						return { vc } satisfies VerificationArtefacts;
+						const value = EB.TaggedTerm.extract(term.arg.row);
+						assert(value, "Tagged pattern expected __tag atom and payload fields");
+
+						const label = value.label;
+						const arm = Row.lookup(type.arg.row, label);
+
+						if (!arm) {
+							return yield* V2.fail<VerificationArtefacts>({ type: "MissingLabel", label, row: type.arg.row });
+						}
+
+						return yield* check.gen(value.payload, arm);
 					});
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], ([term, type]) => {

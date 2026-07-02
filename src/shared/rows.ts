@@ -129,3 +129,9 @@ export const rewrite = <T, V>(r: Row<T, V>, label: string, onVar?: (v: V) => E.E
 		})
 		.exhaustive();
 };
+
+export const lookup = <T, V>(row: Row<T, V>, label: string): T | undefined =>
+	E.fold(
+		() => undefined,
+		(rewritten: Row<T, V>) => (rewritten.type === "extension" ? rewritten.value : undefined),
+	)(rewrite(row, label));

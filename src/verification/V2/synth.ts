@@ -92,11 +92,7 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 						.with({ type: "String" }, () => EB.Constructors.Lit({ type: "Atom", value: "String" }))
 						.with({ type: "Bool" }, () => EB.Constructors.Lit({ type: "Atom", value: "Bool" }))
 						.with({ type: "unit" }, () => EB.Constructors.Lit({ type: "Atom", value: "Unit" }))
-						.with(
-							{ type: "Atom" },
-							({ value }) => ["Num", "String", "Bool", "Unit", "Type", "Row"].includes(value),
-							() => EB.Constructors.Lit({ type: "Atom", value: "Type" }),
-						)
+						.with({ type: "Atom" }, () => EB.Constructors.Lit({ type: "Atom", value: "Type" }))
 						.otherwise(() => {
 							throw new Error("Unsupported literal type in synthesis");
 						});
@@ -133,6 +129,14 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 				})
 				.with(EB.CtorPatterns.Schema, function* () {
 					return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
+				})
+				.with(EB.CtorPatterns.Tagged, function* ({ arg }) {
+					const value = EB.TaggedTerm.extract(arg.row);
+					assert(value, "Tagged synthesis expected __tag atom and payload fields");
+
+					const [payloadTy, artefacts] = yield* synth.gen(value.payload);
+					const row = Row.Constructors.Extension<NF.Value, NF.Variable>(value.label, payloadTy, Row.Constructors.Empty());
+					return [NF.Constructors.Variant(row), artefacts] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Struct, function* (struct) {
 					const { row, vc } = yield* V2.pure(synthStructRow(struct.arg.row));

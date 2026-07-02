@@ -190,8 +190,8 @@ describe("Lowering: match", () => {
 
 	it("lowers match on variant (Some/None)", () => {
 		const scrutinee = EB.DSL.struct([
-			{ label: "__tag", value: EB.DSL.str("Some") },
-			{ label: "Some", value: EB.DSL.num(42) },
+			{ label: "__tag", value: EB.DSL.type("Some") },
+			{ label: "payload", value: EB.DSL.num(42) },
 		]);
 		const term = EB.DSL.match(scrutinee, [
 			{ pattern: EB.DSL.Pat.variant("Some", EB.Constructors.Patterns.Binder("x")), term: EB.DSL.bound(0) },
@@ -274,9 +274,9 @@ describe("Lowering: match", () => {
 
 	it("lowers match on variant with struct payload (Some(Point))", () => {
 		const scrutinee = EB.DSL.struct([
-			{ label: "__tag", value: EB.DSL.str("Some") },
+			{ label: "__tag", value: EB.DSL.type("Some") },
 			{
-				label: "Some",
+				label: "payload",
 				value: EB.DSL.struct([
 					{ label: "x", value: EB.DSL.num(1) },
 					{ label: "y", value: EB.DSL.num(2) },

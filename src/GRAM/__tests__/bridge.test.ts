@@ -9,6 +9,9 @@ import { resetId } from "../graph";
 import * as MIR from "../../lowering/mir";
 import { display } from "../../lowering/pretty";
 import { ARITIES } from "../../lowering/shared/primops";
+import * as Lit from "@yap/shared/literals";
+import * as R from "@yap/shared/rows";
+import { elaborateFrom } from "../../elaboration/inference/__tests__/util";
 
 const bridge = (term: EB.Term): MIR.Module =>
 	pipe(
@@ -201,14 +204,58 @@ describe("GRAM Bridge: Phase 3 — pattern matching", () => {
 
 	it("match variant Some/None — dispatches on tag", () => {
 		const scrutinee = EB.DSL.struct([
-			{ label: "__tag", value: EB.DSL.str("Some") },
-			{ label: "Some", value: EB.DSL.num(42) },
+			{ label: "__tag", value: EB.DSL.type("Some") },
+			{ label: "payload", value: EB.DSL.num(42) },
 		]);
 		const term = EB.DSL.match(scrutinee, [
 			{ pattern: EB.DSL.Pat.variant("Some", EB.Constructors.Patterns.Binder("x")), term: EB.DSL.bound(0) },
 			{ pattern: EB.DSL.Pat.variant("None", EB.Constructors.Patterns.Wildcard()), term: EB.DSL.num(0) },
 		]);
 		expect(via(term)).toBe(42);
+	});
+
+	it("match #some 42 — elaborated variant construction runs end-to-end", () => {
+		const { structure } = elaborateFrom("match #some 42 | #some x -> x | #none _ -> 0");
+
+		expect(via(structure.term)).toBe(42);
+	});
+
+	it("match struct field binders — destructures projected fields", () => {
+		const row = R.Constructors.Extension(
+			"x",
+			EB.Constructors.Patterns.Binder("a"),
+			R.Constructors.Extension("y", EB.Constructors.Patterns.Binder("b"), R.Constructors.Empty<EB.Pattern, string>()),
+		);
+		const term = EB.DSL.match(
+			EB.DSL.struct([
+				{ label: "x", value: EB.DSL.num(3) },
+				{ label: "y", value: EB.DSL.num(4) },
+			]),
+			[{ pattern: EB.Constructors.Patterns.Struct(row), term: EB.DSL.add(EB.DSL.bound(0), EB.DSL.bound(1)) }],
+		);
+
+		expect(via(term)).toBe(7);
+	});
+
+	it("match struct literal field — dispatches on projected field", () => {
+		const exact = R.Constructors.Extension("x", EB.Constructors.Patterns.Lit(Lit.Num(0)), R.Constructors.Empty<EB.Pattern, string>());
+		const bind = R.Constructors.Extension("x", EB.Constructors.Patterns.Binder("n"), R.Constructors.Empty<EB.Pattern, string>());
+		const term = EB.Constructors.Match(EB.DSL.struct([{ label: "x", value: EB.DSL.num(5) }]), [
+			EB.Constructors.Alternative(EB.Constructors.Patterns.Struct(exact), EB.DSL.num(1), []),
+			EB.Constructors.Alternative(EB.Constructors.Patterns.Struct(bind), EB.DSL.bound(0), [["_", EB.NF.Constructors.Lit(Lit.Atom("Num"))]]),
+		]);
+
+		expect(via(term)).toBe(5);
+	});
+
+	it("match nested struct field — chains projections", () => {
+		const nested = R.Constructors.Extension("y", EB.Constructors.Patterns.Binder("a"), R.Constructors.Empty<EB.Pattern, string>());
+		const row = R.Constructors.Extension("x", EB.Constructors.Patterns.Struct(nested), R.Constructors.Empty<EB.Pattern, string>());
+		const term = EB.DSL.match(EB.DSL.struct([{ label: "x", value: EB.DSL.struct([{ label: "y", value: EB.DSL.num(8) }]) }]), [
+			{ pattern: EB.Constructors.Patterns.Struct(row), term: EB.DSL.bound(0) },
+		]);
+
+		expect(via(term)).toBe(8);
 	});
 
 	it("snapshot: match 0 / _", () => {

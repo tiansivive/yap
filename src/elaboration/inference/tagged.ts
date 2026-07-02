@@ -22,9 +22,7 @@ export const infer = (tagged: Tagged): V2.Elaboration<EB.AST> =>
 			const row: NF.Row = NF.Constructors.Extension(tag, ty, rvar);
 			const variant = NF.Constructors.Variant(row);
 
-			const trow = EB.Constructors.Extension(tag, tm, { type: "empty" });
-			const tagtm = EB.Constructors.Struct(trow);
-			return [tagtm, variant, us] satisfies EB.AST;
+			return [EB.Constructors.Tagged(tag, tm), variant, us] satisfies EB.AST;
 		}),
 	);
 infer.gen = F.flow(infer, V2.pure);

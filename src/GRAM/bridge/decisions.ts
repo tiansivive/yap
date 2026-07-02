@@ -49,13 +49,21 @@ const emitFail = (ctx: Ctx): [string, Ctx] => {
 
 const emitSwitch = (id: NodeId, scrut: string, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], ctx: Ctx): [string, Ctx] => {
 	const kind = (Nodes.get(id)(ctx.graph)?.payload.kind ?? "tag") as string;
+	const inspectEdge = Edges.one(id, Labels.INSPECT)(ctx.graph);
+	const [inspected, cI] = inspectEdge !== undefined ? walk(inspectEdge.target, ctx) : [scrut, ctx];
 
 	if (kind === "struct") {
-		throw new Error("Bridge: struct pattern dispatch not yet implemented — requires field projection and sub-pattern matching");
+		const branch = Edges.one(id, Labels.BRANCH)(ctx.graph);
+		if (!branch) {
+			return C.name(cI);
+		}
+		return emitTree(branch.target, inspected, walk, cI);
 	}
 
 	// Discriminant: for variant dispatch read __tag, for literal use value directly
-	const [disc, c1] = kind === "tag" ? readTag(scrut, ctx) : [scrut, ctx];
+	const [disc, c1] = match(kind)
+		.with("tag", () => readTag(inspected, cI))
+		.otherwise(() => [inspected, cI]);
 
 	const branches = Edges.byLabel(id, Labels.BRANCH)(ctx.graph);
 	const defaultEdge = Edges.one(id, Labels.DEFAULT)(ctx.graph);

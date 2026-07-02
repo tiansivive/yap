@@ -963,6 +963,9 @@ export const ignoraModal = (value: NF.Value): NF.Value => {
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];
 
 export type MeetResult = { binder: EB.Binder; nf: NF.Value };
+
+const ExtensionRow = O.fromPredicate((row: R.Row<EB.Pattern, string>): row is R.Extension<EB.Pattern, string> => row.type === "extension");
+
 export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetResult[]> => {
 	return match([unwrapNeutral(nf), pattern])
 		.with([P._, { type: "Wildcard" }], () => O.some([]))
@@ -1016,9 +1019,33 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 		.with([NF.Patterns.Row, { type: "Row" }], ([v, p]) => {
 			return meetAll(ctx, p.row, v.row);
 		})
-		.with([NF.Patterns.Variant, { type: "Variant" }], [NF.Patterns.Struct, { type: "Variant" }], ([{ arg }, p]) => {
-			return meetAll(ctx, p.row, arg.row);
+		.with([NF.Patterns.Tagged, { type: "Variant", row: { type: "extension" } }], ([{ arg }, p]) => {
+			const value = NF.TaggedValue.extract(arg.row);
+			if (!value) {
+				return O.none;
+			}
+
+			return F.pipe(
+				R.rewrite(p.row, value.label),
+				E.fold(
+					() => O.none,
+					matched =>
+						F.pipe(
+							matched,
+							ExtensionRow,
+							O.chain(matched =>
+								F.pipe(
+									O.Do,
+									O.apS("payload", meet(ctx, matched.value, value.payload)),
+									O.apS("rest", meetAll(ctx, matched.row, R.Constructors.Empty())),
+									O.map(({ payload, rest }) => payload.concat(rest)),
+								),
+							),
+						),
+				),
+			);
 		})
+		.with([NF.Patterns.Variant, { type: "Variant" }], ([{ arg }, p]) => meetAll(ctx, p.row, arg.row))
 		.with([NF.Patterns.HashMap, { type: "List" }], ([v, p]) => {
 			console.warn("List pattern matching not yet implemented");
 			return O.some([]);

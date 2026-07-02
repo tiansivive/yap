@@ -12,7 +12,7 @@ import { Simplify } from "type-fest";
 
 import * as Modal from "@yap/verification/modalities/shared";
 import * as Pat from "@yap/elaboration/inference/patterns";
-import { Struct } from "../inference";
+import { match, P } from "ts-pattern";
 
 export type Term = Types.Brand<typeof tag, Constructor & { id: number }>;
 const tag: unique symbol = Symbol("Term");
@@ -44,6 +44,7 @@ export type Variable =
 
 export type Meta = Extract<Variable, { type: "Meta" }>;
 export type Row = R.Row<Term, Variable>;
+export type TaggedParts = { label: string; payload: Term };
 
 export type Binding = (
 	| { type: "Let"; variable: string; value: Term }
@@ -72,6 +73,16 @@ export type Statement =
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
 export const Free = (name: string): Variable => ({ type: "Free", name });
 export const Meta = (val: number, lvl: number): Extract<Variable, { type: "Meta" }> => ({ type: "Meta", val, lvl });
+
+const tagged = (row: Row): TaggedParts | undefined => {
+	const tag = R.lookup(row, "__tag");
+	const payload = R.lookup(row, "payload");
+	return match(tag)
+		.with({ type: "Lit", value: { type: "Atom" } }, tag => (payload ? { label: tag.value.value, payload } : undefined))
+		.otherwise(() => undefined);
+};
+
+const TaggedRow = (row: Row): row is Row => !!tagged(row);
 
 let currentId = 0;
 const nextId = () => ++currentId;
@@ -140,6 +151,8 @@ export const Constructors = {
 
 	Array: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Array")), Constructors.Row(row)),
 	Struct: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row)),
+	Tagged: (tag: string, payload: Term): Term =>
+		Constructors.Struct(Constructors.Extension("__tag", Constructors.Lit(Lit.Atom(tag)), Constructors.Extension("payload", payload, R.Constructors.Empty()))),
 	Schema: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row)),
 	Variant: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row)),
 	Proj: (label: string, term: Term): Term => mk({ type: "Proj", label, term }),
@@ -201,5 +214,14 @@ export const CtorPatterns = {
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } },
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } },
 	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } },
+	Tagged: {
+		type: "App",
+		func: { type: "Lit", value: { type: "Atom", value: "Struct" } },
+		arg: { type: "Row", row: P.when(TaggedRow) },
+	},
 	Array: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Array" } }, arg: { type: "Row" } },
+} as const;
+
+export const TaggedTerm = {
+	extract: tagged,
 } as const;
