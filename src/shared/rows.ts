@@ -129,3 +129,17 @@ export const rewrite = <T, V>(r: Row<T, V>, label: string, onVar?: (v: V) => E.E
 		})
 		.exhaustive();
 };
+
+export const lookup = <T, V>(row: Row<T, V>, label: string): T | undefined =>
+	E.fold(
+		() => undefined,
+		(rewritten: Row<T, V>) => (rewritten.type === "extension" ? rewritten.value : undefined),
+	)(rewrite(row, label));
+
+export type Tagged<T, U extends T = T> = { tag: U; payload: T };
+
+export const tagged = <T, V, U extends T>(row: Row<T, V>, tag: (value: T) => value is U): Tagged<T, U> | undefined => {
+	const value = lookup(row, "__tag");
+	const payload = lookup(row, "payload");
+	return value !== undefined && payload !== undefined && tag(value) ? { tag: value, payload } : undefined;
+};

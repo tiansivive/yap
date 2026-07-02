@@ -12,8 +12,7 @@ import { Simplify } from "type-fest";
 
 import * as Modal from "@yap/verification/modalities/shared";
 import * as Pat from "@yap/elaboration/inference/patterns";
-import { Struct } from "../inference";
-import { match, P } from "ts-pattern";
+import { P } from "ts-pattern";
 
 export type Term = Types.Brand<typeof tag, Constructor & { id: number }>;
 const tag: unique symbol = Symbol("Term");
@@ -45,6 +44,7 @@ export type Variable =
 
 export type Meta = Extract<Variable, { type: "Meta" }>;
 export type Row = R.Row<Term, Variable>;
+export type AtomTerm = Extract<Term, { type: "Lit" }> & { value: Extract<Literal, { type: "Atom" }> };
 
 export type Binding = (
 	| { type: "Let"; variable: string; value: Term }
@@ -73,17 +73,10 @@ export type Statement =
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
 export const Free = (name: string): Variable => ({ type: "Free", name });
 export const Meta = (val: number, lvl: number): Extract<Variable, { type: "Meta" }> => ({ type: "Meta", val, lvl });
-
-const lookupRow = (row: Row, label: string): Term | undefined =>
-	match(row)
-		.with({ type: "extension", label }, ({ value }) => value)
-		.with({ type: "extension" }, ({ row }) => lookupRow(row, label))
-		.otherwise(() => undefined);
+export const AtomTerm = (term: Term): term is AtomTerm => term.type === "Lit" && term.value.type === "Atom";
 
 const TaggedRow = (row: Row): row is Row => {
-	const tag = lookupRow(row, "__tag");
-	const payload = lookupRow(row, "payload");
-	return tag?.type === "Lit" && tag.value.type === "Atom" && payload !== undefined;
+	return R.tagged(row, AtomTerm) !== undefined;
 };
 
 let currentId = 0;

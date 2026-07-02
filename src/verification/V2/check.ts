@@ -104,36 +104,18 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 					return check(term, schema);
 				})
 				.with([EB.CtorPatterns.Tagged, NF.Patterns.Variant], ([term, type]) => {
-					const lookup = (row: EB.Row, label: string): EB.Term | undefined =>
-						E.fold(
-							() => undefined,
-							(rewritten: EB.Row) => (rewritten.type === "extension" ? rewritten.value : undefined),
-						)(Row.rewrite(row, label));
-
 					return V2.Do(function* () {
-						const tag = lookup(term.arg.row, "__tag");
-						const payload = lookup(term.arg.row, "payload");
-						const label = match(tag)
-							.with({ type: "Lit", value: { type: "Atom" } }, t => t.value.value)
-							.otherwise(() => undefined);
+						const tagged = Row.tagged(term.arg.row, EB.AtomTerm);
+						assert(tagged, "Tagged pattern expected __tag atom and payload fields");
 
-						if (!label) {
-							return yield* V2.fail<VerificationArtefacts>({ type: "MissingLabel", label: "__tag", row: type.arg.row });
-						}
-						if (!payload) {
-							return yield* V2.fail<VerificationArtefacts>({ type: "MissingLabel", label: "payload", row: type.arg.row });
-						}
-
-						const arm = E.fold(
-							() => undefined,
-							(row: NF.Row) => (row.type === "extension" ? row.value : undefined),
-						)(Row.rewrite(type.arg.row, label, () => E.left({ tag: "Other", message: `Label ${label} not found.` })));
+						const label = tagged.tag.value.value;
+						const arm = Row.lookup(type.arg.row, label);
 
 						if (!arm) {
 							return yield* V2.fail<VerificationArtefacts>({ type: "MissingLabel", label, row: type.arg.row });
 						}
 
-						return yield* check.gen(payload, arm);
+						return yield* check.gen(tagged.payload, arm);
 					});
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], ([term, type]) => {

@@ -4,7 +4,7 @@ import * as EB from "@yap/elaboration";
 import * as Lit from "@yap/shared/literals";
 import { Literal } from "@yap/shared/literals";
 import { Implicitness } from "@yap/shared/implicitness";
-import { match, P } from "ts-pattern";
+import { P } from "ts-pattern";
 import { Types, update } from "@yap/utils";
 
 import * as Modal from "@yap/verification/modalities/shared";
@@ -33,6 +33,7 @@ type Constructor =
 	  }; // Used during verification only
 
 export type Row = R.Row<Value, Variable>;
+export type AtomValue = Extract<Value, { type: "Lit" }> & { value: Extract<Literal, { type: "Atom" }> };
 
 export type Binder =
 	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }
@@ -173,16 +174,10 @@ export const SCRUTINEE_VAR = "$scrutinee";
 export const PROJ_VAR_PREFIX = "$proj_";
 export const INJ_VAR_PREFIX = "$inj_";
 
-const lookupRow = (row: Row, label: string): Value | undefined =>
-	match(row)
-		.with({ type: "extension", label }, ({ value }) => value)
-		.with({ type: "extension" }, ({ row }) => lookupRow(row, label))
-		.otherwise(() => undefined);
+export const AtomValue = (value: Value): value is AtomValue => value.type === "Lit" && value.value.type === "Atom";
 
 const TaggedRow = (row: Row): row is Row => {
-	const tag = lookupRow(row, "__tag");
-	const payload = lookupRow(row, "payload");
-	return tag?.type === "Lit" && tag.value.type === "Atom" && payload !== undefined;
+	return R.tagged(row, AtomValue) !== undefined;
 };
 
 export const Patterns = {
