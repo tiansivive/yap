@@ -33,7 +33,6 @@ type Constructor =
 	  }; // Used during verification only
 
 export type Row = R.Row<Value, Variable>;
-export type AtomValue = Extract<Value, { type: "Lit" }> & { value: Extract<Literal, { type: "Atom" }> };
 
 export type Binder =
 	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }
@@ -174,10 +173,10 @@ export const SCRUTINEE_VAR = "$scrutinee";
 export const PROJ_VAR_PREFIX = "$proj_";
 export const INJ_VAR_PREFIX = "$inj_";
 
-export const AtomValue = (value: Value): value is AtomValue => value.type === "Lit" && value.value.type === "Atom";
-
 const TaggedRow = (row: Row): row is Row => {
-	return R.tagged(row, AtomValue) !== undefined;
+	const tag = R.lookup(row, "__tag");
+	const payload = R.lookup(row, "payload");
+	return !!tag && tag.type === "Lit" && tag.value.type === "Atom" && !!payload;
 };
 
 export const Patterns = {

@@ -964,6 +964,14 @@ export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">"
 
 export type MeetResult = { binder: EB.Binder; nf: NF.Value };
 
+const tagged = (row: NF.Row): { label: string; payload: NF.Value } | undefined => {
+	const tag = R.lookup(row, "__tag");
+	const payload = R.lookup(row, "payload");
+	return match(tag)
+		.with({ type: "Lit", value: { type: "Atom" } }, tag => (payload ? { label: tag.value.value, payload } : undefined))
+		.otherwise(() => undefined);
+};
+
 export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetResult[]> => {
 	return match([unwrapNeutral(nf), pattern])
 		.with([P._, { type: "Wildcard" }], () => O.some([]))
@@ -1018,20 +1026,20 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 			return meetAll(ctx, p.row, v.row);
 		})
 		.with([NF.Patterns.Tagged, { type: "Variant", row: { type: "extension" } }], ([{ arg }, p]) => {
-			const tagged = R.tagged(arg.row, NF.AtomValue);
-			if (!tagged) {
+			const value = tagged(arg.row);
+			if (!value) {
 				return O.none;
 			}
 
 			return F.pipe(
-				R.rewrite(p.row, tagged.tag.value.value),
+				R.rewrite(p.row, value.label),
 				E.fold(
 					() => O.none,
 					matched =>
 						matched.type === "extension"
 							? F.pipe(
 									O.Do,
-									O.apS("payload", meet(ctx, matched.value, tagged.payload)),
+									O.apS("payload", meet(ctx, matched.value, value.payload)),
 									O.apS("rest", meetAll(ctx, matched.row, R.Constructors.Empty())),
 									O.map(({ payload, rest }) => payload.concat(rest)),
 								)

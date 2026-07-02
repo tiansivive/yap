@@ -25,6 +25,14 @@ type SynthDeps = {
 	translation: TranslationTools;
 };
 
+const tagged = (row: EB.Row): { label: string; payload: EB.Term } | undefined => {
+	const tag = Row.lookup(row, "__tag");
+	const payload = Row.lookup(row, "payload");
+	return match(tag)
+		.with({ type: "Lit", value: { type: "Atom" } }, tag => (payload ? { label: tag.value.value, payload } : undefined))
+		.otherwise(() => undefined);
+};
+
 export const createSynth = ({ runtime, translation }: SynthDeps) => {
 	const { term: translate, formula, quantify } = translation;
 
@@ -131,11 +139,11 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 					return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Tagged, function* ({ arg }) {
-					const tagged = Row.tagged(arg.row, EB.AtomTerm);
-					assert(tagged, "Tagged synthesis expected __tag atom and payload fields");
+					const value = tagged(arg.row);
+					assert(value, "Tagged synthesis expected __tag atom and payload fields");
 
-					const [payloadTy, artefacts] = yield* synth.gen(tagged.payload);
-					const row = Row.Constructors.Extension<NF.Value, NF.Variable>(tagged.tag.value.value, payloadTy, Row.Constructors.Empty());
+					const [payloadTy, artefacts] = yield* synth.gen(value.payload);
+					const row = Row.Constructors.Extension<NF.Value, NF.Variable>(value.label, payloadTy, Row.Constructors.Empty());
 					return [NF.Constructors.Variant(row), artefacts] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Struct, function* (struct) {

@@ -44,7 +44,6 @@ export type Variable =
 
 export type Meta = Extract<Variable, { type: "Meta" }>;
 export type Row = R.Row<Term, Variable>;
-export type AtomTerm = Extract<Term, { type: "Lit" }> & { value: Extract<Literal, { type: "Atom" }> };
 
 export type Binding = (
 	| { type: "Let"; variable: string; value: Term }
@@ -73,10 +72,11 @@ export type Statement =
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
 export const Free = (name: string): Variable => ({ type: "Free", name });
 export const Meta = (val: number, lvl: number): Extract<Variable, { type: "Meta" }> => ({ type: "Meta", val, lvl });
-export const AtomTerm = (term: Term): term is AtomTerm => term.type === "Lit" && term.value.type === "Atom";
 
 const TaggedRow = (row: Row): row is Row => {
-	return R.tagged(row, AtomTerm) !== undefined;
+	const tag = R.lookup(row, "__tag");
+	const payload = R.lookup(row, "payload");
+	return !!tag && tag.type === "Lit" && tag.value.type === "Atom" && !!payload;
 };
 
 let currentId = 0;

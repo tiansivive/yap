@@ -27,6 +27,14 @@ type CheckDeps = {
 	translation: TranslationTools;
 };
 
+const tagged = (row: EB.Row): { label: string; payload: EB.Term } | undefined => {
+	const tag = Row.lookup(row, "__tag");
+	const payload = Row.lookup(row, "payload");
+	return match(tag)
+		.with({ type: "Lit", value: { type: "Atom" } }, tag => (payload ? { label: tag.value.value, payload } : undefined))
+		.otherwise(() => undefined);
+};
+
 export const createCheck = ({ runtime, translation }: CheckDeps) => {
 	const synthPattern = createSynthPattern(runtime);
 	const subtype = createSubtype({ runtime, translation });
@@ -105,17 +113,17 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 				})
 				.with([EB.CtorPatterns.Tagged, NF.Patterns.Variant], ([term, type]) => {
 					return V2.Do(function* () {
-						const tagged = Row.tagged(term.arg.row, EB.AtomTerm);
-						assert(tagged, "Tagged pattern expected __tag atom and payload fields");
+						const value = tagged(term.arg.row);
+						assert(value, "Tagged pattern expected __tag atom and payload fields");
 
-						const label = tagged.tag.value.value;
+						const label = value.label;
 						const arm = Row.lookup(type.arg.row, label);
 
 						if (!arm) {
 							return yield* V2.fail<VerificationArtefacts>({ type: "MissingLabel", label, row: type.arg.row });
 						}
 
-						return yield* check.gen(tagged.payload, arm);
+						return yield* check.gen(value.payload, arm);
 					});
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], ([term, type]) => {
