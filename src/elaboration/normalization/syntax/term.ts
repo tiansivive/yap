@@ -192,10 +192,7 @@ export const Patterns = {
 	Tagged: {
 		type: "App",
 		func: { type: "Lit", value: { type: "Atom", value: "Struct" } },
-		arg: {
-			type: "Row",
-			row: { type: "extension", label: "__tag", value: { type: "Lit", value: { type: "Atom" } }, row: { type: "extension", label: "payload" } },
-		},
+		arg: { type: "Row" },
 	} as const,
 	Array: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Array" } }, arg: { type: "Row" } } as const,
 

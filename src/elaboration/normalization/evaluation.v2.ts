@@ -1024,9 +1024,9 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 			return meetAll(ctx, p.row, v.row);
 		})
 		.with([NF.Patterns.Tagged, { type: "Variant", row: { type: "extension" } }], ([{ arg }, p]) => {
-			const tag = arg.row.value;
-			const payload = arg.row.row.value;
-			return tag.value.value === p.row.label
+			const tag = lookupRow(arg.row, "__tag");
+			const payload = lookupRow(arg.row, "payload");
+			return tag?.type === "Lit" && tag.value.type === "Atom" && tag.value.value === p.row.label && payload !== undefined
 				? F.pipe(
 						O.Do,
 						O.apS("payload", meet(ctx, p.row.value, payload)),
