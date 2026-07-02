@@ -27,14 +27,6 @@ type CheckDeps = {
 	translation: TranslationTools;
 };
 
-const tagged = (row: EB.Row): { label: string; payload: EB.Term } | undefined => {
-	const tag = Row.lookup(row, "__tag");
-	const payload = Row.lookup(row, "payload");
-	return match(tag)
-		.with({ type: "Lit", value: { type: "Atom" } }, tag => (payload ? { label: tag.value.value, payload } : undefined))
-		.otherwise(() => undefined);
-};
-
 export const createCheck = ({ runtime, translation }: CheckDeps) => {
 	const synthPattern = createSynthPattern(runtime);
 	const subtype = createSubtype({ runtime, translation });
@@ -113,7 +105,7 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 				})
 				.with([EB.CtorPatterns.Tagged, NF.Patterns.Variant], ([term, type]) => {
 					return V2.Do(function* () {
-						const value = tagged(term.arg.row);
+						const value = EB.TaggedTerm.extract(term.arg.row);
 						assert(value, "Tagged pattern expected __tag atom and payload fields");
 
 						const label = value.label;

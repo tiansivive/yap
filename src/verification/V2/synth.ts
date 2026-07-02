@@ -25,14 +25,6 @@ type SynthDeps = {
 	translation: TranslationTools;
 };
 
-const tagged = (row: EB.Row): { label: string; payload: EB.Term } | undefined => {
-	const tag = Row.lookup(row, "__tag");
-	const payload = Row.lookup(row, "payload");
-	return match(tag)
-		.with({ type: "Lit", value: { type: "Atom" } }, tag => (payload ? { label: tag.value.value, payload } : undefined))
-		.otherwise(() => undefined);
-};
-
 export const createSynth = ({ runtime, translation }: SynthDeps) => {
 	const { term: translate, formula, quantify } = translation;
 
@@ -139,7 +131,7 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 					return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
 				})
 				.with(EB.CtorPatterns.Tagged, function* ({ arg }) {
-					const value = tagged(arg.row);
+					const value = EB.TaggedTerm.extract(arg.row);
 					assert(value, "Tagged synthesis expected __tag atom and payload fields");
 
 					const [payloadTy, artefacts] = yield* synth.gen(value.payload);

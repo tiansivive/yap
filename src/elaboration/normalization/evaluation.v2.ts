@@ -964,13 +964,7 @@ export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">"
 
 export type MeetResult = { binder: EB.Binder; nf: NF.Value };
 
-const tagged = (row: NF.Row): { label: string; payload: NF.Value } | undefined => {
-	const tag = R.lookup(row, "__tag");
-	const payload = R.lookup(row, "payload");
-	return match(tag)
-		.with({ type: "Lit", value: { type: "Atom" } }, tag => (payload ? { label: tag.value.value, payload } : undefined))
-		.otherwise(() => undefined);
-};
+const ExtensionRow = O.fromPredicate((row: R.Row<EB.Pattern, string>): row is R.Extension<EB.Pattern, string> => row.type === "extension");
 
 export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetResult[]> => {
 	return match([unwrapNeutral(nf), pattern])
@@ -1026,7 +1020,7 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 			return meetAll(ctx, p.row, v.row);
 		})
 		.with([NF.Patterns.Tagged, { type: "Variant", row: { type: "extension" } }], ([{ arg }, p]) => {
-			const value = tagged(arg.row);
+			const value = NF.TaggedValue.extract(arg.row);
 			if (!value) {
 				return O.none;
 			}
@@ -1036,14 +1030,18 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 				E.fold(
 					() => O.none,
 					matched =>
-						matched.type === "extension"
-							? F.pipe(
+						F.pipe(
+							matched,
+							ExtensionRow,
+							O.chain(matched =>
+								F.pipe(
 									O.Do,
 									O.apS("payload", meet(ctx, matched.value, value.payload)),
 									O.apS("rest", meetAll(ctx, matched.row, R.Constructors.Empty())),
 									O.map(({ payload, rest }) => payload.concat(rest)),
-								)
-							: O.none,
+								),
+							),
+						),
 				),
 			);
 		})

@@ -4,7 +4,7 @@ import * as EB from "@yap/elaboration";
 import * as Lit from "@yap/shared/literals";
 import { Literal } from "@yap/shared/literals";
 import { Implicitness } from "@yap/shared/implicitness";
-import { P } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { Types, update } from "@yap/utils";
 
 import * as Modal from "@yap/verification/modalities/shared";
@@ -33,6 +33,7 @@ type Constructor =
 	  }; // Used during verification only
 
 export type Row = R.Row<Value, Variable>;
+export type TaggedParts = { label: string; payload: Value };
 
 export type Binder =
 	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }
@@ -173,11 +174,15 @@ export const SCRUTINEE_VAR = "$scrutinee";
 export const PROJ_VAR_PREFIX = "$proj_";
 export const INJ_VAR_PREFIX = "$inj_";
 
-const TaggedRow = (row: Row): row is Row => {
+const tagged = (row: Row): TaggedParts | undefined => {
 	const tag = R.lookup(row, "__tag");
 	const payload = R.lookup(row, "payload");
-	return !!tag && tag.type === "Lit" && tag.value.type === "Atom" && !!payload;
+	return match(tag)
+		.with({ type: "Lit", value: { type: "Atom" } }, tag => (payload ? { label: tag.value.value, payload } : undefined))
+		.otherwise(() => undefined);
 };
+
+const TaggedRow = (row: Row): row is Row => !!tagged(row);
 
 export const Patterns = {
 	Var: { type: "Var" } as const,
@@ -267,3 +272,7 @@ export const Patterns = {
 
 	External: { type: "External" } as const,
 };
+
+export const TaggedValue = {
+	extract: tagged,
+} as const;
