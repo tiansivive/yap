@@ -173,6 +173,18 @@ export const SCRUTINEE_VAR = "$scrutinee";
 export const PROJ_VAR_PREFIX = "$proj_";
 export const INJ_VAR_PREFIX = "$inj_";
 
+const lookupRow = (row: Row, label: string): Value | undefined =>
+	match(row)
+		.with({ type: "extension", label }, ({ value }) => value)
+		.with({ type: "extension" }, ({ row }) => lookupRow(row, label))
+		.otherwise(() => undefined);
+
+const TaggedRow = (row: Row): row is Row => {
+	const tag = lookupRow(row, "__tag");
+	const payload = lookupRow(row, "payload");
+	return tag?.type === "Lit" && tag.value.type === "Atom" && payload !== undefined;
+};
+
 export const Patterns = {
 	Var: { type: "Var" } as const,
 	Rigid: { type: "Var", variable: { type: "Bound" } } as const,
@@ -192,7 +204,7 @@ export const Patterns = {
 	Tagged: {
 		type: "App",
 		func: { type: "Lit", value: { type: "Atom", value: "Struct" } },
-		arg: { type: "Row" },
+		arg: { type: "Row", row: P.when(TaggedRow) },
 	} as const,
 	Array: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Array" } }, arg: { type: "Row" } } as const,
 

@@ -92,7 +92,6 @@ export const createSubtype = ({ runtime, translation }: SubtypeDeps) => {
 					const body = NF.apply(sig.binder, sig.closure, NF.Constructors.Row(schema.arg.row));
 					return subtype(body, schema);
 				})
-				.with([NF.Patterns.Schema, NF.Patterns.Variant], ([schema, variant]) => contains(variant.arg.row, schema.arg.row))
 				.with([NF.Patterns.Schema, NF.Patterns.Schema], ([{ arg: a }, { arg: b }]) => contains(b.row, a.row))
 				.with([NF.Patterns.Variant, NF.Patterns.Variant], ([{ arg: a }, { arg: b }]) => contains(b.row, a.row))
 				.with([NF.Patterns.Mu, NF.Patterns.Mu], ([mu1, mu2]) =>

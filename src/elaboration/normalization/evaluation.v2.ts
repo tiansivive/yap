@@ -1026,14 +1026,25 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 		.with([NF.Patterns.Tagged, { type: "Variant", row: { type: "extension" } }], ([{ arg }, p]) => {
 			const tag = lookupRow(arg.row, "__tag");
 			const payload = lookupRow(arg.row, "payload");
-			return tag?.type === "Lit" && tag.value.type === "Atom" && tag.value.value === p.row.label && payload !== undefined
-				? F.pipe(
-						O.Do,
-						O.apS("payload", meet(ctx, p.row.value, payload)),
-						O.apS("rest", meetAll(ctx, p.row.row, R.Constructors.Empty())),
-						O.map(({ payload, rest }) => payload.concat(rest)),
-					)
-				: O.none;
+			if (tag?.type !== "Lit" || tag.value.type !== "Atom" || payload === undefined) {
+				return O.none;
+			}
+
+			return F.pipe(
+				R.rewrite(p.row, tag.value.value),
+				E.fold(
+					() => O.none,
+					matched =>
+						matched.type === "extension"
+							? F.pipe(
+									O.Do,
+									O.apS("payload", meet(ctx, matched.value, payload)),
+									O.apS("rest", meetAll(ctx, matched.row, R.Constructors.Empty())),
+									O.map(({ payload, rest }) => payload.concat(rest)),
+								)
+							: O.none,
+				),
+			);
 		})
 		.with([NF.Patterns.Variant, { type: "Variant" }], ([{ arg }, p]) => meetAll(ctx, p.row, arg.row))
 		.with([NF.Patterns.HashMap, { type: "List" }], ([v, p]) => {

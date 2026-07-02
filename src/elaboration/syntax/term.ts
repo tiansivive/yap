@@ -13,6 +13,7 @@ import { Simplify } from "type-fest";
 import * as Modal from "@yap/verification/modalities/shared";
 import * as Pat from "@yap/elaboration/inference/patterns";
 import { Struct } from "../inference";
+import { match, P } from "ts-pattern";
 
 export type Term = Types.Brand<typeof tag, Constructor & { id: number }>;
 const tag: unique symbol = Symbol("Term");
@@ -72,6 +73,18 @@ export type Statement =
 export const Bound = (index: number): Variable => ({ type: "Bound", index });
 export const Free = (name: string): Variable => ({ type: "Free", name });
 export const Meta = (val: number, lvl: number): Extract<Variable, { type: "Meta" }> => ({ type: "Meta", val, lvl });
+
+const lookupRow = (row: Row, label: string): Term | undefined =>
+	match(row)
+		.with({ type: "extension", label }, ({ value }) => value)
+		.with({ type: "extension" }, ({ row }) => lookupRow(row, label))
+		.otherwise(() => undefined);
+
+const TaggedRow = (row: Row): row is Row => {
+	const tag = lookupRow(row, "__tag");
+	const payload = lookupRow(row, "payload");
+	return tag?.type === "Lit" && tag.value.type === "Atom" && payload !== undefined;
+};
 
 let currentId = 0;
 const nextId = () => ++currentId;
@@ -201,5 +214,10 @@ export const CtorPatterns = {
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } },
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } },
 	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } },
+	Tagged: {
+		type: "App",
+		func: { type: "Lit", value: { type: "Atom", value: "Struct" } },
+		arg: { type: "Row", row: P.when(TaggedRow) },
+	},
 	Array: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Array" } }, arg: { type: "Row" } },
 } as const;

@@ -130,6 +130,17 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 				.with(EB.CtorPatterns.Schema, function* () {
 					return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
 				})
+				.with(EB.CtorPatterns.Tagged, function* ({ arg }) {
+					const tag = lookup(arg.row, "__tag");
+					const payload = lookup(arg.row, "payload");
+					if (tag?.type !== "Lit" || tag.value.type !== "Atom" || !payload) {
+						throw new Error("Tagged synthesis expected __tag atom and payload fields");
+					}
+
+					const [payloadTy, artefacts] = yield* synth.gen(payload);
+					const row = Row.Constructors.Extension<NF.Value, NF.Variable>(tag.value.value, payloadTy, Row.Constructors.Empty());
+					return [NF.Constructors.Variant(row), artefacts] satisfies SynthResult;
+				})
 				.with(EB.CtorPatterns.Struct, function* (struct) {
 					const { row, vc } = yield* V2.pure(synthStructRow(struct.arg.row));
 					return [NF.Constructors.Schema(row), { vc }] satisfies SynthResult;
@@ -341,6 +352,13 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 	return synth;
 
 	type StructRow = { row: NF.Row; vc: IVL.Formula };
+	function lookup(row: EB.Row, label: string): EB.Term | undefined {
+		return E.fold(
+			() => undefined,
+			(rewritten: EB.Row) => (rewritten.type === "extension" ? rewritten.value : undefined),
+		)(Row.rewrite(row, label));
+	}
+
 	function synthStructRow(row: EB.Row): V2.Elaboration<StructRow> {
 		return V2.Do(function* () {
 			const result = yield* match(row)
