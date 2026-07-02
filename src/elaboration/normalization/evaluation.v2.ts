@@ -1035,18 +1035,7 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 					)
 				: O.none;
 		})
-		.with([NF.Patterns.Variant, { type: "Variant" }], ([{ arg }, p]) =>
-			match(p.row)
-				.with({ type: "extension" }, ({ label, value }) =>
-					F.pipe(
-						O.Do,
-						O.apS("tag", O.fromNullable(lookupRow(arg.row, "__tag"))),
-						O.apS("payload", O.fromNullable(lookupRow(arg.row, "payload"))),
-						O.chain(({ tag, payload }) => (tag.type === "Lit" && tag.value.type === "Atom" && tag.value.value === label ? meet(ctx, value, payload) : O.none)),
-					),
-				)
-				.otherwise(() => O.none),
-		)
+		.with([NF.Patterns.Variant, { type: "Variant" }], ([{ arg }, p]) => meetAll(ctx, p.row, arg.row))
 		.with([NF.Patterns.HashMap, { type: "List" }], ([v, p]) => {
 			console.warn("List pattern matching not yet implemented");
 			return O.some([]);

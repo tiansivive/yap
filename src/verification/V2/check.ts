@@ -43,7 +43,9 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 				.with([EB.CtorPatterns.Mu, P._], ([term, type]) =>
 					V2.Do(() => V2.local(c => EB.bind(c, { type: "Mu", variable: term.binding.variable }, type), check(term.body, type))),
 				)
-				.with([P._, NF.Patterns.Mu], ([term, type]) => {
+				.with([EB.CtorPatterns.Struct, NF.Patterns.Mu], ([term, type]) => {
+					// One-step unfold exposes recursive variant bodies for concrete tagged values.
+					// Broader recursive subtyping remains in subtype to avoid eager Mu expansion.
 					const unfolded = NF.apply(type.binder, type.closure, type);
 					return check(term, unfolded);
 				})
