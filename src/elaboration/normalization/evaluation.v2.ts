@@ -1026,7 +1026,14 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 		.with([NF.Patterns.Tagged, { type: "Variant", row: { type: "extension" } }], ([{ arg }, p]) => {
 			const tag = arg.row.value;
 			const payload = arg.row.row.value;
-			return tag.value.value === p.row.label ? meet(ctx, p.row.value, payload) : O.none;
+			return tag.value.value === p.row.label
+				? F.pipe(
+						O.Do,
+						O.apS("payload", meet(ctx, p.row.value, payload)),
+						O.apS("rest", meetAll(ctx, p.row.row, R.Constructors.Empty())),
+						O.map(({ payload, rest }) => payload.concat(rest)),
+					)
+				: O.none;
 		})
 		.with([NF.Patterns.Variant, { type: "Variant" }], ([{ arg }, p]) =>
 			match(p.row)

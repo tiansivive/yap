@@ -1931,7 +1931,6 @@ return main();
 return main();
 ",
     "elaborated": "strmap @(List) @Num @ListFunctor listOf1",
-    "error": "Maximum call stack size exceeded",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"strList"}
@@ -2042,7 +2041,10 @@ return main();
       let v16 = call *fnref14(env15, v13)
       return v16",
     "name": "strList",
-    "normalized": "",
+    "normalized": "Struct
+  [ __tag: cons,
+    payload: Struct
+      [ 0: (stringify: (Num) (1)), 1: Struct [ __tag: nil, payload: unit ] ] ]",
     "solverTrace": "=== Formula ===
   true
 
