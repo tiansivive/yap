@@ -706,7 +706,6 @@ return main();
 return main();
 ",
     "elaborated": "Struct [ __tag: zero, payload: unit ]",
-    "error": "Unsupported literal type in synthesis; Unsupported literal type in synthesis; Unsupported literal type in synthesis",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"zero"}
@@ -715,7 +714,7 @@ return main();
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"zero"}}
 [5] lit {"value":{"type":"unit"}}",
-    "ivl": "",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -726,9 +725,33 @@ return main();
       return v2",
     "name": "zero",
     "normalized": "Struct [ __tag: zero, payload: unit ]",
-    "solverTrace": "",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Peano",
-    "validity": "",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -743,7 +766,6 @@ return main();
 return main();
 ",
     "elaborated": "Struct [ __tag: succ, payload: zero ]",
-    "error": "Unsupported literal type in synthesis; Unsupported literal type in synthesis; Unsupported literal type in synthesis",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"first"}
@@ -755,7 +777,7 @@ return main();
 [6] var:ref {"name":"zero"}
   :refers_to -> [5]
   :scope -> [2] {"level":0}",
-    "ivl": "",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -766,9 +788,33 @@ return main();
       return v2",
     "name": "first",
     "normalized": "Struct [ __tag: succ, payload: Struct [ __tag: zero, payload: unit ] ]",
-    "solverTrace": "",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Peano",
-    "validity": "",
+    "validity": "valid",
   },
   {
     "codegenJS": "function main() {
@@ -783,7 +829,6 @@ return main();
 return main();
 ",
     "elaborated": "Struct [ __tag: succ, payload: first ]",
-    "error": "Unsupported literal type in synthesis; Unsupported literal type in synthesis; Unsupported literal type in synthesis",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"second"}
@@ -795,7 +840,7 @@ return main();
 [6] var:ref {"name":"first"}
   :refers_to -> [5]
   :scope -> [2] {"level":0}",
-    "ivl": "",
+    "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -809,9 +854,33 @@ return main();
   [ __tag: succ,
     payload: Struct
       [ __tag: succ, payload: Struct [ __tag: zero, payload: unit ] ] ]",
-    "solverTrace": "",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
     "type": "Peano",
-    "validity": "",
+    "validity": "valid",
   },
 ]
 `;

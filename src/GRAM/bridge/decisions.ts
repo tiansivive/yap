@@ -54,11 +54,16 @@ const emitSwitch = (id: NodeId, scrut: string, walk: (id: NodeId, ctx: Ctx) => [
 
 	if (kind === "struct") {
 		const branch = Edges.one(id, Labels.BRANCH)(ctx.graph);
-		return branch !== undefined ? emitTree(branch.target, inspected, walk, cI) : C.name(cI);
+		if (!branch) {
+			return C.name(cI);
+		}
+		return emitTree(branch.target, inspected, walk, cI);
 	}
 
 	// Discriminant: for variant dispatch read __tag, for literal use value directly
-	const [disc, c1] = kind === "tag" ? readTag(inspected, cI) : [inspected, cI];
+	const [disc, c1] = match(kind)
+		.with("tag", () => readTag(inspected, cI))
+		.otherwise(() => [inspected, cI]);
 
 	const branches = Edges.byLabel(id, Labels.BRANCH)(ctx.graph);
 	const defaultEdge = Edges.one(id, Labels.DEFAULT)(ctx.graph);

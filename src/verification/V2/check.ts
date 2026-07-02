@@ -43,6 +43,10 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 				.with([EB.CtorPatterns.Mu, P._], ([term, type]) =>
 					V2.Do(() => V2.local(c => EB.bind(c, { type: "Mu", variable: term.binding.variable }, type), check(term.body, type))),
 				)
+				.with([P._, NF.Patterns.Mu], ([term, type]) => {
+					const unfolded = NF.apply(type.binder, type.closure, type);
+					return check(term, unfolded);
+				})
 				.with(
 					[P._, NF.Patterns.App],
 					([, type]) => O.isSome(NF.unfoldMu(type)),
@@ -105,10 +109,10 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Variant], ([term, type]) => {
 					const lookup = (row: EB.Row, label: string): EB.Term | undefined =>
-						match(row)
-							.with({ type: "extension", label }, r => r.value)
-							.with({ type: "extension" }, r => lookup(r.row, label))
-							.otherwise(() => undefined);
+						E.fold(
+							() => undefined,
+							(rewritten: EB.Row) => (rewritten.type === "extension" ? rewritten.value : undefined),
+						)(Row.rewrite(row, label));
 
 					return V2.Do(function* () {
 						const tag = lookup(term.arg.row, "__tag");
@@ -117,10 +121,10 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 							.with({ type: "Lit", value: { type: "Atom" } }, t => t.value.value)
 							.otherwise(() => undefined);
 
-						if (label === undefined) {
+						if (!label) {
 							return yield* V2.fail<VerificationArtefacts>({ type: "MissingLabel", label: "__tag", row: type.arg.row });
 						}
-						if (payload === undefined) {
+						if (!payload) {
 							return yield* V2.fail<VerificationArtefacts>({ type: "MissingLabel", label: "payload", row: type.arg.row });
 						}
 
@@ -129,7 +133,7 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 							(row: NF.Row) => (row.type === "extension" ? row.value : undefined),
 						)(Row.rewrite(type.arg.row, label, () => E.left({ tag: "Other", message: `Label ${label} not found.` })));
 
-						if (arm === undefined) {
+						if (!arm) {
 							return yield* V2.fail<VerificationArtefacts>({ type: "MissingLabel", label, row: type.arg.row });
 						}
 

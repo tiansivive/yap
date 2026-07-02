@@ -92,11 +92,7 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 						.with({ type: "String" }, () => EB.Constructors.Lit({ type: "Atom", value: "String" }))
 						.with({ type: "Bool" }, () => EB.Constructors.Lit({ type: "Atom", value: "Bool" }))
 						.with({ type: "unit" }, () => EB.Constructors.Lit({ type: "Atom", value: "Unit" }))
-						.with(
-							{ type: "Atom" },
-							({ value }) => ["Num", "String", "Bool", "Unit", "Type", "Row"].includes(value),
-							() => EB.Constructors.Lit({ type: "Atom", value: "Type" }),
-						)
+						.with({ type: "Atom" }, () => EB.Constructors.Lit({ type: "Atom", value: "Type" }))
 						.otherwise(() => {
 							throw new Error("Unsupported literal type in synthesis");
 						});

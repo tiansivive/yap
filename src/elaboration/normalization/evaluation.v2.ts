@@ -1023,13 +1023,21 @@ export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option
 		.with([NF.Patterns.Row, { type: "Row" }], ([v, p]) => {
 			return meetAll(ctx, p.row, v.row);
 		})
-		.with([NF.Patterns.Variant, { type: "Variant" }], [NF.Patterns.Struct, { type: "Variant" }], ([{ arg }, p]) =>
+		.with([NF.Patterns.Tagged, { type: "Variant", row: { type: "extension" } }], ([{ arg }, p]) => {
+			const tag = arg.row.value;
+			const payload = arg.row.row.value;
+			return tag.value.value === p.row.label ? meet(ctx, p.row.value, payload) : O.none;
+		})
+		.with([NF.Patterns.Variant, { type: "Variant" }], ([{ arg }, p]) =>
 			match(p.row)
-				.with({ type: "extension" }, ({ label, value }) => {
-					const tag = lookupRow(arg.row, "__tag");
-					const payload = lookupRow(arg.row, "payload");
-					return tag?.type === "Lit" && tag.value.type === "Atom" && tag.value.value === label && payload !== undefined ? meet(ctx, value, payload) : O.none;
-				})
+				.with({ type: "extension" }, ({ label, value }) =>
+					F.pipe(
+						O.Do,
+						O.apS("tag", O.fromNullable(lookupRow(arg.row, "__tag"))),
+						O.apS("payload", O.fromNullable(lookupRow(arg.row, "payload"))),
+						O.chain(({ tag, payload }) => (tag.type === "Lit" && tag.value.type === "Atom" && tag.value.value === label ? meet(ctx, value, payload) : O.none)),
+					),
+				)
 				.otherwise(() => O.none),
 		)
 		.with([NF.Patterns.HashMap, { type: "List" }], ([v, p]) => {

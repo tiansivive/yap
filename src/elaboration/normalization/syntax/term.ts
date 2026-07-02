@@ -131,6 +131,8 @@ export const Constructors = {
 	Schema: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit")),
 	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),
 	Struct: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row), "Explicit")),
+	Tagged: (tag: string, payload: Value): Value =>
+		Constructors.Struct(Constructors.Extension("__tag", Constructors.Lit(Lit.Atom(tag)), Constructors.Extension("payload", payload, R.Constructors.Empty()))),
 	Array: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Array")), Constructors.Row(row), "Explicit")),
 
 	StuckMatch: (closure: Closure, scrutinee: Value): Value => {
@@ -187,6 +189,14 @@ export const Patterns = {
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } } as const,
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } } as const,
 	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } } as const,
+	Tagged: {
+		type: "App",
+		func: { type: "Lit", value: { type: "Atom", value: "Struct" } },
+		arg: {
+			type: "Row",
+			row: { type: "extension", label: "__tag", value: { type: "Lit", value: { type: "Atom" } }, row: { type: "extension", label: "payload" } },
+		},
+	} as const,
 	Array: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Array" } }, arg: { type: "Row" } } as const,
 
 	StuckMatch: {
