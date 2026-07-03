@@ -37,7 +37,7 @@ alwaysApply: true
 
 - **V2 is canonical** — V1 (fp-ts-centric API style) is deprecated, kept for reference
 - `V2.Do()` takes a generator; yields use ReaderWriterEither semantics
-- Inference: `src/elaboration/infer.ts` + `src/elaboration/inference/*` (per-construct handlers)
+- Inference: dispatch in `src/elaboration/elaborate.ts` + `src/elaboration/inference/*` (per-construct handlers)
 - Checking: `src/elaboration/check.ts` (dispatches on `[term, type]`)
 
 ## Comments
