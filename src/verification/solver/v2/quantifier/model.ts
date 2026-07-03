@@ -1,17 +1,20 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // Shared quantifier model: extracted quantifiers, state, generated lemmas, and trace events.
 // CDCL = Conflict-Driven Clause Learning; MBQI = Model-Based Quantifier Instantiation.
 
 import type { IVL } from "../../ivl/types";
 import type { Clause } from "../cdcl";
 
+// Annotated rather than `satisfies`: satisfies keeps the inferred type, so the
+// empty array literals would stay never[] and poison every consumer of `empty`.
+const empty: State = {
+	quantifiers: [],
+	generation: 0,
+	instantiated: new Set(),
+	phase: { round: 0, pending: [] },
+};
+
 export const State = {
-	empty: {
-		quantifiers: [],
-		generation: 0,
-		instantiated: new Set(),
-		phase: { round: 0, pending: [] },
-	} satisfies State,
+	empty,
 
 	from: (quantifiers: Info[]): State => ({
 		...State.empty,

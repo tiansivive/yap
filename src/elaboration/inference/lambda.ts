@@ -7,9 +7,6 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
-import * as Log from "@yap/shared/logging";
-
-import { Liquid } from "@yap/verification/modalities";
 import { update } from "@yap/utils";
 
 type Lambda = Extract<Src.Term, { type: "lambda" }>;
@@ -20,7 +17,7 @@ export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
 		V2.Do<EB.AST, EB.AST>(function* () {
 			const ctx = yield* V2.ask();
 
-			const [ann, us] = lam.annotation
+			const [ann, _us] = lam.annotation
 				? yield* EB.check.gen(lam.annotation, NF.Type)
 				: ([EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
 
@@ -34,7 +31,7 @@ export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
 				},
 				V2.Do(function* () {
 					const inferred = yield* EB.infer.gen(lam.body);
-					const [bTerm, bType, [vu, ...bus]] = yield* EB.Icit.insert.gen(inferred);
+					const [bTerm, bType, [_vu, ...bus]] = yield* EB.Icit.insert.gen(inferred);
 					//yield* V2.tell("constraint", { type: "usage", expected: mty[1], computed: vu });
 
 					const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm, ann);
@@ -44,7 +41,7 @@ export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
 				}),
 			);
 
-			return ast as EB.AST; // Remove the usage of the bound variable
+			return ast satisfies EB.AST; // Remove the usage of the bound variable
 		}),
 	);
 

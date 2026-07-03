@@ -5,6 +5,7 @@ import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Eval from "../evaluation.v2";
 import { parseExpr, mkCtx } from "../../inference/__tests__/util";
+import * as Sub from "@yap/elaboration/unification/substitution";
 
 describe("module.expression elaboration", () => {
 	it('elaborates and evaluates (\\x => \\(y: String) -> y) "hello" without crashing', () => {
@@ -17,7 +18,7 @@ describe("module.expression elaboration", () => {
 		const term = parseExpr(src);
 		const ctx = mkCtx();
 
-		const elaborated = EB.Mod.expression({ type: "expression", value: term }, ctx);
+		const elaborated = EB.Mod.expression({ type: "expression", value: term, location: term.location }, ctx);
 		expect(E.isRight(elaborated)).toBe(true);
 		if (E.isLeft(elaborated)) {
 			return;
@@ -37,7 +38,7 @@ describe("module.expression elaboration", () => {
 		const term = parseExpr(src);
 		const ctx = mkCtx();
 
-		const elaborated = EB.Mod.expression({ type: "expression", value: term }, ctx);
+		const elaborated = EB.Mod.expression({ type: "expression", value: term, location: term.location }, ctx);
 		expect(E.isRight(elaborated)).toBe(true);
 
 		if (E.isLeft(elaborated)) {
@@ -45,7 +46,7 @@ describe("module.expression elaboration", () => {
 		}
 
 		const [, ty] = elaborated.right;
-		const displayed = NF.display(ty, { env: ctx.env, zonker: {}, metas: {} });
+		const displayed = NF.display(ty, { env: ctx.env, zonker: Sub.empty, metas: {} });
 		expect(displayed).toBe("Num");
 	});
 });

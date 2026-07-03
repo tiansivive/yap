@@ -60,29 +60,29 @@ export const collect = (row: Src.Row): V2.Elaboration<Collected> =>
 			row,
 			(val, lbl, acc) =>
 				V2.Do(function* () {
-					const [vtm, vty, qs] = yield* EB.infer.gen(val);
+					const [vtm, vty, _qs] = yield* EB.infer.gen(val);
 					const type = ctx.labels[lbl];
 					if (!type) {
 						throw new Error("Elaborating Row Extension: Label not found");
 					}
 
-					const nf = NF.evaluate(ctx, vtm);
+					//const nf = NF.evaluate(ctx, vtm);
 					yield* V2.tell("constraint", [{ type: "assign", left: vty, right: type }]);
 
-					const accumulated: Collected = yield acc;
+					const accumulated: Collected = yield* V2.pure(acc);
 					return { fields: [...accumulated.fields, { label: lbl, term: vtm, value: vty }], tail: accumulated.tail };
 				}),
 			(v, acc) =>
 				V2.Do(function* () {
-					const [tm, ty, qs] = yield* EB.lookup.gen(v, ctx);
+					const [tm, ty, _qs] = yield* EB.lookup.gen(v, ctx);
 					if (tm.type !== "Var") {
 						throw new Error("Elaborating Row Var: Not a variable");
 					}
 
-					const _ty = NF.unwrapNeutral(ty);
+					const unwrapped = NF.unwrapNeutral(ty);
 
-					const accumulated: Collected = yield acc;
-					return { fields: accumulated.fields, tail: { variable: tm.variable, ty: _ty } };
+					const accumulated: Collected = yield* V2.pure(acc);
+					return { fields: accumulated.fields, tail: { variable: tm.variable, ty: unwrapped } };
 				}),
 			V2.of(initial),
 		);

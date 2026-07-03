@@ -1,13 +1,11 @@
-import { Types, update } from "@yap/utils";
+import { Types } from "@yap/utils";
 
-import * as Q from "@yap/shared/modalities/multiplicity";
 import * as NF from "../normalization";
 import * as R from "@yap/shared/rows";
 import * as Lit from "@yap/shared/literals";
 import { Implicitness } from "@yap/shared/implicitness";
 import { Literal } from "@yap/shared/literals";
 
-import * as F from "fp-ts/lib/function";
 import { Simplify } from "type-fest";
 
 import * as Modal from "@yap/verification/modalities/shared";
@@ -91,7 +89,7 @@ export const resetId = () => {
 };
 export const mk = <K extends Constructor["type"]>(ctor: Extract<Constructor, { type: K }>) => {
 	const r = Types.make(tag, { ...ctor, id: nextId() });
-	return r as Simplify<typeof r>;
+	return r satisfies Simplify<typeof r>;
 };
 
 export const Constructors = {

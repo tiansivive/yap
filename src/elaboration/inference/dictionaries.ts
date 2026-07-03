@@ -15,8 +15,8 @@ export const infer = (dict: Dictionary): V2.Elaboration<EB.AST> =>
 	V2.track(
 		{ tag: "src", type: "term", term: dict, metadata: { action: "infer", description: "Dictionary" } },
 		V2.Do<EB.AST, EB.AST>(function* () {
-			const [tm1, ty1, us1] = yield EB.infer(dict.index);
-			const [tm2, ty2, us2] = yield EB.infer(dict.term);
+			const [tm1, _ty1, us1] = yield EB.infer(dict.index);
+			const [tm2, _ty2, us2] = yield EB.infer(dict.term);
 			const ctx = yield* V2.ask();
 			const m = yield* EB.freshMeta(ctx.env.length, NF.Type);
 			const strategy = match(tm1)

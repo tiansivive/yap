@@ -66,7 +66,7 @@ const trace = (formula: IVL.Formula): Core.Solver<Result> =>
 const loop = function* (clauses: Clause.T[]): Core.G<Result> {
 	const state = yield* Core.State.get();
 	yield* Theory.install(state.encoding);
-	const result: CDCLResult = yield CDCL.solveTrace(clauses);
+	const result = yield* Core.pure(CDCL.solveTrace(clauses));
 	return yield* settle(clauses, result);
 };
 

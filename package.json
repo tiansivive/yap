@@ -35,8 +35,8 @@
 		"railroad": "nearley-railroad src/parser/grammar.ne -o gen/parser/grammar.html",
 		"release": "release-it",
 		"test": "vitest",
-		"tsc": "tsc -p ./tsc.tsconfig.json",
-		"typecheck": "tsc --noEmit -p ./tsc.tsconfig.json",
+		"tsc": "tsc",
+		"typecheck": "tsc --noEmit",
 		"yap": "TS_NODE_TRANSPILE_ONLY=true node --stack-size=131072 --require ts-node/register ./scripts/cli.ts"
 	},
 	"dependencies": {
@@ -65,8 +65,9 @@
 		"@vitest/eslint-plugin": "^1.1.0",
 		"@vitest/ui": "^4.0.13",
 		"console-fail-test": "^0.5.0",
-		"eslint": "^9.10.0",
+		"eslint": "^9.39.4",
 		"eslint-plugin-n": "^17.10.2",
+		"eslint-plugin-unused-imports": "^4.4.1",
 		"husky": "^9.1.5",
 		"knip": "^5.30.0",
 		"lint-staged": "^15.2.10",
@@ -84,7 +85,7 @@
 		"vitest": "^4.0.13"
 	},
 	"engines": {
-		"node": ">=18.3.0"
+		"node": ">=20.0.0"
 	},
 	"publishConfig": {
 		"provenance": true

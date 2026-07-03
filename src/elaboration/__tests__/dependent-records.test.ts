@@ -1,8 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { elaborateFrom } from "../inference/__tests__/util";
-
-import * as NF from "@yap/elaboration/normalization";
-import * as EB from "@yap/elaboration";
 
 describe("Dependent Records", () => {
 	describe("dependent pairs with path-dependent types", () => {

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // Arithmetic theory facade for v2 theory orchestration.
 // LIA = Linear Integer Arithmetic; LRA = Linear Real Arithmetic.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/arithmetic-theory.md
@@ -10,7 +9,7 @@ import type { IVL } from "../../ivl/types";
 import type { Conflict, Literal } from "../cdcl";
 import type * as Encoding from "../encoding";
 import { Bounds } from "./bounds";
-import { type Constraint, type Linear, Normalize } from "./normalize";
+import { type Constraint, Normalize } from "./normalize";
 import type { Event as ArithmeticEvent } from "./simplex";
 import { Simplex, type Tableau } from "./simplex";
 

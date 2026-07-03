@@ -20,7 +20,6 @@ import { match } from "ts-pattern";
 import { createInterface } from "readline";
 import { defaultContext } from "@yap/shared/lib/constants";
 
-import { options } from "@yap/shared/config/options";
 import { mkInterface } from "../modules/loading";
 import { update } from "@yap/utils";
 import { encode, decode } from "../FFI/codecs";
@@ -57,15 +56,15 @@ type ReplState = {
 	display: DisplayOpts;
 };
 
-const computeArity = (fn: Function): number => {
+const computeArity = (fn: unknown): number => {
 	let arity = 0;
-	let current = fn;
+	let current: unknown = fn;
 
 	while (typeof current === "function") {
 		arity++;
 		try {
 			const dummy = Symbol("arity_check");
-			const result = current(dummy);
+			const result: unknown = current(dummy);
 
 			if (typeof result !== "function") {
 				break;
@@ -165,7 +164,7 @@ export function repl(opts: ReplOpts = { codegen: false, target: "js", verify: tr
 				const imports = Object.values(iface.imports).flatMap(([errs, defs]) => defs);
 				const letdecs = iface.letdecs.reduce<EB.Context["imports"]>((acc, [name, result]) => {
 					if (E.isLeft(result)) {
-						console.warn(`Error in module ${filepath} for let ${name}: ${result.left}`);
+						console.warn(`Error in module ${filepath} for let ${name}:`);
 						EB.V2.display(result.left);
 						return acc;
 					}
@@ -175,7 +174,7 @@ export function repl(opts: ReplOpts = { codegen: false, target: "js", verify: tr
 
 				const foreigns = iface.foreign.reduce<EB.Context["imports"]>((acc, [name, ffi]) => {
 					if (E.isLeft(ffi)) {
-						console.warn(`Error in module ${filepath} for foreign ${name}: ${ffi.left}`);
+						console.warn(`Error in module ${filepath} for foreign ${name}:`);
 						EB.V2.display(ffi.left);
 						return acc;
 					}
@@ -188,11 +187,15 @@ export function repl(opts: ReplOpts = { codegen: false, target: "js", verify: tr
 				let ffiExports: EB.Context["ffi"] = {};
 				if (fs.existsSync(FFIpath)) {
 					const code = fs.readFileSync(FFIpath, "utf-8");
-					const sandbox = { module: { exports: {} }, exports: {}, console };
+					const sandbox: { module: { exports: Record<string, unknown> }; exports: Record<string, unknown>; console: Console } = {
+						module: { exports: {} },
+						exports: {},
+						console,
+					};
 					vm.createContext(sandbox);
 					vm.runInContext(code, sandbox);
 
-					const rawExports = sandbox.module.exports as Record<string, Function>;
+					const rawExports = sandbox.module.exports;
 					ffiExports = Object.fromEntries(
 						Object.entries(rawExports).map(([name, fn]) => {
 							const arity = typeof fn === "function" ? computeArity(fn) : 0;
@@ -207,7 +210,7 @@ export function repl(opts: ReplOpts = { codegen: false, target: "js", verify: tr
 											if (typeof result !== "function") {
 												throw new Error(`FFI ${name}: attempted to apply argument to non-function value`);
 											}
-											result = (result as Function)(arg);
+											result = result(arg);
 										}
 										return decode(result);
 									},
@@ -358,6 +361,7 @@ const evalCodegenJS = (mod: MIR.Module, ffi: Record<string, (...args: unknown[])
 	const code = printJS(program);
 	const ffiNames = Object.keys(ffi);
 	const ffiValues = Object.values(ffi);
+	// eslint-disable-next-line @typescript-eslint/no-implied-eval -- executing the compiled program is the point
 	return new Function(...ffiNames, code)(...ffiValues);
 };
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // CNF encoding for v2 formulas, implemented with an internal Tseitin transform.
 // CNF = Conjunctive Normal Form; Tseitin introduces proxies to avoid exponential blowup.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/tseitin-cnf.md

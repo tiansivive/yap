@@ -75,7 +75,7 @@ const handle = async (req: http.IncomingMessage, res: http.ServerResponse) => {
 		const rawJson: boolean = body.rawJson ?? false;
 		const ivlSimplify: boolean = body.ivlSimplify ?? true;
 
-		const result = await run(source, { deBruijn, parserRule, rawJson, ivlSimplify });
+		const result = run(source, { deBruijn, parserRule, rawJson, ivlSimplify });
 
 		res.writeHead(200, { "Content-Type": "application/json" });
 		return res.end(JSON.stringify(result));

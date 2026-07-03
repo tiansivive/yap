@@ -44,7 +44,7 @@ export const unify = (r1: NF.Row, r2: NF.Row, s: Subst): V2.Elaboration<Subst> =
 				)
 				.with(
 					[P._, { type: "variable", variable: { type: "Meta" } }],
-					([P_, { variable }]) => !!s[variable.val],
+					([_, { variable }]) => !!s[variable.val],
 					([r, v]) => {
 						const nf = s[v.variable.val];
 
@@ -87,17 +87,6 @@ export const unify = (r1: NF.Row, r2: NF.Row, s: Subst): V2.Elaboration<Subst> =
 	);
 unify.gen = (r1: NF.Row, r2: NF.Row, s: Subst) => V2.pure(unify(r1, r2, s));
 
-const tail = (row: NF.Row): number[] =>
-	match(row)
-		.with({ type: "empty" }, () => [])
-		.with({ type: "extension" }, ({ row }) => tail(row))
-		.with({ type: "variable" }, ({ variable }) =>
-			match(variable)
-				.with({ type: "Meta" }, ({ val }) => [val])
-				.otherwise(() => []),
-		)
-		.exhaustive();
-
 // TODO: Use `rewrite` from `rows.ts`
 const rewrite = (r: NF.Row, label: string, s: Subst): V2.Elaboration<[NF.Row, Subst]> =>
 	V2.Do(function* () {
@@ -123,7 +112,9 @@ const rewrite = (r: NF.Row, label: string, s: Subst): V2.Elaboration<[NF.Row, Su
 							.otherwise(() =>
 								V2.Do(() =>
 									V2.fail(
-										Err.Impossible("Expected extension: " + R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, ctx), var: v => JSON.stringify(v) })),
+										Err.Impossible(
+											"Expected extension: " + R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, ctx), var: v => JSON.stringify(v) })(rewritten),
+										),
 									),
 								),
 							);

@@ -97,7 +97,7 @@ export const lte = (p: EB.Term, q: EB.Term): EB.Term => {
 
 // Structural: struct, proj, inj
 export const struct = (fields: Array<{ label: string; value: EB.Term }>): EB.Term => {
-	const row = fields.reduceRight<EB.Row>((acc, { label, value }) => R.Constructors.Extension(label, value, acc), R.Constructors.Empty() as EB.Row);
+	const row = fields.reduceRight<EB.Row>((acc, { label, value }) => R.Constructors.Extension(label, value, acc), R.Constructors.Empty() satisfies EB.Row);
 	return EB.Constructors.Struct(row);
 };
 
@@ -108,8 +108,7 @@ export const inj = (label: string, value: EB.Term, term: EB.Term): EB.Term => EB
 /** Pattern builders — namespace-based, extensible. */
 export const Pat = {
 	/** Build a variant pattern: { [tag]: payloadPattern }. Binder("x") for payload binds the payload. */
-	variant: (tag: string, payload: Pattern): Pattern =>
-		EB.Constructors.Patterns.Variant(R.Constructors.Extension(tag, payload, R.Constructors.Empty() as R.Row<Pattern, string>)),
+	variant: (tag: string, payload: Pattern): Pattern => EB.Constructors.Patterns.Variant(R.Constructors.Extension(tag, payload, R.Constructors.Empty())),
 };
 
 /** Build match(scrutinee, alternatives). Alternatives: [pattern, term] pairs. */

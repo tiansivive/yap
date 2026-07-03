@@ -1,4 +1,4 @@
-import { replicate, unsafeUpdateAt } from "fp-ts/lib/Array";
+import { replicate } from "fp-ts/lib/Array";
 import * as NF from "@yap/elaboration/normalization";
 import * as EB from "@yap/elaboration";
 import * as Q from "@yap/shared/modalities/multiplicity";
@@ -71,14 +71,14 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.
 			throw new Error(`Variable not found: ${variable.value}`);
 		}
 
-		const [[binder, origin, nf], ...rest] = types;
+		const [[binder, _origin, nf], ...rest] = types;
 		//const usages = []//unsafeUpdateAt(i, modalities.quantity, zeros);
 		// do we need to check origin here? I don't think it makes a difference whether it's an inserted (implicit) or source (explicit) binder
 		if (binder.variable === variable.value) {
 			const tm = EB.Constructors.Var({ type: "Bound", index: i });
 			return V2.Do(function* () {
 				yield* V2.tell("binder", binder);
-				return [tm, nf, zeros] as EB.AST;
+				return [tm, nf, zeros] satisfies EB.AST;
 			});
 		}
 

@@ -1,5 +1,5 @@
 import { Nodes, Edges, Query } from "../graph";
-import type { Graph, NodeId } from "../graph";
+import type { Graph } from "../graph";
 import { Tags, Labels } from "../vocabulary";
 import * as P from "../payload";
 import type { Rule } from "../grs";

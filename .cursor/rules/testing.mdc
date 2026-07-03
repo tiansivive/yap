@@ -45,6 +45,8 @@ alwaysApply: false
 
 ## General
 
+- **Tests are type-checked** — one tsconfig covers src and tests; `pnpm typecheck` must stay green including test files
+- **Lint relaxes in tests** — unsafe-\*/`any`, non-null `!`, `as` assertions, and `E.isLeft`/`isRight` narrowing are allowed (a wrong assumption crashes the test, which is the signal)
 - **Snapshots heavily used** — update with `pnpm test -u`
 - **Path aliases** resolved by vite-tsconfig-paths
 - **Reset supplies before tests** — compiler passes (elaboration, lowering, etc.) do NOT reset supplies. Tests that need deterministic output (e.g. snapshots) must call the relevant `resetSupply()` / `resetId()` at the start of each test (or in `beforeEach`). Applies to any pass: parser, elaboration, lowering, verification. Lowering's `resetSupply()` resets var (by kind: x, fn, closure, env, etc.), label, and func-name counters.

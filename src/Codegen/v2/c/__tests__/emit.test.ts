@@ -7,7 +7,6 @@ import path from "path";
 import * as EB from "@yap/elaboration";
 import * as Lit from "@yap/shared/literals";
 import * as NF from "@yap/elaboration/normalization";
-import * as R from "@yap/shared/rows";
 
 import { lowerToMir } from "../../../../lowering/lower";
 import { resetSupply } from "../../../../lowering/context";

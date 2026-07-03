@@ -8,13 +8,10 @@ import * as R from "@yap/shared/rows";
 import * as PP from "@yap/shared/pretty";
 
 import * as EB from "@yap/elaboration";
-import { options } from "@yap/shared/config/options";
 import { compose } from "../../unification";
 
-import * as Null from "@yap/utils";
-
 export const doc = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBruijn: false }): PP.Doc =>
-	match(value as NF.Value)
+	match(value)
 		.with({ type: "Lit" }, ({ value }) => Lit.display(value))
 		.with({ type: "Var" }, ({ variable }) =>
 			match(variable)

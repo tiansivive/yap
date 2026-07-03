@@ -1,3 +1,10 @@
+/* eslint-disable no-restricted-syntax, no-restricted-properties, prefer-const, @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion, @typescript-eslint/consistent-type-assertions --
+ * Deliberately imperative: NbE evaluation runs an explicit work-stack machine, and shift/reset
+ * capture slices the live stack for continuations. The file is tech debt scheduled for a rewrite
+ * into a generator-based Evaluation monad that owns the stack as state (mirroring the lowering
+ * monad), so its lint debt is intentionally not paid down — see z-yap [[evaluation-monad-rework]].
+ * This directive is self-retiring: reportUnusedDisableDirectives flags it once the rework lands.
+ */
 import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
@@ -12,7 +19,6 @@ import * as R from "@yap/shared/rows";
 import { Option } from "fp-ts/lib/Option";
 import * as O from "fp-ts/lib/Option";
 import * as A from "fp-ts/lib/Array";
-import { Liquid } from "@yap/verification/modalities";
 import * as Modal from "@yap/verification/modalities/shared";
 import { Implicitness } from "@yap/shared/implicitness";
 import { update } from "@yap/utils";

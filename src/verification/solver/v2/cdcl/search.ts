@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // CDCL(T) search loop for v2 over already encoded CNF clauses.
 // Boolean propagation via BCP.classify; theory assert/check on assignments and fixpoints;
 // conflict analysis; theory stack restoration on backjump.

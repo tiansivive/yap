@@ -4,14 +4,11 @@ import { match } from "ts-pattern";
 import * as EB from "@yap/elaboration";
 import * as R from "@yap/shared/rows";
 
-import * as Q from "@yap/shared/modalities/multiplicity";
-
 import fp from "lodash/fp";
 import * as F from "fp-ts/function";
 import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
 import * as Sub from "../unification/substitution";
-import { Liquid } from "@yap/verification/modalities";
 import { collectMetasEB, collectMetasNF } from "../shared/metas";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
@@ -93,7 +90,7 @@ export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutio
 
 	// Wrap from inner to outer. Each Pi body is quoted with lvl equal to the number of binders in scope.
 	const generalized = A.reverse(ms).reduce<NF.Value>((body, m, i) => {
-		const idx = ms.length - 1 - i; // the idx is the complement of i, since we're going from inner to outer
+		//const idx = ms.length - 1 - i; // the idx is the complement of i, since we're going from inner to outer
 		//const variable = String.fromCharCode(charCode + idx);
 		// Quote with all binders in scope: lvl = ms.length - i
 		const variable = extendedCtx.env[i].name.variable;
@@ -121,7 +118,7 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 				return v;
 			}
 
-			if (!!ctx.zonker[v.variable.val]) {
+			if (ctx.zonker[v.variable.val]) {
 				// Solved meta means it's in the zonker = not unconstrained, so no need to instantiate it
 				return v;
 			}

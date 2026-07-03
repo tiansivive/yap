@@ -6,15 +6,11 @@ import * as NF from "@yap/elaboration/normalization";
 
 import { match, P } from "ts-pattern";
 
-import _ from "lodash";
-import { Subst } from "./unification/substitution";
-
-import * as Metas from "@yap/elaboration/shared/metas";
 import * as R from "@yap/shared/rows";
 import assert from "assert";
 
 export function insert(node: EB.AST): V2.Elaboration<EB.AST> {
-	const [term, ty, us] = node;
+	const [term, _ty, us] = node;
 	return V2.Do(function* () {
 		const ctx = yield* V2.ask();
 		const r = match(node)
@@ -68,11 +64,11 @@ export const wrapLambda = (term: EB.Term, ty: NF.Value, ctx: EB.Context): EB.Ter
 export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Resolutions): EB.Term => {
 	return match(term)
 		.with({ type: "Var", variable: { type: "Meta" } }, v => {
-			if (!!resolutions[v.variable.val]) {
+			if (resolutions[v.variable.val]) {
 				return resolutions[v.variable.val];
 			}
 
-			if (!!ctx.zonker[v.variable.val]) {
+			if (ctx.zonker[v.variable.val]) {
 				const quoted = NF.quote(ctx, ctx.env.length, ctx.zonker[v.variable.val]);
 				// we still need to instantiate in case the quoted term has metas itself
 				return instantiate(quoted, ctx, resolutions);
@@ -125,6 +121,7 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 			),
 		)
 		.with({ type: "Block" }, ({ return: ret, statements }) => {
+			const empty: EB.Statement[] = [];
 			const { stmts, ctx: xtended } = statements.reduce(
 				(acc, s) => {
 					const { stmts, ctx } = acc;
@@ -137,7 +134,7 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 					const instantiated = { ...s, value: instantiate(s.value, ctx, resolutions) };
 					return { stmts: [...stmts, instantiated], ctx };
 				},
-				{ stmts: [] as EB.Statement[], ctx },
+				{ stmts: empty, ctx },
 			);
 
 			return EB.Constructors.Block(stmts, instantiate(ret, xtended, resolutions));

@@ -11,8 +11,6 @@ import * as PP from "@yap/shared/pretty";
 import * as EB from "..";
 import { options } from "@yap/shared/config/options";
 
-import * as Null from "@yap/utils";
-
 const doc = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; printEnv?: boolean } = { deBruijn: false, printEnv: false }): PP.Doc => {
 	const go = (term: EB.Term): PP.Doc =>
 		match(term)
@@ -142,7 +140,7 @@ const displayContext = (context: EB.Context, resolutions: EB.Resolutions, opts =
 	return pretty;
 };
 
-const displayEnv = (ctx: EB.Context, opts = { deBruijn: false }): string => {
+const displayEnv = (ctx: EB.Context, _opts = { deBruijn: false }): string => {
 	const printedEnv = ctx.env.map(({ name }) => name.variable).slice(0);
 
 	return printedEnv.length > 0 ? `Γ: ${printedEnv.join("; ")}` : "·";

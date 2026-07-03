@@ -1,5 +1,4 @@
 import * as EB from "@yap/elaboration";
-import * as Src from "@yap/src/index";
 
 import * as E from "fp-ts/Either";
 import * as F from "fp-ts/function";
@@ -213,7 +212,9 @@ export const tell = function* <K extends Channel>(channel: K, payload: Payload<K
 		return empty;
 	})();
 
-	return yield* pure((ctx, w, st = initialState) => [{ ...writer, result: E.right(undefined) }, st]);
+	// Annotated: inferring A from the lambda is circular (the tuple return needs A contextually).
+	const told: Elaboration<void> = (_ctx, _w, st = initialState) => [{ ...writer, result: E.right(undefined) }, st];
+	return yield* pure(told);
 };
 
 export const listen = function* (): Generator<Elaboration<Accumulator>, Accumulator, Accumulator> {
@@ -222,7 +223,7 @@ export const listen = function* (): Generator<Elaboration<Accumulator>, Accumula
 
 export const fail = function* <A>(cause: Cause): Generator<Elaboration<any>, A, any> {
 	const ctx = yield* ask();
-	return yield* liftE(E.left({ ...cause, provenance: ctx.trace, ctx }));
+	return yield* liftE<A>(E.left({ ...cause, provenance: ctx.trace, ctx }));
 };
 // export const catchErr = function* <A>(handler: (err: Err) => Elaboration<A>): Generator<Elaboration<A>, A, A> {
 // 	return yield* (ctx: EB.Context) => {
@@ -237,15 +238,15 @@ export const fail = function* <A>(cause: Cause): Generator<Elaboration<any>, A, 
  ***********************/
 
 export const getSt = function* (): Generator<Elaboration<MutState>, MutState, MutState> {
-	return yield (ctx, w, st = initialState) => [mkCollector(st), st];
+	return yield (_ctx, _w, st = initialState) => [mkCollector(st), st];
 };
 
 export const putSt = function* (newSt: MutState): Generator<Elaboration<void>, void, void> {
-	return yield (ctx, w, st = initialState) => [mkCollector(undefined), newSt];
+	return yield (_ctx, _w, _st = initialState) => [mkCollector(undefined), newSt];
 };
 
 export const modifySt = function* (f: (st: MutState) => MutState): Generator<Elaboration<void>, void, void> {
-	return yield (ctx, w, st = initialState) => [mkCollector(undefined), f(st)];
+	return yield (_ctx, _w, st = initialState) => [mkCollector(undefined), f(st)];
 };
 
 export const localSt = function* <A>(modify: (st: MutState) => MutState, ma: Elaboration<A>): Generator<Elaboration<A>, A, A> {
@@ -299,6 +300,7 @@ export function Do<R, A>(gen: () => Generator<Elaboration<any>, R, A>): Elaborat
 			if (E.isLeft(ma.result)) {
 				return [ma, mutableState];
 			}
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- resume type is per-yield; the Do driver contract guarantees it
 			state = it.next(ma.result.right); // proceed with the sequence until the next yield
 		}
 		const result = mkCollector(state.value);

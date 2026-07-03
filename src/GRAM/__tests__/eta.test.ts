@@ -3,8 +3,8 @@ import * as EB from "@yap/elaboration";
 
 import { translate } from "../translate";
 import { display } from "../display";
-import { resetId, Nodes, Query, entry } from "../graph";
-import { Tags, Labels } from "../vocabulary";
+import { resetId, Query, entry } from "../graph";
+import { Tags } from "../vocabulary";
 import { eta } from "../passes/eta";
 
 describe("eta-reduce", () => {

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // Theory orchestration for v2: registers CNF atoms with concrete theory states.
 // CDCL(T) = Conflict-Driven Clause Learning modulo theories; EUF = Equality with Uninterpreted Functions.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/theory-plugin-interface.md

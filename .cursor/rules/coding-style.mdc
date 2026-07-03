@@ -37,8 +37,14 @@ alwaysApply: true
 
 - **V2 is canonical** — V1 (fp-ts-centric API style) is deprecated, kept for reference
 - `V2.Do()` takes a generator; yields use ReaderWriterEither semantics
-- Inference: `src/elaboration/infer.ts` + `src/elaboration/inference/*` (per-construct handlers)
+- Inference: dispatch in `src/elaboration/elaborate.ts` + `src/elaboration/inference/*` (per-construct handlers)
 - Checking: `src/elaboration/check.ts` (dispatches on `[term, type]`)
+
+## Lint contract
+
+- **`pnpm lint` stays green** — pre-existing debt is baselined in `eslint-suppressions.json`; new violations fail. Fix suppressed ones opportunistically, then `pnpm eslint . --prune-suppressions`.
+- **`_`-prefix declares a binding intentionally unused** (params, destructured elements, locals kept for documentation). Unprefixed unused bindings are errors — treat them as rot or bug symptoms.
+- **Sanctioned mutable cores** — fresh-name supplies, the generator-monad Do drivers (`elaboration/shared/monad.v2.ts`, `verification/solver/v2/core.ts`), and the NbE evaluator (`evaluation.v2.ts`, pending its monad rework) are deliberately imperative and carry scoped lint carve-outs. Don't cite them as precedent for mutation elsewhere.
 
 ## Comments
 

@@ -813,20 +813,20 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
     "constraints": [
       "Type ~~ Type",
       "Schema [ foo: Schema [ y: ?2 | ?3 ], bar: ?5 | ?6 ] ~~ Num",
-      "?5 ~~ Π(x: ?7) -> (closure: (?9 :: Type) -| Γ: x; $row_6; f; $row_3; y; x)",
+      "?5 ~~ Π(x: ?7) -> (closure: (?8 :: Type) -| Γ: x; $row_6; f; $row_3; y; x)",
       "?2 ~~ ?7",
-      "Schema [ z: Schema [ w: ?11 | ?12 ] | ?13 ] ~~ Num",
-      "?9 ~~ ?9",
-      "?11 ~~ ?9",
-      "?9 ~~ ?15",
-      "?11 ~~ ?15",
+      "Schema [ z: Schema [ w: ?10 | ?11 ] | ?12 ] ~~ Num",
+      "?8 ~~ ?8",
+      "?10 ~~ ?8",
+      "?8 ~~ ?14",
+      "?10 ~~ ?14",
     ],
     "term": "(λ(x: Num) ->
   match x
     | Struct [ foo: Struct [ y: y | $row_3 ], bar: f | $row_6 ] -> f y
-    | Struct [ z: Struct [ w: w | $row_12 ] | $row_13 ] -> w : Π(x: Num) ->
-  (?15 :: ?14))",
-    "type": "Π(x: Num) -> (closure: (?15 :: ?14) -| Γ: x)",
+    | Struct [ z: Struct [ w: w | $row_11 ] | $row_12 ] -> w : Π(x: Num) ->
+  (?14 :: ?13))",
+    "type": "Π(x: Num) -> (closure: (?14 :: ?13) -| Γ: x)",
   },
 }
 `;
@@ -1154,7 +1154,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
               "variable": {
                 "lvl": 6,
                 "type": "Meta",
-                "val": 9,
+                "val": 8,
               },
             },
             "type": "Closure",
@@ -1201,7 +1201,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
                   "variable": {
                     "lvl": 1,
                     "type": "Meta",
-                    "val": 13,
+                    "val": 12,
                   },
                 },
                 "type": "extension",
@@ -1216,7 +1216,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
                           "variable": {
                             "lvl": 1,
                             "type": "Meta",
-                            "val": 12,
+                            "val": 11,
                           },
                         },
                         "type": "extension",
@@ -1227,7 +1227,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
                             "variable": {
                               "lvl": 1,
                               "type": "Meta",
-                              "val": 11,
+                              "val": 10,
                             },
                           },
                         },
@@ -1277,7 +1277,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
             "variable": {
               "lvl": 6,
               "type": "Meta",
-              "val": 9,
+              "val": 8,
             },
           },
         },
@@ -1289,7 +1289,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
             "variable": {
               "lvl": 6,
               "type": "Meta",
-              "val": 9,
+              "val": 8,
             },
           },
         },
@@ -1303,7 +1303,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
             "variable": {
               "lvl": 1,
               "type": "Meta",
-              "val": 11,
+              "val": 10,
             },
           },
         },
@@ -1315,7 +1315,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
             "variable": {
               "lvl": 6,
               "type": "Meta",
-              "val": 9,
+              "val": 8,
             },
           },
         },
@@ -1329,7 +1329,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
             "variable": {
               "lvl": 6,
               "type": "Meta",
-              "val": 9,
+              "val": 8,
             },
           },
         },
@@ -1339,7 +1339,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
           "variable": {
             "lvl": 1,
             "type": "Meta",
-            "val": 15,
+            "val": 14,
           },
         },
         "type": "assign",
@@ -1352,7 +1352,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
             "variable": {
               "lvl": 1,
               "type": "Meta",
-              "val": 11,
+              "val": 10,
             },
           },
         },
@@ -1362,7 +1362,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
           "variable": {
             "lvl": 1,
             "type": "Meta",
-            "val": 15,
+            "val": 14,
           },
         },
         "type": "assign",
@@ -1385,10 +1385,11 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
       },
       "10": {
         "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
+          "type": "Var",
+          "variable": {
+            "lvl": 1,
+            "type": "Meta",
+            "val": 9,
           },
         },
         "meta": {
@@ -1399,11 +1400,10 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
       },
       "11": {
         "ann": {
-          "type": "Var",
-          "variable": {
-            "lvl": 1,
-            "type": "Meta",
-            "val": 10,
+          "type": "Lit",
+          "value": {
+            "type": "Atom",
+            "value": "Row",
           },
         },
         "meta": {
@@ -1431,7 +1431,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
           "type": "Lit",
           "value": {
             "type": "Atom",
-            "value": "Row",
+            "value": "Type",
           },
         },
         "meta": {
@@ -1442,31 +1442,17 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
       },
       "14": {
         "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
+          "type": "Var",
+          "variable": {
+            "lvl": 1,
+            "type": "Meta",
+            "val": 13,
           },
         },
         "meta": {
           "lvl": 1,
           "type": "Meta",
           "val": 14,
-        },
-      },
-      "15": {
-        "ann": {
-          "type": "Var",
-          "variable": {
-            "lvl": 1,
-            "type": "Meta",
-            "val": 14,
-          },
-        },
-        "meta": {
-          "lvl": 1,
-          "type": "Meta",
-          "val": 15,
         },
       },
       "2": {
@@ -1564,7 +1550,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
           },
         },
         "meta": {
-          "lvl": 5,
+          "lvl": 6,
           "type": "Meta",
           "val": 8,
         },
@@ -1578,7 +1564,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
           },
         },
         "meta": {
-          "lvl": 6,
+          "lvl": 1,
           "type": "Meta",
           "val": 9,
         },
@@ -1603,7 +1589,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
           "variable": {
             "lvl": 1,
             "type": "Meta",
-            "val": 15,
+            "val": 14,
           },
         },
         "type": "Abs",
@@ -1740,8 +1726,19 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
                       "variable": {
                         "lvl": 1,
                         "type": "Meta",
-                        "val": 11,
+                        "val": 10,
                       },
+                    },
+                  },
+                ],
+                [
+                  "$row_11",
+                  {
+                    "type": "Var",
+                    "variable": {
+                      "lvl": 1,
+                      "type": "Meta",
+                      "val": 11,
                     },
                   },
                 ],
@@ -1756,24 +1753,13 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
                     },
                   },
                 ],
-                [
-                  "$row_13",
-                  {
-                    "type": "Var",
-                    "variable": {
-                      "lvl": 1,
-                      "type": "Meta",
-                      "val": 13,
-                    },
-                  },
-                ],
               ],
               "pattern": {
                 "row": {
                   "label": "z",
                   "row": {
                     "type": "variable",
-                    "variable": "$row_13",
+                    "variable": "$row_12",
                   },
                   "type": "extension",
                   "value": {
@@ -1781,7 +1767,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
                       "label": "w",
                       "row": {
                         "type": "variable",
-                        "variable": "$row_12",
+                        "variable": "$row_11",
                       },
                       "type": "extension",
                       "value": {
@@ -1844,7 +1830,7 @@ exports[`inference: match > struct patterns > nested recursive struct patterns w
           "variable": {
             "lvl": 1,
             "type": "Meta",
-            "val": 15,
+            "val": 14,
           },
         },
         "type": "Closure",

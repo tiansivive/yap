@@ -1,0 +1,640 @@
+{
+	"scripts/cli.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 2
+		},
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/Codegen/v2/c/emit.ts": {
+		"@typescript-eslint/no-non-null-assertion": {
+			"count": 3
+		},
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/Codegen/v2/erlang/emit.ts": {
+		"@typescript-eslint/no-non-null-assertion": {
+			"count": 1
+		},
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/Codegen/v2/erlang/print.ts": {
+		"@typescript-eslint/no-unused-vars": {
+			"count": 2
+		},
+		"no-restricted-syntax": {
+			"count": 3
+		}
+	},
+	"src/Codegen/v2/js/__tests__/emit.test.ts": {
+		"@typescript-eslint/no-unused-vars": {
+			"count": 2
+		}
+	},
+	"src/Codegen/v2/js/emit.ts": {
+		"no-restricted-syntax": {
+			"count": 3
+		}
+	},
+	"src/Codegen/v2/js/print.ts": {
+		"no-restricted-syntax": {
+			"count": 2
+		}
+	},
+	"src/FFI/codecs.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		},
+		"@typescript-eslint/no-empty-object-type": {
+			"count": 1
+		},
+		"@typescript-eslint/no-explicit-any": {
+			"count": 1
+		},
+		"@typescript-eslint/no-unsafe-argument": {
+			"count": 1
+		},
+		"@typescript-eslint/no-unsafe-member-access": {
+			"count": 5
+		}
+	},
+	"src/GRAM/__tests__/saturate.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/GRAM/__tests__/translate.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/GRAM/bridge/blocks.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 3
+		}
+	},
+	"src/GRAM/bridge/closures.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 5
+		}
+	},
+	"src/GRAM/bridge/continuations.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 8
+		}
+	},
+	"src/GRAM/bridge/decisions.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 5
+		}
+	},
+	"src/GRAM/bridge/emit.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 2
+		}
+	},
+	"src/GRAM/bridge/leaves.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 4
+		}
+	},
+	"src/GRAM/bridge/pap.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 5
+		},
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/GRAM/bridge/primops.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 4
+		}
+	},
+	"src/GRAM/bridge/structural.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 2
+		}
+	},
+	"src/GRAM/display.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 2
+		}
+	},
+	"src/GRAM/graph.ts": {
+		"no-restricted-syntax": {
+			"count": 2
+		}
+	},
+	"src/GRAM/grs/match.ts": {
+		"no-restricted-syntax": {
+			"count": 6
+		}
+	},
+	"src/GRAM/passes/pattern.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		}
+	},
+	"src/GRAM/pipeline/configure.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		},
+		"@typescript-eslint/no-non-null-assertion": {
+			"count": 1
+		},
+		"no-restricted-syntax": {
+			"count": 2
+		}
+	},
+	"src/GRAM/pipeline/index.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/GRAM/translate.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 9
+		},
+		"no-restricted-syntax": {
+			"count": 9
+		}
+	},
+	"src/__tests__/integration/helpers/repl.ts": {
+		"no-restricted-syntax": {
+			"count": 7
+		}
+	},
+	"src/__tests__/setup.ts": {
+		"no-restricted-syntax": {
+			"count": 2
+		}
+	},
+	"src/cli/explore/pipeline.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 4
+		},
+		"@typescript-eslint/no-unsafe-assignment": {
+			"count": 1
+		},
+		"no-restricted-properties": {
+			"count": 4
+		},
+		"no-restricted-syntax": {
+			"count": 8
+		}
+	},
+	"src/cli/explore/server.ts": {
+		"@typescript-eslint/no-unsafe-assignment": {
+			"count": 6
+		},
+		"@typescript-eslint/no-unsafe-member-access": {
+			"count": 5
+		},
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/cli/repl.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 3
+		},
+		"@typescript-eslint/no-unsafe-assignment": {
+			"count": 1
+		},
+		"@typescript-eslint/no-unused-vars": {
+			"count": 1
+		},
+		"no-restricted-properties": {
+			"count": 10
+		},
+		"no-restricted-syntax": {
+			"count": 22
+		}
+	},
+	"src/compile.ts": {
+		"no-restricted-properties": {
+			"count": 2
+		},
+		"no-restricted-syntax": {
+			"count": 3
+		}
+	},
+	"src/elaboration/__tests__/pi-types.test.ts": {
+		"@typescript-eslint/no-unused-vars": {
+			"count": 2
+		}
+	},
+	"src/elaboration/__tests__/shift-reset.test.ts": {
+		"@typescript-eslint/no-unused-vars": {
+			"count": 10
+		}
+	},
+	"src/elaboration/__tests__/utils.ts": {
+		"@typescript-eslint/no-unused-vars": {
+			"count": 1
+		}
+	},
+	"src/elaboration/check.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		},
+		"@typescript-eslint/no-unused-vars": {
+			"count": 1
+		},
+		"no-restricted-properties": {
+			"count": 1
+		}
+	},
+	"src/elaboration/inference/applications.ts": {
+		"@typescript-eslint/no-explicit-any": {
+			"count": 2
+		}
+	},
+	"src/elaboration/inference/patterns.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 5
+		},
+		"@typescript-eslint/no-explicit-any": {
+			"count": 1
+		},
+		"@typescript-eslint/no-unsafe-argument": {
+			"count": 1
+		}
+	},
+	"src/elaboration/inference/rows.ts": {
+		"@typescript-eslint/no-explicit-any": {
+			"count": 2
+		}
+	},
+	"src/elaboration/inference/statements.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		},
+		"@typescript-eslint/no-explicit-any": {
+			"count": 4
+		},
+		"@typescript-eslint/no-unsafe-argument": {
+			"count": 9
+		},
+		"@typescript-eslint/no-unsafe-assignment": {
+			"count": 2
+		},
+		"@typescript-eslint/no-unsafe-member-access": {
+			"count": 1
+		},
+		"no-restricted-syntax": {
+			"count": 2
+		}
+	},
+	"src/elaboration/module.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		}
+	},
+	"src/elaboration/normalization/__tests__/arity.test.ts": {
+		"@typescript-eslint/no-unused-vars": {
+			"count": 1
+		}
+	},
+	"src/elaboration/normalization/syntax/pretty.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 2
+		}
+	},
+	"src/elaboration/normalization/syntax/term.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		},
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/elaboration/pretty/pretty.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/elaboration/pretty/pretty.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 3
+		}
+	},
+	"src/elaboration/shared/cont.ts": {
+		"@typescript-eslint/no-explicit-any": {
+			"count": 1
+		},
+		"@typescript-eslint/no-unused-vars": {
+			"count": 3
+		}
+	},
+	"src/elaboration/shared/context.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		},
+		"@typescript-eslint/no-explicit-any": {
+			"count": 1
+		},
+		"@typescript-eslint/no-unsafe-assignment": {
+			"count": 1
+		},
+		"no-restricted-properties": {
+			"count": 1
+		}
+	},
+	"src/elaboration/shared/errors.ts": {
+		"@typescript-eslint/no-explicit-any": {
+			"count": 4
+		},
+		"@typescript-eslint/no-unsafe-assignment": {
+			"count": 1
+		}
+	},
+	"src/elaboration/shared/metas.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 2
+		}
+	},
+	"src/elaboration/shared/provenance.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/elaboration/solver/nondeterminism.ts": {
+		"@typescript-eslint/no-explicit-any": {
+			"count": 2
+		},
+		"no-restricted-syntax": {
+			"count": 2
+		}
+	},
+	"src/elaboration/solver/solver.ts": {
+		"no-restricted-properties": {
+			"count": 1
+		}
+	},
+	"src/elaboration/syntax/term.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/elaboration/unification/unification.ts": {
+		"no-restricted-properties": {
+			"count": 4
+		}
+	},
+	"src/modules/loading.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		},
+		"@typescript-eslint/no-unsafe-assignment": {
+			"count": 1
+		},
+		"@typescript-eslint/no-unused-vars": {
+			"count": 1
+		},
+		"no-restricted-properties": {
+			"count": 1
+		}
+	},
+	"src/parser/__tests__/blocks.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/__tests__/functions.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/__tests__/grammar.test.ts": {
+		"@typescript-eslint/no-unused-vars": {
+			"count": 1
+		},
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/__tests__/indexed.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/__tests__/literals.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/__tests__/pattern_matching.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/__tests__/precedence.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/__tests__/primops.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/__tests__/refinements.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/__tests__/rows.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/__tests__/usages.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/__tests__/variables.test.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/nearley.d.ts": {
+		"@typescript-eslint/no-empty-object-type": {
+			"count": 1
+		},
+		"@typescript-eslint/no-explicit-any": {
+			"count": 1
+		}
+	},
+	"src/parser/pretty.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/parser/processors.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 4
+		},
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/pipeline/interpret.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		}
+	},
+	"src/pipeline/lower.ts": {
+		"no-restricted-properties": {
+			"count": 3
+		},
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/shared/lib/primitives.ts": {
+		"@typescript-eslint/no-unused-vars": {
+			"count": 3
+		}
+	},
+	"src/shared/logging.ts": {
+		"@typescript-eslint/no-empty-object-type": {
+			"count": 1
+		},
+		"@typescript-eslint/no-unused-vars": {
+			"count": 1
+		},
+		"no-restricted-syntax": {
+			"count": 2
+		}
+	},
+	"src/shared/modalities/multiplicity.ts": {
+		"@typescript-eslint/no-unsafe-return": {
+			"count": 1
+		}
+	},
+	"src/shared/rows.ts": {
+		"no-restricted-syntax": {
+			"count": 2
+		}
+	},
+	"src/utils/functions.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		},
+		"@typescript-eslint/no-explicit-any": {
+			"count": 3
+		},
+		"@typescript-eslint/no-unsafe-return": {
+			"count": 1
+		},
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/utils/objects.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		},
+		"@typescript-eslint/no-empty-object-type": {
+			"count": 2
+		},
+		"@typescript-eslint/no-unsafe-return": {
+			"count": 1
+		}
+	},
+	"src/utils/types.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		},
+		"@typescript-eslint/no-empty-object-type": {
+			"count": 2
+		}
+	},
+	"src/verification/V2/check.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 4
+		},
+		"@typescript-eslint/no-unused-vars": {
+			"count": 1
+		},
+		"no-restricted-properties": {
+			"count": 2
+		}
+	},
+	"src/verification/V2/logic/translate.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		}
+	},
+	"src/verification/V2/subtype.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 1
+		},
+		"no-restricted-properties": {
+			"count": 4
+		}
+	},
+	"src/verification/V2/synth.ts": {
+		"@typescript-eslint/consistent-type-assertions": {
+			"count": 5
+		},
+		"@typescript-eslint/no-unused-vars": {
+			"count": 3
+		},
+		"no-restricted-properties": {
+			"count": 4
+		}
+	},
+	"src/verification/V2/utils/context.ts": {
+		"no-restricted-properties": {
+			"count": 1
+		},
+		"no-restricted-syntax": {
+			"count": 8
+		}
+	},
+	"src/verification/V2/utils/refinements.ts": {
+		"@typescript-eslint/no-unused-vars": {
+			"count": 1
+		},
+		"no-restricted-properties": {
+			"count": 1
+		}
+	},
+	"src/verification/modalities/liquids.ts": {
+		"no-restricted-syntax": {
+			"count": 1
+		}
+	},
+	"src/verification/solver/v2/arithmetic/__tests__/theory.test.ts": {
+		"no-restricted-syntax": {
+			"count": 2
+		}
+	},
+	"src/verification/solver/v2/euf/__tests__/cc.test.ts": {
+		"no-restricted-syntax": {
+			"count": 6
+		}
+	},
+	"src/verification/solver/v2/theory/orchestrate.ts": {
+		"@typescript-eslint/no-unused-vars": {
+			"count": 1
+		},
+		"no-restricted-syntax": {
+			"count": 4
+		}
+	},
+	"src/verification/solver/v2/trace/replay.ts": {
+		"@typescript-eslint/no-unsafe-argument": {
+			"count": 1
+		}
+	}
+}

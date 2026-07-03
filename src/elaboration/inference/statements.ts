@@ -13,9 +13,9 @@ import { freshMeta } from "@yap/elaboration/shared/supply";
 
 import * as Sub from "@yap/elaboration/unification/substitution";
 import { compose } from "@yap/elaboration/unification/substitution";
-import { set, update } from "@yap/utils";
+import { update } from "@yap/utils";
 import { replay } from "../solver/nondeterminism";
-import { unify, display } from "../unification";
+import { unify } from "../unification";
 
 export type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
 export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
@@ -36,7 +36,7 @@ export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
 							_ctx => EB.bind(_ctx, { type: "Let", variable: dec.variable }, va),
 							V2.Do(function* () {
 								const inferred = yield* EB.check.gen(dec.value, va);
-								const [bTerm, [vu, ...bus]] = inferred;
+								const [bTerm, [_vu, ...bus]] = inferred;
 								//yield* V2.tell("constraint", { type: "usage", expected: q, computed: vu });
 
 								return [bTerm, va, bus] satisfies EB.AST; // remove the usage of the bound variable (same as the lambda rule)

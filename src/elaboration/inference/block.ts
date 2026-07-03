@@ -8,19 +8,16 @@ import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
 import * as Lit from "@yap/shared/literals";
-import { Liquid } from "@yap/verification/modalities";
 
-import * as Sub from "@yap/elaboration/unification/substitution";
 import { update } from "@yap/utils";
 
-import { options } from "@yap/shared/config/options";
 type Block = Extract<Src.Term, { type: "block" }>;
 
 export const infer = (block: Block) =>
 	V2.track(
 		{ tag: "src", type: "term", term: block, metadata: { action: "infer", description: "Block statements" } },
 		(() => {
-			const { statements, return: ret } = block;
+			const { statements, return: _ret } = block;
 			const recurse = (stmts: Src.Statement[], results: EB.Statement[]): V2.Elaboration<EB.AST> =>
 				V2.Do(function* () {
 					if (stmts.length === 0) {
@@ -28,7 +25,7 @@ export const infer = (block: Block) =>
 					}
 
 					const [current, ...rest] = stmts;
-					const [stmt, sty, sus] = yield* EB.Stmt.infer.gen(current);
+					const [stmt, _sty, sus] = yield* EB.Stmt.infer.gen(current);
 
 					if (stmt.type !== "Let") {
 						return yield* V2.pure(recurse(rest, [...results, stmt]));
@@ -50,11 +47,11 @@ export const infer = (block: Block) =>
 							return update(next, "env", env => [entry, ...env]);
 						},
 						V2.Do(function* () {
-							const [tm, ty, [vu, ...rus]] = yield* V2.pure(recurse(rest, [...results, r]));
+							const [tm, ty, [_vu, ...rus]] = yield* V2.pure(recurse(rest, [...results, r]));
 							// yield* V2.tell("constraint", { type: "usage", expected: Q.Many, computed: vu });
 							// Remove the usage of the bound variable (same as the lambda rule)
 							// Multiply the usages of the let binder by the multiplicity of the new let binding (same as the application rule)
-							return [tm, ty, Q.add(rus, Q.multiply(Q.Many, sus))] as EB.AST;
+							return [tm, ty, Q.add(rus, Q.multiply(Q.Many, sus))] satisfies EB.AST;
 						}),
 					);
 				});

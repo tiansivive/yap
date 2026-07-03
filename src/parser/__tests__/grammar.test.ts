@@ -279,7 +279,6 @@ describe("Grammar", () => {
 				const data = parser.feed(src);
 
 				const expr = data.results[0];
-				``;
 				const xVal = { type: "Num", value: 1 };
 				const yVal = { type: "Num", value: 2 };
 

@@ -1,8 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { elaborateFrom } from "../inference/__tests__/util";
-
-import * as NF from "@yap/elaboration/normalization";
-import * as EB from "@yap/elaboration";
 
 describe("Let-polymorphism", () => {
 	describe("basic polymorphic let bindings", () => {
@@ -103,19 +100,21 @@ describe("Let-polymorphism", () => {
 			expect({ displays: res.displays }).toMatchSnapshot();
 		});
 
-		// it("polymorphic Y combinator (fixed-point)", () => {
-		// 	const src = `{
-		// 	let y = \\f -> (\\x -> f (x x)) (\\x -> f (x x));
-		// 	let const = \\a -> \\b -> a;
-		// 	let result = y const;
-		// }`;
+		// Blocked on occurs-check recovery: `x x` needs a μ-type solution instead of a thrown
+		// cycle error (z-yap: equirecursive-types).
+		it.skip("polymorphic Y combinator (fixed-point)", () => {
+			const src = `{
+			let y = \\f -> (\\x -> f (x x)) (\\x -> f (x x));
+			let const = \\a -> \\b -> a;
+			let result = y const;
+		}`;
 
-		// 	const res = elaborateFrom(src);
+			const res = elaborateFrom(src);
 
-		// 	expect(res.structure.term.type).toBe("Block");
-		// 	expect({ displays: res.displays }).toMatchSnapshot();
-		// 	expect({ structure: res.structure }).toMatchSnapshot();
-		// });
+			expect(res.structure.term.type).toBe("Block");
+			expect({ displays: res.displays }).toMatchSnapshot();
+			expect({ structure: res.structure }).toMatchSnapshot();
+		});
 
 		it("higher-order polymorphic function", () => {
 			const src = `{
@@ -177,16 +176,14 @@ describe("Let-polymorphism", () => {
 		});
 	});
 
-	// describe("let vs lambda: monomorphism restriction", () => {
-
-	// 	// Note: This test demonstrates that lambda parameters are monomorphic
-	// 	// The following would fail if uncommented because `id` would be monomorphic:
-	// 	// it("lambda-bound parameter is monomorphic (would fail)", () => {
-	// 	//   const src = `(\\id -> (id 5, id "world")) (\\x -> x)`;
-	// 	//   expect(() => elaborateFrom(src)).toThrow();
-	// 	// });
-
-	// });
+	describe("let vs lambda: monomorphism restriction", () => {
+		// Negative test: lambda parameters are monomorphic, so using `id` at two types must
+		// fail. Skipped until the error surfaces as a catchable failure from elaborateFrom.
+		it.skip("lambda-bound parameter is monomorphic", () => {
+			const src = `(\\id -> (id 5, id "world")) (\\x -> x)`;
+			expect(() => elaborateFrom(src)).toThrow();
+		});
+	});
 
 	describe("recursive bindings", () => {
 		it("simple recursive function", () => {

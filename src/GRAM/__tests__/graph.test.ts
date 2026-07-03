@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { Nodes, Edges, Query, mkGraph, entry, resetId } from "../graph";
-import { display } from "../display";
 
 const prov = { created_by: "test" } as const;
 

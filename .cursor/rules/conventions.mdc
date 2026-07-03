@@ -26,7 +26,7 @@ alwaysApply: true
 - **Not resetting supplies** before tests → nondeterministic snapshots
 - **NF.Value branded type**: `Extract<NF.Value, { type: "Abs" }>` → `never`. Use intersection: `NF.Value & { binder: { type: "Pi"; ... }; closure: NF.Closure }`
 - **CST nodes**: Use `SyntaxType.X` enum (e.g. `SyntaxType.Lambda`), not raw `"lambda"`
-- **Never run bare `tsc --noEmit`** — it uses `tsconfig.json` which includes test files with stale APIs. Always use `pnpm typecheck` which uses `tsc.tsconfig.json` (excludes `**/*.test.ts` and static assets)
+- **One tsconfig for everything** — `tsconfig.json` covers src, tests, and `scripts/cli.ts`; tsc, ESLint, vitest, and the IDE all share it. Keep it clean: test files are type-checked by `pnpm typecheck` too (the old `tsc.tsconfig.json` test-exclusion split is retired)
 
 ## Tree-sitter (v2)
 
@@ -36,6 +36,6 @@ alwaysApply: true
 
 ## v2 elaboration
 
-- Inference (`infer.ts`) dispatches per AST node via `ts-pattern` (the map lives in `elaborate.ts`); per-construct handlers in `src/elaboration/inference/*` (lambda, pi, structs, rows, variants, tuples, injection, tagged, match, modal, …). Checking dispatches on `[term, type]` in `check.ts`.
+- Inference dispatches per AST node via `ts-pattern` in `elaborate.ts`; per-construct handlers in `src/elaboration/inference/*` (lambda, pi, structs, rows, variants, tuples, injection, tagged, match, modal, …). Checking dispatches on `[term, type]` in `check.ts`.
 - `check`/`infer` still return `Q.Usages` alongside the term, but this usage threading is **deprecated**: the upcoming usage-semantics system enforces multiplicities in the verification pass and will not consume the elaboration-threaded vectors. Don't build on them; flag them for removal when that work lands.
 - V1 is the deprecated fp-ts-centric API style, kept for reference; the live path is the V2 generator monad.

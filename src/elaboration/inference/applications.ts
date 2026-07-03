@@ -2,17 +2,12 @@ import * as F from "fp-ts/lib/function";
 
 import * as EB from "@yap/elaboration";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
-import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
 import { match } from "ts-pattern";
 import { Implicitness } from "@yap/shared/implicitness";
-import * as Modal from "@yap/verification/modalities";
-import { Liquid } from "@yap/verification/modalities";
-
-import * as Sub from "@yap/elaboration/unification/substitution";
 
 type Application = Extract<Src.Term, { type: "application" }>;
 
@@ -24,9 +19,9 @@ export const infer = (node: Application) =>
 
 			const [ft, fty, fus] = yield* V2.pure(inferFn(node));
 			const pi = yield* mkPi(NF.force(ctx, fty), node.icit);
-			const [at, aus] = yield* V2.pure(checkArg(node, pi[0]));
+			const [at, _aus] = yield* V2.pure(checkArg(node, pi[0]));
 
-			const [nf, cls, x] = pi;
+			const [_nf, cls, x] = pi;
 
 			// TODO: Move this to the verification step
 			//const rus = Q.add(fus, Q.multiply(quantity, aus));
@@ -75,7 +70,6 @@ const mkPi = (fnType: NF.Value, icit: Implicitness): Generator<V2.Elaboration<an
 			const meta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 			const nf = NF.evaluate(ctx, meta);
 
-			const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 			const closure = NF.Constructors.Closure(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length + 1, NF.Type)));
 
 			const pi = NF.Constructors.Pi("x", icit, nf, closure);

@@ -14,6 +14,10 @@ import type * as Trace from "./trace";
 
 export type Solver<A> = (env: Env, w?: Accumulator, st?: State) => [Collector<A>, State];
 export type G<A> = Generator<Solver<any>, A, any>;
+// Single-effect primitives: yielding exactly one Solver<A> resumes with A, so the whole
+// generator types precisely. G<A> keeps TNext=any for composite generators, whose several
+// delegations resume at different types (inexpressible per-yield in TS).
+export type Prim<A> = Generator<Solver<A>, A, A>;
 
 export function run<A>(ma: Solver<A>, env: Env = Env.default, st: State = State.initial): [Collector<A>, State] {
 	return ma(env, Accumulator.empty, st);
@@ -44,18 +48,16 @@ export function Do<R>(gen: () => G<R>): Solver<R> {
 	};
 }
 
-/* eslint-disable @typescript-eslint/no-namespace */
-
 export namespace Reader {
-	export const ask = function* (): G<Env> {
+	export const ask = function* (): Prim<Env> {
 		return yield (env, _w, st = State.initial) => [Collector.of(env), st];
 	};
 
-	export const asks = function* <A>(f: (env: Env) => A): G<A> {
+	export const asks = function* <A>(f: (env: Env) => A): Prim<A> {
 		return yield (env, _w, st = State.initial) => [Collector.of(f(env)), st];
 	};
 
-	export const local = function* <A>(modify: (env: Env) => Env, ma: Solver<A>): G<A> {
+	export const local = function* <A>(modify: (env: Env) => Env, ma: Solver<A>): Prim<A> {
 		return yield (env, w, st = State.initial) => ma(modify(env), w, st);
 	};
 }
@@ -92,7 +94,7 @@ export const Env = {
 };
 
 export namespace Writer {
-	export const listen = function* (): G<Accumulator> {
+	export const listen = function* (): Prim<Accumulator> {
 		return yield (_env, w = Accumulator.empty, st = State.initial) => [Collector.of(w), st];
 	};
 }
@@ -153,16 +155,15 @@ export type State = {
 };
 
 export const State = {
-	get: function* (): G<State> {
-		const r: State = yield (_env, _w, st = State.initial) => [Collector.of(st), st];
-		return r;
+	get: function* (): Prim<State> {
+		return yield (_env, _w, st = State.initial) => [Collector.of(st), st];
 	},
 
-	put: function* (state: State): G<void> {
+	put: function* (state: State): Prim<void> {
 		yield (_env, _w, _st = State.initial) => [Collector.of(undefined), state];
 	},
 
-	modify: function* (f: (state: State) => State): G<void> {
+	modify: function* (f: (state: State) => State): Prim<void> {
 		yield (_env, _w, st = State.initial) => [Collector.of(undefined), f(st)];
 	},
 	// Inlined empties avoid core → domain value-import cycles; domain modules import State.modify.
@@ -212,7 +213,7 @@ export const State = {
 	} satisfies State,
 };
 
-export const localSt = function* <A>(modify: (state: State) => State, ma: Solver<A>): G<A> {
+export const localSt = function* <A>(modify: (state: State) => State, ma: Solver<A>): Prim<A> {
 	return yield (env, w, st = State.initial) => {
 		const [collector] = ma(env, w, modify(st));
 		return [collector, st];
@@ -236,12 +237,16 @@ export const of =
 	<A>(a: A): Solver<A> =>
 	(_env, _w, st = State.initial) => [Collector.of(a), st];
 
-export const lift = function* <A>(a: A): G<A> {
+export const lift = function* <A>(a: A): Prim<A> {
 	return yield of(a);
 };
 
-export const liftC = function* <A>(collector: Collector<A>): G<A> {
+export const liftC = function* <A>(collector: Collector<A>): Prim<A> {
 	return yield (_env, _w, st = State.initial) => [collector, st];
 };
 
-export const liftE = <A>(e: Either<Err, A>): G<A> => liftC({ ...Accumulator.empty, result: e });
+export const liftE = <A>(e: Either<Err, A>): Prim<A> => liftC({ ...Accumulator.empty, result: e });
+
+export const pure = function* <A>(ma: Solver<A>): Prim<A> {
+	return yield ma;
+};

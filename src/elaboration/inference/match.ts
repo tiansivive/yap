@@ -12,9 +12,6 @@ import { match } from "ts-pattern";
 
 import * as P from "@yap/elaboration/shared/provenance";
 
-import * as Modal from "@yap/verification/modalities/shared";
-import { Liquid } from "@yap/verification/modalities";
-
 type Match = Extract<Src.Term, { type: "match" }>;
 
 export const infer = (tm: Match): V2.Elaboration<EB.AST> =>
@@ -23,11 +20,11 @@ export const infer = (tm: Match): V2.Elaboration<EB.AST> =>
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			const ast = yield* EB.infer.gen(tm.scrutinee);
-			const alternatives: AltNode[] = yield V2.traverse(tm.alternatives, elaborate(ast, EB.infer));
+			const alternatives: AltNode[] = yield* V2.pure(V2.traverse(tm.alternatives, elaborate(ast, EB.infer)));
 
 			// Ensure all alternatives have the same type - we pick the type of the first alternative as the common type
 			const common = alternatives[0][1];
-			yield V2.traverse(alternatives, ([alt, ty, us], i) => {
+			yield V2.traverse(alternatives, ([_alt, ty, _us], i) => {
 				const provenance: P.Provenance[] = [
 					{
 						tag: "alt",
@@ -47,7 +44,7 @@ export const infer = (tm: Match): V2.Elaboration<EB.AST> =>
 			});
 
 			// TODO: Also deal with usage semantics
-			const [scrutinee, scuty, sus] = ast;
+			const [scrutinee, _scuty, sus] = ast;
 			const match = EB.Constructors.Match(
 				scrutinee,
 				alternatives.map(([alt]) => alt),
@@ -70,7 +67,7 @@ infer.gen = F.flow(infer, V2.pure);
  */
 export type AltNode = [EB.Alternative, NF.Value, Q.Usages];
 export const elaborate =
-	([scrutinee, scuty, sus]: EB.AST, action: (alt: Src.Term, pat: EB.Patterns.Result) => V2.Elaboration<EB.AST>) =>
+	([_scrutinee, scuty, _sus]: EB.AST, action: (alt: Src.Term, pat: EB.Patterns.Result) => V2.Elaboration<EB.AST>) =>
 	(alt: Src.Alternative): V2.Elaboration<AltNode> =>
 		V2.track(
 			{ tag: "alt", alt, metadata: { action: "alternative", motive: "elaborating pattern", type: scuty } },
@@ -83,7 +80,7 @@ export const elaborate =
 					(alt: Src.Alternative & { pattern: Extract<Src.Pattern, { type: K }> }) =>
 						V2.Do(function* () {
 							const inferred = yield* Patterns.infer[key].gen(alt.pattern);
-							const [pat, patty, patus, binders] = inferred;
+							const [pat, patty, _patus, binders] = inferred;
 							yield* V2.tell("constraint", { type: "assign", left: patty, right: scuty });
 
 							const node = yield* V2.local(

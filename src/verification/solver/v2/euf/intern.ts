@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // EUF term interning for v2: hash-conses IVL terms into enodes for cheap equality checks.
 // EUF = Equality with Uninterpreted Functions; Enode = equality node.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/euf-theory.md

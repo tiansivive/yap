@@ -26,7 +26,7 @@ export const evaluate = (pat: EB.Pattern, ctx: EB.Context, binders: EB.Patterns.
 			const idx = binders.findIndex(([name, _]) => name === value);
 			return NF.Constructors.Var({ type: "Bound", lvl: ctx.env.length + idx });
 		})
-		.with({ type: "Var" }, ({}) => {
+		.with({ type: "Var" }, () => {
 			throw new Error("Var patterns are not implemented yet");
 		})
 
@@ -41,7 +41,7 @@ export const evaluate = (pat: EB.Pattern, ctx: EB.Context, binders: EB.Patterns.
 		.with({ type: "Variant", row: { type: "extension" } }, ({ row }) => NF.Constructors.Tagged(row.label, evaluate(row.value, ctx, binders)))
 		.with({ type: "Variant" }, ({ row }) => NF.Constructors.Variant(toRow(row)))
 
-		.with({ type: "List" }, ({ patterns, rest }) => {
+		.with({ type: "List" }, ({ patterns }) => {
 			const vs = patterns.map(p => evaluate(p, ctx, binders));
 
 			const r = vs.reduce<NF.Row>((r, v, i) => NF.Constructors.Extension(i.toString(), v, r), R.Constructors.Empty());

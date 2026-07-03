@@ -14,7 +14,7 @@ export const infer = (modal: Modal): V2.Elaboration<EB.AST> =>
 		{ tag: "src", type: "term", term: modal, metadata: { action: "infer", description: "Modal term" } },
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
-			const [tm, ty, us] = yield* EB.infer.gen(modal.term);
+			const [tm, _ty, us] = yield* EB.infer.gen(modal.term);
 
 			const nf = NF.evaluate(ctx, tm); // Modalities work on the term (in normal form), not on its type
 			const liquid = modal.modalities.liquid ? yield* EB.Liquid.typecheck(modal.modalities.liquid, nf) : Liquid.Predicate.Neutral(tm);

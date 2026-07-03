@@ -1,4 +1,4 @@
-import type { NodeId, Payload, Edge as GraphEdge } from "../graph";
+import type { NodeId, Payload } from "../graph";
 import type { Tag, Label } from "../vocabulary";
 import type { Provenance } from "../provenance";
 import type { Graph } from "../graph";

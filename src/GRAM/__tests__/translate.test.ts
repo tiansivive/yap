@@ -5,7 +5,7 @@ import * as NF from "@yap/elaboration/normalization";
 
 import { translate } from "../translate";
 import { display } from "../display";
-import { resetId, Nodes, Query, Edges, entry } from "../graph";
+import { resetId, Nodes, Query } from "../graph";
 import { Tags, Labels } from "../vocabulary";
 
 describe("GRAM translate", () => {
