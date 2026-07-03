@@ -168,8 +168,6 @@ export const Annotation = ([term, ...rest]: [Term, ...Annotation]): Term => {
  * Lambda processors
  ***********************************************************/
 
-type Implicit = [Backslash, Param[], Whitespace, Arrow, Whitespace, Term];
-type Explicit = [Backslash, Param[], Whitespace, Arrow, Whitespace, Term];
 type Param = { type: "param"; binding: Variable; annotation?: Term };
 
 const Lam = (icit: Implicitness, params: Param[], body: Term): Term => {
@@ -195,7 +193,7 @@ export const Lambda: (icit: Implicitness) => PostProcessor<[Backslash, [Param, [
 
 export const Pi: (icit: Implicitness) => PostProcessor<[Term, Whitespace, Token, Whitespace, Term], Term> =
 	icit =>
-	([expr, , arr, , body]) => {
+	([expr, , _arr, , body]) => {
 		if (expr.type === "annotation") {
 			const { term, ann } = expr;
 
@@ -430,7 +428,7 @@ export const keyvalPat = (pair: [Variable, Whitespace, Colon, Whitespace, Src.Pa
 };
 
 type PatTagged = [string, Src.Pattern];
-export const taggedPat = ([tok, v, , pat]: [Hash, Variable, Space, Src.Pattern]): PatTagged => {
+export const taggedPat = ([_tok, v, , pat]: [Hash, Variable, Space, Src.Pattern]): PatTagged => {
 	return [v.value, pat];
 };
 
@@ -462,7 +460,7 @@ export const Pattern = {
 		const row = pats.reduceRight<RowPat>((acc, [[label, value]]) => ({ type: "extension", label, value, row: acc }), tail);
 		return { type: "variant", row };
 	},
-	Wildcard: ([tok]: [Token]): Src.Pattern => ({ type: "wildcard" }),
+	Wildcard: ([_tok]: [Token]): Src.Pattern => ({ type: "wildcard" }),
 
 	Empty: {
 		List: (): Src.Pattern => ({ type: "list", elements: [] }),
@@ -652,25 +650,18 @@ const locSpan = (from: P.Location, to: P.Location): P.Location => ({
 /***********************************************************
  * Token aliases
  ***********************************************************/
-type LParens = Token;
-type RParens = Token;
 type LAngle = Token;
 type RAngle = Token;
 type Space = Token;
 type Whitespace = Token;
 type Newline = Token;
-type Comma = Token;
 type SemiColon = Token;
 type Colon = Token;
 type Backslash = Token;
 type Hash = Token;
 type Dot = Token;
 type Arrow = Token;
-type FatArrow = Token;
 type Equals = Token;
 type Bar = Token;
-
-type LBrace = Token;
-type RBrace = Token;
 
 type Keyword = Token;

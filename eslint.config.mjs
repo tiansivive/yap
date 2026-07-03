@@ -196,6 +196,19 @@ export default tseslint.config(
 		},
 	},
 	{
+		// Monad drivers (the generator Do loops): the sanctioned imperative core. Stepping
+		// loops, variance `any`s in effect types, and channel-dispatch casts are inherent
+		// to the encoding. Type-safety rules (unsafe-*, unused-vars) stay on — they guard
+		// the precisely-typed primitives around the drivers.
+		files: ["src/elaboration/shared/monad.v2.ts", "src/verification/solver/v2/core.ts"],
+		rules: {
+			"no-restricted-syntax": "off",
+			"no-restricted-properties": "off",
+			"@typescript-eslint/no-explicit-any": "off",
+			"@typescript-eslint/consistent-type-assertions": "off",
+		},
+	},
+	{
 		// Primitives table uses sparse tuples for positional-optional entries.
 		files: ["src/shared/lib/**"],
 		rules: {
@@ -253,6 +266,9 @@ export default tseslint.config(
 			"@typescript-eslint/no-explicit-any": "off",
 			// Either narrowing (if (E.isRight(r)) …) is the natural assertion idiom in tests.
 			"no-restricted-properties": "off",
+			// A wrong `!` in a test crashes the test — that IS the failure signal;
+			// narrowing ceremony in assertions adds nothing.
+			"@typescript-eslint/no-non-null-assertion": "off",
 		},
 	},
 );
