@@ -44,15 +44,16 @@ Each should be shown in VS Code, and can be run manually on the command-line:
 - `pnpm lint` ([ESLint](https://eslint.org) with [typescript-eslint](https://typescript-eslint.io)): Lints JavaScript and TypeScript source files
 - `pnpm lint:knip` ([knip](https://github.com/webpro/knip)): Detects unused files, dependencies, and code exports
 
-Read the individual documentation for each linter to understand how it can be configured and used best.
+Both gates must stay green, and both carry inventoried debt rather than red builds:
 
-For example, ESLint can be run with `--fix` to auto-fix some lint rule complaints:
+- **ESLint** baselines pre-existing violations in `eslint-suppressions.json` (per file, per rule, with counts). New violations fail immediately; fixing suppressed ones shrinks the file via `pnpm eslint . --prune-suppressions`. The JSON is the debt ledger — pick a file from it whenever you want to burn some down.
+- **knip** reports everything as warnings for now; `files` and `dependencies` flip back to errors once the orphaned-file cleanup pass lands (tracked in z-yap). Entry points in `knip.json` declare the real program roots — the library barrel, the CLI, the Codegen backend barrels (intended API surface), and the test suite.
+
+ESLint can be run with `--fix` to auto-fix some lint rule complaints:
 
 ```shell
 pnpm run lint --fix
 ```
-
-Note that you'll likely need to run `pnpm build` before `pnpm lint` so that lint rules which check the file system can pick up on any built files.
 
 ## Testing
 
