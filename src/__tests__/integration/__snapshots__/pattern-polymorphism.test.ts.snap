@@ -1,0 +1,1823 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Pattern matching — polymorphic generalization > single-arm variant with unused payload 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_28;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_31(env0, x1) {
+  let __block = "entry";
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        (__block = "sw2");
+        break;
+      }
+      case "sw2": {
+        const tag0 = x1.__tag;
+        if ((String(tag0) === "nil")) {
+          (__block = "case4");
+          break;
+        }
+      }
+      case "case4": {
+        const v5 = x1.payload;
+        const a = v5;
+        const v6 = 0;
+        const match1 = v6;
+        (__block = "join3");
+        break;
+      }
+      case "join3": {
+        return match1;
+      }
+    }
+  }
+}
+
+function closure_30(env0, A1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_31;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_29(env0, a1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_30;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_28(env0, r1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_29;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+return main();
+",
+    "elaborated": "λ(r: Row) =>
+  λ(a: Type) =>
+    λ(A: a) =>
+      (λ(x: Variant [ nil: A | r ]) ->
+        match x | Variant [ nil: a | $row_4 ] -> 0 : Π(x: Variant
+        [ nil: A | r ]) ->
+        Num)",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"r","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [24]
+[3] lit {"value":{"type":"Atom","value":"Row"}}
+[4] lambda {"variable":"a","icit":"Implicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [25]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lambda {"variable":"A","icit":"Implicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [26]
+[7] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[8] lambda {"variable":"x","icit":"Explicit","level":3}
+  :annotation -> [9]
+  :body -> [14]
+  :env -> [27]
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Variant"}}
+[11] row:ext {"label":"nil"}
+  :rest -> [13]
+  :value -> [12]
+[12] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[13] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[14] match
+  :alt -> [16] {"index":0}
+  :decision_tree -> [21]
+  :scrutinee -> [15]
+[15] var:bound {"index":0}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+[16] case
+  :body -> [20]
+  :pattern -> [17]
+[17] pat:variant {"label":"nil"}
+  :payload -> [18]
+[18] pat:binder {"name":"a","level":4}
+[19] pat:wildcard
+[20] lit {"value":{"type":"Num","value":0}}
+[21] switch {"kind":"tag"}
+  :branch -> [23] {"label":"nil"}
+  :inspect -> [15]
+[22] proj {"label":"payload"}
+  :target -> [15]
+[23] leaf
+  :bind -> [22] {"name":"a","binder":18}
+  :body -> [20]
+[24] env
+[25] env
+[26] env
+[27] env
+[28] closure
+  :body -> [2]
+  :env -> [24]
+[29] closure
+  :body -> [4]
+  :env -> [25]
+[30] closure
+  :body -> [6]
+  :env -> [26]
+[31] closure
+  :body -> [8]
+  :env -> [27]",
+    "ivl": "(forall ((r Row))
+  (forall ((a Type)) (forall ((A Type)) (forall ((x Schema)) (= x x)))))",
+    "kind": "expression",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_28
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_31(env0, x1) entry=entry
+    entry:
+      jump sw2
+    sw2:
+      let tag0 = read x1.__tag
+      branch tag0 { nil -> case4 }
+    case4:
+      let v5 = read x1.payload
+      let a = v5
+      let v6 = 0
+      let match1 = v6
+      jump join3
+    join3:
+      return match1
+  fn closure_30(env0, A1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_31
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_29(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_30
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_28(env0, r1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_29
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
+    "name": "(expr)",
+    "normalized": "λ(r: Row) =>
+  (closure: λ(a: Type) =>
+    λ(A: a) =>
+      (λ(x: Variant [ nil: A | r ]) ->
+        match x | Variant [ nil: a | $row_4 ] -> 0 : Π(x: Variant
+        [ nil: A | r ]) ->
+        Num) -| Γ: r)",
+    "solverTrace": "=== Formula ===
+  (forall ((r Row))
+    (forall ((a Type)) (forall ((A Type)) (forall ((x Schema)) (= x x)))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
+    "type": "Π(r: Row) => Π(a: Type) => Π(A: a) => Π(x: Variant [ nil: A | r ]) -> Num",
+    "validity": "valid",
+  },
+]
+`;
+
+exports[`Pattern matching — polymorphic generalization > struct pattern with unconstrained binders 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_38;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_43(env0, x1) {
+  const v0 = x1.bar;
+  const z = v0;
+  const v1 = x1.foo;
+  const y = v1;
+  const v2 = 0;
+  return v2;
+}
+
+function closure_42(env0, B1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {};
+  const fnref_cls2 = closure_43;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_41(env0, b1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: cap_0
+  };
+  const fnref_cls2 = closure_42;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_40(env0, A1) {
+  const env_cls2 = {
+    v0: A1
+  };
+  const fnref_cls2 = closure_41;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_39(env0, a1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_40;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_38(env0, r1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_39;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+return main();
+",
+    "elaborated": "λ(r: Row) =>
+  λ(a: Type) =>
+    λ(A: a) =>
+      λ(b: Type) =>
+        λ(B: b) =>
+          (λ(x: Schema [ foo: A, bar: B | r ]) ->
+            match x | Struct [ foo: y, bar: z | $row_6 ] -> 0 : Π(x: Schema
+            [ foo: A, bar: B | r ]) ->
+            Num)",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"r","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [32]
+[3] lit {"value":{"type":"Atom","value":"Row"}}
+[4] lambda {"variable":"a","icit":"Implicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [33]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lambda {"variable":"A","icit":"Implicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [34]
+[7] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[8] lambda {"variable":"b","icit":"Implicit","level":3}
+  :annotation -> [9]
+  :body -> [10]
+  :env -> [35]
+[9] lit {"value":{"type":"Atom","value":"Type"}}
+[10] lambda {"variable":"B","icit":"Implicit","level":4}
+  :annotation -> [11]
+  :body -> [12]
+  :env -> [36]
+[11] var:bound {"index":0}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+[12] lambda {"variable":"x","icit":"Explicit","level":5}
+  :annotation -> [13]
+  :body -> [20]
+  :env -> [37]
+[13] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] lit {"value":{"type":"Atom","value":"Schema"}}
+[15] row:ext {"label":"foo"}
+  :rest -> [17]
+  :value -> [16]
+[16] var:bound {"index":2}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+[17] row:ext {"label":"bar"}
+  :rest -> [19]
+  :value -> [18]
+[18] var:bound {"index":0}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+[19] var:bound {"index":0}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+[20] match
+  :alt -> [22] {"index":0}
+  :decision_tree -> [28]
+  :scrutinee -> [21]
+[21] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+  :scope -> [12] {"level":5}
+[22] case
+  :body -> [27]
+  :pattern -> [23]
+[23] pat:struct
+  :field -> [24] {"label":"foo"}
+  :field -> [25] {"label":"bar"}
+[24] pat:binder {"name":"y","level":6}
+[25] pat:binder {"name":"z","level":7}
+[26] pat:wildcard
+[27] lit {"value":{"type":"Num","value":0}}
+[28] switch {"kind":"struct"}
+  :branch -> [31]
+  :inspect -> [21]
+[29] proj {"label":"bar"}
+  :target -> [21]
+[30] proj {"label":"foo"}
+  :target -> [21]
+[31] leaf
+  :bind -> [29] {"name":"z","binder":25}
+  :bind -> [30] {"name":"y","binder":24}
+  :body -> [27]
+[32] env
+[33] env
+[34] env
+[35] env
+  :capture -> [6] {"index":0}
+[36] env
+  :capture -> [6] {"index":0}
+[37] env
+[38] closure
+  :body -> [2]
+  :env -> [32]
+[39] closure
+  :body -> [4]
+  :env -> [33]
+[40] closure
+  :body -> [6]
+  :env -> [34]
+[41] closure
+  :body -> [8]
+  :env -> [35]
+[42] closure
+  :body -> [10]
+  :env -> [36]
+[43] closure
+  :body -> [12]
+  :env -> [37]",
+    "ivl": "(forall ((r Row))
+  (forall ((a Type))
+    (forall ((A Type))
+      (forall ((b Type)) (forall ((B Type)) (forall ((x Schema)) (= x x)))))))",
+    "kind": "expression",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_38
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_43(env0, x1) entry=entry
+    entry:
+      let v0 = read x1.bar
+      let z = v0
+      let v1 = read x1.foo
+      let y = v1
+      let v2 = 0
+      return v2
+  fn closure_42(env0, B1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_43
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_41(env0, b1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_42
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_40(env0, A1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: A1 }
+      let fnref_cls2 = &closure_41
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_39(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_40
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_38(env0, r1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_39
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
+    "name": "(expr)",
+    "normalized": "λ(r: Row) =>
+  (closure: λ(a: Type) =>
+    λ(A: a) =>
+      λ(b: Type) =>
+        λ(B: b) =>
+          (λ(x: Schema [ foo: A, bar: B | r ]) ->
+            match x | Struct [ foo: y, bar: z | $row_6 ] -> 0 : Π(x: Schema
+            [ foo: A, bar: B | r ]) ->
+            Num) -| Γ: r)",
+    "solverTrace": "=== Formula ===
+  (forall ((r Row))
+    (forall ((a Type))
+      (forall ((A Type))
+        (forall ((b Type)) (forall ((B Type)) (forall ((x Schema)) (= x x)))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
+    "type": "Π(r: Row) =>
+  Π(a: Type) =>
+    Π(A: a) =>
+      Π(b: Type) => Π(B: b) => Π(x: Schema [ foo: A, bar: B | r ]) -> Num",
+    "validity": "valid",
+  },
+]
+`;
+
+exports[`Pattern matching — polymorphic generalization > variant match that returns the payload 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_28;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_31(env0, x1) {
+  let __block = "entry";
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        (__block = "sw2");
+        break;
+      }
+      case "sw2": {
+        const tag0 = x1.__tag;
+        if ((String(tag0) === "some")) {
+          (__block = "case4");
+          break;
+        }
+      }
+      case "case4": {
+        const v5 = x1.payload;
+        const v = v5;
+        const match1 = v;
+        (__block = "join3");
+        break;
+      }
+      case "join3": {
+        return match1;
+      }
+    }
+  }
+}
+
+function closure_30(env0, A1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_31;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_29(env0, a1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_30;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_28(env0, r1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_29;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+return main();
+",
+    "elaborated": "λ(r: Row) =>
+  λ(a: Type) =>
+    λ(A: a) =>
+      (λ(x: Variant [ some: A | r ]) ->
+        match x | Variant [ some: v | $row_4 ] -> v : Π(x: Variant
+        [ some: A | r ]) ->
+        A)",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"r","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [24]
+[3] lit {"value":{"type":"Atom","value":"Row"}}
+[4] lambda {"variable":"a","icit":"Implicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [25]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lambda {"variable":"A","icit":"Implicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [26]
+[7] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[8] lambda {"variable":"x","icit":"Explicit","level":3}
+  :annotation -> [9]
+  :body -> [14]
+  :env -> [27]
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Variant"}}
+[11] row:ext {"label":"some"}
+  :rest -> [13]
+  :value -> [12]
+[12] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[13] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[14] match
+  :alt -> [16] {"index":0}
+  :decision_tree -> [21]
+  :scrutinee -> [15]
+[15] var:bound {"index":0}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+[16] case
+  :body -> [20]
+  :pattern -> [17]
+[17] pat:variant {"label":"some"}
+  :payload -> [18]
+[18] pat:binder {"name":"v","level":4}
+[19] pat:wildcard
+[20] var:bound {"index":1}
+  :refers_to -> [18]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [18] {"level":4}
+  :scope -> [19] {"level":5}
+[21] switch {"kind":"tag"}
+  :branch -> [23] {"label":"some"}
+  :inspect -> [15]
+[22] proj {"label":"payload"}
+  :target -> [15]
+[23] leaf
+  :bind -> [22] {"name":"v","binder":18}
+  :body -> [20]
+[24] env
+[25] env
+[26] env
+[27] env
+[28] closure
+  :body -> [2]
+  :env -> [24]
+[29] closure
+  :body -> [4]
+  :env -> [25]
+[30] closure
+  :body -> [6]
+  :env -> [26]
+[31] closure
+  :body -> [8]
+  :env -> [27]",
+    "ivl": "(forall ((r Row))
+  (forall ((a Type))
+    (forall ((A Type))
+      (forall ((x Schema))
+        (and
+          (= x x)
+          (forall (($fresh1 Schema))
+            (=>
+              (and (= $fresh1 x) (= $fresh1 x))
+              (forall ((v Type)) (forall (($row_4 Row)) (= v v))))))))))",
+    "kind": "expression",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_28
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_31(env0, x1) entry=entry
+    entry:
+      jump sw2
+    sw2:
+      let tag0 = read x1.__tag
+      branch tag0 { some -> case4 }
+    case4:
+      let v5 = read x1.payload
+      let v = v5
+      let match1 = v
+      jump join3
+    join3:
+      return match1
+  fn closure_30(env0, A1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_31
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_29(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_30
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_28(env0, r1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_29
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
+    "name": "(expr)",
+    "normalized": "λ(r: Row) =>
+  (closure: λ(a: Type) =>
+    λ(A: a) =>
+      (λ(x: Variant [ some: A | r ]) ->
+        match x | Variant [ some: v | $row_4 ] -> v : Π(x: Variant
+        [ some: A | r ]) ->
+        A) -| Γ: r)",
+    "solverTrace": "=== Formula ===
+  (forall ((r Row))
+    (forall ((a Type))
+      (forall ((A Type))
+        (forall ((x Schema))
+          (and
+            (= x x)
+            (forall (($fresh1 Schema))
+              (=>
+                (and (= $fresh1 x) (= $fresh1 x))
+                (forall ((v Type)) (forall (($row_4 Row)) (= v v))))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  a=v -> residual
+  A=v -> residual
+  x=x -> residual
+  $fresh1=x -> residual
+  v=v -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
+    "type": "Π(r: Row) => Π(a: Type) => Π(A: a) => Π(x: Variant [ some: A | r ]) -> A",
+    "validity": "valid",
+  },
+]
+`;
+
+exports[`Pattern matching — polymorphic generalization > variant match with unconstrained payloads 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_64;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_72(env0, x1) {
+  let __block = "entry";
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        (__block = "sw2");
+        break;
+      }
+      case "sw2": {
+        const tag0 = x1.__tag;
+        if ((String(tag0) === "nil")) {
+          (__block = "case4");
+          break;
+        }
+        if ((String(tag0) === "cons")) {
+          (__block = "case5");
+          break;
+        }
+      }
+      case "case4": {
+        const v5 = x1.payload;
+        const a = v5;
+        const v6 = 0;
+        const match1 = v6;
+        (__block = "join3");
+        break;
+      }
+      case "case5": {
+        const v6 = x1.payload;
+        const v7 = v6 .0;
+        const el = v7;
+        const v8 = v6 .1;
+        const rest = v8;
+        const v9 = 1;
+        const match1 = v9;
+        (__block = "join3");
+        break;
+      }
+      case "join3": {
+        return match1;
+      }
+    }
+  }
+}
+
+function closure_71(env0, C1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {};
+  const fnref_cls2 = closure_72;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_70(env0, c1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: cap_0
+  };
+  const fnref_cls2 = closure_71;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_69(env0, B1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: cap_0
+  };
+  const fnref_cls2 = closure_70;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_68(env0, b1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: cap_0
+  };
+  const fnref_cls2 = closure_69;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_67(env0, s1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: cap_0
+  };
+  const fnref_cls2 = closure_68;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_66(env0, r1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: cap_0
+  };
+  const fnref_cls2 = closure_67;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_65(env0, A1) {
+  const env_cls2 = {
+    v0: A1
+  };
+  const fnref_cls2 = closure_66;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_64(env0, a1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_65;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+return main();
+",
+    "elaborated": "λ(a: Type) =>
+  λ(A: a) =>
+    λ(r: Row) =>
+      λ(s: Row) =>
+        λ(b: Type) =>
+          λ(B: b) =>
+            λ(c: Type) =>
+              λ(C: c) =>
+                (λ(x: Variant
+                  [ nil: A | [ cons: Schema [ 0: B, 1: C | s ] | r ] ]) ->
+                  match x
+                    | Variant [ nil: a | $row_4 ] -> 0
+                    | Variant [ cons: Struct [ 0: el,
+                        1: rest | $row_9 ] | $row_10 ] ->
+                        1 : Π(x: Variant
+                  [ nil: A | [ cons: Schema [ 0: B, 1: C | s ] | r ] ]) ->
+                  Num)",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"a","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [55]
+[3] lit {"value":{"type":"Atom","value":"Type"}}
+[4] lambda {"variable":"A","icit":"Implicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [56]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] lambda {"variable":"r","icit":"Implicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [57]
+[7] lit {"value":{"type":"Atom","value":"Row"}}
+[8] lambda {"variable":"s","icit":"Implicit","level":3}
+  :annotation -> [9]
+  :body -> [10]
+  :env -> [58]
+[9] lit {"value":{"type":"Atom","value":"Row"}}
+[10] lambda {"variable":"b","icit":"Implicit","level":4}
+  :annotation -> [11]
+  :body -> [12]
+  :env -> [59]
+[11] lit {"value":{"type":"Atom","value":"Type"}}
+[12] lambda {"variable":"B","icit":"Implicit","level":5}
+  :annotation -> [13]
+  :body -> [14]
+  :env -> [60]
+[13] var:bound {"index":0}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+[14] lambda {"variable":"c","icit":"Implicit","level":6}
+  :annotation -> [15]
+  :body -> [16]
+  :env -> [61]
+[15] lit {"value":{"type":"Atom","value":"Type"}}
+[16] lambda {"variable":"C","icit":"Implicit","level":7}
+  :annotation -> [17]
+  :body -> [18]
+  :env -> [62]
+[17] var:bound {"index":0}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+  :scope -> [12] {"level":5}
+  :scope -> [14] {"level":6}
+[18] lambda {"variable":"x","icit":"Explicit","level":8}
+  :annotation -> [19]
+  :body -> [32]
+  :env -> [63]
+[19] app {"icit":"Explicit"}
+  :arg -> [21]
+  :func -> [20]
+[20] lit {"value":{"type":"Atom","value":"Variant"}}
+[21] row:ext {"label":"nil"}
+  :rest -> [23]
+  :value -> [22]
+[22] var:bound {"index":6}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+  :scope -> [12] {"level":5}
+  :scope -> [14] {"level":6}
+  :scope -> [16] {"level":7}
+[23] row:ext {"label":"cons"}
+  :rest -> [31]
+  :value -> [24]
+[24] app {"icit":"Explicit"}
+  :arg -> [26]
+  :func -> [25]
+[25] lit {"value":{"type":"Atom","value":"Schema"}}
+[26] row:ext {"label":"0"}
+  :rest -> [28]
+  :value -> [27]
+[27] var:bound {"index":-5}
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+  :scope -> [12] {"level":5}
+  :scope -> [14] {"level":6}
+  :scope -> [16] {"level":7}
+[28] row:ext {"label":"1"}
+  :rest -> [30]
+  :value -> [29]
+[29] var:bound {"index":-7}
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+  :scope -> [12] {"level":5}
+  :scope -> [14] {"level":6}
+  :scope -> [16] {"level":7}
+[30] var:bound {"index":-3}
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+  :scope -> [12] {"level":5}
+  :scope -> [14] {"level":6}
+  :scope -> [16] {"level":7}
+[31] var:bound {"index":-3}
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+  :scope -> [12] {"level":5}
+  :scope -> [14] {"level":6}
+  :scope -> [16] {"level":7}
+[32] match
+  :alt -> [34] {"index":0}
+  :alt -> [39] {"index":1}
+  :decision_tree -> [47]
+  :scrutinee -> [33]
+[33] var:bound {"index":0}
+  :refers_to -> [18]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+  :scope -> [12] {"level":5}
+  :scope -> [14] {"level":6}
+  :scope -> [16] {"level":7}
+  :scope -> [18] {"level":8}
+[34] case
+  :body -> [38]
+  :next -> [39]
+  :pattern -> [35]
+[35] pat:variant {"label":"nil"}
+  :payload -> [36]
+[36] pat:binder {"name":"a","level":9}
+[37] pat:wildcard
+[38] lit {"value":{"type":"Num","value":0}}
+[39] case
+  :body -> [46]
+  :pattern -> [40]
+[40] pat:variant {"label":"cons"}
+  :payload -> [41]
+[41] pat:struct
+  :field -> [42] {"label":"0"}
+  :field -> [43] {"label":"1"}
+[42] pat:binder {"name":"el","level":9}
+[43] pat:binder {"name":"rest","level":10}
+[44] pat:wildcard
+[45] pat:wildcard
+[46] lit {"value":{"type":"Num","value":1}}
+[47] switch {"kind":"tag"}
+  :branch -> [49] {"label":"nil"}
+  :branch -> [51] {"label":"cons"}
+  :inspect -> [33]
+[48] proj {"label":"payload"}
+  :target -> [33]
+[49] leaf
+  :bind -> [48] {"name":"a","binder":36}
+  :body -> [38]
+[50] proj {"label":"payload"}
+  :target -> [33]
+[51] switch {"kind":"struct"}
+  :branch -> [54]
+  :inspect -> [50]
+[52] proj {"label":"0"}
+  :target -> [50]
+[53] proj {"label":"1"}
+  :target -> [50]
+[54] leaf
+  :bind -> [52] {"name":"el","binder":42}
+  :bind -> [53] {"name":"rest","binder":43}
+  :body -> [46]
+[55] env
+[56] env
+[57] env
+  :capture -> [4] {"index":0}
+[58] env
+  :capture -> [4] {"index":0}
+[59] env
+  :capture -> [4] {"index":0}
+[60] env
+  :capture -> [4] {"index":0}
+[61] env
+  :capture -> [4] {"index":0}
+[62] env
+  :capture -> [4] {"index":0}
+[63] env
+[64] closure
+  :body -> [2]
+  :env -> [55]
+[65] closure
+  :body -> [4]
+  :env -> [56]
+[66] closure
+  :body -> [6]
+  :env -> [57]
+[67] closure
+  :body -> [8]
+  :env -> [58]
+[68] closure
+  :body -> [10]
+  :env -> [59]
+[69] closure
+  :body -> [12]
+  :env -> [60]
+[70] closure
+  :body -> [14]
+  :env -> [61]
+[71] closure
+  :body -> [16]
+  :env -> [62]
+[72] closure
+  :body -> [18]
+  :env -> [63]",
+    "ivl": "(forall ((a Type))
+  (forall ((A Type))
+    (forall ((r Row))
+      (forall ((s Row))
+        (forall ((b Type))
+          (forall ((B Type))
+            (forall ((c Type))
+              (forall ((C Type))
+                (forall ((x Schema)) (and (= x x) (= x x)))))))))))",
+    "kind": "expression",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_64
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_72(env0, x1) entry=entry
+    entry:
+      jump sw2
+    sw2:
+      let tag0 = read x1.__tag
+      branch tag0 { nil -> case4 | cons -> case5 }
+    case4:
+      let v5 = read x1.payload
+      let a = v5
+      let v6 = 0
+      let match1 = v6
+      jump join3
+    case5:
+      let v6 = read x1.payload
+      let v7 = read v6.0
+      let el = v7
+      let v8 = read v6.1
+      let rest = v8
+      let v9 = 1
+      let match1 = v9
+      jump join3
+    join3:
+      return match1
+  fn closure_71(env0, C1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_72
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_70(env0, c1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_71
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_69(env0, B1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_70
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_68(env0, b1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_69
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_67(env0, s1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_68
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_66(env0, r1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_67
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_65(env0, A1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: A1 }
+      let fnref_cls2 = &closure_66
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_64(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_65
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
+    "name": "(expr)",
+    "normalized": "λ(a: Type) =>
+  (closure: λ(A: a) =>
+    λ(r: Row) =>
+      λ(s: Row) =>
+        λ(b: Type) =>
+          λ(B: b) =>
+            λ(c: Type) =>
+              λ(C: c) =>
+                (λ(x: Variant
+                  [ nil: A | [ cons: Schema [ 0: B, 1: C | s ] | r ] ]) ->
+                  match x
+                    | Variant [ nil: a | $row_4 ] -> 0
+                    | Variant [ cons: Struct [ 0: el,
+                        1: rest | $row_9 ] | $row_10 ] ->
+                        1 : Π(x: Variant
+                  [ nil: A | [ cons: Schema [ 0: B, 1: C | s ] | r ] ]) ->
+                  Num) -| Γ: a)",
+    "solverTrace": "=== Formula ===
+  (forall ((a Type))
+    (forall ((A Type))
+      (forall ((r Row))
+        (forall ((s Row))
+          (forall ((b Type))
+            (forall ((B Type))
+              (forall ((c Type))
+                (forall ((C Type))
+                  (forall ((x Schema)) (and (= x x) (= x x)))))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
+    "type": "Π(a: Type) =>
+  Π(A: a) =>
+    Π(r: Row) =>
+      Π(s: Row) =>
+        Π(b: Type) =>
+          Π(B: b) =>
+            Π(c: Type) =>
+              Π(C: c) =>
+                Π(x: Variant [ nil: A, cons: Schema [ 0: B, 1: C | s ] | r ]) ->
+                  Num",
+    "validity": "valid",
+  },
+]
+`;
+
+exports[`Pattern matching — polymorphic generalization > wildcard variant match 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_43;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_48(env0, x1) {
+  let __block = "entry";
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        (__block = "sw2");
+        break;
+      }
+      case "sw2": {
+        const tag0 = x1.__tag;
+        if ((String(tag0) === "nil")) {
+          (__block = "case4");
+          break;
+        }
+        if ((String(tag0) === "cons")) {
+          (__block = "case5");
+          break;
+        }
+      }
+      case "case4": {
+        const v5 = 0;
+        const match1 = v5;
+        (__block = "join3");
+        break;
+      }
+      case "case5": {
+        const v6 = 1;
+        const match1 = v6;
+        (__block = "join3");
+        break;
+      }
+      case "join3": {
+        return match1;
+      }
+    }
+  }
+}
+
+function closure_47(env0, B1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {};
+  const fnref_cls2 = closure_48;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_46(env0, b1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: cap_0
+  };
+  const fnref_cls2 = closure_47;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_45(env0, r1) {
+  const cap_0 = env0.v0;
+  const env_cls2 = {
+    v0: cap_0
+  };
+  const fnref_cls2 = closure_46;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_44(env0, A1) {
+  const env_cls2 = {
+    v0: A1
+  };
+  const fnref_cls2 = closure_45;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_43(env0, a1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_44;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+return main();
+",
+    "elaborated": "λ(a: Type) =>
+  λ(A: a) =>
+    λ(r: Row) =>
+      λ(b: Type) =>
+        λ(B: b) =>
+          (λ(x: Variant [ nil: A | [ cons: B | r ] ]) ->
+            match x
+              | Variant [ nil: _ | $row_4 ] -> 0
+              | Variant [ cons: _ | $row_7 ] -> 1 : Π(x: Variant
+            [ nil: A | [ cons: B | r ] ]) ->
+            Num)",
+    "gram": "[1] root
+  :entry -> [2]
+[2] lambda {"variable":"a","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [37]
+[3] lit {"value":{"type":"Atom","value":"Type"}}
+[4] lambda {"variable":"A","icit":"Implicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [38]
+[5] var:bound {"index":0}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+[6] lambda {"variable":"r","icit":"Implicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [39]
+[7] lit {"value":{"type":"Atom","value":"Row"}}
+[8] lambda {"variable":"b","icit":"Implicit","level":3}
+  :annotation -> [9]
+  :body -> [10]
+  :env -> [40]
+[9] lit {"value":{"type":"Atom","value":"Type"}}
+[10] lambda {"variable":"B","icit":"Implicit","level":4}
+  :annotation -> [11]
+  :body -> [12]
+  :env -> [41]
+[11] var:bound {"index":0}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+[12] lambda {"variable":"x","icit":"Explicit","level":5}
+  :annotation -> [13]
+  :body -> [20]
+  :env -> [42]
+[13] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] lit {"value":{"type":"Atom","value":"Variant"}}
+[15] row:ext {"label":"nil"}
+  :rest -> [17]
+  :value -> [16]
+[16] var:bound {"index":3}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+[17] row:ext {"label":"cons"}
+  :rest -> [19]
+  :value -> [18]
+[18] var:bound {"index":-4}
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+[19] var:bound {"index":-3}
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+[20] match
+  :alt -> [22] {"index":0}
+  :alt -> [27] {"index":1}
+  :decision_tree -> [32]
+  :scrutinee -> [21]
+[21] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+  :scope -> [12] {"level":5}
+[22] case
+  :body -> [26]
+  :next -> [27]
+  :pattern -> [23]
+[23] pat:variant {"label":"nil"}
+  :payload -> [24]
+[24] pat:wildcard
+[25] pat:wildcard
+[26] lit {"value":{"type":"Num","value":0}}
+[27] case
+  :body -> [31]
+  :pattern -> [28]
+[28] pat:variant {"label":"cons"}
+  :payload -> [29]
+[29] pat:wildcard
+[30] pat:wildcard
+[31] lit {"value":{"type":"Num","value":1}}
+[32] switch {"kind":"tag"}
+  :branch -> [34] {"label":"nil"}
+  :branch -> [36] {"label":"cons"}
+  :inspect -> [21]
+[33] proj {"label":"payload"}
+  :target -> [21]
+[34] leaf
+  :body -> [26]
+[35] proj {"label":"payload"}
+  :target -> [21]
+[36] leaf
+  :body -> [31]
+[37] env
+[38] env
+[39] env
+  :capture -> [4] {"index":0}
+[40] env
+  :capture -> [4] {"index":0}
+[41] env
+  :capture -> [4] {"index":0}
+[42] env
+[43] closure
+  :body -> [2]
+  :env -> [37]
+[44] closure
+  :body -> [4]
+  :env -> [38]
+[45] closure
+  :body -> [6]
+  :env -> [39]
+[46] closure
+  :body -> [8]
+  :env -> [40]
+[47] closure
+  :body -> [10]
+  :env -> [41]
+[48] closure
+  :body -> [12]
+  :env -> [42]",
+    "ivl": "(forall ((a Type))
+  (forall ((A Type))
+    (forall ((r Row))
+      (forall ((b Type))
+        (forall ((B Type)) (forall ((x Schema)) (and (= x x) (= x x))))))))",
+    "kind": "expression",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_43
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_48(env0, x1) entry=entry
+    entry:
+      jump sw2
+    sw2:
+      let tag0 = read x1.__tag
+      branch tag0 { nil -> case4 | cons -> case5 }
+    case4:
+      let v5 = 0
+      let match1 = v5
+      jump join3
+    case5:
+      let v6 = 1
+      let match1 = v6
+      jump join3
+    join3:
+      return match1
+  fn closure_47(env0, B1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_48
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_46(env0, b1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_47
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_45(env0, r1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_46
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_44(env0, A1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: A1 }
+      let fnref_cls2 = &closure_45
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_43(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_44
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
+    "name": "(expr)",
+    "normalized": "λ(a: Type) =>
+  (closure: λ(A: a) =>
+    λ(r: Row) =>
+      λ(b: Type) =>
+        λ(B: b) =>
+          (λ(x: Variant [ nil: A | [ cons: B | r ] ]) ->
+            match x
+              | Variant [ nil: _ | $row_4 ] -> 0
+              | Variant [ cons: _ | $row_7 ] -> 1 : Π(x: Variant
+            [ nil: A | [ cons: B | r ] ]) ->
+            Num) -| Γ: a)",
+    "solverTrace": "=== Formula ===
+  (forall ((a Type))
+    (forall ((A Type))
+      (forall ((r Row))
+        (forall ((b Type))
+          (forall ((B Type)) (forall ((x Schema)) (and (= x x) (= x x))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
+    "type": "Π(a: Type) =>
+  Π(A: a) =>
+    Π(r: Row) =>
+      Π(b: Type) => Π(B: b) => Π(x: Variant [ nil: A, cons: B | r ]) -> Num",
+    "validity": "valid",
+  },
+]
+`;

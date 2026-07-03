@@ -35,7 +35,7 @@ export const collectMetasNF = (val: NF.Value, zonker: Subst): MetaNF[] => {
 						return [v, ...ms];
 					}
 
-					return collectMetasNF(zonker[v.val], zonker);
+					return ms.concat(collectMetasNF(zonker[v.val], zonker));
 				},
 				[] as MetaNF[],
 			),

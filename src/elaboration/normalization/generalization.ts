@@ -66,12 +66,35 @@ const getNameFactory = (counters: ReturnType<typeof mkCounters>) => {
 export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutions: EB.Resolutions): [NF.Value, EB.Context["zonker"]] => {
 	const tyMetas = collectMetasNF(ty, ctx.zonker);
 	const tmMetas = collectMetasEB(tm, ctx.zonker);
-	const allMetas = fp.uniqBy((m: Meta) => m.val, [...tyMetas, ...tmMetas]).filter(m => !resolutions[m.val]);
+	const seed = fp.uniqBy((m: Meta) => m.val, [...tyMetas, ...tmMetas]);
+
+	// Transitively pull in the metas that appear in a meta's *kind* (its annotation), ordering
+	// each kind-meta before the meta it kinds. This yields the principal type: an unconstrained
+	// binder whose kind is itself unknown becomes Π(k: Type) => Π(v: k) => …, rather than
+	// leaking a raw kind meta or defaulting it to Any.
+	const expandKinds = (seeds: Meta[]): Meta[] => {
+		const seen = new Set<number>();
+		const out: Meta[] = [];
+		const visit = (m: Meta): void => {
+			if (seen.has(m.val)) {
+				return;
+			}
+			seen.add(m.val);
+			const entry = ctx.metas[m.val];
+			if (entry) {
+				collectMetasNF(entry.ann, ctx.zonker).forEach(visit);
+			}
+			out.push(m);
+		};
+		seeds.forEach(visit);
+		return out;
+	};
+
+	const allMetas = expandKinds(seed).filter(m => !resolutions[m.val]);
 	const getName = getNameFactory(mkCounters());
 
 	// Filter out metas from outer scopes - only generalize metas created in the current scope
 	// A meta's lvl indicates the context depth when it was created
-	// If lvl < ctx.env.length, it was created in an outer scope and should NOT be generalized
 	const ms = allMetas.filter(m => m.lvl >= ctx.env.length);
 
 	if (ms.length === 0) {
