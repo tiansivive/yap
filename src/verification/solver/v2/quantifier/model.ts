@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // Shared quantifier model: extracted quantifiers, state, generated lemmas, and trace events.
 // CDCL = Conflict-Driven Clause Learning; MBQI = Model-Based Quantifier Instantiation.
 

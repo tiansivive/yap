@@ -44,8 +44,6 @@ export function Do<R>(gen: () => G<R>): Solver<R> {
 	};
 }
 
-/* eslint-disable @typescript-eslint/no-namespace */
-
 export namespace Reader {
 	export const ask = function* (): G<Env> {
 		return yield (env, _w, st = State.initial) => [Collector.of(env), st];

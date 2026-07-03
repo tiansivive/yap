@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // Grounding substitutes MBQI candidates into quantified bodies and classifies the simplified result.
 // MBQI = Model-Based Quantifier Instantiation.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/mbqi.md

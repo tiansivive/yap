@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // CDCL v2 domain model: solver-owned boolean search state.
 // CDCL = Conflict-Driven Clause Learning; BCP = Boolean Constraint Propagation.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/cdcl-t-solver.md

@@ -84,7 +84,7 @@
 		"vitest": "^4.0.13"
 	},
 	"engines": {
-		"node": ">=18.3.0"
+		"node": ">=20.0.0"
 	},
 	"publishConfig": {
 		"provenance": true

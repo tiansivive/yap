@@ -68,7 +68,27 @@ const bannedSyntax = [
 
 export default tseslint.config(
 	{
-		ignores: ["coverage*", "lib", "node_modules", "pnpm-lock.yaml", "**/*.snap", "src/parser/grammar.ts"],
+		ignores: [
+			"coverage*",
+			"lib",
+			"node_modules",
+			"pnpm-lock.yaml",
+			"**/*.snap",
+			"src/parser/grammar.ts",
+			// Build artifacts
+			"bin",
+			"dist",
+			// Nested repo with its own conventions
+			"z-yap",
+			// Not part of the tsconfig project: highlight grammars, browser assets, example FFI shims
+			"tooling",
+			"src/cli/explore/static",
+			"examples/**/*.js",
+			// Deprecated direct-lowering path (D-006). NOTE: mir.ts, interpret.ts, and
+			// shared/primops are still live (GRAM bridge + pipeline imports) — migrate them
+			// out so they regain lint coverage, then delete the rest.
+			"src/lowering",
+		],
 	},
 	{
 		linterOptions: {
@@ -85,7 +105,7 @@ export default tseslint.config(
 	},
 	...tseslint.config({
 		extends: tseslint.configs.recommendedTypeChecked,
-		files: ["**/*.js", "**/*.ts"],
+		files: ["**/*.js", "**/*.mjs", "**/*.ts"],
 		languageOptions: {
 			parserOptions: {
 				projectService: {
@@ -98,22 +118,40 @@ export default tseslint.config(
 		rules: {
 			// These on-by-default rules don't work well for this repo and we like them off.
 			"no-constant-condition": "off",
+			// V2.Do dispatch: every ts-pattern .with() handler is a function* so the match
+			// delegates uniformly; pure branches legitimately never yield.
+			"require-yield": "off",
+			// Namespace-based APIs are the house style (coding-style.mdc).
+			"@typescript-eslint/no-namespace": "off",
 
 			// These on-by-default rules work well for this repo if configured
-			"@typescript-eslint/no-unused-vars": ["error", { caughtErrors: "all" }],
+			// `_`-prefix declares a binding intentionally unused: descriptive param names,
+			// documented destructurings. Unprefixed unused bindings stay errors (rot).
+			"@typescript-eslint/no-unused-vars": [
+				"error",
+				{
+					caughtErrors: "all",
+					argsIgnorePattern: "^_",
+					varsIgnorePattern: "^_",
+					caughtErrorsIgnorePattern: "^_",
+					destructuredArrayIgnorePattern: "^_",
+					ignoreRestSiblings: true,
+				},
+			],
+			// The else-ban pushes side-effect ternaries; allow them here rather than fight it.
+			"@typescript-eslint/no-unused-expressions": ["error", { allowTernary: true }],
 
 			// ── Immutability ────────────────────────────────────
 			"prefer-const": "error",
 			"no-var": "error",
 			"no-param-reassign": "error",
-			"no-plusplus": "error",
 
 			// ── Strict equality ─────────────────────────────────
 			eqeqeq: ["error", "always"],
 
 			// ── Type safety ─────────────────────────────────────
 			"@typescript-eslint/no-non-null-assertion": "error",
-			"@typescript-eslint/consistent-type-assertions": ["warn", { assertionStyle: "never" }],
+			"@typescript-eslint/consistent-type-assertions": ["error", { assertionStyle: "never" }],
 
 			// ── fp-ts: composition over inspection ──────────────
 			"no-restricted-properties": [
@@ -141,9 +179,28 @@ export default tseslint.config(
 		},
 	}),
 	{
-		files: ["src/lowering/**/*.ts"],
+		// Primitives table uses sparse tuples for positional-optional entries.
+		files: ["src/shared/lib/**"],
 		rules: {
-			"no-restricted-syntax": ["error", ...bannedSyntax.filter(s => !s.selector.includes("'push'"))],
+			"no-sparse-arrays": "off",
+		},
+	},
+	{
+		// CLI entry points: thin commander glue over untyped cmd/opts objects;
+		// process.exit is the correct exit path; hashbang is intentional.
+		extends: [tseslint.configs.disableTypeChecked],
+		files: ["scripts/**"],
+		rules: {
+			"n/no-process-exit": "off",
+			"n/hashbang": "off",
+		},
+	},
+	{
+		// Root config files: CJS, untyped, outside the project graph.
+		extends: [tseslint.configs.disableTypeChecked],
+		files: ["*.config.js", "*.config.cjs", "*.config.mjs"],
+		rules: {
+			"@typescript-eslint/no-require-imports": "off",
 		},
 	},
 	{
@@ -159,7 +216,7 @@ export default tseslint.config(
 		files: ["**/*.md/*.ts"],
 	},
 	{
-		files: ["**/*.test.*"],
+		files: ["**/*.test.*", "**/__tests__/**"],
 		languageOptions: {
 			globals: vitest.environments.env.globals,
 		},
@@ -171,6 +228,14 @@ export default tseslint.config(
 			"@typescript-eslint/no-unsafe-assignment": "off",
 			"@typescript-eslint/no-unsafe-call": "off",
 			"@typescript-eslint/consistent-type-assertions": "off",
+			// Tests exercise untyped boundaries (Nearley results, new Function, FFI shims);
+			// the unsafe-* family and explicit any are noise there.
+			"@typescript-eslint/no-unsafe-member-access": "off",
+			"@typescript-eslint/no-unsafe-argument": "off",
+			"@typescript-eslint/no-unsafe-return": "off",
+			"@typescript-eslint/no-explicit-any": "off",
+			// Either narrowing (if (E.isRight(r)) …) is the natural assertion idiom in tests.
+			"no-restricted-properties": "off",
 		},
 	},
 );

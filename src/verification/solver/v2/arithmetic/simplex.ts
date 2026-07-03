@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // Dual simplex: linear arithmetic feasibility via rational-bounded tableau repair.
 // LRA = Linear Real Arithmetic; BV = Basic Variable; NBV = Non-Basic Variable.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/arithmetic-theory.md

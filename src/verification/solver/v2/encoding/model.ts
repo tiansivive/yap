@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // Encoding v2 domain model: boolean abstraction of IVL formulas.
 // CNF = Conjunctive Normal Form; Tseitin proxies preserve formula structure.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/tseitin-cnf.md

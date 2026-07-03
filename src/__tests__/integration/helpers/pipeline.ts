@@ -196,7 +196,6 @@ const Elaborate = {
 };
 
 const parse = (source: string): ReadonlyArray<Src.Statement> => {
-	// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Nearley requires ParserStart override
 	const g = { ...Grammar, ParserStart: "Script" } as typeof Grammar;
 	const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(g));
 	const sanitized = source.trim().endsWith(";") ? source : `${source};`;
@@ -205,8 +204,6 @@ const parse = (source: string): ReadonlyArray<Src.Statement> => {
 	if (results.length !== 1) {
 		throw new Error(`Ambiguous or failed parse: expected 1, got ${results.length}`);
 	}
-	// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Nearley results are untyped
-	// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Nearley results are untyped
 	return (results[0] as Src.Script).script;
 };
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // Arithmetic normalization: converts IVL atoms into canonical linear constraints.
 // LIA = Linear Integer Arithmetic; LRA = Linear Real Arithmetic.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/arithmetic-theory.md

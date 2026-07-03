@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // E-matching rounds instantiate triggered quantifiers and stage generated CDCL lemmas.
 // CDCL = Conflict-Driven Clause Learning; EUF = Equality with Uninterpreted Functions.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/e-matching.md

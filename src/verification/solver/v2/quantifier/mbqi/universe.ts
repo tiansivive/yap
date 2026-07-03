@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // Universe builds the bounded ground-term domain MBQI ranges over for candidate instantiation.
 // MBQI = Model-Based Quantifier Instantiation; EUF = Equality with Uninterpreted Functions.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/mbqi.md

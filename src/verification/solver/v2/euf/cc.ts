@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // Congruence closure for v2 EUF: maintains equality classes over interned terms.
 // CC = Congruence Closure; EUF = Equality with Uninterpreted Functions.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/congruence-closure.md

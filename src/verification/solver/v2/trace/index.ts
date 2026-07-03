@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 // Solver v2 trace events: writer payloads for observable CDCL(T) execution.
 // CDCL(T) = Conflict-Driven Clause Learning modulo theories.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/solver-trace.md
