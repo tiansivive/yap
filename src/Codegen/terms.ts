@@ -1,5 +1,4 @@
 import { match } from "ts-pattern";
-import { globalModules } from "../modules/loading";
 
 import * as EB from "@yap/elaboration";
 import * as Sub from "@yap/elaboration/unification/substitution";

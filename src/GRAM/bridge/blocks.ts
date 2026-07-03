@@ -1,5 +1,5 @@
 import { Nodes, Edges } from "../graph";
-import type { NodeId, Edge } from "../graph";
+import type { NodeId } from "../graph";
 import { Tags, Labels } from "../vocabulary";
 import { Constructors } from "../../lowering/mir";
 import type { Ctx } from "./context";

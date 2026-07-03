@@ -1,6 +1,3 @@
-import * as Src from "@yap/src/terms";
-import * as EB from "@yap/elaboration";
-import * as NF from "@yap/elaboration/normalization";
 import { Token } from "moo";
 
 export type WithLocation<T> = T & { location: Location };

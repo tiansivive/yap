@@ -6,10 +6,6 @@ import * as NF from "@yap/elaboration/normalization";
 
 import { match, P } from "ts-pattern";
 
-import _ from "lodash";
-import { Subst } from "./unification/substitution";
-
-import * as Metas from "@yap/elaboration/shared/metas";
 import * as R from "@yap/shared/rows";
 import assert from "assert";
 
@@ -68,11 +64,11 @@ export const wrapLambda = (term: EB.Term, ty: NF.Value, ctx: EB.Context): EB.Ter
 export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Resolutions): EB.Term => {
 	return match(term)
 		.with({ type: "Var", variable: { type: "Meta" } }, v => {
-			if (!!resolutions[v.variable.val]) {
+			if (resolutions[v.variable.val]) {
 				return resolutions[v.variable.val];
 			}
 
-			if (!!ctx.zonker[v.variable.val]) {
+			if (ctx.zonker[v.variable.val]) {
 				const quoted = NF.quote(ctx, ctx.env.length, ctx.zonker[v.variable.val]);
 				// we still need to instantiate in case the quoted term has metas itself
 				return instantiate(quoted, ctx, resolutions);

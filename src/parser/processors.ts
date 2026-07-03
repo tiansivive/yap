@@ -1,4 +1,4 @@
-import { Postprocessor, PostProcessor } from "nearley";
+import { PostProcessor } from "nearley";
 
 import type { Statement, Term, Variable, Row } from "./terms";
 import * as Src from "./terms";
@@ -14,7 +14,6 @@ import * as Null from "@yap/utils";
 
 import * as F from "fp-ts/function";
 import * as NEA from "fp-ts/NonEmptyArray";
-import assert from "node:assert";
 
 type Sourced<T> = [T, P.Location];
 const Sourced = {

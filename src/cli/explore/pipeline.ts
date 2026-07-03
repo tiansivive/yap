@@ -6,7 +6,6 @@ import * as EB from "@yap/elaboration";
 import * as GRAM from "@yap/gram";
 
 import * as E from "fp-ts/lib/Either";
-import { pipe } from "fp-ts/function";
 import fs from "fs";
 import { resolve } from "path";
 

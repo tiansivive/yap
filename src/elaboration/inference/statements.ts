@@ -13,9 +13,9 @@ import { freshMeta } from "@yap/elaboration/shared/supply";
 
 import * as Sub from "@yap/elaboration/unification/substitution";
 import { compose } from "@yap/elaboration/unification/substitution";
-import { set, update } from "@yap/utils";
+import { update } from "@yap/utils";
 import { replay } from "../solver/nondeterminism";
-import { unify, display } from "../unification";
+import { unify } from "../unification";
 
 export type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
 export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>

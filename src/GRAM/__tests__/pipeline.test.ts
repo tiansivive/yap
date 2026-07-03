@@ -7,15 +7,12 @@ import * as Lit from "@yap/shared/literals";
 import { translate } from "../translate";
 import { display } from "../display";
 import { resetId, Query, entry, mkGraph } from "../graph";
-import { Tags, Labels } from "../vocabulary";
+import { Tags } from "../vocabulary";
 import { ARITIES } from "../../lowering/shared/primops";
 
 import { compile, configure, verify, defaultPipeline } from "../pipeline";
 import type { Descriptor } from "../pipeline";
-import { none, Initial } from "../pipeline";
-import { descriptor as eta } from "../passes/eta";
-import { descriptor as saturate } from "../passes/saturate";
-import { descriptor as closure } from "../passes/closure";
+import { none } from "../pipeline";
 
 const reset = () => {
 	EB.resetId();

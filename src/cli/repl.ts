@@ -20,7 +20,6 @@ import { match } from "ts-pattern";
 import { createInterface } from "readline";
 import { defaultContext } from "@yap/shared/lib/constants";
 
-import { options } from "@yap/shared/config/options";
 import { mkInterface } from "../modules/loading";
 import { update } from "@yap/utils";
 import { encode, decode } from "../FFI/codecs";
@@ -207,7 +206,7 @@ export function repl(opts: ReplOpts = { codegen: false, target: "js", verify: tr
 											if (typeof result !== "function") {
 												throw new Error(`FFI ${name}: attempted to apply argument to non-function value`);
 											}
-											result = (result as Function)(arg);
+											result = result(arg);
 										}
 										return decode(result);
 									},

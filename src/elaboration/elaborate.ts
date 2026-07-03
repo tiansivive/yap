@@ -6,7 +6,6 @@ import * as Src from "@yap/src/index";
 import * as V2 from "./shared/monad.v2";
 
 import * as NF from "./normalization";
-import * as Modal from "@yap/verification/modalities/shared";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 export type AST = [EB.Term, NF.Value, Q.Usages];

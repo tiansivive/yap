@@ -5,10 +5,9 @@ import * as Lit from "@yap/shared/literals";
 import { Literal } from "@yap/shared/literals";
 import { Implicitness } from "@yap/shared/implicitness";
 import { match, P } from "ts-pattern";
-import { Types, update } from "@yap/utils";
+import { Types } from "@yap/utils";
 
 import * as Modal from "@yap/verification/modalities/shared";
-import { SetFieldType } from "type-fest";
 
 export const nf_tag: unique symbol = Symbol("NF");
 

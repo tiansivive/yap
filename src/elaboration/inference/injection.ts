@@ -9,7 +9,6 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as R from "@yap/shared/rows";
 
 import * as F from "fp-ts/function";
-import { Liquid } from "@yap/verification/modalities";
 import { isLeft } from "fp-ts/lib/Either";
 import assert from "node:assert";
 import * as Src from "@yap/src/index";

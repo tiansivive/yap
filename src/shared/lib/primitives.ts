@@ -213,22 +213,22 @@ export const PrimOps: EB.Context['ffi'] = {
 }
 
 
-export const OP_AND = "$and" as const;
-export const OP_OR = "$or" as const;
-export const OP_EQ = "$eq" as const;
-export const OP_NEQ = "$neq" as const;
-export const OP_LT = "$lt" as const;
-export const OP_GT = "$gt" as const;
-export const OP_LTE = "$lte" as const;
-export const OP_GTE = "$gte" as const;
-export const OP_NOT = "$not" as const;
+export const OP_AND = "$and";
+export const OP_OR = "$or";
+export const OP_EQ = "$eq";
+export const OP_NEQ = "$neq";
+export const OP_LT = "$lt";
+export const OP_GT = "$gt";
+export const OP_LTE = "$lte";
+export const OP_GTE = "$gte";
+export const OP_NOT = "$not";
 
-export const OP_ADD = "$add" as const;
-export const OP_SUB = "$sub" as const;
-export const OP_MUL = "$mul" as const;
-export const OP_DIV = "$div" as const;
+export const OP_ADD = "$add";
+export const OP_SUB = "$sub";
+export const OP_MUL = "$mul";
+export const OP_DIV = "$div";
 
-export const OP_CONCAT = "$concat" as const;
+export const OP_CONCAT = "$concat";
 
 
 

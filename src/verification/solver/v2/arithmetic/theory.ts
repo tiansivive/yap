@@ -9,7 +9,7 @@ import type { IVL } from "../../ivl/types";
 import type { Conflict, Literal } from "../cdcl";
 import type * as Encoding from "../encoding";
 import { Bounds } from "./bounds";
-import { type Constraint, type Linear, Normalize } from "./normalize";
+import { type Constraint, Normalize } from "./normalize";
 import type { Event as ArithmeticEvent } from "./simplex";
 import { Simplex, type Tableau } from "./simplex";
 

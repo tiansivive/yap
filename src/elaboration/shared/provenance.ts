@@ -29,7 +29,7 @@ export const display = (provenance: Provenance[] = [], opts = { cap: 10 }, zonke
 		.map(p => {
 			const pretty = (prov => {
 				if (prov.tag === "unify" && prov.type === "nf") {
-					return `\n\t${NF.display(prov.vals[0] as NF.Value, displayCtx)}\nwith:\n\t${NF.display(prov.vals[1] as NF.Value, displayCtx)}`;
+					return `\n\t${NF.display(prov.vals[0], displayCtx)}\nwith:\n\t${NF.display(prov.vals[1], displayCtx)}`;
 				}
 
 				if (prov.tag === "unify" && prov.type === "row") {

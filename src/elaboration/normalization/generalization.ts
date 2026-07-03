@@ -4,14 +4,11 @@ import { match } from "ts-pattern";
 import * as EB from "@yap/elaboration";
 import * as R from "@yap/shared/rows";
 
-import * as Q from "@yap/shared/modalities/multiplicity";
-
 import fp from "lodash/fp";
 import * as F from "fp-ts/function";
 import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
 import * as Sub from "../unification/substitution";
-import { Liquid } from "@yap/verification/modalities";
 import { collectMetasEB, collectMetasNF } from "../shared/metas";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
@@ -121,7 +118,7 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 				return v;
 			}
 
-			if (!!ctx.zonker[v.variable.val]) {
+			if (ctx.zonker[v.variable.val]) {
 				// Solved meta means it's in the zonker = not unconstrained, so no need to instantiate it
 				return v;
 			}

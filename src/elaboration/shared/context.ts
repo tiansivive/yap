@@ -1,4 +1,4 @@
-import { replicate, unsafeUpdateAt } from "fp-ts/lib/Array";
+import { replicate } from "fp-ts/lib/Array";
 import * as NF from "@yap/elaboration/normalization";
 import * as EB from "@yap/elaboration";
 import * as Q from "@yap/shared/modalities/multiplicity";

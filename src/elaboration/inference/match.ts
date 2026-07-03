@@ -12,9 +12,6 @@ import { match } from "ts-pattern";
 
 import * as P from "@yap/elaboration/shared/provenance";
 
-import * as Modal from "@yap/verification/modalities/shared";
-import { Liquid } from "@yap/verification/modalities";
-
 type Match = Extract<Src.Term, { type: "match" }>;
 
 export const infer = (tm: Match): V2.Elaboration<EB.AST> =>

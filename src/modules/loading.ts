@@ -1,5 +1,4 @@
 import * as EB from "@yap/elaboration";
-import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
 import * as V2 from "@yap/elaboration/shared/monad.v2";
@@ -7,8 +6,6 @@ import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as Sub from "@yap/elaboration/unification/substitution";
 
 import { Either } from "fp-ts/lib/Either";
-import { Option } from "fp-ts/lib/Option";
-import * as O from "fp-ts/lib/Option";
 import * as R from "fp-ts/lib/Record";
 import * as E from "fp-ts/lib/Either";
 import * as F from "fp-ts/lib/function";

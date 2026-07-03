@@ -1,6 +1,7 @@
 import eslint from "@eslint/js";
 import vitest from "@vitest/eslint-plugin";
 import n from "eslint-plugin-n";
+import unusedImports from "eslint-plugin-unused-imports";
 import tseslint from "typescript-eslint";
 
 const bannedMutation = [
@@ -106,6 +107,7 @@ export default tseslint.config(
 	...tseslint.config({
 		extends: tseslint.configs.recommendedTypeChecked,
 		files: ["**/*.js", "**/*.mjs", "**/*.ts"],
+		plugins: { "unused-imports": unusedImports },
 		languageOptions: {
 			parserOptions: {
 				projectService: {
@@ -123,6 +125,13 @@ export default tseslint.config(
 			"require-yield": "off",
 			// Namespace-based APIs are the house style (coding-style.mdc).
 			"@typescript-eslint/no-namespace": "off",
+			// Open-vocabulary aliases (GRAM Tag/Label are both string) make unions like
+			// Tag | Label checker-identical but reader-meaningful; keep the documentation.
+			"@typescript-eslint/no-duplicate-type-constituents": "off",
+
+			// Dead imports are auto-fixable (--fix and IDE-on-save keep them at zero);
+			// unused locals stay manual review below, since they can be bug symptoms.
+			"unused-imports/no-unused-imports": "error",
 
 			// These on-by-default rules work well for this repo if configured
 			// `_`-prefix declares a binding intentionally unused: descriptive param names,
@@ -178,6 +187,14 @@ export default tseslint.config(
 			"no-restricted-syntax": ["error", ...bannedSyntax],
 		},
 	}),
+	{
+		// In declaration files an import can be load-bearing with zero references:
+		// module-hood decides whether `declare module` augments or replaces.
+		files: ["**/*.d.ts"],
+		rules: {
+			"unused-imports/no-unused-imports": "off",
+		},
+	},
 	{
 		// Primitives table uses sparse tuples for positional-optional entries.
 		files: ["src/shared/lib/**"],

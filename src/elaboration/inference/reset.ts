@@ -1,11 +1,9 @@
 import * as F from "fp-ts/lib/function";
 import * as EB from "@yap/elaboration";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
-import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
-import * as Lit from "@yap/shared/literals";
 
 import { update } from "@yap/utils";
 

@@ -6,7 +6,6 @@ import * as Src from "@yap/src/index";
 import * as NF from "@yap/elaboration/normalization";
 import { match } from "ts-pattern";
 
-import * as Lit from "@yap/shared/literals";
 import * as F from "fp-ts/function";
 
 type Projection = Extract<Src.Term, { type: "projection" }>;

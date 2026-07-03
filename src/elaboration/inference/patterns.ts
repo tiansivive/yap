@@ -1,19 +1,13 @@
 import { match } from "ts-pattern";
 
-import * as F from "fp-ts/lib/function";
-
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Q from "@yap/shared/modalities/multiplicity";
-
-import * as Log from "@yap/shared/logging";
 
 import * as V2 from "@yap/elaboration/shared/monad.v2";
 
 import * as Src from "@yap/src/index";
 import * as Lit from "@yap/shared/literals";
-
-import * as Modal from "@yap/verification/modalities/shared";
 
 import * as R from "@yap/shared/rows";
 import { capitalize } from "lodash";

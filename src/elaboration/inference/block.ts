@@ -8,12 +8,9 @@ import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
 import * as Lit from "@yap/shared/literals";
-import { Liquid } from "@yap/verification/modalities";
 
-import * as Sub from "@yap/elaboration/unification/substitution";
 import { update } from "@yap/utils";
 
-import { options } from "@yap/shared/config/options";
 type Block = Extract<Src.Term, { type: "block" }>;
 
 export const infer = (block: Block) =>

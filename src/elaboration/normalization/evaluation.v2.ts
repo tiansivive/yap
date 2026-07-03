@@ -19,7 +19,6 @@ import * as R from "@yap/shared/rows";
 import { Option } from "fp-ts/lib/Option";
 import * as O from "fp-ts/lib/Option";
 import * as A from "fp-ts/lib/Array";
-import { Liquid } from "@yap/verification/modalities";
 import * as Modal from "@yap/verification/modalities/shared";
 import { Implicitness } from "@yap/shared/implicitness";
 import { update } from "@yap/utils";

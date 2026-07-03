@@ -2,17 +2,12 @@ import * as F from "fp-ts/lib/function";
 
 import * as EB from "@yap/elaboration";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
-import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
 import { match } from "ts-pattern";
 import { Implicitness } from "@yap/shared/implicitness";
-import * as Modal from "@yap/verification/modalities";
-import { Liquid } from "@yap/verification/modalities";
-
-import * as Sub from "@yap/elaboration/unification/substitution";
 
 type Application = Extract<Src.Term, { type: "application" }>;
 

@@ -1,4 +1,4 @@
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
@@ -7,15 +7,14 @@ import * as Row from "@yap/shared/rows";
 
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
-import type { CheckFn, SynthFn, SynthResult, SubtypeFn } from "./types";
+import type { SynthResult } from "./types";
 import type { TranslationTools } from "./logic/translate";
 import type { VerificationRuntime } from "./utils/context";
-import { noCapture, unwrapExistential } from "./utils/context";
+import { noCapture } from "./utils/context";
 import { extractModalities, selfify } from "./utils/refinements";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
 import { createCheck } from "./check";
-import { createSubtype } from "./subtype";
 import { primopMapping } from "@yap/shared/lib/primitives";
 import * as E from "fp-ts/lib/Either";
 import assert from "node:assert";

@@ -2,7 +2,7 @@ import type { Literal } from "@yap/shared/literals";
 
 import { Nodes, Edges, Query } from "../graph";
 import type { NodeId } from "../graph";
-import { Tags, Labels } from "../vocabulary";
+import { Labels } from "../vocabulary";
 import { Constructors } from "../../lowering/mir";
 import type { Ctx } from "./context";
 import * as C from "./context";

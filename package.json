@@ -67,6 +67,7 @@
 		"console-fail-test": "^0.5.0",
 		"eslint": "^9.10.0",
 		"eslint-plugin-n": "^17.10.2",
+		"eslint-plugin-unused-imports": "^4.4.1",
 		"husky": "^9.1.5",
 		"knip": "^5.30.0",
 		"lint-staged": "^15.2.10",

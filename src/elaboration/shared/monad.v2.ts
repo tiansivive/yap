@@ -1,5 +1,4 @@
 import * as EB from "@yap/elaboration";
-import * as Src from "@yap/src/index";
 
 import * as E from "fp-ts/Either";
 import * as F from "fp-ts/function";

@@ -108,8 +108,7 @@ export const inj = (label: string, value: EB.Term, term: EB.Term): EB.Term => EB
 /** Pattern builders — namespace-based, extensible. */
 export const Pat = {
 	/** Build a variant pattern: { [tag]: payloadPattern }. Binder("x") for payload binds the payload. */
-	variant: (tag: string, payload: Pattern): Pattern =>
-		EB.Constructors.Patterns.Variant(R.Constructors.Extension(tag, payload, R.Constructors.Empty() as R.Row<Pattern, string>)),
+	variant: (tag: string, payload: Pattern): Pattern => EB.Constructors.Patterns.Variant(R.Constructors.Extension(tag, payload, R.Constructors.Empty())),
 };
 
 /** Build match(scrutinee, alternatives). Alternatives: [pattern, term] pairs. */

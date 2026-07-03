@@ -7,9 +7,6 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
-import * as Log from "@yap/shared/logging";
-
-import { Liquid } from "@yap/verification/modalities";
 import { update } from "@yap/utils";
 
 type Lambda = Extract<Src.Term, { type: "lambda" }>;

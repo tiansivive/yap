@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { elaborateFrom } from "./util";
-import { stripKeys } from "../../../__tests__/setup";
 
 describe("Inference: Literals", () => {
 	it("numbers: 1 >=> Num", () => {

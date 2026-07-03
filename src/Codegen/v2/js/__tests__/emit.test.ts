@@ -168,7 +168,7 @@ describe("Codegen: match", () => {
 		const row = R.Constructors.Extension(
 			"x",
 			EB.Constructors.Patterns.Binder("a"),
-			R.Constructors.Extension("y", EB.Constructors.Patterns.Binder("b"), R.Constructors.Empty() as R.Row<EB.Pattern, string>),
+			R.Constructors.Extension("y", EB.Constructors.Patterns.Binder("b"), R.Constructors.Empty()),
 		);
 		const term = EB.DSL.match(scrutinee, [{ pattern: EB.Constructors.Patterns.Struct(row), term: EB.DSL.add(EB.DSL.bound(0), EB.DSL.bound(1)) }]);
 		expect(codegen(term)).toBe(7);

@@ -2,16 +2,12 @@ import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as EB from "@yap/elaboration";
 import * as U from "@yap/elaboration/unification";
 import * as NF from "@yap/elaboration/normalization";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 import * as Sub from "@yap/elaboration/unification/substitution";
 import { Subst } from "@yap/elaboration/unification/substitution";
 
-import * as Err from "@yap/elaboration/shared/errors";
-
-import * as F from "fp-ts/lib/function";
 import * as E from "fp-ts/lib/Either";
 
-import * as Q from "@yap/shared/modalities/multiplicity";
 import { WithProvenance } from "../shared/provenance";
 
 import _ from "lodash";

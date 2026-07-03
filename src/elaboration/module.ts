@@ -4,8 +4,6 @@ import * as Src from "@yap/src/index";
 
 import * as V2 from "@yap/elaboration/shared/monad.v2";
 
-import * as Q from "@yap/shared/modalities/multiplicity";
-
 import { Either } from "fp-ts/lib/Either";
 
 import * as E from "fp-ts/lib/Either";

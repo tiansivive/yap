@@ -1,13 +1,9 @@
-import * as F from "fp-ts/lib/function";
-
 import * as EB from "@yap/elaboration";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
 
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
-import { Usages } from "@yap/shared/modalities/multiplicity";
 import { Unwrap } from "../shared/monad.v2";
-import { isEqual } from "lodash";
 
 type Annotation = Extract<Src.Term, { type: "annotation" }>;
 
