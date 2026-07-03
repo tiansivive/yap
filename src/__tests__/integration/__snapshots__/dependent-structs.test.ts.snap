@@ -1,0 +1,97 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Integration — Nested dependent structs > nested dependent struct with sibling-label projection 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = 1;
+  const v1 = 2;
+  const v2 = {
+    x: v0,
+    y: v1
+  };
+  const v3 = v2.x;
+  const v4 = 2;
+  const v5 = (v3 / v4);
+  const v6 = v2.y;
+  const v7 = 2;
+  const v8 = (v6 / v7);
+  const v9 = {
+    a: v5,
+    b: v8
+  };
+  const v10 = {
+    point: v2,
+    halved: v9
+  };
+  return v10;
+}
+return main();
+",
+    "elaborated": "Struct
+  [ point: Struct [ x: 1, y: 2 ],
+    halved: Struct [ a: FFI.$div (:point).x 2, b: FFI.$div (:point).y 2 ] ]",
+    "error": "Not a function; Not a function; Not a function",
+    "gram": "[1] root
+  :entry -> [2]
+[2] struct
+  :field -> [3] {"label":"point"}
+  :field -> [6] {"label":"halved"}
+[3] struct
+  :field -> [4] {"label":"x"}
+  :field -> [5] {"label":"y"}
+[4] lit {"value":{"type":"Num","value":1}}
+[5] lit {"value":{"type":"Num","value":2}}
+[6] struct
+  :field -> [20] {"label":"a"}
+  :field -> [21] {"label":"b"}
+[9] var:foreign {"name":"$div","arity":2}
+[11] proj {"label":"x"}
+  :next -> [13]
+  :target -> [12]
+[12] var:label {"name":"point"}
+  :refers_to -> [3]
+[13] lit {"value":{"type":"Num","value":2}}
+[17] proj {"label":"y"}
+  :next -> [19]
+  :target -> [18]
+[18] var:label {"name":"point"}
+  :refers_to -> [3]
+[19] lit {"value":{"type":"Num","value":2}}
+[20] primop {"op":"$div"}
+  :arg -> [11] {"index":0}
+  :arg -> [13] {"index":1}
+  :callee -> [9]
+[21] primop {"op":"$div"}
+  :arg -> [17] {"index":0}
+  :arg -> [19] {"index":1}
+  :callee -> [9]",
+    "ivl": "",
+    "kind": "expression",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 1
+      let v1 = 2
+      let v2 = alloc { x: v0, y: v1 }
+      let v3 = read v2.x
+      let v4 = 2
+      let v5 = /(v3, v4)
+      let v6 = read v2.y
+      let v7 = 2
+      let v8 = /(v6, v7)
+      let v9 = alloc { a: v5, b: v8 }
+      let v10 = alloc { point: v2, halved: v9 }
+      return v10",
+    "name": "(expr)",
+    "normalized": "Struct [ point: Struct [ x: 1, y: 2 ], halved: Struct [ a: 0.5, b: 1 ] ]",
+    "solverTrace": "",
+    "type": "Schema
+  [ point: Schema [ x: Num, y: Num ],
+    halved: Schema
+      [ a: <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$div (:point).x 2) |],
+        b: <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$div (:point).y 2) |] ] ]",
+    "validity": "",
+  },
+]
+`;
