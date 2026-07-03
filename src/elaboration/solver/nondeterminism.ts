@@ -26,7 +26,7 @@ export const replay = function* <T>(action: (zonker: Record<number, NF.Value>) =
 
 	const answers: T[] = [];
 	for (const z of zonkers) {
-		const answer = yield action(z);
+		const answer = yield* V2.pure(action(z));
 		answers.push(answer);
 	}
 

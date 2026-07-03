@@ -69,7 +69,7 @@ export const collect = (row: Src.Row): V2.Elaboration<Collected> =>
 					//const nf = NF.evaluate(ctx, vtm);
 					yield* V2.tell("constraint", [{ type: "assign", left: vty, right: type }]);
 
-					const accumulated: Collected = yield acc;
+					const accumulated: Collected = yield* V2.pure(acc);
 					return { fields: [...accumulated.fields, { label: lbl, term: vtm, value: vty }], tail: accumulated.tail };
 				}),
 			(v, acc) =>
@@ -81,7 +81,7 @@ export const collect = (row: Src.Row): V2.Elaboration<Collected> =>
 
 					const unwrapped = NF.unwrapNeutral(ty);
 
-					const accumulated: Collected = yield acc;
+					const accumulated: Collected = yield* V2.pure(acc);
 					return { fields: accumulated.fields, tail: { variable: tm.variable, ty: unwrapped } };
 				}),
 			V2.of(initial),

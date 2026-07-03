@@ -20,7 +20,7 @@ export const infer = (tm: Match): V2.Elaboration<EB.AST> =>
 		V2.Do(function* () {
 			const ctx = yield* V2.ask();
 			const ast = yield* EB.infer.gen(tm.scrutinee);
-			const alternatives: AltNode[] = yield V2.traverse(tm.alternatives, elaborate(ast, EB.infer));
+			const alternatives: AltNode[] = yield* V2.pure(V2.traverse(tm.alternatives, elaborate(ast, EB.infer)));
 
 			// Ensure all alternatives have the same type - we pick the type of the first alternative as the common type
 			const common = alternatives[0][1];
