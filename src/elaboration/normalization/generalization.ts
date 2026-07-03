@@ -90,7 +90,7 @@ export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutio
 
 	// Wrap from inner to outer. Each Pi body is quoted with lvl equal to the number of binders in scope.
 	const generalized = A.reverse(ms).reduce<NF.Value>((body, m, i) => {
-		const idx = ms.length - 1 - i; // the idx is the complement of i, since we're going from inner to outer
+		//const idx = ms.length - 1 - i; // the idx is the complement of i, since we're going from inner to outer
 		//const variable = String.fromCharCode(charCode + idx);
 		// Quote with all binders in scope: lvl = ms.length - i
 		const variable = extendedCtx.env[i].name.variable;

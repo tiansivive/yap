@@ -50,7 +50,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				)
 				.with(
 					[P._, NF.Patterns.Flex],
-					([v, { variable }]) => !!subst[variable.val],
+					([_, { variable }]) => !!subst[variable.val],
 					([v, meta]) => unify(v, subst[meta.variable.val], lvl, subst),
 				)
 				.with([NF.Patterns.Flex, P._], ([meta, v]) => V2.of(Sub.compose(bind(ctx, meta.variable, v), subst)))
@@ -159,7 +159,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 					}),
 				)
 
-				.with([NF.Patterns.StuckMatch, NF.Patterns.StuckMatch], ([left, right]) => {
+				.with([NF.Patterns.StuckMatch, NF.Patterns.StuckMatch], ([_left, _right]) => {
 					throw new Error("Unification of stuck match expressions is not supported yet");
 				})
 				.with([NF.Patterns.StuckMatch, P._], ([stuck, v]) => {
@@ -295,10 +295,10 @@ const occursCheck = (ctx: EB.Context, v: Meta, ty: NF.Value): boolean => {
 			.with(NF.Patterns.Var, ({ variable }) => _.isEqual(variable, v))
 			.with({ type: "Neutral" }, ({ value }) => occursCheck(ctx, v, value))
 			//occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
-			.with(NF.Patterns.Lambda, ({ binder, closure }) => occursInTerm(closure.ctx, v, closure.term))
+			.with(NF.Patterns.Lambda, ({ closure }) => occursInTerm(closure.ctx, v, closure.term))
 			//occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
-			.with(NF.Patterns.Pi, ({ binder, closure }) => occursInTerm(closure.ctx, v, closure.term))
-			.with(NF.Patterns.Sigma, ({ binder, closure }) => occursInTerm(closure.ctx, v, closure.term))
+			.with(NF.Patterns.Pi, ({ closure }) => occursInTerm(closure.ctx, v, closure.term))
+			.with(NF.Patterns.Sigma, ({ closure }) => occursInTerm(closure.ctx, v, closure.term))
 			.with(NF.Patterns.App, ({ func, arg }) => occursCheck(ctx, v, func) || occursCheck(ctx, v, arg))
 			.with(NF.Patterns.Modal, ({ value, modalities }) => occursCheck(ctx, v, value) || occursCheck(ctx, v, modalities.liquid))
 

@@ -212,7 +212,7 @@ export const tell = function* <K extends Channel>(channel: K, payload: Payload<K
 		return empty;
 	})();
 
-	return yield* pure((ctx, w, st = initialState) => [{ ...writer, result: E.right(undefined) }, st]);
+	return yield* pure((_ctx, _w, st = initialState) => [{ ...writer, result: E.right(undefined) }, st]);
 };
 
 export const listen = function* (): Generator<Elaboration<Accumulator>, Accumulator, Accumulator> {
@@ -236,15 +236,15 @@ export const fail = function* <A>(cause: Cause): Generator<Elaboration<any>, A, 
  ***********************/
 
 export const getSt = function* (): Generator<Elaboration<MutState>, MutState, MutState> {
-	return yield (ctx, w, st = initialState) => [mkCollector(st), st];
+	return yield (_ctx, _w, st = initialState) => [mkCollector(st), st];
 };
 
 export const putSt = function* (newSt: MutState): Generator<Elaboration<void>, void, void> {
-	return yield (ctx, w, st = initialState) => [mkCollector(undefined), newSt];
+	return yield (_ctx, _w, _st = initialState) => [mkCollector(undefined), newSt];
 };
 
 export const modifySt = function* (f: (st: MutState) => MutState): Generator<Elaboration<void>, void, void> {
-	return yield (ctx, w, st = initialState) => [mkCollector(undefined), f(st)];
+	return yield (_ctx, _w, st = initialState) => [mkCollector(undefined), f(st)];
 };
 
 export const localSt = function* <A>(modify: (st: MutState) => MutState, ma: Elaboration<A>): Generator<Elaboration<A>, A, A> {

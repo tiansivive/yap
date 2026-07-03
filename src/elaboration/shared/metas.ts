@@ -73,7 +73,7 @@ export const collectMetasEB = (tm: EB.Term, zonker: Subst): MetaEB[] => {
 				return collectMetasNF(zonker[variable.val], zonker);
 			})
 			.with({ type: "Lit" }, () => [])
-			.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) => _metas(body))
+			.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body }) => _metas(body))
 			.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }) => [..._metas(binding.annotation), ..._metas(body)])
 			.with({ type: "Abs", binding: { type: "Mu" } }, ({ body, binding }) => [..._metas(binding.annotation), ..._metas(body)])
 			.with({ type: "Abs", binding: { type: "Sigma" } }, ({ body, binding }) => [..._metas(binding.annotation), ..._metas(body)])

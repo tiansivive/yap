@@ -223,7 +223,7 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 						const alternatives = yield* V2.pure(
 							V2.traverse(
 								m.alternatives,
-								EB.Inference.Match.elaborate(ast, (src, [pat, patty, , binders]) =>
+								EB.Inference.Match.elaborate(ast, (src, [pat, _patty, , binders]) =>
 									V2.Do(function* () {
 										const ctx = yield* V2.ask();
 										const val = NF.Pats.evaluate(pat, ctx, binders);
@@ -327,7 +327,7 @@ const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): V2.Elaboration<[EB.R
 
 					const rvar: EB.Row = { type: "variable", variable: tm.variable };
 
-					return [R.append(r, rvar), Q.add(us, usages)] as [EB.Row, Q.Usages];
+					return [R.append(r, rvar), Q.add(us, usages)] satisfies [EB.Row, Q.Usages];
 				}),
 			V2.of<[EB.Row, Q.Usages]>([{ type: "empty" }, Q.noUsage(lvl)]),
 		),
@@ -346,7 +346,7 @@ const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<str
 				}
 
 				if (rewritten.right.type !== "extension") {
-					return V2.fail<[EB.Row, Q.Usages]>({ type: "Impossible", message: "Rewritting a row extension should result in another row extension" });
+					return V2.fail<[EB.Row, Q.Usages]>({ type: "Impossible", message: "Rewriting a row extension should result in another row extension" });
 				}
 
 				const { value: rv, row: rr } = rewritten.right;
@@ -371,7 +371,7 @@ const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<str
 				);
 			})
 			.with([P._, { type: "variable" }], () => V2.fail<[EB.Row, Q.Usages]>({ type: "Impossible", message: "Cannot have row var in a struct value" }))
-			.with([{ type: "variable" }, { type: "empty" }], function* ([v, e]) {
+			.with([{ type: "variable" }, { type: "empty" }], function* ([v, _e]) {
 				yield* V2.tell("constraint", { type: "assign", left: NF.Constructors.Row({ type: "empty" }), right: NF.Constructors.Row(v) });
 				return [{ type: "empty" }, us] satisfies [EB.Row, Q.Usages];
 			})
@@ -392,7 +392,7 @@ const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<str
 				return [inferred.tm, us] satisfies [EB.Row, Q.Usages];
 			})
 			.with([P._, { type: "extension" }], ([r, { label }]) => V2.fail<[EB.Row, Q.Usages]>(Err.MissingLabel(label, r)))
-			.otherwise(r => {
+			.otherwise(_ => {
 				throw new Error("Unknown row action");
 			});
 

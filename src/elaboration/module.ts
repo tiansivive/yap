@@ -49,7 +49,7 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context): Omit<Interface, "im
 				E.match(
 					e => {
 						const [r, c] = next(tail, ctx);
-						return [update(r, "errors", A.prepend(e)), c] as WithCtx;
+						return [update(r, "errors", A.prepend(e)), c] satisfies WithCtx;
 					},
 					ctx => next(tail, ctx),
 				),
@@ -63,7 +63,7 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context): Omit<Interface, "im
 				E.match(
 					e => {
 						const [r, c] = next(tail, ctx);
-						return [update(r, "foreign", A.prepend<Pair>([name, E.left(e)])), c] as WithCtx;
+						return [update(r, "foreign", A.prepend<Pair>([name, E.left(e)])), c] satisfies WithCtx;
 					},
 					([ast, nextCtx, decl]) =>
 						F.pipe(
@@ -76,7 +76,7 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context): Omit<Interface, "im
 										update("declarations", (d: Record<string, Declaration>) => ({ ...d, [name]: decl })),
 									),
 									c,
-								] as WithCtx,
+								] satisfies WithCtx,
 							maybeExport(name),
 						),
 				),
@@ -91,10 +91,10 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context): Omit<Interface, "im
 				E.match(
 					e => {
 						const [r, c] = next(tail, ctx);
-						return [update(r, "letdecs", A.prepend<Pair>([name, E.left(e)])), c] as WithCtx;
+						return [update(r, "letdecs", A.prepend<Pair>([name, E.left(e)])), c] satisfies WithCtx;
 					},
 					([ast, nextCtx]) =>
-						F.pipe(next(tail, nextCtx), ([r, c]) => [update(r, "letdecs", A.prepend<Pair>([name, E.right(ast)])), c] as WithCtx, maybeExport(name)),
+						F.pipe(next(tail, nextCtx), ([r, c]) => [update(r, "letdecs", A.prepend<Pair>([name, E.right(ast)])), c] satisfies WithCtx, maybeExport(name)),
 				),
 			);
 		}

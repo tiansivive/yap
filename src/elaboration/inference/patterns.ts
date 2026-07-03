@@ -77,7 +77,7 @@ export const infer: Inference<Src.Pattern, "type"> = {
 
 	Variant: V2.regen(pat =>
 		V2.Do(function* () {
-			const ctx = yield* V2.ask();
+			//const ctx = yield* V2.ask();
 			const [r, rowty, rus, binders] = yield* elaborate.gen(pat.row);
 			// const addVar = function* (nfr: NF.Row): Generator<V2.Elaboration<any>, NF.Row, any> {
 			// 	if (nfr.type === "empty") {
@@ -156,7 +156,7 @@ const elaborate = V2.regen(
 			const ctx = yield* V2.ask();
 
 			const rr: RowResult = yield match(r)
-				.with({ type: "empty" }, r =>
+				.with({ type: "empty" }, _r =>
 					V2.Do(function* () {
 						const meta = yield* EB.freshMeta(ctx.env.length, NF.Row);
 						const fresh = `$row_${meta.val}`;

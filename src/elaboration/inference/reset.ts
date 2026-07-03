@@ -52,7 +52,7 @@ export const infer = (reset: Reset): V2.Elaboration<EB.AST> =>
 				yield* V2.tell("constraint", { type: "assign", left: d.answer.initial, right: d.answer.final });
 			}
 
-			yield* V2.modifySt(update("delimitations", ([d, ...ds]) => ds));
+			yield* V2.modifySt(update("delimitations", ([_d, ...ds]) => ds));
 			return [EB.Constructors.Reset(tm), d.answer.final, us] satisfies EB.AST;
 		}),
 	);

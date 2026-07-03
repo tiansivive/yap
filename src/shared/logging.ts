@@ -29,7 +29,7 @@ export const logger = winston.createLogger({
 			level: "debug",
 			format: winston.format.combine(
 				winston.format(info => {
-					const msg = `[${label.join(".")}] ${info.message}`;
+					const msg = `[${label.join(".")}] ${String(info.message)}`;
 					info[Symbol.for("message")] = msg.replace(/\n/g, " ");
 
 					const meta = Object.entries(info).reduce((acc: object, [key, value]) => {

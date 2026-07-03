@@ -27,7 +27,7 @@
 			"@yap/pipeline/*": ["./src/pipeline/*"]
 		}
 	},
-	"include": ["src", "scripts/cli.ts", "integration-tests"],
+	"include": ["src", "scripts/cli.ts"],
 	"exclude": ["src/cli/explore/static", "tooling/syntax-highlighting"],
 	"ts-node": {
 		"require": ["tsconfig-paths/register"]

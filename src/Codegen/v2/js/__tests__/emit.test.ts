@@ -17,6 +17,7 @@ const codegen = (term: EB.Term, ffi?: Record<string, (...args: any[]) => any>, d
 	const code = print(program);
 	const ffiNames = Object.keys(ffi ?? {});
 	const ffiValues = Object.values(ffi ?? {});
+	// eslint-disable-next-line @typescript-eslint/no-implied-eval -- executing emitted JS is what this suite tests
 	const fn = new Function(...ffiNames, code);
 	return fn(...ffiValues);
 };
@@ -168,7 +169,7 @@ describe("Codegen: match", () => {
 		const row = R.Constructors.Extension(
 			"x",
 			EB.Constructors.Patterns.Binder("a"),
-			R.Constructors.Extension("y", EB.Constructors.Patterns.Binder("b"), R.Constructors.Empty()),
+			R.Constructors.Extension("y", EB.Constructors.Patterns.Binder("b"), R.Constructors.Empty<EB.Pattern, string>()),
 		);
 		const term = EB.DSL.match(scrutinee, [{ pattern: EB.Constructors.Patterns.Struct(row), term: EB.DSL.add(EB.DSL.bound(0), EB.DSL.bound(1)) }]);
 		expect(codegen(term)).toBe(7);

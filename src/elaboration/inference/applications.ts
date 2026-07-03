@@ -19,9 +19,9 @@ export const infer = (node: Application) =>
 
 			const [ft, fty, fus] = yield* V2.pure(inferFn(node));
 			const pi = yield* mkPi(NF.force(ctx, fty), node.icit);
-			const [at, aus] = yield* V2.pure(checkArg(node, pi[0]));
+			const [at, _aus] = yield* V2.pure(checkArg(node, pi[0]));
 
-			const [nf, cls, x] = pi;
+			const [_nf, cls, x] = pi;
 
 			// TODO: Move this to the verification step
 			//const rus = Q.add(fus, Q.multiply(quantity, aus));
@@ -70,7 +70,6 @@ const mkPi = (fnType: NF.Value, icit: Implicitness): Generator<V2.Elaboration<an
 			const meta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 			const nf = NF.evaluate(ctx, meta);
 
-			const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 			const closure = NF.Constructors.Closure(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length + 1, NF.Type)));
 
 			const pi = NF.Constructors.Pi("x", icit, nf, closure);

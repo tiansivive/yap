@@ -140,7 +140,7 @@ const displayContext = (context: EB.Context, resolutions: EB.Resolutions, opts =
 	return pretty;
 };
 
-const displayEnv = (ctx: EB.Context, opts = { deBruijn: false }): string => {
+const displayEnv = (ctx: EB.Context, _opts = { deBruijn: false }): string => {
 	const printedEnv = ctx.env.map(({ name }) => name.variable).slice(0);
 
 	return printedEnv.length > 0 ? `Γ: ${printedEnv.join("; ")}` : "·";

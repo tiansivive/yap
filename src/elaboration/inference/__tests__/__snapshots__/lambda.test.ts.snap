@@ -248,11 +248,11 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
 {
   "displays": {
     "constraints": [
-      "?1 ~~ Π(x: ?2) -> (closure: (?4 :: Type) -| Γ: x; f)",
+      "?1 ~~ Π(x: ?2) -> (closure: (?3 :: Type) -| Γ: x; f)",
       "Num ~~ ?2",
     ],
-    "term": "(λ(f: (?1 :: Type)) => f 1 : Π(f: (?1 :: Type)) => (?4 :: Type))",
-    "type": "Π(f: ?1) => (closure: (?4 :: Type) -| Γ: f)",
+    "term": "(λ(f: (?1 :: Type)) => f 1 : Π(f: (?1 :: Type)) => (?3 :: Type))",
+    "type": "Π(f: ?1) => (closure: (?3 :: Type) -| Γ: f)",
   },
 }
 `;
@@ -356,7 +356,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
               "variable": {
                 "lvl": 2,
                 "type": "Meta",
-                "val": 4,
+                "val": 3,
               },
             },
             "type": "Closure",
@@ -426,23 +426,9 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
           },
         },
         "meta": {
-          "lvl": 1,
-          "type": "Meta",
-          "val": 3,
-        },
-      },
-      "4": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
           "lvl": 2,
           "type": "Meta",
-          "val": 4,
+          "val": 3,
         },
       },
     },
@@ -466,7 +452,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
           "variable": {
             "lvl": 2,
             "type": "Meta",
-            "val": 4,
+            "val": 3,
           },
         },
         "type": "Abs",
@@ -539,7 +525,7 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
           "variable": {
             "lvl": 2,
             "type": "Meta",
-            "val": 4,
+            "val": 3,
           },
         },
         "type": "Closure",
@@ -555,11 +541,11 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
 {
   "displays": {
     "constraints": [
-      "?1 ~~ Π(x: ?2) -> (closure: (?4 :: Type) -| Γ: x; f)",
+      "?1 ~~ Π(x: ?2) -> (closure: (?3 :: Type) -| Γ: x; f)",
       "Num ~~ ?2",
     ],
-    "term": "(λ(f: (?1 :: Type)) -> f 1 : Π(f: (?1 :: Type)) -> (?4 :: Type))",
-    "type": "Π(f: ?1) -> (closure: (?4 :: Type) -| Γ: f)",
+    "term": "(λ(f: (?1 :: Type)) -> f 1 : Π(f: (?1 :: Type)) -> (?3 :: Type))",
+    "type": "Π(f: ?1) -> (closure: (?3 :: Type) -| Γ: f)",
   },
 }
 `;
@@ -663,7 +649,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
               "variable": {
                 "lvl": 2,
                 "type": "Meta",
-                "val": 4,
+                "val": 3,
               },
             },
             "type": "Closure",
@@ -733,23 +719,9 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
           },
         },
         "meta": {
-          "lvl": 1,
-          "type": "Meta",
-          "val": 3,
-        },
-      },
-      "4": {
-        "ann": {
-          "type": "Lit",
-          "value": {
-            "type": "Atom",
-            "value": "Type",
-          },
-        },
-        "meta": {
           "lvl": 2,
           "type": "Meta",
-          "val": 4,
+          "val": 3,
         },
       },
     },
@@ -773,7 +745,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
           "variable": {
             "lvl": 2,
             "type": "Meta",
-            "val": 4,
+            "val": 3,
           },
         },
         "type": "Abs",
@@ -846,7 +818,7 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
           "variable": {
             "lvl": 2,
             "type": "Meta",
-            "val": 4,
+            "val": 3,
           },
         },
         "type": "Closure",

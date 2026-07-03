@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { match } from "ts-pattern";
 import * as Core from "../../core";
-import { CDCL, type Clause, type Result } from "../index";
+import { CDCL, Clause, type Result } from "../index";
 
-const collect = (clauses: Clause[]): { steps: { tag: string }[]; result: Result } => {
+const collect = (clauses: Clause.T[]): { steps: { tag: string }[]; result: Result } => {
 	const [collector] = Core.run(CDCL.solveTrace(clauses));
 	return match(collector.result)
 		.with({ _tag: "Right" }, ({ right }) => ({ steps: collector.steps, result: right }))
@@ -14,19 +14,19 @@ const collect = (clauses: Clause[]): { steps: { tag: string }[]; result: Result 
 describe("CDCL Core", () => {
 	describe("trivial SAT", () => {
 		it("satisfies a single positive unit clause", () => {
-			const clauses: Clause[] = [{ literals: [1], origin: "test" }];
+			const clauses: Clause.T[] = [{ literals: [1], origin: "test" }];
 			const result = CDCL.solve(clauses);
 			expect(result.tag).toBe("sat");
 		});
 
 		it("satisfies a single negative unit clause", () => {
-			const clauses: Clause[] = [{ literals: [-1], origin: "test" }];
+			const clauses: Clause.T[] = [{ literals: [-1], origin: "test" }];
 			const result = CDCL.solve(clauses);
 			expect(result.tag).toBe("sat");
 		});
 
 		it("satisfies two compatible unit clauses", () => {
-			const clauses: Clause[] = [
+			const clauses: Clause.T[] = [
 				{ literals: [1], origin: "test" },
 				{ literals: [2], origin: "test" },
 			];
@@ -35,7 +35,7 @@ describe("CDCL Core", () => {
 		});
 
 		it("satisfies a disjunctive clause", () => {
-			const clauses: Clause[] = [{ literals: [1, 2, 3], origin: "test" }];
+			const clauses: Clause.T[] = [{ literals: [1, 2, 3], origin: "test" }];
 			const result = CDCL.solve(clauses);
 			expect(result.tag).toBe("sat");
 		});
@@ -43,7 +43,7 @@ describe("CDCL Core", () => {
 
 	describe("trivial UNSAT", () => {
 		it("detects contradiction: x and not-x", () => {
-			const clauses: Clause[] = [
+			const clauses: Clause.T[] = [
 				{ literals: [1], origin: "a" },
 				{ literals: [-1], origin: "b" },
 			];
@@ -52,7 +52,7 @@ describe("CDCL Core", () => {
 		});
 
 		it("detects empty clause", () => {
-			const clauses: Clause[] = [{ literals: [], origin: "empty" }];
+			const clauses: Clause.T[] = [{ literals: [], origin: "empty" }];
 			const result = CDCL.solve(clauses);
 			expect(result.tag).toBe("unsat");
 		});
@@ -60,7 +60,7 @@ describe("CDCL Core", () => {
 
 	describe("BCP propagation", () => {
 		it("propagates through unit implications", () => {
-			const clauses: Clause[] = [
+			const clauses: Clause.T[] = [
 				{ literals: [1], origin: "unit" },
 				{ literals: [-1, 2], origin: "impl1" },
 				{ literals: [-2, 3], origin: "impl2" },
@@ -77,7 +77,7 @@ describe("CDCL Core", () => {
 		});
 
 		it("detects conflict during propagation", () => {
-			const clauses: Clause[] = [
+			const clauses: Clause.T[] = [
 				{ literals: [1], origin: "a" },
 				{ literals: [-1, 2], origin: "b" },
 				{ literals: [-2], origin: "c" },
@@ -89,7 +89,7 @@ describe("CDCL Core", () => {
 
 	describe("conflict analysis and backjumping", () => {
 		it("solves pigeon-hole-like problem requiring backtrack", () => {
-			const clauses: Clause[] = [
+			const clauses: Clause.T[] = [
 				{ literals: [1, 2], origin: "c1" },
 				{ literals: [1, -2], origin: "c2" },
 				{ literals: [-1, 2], origin: "c3" },
@@ -100,7 +100,7 @@ describe("CDCL Core", () => {
 		});
 
 		it("learns clause and backtracks on 3-variable problem", () => {
-			const clauses: Clause[] = [
+			const clauses: Clause.T[] = [
 				{ literals: [1, 2], origin: "c1" },
 				{ literals: [-1, 3], origin: "c2" },
 				{ literals: [-2, 3], origin: "c3" },
@@ -113,7 +113,7 @@ describe("CDCL Core", () => {
 
 	describe("larger instances", () => {
 		it("solves a 5-variable satisfiable instance", () => {
-			const clauses: Clause[] = [
+			const clauses: Clause.T[] = [
 				{ literals: [1, 2, 3], origin: "c1" },
 				{ literals: [-1, -2, 4], origin: "c2" },
 				{ literals: [-3, 5], origin: "c3" },
@@ -129,7 +129,7 @@ describe("CDCL Core", () => {
 		const tags = (steps: { tag: string }[]) => steps.map(s => s.tag);
 
 		it("SAT trace ends with sat event", () => {
-			const clauses: Clause[] = [{ literals: [1], origin: "test" }];
+			const clauses: Clause.T[] = [{ literals: [1], origin: "test" }];
 			const { steps, result } = collect(clauses);
 
 			expect(result.tag).toBe("sat");
@@ -137,7 +137,7 @@ describe("CDCL Core", () => {
 		});
 
 		it("SAT trace contains propagate for unit clause", () => {
-			const clauses: Clause[] = [{ literals: [1], origin: "test" }];
+			const clauses: Clause.T[] = [{ literals: [1], origin: "test" }];
 			const { steps } = collect(clauses);
 
 			const propagations = steps.filter(s => s.tag === "propagate");
@@ -145,7 +145,7 @@ describe("CDCL Core", () => {
 		});
 
 		it("UNSAT trace ends with unsat event", () => {
-			const clauses: Clause[] = [
+			const clauses: Clause.T[] = [
 				{ literals: [1], origin: "a" },
 				{ literals: [-1], origin: "b" },
 			];
@@ -156,7 +156,7 @@ describe("CDCL Core", () => {
 		});
 
 		it("UNSAT trace contains conflict event", () => {
-			const clauses: Clause[] = [
+			const clauses: Clause.T[] = [
 				{ literals: [1], origin: "a" },
 				{ literals: [-1], origin: "b" },
 			];
@@ -166,7 +166,7 @@ describe("CDCL Core", () => {
 		});
 
 		it("backtracking trace includes decide, analyze, backjump", () => {
-			const clauses: Clause[] = [
+			const clauses: Clause.T[] = [
 				{ literals: [1, 2], origin: "c1" },
 				{ literals: [1, -2], origin: "c2" },
 				{ literals: [-1, 2], origin: "c3" },
@@ -182,7 +182,7 @@ describe("CDCL Core", () => {
 		});
 
 		it("BCP chain trace shows propagations", () => {
-			const clauses: Clause[] = [
+			const clauses: Clause.T[] = [
 				{ literals: [1], origin: "unit" },
 				{ literals: [-1, 2], origin: "impl1" },
 				{ literals: [-2, 3], origin: "impl2" },
@@ -195,7 +195,7 @@ describe("CDCL Core", () => {
 		});
 
 		it("trace collection produces non-empty output", () => {
-			const clauses: Clause[] = [
+			const clauses: Clause.T[] = [
 				{ literals: [1], origin: "a" },
 				{ literals: [-1], origin: "b" },
 			];

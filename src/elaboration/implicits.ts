@@ -10,7 +10,7 @@ import * as R from "@yap/shared/rows";
 import assert from "assert";
 
 export function insert(node: EB.AST): V2.Elaboration<EB.AST> {
-	const [term, ty, us] = node;
+	const [term, _ty, us] = node;
 	return V2.Do(function* () {
 		const ctx = yield* V2.ask();
 		const r = match(node)
@@ -121,6 +121,7 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 			),
 		)
 		.with({ type: "Block" }, ({ return: ret, statements }) => {
+			const empty: EB.Statement[] = [];
 			const { stmts, ctx: xtended } = statements.reduce(
 				(acc, s) => {
 					const { stmts, ctx } = acc;
@@ -133,7 +134,7 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 					const instantiated = { ...s, value: instantiate(s.value, ctx, resolutions) };
 					return { stmts: [...stmts, instantiated], ctx };
 				},
-				{ stmts: [] as EB.Statement[], ctx },
+				{ stmts: empty, ctx },
 			);
 
 			return EB.Constructors.Block(stmts, instantiate(ret, xtended, resolutions));

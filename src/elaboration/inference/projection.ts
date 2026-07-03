@@ -83,7 +83,7 @@ export const project = (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages):
 					return v;
 				}),
 			)
-			.with(NF.Patterns.Sigma, ({ binder, closure }) =>
+			.with(NF.Patterns.Sigma, ({ binder, closure: _cls }) =>
 				V2.Do(function* () {
 					// Sigma types have the form: Σ(r: Row). Body(r)
 					// The binder annotation is a Row type

@@ -97,7 +97,7 @@ export const lte = (p: EB.Term, q: EB.Term): EB.Term => {
 
 // Structural: struct, proj, inj
 export const struct = (fields: Array<{ label: string; value: EB.Term }>): EB.Term => {
-	const row = fields.reduceRight<EB.Row>((acc, { label, value }) => R.Constructors.Extension(label, value, acc), R.Constructors.Empty() as EB.Row);
+	const row = fields.reduceRight<EB.Row>((acc, { label, value }) => R.Constructors.Extension(label, value, acc), R.Constructors.Empty() satisfies EB.Row);
 	return EB.Constructors.Struct(row);
 };
 

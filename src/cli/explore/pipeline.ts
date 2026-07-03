@@ -120,7 +120,7 @@ const parse = (source: string, rule: ParserRule): Src.Term | Src.Statement => {
 	return data.results[0] as Src.Term;
 };
 
-export const run = async (source: string, opts: Options): Promise<Result> => {
+export const run = (source: string, opts: Options): Result => {
 	const errors: string[] = [];
 	const result = { ...empty, source };
 	const db = deBruijnOpts(opts.deBruijn);

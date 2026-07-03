@@ -89,7 +89,7 @@ export const resetId = () => {
 };
 export const mk = <K extends Constructor["type"]>(ctor: Extract<Constructor, { type: K }>) => {
 	const r = Types.make(tag, { ...ctor, id: nextId() });
-	return r as Simplify<typeof r>;
+	return r satisfies Simplify<typeof r>;
 };
 
 export const Constructors = {

@@ -26,7 +26,7 @@ alwaysApply: true
 - **Not resetting supplies** before tests → nondeterministic snapshots
 - **NF.Value branded type**: `Extract<NF.Value, { type: "Abs" }>` → `never`. Use intersection: `NF.Value & { binder: { type: "Pi"; ... }; closure: NF.Closure }`
 - **CST nodes**: Use `SyntaxType.X` enum (e.g. `SyntaxType.Lambda`), not raw `"lambda"`
-- **Never run bare `tsc --noEmit`** — it uses `tsconfig.json` which includes test files with stale APIs. Always use `pnpm typecheck` which uses `tsc.tsconfig.json` (excludes `**/*.test.ts` and static assets)
+- **One tsconfig for everything** — `tsconfig.json` covers src, tests, and `scripts/cli.ts`; tsc, ESLint, vitest, and the IDE all share it. Keep it clean: test files are type-checked by `pnpm typecheck` too (the old `tsc.tsconfig.json` test-exclusion split is retired)
 
 ## Tree-sitter (v2)
 

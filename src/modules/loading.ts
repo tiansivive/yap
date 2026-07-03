@@ -91,7 +91,7 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts
 
 	iface.letdecs.forEach(([name, result]) => {
 		if (E.isLeft(result)) {
-			console.warn(`Error in module ${moduleName} for let ${name}: ${result.left}`);
+			console.warn(`Error in module ${moduleName} for let ${name}:`);
 			V2.display(result.left);
 			console.error(P.display(result.left.provenance || [], { cap: 100 }, Sub.empty, {}));
 		}
