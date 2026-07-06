@@ -47,6 +47,7 @@ The detailed source is `.cursor/rules/*.mdc`. Consult by task:
 | writing to z-yap or closing out a session | zettelkasten skill (`z-yap/.cursor/skills/zettelkasten/`)     |
 | authoring a phased implementation plan    | create-plan skill (`.cursor/skills/create-plan/`)             |
 | reviewing Yap code                        | yap-reviewer skill (`.cursor/skills/yap-reviewer/`)           |
+| debugging a failure / tracking down a bug | `debugging.mdc`                                               |
 
 ## Key references
 

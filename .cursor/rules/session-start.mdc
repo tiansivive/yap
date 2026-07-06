@@ -15,5 +15,6 @@ Apply these rules to all code you write:
 - **agent-behavior.mdc** — collaborative, validate, surface issues, self-maintenance
 - **communication.mdc** — prose: density, variation, forward progress
 - **testing.mdc** — when touching tests
+- **debugging.mdc** — when tracking down a bug: root cause over symptom, hold hypotheses loosely
 
 Do not default to imperative loops or if/else chains. Follow the project's style from the start.

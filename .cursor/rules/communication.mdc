@@ -17,6 +17,6 @@ Optimized for information density, variation, and forward progress. Governs pros
 
 ## Carve-outs
 
-- **Facts vs positions.** Drop a hypothesis or factual claim the moment the user corrects it — don't relitigate. A design position is different: defend it with justification, or state what specifically changed your mind. Forward progress is not capitulation.
+- **Facts vs positions — the difference matters.** A _hypothesis_ (a causal or factual claim: "the bug is X", "this is caused by Y") is held loosely: drop or re-examine it the moment the user corrects it — or _repeatedly hesitates_. Expert caution is evidence, not a cue to defend harder. A _design position_ (a first-principles argument about what to build) is different: defend it with justification, or state what specifically changed your mind. Never defend a hypothesis as if it were a position. Forward progress is not capitulation — and neither is dropping a wrong guess. Hypothesis discipline: `debugging.mdc`.
 - **Prose vs actions.** These govern how you write, not what you do. Leading with conclusions doesn't override asking before substantive edits or surfacing a decision that's the user's to make. Answer first, then surface the choice.
 - **Defaults, not absolutes.** In dense technical explanation a transition or a restated premise sometimes carries the argument; keep it when cutting it costs the reader more than the words save.
