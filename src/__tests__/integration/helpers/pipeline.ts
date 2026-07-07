@@ -196,7 +196,7 @@ const Elaborate = {
 };
 
 const parse = (source: string): ReadonlyArray<Src.Statement> => {
-	const g = { ...Grammar, ParserStart: "Script" } as typeof Grammar;
+	const g = { ...Grammar, ParserStart: "Script" };
 	const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(g));
 	const sanitized = source.trim().endsWith(";") ? source : `${source};`;
 	const { results } = parser.feed(sanitized);

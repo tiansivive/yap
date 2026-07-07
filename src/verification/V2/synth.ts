@@ -373,11 +373,11 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 
 	function toNFVariable(context: EB.Context, variable: EB.Variable): NF.Variable {
 		return match(variable)
-			.with({ type: "Bound" }, ({ index }) => ({ type: "Bound", lvl: context.env.length - 1 - index }) as NF.Variable)
-			.with({ type: "Free" }, ({ name }) => ({ type: "Free", name }) as NF.Variable)
-			.with({ type: "Label" }, ({ name }) => ({ type: "Label", name }) as NF.Variable)
-			.with({ type: "Foreign" }, ({ name }) => ({ type: "Foreign", name }) as NF.Variable)
-			.with({ type: "Meta" }, ({ val, lvl }) => ({ type: "Meta", val, lvl }) as NF.Variable)
+			.with({ type: "Bound" }, ({ index }) => ({ type: "Bound", lvl: context.env.length - 1 - index }))
+			.with({ type: "Free" }, ({ name }) => ({ type: "Free", name }))
+			.with({ type: "Label" }, ({ name }) => ({ type: "Label", name }))
+			.with({ type: "Foreign" }, ({ name }) => ({ type: "Foreign", name }))
+			.with({ type: "Meta" }, ({ val, lvl }) => ({ type: "Meta", val, lvl }))
 			.otherwise(() => {
 				throw new Error("Unsupported variable in struct row synthesis");
 			});

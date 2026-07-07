@@ -10,7 +10,7 @@ import { match } from "ts-pattern";
 
 // Create a fresh parser for expressions (Ann grammar start)
 export const mkParser = () => {
-	const g = { ...Grammar, ParserStart: "Ann" } as typeof Grammar;
+	const g = { ...Grammar, ParserStart: "Ann" };
 	return new Nearley.Parser(Nearley.Grammar.fromCompiled(g), { keepHistory: true });
 };
 
