@@ -1,0 +1,29 @@
+---
+description: Debugging & hypothesis discipline — root cause over symptom, falsify over defend
+alwaysApply: false
+---
+
+# Debugging
+
+Applies whenever tracking down a bug, failure, or unexpected behavior. Complements `agent-behavior.mdc` (interaction) and `communication.mdc` (hypothesis vs position).
+
+## Mechanism ≠ root cause
+
+- A runtime-confirmed **mechanism** explains _what happens_ — it is an observation, not a root cause and not a validated fix. "The logs prove X" means X occurs, never that changing X is correct.
+- State the system's **invariant/contract first**, then fix _the stage that violated it_ — not where the symptom surfaces. E.g. "types must never surface metavariables" ⇒ a printed `?N` is an upstream erasure failure, not a spot to default.
+- Prefer fixes that make the bad state **impossible** over fixes that **hide** it. "Default it / make it disappear / guard it away" is a band-aid smell. A value that resolves a problem while carrying no real semantics (an untethered default like `Any`) is a red flag, not relief.
+- Verify against what the system _should_ produce — not against "symptom gone" or "the suite went green."
+
+## Priors
+
+- **Mature, commented, tested code is high-prior-correct.** Require disproportionate evidence before changing it; suspect newer, uncovered code first. Missing test coverage for the failing case is _your_ blind spot to probe, not proof the code is wrong.
+
+## With the domain expert
+
+- Repeated **caution or hesitation** from the user is a falsification signal — often stronger than your own trace, since they hold design intent you lack. By the second nudge, switch from _defending_ the hypothesis to _breaking_ it and pursuing their alternative.
+- Don't borrow "hold positions with justification" (an `agent-behavior.mdc` **design** posture) to defend an investigative hypothesis. Positions are defended; hypotheses are falsified.
+
+## Method
+
+- Gather runtime evidence before fixing; test several hypotheses in parallel, spanning **different subsystems**, not one deep.
+- When evidence rejects a hypothesis, **revert its code changes** before pursuing the next — don't accumulate speculative guards.

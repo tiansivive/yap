@@ -9,7 +9,7 @@ import * as F from "fp-ts/function";
 import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
 import * as Sub from "../unification/substitution";
-import { collectMetasEB, collectMetasNF } from "../shared/metas";
+import { Annotations, collectMetasEB, collectMetasNF } from "../shared/metas";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
 
@@ -66,12 +66,13 @@ const getNameFactory = (counters: ReturnType<typeof mkCounters>) => {
 export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutions: EB.Resolutions): [NF.Value, EB.Context["zonker"]] => {
 	const tyMetas = collectMetasNF(ty, ctx.zonker);
 	const tmMetas = collectMetasEB(tm, ctx.zonker);
-	const allMetas = fp.uniqBy((m: Meta) => m.val, [...tyMetas, ...tmMetas]).filter(m => !resolutions[m.val]);
+	const seed = fp.uniqBy((m: Meta) => m.val, [...tyMetas, ...tmMetas]);
+
+	const allMetas = Annotations.closeOver(ctx, seed).filter(m => !resolutions[m.val]);
 	const getName = getNameFactory(mkCounters());
 
 	// Filter out metas from outer scopes - only generalize metas created in the current scope
 	// A meta's lvl indicates the context depth when it was created
-	// If lvl < ctx.env.length, it was created in an outer scope and should NOT be generalized
 	const ms = allMetas.filter(m => m.lvl >= ctx.env.length);
 
 	if (ms.length === 0) {

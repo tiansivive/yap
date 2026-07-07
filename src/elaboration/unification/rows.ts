@@ -64,8 +64,20 @@ export const unify = (r1: NF.Row, r2: NF.Row, s: Subst): V2.Elaboration<Subst> =
 							return yield* V2.fail<Subst>(Err.Impossible("Expected extension"));
 						}
 
-						const o2 = yield* U.unify.gen(value, rewritten.value, lvl, Sub.compose(o1, s));
-						const o3 = yield* unify.gen(row, rewritten.row, o2);
+						// INTERIM (elaboration monad RW->State refactor): `rewrite` above can mint fresh
+						// metas (row-tail rewriting) mid-solve. Metas are recorded on the monad's *writer*
+						// channel, which bubbles up but is NOT visible to the nested `unify` calls below;
+						// the *reader* `ctx.metas` was frozen before solving, so a flex-flex kind lookup
+						// ([[flex-flex-unification]]) for a just-minted meta misses its `.ann` and crashes.
+						// Splice the metas told so far into the reader for the recursive unifications so
+						// kind-checking still sees them. Remove once metas move onto threaded State — see
+						// [[monad-split]] (RW->State) — which propagates new metas to every subsequent step,
+						// nested recursion included, automatically.
+						const { metas: told } = yield* V2.listen();
+						const withMetas = (c: EB.Context): EB.Context => ({ ...c, metas: { ...c.metas, ...told } });
+
+						const o2 = yield* V2.local(withMetas, U.unify(value, rewritten.value, lvl, Sub.compose(o1, s)));
+						const o3 = yield* V2.local(withMetas, unify(row, rewritten.row, o2));
 
 						return F.pipe(o3, Sub.compose(o2), Sub.compose(o1));
 					}),

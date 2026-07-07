@@ -91,11 +91,17 @@
 	"src/GRAM/bridge/decisions.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 5
+		},
+		"@typescript-eslint/no-base-to-string": {
+			"count": 3
 		}
 	},
 	"src/GRAM/bridge/emit.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 2
+		},
+		"@typescript-eslint/no-base-to-string": {
+			"count": 3
 		}
 	},
 	"src/GRAM/bridge/leaves.ts": {
@@ -136,9 +142,22 @@
 			"count": 6
 		}
 	},
+	"src/GRAM/passes/label-cycles.ts": {
+		"@typescript-eslint/no-base-to-string": {
+			"count": 2
+		}
+	},
 	"src/GRAM/passes/pattern.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 1
+		},
+		"@typescript-eslint/no-base-to-string": {
+			"count": 2
+		}
+	},
+	"src/GRAM/passes/resolve-labels.ts": {
+		"@typescript-eslint/no-base-to-string": {
+			"count": 3
 		}
 	},
 	"src/GRAM/pipeline/configure.ts": {
@@ -206,6 +225,9 @@
 		},
 		"@typescript-eslint/no-unsafe-assignment": {
 			"count": 1
+		},
+		"@typescript-eslint/no-unsafe-call": {
+			"count": 3
 		},
 		"@typescript-eslint/no-unused-vars": {
 			"count": 1
@@ -583,9 +605,6 @@
 		}
 	},
 	"src/verification/V2/synth.ts": {
-		"@typescript-eslint/consistent-type-assertions": {
-			"count": 5
-		},
 		"@typescript-eslint/no-unused-vars": {
 			"count": 3
 		},

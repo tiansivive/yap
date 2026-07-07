@@ -4,7 +4,7 @@ import Grammar from "../grammar";
 
 describe("Parser: Shift/Reset", () => {
 	const mkParser = () => {
-		const g = { ...Grammar, ParserStart: "Ann" } as typeof Grammar;
+		const g = { ...Grammar, ParserStart: "Ann" };
 		return new Nearley.Parser(Nearley.Grammar.fromCompiled(g), { keepHistory: true });
 	};
 

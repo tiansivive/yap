@@ -1,5 +1,5 @@
 import * as NF from "@yap/elaboration/normalization";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as R from "@yap/shared/rows";
@@ -35,7 +35,7 @@ export const collectMetasNF = (val: NF.Value, zonker: Subst): MetaNF[] => {
 						return [v, ...ms];
 					}
 
-					return collectMetasNF(zonker[v.val], zonker);
+					return ms.concat(collectMetasNF(zonker[v.val], zonker));
 				},
 				[] as MetaNF[],
 			),
@@ -82,7 +82,15 @@ export const collectMetasEB = (tm: EB.Term, zonker: Subst): MetaEB[] => {
 				R.fold(
 					row,
 					(val, l, ms) => ms.concat(_metas(val)),
-					(v, ms) => (v.type === "Meta" ? [...ms, v] : ms),
+					(v, ms) => {
+						if (v.type !== "Meta") {
+							return ms;
+						}
+						if (!zonker[v.val]) {
+							return [...ms, v];
+						}
+						return ms.concat(collectMetasNF(zonker[v.val], zonker));
+					},
 					[] as MetaEB[],
 				),
 			)
@@ -102,6 +110,25 @@ export const collectMetasEB = (tm: EB.Term, zonker: Subst): MetaEB[] => {
 		return ms;
 	};
 	return _metas(tm);
+};
+
+export const Annotations = {
+	closeOver: (ctx: EB.Context, seeds: readonly MetaNF[]): readonly MetaNF[] => {
+		// A pass over the collected metas rather than inlining into the collectors' Meta cases:
+		// those take (val, zonker), and threading ctx.metas through them to reach annotations is annoying.
+		type Acc = readonly [ReadonlySet<number>, readonly MetaNF[]];
+		const go = ([seen, out]: Acc, m: MetaNF): Acc =>
+			match(seen.has(m.val))
+				.with(true, (): Acc => [seen, out])
+				.otherwise((): Acc => {
+					const anns = match(ctx.metas[m.val])
+						.with(P.nullish, (): readonly MetaNF[] => [])
+						.otherwise(entry => collectMetasNF(entry.ann, ctx.zonker));
+					const [seen2, out2] = anns.reduce<Acc>(go, [new Set([...seen, m.val]), out]);
+					return [seen2, [...out2, m]];
+				});
+		return seeds.reduce<Acc>(go, [new Set<number>(), []])[1];
+	},
 };
 
 export const collect = {

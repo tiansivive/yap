@@ -1627,3 +1627,184 @@ return main();
   },
 ]
 `;
+
+exports[`Language Tour — Polymorphism > unused binding does not over-generalize the block 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_20;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  const proj3 = closure_cls2;
+  const v4 = null;
+  return v4;
+}
+
+function closure_22(env0, obj1) {
+  const v0 = obj1.x;
+  return v0;
+}
+
+function closure_21(env0, a1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_22;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_20(env0, r1) {
+  const env_cls2 = {};
+  const fnref_cls2 = closure_21;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+return main();
+",
+    "elaborated": "{
+  let proj
+    : Π(r: Row) =>
+      (closure: Π(a: Type) => Π(obj: Schema [ x: a | r ]) -> a -| Γ: r; proj)
+    = λ(r: Row) =>
+      λ(a: Type) =>
+        (λ(obj: Schema [ x: a | r ]) -> (obj).x : Π(obj: Schema [ x: a | r ]) ->
+          a);
+  return unit;
+}",
+    "gram": "[1] root
+  :entry -> [2]
+[2] block
+  :return -> [16]
+  :stmt -> [3] {"index":0}
+[3] stmt:let {"variable":"proj"}
+  :value -> [4]
+[4] lambda {"variable":"r","icit":"Implicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [17]
+[5] lit {"value":{"type":"Atom","value":"Row"}}
+[6] lambda {"variable":"a","icit":"Implicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [18]
+[7] lit {"value":{"type":"Atom","value":"Type"}}
+[8] lambda {"variable":"obj","icit":"Explicit","level":3}
+  :annotation -> [9]
+  :body -> [14]
+  :env -> [19]
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"x"}
+  :rest -> [13]
+  :value -> [12]
+[12] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [3] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[13] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [3] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[14] proj {"label":"x"}
+  :target -> [15]
+[15] var:bound {"index":0}
+  :refers_to -> [8]
+  :scope -> [3] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+[16] lit {"value":{"type":"unit"}}
+[17] env
+[18] env
+[19] env
+[20] closure
+  :body -> [4]
+  :env -> [17]
+[21] closure
+  :body -> [6]
+  :env -> [18]
+[22] closure
+  :body -> [8]
+  :env -> [19]",
+    "ivl": "(forall ((r Row)) (forall ((a Type)) (forall ((obj Schema)) (= obj obj))))",
+    "kind": "expression",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_20
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      let proj3 = closure_cls2
+      let v4 = unit
+      return v4
+  fn closure_22(env0, obj1) entry=entry
+    entry:
+      let v0 = read obj1.x
+      return v0
+  fn closure_21(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_22
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_20(env0, r1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_21
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2",
+    "name": "(expr)",
+    "normalized": "unit",
+    "solverTrace": "=== Formula ===
+  (forall ((r Row)) (forall ((a Type)) (forall ((obj Schema)) (= obj obj))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  obj=obj -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
+    "type": "Unit",
+    "validity": "valid",
+  },
+]
+`;

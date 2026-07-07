@@ -3,7 +3,7 @@ import Nearley from "nearley";
 import Grammar from "../grammar";
 
 const mkParser = (start: string = "Ann") => {
-	const g = { ...Grammar, ParserStart: start } as typeof Grammar;
+	const g = { ...Grammar, ParserStart: start };
 	return new Nearley.Parser(Nearley.Grammar.fromCompiled(g), { keepHistory: true });
 };
 

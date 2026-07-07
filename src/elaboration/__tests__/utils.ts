@@ -14,7 +14,7 @@ import * as A from "fp-ts/lib/Array";
 import * as R from "fp-ts/lib/Record";
 
 export const mkParser = () => {
-	const g = { ...Grammar, ParserStart: "Letdec" } as typeof Grammar;
+	const g = { ...Grammar, ParserStart: "Letdec" };
 	return new Nearley.Parser(Nearley.Grammar.fromCompiled(g), { keepHistory: true });
 };
 

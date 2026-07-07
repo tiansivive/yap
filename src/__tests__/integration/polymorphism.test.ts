@@ -47,6 +47,15 @@ let letpoly: Num = {
 		expect(snap(result)).toMatchSnapshot();
 	});
 
+	test("unused binding does not over-generalize the block", () => {
+		const result = runScript(`{ let proj = \\obj -> obj.x; }`);
+		const type = result.declarations[0]?.stages?.type ?? "";
+		// A unit-returning block whose only binding is unused has type `Unit`; a row meta from
+		// the dead binding must not escape into the block-level generalization.
+		expect(type).toBe("Unit");
+		expect(snap(result)).toMatchSnapshot();
+	});
+
 	test("implicit resolution with using", () => {
 		const result = runScript(`
 let addImplicit: (n: Num) => Num -> Num = \\x -> x + n;
