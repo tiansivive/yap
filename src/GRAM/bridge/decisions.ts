@@ -84,7 +84,7 @@ const emitSwitch = (id: NodeId, scrut: string, walk: (id: NodeId, ctx: Ctx) => [
 			const inner = C.fork(c2a);
 			const [val, cInner] = emitTree(edge.target, scrut, walk, inner);
 			const [instrs, flushed] = C.flush(cInner);
-			const caseBlock = Block(caseLabel, [], [...instrs, Instr.Let(resultVar, Expr.Var(val))], Terminator.Jump(joinLabel, []));
+			const caseBlock = Block(caseLabel, [], [...instrs], Terminator.Jump(joinLabel, [val]));
 			const cWithFns = flushed.functions.reduce<Ctx>((cc, f) => C.func(cc, f), c2a);
 			const caseValue = extractValue(edge, kind);
 			return [[...acc, { value: caseValue, target: caseLabel, args: [] }], [...blks, caseBlock, ...flushed.blocks], cWithFns];
@@ -94,14 +94,14 @@ const emitSwitch = (id: NodeId, scrut: string, walk: (id: NodeId, ctx: Ctx) => [
 
 	// Default block
 	const [defTarget, defBlocks, c6] =
-		defaultEdge !== undefined ? buildDefault(defaultEdge.target, scrut, walk, resultVar, joinLabel, c5) : [undefined, [] as ReadonlyArray<MIR.Block>, c5];
+		defaultEdge !== undefined ? buildDefault(defaultEdge.target, scrut, walk, joinLabel, c5) : [undefined, [] as ReadonlyArray<MIR.Block>, c5];
 
 	// Pre-block with Branch terminator
 	const [pending, c7] = C.flush(c6);
 	const preBlock = Block(preLabel, [], [...pending], Terminator.Branch(disc, [...cases], defTarget));
 
-	// Join block
-	const joinBlock = Block(joinLabel, [], [], Terminator.Return(resultVar));
+	// Join block: each case/default jumps here with its result, bound to the join parameter
+	const joinBlock = Block(joinLabel, [resultVar], [], Terminator.Return(resultVar));
 
 	// Order: pre-block first (entry point), then cases, default, join
 	const allBlocks = [preBlock, ...caseBlocks, ...defBlocks, joinBlock];
@@ -114,7 +114,6 @@ const buildDefault = (
 	id: NodeId,
 	scrut: string,
 	walk: (id: NodeId, ctx: Ctx) => [string, Ctx],
-	resultVar: string,
 	joinLabel: string,
 	ctx: Ctx,
 ): [MIR.DefaultCase, ReadonlyArray<MIR.Block>, Ctx] => {
@@ -122,7 +121,7 @@ const buildDefault = (
 	const inner = C.fork(c1);
 	const [val, cInner] = emitTree(id, scrut, walk, inner);
 	const [instrs, flushed] = C.flush(cInner);
-	const defBlock = Block(defLabel, [], [...instrs, Instr.Let(resultVar, Expr.Var(val))], Terminator.Jump(joinLabel, []));
+	const defBlock = Block(defLabel, [], [...instrs], Terminator.Jump(joinLabel, [val]));
 	const c2 = flushed.functions.reduce<Ctx>((c, f) => C.func(c, f), c1);
 	return [{ target: defLabel, args: [] }, [defBlock, ...flushed.blocks], c2];
 };

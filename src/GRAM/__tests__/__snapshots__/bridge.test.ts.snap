@@ -81,13 +81,11 @@ exports[`GRAM Bridge: Phase 3 — pattern matching > snapshot: match 0 / _ 1`] =
       branch x1 { 0 -> case3; default -> default4 }
     case3:
       let v4 = 1
-      let match0 = v4
-      jump join2
+      jump join2(v4)
     default4:
       let v5 = 2
-      let match0 = v5
-      jump join2
-    join2:
+      jump join2(v5)
+    join2(match0):
       return match0"
 `;
 

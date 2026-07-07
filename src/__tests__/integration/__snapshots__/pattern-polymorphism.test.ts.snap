@@ -15,6 +15,7 @@ exports[`Pattern matching — polymorphic generalization > single-arm variant wi
 
 function closure_31(env0, x1) {
   let __block = "entry";
+  let match1;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -32,7 +33,8 @@ function closure_31(env0, x1) {
         const v5 = x1.payload;
         const a = v5;
         const v6 = 0;
-        const match1 = v6;
+        const __t0 = v6;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -184,9 +186,8 @@ return main();
       let v5 = read x1.payload
       let a = v5
       let v6 = 0
-      let match1 = v6
-      jump join3
-    join3:
+      jump join3(v6)
+    join3(match1):
       return match1
   fn closure_30(env0, A1) entry=entry
     entry:
@@ -599,6 +600,7 @@ exports[`Pattern matching — polymorphic generalization > variant match that re
 
 function closure_31(env0, x1) {
   let __block = "entry";
+  let match1;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -615,7 +617,8 @@ function closure_31(env0, x1) {
       case "case4": {
         const v5 = x1.payload;
         const v = v5;
-        const match1 = v;
+        const __t0 = v;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -781,9 +784,8 @@ return main();
     case4:
       let v5 = read x1.payload
       let v = v5
-      let match1 = v
-      jump join3
-    join3:
+      jump join3(v)
+    join3(match1):
       return match1
   fn closure_30(env0, A1) entry=entry
     entry:
@@ -881,6 +883,7 @@ exports[`Pattern matching — polymorphic generalization > variant match with un
 
 function closure_72(env0, x1) {
   let __block = "entry";
+  let match1;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -902,7 +905,8 @@ function closure_72(env0, x1) {
         const v5 = x1.payload;
         const a = v5;
         const v6 = 0;
-        const match1 = v6;
+        const __t0 = v6;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -913,7 +917,8 @@ function closure_72(env0, x1) {
         const v8 = v6 .1;
         const rest = v8;
         const v9 = 1;
-        const match1 = v9;
+        const __t0 = v9;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -1297,8 +1302,7 @@ return main();
       let v5 = read x1.payload
       let a = v5
       let v6 = 0
-      let match1 = v6
-      jump join3
+      jump join3(v6)
     case5:
       let v6 = read x1.payload
       let v7 = read v6.0
@@ -1306,9 +1310,8 @@ return main();
       let v8 = read v6.1
       let rest = v8
       let v9 = 1
-      let match1 = v9
-      jump join3
-    join3:
+      jump join3(v9)
+    join3(match1):
       return match1
   fn closure_71(env0, C1) entry=entry
     entry:
@@ -1456,6 +1459,7 @@ exports[`Pattern matching — polymorphic generalization > wildcard variant matc
 
 function closure_48(env0, x1) {
   let __block = "entry";
+  let match1;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -1475,13 +1479,15 @@ function closure_48(env0, x1) {
       }
       case "case4": {
         const v5 = 0;
-        const match1 = v5;
+        const __t0 = v5;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
       case "case5": {
         const v6 = 1;
-        const match1 = v6;
+        const __t0 = v6;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -1720,13 +1726,11 @@ return main();
       branch tag0 { nil -> case4 | cons -> case5 }
     case4:
       let v5 = 0
-      let match1 = v5
-      jump join3
+      jump join3(v5)
     case5:
       let v6 = 1
-      let match1 = v6
-      jump join3
-    join3:
+      jump join3(v6)
+    join3(match1):
       return match1
   fn closure_47(env0, B1) entry=entry
     entry:
