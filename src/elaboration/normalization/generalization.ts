@@ -9,7 +9,7 @@ import * as F from "fp-ts/function";
 import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
 import * as Sub from "../unification/substitution";
-import { collectMetasEB, collectMetasNF } from "../shared/metas";
+import { Annotations, collectMetasEB, collectMetasNF } from "../shared/metas";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
 
@@ -68,29 +68,7 @@ export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutio
 	const tmMetas = collectMetasEB(tm, ctx.zonker);
 	const seed = fp.uniqBy((m: Meta) => m.val, [...tyMetas, ...tmMetas]);
 
-	// Transitively pull in the metas that appear in a meta's *kind* (its annotation), ordering
-	// each kind-meta before the meta it kinds. This yields the principal type: an unconstrained
-	// binder whose kind is itself unknown becomes Π(k: Type) => Π(v: k) => …, rather than
-	// leaking a raw kind meta or defaulting it to Any.
-	const expandKinds = (seeds: Meta[]): Meta[] => {
-		const seen = new Set<number>();
-		const out: Meta[] = [];
-		const visit = (m: Meta): void => {
-			if (seen.has(m.val)) {
-				return;
-			}
-			seen.add(m.val);
-			const entry = ctx.metas[m.val];
-			if (entry) {
-				collectMetasNF(entry.ann, ctx.zonker).forEach(visit);
-			}
-			out.push(m);
-		};
-		seeds.forEach(visit);
-		return out;
-	};
-
-	const allMetas = expandKinds(seed).filter(m => !resolutions[m.val]);
+	const allMetas = Annotations.closeOver(ctx, seed).filter(m => !resolutions[m.val]);
 	const getName = getNameFactory(mkCounters());
 
 	// Filter out metas from outer scopes - only generalize metas created in the current scope

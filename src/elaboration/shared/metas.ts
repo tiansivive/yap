@@ -1,5 +1,5 @@
 import * as NF from "@yap/elaboration/normalization";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as R from "@yap/shared/rows";
@@ -110,6 +110,25 @@ export const collectMetasEB = (tm: EB.Term, zonker: Subst): MetaEB[] => {
 		return ms;
 	};
 	return _metas(tm);
+};
+
+export const Annotations = {
+	closeOver: (ctx: EB.Context, seeds: readonly MetaNF[]): readonly MetaNF[] => {
+		// A pass over the collected metas rather than inlining into the collectors' Meta cases:
+		// those take (val, zonker), and threading ctx.metas through them to reach annotations is annoying.
+		type Acc = readonly [ReadonlySet<number>, readonly MetaNF[]];
+		const go = ([seen, out]: Acc, m: MetaNF): Acc =>
+			match(seen.has(m.val))
+				.with(true, (): Acc => [seen, out])
+				.otherwise((): Acc => {
+					const anns = match(ctx.metas[m.val])
+						.with(P.nullish, (): readonly MetaNF[] => [])
+						.otherwise(entry => collectMetasNF(entry.ann, ctx.zonker));
+					const [seen2, out2] = anns.reduce<Acc>(go, [new Set([...seen, m.val]), out]);
+					return [seen2, [...out2, m]];
+				});
+		return seeds.reduce<Acc>(go, [new Set<number>(), []])[1];
+	},
 };
 
 export const collect = {

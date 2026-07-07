@@ -1,10 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { runScript, snap } from "./helpers/pipeline";
 
-// Regression coverage for generalization of pattern-bound values. Unconstrained pattern
-// binders whose type — and whose type's kind — are unknown must generalize to the principal
-// type (Π(a: Type) => Π(A: a) => …), rather than leaking raw metas or defaulting to `Any`.
-// See generalize's transitive kind collection and the collectMetasNF row-tail accumulator.
 describe("Pattern matching — polymorphic generalization", () => {
 	const typeOf = (src: string) => {
 		const result = runScript(src);
