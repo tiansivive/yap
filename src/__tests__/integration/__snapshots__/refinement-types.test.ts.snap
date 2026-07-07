@@ -2063,6 +2063,7 @@ exports[`Language Tour — Refinement Types > flow-sensitive refinements preserv
   {
     "codegenJS": "function main() {
   let __block = "entry";
+  let match4;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -2086,13 +2087,15 @@ exports[`Language Tour — Refinement Types > flow-sensitive refinements preserv
         }
       }
       case "case7": {
-        const match4 = a1;
+        const __t0 = a1;
+        (match4 = __t0);
         (__block = "join6");
         break;
       }
       case "case8": {
         const v9 = 42;
-        const match4 = v9;
+        const __t0 = v9;
+        (match4 = __t0);
         (__block = "join6");
         break;
       }
@@ -2206,13 +2209,11 @@ return main();
       let v3 = >(a1, v2)
       branch v3 { true -> case7 | false -> case8 }
     case7:
-      let match4 = a1
-      jump join6
+      jump join6(a1)
     case8:
       let v9 = 42
-      let match4 = v9
-      jump join6
-    join6:
+      jump join6(v9)
+    join6(match4):
       return match4",
     "name": "test",
     "normalized": "1",

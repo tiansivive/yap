@@ -18,6 +18,7 @@ exports[`Language Tour — Defining Types > computing types 1`] = `
 
 function closure_19(env0, b1) {
   let __block = "entry";
+  let match0;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -37,12 +38,14 @@ function closure_19(env0, b1) {
         }
       }
       case "case3": {
-        const match0 = cap_0;
+        const __t0 = cap_0;
+        (match0 = __t0);
         (__block = "join2");
         break;
       }
       case "case4": {
-        const match0 = cap_1;
+        const __t0 = cap_1;
+        (match0 = __t0);
         (__block = "join2");
         break;
       }
@@ -122,12 +125,10 @@ return main();
     sw1:
       branch b1 { true -> case3 | false -> case4 }
     case3:
-      let match0 = cap_0
-      jump join2
+      jump join2(cap_0)
     case4:
-      let match0 = cap_1
-      jump join2
-    join2:
+      jump join2(cap_1)
+    join2(match0):
       return match0",
     "name": "chooseType",
     "normalized": "λ(b: Bool) -> (closure: match b | true -> Num | false -> String -| Γ: b)",

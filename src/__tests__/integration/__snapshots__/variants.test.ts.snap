@@ -337,6 +337,7 @@ exports[`Language Tour — Pattern Matching > literal patterns 1`] = `
 
 function closure_17(env0, n1) {
   let __block = "entry";
+  let match0;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -353,13 +354,15 @@ function closure_17(env0, n1) {
       }
       case "case3": {
         const v4 = true;
-        const match0 = v4;
+        const __t0 = v4;
+        (match0 = __t0);
         (__block = "join2");
         break;
       }
       case "default4": {
         const v5 = false;
-        const match0 = v5;
+        const __t0 = v5;
+        (match0 = __t0);
         (__block = "join2");
         break;
       }
@@ -428,13 +431,11 @@ return main();
       branch n1 { 0 -> case3; default -> default4 }
     case3:
       let v4 = true
-      let match0 = v4
-      jump join2
+      jump join2(v4)
     default4:
       let v5 = false
-      let match0 = v5
-      jump join2
-    join2:
+      jump join2(v5)
+    join2(match0):
       return match0",
     "name": "isZero",
     "normalized": "λ(n: Num) -> (closure: match n | 0 -> true | _ -> false -| Γ: n)",
@@ -902,6 +903,7 @@ return main();
 
 function closure_66(env0, list1) {
   let __block = "entry";
+  let match1;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -923,7 +925,8 @@ function closure_66(env0, list1) {
       }
       case "case4": {
         const v5 = 0;
-        const match1 = v5;
+        const __t0 = v5;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -941,7 +944,8 @@ function closure_66(env0, list1) {
         const env14 = v12.__env;
         const v15 = fnref13(env14, xs);
         const v16 = (v9 + v15);
-        const match1 = v16;
+        const __t0 = v16;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -1177,8 +1181,7 @@ return main();
       branch tag0 { nil -> case4 | cons -> case5 }
     case4:
       let v5 = 0
-      let match1 = v5
-      jump join3
+      jump join3(v5)
     case5:
       let v6 = read list1.payload
       let v7 = read v6.0
@@ -1193,9 +1196,8 @@ return main();
       let env14 = read v12.__env
       let v15 = call *fnref13(env14, xs)
       let v16 = +(v9, v15)
-      let match1 = v16
-      jump join3
-    join3:
+      jump join3(v16)
+    join3(match1):
       return match1
   fn closure_65(env0, a1) entry=entry
     entry:
@@ -1473,6 +1475,7 @@ return main();
 
 function closure_68(env0, s1) {
   let __block = "entry";
+  let match1;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -1498,7 +1501,8 @@ function closure_68(env0, s1) {
         const v5 = s1.payload;
         const r = v5;
         const v6 = "Circle with radius";
-        const match1 = v6;
+        const __t0 = v6;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -1509,14 +1513,16 @@ function closure_68(env0, s1) {
         const v8 = v6 .1;
         const h = v8;
         const v9 = "Rectangle";
-        const match1 = v9;
+        const __t0 = v9;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
       case "case6": {
         const v7 = s1.payload;
         const v8 = "Point at coordinates";
-        const match1 = v8;
+        const __t0 = v8;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -1701,8 +1707,7 @@ return main();
       let v5 = read s1.payload
       let r = v5
       let v6 = "Circle with radius"
-      let match1 = v6
-      jump join3
+      jump join3(v6)
     case5:
       let v6 = read s1.payload
       let v7 = read v6.0
@@ -1710,14 +1715,12 @@ return main();
       let v8 = read v6.1
       let h = v8
       let v9 = "Rectangle"
-      let match1 = v9
-      jump join3
+      jump join3(v9)
     case6:
       let v7 = read s1.payload
       let v8 = "Point at coordinates"
-      let match1 = v8
-      jump join3
-    join3:
+      jump join3(v8)
+    join3(match1):
       return match1",
     "name": "describeShape",
     "normalized": "λ(s: Variant

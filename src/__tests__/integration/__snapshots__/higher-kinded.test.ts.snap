@@ -366,6 +366,7 @@ return main();
 
 function closure_82(env0, list1) {
   let __block = "entry";
+  let match1;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -394,7 +395,8 @@ function closure_82(env0, list1) {
           __tag: v5,
           payload: v6
         };
-        const match1 = v7;
+        const __t0 = v7;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -428,7 +430,8 @@ function closure_82(env0, list1) {
           __tag: v9,
           payload: v25
         };
-        const match1 = v26;
+        const __t0 = v26;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -816,8 +819,7 @@ return main();
       let v5 = nil
       let v6 = unit
       let v7 = alloc { __tag: v5, payload: v6 }
-      let match1 = v7
-      jump join3
+      jump join3(v7)
     case5:
       let v6 = read list1.payload
       let v7 = read v6.0
@@ -842,9 +844,8 @@ return main();
       let v24 = call *fnref22(env23, xs)
       let v25 = alloc { 0: v12, 1: v24 }
       let v26 = alloc { __tag: v9, payload: v25 }
-      let match1 = v26
-      jump join3
-    join3:
+      jump join3(v26)
+    join3(match1):
       return match1
   fn closure_81(env0, f1) entry=entry
     entry:
@@ -2438,6 +2439,7 @@ return main();
 
 function closure_82(env0, list1) {
   let __block = "entry";
+  let match1;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -2466,7 +2468,8 @@ function closure_82(env0, list1) {
           __tag: v5,
           payload: v6
         };
-        const match1 = v7;
+        const __t0 = v7;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -2500,7 +2503,8 @@ function closure_82(env0, list1) {
           __tag: v9,
           payload: v25
         };
-        const match1 = v26;
+        const __t0 = v26;
+        (match1 = __t0);
         (__block = "join3");
         break;
       }
@@ -2888,8 +2892,7 @@ return main();
       let v5 = nil
       let v6 = unit
       let v7 = alloc { __tag: v5, payload: v6 }
-      let match1 = v7
-      jump join3
+      jump join3(v7)
     case5:
       let v6 = read list1.payload
       let v7 = read v6.0
@@ -2914,9 +2917,8 @@ return main();
       let v24 = call *fnref22(env23, xs)
       let v25 = alloc { 0: v12, 1: v24 }
       let v26 = alloc { __tag: v9, payload: v25 }
-      let match1 = v26
-      jump join3
-    join3:
+      jump join3(v26)
+    join3(match1):
       return match1
   fn closure_81(env0, f1) entry=entry
     entry:

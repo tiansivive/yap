@@ -384,6 +384,7 @@ return main();
 
 function closure_18(env0, b1) {
   let __block = "entry";
+  let match0;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -402,13 +403,15 @@ function closure_18(env0, b1) {
       }
       case "case3": {
         const v4 = "true";
-        const match0 = v4;
+        const __t0 = v4;
+        (match0 = __t0);
         (__block = "join2");
         break;
       }
       case "case4": {
         const v5 = "false";
-        const match0 = v5;
+        const __t0 = v5;
+        (match0 = __t0);
         (__block = "join2");
         break;
       }
@@ -480,13 +483,11 @@ return main();
       branch b1 { true -> case3 | false -> case4 }
     case3:
       let v4 = "true"
-      let match0 = v4
-      jump join2
+      jump join2(v4)
     case4:
       let v5 = "false"
-      let match0 = v5
-      jump join2
-    join2:
+      jump join2(v5)
+    join2(match0):
       return match0",
     "name": "ShowBool",
     "normalized": "Struct
@@ -1070,6 +1071,7 @@ return main();
 
 function closure_75(env0, y1) {
   let __block = "entry";
+  let match7;
   while (true) {
     switch (__block) {
       case "entry": {
@@ -1103,13 +1105,15 @@ function closure_75(env0, y1) {
         const env14 = v12.__env;
         const v15 = fnref13(env14, cap_1);
         const v16 = (v11 + v15);
-        const match7 = v16;
+        const __t0 = v16;
+        (match7 = __t0);
         (__block = "join9");
         break;
       }
       case "case11": {
         const v12 = "Not equal";
-        const match7 = v12;
+        const __t0 = v12;
+        (match7 = __t0);
         (__block = "join9");
         break;
       }
@@ -1469,13 +1473,11 @@ return main();
       let env14 = read v12.__env
       let v15 = call *fnref13(env14, cap_1)
       let v16 = ++(v11, v15)
-      let match7 = v16
-      jump join9
+      jump join9(v16)
     case11:
       let v12 = "Not equal"
-      let match7 = v12
-      jump join9
-    join9:
+      jump join9(v12)
+    join9(match7):
       return match7
   fn closure_74(env0, x1) entry=entry
     entry:
