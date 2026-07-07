@@ -1,3 +1,5 @@
+# [0.6.0-alpha.5](https://github.com/tiansivive/yap/compare/v0.6.0-alpha.4...v0.6.0-alpha.5) (2026-07-07)
+
 # [0.6.0-alpha.4](https://github.com/tiansivive/yap/compare/v0.6.0-alpha.3...v0.6.0-alpha.4) (2026-06-24)
 
 # [0.6.0-alpha.3](https://github.com/tiansivive/yap/compare/v0.6.0-alpha.2...v0.6.0-alpha.3) (2026-06-24)
