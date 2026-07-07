@@ -82,7 +82,15 @@ export const collectMetasEB = (tm: EB.Term, zonker: Subst): MetaEB[] => {
 				R.fold(
 					row,
 					(val, l, ms) => ms.concat(_metas(val)),
-					(v, ms) => (v.type === "Meta" ? [...ms, v] : ms),
+					(v, ms) => {
+						if (v.type !== "Meta") {
+							return ms;
+						}
+						if (!zonker[v.val]) {
+							return [...ms, v];
+						}
+						return ms.concat(collectMetasNF(zonker[v.val], zonker));
+					},
 					[] as MetaEB[],
 				),
 			)
