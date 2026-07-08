@@ -127,6 +127,29 @@ export const collectSigmaBindings = (r1: NF.Row, r2: NF.Row): V2.Elaboration<Lab
 		)
 		.otherwise(() => V2.Do(() => V2.fail({ type: "Impossible", message: "Schema verification: incompatible rows" })));
 
+const rowFieldTypes = (row: NF.Row): EB.Context["labels"] =>
+	match(row)
+		.with({ type: "extension" }, ({ label, value, row }) => ({ [label]: value, ...rowFieldTypes(row) }))
+		.otherwise(() => ({}));
+
+/**
+ * Establish the sibling-label scope for a record/sigma row before descending into its subterms.
+ * Each field label becomes visible — its declared type in `labels`, a symbolic label-neutral in
+ * `sigma` — so any subterm referencing a sibling `:field` resolves (NbE reads `sigma`; the IVL
+ * translator reads `labels` for the sort). Verification analogue of elaboration's `withLabelContext`.
+ */
+export const withRowLabels = <A>(row: NF.Row, comp: V2.Elaboration<A>): V2.Elaboration<A> =>
+	V2.Do(function* () {
+		const labels = rowFieldTypes(row);
+		return yield* V2.local(ctx => {
+			const sigma = Object.keys(labels).reduce<EB.Context["sigma"]>(
+				(s, label) => ({ ...s, [label]: { value: NF.Constructors.Neutral(NF.Constructors.Var({ type: "Label", name: label })) } }),
+				ctx.sigma,
+			);
+			return { ...ctx, labels: { ...ctx.labels, ...labels }, sigma };
+		}, comp);
+	});
+
 export const unwrapExistential = (nf: NF.Value): NF.Value =>
 	match(NF.unwrapNeutral(nf))
 		.with({ type: "Existential" }, e => unwrapExistential(e.body.value))

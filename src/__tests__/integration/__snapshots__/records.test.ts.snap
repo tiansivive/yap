@@ -695,9 +695,79 @@ return main();
 exports[`Language Tour — Records & Tuples > self-referencing fields 1`] = `
 [
   {
-    "error": "Unbound label: width",
+    "codegenJS": "function main() {
+  const v0 = 20;
+  const v1 = 10;
+  const v2 = (v1 * v0);
+  const v3 = {
+    height: v0,
+    width: v1,
+    area: v2
+  };
+  return v3;
+}
+return main();
+",
+    "elaborated": "Struct [ area: FFI.$mul :width :height, height: 20, width: 10 ]",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"rectangle"}
+[3] struct
+  :field -> [10] {"label":"height"}
+  :field -> [11] {"label":"width"}
+  :field -> [12] {"label":"area"}
+[6] var:foreign {"name":"$mul","arity":2}
+[8] var:label {"name":"width"}
+  :next -> [9]
+  :refers_to -> [11]
+[9] var:label {"name":"height"}
+  :refers_to -> [10]
+[10] lit {"value":{"type":"Num","value":20}}
+[11] lit {"value":{"type":"Num","value":10}}
+[12] primop {"op":"$mul"}
+  :arg -> [8] {"index":0}
+  :arg -> [9] {"index":1}
+  :callee -> [6]",
+    "ivl": "true",
     "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = 20
+      let v1 = 10
+      let v2 = *(v1, v0)
+      let v3 = alloc { height: v0, width: v1, area: v2 }
+      return v3",
     "name": "rectangle",
+    "normalized": "Struct [ area: 200, height: 20, width: 10 ]",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
+    "type": "Σ($sig: [ area: Num, height: Num, width: Num ]) .
+  Schema [ area: Num, height: Num, width: Num ]",
+    "validity": "valid",
   },
 ]
 `;

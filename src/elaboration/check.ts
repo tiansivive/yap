@@ -147,9 +147,12 @@ export const check = (term: Src.Term, type: NF.Value): V2.Elaboration<[EB.Term, 
 
 						const rv = NF.evaluate(ctx, rtm);
 						assert(rv.type === "App" && rv.arg.type === "Row", "Expected struct term to evaluate to an application of a Row");
-						const ty = NF.apply(sig.binder, sig.closure, NF.Constructors.Row(rv.arg.row));
+						const valueRow = rv.arg.row;
+						const ty = NF.apply(sig.binder, sig.closure, NF.Constructors.Row(valueRow));
 
-						return yield* Check.val.gen(tm, ty);
+						// The re-check evaluates each field value; sibling `:label` refs resolve through
+						// ctx.sigma at eval time, so make the inferred field values visible.
+						return yield* V2.local(c => EB.extendSigma(c, valueRow), Check.val(tm, ty));
 					}),
 				)
 				.with([{ type: "match" }, NF.Patterns.Type], ([match, ty]) => {
@@ -360,8 +363,8 @@ const traverseRow = (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<str
 							throw new Error("Elaborating Row Extension: Label not found");
 						}
 						const ctx = yield* V2.ask();
-						const nf = NF.evaluate(ctx, tm);
-						yield* V2.tell("constraint", [{ type: "assign", left: nf, right: type, lvl: ctx.env.length }]);
+						//const nf = NF.evaluate(ctx, tm);
+						yield* V2.tell("constraint", [{ type: "assign", left: value, right: type, lvl: ctx.env.length }]);
 
 						const [rt, rus] = yield* Check.row.traverse.gen(rr as Src.Row, row, us, bindings);
 						const q = Q.add(tus, rus);

@@ -14,7 +14,7 @@ import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import { Liquid } from "../modalities";
 import { extractModalities, isFirstOrder } from "./utils/refinements";
-import { noCapture } from "./utils/context";
+import { noCapture, withRowLabels } from "./utils/context";
 import type { VerificationRuntime } from "./utils/context";
 import type { TranslationTools } from "./logic/translate";
 import type { VerificationResult } from "./types";
@@ -341,6 +341,14 @@ export const createSubtype = ({ runtime, translation }: SubtypeDeps) => {
 				),
 			);
 		};
-		return Row.fold(b, onVal, (_rv, acc) => acc, V2.of(Build.true_()));
+		// Open both rows' sibling-label scope before folding: a field refinement may reference a
+		// sibling `:label`, which must resolve while its enclosing row is being traversed.
+		return withRowLabels(
+			a,
+			withRowLabels(
+				b,
+				Row.fold(b, onVal, (_rv, acc) => acc, V2.of(Build.true_())),
+			),
+		);
 	}
 };
