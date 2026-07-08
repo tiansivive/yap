@@ -356,7 +356,14 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 				})
 				.with({ type: "extension" }, function* ({ label, value, row: rest }) {
 					const [ty, artefacts] = yield* synth.gen(value);
-					const restResult = yield* V2.pure(synthStructRow(rest));
+					// Thread this field into scope (type in labels, value in sigma) so a later field's
+					// sibling `:label` reference resolves to its concrete value while the row is synthesized.
+					const fieldCtx = yield* V2.ask();
+					const fieldValue = NF.evaluate(fieldCtx, value);
+					const restResult = yield* V2.local(
+						c => EB.extendSigma(EB.extendLabel(c, label, ty), Row.Constructors.Extension(label, fieldValue, Row.Constructors.Empty())),
+						synthStructRow(rest),
+					);
 					return {
 						row: Row.Constructors.Extension(label, ty, restResult.row),
 						vc: Build.and(artefacts.vc, restResult.vc),

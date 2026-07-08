@@ -205,6 +205,23 @@ export const createTranslationTools = (runtime: VerificationRuntime, toModalitie
 				if (v.variable.type === "Meta") {
 					return Build.const_(`?${v.variable.val}`, Build.uninterpreted("Any"));
 				}
+				if (v.variable.type === "Label") {
+					const name = v.variable.name;
+					const sig = ctx.sigma[name];
+					// A concrete sibling value (threaded in by the enclosing record boundary) resolves
+					// directly. A purely symbolic sibling — the label-neutral placeholder installed by
+					// `withRowLabels`, or nothing in scope — becomes a logical constant of the field's sort.
+					if (sig) {
+						const symbolic = match(sig.value)
+							.with({ type: "Neutral", value: { type: "Var", variable: { type: "Label" } } }, () => true)
+							.otherwise(() => false);
+						if (!symbolic) {
+							return term(sig.value, ctx, rigids);
+						}
+					}
+					const ty = ctx.labels[name];
+					return Build.const_(name, ty ? mkSort(ty, ctx) : Build.uninterpreted("Label"));
+				}
 				throw new Error(`Unsupported variable in formula translation: ${v.variable.type} (${JSON.stringify(v.variable)})`);
 			})
 			.with({ type: "External" }, e => {
