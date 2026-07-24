@@ -405,11 +405,6 @@
 			"count": 1
 		}
 	},
-	"src/elaboration/unification/unification.ts": {
-		"no-restricted-properties": {
-			"count": 4
-		}
-	},
 	"src/modules/loading.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 1
