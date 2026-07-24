@@ -151,7 +151,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
 			if (!ctx.zonker[variable.val]) {
 				const v = NF.Constructors.Var(variable);
-				globalResultStack.push(NF.Constructors.Neutral(v));
+				globalResultStack.push(NF.Constructors.Neutral("Symbolic", v));
 				return;
 			}
 
@@ -162,7 +162,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
 			const entry = ctx.env[variable.index];
 			if (entry.type[0].type === "Mu") {
-				globalResultStack.push(NF.Constructors.Neutral(entry.nf));
+				globalResultStack.push(NF.Constructors.Neutral("Sealed", entry.nf));
 			} else {
 				globalResultStack.push(entry.nf);
 			}
@@ -170,7 +170,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
 			const val = ctx.ffi[variable.name];
 			if (!val) {
-				globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.Var(variable), "Sealed"));
+				globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.Var(variable)));
 				return;
 			}
 
@@ -221,7 +221,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 					return sig;
 				}
 				const v = NF.Constructors.Var({ type: "Label", name: label });
-				return { ...sig, [label]: { value: NF.Constructors.Neutral(v) } };
+				return { ...sig, [label]: { value: NF.Constructors.Neutral("Symbolic", v) } };
 			}, ctx.sigma);
 
 			const xtended = { ...ctx, sigma };
@@ -418,7 +418,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 				globalWorkStack.push({ type: "Eval", ctx, term: shift });
 			} else {
 				const v = NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 });
-				globalResultStack.push(NF.Constructors.Neutral(v));
+				globalResultStack.push(NF.Constructors.Neutral("Symbolic", v));
 			}
 		})
 		.with({ type: "Ann" }, ({ term }) => {
@@ -662,7 +662,7 @@ function injectValue(base: NF.Value, label: string, injected: NF.Value, ctx: EB.
 function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): void {
 	match(nff)
 		.with({ type: "Neutral" }, ({ kind, value }) => {
-			globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit), kind));
+			globalResultStack.push(NF.Constructors.Neutral(kind, NF.Constructors.App(value, nfa, icit)));
 		})
 		.with({ type: "Modal" }, ({ modalities, value }) => {
 			console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
@@ -671,7 +671,7 @@ function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): v
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, () => {
 			// Do not unfold mu during normalization - defer to unification
-			globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)));
+			globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
 		})
 		.with({ type: "Abs" }, ({ closure, binder }) => {
 			// Inline apply semantics: extend context and evaluate body
@@ -704,10 +704,10 @@ function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): v
 			globalResultStack.push(NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit));
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, () => {
-			globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)));
+			globalResultStack.push(NF.Constructors.Neutral("Symbolic", NF.Constructors.App(nff, nfa, icit)));
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, () => {
-			globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit), "Sealed"));
+			globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
 		})
 		.with({ type: "App" }, ({ func, arg, icit: argIcit }) => {
 			// Reduce func to arg first, then apply result to nfa
@@ -729,7 +729,7 @@ function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): v
 			}
 
 			if (accumulated.some(a => a.type === "Neutral")) {
-				globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.External(name, arity, compute, accumulated)));
+				globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.External(name, arity, compute, accumulated)));
 				return;
 			}
 
@@ -765,21 +765,21 @@ function matchingAndPushStack(ctx: EB.Context, nf: NF.Value, alts: EB.Alternativ
 // Re-export helper functions that are still used
 export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Value =>
 	match(nff)
-		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit), kind))
+		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(kind, NF.Constructors.App(value, nfa, icit)))
 		.with({ type: "Modal" }, ({ modalities, value }) => {
 			console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
 			return reduce(value, nfa, icit);
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
 			// Do not unfold mu during normalization - defer to unification
-			return NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit));
+			return NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit));
 		})
 		.with({ type: "Abs" }, ({ closure, binder }) => {
 			return apply(binder, closure, nfa);
 		})
 		.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
-		.with({ type: "Var", variable: { type: "Meta" } }, _ => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
-		.with({ type: "Var", variable: { type: "Foreign" } }, () => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit), "Sealed"))
+		.with({ type: "Var", variable: { type: "Meta" } }, _ => NF.Constructors.Neutral("Symbolic", NF.Constructors.App(nff, nfa, icit)))
+		.with({ type: "Var", variable: { type: "Foreign" } }, () => NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)))
 		.with({ type: "App" }, ({ func, arg, icit }) => {
 			const nff = reduce(func, arg, icit);
 			return NF.Constructors.App(nff, nfa, icit);
@@ -797,7 +797,7 @@ export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Val
 
 			if (accumulated.some(a => a.type === "Neutral")) {
 				const external = NF.Constructors.External(name, arity, compute, accumulated);
-				return NF.Constructors.Neutral(external);
+				return NF.Constructors.Neutral("Sealed", external);
 			}
 
 			return compute(...accumulated.map(ignoraModal));
@@ -919,6 +919,14 @@ export const resume = (ctx: EB.Context, value: NF.Value): Option<NF.Value> =>
 export function force(ctx: EB.Context, value: NF.Value): NF.Value {
 	return match(value)
 		.with({ type: "Neutral", kind: "Sealed" }, () => value)
+		.with({ type: "Neutral", kind: "Symbolic", value: NF.Patterns.Label }, ({ value: label }) => {
+			return match(ctx.sigma[label.variable.name])
+				.with({ value: { type: "Neutral", kind: "Symbolic", value: NF.Patterns.Label } }, ({ value: placeholder }) =>
+					placeholder.value.variable.name === label.variable.name ? value : force(ctx, placeholder),
+				)
+				.with({ value: P.select() }, resolved => force(ctx, resolved))
+				.otherwise(() => value);
+		})
 		.with({ type: "Neutral", kind: "Symbolic", value: NF.Patterns.Flex }, ({ value: flex }) => {
 			const solution = ctx.zonker[flex.variable.val];
 			return solution ? force(ctx, solution) : value;

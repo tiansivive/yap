@@ -143,7 +143,7 @@ export const withRowLabels = <A>(row: NF.Row, comp: V2.Elaboration<A>): V2.Elabo
 		const labels = rowFieldTypes(row);
 		return yield* V2.local(ctx => {
 			const sigma = Object.keys(labels).reduce<EB.Context["sigma"]>(
-				(s, label) => ({ ...s, [label]: { value: NF.Constructors.Neutral(NF.Constructors.Var({ type: "Label", name: label })) } }),
+				(s, label) => ({ ...s, [label]: { value: NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Label", name: label })) } }),
 				ctx.sigma,
 			);
 			return { ...ctx, labels: { ...ctx.labels, ...labels }, sigma };

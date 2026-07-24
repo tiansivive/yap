@@ -34,7 +34,7 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 				),
 			),
 		)
-		.with({ type: "Neutral" }, ({ kind, value }) => Constructors.Neutral(traverse(value, onVar, onTerm), kind))
+		.with({ type: "Neutral" }, ({ kind, value }) => Constructors.Neutral(kind, traverse(value, onVar, onTerm)))
 		.with(Patterns.Modal, ({ value, modalities }) =>
 			Constructors.Modal(traverse(value, onVar, onTerm), {
 				quantity: modalities.quantity,

@@ -10,7 +10,8 @@ const symbolicRow = (annotation: NF.Value): NF.Row => {
 			.with({ type: "empty" }, (): NF.Row => ({ type: "empty" }))
 			.with(
 				{ type: "extension" },
-				({ label, row }): NF.Row => NF.Constructors.Extension(label, NF.Constructors.Neutral(NF.Constructors.Var({ type: "Label", name: label })), go(row)),
+				({ label, row }): NF.Row =>
+					NF.Constructors.Extension(label, NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Label", name: label })), go(row)),
 			)
 			.with({ type: "variable" }, (v): NF.Row => v)
 			.exhaustive();

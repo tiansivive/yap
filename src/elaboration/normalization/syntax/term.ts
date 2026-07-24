@@ -116,7 +116,7 @@ export const Constructors = {
 			value,
 		}),
 	Atom: (value: string) => mk(Constructors.Lit(Lit.Atom(value))),
-	Neutral: (value: Value, kind: Neutral = "Symbolic") =>
+	Neutral: (kind: Neutral, value: Value) =>
 		mk({
 			type: "Neutral" as const,
 			kind,
@@ -132,7 +132,7 @@ export const Constructors = {
 	Indexed: (index: Value, value: Value, strategy: Value): Value => {
 		const indexed = Constructors.App(Constructors.Var({ type: "Foreign", name: "Indexed" }), index, "Explicit");
 		const valued = Constructors.App(indexed, value, "Explicit");
-		return Constructors.Neutral(Constructors.App(valued, strategy, "Implicit"), "Sealed");
+		return Constructors.Neutral("Sealed", Constructors.App(valued, strategy, "Implicit"));
 	},
 	Closure: (ctx: EB.Context, term: EB.Term): Closure => ({ type: "Closure", ctx, term }),
 	Primop: (ctx: EB.Context, term: EB.Term, arity: number, compute: (...args: Value[]) => Value): Closure => ({ type: "PrimOp", ctx, term, arity, compute }),
@@ -140,19 +140,19 @@ export const Constructors = {
 	Row: (row: Row): Value => mk({ type: "Row", row }),
 	Extension: (label: string, value: Value, row: Row): Row => ({ type: "extension", label, value, row }),
 
-	Schema: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit"), "Sealed"),
-	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit"), "Sealed"),
-	Struct: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row), "Explicit"), "Sealed"),
+	Schema: (row: Row): Value => Constructors.Neutral("Sealed", Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit")),
+	Variant: (row: Row): Value => Constructors.Neutral("Sealed", Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),
+	Struct: (row: Row): Value => Constructors.Neutral("Sealed", Constructors.App(Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row), "Explicit")),
 	Tagged: (tag: string, payload: Value): Value =>
 		Constructors.Struct(Constructors.Extension("__tag", Constructors.Lit(Lit.Atom(tag)), Constructors.Extension("payload", payload, R.Constructors.Empty()))),
-	Array: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Array")), Constructors.Row(row), "Explicit"), "Sealed"),
+	Array: (row: Row): Value => Constructors.Neutral("Sealed", Constructors.App(Constructors.Lit(Lit.Atom("Array")), Constructors.Row(row), "Explicit")),
 
 	Proj: (base: Value, label: string): Value => mk({ type: "Proj", base, label }),
 	Match: (closure: Closure, scrutinee: Value): Value => mk({ type: "Match", closure, scrutinee }),
 	Inj: (base: Value, label: string, injected: Value): Value => mk({ type: "Inj", base, label, injected }),
-	StuckMatch: (closure: Closure, scrutinee: Value): Value => Constructors.Neutral(Constructors.Match(closure, scrutinee), "Blocked"),
-	StuckProj: (base: Value, label: string): Value => Constructors.Neutral(Constructors.Proj(base, label), "Blocked"),
-	StuckInj: (base: Value, label: string, injected: Value): Value => Constructors.Neutral(Constructors.Inj(base, label, injected), "Blocked"),
+	StuckMatch: (closure: Closure, scrutinee: Value): Value => Constructors.Neutral("Blocked", Constructors.Match(closure, scrutinee)),
+	StuckProj: (base: Value, label: string): Value => Constructors.Neutral("Blocked", Constructors.Proj(base, label)),
+	StuckInj: (base: Value, label: string, injected: Value): Value => Constructors.Neutral("Blocked", Constructors.Inj(base, label, injected)),
 	Modal: (value: Value, modalities: Modalities): Value =>
 		mk({
 			type: "Modal",

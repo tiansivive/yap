@@ -537,7 +537,7 @@ const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplS
 					const ar = NF.arity(state.ctx, nf);
 					const compute = (...args: NF.Value[]) => {
 						const ext = NF.Constructors.External(s.variable, ar, compute, args);
-						return NF.Constructors.Neutral(ext);
+						return NF.Constructors.Neutral("Sealed", ext);
 					};
 					const c1: EB.Context = { ...state.ctx, imports: { ...state.ctx.imports, [s.variable]: [v, nf, []] } };
 					return { ...c1, ffi: { ...c1.ffi, [s.variable]: { arity: ar, compute } } };

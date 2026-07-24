@@ -317,32 +317,16 @@ exports[`Shift-reset > resumption of dependent continuation > resuming continuat
     "Num ~~ ?9",
     "?7 ~~ ?8",
     "?9 ~~ Num",
-    "(λ($scrutinee: Any) ->
-  (closure: match $scrutinee
-    | 0 -> Num
-    | _ -> String -| Γ: $scrutinee; x; test))
-  ?10 ~~ ?7",
+    "match ?10 … ~~ ?7",
     "?8 ~~ ?6",
     "Unit ~~ ?1",
   ],
   "solution": "?1 |=> Unit
 ?3 |=> Num
 ?5 |=> Num
-?6 |=> (λ($scrutinee: Any) ->
-  (closure: match $scrutinee
-    | 0 -> Num
-    | _ -> String -| Γ: $scrutinee; $scrutinee; $scrutinee; x; test))
-  ?10
-?7 |=> (λ($scrutinee: Any) ->
-  (closure: match $scrutinee
-    | 0 -> Num
-    | _ -> String -| Γ: $scrutinee; $scrutinee; x; test))
-  ?10
-?8 |=> (λ($scrutinee: Any) ->
-  (closure: match $scrutinee
-    | 0 -> Num
-    | _ -> String -| Γ: $scrutinee; $scrutinee; x; test))
-  ?10
+?6 |=> match ?10 …
+?7 |=> match ?10 …
+?8 |=> match ?10 …
 ?9 |=> Num",
   "state": {
     "nondeterminism": {
@@ -359,14 +343,7 @@ exports[`Shift-reset > resumption of dependent continuation > resuming continuat
       = λ(x: Num) -> match x | 0 -> 0 | _ -> "hello";
     let foo
       : String
-      = reset |f
-        bubble#10 (shift (λ($k: Π($k: Num) ->
-          (λ($scrutinee: Any) ->
-            (closure: match $scrutinee
-              | 0 -> Num
-              | _ -> String -| Γ: $scrutinee; $scrutinee; x; test))
-            ?10) ->
-          $k 10))|;
+      = reset |f bubble#10 (shift (λ($k: Π($k: Num) -> match ?10 …) -> $k 10))|;
     return unit;
   }",
   "type": "Unit",

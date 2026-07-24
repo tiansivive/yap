@@ -205,7 +205,7 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 				),
 			),
 		)
-		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(instantiate(value, ctx), kind))
+		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(kind, instantiate(value, ctx)))
 		.with(NF.Patterns.Modal, ({ value, modalities }) =>
 			NF.Constructors.Modal(instantiate(value, ctx), {
 				quantity: modalities.quantity,
@@ -255,7 +255,7 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 				),
 			),
 		)
-		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(trimClosureEnvs(value), kind))
+		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(kind, trimClosureEnvs(value)))
 		.with(NF.Patterns.Modal, ({ value, modalities }) =>
 			NF.Constructors.Modal(trimClosureEnvs(value), {
 				quantity: modalities.quantity,

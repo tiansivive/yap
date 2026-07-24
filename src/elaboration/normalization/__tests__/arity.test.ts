@@ -79,7 +79,7 @@ describe("NF.inert", () => {
 	});
 
 	it("rigid applied to args (stuck app) is NOT inert", () => {
-		const stuck = NF.Constructors.Neutral(NF.Constructors.App(NF.Constructors.Var({ type: "Bound", lvl: 0 }), Num, "Explicit"));
+		const stuck = NF.Constructors.Neutral("Symbolic", NF.Constructors.App(NF.Constructors.Var({ type: "Bound", lvl: 0 }), Num, "Explicit"));
 		expect(NF.inert(stuck)).toBe(false);
 	});
 
@@ -89,7 +89,7 @@ describe("NF.inert", () => {
 	});
 
 	it("Foreign var is inert", () => {
-		const foreign = NF.Constructors.Neutral(NF.Constructors.Var({ type: "Foreign", name: "Indexed" }));
+		const foreign = NF.Constructors.Neutral("Sealed", NF.Constructors.Var({ type: "Foreign", name: "Indexed" }));
 		expect(NF.inert(foreign)).toBe(true);
 	});
 });
