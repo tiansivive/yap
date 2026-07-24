@@ -132,14 +132,11 @@ export const infer: Inference<Src.Pattern, "type"> = {
 
 			const [pats, binders] = es.reduce(([pats, binders], [pat, , , b]) => [pats.concat(pat), binders.concat(b)], [[], []] as [EB.Pattern[], Binder[]]);
 
-			const indexing = NF.Constructors.App(NF.Indexed, NF.Constructors.Lit(Lit.Atom("Num")), "Explicit");
-			const values = NF.Constructors.App(indexing, v, "Explicit");
-
-			const ty = NF.Constructors.App(values, NF.Constructors.Var({ type: "Foreign", name: "defaultArray" }), "Implicit");
+			const ty = NF.Constructors.Indexed(NF.Constructors.Lit(Lit.Atom("Num")), v, NF.Constructors.Var({ type: "Foreign", name: "defaultArray" }));
 
 			return [
 				EB.Constructors.Patterns.List(pats, pat.rest?.value),
-				NF.Constructors.Neutral(ty),
+				ty,
 				Q.noUsage(ctx.env.length),
 				pat.rest ? binders.concat([[pat.rest.value, ty /*, Q.noUsage(ctx.env.length)*/]]) : binders,
 			];

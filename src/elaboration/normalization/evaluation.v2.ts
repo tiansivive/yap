@@ -170,7 +170,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
 			const val = ctx.ffi[variable.name];
 			if (!val) {
-				globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.Var(variable)));
+				globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.Var(variable), "Sealed"));
 				return;
 			}
 
@@ -707,7 +707,7 @@ function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): v
 			globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)));
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, () => {
-			globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)));
+			globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit), "Sealed"));
 		})
 		.with({ type: "App" }, ({ func, arg, icit: argIcit }) => {
 			// Reduce func to arg first, then apply result to nfa
@@ -779,7 +779,7 @@ export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Val
 		})
 		.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
 		.with({ type: "Var", variable: { type: "Meta" } }, _ => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
-		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
+		.with({ type: "Var", variable: { type: "Foreign" } }, () => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit), "Sealed"))
 		.with({ type: "App" }, ({ func, arg, icit }) => {
 			const nff = reduce(func, arg, icit);
 			return NF.Constructors.App(nff, nfa, icit);
@@ -923,7 +923,7 @@ export function force(ctx: EB.Context, value: NF.Value): NF.Value {
 			const solution = ctx.zonker[flex.variable.val];
 			return solution ? force(ctx, solution) : value;
 		})
-		.with({ type: "Neutral", kind: "Symbolic" }, ({ value: symbolic }) => force(ctx, symbolic))
+		.with({ type: "Neutral", kind: "Symbolic" }, () => value)
 		.with({ type: "Neutral", kind: "Blocked" }, ({ value: blocked }) =>
 			F.pipe(
 				resume(ctx, blocked),

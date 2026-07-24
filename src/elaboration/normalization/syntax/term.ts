@@ -129,6 +129,11 @@ export const Constructors = {
 			arg,
 			icit,
 		}),
+	Indexed: (index: Value, value: Value, strategy: Value): Value => {
+		const indexed = Constructors.App(Constructors.Var({ type: "Foreign", name: "Indexed" }), index, "Explicit");
+		const valued = Constructors.App(indexed, value, "Explicit");
+		return Constructors.Neutral(Constructors.App(valued, strategy, "Implicit"), "Sealed");
+	},
 	Closure: (ctx: EB.Context, term: EB.Term): Closure => ({ type: "Closure", ctx, term }),
 	Primop: (ctx: EB.Context, term: EB.Term, arity: number, compute: (...args: Value[]) => Value): Closure => ({ type: "PrimOp", ctx, term, arity, compute }),
 
