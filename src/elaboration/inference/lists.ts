@@ -30,10 +30,7 @@ export const infer = (list: List): V2.Elaboration<EB.AST> =>
 			const es = yield* V2.pure(V2.traverse(list.elements, validate));
 			const usages = es.reduce((acc, [, , us]) => Q.add(acc, us), Q.noUsage(ctx.env.length));
 
-			const indexing = NF.Constructors.App(NF.Indexed, NF.Constructors.Lit(Lit.Atom("Num")), "Explicit");
-			const values = NF.Constructors.App(indexing, v, "Explicit");
-
-			const ty = NF.Constructors.App(values, NF.Constructors.Var({ type: "Foreign", name: "defaultArray" }), "Implicit");
+			const ty = NF.Constructors.Indexed(NF.Constructors.Lit(Lit.Atom("Num")), v, NF.Constructors.Var({ type: "Foreign", name: "defaultArray" }));
 
 			const row = es.reduceRight(
 				(r: EB.Row, [tm], i) => {
@@ -42,7 +39,7 @@ export const infer = (list: List): V2.Elaboration<EB.AST> =>
 				},
 				{ type: "empty" },
 			);
-			return [EB.Constructors.Array(row), NF.Constructors.Neutral(ty), usages] satisfies EB.AST;
+			return [EB.Constructors.Array(row), ty, usages] satisfies EB.AST;
 		}),
 	);
 infer.gen = F.flow(infer, V2.pure);

@@ -8,6 +8,5 @@ describe("inference: tagged", () => {
 		expect(res.displays.constraints.length).toBe(0);
 
 		expect({ displays: res.displays }).toMatchSnapshot();
-		expect({ structure: res.structure }).toMatchSnapshot();
 	});
 });

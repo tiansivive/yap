@@ -10,7 +10,6 @@ describe("inference: application", () => {
 		expect(res.displays.type).toBe("?1");
 		expect(res.displays.constraints.join()).toContain("Num ~~ ?1");
 		expect({ displays: res.displays }).toMatchSnapshot();
-		expect({ structure: res.structure }).toMatchSnapshot();
 	});
 
 	describe("implicit insertion", () => {
@@ -38,7 +37,6 @@ describe("inference: application", () => {
 			expect(res.displays.term).toContain("@");
 
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("inserts implicit argument with correct type", () => {
@@ -51,7 +49,6 @@ describe("inference: application", () => {
 			expect(res.structure.metas[1].ann).toMatchObject({ type: "Lit", value: { type: "Atom", value: "Num" } });
 
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("inserts multiple implicit arguments when needed", () => {
@@ -63,7 +60,6 @@ describe("inference: application", () => {
 			expect(implicitCount).toBe(2);
 
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 	});
 });

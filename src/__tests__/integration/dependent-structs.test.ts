@@ -6,7 +6,9 @@ describe("Integration — Nested dependent structs", () => {
 		const result = runScript(`{ point: { x: 1, y: 2 }, halved: { a: :point.x / 2, b: :point.y / 2 } }`);
 		const decl = result.declarations[0];
 
-		expect(decl?.error ?? "").not.toContain("Cannot read properties of undefined");
+		expect(decl?.error).toBeUndefined();
+		expect(decl?.stages?.ivl).not.toBe("");
+		expect(decl?.stages?.validity).toBe("valid");
 		expect(decl?.stages?.mir).toBeTruthy();
 		expect(snap(result)).toMatchSnapshot();
 	});

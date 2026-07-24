@@ -31,7 +31,6 @@ return main();
     "elaborated": "Struct
   [ point: Struct [ x: 1, y: 2 ],
     halved: Struct [ a: FFI.$div (:point).x 2, b: FFI.$div (:point).y 2 ] ]",
-    "error": "Not a function; Not a function; Not a function",
     "gram": "[1] root
   :entry -> [2]
 [2] struct
@@ -66,7 +65,13 @@ return main();
   :arg -> [17] {"index":0}
   :arg -> [19] {"index":1}
   :callee -> [9]",
-    "ivl": "",
+    "ivl": "(and
+  (forall ((x Real))
+    (forall ((y Real))
+      (=> (= y 2) (forall ((r Real)) (=> (= r 0.5) (= r (/ 1 2)))))))
+  (forall ((x Real))
+    (forall ((y Real))
+      (=> (= y 2) (forall ((r Real)) (=> (= r 1) (= r (/ 2 2))))))))",
     "kind": "expression",
     "mir": "module
   fn main entry=entry
@@ -85,13 +90,62 @@ return main();
       return v10",
     "name": "(expr)",
     "normalized": "Struct [ point: Struct [ x: 1, y: 2 ], halved: Struct [ a: 0.5, b: 1 ] ]",
-    "solverTrace": "",
+    "solverTrace": "=== Formula ===
+  (and
+    (forall ((x Real))
+      (forall ((y Real))
+        (=> (= y 2) (forall ((r Real)) (=> (= r 0.5) (= r (/ 1 2)))))))
+    (forall ((x Real))
+      (forall ((y Real))
+        (=> (= y 2) (forall ((r Real)) (=> (= r 1) (= r (/ 2 2))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=2 -> residual
+  x=0.5 -> residual
+  x=1 -> residual
+  y=2 -> residual
+  y=0.5 -> tautology
+  y=1 -> tautology
+  r=2 -> tautology
+  r=0.5 -> tautology
+  r=1 -> tautology
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
     "type": "Schema
   [ point: Schema [ x: Num, y: Num ],
     halved: Schema
       [ a: <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$div (:point).x 2) |],
         b: <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$div (:point).y 2) |] ] ]",
-    "validity": "",
+    "validity": "valid",
   },
 ]
 `;

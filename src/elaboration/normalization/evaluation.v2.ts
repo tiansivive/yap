@@ -151,7 +151,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
 			if (!ctx.zonker[variable.val]) {
 				const v = NF.Constructors.Var(variable);
-				globalResultStack.push(NF.Constructors.Neutral(v));
+				globalResultStack.push(NF.Constructors.Neutral("Symbolic", v));
 				return;
 			}
 
@@ -162,7 +162,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
 			const entry = ctx.env[variable.index];
 			if (entry.type[0].type === "Mu") {
-				globalResultStack.push(NF.Constructors.Neutral(entry.nf));
+				globalResultStack.push(NF.Constructors.Neutral("Sealed", entry.nf));
 			} else {
 				globalResultStack.push(entry.nf);
 			}
@@ -170,7 +170,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
 			const val = ctx.ffi[variable.name];
 			if (!val) {
-				globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.Var(variable)));
+				globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.Var(variable)));
 				return;
 			}
 
@@ -221,7 +221,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 					return sig;
 				}
 				const v = NF.Constructors.Var({ type: "Label", name: label });
-				return { ...sig, [label]: { value: NF.Constructors.Neutral(v) } };
+				return { ...sig, [label]: { value: NF.Constructors.Neutral("Symbolic", v) } };
 			}, ctx.sigma);
 
 			const xtended = { ...ctx, sigma };
@@ -297,21 +297,13 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 				type: "Cont",
 				arity: 1,
 				handler: ([scrutinee]) => {
-					const isStuck = (val: NF.Value) =>
-						match(val)
-							.with({ type: "Neutral" }, neutral =>
-								match(neutral.value)
-									.with(NF.Patterns.Struct, NF.Patterns.Schema, NF.Patterns.Variant, NF.Patterns.Array, () => false)
-									.otherwise(() => true),
-							)
-							.otherwise(() => false);
-
-					if (isStuck(scrutinee)) {
+					const known = view(ctx, scrutinee);
+					if (known.kind !== "Sealed") {
 						globalResultStack.push(NF.Constructors.StuckMatch(NF.Constructors.Closure(ctx, v), scrutinee));
 						return;
 					}
 
-					matchingAndPushStack(ctx, scrutinee, v.alternatives);
+					matchingAndPushStack(ctx, known.value, v.alternatives);
 				},
 			});
 			globalWorkStack.push({ type: "Eval", ctx, term: v.scrutinee });
@@ -322,7 +314,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 				type: "Cont",
 				arity: 1,
 				handler: ([base]) => {
-					globalResultStack.push(projectValue(base, label, ctx, term));
+					globalResultStack.push(projectValue(base, label, ctx));
 				},
 			});
 			globalWorkStack.push({ type: "Eval", ctx, term });
@@ -333,7 +325,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 				type: "Cont",
 				arity: 2,
 				handler: ([base, injected]) => {
-					globalResultStack.push(injectValue(base, label, injected, valueTerm, ctx));
+					globalResultStack.push(injectValue(base, label, injected, ctx));
 				},
 			});
 			globalWorkStack.push({ type: "Eval", ctx, term: valueTerm });
@@ -426,7 +418,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 				globalWorkStack.push({ type: "Eval", ctx, term: shift });
 			} else {
 				const v = NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 });
-				globalResultStack.push(NF.Constructors.Neutral(v));
+				globalResultStack.push(NF.Constructors.Neutral("Symbolic", v));
 			}
 		})
 		.with({ type: "Ann" }, ({ term }) => {
@@ -605,105 +597,59 @@ function evalRowPush(ctx: EB.Context, row: EB.Row): void {
 		});
 }
 
-/**
- * Project a label from a value.
- * Extracted from the original Proj case for use in continuation handler.
- */
-function projectValue(base: NF.Value, label: string, ctx: EB.Context, originalTerm: EB.Term): NF.Value {
-	type ProjectAttempt = { tag: "found"; value: NF.Value } | { tag: "blocked" } | { tag: "missing" } | { tag: "not-applicable" };
+type Project = { tag: "found"; value: NF.Value } | { tag: "blocked" } | { tag: "missing" } | { tag: "not-applicable" };
 
-	const lookupRow = (row: NF.Row): ProjectAttempt => {
-		switch (row.type) {
-			case "empty":
-				return { tag: "missing" };
-			case "variable":
-				return { tag: "blocked" };
-			case "extension":
-				if (row.label === label) {
-					return { tag: "found", value: row.value };
-				}
-				return lookupRow(row.row);
-		}
-	};
+const project = (ctx: EB.Context, base: NF.Value, label: string): Project => {
+	const current = match(base)
+		.with({ type: "Neutral", kind: "Symbolic", value: NF.Patterns.Label }, ({ value }) => ctx.sigma[value.variable.name]?.value ?? base)
+		.otherwise(() => base);
 
-	const attemptProject = (value: NF.Value): ProjectAttempt => {
-		const target = unwrapNeutral(value);
+	const lookup = (row: NF.Row): Project =>
+		match(row)
+			.with({ type: "empty" }, (): Project => ({ tag: "missing" }))
+			.with({ type: "variable" }, (): Project => ({ tag: "blocked" }))
+			.with({ type: "extension" }, ({ label: current, value, row }) => (current === label ? ({ tag: "found", value } satisfies Project) : lookup(row)))
+			.exhaustive();
 
-		return match(target)
-			.with({ type: "Neutral" }, (): ProjectAttempt => ({ tag: "blocked" }))
-			.with(NF.Patterns.Row, ({ row }) => lookupRow(row))
-			.with(NF.Patterns.Struct, NF.Patterns.Schema, NF.Patterns.Variant, ({ arg }) => lookupRow(arg.row))
-			.otherwise((): ProjectAttempt => ({ tag: "not-applicable" }));
-	};
+	return match(view(ctx, current))
+		.with({ kind: "Symbolic" }, (): Project => ({ tag: "blocked" }))
+		.with({ kind: "Blocked" }, (): Project => ({ tag: "blocked" }))
+		.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => lookup(value.row))
+		.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value }) => lookup(value.arg.row))
+		.with({ kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) => lookup(value.arg.row))
+		.with({ kind: "Sealed", value: NF.Patterns.Variant }, ({ value }) => lookup(value.arg.row))
+		.otherwise((): Project => ({ tag: "not-applicable" }));
+};
 
-	const attempt = attemptProject(base);
-
-	if (attempt.tag === "found") {
-		return attempt.value;
-	}
-
-	if (attempt.tag === "missing") {
-		throw new Error(`Projection: label ${label} not found`);
-	}
-
-	const binder = `${NF.PROJ_VAR_PREFIX}${label}`;
-	const body = EB.Constructors.Proj(label, EB.Constructors.Var({ type: "Bound", index: 0 }));
-	const lambda = NF.Constructors.Lambda(binder, "Explicit", NF.Constructors.Closure(ctx, body), NF.Any);
-	const app = NF.Constructors.App(lambda, base, "Explicit");
-	return NF.Constructors.Neutral(app);
+function projectValue(base: NF.Value, label: string, ctx: EB.Context): NF.Value {
+	return match(project(ctx, base, label))
+		.with({ tag: "found" }, ({ value }) => value)
+		.with({ tag: "missing" }, () => {
+			throw new Error(`Projection: label ${label} not found`);
+		})
+		.otherwise(() => NF.Constructors.StuckProj(base, label));
 }
 
-/**
- * Inject a value into a row at the given label.
- * Extracted from the original Inj case for use in continuation handler.
- */
-function injectValue(base: NF.Value, label: string, injected: NF.Value, valueTerm: EB.Term, ctx: EB.Context): NF.Value {
-	type InjectAttempt = { tag: "updated"; value: NF.Value } | { tag: "blocked" } | { tag: "not-applicable" };
+const inject = (ctx: EB.Context, base: NF.Value, label: string, injected: NF.Value): NF.Value | undefined => {
+	const set = (row: NF.Row): NF.Row =>
+		match(row)
+			.with({ type: "empty" }, (): NF.Row => NF.Constructors.Extension(label, injected, row))
+			.with({ type: "variable" }, (): NF.Row => NF.Constructors.Extension(label, injected, row))
+			.with({ type: "extension" }, ({ label: current, value, row }) =>
+				current === label ? NF.Constructors.Extension(label, injected, row) : NF.Constructors.Extension(current, value, set(row)),
+			)
+			.exhaustive();
 
-	const setRowValue = (row: NF.Row): NF.Row => {
-		switch (row.type) {
-			case "empty":
-				return NF.Constructors.Extension(label, injected, row);
-			case "variable":
-				return NF.Constructors.Extension(label, injected, row);
-			case "extension": {
-				if (row.label === label) {
-					return NF.Constructors.Extension(label, injected, row.row);
-				}
-				const rest = setRowValue(row.row);
-				return NF.Constructors.Extension(row.label, row.value, rest);
-			}
-		}
-	};
+	return match(view(ctx, base))
+		.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => NF.Constructors.Row(set(value.row)))
+		.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value }) => NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit))
+		.with({ kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) => NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit))
+		.with({ kind: "Sealed", value: NF.Patterns.Variant }, ({ value }) => NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit))
+		.otherwise(() => undefined);
+};
 
-	const attemptInject = (value: NF.Value): InjectAttempt => {
-		const target = unwrapNeutral(value);
-
-		return match(target)
-			.with({ type: "Neutral" }, (): InjectAttempt => ({ tag: "blocked" }))
-			.with(NF.Patterns.Row, ({ row }): InjectAttempt => {
-				const updated = setRowValue(row);
-				return { tag: "updated", value: NF.Constructors.Row(updated) };
-			})
-			.with(NF.Patterns.Struct, NF.Patterns.Schema, NF.Patterns.Variant, matched => {
-				const updated = setRowValue(matched.arg.row);
-				const updatedRow = NF.Constructors.Row(updated);
-				return { tag: "updated", value: NF.Constructors.App(matched.func, updatedRow, matched.icit) } satisfies InjectAttempt;
-			})
-			.otherwise((): InjectAttempt => ({ tag: "not-applicable" }));
-	};
-
-	const attempt = attemptInject(base);
-
-	if (attempt.tag === "updated") {
-		return attempt.value;
-	}
-
-	const binder = `${NF.INJ_VAR_PREFIX}${label}`;
-	const body = EB.Constructors.Inj(label, valueTerm, EB.Constructors.Var({ type: "Bound", index: 0 }));
-	const lambda = NF.Constructors.Lambda(binder, "Explicit", NF.Constructors.Closure(ctx, body), NF.Any);
-	const app = NF.Constructors.App(lambda, base, "Explicit");
-	return NF.Constructors.Neutral(app);
+function injectValue(base: NF.Value, label: string, injected: NF.Value, ctx: EB.Context): NF.Value {
+	return inject(ctx, base, label, injected) ?? NF.Constructors.StuckInj(base, label, injected);
 }
 
 /**
@@ -715,8 +661,8 @@ function injectValue(base: NF.Value, label: string, injected: NF.Value, valueTer
  */
 function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): void {
 	match(nff)
-		.with({ type: "Neutral" }, ({ value }) => {
-			globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)));
+		.with({ type: "Neutral" }, ({ kind, value }) => {
+			globalResultStack.push(NF.Constructors.Neutral(kind, NF.Constructors.App(value, nfa, icit)));
 		})
 		.with({ type: "Modal" }, ({ modalities, value }) => {
 			console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
@@ -725,7 +671,7 @@ function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): v
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, () => {
 			// Do not unfold mu during normalization - defer to unification
-			globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)));
+			globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
 		})
 		.with({ type: "Abs" }, ({ closure, binder }) => {
 			// Inline apply semantics: extend context and evaluate body
@@ -758,10 +704,10 @@ function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): v
 			globalResultStack.push(NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit));
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, () => {
-			globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)));
+			globalResultStack.push(NF.Constructors.Neutral("Symbolic", NF.Constructors.App(nff, nfa, icit)));
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, () => {
-			globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)));
+			globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
 		})
 		.with({ type: "App" }, ({ func, arg, icit: argIcit }) => {
 			// Reduce func to arg first, then apply result to nfa
@@ -783,7 +729,7 @@ function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): v
 			}
 
 			if (accumulated.some(a => a.type === "Neutral")) {
-				globalResultStack.push(NF.Constructors.Neutral(NF.Constructors.External(name, arity, compute, accumulated)));
+				globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.External(name, arity, compute, accumulated)));
 				return;
 			}
 
@@ -819,21 +765,21 @@ function matchingAndPushStack(ctx: EB.Context, nf: NF.Value, alts: EB.Alternativ
 // Re-export helper functions that are still used
 export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Value =>
 	match(nff)
-		.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(NF.Constructors.App(value, nfa, icit)))
+		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(kind, NF.Constructors.App(value, nfa, icit)))
 		.with({ type: "Modal" }, ({ modalities, value }) => {
 			console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
 			return reduce(value, nfa, icit);
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
 			// Do not unfold mu during normalization - defer to unification
-			return NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit));
+			return NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit));
 		})
 		.with({ type: "Abs" }, ({ closure, binder }) => {
 			return apply(binder, closure, nfa);
 		})
 		.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
-		.with({ type: "Var", variable: { type: "Meta" } }, _ => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
-		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => NF.Constructors.Neutral(NF.Constructors.App(nff, nfa, icit)))
+		.with({ type: "Var", variable: { type: "Meta" } }, _ => NF.Constructors.Neutral("Symbolic", NF.Constructors.App(nff, nfa, icit)))
+		.with({ type: "Var", variable: { type: "Foreign" } }, () => NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)))
 		.with({ type: "App" }, ({ func, arg, icit }) => {
 			const nff = reduce(func, arg, icit);
 			return NF.Constructors.App(nff, nfa, icit);
@@ -851,7 +797,7 @@ export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Val
 
 			if (accumulated.some(a => a.type === "Neutral")) {
 				const external = NF.Constructors.External(name, arity, compute, accumulated);
-				return NF.Constructors.Neutral(external);
+				return NF.Constructors.Neutral("Sealed", external);
 			}
 
 			return compute(...accumulated.map(ignoraModal));
@@ -942,21 +888,76 @@ export function apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): 
 	return closure.compute(...args);
 }
 
+export type View = { kind: NF.Neutral; value: NF.Value };
+
+export const resume = (ctx: EB.Context, value: NF.Value): Option<NF.Value> =>
+	match(value)
+		.with(NF.Patterns.Proj, ({ base, label }) =>
+			match(project(ctx, base, label))
+				.with({ tag: "found" }, ({ value }) => O.some(value))
+				.with({ tag: "missing" }, () => {
+					throw new Error(`Projection: label ${label} not found`);
+				})
+				.otherwise(() => O.none),
+		)
+		.with(NF.Patterns.Match, ({ closure, scrutinee }) => {
+			const known = view(ctx, scrutinee);
+			if (known.kind !== "Sealed") {
+				return O.none;
+			}
+			assert(closure.type === "Closure", "Blocked match should retain a term closure");
+			assert(closure.term.type === "Match", "Blocked match closure should retain a match term");
+			const result = matching(closure.ctx, known.value, closure.term.alternatives);
+			if (!result) {
+				throw new Error("Match: No alternative matched");
+			}
+			return O.some(result);
+		})
+		.with(NF.Patterns.Inj, ({ base, label, injected }) => O.fromNullable(inject(ctx, base, label, injected)))
+		.otherwise(() => O.none);
+
+export function force(ctx: EB.Context, value: NF.Value): NF.Value {
+	return match(value)
+		.with({ type: "Neutral", kind: "Sealed" }, () => value)
+		.with({ type: "Neutral", kind: "Symbolic", value: NF.Patterns.Label }, ({ value: label }) => {
+			return match(ctx.sigma[label.variable.name])
+				.with({ value: { type: "Neutral", kind: "Symbolic", value: NF.Patterns.Label } }, ({ value: placeholder }) =>
+					placeholder.value.variable.name === label.variable.name ? value : force(ctx, placeholder),
+				)
+				.with({ value: P.select() }, resolved => force(ctx, resolved))
+				.otherwise(() => value);
+		})
+		.with({ type: "Neutral", kind: "Symbolic", value: NF.Patterns.Flex }, ({ value: flex }) => {
+			const solution = ctx.zonker[flex.variable.val];
+			return solution ? force(ctx, solution) : value;
+		})
+		.with({ type: "Neutral", kind: "Symbolic" }, () => value)
+		.with({ type: "Neutral", kind: "Blocked" }, ({ value: blocked }) =>
+			F.pipe(
+				resume(ctx, blocked),
+				O.match(
+					() => value,
+					next => force(ctx, next),
+				),
+			),
+		)
+		.with(NF.Patterns.Flex, ({ variable }) => {
+			const solution = ctx.zonker[variable.val];
+			return solution ? force(ctx, solution) : value;
+		})
+		.otherwise(() => value);
+}
+
+export function view(ctx: EB.Context, value: NF.Value): View {
+	const forced = force(ctx, value);
+	return match(forced)
+		.with({ type: "Neutral" }, ({ kind, value }) => ({ kind, value }))
+		.otherwise(value => ({ kind: "Sealed", value }));
+}
+
 export const unwrapNeutral = (value: NF.Value): NF.Value => {
 	return match(value)
-		.with({ type: "Neutral" }, ({ value }) => unwrapNeutral(value))
-		.otherwise(() => value);
-};
-
-export const force = (ctx: EB.Context, value: NF.Value): NF.Value => {
-	return match(value)
-		.with({ type: "Neutral" }, ({ value }) => force(ctx, value))
-		.with(NF.Patterns.Flex, ({ variable }) => {
-			if (ctx.zonker[variable.val]) {
-				return force(ctx, ctx.zonker[variable.val]);
-			}
-			return NF.Constructors.Neutral(value);
-		})
+		.with({ type: "Neutral", kind: P.union("Symbolic", "Sealed") }, ({ value }) => unwrapNeutral(value))
 		.otherwise(() => value);
 };
 

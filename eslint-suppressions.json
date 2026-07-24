@@ -405,11 +405,6 @@
 			"count": 1
 		}
 	},
-	"src/elaboration/unification/unification.ts": {
-		"no-restricted-properties": {
-			"count": 4
-		}
-	},
 	"src/modules/loading.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 1
@@ -606,7 +601,7 @@
 	},
 	"src/verification/V2/synth.ts": {
 		"@typescript-eslint/no-unused-vars": {
-			"count": 3
+			"count": 2
 		},
 		"no-restricted-properties": {
 			"count": 4

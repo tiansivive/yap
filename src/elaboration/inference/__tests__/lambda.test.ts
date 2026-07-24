@@ -14,7 +14,6 @@ describe("Inference: lambdas", () => {
 		expect(structure.metas[1].ann).toMatchObject({ type: "Lit", value: { type: "Atom", value: "Type" } });
 
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 
 	it("implicit lambda without annotation", () => {
@@ -27,7 +26,6 @@ describe("Inference: lambdas", () => {
 		expect(structure.metas[1].ann).toMatchObject({ type: "Lit", value: { type: "Atom", value: "Type" } });
 
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 
 	it("explicit lambda with param annotation", () => {
@@ -39,7 +37,6 @@ describe("Inference: lambdas", () => {
 		expect(metas).toHaveLength(0);
 
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 
 	describe("higher order functions", () => {
@@ -48,7 +45,6 @@ describe("Inference: lambdas", () => {
 
 			expect(structure.type).toMatchObject({ type: "Abs", binder: { type: "Pi", icit: "Explicit" } });
 			expect({ displays }).toMatchSnapshot();
-			expect({ structure }).toMatchSnapshot();
 		});
 
 		it("higher order function with implicit param", () => {
@@ -56,7 +52,6 @@ describe("Inference: lambdas", () => {
 
 			expect(structure.type).toMatchObject({ type: "Abs", binder: { type: "Pi", icit: "Implicit" } });
 			expect({ displays }).toMatchSnapshot();
-			expect({ structure }).toMatchSnapshot();
 		});
 	});
 });

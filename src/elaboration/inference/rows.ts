@@ -42,7 +42,7 @@ export const withLabelContext = <A>(row: Src.Row, f: V2.Elaboration<A>): V2.Elab
 			ctx_ =>
 				entries(bindings).reduce((ctx, [label, type]) => {
 					const withLabel = EB.extendLabel(ctx, label, type);
-					const neutral = NF.Constructors.Neutral(NF.Constructors.Var({ type: "Label", name: label }));
+					const neutral = NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Label", name: label }));
 					return { ...withLabel, sigma: { ...withLabel.sigma, [label]: { value: neutral } } };
 				}, ctx_),
 			f,

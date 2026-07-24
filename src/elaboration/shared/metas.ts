@@ -22,6 +22,9 @@ export const collectMetasNF = (val: NF.Value, zonker: Subst): MetaNF[] => {
 		})
 		.with(NF.Patterns.Var, () => [])
 		.with(NF.Patterns.App, ({ func, arg }) => [...collectMetasNF(func, zonker), ...collectMetasNF(arg, zonker)])
+		.with(NF.Patterns.Proj, ({ base }) => collectMetasNF(base, zonker))
+		.with(NF.Patterns.Match, ({ closure, scrutinee }) => [...collectMetasNF(scrutinee, zonker), ...collectMetasEB(closure.term, zonker)])
+		.with(NF.Patterns.Inj, ({ base, injected }) => [...collectMetasNF(base, zonker), ...collectMetasNF(injected, zonker)])
 		.with(NF.Patterns.Row, ({ row }) =>
 			R.fold(
 				row,

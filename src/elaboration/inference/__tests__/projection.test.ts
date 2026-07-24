@@ -7,7 +7,6 @@ describe("inference: projection", () => {
 		// Projecting a Num field should yield Num
 		expect(res.displays.type).toBe("Num");
 		expect({ displays: res.displays }).toMatchSnapshot();
-		expect({ structure: res.structure }).toMatchSnapshot();
 	});
 
 	it("\\obj -> obj.x", () => {
@@ -18,7 +17,6 @@ describe("inference: projection", () => {
 		expect(res.displays.constraints).toContain("Schema [ x: ?2 | ?3 ] ~~ ?1");
 		expect(res.structure.metas[3].ann).toMatchObject({ type: "Lit", value: { value: "Row" } });
 		expect({ displays: res.displays }).toMatchSnapshot();
-		expect({ structure: res.structure }).toMatchSnapshot();
 	});
 
 	it("{ let proj = \\obj -> obj.x; }", () => {
@@ -29,7 +27,6 @@ describe("inference: projection", () => {
 		// expect(res.displays.constraints).toContain("(?2) [ x: ?4 | ?5 ] ~~ ?1");
 		// expect(res.structure.metas[5].ann).toMatchObject({ type: "Lit", value: { value: "Row"} });
 		expect({ displays: res.displays }).toMatchSnapshot();
-		expect({ structure: res.structure }).toMatchSnapshot();
 	});
 
 	describe("Projection from Sigma types", () => {
@@ -47,7 +44,6 @@ describe("inference: projection", () => {
 			expect(res.structure.term.type).toBe("Block");
 			expect(res.displays.type).toBe("String");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 	});
 });

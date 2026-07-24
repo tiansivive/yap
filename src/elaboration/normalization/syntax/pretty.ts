@@ -30,6 +30,9 @@ export const doc = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBruijn: 
 				.exhaustive(),
 		)
 		.with({ type: "Neutral" }, ({ value: v }) => doc(v, ctx, opts))
+		.with(NF.Patterns.Proj, ({ base, label }) => [doc(base, ctx, opts), ".", label])
+		.with(NF.Patterns.Match, ({ scrutinee }) => ["match ", doc(scrutinee, ctx, opts), " …"])
+		.with(NF.Patterns.Inj, ({ base, label, injected }) => ["inj ", label, " ", doc(injected, ctx, opts), " into ", doc(base, ctx, opts)])
 		.with({ type: "Abs", binder: { type: "Mu" } }, ({ binder }) => binder.source)
 		.with({ type: "Abs" }, ({ binder, closure }) => {
 			const b: PP.Doc = match(binder)

@@ -158,7 +158,7 @@ export const createTranslationTools = (runtime: VerificationRuntime, toModalitie
 			.otherwise(() => []);
 
 	const term = (nf: NF.Value, ctx: EB.Context, rigids: Record<number, IVL.Term> = {}): IVL.Term =>
-		match(nf)
+		match(NF.force(ctx, nf))
 			.with({ type: "Neutral" }, ({ value }) => term(value, ctx, rigids))
 			.with({ type: "Modal" }, ({ value }) => term(value, ctx, rigids))
 			.with(NF.Patterns.Lit, l =>
@@ -213,7 +213,7 @@ export const createTranslationTools = (runtime: VerificationRuntime, toModalitie
 					// `withRowLabels`, or nothing in scope — becomes a logical constant of the field's sort.
 					if (sig) {
 						const symbolic = match(sig.value)
-							.with({ type: "Neutral", value: { type: "Var", variable: { type: "Label" } } }, () => true)
+							.with({ type: "Neutral", kind: "Symbolic", value: { type: "Var", variable: { type: "Label" } } }, () => true)
 							.otherwise(() => false);
 						if (!symbolic) {
 							return term(sig.value, ctx, rigids);
@@ -241,7 +241,7 @@ export const createTranslationTools = (runtime: VerificationRuntime, toModalitie
 			});
 
 	const formula = (nf: NF.Value, ctx: EB.Context, rigids: Record<number, IVL.Term> = {}): IVL.Formula =>
-		match(nf)
+		match(NF.force(ctx, nf))
 			.with({ type: "Neutral" }, ({ value }) => formula(value, ctx, rigids))
 			.with({ type: "Modal" }, ({ value }) => formula(value, ctx, rigids))
 			.with(NF.Patterns.Lit, ({ value }) =>

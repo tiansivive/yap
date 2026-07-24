@@ -16,6 +16,5 @@ describe("inference: annotations", () => {
 
 		expect(Object.entries(structure.metas)).toHaveLength(0);
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 });

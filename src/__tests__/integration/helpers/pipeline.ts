@@ -151,7 +151,7 @@ const Elaborate = {
 					const ar = NF.arity(ctx, nf);
 					const compute = (...args: NF.Value[]) => {
 						const ext = NF.Constructors.External(stmt.variable, ar, compute, args);
-						return NF.Constructors.Neutral(ext);
+						return NF.Constructors.Neutral("Sealed", ext);
 					};
 					const c1 = set(ctx, ["imports", stmt.variable] as const, [v, nf, []] satisfies EB.AST);
 					return set(c1, ["ffi", stmt.variable] as const, { arity: ar, compute });

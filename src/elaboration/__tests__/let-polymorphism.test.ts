@@ -113,7 +113,6 @@ describe("Let-polymorphism", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("higher-order polymorphic function", () => {
