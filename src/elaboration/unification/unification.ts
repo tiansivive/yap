@@ -153,23 +153,29 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				.with([NF.Patterns.StuckMatch, NF.Patterns.StuckMatch], ([_left, _right]) => {
 					throw new Error("Unification of stuck match expressions is not supported yet");
 				})
-				.with([NF.Patterns.StuckMatch, P._], ([stuck, value]) =>
-					F.pipe(
-						NF.resume(ctx, stuck.value),
-						O.match(
-							() => V2.Do<Subst, unknown>(() => V2.fail(Err.TypeMismatch(stuck, value))),
-							next => unify(next, value, lvl, subst),
+				.with(
+					[NF.Patterns.StuckMatch, P._],
+					([stuck]) => O.isSome(NF.resume(ctx, stuck.value)),
+					([stuck, value]) =>
+						F.pipe(
+							NF.resume(ctx, stuck.value),
+							O.getOrElse<NF.Value>(() => {
+								throw new Error("Stuck match must resume after passing its guard");
+							}),
+							resumed => unify(resumed, value, lvl, subst),
 						),
-					),
 				)
-				.with([P._, NF.Patterns.StuckMatch], ([value, stuck]) =>
-					F.pipe(
-						NF.resume(ctx, stuck.value),
-						O.match(
-							() => V2.Do<Subst, unknown>(() => V2.fail(Err.TypeMismatch(value, stuck))),
-							next => unify(value, next, lvl, subst),
+				.with(
+					[P._, NF.Patterns.StuckMatch],
+					([, stuck]) => O.isSome(NF.resume(ctx, stuck.value)),
+					([value, stuck]) =>
+						F.pipe(
+							NF.resume(ctx, stuck.value),
+							O.getOrElse<NF.Value>(() => {
+								throw new Error("Stuck match must resume after passing its guard");
+							}),
+							resumed => unify(value, resumed, lvl, subst),
 						),
-					),
 				)
 				.with([NF.Patterns.App, NF.Patterns.App], ([left, right]) =>
 					V2.Do<Subst, Subst>(function* () {

@@ -226,35 +226,41 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 					const projected = (label: string, ty: NF.Value): V2.Elaboration<NF.Value> =>
 						V2.Do(function* () {
 							return yield* match(NF.view(ctx, ty))
-								.with({ kind: "Sealed", value: NF.Patterns.Modal }, function* ({ value: m }) {
-									const proj = yield* V2.pure(projected(label, m.value));
-									return proj;
-								})
-								.with({ kind: "Sealed", value: NF.Patterns.Schema }, function* ({ value: { func, arg } }) {
-									const rewritten = Row.rewrite(arg.row, label);
-									if (E.isLeft(rewritten)) {
-										throw new Error("Projection label not found: " + label);
-									}
-									if (rewritten.right.type !== "extension") {
-										throw new Error("Projected label is not an extension: " + label);
-									}
+								.with({ kind: "Sealed" }, ({ value }) =>
+									match(value)
+										.with(NF.Patterns.Modal, function* (modal) {
+											const proj = yield* V2.pure(projected(label, modal.value));
+											return proj;
+										})
+										.with(NF.Patterns.Schema, function* ({ func, arg }) {
+											const rewritten = Row.rewrite(arg.row, label);
+											if (E.isLeft(rewritten)) {
+												throw new Error("Projection label not found: " + label);
+											}
+											if (rewritten.right.type !== "extension") {
+												throw new Error("Projected label is not an extension: " + label);
+											}
 
-									return rewritten.right.value;
-								})
-								.with({ kind: "Sealed", value: NF.Patterns.Sigma }, function* ({ value: { binder, closure } }) {
-									if (binder.annotation.type !== "Row") {
-										throw new Error("Sigma binder annotation must be a Row");
-									}
+											return rewritten.right.value;
+										})
+										.with(NF.Patterns.Sigma, function* ({ binder }) {
+											if (binder.annotation.type !== "Row") {
+												throw new Error("Sigma binder annotation must be a Row");
+											}
 
-									const rewritten = Row.rewrite(binder.annotation.row, label);
-									if (E.isLeft(rewritten)) {
-										throw new Error("Projection label not found in Sigma: " + label);
-									}
-									if (rewritten.right.type !== "extension") {
-										throw new Error("Projected label is not an extension in Sigma: " + label);
-									}
-									return rewritten.right.value;
-								})
+											const rewritten = Row.rewrite(binder.annotation.row, label);
+											if (E.isLeft(rewritten)) {
+												throw new Error("Projection label not found in Sigma: " + label);
+											}
+											if (rewritten.right.type !== "extension") {
+												throw new Error("Projected label is not an extension in Sigma: " + label);
+											}
+											return rewritten.right.value;
+										})
+										.otherwise(() => {
+											throw new Error("Projection expected a Sigma type");
+										}),
+								)
 								.otherwise(() => {
 									throw new Error("Projection expected a Sigma type");
 								});
@@ -265,55 +271,60 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 				})
 				.with(EB.CtorPatterns.Inj, function* (inj) {
 					const [baseTy, baseArtefacts] = yield* synth.gen(inj.term);
-					const base = NF.view(ctx, baseTy);
 					const [valueTy, valueArtefacts] = yield* synth.gen(inj.value);
 					const payloadTy = NF.force(ctx, valueTy);
 
-					const injected = (label: string, ty: NF.View): V2.Elaboration<NF.Value> =>
+					const injected = (label: string, ty: NF.Value): V2.Elaboration<NF.Value> =>
 						V2.Do(function* () {
-							return yield* match(ty)
-								.with({ kind: "Sealed", value: NF.Patterns.Modal }, function* ({ value: { value, modalities } }) {
-									const inner = yield* V2.pure(injected(label, NF.view(ctx, value)));
-									return NF.Constructors.Modal(inner, modalities);
-								})
-								.with({ kind: "Sealed", value: NF.Patterns.Schema }, function* ({ value: { func, arg } }) {
-									const rewritten = Row.rewrite(arg.row, label);
-									if (E.isLeft(rewritten)) {
-										const extended = Row.Constructors.Extension(label, payloadTy, arg.row);
-										return NF.Constructors.App(func, NF.Constructors.Row(extended), "Explicit");
-									}
+							return yield* match(NF.view(ctx, ty))
+								.with({ kind: "Sealed" }, ({ value }) =>
+									match(value)
+										.with(NF.Patterns.Modal, function* ({ value, modalities }) {
+											const inner = yield* V2.pure(injected(label, value));
+											return NF.Constructors.Modal(inner, modalities);
+										})
+										.with(NF.Patterns.Schema, function* ({ func, arg }) {
+											const rewritten = Row.rewrite(arg.row, label);
+											if (E.isLeft(rewritten)) {
+												const extended = Row.Constructors.Extension(label, payloadTy, arg.row);
+												return NF.Constructors.App(func, NF.Constructors.Row(extended), "Explicit");
+											}
 
-									return NF.Constructors.App(func, NF.Constructors.Row(rewritten.right), "Explicit");
-								})
-								.with({ kind: "Sealed", value: NF.Patterns.Sigma }, function* ({ value: { binder, closure } }) {
-									if (binder.annotation.type !== "Row") {
-										throw new Error("Sigma binder annotation must be a Row");
-									}
+											return NF.Constructors.App(func, NF.Constructors.Row(rewritten.right), "Explicit");
+										})
+										.with(NF.Patterns.Sigma, function* ({ binder, closure }) {
+											if (binder.annotation.type !== "Row") {
+												throw new Error("Sigma binder annotation must be a Row");
+											}
 
-									const rewritten = Row.rewrite(binder.annotation.row, label);
-									if (E.isLeft(rewritten)) {
-										const extended = Row.Constructors.Extension(label, payloadTy, binder.annotation.row);
-										const ann = NF.Constructors.Row(extended);
+											const rewritten = Row.rewrite(binder.annotation.row, label);
+											if (E.isLeft(rewritten)) {
+												const extended = Row.Constructors.Extension(label, payloadTy, binder.annotation.row);
+												const ann = NF.Constructors.Row(extended);
 
-										const schema = match(closure.term)
-											.with(EB.CtorPatterns.Schema, ({ arg }) =>
-												EB.Constructors.Schema(EB.Constructors.Extension(label, NF.quote(ctx, ctx.env.length, payloadTy), arg.row)),
-											)
-											.otherwise(_ => {
-												throw new Error("Injection expected a Schema type in sigma injection");
-											});
+												const schema = match(closure.term)
+													.with(EB.CtorPatterns.Schema, ({ arg }) =>
+														EB.Constructors.Schema(EB.Constructors.Extension(label, NF.quote(ctx, ctx.env.length, payloadTy), arg.row)),
+													)
+													.otherwise(_ => {
+														throw new Error("Injection expected a Schema type in sigma injection");
+													});
 
-										return NF.Constructors.Sigma(binder.variable, ann, NF.Constructors.Closure(closure.ctx, schema));
-									}
+												return NF.Constructors.Sigma(binder.variable, ann, NF.Constructors.Closure(closure.ctx, schema));
+											}
 
-									return NF.Constructors.Sigma(binder.variable, NF.Constructors.Row(rewritten.right), closure);
-								})
+											return NF.Constructors.Sigma(binder.variable, NF.Constructors.Row(rewritten.right), closure);
+										})
+										.otherwise(() => {
+											throw new Error("Injection expected a Schema or Variant type");
+										}),
+								)
 								.otherwise(() => {
 									throw new Error("Injection expected a Schema or Variant type");
 								});
 						});
 
-					const outTy = yield* V2.pure(injected(inj.label, base));
+					const outTy = yield* V2.pure(injected(inj.label, baseTy));
 					const combinedVc = Build.and(baseArtefacts.vc, valueArtefacts.vc);
 					return [outTy, { vc: combinedVc }] satisfies SynthResult;
 				})
