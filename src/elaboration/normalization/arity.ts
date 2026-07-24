@@ -1,6 +1,6 @@
 import * as NF from ".";
 import * as EB from "@yap/elaboration";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 const { Patterns } = NF;
 
@@ -54,10 +54,12 @@ export const arity = (ctx: EB.Context, ty: NF.Value): number => {
 			const returnType = NF.apply(binder, closure, rigid);
 			return 1 + arity(extended, returnType);
 		})
-		.otherwise(v => {
-			if (!inert(v)) {
+		.with(
+			P._,
+			v => !inert(v),
+			() => {
 				throw new Error("Foreign type has undecidable arity: head is not inert");
-			}
-			return 0;
-		});
+			},
+		)
+		.otherwise(() => 0);
 };

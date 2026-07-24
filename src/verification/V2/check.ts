@@ -38,21 +38,21 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 			const ctx = yield* V2.ask();
 			runtime.log("Checking", EB.Display.Term(tm, ctx), "Against:", NF.display(ty, ctx), "Env:", EB.Display.Env(ctx));
 
-			const result = match([tm, NF.unwrapNeutral(NF.force(ctx, ty))])
-				.with([{ type: "Modal" }, NF.Patterns.Type], ([term, type]) => check(term.term, type))
-				.with([EB.CtorPatterns.Mu, P._], ([term, type]) =>
+			const result = match([tm, NF.view(ctx, ty)])
+				.with([{ type: "Modal" }, { kind: "Sealed", value: NF.Patterns.Type }], ([term, { value: type }]) => check(term.term, type))
+				.with([EB.CtorPatterns.Mu, P._], ([term, { value: type }]) =>
 					V2.Do(() => V2.local(c => EB.bind(c, { type: "Mu", variable: term.binding.variable }, type), check(term.body, type))),
 				)
 				.with(
-					[P._, NF.Patterns.App],
-					([, type]) => O.isSome(NF.unfoldMu(type)),
-					([term, type]) => {
+					[P._, { kind: "Sealed", value: NF.Patterns.App }],
+					([, { value: type }]) => O.isSome(NF.unfoldMu(type)),
+					([term, { value: type }]) => {
 						const unfolded = NF.unfoldMu(type);
 						assert(unfolded._tag === "Some");
 						return check(term, unfolded.value);
 					},
 				)
-				.with([{ type: "Abs" }, { type: "Abs", binder: { type: "Pi" } }], ([term, type]) =>
+				.with([{ type: "Abs" }, { kind: "Sealed", value: { type: "Abs", binder: { type: "Pi" } } }], ([term, { value: type }]) =>
 					V2.Do(() =>
 						V2.local(
 							c => EB.bind(c, { type: "Lambda", variable: term.binding.variable }, type.binder.annotation),
@@ -89,7 +89,7 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 						),
 					),
 				)
-				.with([EB.CtorPatterns.Array, NF.Patterns.Indexed], ([term, type]) => {
+				.with([EB.CtorPatterns.Array, { kind: "Sealed", value: NF.Patterns.Indexed }], ([term, { value: type }]) => {
 					return V2.of({
 						vc: runtime.record("check.array", Build.true_(), {
 							type: NF.display(type, ctx),
@@ -97,13 +97,15 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 						}),
 					} satisfies VerificationArtefacts);
 				})
-				.with([EB.CtorPatterns.Struct, NF.Patterns.Sigma], ([term, type]) => {
-					const value = NF.unwrapNeutral(NF.evaluate(ctx, term));
-					assert(value.type === "App" && value.arg.type === "Row", "Expected struct to evaluate to row application");
-					const schema = NF.apply(type.binder, type.closure, NF.Constructors.Row(value.arg.row));
+				.with([EB.CtorPatterns.Struct, { kind: "Sealed", value: NF.Patterns.Sigma }], ([term, { value: type }]) => {
+					const schema = match(NF.view(ctx, NF.evaluate(ctx, term)))
+						.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value }) => NF.apply(type.binder, type.closure, NF.Constructors.Row(value.arg.row)))
+						.otherwise(() => {
+							throw new Error("Expected struct to evaluate to a sealed struct");
+						});
 					return check(term, schema);
 				})
-				.with([EB.CtorPatterns.Tagged, NF.Patterns.Variant], ([term, type]) => {
+				.with([EB.CtorPatterns.Tagged, { kind: "Sealed", value: NF.Patterns.Variant }], ([term, { value: type }]) => {
 					return V2.Do(function* () {
 						const value = EB.TaggedTerm.extract(term.arg.row);
 						assert(value, "Tagged pattern expected __tag atom and payload fields");
@@ -118,8 +120,7 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 						return yield* check.gen(value.payload, arm);
 					});
 				})
-				.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], ([term, type]) => {
-					const nf = NF.unwrapNeutral(NF.evaluate(ctx, term));
+				.with([EB.CtorPatterns.Struct, { kind: "Sealed", value: NF.Patterns.Schema }], ([term, { value: type }]) => {
 					const traverse = (r1: EB.Row, r2: NF.Row): V2.Elaboration<VerificationArtefacts> =>
 						match([r1, r2])
 							.with([{ type: "empty" }, { type: "empty" }], () => V2.of<VerificationArtefacts>({ vc: Build.true_() }))
@@ -141,8 +142,8 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 							)
 							.otherwise(() => V2.Do(() => V2.fail<VerificationArtefacts>({ type: "Impossible", message: "Schema verification: incompatible rows" })));
 
-					const result = match(nf)
-						.with(NF.Patterns.Struct, struct =>
+					const result = match(NF.view(ctx, NF.evaluate(ctx, term)))
+						.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value: struct }) =>
 							V2.Do(function* () {
 								const bindings = yield* V2.pure(collectSigmaBindings(struct.arg.row, type.arg.row));
 								return yield* V2.local(
@@ -161,7 +162,7 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 
 					return result;
 				})
-				.with([EB.CtorPatterns.Match, P._], ([term, type]) =>
+				.with([EB.CtorPatterns.Match, P._], ([term, { value: type }]) =>
 					V2.Do(function* () {
 						const { alternatives, scrutinee } = term;
 
@@ -210,7 +211,7 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 						return { vc } satisfies VerificationArtefacts;
 					}),
 				)
-				.otherwise(([term, type]) =>
+				.otherwise(([term, { value: type }]) =>
 					V2.Do(function* () {
 						const [synthed, artefacts] = yield* synth.gen(term);
 						const checked = yield* subtype.gen(synthed, type);

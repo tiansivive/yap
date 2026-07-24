@@ -890,20 +890,20 @@ export function apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): 
 
 export type View = { kind: NF.Neutral; value: NF.Value };
 
-const resume = (ctx: EB.Context, value: NF.Value): NF.Value | undefined =>
+export const resume = (ctx: EB.Context, value: NF.Value): Option<NF.Value> =>
 	match(value)
 		.with(NF.Patterns.Proj, ({ base, label }) =>
 			match(project(ctx, base, label))
-				.with({ tag: "found" }, ({ value }) => value)
+				.with({ tag: "found" }, ({ value }) => O.some(value))
 				.with({ tag: "missing" }, () => {
 					throw new Error(`Projection: label ${label} not found`);
 				})
-				.otherwise(() => undefined),
+				.otherwise(() => O.none),
 		)
 		.with(NF.Patterns.Match, ({ closure, scrutinee }) => {
 			const known = view(ctx, scrutinee);
 			if (known.kind !== "Sealed") {
-				return undefined;
+				return O.none;
 			}
 			assert(closure.type === "Closure", "Blocked match should retain a term closure");
 			assert(closure.term.type === "Match", "Blocked match closure should retain a match term");
@@ -911,10 +911,10 @@ const resume = (ctx: EB.Context, value: NF.Value): NF.Value | undefined =>
 			if (!result) {
 				throw new Error("Match: No alternative matched");
 			}
-			return result;
+			return O.some(result);
 		})
-		.with(NF.Patterns.Inj, ({ base, label, injected }) => inject(ctx, base, label, injected))
-		.otherwise(() => undefined);
+		.with(NF.Patterns.Inj, ({ base, label, injected }) => O.fromNullable(inject(ctx, base, label, injected)))
+		.otherwise(() => O.none);
 
 export function force(ctx: EB.Context, value: NF.Value): NF.Value {
 	return match(value)
@@ -924,10 +924,15 @@ export function force(ctx: EB.Context, value: NF.Value): NF.Value {
 			return solution ? force(ctx, solution) : value;
 		})
 		.with({ type: "Neutral", kind: "Symbolic" }, ({ value: symbolic }) => force(ctx, symbolic))
-		.with({ type: "Neutral", kind: "Blocked" }, ({ value: blocked }) => {
-			const result = resume(ctx, blocked);
-			return result ? force(ctx, result) : value;
-		})
+		.with({ type: "Neutral", kind: "Blocked" }, ({ value: blocked }) =>
+			F.pipe(
+				resume(ctx, blocked),
+				O.match(
+					() => value,
+					next => force(ctx, next),
+				),
+			),
+		)
 		.with(NF.Patterns.Flex, ({ variable }) => {
 			const solution = ctx.zonker[variable.val];
 			return solution ? force(ctx, solution) : value;

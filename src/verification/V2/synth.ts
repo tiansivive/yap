@@ -225,12 +225,12 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 					const [baseTy, baseArtefacts] = yield* synth.gen(proj.term);
 					const projected = (label: string, ty: NF.Value): V2.Elaboration<NF.Value> =>
 						V2.Do(function* () {
-							return yield* match(NF.unwrapNeutral(NF.force(ctx, ty)))
-								.with(NF.Patterns.Modal, function* (m) {
+							return yield* match(NF.view(ctx, ty))
+								.with({ kind: "Sealed", value: NF.Patterns.Modal }, function* ({ value: m }) {
 									const proj = yield* V2.pure(projected(label, m.value));
 									return proj;
 								})
-								.with(NF.Patterns.Schema, function* ({ func, arg }) {
+								.with({ kind: "Sealed", value: NF.Patterns.Schema }, function* ({ value: { func, arg } }) {
 									const rewritten = Row.rewrite(arg.row, label);
 									if (E.isLeft(rewritten)) {
 										throw new Error("Projection label not found: " + label);
@@ -241,7 +241,7 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 
 									return rewritten.right.value;
 								})
-								.with(NF.Patterns.Sigma, function* ({ binder, closure }) {
+								.with({ kind: "Sealed", value: NF.Patterns.Sigma }, function* ({ value: { binder, closure } }) {
 									if (binder.annotation.type !== "Row") {
 										throw new Error("Sigma binder annotation must be a Row");
 									}
@@ -265,18 +265,18 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 				})
 				.with(EB.CtorPatterns.Inj, function* (inj) {
 					const [baseTy, baseArtefacts] = yield* synth.gen(inj.term);
-					const forcedBase = NF.unwrapNeutral(NF.force(ctx, baseTy));
+					const base = NF.view(ctx, baseTy);
 					const [valueTy, valueArtefacts] = yield* synth.gen(inj.value);
 					const payloadTy = NF.force(ctx, valueTy);
 
-					const injected = (label: string, ty: NF.Value): V2.Elaboration<NF.Value> =>
+					const injected = (label: string, ty: NF.View): V2.Elaboration<NF.Value> =>
 						V2.Do(function* () {
 							return yield* match(ty)
-								.with(NF.Patterns.Modal, function* ({ value, modalities }) {
-									const inner = yield* V2.pure(injected(label, value));
+								.with({ kind: "Sealed", value: NF.Patterns.Modal }, function* ({ value: { value, modalities } }) {
+									const inner = yield* V2.pure(injected(label, NF.view(ctx, value)));
 									return NF.Constructors.Modal(inner, modalities);
 								})
-								.with(NF.Patterns.Schema, function* ({ func, arg }) {
+								.with({ kind: "Sealed", value: NF.Patterns.Schema }, function* ({ value: { func, arg } }) {
 									const rewritten = Row.rewrite(arg.row, label);
 									if (E.isLeft(rewritten)) {
 										const extended = Row.Constructors.Extension(label, payloadTy, arg.row);
@@ -285,7 +285,7 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 
 									return NF.Constructors.App(func, NF.Constructors.Row(rewritten.right), "Explicit");
 								})
-								.with(NF.Patterns.Sigma, function* ({ binder, closure }) {
+								.with({ kind: "Sealed", value: NF.Patterns.Sigma }, function* ({ value: { binder, closure } }) {
 									if (binder.annotation.type !== "Row") {
 										throw new Error("Sigma binder annotation must be a Row");
 									}
@@ -313,7 +313,7 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 								});
 						});
 
-					const outTy = yield* V2.pure(injected(inj.label, forcedBase));
+					const outTy = yield* V2.pure(injected(inj.label, base));
 					const combinedVc = Build.and(baseArtefacts.vc, valueArtefacts.vc);
 					return [outTy, { vc: combinedVc }] satisfies SynthResult;
 				})
