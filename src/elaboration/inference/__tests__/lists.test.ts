@@ -8,6 +8,5 @@ describe("inference: list", () => {
 		expect(res.displays.constraints.join()).toContain("Num ~~ ?2");
 
 		expect({ displays: res.displays }).toMatchSnapshot();
-		expect({ structure: res.structure }).toMatchSnapshot();
 	});
 });

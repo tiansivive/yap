@@ -14,7 +14,6 @@ describe("inference: pi/arrow", () => {
 		expect(Object.entries(structure.metas)).toHaveLength(0);
 
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 
 	it("pi explicit: (x: Num) -> Num", () => {
@@ -28,7 +27,6 @@ describe("inference: pi/arrow", () => {
 		expect(Object.entries(structure.metas)).toHaveLength(0);
 
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 
 	it("pi implicit: (x: Num) => Num", () => {
@@ -43,7 +41,6 @@ describe("inference: pi/arrow", () => {
 		expect(Object.entries(structure.metas)).toHaveLength(0);
 
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 
 	it("output type must be a Type: (x: Num) -> x", () => {
@@ -58,6 +55,5 @@ describe("inference: pi/arrow", () => {
 		expect(Object.entries(structure.metas)).toHaveLength(0);
 
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 });

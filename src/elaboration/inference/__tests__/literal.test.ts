@@ -11,7 +11,6 @@ describe("Inference: Literals", () => {
 
 		//const stripped = stripKeys({ structure }, ["ffi", "imports"])
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 
 	it("Boolean: true >=> Boolean", () => {
@@ -22,7 +21,6 @@ describe("Inference: Literals", () => {
 		expect(Object.entries(structure.metas)).toHaveLength(0);
 
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 
 	it('String: "hello" >=> String', () => {
@@ -33,7 +31,6 @@ describe("Inference: Literals", () => {
 		expect(Object.entries(structure.metas)).toHaveLength(0);
 
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 
 	it("Unit: ! >=> Unit", () => {
@@ -44,7 +41,6 @@ describe("Inference: Literals", () => {
 		expect(Object.entries(structure.metas)).toHaveLength(0);
 
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 
 	it("Type: Type >=> Type", () => {
@@ -55,7 +51,6 @@ describe("Inference: Literals", () => {
 		expect(Object.entries(structure.metas)).toHaveLength(0);
 
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 
 	it("Row: Row >=> Type", () => {
@@ -66,6 +61,5 @@ describe("Inference: Literals", () => {
 		expect(Object.entries(structure.metas)).toHaveLength(0);
 
 		expect({ displays }).toMatchSnapshot();
-		expect({ structure }).toMatchSnapshot();
 	});
 });

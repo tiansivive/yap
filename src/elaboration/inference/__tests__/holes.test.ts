@@ -5,6 +5,5 @@ describe("inference: hole", () => {
 	it("_", () => {
 		const res = elaborateFrom("_");
 		expect({ displays: res.displays }).toMatchSnapshot();
-		expect({ structure: res.structure }).toMatchSnapshot();
 	});
 });

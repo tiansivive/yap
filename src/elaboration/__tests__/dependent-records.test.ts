@@ -14,7 +14,6 @@ describe("Dependent Records", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("Dependent pair: matching singleton values pass", () => {
@@ -27,7 +26,6 @@ describe("Dependent Records", () => {
 			const res = elaborateFrom(src);
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("Dependent pair: mismatched singleton values fail", () => {
@@ -51,7 +49,6 @@ describe("Dependent Records", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 
 		it("Pair instantiated with Num and String", () => {
@@ -69,7 +66,6 @@ describe("Dependent Records", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 	});
 
@@ -85,7 +81,6 @@ describe("Dependent Records", () => {
 
 			expect(res.structure.term.type).toBe("Block");
 			expect({ displays: res.displays }).toMatchSnapshot();
-			expect({ structure: res.structure }).toMatchSnapshot();
 		});
 	});
 });

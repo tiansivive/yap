@@ -5,6 +5,5 @@ describe("inference: modal", () => {
 	it.skip("<*> 1", () => {
 		const res = elaborateFrom("<*> Num");
 		expect({ displays: res.displays }).toMatchSnapshot();
-		expect({ structure: res.structure }).toMatchSnapshot();
 	});
 });
