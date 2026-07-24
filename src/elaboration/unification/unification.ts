@@ -155,6 +155,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				})
 				.with(
 					[NF.Patterns.StuckMatch, P._],
+					// eslint-disable-next-line no-restricted-properties
 					([stuck]) => O.isSome(NF.resume(ctx, stuck.value)),
 					([stuck, value]) =>
 						F.pipe(
@@ -167,6 +168,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				)
 				.with(
 					[P._, NF.Patterns.StuckMatch],
+					// eslint-disable-next-line no-restricted-properties
 					([, stuck]) => O.isSome(NF.resume(ctx, stuck.value)),
 					([value, stuck]) =>
 						F.pipe(
@@ -192,6 +194,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 						const unfoldedL = NF.unfoldMu(left);
 						const unfoldedR = NF.unfoldMu(right);
 
+						// eslint-disable-next-line no-restricted-properties
 						if (O.isNone(unfoldedL) && O.isNone(unfoldedR)) {
 							const o1 = yield unify(left.func, right.func, lvl, subst);
 							const o2 = yield unify(left.arg, right.arg, lvl, o1);
@@ -216,6 +219,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 
 				.with(
 					[NF.Patterns.App, P._],
+					// eslint-disable-next-line no-restricted-properties
 					([app]) => O.isSome(NF.unfoldMu(app)),
 					([app, v]) => {
 						const unfolded = NF.unfoldMu(app);
@@ -232,6 +236,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				)
 				.with(
 					[P._, NF.Patterns.App],
+					// eslint-disable-next-line no-restricted-properties
 					([, app]) => O.isSome(NF.unfoldMu(app)),
 					([v, app]) => {
 						const unfolded = NF.unfoldMu(app);
