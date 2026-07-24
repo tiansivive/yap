@@ -38,7 +38,7 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 			const ctx = yield* V2.ask();
 			runtime.log("Checking", EB.Display.Term(tm, ctx), "Against:", NF.display(ty, ctx), "Env:", EB.Display.Env(ctx));
 
-			const result = match([tm, NF.force(ctx, ty)])
+			const result = match([tm, NF.unwrapNeutral(NF.force(ctx, ty))])
 				.with([{ type: "Modal" }, NF.Patterns.Type], ([term, type]) => check(term.term, type))
 				.with([EB.CtorPatterns.Mu, P._], ([term, type]) =>
 					V2.Do(() => V2.local(c => EB.bind(c, { type: "Mu", variable: term.binding.variable }, type), check(term.body, type))),
@@ -98,7 +98,7 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 					} satisfies VerificationArtefacts);
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Sigma], ([term, type]) => {
-					const value = NF.evaluate(ctx, term);
+					const value = NF.unwrapNeutral(NF.evaluate(ctx, term));
 					assert(value.type === "App" && value.arg.type === "Row", "Expected struct to evaluate to row application");
 					const schema = NF.apply(type.binder, type.closure, NF.Constructors.Row(value.arg.row));
 					return check(term, schema);
@@ -119,7 +119,7 @@ export const createCheck = ({ runtime, translation }: CheckDeps) => {
 					});
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], ([term, type]) => {
-					const nf = NF.evaluate(ctx, term);
+					const nf = NF.unwrapNeutral(NF.evaluate(ctx, term));
 					const traverse = (r1: EB.Row, r2: NF.Row): V2.Elaboration<VerificationArtefacts> =>
 						match([r1, r2])
 							.with([{ type: "empty" }, { type: "empty" }], () => V2.of<VerificationArtefacts>({ vc: Build.true_() }))

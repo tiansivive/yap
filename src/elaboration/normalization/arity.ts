@@ -32,7 +32,7 @@ export const inert = (ty: NF.Value): boolean => {
 			return match(h)
 				.with({ type: "Var", variable: { type: "Bound" } }, () => false)
 				.with({ type: "Var", variable: { type: "Meta" } }, () => false)
-				.with(Patterns.Lambda, ({ binder }) => binder.variable !== NF.SCRUTINEE_VAR)
+				.with(Patterns.Lambda, () => true)
 				.otherwise(() => true);
 		})
 		.otherwise(() => true);

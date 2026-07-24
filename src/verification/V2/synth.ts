@@ -225,7 +225,7 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 					const [baseTy, baseArtefacts] = yield* synth.gen(proj.term);
 					const projected = (label: string, ty: NF.Value): V2.Elaboration<NF.Value> =>
 						V2.Do(function* () {
-							return yield* match(NF.force(ctx, ty))
+							return yield* match(NF.unwrapNeutral(NF.force(ctx, ty)))
 								.with(NF.Patterns.Modal, function* (m) {
 									const proj = yield* V2.pure(projected(label, m.value));
 									return proj;
@@ -265,7 +265,7 @@ export const createSynth = ({ runtime, translation }: SynthDeps) => {
 				})
 				.with(EB.CtorPatterns.Inj, function* (inj) {
 					const [baseTy, baseArtefacts] = yield* synth.gen(inj.term);
-					const forcedBase = NF.force(ctx, baseTy);
+					const forcedBase = NF.unwrapNeutral(NF.force(ctx, baseTy));
 					const [valueTy, valueArtefacts] = yield* synth.gen(inj.value);
 					const payloadTy = NF.force(ctx, valueTy);
 

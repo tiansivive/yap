@@ -16,9 +16,12 @@ type Constructor =
 	| { type: "Var"; variable: Variable }
 	| { type: "Lit"; value: Literal }
 	| { type: "App"; func: Value; arg: Value; icit: Implicitness }
+	| { type: "Proj"; base: Value; label: string }
+	| { type: "Match"; closure: Closure; scrutinee: Value }
+	| { type: "Inj"; base: Value; label: string; injected: Value }
 	| { type: "Row"; row: Row }
 	| { type: "Abs"; binder: Binder; closure: Closure }
-	| { type: "Neutral"; value: Value }
+	| { type: "Neutral"; kind: Neutral; value: Value }
 	| { type: "Modal"; value: Value; modalities: Modalities }
 	| { type: "External"; name: string; arity: number; compute: (...args: Value[]) => Value; args: Value[] }
 	| {
@@ -33,6 +36,7 @@ type Constructor =
 
 export type Row = R.Row<Value, Variable>;
 export type TaggedParts = { label: string; payload: Value };
+export type Neutral = "Symbolic" | "Sealed" | "Blocked";
 
 export type Binder =
 	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }
@@ -97,11 +101,13 @@ export const Constructors = {
 	Rigid: (lvl: number): Value =>
 		mk({
 			type: "Neutral",
+			kind: "Symbolic",
 			value: Constructors.Var({ type: "Bound", lvl }),
 		}),
 	Flex: (variable: Extract<Variable, { type: "Meta" }>): Value =>
 		mk({
 			type: "Neutral",
+			kind: "Symbolic",
 			value: Constructors.Var(variable),
 		}),
 	Lit: (value: Literal) =>
@@ -110,9 +116,10 @@ export const Constructors = {
 			value,
 		}),
 	Atom: (value: string) => mk(Constructors.Lit(Lit.Atom(value))),
-	Neutral: (value: Value) =>
+	Neutral: (value: Value, kind: Neutral = "Symbolic") =>
 		mk({
 			type: "Neutral" as const,
+			kind,
 			value,
 		}),
 	App: (func: Value, arg: Value, icit: Implicitness) =>
@@ -128,18 +135,19 @@ export const Constructors = {
 	Row: (row: Row): Value => mk({ type: "Row", row }),
 	Extension: (label: string, value: Value, row: Row): Row => ({ type: "extension", label, value, row }),
 
-	Schema: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit")),
-	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),
-	Struct: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row), "Explicit")),
+	Schema: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit"), "Sealed"),
+	Variant: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit"), "Sealed"),
+	Struct: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row), "Explicit"), "Sealed"),
 	Tagged: (tag: string, payload: Value): Value =>
 		Constructors.Struct(Constructors.Extension("__tag", Constructors.Lit(Lit.Atom(tag)), Constructors.Extension("payload", payload, R.Constructors.Empty()))),
-	Array: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Array")), Constructors.Row(row), "Explicit")),
+	Array: (row: Row): Value => Constructors.Neutral(Constructors.App(Constructors.Lit(Lit.Atom("Array")), Constructors.Row(row), "Explicit"), "Sealed"),
 
-	StuckMatch: (closure: Closure, scrutinee: Value): Value => {
-		const lambda = Constructors.Lambda(SCRUTINEE_VAR, "Explicit", closure, Any);
-		const app = Constructors.App(lambda, scrutinee, "Explicit");
-		return Constructors.Neutral(app);
-	},
+	Proj: (base: Value, label: string): Value => mk({ type: "Proj", base, label }),
+	Match: (closure: Closure, scrutinee: Value): Value => mk({ type: "Match", closure, scrutinee }),
+	Inj: (base: Value, label: string, injected: Value): Value => mk({ type: "Inj", base, label, injected }),
+	StuckMatch: (closure: Closure, scrutinee: Value): Value => Constructors.Neutral(Constructors.Match(closure, scrutinee), "Blocked"),
+	StuckProj: (base: Value, label: string): Value => Constructors.Neutral(Constructors.Proj(base, label), "Blocked"),
+	StuckInj: (base: Value, label: string, injected: Value): Value => Constructors.Neutral(Constructors.Inj(base, label, injected), "Blocked"),
 	Modal: (value: Value, modalities: Modalities): Value =>
 		mk({
 			type: "Modal",
@@ -169,10 +177,6 @@ export const Any = mk({
 	value: { type: "Atom", value: "Any" },
 });
 
-export const SCRUTINEE_VAR = "$scrutinee";
-export const PROJ_VAR_PREFIX = "$proj_";
-export const INJ_VAR_PREFIX = "$inj_";
-
 const tagged = (row: Row): TaggedParts | undefined => {
 	const tag = R.lookup(row, "__tag");
 	const payload = R.lookup(row, "payload");
@@ -195,6 +199,10 @@ export const Patterns = {
 	Type: { type: "Lit", value: { type: "Atom", value: "Type" } } as const,
 	Unit: { type: "Lit", value: { type: "Atom", value: "Unit" } } as const,
 	Any: { type: "Lit", value: { type: "Atom", value: "Any" } } as const,
+	Neutral: { type: "Neutral" } as const,
+	Symbolic: { type: "Neutral", kind: "Symbolic" } as const,
+	Sealed: { type: "Neutral", kind: "Sealed" } as const,
+	Blocked: { type: "Neutral", kind: "Blocked" } as const,
 
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } } as const,
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } } as const,
@@ -206,18 +214,12 @@ export const Patterns = {
 	} as const,
 	Array: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Array" } }, arg: { type: "Row" } } as const,
 
-	StuckMatch: {
-		type: "App",
-		func: { type: "Abs", binder: { type: "Lambda", variable: SCRUTINEE_VAR } },
-	} as const,
-	StuckProj: {
-		type: "App",
-		func: { type: "Abs", binder: { type: "Lambda", variable: P.string.startsWith(PROJ_VAR_PREFIX) } },
-	} as const,
-	StuckInj: {
-		type: "App",
-		func: { type: "Abs", binder: { type: "Lambda", variable: P.string.startsWith(INJ_VAR_PREFIX) } },
-	} as const,
+	Proj: { type: "Proj" } as const,
+	Match: { type: "Match" } as const,
+	Inj: { type: "Inj" } as const,
+	StuckMatch: { type: "Neutral", kind: "Blocked", value: { type: "Match" } } as const,
+	StuckProj: { type: "Neutral", kind: "Blocked", value: { type: "Proj" } } as const,
+	StuckInj: { type: "Neutral", kind: "Blocked", value: { type: "Inj" } } as const,
 
 	App: { type: "App" } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,

@@ -22,6 +22,9 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 			return Constructors.Mu(binder.variable, binder.source, traverse(annotation, onVar, onTerm), update(closure, "term", onTerm));
 		})
 		.with({ type: "App" }, ({ icit, func, arg }) => Constructors.App(traverse(func, onVar, onTerm), traverse(arg, onVar, onTerm), icit))
+		.with(Patterns.Proj, ({ base, label }) => Constructors.Proj(traverse(base, onVar, onTerm), label))
+		.with(Patterns.Match, ({ closure, scrutinee }) => Constructors.Match(update(closure, "term", onTerm), traverse(scrutinee, onVar, onTerm)))
+		.with(Patterns.Inj, ({ base, label, injected }) => Constructors.Inj(traverse(base, onVar, onTerm), label, traverse(injected, onVar, onTerm)))
 		.with({ type: "Row" }, ({ row }) =>
 			Constructors.Row(
 				R.traverse(
@@ -31,7 +34,7 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 				),
 			),
 		)
-		.with({ type: "Neutral" }, ({ value }) => Constructors.Neutral(traverse(value, onVar, onTerm)))
+		.with({ type: "Neutral" }, ({ kind, value }) => Constructors.Neutral(traverse(value, onVar, onTerm), kind))
 		.with(Patterns.Modal, ({ value, modalities }) =>
 			Constructors.Modal(traverse(value, onVar, onTerm), {
 				quantity: modalities.quantity,

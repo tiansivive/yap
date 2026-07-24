@@ -16,14 +16,6 @@ import * as R from "@yap/shared/rows";
 import * as Row from "@yap/elaboration/unification/rows";
 
 export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst): V2.Elaboration<Subst> => {
-	if (left.type === "Neutral") {
-		return unify(left.value, right, lvl, subst);
-	}
-
-	if (right.type === "Neutral") {
-		return unify(left, right.value, lvl, subst);
-	}
-
 	return V2.track(
 		{ tag: "unify", type: "nf", vals: [left, right], metadata: { action: "unification" } },
 		V2.Do(function* () {
@@ -36,7 +28,6 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				.with([NF.Patterns.Flex, NF.Patterns.Flex], ([meta1, meta2]) =>
 					V2.Do<Subst, Subst>(function* () {
 						const s = Sub.compose(bind(ctx, meta1.variable, meta2), subst);
-
 						const ann1 = ctx.metas[meta1.variable.val].ann;
 						const ann2 = ctx.metas[meta2.variable.val].ann;
 						const s1 = yield* unify.gen(ann1, ann2, lvl, s);
@@ -162,14 +153,16 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number, subst: Subst
 				.with([NF.Patterns.StuckMatch, NF.Patterns.StuckMatch], ([_left, _right]) => {
 					throw new Error("Unification of stuck match expressions is not supported yet");
 				})
-				.with([NF.Patterns.StuckMatch, P._], ([stuck, v]) => {
-					const applied = NF.reduce(stuck.func, NF.force(ctx, stuck.arg), "Explicit");
-					return unify(applied, v, lvl, subst);
-				})
-				.with([P._, NF.Patterns.StuckMatch], ([v, stuck]) => {
-					const applied = NF.reduce(stuck.func, NF.force(ctx, stuck.arg), "Explicit");
-					return unify(v, applied, lvl, subst);
-				})
+				.with(
+					[NF.Patterns.StuckMatch, P._],
+					([stuck]) => NF.force(ctx, stuck) !== stuck,
+					([stuck, value]) => unify(NF.force(ctx, stuck), value, lvl, subst),
+				)
+				.with(
+					[P._, NF.Patterns.StuckMatch],
+					([value, stuck]) => NF.force(ctx, stuck) !== stuck,
+					([value, stuck]) => unify(value, NF.force(ctx, stuck), lvl, subst),
+				)
 				.with([NF.Patterns.App, NF.Patterns.App], ([left, right]) =>
 					V2.Do<Subst, Subst>(function* () {
 						const isFlex = (t: NF.Value) =>
@@ -276,9 +269,7 @@ export const bind = (ctx: EB.Context, v: Meta, ty: NF.Value): Subst => {
 	}
 
 	const canonical = match(ty)
-		.with(NF.Patterns.StuckMatch, ({ func, arg }) => {
-			return NF.reduce(func, NF.force(ctx, arg), "Explicit");
-		})
+		.with(NF.Patterns.StuckMatch, () => NF.force(ctx, ty))
 		.otherwise(() => ty);
 
 	if (!occursCheck(ctx, v, canonical)) {
@@ -294,6 +285,9 @@ const occursCheck = (ctx: EB.Context, v: Meta, ty: NF.Value): boolean => {
 		match(ty)
 			.with(NF.Patterns.Var, ({ variable }) => _.isEqual(variable, v))
 			.with({ type: "Neutral" }, ({ value }) => occursCheck(ctx, v, value))
+			.with(NF.Patterns.Proj, ({ base }) => occursCheck(ctx, v, base))
+			.with(NF.Patterns.Match, ({ closure, scrutinee }) => occursCheck(ctx, v, scrutinee) || occursInTerm(closure.ctx, v, closure.term))
+			.with(NF.Patterns.Inj, ({ base, injected }) => occursCheck(ctx, v, base) || occursCheck(ctx, v, injected))
 			//occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))
 			.with(NF.Patterns.Lambda, ({ closure }) => occursInTerm(closure.ctx, v, closure.term))
 			//occursCheck(ctx, v, NF.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length))))

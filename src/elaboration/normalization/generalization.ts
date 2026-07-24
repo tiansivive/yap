@@ -193,6 +193,9 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 			);
 		})
 		.with({ type: "App" }, ({ icit, func, arg }) => NF.Constructors.App(instantiate(func, ctx), instantiate(arg, ctx), icit))
+		.with(NF.Patterns.Proj, ({ base, label }) => NF.Constructors.Proj(instantiate(base, ctx), label))
+		.with(NF.Patterns.Match, ({ closure, scrutinee }) => NF.Constructors.Match(closure, instantiate(scrutinee, ctx)))
+		.with(NF.Patterns.Inj, ({ base, label, injected }) => NF.Constructors.Inj(instantiate(base, ctx), label, instantiate(injected, ctx)))
 		.with({ type: "Row" }, ({ row }) =>
 			NF.Constructors.Row(
 				R.traverse(
@@ -202,7 +205,7 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 				),
 			),
 		)
-		.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(instantiate(value, ctx)))
+		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(instantiate(value, ctx), kind))
 		.with(NF.Patterns.Modal, ({ value, modalities }) =>
 			NF.Constructors.Modal(instantiate(value, ctx), {
 				quantity: modalities.quantity,
@@ -240,6 +243,9 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 		})
 
 		.with({ type: "App" }, ({ icit, func, arg }) => NF.Constructors.App(trimClosureEnvs(func), trimClosureEnvs(arg), icit))
+		.with(NF.Patterns.Proj, ({ base, label }) => NF.Constructors.Proj(trimClosureEnvs(base), label))
+		.with(NF.Patterns.Match, ({ closure, scrutinee }) => NF.Constructors.Match(closure, trimClosureEnvs(scrutinee)))
+		.with(NF.Patterns.Inj, ({ base, label, injected }) => NF.Constructors.Inj(trimClosureEnvs(base), label, trimClosureEnvs(injected)))
 		.with({ type: "Row" }, ({ row }) =>
 			NF.Constructors.Row(
 				R.traverse(
@@ -249,7 +255,7 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 				),
 			),
 		)
-		.with({ type: "Neutral" }, ({ value }) => NF.Constructors.Neutral(trimClosureEnvs(value)))
+		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(trimClosureEnvs(value), kind))
 		.with(NF.Patterns.Modal, ({ value, modalities }) =>
 			NF.Constructors.Modal(trimClosureEnvs(value), {
 				quantity: modalities.quantity,
