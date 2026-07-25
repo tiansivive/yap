@@ -73,11 +73,6 @@
 			"count": 1
 		}
 	},
-	"src/GRAM/bridge/blocks.ts": {
-		"@typescript-eslint/consistent-type-assertions": {
-			"count": 3
-		}
-	},
 	"src/GRAM/bridge/closures.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 5
@@ -91,14 +86,6 @@
 	"src/GRAM/bridge/decisions.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 5
-		},
-		"@typescript-eslint/no-base-to-string": {
-			"count": 3
-		}
-	},
-	"src/GRAM/bridge/emit.ts": {
-		"@typescript-eslint/consistent-type-assertions": {
-			"count": 2
 		},
 		"@typescript-eslint/no-base-to-string": {
 			"count": 3
@@ -203,18 +190,9 @@
 		},
 		"no-restricted-properties": {
 			"count": 4
-		},
-		"no-restricted-syntax": {
-			"count": 8
 		}
 	},
 	"src/cli/explore/server.ts": {
-		"@typescript-eslint/no-unsafe-assignment": {
-			"count": 6
-		},
-		"@typescript-eslint/no-unsafe-member-access": {
-			"count": 5
-		},
 		"no-restricted-syntax": {
 			"count": 1
 		}

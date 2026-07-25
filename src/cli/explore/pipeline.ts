@@ -89,6 +89,16 @@ const deBruijnOpts = (mode: DeBruijnMode) => ({
 	deBruijn: mode === "index" || mode === "level" || mode === "both",
 });
 
+const attempt = <T>(phase: string, fn: () => T, errors: string[]): T | undefined => {
+	try {
+		return fn();
+	} catch (e) {
+		// eslint-disable-next-line no-restricted-syntax
+		errors.push(`[${phase}] ${e instanceof Error ? e.message : String(e)}`);
+		return undefined;
+	}
+};
+
 const display = (value: unknown): string => {
 	if (typeof value === "string") {
 		return JSON.stringify(value);
@@ -131,22 +141,14 @@ const parse = (source: string, rule: ParserRule): Src.Term | Src.Statement => {
 };
 
 export const run = (source: string, opts: Options): Result => {
+	const errors: string[] = [];
 	const result = { ...empty, source };
 	const db = deBruijnOpts(opts.deBruijn);
 
-	const attempt = <T>(phase: string, fn: () => T): T | undefined => {
-		try {
-			return fn();
-		} catch (e) {
-			result.errors = [...result.errors, `[${phase}] ${e instanceof Error ? e.message : String(e)}`];
-			return undefined;
-		}
-	};
-
-	const parsed = attempt("Parse", () => parse(source, opts.parserRule));
+	const parsed = attempt("Parse", () => parse(source, opts.parserRule), errors);
 
 	if (!parsed) {
-		return result;
+		return { ...result, errors };
 	}
 
 	const stmt: Src.Statement = opts.parserRule === "Ann" ? ({ type: "expression", value: parsed as Src.Term } as Src.Statement) : (parsed as Src.Statement);
@@ -157,7 +159,7 @@ export const run = (source: string, opts: Options): Result => {
 		if (opts.rawJson) {
 			result.raw.parsed = stmt;
 		}
-		return result;
+		return { ...result, errors };
 	}
 
 	result.parsed = Src.display(stmt.value);
@@ -166,143 +168,166 @@ export const run = (source: string, opts: Options): Result => {
 		result.raw.parsed = stmt.value;
 	}
 
-	const elaborated = attempt("Elaboration", () => EB.Mod.expression(stmt, defaultContext));
+	const elaborated = attempt("Elaboration", () => EB.Mod.expression(stmt, defaultContext), errors);
 	if (!elaborated || E.isLeft(elaborated)) {
 		if (elaborated && E.isLeft(elaborated)) {
-			result.errors = [...result.errors, `[Elaboration] ${EB.V2.display(elaborated.left)}`];
+			// eslint-disable-next-line no-restricted-syntax
+			errors.push(`[Elaboration] ${EB.V2.display(elaborated.left)}`);
 		}
-		return result;
+		return { ...result, errors };
 	}
 
 	const [tm, ty, _us, ctx, debug] = elaborated.right;
 
-	result.elaborated = attempt("Typechecker / display", () => EB.Display.Term(tm, ctx, db)) ?? "";
+	result.elaborated = attempt("Typechecker / display", () => EB.Display.Term(tm, ctx, db), errors) ?? "";
 
 	if (debug) {
 		const displayCtx = { zonker: ctx.zonker, metas: ctx.metas, env: ctx.env };
 		result.constraints =
-			attempt("Typechecker / constraints", () => {
-				if (debug.constraints.length === 0) {
-					return "No constraints";
-				}
-				return debug.constraints
-					.map((c, i) => {
-						const prefix = `[${i}] `;
-						if (c.type === "assign") {
-							const l = EB.NF.display(c.left, displayCtx, db);
-							const r = EB.NF.display(c.right, displayCtx, db);
-							return `${prefix}${l}  ~  ${r}`;
-						}
-						return `${prefix}resolve ?${c.meta.val}`;
-					})
-					.join("\n");
-			}) ?? "";
+			attempt(
+				"Typechecker / constraints",
+				() => {
+					if (debug.constraints.length === 0) {
+						return "No constraints";
+					}
+					return debug.constraints
+						.map((c, i) => {
+							const prefix = `[${i}] `;
+							if (c.type === "assign") {
+								const l = EB.NF.display(c.left, displayCtx, db);
+								const r = EB.NF.display(c.right, displayCtx, db);
+								return `${prefix}${l}  ~  ${r}`;
+							}
+							return `${prefix}resolve ?${c.meta.val}`;
+						})
+						.join("\n");
+				},
+				errors,
+			) ?? "";
 
 		result.metas =
-			attempt("Typechecker / metas", () => {
-				const zonkerStr = Sub.display(debug.zonker, ctx.metas);
-				const resKeys = Object.keys(debug.resolutions);
-				const resSection =
-					resKeys.length > 0
-						? `\n\nResolutions:\n${resKeys.map(k => `  ?${k} |=> ${EB.Display.Term(debug.resolutions[Number(k)], displayCtx, db)}`).join("\n")}`
-						: "";
-				const metaKeys = Object.keys(ctx.metas);
-				const metaSection =
-					metaKeys.length > 0
-						? `\n\nMetas (${metaKeys.length}):\n${metaKeys
-								.map(k => {
-									const m = ctx.metas[Number(k)];
-									return `  ?${k} : ${EB.NF.display(m.ann, displayCtx, db)}`;
-								})
-								.join("\n")}`
-						: "";
-				return `Zonker:\n${zonkerStr}${resSection}${metaSection}`;
-			}) ?? "";
+			attempt(
+				"Typechecker / metas",
+				() => {
+					const sections: string[] = [];
+					const zonkerStr = Sub.display(debug.zonker, ctx.metas);
+					// eslint-disable-next-line no-restricted-syntax
+					sections.push(`Zonker:\n${zonkerStr}`);
+					const resKeys = Object.keys(debug.resolutions);
+					if (resKeys.length > 0) {
+						const resStr = resKeys.map(k => `  ?${k} |=> ${EB.Display.Term(debug.resolutions[Number(k)], displayCtx, db)}`).join("\n");
+						// eslint-disable-next-line no-restricted-syntax
+						sections.push(`\nResolutions:\n${resStr}`);
+					}
+					const metaKeys = Object.keys(ctx.metas);
+					if (metaKeys.length > 0) {
+						const metaStr = metaKeys
+							.map(k => {
+								const m = ctx.metas[Number(k)];
+								return `  ?${k} : ${EB.NF.display(m.ann, displayCtx, db)}`;
+							})
+							.join("\n");
+						// eslint-disable-next-line no-restricted-syntax
+						sections.push(`\nMetas (${metaKeys.length}):\n${metaStr}`);
+					}
+					return sections.join("\n");
+				},
+				errors,
+			) ?? "";
 	}
 
 	if (opts.rawJson) {
 		result.raw.elaborated = tm;
 	}
 
-	const quoted = attempt("Typechecker / quote", () => EB.NF.quote(ctx, ctx.env.length, ty));
-	result.type = quoted ? (attempt("Typechecker / display", () => EB.Display.Term(quoted, ctx, db)) ?? "") : "";
+	const quoted = attempt("Typechecker / quote", () => EB.NF.quote(ctx, ctx.env.length, ty), errors);
+	result.type = quoted ? (attempt("Typechecker / display", () => EB.Display.Term(quoted, ctx, db), errors) ?? "") : "";
 
 	if (opts.rawJson && quoted) {
 		result.raw.type = quoted;
 	}
 
 	if (opts.deBruijn === "both" && quoted) {
-		result.type += `\n\n--- NF ---\n${attempt("Typechecker / normalize", () => EB.NF.display(ty, ctx, db)) ?? ""}`;
+		result.type += `\n\n--- NF ---\n${attempt("Typechecker / normalize", () => EB.NF.display(ty, ctx, db), errors) ?? ""}`;
 	}
 
 	if (opts.evaluate) {
-		const nf = attempt("Normalization", () => EB.NF.evaluate(ctx, tm));
-		result.normalized = nf ? (attempt("Normalization / display", () => EB.NF.display(nf, ctx, db)) ?? "") : "";
+		const nf = attempt("Normalization", () => EB.NF.evaluate(ctx, tm), errors);
+		result.normalized = nf ? (attempt("Normalization / display", () => EB.NF.display(nf, ctx, db), errors) ?? "") : "";
 
 		if (opts.deBruijn === "both" && nf) {
-			const quotedNF = attempt("Normalization / quote", () => EB.NF.quote(ctx, ctx.env.length, nf));
+			const quotedNF = attempt("Normalization / quote", () => EB.NF.quote(ctx, ctx.env.length, nf), errors);
 			if (quotedNF) {
-				result.normalized += `\n\n--- Quoted ---\n${attempt("Normalization / display", () => EB.Display.Term(quotedNF, ctx, db)) ?? ""}`;
+				result.normalized += `\n\n--- Quoted ---\n${attempt("Normalization / display", () => EB.Display.Term(quotedNF, ctx, db), errors) ?? ""}`;
 			}
 		}
 	}
 
 	Build.simplify = opts.ivlSimplify;
-	const ivlArtefacts = attempt("Verification / IVL", () => {
-		const V2 = VerificationServiceV2();
-		const [{ result: res }] = V2.check(tm, ty)(ctx);
+	const ivlArtefacts = attempt(
+		"Verification / IVL",
+		() => {
+			const V2 = VerificationServiceV2();
+			const [{ result: res }] = V2.check(tm, ty)(ctx);
 
-		if (res._tag === "Left") {
-			return undefined;
-		}
-		return res.right;
-	});
+			if (res._tag === "Left") {
+				return undefined;
+			}
+			return res.right;
+		},
+		errors,
+	);
 
 	if (ivlArtefacts) {
-		result.ivl = attempt("Verification / IVL display", () => IVLPrint.formula(ivlArtefacts.vc)) ?? "";
-		result.validity = attempt("Verification / validity", () => Validity.display(Validity.check(ivlArtefacts.vc))) ?? "";
+		result.ivl = attempt("Verification / IVL display", () => IVLPrint.formula(ivlArtefacts.vc), errors) ?? "";
+		result.validity = attempt("Verification / validity", () => Validity.display(Validity.check(ivlArtefacts.vc)), errors) ?? "";
 
 		result.solverTrace =
-			attempt("Verification / solver trace", () => {
-				const checked = Solver.run(ivlArtefacts.vc);
-				return Replay.replay({ formula: IVLPrint.formula(ivlArtefacts.vc), steps: checked.steps, encoding: checked.encoding, arena: checked.arena });
-			}) ?? "";
+			attempt(
+				"Verification / solver trace",
+				() => {
+					const checked = Solver.run(ivlArtefacts.vc);
+					return Replay.replay({ formula: IVLPrint.formula(ivlArtefacts.vc), steps: checked.steps, encoding: checked.encoding, arena: checked.arena });
+				},
+				errors,
+			) ?? "";
 	}
 
 	const arities = Pipeline.deriveAritiesFromContext(ctx);
-	const gramResult = attempt("IR / GRAM", () => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities }));
+	const gramResult = attempt("IR / GRAM", () => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities }), errors);
 
 	const gramGraph = gramResult && E.isRight(gramResult) ? gramResult.right : undefined;
-	result.gram = gramGraph ? (attempt("IR / GRAM display", () => GRAM.display(gramGraph)) ?? "") : "";
-	result.gramDot = gramGraph ? (attempt("IR / DOT", () => GRAM.dot(gramGraph)) ?? "") : "";
+	result.gram = gramGraph ? (attempt("IR / GRAM display", () => GRAM.display(gramGraph), errors) ?? "") : "";
+	result.gramDot = gramGraph ? (attempt("IR / DOT", () => GRAM.dot(gramGraph), errors) ?? "") : "";
 
 	if (gramResult && E.isLeft(gramResult)) {
-		result.errors = [...result.errors, `[IR / GRAM] ${JSON.stringify(gramResult.left)}`];
+		// eslint-disable-next-line no-restricted-syntax
+		errors.push(`[IR / GRAM] ${JSON.stringify(gramResult.left)}`);
 	}
 
-	const mod = gramGraph ? (attempt("IR / MIR bridge", () => GRAM.Bridge.emit(gramGraph)) ?? undefined) : undefined;
-	result.mir = mod ? (attempt("IR / MIR display", () => MIR.display.module(mod)) ?? "") : "";
+	const mod = gramGraph ? (attempt("IR / MIR bridge", () => GRAM.Bridge.emit(gramGraph), errors) ?? undefined) : undefined;
+	result.mir = mod ? (attempt("IR / MIR display", () => MIR.display.module(mod), errors) ?? "") : "";
 
 	if (opts.rawJson && mod) {
 		result.raw.mir = mod;
 	}
 
 	if (mod) {
-		result.codegenJS = attempt("Codegen / JavaScript emit", () => printJS(emitJS(mod))) ?? "";
-		result.codegenC = attempt("Codegen / C emit", () => printC(emitC(mod))) ?? "";
-		result.codegenErlang = attempt("Codegen / Erlang emit", () => printErl(emitErl(mod))) ?? "";
-		result.output = result.codegenJS ? (attempt("Codegen / JavaScript execution", () => display(executeJS(result.codegenJS))) ?? "") : "";
-		result.interpreted = opts.interpret ? (attempt("IR / MIR interpretation", () => display(Pipeline.run(mod, Pipeline.emptyRuntime()))) ?? "") : "";
+		result.codegenJS = attempt("Codegen / JavaScript emit", () => printJS(emitJS(mod)), errors) ?? "";
+		result.codegenC = attempt("Codegen / C emit", () => printC(emitC(mod)), errors) ?? "";
+		result.codegenErlang = attempt("Codegen / Erlang emit", () => printErl(emitErl(mod)), errors) ?? "";
+		result.output = result.codegenJS ? (attempt("Codegen / JavaScript execution", () => display(executeJS(result.codegenJS)), errors) ?? "") : "";
+		result.interpreted = opts.interpret ? (attempt("IR / MIR interpretation", () => display(Pipeline.run(mod, Pipeline.emptyRuntime())), errors) ?? "") : "";
 	}
 
-	if (result.errors.length > 0) {
+	if (errors.length > 0) {
 		const logsDir = resolve(process.cwd(), "./.logs");
 
 		if (!fs.existsSync(logsDir)) {
 			fs.mkdirSync(logsDir, { recursive: true });
 		}
-		fs.writeFileSync(resolve(logsDir, "error.json"), JSON.stringify({ errors: result.errors, result }, undefined, 2));
+		fs.writeFileSync(resolve(logsDir, "error.json"), JSON.stringify({ errors, result }, undefined, 2));
 	}
 
-	return result;
+	return { ...result, errors };
 };
