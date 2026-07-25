@@ -182,13 +182,13 @@ const structFromRow = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 
 const erase = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const node = Nodes.get(id)(ctx.graph);
-	const source = node?.payload.source ?? node?.payload.variable;
-	return emptyStruct(ctx, { erasure: { tag: node?.tag, ...(source !== undefined && { source }) } });
+	const source = (node?.payload.source ?? node?.payload.variable ?? "") as string;
+	return emptyStruct(ctx, { erasure: { tag: node?.tag, source } });
 };
 
 const emptyStruct = (ctx: Ctx, debug?: MIR.Debug): [string, Ctx] => {
 	const [result, c1] = C.name(ctx);
-	const c2 = C.instr(c1, Constructors.Instr.Alloc({ type: "Record", fields: [], ...(debug !== undefined && { debug }) }, result));
+	const c2 = C.instr(c1, Constructors.Instr.Alloc({ type: "Record", fields: [], debug }, result));
 	return [result, c2];
 };
 

@@ -5,6 +5,7 @@ import { Constructors } from "../../lowering/mir";
 import type * as MIR from "../../lowering/mir";
 import type { Ctx } from "./context";
 import * as C from "./context";
+import * as Nullable from "../../utils/Nullable";
 import { match } from "ts-pattern";
 
 const { Instr, Expr } = Constructors;
@@ -34,7 +35,14 @@ const letStmt = (sid: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], ctx
 	const [val, c1] = valueEdge !== undefined ? walk(valueEdge.target, ctx) : C.name(ctx);
 	const variable = (Nodes.get(sid)(ctx.graph)?.payload.variable ?? "") as string;
 	const [n, c2] = C.name(c1, variable);
-	const c3 = C.instr(c2, Instr.Let(n, Expr.Var(val), valueEdge === undefined ? undefined : erasure(valueEdge.target, ctx)));
+	const c3 = C.instr(
+		c2,
+		Instr.Let(
+			n,
+			Expr.Var(val),
+			Nullable.map(valueEdge, e => erasure(e.target, ctx)),
+		),
+	);
 	return C.bind(c3, sid, n);
 };
 
@@ -44,8 +52,8 @@ const erasure = (id: NodeId, ctx: Ctx): MIR.Debug | undefined => {
 		return undefined;
 	}
 
-	const source = node.payload.source ?? node.payload.variable;
-	return { erasure: { tag: node.tag, ...(source !== undefined && { source }) } };
+	const source = (node.payload.source ?? node.payload.variable ?? "") as string;
+	return { erasure: { tag: node.tag, source } };
 };
 
 const exprStmt = (sid: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], ctx: Ctx): Ctx => {
