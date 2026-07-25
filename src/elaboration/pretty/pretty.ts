@@ -181,6 +181,7 @@ const Stmt = {
 			.with({ type: "Let" }, ({ variable, value, annotation }) =>
 				PP.letBinding(variable, NF.doc(annotation, bind(variable, ctx), opts), doc(value, bind(variable, ctx), opts)),
 			)
+			.with({ type: "Using" }, ({ value }) => PP.group(["using ", doc(value, ctx, opts)]))
 			.otherwise(() => "Statement Display: Not implemented"),
 	display: (stmt: EB.Statement, ctx: DisplayContext, opts = { deBruijn: false }): string => PP.render(Stmt.doc(stmt, ctx, opts)),
 };
