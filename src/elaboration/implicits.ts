@@ -65,7 +65,7 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 	return match(term)
 		.with({ type: "Var", variable: { type: "Meta" } }, v => {
 			if (resolutions[v.variable.val]) {
-				return resolutions[v.variable.val];
+				return NF.quote(ctx, ctx.env.length, resolutions[v.variable.val]);
 			}
 
 			if (ctx.zonker[v.variable.val]) {

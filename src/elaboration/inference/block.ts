@@ -6,6 +6,19 @@ import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as NF from "@yap/elaboration/normalization";
+
+const termToNF = (ctx: EB.Context, term: EB.Term): NF.Value => {
+	if (term.type === "Var") {
+		if (term.variable.type === "Bound") {
+			return NF.Constructors.Var({ type: "Bound", lvl: ctx.env.length - 1 - term.variable.index });
+		}
+
+		if (term.variable.type === "Free") {
+			return NF.Constructors.Var({ type: "Free", name: term.variable.name });
+		}
+	}
+	return NF.evaluate(ctx, term);
+};
 import * as Src from "@yap/src/index";
 
 import * as Lit from "@yap/shared/literals";
@@ -30,7 +43,10 @@ export const infer = (block: Block) =>
 
 					if (stmt.type === "Using") {
 						type Implicit = EB.Context["implicits"][0];
-						return yield* V2.local(ctx => update(ctx, "implicits", A.append<Implicit>([stmt.value, stmt.annotation])), recurse(rest, [...results, stmt]));
+						return yield* V2.local(
+							ctx => update(ctx, "implicits", A.append<Implicit>([termToNF(ctx, stmt.value), stmt.annotation])),
+							recurse(rest, [...results, stmt]),
+						);
 					}
 
 					if (stmt.type !== "Let") {

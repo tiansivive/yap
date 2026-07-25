@@ -312,7 +312,7 @@ describe("Normalization: generalization", () => {
 			const typeWithMetas = NF.Constructors.App(meta1, meta2, "Explicit");
 
 			// ?2 is in resolutions (resolved implicitly), so it should not be generalized
-			const resolutions: EB.Resolutions = { 2: EB.Constructors.Lit(Lit.Atom("Num")) };
+			const resolutions: EB.Resolutions = { 2: NF.Constructors.Lit(Lit.Atom("Num")) };
 
 			const [generalized, z] = NF.generalize(typeWithMetas, noMetasTerm, ctx, resolutions);
 			const extendedCtx = { ...ctx, zonker: z };
@@ -342,7 +342,7 @@ describe("Normalization: generalization", () => {
 			const termWithMetas = EB.Constructors.App("Explicit", meta2EB, meta3);
 
 			// ?2 is resolved
-			const resolutions: EB.Resolutions = { 2: EB.Constructors.Lit(Lit.Atom("Num")) };
+			const resolutions: EB.Resolutions = { 2: NF.Constructors.Lit(Lit.Atom("Num")) };
 
 			const [generalized, z] = NF.generalize(typeWithMetas, termWithMetas, ctx, resolutions);
 			const extendedCtx = { ...ctx, zonker: z };
@@ -578,7 +578,7 @@ describe("Normalization: generalization", () => {
 			// Term has ?2
 			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
 
-			const resolutions: EB.Resolutions = { 2: EB.Constructors.Lit(Lit.Atom("Num")) };
+			const resolutions: EB.Resolutions = { 2: NF.Constructors.Lit(Lit.Atom("Num")) };
 
 			const [generalized, z] = NF.generalize(meta1, meta2, ctx, resolutions);
 			const extendedCtx = { ...ctx, zonker: z };

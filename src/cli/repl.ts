@@ -239,7 +239,7 @@ export function repl(opts: ReplOpts = { codegen: false, target: "js", verify: tr
 				console.log("\nImplicits:");
 				state.ctx.implicits.forEach(([tm, ty], i) => {
 					console.log(`\n  [${i}]:`);
-					console.log(`	Term: ${EB.Display.Term(tm, state.ctx)}`);
+					console.log(`	Term: ${NF.display(tm, state.ctx)}`);
 					console.log(`	Type: ${NF.display(ty, state.ctx)}`);
 				});
 				console.log("");

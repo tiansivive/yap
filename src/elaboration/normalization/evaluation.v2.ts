@@ -479,7 +479,13 @@ function processStatementsAndPush(stmts: EB.Statement[], ctx: EB.Context, return
 			globalWorkStack.push({ type: "Eval", ctx, term: value });
 		})
 		.with({ type: "Using" }, ({ value, annotation }) => {
-			const updated = update(ctx, "implicits", A.append<EB.Context["implicits"][0]>([value, annotation]));
+			const nfValue: NF.Value =
+				value.type === "Var" && value.variable.type === "Bound"
+					? NF.Constructors.Var({ type: "Bound", lvl: ctx.env.length - 1 - value.variable.index })
+					: value.type === "Var" && value.variable.type === "Free"
+						? NF.Constructors.Var({ type: "Free", name: value.variable.name })
+						: evaluate(ctx, value);
+			const updated = update(ctx, "implicits", A.append<EB.Context["implicits"][0]>([nfValue, annotation]));
 			processStatementsAndPush(rest, updated, returnTerm);
 		})
 		.exhaustive();
