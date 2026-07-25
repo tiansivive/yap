@@ -1,4 +1,5 @@
 import * as F from "fp-ts/lib/function";
+import * as A from "fp-ts/lib/Array";
 
 import * as EB from "@yap/elaboration";
 import * as V2 from "@yap/elaboration/shared/monad.v2";
@@ -26,6 +27,11 @@ export const infer = (block: Block) =>
 
 					const [current, ...rest] = stmts;
 					const [stmt, _sty, sus] = yield* EB.Stmt.infer.gen(current);
+
+					if (stmt.type === "Using") {
+						type Implicit = EB.Context["implicits"][0];
+						return yield* V2.local(ctx => update(ctx, "implicits", A.append<Implicit>([stmt.value, stmt.annotation])), recurse(rest, [...results, stmt]));
+					}
 
 					if (stmt.type !== "Let") {
 						return yield* V2.pure(recurse(rest, [...results, stmt]));
