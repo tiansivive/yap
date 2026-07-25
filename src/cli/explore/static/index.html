@@ -20,6 +20,25 @@
 				<div id="editor"></div>
 			</div>
 			<div class="output-pane">
+				<div class="output-drawer" id="output-drawer">
+					<div class="pane-label">Output</div>
+					<div class="result-grid">
+						<div>
+							<span>Value</span>
+							<pre id="output-value">—</pre>
+						</div>
+						<div>
+							<span>Type</span>
+							<pre id="output-type">—</pre>
+						</div>
+						<div>
+							<span>Validity</span>
+							<pre id="output-validity">—</pre>
+						</div>
+					</div>
+					<div class="errors hidden" id="errors"><pre></pre></div>
+				</div>
+				<div class="groups" id="groups"></div>
 				<div class="tabs" id="tabs"></div>
 				<div id="output-container">
 					<div id="output"></div>
@@ -28,7 +47,6 @@
 						<div id="raw-content" class="collapsed"><pre></pre></div>
 					</div>
 				</div>
-				<div class="errors hidden" id="errors"><pre></pre></div>
 			</div>
 			<div class="sidebar" id="sidebar">
 				<h3>Config</h3>
@@ -61,6 +79,14 @@
 				<div class="check-row">
 					<input type="checkbox" id="cfg-raw" />
 					<label for="cfg-raw" style="flex-direction: row">Show raw JSON</label>
+				</div>
+				<div class="check-row">
+					<input type="checkbox" id="cfg-evaluate" />
+					<label for="cfg-evaluate" style="flex-direction: row">Show NbE result</label>
+				</div>
+				<div class="check-row">
+					<input type="checkbox" id="cfg-interpret" />
+					<label for="cfg-interpret" style="flex-direction: row">Show MIR result</label>
 				</div>
 			</div>
 		</div>

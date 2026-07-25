@@ -8,6 +8,7 @@ import * as GRAM from "@yap/gram";
 import * as E from "fp-ts/lib/Either";
 import fs from "fs";
 import { resolve } from "path";
+import vm from "vm";
 
 import { defaultContext } from "@yap/shared/lib/constants";
 import * as Pipeline from "@yap/pipeline";
@@ -34,6 +35,8 @@ export type Options = {
 	parserRule: ParserRule;
 	rawJson: boolean;
 	ivlSimplify: boolean;
+	evaluate: boolean;
+	interpret: boolean;
 };
 
 export type Result = {
@@ -41,7 +44,9 @@ export type Result = {
 	parsed: string;
 	elaborated: string;
 	type: string;
+	output: string;
 	normalized: string;
+	interpreted: string;
 	constraints: string;
 	metas: string;
 	ivl: string;
@@ -62,7 +67,9 @@ const empty: Result = {
 	parsed: "",
 	elaborated: "",
 	type: "",
+	output: "",
 	normalized: "",
+	interpreted: "",
 	constraints: "",
 	metas: "",
 	ivl: "",
@@ -90,6 +97,20 @@ const attempt = <T>(fn: () => T, errors: string[]): T | undefined => {
 		return undefined;
 	}
 };
+
+const display = (value: unknown): string => {
+	if (typeof value === "string") {
+		return JSON.stringify(value);
+	}
+
+	if (typeof value === "object" && value !== null) {
+		return JSON.stringify(value) ?? String(value);
+	}
+
+	return String(value);
+};
+
+const executeJS = (code: string): unknown => vm.runInNewContext(`(function () {\n${code}\n})()`);
 
 const parse = (source: string, rule: ParserRule): Src.Term | Src.Statement => {
 	Grammar.ParserStart = rule;
@@ -219,13 +240,15 @@ export const run = (source: string, opts: Options): Result => {
 		result.type += `\n\n--- NF ---\n${attempt(() => EB.NF.display(ty, ctx, db), errors) ?? ""}`;
 	}
 
-	const nf = attempt(() => EB.NF.evaluate(ctx, tm), errors);
-	result.normalized = nf ? (attempt(() => EB.NF.display(nf, ctx, db), errors) ?? "") : "";
+	if (opts.evaluate) {
+		const nf = attempt(() => EB.NF.evaluate(ctx, tm), errors);
+		result.normalized = nf ? (attempt(() => EB.NF.display(nf, ctx, db), errors) ?? "") : "";
 
-	if (opts.deBruijn === "both" && nf) {
-		const quotedNF = attempt(() => EB.NF.quote(ctx, ctx.env.length, nf), errors);
-		if (quotedNF) {
-			result.normalized += `\n\n--- Quoted ---\n${attempt(() => EB.Display.Term(quotedNF, ctx, db), errors) ?? ""}`;
+		if (opts.deBruijn === "both" && nf) {
+			const quotedNF = attempt(() => EB.NF.quote(ctx, ctx.env.length, nf), errors);
+			if (quotedNF) {
+				result.normalized += `\n\n--- Quoted ---\n${attempt(() => EB.Display.Term(quotedNF, ctx, db), errors) ?? ""}`;
+			}
 		}
 	}
 
@@ -274,6 +297,8 @@ export const run = (source: string, opts: Options): Result => {
 		result.codegenJS = attempt(() => printJS(emitJS(mod)), errors) ?? "";
 		result.codegenC = attempt(() => printC(emitC(mod)), errors) ?? "";
 		result.codegenErlang = attempt(() => printErl(emitErl(mod)), errors) ?? "";
+		result.output = result.codegenJS ? (attempt(() => display(executeJS(result.codegenJS)), errors) ?? "") : "";
+		result.interpreted = opts.interpret ? (attempt(() => display(Pipeline.run(mod, Pipeline.emptyRuntime())), errors) ?? "") : "";
 	}
 
 	if (errors.length > 0) {
