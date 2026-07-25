@@ -137,7 +137,7 @@ kbd {
 	overflow: auto;
 }
 
-/* ── Output pane ── */
+/* ── Result and inspection panes ── */
 
 .output-pane {
 	flex: 1;
@@ -146,10 +146,77 @@ kbd {
 	min-width: 0;
 }
 
+.output-drawer {
+	background: var(--surface);
+	border-bottom: 1px solid var(--border);
+	flex-shrink: 0;
+}
+
+.result-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.result-grid > div {
+	padding: 8px 12px;
+	border-right: 1px solid var(--border);
+	min-width: 0;
+}
+
+.result-grid > div:last-child {
+	border-right: none;
+}
+
+.result-grid span {
+	display: block;
+	font-size: 10px;
+	color: var(--subtext);
+	text-transform: uppercase;
+	letter-spacing: 0.75px;
+	margin-bottom: 4px;
+}
+
+.result-grid pre {
+	font-family: var(--font);
+	font-size: 12px;
+	line-height: 1.4;
+	white-space: pre-wrap;
+	word-break: break-word;
+	color: var(--text);
+}
+
+.groups,
 .tabs {
 	display: flex;
-	flex-wrap: wrap;
 	background: var(--surface);
+	flex-shrink: 0;
+}
+
+.groups {
+	border-bottom: 1px solid var(--border);
+}
+
+.group {
+	font-family: var(--font);
+	font-size: 11px;
+	padding: 7px 14px;
+	background: none;
+	color: var(--subtext);
+	border: none;
+	border-right: 1px solid var(--border);
+	cursor: pointer;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.group:hover,
+.group.active {
+	color: var(--text);
+	background: var(--overlay);
+}
+
+.tabs {
+	display: flex;
 	border-bottom: 1px solid var(--border);
 	flex-shrink: 0;
 }
@@ -264,7 +331,7 @@ kbd {
 	padding: 8px 16px;
 	background: #1e1020;
 	border-top: 1px solid var(--error);
-	max-height: 150px;
+	max-height: 120px;
 	overflow: auto;
 	flex-shrink: 0;
 }

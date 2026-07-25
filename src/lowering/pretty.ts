@@ -1,9 +1,10 @@
 import { match, P } from "ts-pattern";
 import * as Lit from "@yap/shared/literals";
 import { primopMapping } from "@yap/shared/lib/primitives";
-import type { Block, Expr, Function, Instr, Module, Terminator } from "./mir";
+import type { Block, Debug, Expr, Function, Instr, Module, Terminator } from "./mir";
 
 const INDENT = "  ";
+const note = (debug?: Debug): string => (debug === undefined ? "" : `  // ${JSON.stringify(debug)}`);
 
 const d = {
 	expr: (expr: Expr): string =>
@@ -20,7 +21,7 @@ const d = {
 
 	instr: (instr: Instr): string =>
 		match(instr)
-			.with({ type: "Let" }, ({ name, expr }) => `let ${name} = ${d.expr(expr)}`)
+			.with({ type: "Let" }, ({ name, expr, debug }) => `let ${name} = ${d.expr(expr)}${note(debug)}`)
 			.with({ type: "Read" }, ({ label, target, result }) => `let ${result} = read ${target}.${label}`)
 			.with({ type: "Update", mode: "immutable" }, ({ into, result, alloc }) => {
 				const fieldsStr = alloc.fields.map(f => `${f.label}: ${f.value}`).join(", ");
@@ -32,7 +33,7 @@ const d = {
 			})
 			.with({ type: "Alloc" }, ({ alloc, result }) => {
 				const fieldsStr = alloc.fields.map(f => `${f.label}: ${f.value}`).join(", ");
-				return `let ${result} = alloc { ${fieldsStr} }`;
+				return `let ${result} = alloc { ${fieldsStr} }${note(alloc.debug)}`;
 			})
 			.with({ type: "Call" }, ({ target, args, result }) => {
 				const argsStr = args.join(", ");

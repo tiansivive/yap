@@ -8,6 +8,7 @@ import * as GRAM from "@yap/gram";
 import * as E from "fp-ts/lib/Either";
 import fs from "fs";
 import { resolve } from "path";
+import vm from "vm";
 
 import { defaultContext } from "@yap/shared/lib/constants";
 import * as Pipeline from "@yap/pipeline";
@@ -34,6 +35,8 @@ export type Options = {
 	parserRule: ParserRule;
 	rawJson: boolean;
 	ivlSimplify: boolean;
+	evaluate: boolean;
+	interpret: boolean;
 };
 
 export type Result = {
@@ -41,7 +44,9 @@ export type Result = {
 	parsed: string;
 	elaborated: string;
 	type: string;
+	output: string;
 	normalized: string;
+	interpreted: string;
 	constraints: string;
 	metas: string;
 	ivl: string;
@@ -62,7 +67,9 @@ const empty: Result = {
 	parsed: "",
 	elaborated: "",
 	type: "",
+	output: "",
 	normalized: "",
+	interpreted: "",
 	constraints: "",
 	metas: "",
 	ivl: "",
@@ -82,14 +89,27 @@ const deBruijnOpts = (mode: DeBruijnMode) => ({
 	deBruijn: mode === "index" || mode === "level" || mode === "both",
 });
 
-const attempt = <T>(fn: () => T, errors: string[]): T | undefined => {
+const attempt = <T>(phase: string, fn: () => T, errors: string[]): T | undefined => {
 	try {
 		return fn();
 	} catch (e) {
-		errors.push(e instanceof Error ? e.message : String(e));
+		// eslint-disable-next-line no-restricted-syntax
+		errors.push(`[${phase}] ${e instanceof Error ? e.message : String(e)}`);
 		return undefined;
 	}
 };
+
+const display = (value: unknown): string => {
+	if (typeof value === "string") {
+		return JSON.stringify(value);
+	}
+	if (typeof value === "object" && value instanceof Object) {
+		return JSON.stringify(value);
+	}
+	return String(value);
+};
+
+const executeJS = (code: string): unknown => vm.runInNewContext(`(function () {\n${code}\n})()`);
 
 const parse = (source: string, rule: ParserRule): Src.Term | Src.Statement => {
 	Grammar.ParserStart = rule;
@@ -104,7 +124,7 @@ const parse = (source: string, rule: ParserRule): Src.Term | Src.Statement => {
 		if (!fs.existsSync(logsDir)) {
 			fs.mkdirSync(logsDir, { recursive: true });
 		}
-		fs.writeFileSync(resolve(logsDir, "error.json"), JSON.stringify(data.results, null, 2));
+		fs.writeFileSync(resolve(logsDir, "error.json"), JSON.stringify(data.results, undefined, 2));
 		throw new Error(`Ambiguous parse: ${data.results.length} results. Check .logs/error.json`);
 	}
 
@@ -125,7 +145,7 @@ export const run = (source: string, opts: Options): Result => {
 	const result = { ...empty, source };
 	const db = deBruijnOpts(opts.deBruijn);
 
-	const parsed = attempt(() => parse(source, opts.parserRule), errors);
+	const parsed = attempt("Parse", () => parse(source, opts.parserRule), errors);
 
 	if (!parsed) {
 		return { ...result, errors };
@@ -148,132 +168,156 @@ export const run = (source: string, opts: Options): Result => {
 		result.raw.parsed = stmt.value;
 	}
 
-	const elaborated = attempt(() => EB.Mod.expression(stmt, defaultContext), errors);
+	const elaborated = attempt("Elaboration", () => EB.Mod.expression(stmt, defaultContext), errors);
 	if (!elaborated || E.isLeft(elaborated)) {
 		if (elaborated && E.isLeft(elaborated)) {
-			errors.push(EB.V2.display(elaborated.left));
+			// eslint-disable-next-line no-restricted-syntax
+			errors.push(`[Elaboration] ${EB.V2.display(elaborated.left)}`);
 		}
 		return { ...result, errors };
 	}
 
 	const [tm, ty, _us, ctx, debug] = elaborated.right;
 
-	result.elaborated = attempt(() => EB.Display.Term(tm, ctx, db), errors) ?? "";
+	result.elaborated = attempt("Typechecker / display", () => EB.Display.Term(tm, ctx, db), errors) ?? "";
 
 	if (debug) {
 		const displayCtx = { zonker: ctx.zonker, metas: ctx.metas, env: ctx.env };
 		result.constraints =
-			attempt(() => {
-				if (debug.constraints.length === 0) {
-					return "No constraints";
-				}
-				return debug.constraints
-					.map((c, i) => {
-						const prefix = `[${i}] `;
-						if (c.type === "assign") {
-							const l = EB.NF.display(c.left, displayCtx, db);
-							const r = EB.NF.display(c.right, displayCtx, db);
-							return `${prefix}${l}  ~  ${r}`;
-						}
-						return `${prefix}resolve ?${c.meta.val}`;
-					})
-					.join("\n");
-			}, errors) ?? "";
-
-		result.metas =
-			attempt(() => {
-				const sections: string[] = [];
-				const zonkerStr = Sub.display(debug.zonker, ctx.metas);
-				sections.push(`Zonker:\n${zonkerStr}`);
-				const resKeys = Object.keys(debug.resolutions);
-				if (resKeys.length > 0) {
-					const resStr = resKeys.map(k => `  ?${k} |=> ${EB.Display.Term(debug.resolutions[Number(k)], displayCtx, db)}`).join("\n");
-					sections.push(`\nResolutions:\n${resStr}`);
-				}
-				const metaKeys = Object.keys(ctx.metas);
-				if (metaKeys.length > 0) {
-					const metaStr = metaKeys
-						.map(k => {
-							const m = ctx.metas[Number(k)];
-							return `  ?${k} : ${EB.NF.display(m.ann, displayCtx, db)}`;
+			attempt(
+				"Typechecker / constraints",
+				() => {
+					if (debug.constraints.length === 0) {
+						return "No constraints";
+					}
+					return debug.constraints
+						.map((c, i) => {
+							const prefix = `[${i}] `;
+							if (c.type === "assign") {
+								const l = EB.NF.display(c.left, displayCtx, db);
+								const r = EB.NF.display(c.right, displayCtx, db);
+								return `${prefix}${l}  ~  ${r}`;
+							}
+							return `${prefix}resolve ?${c.meta.val}`;
 						})
 						.join("\n");
-					sections.push(`\nMetas (${metaKeys.length}):\n${metaStr}`);
-				}
-				return sections.join("\n");
-			}, errors) ?? "";
+				},
+				errors,
+			) ?? "";
+
+		result.metas =
+			attempt(
+				"Typechecker / metas",
+				() => {
+					const sections: string[] = [];
+					const zonkerStr = Sub.display(debug.zonker, ctx.metas);
+					// eslint-disable-next-line no-restricted-syntax
+					sections.push(`Zonker:\n${zonkerStr}`);
+					const resKeys = Object.keys(debug.resolutions);
+					if (resKeys.length > 0) {
+						const resStr = resKeys.map(k => `  ?${k} |=> ${EB.Display.Term(debug.resolutions[Number(k)], displayCtx, db)}`).join("\n");
+						// eslint-disable-next-line no-restricted-syntax
+						sections.push(`\nResolutions:\n${resStr}`);
+					}
+					const metaKeys = Object.keys(ctx.metas);
+					if (metaKeys.length > 0) {
+						const metaStr = metaKeys
+							.map(k => {
+								const m = ctx.metas[Number(k)];
+								return `  ?${k} : ${EB.NF.display(m.ann, displayCtx, db)}`;
+							})
+							.join("\n");
+						// eslint-disable-next-line no-restricted-syntax
+						sections.push(`\nMetas (${metaKeys.length}):\n${metaStr}`);
+					}
+					return sections.join("\n");
+				},
+				errors,
+			) ?? "";
 	}
 
 	if (opts.rawJson) {
 		result.raw.elaborated = tm;
 	}
 
-	const quoted = attempt(() => EB.NF.quote(ctx, ctx.env.length, ty), errors);
-	result.type = quoted ? (attempt(() => EB.Display.Term(quoted, ctx, db), errors) ?? "") : "";
+	const quoted = attempt("Typechecker / quote", () => EB.NF.quote(ctx, ctx.env.length, ty), errors);
+	result.type = quoted ? (attempt("Typechecker / display", () => EB.Display.Term(quoted, ctx, db), errors) ?? "") : "";
 
 	if (opts.rawJson && quoted) {
 		result.raw.type = quoted;
 	}
 
 	if (opts.deBruijn === "both" && quoted) {
-		result.type += `\n\n--- NF ---\n${attempt(() => EB.NF.display(ty, ctx, db), errors) ?? ""}`;
+		result.type += `\n\n--- NF ---\n${attempt("Typechecker / normalize", () => EB.NF.display(ty, ctx, db), errors) ?? ""}`;
 	}
 
-	const nf = attempt(() => EB.NF.evaluate(ctx, tm), errors);
-	result.normalized = nf ? (attempt(() => EB.NF.display(nf, ctx, db), errors) ?? "") : "";
+	if (opts.evaluate) {
+		const nf = attempt("Normalization", () => EB.NF.evaluate(ctx, tm), errors);
+		result.normalized = nf ? (attempt("Normalization / display", () => EB.NF.display(nf, ctx, db), errors) ?? "") : "";
 
-	if (opts.deBruijn === "both" && nf) {
-		const quotedNF = attempt(() => EB.NF.quote(ctx, ctx.env.length, nf), errors);
-		if (quotedNF) {
-			result.normalized += `\n\n--- Quoted ---\n${attempt(() => EB.Display.Term(quotedNF, ctx, db), errors) ?? ""}`;
+		if (opts.deBruijn === "both" && nf) {
+			const quotedNF = attempt("Normalization / quote", () => EB.NF.quote(ctx, ctx.env.length, nf), errors);
+			if (quotedNF) {
+				result.normalized += `\n\n--- Quoted ---\n${attempt("Normalization / display", () => EB.Display.Term(quotedNF, ctx, db), errors) ?? ""}`;
+			}
 		}
 	}
 
 	Build.simplify = opts.ivlSimplify;
-	const ivlArtefacts = attempt(() => {
-		const V2 = VerificationServiceV2();
-		const [{ result: res }] = V2.check(tm, ty)(ctx);
+	const ivlArtefacts = attempt(
+		"Verification / IVL",
+		() => {
+			const V2 = VerificationServiceV2();
+			const [{ result: res }] = V2.check(tm, ty)(ctx);
 
-		if (res._tag === "Left") {
-			return undefined;
-		}
-		//const x = V2.getObligations().forEach(o => o.)
-		return res.right;
-	}, errors);
+			if (res._tag === "Left") {
+				return undefined;
+			}
+			return res.right;
+		},
+		errors,
+	);
 
 	if (ivlArtefacts) {
-		result.ivl = attempt(() => IVLPrint.formula(ivlArtefacts.vc), errors) ?? "";
-		result.validity = attempt(() => Validity.display(Validity.check(ivlArtefacts.vc)), errors) ?? "";
+		result.ivl = attempt("Verification / IVL display", () => IVLPrint.formula(ivlArtefacts.vc), errors) ?? "";
+		result.validity = attempt("Verification / validity", () => Validity.display(Validity.check(ivlArtefacts.vc)), errors) ?? "";
 
 		result.solverTrace =
-			attempt(() => {
-				const checked = Solver.run(ivlArtefacts.vc);
-				return Replay.replay({ formula: IVLPrint.formula(ivlArtefacts.vc), steps: checked.steps, encoding: checked.encoding, arena: checked.arena });
-			}, errors) ?? "";
+			attempt(
+				"Verification / solver trace",
+				() => {
+					const checked = Solver.run(ivlArtefacts.vc);
+					return Replay.replay({ formula: IVLPrint.formula(ivlArtefacts.vc), steps: checked.steps, encoding: checked.encoding, arena: checked.arena });
+				},
+				errors,
+			) ?? "";
 	}
 
 	const arities = Pipeline.deriveAritiesFromContext(ctx);
-	const gramResult = attempt(() => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities }), errors);
+	const gramResult = attempt("IR / GRAM", () => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities }), errors);
 
 	const gramGraph = gramResult && E.isRight(gramResult) ? gramResult.right : undefined;
-	result.gram = gramGraph ? (attempt(() => GRAM.display(gramGraph), errors) ?? "") : "";
-	result.gramDot = gramGraph ? (attempt(() => GRAM.dot(gramGraph), errors) ?? "") : "";
+	result.gram = gramGraph ? (attempt("IR / GRAM display", () => GRAM.display(gramGraph), errors) ?? "") : "";
+	result.gramDot = gramGraph ? (attempt("IR / DOT", () => GRAM.dot(gramGraph), errors) ?? "") : "";
 
 	if (gramResult && E.isLeft(gramResult)) {
-		errors.push(`GRAM: ${JSON.stringify(gramResult.left)}`);
+		// eslint-disable-next-line no-restricted-syntax
+		errors.push(`[IR / GRAM] ${JSON.stringify(gramResult.left)}`);
 	}
 
-	const mod = gramGraph ? (attempt(() => GRAM.Bridge.emit(gramGraph), errors) ?? undefined) : undefined;
-	result.mir = mod ? (attempt(() => MIR.display.module(mod), errors) ?? "") : "";
+	const mod = gramGraph ? (attempt("IR / MIR bridge", () => GRAM.Bridge.emit(gramGraph), errors) ?? undefined) : undefined;
+	result.mir = mod ? (attempt("IR / MIR display", () => MIR.display.module(mod), errors) ?? "") : "";
 
 	if (opts.rawJson && mod) {
 		result.raw.mir = mod;
 	}
 
 	if (mod) {
-		result.codegenJS = attempt(() => printJS(emitJS(mod)), errors) ?? "";
-		result.codegenC = attempt(() => printC(emitC(mod)), errors) ?? "";
-		result.codegenErlang = attempt(() => printErl(emitErl(mod)), errors) ?? "";
+		result.codegenJS = attempt("Codegen / JavaScript emit", () => printJS(emitJS(mod)), errors) ?? "";
+		result.codegenC = attempt("Codegen / C emit", () => printC(emitC(mod)), errors) ?? "";
+		result.codegenErlang = attempt("Codegen / Erlang emit", () => printErl(emitErl(mod)), errors) ?? "";
+		result.output = result.codegenJS ? (attempt("Codegen / JavaScript execution", () => display(executeJS(result.codegenJS)), errors) ?? "") : "";
+		result.interpreted = opts.interpret ? (attempt("IR / MIR interpretation", () => display(Pipeline.run(mod, Pipeline.emptyRuntime())), errors) ?? "") : "";
 	}
 
 	if (errors.length > 0) {
@@ -282,7 +326,7 @@ export const run = (source: string, opts: Options): Result => {
 		if (!fs.existsSync(logsDir)) {
 			fs.mkdirSync(logsDir, { recursive: true });
 		}
-		fs.writeFileSync(resolve(logsDir, "error.json"), JSON.stringify({ errors, result }, null, 2));
+		fs.writeFileSync(resolve(logsDir, "error.json"), JSON.stringify({ errors, result }, undefined, 2));
 	}
 
 	return { ...result, errors };

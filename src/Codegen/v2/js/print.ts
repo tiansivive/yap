@@ -2,6 +2,12 @@ import { match } from "ts-pattern";
 import { js as beautify } from "js-beautify";
 import type { Expr, Stmt, Decl, Program } from "./js";
 
+const identifier = /^[A-Za-z_$][\w$]*$/;
+
+const property = (object: Expr, key: string): string => (identifier.test(key) ? `${printExpr(object)}.${key}` : `${printExpr(object)}[${JSON.stringify(key)}]`);
+
+const key = (value: string): string => (identifier.test(value) ? value : JSON.stringify(value));
+
 export function print(program: Program): string {
 	const raw = [...program.declarations.map(printDecl), ...program.body.map(printStmt)].join("\n");
 	return beautify(raw, { indent_size: 2, end_with_newline: true });
@@ -43,9 +49,9 @@ function printExpr(expr: Expr): string {
 		.with({ type: "Binary" }, ({ op, left, right }) => `(${printExpr(left)} ${op} ${printExpr(right)})`)
 		.with({ type: "Unary" }, ({ op, arg }) => `(${op}${printExpr(arg)})`)
 		.with({ type: "Call" }, ({ callee, args }) => `${printExpr(callee)}(${args.map(printExpr).join(", ")})`)
-		.with({ type: "Member" }, ({ object, property }) => `${printExpr(object)}.${property}`)
+		.with({ type: "Member" }, ({ object, property: p }) => property(object, p))
 		.with({ type: "Object" }, ({ fields }) => {
-			const entries = fields.map(f => (f.spread ? `...${printExpr(f.value)}` : `${f.key}: ${printExpr(f.value)}`));
+			const entries = fields.map(f => (f.spread ? `...${printExpr(f.value)}` : `${key(f.key)}: ${printExpr(f.value)}`));
 			return `{${entries.join(", ")}}`;
 		})
 		.with({ type: "Assign" }, ({ target, value }) => `(${printExpr(target)} = ${printExpr(value)})`)

@@ -563,7 +563,7 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0",
     "name": "Point",
     "normalized": "Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)",

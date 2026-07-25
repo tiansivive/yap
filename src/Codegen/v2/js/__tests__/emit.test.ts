@@ -7,6 +7,7 @@ import * as R from "@yap/shared/rows";
 
 import { lowerToMir } from "../../../../lowering/lower";
 import { resetSupply } from "../../../../lowering/context";
+import * as MIR from "../../../../lowering/mir";
 import type { Declaration } from "../../../../lowering/mir";
 import { emit } from "../emit";
 import { print } from "../print";
@@ -20,6 +21,12 @@ const codegen = (term: EB.Term, ffi?: Record<string, (...args: any[]) => any>, d
 	// eslint-disable-next-line @typescript-eslint/no-implied-eval -- executing emitted JS is what this suite tests
 	const fn = new Function(...ffiNames, code);
 	return fn(...ffiValues);
+};
+
+const codegenMir = (mod: MIR.Module) => {
+	const code = print(emit(mod));
+	// eslint-disable-next-line @typescript-eslint/no-implied-eval -- executing emitted JS is what this suite tests
+	return new Function(code)();
 };
 
 describe("Codegen: primitives and ops", () => {
@@ -120,6 +127,33 @@ describe("Codegen: struct, proj, inj", () => {
 		const lam = EB.DSL.lambda("r", EB.DSL.proj("x", EB.DSL.bound(0)), EB.DSL.type("Num"));
 		const term = EB.DSL.app(lam, EB.DSL.struct([{ label: "x", value: EB.DSL.num(99) }]));
 		expect(codegen(term)).toBe(99);
+	});
+});
+
+describe("Codegen: arbitrary record labels", () => {
+	it("reads and updates positional fields", () => {
+		const { Block, Function, Instr, Module, Terminator, Expr } = MIR.Constructors;
+		const mod = Module(
+			[
+				Function("main", [], "entry", [
+					Block(
+						"entry",
+						[],
+						[
+							Instr.Let("one", Expr.Lit(Lit.Num(1))),
+							Instr.Alloc({ type: "Record", fields: [{ label: "0", value: "one" }] }, "tuple"),
+							Instr.Let("two", Expr.Lit(Lit.Num(2))),
+							Instr.UpdateFbip("tuple", [{ label: "1", value: "two" }]),
+							Instr.Read("1", "tuple", "result"),
+						],
+						Terminator.Return("result"),
+					),
+				]),
+			],
+			[],
+		);
+
+		expect(codegenMir(mod)).toBe(2);
 	});
 });
 

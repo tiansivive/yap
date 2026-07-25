@@ -45,6 +45,8 @@ const serveFile = (res: http.ServerResponse, filePath: string) => {
 	res.end(fs.readFileSync(filePath, "utf-8"));
 };
 
+const isBody = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v instanceof Object;
+
 const collect = (req: http.IncomingMessage): Promise<string> =>
 	new Promise((resolve, reject) => {
 		const chunks: Buffer[] = [];
@@ -68,14 +70,17 @@ const handle = async (req: http.IncomingMessage, res: http.ServerResponse) => {
 	}
 
 	if (req.method === "POST" && url === "/run") {
-		const body = JSON.parse(await collect(req));
-		const source: string = body.source ?? "";
-		const deBruijn: DeBruijnMode = body.deBruijn ?? "off";
-		const parserRule: ParserRule = body.parserRule ?? "Ann";
-		const rawJson: boolean = body.rawJson ?? false;
-		const ivlSimplify: boolean = body.ivlSimplify ?? true;
+		const raw: unknown = JSON.parse(await collect(req));
+		const body: Record<string, unknown> = isBody(raw) ? raw : {};
+		const source = typeof body.source === "string" ? body.source : "";
+		const deBruijn: DeBruijnMode = body.deBruijn === "index" || body.deBruijn === "level" || body.deBruijn === "both" ? body.deBruijn : "off";
+		const parserRule: ParserRule = body.parserRule === "Script" ? "Script" : "Ann";
+		const rawJson = body.rawJson === true;
+		const ivlSimplify = body.ivlSimplify !== false;
+		const evaluate = body.evaluate === true;
+		const interpret = body.interpret === true;
 
-		const result = run(source, { deBruijn, parserRule, rawJson, ivlSimplify });
+		const result = run(source, { deBruijn, parserRule, rawJson, ivlSimplify, evaluate, interpret });
 
 		res.writeHead(200, { "Content-Type": "application/json" });
 		return res.end(JSON.stringify(result));

@@ -17,6 +17,7 @@ import * as Decisions from "./decisions";
 import * as Continuations from "./continuations";
 
 const { Terminator, Block, Function: Fn, Module } = Constructors;
+const strOf = (v: unknown): string => (typeof v === "string" ? v : "");
 
 export const emit = (graph: Graph): MIR.Module => {
 	const root = entry(graph);
@@ -44,9 +45,10 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.VAR_FREE, () => Leaves.free(id, ctx))
 		.with(Tags.VAR_FOREIGN, () => Leaves.foreign(id, ctx))
 		.with(Tags.VAR_LABEL, () => labelRef(id, ctx))
-		.with(Tags.VAR_META, () => emptyStruct(ctx))
-		.with(Tags.PI, () => emptyStruct(ctx))
-		.with(Tags.SIGMA, () => emptyStruct(ctx))
+		.with(Tags.VAR_META, () => erase(id, ctx))
+		.with(Tags.PI, () => erase(id, ctx))
+		.with(Tags.SIGMA, () => erase(id, ctx))
+		.with(Tags.MU, () => erase(id, ctx))
 		.with(Tags.PROJ, () => Structural.read(id, walk, ctx))
 		.with(Tags.INJ, () => Structural.update(id, walk, ctx))
 		.with(Tags.APP, () => app(id, ctx))
@@ -92,7 +94,7 @@ const labelRef = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const ownerVar = owner !== undefined ? C.resolve(ctx, owner) : undefined;
 
 	if (ownerVar !== undefined) {
-		const name = String(Nodes.get(id)(ctx.graph)?.payload.name ?? "");
+		const name = strOf(Nodes.get(id)(ctx.graph)?.payload.name);
 		const [v, c1] = C.name(ctx);
 		return [v, C.instr(c1, Constructors.Instr.Read(name, ownerVar, v))];
 	}
@@ -105,7 +107,8 @@ const app = (id: NodeId, ctx: Ctx): [string, Ctx] => (isStructApp(id, ctx) ? str
 const isStructApp = (id: NodeId, ctx: Ctx): boolean => {
 	const funcTarget = Edges.one(id, Labels.FUNC)(ctx.graph)?.target;
 	const funcNode = funcTarget !== undefined ? Nodes.get(funcTarget)(ctx.graph) : undefined;
-	return funcNode?.tag === Tags.LIT && (funcNode.payload.value as { type?: string })?.type === "Atom";
+	const val = funcNode?.payload.value;
+	return funcNode?.tag === Tags.LIT && typeof val === "object" && val instanceof Object && String(Reflect.get(val, "type")) === "Atom";
 };
 
 const structFromApp = (id: NodeId, ctx: Ctx): [string, Ctx] => {
@@ -146,7 +149,7 @@ const struct = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const [pairs, c1] = plain.reduce<[ReadonlyArray<{ label: string; value: string }>, Ctx]>(
 		([acc, c], e) => {
 			const [v, c2] = walk(e.target, c);
-			const label = String(e.payload.label ?? "");
+			const label = strOf(e.payload.label);
 			return [[...acc, { label, value: v }], C.bindLabel(c2, label, v)];
 		},
 		[[], ctx],
@@ -157,7 +160,7 @@ const struct = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	return knotted.reduce<[string, Ctx]>(
 		([res, c], e) => {
 			const [v, cc] = walk(e.target, c);
-			const label = String(e.payload.label ?? "");
+			const label = strOf(e.payload.label);
 			return [res, C.instr(cc, Constructors.Instr.UpdateFbip(result, [{ label, value: v }]))];
 		},
 		[result, c3],
@@ -179,9 +182,15 @@ const structFromRow = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	return [result, C.bind(c3, id, result)];
 };
 
-const emptyStruct = (ctx: Ctx): [string, Ctx] => {
+const erase = (id: NodeId, ctx: Ctx): [string, Ctx] => {
+	const node = Nodes.get(id)(ctx.graph);
+	const source = strOf(node?.payload.source ?? node?.payload.variable);
+	return emptyStruct(ctx, { erasure: { tag: node?.tag, source } });
+};
+
+const emptyStruct = (ctx: Ctx, debug?: MIR.Debug): [string, Ctx] => {
 	const [result, c1] = C.name(ctx);
-	const c2 = C.instr(c1, Constructors.Instr.Alloc({ type: "Record", fields: [] }, result));
+	const c2 = C.instr(c1, Constructors.Instr.Alloc({ type: "Record", fields: [], debug }, result));
 	return [result, c2];
 };
 
@@ -192,7 +201,7 @@ const collectFields = (id: NodeId, ctx: Ctx): ReadonlyArray<Field> => {
 	return node?.tag !== Tags.ROW_EXT
 		? []
 		: [
-				{ label: (node.payload.label ?? "") as string, valueId: Edges.one(id, Labels.VALUE)(ctx.graph)?.target ?? id },
+				{ label: strOf(node.payload.label), valueId: Edges.one(id, Labels.VALUE)(ctx.graph)?.target ?? id },
 				...collectFields(Edges.one(id, Labels.REST)(ctx.graph)?.target ?? -1, ctx),
 			];
 };
