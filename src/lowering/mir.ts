@@ -11,56 +11,58 @@ import { Simplify } from "type-fest";
 // - assignments of simple expressions to SSA-ish variables
 
 export type Label = string;
+export type Debug = Readonly<Record<string, unknown>>;
+type Node<T> = T & { debug?: Debug };
 
-export type Function = {
+export type Function = Node<{
 	name: string;
 	params: string[];
 	entry: Label;
 	blocks: Block[];
-};
+}>;
 
-export type Declaration = { name: string; arity: number; source: "ffi" };
+export type Declaration = Node<{ name: string; arity: number; source: "ffi" }>;
 
-export type Module = {
+export type Module = Node<{
 	functions: Function[];
 	declarations: Declaration[];
-};
+}>;
 
-export type Block = {
+export type Block = Node<{
 	label: Label;
 	params: string[];
 	instrs: Instr[];
 	terminator: Terminator;
-};
+}>;
 
-export type Allocation = {
+export type Allocation = Node<{
 	type: "Record";
 	fields: Array<{ label: string; value: string }>;
-};
+}>;
 
-export type CallTarget = { type: "direct"; func: string } | { type: "indirect"; callee: string };
+export type CallTarget = Node<{ type: "direct"; func: string } | { type: "indirect"; callee: string }>;
 
-export type Instr =
+export type Instr = Node<
 	| { type: "Let"; name: string; expr: Expr }
 	| { type: "Read"; label: string; target: string; result: string }
 	| { type: "Update"; mode: "immutable"; into: string; result: string; alloc: Allocation }
 	| { type: "Update"; mode: "fbip"; into: string; updates: Array<{ label: string; value: string }> }
 	| { type: "Alloc"; alloc: Allocation; result: string }
-	| { type: "Call"; target: CallTarget; args: string[]; result: string };
+	| { type: "Call"; target: CallTarget; args: string[]; result: string }
+>;
 
-export type Case = { value: string; target: Label; args: string[] };
-export type DefaultCase = { target: Label; args: string[] };
+export type Case = Node<{ value: string; target: Label; args: string[] }>;
+export type DefaultCase = Node<{ target: Label; args: string[] }>;
 
-export type Terminator =
+export type Terminator = Node<
 	| { type: "Jump"; target: Label; args: string[] }
 	| { type: "Branch"; scrutinee: string; cases: Case[]; default?: DefaultCase }
-	| { type: "Return"; value: string };
+	| { type: "Return"; value: string }
+>;
 
-export type Expr =
-	| { type: "Var"; name: string }
-	| { type: "Lit"; value: Literal }
-	| { type: "FuncRef"; name: string }
-	| { type: "PrimOp"; op: string; args: string[] };
+export type Expr = Node<
+	{ type: "Var"; name: string } | { type: "Lit"; value: Literal } | { type: "FuncRef"; name: string } | { type: "PrimOp"; op: string; args: string[] }
+>;
 
 let currentId = 0;
 const nextId = () => ++currentId;
@@ -70,40 +72,72 @@ export const resetId = () => {
 
 export const Constructors = {
 	Expr: {
-		Var: (name: string): Expr => ({ type: "Var", name }),
-		Lit: (value: Literal): Expr => ({ type: "Lit", value }),
-		FuncRef: (name: string): Expr => ({ type: "FuncRef", name }),
-		PrimOp: (op: string, args: string[]): Expr => ({ type: "PrimOp", op, args }),
+		Var: (name: string, debug?: Debug): Expr => ({ type: "Var", name, ...(debug !== undefined && { debug }) }),
+		Lit: (value: Literal, debug?: Debug): Expr => ({ type: "Lit", value, ...(debug !== undefined && { debug }) }),
+		FuncRef: (name: string, debug?: Debug): Expr => ({ type: "FuncRef", name, ...(debug !== undefined && { debug }) }),
+		PrimOp: (op: string, args: string[], debug?: Debug): Expr => ({ type: "PrimOp", op, args, ...(debug !== undefined && { debug }) }),
 	},
 	Instr: {
-		Let: (name: string, expr: Expr): Instr => ({ type: "Let", name, expr }),
-		Read: (label: string, target: string, result: string): Instr => ({ type: "Read", label, target, result }),
-		UpdateImmutable: (into: string, result: string, alloc: Allocation): Instr => ({ type: "Update", mode: "immutable", into, result, alloc }),
-		UpdateFbip: (into: string, updates: Array<{ label: string; value: string }>): Instr => ({ type: "Update", mode: "fbip", into, updates }),
-		Alloc: (alloc: Allocation, result: string): Instr => ({ type: "Alloc", alloc, result }),
-		Call: (target: CallTarget, args: string[], result: string): Instr => ({ type: "Call", target, args, result }),
+		Let: (name: string, expr: Expr, debug?: Debug): Instr => ({ type: "Let", name, expr, ...(debug !== undefined && { debug }) }),
+		Read: (label: string, target: string, result: string, debug?: Debug): Instr => ({
+			type: "Read",
+			label,
+			target,
+			result,
+			...(debug !== undefined && { debug }),
+		}),
+		UpdateImmutable: (into: string, result: string, alloc: Allocation, debug?: Debug): Instr => ({
+			type: "Update",
+			mode: "immutable",
+			into,
+			result,
+			alloc,
+			...(debug !== undefined && { debug }),
+		}),
+		UpdateFbip: (into: string, updates: Array<{ label: string; value: string }>, debug?: Debug): Instr => ({
+			type: "Update",
+			mode: "fbip",
+			into,
+			updates,
+			...(debug !== undefined && { debug }),
+		}),
+		Alloc: (alloc: Allocation, result: string, debug?: Debug): Instr => ({ type: "Alloc", alloc, result, ...(debug !== undefined && { debug }) }),
+		Call: (target: CallTarget, args: string[], result: string, debug?: Debug): Instr => ({
+			type: "Call",
+			target,
+			args,
+			result,
+			...(debug !== undefined && { debug }),
+		}),
 	},
 	Terminator: {
-		Jump: (target: Label, args: string[]): Terminator => ({ type: "Jump", target, args }),
-		Branch: (scrutinee: string, cases: Case[], def?: DefaultCase): Terminator => ({
+		Jump: (target: Label, args: string[], debug?: Debug): Terminator => ({ type: "Jump", target, args, ...(debug !== undefined && { debug }) }),
+		Branch: (scrutinee: string, cases: Case[], def?: DefaultCase, debug?: Debug): Terminator => ({
 			type: "Branch",
 			scrutinee,
 			cases,
 			...(def !== undefined && { default: def }),
+			...(debug !== undefined && { debug }),
 		}),
-		Return: (value: string): Terminator => ({ type: "Return", value }),
+		Return: (value: string, debug?: Debug): Terminator => ({ type: "Return", value, ...(debug !== undefined && { debug }) }),
 	},
-	Block: (label: Label, params: string[], instrs: Instr[], terminator: Terminator): Block => ({
+	Block: (label: Label, params: string[], instrs: Instr[], terminator: Terminator, debug?: Debug): Block => ({
 		label,
 		params,
 		instrs,
 		terminator,
+		...(debug !== undefined && { debug }),
 	}),
-	Function: (name: string, params: string[], entry: Label, blocks: Block[]): Function => ({
+	Function: (name: string, params: string[], entry: Label, blocks: Block[], debug?: Debug): Function => ({
 		name,
 		params,
 		entry,
 		blocks,
+		...(debug !== undefined && { debug }),
 	}),
-	Module: (functions: Function[], declarations: Declaration[] = []): Module => ({ functions, declarations }),
+	Module: (functions: Function[], declarations: Declaration[] = [], debug?: Debug): Module => ({
+		functions,
+		declarations,
+		...(debug !== undefined && { debug }),
+	}),
 };

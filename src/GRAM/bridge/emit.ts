@@ -44,9 +44,10 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.VAR_FREE, () => Leaves.free(id, ctx))
 		.with(Tags.VAR_FOREIGN, () => Leaves.foreign(id, ctx))
 		.with(Tags.VAR_LABEL, () => labelRef(id, ctx))
-		.with(Tags.VAR_META, () => emptyStruct(ctx))
-		.with(Tags.PI, () => emptyStruct(ctx))
-		.with(Tags.SIGMA, () => emptyStruct(ctx))
+		.with(Tags.VAR_META, () => erase(id, ctx))
+		.with(Tags.PI, () => erase(id, ctx))
+		.with(Tags.SIGMA, () => erase(id, ctx))
+		.with(Tags.MU, () => erase(id, ctx))
 		.with(Tags.PROJ, () => Structural.read(id, walk, ctx))
 		.with(Tags.INJ, () => Structural.update(id, walk, ctx))
 		.with(Tags.APP, () => app(id, ctx))
@@ -179,9 +180,15 @@ const structFromRow = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	return [result, C.bind(c3, id, result)];
 };
 
-const emptyStruct = (ctx: Ctx): [string, Ctx] => {
+const erase = (id: NodeId, ctx: Ctx): [string, Ctx] => {
+	const node = Nodes.get(id)(ctx.graph);
+	const source = node?.payload.source ?? node?.payload.variable;
+	return emptyStruct(ctx, { erasure: { tag: node?.tag, ...(source !== undefined && { source }) } });
+};
+
+const emptyStruct = (ctx: Ctx, debug?: MIR.Debug): [string, Ctx] => {
 	const [result, c1] = C.name(ctx);
-	const c2 = C.instr(c1, Constructors.Instr.Alloc({ type: "Record", fields: [] }, result));
+	const c2 = C.instr(c1, Constructors.Instr.Alloc({ type: "Record", fields: [], ...(debug !== undefined && { debug }) }, result));
 	return [result, c2];
 };
 

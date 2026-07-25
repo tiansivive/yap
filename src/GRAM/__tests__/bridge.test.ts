@@ -113,6 +113,21 @@ describe("GRAM Bridge: Phase 1 — leaves and structural ops", () => {
 		expect(result).toBe(42);
 	});
 
+	it("erases a mu type declaration with debug provenance", () => {
+		const { structure } = elaborateFrom(`{
+			let Peano: Type = | #zero Unit | #succ Peano;
+			let zero: Peano = #zero !;
+			let first: Peano = #succ zero;
+			let second: Peano = #succ first;
+		}`);
+		const mod = bridge(structure.term);
+		const erased = mod.functions[0].blocks.flatMap(block => block.instrs).find(instr => instr.type === "Alloc" && instr.alloc.debug?.erasure !== undefined);
+
+		expect(erased).toMatchObject({ alloc: { debug: { erasure: { tag: "mu", source: "Peano" } } } });
+		expect(display.module(mod)).toContain('let Peano1 = v0  // {"erasure":{"tag":"mu","source":"Peano"}}');
+		expect(interpret(mod)).toBeNull();
+	});
+
 	it("snapshot: struct { x: 1 }", () => {
 		const term = EB.DSL.struct([{ label: "x", value: EB.DSL.num(1) }]);
 		expect(display.module(bridge(term))).toMatchSnapshot();
