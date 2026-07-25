@@ -8,9 +8,9 @@ exports[`Language Tour — Records & Tuples > arrays and dictionaries 1`] = `
   const v1 = 2;
   const v2 = 3;
   const v3 = {
-    0: v0,
-    1: v1,
-    2: v2
+    "0": v0,
+    "1": v1,
+    "2": v2
   };
   return v3;
 }
@@ -779,8 +779,8 @@ exports[`Language Tour — Records & Tuples > tuples 1`] = `
   const v0 = 42;
   const v1 = "answer";
   const v2 = {
-    0: v0,
-    1: v1
+    "0": v0,
+    "1": v1
   };
   return v2;
 }
@@ -839,8 +839,8 @@ return main();
   const v0 = "answer";
   const v1 = 42;
   const v2 = {
-    1: v0,
-    0: v1
+    "1": v0,
+    "0": v1
   };
   return v2;
 }

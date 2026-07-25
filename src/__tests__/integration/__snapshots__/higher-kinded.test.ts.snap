@@ -8,6 +8,7 @@ exports[`Language Tour — Higher-Kinded Polymorphism > fmap with implicit resol
   },
   {
     "codegenJS": "function main() {
+  const v0 = {};
   return v0;
 }
 return main();
@@ -80,6 +81,7 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"List"}}
       return v0",
     "name": "List",
     "normalized": "List",
@@ -314,7 +316,7 @@ return main();
       return closure_cls2
   fn closure_45(env0, f1) entry=entry
     entry:
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0",
     "name": "Functor",
     "normalized": "λ(f: Π(t4: Type) -> (closure: Type -| Γ: t4)) ->
@@ -402,9 +404,9 @@ function closure_82(env0, list1) {
       }
       case "case5": {
         const v6 = list1.payload;
-        const v7 = v6 .0;
+        const v7 = v6["0"];
         const x = v7;
-        const v8 = v6 .1;
+        const v8 = v6["1"];
         const xs = v8;
         const v9 = "cons";
         const fnref10 = cap_0.__fn;
@@ -423,8 +425,8 @@ function closure_82(env0, list1) {
         const env23 = v21.__env;
         const v24 = fnref22(env23, xs);
         const v25 = {
-          0: v12,
-          1: v24
+          "0": v12,
+          "1": v24
         };
         const v26 = {
           __tag: v9,
@@ -1834,8 +1836,8 @@ return main();
     payload: v3
   };
   const v5 = {
-    0: v1,
-    1: v4
+    "0": v1,
+    "1": v4
   };
   const v6 = {
     __tag: v0,
@@ -1912,6 +1914,7 @@ return main();
   {
     "codegenJS": "function main() {
   const v0 = strmap;
+  const v1 = {};
   const fnref2 = v0.__fn;
   const env3 = v0.__env;
   const v4 = fnref2(env3, v1);
@@ -2025,6 +2028,7 @@ return main();
   fn main entry=entry
     entry:
       let v0 = strmap
+      let v1 = alloc {  }  // {"erasure":{"tag":"mu","source":"List"}}
       let fnref2 = read v0.__fn
       let env3 = read v0.__env
       let v4 = call *fnref2(env3, v1)
@@ -2081,6 +2085,7 @@ exports[`Language Tour — Higher-Kinded Polymorphism > functor 1`] = `
 [
   {
     "codegenJS": "function main() {
+  const v0 = {};
   return v0;
 }
 return main();
@@ -2153,6 +2158,7 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"List"}}
       return v0",
     "name": "List",
     "normalized": "List",
@@ -2387,7 +2393,7 @@ return main();
       return closure_cls2
   fn closure_45(env0, f1) entry=entry
     entry:
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0",
     "name": "Functor",
     "normalized": "λ(f: Π(t3: Type) -> (closure: Type -| Γ: t3)) ->
@@ -2475,9 +2481,9 @@ function closure_82(env0, list1) {
       }
       case "case5": {
         const v6 = list1.payload;
-        const v7 = v6 .0;
+        const v7 = v6["0"];
         const x = v7;
-        const v8 = v6 .1;
+        const v8 = v6["1"];
         const xs = v8;
         const v9 = "cons";
         const fnref10 = cap_0.__fn;
@@ -2496,8 +2502,8 @@ function closure_82(env0, list1) {
         const env23 = v21.__env;
         const v24 = fnref22(env23, xs);
         const v25 = {
-          0: v12,
-          1: v24
+          "0": v12,
+          "1": v24
         };
         const v26 = {
           __tag: v9,

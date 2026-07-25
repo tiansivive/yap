@@ -345,7 +345,7 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0",
     "name": "DependentPair",
     "normalized": "Σ($sig: [ snd: :fst, fst: Type ]) .
@@ -634,7 +634,7 @@ return main();
   fn closure_29(env0, p1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0
   fn closure_28(env0, a1) entry=entry
     entry:
@@ -802,6 +802,7 @@ exports[`Language Tour — Dependent Types > length-indexed vectors 1`] = `
 [
   {
     "codegenJS": "function main() {
+  const v0 = {};
   return v0;
 }
 return main();
@@ -933,6 +934,7 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"Vec"}}
       return v0",
     "name": "Vec",
     "normalized": "Vec",
@@ -1029,8 +1031,8 @@ return main();
   const v0 = 10;
   const v1 = vec0;
   const v2 = {
-    0: v0,
-    1: v1
+    "0": v0,
+    "1": v1
   };
   return v2;
 }
@@ -1092,8 +1094,8 @@ return main();
   const v0 = 20;
   const v1 = vec1;
   const v2 = {
-    0: v0,
-    1: v1
+    "0": v0,
+    "1": v1
   };
   return v2;
 }
@@ -1155,8 +1157,8 @@ return main();
   const v0 = 30;
   const v1 = vec2;
   const v2 = {
-    0: v0,
-    1: v1
+    "0": v0,
+    "1": v1
   };
   return v2;
 }

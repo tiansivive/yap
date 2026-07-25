@@ -912,9 +912,9 @@ function closure_72(env0, x1) {
       }
       case "case5": {
         const v6 = x1.payload;
-        const v7 = v6 .0;
+        const v7 = v6["0"];
         const el = v7;
-        const v8 = v6 .1;
+        const v8 = v6["1"];
         const rest = v8;
         const v9 = 1;
         const __t0 = v9;

@@ -785,6 +785,7 @@ exports[`Language Tour — Pattern Matching > recursive functions 1`] = `
 [
   {
     "codegenJS": "function main() {
+  const v0 = {};
   return v0;
 }
 return main();
@@ -857,6 +858,7 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"List"}}
       return v0",
     "name": "List",
     "normalized": "List",
@@ -932,9 +934,9 @@ function closure_66(env0, list1) {
       }
       case "case5": {
         const v6 = list1.payload;
-        const v7 = v6 .0;
+        const v7 = v6["0"];
         const x = v7;
-        const v8 = v6 .1;
+        const v8 = v6["1"];
         const xs = v8;
         const v9 = 1;
         const fnref10 = cap_0.__fn;
@@ -1276,7 +1278,7 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0",
     "name": "Factorial",
     "normalized": "Σ($sig: [ compute: Π(t1: Num) -> (closure: Num -| Γ: t1) ]) .
@@ -1329,8 +1331,8 @@ exports[`Language Tour — Pattern Matching > variant patterns 1`] = `
   const v0 = {};
   const v1 = Num;
   const v2 = {
-    1: v1,
-    0: v1
+    "1": v1,
+    "0": v1
   };
   const v3 = {
     point: v0,
@@ -1423,7 +1425,7 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       let v1 = Num
       let v2 = alloc { 1: v1, 0: v1 }
       let v3 = alloc { point: v0, rectangle: v2, circle: v1 }
@@ -1508,9 +1510,9 @@ function closure_68(env0, s1) {
       }
       case "case5": {
         const v6 = s1.payload;
-        const v7 = v6 .0;
+        const v7 = v6["0"];
         const w = v7;
-        const v8 = v6 .1;
+        const v8 = v6["1"];
         const h = v8;
         const v9 = "Rectangle";
         const __t0 = v9;
@@ -1927,8 +1929,8 @@ exports[`Language Tour — Variants & Tagged Values > variants with data 1`] = `
   const v0 = {};
   const v1 = Num;
   const v2 = {
-    1: v1,
-    0: v1
+    "1": v1,
+    "0": v1
   };
   const v3 = {
     point: v0,
@@ -2021,7 +2023,7 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       let v1 = Num
       let v2 = alloc { 1: v1, 0: v1 }
       let v3 = alloc { point: v0, rectangle: v2, circle: v1 }
@@ -2129,8 +2131,8 @@ return main();
   const v1 = 10;
   const v2 = 20;
   const v3 = {
-    0: v1,
-    1: v2
+    "0": v1,
+    "1": v2
   };
   const v4 = {
     __tag: v0,

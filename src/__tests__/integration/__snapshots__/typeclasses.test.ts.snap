@@ -95,7 +95,7 @@ return main();
   fn closure_20(env0, t1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0",
     "name": "Show",
     "normalized": "λ(t: Type) ->
@@ -238,7 +238,7 @@ return main();
   fn closure_24(env0, t1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0",
     "name": "Eq",
     "normalized": "λ(t: Type) ->
@@ -708,7 +708,7 @@ return main();
   fn closure_20(env0, t1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0",
     "name": "Show",
     "normalized": "λ(t: Type) ->
@@ -851,7 +851,7 @@ return main();
   fn closure_24(env0, t1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0",
     "name": "Eq",
     "normalized": "λ(t: Type) ->
@@ -1812,7 +1812,7 @@ return main();
   fn closure_20(env0, t1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0",
     "name": "Show",
     "normalized": "λ(t: Type) ->
@@ -1955,7 +1955,7 @@ return main();
   fn closure_24(env0, t1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0",
     "name": "Eq",
     "normalized": "λ(t: Type) ->

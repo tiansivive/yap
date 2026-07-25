@@ -1641,7 +1641,7 @@ return main();
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0
   fn closure_39(env0, b1) entry=entry
     entry:
@@ -1918,7 +1918,7 @@ return main();
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0
   fn closure_39(env0, b1) entry=entry
     entry:
@@ -3687,6 +3687,7 @@ exports[`Language Tour — Refinement Types > ordered list construction rejects 
 [
   {
     "codegenJS": "function main() {
+  const v0 = {};
   const List1 = v0;
   const v2 = "cons";
   const v3 = 2;
@@ -3965,7 +3966,8 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let List1 = v0
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"List"}}
+      let List1 = v0  // {"erasure":{"tag":"mu","source":"List"}}
       let v2 = cons
       let v3 = 2
       let v4 = cons
@@ -4045,6 +4047,7 @@ exports[`Language Tour — Refinement Types > ordered lists with refinement poly
 [
   {
     "codegenJS": "function main() {
+  const v0 = {};
   return v0;
 }
 return main();
@@ -4230,6 +4233,7 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"OrderedList"}}
       return v0",
     "name": "OrderedList",
     "normalized": "OrderedList",
@@ -4663,7 +4667,7 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
       return v0",
     "name": "OrderedPair",
     "normalized": "Σ($sig: [ snd: <ω> Num [| λ(v: Num) -> (closure: FFI.$gt v :fst -| Γ: v) |],
