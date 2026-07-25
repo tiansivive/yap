@@ -89,24 +89,13 @@ const deBruijnOpts = (mode: DeBruijnMode) => ({
 	deBruijn: mode === "index" || mode === "level" || mode === "both",
 });
 
-const attempt = <T>(phase: string, fn: () => T, errors: string[]): T | undefined => {
-	try {
-		return fn();
-	} catch (e) {
-		errors.push(`[${phase}] ${e instanceof Error ? e.message : String(e)}`);
-		return undefined;
-	}
-};
-
 const display = (value: unknown): string => {
 	if (typeof value === "string") {
 		return JSON.stringify(value);
 	}
-
-	if (typeof value === "object" && value !== null) {
-		return JSON.stringify(value) ?? String(value);
+	if (typeof value === "object" && value instanceof Object) {
+		return JSON.stringify(value);
 	}
-
 	return String(value);
 };
 
@@ -125,7 +114,7 @@ const parse = (source: string, rule: ParserRule): Src.Term | Src.Statement => {
 		if (!fs.existsSync(logsDir)) {
 			fs.mkdirSync(logsDir, { recursive: true });
 		}
-		fs.writeFileSync(resolve(logsDir, "error.json"), JSON.stringify(data.results, null, 2));
+		fs.writeFileSync(resolve(logsDir, "error.json"), JSON.stringify(data.results, undefined, 2));
 		throw new Error(`Ambiguous parse: ${data.results.length} results. Check .logs/error.json`);
 	}
 
@@ -142,14 +131,22 @@ const parse = (source: string, rule: ParserRule): Src.Term | Src.Statement => {
 };
 
 export const run = (source: string, opts: Options): Result => {
-	const errors: string[] = [];
 	const result = { ...empty, source };
 	const db = deBruijnOpts(opts.deBruijn);
 
-	const parsed = attempt("Parse", () => parse(source, opts.parserRule), errors);
+	const attempt = <T>(phase: string, fn: () => T): T | undefined => {
+		try {
+			return fn();
+		} catch (e) {
+			result.errors = [...result.errors, `[${phase}] ${e instanceof Error ? e.message : String(e)}`];
+			return undefined;
+		}
+	};
+
+	const parsed = attempt("Parse", () => parse(source, opts.parserRule));
 
 	if (!parsed) {
-		return { ...result, errors };
+		return result;
 	}
 
 	const stmt: Src.Statement = opts.parserRule === "Ann" ? ({ type: "expression", value: parsed as Src.Term } as Src.Statement) : (parsed as Src.Statement);
@@ -160,7 +157,7 @@ export const run = (source: string, opts: Options): Result => {
 		if (opts.rawJson) {
 			result.raw.parsed = stmt;
 		}
-		return { ...result, errors };
+		return result;
 	}
 
 	result.parsed = Src.display(stmt.value);
@@ -169,162 +166,143 @@ export const run = (source: string, opts: Options): Result => {
 		result.raw.parsed = stmt.value;
 	}
 
-	const elaborated = attempt("Elaboration", () => EB.Mod.expression(stmt, defaultContext), errors);
+	const elaborated = attempt("Elaboration", () => EB.Mod.expression(stmt, defaultContext));
 	if (!elaborated || E.isLeft(elaborated)) {
 		if (elaborated && E.isLeft(elaborated)) {
-			errors.push(`[Elaboration] ${EB.V2.display(elaborated.left)}`);
+			result.errors = [...result.errors, `[Elaboration] ${EB.V2.display(elaborated.left)}`];
 		}
-		return { ...result, errors };
+		return result;
 	}
 
 	const [tm, ty, _us, ctx, debug] = elaborated.right;
 
-	result.elaborated = attempt("Typechecker / display", () => EB.Display.Term(tm, ctx, db), errors) ?? "";
+	result.elaborated = attempt("Typechecker / display", () => EB.Display.Term(tm, ctx, db)) ?? "";
 
 	if (debug) {
 		const displayCtx = { zonker: ctx.zonker, metas: ctx.metas, env: ctx.env };
 		result.constraints =
-			attempt(
-				"Typechecker / constraints",
-				() => {
-					if (debug.constraints.length === 0) {
-						return "No constraints";
-					}
-					return debug.constraints
-						.map((c, i) => {
-							const prefix = `[${i}] `;
-							if (c.type === "assign") {
-								const l = EB.NF.display(c.left, displayCtx, db);
-								const r = EB.NF.display(c.right, displayCtx, db);
-								return `${prefix}${l}  ~  ${r}`;
-							}
-							return `${prefix}resolve ?${c.meta.val}`;
-						})
-						.join("\n");
-				},
-				errors,
-			) ?? "";
+			attempt("Typechecker / constraints", () => {
+				if (debug.constraints.length === 0) {
+					return "No constraints";
+				}
+				return debug.constraints
+					.map((c, i) => {
+						const prefix = `[${i}] `;
+						if (c.type === "assign") {
+							const l = EB.NF.display(c.left, displayCtx, db);
+							const r = EB.NF.display(c.right, displayCtx, db);
+							return `${prefix}${l}  ~  ${r}`;
+						}
+						return `${prefix}resolve ?${c.meta.val}`;
+					})
+					.join("\n");
+			}) ?? "";
 
 		result.metas =
-			attempt(
-				"Typechecker / metas",
-				() => {
-					const sections: string[] = [];
-					const zonkerStr = Sub.display(debug.zonker, ctx.metas);
-					sections.push(`Zonker:\n${zonkerStr}`);
-					const resKeys = Object.keys(debug.resolutions);
-					if (resKeys.length > 0) {
-						const resStr = resKeys.map(k => `  ?${k} |=> ${EB.Display.Term(debug.resolutions[Number(k)], displayCtx, db)}`).join("\n");
-						sections.push(`\nResolutions:\n${resStr}`);
-					}
-					const metaKeys = Object.keys(ctx.metas);
-					if (metaKeys.length > 0) {
-						const metaStr = metaKeys
-							.map(k => {
-								const m = ctx.metas[Number(k)];
-								return `  ?${k} : ${EB.NF.display(m.ann, displayCtx, db)}`;
-							})
-							.join("\n");
-						sections.push(`\nMetas (${metaKeys.length}):\n${metaStr}`);
-					}
-					return sections.join("\n");
-				},
-				errors,
-			) ?? "";
+			attempt("Typechecker / metas", () => {
+				const zonkerStr = Sub.display(debug.zonker, ctx.metas);
+				const resKeys = Object.keys(debug.resolutions);
+				const resSection =
+					resKeys.length > 0
+						? `\n\nResolutions:\n${resKeys.map(k => `  ?${k} |=> ${EB.Display.Term(debug.resolutions[Number(k)], displayCtx, db)}`).join("\n")}`
+						: "";
+				const metaKeys = Object.keys(ctx.metas);
+				const metaSection =
+					metaKeys.length > 0
+						? `\n\nMetas (${metaKeys.length}):\n${metaKeys
+								.map(k => {
+									const m = ctx.metas[Number(k)];
+									return `  ?${k} : ${EB.NF.display(m.ann, displayCtx, db)}`;
+								})
+								.join("\n")}`
+						: "";
+				return `Zonker:\n${zonkerStr}${resSection}${metaSection}`;
+			}) ?? "";
 	}
 
 	if (opts.rawJson) {
 		result.raw.elaborated = tm;
 	}
 
-	const quoted = attempt("Typechecker / quote", () => EB.NF.quote(ctx, ctx.env.length, ty), errors);
-	result.type = quoted ? (attempt("Typechecker / display", () => EB.Display.Term(quoted, ctx, db), errors) ?? "") : "";
+	const quoted = attempt("Typechecker / quote", () => EB.NF.quote(ctx, ctx.env.length, ty));
+	result.type = quoted ? (attempt("Typechecker / display", () => EB.Display.Term(quoted, ctx, db)) ?? "") : "";
 
 	if (opts.rawJson && quoted) {
 		result.raw.type = quoted;
 	}
 
 	if (opts.deBruijn === "both" && quoted) {
-		result.type += `\n\n--- NF ---\n${attempt("Typechecker / normalize", () => EB.NF.display(ty, ctx, db), errors) ?? ""}`;
+		result.type += `\n\n--- NF ---\n${attempt("Typechecker / normalize", () => EB.NF.display(ty, ctx, db)) ?? ""}`;
 	}
 
 	if (opts.evaluate) {
-		const nf = attempt("Normalization", () => EB.NF.evaluate(ctx, tm), errors);
-		result.normalized = nf ? (attempt("Normalization / display", () => EB.NF.display(nf, ctx, db), errors) ?? "") : "";
+		const nf = attempt("Normalization", () => EB.NF.evaluate(ctx, tm));
+		result.normalized = nf ? (attempt("Normalization / display", () => EB.NF.display(nf, ctx, db)) ?? "") : "";
 
 		if (opts.deBruijn === "both" && nf) {
-			const quotedNF = attempt("Normalization / quote", () => EB.NF.quote(ctx, ctx.env.length, nf), errors);
+			const quotedNF = attempt("Normalization / quote", () => EB.NF.quote(ctx, ctx.env.length, nf));
 			if (quotedNF) {
-				result.normalized += `\n\n--- Quoted ---\n${attempt("Normalization / display", () => EB.Display.Term(quotedNF, ctx, db), errors) ?? ""}`;
+				result.normalized += `\n\n--- Quoted ---\n${attempt("Normalization / display", () => EB.Display.Term(quotedNF, ctx, db)) ?? ""}`;
 			}
 		}
 	}
 
 	Build.simplify = opts.ivlSimplify;
-	const ivlArtefacts = attempt(
-		"Verification / IVL",
-		() => {
-			const V2 = VerificationServiceV2();
-			const [{ result: res }] = V2.check(tm, ty)(ctx);
+	const ivlArtefacts = attempt("Verification / IVL", () => {
+		const V2 = VerificationServiceV2();
+		const [{ result: res }] = V2.check(tm, ty)(ctx);
 
-			if (res._tag === "Left") {
-				return undefined;
-			}
-			//const x = V2.getObligations().forEach(o => o.)
-			return res.right;
-		},
-		errors,
-	);
+		if (res._tag === "Left") {
+			return undefined;
+		}
+		return res.right;
+	});
 
 	if (ivlArtefacts) {
-		result.ivl = attempt("Verification / IVL display", () => IVLPrint.formula(ivlArtefacts.vc), errors) ?? "";
-		result.validity = attempt("Verification / validity", () => Validity.display(Validity.check(ivlArtefacts.vc)), errors) ?? "";
+		result.ivl = attempt("Verification / IVL display", () => IVLPrint.formula(ivlArtefacts.vc)) ?? "";
+		result.validity = attempt("Verification / validity", () => Validity.display(Validity.check(ivlArtefacts.vc))) ?? "";
 
 		result.solverTrace =
-			attempt(
-				"Verification / solver trace",
-				() => {
-					const checked = Solver.run(ivlArtefacts.vc);
-					return Replay.replay({ formula: IVLPrint.formula(ivlArtefacts.vc), steps: checked.steps, encoding: checked.encoding, arena: checked.arena });
-				},
-				errors,
-			) ?? "";
+			attempt("Verification / solver trace", () => {
+				const checked = Solver.run(ivlArtefacts.vc);
+				return Replay.replay({ formula: IVLPrint.formula(ivlArtefacts.vc), steps: checked.steps, encoding: checked.encoding, arena: checked.arena });
+			}) ?? "";
 	}
 
 	const arities = Pipeline.deriveAritiesFromContext(ctx);
-	const gramResult = attempt("IR / GRAM", () => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities }), errors);
+	const gramResult = attempt("IR / GRAM", () => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities }));
 
 	const gramGraph = gramResult && E.isRight(gramResult) ? gramResult.right : undefined;
-	result.gram = gramGraph ? (attempt("IR / GRAM display", () => GRAM.display(gramGraph), errors) ?? "") : "";
-	result.gramDot = gramGraph ? (attempt("IR / DOT", () => GRAM.dot(gramGraph), errors) ?? "") : "";
+	result.gram = gramGraph ? (attempt("IR / GRAM display", () => GRAM.display(gramGraph)) ?? "") : "";
+	result.gramDot = gramGraph ? (attempt("IR / DOT", () => GRAM.dot(gramGraph)) ?? "") : "";
 
 	if (gramResult && E.isLeft(gramResult)) {
-		errors.push(`[IR / GRAM] ${JSON.stringify(gramResult.left)}`);
+		result.errors = [...result.errors, `[IR / GRAM] ${JSON.stringify(gramResult.left)}`];
 	}
 
-	const mod = gramGraph ? (attempt("IR / MIR bridge", () => GRAM.Bridge.emit(gramGraph), errors) ?? undefined) : undefined;
-	result.mir = mod ? (attempt("IR / MIR display", () => MIR.display.module(mod), errors) ?? "") : "";
+	const mod = gramGraph ? (attempt("IR / MIR bridge", () => GRAM.Bridge.emit(gramGraph)) ?? undefined) : undefined;
+	result.mir = mod ? (attempt("IR / MIR display", () => MIR.display.module(mod)) ?? "") : "";
 
 	if (opts.rawJson && mod) {
 		result.raw.mir = mod;
 	}
 
 	if (mod) {
-		result.codegenJS = attempt("Codegen / JavaScript emit", () => printJS(emitJS(mod)), errors) ?? "";
-		result.codegenC = attempt("Codegen / C emit", () => printC(emitC(mod)), errors) ?? "";
-		result.codegenErlang = attempt("Codegen / Erlang emit", () => printErl(emitErl(mod)), errors) ?? "";
-		result.output = result.codegenJS ? (attempt("Codegen / JavaScript execution", () => display(executeJS(result.codegenJS)), errors) ?? "") : "";
-		result.interpreted = opts.interpret ? (attempt("IR / MIR interpretation", () => display(Pipeline.run(mod, Pipeline.emptyRuntime())), errors) ?? "") : "";
+		result.codegenJS = attempt("Codegen / JavaScript emit", () => printJS(emitJS(mod))) ?? "";
+		result.codegenC = attempt("Codegen / C emit", () => printC(emitC(mod))) ?? "";
+		result.codegenErlang = attempt("Codegen / Erlang emit", () => printErl(emitErl(mod))) ?? "";
+		result.output = result.codegenJS ? (attempt("Codegen / JavaScript execution", () => display(executeJS(result.codegenJS))) ?? "") : "";
+		result.interpreted = opts.interpret ? (attempt("IR / MIR interpretation", () => display(Pipeline.run(mod, Pipeline.emptyRuntime()))) ?? "") : "";
 	}
 
-	if (errors.length > 0) {
+	if (result.errors.length > 0) {
 		const logsDir = resolve(process.cwd(), "./.logs");
 
 		if (!fs.existsSync(logsDir)) {
 			fs.mkdirSync(logsDir, { recursive: true });
 		}
-		fs.writeFileSync(resolve(logsDir, "error.json"), JSON.stringify({ errors, result }, null, 2));
+		fs.writeFileSync(resolve(logsDir, "error.json"), JSON.stringify({ errors: result.errors, result }, undefined, 2));
 	}
 
-	return { ...result, errors };
+	return result;
 };
