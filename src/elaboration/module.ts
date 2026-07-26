@@ -21,19 +21,6 @@ import type { WithProvenance } from "./shared/provenance";
 type InterfaceFields = Omit<Interface, "imports" | "zonker">;
 type WithCtx = [InterfaceFields, EB.Context];
 
-const termToNF = (ctx: EB.Context, term: EB.Term): NF.Value => {
-	if (term.type === "Var") {
-		if (term.variable.type === "Bound") {
-			return NF.Constructors.Var({ type: "Bound", lvl: ctx.env.length - 1 - term.variable.index });
-		}
-
-		if (term.variable.type === "Free") {
-			return NF.Constructors.Var({ type: "Free", name: term.variable.name });
-		}
-	}
-	return NF.evaluate(ctx, term);
-};
-
 export const elaborate = (mod: Src.Module, ctx: EB.Context): Omit<Interface, "imports"> => {
 	const maybeExport =
 		(name: string) =>
@@ -147,7 +134,7 @@ export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.C
 	const infer = EB.Stmt.infer(stmt);
 	const [{ result }] = infer(ctx);
 	type Implicit = EB.Context["implicits"][0];
-	return E.Functor.map(result, ([t, ty]) => update(ctx, "implicits", A.append<Implicit>([termToNF(ctx, t.value), ty])));
+	return E.Functor.map(result, ([t, ty]) => update(ctx, "implicits", A.append<Implicit>([NF.evaluate(ctx, t.value, { noInlineBindings: true }), ty])));
 };
 
 export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context]>] => {

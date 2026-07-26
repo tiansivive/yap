@@ -163,16 +163,7 @@ const Elaborate = {
 		pipe(
 			safe(() => EB.Stmt.infer(stmt)(ctx)),
 			E.chain(([{ result }]) => flatten(result)),
-			E.map(([t, ty]) => {
-				const v = t.value;
-				const nfValue: NF.Value =
-					v.type === "Var" && v.variable.type === "Bound"
-						? NF.Constructors.Var({ type: "Bound", lvl: ctx.env.length - 1 - v.variable.index })
-						: v.type === "Var" && v.variable.type === "Free"
-							? NF.Constructors.Var({ type: "Free", name: v.variable.name })
-							: NF.evaluate(ctx, v);
-				return update(ctx, "implicits", A.append<EB.Context["implicits"][number]>([nfValue, ty]));
-			}),
+			E.map(([t, ty]) => update(ctx, "implicits", A.append<EB.Context["implicits"][number]>([NF.evaluate(ctx, t.value, { noInlineBindings: true }), ty]))),
 		),
 
 	letdec: (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): E.Either<string, Elaborated> =>
