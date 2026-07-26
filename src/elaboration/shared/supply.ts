@@ -15,7 +15,8 @@ export const freshMeta = function* (lvl: number, ann: EB.NF.Value) {
 	counts.meta++;
 
 	const m: EB.Meta = { type: "Meta", val: counts.meta, lvl };
-	yield* V2.tell("meta", { meta: m, ann });
+	const ctx = yield* V2.ask();
+	yield* V2.tell("meta", { meta: m, ann: EB.NF.quote(ctx, lvl, ann) });
 
 	return m;
 };

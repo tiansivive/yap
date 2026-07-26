@@ -29,7 +29,7 @@ const doc = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; prin
 							return NF.doc(ctx.zonker[val], ctx, opts);
 						}
 						const { ann } = ctx.metas[val];
-						return options.verbose ? ["(?", `${val}`, " :: ", NF.doc(ann, ctx, opts), ")"] : `?${val}`;
+						return options.verbose ? ["(?", `${val}`, " :: ", go(ann), ")"] : `?${val}`;
 					})
 					.otherwise(() => "Var _display: Not implemented"),
 			)

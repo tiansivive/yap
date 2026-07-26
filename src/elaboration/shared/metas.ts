@@ -126,7 +126,7 @@ export const Annotations = {
 				.otherwise((): Acc => {
 					const anns = match(ctx.metas[m.val])
 						.with(P.nullish, (): readonly MetaNF[] => [])
-						.otherwise(entry => collectMetasNF(entry.ann, ctx.zonker));
+						.otherwise(entry => collectMetasEB(entry.ann, ctx.zonker));
 					const [seen2, out2] = anns.reduce<Acc>(go, [new Set([...seen, m.val]), out]);
 					return [seen2, [...out2, m]];
 				});

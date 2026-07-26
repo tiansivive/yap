@@ -33,7 +33,7 @@ export type Context = {
 	record: Record<string, { term?: EB.Term; value?: NF.Value }>;
 
 	zonker: Sub.Subst;
-	metas: Record<number, { meta: EB.Meta; ann: NF.Value }>;
+	metas: Record<number, { meta: EB.Meta; ann: EB.Term }>;
 	imports: Record<string, EB.AST>;
 	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
 	trace: P.Stack<Provenance>;

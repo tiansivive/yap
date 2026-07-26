@@ -224,7 +224,7 @@ export const run = (source: string, opts: Options): Result => {
 						const metaStr = metaKeys
 							.map(k => {
 								const m = ctx.metas[Number(k)];
-								return `  ?${k} : ${EB.NF.display(m.ann, displayCtx, db)}`;
+								return `  ?${k} : ${EB.Display.Term(m.ann, displayCtx, db)}`;
 							})
 							.join("\n");
 						// eslint-disable-next-line no-restricted-syntax

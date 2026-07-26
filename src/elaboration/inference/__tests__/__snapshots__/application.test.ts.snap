@@ -11,7 +11,7 @@ exports[`inference: application > implicit insertion > inserts implicit argument
     "term": "((λ(x: (?1 :: Type)) =>
   (λ(y: String) -> y : Π(y: String) -> String) : Π(x: (?1 :: Type)) =>
   Π(y: String) -> String))
-  @(?2 :: ?1)
+  @(?2 :: (?1 :: Type))
   "hello"",
     "type": "String",
   },
@@ -49,8 +49,8 @@ exports[`inference: application > implicit insertion > inserts multiple implicit
   ((λ(b: (?2 :: Type)) =>
     (λ(c: String) -> c : Π(c: String) -> String) : Π(b: (?2 :: Type)) =>
     Π(c: String) -> String))
-    @(?3 :: ?2) : Π(a: (?1 :: Type)) => Π(c: String) -> String))
-  @(?4 :: ?1)
+    @(?3 :: (?2 :: Type)) : Π(a: (?1 :: Type)) => Π(c: String) -> String))
+  @(?4 :: (?1 :: Type))
   "hello"",
     "type": "String",
   },

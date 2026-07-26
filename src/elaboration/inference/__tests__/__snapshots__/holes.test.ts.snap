@@ -4,7 +4,7 @@ exports[`inference: hole > _ 1`] = `
 {
   "displays": {
     "constraints": [],
-    "term": "(?2 :: ?1)",
+    "term": "(?2 :: (?1 :: Type))",
     "type": "?2",
   },
 }

@@ -85,7 +85,8 @@ export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutio
 		//const name = `${String.fromCharCode(charCode + i)}`;
 		const boundLvl = i + ctx.env.length; // outermost binder is the first one after the existing env
 		const { ann } = ctx.metas[m.val];
-		const withBinder = EB.bind(acc, { type: "Pi", variable: getName(ann) }, ann, "inserted");
+		const annNF = NF.evaluate(acc, ann);
+		const withBinder = EB.bind(acc, { type: "Pi", variable: getName(annNF) }, annNF, "inserted");
 		return set(withBinder, ["zonker", `${m.val}`] as const, NF.Constructors.Var({ type: "Bound", lvl: boundLvl }));
 	}, ctx);
 
@@ -98,9 +99,9 @@ export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutio
 		const trimmed = update(extendedCtx, "env", e => e.slice(i)); // trim the already introduced binders from the env for quoting
 		const term = NF.quote(trimmed, ctx.env.length + ms.length - i, body);
 		const { ann } = ctx.metas[m.val];
-
 		const closureCtx = update(trimmed, "env", e => e.slice(1)); // drop the binder we are introducing now so it doesn't get captured in the closure
-		return NF.Constructors.Pi(variable, "Implicit", ann, NF.Constructors.Closure(closureCtx, term));
+		const annNF = NF.evaluate(closureCtx, ann);
+		return NF.Constructors.Pi(variable, "Implicit", annNF, NF.Constructors.Closure(closureCtx, term));
 	}, ty);
 
 	// Return the context with updated zonker
@@ -131,7 +132,8 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 			}
 
 			const { ann } = ctx.metas[v.variable.val];
-			return match(ann)
+			const annNF = NF.evaluate(ctx, ann);
+			return match(annNF)
 				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => NF.Constructors.Row({ type: "empty" }))
 				.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => NF.Constructors.Lit({ type: "Atom", value: "Any" }))
 				.otherwise(() => NF.Constructors.Var(v.variable));
