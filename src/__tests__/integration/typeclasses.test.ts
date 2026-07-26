@@ -31,6 +31,23 @@ let same = areEqual 10 10;
 		expect(snap(result)).toMatchSnapshot();
 	});
 
+	test("using inside block expression", () => {
+		const result = runScript(`
+foreign stringify: (a: Type) => a -> String;
+let Show: Type -> Type = \\t -> { show: t -> String };
+let Eq: Type -> Type = \\t -> { eq: t -> t -> Bool };
+let ShowNum: Show Num = { show: \\n -> stringify n };
+let EqNum: Eq Num = { eq: \\x y -> x == y };
+let areEqual: (t: Type) => (eq: Eq t) => (x: t) -> (y: t) -> Bool = \\x y -> eq.eq x y;
+let result = {
+  using EqNum;
+  let same = areEqual 10 10;
+  return same;
+};
+		`);
+		expect(snap(result)).toMatchSnapshot();
+	});
+
 	test("multiple constraints", () => {
 		const result = runScript(`
 foreign stringify: (a: Type) => a -> String;
