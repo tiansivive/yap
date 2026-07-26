@@ -126,7 +126,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, noInlineBindings: boolean)
 		})
 		.with(
 			{ type: "Var", variable: { type: "Free" } },
-			() => noInlineBindings,
+			_ => noInlineBindings,
 			({ variable }) => {
 				globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.Var(variable)));
 			},
@@ -176,7 +176,7 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, noInlineBindings: boolean)
 		})
 		.with(
 			{ type: "Var", variable: { type: "Bound" } },
-			() => noInlineBindings,
+			_ => noInlineBindings,
 			({ variable }) => {
 				const lvl = ctx.env.length - 1 - variable.index;
 				globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.Var({ type: "Bound", lvl })));
