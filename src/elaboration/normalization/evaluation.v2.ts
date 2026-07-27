@@ -279,8 +279,8 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, noInlineBindings: boolean)
 					reduceAndPushStack(funcVal, argVal, icit);
 				},
 			});
-			globalWorkStack.push({ type: "Eval", ctx, term: arg });
-			globalWorkStack.push({ type: "Eval", ctx, term: func });
+			globalWorkStack.push({ type: "Eval", ctx, term: arg, noInlineBindings });
+			globalWorkStack.push({ type: "Eval", ctx, term: func, noInlineBindings });
 		})
 		.with({ type: "Row" }, ({ row }) => {
 			const extractLabels = (r: EB.Row): { [key: string]: EB.Term } => {

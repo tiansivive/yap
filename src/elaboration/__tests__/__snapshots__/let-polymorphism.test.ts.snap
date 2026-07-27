@@ -673,6 +673,30 @@ exports[`Let-polymorphism > nested let bindings > shadowing polymorphic lets 1`]
 }
 `;
 
+exports[`Let-polymorphism > polymorphism on block scope > polymorphic return value on non resolved implicit 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Num ~~ Num",
+      "?1 @ Num",
+      "Num ~~ Num",
+    ],
+    "term": "{
+  let f
+    : Π(i: Num) => (closure: Π(t1: Num) -> Num -| Γ: i)
+    = λ(i: Num) => λ(x: Num) -> x;
+  return f @(?1 :: Num) 1;
+}",
+    "type": "Num",
+  },
+}
+`;
+
 exports[`Let-polymorphism > recursive bindings > recursive function with polymorphic usage 1`] = `
 {
   "displays": {

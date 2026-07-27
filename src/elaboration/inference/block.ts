@@ -12,6 +12,7 @@ import * as Src from "@yap/src/index";
 import * as Lit from "@yap/shared/literals";
 
 import { update } from "@yap/utils";
+import { compose } from "../unification/substitution";
 
 type Block = Extract<Src.Term, { type: "block" }>;
 
@@ -81,7 +82,21 @@ const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]) 
 	}
 
 	const [t, ty, rus] = yield* EB.infer.gen(ret);
-	return [EB.Constructors.Block(results, t), ty, rus] satisfies EB.AST;
+
+	const ctx = yield* V2.ask();
+	const { constraints, metas } = yield* V2.listen();
+	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
+
+	const { zonker, resolutions } = yield* V2.local(_ => withMetas, EB.solve(constraints));
+	const { metas: postSolveMetas } = yield* V2.listen();
+
+	const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postSolveMetas }));
+	const zonked = update(withAllMetas, "zonker", z => compose(zonker, z));
+	const value = NF.evaluate(zonked, t, { noInlineBindings: true });
+	const generalized = NF.abstract(NF.force(zonked, ty), value, zonked, resolutions);
+	yield* V2.tell("zonker", generalized.zonker);
+
+	return [EB.Constructors.Block(results, generalized.term), generalized.type, rus] satisfies EB.AST;
 };
 
 infer.gen = F.flow(infer, V2.pure);
