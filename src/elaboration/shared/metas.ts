@@ -9,6 +9,64 @@ import * as F from "fp-ts/function";
 
 import { Subst } from "../unification/substitution";
 
+/**
+ * The authoritative metacontext.  A meta's syntax, annotation, and eventual
+ * semantic solution move together so consumers cannot accidentally observe
+ * different versions of those three facts.
+ */
+export type Entry = {
+	meta: EB.Meta;
+	annotation: NF.Value;
+	solution?: NF.Value;
+};
+
+export type Registry = Readonly<Record<number, Entry>>;
+
+export const empty: Registry = {};
+
+export const lookup = (metas: Registry, id: number): Entry | undefined => metas[id];
+
+export const solution = (metas: Registry, id: number): NF.Value | undefined => metas[id]?.solution;
+
+export const solutions = (metas: Registry): Sub.Subst =>
+	Sub.from(Object.fromEntries(Object.values(metas).flatMap(entry => (entry.solution ? [[entry.meta.val, entry.solution]] : []))));
+
+export const withSolutions = (metas: Registry, subst: Sub.Subst): Registry =>
+	Object.entries(subst).reduce((entries, [id, value]) => solve(entries, Number(id), value), metas);
+
+export const register = (metas: Registry, entry: Entry): Registry => ({ ...metas, [entry.meta.val]: entry });
+
+export const solve = (metas: Registry, id: number, value: NF.Value): Registry => {
+	const entry = metas[id];
+	if (!entry) {
+		throw new Error(`Cannot solve unregistered meta ?${id}`);
+	}
+	return { ...metas, [id]: { ...entry, solution: value } };
+};
+
+/** Keep only facts every replay branch agrees on; candidate-local solutions stay local. */
+export const merge = (base: Registry, branches: readonly Registry[]): Registry => {
+	if (branches.length === 0) {
+		return base;
+	}
+	return Object.values(base).reduce<Registry>((merged, entry) => {
+		const solutions = branches.map(branch => branch[entry.meta.val]?.solution);
+		const agreed = solutions.every(value => isEqual(value, solutions[0]));
+		return agreed && solutions[0] ? solve(merged, entry.meta.val, solutions[0]) : merged;
+	}, base);
+};
+
+export const fresh = function* (lvl: number, annotation: NF.Value): V2.Gelaboration<EB.Meta> {
+	const meta = yield* V2.gets(st => st.fresh.meta + 1);
+	const value: EB.Meta = { type: "Meta", val: meta, lvl };
+	yield* V2.modify(st => ({
+		...st,
+		fresh: { ...st.fresh, meta },
+		metas: register(st.metas, { meta: value, annotation }),
+	}));
+	return value;
+};
+
 type MetaNF = Extract<NF.Variable, { type: "Meta" }>;
 
 export const collectMetasNF = (val: NF.Value, zonker: Subst): MetaNF[] => {
