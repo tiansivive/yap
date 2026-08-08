@@ -1,297 +1,199 @@
-/* eslint-disable no-restricted-syntax */
+/* eslint-disable @typescript-eslint/consistent-type-assertions */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-restricted-syntax */
 
 // ============================================================================
-// Effect system
+// Actions are the primitive. Effects are however you choose to group them.
 // ============================================================================
 
-export type Eff<Op, A> = Generator<Op, A, unknown>;
+/*
+ * An Action is one operation: a tag, a payload, the type a handler must answer
+ * it with, and which control it exercises. Yielding one puts it in the
+ * program's row, so a row is inferred from what a program actually does rather
+ * than declared up front:
+ *
+ *   const ask = function* () { return yield* ctl.resume<Ask>("Reader.ask", undefined) };
+ *
+ *   function* program() {
+ *     const environment = yield* ask();
+ *     yield* tell(environment.host);
+ *     return environment.verbose;
+ *   }
+ *   //  ^? Generator<Ask | Tell, boolean, unknown>
+ *
+ * run then refuses a handler list that does not cover the row, and answers with
+ * the program's value followed by each handler's output.
+ *
+ * Nothing here groups actions. A Reader is a record you write by hand, and if
+ * it hands back a callback for its handlers then its handlers are swappable.
+ *
+ * An action's control says where its clause's answer goes. A resume action feeds
+ * it back to the program; an abort action makes it the run's answer and the loop
+ * breaks. Only a row containing an abort action widens the result, and it widens
+ * by that action's own answer type, so what a program can fail with shows up in
+ * its type and a program that cannot fail does not have to say so.
+ */
 
-export function run<const Effects extends readonly Effect<any, any, any>[], Op extends OpsOf<Effects[number]>, A>(
-	program: () => Eff<Op, A>,
-	effects: Effects,
-): [A, Outputs<Effects>];
+export type Control = "resume" | "abort";
 
-export function run<const Effects extends readonly Effect<any, any, any>[], Op extends OpsOf<Effects[number]>, A, R>(
-	program: () => Eff<Op, A>,
-	effects: Effects,
-	answer: Answer<ErrorsOf<Effects[number]>, A, Outputs<Effects>, R>,
-): R;
+export type Action<Tag extends string, Payload, A, C extends Control = "resume"> = {
+	readonly tag: Tag;
+	readonly payload: Payload;
+	readonly control: C;
 
-export function run(
-	program: () => Eff<Operation, unknown>,
-	effects: readonly Effect<string, Handlers, unknown>[],
-	answer: Answer<unknown, unknown, unknown[], unknown> = {
-		[RESUME]: (value, outputs) => [value, outputs],
-		[ABORT]: (error): never => {
-			if (error instanceof Error) {
-				throw error;
-			}
+	/*
+	 * A is what this action's clause answers with. A resume clause answers the
+	 * program, so that is what yield* gives back; an abort clause answers the run
+	 * instead, so the program gets never and a call to it does not return.
+	 */
+	[Symbol.iterator](): Generator<Action<Tag, Payload, A, C>, C extends "abort" ? never : A, unknown>;
+};
 
-			throw new Error(String(error));
+export type AnyAction = Action<string, any, any, Control>;
+
+type Answer<Act> = Act extends Action<string, any, infer A, Control> ? A : never;
+
+/** The actions in a row that break the loop rather than feeding it. */
+type Failing<Row extends AnyAction> = Extract<Row, { control: "abort" }>;
+
+/** The error an aborted run answered with. */
+export const ABORT: unique symbol = Symbol("abort");
+
+export type Aborted<E> = { readonly [ABORT]: E };
+
+/* Extract rather than E | Aborted<E>, which would need one E to be both. */
+export const failed = <A>(answer: A): answer is Extract<A, Aborted<unknown>> => typeof answer === "object" && answer !== null && ABORT in answer;
+
+/** A computation yielding the actions in Row and answering with an A. */
+export type Eff<Row extends AnyAction, A> = Generator<Row, A, unknown>;
+
+const build = (tag: string, payload: unknown, control: Control) => {
+	const self = {
+		tag,
+		payload,
+		control,
+
+		*[Symbol.iterator](): Generator<unknown, unknown, unknown> {
+			return yield self;
 		},
-	},
-) {
-	const drive = (computation: Eff<Operation, unknown>, effects: Effects): Outcome<unknown, unknown> => {
-		let input: unknown;
+	};
 
-		while (true) {
-			const step = computation.next(input);
+	return self;
+};
 
-			if (step.done) {
-				return resume(step.value);
-			}
+/* Action builders. Yieldable, so one reads as `yield* ctl.resume(…)`. */
+export const ctl = {
+	/** Its clause answers the program, which carries on. */
+	resume: <Act extends Action<string, any, any, "resume">>(tag: Act["tag"], payload: Act["payload"]): Act => build(tag, payload, "resume") as unknown as Act,
 
-			const operation = step.value;
+	/** Its clause answers the whole run, and the loop breaks. */
+	abort: <Act extends Action<string, any, any, "abort">>(tag: Act["tag"], payload: Act["payload"]): Act => build(tag, payload, "abort") as unknown as Act,
+};
 
-			const effect = effects.find(effect => effect[EFFECT].identity === operation.effect);
-			const handler = effect?.[EFFECT].handlers[operation.action];
-
-			if (!handler) {
-				throw new Error(`Unhandled effect operation: ${operation.action}`);
-			}
-
-			// Operation arguments cross from an erased runtime operation into its handler.
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-			const control = handler.call(effect, ...operation.args);
-
-			if (ABORT in control) {
-				return control;
-			}
-
-			if (SCOPED in control) {
-				const scoped = control[SCOPED];
-				const nested = drive(scoped.action(), scoped.swap(effects));
-
-				if (ABORT in nested) {
-					return nested;
-				}
-
-				input = nested[RESUME];
-				continue;
-			}
-
-			input = control[RESUME];
+/**
+ * Answers some part of a row, and contributes one output to the result.
+ *
+ * A clause takes its action's payload and answers with what that action's type
+ * promised. Handlers are matched last-to-first, so a later one shadows an
+ * earlier one for the tags they share.
+ */
+export type Handler<Row extends AnyAction, Output> = {
+	readonly clauses: {
+		[Tag in Row["tag"]]: Extract<Row, { tag: Tag }> extends {
+			readonly control: "abort";
 		}
+			? (payload: Extract<Row, { tag: Tag }>["payload"]) => unknown
+			: (payload: Extract<Row, { tag: Tag }>["payload"]) => Answer<Extract<Row, { tag: Tag }>>;
 	};
+	readonly output: () => Output;
+};
 
-	const control = drive(program(), effects);
+/*
+ * The actions an effect offers, read off the row its handlers cover.
+ *
+ * Takes one effect or a tuple of them, so a row is named once and reused:
+ *
+ *   const Env = reader<Context>();
+ *   const Log = writer(constraints);
+ *   const Fail = except<Cause>();
+ *
+ *   type Elaboration<A> = Eff<Actions<[typeof Env, typeof Log, typeof Fail]>, A>;
+ */
+export type Actions<Effects> = Effects extends readonly unknown[] ? { [I in keyof Effects]: Offered<Effects[I]> }[number] : Offered<Effects>;
 
-	if (ABORT in control) {
-		return answer[ABORT](control[ABORT]);
-	}
-
-	return answer[RESUME](
-		control[RESUME],
-		effects.map(effect => effect.finalize()),
-	);
+type Offered<Effect> = Effect extends {
+	handlers: (...args: any[]) => Handler<infer Row, any>;
 }
-
-// ============================================================================
-// Effect builder
-// ============================================================================
-
-export function defineEffect<const Name extends string, const H extends Handlers>(name: Name, handlers: H): Effect<Name, H, undefined>;
-
-export function defineEffect<const Name extends string, const H extends Handlers, Output>(
-	name: Name,
-	handlers: H,
-	finalize: () => Output,
-): Effect<Name, H, Output>;
-
-export function defineEffect(name: string, handlers: Handlers, finalize: () => unknown = () => undefined): Effect<string, Handlers, unknown> {
-	const actions: Record<string, (...args: any[]) => Eff<any, any>> = {};
-
-	for (const action in handlers) {
-		actions[action] = (...args: unknown[]): Eff<Operation, unknown> =>
-			(function* (): Eff<Operation, unknown> {
-				return yield {
-					effect: actions,
-					action,
-					args,
-				};
-			})();
-	}
-
-	Object.defineProperty(actions, EFFECT, {
-		value: {
-			name,
-			identity: actions,
-			handlers,
-		},
-	});
-	Object.defineProperty(actions, "finalize", {
-		value: finalize,
-	});
-
-	// Dynamic handler keys cannot be correlated with H's statically known keys.
-	// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-	return actions as Effect<string, Handlers, unknown>;
-}
-
-export function override<Original extends Effect<string, Handlers, unknown>, Replacement extends Effect<string, Handlers, unknown>>(
-	original: Original,
-	replacement: Replacement,
-): Replacement {
-	const metadata = replacement[EFFECT];
-
-	// A scoped replacement handles operations already created by the original.
-	// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-	return Object.create(replacement, {
-		[EFFECT]: {
-			value: {
-				...metadata,
-				identity: original[EFFECT].identity,
-			},
-		},
-	}) as Replacement;
-}
-
-// ============================================================================
-// Effect types
-// ============================================================================
-
-export const EFFECT = Symbol("effect");
-
-export type Effect<Name extends string, H extends Handlers, Output> = Actions<Name, H> & {
-	readonly [EFFECT]: {
-		readonly name: Name;
-		readonly identity: object;
-		readonly handlers: H;
-	};
-	readonly finalize: () => Output;
-};
-
-type Outputs<Effects extends readonly Effect<any, any, any>[]> = {
-	[K in keyof Effects]: Effects[K] extends Effect<any, any, infer Output> ? Output : never;
-};
-
-export type Handlers = Record<string, Handler>;
-export type Handler = (...args: any[]) => Control<any, any>;
-
-type Effects = readonly Effect<string, Handlers, unknown>[];
-
-type Actions<Name extends string, D extends Handlers> = {
-	[K in keyof D & string]: (...args: Parameters<D[K]>) => Eff<OperationWithPhantoms<Name, K, D[K]>, ValueOf<ReturnType<D[K]>>>;
-};
-
-type OperationWithPhantoms<Name extends string, Action extends string, F extends Handler> = {
-	readonly effect: object;
-	readonly __effect?: Name;
-	readonly action: Action;
-	readonly args: Parameters<F>;
-	readonly __resume?: ValueOf<ReturnType<F>>;
-	readonly __abort?: ErrorOf<ReturnType<F>>;
-};
-
-export type Operation = Pick<OperationWithPhantoms<string, string, Handler>, "effect" | "action" | "args">;
-
-type ValueOf<C> = C extends Control<any, infer A> ? A : never;
-
-// ============================================================================
-// Control
-// ============================================================================
-
-export type Control<E, A> = Resume<A> | Abort<E> | Scoped<A>;
-
-type Outcome<E, A> = Resume<A> | Abort<E>;
-
-export type Resume<A> = {
-	readonly [RESUME]: A;
-};
-
-export type Abort<E> = {
-	readonly [ABORT]: E;
-};
-
-export type Scoped<A> = {
-	readonly [SCOPED]: {
-		readonly action: () => Eff<Operation, A>;
-		readonly swap: (effects: Effects) => Effects;
-	};
-};
-
-export const resume = <A>(value: A): Resume<A> => ({
-	[RESUME]: value,
-});
-
-export const abort = <E>(error: E): Abort<E> => ({
-	[ABORT]: error,
-});
-
-export const scoped = <A>(action: () => Eff<Operation, A>, swap: (effects: Effects) => Effects): Scoped<A> => ({
-	[SCOPED]: { action, swap },
-});
-
-export const RESUME = Symbol("resume");
-export const ABORT = Symbol("abort");
-export const SCOPED = Symbol("scoped");
-
-// ============================================================================
-// Answer interpretation
-// ============================================================================
-
-export type Answer<E, A, Outputs, R> = {
-	readonly [RESUME]: (value: A, outputs: Outputs) => R;
-	readonly [ABORT]: (error: E) => R;
-};
-
-// Default:
-//
-//   RESUME → return the program value
-//   ABORT  → throw a JavaScript exception
-
-// const Reader = <R,>(env: R) => defineEffect("Reader", {
-//   ask: () => resume(env),
-// });
-
-// const reader = Reader({ foo: 1})
-// const { ask } = reader;
-
-// const errors = defineEffect("Errors", {
-//   fail: (message: string) => abort(new Error(message)),
-// });
-// function* program(){
-//   const environment = yield* ask();
-
-//   if (!environment) {
-//     return yield* errors.fail("Missing environment");
-//   }
-
-//   return environment.foo;
-// }
-
-// const _errors2 = defineEffect("Errors", {
-//   fail: (message: string) => {
-//     console.log("error", message);
-//     return abort(message);
-//   }
-// });
-
-// run(program, [reader, errors], {
-//   [ABORT]: (error) => {
-//     console.log("Caught error:", error);
-//     return -1;
-//   },
-//   [RESUME]: (value) => {
-//     console.log("Program completed with value:", value);
-//     return value;
-//   }
-// })
-
-// ============================================================================
-// Type extraction
-// ============================================================================
-
-export type OpsOf<E> = E extends {
-	readonly [EFFECT]: {
-		readonly name: infer Name extends string;
-		readonly handlers: infer H extends Handlers;
-	};
-}
-	? { [K in keyof H & string]: OperationWithPhantoms<Name, K, H[K]> }[keyof H & string]
+	? Row
 	: never;
 
-type ErrorsOf<Eff extends Effect<any, any, any>> = Eff extends Effect<any, infer H, any> ? ErrorOf<ReturnType<H[keyof H & string]>> : TypeError;
+type Covered<Handlers extends readonly unknown[]> = {
+	[I in keyof Handlers]: Handlers[I] extends Handler<infer Row, any> ? Row : never;
+}[number];
 
-type ErrorOf<C> = C extends Abort<infer E> ? E : never;
+type Outputs<Handlers extends readonly unknown[]> = {
+	[I in keyof Handlers]: Handlers[I] extends Handler<any, infer Output> ? Output : never;
+};
+
+/*
+ * [Row] extends [Covered] rather than Row extends Covered: a bare union in a
+ * conditional distributes, which would let any single covered action satisfy
+ * the whole row.
+ */
+export function run<Row extends AnyAction, A, const Handlers extends readonly Handler<any, any>[]>(
+	program: () => Eff<Row, A>,
+	handlers: Handlers & ([Row] extends [Covered<Handlers>] ? unknown : { readonly missing: Exclude<Row["tag"], Covered<Handlers>["tag"]> }),
+): readonly [[Failing<Row>] extends [never] ? A : A | Aborted<Answer<Failing<Row>>>, ...Outputs<Handlers>] {
+	type Result = readonly [[Failing<Row>] extends [never] ? A : A | Aborted<Answer<Failing<Row>>>, ...Outputs<Handlers>];
+
+	/* One cast at the boundary; the interpreter has no use for the precise types. */
+	type Erased = {
+		readonly clauses: Readonly<Record<string, (payload: unknown) => unknown>>;
+		readonly output: () => unknown;
+	};
+
+	const erased = handlers as unknown as readonly Erased[];
+	const clauses = new Map<string, (payload: unknown) => unknown>();
+
+	for (const handler of erased) {
+		for (const tag of Object.keys(handler.clauses)) {
+			const clause = handler.clauses[tag];
+
+			if (clause) {
+				clauses.set(tag, clause);
+			}
+		}
+	}
+
+	const computation = program();
+	let input: unknown;
+	let started = false;
+
+	while (true) {
+		const step = started ? computation.next(input) : computation.next();
+		started = true;
+
+		const outputs = (): unknown[] => erased.map(handler => handler.output());
+
+		if (step.done) {
+			return [step.value, ...outputs()] as unknown as Result;
+		}
+
+		const clause = clauses.get(step.value.tag);
+
+		if (!clause) {
+			throw new Error(`No handler for ${step.value.tag}`);
+		}
+
+		const answered = clause(step.value.payload);
+
+		/* An abort clause answers for the run, so outputs still come back with it. */
+		if (step.value.control === "abort") {
+			computation.return(undefined as unknown as A);
+
+			return [{ [ABORT]: answered }, ...outputs()] as unknown as Result;
+		}
+
+		input = answered;
+	}
+}
