@@ -4,6 +4,7 @@ import * as EB from "@yap/elaboration";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as V2 from "@yap/elaboration/shared/monad.v2";
+import * as M from "@yap/elaboration/shared/effects";
 
 import * as Src from "@yap/src/index";
 import * as P from "@yap/shared/provenance";
@@ -43,18 +44,18 @@ export type Zonker = Context["zonker"];
 
 export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
-export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.AST> => {
+export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<EB.AST> => {
 	const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
 	if (variable.type === "label") {
 		const type = ctx.labels[variable.value];
 		if (type) {
 			const tm = EB.Constructors.Var({ type: "Label", name: variable.value });
-			return V2.of<EB.AST>([tm, type, zeros]);
+			return M.of<EB.AST>([tm, type, zeros]);
 		}
 		throw new Error(`Label not found: ${variable.value}`);
 	}
 
-	const _lookup = (i: number, variable: Src.Variable, types: Array<Context["env"][number]["type"]>): V2.Elaboration<EB.AST> => {
+	const _lookup = (i: number, variable: Src.Variable, types: Array<Context["env"][number]["type"]>): M.Elaboration<EB.AST> => {
 		// free vars can be shadowed by bound vars, so only if no bound vars are found do we check for free vars
 		// QUESTION: should we disallow this shadowing?
 		if (types.length === 0) {
@@ -65,7 +66,7 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.
 				const tm = match(storedTm)
 					.with({ type: "Var", variable: { type: "Foreign" } }, t => EB.Constructors.Var({ type: "Foreign", name: t.variable.name }))
 					.otherwise(() => EB.Constructors.Var({ type: "Free", name: variable.value }));
-				return V2.of<EB.AST>([tm, nf, Q.add(us, zeros)]);
+				return M.of<EB.AST>([tm, nf, Q.add(us, zeros)]);
 			}
 
 			throw new Error(`Variable not found: ${variable.value}`);
@@ -76,10 +77,7 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.
 		// do we need to check origin here? I don't think it makes a difference whether it's an inserted (implicit) or source (explicit) binder
 		if (binder.variable === variable.value) {
 			const tm = EB.Constructors.Var({ type: "Bound", index: i });
-			return V2.Do(function* () {
-				yield* V2.tell("binder", binder);
-				return [tm, nf, zeros] satisfies EB.AST;
-			});
+			return M.of<EB.AST>([tm, nf, zeros]);
 		}
 
 		return _lookup(i + 1, variable, rest);
@@ -91,7 +89,6 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.
 		ctx.env.map(v => v.type),
 	);
 };
-lookup.gen = F.flow(lookup, V2.pure);
 
 export const resolveImplicit = (nf: NF.Value): V2.Elaboration<[EB.Term, Sub.Subst] | void> =>
 	V2.Do(function* () {

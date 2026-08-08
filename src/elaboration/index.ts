@@ -18,5 +18,6 @@ export * as Icit from "./implicits";
 export * as Mod from "./module";
 
 export * as V2 from "./shared/monad.v2";
+export * as M from "./shared/effects";
 
 export * from "./modalities";

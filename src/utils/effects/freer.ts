@@ -67,6 +67,22 @@ export const failed = <A>(answer: A): answer is Extract<A, Aborted<unknown>> => 
 /** A computation yielding the actions in Row and answering with an A. */
 export type Eff<Row extends AnyAction, A> = Generator<Row, A, unknown>;
 
+/** A computation that yields nothing and answers with a. */
+export function* of<A>(a: A): Eff<never, A> {
+	return a;
+}
+
+/** Runs f over items in order, answering with every answer. */
+export function* traverse<Row extends AnyAction, A, B>(items: readonly A[], f: (item: A, index: number) => Eff<Row, B>): Eff<Row, B[]> {
+	const collected: B[] = [];
+
+	for (const [index, item] of items.entries()) {
+		collected.push(yield* f(item, index));
+	}
+
+	return collected;
+}
+
 const build = (tag: string, payload: unknown, control: Control) => {
 	const self = {
 		tag,

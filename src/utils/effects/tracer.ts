@@ -37,10 +37,10 @@ export function tracer<P>() {
 	const many = (provenance: P | readonly P[]): provenance is readonly P[] => Array.isArray(provenance);
 
 	/** Run program under provenance, and leave the stack as it was after. */
-	const track = function* <Row extends AnyAction, A>(provenance: P | readonly P[], program: Eff<Row, A>) {
+	const track = function* <Row extends AnyAction, A>(provenance: P | readonly P[], program: () => Eff<Row, A>) {
 		yield* ctl.resume<Push>("Trace.push", many(provenance) ? provenance : [provenance]);
 
-		const value = yield* program;
+		const value = yield* program();
 
 		yield* ctl.resume<Pop>("Trace.pop", undefined);
 

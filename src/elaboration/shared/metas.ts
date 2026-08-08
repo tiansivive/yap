@@ -7,7 +7,9 @@ import * as R from "@yap/shared/rows";
 import fp from "lodash/fp";
 import * as F from "fp-ts/function";
 
+import * as Sub from "../unification/substitution";
 import { Subst } from "../unification/substitution";
+import * as M from "./effects";
 
 /**
  * The authoritative metacontext.  A meta's syntax, annotation, and eventual
@@ -36,6 +38,10 @@ export const withSolutions = (metas: Registry, subst: Sub.Subst): Registry =>
 
 export const register = (metas: Registry, entry: Entry): Registry => ({ ...metas, [entry.meta.val]: entry });
 
+/** The registry in the shape ctx.metas still expects, until the context field retires. */
+export const asContext = (metas: Registry): EB.Context["metas"] =>
+	Object.values(metas).reduce<EB.Context["metas"]>((ms, { meta, annotation }) => ({ ...ms, [meta.val]: { meta, ann: annotation } }), {});
+
 export const solve = (metas: Registry, id: number, value: NF.Value): Registry => {
 	const entry = metas[id];
 	if (!entry) {
@@ -51,20 +57,18 @@ export const merge = (base: Registry, branches: readonly Registry[]): Registry =
 	}
 	return Object.values(base).reduce<Registry>((merged, entry) => {
 		const solutions = branches.map(branch => branch[entry.meta.val]?.solution);
-		const agreed = solutions.every(value => isEqual(value, solutions[0]));
+		const agreed = solutions.every(value => fp.isEqual(value, solutions[0]));
 		return agreed && solutions[0] ? solve(merged, entry.meta.val, solutions[0]) : merged;
 	}, base);
 };
 
-export const fresh = function* (lvl: number, annotation: NF.Value): V2.Gelaboration<EB.Meta> {
-	const meta = yield* V2.gets(st => st.fresh.meta + 1);
-	const value: EB.Meta = { type: "Meta", val: meta, lvl };
-	yield* V2.modify(st => ({
-		...st,
-		fresh: { ...st.fresh, meta },
-		metas: register(st.metas, { meta: value, annotation }),
-	}));
-	return value;
+export const fresh = function* (lvl: number, annotation: NF.Value): M.Elaboration<EB.Meta> {
+	const id = yield* M.supply.fresh("meta");
+	const meta: EB.Meta = { type: "Meta", val: id, lvl };
+
+	yield* M.st.modify(st => ({ ...st, registry: register(st.registry, { meta, annotation }) }));
+
+	return meta;
 };
 
 type MetaNF = Extract<NF.Variable, { type: "Meta" }>;

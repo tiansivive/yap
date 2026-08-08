@@ -1,5 +1,4 @@
-import * as EB from "@yap/elaboration";
-import * as V2 from "@yap/elaboration/shared/monad.v2";
+import * as Metas from "./metas";
 
 const counts = {
 	meta: 0,
@@ -11,14 +10,8 @@ export const resetSupply = (key: keyof typeof counts) => {
 	counts[key] = 0;
 };
 
-export const freshMeta = function* (lvl: number, ann: EB.NF.Value) {
-	counts.meta++;
-
-	const m: EB.Meta = { type: "Meta", val: counts.meta, lvl };
-	yield* V2.tell("meta", { meta: m, ann });
-
-	return m;
-};
+/** Mints from the supply effect and registers in the metacontext. */
+export const freshMeta = Metas.fresh;
 
 // export const freshSkolem = function* (ann: EB.NF.Value) {
 // 	counts.skolem++;

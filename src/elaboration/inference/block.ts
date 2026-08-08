@@ -1,7 +1,6 @@
-import * as F from "fp-ts/lib/function";
-
 import * as EB from "@yap/elaboration";
-import * as V2 from "@yap/elaboration/shared/monad.v2";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as NF from "@yap/elaboration/normalization";
@@ -13,65 +12,60 @@ import { update } from "@yap/utils";
 
 type Block = Extract<Src.Term, { type: "block" }>;
 
-export const infer = (block: Block) =>
-	V2.track(
-		{ tag: "src", type: "term", term: block, metadata: { action: "infer", description: "Block statements" } },
-		(() => {
-			const { statements, return: _ret } = block;
-			const recurse = (stmts: Src.Statement[], results: EB.Statement[]): V2.Elaboration<EB.AST> =>
-				V2.Do(function* () {
-					if (stmts.length === 0) {
-						return yield* inferReturn(block, results);
-					}
+export const infer = (block: Block): M.Elaboration<EB.AST> =>
+	M.tracer.track({ tag: "src", type: "term", term: block, metadata: { action: "infer", description: "Block statements" } }, () => {
+		const { statements } = block;
 
-					const [current, ...rest] = stmts;
-					const [stmt, _sty, sus] = yield* EB.Stmt.infer.gen(current);
+		const recurse = function* (stmts: Src.Statement[], results: EB.Statement[]): M.Elaboration<EB.AST> {
+			if (stmts.length === 0) {
+				return yield* inferReturn(block, results);
+			}
 
-					if (stmt.type !== "Let") {
-						return yield* V2.pure(recurse(rest, [...results, stmt]));
-					}
+			const [current, ...rest] = stmts;
+			const [stmt, _sty, sus] = yield* EB.Stmt.infer(current);
 
-					const [r, next] = yield* EB.Stmt.letdec(stmt);
-					yield* V2.tell("zonker", next.zonker);
+			if (stmt.type !== "Let") {
+				return yield* recurse(rest, [...results, stmt]);
+			}
 
-					return yield* V2.local(
-						_ => {
-							// First evaluate the current let body in a context extended with itself, allowing for recursion
-							// Then extend the context for the remaining statements with the evaluated let binding
-							const recursiveCtx = EB.bind(next, { type: "Let", variable: stmt.variable }, r.annotation);
-							const entry: EB.Context["env"][number] = {
-								nf: NF.evaluate(recursiveCtx, r.value),
-								type: [{ type: "Let", variable: stmt.variable }, "source", r.annotation],
-								name: { type: "Let", variable: stmt.variable },
-							};
-							return update(next, "env", env => [entry, ...env]);
-						},
-						V2.Do(function* () {
-							const [tm, ty, [_vu, ...rus]] = yield* V2.pure(recurse(rest, [...results, r]));
-							// yield* V2.tell("constraint", { type: "usage", expected: Q.Many, computed: vu });
-							// Remove the usage of the bound variable (same as the lambda rule)
-							// Multiply the usages of the let binder by the multiplicity of the new let binding (same as the application rule)
-							return [tm, ty, Q.add(rus, Q.multiply(Q.Many, sus))] satisfies EB.AST;
-						}),
-					);
-				});
+			const [r, next] = yield* EB.Stmt.letdec(stmt);
+			yield* M.st.modify(s => ({ ...s, registry: Metas.withSolutions(s.registry, next.zonker) }));
 
-			return recurse(statements, []);
-		})(),
-	);
+			return yield* M.reader.local(
+				_ => {
+					// First evaluate the current let body in a context extended with itself, allowing for recursion
+					// Then extend the context for the remaining statements with the evaluated let binding
+					const recursiveCtx = EB.bind(next, { type: "Let", variable: stmt.variable }, r.annotation);
+					const entry: EB.Context["env"][number] = {
+						nf: NF.evaluate(recursiveCtx, r.value),
+						type: [{ type: "Let", variable: stmt.variable }, "source", r.annotation],
+						name: { type: "Let", variable: stmt.variable },
+					};
+					return update(next, "env", env => [entry, ...env]);
+				},
+				(function* () {
+					const [tm, ty, [_vu, ...rus]] = yield* recurse(rest, [...results, r]);
+					// yield* M.constrain({ type: "usage", expected: Q.Many, computed: vu });
+					// Remove the usage of the bound variable (same as the lambda rule)
+					// Multiply the usages of the let binder by the multiplicity of the new let binding (same as the application rule)
+					return [tm, ty, Q.add(rus, Q.multiply(Q.Many, sus))] satisfies EB.AST;
+				})(),
+			);
+		};
 
-const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]) {
+		return recurse(statements, []);
+	});
+
+const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]): M.Elaboration<EB.AST> {
 	if (!ret) {
 		//TODO: add effect tracking
 		const ty = NF.Constructors.Lit(Lit.Atom("Unit"));
 		const unit = EB.Constructors.Lit(Lit.unit());
 		const tm = EB.Constructors.Block(results, unit);
-		const { env } = yield* V2.ask();
+		const { env } = yield* M.reader.ask();
 		return [tm, ty, Q.noUsage(env.length)] satisfies EB.AST;
 	}
 
-	const [t, ty, rus] = yield* EB.infer.gen(ret);
+	const [t, ty, rus] = yield* EB.infer(ret);
 	return [EB.Constructors.Block(results, t), ty, rus] satisfies EB.AST;
 };
-
-infer.gen = F.flow(infer, V2.pure);

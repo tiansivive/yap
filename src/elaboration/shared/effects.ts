@@ -7,7 +7,7 @@ import * as Metas from "@yap/elaboration/shared/metas";
 import { Monoid } from "fp-ts/lib/Monoid";
 import { Cause } from "./errors";
 
-export type Elaboration<A> = Eff.Eff<Eff.Actions<[typeof writer, typeof reader, typeof except, typeof st, typeof tracer]>, A>;
+export type Elaboration<A> = Eff.Eff<Eff.Actions<[typeof writer, typeof reader, typeof except, typeof st, typeof supply, typeof tracer]>, A>;
 
 type Collector = {
 	constraints: P.WithProvenance<EB.Constraint>[];
@@ -27,7 +27,26 @@ export type Err = Cause & { provenance?: P.Provenance[]; ctx: EB.Context };
 
 export const tracer = Eff.tracer<P.Provenance>();
 
-export const st = Eff.st<MutState>;
+export const st = Eff.st<MutState>();
+
+export const supply = Eff.supply<"meta" | "var" | "skolem">();
+
+export const of = Eff.of;
+export const traverse = Eff.traverse;
+
+/* TODO(provenance): stamp `trace` from the tracer once the main migration lands. */
+export const constrain = function* (constraints: EB.Constraint | EB.Constraint[]) {
+	const many = Array.isArray(constraints) ? constraints : [constraints];
+
+	yield* writer.tell({ constraints: many.map(c => ({ ...c, trace: [] })) });
+};
+
+/* TODO(provenance): attach the tracer's stack once the main migration lands. */
+export const fail = function* (cause: Cause) {
+	const ctx = yield* reader.ask();
+
+	return yield* except.raise({ ...cause, ctx });
+};
 
 export type MutState = {
 	delimitations: Array<Delimitation>;

@@ -1,7 +1,5 @@
-import * as F from "fp-ts/lib/function";
-
 import * as EB from "@yap/elaboration";
-import * as V2 from "@yap/elaboration/shared/monad.v2";
+import * as M from "@yap/elaboration/shared/effects";
 import * as NF from "@yap/elaboration/normalization";
 
 import { match, P } from "ts-pattern";
@@ -9,32 +7,29 @@ import { match, P } from "ts-pattern";
 import * as R from "@yap/shared/rows";
 import assert from "assert";
 
-export function insert(node: EB.AST): V2.Elaboration<EB.AST> {
+export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 	const [term, _ty, us] = node;
-	return V2.Do(function* () {
-		const ctx = yield* V2.ask();
-		const r = match(node)
-			.with([P._, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._], ([, pi]) =>
-				V2.Do(function* () {
-					const meta = yield* EB.freshMeta(ctx.env.length, pi.binder.annotation);
-					const mvar = EB.Constructors.Var(meta);
-					const vNF = NF.evaluate(ctx, mvar);
+	const ctx = yield* M.reader.ask();
 
-					const tm = EB.Constructors.App("Implicit", term, mvar);
-					const bodyNF = NF.apply(pi.binder, pi.closure, vNF);
+	const r = match(node)
+		.with([P._, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._], ([, pi]) =>
+			(function* () {
+				const meta = yield* EB.freshMeta(ctx.env.length, pi.binder.annotation);
+				const mvar = EB.Constructors.Var(meta);
+				const vNF = NF.evaluate(ctx, mvar);
 
-					yield* V2.tell("constraint", { type: "resolve", meta, value: pi.binder.annotation, implicits: ctx.implicits });
+				const tm = EB.Constructors.App("Implicit", term, mvar);
+				const bodyNF = NF.apply(pi.binder, pi.closure, vNF);
 
-					const r = yield* insert.gen([tm, bodyNF, us]);
-					return r;
-				}),
-			)
-			.otherwise(() => V2.of<EB.AST>(node));
-		return yield* V2.pure(r);
-	});
+				yield* M.constrain({ type: "resolve", meta, value: pi.binder.annotation, implicits: ctx.implicits });
+
+				return yield* insert([tm, bodyNF, us]);
+			})(),
+		)
+		.otherwise(() => M.of<EB.AST>(node));
+
+	return yield* r;
 }
-
-insert.gen = F.flow(insert, V2.pure);
 
 export const wrapLambda = (term: EB.Term, ty: NF.Value, ctx: EB.Context): EB.Term => {
 	return match(ty)

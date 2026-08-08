@@ -1,7 +1,6 @@
-import * as F from "fp-ts/lib/function";
-
 import * as EB from "@yap/elaboration";
-import * as V2 from "@yap/elaboration/shared/monad.v2";
+
+import * as M from "@yap/elaboration/shared/effects";
 
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
@@ -12,46 +11,41 @@ import { Implicitness } from "@yap/shared/implicitness";
 type Application = Extract<Src.Term, { type: "application" }>;
 
 export const infer = (node: Application) =>
-	V2.track(
-		{ tag: "src", type: "term", term: node, metadata: { action: "infer", description: "Application node" } },
-		V2.Do(function* () {
-			const ctx = yield* V2.ask();
+	M.tracer.track({ tag: "src", type: "term", term: node, metadata: { action: "infer", description: "Application node" } }, function* () {
+		const ctx = yield* M.reader.ask();
 
-			const [ft, fty, fus] = yield* V2.pure(inferFn(node));
-			const pi = yield* mkPi(NF.force(ctx, fty), node.icit);
-			const [at, _aus] = yield* V2.pure(checkArg(node, pi[0]));
+		const [ft, fty, fus] = yield* inferFn(node);
+		const pi = yield* mkPi(NF.force(ctx, fty), node.icit);
+		const [at, _aus] = yield* checkArg(node, pi[0]);
 
-			const [_nf, cls, x] = pi;
+		const [_nf, cls, x] = pi;
 
-			// TODO: Move this to the verification step
-			//const rus = Q.add(fus, Q.multiply(quantity, aus));
+		// TODO: Move this to the verification step
+		//const rus = Q.add(fus, Q.multiply(quantity, aus));
 
-			const val = NF.apply({ type: "Pi", variable: x }, cls, NF.evaluate(ctx, at));
-			return [EB.Constructors.App(node.icit, ft, at), val, fus] satisfies EB.AST;
-		}),
-	);
-infer.gen = F.flow(infer, V2.pure);
+		const val = NF.apply({ type: "Pi", variable: x }, cls, NF.evaluate(ctx, at));
+		return [EB.Constructors.App(node.icit, ft, at), val, fus] satisfies EB.AST;
+	});
 
 const inferFn = (node: Application) =>
-	V2.track(
-		{ tag: "src", type: "term", term: node.fn, metadata: { action: "infer", description: "inferring function type" } },
-		V2.Do(function* () {
-			const inferred = yield* EB.infer.gen(node.fn);
+	M.tracer.track({ tag: "src", type: "term", term: node.fn, metadata: { action: "infer", description: "inferring function type" } }, function* () {
+		const inferred = yield* EB.infer(node.fn);
 
-			if (node.icit !== "Explicit") {
-				return inferred;
-			}
+		if (node.icit !== "Explicit") {
+			return inferred;
+		}
 
-			const ast = yield* EB.Icit.insert.gen(inferred);
-			return ast;
-		}),
-	);
+		const ast = yield* EB.Icit.insert(inferred);
+		return ast;
+	});
 
 const checkArg = ({ arg }: Application, ann: NF.Value) =>
-	V2.track({ tag: "src", type: "term", term: arg, metadata: { action: "checking", against: ann, description: "checking argument type" } }, EB.check(arg, ann));
+	M.tracer.track({ tag: "src", type: "term", term: arg, metadata: { action: "checking", against: ann, description: "checking argument type" } }, () =>
+		EB.check(arg, ann),
+	);
 
 type Pi = [NF.Value, NF.Closure, string];
-const mkPi = (fnType: NF.Value, icit: Implicitness): Generator<V2.Elaboration<any>, Pi, any> =>
+const mkPi = (fnType: NF.Value, icit: Implicitness): M.Elaboration<Pi> =>
 	match(fnType)
 		.with({ type: "Modal" }, ({ value }) => {
 			console.warn("Inferred fn as a modal type. Still unsure what to do here. Simply unwrapping the modality for now");
@@ -62,10 +56,10 @@ const mkPi = (fnType: NF.Value, icit: Implicitness): Generator<V2.Elaboration<an
 				throw new Error("Implicitness mismatch");
 			}
 
-			return V2.lift<Pi>([pi.binder.annotation, pi.closure, pi.binder.variable]);
+			return M.of<Pi>([pi.binder.annotation, pi.closure, pi.binder.variable]);
 		})
 		.otherwise(function* () {
-			const ctx = yield* V2.ask();
+			const ctx = yield* M.reader.ask();
 
 			const meta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 			const nf = NF.evaluate(ctx, meta);
@@ -74,6 +68,6 @@ const mkPi = (fnType: NF.Value, icit: Implicitness): Generator<V2.Elaboration<an
 
 			const pi = NF.Constructors.Pi("x", icit, nf, closure);
 
-			yield* V2.tell("constraint", { type: "assign", left: fnType, right: pi, lvl: ctx.env.length });
+			yield* M.constrain({ type: "assign", left: fnType, right: pi, lvl: ctx.env.length });
 			return [nf, closure, pi.binder.variable] satisfies Pi;
 		});
