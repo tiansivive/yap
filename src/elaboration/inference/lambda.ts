@@ -20,7 +20,7 @@ export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
 
 		const ty = NF.evaluate(ctx, ann);
 
-		const { registry } = yield* M.st.get();
+		const registry = yield* Metas.registry.get();
 		const metas = Metas.asContext(ctx, registry);
 
 		const ast = yield* M.reader.local(

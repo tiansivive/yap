@@ -2,12 +2,15 @@ import * as Eff from "@yap/utils/effects";
 
 import * as P from "@yap/elaboration/shared/provenance";
 import * as EB from "@yap/elaboration";
-import * as Metas from "@yap/elaboration/shared/metas";
+import type * as Metas from "@yap/elaboration/shared/metas";
 
 import { Monoid } from "fp-ts/lib/Monoid";
 import { Cause } from "./errors";
 
-export type Elaboration<A> = Eff.Eff<Eff.Actions<[typeof writer, typeof reader, typeof except, typeof st, typeof supply, typeof tracer]>, A>;
+export type Elaboration<A> = Eff.Eff<
+	Eff.Actions<[typeof writer, typeof reader, typeof except, typeof st, typeof supply, typeof tracer, typeof Metas.registry]>,
+	A
+>;
 
 type Collector = {
 	constraints: P.WithProvenance<EB.Constraint>[];
@@ -53,7 +56,6 @@ export type MutState = {
 	nondeterminism: {
 		solution: Record<number, EB.NF.Value[]>;
 	};
-	registry: Metas.Registry;
 };
 
 export type Delimitation = {

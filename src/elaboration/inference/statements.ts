@@ -71,7 +71,7 @@ export const infer = (stmt: Src.Statement): M.Elaboration<ElaboratedStmt> =>
 export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M.Elaboration<[Extract<EB.Statement, { type: "Let" }>, EB.Context]> {
 	const ctx = yield* M.reader.ask();
 	const { constraints } = yield* M.writer.peek();
-	const { registry } = yield* M.st.get();
+	const registry = yield* Metas.registry.get();
 	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...Metas.asContext(ctx, registry) }));
 
 	const _letdec = (z: Record<number, NF.Value>) =>
@@ -79,7 +79,7 @@ export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M
 			const nondet = update(withMetas, "zonker", old => ({ ...old, ...z }));
 
 			const { zonker, resolutions } = yield* M.reader.local(_ => nondet, EB.solve(constraints));
-			const { registry: postSolve } = yield* M.st.get();
+			const postSolve = yield* Metas.registry.get();
 			const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...Metas.asContext(ctx, postSolve) }));
 			const zonked = update(withAllMetas, "zonker", z => compose(zonker, z));
 

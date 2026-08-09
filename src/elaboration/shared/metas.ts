@@ -7,6 +7,8 @@ import * as R from "@yap/shared/rows";
 import fp from "lodash/fp";
 import * as F from "fp-ts/function";
 
+import * as Eff from "@yap/utils/effects";
+
 import * as Sub from "../unification/substitution";
 import { Subst } from "../unification/substitution";
 import * as M from "./effects";
@@ -65,11 +67,51 @@ export const merge = (base: Registry, branches: readonly Registry[]): Registry =
 	}, base);
 };
 
+/*
+ * The registry as an ambient capability. One instance module-wide: an
+ * action's identity is its tag, so every row that mentions the registry
+ * must share this one. The handler owns the cell; get/modify are the only
+ * ways to observe or move it, and the pure algebra above rides in payloads.
+ */
+type Get = Eff.Action<"Registry.get", undefined, Registry>;
+type Modify = Eff.Action<"Registry.modify", (registry: Registry) => Registry, Registry>;
+
+const get = function* () {
+	return yield* Eff.ctl.resume<Get>("Registry.get", undefined);
+};
+
+/** Answers with the registry after the change. */
+const modify = function* (change: (registry: Registry) => Registry) {
+	return yield* Eff.ctl.resume<Modify>("Registry.modify", change);
+};
+
+const handlers = (initial: Registry = empty): Eff.Handler<Get | Modify, Registry> => {
+	/* eslint-disable no-restricted-syntax -- this handler owns the registry cell */
+	let current = initial;
+
+	return {
+		clauses: {
+			"Registry.get": () => current,
+
+			"Registry.modify": change => {
+				current = change(current);
+
+				return current;
+			},
+		},
+
+		output: () => current,
+	};
+	/* eslint-enable no-restricted-syntax */
+};
+
+export const registry = { get, modify, handlers };
+
 export const fresh = function* (lvl: number, annotation: NF.Value): M.Elaboration<EB.Meta> {
 	const id = yield* M.supply.fresh("meta");
 	const meta: EB.Meta = { type: "Meta", val: id, lvl };
 
-	yield* M.st.modify(st => ({ ...st, registry: register(st.registry, { meta, annotation }) }));
+	yield* registry.modify(current => register(current, { meta, annotation }));
 
 	return meta;
 };

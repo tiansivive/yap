@@ -151,6 +151,16 @@ type Outputs<Handlers extends readonly unknown[]> = {
 	[I in keyof Handlers]: Handlers[I] extends Handler<any, infer Output> ? Output : never;
 };
 
+/* One cast at the boundary; the interpreters have no use for the precise types. */
+type Erased = {
+	readonly clauses: Readonly<Record<string, (payload: unknown) => unknown>>;
+	readonly output: () => unknown;
+};
+
+/** Flattened clause lookup; a later handler shadows an earlier one per tag. */
+const clausesOf = (handlers: readonly Erased[]): Map<string, (payload: unknown) => unknown> =>
+	new Map(handlers.flatMap(handler => Object.entries(handler.clauses)));
+
 /*
  * [Row] extends [Covered] rather than Row extends Covered: a bare union in a
  * conditional distributes, which would let any single covered action satisfy
@@ -162,24 +172,8 @@ export function run<Row extends AnyAction, A, const Handlers extends readonly Ha
 ): readonly [[Failing<Row>] extends [never] ? A : A | Aborted<Answer<Failing<Row>>>, ...Outputs<Handlers>] {
 	type Result = readonly [[Failing<Row>] extends [never] ? A : A | Aborted<Answer<Failing<Row>>>, ...Outputs<Handlers>];
 
-	/* One cast at the boundary; the interpreter has no use for the precise types. */
-	type Erased = {
-		readonly clauses: Readonly<Record<string, (payload: unknown) => unknown>>;
-		readonly output: () => unknown;
-	};
-
 	const erased = handlers as unknown as readonly Erased[];
-	const clauses = new Map<string, (payload: unknown) => unknown>();
-
-	for (const handler of erased) {
-		for (const tag of Object.keys(handler.clauses)) {
-			const clause = handler.clauses[tag];
-
-			if (clause) {
-				clauses.set(tag, clause);
-			}
-		}
-	}
+	const clauses = clausesOf(erased);
 
 	const computation = program();
 	let input: unknown;
@@ -213,3 +207,51 @@ export function run<Row extends AnyAction, A, const Handlers extends readonly Ha
 		input = answered;
 	}
 }
+
+/*
+ * Runs a program with part of its row handled here, forwarding the rest.
+ *
+ * Two rules, both already the system's own:
+ * - The given handlers answer their tags; every other action is re-yielded
+ *   to the enclosing run. A handled effect is private to this scope — a
+ *   fresh resource per call; a forwarded one stays shared, which is why a
+ *   nested `run` (forking shared handlers) is the wrong tool here.
+ * - A resume answer goes back into the program; an abort answer goes
+ *   outward — same rule as run, where outward means return; here it means
+ *   yield. The run stays the only abort delimiter, so aborts always remain
+ *   in the forwarded row, and this scope never resumes after one — do not
+ *   rely on try/finally in effect programs.
+ *
+ * Answers like run: the program's value, then each handler's output.
+ */
+function* scoped<Row extends AnyAction, A, const Handlers extends readonly Handler<any, any>[]>(
+	handlers: Handlers,
+	program: () => Eff<Row, A>,
+): Generator<Exclude<Row, { tag: Covered<Handlers>["tag"]; control: "resume" }>, readonly [A, ...Outputs<Handlers>], unknown> {
+	type Forwarded = Exclude<Row, { tag: Covered<Handlers>["tag"]; control: "resume" }>;
+
+	const erased = handlers as unknown as readonly Erased[];
+	const clauses = clausesOf(erased);
+
+	const computation = program();
+	let input: unknown;
+
+	while (true) {
+		const step = computation.next(input);
+
+		if (step.done) {
+			return [step.value, ...erased.map(handler => handler.output())] as unknown as readonly [A, ...Outputs<Handlers>];
+		}
+
+		const clause = clauses.get(step.value.tag);
+		const answer = clause ? clause(step.value.payload) : yield step.value as Forwarded;
+
+		if (step.value.control === "abort") {
+			yield { ...step.value, payload: answer } as Forwarded;
+		} else {
+			input = answer;
+		}
+	}
+}
+
+export { scoped as with };

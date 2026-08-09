@@ -41,7 +41,7 @@ export const infer = (block: Block): M.Elaboration<EB.AST> =>
 			}
 
 			const [r, next] = yield* EB.Stmt.letdec(stmt);
-			yield* M.st.modify(s => ({ ...s, registry: Metas.withSolutions(s.registry, next.zonker) }));
+			yield* Metas.registry.modify(current => Metas.withSolutions(current, next.zonker));
 
 			return yield* M.reader.local(
 				_ => {
@@ -82,17 +82,17 @@ const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]):
 
 	const ctx = yield* M.reader.ask();
 	const { constraints } = yield* M.writer.peek();
-	const { registry } = yield* M.st.get();
+	const registry = yield* Metas.registry.get();
 	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...Metas.asContext(ctx, registry) }));
 
 	const { zonker, resolutions } = yield* M.reader.local(_ => withMetas, EB.solve(constraints));
-	const { registry: postSolve } = yield* M.st.get();
+	const postSolve = yield* Metas.registry.get();
 
 	const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...Metas.asContext(ctx, postSolve) }));
 	const zonked = update(withAllMetas, "zonker", z => compose(zonker, z));
 	const value = NF.evaluate(zonked, t, { noInlineBindings: true });
 	const generalized = NF.abstract(NF.force(zonked, ty), value, zonked, resolutions);
-	yield* M.st.modify(s => ({ ...s, registry: Metas.withSolutions(s.registry, generalized.zonker) }));
+	yield* Metas.registry.modify(current => Metas.withSolutions(current, generalized.zonker));
 
 	return [EB.Constructors.Block(results, generalized.term), generalized.type, rus] satisfies EB.AST;
 };
