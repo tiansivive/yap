@@ -27,14 +27,14 @@ export type Context = {
 		nf: NF.Value;
 		name: Binder;
 	}>;
-	implicits: Array<[EB.Term, NF.Value]>;
+	implicits: Array<[NF.Value, NF.Value]>;
 
 	labels: Record<string, NF.Value>;
 	sigma: Record<string, { value: NF.Value }>;
 	record: Record<string, { term?: EB.Term; value?: NF.Value }>;
 
 	zonker: Sub.Subst;
-	metas: Record<number, { meta: EB.Meta; ann: NF.Value }>;
+	metas: Record<number, { meta: EB.Meta; ann: EB.Term }>;
 	imports: Record<string, EB.AST>;
 	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
 	trace: P.Stack<Provenance>;
@@ -104,7 +104,7 @@ export const resolveImplicit = (nf: NF.Value): V2.Elaboration<[EB.Term, Sub.Subs
 			const [{ result }] = unification(ctx);
 
 			if (E.isRight(result)) {
-				return [term, result.right];
+				return [NF.quote(ctx, ctx.env.length, term), result.right];
 			}
 			return lookup(rest);
 		};

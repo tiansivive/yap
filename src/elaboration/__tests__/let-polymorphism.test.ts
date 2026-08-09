@@ -272,6 +272,23 @@ describe("Let-polymorphism", () => {
 		});
 	});
 
+	describe("polymorphism on block scope", () => {
+		it("polymorphic return value on non resolved implicit", () => {
+			const src = `{ 
+				let p = { 
+				  let f: (i: Num) => Num -> Num = \\x -> x;
+				  return f 1;
+				};
+				return p;
+			}`;
+
+			const res = elaborateFrom(src);
+
+			expect(res.displays.term).toContain("return λ(A: Num) =>");
+			expect({ displays: res.displays }).toMatchSnapshot();
+		});
+	});
+
 	describe("edge cases", () => {
 		it("let with unused polymorphic binding", () => {
 			const src = `{

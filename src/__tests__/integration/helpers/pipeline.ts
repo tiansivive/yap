@@ -163,7 +163,7 @@ const Elaborate = {
 		pipe(
 			safe(() => EB.Stmt.infer(stmt)(ctx)),
 			E.chain(([{ result }]) => flatten(result)),
-			E.map(([t, ty]) => update(ctx, "implicits", A.append<EB.Context["implicits"][number]>([t.value, ty]))),
+			E.map(([t, ty]) => update(ctx, "implicits", A.append<EB.Context["implicits"][number]>([NF.evaluate(ctx, t.value, { noInlineBindings: true }), ty]))),
 		),
 
 	letdec: (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): E.Either<string, Elaborated> =>

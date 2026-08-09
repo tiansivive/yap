@@ -56,9 +56,9 @@ const _solve = (cs: Array<Ctaint>, _ctx: EB.Context, subst: Subst): V2.Elaborati
 		});
 };
 
-export type Resolutions = Record<number, EB.Term>;
+export type Resolutions = Record<number, NF.Value>;
 const resolve = (cs: Array<Extract<Constraint, { type: "resolve" }>>, ctx: EB.Context): Resolutions => {
-	const lookup = (implicits: EB.Context["implicits"], nf: NF.Value): EB.Term | void => {
+	const lookup = (implicits: EB.Context["implicits"], nf: NF.Value): NF.Value | void => {
 		if (implicits.length === 0) {
 			return;
 		}

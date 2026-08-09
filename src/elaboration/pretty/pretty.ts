@@ -29,7 +29,7 @@ const doc = (term: EB.Term, ctx: DisplayContext, opts: { deBruijn: boolean; prin
 							return NF.doc(ctx.zonker[val], ctx, opts);
 						}
 						const { ann } = ctx.metas[val];
-						return options.verbose ? ["(?", `${val}`, " :: ", NF.doc(ann, ctx, opts), ")"] : `?${val}`;
+						return options.verbose ? ["(?", `${val}`, " :: ", go(ann), ")"] : `?${val}`;
 					})
 					.otherwise(() => "Var _display: Not implemented"),
 			)
@@ -181,6 +181,7 @@ const Stmt = {
 			.with({ type: "Let" }, ({ variable, value, annotation }) =>
 				PP.letBinding(variable, NF.doc(annotation, bind(variable, ctx), opts), doc(value, bind(variable, ctx), opts)),
 			)
+			.with({ type: "Using" }, ({ value }) => PP.group(["using ", doc(value, ctx, opts)]))
 			.otherwise(() => "Statement Display: Not implemented"),
 	display: (stmt: EB.Statement, ctx: DisplayContext, opts = { deBruijn: false }): string => PP.render(Stmt.doc(stmt, ctx, opts)),
 };

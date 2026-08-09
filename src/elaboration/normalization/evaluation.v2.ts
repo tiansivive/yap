@@ -39,21 +39,29 @@ import * as Lit from "@yap/shared/literals";
  */
 
 export type StackFrame =
-	| { type: "Eval"; ctx: EB.Context; term: EB.Term }
+	| { type: "Eval"; ctx: EB.Context; term: EB.Term; noInlineBindings?: boolean }
 	| { type: "Cont"; arity: number; handler: (results: NF.Value[]) => void }
 	| { type: "Delimiter"; ctx: EB.Context; resultSize: number };
+
+export type EvalOptions = {
+	/** no δ-reduction: prevents inlining of definitions. Default is `false`. */
+	noInlineBindings?: boolean;
+	/** fuel cap: maximum number of evaluation steps before throwing an error. Default is `10,000,000`. */
+	maxSteps?: number;
+};
 
 // GLOBAL stacks - reused across all evaluate calls
 const globalWorkStack: StackFrame[] = [];
 const globalResultStack: NF.Value[] = [];
 
-export function evaluate(ctx: EB.Context, term: EB.Term, maxSteps = 10000000): NF.Value {
+export function evaluate(ctx: EB.Context, term: EB.Term, opts: EvalOptions = {}): NF.Value {
+	const { noInlineBindings = false, maxSteps = 10000000 } = opts;
 	// Track where this call's work starts in the global stack
 	const initialWorkSize = globalWorkStack.length;
 	const initialResultSize = globalResultStack.length;
 
 	// Add our work
-	globalWorkStack.push({ type: "Eval", ctx, term });
+	globalWorkStack.push({ type: "Eval", ctx, term, noInlineBindings });
 
 	let steps = 0;
 
@@ -79,7 +87,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term, maxSteps = 10000000): N
 			continue;
 		} else {
 			// Evaluate term
-			evaluateTerm(frame.ctx, frame.term);
+			evaluateTerm(frame.ctx, frame.term, frame.noInlineBindings ?? false);
 		}
 	}
 
@@ -92,7 +100,7 @@ export function evaluate(ctx: EB.Context, term: EB.Term, maxSteps = 10000000): N
 	return globalResultStack.pop()!;
 }
 
-function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
+function evaluateTerm(ctx: EB.Context, term: EB.Term, noInlineBindings: boolean): void {
 	match(term)
 		.with({ type: "Lit" }, ({ value }) => {
 			globalResultStack.push(NF.Constructors.Lit(value));
@@ -116,6 +124,13 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 			}
 			throw new Error("Unbound label: " + variable.name);
 		})
+		.with(
+			{ type: "Var", variable: { type: "Free" } },
+			_ => noInlineBindings,
+			({ variable }) => {
+				globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.Var(variable)));
+			},
+		)
 		.with({ type: "Var", variable: { type: "Free" } }, ({ variable }) => {
 			const val = ctx.imports[variable.name];
 
@@ -159,13 +174,19 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 			const quoted = NF.quote(ctx, ctx.env.length, ctx.zonker[variable.val]);
 			globalWorkStack.push({ type: "Eval", ctx, term: quoted });
 		})
+		.with(
+			{ type: "Var", variable: { type: "Bound" } },
+			_ => noInlineBindings,
+			({ variable }) => {
+				const lvl = ctx.env.length - 1 - variable.index;
+				globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.Var({ type: "Bound", lvl })));
+			},
+		)
 		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
 			const entry = ctx.env[variable.index];
-			if (entry.type[0].type === "Mu") {
-				globalResultStack.push(NF.Constructors.Neutral("Sealed", entry.nf));
-			} else {
-				globalResultStack.push(entry.nf);
-			}
+			match(entry.type[0])
+				.with({ type: "Mu" }, () => globalResultStack.push(NF.Constructors.Neutral("Sealed", entry.nf)))
+				.otherwise(() => globalResultStack.push(entry.nf));
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
 			const val = ctx.ffi[variable.name];
@@ -258,8 +279,8 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term): void {
 					reduceAndPushStack(funcVal, argVal, icit);
 				},
 			});
-			globalWorkStack.push({ type: "Eval", ctx, term: arg });
-			globalWorkStack.push({ type: "Eval", ctx, term: func });
+			globalWorkStack.push({ type: "Eval", ctx, term: arg, noInlineBindings });
+			globalWorkStack.push({ type: "Eval", ctx, term: func, noInlineBindings });
 		})
 		.with({ type: "Row" }, ({ row }) => {
 			const extractLabels = (r: EB.Row): { [key: string]: EB.Term } => {
@@ -479,7 +500,9 @@ function processStatementsAndPush(stmts: EB.Statement[], ctx: EB.Context, return
 			globalWorkStack.push({ type: "Eval", ctx, term: value });
 		})
 		.with({ type: "Using" }, ({ value, annotation }) => {
-			const updated = update(ctx, "implicits", A.append<EB.Context["implicits"][0]>([value, annotation]));
+			// no delta-reduction: we don't want to inline the value, just evaluate it and add it to implicits
+			const nfValue = evaluate(ctx, value, { noInlineBindings: true });
+			const updated = update(ctx, "implicits", A.append<EB.Context["implicits"][0]>([nfValue, annotation]));
 			processStatementsAndPush(rest, updated, returnTerm);
 		})
 		.exhaustive();
@@ -857,7 +880,7 @@ export function apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): 
 			} else if (frame.type === "Delimiter") {
 				continue;
 			} else {
-				evaluateTerm(frame.ctx, frame.term);
+				evaluateTerm(frame.ctx, frame.term, frame.noInlineBindings ?? false);
 			}
 		}
 

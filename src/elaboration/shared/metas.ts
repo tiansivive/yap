@@ -39,8 +39,11 @@ export const withSolutions = (metas: Registry, subst: Sub.Subst): Registry =>
 export const register = (metas: Registry, entry: Entry): Registry => ({ ...metas, [entry.meta.val]: entry });
 
 /** The registry in the shape ctx.metas still expects, until the context field retires. */
-export const asContext = (metas: Registry): EB.Context["metas"] =>
-	Object.values(metas).reduce<EB.Context["metas"]>((ms, { meta, annotation }) => ({ ...ms, [meta.val]: { meta, ann: annotation } }), {});
+export const asContext = (ctx: EB.Context, metas: Registry): EB.Context["metas"] =>
+	Object.values(metas).reduce<EB.Context["metas"]>(
+		(ms, { meta, annotation }) => ({ ...ms, [meta.val]: { meta, ann: NF.quote(ctx, meta.lvl, annotation) } }),
+		{},
+	);
 
 export const solve = (metas: Registry, id: number, value: NF.Value): Registry => {
 	const entry = metas[id];
@@ -188,7 +191,7 @@ export const Annotations = {
 				.otherwise((): Acc => {
 					const anns = match(ctx.metas[m.val])
 						.with(P.nullish, (): readonly MetaNF[] => [])
-						.otherwise(entry => collectMetasNF(entry.ann, ctx.zonker));
+						.otherwise(entry => collectMetasEB(entry.ann, ctx.zonker));
 					const [seen2, out2] = anns.reduce<Acc>(go, [new Set([...seen, m.val]), out]);
 					return [seen2, [...out2, m]];
 				});

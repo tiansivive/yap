@@ -223,3 +223,7 @@ export const CtorPatterns = {
 export const TaggedTerm = {
 	extract: tagged,
 } as const;
+
+export const Type: Term = Constructors.Lit(Lit.Atom("Type"));
+export const Row: Term = Constructors.Lit(Lit.Atom("Row"));
+export const Any: Term = Constructors.Lit(Lit.Atom("Any"));

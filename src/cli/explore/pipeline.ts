@@ -215,7 +215,7 @@ export const run = (source: string, opts: Options): Result => {
 					sections.push(`Zonker:\n${zonkerStr}`);
 					const resKeys = Object.keys(debug.resolutions);
 					if (resKeys.length > 0) {
-						const resStr = resKeys.map(k => `  ?${k} |=> ${EB.Display.Term(debug.resolutions[Number(k)], displayCtx, db)}`).join("\n");
+						const resStr = resKeys.map(k => `  ?${k} |=> ${EB.NF.display(debug.resolutions[Number(k)], displayCtx, db)}`).join("\n");
 						// eslint-disable-next-line no-restricted-syntax
 						sections.push(`\nResolutions:\n${resStr}`);
 					}
@@ -224,7 +224,7 @@ export const run = (source: string, opts: Options): Result => {
 						const metaStr = metaKeys
 							.map(k => {
 								const m = ctx.metas[Number(k)];
-								return `  ?${k} : ${EB.NF.display(m.ann, displayCtx, db)}`;
+								return `  ?${k} : ${EB.Display.Term(m.ann, displayCtx, db)}`;
 							})
 							.join("\n");
 						// eslint-disable-next-line no-restricted-syntax

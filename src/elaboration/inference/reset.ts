@@ -39,7 +39,7 @@ export const infer = (reset: Reset): M.Elaboration<EB.AST> =>
 
 		const { registry } = yield* M.st.get();
 		const [tm, us] = yield* M.reader.local(
-			update("metas", ms => ({ ...ms, ...Metas.asContext(registry) })),
+			update("metas", ms => ({ ...ms, ...Metas.asContext(ctx, registry) })),
 			EB.check(reset.term, d.answer.initial),
 		);
 		const {

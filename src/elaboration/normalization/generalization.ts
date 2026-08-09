@@ -63,7 +63,7 @@ const getNameFactory = (counters: ReturnType<typeof mkCounters>) => {
  * ```
  * Here, generalizing the type of `fmap stringify` alone would miss the meta for `functor`, as its never used in the type.
  */
-export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutions: EB.Resolutions): [NF.Value, EB.Context["zonker"]] => {
+export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutions: EB.Resolutions): [NF.Value, EB.Context["zonker"], boolean] => {
 	const tyMetas = collectMetasNF(ty, ctx.zonker);
 	const tmMetas = collectMetasEB(tm, ctx.zonker);
 	const seed = fp.uniqBy((m: Meta) => m.val, [...tyMetas, ...tmMetas]);
@@ -76,7 +76,7 @@ export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutio
 	const ms = allMetas.filter(m => m.lvl >= ctx.env.length);
 
 	if (ms.length === 0) {
-		return [ty, ctx.zonker];
+		return [ty, ctx.zonker, false];
 	}
 
 	// Build a single closure context that has all generalized metas mapped to the corresponding bound variables.
@@ -85,7 +85,8 @@ export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutio
 		//const name = `${String.fromCharCode(charCode + i)}`;
 		const boundLvl = i + ctx.env.length; // outermost binder is the first one after the existing env
 		const { ann } = ctx.metas[m.val];
-		const withBinder = EB.bind(acc, { type: "Pi", variable: getName(ann) }, ann, "inserted");
+		const annNF = NF.evaluate(acc, ann);
+		const withBinder = EB.bind(acc, { type: "Pi", variable: getName(annNF) }, annNF, "inserted");
 		return set(withBinder, ["zonker", `${m.val}`] as const, NF.Constructors.Var({ type: "Bound", lvl: boundLvl }));
 	}, ctx);
 
@@ -98,13 +99,75 @@ export const generalize = (ty: NF.Value, tm: EB.Term, ctx: EB.Context, resolutio
 		const trimmed = update(extendedCtx, "env", e => e.slice(i)); // trim the already introduced binders from the env for quoting
 		const term = NF.quote(trimmed, ctx.env.length + ms.length - i, body);
 		const { ann } = ctx.metas[m.val];
-
 		const closureCtx = update(trimmed, "env", e => e.slice(1)); // drop the binder we are introducing now so it doesn't get captured in the closure
-		return NF.Constructors.Pi(variable, "Implicit", ann, NF.Constructors.Closure(closureCtx, term));
+		const annNF = NF.evaluate(closureCtx, ann);
+		return NF.Constructors.Pi(variable, "Implicit", annNF, NF.Constructors.Closure(closureCtx, term));
 	}, ty);
 
 	// Return the context with updated zonker
-	return [generalized, extendedCtx.zonker];
+	return [generalized, extendedCtx.zonker, true];
+};
+
+type Abstraction = {
+	term: EB.Term;
+	type: NF.Value;
+	zonker: EB.Context["zonker"];
+};
+
+/**
+ * Generalize a semantic return value at its lexical boundary.
+ *
+ * The value is evaluated before abstraction, so its free variables are stable
+ * levels. Quoting under the inserted binders then reconstructs their indices
+ * without syntactically capturing block-local bindings.
+ */
+export const abstract = (ty: NF.Value, value: NF.Value, ctx: EB.Context, resolutions: EB.Resolutions): Abstraction => {
+	const tyMetas = collectMetasNF(ty, ctx.zonker);
+	const valueMetas = collectMetasNF(value, ctx.zonker);
+	const seed = fp.uniqBy((m: Meta) => m.val, [...tyMetas, ...valueMetas]);
+	const allMetas = Annotations.closeOver(ctx, seed).filter(m => !resolutions[m.val]);
+	const ms = allMetas.filter(m => m.lvl >= ctx.env.length);
+
+	if (ms.length === 0) {
+		return { term: NF.quote(ctx, ctx.env.length, value), type: ty, zonker: ctx.zonker };
+	}
+
+	const getName = getNameFactory(mkCounters());
+	const entries = ms.reduce(
+		(acc, m, i) => {
+			const { ann } = ctx.metas[m.val];
+			const annotation = NF.evaluate(acc.ctx, ann);
+			const variable = getName(annotation);
+			const binding: EB.Binding = {
+				type: "Lambda",
+				variable,
+				icit: "Implicit",
+				annotation: NF.quote(acc.ctx, acc.ctx.env.length, annotation),
+			};
+			const pi: EB.Binding = { ...binding, type: "Pi" };
+			const boundLvl = i + ctx.env.length;
+			const xtended = EB.bind(acc.ctx, pi, annotation, "inserted");
+			return {
+				ctx: set(xtended, ["zonker", `${m.val}`] as const, NF.Constructors.Var({ type: "Bound", lvl: boundLvl })),
+				entries: [...acc.entries, { binding, meta: m }],
+			};
+		},
+		{ ctx, entries: [] as Array<{ binding: EB.Binding; meta: Meta }> },
+	);
+
+	const type = A.reverse(entries.entries).reduce<NF.Value>((body, { meta }, i) => {
+		const variable = entries.ctx.env[i].name.variable;
+		const trimmed = update(entries.ctx, "env", env => env.slice(i));
+		const term = NF.quote(trimmed, ctx.env.length + ms.length - i, body);
+		const { ann } = ctx.metas[meta.val];
+		const closureCtx = update(trimmed, "env", env => env.slice(1));
+		const annotation = NF.evaluate(closureCtx, ann);
+		return NF.Constructors.Pi(variable, "Implicit", annotation, NF.Constructors.Closure(closureCtx, term));
+	}, ty);
+
+	const body = NF.quote(entries.ctx, entries.ctx.env.length, value);
+	const term = A.reverse(entries.entries).reduce((body, { binding }) => EB.Constructors.Abs(binding, body), body);
+	return { term, type, zonker: entries.ctx.zonker };
 };
 
 /**
@@ -131,7 +194,8 @@ export const instantiate = (nf: NF.Value, ctx: EB.Context): NF.Value => {
 			}
 
 			const { ann } = ctx.metas[v.variable.val];
-			return match(ann)
+			const annNF = NF.evaluate(ctx, ann);
+			return match(annNF)
 				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => NF.Constructors.Row({ type: "empty" }))
 				.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => NF.Constructors.Lit({ type: "Atom", value: "Any" }))
 				.otherwise(() => NF.Constructors.Var(v.variable));

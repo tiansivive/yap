@@ -134,7 +134,7 @@ export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.C
 	const infer = EB.Stmt.infer(stmt);
 	const [{ result }] = infer(ctx);
 	type Implicit = EB.Context["implicits"][0];
-	return E.Functor.map(result, ([t, ty]) => update(ctx, "implicits", A.append<Implicit>([t.value, ty])));
+	return E.Functor.map(result, ([t, ty]) => update(ctx, "implicits", A.append<Implicit>([NF.evaluate(ctx, t.value, { noInlineBindings: true }), ty])));
 };
 
 export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context]>] => {

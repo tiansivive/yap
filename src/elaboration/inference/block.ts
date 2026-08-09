@@ -1,14 +1,18 @@
+import * as A from "fp-ts/lib/Array";
+
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as NF from "@yap/elaboration/normalization";
+
 import * as Src from "@yap/src/index";
 
 import * as Lit from "@yap/shared/literals";
 
 import { update } from "@yap/utils";
+import { compose } from "../unification/substitution";
 
 type Block = Extract<Src.Term, { type: "block" }>;
 
@@ -23,6 +27,14 @@ export const infer = (block: Block): M.Elaboration<EB.AST> =>
 
 			const [current, ...rest] = stmts;
 			const [stmt, _sty, sus] = yield* EB.Stmt.infer(current);
+
+			if (stmt.type === "Using") {
+				type Implicit = EB.Context["implicits"][0];
+				return yield* M.reader.local(
+					ctx => update(ctx, "implicits", A.append<Implicit>([NF.evaluate(ctx, stmt.value, { noInlineBindings: true }), stmt.annotation])),
+					recurse(rest, [...results, stmt]),
+				);
+			}
 
 			if (stmt.type !== "Let") {
 				return yield* recurse(rest, [...results, stmt]);
@@ -67,5 +79,20 @@ const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]):
 	}
 
 	const [t, ty, rus] = yield* EB.infer(ret);
-	return [EB.Constructors.Block(results, t), ty, rus] satisfies EB.AST;
+
+	const ctx = yield* M.reader.ask();
+	const { constraints } = yield* M.writer.peek();
+	const { registry } = yield* M.st.get();
+	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...Metas.asContext(ctx, registry) }));
+
+	const { zonker, resolutions } = yield* M.reader.local(_ => withMetas, EB.solve(constraints));
+	const { registry: postSolve } = yield* M.st.get();
+
+	const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...Metas.asContext(ctx, postSolve) }));
+	const zonked = update(withAllMetas, "zonker", z => compose(zonker, z));
+	const value = NF.evaluate(zonked, t, { noInlineBindings: true });
+	const generalized = NF.abstract(NF.force(zonked, ty), value, zonked, resolutions);
+	yield* M.st.modify(s => ({ ...s, registry: Metas.withSolutions(s.registry, generalized.zonker) }));
+
+	return [EB.Constructors.Block(results, generalized.term), generalized.type, rus] satisfies EB.AST;
 };

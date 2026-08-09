@@ -7,6 +7,9 @@ import { mkCtx } from "../../inference/__tests__/util";
 
 import * as F from "fp-ts/function";
 
+const EBType = EB.Type;
+const EBRow = EB.Row;
+
 describe("Normalization: generalization", () => {
 	const noMetasTerm = EB.Constructors.Lit(Lit.Atom("Unit"));
 	const noResolutions = {};
@@ -14,7 +17,7 @@ describe("Normalization: generalization", () => {
 	describe("generalize", () => {
 		it("simple meta: ?1 |=> Π(a: Type) => a", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
 
 			const meta = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 			const [generalized, z] = NF.generalize(meta, noMetasTerm, ctx, noResolutions);
@@ -36,8 +39,8 @@ describe("Normalization: generalization", () => {
 		it("multiple metas: ?1 ?2 |=> Π(a: Type) => Π(b: Type) => a b", () => {
 			const ctx = mkCtx();
 			// Create metas ?1 :: Type and ?2 :: Type
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			// Create Pi type: ?1 -> ?2
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -65,7 +68,7 @@ describe("Normalization: generalization", () => {
 
 		it("metas only in the term, not the type", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
 
 			// Type has no metas
 			const typeWithNoMetas = NF.Constructors.Lit(Lit.Atom("Num"));
@@ -87,9 +90,9 @@ describe("Normalization: generalization", () => {
 
 		it("generalizes metas in both type and term, eliminating duplicates", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
-			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
+			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: EBType };
 
 			// Type has ?1
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -121,9 +124,9 @@ describe("Normalization: generalization", () => {
 			const ctx = mkCtx();
 
 			// Create three metas
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
-			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
+			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: EBType };
 
 			// Create a term with all three metas
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -151,8 +154,8 @@ describe("Normalization: generalization", () => {
 			const ctx = mkCtx();
 
 			// Create metas: one Row, one Type
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Row };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBRow };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			// Type with both metas
 			const metaRow = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -173,9 +176,9 @@ describe("Normalization: generalization", () => {
 			const ctx = mkCtx();
 
 			// Create metas: two Types and one Row
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
-			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: NF.Row };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
+			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: EBRow };
 
 			// Type with all three metas
 			const m1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -209,8 +212,7 @@ describe("Normalization: generalization", () => {
 
 			// Create metas: one Type constructor (Type -> Type), one regular Type
 			// We'll create the first meta with a Pi type annotation
-			const typeToType = NF.Constructors.Pi("x", "Implicit", NF.Type, NF.Constructors.Closure(ctx, EB.Constructors.Lit(Lit.Type())));
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: typeToType };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EB.Constructors.Pi("x", "Implicit", EB.Type, EB.Type) };
 
 			// Type with both metas
 			const metaTypeCtor = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -230,9 +232,9 @@ describe("Normalization: generalization", () => {
 		it("handles pi types: ?1 -> ?2 -> ?3 |=> Π(a: Type) => Π(b: Type) => Π(c: Type) => Π(x: a) -> Π(y: b) -> c", () => {
 			const ctx = mkCtx();
 			// Create three metas
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
-			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
+			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: EBType };
 
 			// Create a term with all three metas
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -253,8 +255,8 @@ describe("Normalization: generalization", () => {
 
 		it("correctly types metas: (?1:Type) -> (?2: Row)  |=> Π(a: Type) => Π(r: Row) => Π(x: a) -> r", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Row };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBRow };
 
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
@@ -276,8 +278,8 @@ describe("Normalization: generalization", () => {
 
 		it("preserves already-solved metas in zonker", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 			ctx.zonker[2] = NF.Constructors.Lit(Lit.Atom("Num"));
 
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -303,8 +305,8 @@ describe("Normalization: generalization", () => {
 
 		it("ignores metas that are in the resolutions parameter", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			// Both metas in the type
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -312,7 +314,7 @@ describe("Normalization: generalization", () => {
 			const typeWithMetas = NF.Constructors.App(meta1, meta2, "Explicit");
 
 			// ?2 is in resolutions (resolved implicitly), so it should not be generalized
-			const resolutions: EB.Resolutions = { 2: EB.Constructors.Lit(Lit.Atom("Num")) };
+			const resolutions: EB.Resolutions = { 2: NF.Constructors.Lit(Lit.Atom("Num")) };
 
 			const [generalized, z] = NF.generalize(typeWithMetas, noMetasTerm, ctx, resolutions);
 			const extendedCtx = { ...ctx, zonker: z };
@@ -327,9 +329,9 @@ describe("Normalization: generalization", () => {
 
 		it("ignores resolved metas in both type and term", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
-			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
+			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: EBType };
 
 			// Type has ?1 and ?2
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -342,7 +344,7 @@ describe("Normalization: generalization", () => {
 			const termWithMetas = EB.Constructors.App("Explicit", meta2EB, meta3);
 
 			// ?2 is resolved
-			const resolutions: EB.Resolutions = { 2: EB.Constructors.Lit(Lit.Atom("Num")) };
+			const resolutions: EB.Resolutions = { 2: NF.Constructors.Lit(Lit.Atom("Num")) };
 
 			const [generalized, z] = NF.generalize(typeWithMetas, termWithMetas, ctx, resolutions);
 			const extendedCtx = { ...ctx, zonker: z };
@@ -371,7 +373,7 @@ describe("Normalization: generalization", () => {
 
 		it("introduces binder under existing environment entries", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
 			const xtended = EB.bind(ctx, { type: "Let", variable: "x" }, NF.Any);
 
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -385,8 +387,8 @@ describe("Normalization: generalization", () => {
 
 		it("introduces multiple binders under existing environment entries", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 			const xtended = F.pipe(
 				ctx,
 				ctx => EB.bind(ctx, { type: "Let", variable: "x" }, NF.Any),
@@ -408,8 +410,8 @@ describe("Normalization: generalization", () => {
 		it("handles pi types under existing environment entries", () => {
 			const ctx = mkCtx();
 			// Create three metas
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			const xtended = F.pipe(
 				ctx,
@@ -434,7 +436,7 @@ describe("Normalization: generalization", () => {
 	describe("instantiate", () => {
 		it("instantiates unconstrained Type meta to Any", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
 
 			const meta = NF.Constructors.Var({ type: "Meta", val: 1, lvl: 0 });
 
@@ -447,7 +449,7 @@ describe("Normalization: generalization", () => {
 
 		it("instantiates unconstrained Row meta to empty row", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Row };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBRow };
 
 			const meta = NF.Constructors.Var({ type: "Meta", val: 1, lvl: 0 });
 
@@ -460,7 +462,7 @@ describe("Normalization: generalization", () => {
 
 		it("leaves solved metas unchanged", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
 			ctx.zonker[1] = NF.Constructors.Lit(Lit.Atom("Num"));
 
 			const meta = NF.Constructors.Var({ type: "Meta", val: 1, lvl: 0 });
@@ -514,7 +516,7 @@ describe("Normalization: generalization", () => {
 	describe("integration: generalize + instantiate round-trip", () => {
 		it("generalizes and then instantiates a polymorphic type", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
 
 			const meta = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 
@@ -530,8 +532,8 @@ describe("Normalization: generalization", () => {
 
 		it("generalizes a function type and instantiates it", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
@@ -549,8 +551,8 @@ describe("Normalization: generalization", () => {
 
 		it("generalizes metas in term and type, then instantiates", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			// Type has ?1
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -570,15 +572,15 @@ describe("Normalization: generalization", () => {
 
 		it("generalizes with resolutions and then instantiates", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: NF.Type };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: NF.Type };
+			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
+			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			// Type has ?1
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 			// Term has ?2
 			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
 
-			const resolutions: EB.Resolutions = { 2: EB.Constructors.Lit(Lit.Atom("Num")) };
+			const resolutions: EB.Resolutions = { 2: NF.Constructors.Lit(Lit.Atom("Num")) };
 
 			const [generalized, z] = NF.generalize(meta1, meta2, ctx, resolutions);
 			const extendedCtx = { ...ctx, zonker: z };

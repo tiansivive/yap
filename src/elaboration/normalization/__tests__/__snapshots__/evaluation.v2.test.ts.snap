@@ -85,7 +85,7 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
       "?5 ~~ Num",
       "Π(x: ?4) ->
   (closure: <ω> Num [| λ(r: Num) ->
-    FFI.$eq r (FFI.$add 1 (?6 :: ?5)) |] -| Γ: x; test) ~~ ?2",
+    FFI.$eq r (FFI.$add 1 (?6 :: (?5 :: Type))) |] -| Γ: x; test) ~~ ?2",
       "?3 ~~ ?1",
       "Num ~~ ?4",
     ],

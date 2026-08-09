@@ -60,7 +60,7 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 	return match(term)
 		.with({ type: "Var", variable: { type: "Meta" } }, v => {
 			if (resolutions[v.variable.val]) {
-				return resolutions[v.variable.val];
+				return NF.quote(ctx, ctx.env.length, resolutions[v.variable.val]);
 			}
 
 			if (ctx.zonker[v.variable.val]) {
@@ -75,8 +75,9 @@ export const instantiate = (term: EB.Term, ctx: EB.Context, resolutions: EB.Reso
 				return v;
 			}
 			const { ann } = ctx.metas[v.variable.val];
+			const annNF = NF.evaluate(ctx, ann);
 
-			return match(ann)
+			return match(annNF)
 				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.Constructors.Row({ type: "empty" }))
 				.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Any" }))
 				.with({ type: "Lit", value: { type: "Atom", value: "Any" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Void" }))

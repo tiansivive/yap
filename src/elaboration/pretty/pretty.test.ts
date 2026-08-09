@@ -52,7 +52,7 @@ describe("Displaying elaborated terms", () => {
 			const m = EB.Meta(1, 0);
 			const term = EB.Constructors.Var(m);
 
-			const xtended: EB.Context = { ...ctx, metas: { 1: { meta: m, ann: EB.NF.Type } } };
+			const xtended: EB.Context = { ...ctx, metas: { 1: { meta: m, ann: EB.Type } } };
 			expect(EB.Display.Term(term, xtended)).toMatchSnapshot();
 		});
 

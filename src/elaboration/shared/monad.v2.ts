@@ -151,7 +151,7 @@ type Payload<K extends Channel> = K extends "constraint"
 	: K extends "binder"
 		? EB.Binder
 		: K extends "meta"
-			? { meta: EB.Meta; ann: EB.NF.Value }
+			? { meta: EB.Meta; ann: EB.Term }
 			: K extends "type"
 				? { term: EB.Term; nf: EB.NF.Value; modalities: Modal.Annotations<EB.Term> }
 				: K extends "zonker"
