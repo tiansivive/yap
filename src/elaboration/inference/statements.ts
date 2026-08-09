@@ -41,8 +41,12 @@ export const infer = (stmt: Src.Statement): M.Elaboration<ElaboratedStmt> =>
 					})(),
 				);
 
-				// TODO(binders): the writer's binder channel is gone, so recursive lets are no longer
-				// detected here. v2 wrapped them in Mu:
+				// TODO(post-migration): recursive type-level lets are not wrapped in Mu right now.
+				// Agreed approach: no upward channel needed — wrap when va == Type and the elaborated
+				// body self-references (occurs-check for Var{Bound, index == depth} on inferred[0]).
+				// This drops v2's support for self-reference inside type annotations of value-level
+				// lets, which we consider degenerate and do not want to allow.
+				// v2 did it via the writer's binder channel:
 				// const { binders } = yield* V2.listen();
 				// const tm = binders.find(b => b.type === "Mu" && b.variable === dec.variable)
 				// 	? EB.Constructors.Mu("x", dec.variable, ann[0], inferred[0])
