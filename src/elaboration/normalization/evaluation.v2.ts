@@ -6,8 +6,6 @@
  */
 import { match, P } from "ts-pattern";
 
-import * as Eff from "@yap/utils/effects";
-
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
@@ -38,28 +36,13 @@ export type EvalOptions = {
 	maxSteps?: number;
 };
 
-/** The evaluation procedure, under the environment the machine is running in. */
+/** The evaluation procedure: one marked drive on the ambient machine, under the ambient env. */
 export function* evaluate(term: EB.Term, opts: EvalOptions = {}): Evaluation<NF.Value> {
-	const ctx = yield* Stack.current();
-
-	return yield* drive(ctx, term, opts);
-}
-
-/** The elaboration-facing entry: a fresh machine over the ambient context. */
-export function* normalize(term: EB.Term, opts: EvalOptions = {}) {
+	const { noInlineBindings = false, maxSteps = 10000000 } = opts;
 	const ctx = yield* M.reader.ask();
 
-	const [value] = yield* Eff.with([Stack.handlers(ctx)], () => evaluate(term, opts));
-
-	return value;
-}
-
-/** One drive of the machine: schedules term under env and processes its own work. */
-function* drive(env: EB.Context, term: EB.Term, opts: EvalOptions = {}): Evaluation<NF.Value> {
-	const { noInlineBindings = false, maxSteps = 10000000 } = opts;
-
 	const mark = yield* Stack.begin();
-	yield* Stack.with(env, term, noInlineBindings);
+	yield* Stack.eval(term, noInlineBindings);
 
 	let steps = 0;
 
@@ -72,20 +55,26 @@ function* drive(env: EB.Context, term: EB.Term, opts: EvalOptions = {}): Evaluat
 
 		steps++;
 		if (steps > maxSteps) {
-			throw new Error(`Evaluation exceeded maximum steps (${maxSteps}). Possible infinite loop in: ${EB.Display.Term(term, env)}`);
+			throw new Error(`Evaluation exceeded maximum steps (${maxSteps}). Possible infinite loop in: ${EB.Display.Term(term, ctx)}`);
 		}
 
+		/* The driver re-binds the reader per step: the frame's env is the single authority. */
 		yield* match(step)
-			.with({ type: "Eval" }, ({ term: tm, noInline }) => evaluateTerm(tm, noInline))
-			.with({ type: "Cont" }, ({ k, args }) => k(args))
+			.with({ type: "Eval" }, ({ env: scope, term: tm, noInline }) => M.reader.local(_ => scope, evaluateTerm(tm, noInline)))
+			.with({ type: "Cont" }, ({ env: scope, k, args }) => M.reader.local(_ => scope, k(args)))
 			.exhaustive();
 	}
 
 	return yield* Stack.finish(mark);
 }
 
+/** The elaboration-facing entry. */
+export function* normalize(term: EB.Term, opts: EvalOptions = {}): Evaluation<NF.Value> {
+	return yield* evaluate(term, opts);
+}
+
 function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<void> {
-	const ctx = yield* Stack.current();
+	const ctx = yield* M.reader.ask();
 
 	yield* match(term)
 		.with({ type: "Lit" }, function* ({ value }) {
@@ -143,7 +132,7 @@ function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<voi
 			});
 
 			// Evaluate in extended context
-			yield* Stack.with(xtended, val[0]);
+			yield* M.reader.local(_ => xtended, Stack.eval(val[0]));
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, function* ({ variable }) {
 			const registry = yield* Metas.registry.get();
@@ -155,7 +144,7 @@ function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<voi
 			}
 
 			// Force re-evaluation of the solution
-			yield* Stack.eval(NF.quote(ctx, ctx.env.length, solution));
+			yield* Stack.eval(yield* NF.quote(ctx.env.length, solution));
 		})
 		.with(
 			{ type: "Var", variable: { type: "Bound" } },
@@ -229,7 +218,7 @@ function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<voi
 			});
 
 			// Evaluate the row
-			yield* evalRowPush(xtended, binding.annotation.row);
+			yield* M.reader.local(_ => xtended, evalRowPush(binding.annotation.row));
 		})
 		.with({ type: "Abs", binding: { type: "Mu" } }, function* (mu) {
 			// Evaluate annotation, then construct Mu
@@ -270,32 +259,32 @@ function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<voi
 				yield* Stack.ret(rowVal); // Already a Row value
 			});
 
-			yield* evalRowPush(xtended, row);
+			yield* M.reader.local(_ => xtended, evalRowPush(row));
 		})
 		.with({ type: "Match" }, function* (v) {
 			// Evaluate scrutinee, then match
 			yield* Stack.cont(1, function* ([scrutinee]) {
-				const known = view(ctx, scrutinee);
+				const known = yield* view(scrutinee);
 				if (known.kind !== "Sealed") {
 					yield* Stack.ret(NF.Constructors.StuckMatch(NF.Constructors.Closure(ctx, v), scrutinee));
 					return;
 				}
 
-				yield* matchingAndPushStack(ctx, known.value, v.alternatives);
+				yield* matchingAndPushStack(known.value, v.alternatives);
 			});
 			yield* Stack.eval(v.scrutinee);
 		})
 		.with({ type: "Proj" }, function* ({ term, label }) {
 			// Evaluate base, then project
 			yield* Stack.cont(1, function* ([base]) {
-				yield* Stack.ret(projectValue(base, label, ctx));
+				yield* Stack.ret(yield* projectValue(base, label));
 			});
 			yield* Stack.eval(term);
 		})
 		.with({ type: "Inj" }, function* ({ term, label, value: valueTerm }) {
 			// Evaluate base and value, then inject
 			yield* Stack.cont(2, function* ([base, injected]) {
-				yield* Stack.ret(injectValue(base, label, injected, ctx));
+				yield* Stack.ret(yield* injectValue(base, label, injected));
 			});
 			yield* Stack.eval(valueTerm);
 			yield* Stack.eval(term);
@@ -316,7 +305,7 @@ function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<voi
 		})
 		.with({ type: "Block" }, function* ({ statements, return: ret }) {
 			// Process statements to extend context, then evaluate return
-			yield* processStatementsAndPush(statements, ctx, ret);
+			yield* processStatementsAndPush(statements, ret);
 		})
 		.with({ type: "Reset" }, function* ({ term }) {
 			// Reset establishes a delimiter for continuation capture.
@@ -377,13 +366,14 @@ function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<voi
 /**
  * Process block statements, evaluating let bindings and extending context.
  */
-function* processStatementsAndPush(stmts: EB.Statement[], ctx: EB.Context, returnTerm: EB.Term): Evaluation<void> {
+function* processStatementsAndPush(stmts: EB.Statement[], returnTerm: EB.Term): Evaluation<void> {
 	if (stmts.length === 0) {
 		// No more statements, evaluate the return term
-		yield* Stack.with(ctx, returnTerm);
+		yield* Stack.eval(returnTerm);
 		return;
 	}
 
+	const ctx = yield* M.reader.ask();
 	const [current, ...rest] = stmts;
 
 	yield* match(current)
@@ -395,29 +385,34 @@ function* processStatementsAndPush(stmts: EB.Statement[], ctx: EB.Context, retur
 			};
 			const extended = { ...ctx, env: [entry, ...ctx.env] };
 
-			// Process remaining statements after this value is evaluated
-			yield* Stack.cont(1, function* ([val]) {
-				entry.nf = val;
-				yield* processStatementsAndPush(rest, extended, returnTerm);
-			});
+			yield* M.reader.local(
+				_ => extended,
+				(function* () {
+					// Process remaining statements after this value is evaluated
+					yield* Stack.cont(1, function* ([val]) {
+						entry.nf = val;
+						yield* processStatementsAndPush(rest, returnTerm);
+					});
 
-			// Evaluate the value
-			yield* Stack.with(extended, value);
+					// Evaluate the value
+					yield* Stack.eval(value);
+				})(),
+			);
 		})
 		.with({ type: "Expression" }, function* ({ value }) {
 			// Discard the result and continue
 			yield* Stack.cont(1, function* ([_val]) {
-				yield* processStatementsAndPush(rest, ctx, returnTerm);
+				yield* processStatementsAndPush(rest, returnTerm);
 			});
 
 			// Evaluate the expression
-			yield* Stack.with(ctx, value);
+			yield* Stack.eval(value);
 		})
 		.with({ type: "Using" }, function* ({ value, annotation }) {
 			// no delta-reduction: we don't want to inline the value, just evaluate it and add it to implicits
-			const nfValue = yield* drive(ctx, value, { noInlineBindings: true });
+			const nfValue = yield* evaluate(value, { noInlineBindings: true });
 			const updated = update(ctx, "implicits", A.append<EB.Context["implicits"][0]>([nfValue, annotation]));
-			yield* processStatementsAndPush(rest, updated, returnTerm);
+			yield* M.reader.local(_ => updated, processStatementsAndPush(rest, returnTerm));
 		})
 		.exhaustive();
 }
@@ -432,7 +427,7 @@ function* deferred(value: NF.Value): Evaluation<void> {
 	});
 }
 
-function* evalRowPush(ctx: EB.Context, row: EB.Row): Evaluation<void> {
+function* evalRowPush(row: EB.Row): Evaluation<void> {
 	yield* match(row)
 		.with({ type: "empty" }, r => deferred(NF.Constructors.Row(r)))
 		.with({ type: "extension" }, function* ({ label, value: term, row: restRow }) {
@@ -446,10 +441,10 @@ function* evalRowPush(ctx: EB.Context, row: EB.Row): Evaluation<void> {
 			});
 
 			// Schedule rest row evaluation
-			yield* evalRowPush(ctx, restRow);
+			yield* evalRowPush(restRow);
 
 			// Schedule value evaluation (will complete first due to stack order)
-			yield* Stack.with(ctx, term);
+			yield* Stack.eval(term);
 		})
 		.with({ type: "variable" }, function* (r) {
 			yield* match(r.variable)
@@ -462,6 +457,8 @@ function* evalRowPush(ctx: EB.Context, row: EB.Row): Evaluation<void> {
 						return;
 					}
 
+					const ctx = yield* M.reader.ask();
+
 					yield* match(solved)
 						.with({ type: "Row" }, deferred)
 						.with({ type: "Var" }, ({ variable }) => deferred(NF.Constructors.Row({ type: "variable", variable })))
@@ -470,6 +467,8 @@ function* evalRowPush(ctx: EB.Context, row: EB.Row): Evaluation<void> {
 						});
 				})
 				.with({ type: "Bound" }, function* (v) {
+					const ctx = yield* M.reader.ask();
+
 					yield* match(unwrapNeutral(ctx.env[v.index].nf))
 						.with({ type: "Row" }, deferred)
 						.with({ type: "Var" }, val => deferred(NF.Constructors.Row({ type: "variable", variable: val.variable })))
@@ -488,7 +487,9 @@ function* evalRowPush(ctx: EB.Context, row: EB.Row): Evaluation<void> {
 
 type Project = { tag: "found"; value: NF.Value } | { tag: "blocked" } | { tag: "missing" } | { tag: "not-applicable" };
 
-const project = (ctx: EB.Context, base: NF.Value, label: string): Project => {
+const project = function* (base: NF.Value, label: string): Evaluation<Project> {
+	const ctx = yield* M.reader.ask();
+
 	const current = match(base)
 		.with({ type: "Neutral", kind: "Symbolic", value: NF.Patterns.Label }, ({ value }) => ctx.sigma[value.variable.name]?.value ?? base)
 		.otherwise(() => base);
@@ -500,7 +501,7 @@ const project = (ctx: EB.Context, base: NF.Value, label: string): Project => {
 			.with({ type: "extension" }, ({ label: current, value, row }) => (current === label ? ({ tag: "found", value } satisfies Project) : lookup(row)))
 			.exhaustive();
 
-	return match(view(ctx, current))
+	return match(yield* view(current))
 		.with({ kind: "Symbolic" }, (): Project => ({ tag: "blocked" }))
 		.with({ kind: "Blocked" }, (): Project => ({ tag: "blocked" }))
 		.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => lookup(value.row))
@@ -510,8 +511,8 @@ const project = (ctx: EB.Context, base: NF.Value, label: string): Project => {
 		.otherwise((): Project => ({ tag: "not-applicable" }));
 };
 
-function projectValue(base: NF.Value, label: string, ctx: EB.Context): NF.Value {
-	return match(project(ctx, base, label))
+function* projectValue(base: NF.Value, label: string): Evaluation<NF.Value> {
+	return match(yield* project(base, label))
 		.with({ tag: "found" }, ({ value }) => value)
 		.with({ tag: "missing" }, () => {
 			throw new Error(`Projection: label ${label} not found`);
@@ -519,7 +520,7 @@ function projectValue(base: NF.Value, label: string, ctx: EB.Context): NF.Value 
 		.otherwise(() => NF.Constructors.StuckProj(base, label));
 }
 
-const inject = (ctx: EB.Context, base: NF.Value, label: string, injected: NF.Value): NF.Value | undefined => {
+const inject = function* (base: NF.Value, label: string, injected: NF.Value): Evaluation<NF.Value | undefined> {
 	const set = (row: NF.Row): NF.Row =>
 		match(row)
 			.with({ type: "empty" }, (): NF.Row => NF.Constructors.Extension(label, injected, row))
@@ -529,7 +530,7 @@ const inject = (ctx: EB.Context, base: NF.Value, label: string, injected: NF.Val
 			)
 			.exhaustive();
 
-	return match(view(ctx, base))
+	return match(yield* view(base))
 		.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => NF.Constructors.Row(set(value.row)))
 		.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value }) => NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit))
 		.with({ kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) => NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit))
@@ -537,8 +538,8 @@ const inject = (ctx: EB.Context, base: NF.Value, label: string, injected: NF.Val
 		.otherwise(() => undefined);
 };
 
-function injectValue(base: NF.Value, label: string, injected: NF.Value, ctx: EB.Context): NF.Value {
-	return inject(ctx, base, label, injected) ?? NF.Constructors.StuckInj(base, label, injected);
+function* injectValue(base: NF.Value, label: string, injected: NF.Value): Evaluation<NF.Value> {
+	return (yield* inject(base, label, injected)) ?? NF.Constructors.StuckInj(base, label, injected);
 }
 
 /**
@@ -569,9 +570,7 @@ function* reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): 
 				return EB.extendSigma(cls.ctx, nfa.row);
 			};
 			yield* match(closure)
-				.with({ type: "Closure" }, function* (cls) {
-					yield* Stack.with(extended(cls), cls.term);
-				})
+				.with({ type: "Closure" }, cls => M.reader.local(_ => extended(cls), Stack.eval(cls.term)))
 				.with({ type: "PrimOp" }, function* (primop) {
 					const args = extended(primop)
 						.env.slice(0, primop.arity)
@@ -627,22 +626,23 @@ function* reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): 
 /**
  * Stack-based matching: push alternatives as work items instead of recursively calling evaluate.
  */
-function* matchingAndPushStack(ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]): Evaluation<void> {
+function* matchingAndPushStack(nf: NF.Value, alts: EB.Alternative[]): Evaluation<void> {
 	if (alts.length === 0) {
 		throw new Error("Match: No alternative matched");
 	}
 
+	const ctx = yield* M.reader.ask();
 	const [alt, ...rest] = alts;
 	const meetResult = meet(ctx, alt.pattern, nf);
 
 	if (O.isSome(meetResult)) {
 		// Pattern matched: enter the alternative under the binder-extended context
 		const binders = meetResult.value;
-		const extendedCtx = binders.reduce((_ctx, { binder, nf }) => EB.extend(_ctx, binder, nf), ctx);
-		yield* Stack.with(extendedCtx, alt.term);
+		const extendedCtx = binders.reduce((_ctx, { binder, nf: bound }) => EB.extend(_ctx, binder, bound), ctx);
+		yield* M.reader.local(_ => extendedCtx, Stack.eval(alt.term));
 	} else {
 		// Pattern didn't match: try next alternative
-		yield* matchingAndPushStack(ctx, nf, rest);
+		yield* matchingAndPushStack(nf, rest);
 	}
 }
 
@@ -690,21 +690,23 @@ export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Val
 			throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
 		});
 
-export const matching = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]): NF.Value | undefined => {
-	return match(alts)
-		.with([], () => undefined)
-		.with([P._, ...P.array()], ([alt, ...rest]) =>
-			F.pipe(
-				meet(ctx, alt.pattern, nf),
-				O.map(binders => {
-					const extended = binders.reduce((_ctx, { binder, nf }) => EB.extend(_ctx, binder, nf), ctx);
-					return evaluate(extended, alt.term);
-				}),
-				O.getOrElse(() => matching(ctx, nf, rest)),
-			),
-		)
-		.exhaustive();
-};
+export function* matching(nf: NF.Value, alts: EB.Alternative[]): Evaluation<NF.Value | undefined> {
+	if (alts.length === 0) {
+		return undefined;
+	}
+
+	const ctx = yield* M.reader.ask();
+	const [alt, ...rest] = alts;
+	const met = meet(ctx, alt.pattern, nf);
+
+	if (O.isNone(met)) {
+		return yield* matching(nf, rest);
+	}
+
+	const extended = met.value.reduce((_ctx, { binder, nf: bound }) => EB.extend(_ctx, binder, bound), ctx);
+
+	return yield* M.reader.local(_ => extended, evaluate(alt.term));
+}
 
 export function apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): NF.Value {
 	// Check if this is a captured continuation being applied
@@ -774,66 +776,83 @@ export function apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): 
 
 export type View = { kind: NF.Neutral; value: NF.Value };
 
-export const resume = (ctx: EB.Context, value: NF.Value): Option<NF.Value> =>
-	match(value)
-		.with(NF.Patterns.Proj, ({ base, label }) =>
-			match(project(ctx, base, label))
-				.with({ tag: "found" }, ({ value }) => O.some(value))
+export function* resume(value: NF.Value): Evaluation<Option<NF.Value>> {
+	return yield* match(value)
+		.with(NF.Patterns.Proj, function* ({ base, label }) {
+			return match(yield* project(base, label))
+				.with({ tag: "found" }, ({ value: found }) => O.some(found))
 				.with({ tag: "missing" }, () => {
 					throw new Error(`Projection: label ${label} not found`);
 				})
-				.otherwise(() => O.none),
-		)
-		.with(NF.Patterns.Match, ({ closure, scrutinee }) => {
-			const known = view(ctx, scrutinee);
+				.otherwise(() => O.none);
+		})
+		.with(NF.Patterns.Match, function* ({ closure, scrutinee }) {
+			const known = yield* view(scrutinee);
 			if (known.kind !== "Sealed") {
 				return O.none;
 			}
 			assert(closure.type === "Closure", "Blocked match should retain a term closure");
 			assert(closure.term.type === "Match", "Blocked match closure should retain a match term");
-			const result = matching(closure.ctx, known.value, closure.term.alternatives);
+
+			const result = yield* M.reader.local(_ => closure.ctx, matching(known.value, closure.term.alternatives));
 			if (!result) {
 				throw new Error("Match: No alternative matched");
 			}
 			return O.some(result);
 		})
-		.with(NF.Patterns.Inj, ({ base, label, injected }) => O.fromNullable(inject(ctx, base, label, injected)))
-		.otherwise(() => O.none);
-
-export function force(ctx: EB.Context, value: NF.Value): NF.Value {
-	return match(value)
-		.with({ type: "Neutral", kind: "Sealed" }, () => value)
-		.with({ type: "Neutral", kind: "Symbolic", value: NF.Patterns.Label }, ({ value: label }) => {
-			return match(ctx.sigma[label.variable.name])
-				.with({ value: { type: "Neutral", kind: "Symbolic", value: NF.Patterns.Label } }, ({ value: placeholder }) =>
-					placeholder.value.variable.name === label.variable.name ? value : force(ctx, placeholder),
-				)
-				.with({ value: P.select() }, resolved => force(ctx, resolved))
-				.otherwise(() => value);
+		.with(NF.Patterns.Inj, function* ({ base, label, injected }) {
+			return O.fromNullable(yield* inject(base, label, injected));
 		})
-		.with({ type: "Neutral", kind: "Symbolic", value: NF.Patterns.Flex }, ({ value: flex }) => {
-			const solution = ctx.zonker[flex.variable.val];
-			return solution ? force(ctx, solution) : value;
-		})
-		.with({ type: "Neutral", kind: "Symbolic" }, () => value)
-		.with({ type: "Neutral", kind: "Blocked" }, ({ value: blocked }) =>
-			F.pipe(
-				resume(ctx, blocked),
-				O.match(
-					() => value,
-					next => force(ctx, next),
-				),
-			),
-		)
-		.with(NF.Patterns.Flex, ({ variable }) => {
-			const solution = ctx.zonker[variable.val];
-			return solution ? force(ctx, solution) : value;
-		})
-		.otherwise(() => value);
+		.otherwise(function* () {
+			return O.none;
+		});
 }
 
-export function view(ctx: EB.Context, value: NF.Value): View {
-	const forced = force(ctx, value);
+export function* force(value: NF.Value): Evaluation<NF.Value> {
+	return yield* match(value)
+		.with({ type: "Neutral", kind: "Sealed" }, function* () {
+			return value;
+		})
+		.with({ type: "Neutral", kind: "Symbolic", value: NF.Patterns.Label }, function* ({ value: label }) {
+			const ctx = yield* M.reader.ask();
+
+			return yield* match(ctx.sigma[label.variable.name])
+				.with({ value: { type: "Neutral", kind: "Symbolic", value: NF.Patterns.Label } }, function* ({ value: placeholder }) {
+					return placeholder.value.variable.name === label.variable.name ? value : yield* force(placeholder);
+				})
+				.with({ value: P.select() }, function* (resolved) {
+					return yield* force(resolved);
+				})
+				.otherwise(function* () {
+					return value;
+				});
+		})
+		.with({ type: "Neutral", kind: "Symbolic", value: NF.Patterns.Flex }, function* ({ value: flex }) {
+			const solution = Metas.solution(yield* Metas.registry.get(), flex.variable.val);
+
+			return solution ? yield* force(solution) : value;
+		})
+		.with({ type: "Neutral", kind: "Symbolic" }, function* () {
+			return value;
+		})
+		.with({ type: "Neutral", kind: "Blocked" }, function* ({ value: blocked }) {
+			const next = yield* resume(blocked);
+
+			return O.isNone(next) ? value : yield* force(next.value);
+		})
+		.with(NF.Patterns.Flex, function* ({ variable }) {
+			const solution = Metas.solution(yield* Metas.registry.get(), variable.val);
+
+			return solution ? yield* force(solution) : value;
+		})
+		.otherwise(function* () {
+			return value;
+		});
+}
+
+export function* view(value: NF.Value): Evaluation<View> {
+	const forced = yield* force(value);
+
 	return match(forced)
 		.with({ type: "Neutral" }, ({ kind, value }) => ({ kind, value }))
 		.otherwise(value => ({ kind: "Sealed", value }));

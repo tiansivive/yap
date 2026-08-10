@@ -3,12 +3,14 @@ import * as Eff from "@yap/utils/effects";
 import * as P from "@yap/elaboration/shared/provenance";
 import * as EB from "@yap/elaboration";
 import type * as Metas from "@yap/elaboration/shared/metas";
+import type * as NF from "@yap/elaboration/normalization";
 
 import { Monoid } from "fp-ts/lib/Monoid";
 import { Cause } from "./errors";
 
+/* The callstack is ambient like the old global stacks were: one machine per run, installed at the boundary. */
 export type Elaboration<A> = Eff.Eff<
-	Eff.Actions<[typeof writer, typeof reader, typeof except, typeof st, typeof supply, typeof tracer, typeof Metas.registry]>,
+	Eff.Actions<[typeof writer, typeof reader, typeof except, typeof st, typeof supply, typeof tracer, typeof Metas.registry, typeof NF.callstack]>,
 	A
 >;
 

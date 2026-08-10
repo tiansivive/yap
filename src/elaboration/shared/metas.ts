@@ -107,6 +107,9 @@ const handlers = (initial: Registry = empty): Eff.Handler<Get | Modify, Registry
 
 export const registry = { get, modify, handlers };
 
+/** A computation over the registry alone. */
+export type Effect<A> = Eff.Eff<Eff.Actions<typeof registry>, A>;
+
 export const fresh = function* (lvl: number, annotation: NF.Value): M.Elaboration<EB.Meta> {
 	const id = yield* M.supply.fresh("meta");
 	const meta: EB.Meta = { type: "Meta", val: id, lvl };
