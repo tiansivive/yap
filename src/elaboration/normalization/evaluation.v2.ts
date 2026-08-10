@@ -1,14 +1,19 @@
-/* eslint-disable no-restricted-syntax, no-restricted-properties, prefer-const, @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion, @typescript-eslint/consistent-type-assertions --
- * Deliberately imperative: NbE evaluation runs an explicit work-stack machine, and shift/reset
- * capture slices the live stack for continuations. The file is tech debt scheduled for a rewrite
- * into a generator-based Evaluation monad that owns the stack as state (mirroring the lowering
- * monad), so its lint debt is intentionally not paid down — see z-yap [[evaluation-monad-rework]].
- * This directive is self-retiring: reportUnusedDisableDirectives flags it once the rework lands.
+/* eslint-disable no-restricted-syntax, no-restricted-properties, prefer-const, @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion --
+ * The NbE machine: evaluation drives an explicit work-stack owned by the callstack effect
+ * (./callstack.ts), and shift/reset capture slices that stack for continuations. The driver
+ * loop and the remaining unconverted helpers (apply, matching, reduce, force, quote) keep
+ * this file's imperative residue; the helpers convert in a later pass.
  */
 import { match, P } from "ts-pattern";
 
+import * as Eff from "@yap/utils/effects";
+
 import * as EB from "@yap/elaboration";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from ".";
+
+import { callstack as Stack, Evaluation } from "./callstack";
 
 import _ from "lodash";
 
@@ -26,23 +31,6 @@ import assert from "assert";
 
 import * as Lit from "@yap/shared/literals";
 
-/**
- * Stack-based evaluation to prevent stack overflow on deeply recursive Yap programs.
- *
- * Uses two GLOBAL stacks shared across all evaluation calls:
- * - workStack: frames to process (either evaluate a term or apply a continuation)
- * - resultStack: completed values waiting to be consumed by continuations
- *
- * Each call to evaluate() only processes work items it added (tracks initial stack size).
- * This allows helpers to recursively call evaluate() without allocating new stacks.
- * The stacks grow on the heap, not the JS call stack.
- */
-
-export type StackFrame =
-	| { type: "Eval"; ctx: EB.Context; term: EB.Term; noInlineBindings?: boolean }
-	| { type: "Cont"; arity: number; handler: (results: NF.Value[]) => void }
-	| { type: "Delimiter"; ctx: EB.Context; resultSize: number };
-
 export type EvalOptions = {
 	/** no δ-reduction: prevents inlining of definitions. Default is `false`. */
 	noInlineBindings?: boolean;
@@ -50,88 +38,86 @@ export type EvalOptions = {
 	maxSteps?: number;
 };
 
-// GLOBAL stacks - reused across all evaluate calls
-const globalWorkStack: StackFrame[] = [];
-const globalResultStack: NF.Value[] = [];
+/** The evaluation procedure, under the environment the machine is running in. */
+export function* evaluate(term: EB.Term, opts: EvalOptions = {}): Evaluation<NF.Value> {
+	const ctx = yield* Stack.current();
 
-export function evaluate(ctx: EB.Context, term: EB.Term, opts: EvalOptions = {}): NF.Value {
+	return yield* drive(ctx, term, opts);
+}
+
+/** The elaboration-facing entry: a fresh machine over the ambient context. */
+export function* normalize(term: EB.Term, opts: EvalOptions = {}) {
+	const ctx = yield* M.reader.ask();
+
+	const [value] = yield* Eff.with([Stack.handlers(ctx)], () => evaluate(term, opts));
+
+	return value;
+}
+
+/** One drive of the machine: schedules term under env and processes its own work. */
+function* drive(env: EB.Context, term: EB.Term, opts: EvalOptions = {}): Evaluation<NF.Value> {
 	const { noInlineBindings = false, maxSteps = 10000000 } = opts;
-	// Track where this call's work starts in the global stack
-	const initialWorkSize = globalWorkStack.length;
-	const initialResultSize = globalResultStack.length;
 
-	// Add our work
-	globalWorkStack.push({ type: "Eval", ctx, term, noInlineBindings });
+	const mark = yield* Stack.begin();
+	yield* Stack.with(env, term, noInlineBindings);
 
 	let steps = 0;
 
-	// Only process work items we added (everything beyond initialWorkSize)
-	while (globalWorkStack.length > initialWorkSize) {
+	while (true) {
+		const step = yield* Stack.next(mark);
+
+		if (!step) {
+			break;
+		}
+
 		steps++;
 		if (steps > maxSteps) {
-			throw new Error(`Evaluation exceeded maximum steps (${maxSteps}). Possible infinite loop in: ${EB.Display.Term(term, ctx)}`);
+			throw new Error(`Evaluation exceeded maximum steps (${maxSteps}). Possible infinite loop in: ${EB.Display.Term(term, env)}`);
 		}
 
-		const frame = globalWorkStack.pop()!;
-
-		if (frame.type === "Cont") {
-			// Pop required results and apply continuation
-			const args = globalResultStack.splice(-frame.arity, frame.arity);
-			if (args.length !== frame.arity) {
-				throw new Error(`Continuation expected ${frame.arity} results but got ${args.length}`);
-			}
-			frame.handler(args);
-		} else if (frame.type === "Delimiter") {
-			// Reset delimiter reached - the result is already on the stack from the enclosed term
-			// Just pass through - the delimiter stays processed
-			continue;
-		} else {
-			// Evaluate term
-			evaluateTerm(frame.ctx, frame.term, frame.noInlineBindings ?? false);
-		}
+		yield* match(step)
+			.with({ type: "Eval" }, ({ term: tm, noInline }) => evaluateTerm(tm, noInline))
+			.with({ type: "Cont" }, ({ k, args }) => k(args))
+			.exhaustive();
 	}
 
-	// We should have exactly one result from our work
-	const resultCount = globalResultStack.length - initialResultSize;
-	if (resultCount !== 1) {
-		throw new Error(`Expected exactly 1 result, got ${resultCount}`);
-	}
-
-	return globalResultStack.pop()!;
+	return yield* Stack.finish(mark);
 }
 
-function evaluateTerm(ctx: EB.Context, term: EB.Term, noInlineBindings: boolean): void {
-	match(term)
-		.with({ type: "Lit" }, ({ value }) => {
-			globalResultStack.push(NF.Constructors.Lit(value));
+function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<void> {
+	const ctx = yield* Stack.current();
+
+	yield* match(term)
+		.with({ type: "Lit" }, function* ({ value }) {
+			yield* Stack.ret(NF.Constructors.Lit(value));
 		})
-		.with({ type: "Var", variable: { type: "Label" } }, ({ variable }) => {
+		.with({ type: "Var", variable: { type: "Label" } }, function* ({ variable }) {
 			const sig = ctx.sigma[variable.name];
 			if (sig) {
-				globalResultStack.push(sig.value);
+				yield* Stack.ret(sig.value);
 				return;
 			}
+
 			const rec = ctx.record[variable.name];
-			if (rec) {
-				if (rec.value) {
-					globalResultStack.push(rec.value);
-					return;
-				}
-				if (rec.term) {
-					globalWorkStack.push({ type: "Eval", ctx, term: rec.term });
-					return;
-				}
+			if (rec?.value) {
+				yield* Stack.ret(rec.value);
+				return;
 			}
+			if (rec?.term) {
+				yield* Stack.eval(rec.term);
+				return;
+			}
+
 			throw new Error("Unbound label: " + variable.name);
 		})
 		.with(
 			{ type: "Var", variable: { type: "Free" } },
 			_ => noInlineBindings,
-			({ variable }) => {
-				globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.Var(variable)));
+			function* ({ variable }) {
+				yield* Stack.ret(NF.Constructors.Neutral("Sealed", NF.Constructors.Var(variable)));
 			},
 		)
-		.with({ type: "Var", variable: { type: "Free" } }, ({ variable }) => {
+		.with({ type: "Var", variable: { type: "Free" } }, function* ({ variable }) {
 			const val = ctx.imports[variable.name];
 
 			if (!val) {
@@ -150,82 +136,72 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, noInlineBindings: boolean)
 
 			const xtended = { ...ctx, env: [entry, ...ctx.env] };
 
-			// Push continuation to tie the knot
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 1,
-				handler: ([result]) => {
-					entry.nf = result;
-					globalResultStack.push(result);
-				},
+			// Continuation to tie the knot
+			yield* Stack.cont(1, function* ([result]) {
+				entry.nf = result;
+				yield* Stack.ret(result);
 			});
 
 			// Evaluate in extended context
-			globalWorkStack.push({ type: "Eval", ctx: xtended, term: val[0] });
+			yield* Stack.with(xtended, val[0]);
 		})
-		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
-			if (!ctx.zonker[variable.val]) {
-				const v = NF.Constructors.Var(variable);
-				globalResultStack.push(NF.Constructors.Neutral("Symbolic", v));
+		.with({ type: "Var", variable: { type: "Meta" } }, function* ({ variable }) {
+			const registry = yield* Metas.registry.get();
+			const solution = Metas.solution(registry, variable.val);
+
+			if (!solution) {
+				yield* Stack.ret(NF.Constructors.Neutral("Symbolic", NF.Constructors.Var(variable)));
 				return;
 			}
 
-			// Force re-evaluation of zonker value
-			const quoted = NF.quote(ctx, ctx.env.length, ctx.zonker[variable.val]);
-			globalWorkStack.push({ type: "Eval", ctx, term: quoted });
+			// Force re-evaluation of the solution
+			yield* Stack.eval(NF.quote(ctx, ctx.env.length, solution));
 		})
 		.with(
 			{ type: "Var", variable: { type: "Bound" } },
 			_ => noInlineBindings,
-			({ variable }) => {
+			function* ({ variable }) {
 				const lvl = ctx.env.length - 1 - variable.index;
-				globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.Var({ type: "Bound", lvl })));
+				yield* Stack.ret(NF.Constructors.Neutral("Sealed", NF.Constructors.Var({ type: "Bound", lvl })));
 			},
 		)
-		.with({ type: "Var", variable: { type: "Bound" } }, ({ variable }) => {
+		.with({ type: "Var", variable: { type: "Bound" } }, function* ({ variable }) {
 			const entry = ctx.env[variable.index];
-			match(entry.type[0])
-				.with({ type: "Mu" }, () => globalResultStack.push(NF.Constructors.Neutral("Sealed", entry.nf)))
-				.otherwise(() => globalResultStack.push(entry.nf));
+			yield* match(entry.type[0])
+				.with({ type: "Mu" }, function* () {
+					yield* Stack.ret(NF.Constructors.Neutral("Sealed", entry.nf));
+				})
+				.otherwise(function* () {
+					yield* Stack.ret(entry.nf);
+				});
 		})
-		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => {
+		.with({ type: "Var", variable: { type: "Foreign" } }, function* ({ variable }) {
 			const val = ctx.ffi[variable.name];
+
 			if (!val) {
-				globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.Var(variable)));
+				yield* Stack.ret(NF.Constructors.Neutral("Sealed", NF.Constructors.Var(variable)));
 				return;
 			}
 
-			if (val && val.arity === 0) {
-				globalResultStack.push(val.compute());
-				return;
-			}
-
-			const external = NF.Constructors.External(variable.name, val.arity, val.compute, []);
-			globalResultStack.push(external);
+			yield* match(val)
+				.with({ arity: 0 }, ffi => Stack.ret(ffi.compute()))
+				.otherwise(ffi => Stack.ret(NF.Constructors.External(variable.name, ffi.arity, ffi.compute, [])));
 		})
-		.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body, binding }) => {
+		.with({ type: "Abs", binding: { type: "Lambda" } }, function* ({ body, binding }) {
 			// Evaluate annotation, then construct Lambda
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 1,
-				handler: ([ann]) => {
-					globalResultStack.push(NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(ctx, body), ann));
-				},
+			yield* Stack.cont(1, function* ([ann]) {
+				yield* Stack.ret(NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(ctx, body), ann));
 			});
-			globalWorkStack.push({ type: "Eval", ctx, term: binding.annotation });
+			yield* Stack.eval(binding.annotation);
 		})
-		.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }) => {
+		.with({ type: "Abs", binding: { type: "Pi" } }, function* ({ body, binding }) {
 			// Evaluate annotation, then construct Pi
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 1,
-				handler: ([ann]) => {
-					globalResultStack.push(NF.Constructors.Pi(binding.variable, binding.icit, ann, NF.Constructors.Closure(ctx, body)));
-				},
+			yield* Stack.cont(1, function* ([ann]) {
+				yield* Stack.ret(NF.Constructors.Pi(binding.variable, binding.icit, ann, NF.Constructors.Closure(ctx, body)));
 			});
-			globalWorkStack.push({ type: "Eval", ctx, term: binding.annotation });
+			yield* Stack.eval(binding.annotation);
 		})
-		.with({ type: "Abs", binding: { type: "Sigma" } }, ({ body, binding }) => {
+		.with({ type: "Abs", binding: { type: "Sigma" } }, function* ({ body, binding }) {
 			assert(binding.annotation.type === "Row", "Sigma binder annotation must be a Row");
 
 			const extractLabels = (r: EB.Row): { [key: string]: EB.Term } => {
@@ -248,41 +224,29 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, noInlineBindings: boolean)
 			const xtended = { ...ctx, sigma };
 
 			// Evaluate row then construct Sigma
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 1,
-				handler: ([ann]) => {
-					globalResultStack.push(NF.Constructors.Sigma(binding.variable, ann, NF.Constructors.Closure(ctx, body)));
-				},
+			yield* Stack.cont(1, function* ([ann]) {
+				yield* Stack.ret(NF.Constructors.Sigma(binding.variable, ann, NF.Constructors.Closure(ctx, body)));
 			});
 
 			// Evaluate the row
-			evalRowPush(xtended, binding.annotation.row);
+			yield* evalRowPush(xtended, binding.annotation.row);
 		})
-		.with({ type: "Abs", binding: { type: "Mu" } }, mu => {
+		.with({ type: "Abs", binding: { type: "Mu" } }, function* (mu) {
 			// Evaluate annotation, then construct Mu
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 1,
-				handler: ([ann]) => {
-					globalResultStack.push(NF.Constructors.Mu(mu.binding.variable, mu.binding.source, ann, NF.Constructors.Closure(ctx, mu.body)));
-				},
+			yield* Stack.cont(1, function* ([ann]) {
+				yield* Stack.ret(NF.Constructors.Mu(mu.binding.variable, mu.binding.source, ann, NF.Constructors.Closure(ctx, mu.body)));
 			});
-			globalWorkStack.push({ type: "Eval", ctx, term: mu.binding.annotation });
+			yield* Stack.eval(mu.binding.annotation);
 		})
-		.with({ type: "App" }, ({ func, arg, icit }) => {
-			// Evaluate func and arg, then reduce using stack-based reduce
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 2,
-				handler: ([funcVal, argVal]) => {
-					reduceAndPushStack(funcVal, argVal, icit);
-				},
+		.with({ type: "App" }, function* ({ func, arg, icit }) {
+			// Evaluate func and arg, then reduce
+			yield* Stack.cont(2, function* ([funcVal, argVal]) {
+				yield* reduceAndPushStack(funcVal, argVal, icit);
 			});
-			globalWorkStack.push({ type: "Eval", ctx, term: arg, noInlineBindings });
-			globalWorkStack.push({ type: "Eval", ctx, term: func, noInlineBindings });
+			yield* Stack.eval(arg, noInlineBindings);
+			yield* Stack.eval(func, noInlineBindings);
 		})
-		.with({ type: "Row" }, ({ row }) => {
+		.with({ type: "Row" }, function* ({ row }) {
 			const extractLabels = (r: EB.Row): { [key: string]: EB.Term } => {
 				if (r.type === "empty" || r.type === "variable") {
 					return {};
@@ -301,151 +265,110 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, noInlineBindings: boolean)
 
 			const xtended = { ...ctx, record };
 
-			// Evaluate row and wrap in Row constructor
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 1,
-				handler: ([rowVal]) => {
-					globalResultStack.push(rowVal); // Already a Row value
-				},
+			// Evaluate row and pass the built Row value through
+			yield* Stack.cont(1, function* ([rowVal]) {
+				yield* Stack.ret(rowVal); // Already a Row value
 			});
 
-			evalRowPush(xtended, row);
+			yield* evalRowPush(xtended, row);
 		})
-		.with({ type: "Match" }, v => {
+		.with({ type: "Match" }, function* (v) {
 			// Evaluate scrutinee, then match
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 1,
-				handler: ([scrutinee]) => {
-					const known = view(ctx, scrutinee);
-					if (known.kind !== "Sealed") {
-						globalResultStack.push(NF.Constructors.StuckMatch(NF.Constructors.Closure(ctx, v), scrutinee));
-						return;
-					}
+			yield* Stack.cont(1, function* ([scrutinee]) {
+				const known = view(ctx, scrutinee);
+				if (known.kind !== "Sealed") {
+					yield* Stack.ret(NF.Constructors.StuckMatch(NF.Constructors.Closure(ctx, v), scrutinee));
+					return;
+				}
 
-					matchingAndPushStack(ctx, known.value, v.alternatives);
-				},
+				yield* matchingAndPushStack(ctx, known.value, v.alternatives);
 			});
-			globalWorkStack.push({ type: "Eval", ctx, term: v.scrutinee });
+			yield* Stack.eval(v.scrutinee);
 		})
-		.with({ type: "Proj" }, ({ term, label }) => {
+		.with({ type: "Proj" }, function* ({ term, label }) {
 			// Evaluate base, then project
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 1,
-				handler: ([base]) => {
-					globalResultStack.push(projectValue(base, label, ctx));
-				},
+			yield* Stack.cont(1, function* ([base]) {
+				yield* Stack.ret(projectValue(base, label, ctx));
 			});
-			globalWorkStack.push({ type: "Eval", ctx, term });
+			yield* Stack.eval(term);
 		})
-		.with({ type: "Inj" }, ({ term, label, value: valueTerm }) => {
+		.with({ type: "Inj" }, function* ({ term, label, value: valueTerm }) {
 			// Evaluate base and value, then inject
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 2,
-				handler: ([base, injected]) => {
-					globalResultStack.push(injectValue(base, label, injected, ctx));
-				},
+			yield* Stack.cont(2, function* ([base, injected]) {
+				yield* Stack.ret(injectValue(base, label, injected, ctx));
 			});
-			globalWorkStack.push({ type: "Eval", ctx, term: valueTerm });
-			globalWorkStack.push({ type: "Eval", ctx, term });
+			yield* Stack.eval(valueTerm);
+			yield* Stack.eval(term);
 		})
-		.with({ type: "Modal" }, ({ term, modalities }) => {
+		.with({ type: "Modal" }, function* ({ term, modalities }) {
 			// Evaluate term and liquid, then wrap in Modal
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 2,
-				handler: ([nf, liquid]) => {
-					const result = match(nf)
-						.with(NF.Patterns.Modal, ({ modalities: innerModalities, value }) => {
-							const combined = Modal.combine(innerModalities, { quantity: modalities.quantity, liquid }, ctx);
-							return NF.Constructors.Modal(value, combined);
-						})
-						.otherwise(v => NF.Constructors.Modal(v, { quantity: modalities.quantity, liquid }));
-					globalResultStack.push(result);
-				},
+			yield* Stack.cont(2, function* ([nf, liquid]) {
+				const result = match(nf)
+					.with(NF.Patterns.Modal, ({ modalities: innerModalities, value }) => {
+						const combined = Modal.combine(innerModalities, { quantity: modalities.quantity, liquid }, ctx);
+						return NF.Constructors.Modal(value, combined);
+					})
+					.otherwise(v => NF.Constructors.Modal(v, { quantity: modalities.quantity, liquid }));
+				yield* Stack.ret(result);
 			});
-			globalWorkStack.push({ type: "Eval", ctx, term: modalities.liquid });
-			globalWorkStack.push({ type: "Eval", ctx, term });
+			yield* Stack.eval(modalities.liquid);
+			yield* Stack.eval(term);
 		})
-		.with({ type: "Block" }, ({ statements, return: ret }) => {
+		.with({ type: "Block" }, function* ({ statements, return: ret }) {
 			// Process statements to extend context, then evaluate return
-			processStatementsAndPush(statements, ctx, ret);
+			yield* processStatementsAndPush(statements, ctx, ret);
 		})
-		.with({ type: "Reset" }, ({ term }) => {
+		.with({ type: "Reset" }, function* ({ term }) {
 			// Reset establishes a delimiter for continuation capture.
-			// We annotate the delimiter with the current result stack size so that
-			// shift can restore it when capturing.
-			globalWorkStack.push({ type: "Delimiter", ctx, resultSize: globalResultStack.length });
-			globalWorkStack.push({ type: "Eval", ctx, term });
+			yield* Stack.delimit();
+			yield* Stack.eval(term);
 		})
-		.with({ type: "Shift" }, ({ body }) => {
+		.with({ type: "Shift" }, function* ({ body }) {
 			// At this point the typing phase has already desugared
 			//   shift e
 			// into
 			//   shift (\k -> e[k])
 			// where each `resume v` in `e` became `k v`.
 			//
-			// Here we implement the dynamic semantics: capture the continuation
-			// up to the nearest Reset-delimiter, package it as a function value,
-			// and apply the body-lambda to that continuation.
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 1,
-				handler: ([h]) => {
-					// Find the nearest reset delimiter.
-					const delimiterIndex = globalWorkStack.findLastIndex(frame => frame.type === "Delimiter");
-					if (delimiterIndex < 0) {
-						throw new Error("Shift without enclosing reset");
-					}
+			// Dynamic semantics: capture the continuation up to the nearest
+			// Reset-delimiter, package it as a function value, and apply the
+			// body-lambda to that continuation.
+			yield* Stack.cont(1, function* ([h]) {
+				const captured = yield* Stack.capture();
+				if (!captured) {
+					throw new Error("Shift without enclosing reset");
+				}
 
-					// Extract delimiter, captured frames, and the result suffix produced
-					// inside this reset up to the shift point.
-					const delimiter = globalWorkStack[delimiterIndex] as Extract<StackFrame, { type: "Delimiter" }>;
-					const capturedFrames: StackFrame[] = globalWorkStack.slice(delimiterIndex + 1);
-					const capturedResults = globalResultStack.slice(delimiter.resultSize);
+				// A continuation closure that, when applied to a value v, replays
+				// the captured continuation as if resumed at the shift point.
+				const continuation: NF.Closure = {
+					type: "Continuation",
+					frames: captured.frames,
+					results: captured.results,
+					ctx: captured.env,
+					term: EB.Constructors.Lit(Lit.unit()), // dummy term
+				};
 
-					// Restore work/result stacks to the state at reset, so the current
-					// evaluation no longer sees the aborted inner continuation.
-					globalWorkStack.splice(delimiterIndex); // drop delimiter + frames
-					globalResultStack.splice(delimiter.resultSize);
+				const kVal = NF.Constructors.Lambda("kArg", "Explicit", continuation, NF.Any);
 
-					// Build a continuation closure that, when applied to a value v,
-					// will replay the captured continuation as if it had been
-					// resumed at the shift point.
-					const continuation: NF.Closure = {
-						type: "Continuation",
-						frames: capturedFrames,
-						results: capturedResults,
-						ctx: delimiter.ctx,
-						term: EB.Constructors.Lit(Lit.unit()), // dummy term
-					};
-
-					const kVal = NF.Constructors.Lambda("kArg", "Explicit", continuation, NF.Any);
-
-					// Now apply the desugared handler `h : (A -> R) -> R` to the
-					// continuation value `kVal`.
-					reduceAndPushStack(h, kVal, "Explicit");
-				},
+				// Apply the desugared handler `h : (A -> R) -> R` to `kVal`.
+				yield* reduceAndPushStack(h, kVal, "Explicit");
 			});
 			// Evaluate the body-lambda; the above continuation receives it.
-			globalWorkStack.push({ type: "Eval", ctx, term: body });
+			yield* Stack.eval(body);
 		})
-		.with({ type: "Bubble" }, ({ meta, shift }) => {
-			const delimiterIndex = globalWorkStack.findLastIndex(frame => frame.type === "Delimiter");
-			if (delimiterIndex >= 0) {
-				globalWorkStack.push({ type: "Eval", ctx, term: shift });
-			} else {
-				const v = NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 });
-				globalResultStack.push(NF.Constructors.Neutral("Symbolic", v));
+		.with({ type: "Bubble" }, function* ({ meta, shift }) {
+			if (yield* Stack.delimited()) {
+				yield* Stack.eval(shift);
+				return;
 			}
+
+			yield* Stack.ret(NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 })));
 		})
-		.with({ type: "Ann" }, ({ term }) => {
-			globalWorkStack.push({ type: "Eval", ctx, term });
+		.with({ type: "Ann" }, function* ({ term }) {
+			yield* Stack.eval(term);
 		})
-		.otherwise(tm => {
+		.otherwise(function* (tm) {
 			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx));
 			throw new Error("Not implemented");
 		});
@@ -453,19 +376,18 @@ function evaluateTerm(ctx: EB.Context, term: EB.Term, noInlineBindings: boolean)
 
 /**
  * Process block statements, evaluating let bindings and extending context.
- * Pushes work onto global stack instead of recursing.
  */
-function processStatementsAndPush(stmts: EB.Statement[], ctx: EB.Context, returnTerm: EB.Term): void {
+function* processStatementsAndPush(stmts: EB.Statement[], ctx: EB.Context, returnTerm: EB.Term): Evaluation<void> {
 	if (stmts.length === 0) {
 		// No more statements, evaluate the return term
-		globalWorkStack.push({ type: "Eval", ctx, term: returnTerm });
+		yield* Stack.with(ctx, returnTerm);
 		return;
 	}
 
 	const [current, ...rest] = stmts;
 
-	match(current)
-		.with({ type: "Let" }, ({ variable, annotation, value }) => {
+	yield* match(current)
+		.with({ type: "Let" }, function* ({ variable, annotation, value }) {
 			const entry: EB.Context["env"][number] = {
 				nf: NF.Constructors.Var({ type: "Bound", lvl: ctx.env.length }),
 				type: [{ type: "Let", variable }, "source", annotation],
@@ -473,149 +395,93 @@ function processStatementsAndPush(stmts: EB.Statement[], ctx: EB.Context, return
 			};
 			const extended = { ...ctx, env: [entry, ...ctx.env] };
 
-			// Push continuation to process remaining statements after this value is evaluated
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 1,
-				handler: ([val]) => {
-					entry.nf = val;
-					processStatementsAndPush(rest, extended, returnTerm);
-				},
+			// Process remaining statements after this value is evaluated
+			yield* Stack.cont(1, function* ([val]) {
+				entry.nf = val;
+				yield* processStatementsAndPush(rest, extended, returnTerm);
 			});
 
 			// Evaluate the value
-			globalWorkStack.push({ type: "Eval", ctx: extended, term: value });
+			yield* Stack.with(extended, value);
 		})
-		.with({ type: "Expression" }, ({ value }) => {
-			// Push continuation to discard result and continue
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 1,
-				handler: ([_val]) => {
-					processStatementsAndPush(rest, ctx, returnTerm);
-				},
+		.with({ type: "Expression" }, function* ({ value }) {
+			// Discard the result and continue
+			yield* Stack.cont(1, function* ([_val]) {
+				yield* processStatementsAndPush(rest, ctx, returnTerm);
 			});
 
 			// Evaluate the expression
-			globalWorkStack.push({ type: "Eval", ctx, term: value });
+			yield* Stack.with(ctx, value);
 		})
-		.with({ type: "Using" }, ({ value, annotation }) => {
+		.with({ type: "Using" }, function* ({ value, annotation }) {
 			// no delta-reduction: we don't want to inline the value, just evaluate it and add it to implicits
-			const nfValue = evaluate(ctx, value, { noInlineBindings: true });
+			const nfValue = yield* drive(ctx, value, { noInlineBindings: true });
 			const updated = update(ctx, "implicits", A.append<EB.Context["implicits"][0]>([nfValue, annotation]));
-			processStatementsAndPush(rest, updated, returnTerm);
+			yield* processStatementsAndPush(rest, updated, returnTerm);
 		})
 		.exhaustive();
 }
 
 /**
- * Push work to evaluate a row onto the global stack.
- * Rows are evaluated recursively from right to left, building up the result.
+ * Schedule the evaluation of a row, built up from right to left.
  */
-function evalRowPush(ctx: EB.Context, row: EB.Row): void {
-	match(row)
-		.with({ type: "empty" }, r => {
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 0,
-				handler: _args => {
-					globalResultStack.push(NF.Constructors.Row(r));
-				},
-			});
-		})
-		.with({ type: "extension" }, ({ label, value: term, row: restRow }) => {
+/** Rows complete right-to-left, so a leaf answers through an arity-0 continuation to keep result order. */
+function* deferred(value: NF.Value): Evaluation<void> {
+	yield* Stack.cont(0, function* () {
+		yield* Stack.ret(value);
+	});
+}
+
+function* evalRowPush(ctx: EB.Context, row: EB.Row): Evaluation<void> {
+	yield* match(row)
+		.with({ type: "empty" }, r => deferred(NF.Constructors.Row(r)))
+		.with({ type: "extension" }, function* ({ label, value: term, row: restRow }) {
 			// Evaluate value and rest, then construct extension
-			globalWorkStack.push({
-				type: "Cont",
-				arity: 2,
-				handler: ([value, rest]) => {
-					// rest should be a Row value
-					if (rest.type !== "Row") {
-						throw new Error("Expected Row value in row evaluation");
-					}
-					globalResultStack.push(NF.Constructors.Row(NF.Constructors.Extension(label, value, rest.row)));
-				},
+			yield* Stack.cont(2, function* ([value, rest]) {
+				// rest should be a Row value
+				if (rest.type !== "Row") {
+					throw new Error("Expected Row value in row evaluation");
+				}
+				yield* Stack.ret(NF.Constructors.Row(NF.Constructors.Extension(label, value, rest.row)));
 			});
 
-			// Push rest row evaluation
-			evalRowPush(ctx, restRow);
+			// Schedule rest row evaluation
+			yield* evalRowPush(ctx, restRow);
 
-			// Push value evaluation (will complete first due to stack order)
-			globalWorkStack.push({ type: "Eval", ctx, term });
+			// Schedule value evaluation (will complete first due to stack order)
+			yield* Stack.with(ctx, term);
 		})
-		.with({ type: "variable" }, r => {
-			if (r.variable.type === "Meta") {
-				const zonked = ctx.zonker[r.variable.val];
-				if (!zonked) {
-					const v = r.variable;
-					globalWorkStack.push({
-						type: "Cont",
-						arity: 0,
-						handler: _args => {
-							globalResultStack.push(NF.Constructors.Row({ type: "variable", variable: v }));
-						},
-					});
-					return;
-				}
+		.with({ type: "variable" }, function* (r) {
+			yield* match(r.variable)
+				.with({ type: "Meta" }, function* (v) {
+					const registry = yield* Metas.registry.get();
+					const solved = Metas.solution(registry, v.val);
 
-				// Handle zonked meta
-				if (zonked.type === "Row") {
-					globalWorkStack.push({
-						type: "Cont",
-						arity: 0,
-						handler: _args => {
-							globalResultStack.push(zonked);
-						},
-					});
-					return;
-				}
+					if (!solved) {
+						yield* deferred(NF.Constructors.Row({ type: "variable", variable: v }));
+						return;
+					}
 
-				if (zonked.type === "Var") {
-					globalWorkStack.push({
-						type: "Cont",
-						arity: 0,
-						handler: _args => {
-							globalResultStack.push(NF.Constructors.Row({ type: "variable", variable: zonked.variable }));
-						},
-					});
-					return;
-				}
-
-				throw new Error("Zonked meta in row position is not a row or variable: " + NF.display(zonked, ctx));
-			}
-
-			if (r.variable.type === "Bound") {
-				const { nf } = ctx.env[r.variable.index];
-				const val = unwrapNeutral(nf);
-
-				if (val.type === "Row") {
-					globalWorkStack.push({
-						type: "Cont",
-						arity: 0,
-						handler: _args => {
-							globalResultStack.push(val);
-						},
-					});
-					return;
-				}
-
-				if (val.type === "Var") {
-					globalWorkStack.push({
-						type: "Cont",
-						arity: 0,
-						handler: _args => {
-							globalResultStack.push(NF.Constructors.Row({ type: "variable", variable: val.variable }));
-						},
-					});
-					return;
-				}
-
-				throw new Error("Evaluating a row variable that is not a row or a variable: " + NF.display(val, ctx));
-			}
-
-			throw new Error(`Eval Row Variable: Not implemented yet: ${JSON.stringify(r)}`);
+					yield* match(solved)
+						.with({ type: "Row" }, deferred)
+						.with({ type: "Var" }, ({ variable }) => deferred(NF.Constructors.Row({ type: "variable", variable })))
+						.otherwise(nf => {
+							throw new Error("Solved meta in row position is not a row or variable: " + NF.display(nf, ctx));
+						});
+				})
+				.with({ type: "Bound" }, function* (v) {
+					yield* match(unwrapNeutral(ctx.env[v.index].nf))
+						.with({ type: "Row" }, deferred)
+						.with({ type: "Var" }, val => deferred(NF.Constructors.Row({ type: "variable", variable: val.variable })))
+						.otherwise(val => {
+							throw new Error("Evaluating a row variable that is not a row or a variable: " + NF.display(val, ctx));
+						});
+				})
+				.otherwise(v => {
+					throw new Error(`Eval Row Variable: Not implemented yet: ${JSON.stringify(v)}`);
+				});
 		})
-		.otherwise(() => {
+		.otherwise(function* () {
 			throw new Error("Not implemented");
 		});
 }
@@ -676,28 +542,25 @@ function injectValue(base: NF.Value, label: string, injected: NF.Value, ctx: EB.
 }
 
 /**
- * Reduce function application and push result to global result stack.
+ * Stack-based reduce: apply function to argument without a nested drive.
+ * Inlines apply semantics for the Abs case.
  */
-/**
- * Stack-based reduce: apply function to argument without calling evaluate.
- * Inlines apply semantics for Abs case.
- */
-function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): void {
-	match(nff)
-		.with({ type: "Neutral" }, ({ kind, value }) => {
-			globalResultStack.push(NF.Constructors.Neutral(kind, NF.Constructors.App(value, nfa, icit)));
+function* reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evaluation<void> {
+	yield* match(nff)
+		.with({ type: "Neutral" }, function* ({ kind, value }) {
+			yield* Stack.ret(NF.Constructors.Neutral(kind, NF.Constructors.App(value, nfa, icit)));
 		})
-		.with({ type: "Modal" }, ({ modalities, value }) => {
+		.with({ type: "Modal" }, function* ({ modalities, value }) {
 			console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
 			// Recursively reduce the inner value
-			reduceAndPushStack(value, nfa, icit);
+			yield* reduceAndPushStack(value, nfa, icit);
 		})
-		.with({ type: "Abs", binder: { type: "Mu" } }, () => {
+		.with({ type: "Abs", binder: { type: "Mu" } }, function* () {
 			// Do not unfold mu during normalization - defer to unification
-			globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
+			yield* Stack.ret(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
 		})
-		.with({ type: "Abs" }, ({ closure, binder }) => {
-			// Inline apply semantics: extend context and evaluate body
+		.with({ type: "Abs" }, function* ({ closure, binder }) {
+			// Closure consumption: the closure's stored environment plus the argument
 			const extended = (cls: Exclude<NF.Closure, { type: "Continuation" }>) => {
 				if (binder.type !== "Sigma") {
 					return EB.extend(cls.ctx, binder, nfa);
@@ -705,60 +568,58 @@ function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): v
 				assert(nfa.type === "Row", "Sigma binder should be applied to a Row");
 				return EB.extendSigma(cls.ctx, nfa.row);
 			};
-			match(closure)
-				.with({ type: "Closure" }, cls => globalWorkStack.push({ type: "Eval", ctx: extended(cls), term: cls.term }))
-				.with({ type: "PrimOp" }, primop => {
+			yield* match(closure)
+				.with({ type: "Closure" }, function* (cls) {
+					yield* Stack.with(extended(cls), cls.term);
+				})
+				.with({ type: "PrimOp" }, function* (primop) {
 					const args = extended(primop)
 						.env.slice(0, primop.arity)
 						.map(({ nf }) => nf);
-					globalResultStack.push(primop.compute(...args));
+					yield* Stack.ret(primop.compute(...args));
 				})
-				.with({ type: "Continuation" }, cont => {
-					// Restore the captured result suffix and then push the new argument.
-					globalResultStack.push(...cont.results);
-					globalResultStack.push(nfa);
-					// Replay captured frames as the rest of the delimited continuation.
-					globalWorkStack.push(...cont.frames);
-					return;
+				.with({ type: "Continuation" }, function* (cont) {
+					// Replay the captured continuation with the argument at the shift point.
+					yield* Stack.resume({ frames: cont.frames, results: cont.results, env: cont.ctx }, nfa);
 				})
 				.exhaustive();
 		})
-		.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => {
-			globalResultStack.push(NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit));
+		.with({ type: "Lit", value: { type: "Atom" } }, function* ({ value }) {
+			yield* Stack.ret(NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit));
 		})
-		.with({ type: "Var", variable: { type: "Meta" } }, () => {
-			globalResultStack.push(NF.Constructors.Neutral("Symbolic", NF.Constructors.App(nff, nfa, icit)));
+		.with({ type: "Var", variable: { type: "Meta" } }, function* () {
+			yield* Stack.ret(NF.Constructors.Neutral("Symbolic", NF.Constructors.App(nff, nfa, icit)));
 		})
-		.with({ type: "Var", variable: { type: "Foreign" } }, () => {
-			globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
+		.with({ type: "Var", variable: { type: "Foreign" } }, function* () {
+			yield* Stack.ret(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
 		})
-		.with({ type: "App" }, ({ func, arg, icit: argIcit }) => {
+		.with({ type: "App" }, function* ({ func, arg, icit: argIcit }) {
 			// Reduce func to arg first, then apply result to nfa
 			// This is a recursive reduction, not evaluation
 			const intermediate = reduce(func, arg, argIcit);
-			reduceAndPushStack(intermediate, nfa, icit);
+			yield* reduceAndPushStack(intermediate, nfa, icit);
 		})
-		.with({ type: "External" }, ({ name, args, arity, compute }) => {
+		.with({ type: "External" }, function* ({ name, args, arity, compute }) {
 			if (arity === 0) {
-				globalResultStack.push(compute());
+				yield* Stack.ret(compute());
 				return;
 			}
 
 			const accumulated = [...args, nfa];
 
 			if (accumulated.length < arity) {
-				globalResultStack.push(NF.Constructors.External(name, arity, compute, accumulated));
+				yield* Stack.ret(NF.Constructors.External(name, arity, compute, accumulated));
 				return;
 			}
 
 			if (accumulated.some(a => a.type === "Neutral")) {
-				globalResultStack.push(NF.Constructors.Neutral("Sealed", NF.Constructors.External(name, arity, compute, accumulated)));
+				yield* Stack.ret(NF.Constructors.Neutral("Sealed", NF.Constructors.External(name, arity, compute, accumulated)));
 				return;
 			}
 
-			globalResultStack.push(compute(...accumulated.map(ignoraModal)));
+			yield* Stack.ret(compute(...accumulated.map(ignoraModal)));
 		})
-		.otherwise(() => {
+		.otherwise(function* () {
 			throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
 		});
 }
@@ -766,7 +627,7 @@ function reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): v
 /**
  * Stack-based matching: push alternatives as work items instead of recursively calling evaluate.
  */
-function matchingAndPushStack(ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]): void {
+function* matchingAndPushStack(ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]): Evaluation<void> {
 	if (alts.length === 0) {
 		throw new Error("Match: No alternative matched");
 	}
@@ -775,13 +636,13 @@ function matchingAndPushStack(ctx: EB.Context, nf: NF.Value, alts: EB.Alternativ
 	const meetResult = meet(ctx, alt.pattern, nf);
 
 	if (O.isSome(meetResult)) {
-		// Pattern matched: extend context and evaluate body
+		// Pattern matched: enter the alternative under the binder-extended context
 		const binders = meetResult.value;
 		const extendedCtx = binders.reduce((_ctx, { binder, nf }) => EB.extend(_ctx, binder, nf), ctx);
-		globalWorkStack.push({ type: "Eval", ctx: extendedCtx, term: alt.term });
+		yield* Stack.with(extendedCtx, alt.term);
 	} else {
 		// Pattern didn't match: try next alternative
-		matchingAndPushStack(ctx, nf, rest);
+		yield* matchingAndPushStack(ctx, nf, rest);
 	}
 }
 
