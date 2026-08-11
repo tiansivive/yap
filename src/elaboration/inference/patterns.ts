@@ -50,7 +50,7 @@ export const infer: Inference<Src.Pattern, "type"> = {
 		// }
 		const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 		const meta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
-		const va = NF.evaluate(ctx, meta);
+		const va = yield* NF.normalize(meta);
 		const zero = Q.noUsage(ctx.env.length);
 		const binder: Binder = [pat.value.value, va];
 		return [{ type: "Binder", value: pat.value.value }, va, zero, [binder]];
@@ -102,7 +102,7 @@ export const infer: Inference<Src.Pattern, "type"> = {
 		const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 		const mvar = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
 
-		const v = NF.evaluate(ctx, mvar);
+		const v = yield* NF.normalize(mvar);
 
 		const validate = function* (val: Src.Pattern) {
 			const key = capitalize(val.type) as keyof typeof infer;

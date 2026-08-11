@@ -41,9 +41,9 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				[{ type: "lambda" }, { type: "Abs", binder: { type: "Pi" } }],
 				([tm, ty]) => tm.icit === ty.binder.icit,
 				function* ([tm, ty]) {
-					const bType = NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
+					const bType = yield* NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
 
-					const ann = tm.annotation ? (yield* EB.check(tm.annotation, ty.binder.annotation))[0] : NF.quote(ctx, ctx.env.length, ty.binder.annotation);
+					const ann = tm.annotation ? (yield* EB.check(tm.annotation, ty.binder.annotation))[0] : yield* NF.quote(ctx.env.length, ty.binder.annotation);
 
 					return yield* M.reader.local(
 						ctx => EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation),
@@ -60,12 +60,12 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				[P._, { type: "Abs", binder: { type: "Pi" } }],
 				([_, ty]) => ty.binder.icit === "Implicit",
 				function* ([tm, ty]) {
-					const ann = NF.quote(ctx, ctx.env.length, ty.binder.annotation);
+					const ann = yield* NF.quote(ctx.env.length, ty.binder.annotation);
 
 					return yield* M.reader.local(
 						ctx => EB.bind(ctx, { type: "Lambda", variable: ty.binder.variable }, ty.binder.annotation, "inserted"),
 						(function* () {
-							const bType = NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
+							const bType = yield* NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
 							const [_tm, us] = yield* Check.val(tm, bType);
 							const [vu] = us;
 							//	yield* M.constrain({ type: "usage", expected: ty.binder.annotation[1], computed: vu });
@@ -128,10 +128,10 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				// TODO:QUESTION: can we avoid the double elaboration? e.g. extract values without full inference
 				const [rtm] = yield* EB.infer(tm);
 
-				const rv = NF.evaluate(ctx, rtm);
+				const rv = yield* NF.normalize(rtm);
 				assert(rv.type === "App" && rv.arg.type === "Row", "Expected struct term to evaluate to an application of a Row");
 				const valueRow = rv.arg.row;
-				const ty = NF.apply(sig.binder, sig.closure, NF.Constructors.Row(valueRow));
+				const ty = yield* NF.apply(sig.binder, sig.closure, NF.Constructors.Row(valueRow));
 
 				// The re-check evaluates each field value; sibling `:label` refs resolve through
 				// ctx.sigma at eval time, so make the inferred field values visible.
@@ -165,7 +165,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				// 	return [inferred[0], inferred[2]] satisfies Result;
 				// }
 
-				const narrow = (nf: NF.Value, ctx: EB.Context) => {
+				const narrow = (nf: NF.Value, quoted: EB.Term, ctx: EB.Context) => {
 					const next = match(scrutinee)
 						.with({ type: "Var", variable: { type: "Bound" } }, bound =>
 							update(
@@ -181,7 +181,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 							update(ctx, "imports", imports =>
 								F.pipe(
 									imports,
-									Rec.modifyAt(free.variable.name, set("0", NF.quote(ctx, ctx.env.length, nf))),
+									Rec.modifyAt(free.variable.name, set("0", quoted)),
 									O.getOrElse(() => imports),
 								),
 							),
@@ -204,12 +204,13 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					EB.Inference.Match.elaborate(ast, function* (src, [pat, _patty, , binders]) {
 						const ctx = yield* M.reader.ask();
 						const val = NF.Pats.evaluate(pat, ctx, binders);
+						const quoted = yield* NF.quote(ctx.env.length, val);
 
 						const [tm, us] = yield* M.reader.local(
-							c => narrow(val, c),
+							c => narrow(val, quoted, c),
 							(function* () {
 								const ctx = yield* M.reader.ask();
-								const branchTy = NF.evaluate(ctx, NF.quote(ctx, ctx.env.length, ty));
+								const branchTy = yield* NF.normalize(yield* NF.quote(ctx.env.length, ty));
 								return yield* EB.check(src, branchTy);
 							})(),
 						);
@@ -245,7 +246,9 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 			.with([{ type: "modal" }, P._], function* ([tm, val]) {
 				const [checked, us] = yield* Check.val(tm.term, val);
 
-				const liquid = tm.modalities.liquid ? yield* EB.Liquid.typecheck(tm.modalities.liquid, NF.evaluate(ctx, checked)) : Liquid.Predicate.Neutral(checked);
+				const liquid = tm.modalities.liquid
+					? yield* EB.Liquid.typecheck(tm.modalities.liquid, yield* NF.normalize(checked))
+					: Liquid.Predicate.Neutral(checked);
 				const quantity = tm.modalities.quantity ?? Q.Many;
 
 				return [EB.Constructors.Modal(checked, { liquid, quantity }), us] satisfies Result;

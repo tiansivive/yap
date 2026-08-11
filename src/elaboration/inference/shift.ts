@@ -32,7 +32,7 @@ export const infer = (shift: Shift): M.Elaboration<EB.AST> =>
 		const skolem = yield* EB.freshMeta(ctx.env.length, A);
 
 		const kBinder = "$k";
-		const kTy = NF.Constructors.Pi(kBinder, "Explicit", A, NF.closeVal(ctx, answer.initial));
+		const kTy = NF.Constructors.Pi(kBinder, "Explicit", A, yield* NF.closeVal(answer.initial));
 
 		yield* M.st.modify(F.flow(set("delimitations.0.shifted", true), set("delimitations.0.answer.initial", answer.final)));
 
@@ -42,7 +42,7 @@ export const infer = (shift: Shift): M.Elaboration<EB.AST> =>
 		);
 		yield* M.st.modify(set("delimitations.0.answer.initial", answer.initial));
 
-		const body = EB.Constructors.Lambda(kBinder, "Explicit", ktm, NF.quote(ctx, ctx.env.length, kTy));
+		const body = EB.Constructors.Lambda(kBinder, "Explicit", ktm, yield* NF.quote(ctx.env.length, kTy));
 		const tm = EB.Constructors.Shift(body);
 		const { nondeterminism } = yield* M.st.get();
 		const values = nondeterminism.solution[skolem.val] ?? [];
@@ -68,8 +68,8 @@ export const resume = (resume: Resume): M.Elaboration<EB.AST> =>
 		assert(kty.type === "Abs" && kty.binder.type === "Pi", "Expected continuation to have Pi type");
 
 		const [atm, aus] = yield* EB.check(resume.term, kty.binder.annotation);
-		const va = NF.evaluate(ctx, atm);
-		const codomain = NF.apply(kty.binder, kty.closure, va);
+		const va = yield* NF.normalize(atm);
+		const codomain = yield* NF.apply(kty.binder, kty.closure, va);
 		yield* M.st.modify(update(`nondeterminism.solution.${binder.resumption.meta.val}`, (vals = []) => [va, ...vals]));
 
 		const k = EB.Constructors.Var({ type: "Bound", index: idx });

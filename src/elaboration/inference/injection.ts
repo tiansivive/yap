@@ -30,8 +30,8 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 		.with({ type: "Var" }, function* (_) {
 			const r: NF.Row = { type: "variable", variable: yield* EB.freshMeta(ctx.env.length, NF.Row) };
 			const rowTypeCtor = EB.Constructors.Pi("rx", "Explicit", EB.Constructors.Lit(Lit.Row()), EB.Constructors.Lit(Lit.Type()));
-			const ann = NF.evaluate(ctx, rowTypeCtor);
-			const ctor = NF.evaluate(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, ann)));
+			const ann = yield* NF.normalize(rowTypeCtor);
+			const ctor = yield* NF.normalize(EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, ann)));
 
 			const inferred = NF.Constructors.App(ctor, NF.Constructors.Row(r), "Explicit");
 			const extended = NF.Constructors.App(ctor, NF.Constructors.Row(NF.Constructors.Extension(label, value[1], r)), "Explicit");
@@ -39,22 +39,23 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 			yield* M.constrain({ type: "assign", left: inferred, right: tm[1], lvl: ctx.env.length });
 			return extended;
 		})
-		.with(NF.Patterns.Sigma, sig => {
+		.with(NF.Patterns.Sigma, function* (sig) {
 			assert(sig.binder.annotation.type === "Row", "Injection: Expected Row type in Sigma binder annotation");
 			const rewritten = R.rewrite(sig.binder.annotation.row, label);
 			if (isLeft(rewritten)) {
 				const ann = NF.Constructors.Row(NF.Constructors.Extension(label, value[1], sig.binder.annotation.row));
+				const quoted = yield* NF.quote(ctx.env.length, value[1]);
 
 				const schema = match(sig.closure.term)
-					.with(EB.CtorPatterns.Schema, ({ arg }) => EB.Constructors.Schema(EB.Constructors.Extension(label, NF.quote(ctx, ctx.env.length, value[1]), arg.row)))
+					.with(EB.CtorPatterns.Schema, ({ arg }) => EB.Constructors.Schema(EB.Constructors.Extension(label, quoted, arg.row)))
 					.otherwise(_ => {
 						throw new Error("Injection: Expected Schema type in sigma injection");
 					});
 
-				return M.of(NF.Constructors.Sigma(sig.binder.variable, ann, NF.Constructors.Closure(sig.closure.ctx, schema)));
+				return NF.Constructors.Sigma(sig.binder.variable, ann, NF.Constructors.Closure(sig.closure.ctx, schema));
 			}
 
-			return M.of(NF.Constructors.Sigma(sig.binder.variable, NF.Constructors.Row(rewritten.right), sig.closure));
+			return NF.Constructors.Sigma(sig.binder.variable, NF.Constructors.Row(rewritten.right), sig.closure);
 		})
 		.with(NF.Patterns.Schema, NF.Patterns.Variant, ({ func, arg }) => {
 			const rewritten = R.rewrite(arg.row, label);

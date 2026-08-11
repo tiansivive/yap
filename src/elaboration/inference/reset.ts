@@ -38,8 +38,9 @@ export const infer = (reset: Reset): M.Elaboration<EB.AST> =>
 		yield* M.st.modify(update("delimitations", ds => [d, ...ds]));
 
 		const registry = yield* Metas.registry.get();
+		const metas = yield* Metas.asContext(registry);
 		const [tm, us] = yield* M.reader.local(
-			update("metas", ms => ({ ...ms, ...Metas.asContext(ctx, registry) })),
+			update("metas", ms => ({ ...ms, ...metas })),
 			EB.check(reset.term, d.answer.initial),
 		);
 		const {

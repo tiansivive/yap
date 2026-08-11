@@ -12,10 +12,8 @@ type Application = Extract<Src.Term, { type: "application" }>;
 
 export const infer = (node: Application) =>
 	M.tracer.track({ tag: "src", type: "term", term: node, metadata: { action: "infer", description: "Application node" } }, function* () {
-		const ctx = yield* M.reader.ask();
-
 		const [ft, fty, fus] = yield* inferFn(node);
-		const pi = yield* mkPi(NF.force(ctx, fty), node.icit);
+		const pi = yield* mkPi(yield* NF.force(fty), node.icit);
 		const [at, _aus] = yield* checkArg(node, pi[0]);
 
 		const [_nf, cls, x] = pi;
@@ -23,7 +21,7 @@ export const infer = (node: Application) =>
 		// TODO: Move this to the verification step
 		//const rus = Q.add(fus, Q.multiply(quantity, aus));
 
-		const val = NF.apply({ type: "Pi", variable: x }, cls, NF.evaluate(ctx, at));
+		const val = yield* NF.apply({ type: "Pi", variable: x }, cls, yield* NF.normalize(at));
 		return [EB.Constructors.App(node.icit, ft, at), val, fus] satisfies EB.AST;
 	});
 
@@ -62,7 +60,7 @@ const mkPi = (fnType: NF.Value, icit: Implicitness): M.Elaboration<Pi> =>
 			const ctx = yield* M.reader.ask();
 
 			const meta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
-			const nf = NF.evaluate(ctx, meta);
+			const nf = yield* NF.normalize(meta);
 
 			const closure = NF.Constructors.Closure(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length + 1, NF.Type)));
 

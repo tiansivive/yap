@@ -28,7 +28,7 @@ export const infer = (stmt: Src.Statement): M.Elaboration<ElaboratedStmt> =>
 				const ann = dec.annotation
 					? yield* EB.check(dec.annotation, NF.Type)
 					: ([EB.Constructors.Var(yield* freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
-				const va = NF.evaluate(ctx, ann[0]);
+				const va = yield* NF.normalize(ann[0]);
 
 				const inferred = yield* M.reader.local(
 					_ctx => EB.bind(_ctx, { type: "Let", variable: dec.variable }, va),
@@ -72,7 +72,8 @@ export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M
 	const ctx = yield* M.reader.ask();
 	const { constraints } = yield* M.writer.peek();
 	const registry = yield* Metas.registry.get();
-	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...Metas.asContext(ctx, registry) }));
+	const metas = yield* Metas.asContext(registry);
+	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
 
 	const _letdec = (z: Record<number, NF.Value>) =>
 		(function* (): M.Elaboration<[NF.Value, EB.Context, EB.Resolutions, boolean]> {
@@ -80,11 +81,12 @@ export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M
 
 			const { zonker, resolutions } = yield* M.reader.local(_ => nondet, EB.solve(constraints));
 			const postSolve = yield* Metas.registry.get();
-			const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...Metas.asContext(ctx, postSolve) }));
+			const postMetas = yield* Metas.asContext(postSolve);
+			const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postMetas }));
 			const zonked = update(withAllMetas, "zonker", z => compose(zonker, z));
 
 			const [generalized, subst, introduced] = NF.generalize(
-				NF.force(zonked, dec.annotation),
+				yield* M.reader.local(_ => zonked, NF.force(dec.annotation)),
 				dec.value,
 				EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation),
 				resolutions,

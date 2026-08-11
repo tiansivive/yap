@@ -28,7 +28,7 @@ export const project = function* (label: string, tm: EB.Term, ty: NF.Value, us: 
 
 			//const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 			const kind = NF.Type;
-			const val = NF.evaluate(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind)));
+			const val = yield* NF.normalize(EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind)));
 
 			const r: NF.Row = { type: "variable", variable: yield* EB.freshMeta(ctx.env.length, NF.Row) };
 			const xtension = NF.Constructors.Extension(label, val, r);
@@ -56,7 +56,7 @@ export const project = function* (label: string, tm: EB.Term, ty: NF.Value, us: 
 					})
 					.with({ type: "variable" }, function* (r) {
 						const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
-						const val = NF.evaluate(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind)));
+						const val = yield* NF.normalize(EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind)));
 						return [NF.Constructors.Extension(l, val, r), val] satisfies [NF.Row, NF.Value];
 					})
 					.exhaustive();
@@ -88,7 +88,7 @@ export const project = function* (label: string, tm: EB.Term, ty: NF.Value, us: 
 					.with({ type: "extension" }, r => from(l, r.row))
 					.with({ type: "variable" }, function* (r) {
 						const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
-						const val = NF.evaluate(ctx, EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind)));
+						const val = yield* NF.normalize(EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind)));
 						const newRow = NF.Constructors.Extension(l, val, r);
 						yield* M.constrain({
 							type: "assign",

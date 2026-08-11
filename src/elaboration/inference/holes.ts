@@ -13,7 +13,7 @@ export const infer = (h: Hole): M.Elaboration<EB.AST> =>
 		const ctx = yield* M.reader.ask();
 		const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 		const meta = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
-		const ty = NF.evaluate(ctx, meta);
+		const ty = yield* NF.normalize(meta);
 		// const modal = NF.infer(env, annotation);
 		return [meta, ty, Q.noUsage(ctx.env.length)] satisfies EB.AST;
 	});

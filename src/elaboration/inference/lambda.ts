@@ -18,10 +18,10 @@ export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
 			? yield* EB.check(lam.annotation, NF.Type)
 			: ([EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
 
-		const ty = NF.evaluate(ctx, ann);
+		const ty = yield* NF.normalize(ann);
 
 		const registry = yield* Metas.registry.get();
-		const metas = Metas.asContext(ctx, registry);
+		const metas = yield* Metas.asContext(registry);
 
 		const ast = yield* M.reader.local(
 			_ctx => {
@@ -34,8 +34,8 @@ export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
 				//yield* M.constrain({ type: "usage", expected: mty[1], computed: vu });
 
 				const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm, ann);
-				const pi = NF.Constructors.Pi(lam.variable, lam.icit, ty, NF.closeVal(ctx, bType));
-				const piTerm = NF.quote(ctx, ctx.env.length, pi);
+				const pi = NF.Constructors.Pi(lam.variable, lam.icit, ty, yield* NF.closeVal(bType));
+				const piTerm = yield* NF.quote(ctx.env.length, pi);
 				return [EB.Constructors.Ann(tm, piTerm), pi, bus] satisfies EB.AST;
 			})(),
 		);

@@ -30,10 +30,9 @@ export const infer = (block: Block): M.Elaboration<EB.AST> =>
 
 			if (stmt.type === "Using") {
 				type Implicit = EB.Context["implicits"][0];
-				return yield* M.reader.local(
-					ctx => update(ctx, "implicits", A.append<Implicit>([NF.evaluate(ctx, stmt.value, { noInlineBindings: true }), stmt.annotation])),
-					recurse(rest, [...results, stmt]),
-				);
+				const nfValue = yield* NF.normalize(stmt.value, { noInlineBindings: true });
+
+				return yield* M.reader.local(ctx => update(ctx, "implicits", A.append<Implicit>([nfValue, stmt.annotation])), recurse(rest, [...results, stmt]));
 			}
 
 			if (stmt.type !== "Let") {
@@ -43,13 +42,15 @@ export const infer = (block: Block): M.Elaboration<EB.AST> =>
 			const [r, next] = yield* EB.Stmt.letdec(stmt);
 			yield* Metas.registry.modify(current => Metas.withSolutions(current, next.zonker));
 
+			// First evaluate the current let body in a context extended with itself, allowing for recursion
+			// Then extend the context for the remaining statements with the evaluated let binding
+			const recursiveCtx = EB.bind(next, { type: "Let", variable: stmt.variable }, r.annotation);
+			const nf = yield* M.reader.local(_ => recursiveCtx, NF.normalize(r.value));
+
 			return yield* M.reader.local(
 				_ => {
-					// First evaluate the current let body in a context extended with itself, allowing for recursion
-					// Then extend the context for the remaining statements with the evaluated let binding
-					const recursiveCtx = EB.bind(next, { type: "Let", variable: stmt.variable }, r.annotation);
 					const entry: EB.Context["env"][number] = {
-						nf: NF.evaluate(recursiveCtx, r.value),
+						nf,
 						type: [{ type: "Let", variable: stmt.variable }, "source", r.annotation],
 						name: { type: "Let", variable: stmt.variable },
 					};
@@ -83,15 +84,17 @@ const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]):
 	const ctx = yield* M.reader.ask();
 	const { constraints } = yield* M.writer.peek();
 	const registry = yield* Metas.registry.get();
-	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...Metas.asContext(ctx, registry) }));
+	const metas = yield* Metas.asContext(registry);
+	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
 
 	const { zonker, resolutions } = yield* M.reader.local(_ => withMetas, EB.solve(constraints));
 	const postSolve = yield* Metas.registry.get();
 
-	const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...Metas.asContext(ctx, postSolve) }));
+	const postMetas = yield* Metas.asContext(postSolve);
+	const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postMetas }));
 	const zonked = update(withAllMetas, "zonker", z => compose(zonker, z));
-	const value = NF.evaluate(zonked, t, { noInlineBindings: true });
-	const generalized = NF.abstract(NF.force(zonked, ty), value, zonked, resolutions);
+	const value = yield* M.reader.local(_ => zonked, NF.normalize(t, { noInlineBindings: true }));
+	const generalized = NF.abstract(yield* M.reader.local(_ => zonked, NF.force(ty)), value, zonked, resolutions);
 	yield* Metas.registry.modify(current => Metas.withSolutions(current, generalized.zonker));
 
 	return [EB.Constructors.Block(results, generalized.term), generalized.type, rus] satisfies EB.AST;

@@ -16,10 +16,10 @@ export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 			(function* () {
 				const meta = yield* EB.freshMeta(ctx.env.length, pi.binder.annotation);
 				const mvar = EB.Constructors.Var(meta);
-				const vNF = NF.evaluate(ctx, mvar);
+				const vNF = yield* NF.normalize(mvar);
 
 				const tm = EB.Constructors.App("Implicit", term, mvar);
-				const bodyNF = NF.apply(pi.binder, pi.closure, vNF);
+				const bodyNF = yield* NF.apply(pi.binder, pi.closure, vNF);
 
 				yield* M.constrain({ type: "resolve", meta, value: pi.binder.annotation, implicits: ctx.implicits });
 

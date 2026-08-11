@@ -11,12 +11,10 @@ export const infer = (node: Annotation): M.Elaboration<EB.AST> =>
 	M.tracer.track({ tag: "src", type: "term", term: node, metadata: { action: "infer", description: "Annotation node" } }, function* () {
 		const { term, ann } = node;
 
-		const ctx = yield* M.reader.ask();
-
 		// FIXME:TODO: This was a fix for allowing singleton numbers as annotations. The correct was is to pattern match on check(Lit.Num, Type), and allow that check to succeed
 		const ast = yield* EB.check(ann, NF.Type);
 		//const [_ann, kind]: EB.AST = yield* EB.Icit.insert.gen(ast[0]);
-		const nf = NF.evaluate(ctx, ast[0]);
+		const nf = yield* NF.normalize(ast[0]);
 
 		//const [_ann, us] = yield* EB.check.gen(ann, nf);
 		//const _ty = NF.evaluate(ctx, _ann);

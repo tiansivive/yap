@@ -14,8 +14,7 @@ export const infer = (pi: Pi): M.Elaboration<EB.AST> =>
 
 		const ann = pi.type === "pi" ? pi.annotation : pi.lhs;
 		const [ty, us] = yield* EB.check(ann, NF.Type);
-		const ctx = yield* M.reader.ask();
-		const va = NF.evaluate(ctx, ty);
+		const va = yield* NF.normalize(ty);
 
 		const [bodyTm, [, ...bus]] = yield* M.reader.local(_ctx => EB.bind(_ctx, { type: "Pi", variable: v }, va), EB.check(body, NF.Type));
 

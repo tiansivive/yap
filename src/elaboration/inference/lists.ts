@@ -14,7 +14,7 @@ export const infer = (list: List): M.Elaboration<EB.AST> =>
 		const ctx = yield* M.reader.ask();
 		const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 		const mvar = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
-		const v = NF.evaluate(ctx, mvar);
+		const v = yield* NF.normalize(mvar);
 
 		const validate = function* (tm: Src.Term) {
 			const inferred = yield* EB.infer(tm);
