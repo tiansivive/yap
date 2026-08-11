@@ -246,6 +246,43 @@ export default tseslint.config(
 		files: ["**/*.md/*.ts"],
 	},
 	{
+		// NbE owns its machine: consumers go through the normalization barrel (the public,
+		// fresh-machine surface). Mid-drive straddlers must disable this rule explicitly.
+		files: ["src/**/*.ts"],
+		ignores: ["src/elaboration/normalization/**"],
+		rules: {
+			"no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: ["**/normalization/*", "!**/normalization/index"],
+							message: "NbE internals are in-drive only — import the normalization barrel instead.",
+						},
+					],
+				},
+			],
+		},
+	},
+	{
+		// The machine layer never imports the barrel: "." is the outward face, and the import
+		// cycle through it degrades api's inferred exports to `any` for cyclic importers.
+		files: ["src/elaboration/normalization/{evaluation.v2,quoting,callstack,recursion,arity,patterns,api}.ts"],
+		rules: {
+			"no-restricted-imports": [
+				"error",
+				{
+					paths: [
+						{
+							name: ".",
+							message: "The barrel is the outward face — import syntax/* and sibling modules directly.",
+						},
+					],
+				},
+			],
+		},
+	},
+	{
 		files: ["**/*.test.*", "**/__tests__/**"],
 		languageOptions: {
 			globals: vitest.environments.env.globals,

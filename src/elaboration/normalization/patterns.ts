@@ -1,5 +1,5 @@
 import * as EB from "@yap/elaboration";
-import * as NF from "@yap/elaboration/normalization";
+import * as NF from "./syntax/term";
 
 import { match } from "ts-pattern";
 

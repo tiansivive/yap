@@ -3,8 +3,10 @@ import * as Eff from "@yap/utils/effects";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 
-import * as NF from ".";
+import * as NF from "./syntax/term";
+import { display } from "./syntax/pretty";
 import { Evaluation } from "./callstack";
+import { apply } from "./evaluation.v2";
 import { match } from "ts-pattern";
 import assert from "node:assert";
 
@@ -68,21 +70,21 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 		})
 		.with({ type: "Abs", binder: { type: "Lambda" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
-			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
+			const val = yield* apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = yield* M.reader.local(_ => closure.ctx, quote(lvl + 1, val));
 			const ann = yield* quote(lvl, annotation);
 			return EB.Constructors.Lambda(variable, icit, body, ann);
 		})
 		.with({ type: "Abs", binder: { type: "Pi" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
-			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
+			const val = yield* apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = yield* M.reader.local(_ => closure.ctx, quote(lvl + 1, val));
 			const ann = yield* quote(lvl, annotation);
 			return EB.Constructors.Pi(variable, icit, ann, body);
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, function* ({ binder, closure }) {
 			const { variable, source, annotation } = binder;
-			const val = NF.apply(binder, closure, NF.Constructors.Rigid(lvl));
+			const val = yield* apply(binder, closure, NF.Constructors.Rigid(lvl));
 			const body = yield* M.reader.local(_ => closure.ctx, quote(lvl + 1, val));
 			const ann = yield* quote(lvl, annotation);
 			return EB.Constructors.Mu(variable, source, ann, body);
@@ -92,7 +94,7 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 			// Apply with symbolic label neutrals so matches get stuck instead of crashing.
 			// Analogous to Pi quoting applying with Rigid(lvl).
 			const symbolic = NF.Constructors.Row(symbolicRow(annotation));
-			const val = NF.apply(binder, closure, symbolic);
+			const val = yield* apply(binder, closure, symbolic);
 			const body = yield* M.reader.local(_ => closure.ctx, quote(lvl, val));
 			const ann = yield* quote(lvl, annotation);
 			return EB.Constructors.Sigma(variable, ann, body);
@@ -129,7 +131,7 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 		})
 		.otherwise(function* (nf) {
 			const ctx = yield* M.reader.ask();
-			throw new Error("Quote: Not implemented yet: " + NF.display(nf, ctx));
+			throw new Error("Quote: Not implemented yet: " + display(nf, ctx));
 		});
 }
 

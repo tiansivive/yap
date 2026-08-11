@@ -1,6 +1,10 @@
-import * as NF from ".";
+import * as NF from "./syntax/term";
 import * as EB from "@yap/elaboration";
+import * as M from "@yap/elaboration/shared/effects";
 import { match, P } from "ts-pattern";
+
+import { Evaluation } from "./callstack";
+import { apply, unwrapNeutral } from "./evaluation.v2";
 
 const { Patterns } = NF;
 
@@ -8,7 +12,7 @@ const { Patterns } = NF;
  * Walk an App spine to its head (peeling Neutral along the way).
  */
 const head = (v: NF.Value): NF.Value =>
-	match(NF.unwrapNeutral(v))
+	match(unwrapNeutral(v))
 		.with(Patterns.App, ({ func }) => head(func))
 		.otherwise(x => x);
 
@@ -19,7 +23,7 @@ const head = (v: NF.Value): NF.Value =>
  * matches are NOT inert — they could potentially hide more Pi binders.
  */
 export const inert = (ty: NF.Value): boolean => {
-	const val = NF.unwrapNeutral(ty);
+	const val = unwrapNeutral(ty);
 	return match(val)
 		.with(Patterns.Flex, () => false)
 		.with(Patterns.Pi, () => false)
@@ -44,21 +48,26 @@ export const inert = (ty: NF.Value): boolean => {
  *
  * Throws if the return type has a non-inert head (value-dependent arity).
  */
-export const arity = (ctx: EB.Context, ty: NF.Value): number => {
-	const val = NF.unwrapNeutral(ty);
-	return match(val)
-		.with(Patterns.Pi, ({ binder, closure }) => {
+export function* arity(ty: NF.Value): Evaluation<number> {
+	const val = unwrapNeutral(ty);
+
+	return yield* match(val)
+		.with(Patterns.Pi, function* ({ binder, closure }) {
+			const ctx = yield* M.reader.ask();
 			const rigid = NF.Constructors.Rigid(ctx.env.length);
 			const extended = EB.bind(ctx, { type: "Pi", variable: binder.variable }, binder.annotation);
-			const returnType = NF.apply(binder, closure, rigid);
-			return 1 + arity(extended, returnType);
+			const returnType = yield* apply(binder, closure, rigid);
+
+			return 1 + (yield* M.reader.local(_ => extended, arity(returnType)));
 		})
 		.with(
 			P._,
 			v => !inert(v),
-			() => {
+			function* () {
 				throw new Error("Foreign type has undecidable arity: head is not inert");
 			},
 		)
-		.otherwise(() => 0);
-};
+		.otherwise(function* () {
+			return 0;
+		});
+}

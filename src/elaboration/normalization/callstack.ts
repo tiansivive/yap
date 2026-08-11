@@ -6,7 +6,7 @@ import * as Eff from "@yap/utils/effects";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
-import * as NF from ".";
+import * as NF from "./syntax/term";
 
 /*
  * The NbE machine's stacks as an effect: one ambient machine per run, the

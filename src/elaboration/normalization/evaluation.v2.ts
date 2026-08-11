@@ -1,17 +1,18 @@
-/* eslint-disable no-restricted-syntax, no-restricted-properties, prefer-const, @typescript-eslint/no-unused-vars, @typescript-eslint/no-non-null-assertion --
+/* eslint-disable no-restricted-syntax, no-restricted-properties, @typescript-eslint/no-unused-vars --
  * The NbE machine: evaluation drives an explicit work-stack owned by the callstack effect
  * (./callstack.ts), and shift/reset capture slices that stack for continuations. The driver
- * loop and the remaining unconverted helpers (apply, matching, reduce, force, quote) keep
- * this file's imperative residue; the helpers convert in a later pass.
+ * loop is the file's remaining imperative residue.
  */
 import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
-import * as NF from ".";
+import * as NF from "./syntax/term";
+import { display } from "./syntax/pretty";
 
-import { callstack as Stack, Evaluation } from "./callstack";
+import { callstack as Stack, Evaluation, Mark } from "./callstack";
+import * as Quoting from "./quoting";
 
 import _ from "lodash";
 
@@ -29,21 +30,30 @@ import assert from "assert";
 
 import * as Lit from "@yap/shared/literals";
 
+/** Default fuel cap for a drive; exceeding it throws. */
+export const MAX_STEPS = 10_000_000;
+
 export type EvalOptions = {
 	/** no δ-reduction: prevents inlining of definitions. Default is `false`. */
 	noInlineBindings?: boolean;
-	/** fuel cap: maximum number of evaluation steps before throwing an error. Default is `10,000,000`. */
+	/** fuel cap: maximum number of evaluation steps before throwing an error. Default is `MAX_STEPS`. */
 	maxSteps?: number;
 };
 
 /** The evaluation procedure: one marked drive on the ambient machine, under the ambient env. */
 export function* evaluate(term: EB.Term, opts: EvalOptions = {}): Evaluation<NF.Value> {
-	const { noInlineBindings = false, maxSteps = 10000000 } = opts;
+	const { noInlineBindings = false, maxSteps = MAX_STEPS } = opts;
 	const ctx = yield* M.reader.ask();
 
 	const mark = yield* Stack.begin();
 	yield* Stack.eval(term, noInlineBindings);
+	yield* drain(mark, maxSteps, () => `Evaluation exceeded maximum steps (${maxSteps}). Possible infinite loop in: ${EB.Display.Term(term, ctx)}`);
 
+	return yield* Stack.finish(mark);
+}
+
+/** Processes a drive's work to exhaustion. */
+function* drain(mark: Mark, maxSteps: number, blame: () => string): Evaluation<void> {
 	let steps = 0;
 
 	while (true) {
@@ -55,7 +65,7 @@ export function* evaluate(term: EB.Term, opts: EvalOptions = {}): Evaluation<NF.
 
 		steps++;
 		if (steps > maxSteps) {
-			throw new Error(`Evaluation exceeded maximum steps (${maxSteps}). Possible infinite loop in: ${EB.Display.Term(term, ctx)}`);
+			throw new Error(blame());
 		}
 
 		/* The driver re-binds the reader per step: the frame's env is the single authority. */
@@ -64,13 +74,6 @@ export function* evaluate(term: EB.Term, opts: EvalOptions = {}): Evaluation<NF.
 			.with({ type: "Cont" }, ({ env: scope, k, args }) => M.reader.local(_ => scope, k(args)))
 			.exhaustive();
 	}
-
-	return yield* Stack.finish(mark);
-}
-
-/** The elaboration-facing entry. */
-export function* normalize(term: EB.Term, opts: EvalOptions = {}): Evaluation<NF.Value> {
-	return yield* evaluate(term, opts);
 }
 
 function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<void> {
@@ -144,7 +147,7 @@ function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<voi
 			}
 
 			// Force re-evaluation of the solution
-			yield* Stack.eval(yield* NF.quote(ctx.env.length, solution));
+			yield* Stack.eval(yield* Quoting.quote(ctx.env.length, solution));
 		})
 		.with(
 			{ type: "Var", variable: { type: "Bound" } },
@@ -292,12 +295,14 @@ function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<voi
 		.with({ type: "Modal" }, function* ({ term, modalities }) {
 			// Evaluate term and liquid, then wrap in Modal
 			yield* Stack.cont(2, function* ([nf, liquid]) {
-				const result = match(nf)
-					.with(NF.Patterns.Modal, ({ modalities: innerModalities, value }) => {
-						const combined = Modal.combine(innerModalities, { quantity: modalities.quantity, liquid }, ctx);
+				const result = yield* match(nf)
+					.with(NF.Patterns.Modal, function* ({ modalities: innerModalities, value }) {
+						const combined = yield* Modal.combine(innerModalities, { quantity: modalities.quantity, liquid });
 						return NF.Constructors.Modal(value, combined);
 					})
-					.otherwise(v => NF.Constructors.Modal(v, { quantity: modalities.quantity, liquid }));
+					.otherwise(function* (v) {
+						return NF.Constructors.Modal(v, { quantity: modalities.quantity, liquid });
+					});
 				yield* Stack.ret(result);
 			});
 			yield* Stack.eval(modalities.liquid);
@@ -463,7 +468,7 @@ function* evalRowPush(row: EB.Row): Evaluation<void> {
 						.with({ type: "Row" }, deferred)
 						.with({ type: "Var" }, ({ variable }) => deferred(NF.Constructors.Row({ type: "variable", variable })))
 						.otherwise(nf => {
-							throw new Error("Solved meta in row position is not a row or variable: " + NF.display(nf, ctx));
+							throw new Error("Solved meta in row position is not a row or variable: " + display(nf, ctx));
 						});
 				})
 				.with({ type: "Bound" }, function* (v) {
@@ -473,7 +478,7 @@ function* evalRowPush(row: EB.Row): Evaluation<void> {
 						.with({ type: "Row" }, deferred)
 						.with({ type: "Var" }, val => deferred(NF.Constructors.Row({ type: "variable", variable: val.variable })))
 						.otherwise(val => {
-							throw new Error("Evaluating a row variable that is not a row or a variable: " + NF.display(val, ctx));
+							throw new Error("Evaluating a row variable that is not a row or a variable: " + display(val, ctx));
 						});
 				})
 				.otherwise(v => {
@@ -595,7 +600,7 @@ function* reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): 
 		.with({ type: "App" }, function* ({ func, arg, icit: argIcit }) {
 			// Reduce func to arg first, then apply result to nfa
 			// This is a recursive reduction, not evaluation
-			const intermediate = reduce(func, arg, argIcit);
+			const intermediate = yield* reduce(func, arg, argIcit);
 			yield* reduceAndPushStack(intermediate, nfa, icit);
 		})
 		.with({ type: "External" }, function* ({ name, args, arity, compute }) {
@@ -646,29 +651,36 @@ function* matchingAndPushStack(nf: NF.Value, alts: EB.Alternative[]): Evaluation
 	}
 }
 
-// Re-export helper functions that are still used
-export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Value =>
-	match(nff)
-		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(kind, NF.Constructors.App(value, nfa, icit)))
-		.with({ type: "Modal" }, ({ modalities, value }) => {
-			console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
-			return reduce(value, nfa, icit);
+export function* reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evaluation<NF.Value> {
+	return yield* match(nff)
+		.with({ type: "Neutral" }, function* ({ kind, value }) {
+			return NF.Constructors.Neutral(kind, NF.Constructors.App(value, nfa, icit));
 		})
-		.with({ type: "Abs", binder: { type: "Mu" } }, mu => {
+		.with({ type: "Modal" }, function* ({ modalities, value }) {
+			console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
+			return yield* reduce(value, nfa, icit);
+		})
+		.with({ type: "Abs", binder: { type: "Mu" } }, function* (mu) {
 			// Do not unfold mu during normalization - defer to unification
 			return NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit));
 		})
-		.with({ type: "Abs" }, ({ closure, binder }) => {
-			return apply(binder, closure, nfa);
+		.with({ type: "Abs" }, function* ({ closure, binder }) {
+			return yield* apply(binder, closure, nfa);
 		})
-		.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit))
-		.with({ type: "Var", variable: { type: "Meta" } }, _ => NF.Constructors.Neutral("Symbolic", NF.Constructors.App(nff, nfa, icit)))
-		.with({ type: "Var", variable: { type: "Foreign" } }, () => NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)))
-		.with({ type: "App" }, ({ func, arg, icit }) => {
-			const nff = reduce(func, arg, icit);
+		.with({ type: "Lit", value: { type: "Atom" } }, function* ({ value }) {
+			return NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit);
+		})
+		.with({ type: "Var", variable: { type: "Meta" } }, function* (_) {
+			return NF.Constructors.Neutral("Symbolic", NF.Constructors.App(nff, nfa, icit));
+		})
+		.with({ type: "Var", variable: { type: "Foreign" } }, function* () {
+			return NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit));
+		})
+		.with({ type: "App" }, function* ({ func, arg, icit }) {
+			const nff = yield* reduce(func, arg, icit);
 			return NF.Constructors.App(nff, nfa, icit);
 		})
-		.with({ type: "External" }, ({ name, args, arity, compute }) => {
+		.with({ type: "External" }, function* ({ name, args, arity, compute }) {
 			if (arity === 0) {
 				return compute();
 			}
@@ -686,9 +698,10 @@ export const reduce = (nff: NF.Value, nfa: NF.Value, icit: Implicitness): NF.Val
 
 			return compute(...accumulated.map(ignoraModal));
 		})
-		.otherwise(() => {
+		.otherwise(function* () {
 			throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
 		});
+}
 
 export function* matching(nf: NF.Value, alts: EB.Alternative[]): Evaluation<NF.Value | undefined> {
 	if (alts.length === 0) {
@@ -708,66 +721,27 @@ export function* matching(nf: NF.Value, alts: EB.Alternative[]): Evaluation<NF.V
 	return yield* M.reader.local(_ => extended, evaluate(alt.term));
 }
 
-export function apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): NF.Value {
-	// Check if this is a captured continuation being applied
+export function* apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): Evaluation<NF.Value> {
+	// A captured continuation: replay it with the value at the shift point.
 	if (closure.type === "Continuation") {
-		// This is a continuation - replay the captured frames in a local loop.
-		// Restore captured result suffix and then push the new argument.
-		const initialWorkSize = globalWorkStack.length;
-		const initialResultSize = globalResultStack.length;
-		globalResultStack.push(...closure.results);
-		globalResultStack.push(value);
+		const mark = yield* Stack.begin();
+		yield* Stack.resume({ frames: closure.frames, results: closure.results, env: closure.ctx }, value);
+		yield* drain(mark, MAX_STEPS, () => `Continuation replay exceeded maximum steps`);
 
-		// Replay all captured frames
-		for (const frame of closure.frames) {
-			globalWorkStack.push(frame);
-		}
-
-		let steps = 0;
-		const maxSteps = 10000000;
-
-		while (globalWorkStack.length > initialWorkSize) {
-			steps++;
-			if (steps > maxSteps) {
-				throw new Error(`Continuation replay exceeded maximum steps`);
-			}
-
-			const frame = globalWorkStack.pop()!;
-
-			if (frame.type === "Cont") {
-				const args = globalResultStack.splice(-frame.arity, frame.arity);
-				if (args.length !== frame.arity) {
-					throw new Error(`Continuation expected ${frame.arity} results but got ${args.length}`);
-				}
-				frame.handler(args);
-			} else if (frame.type === "Delimiter") {
-				continue;
-			} else {
-				evaluateTerm(frame.ctx, frame.term, frame.noInlineBindings ?? false);
-			}
-		}
-
-		// Return the result from the replayed computation
-		const resultCount = globalResultStack.length - initialResultSize;
-		if (resultCount !== 1) {
-			throw new Error(`Continuation replay expected 1 result, got ${resultCount}`);
-		}
-
-		return globalResultStack.pop()!;
+		return yield* Stack.finish(mark);
 	}
 
-	let { ctx, term } = closure;
-
+	// Closure consumption: the closure's stored environment plus the argument.
 	const extended = (() => {
 		if (binder.type !== "Sigma") {
-			return EB.extend(ctx, binder, value);
+			return EB.extend(closure.ctx, binder, value);
 		}
 		assert(value.type === "Row", "Sigma binder should be applied to a Row");
-		return EB.extendSigma(ctx, value.row);
+		return EB.extendSigma(closure.ctx, value.row);
 	})();
 
 	if (closure.type === "Closure") {
-		return evaluate(extended, term);
+		return yield* M.reader.local(_ => extended, evaluate(closure.term));
 	}
 
 	const args = extended.env.slice(0, closure.arity).map(({ nf }) => nf);
