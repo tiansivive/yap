@@ -3,8 +3,7 @@ import * as E from "fp-ts/lib/Either";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
-import * as Eval from "../evaluation.v2";
-import { parseExpr, mkCtx } from "../../inference/__tests__/util";
+import { parseExpr, mkCtx, runNF } from "../../inference/__tests__/util";
 import * as Sub from "@yap/elaboration/unification/substitution";
 
 describe("module.expression elaboration", () => {
@@ -25,7 +24,7 @@ describe("module.expression elaboration", () => {
 		}
 
 		const [tm, , , finalCtx] = elaborated.right;
-		expect(() => Eval.evaluate(finalCtx, tm)).not.toThrow();
+		expect(() => runNF(finalCtx, () => NF.normalize(tm))).not.toThrow();
 	});
 
 	it("let-binding does not leak inner metas: { let id = \\x -> x; return id 42; }", () => {

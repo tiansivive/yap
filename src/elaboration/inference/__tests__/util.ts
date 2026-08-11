@@ -1,7 +1,12 @@
 import Nearley from "nearley";
 import Grammar from "@yap/src/grammar";
 
+import * as Eff from "@yap/utils/effects";
+
 import * as EB from "@yap/elaboration";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
+import * as Errors from "@yap/elaboration/shared/errors";
 import * as NF from "@yap/elaboration/normalization";
 import * as Lib from "@yap/shared/lib/primitives";
 import { omit } from "lodash/fp";
@@ -48,6 +53,34 @@ export const Liquid = {
 	mentions: (symbol: string): RegExp => new RegExp(escapeRegExp(symbol)),
 } as const;
 
+const initialState = (): M.MutState => ({ delimitations: [], nondeterminism: { solution: {} } });
+
+/** Runs an elaboration program with a fresh handler set; answers with every handler's output. */
+export const runEB = <A>(ctx: EB.Context, program: () => M.Elaboration<A>, registry: Metas.Registry = Metas.empty) => {
+	const [answer, collected, , , state, counts, metas, trace] = Eff.run(program, [
+		M.writer.handlers(),
+		M.reader.handlers(ctx),
+		M.except.handlers(),
+		M.st.handlers(initialState()),
+		M.supply.handlers(),
+		Metas.registry.handlers(registry),
+		M.tracer.handlers(),
+	]);
+
+	return { answer, collected, state, counts, registry: metas, trace } as const;
+};
+
+/** Runs a public-NbE program (reader + registry row) with a fresh machine. */
+export const runNF = <A>(
+	ctx: EB.Context,
+	program: () => Eff.Eff<Eff.Actions<[typeof M.reader, typeof Metas.registry]>, A>,
+	registry: Metas.Registry = Metas.empty,
+): A => {
+	const [value] = Eff.run(program, [M.reader.handlers(ctx), Metas.registry.handlers(registry)]);
+
+	return value;
+};
+
 // Run elaboration/inference for a source string; returns elaborated term, type, usages, constraints and displays.
 export const elaborateFrom = (src: string) => {
 	EB.resetSupply("meta");
@@ -58,24 +91,21 @@ export const elaborateFrom = (src: string) => {
 	const term = parseExpr(src);
 	const ctx = mkCtx();
 
-	const result = EB.V2.Do(function* () {
-		const [tm, ty] = yield* EB.infer.gen(term);
-		const { constraints: csts, metas, types, zonker } = yield* EB.V2.listen();
-		const constraints = csts.map(c => (c.type === "assign" ? omit("trace", c) : c));
-		return { tm, ty, constraints, metas, types, zonker } as const;
-	});
+	const { answer, collected, state, registry } = runEB(ctx, () => EB.infer(term));
 
-	const [out, state] = result(ctx);
-	if (out.result._tag === "Left") {
-		throw new Error(EB.V2.display(out.result.left));
+	if (Eff.failed(answer)) {
+		throw new Error(Errors.display(answer[Eff.ABORT], Metas.solutions(registry), {}));
 	}
-	const { tm, ty, constraints, metas, types, zonker } = out.result.right;
+
+	const [tm, ty] = answer;
+	const constraints = collected.constraints.map(c => (c.type === "assign" ? omit("trace", c) : c));
+	const zonker = Metas.solutions(registry);
 
 	const pretty = {
-		term: EB.Display.Term(tm, { env: ctx.env, zonker, metas: { ...ctx.metas, ...metas } }),
-		type: NF.display(ty, { env: ctx.env, zonker, metas: { ...ctx.metas, ...metas } }),
-		// use context zonker to display metas in constraints
-		constraints: constraints.map((c: any) => EB.Display.Constraint(c, { env: ctx.env, zonker: ctx.zonker, metas: { ...ctx.metas, ...metas } })),
+		term: EB.Display.Term(tm, { env: ctx.env, zonker, metas: {} }),
+		type: NF.display(ty, { env: ctx.env, zonker, metas: {} }),
+		// use the registry's solutions to display metas in constraints
+		constraints: constraints.map((c: any) => EB.Display.Constraint(c, { env: ctx.env, zonker, metas: {} })),
 	};
 
 	// Build a snapshot-friendly object
@@ -86,10 +116,11 @@ export const elaborateFrom = (src: string) => {
 			term: tm,
 			type: ty,
 			constraints,
-			metas,
-			typedTerms: types,
+			metas: registry,
+			typedTerms: {},
 		},
 		state,
 		zonker,
+		registry,
 	};
 };

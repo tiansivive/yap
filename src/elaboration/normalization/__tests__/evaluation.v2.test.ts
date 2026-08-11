@@ -2,24 +2,20 @@ import { describe, it, expect } from "vitest";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
-import * as Eval from "../evaluation.v2";
 
-import { elaborateFrom, mkCtx } from "../../inference/__tests__/util";
+import { elaborateFrom, mkCtx, runNF } from "../../inference/__tests__/util";
 import { update } from "@yap/utils";
 
-const ctxFor = (base = mkCtx(), metas: EB.Context["metas"] = {}) => ({
-	...base,
-	metas: { ...base.metas, ...metas },
-});
+const ctxFor = (base = mkCtx()) => base;
 
 const show = (v: NF.Value, ctx: EB.Context) => NF.display(v, { env: ctx.env, zonker: ctx.zonker, metas: ctx.metas });
 
 describe("Normalization v2 (stack-based): evaluation / reduce / matching", () => {
 	it("evaluates literals and arithmetic to WHNF", () => {
 		const { structure } = elaborateFrom("1 + 2");
-		const ctx = ctxFor(mkCtx(), structure.metas);
+		const ctx = ctxFor(mkCtx());
 
-		const nf = Eval.evaluate(ctx, structure.term);
+		const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 
 		// WHNF check: should be a literal after computing FFI op
 		expect(nf.type).toBe("Lit");
@@ -28,18 +24,18 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 
 	it("evaluates lambda application via reduce to WHNF", () => {
 		const { structure } = elaborateFrom("(\\x -> x) 1");
-		const ctx = ctxFor(mkCtx(), structure.metas);
+		const ctx = ctxFor(mkCtx());
 
-		const nf = Eval.evaluate(ctx, structure.term);
+		const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 		expect(nf.type).toBe("Lit");
 		expect(show(nf, ctx)).toBe("1");
 	});
 
 	it("evaluates rows + projection", () => {
 		const { structure } = elaborateFrom("{ x: 1, y: 2 }.x");
-		const ctx = ctxFor(mkCtx(), structure.metas);
+		const ctx = ctxFor(mkCtx());
 
-		const nf = Eval.evaluate(ctx, structure.term);
+		const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 		expect(nf.type).toBe("Lit");
 		expect(show(nf, ctx)).toBe("1");
 	});
@@ -47,9 +43,9 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 	it("pattern matches on a struct", () => {
 		const src = ["match { a: 1, b: 2}", "  | { a: x, b: y } -> x", "  | _ -> 0"].join("\n");
 		const { structure } = elaborateFrom(src);
-		const ctx = ctxFor(mkCtx(), structure.metas);
+		const ctx = ctxFor(mkCtx());
 
-		const nf = Eval.evaluate(ctx, structure.term);
+		const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 		expect(nf.type).toBe("Lit");
 		expect(show(nf, ctx)).toBe("1");
 	});
@@ -57,9 +53,9 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 	it("evaluates dependent record projection", () => {
 		const src = "{ x: 1, y: :x + 1 }.y";
 		const { structure } = elaborateFrom(src);
-		const ctx = ctxFor(mkCtx(), structure.metas);
+		const ctx = ctxFor(mkCtx());
 
-		const nf = Eval.evaluate(ctx, structure.term);
+		const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 		expect(nf.type).toBe("Lit");
 		expect(show(nf, ctx)).toBe("2");
 	});
@@ -77,9 +73,9 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 			return (count 10000) 0;
 		}`;
 			const { structure } = elaborateFrom(src);
-			const ctx = ctxFor(mkCtx(), structure.metas);
+			const ctx = ctxFor(mkCtx());
 
-			const nf = Eval.evaluate(ctx, structure.term);
+			const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 			expect(nf.type).toBe("Lit");
 
 			expect(show(nf, ctx)).toBe("10000");
@@ -96,9 +92,9 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 			return countdown 10;
 		}`;
 		const { structure } = elaborateFrom(src);
-		const ctx = ctxFor(mkCtx(), structure.metas);
+		const ctx = ctxFor(mkCtx());
 
-		const nf = Eval.evaluate(ctx, structure.term);
+		const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 		expect(nf.type).toBe("Lit");
 		expect(show(nf, ctx)).toBe("0");
 	});
@@ -111,9 +107,9 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 			}`;
 
 			const { structure } = elaborateFrom(src);
-			const ctx = ctxFor(mkCtx(), structure.metas);
+			const ctx = ctxFor(mkCtx());
 
-			const nf = Eval.evaluate(ctx, structure.term);
+			const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 			expect(nf.type).toBe("Lit");
 			expect(show(nf, ctx)).toBe("10");
 		});
@@ -125,9 +121,9 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 			}`;
 
 			const { structure } = elaborateFrom(src);
-			const ctx = ctxFor(mkCtx(), structure.metas);
+			const ctx = ctxFor(mkCtx());
 
-			const nf = Eval.evaluate(ctx, structure.term);
+			const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 			expect(nf.type).toBe("Lit");
 			expect(show(nf, ctx)).toBe("32");
 		});
@@ -139,8 +135,8 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 			}`;
 
 			const { structure, displays } = elaborateFrom(src);
-			const ctx = ctxFor(mkCtx(), structure.metas);
-			const nf = Eval.evaluate(ctx, structure.term);
+			const ctx = ctxFor(mkCtx());
+			const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 			expect({ pretty: displays, nfType: nf.type }).toMatchSnapshot();
 		});
 
@@ -173,9 +169,9 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 			}`;
 
 			const { structure, displays, zonker } = elaborateFrom(src);
-			const ctx = update(ctxFor(mkCtx(), structure.metas), "zonker", z => ({ ...z, ...zonker }));
+			const ctx = update(ctxFor(mkCtx()), "zonker", z => ({ ...z, ...zonker }));
 
-			const nf = Eval.evaluate(ctx, structure.term);
+			const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 			//expect(nf.type).toBe("Lit");
 			expect({
 				displays,

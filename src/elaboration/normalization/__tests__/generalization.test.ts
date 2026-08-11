@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Lit from "@yap/shared/literals";
-import { mkCtx } from "../../inference/__tests__/util";
+import { mkCtx, runNF } from "../../inference/__tests__/util";
 
 import * as F from "fp-ts/function";
 
@@ -26,7 +26,7 @@ describe("Normalization: generalization", () => {
 			const nf = NF.display(generalized, extendedCtx);
 			expect(nf).toContain("=>");
 
-			const quoted = NF.quote(extendedCtx, ctx.env.length, generalized);
+			const quoted = runNF(extendedCtx, () => NF.quote(ctx.env.length, generalized));
 			expect({
 				nf,
 				eb: EB.Display.Term(quoted, extendedCtx),
@@ -55,7 +55,7 @@ describe("Normalization: generalization", () => {
 			const matches = nf.match(/=>/g) || [];
 			expect(matches.length).toBe(2);
 
-			const quoted = NF.quote(extendedCtx, 0, generalized);
+			const quoted = runNF(extendedCtx, () => NF.quote(0, generalized));
 			expect({
 				nf,
 				eb: EB.Display.Term(quoted, extendedCtx),
@@ -146,7 +146,7 @@ describe("Normalization: generalization", () => {
 			expect(display).toContain("b");
 			expect(display).toContain("c");
 
-			const quoted = NF.quote(extendedCtx, 0, generalized);
+			const quoted = runNF(extendedCtx, () => NF.quote(0, generalized));
 			expect({ nf: display, eb: EB.Display.Term(quoted, extendedCtx) }).toMatchSnapshot();
 		});
 
@@ -249,7 +249,7 @@ describe("Normalization: generalization", () => {
 			const extendedCtx = { ...ctx, zonker: z };
 
 			const display = NF.display(generalized, extendedCtx);
-			const quoted = NF.quote(extendedCtx, 0, generalized);
+			const quoted = runNF(extendedCtx, () => NF.quote(0, generalized));
 			expect({ nf: display, eb: EB.Display.Term(quoted, extendedCtx) }).toMatchSnapshot();
 		});
 
@@ -269,7 +269,7 @@ describe("Normalization: generalization", () => {
 			expect(nf).toContain("a: Type");
 			expect(nf).toContain("r: Row");
 
-			const quoted = NF.quote(extendedCtx, 0, generalized);
+			const quoted = runNF(extendedCtx, () => NF.quote(0, generalized));
 			expect({
 				nf,
 				eb: EB.Display.Term(quoted, extendedCtx),
@@ -293,7 +293,7 @@ describe("Normalization: generalization", () => {
 			expect(nf).toContain("a: Type");
 			expect(nf).toContain("-> Num");
 
-			const quoted = NF.quote(extendedCtx, 0, generalized);
+			const quoted = runNF(extendedCtx, () => NF.quote(0, generalized));
 			expect({
 				nf,
 				eb: EB.Display.Term(quoted, extendedCtx),
@@ -380,7 +380,7 @@ describe("Normalization: generalization", () => {
 			const [generalized, z] = NF.generalize(meta1, noMetasTerm, xtended, noResolutions);
 			const extendedCtx = { ...xtended, zonker: z };
 
-			const quoted = NF.quote(extendedCtx, xtended.env.length, generalized);
+			const quoted = runNF(extendedCtx, () => NF.quote(xtended.env.length, generalized));
 
 			expect({ nf: NF.display(generalized, extendedCtx), eb: EB.Display.Term(quoted, extendedCtx) }).toMatchSnapshot();
 		});
@@ -402,7 +402,7 @@ describe("Normalization: generalization", () => {
 			const [generalized, z] = NF.generalize(app, noMetasTerm, xtended, noResolutions);
 			const extendedCtx = { ...xtended, zonker: z };
 
-			const quoted = NF.quote(extendedCtx, xtended.env.length, generalized);
+			const quoted = runNF(extendedCtx, () => NF.quote(xtended.env.length, generalized));
 
 			expect({ nf: NF.display(generalized, extendedCtx), eb: EB.Display.Term(quoted, extendedCtx) }).toMatchSnapshot();
 		});
@@ -428,7 +428,7 @@ describe("Normalization: generalization", () => {
 			const [generalized, z] = NF.generalize(pi, noMetasTerm, xtended, noResolutions);
 			const extendedCtx = { ...xtended, zonker: z };
 
-			const quoted = NF.quote(extendedCtx, xtended.env.length, generalized);
+			const quoted = runNF(extendedCtx, () => NF.quote(xtended.env.length, generalized));
 			expect({ nf: NF.display(generalized, extendedCtx), eb: EB.Display.Term(quoted, extendedCtx) }).toMatchSnapshot();
 		});
 	});
