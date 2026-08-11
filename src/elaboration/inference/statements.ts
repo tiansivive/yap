@@ -6,7 +6,6 @@ import * as NF from "@yap/elaboration/normalization";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as Q from "@yap/shared/modalities/multiplicity";
-import * as F from "fp-ts/lib/function";
 import * as R from "fp-ts/lib/Record";
 
 import { match } from "ts-pattern";
@@ -80,19 +79,19 @@ export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M
 			const nondet = update(withMetas, "zonker", old => ({ ...old, ...z }));
 
 			const { zonker, resolutions } = yield* M.reader.local(_ => nondet, EB.solve(constraints));
+			// Bridge until the solver converts (M4): it reports solutions as a zonker; the registry is the authority downstream.
+			yield* Metas.registry.modify(current => Metas.withSolutions(current, zonker));
 			const postSolve = yield* Metas.registry.get();
 			const postMetas = yield* Metas.asContext(postSolve);
 			const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postMetas }));
-			const zonked = update(withAllMetas, "zonker", z => compose(zonker, z));
+			const next = update(withAllMetas, "zonker", z => compose(zonker, z));
 
-			const [generalized, subst, introduced] = NF.generalize(
-				yield* M.reader.local(_ => zonked, NF.force(dec.annotation)),
-				dec.value,
-				EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation),
-				resolutions,
+			const forced = yield* M.reader.local(_ => next, NF.force(dec.annotation));
+			const [generalized, introduced] = yield* M.reader.local(
+				_ => EB.bind(next, { type: "Let", variable: dec.variable }, dec.annotation),
+				NF.generalize(forced, dec.value, resolutions),
 			);
-			const next = update(zonked, "zonker", z => compose(subst, z));
-			const instantiated = NF.instantiate(generalized, EB.bind(next, { type: "Let", variable: dec.variable }, generalized));
+			const instantiated = yield* M.reader.local(_ => EB.bind(next, { type: "Let", variable: dec.variable }, generalized), NF.instantiate(generalized));
 			return [instantiated, next, resolutions, introduced];
 		})();
 
@@ -109,7 +108,13 @@ export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M
 	}
 
 	const xtended = EB.bind(next, { type: "Let", variable: dec.variable }, instantiated);
-	const wrapped = F.pipe(introduced ? EB.Icit.wrapLambda(dec.value, instantiated, xtended) : dec.value, tm => EB.Icit.instantiate(tm, xtended, resolutions));
+	const wrapped = yield* M.reader.local(
+		_ => xtended,
+		(function* (): M.Elaboration<EB.Term> {
+			const tm = introduced ? yield* EB.Icit.wrapLambda(dec.value, instantiated) : dec.value;
+			return yield* EB.Icit.instantiate(tm, resolutions);
+		})(),
+	);
 
 	const statement = EB.Constructors.Stmt.Let(dec.variable, wrapped, instantiated);
 	return [statement, next] as [Extract<EB.Statement, { type: "Let" }>, EB.Context];

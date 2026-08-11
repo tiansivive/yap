@@ -40,7 +40,6 @@ export const infer = (block: Block): M.Elaboration<EB.AST> =>
 			}
 
 			const [r, next] = yield* EB.Stmt.letdec(stmt);
-			yield* Metas.registry.modify(current => Metas.withSolutions(current, next.zonker));
 
 			// First evaluate the current let body in a context extended with itself, allowing for recursion
 			// Then extend the context for the remaining statements with the evaluated let binding
@@ -88,14 +87,16 @@ const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]):
 	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
 
 	const { zonker, resolutions } = yield* M.reader.local(_ => withMetas, EB.solve(constraints));
+	// Bridge until the solver converts (M4): it reports solutions as a zonker; the registry is the authority downstream.
+	yield* Metas.registry.modify(current => Metas.withSolutions(current, zonker));
 	const postSolve = yield* Metas.registry.get();
 
 	const postMetas = yield* Metas.asContext(postSolve);
 	const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postMetas }));
 	const zonked = update(withAllMetas, "zonker", z => compose(zonker, z));
 	const value = yield* M.reader.local(_ => zonked, NF.normalize(t, { noInlineBindings: true }));
-	const generalized = NF.abstract(yield* M.reader.local(_ => zonked, NF.force(ty)), value, zonked, resolutions);
-	yield* Metas.registry.modify(current => Metas.withSolutions(current, generalized.zonker));
+	const forced = yield* M.reader.local(_ => zonked, NF.force(ty));
+	const generalized = yield* M.reader.local(_ => zonked, NF.abstract(forced, value, resolutions));
 
 	return [EB.Constructors.Block(results, generalized.term), generalized.type, rus] satisfies EB.AST;
 };
