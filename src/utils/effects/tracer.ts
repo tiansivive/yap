@@ -30,7 +30,7 @@ export function tracer<P>() {
 
 	/** The stack as it stands, as its own array. */
 	const trace = function* () {
-		return yield* ctl.resume<Read>("Trace.read", undefined);
+		return yield* ctl.action<Read>("Trace.read", undefined);
 	};
 
 	/* Misreads a P that is itself an array, which no provenance type should be. */
@@ -38,11 +38,11 @@ export function tracer<P>() {
 
 	/** Run program under provenance, and leave the stack as it was after. */
 	const track = function* <Row extends AnyAction, A>(provenance: P | readonly P[], program: () => Eff<Row, A>) {
-		yield* ctl.resume<Push>("Trace.push", many(provenance) ? provenance : [provenance]);
+		yield* ctl.action<Push>("Trace.push", many(provenance) ? provenance : [provenance]);
 
 		const value = yield* program();
 
-		yield* ctl.resume<Pop>("Trace.pop", undefined);
+		yield* ctl.action<Pop>("Trace.pop", undefined);
 
 		return value;
 	};
@@ -54,13 +54,13 @@ export function tracer<P>() {
 
 		return {
 			clauses: {
-				"Trace.read": () => [...entries],
+				"Trace.read": () => ctl.resume([...entries]),
 
 				"Trace.push": added => {
 					marks.push(entries.length);
 					entries.push(...added);
 
-					return undefined;
+					return ctl.resume(undefined);
 				},
 
 				"Trace.pop": () => {
@@ -70,7 +70,7 @@ export function tracer<P>() {
 						entries.length = mark;
 					}
 
-					return undefined;
+					return ctl.resume(undefined);
 				},
 			},
 

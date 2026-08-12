@@ -78,12 +78,12 @@ type Get = Eff.Action<"Registry.get", undefined, Registry>;
 type Modify = Eff.Action<"Registry.modify", (registry: Registry) => Registry, Registry>;
 
 const get = function* () {
-	return yield* Eff.ctl.resume<Get>("Registry.get", undefined);
+	return yield* Eff.ctl.action<Get>("Registry.get", undefined);
 };
 
 /** Answers with the registry after the change. */
 const modify = function* (change: (registry: Registry) => Registry) {
-	return yield* Eff.ctl.resume<Modify>("Registry.modify", change);
+	return yield* Eff.ctl.action<Modify>("Registry.modify", change);
 };
 
 const handlers = (initial: Registry = empty): Eff.Handler<Get | Modify, Registry> => {
@@ -92,12 +92,12 @@ const handlers = (initial: Registry = empty): Eff.Handler<Get | Modify, Registry
 
 	return {
 		clauses: {
-			"Registry.get": () => current,
+			"Registry.get": () => Eff.ctl.resume(current),
 
 			"Registry.modify": change => {
 				current = change(current);
 
-				return current;
+				return Eff.ctl.resume(current);
 			},
 		},
 

@@ -14,7 +14,7 @@ export function supply<K extends string>() {
 
 	/** The next number for kind, counting from 1. */
 	const fresh = function* (kind: K) {
-		return yield* ctl.resume<Fresh>("Supply.fresh", kind);
+		return yield* ctl.action<Fresh>("Supply.fresh", kind);
 	};
 
 	const handlers = (initial: Partial<Record<K, number>> = {}): Handler<Fresh, Partial<Record<K, number>>> => {
@@ -27,7 +27,7 @@ export function supply<K extends string>() {
 					const next = (counts[kind] ?? 0) + 1;
 					counts[kind] = next;
 
-					return next;
+					return ctl.resume(next);
 				},
 			},
 

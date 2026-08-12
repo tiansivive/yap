@@ -20,28 +20,28 @@ export function writer<W>(monoid: Monoid<W>) {
 	type Close = Action<"Writer.close", (written: W) => W, W>;
 
 	const tell = function* (entry: W) {
-		return yield* ctl.resume<Tell>("Writer.tell", entry);
+		return yield* ctl.action<Tell>("Writer.tell", entry);
 	};
 
 	/** Everything written so far in the innermost scope. */
 	const peek = function* () {
-		return yield* ctl.resume<Peek>("Writer.peek", undefined);
+		return yield* ctl.action<Peek>("Writer.peek", undefined);
 	};
 
 	/** mtl's listen: the program's value, and what that program alone wrote. */
 	const listen = function* <Row extends AnyAction, A>(program: Eff<Row, A>) {
-		yield* ctl.resume<Open>("Writer.open", undefined);
+		yield* ctl.action<Open>("Writer.open", undefined);
 		const value = yield* program;
-		const written = yield* ctl.resume<Close>("Writer.close", entries => entries);
+		const written = yield* ctl.action<Close>("Writer.close", entries => entries);
 
 		return [value, written] as const;
 	};
 
 	/** mtl's censor: what the program wrote, transformed on its way out. */
 	const censor = function* <Row extends AnyAction, A>(change: (written: W) => W, program: Eff<Row, A>) {
-		yield* ctl.resume<Open>("Writer.open", undefined);
+		yield* ctl.action<Open>("Writer.open", undefined);
 		const value = yield* program;
-		yield* ctl.resume<Close>("Writer.close", change);
+		yield* ctl.action<Close>("Writer.close", change);
 
 		return value;
 	};
@@ -55,21 +55,23 @@ export function writer<W>(monoid: Monoid<W>) {
 			clauses: {
 				"Writer.tell": entry => {
 					scopes[innermost()] = monoid.concat(scopes[innermost()], entry);
+
+					return ctl.resume(undefined);
 				},
 
-				"Writer.peek": () => scopes[innermost()],
+				"Writer.peek": () => ctl.resume(scopes[innermost()]),
 
 				"Writer.open": () => {
 					scopes.push(monoid.empty);
 
-					return undefined;
+					return ctl.resume(undefined);
 				},
 
 				"Writer.close": change => {
 					const written = change(scopes.length > 1 ? (scopes.pop() ?? monoid.empty) : monoid.empty);
 					scopes[innermost()] = monoid.concat(scopes[innermost()], written);
 
-					return written;
+					return ctl.resume(written);
 				},
 			},
 

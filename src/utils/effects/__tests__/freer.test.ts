@@ -99,25 +99,61 @@ describe("Eff.with", () => {
 		expect(Eff.failed(answer)).toBe(true);
 	});
 
-	it("runs a scoped abort clause and still forwards the abort to the run", () => {
-		const stamping: Eff.Handler<Eff.Actions<typeof errors>, undefined> = {
-			clauses: { "Except.raise": error => `inner: ${String(error)}` },
+	it("a with-installed raise clause delimits at the with", () => {
+		const catching: Eff.Handler<Eff.Actions<typeof errors>, undefined, string> = {
+			clauses: { "Except.raise": error => Eff.ctl.abort(`caught: ${String(error)}`) },
 			output: () => undefined,
 		};
 
 		const program = function* () {
-			const [value] = yield* Eff.with([stamping], function* () {
-				return yield* errors.raise("boom");
+			const [attempt] = yield* Eff.with([catching], function* () {
+				yield* errors.raise("boom");
+
+				return "unreachable";
 			});
 
-			return value;
+			/* The abort answered the with; the program carries on past it. */
+			return Eff.failed(attempt) ? attempt[Eff.ABORT] : attempt;
 		};
 
 		const [answer] = Eff.run(program, [errors.handlers()]);
 
-		expect(Eff.failed(answer)).toBe(true);
-		if (Eff.failed(answer)) {
-			expect(answer[Eff.ABORT]).toBe("inner: boom");
-		}
+		expect(Eff.failed(answer)).toBe(false);
+		expect(answer).toBe("caught: boom");
+	});
+
+	it("tries candidates by delimiting each attempt", () => {
+		const attempted: Eff.Handler<Eff.Actions<typeof errors>, undefined, string> = {
+			clauses: { "Except.raise": error => Eff.ctl.abort(String(error)) },
+			output: () => undefined,
+		};
+
+		const attempt = (candidate: number) =>
+			Eff.with([attempted], function* () {
+				yield* state.put(candidate);
+
+				if (candidate < 3) {
+					return yield* errors.raise(`no: ${candidate}`);
+				}
+
+				return candidate;
+			});
+
+		const search = function* (candidates: readonly number[]): Eff.Eff<Eff.Actions<[typeof errors, typeof state]>, number> {
+			if (candidates.length === 0) {
+				return yield* errors.raise("exhausted");
+			}
+
+			const [candidate, ...rest] = candidates;
+			const [outcome] = yield* attempt(candidate);
+
+			return Eff.failed(outcome) ? yield* search(rest) : outcome;
+		};
+
+		const program = () => search([1, 2, 3]);
+
+		const [answer] = Eff.run(program, [errors.handlers(), state.handlers(0)]);
+
+		expect(answer).toBe(3);
 	});
 });

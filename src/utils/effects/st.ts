@@ -14,15 +14,15 @@ export function st<S>() {
 	type Modify = Action<"ST.modify", (value: S) => S, S>;
 
 	const get = function* () {
-		return yield* ctl.resume<Get>("ST.get", undefined);
+		return yield* ctl.action<Get>("ST.get", undefined);
 	};
 
 	const put = function* (value: S) {
-		return yield* ctl.resume<Put>("ST.put", value);
+		return yield* ctl.action<Put>("ST.put", value);
 	};
 
 	const modify = function* (update: (value: S) => S) {
-		return yield* ctl.resume<Modify>("ST.modify", update);
+		return yield* ctl.action<Modify>("ST.modify", update);
 	};
 
 	const handlers = (initial: S): Handler<Get | Put | Modify, S> => {
@@ -31,16 +31,18 @@ export function st<S>() {
 
 		return {
 			clauses: {
-				"ST.get": () => state,
+				"ST.get": () => ctl.resume(state),
 
 				"ST.put": value => {
 					state = value;
+
+					return ctl.resume(undefined);
 				},
 
 				"ST.modify": update => {
 					state = update(state);
 
-					return state;
+					return ctl.resume(state);
 				},
 			},
 

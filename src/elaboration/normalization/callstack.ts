@@ -58,58 +58,58 @@ type Resume = Eff.Action<"Callstack.resume", { captured: Captured; value: NF.Val
 
 /** Opens a drive: everything above the mark belongs to this evaluate call. */
 const begin = function* () {
-	return yield* Eff.ctl.resume<Begin>("Callstack.begin", undefined);
+	return yield* Eff.ctl.action<Begin>("Callstack.begin", undefined);
 };
 
 /** The next step of this drive, or undefined when its work is exhausted. */
 const next = function* (mark: Mark) {
-	return yield* Eff.ctl.resume<Next>("Callstack.next", mark);
+	return yield* Eff.ctl.action<Next>("Callstack.next", mark);
 };
 
 /** Closes a drive: answers with its single result. */
 const finish = function* (mark: Mark) {
-	return yield* Eff.ctl.resume<Finish>("Callstack.finish", mark);
+	return yield* Eff.ctl.action<Finish>("Callstack.finish", mark);
 };
 
 /** Evaluate term next, under the environment the reader holds at scheduling time. */
 const evalOp = function* (term: EB.Term, noInline = false) {
 	const env = yield* M.reader.ask();
 
-	return yield* Eff.ctl.resume<Eval>("Callstack.eval", { env, term, noInline });
+	return yield* Eff.ctl.action<Eval>("Callstack.eval", { env, term, noInline });
 };
 
 /** Return a finished value to the next continuation. */
 const ret = function* (value: NF.Value) {
-	return yield* Eff.ctl.resume<Ret>("Callstack.ret", value);
+	return yield* Eff.ctl.action<Ret>("Callstack.ret", value);
 };
 
 /** Continuation: run k over the next `arity` results, under the scheduling-time environment. */
 const cont = function* (arity: number, k: (results: NF.Value[]) => Evaluation<void>) {
 	const env = yield* M.reader.ask();
 
-	return yield* Eff.ctl.resume<Cont>("Callstack.cont", { env, arity, k });
+	return yield* Eff.ctl.action<Cont>("Callstack.cont", { env, arity, k });
 };
 
 /** Marks a reset boundary for continuation capture. */
 const delimit = function* () {
 	const env = yield* M.reader.ask();
 
-	return yield* Eff.ctl.resume<Delimit>("Callstack.delimit", env);
+	return yield* Eff.ctl.action<Delimit>("Callstack.delimit", env);
 };
 
 /** Whether a reset boundary is in scope. */
 const delimited = function* () {
-	return yield* Eff.ctl.resume<Delimited>("Callstack.delimited", undefined);
+	return yield* Eff.ctl.action<Delimited>("Callstack.delimited", undefined);
 };
 
 /** Slices off everything up to the nearest delimiter; undefined without one. */
 const capture = function* () {
-	return yield* Eff.ctl.resume<Capture>("Callstack.capture", undefined);
+	return yield* Eff.ctl.action<Capture>("Callstack.capture", undefined);
 };
 
 /** Replays a captured continuation with value at the shift point. */
 const resume = function* (captured: Captured, value: NF.Value) {
-	return yield* Eff.ctl.resume<Resume>("Callstack.resume", { captured, value });
+	return yield* Eff.ctl.action<Resume>("Callstack.resume", { captured, value });
 };
 
 type Actions = Begin | Next | Finish | Eval | Ret | Cont | Delimit | Delimited | Capture | Resume;
@@ -121,9 +121,9 @@ const handlers = (): Eff.Handler<Actions, undefined> => {
 
 	return {
 		clauses: {
-			"Callstack.begin": (): Mark => ({ work: workStack.length, results: resultStack.length }),
+			"Callstack.begin": () => Eff.ctl.resume<Mark>({ work: workStack.length, results: resultStack.length }),
 
-			"Callstack.next": (mark): Step | undefined => {
+			"Callstack.next": mark => {
 				while (workStack.length > mark.work) {
 					const step = match<StackFrame, Step | undefined>(workStack.pop() as StackFrame)
 						.with({ type: "Delimiter" }, () => undefined)
@@ -140,53 +140,53 @@ const handlers = (): Eff.Handler<Actions, undefined> => {
 						.exhaustive();
 
 					if (step) {
-						return step;
+						return Eff.ctl.resume<Step | undefined>(step);
 					}
 				}
 
-				return undefined;
+				return Eff.ctl.resume<Step | undefined>(undefined);
 			},
 
-			"Callstack.finish": (mark): NF.Value => {
+			"Callstack.finish": mark => {
 				const produced = resultStack.length - mark.results;
 
 				if (produced !== 1) {
 					throw new Error(`Expected exactly 1 result, got ${produced}`);
 				}
 
-				return resultStack.pop() as NF.Value;
+				return Eff.ctl.resume(resultStack.pop() as NF.Value);
 			},
 
 			"Callstack.eval": ({ env, term, noInline }) => {
 				workStack.push({ type: "Eval", env, term, noInline });
 
-				return undefined;
+				return Eff.ctl.resume(undefined);
 			},
 
 			"Callstack.ret": value => {
 				resultStack.push(value);
 
-				return undefined;
+				return Eff.ctl.resume(undefined);
 			},
 
 			"Callstack.cont": ({ env, arity, k }) => {
 				workStack.push({ type: "Cont", env, arity, k });
 
-				return undefined;
+				return Eff.ctl.resume(undefined);
 			},
 
 			"Callstack.delimit": env => {
 				workStack.push({ type: "Delimiter", env, resultSize: resultStack.length });
 
-				return undefined;
+				return Eff.ctl.resume(undefined);
 			},
 
-			"Callstack.delimited": () => workStack.some(frame => frame.type === "Delimiter"),
+			"Callstack.delimited": () => Eff.ctl.resume(workStack.some(frame => frame.type === "Delimiter")),
 
-			"Callstack.capture": (): Captured | undefined => {
+			"Callstack.capture": () => {
 				const index = workStack.findLastIndex(frame => frame.type === "Delimiter");
 
-				return match(workStack[index])
+				const captured = match<StackFrame | undefined, Captured | undefined>(workStack[index])
 					.with({ type: "Delimiter" }, ({ env, resultSize }) => {
 						const frames = workStack.slice(index + 1);
 						const results = resultStack.slice(resultSize);
@@ -198,13 +198,15 @@ const handlers = (): Eff.Handler<Actions, undefined> => {
 						return { frames, results, env };
 					})
 					.otherwise(() => undefined);
+
+				return Eff.ctl.resume(captured);
 			},
 
 			"Callstack.resume": ({ captured, value }) => {
 				resultStack.push(...captured.results, value);
 				workStack.push(...captured.frames);
 
-				return undefined;
+				return Eff.ctl.resume(undefined);
 			},
 		},
 

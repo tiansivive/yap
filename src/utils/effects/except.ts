@@ -8,19 +8,20 @@ import { Action, ctl, Handler } from "@yap/utils/effects/freer";
  */
 
 export function except<E>() {
-	type Raise = Action<"Except.raise", E, E, "abort">;
+	/* Answer type never: no handler can resume a raise, only abort with it. */
+	type Raise = Action<"Except.raise", E, never>;
 
-	/* Answers with never, so a call to raise does not return. */
 	const raise = function* (error: E) {
-		return yield* ctl.abort<Raise>("Except.raise", error);
+		return yield* ctl.action<Raise>("Except.raise", error);
 	};
 
 	/*
-	 * No catch. An abort breaks the loop, and nothing here can restart it from
-	 * where the raise stood.
+	 * The default handler aborts its installing scope with the error. A scope
+	 * wanting to observe failure installs this (or its own clause) via Eff.with
+	 * and reads the abort off the value slot.
 	 */
-	const handlers = (): Handler<Raise, undefined> => ({
-		clauses: { "Except.raise": error => error },
+	const handlers = (): Handler<Raise, undefined, E> => ({
+		clauses: { "Except.raise": error => ctl.abort(error) },
 		output: () => undefined,
 	});
 

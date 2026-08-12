@@ -16,20 +16,20 @@ export function reader<R>() {
 	type Pop = Action<"Reader.pop", undefined, undefined>;
 
 	const ask = function* () {
-		return yield* ctl.resume<Ask>("Reader.ask", undefined);
+		return yield* ctl.action<Ask>("Reader.ask", undefined);
 	};
 
 	/* Generic on the wrapper, so the answer follows the projection per call. */
 	const asks = function* <A>(project: (environment: R) => A) {
-		return yield* ctl.resume<Action<"Reader.asks", (environment: R) => A, A>>("Reader.asks", project);
+		return yield* ctl.action<Action<"Reader.asks", (environment: R) => A, A>>("Reader.asks", project);
 	};
 
 	const local = function* <Row extends AnyAction, A>(modify: (environment: R) => R, program: Eff<Row, A>) {
-		yield* ctl.resume<Push>("Reader.push", modify);
+		yield* ctl.action<Push>("Reader.push", modify);
 
 		const value = yield* program;
 
-		yield* ctl.resume<Pop>("Reader.pop", undefined);
+		yield* ctl.action<Pop>("Reader.pop", undefined);
 
 		return value;
 	};
@@ -41,13 +41,13 @@ export function reader<R>() {
 
 		return {
 			clauses: {
-				"Reader.ask": () => current(),
-				"Reader.asks": project => project(current()),
+				"Reader.ask": () => ctl.resume(current()),
+				"Reader.asks": project => ctl.resume(project(current())),
 
 				"Reader.push": modify => {
 					scopes.push(modify(current()));
 
-					return undefined;
+					return ctl.resume(undefined);
 				},
 
 				"Reader.pop": () => {
@@ -55,7 +55,7 @@ export function reader<R>() {
 						scopes.pop();
 					}
 
-					return undefined;
+					return ctl.resume(undefined);
 				},
 			},
 

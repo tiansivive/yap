@@ -7,12 +7,11 @@
 // ============================================================================
 
 /*
- * An Action is one operation: a tag, a payload, the type a handler must answer
- * it with, and which control it exercises. Yielding one puts it in the
- * program's row, so a row is inferred from what a program actually does rather
- * than declared up front:
+ * An Action is one operation: a tag, a payload, and the type a handler must
+ * answer it with. Yielding one puts it in the program's row, so a row is
+ * inferred from what a program actually does rather than declared up front:
  *
- *   const ask = function* () { return yield* ctl.resume<Ask>("Reader.ask", undefined) };
+ *   const ask = function* () { return yield* ctl.action<Ask>("Reader.ask", undefined) };
  *
  *   function* program() {
  *     const environment = yield* ask();
@@ -27,36 +26,34 @@
  * Nothing here groups actions. A Reader is a record you write by hand, and if
  * it hands back a callback for its handlers then its handlers are swappable.
  *
- * An action's control says where its clause's answer goes. A resume action feeds
- * it back to the program; an abort action makes it the run's answer and the loop
- * breaks. Only a row containing an abort action widens the result, and it widens
- * by that action's own answer type, so what a program can fail with shows up in
- * its type and a program that cannot fail does not have to say so.
+ * An action declares; its handler controls. Every clause answers with a
+ * Control value: ctl.resume(v) feeds v back to the program, ctl.abort(v)
+ * discards the rest of the program and makes v the answer of whatever scope
+ * installed that handler — the run, or an Eff.with. What a handler can abort
+ * with is its Raises parameter, so failure shows up on the handler, not the
+ * action.
  */
 
-export type Control = "resume" | "abort";
-
-export type Action<Tag extends string, Payload, A, C extends Control = "resume"> = {
+export type Action<Tag extends string, Payload, A> = {
 	readonly tag: Tag;
 	readonly payload: Payload;
-	readonly control: C;
 
 	/*
-	 * A is what this action's clause answers with. A resume clause answers the
-	 * program, so that is what yield* gives back; an abort clause answers the run
-	 * instead, so the program gets never and a call to it does not return.
+	 * A is what a resuming clause answers the program with, so that is what
+	 * yield* gives back. An action whose A is never cannot be resumed — its
+	 * handlers can only abort — and a call to it does not return.
 	 */
-	[Symbol.iterator](): Generator<Action<Tag, Payload, A, C>, C extends "abort" ? never : A, unknown>;
+	[Symbol.iterator](): Generator<Action<Tag, Payload, A>, A, unknown>;
 };
 
-export type AnyAction = Action<string, any, any, Control>;
+export type AnyAction = Action<string, any, any>;
 
-type Answer<Act> = Act extends Action<string, any, infer A, Control> ? A : never;
+type Answer<Act> = Act extends Action<string, any, infer A> ? A : never;
 
-/** The actions in a row that break the loop rather than feeding it. */
-type Failing<Row extends AnyAction> = Extract<Row, { control: "abort" }>;
+/** What a clause answers: feed the program, or answer the installing scope. */
+export type Control<A = unknown, E = unknown> = { readonly control: "resume"; readonly value: A } | { readonly control: "abort"; readonly value: E };
 
-/** The error an aborted run answered with. */
+/** The error an aborted scope answered with. */
 export const ABORT: unique symbol = Symbol("abort");
 
 export type Aborted<E> = { readonly [ABORT]: E };
@@ -83,11 +80,10 @@ export function* traverse<Row extends AnyAction, A, B>(items: readonly A[], f: (
 	return collected;
 }
 
-const build = (tag: string, payload: unknown, control: Control) => {
+const build = (tag: string, payload: unknown) => {
 	const self = {
 		tag,
 		payload,
-		control,
 
 		*[Symbol.iterator](): Generator<unknown, unknown, unknown> {
 			return yield self;
@@ -97,29 +93,27 @@ const build = (tag: string, payload: unknown, control: Control) => {
 	return self;
 };
 
-/* Action builders. Yieldable, so one reads as `yield* ctl.resume(…)`. */
 export const ctl = {
-	/** Its clause answers the program, which carries on. */
-	resume: <Act extends Action<string, any, any, "resume">>(tag: Act["tag"], payload: Act["payload"]): Act => build(tag, payload, "resume") as unknown as Act,
+	/** Declares one operation. Yieldable, so one reads as `yield* ctl.action(…)`. */
+	action: <Act extends AnyAction>(tag: Act["tag"], payload: Act["payload"]): Act => build(tag, payload) as unknown as Act,
 
-	/** Its clause answers the whole run, and the loop breaks. */
-	abort: <Act extends Action<string, any, any, "abort">>(tag: Act["tag"], payload: Act["payload"]): Act => build(tag, payload, "abort") as unknown as Act,
+	/** Answer the program, which carries on. */
+	resume: <A>(value: A): Control<A, never> => ({ control: "resume", value }),
+
+	/** Answer the scope that installed this handler; the program is discarded. */
+	abort: <E>(value: E): Control<never, E> => ({ control: "abort", value }),
 };
 
 /**
  * Answers some part of a row, and contributes one output to the result.
  *
- * A clause takes its action's payload and answers with what that action's type
- * promised. Handlers are matched last-to-first, so a later one shadows an
- * earlier one for the tags they share.
+ * A clause takes its action's payload and answers with a Control: resume what
+ * the action's type promised, or abort with a Raises. Handlers are matched
+ * last-to-first, so a later one shadows an earlier one for the tags they share.
  */
-export type Handler<Row extends AnyAction, Output> = {
+export type Handler<Row extends AnyAction, Output, Raises = never> = {
 	readonly clauses: {
-		[Tag in Row["tag"]]: Extract<Row, { tag: Tag }> extends {
-			readonly control: "abort";
-		}
-			? (payload: Extract<Row, { tag: Tag }>["payload"]) => unknown
-			: (payload: Extract<Row, { tag: Tag }>["payload"]) => Answer<Extract<Row, { tag: Tag }>>;
+		[Tag in Row["tag"]]: (payload: Extract<Row, { tag: Tag }>["payload"]) => Control<Answer<Extract<Row, { tag: Tag }>>, Raises>;
 	};
 	readonly output: () => Output;
 };
@@ -138,27 +132,35 @@ export type Handler<Row extends AnyAction, Output> = {
 export type Actions<Effects> = Effects extends readonly unknown[] ? { [I in keyof Effects]: Offered<Effects[I]> }[number] : Offered<Effects>;
 
 type Offered<Effect> = Effect extends {
-	handlers: (...args: any[]) => Handler<infer Row, any>;
+	handlers: (...args: any[]) => Handler<infer Row, any, any>;
 }
 	? Row
 	: never;
 
 type Covered<Handlers extends readonly unknown[]> = {
-	[I in keyof Handlers]: Handlers[I] extends Handler<infer Row, any> ? Row : never;
+	[I in keyof Handlers]: Handlers[I] extends Handler<infer Row, any, any> ? Row : never;
 }[number];
 
 type Outputs<Handlers extends readonly unknown[]> = {
-	[I in keyof Handlers]: Handlers[I] extends Handler<any, infer Output> ? Output : never;
+	[I in keyof Handlers]: Handlers[I] extends Handler<any, infer Output, any> ? Output : never;
 };
+
+/** Everything the given handlers can abort with. */
+type Raised<Handlers extends readonly unknown[]> = {
+	[I in keyof Handlers]: Handlers[I] extends Handler<any, any, infer Raises> ? Raises : never;
+}[number];
+
+/** The value slot of a scope's answer: plain when no handler can abort. */
+type Outcome<A, Raises> = [Raises] extends [never] ? A : A | Aborted<Raises>;
 
 /* One cast at the boundary; the interpreters have no use for the precise types. */
 type Erased = {
-	readonly clauses: Readonly<Record<string, (payload: unknown) => unknown>>;
+	readonly clauses: Readonly<Record<string, (payload: unknown) => Control>>;
 	readonly output: () => unknown;
 };
 
 /** Flattened clause lookup; a later handler shadows an earlier one per tag. */
-const clausesOf = (handlers: readonly Erased[]): Map<string, (payload: unknown) => unknown> =>
+const clausesOf = (handlers: readonly Erased[]): Map<string, (payload: unknown) => Control> =>
 	new Map(handlers.flatMap(handler => Object.entries(handler.clauses)));
 
 /*
@@ -166,11 +168,11 @@ const clausesOf = (handlers: readonly Erased[]): Map<string, (payload: unknown) 
  * conditional distributes, which would let any single covered action satisfy
  * the whole row.
  */
-export function run<Row extends AnyAction, A, const Handlers extends readonly Handler<any, any>[]>(
+export function run<Row extends AnyAction, A, const Handlers extends readonly Handler<any, any, any>[]>(
 	program: () => Eff<Row, A>,
 	handlers: Handlers & ([Row] extends [Covered<Handlers>] ? unknown : { readonly missing: Exclude<Row["tag"], Covered<Handlers>["tag"]> }),
-): readonly [[Failing<Row>] extends [never] ? A : A | Aborted<Answer<Failing<Row>>>, ...Outputs<Handlers>] {
-	type Result = readonly [[Failing<Row>] extends [never] ? A : A | Aborted<Answer<Failing<Row>>>, ...Outputs<Handlers>];
+): readonly [Outcome<A, Raised<Handlers>>, ...Outputs<Handlers>] {
+	type Result = readonly [Outcome<A, Raised<Handlers>>, ...Outputs<Handlers>];
 
 	const erased = handlers as unknown as readonly Erased[];
 	const clauses = clausesOf(erased);
@@ -197,14 +199,14 @@ export function run<Row extends AnyAction, A, const Handlers extends readonly Ha
 
 		const answered = clause(step.value.payload);
 
-		/* An abort clause answers for the run, so outputs still come back with it. */
-		if (step.value.control === "abort") {
+		/* An aborting clause answers for the run, so outputs still come back with it. */
+		if (answered.control === "abort") {
 			computation.return(undefined as unknown as A);
 
-			return [{ [ABORT]: answered }, ...outputs()] as unknown as Result;
+			return [{ [ABORT]: answered.value }, ...outputs()] as unknown as Result;
 		}
 
-		input = answered;
+		input = answered.value;
 	}
 }
 
@@ -216,19 +218,21 @@ export function run<Row extends AnyAction, A, const Handlers extends readonly Ha
  *   to the enclosing run. A handled effect is private to this scope — a
  *   fresh resource per call; a forwarded one stays shared, which is why a
  *   nested `run` (forking shared handlers) is the wrong tool here.
- * - A resume answer goes back into the program; an abort answer goes
- *   outward — same rule as run, where outward means return; here it means
- *   yield. The run stays the only abort delimiter, so aborts always remain
- *   in the forwarded row, and this scope never resumes after one — do not
- *   rely on try/finally in effect programs.
+ * - The installing scope is the delimiter. A local clause that aborts
+ *   answers this scope — the program is discarded and the abort shows up
+ *   in the value slot, same protocol as run. An uncovered abort forwards
+ *   and delimits wherever its handler was installed. Nothing unwinds inner
+ *   generators — do not rely on try/finally in effect programs.
  *
- * Answers like run: the program's value, then each handler's output.
+ * Answers like run: the program's value (or this scope's abort), then each
+ * handler's output.
  */
-function* scoped<Row extends AnyAction, A, const Handlers extends readonly Handler<any, any>[]>(
+function* scoped<Row extends AnyAction, A, const Handlers extends readonly Handler<any, any, any>[]>(
 	handlers: Handlers,
 	program: () => Eff<Row, A>,
-): Generator<Exclude<Row, { tag: Covered<Handlers>["tag"]; control: "resume" }>, readonly [A, ...Outputs<Handlers>], unknown> {
-	type Forwarded = Exclude<Row, { tag: Covered<Handlers>["tag"]; control: "resume" }>;
+): Generator<Exclude<Row, { tag: Covered<Handlers>["tag"] }>, readonly [Outcome<A, Raised<Handlers>>, ...Outputs<Handlers>], unknown> {
+	type Forwarded = Exclude<Row, { tag: Covered<Handlers>["tag"] }>;
+	type Result = readonly [Outcome<A, Raised<Handlers>>, ...Outputs<Handlers>];
 
 	const erased = handlers as unknown as readonly Erased[];
 	const clauses = clausesOf(erased);
@@ -239,18 +243,28 @@ function* scoped<Row extends AnyAction, A, const Handlers extends readonly Handl
 	while (true) {
 		const step = computation.next(input);
 
+		const outputs = (): unknown[] => erased.map(handler => handler.output());
+
 		if (step.done) {
-			return [step.value, ...erased.map(handler => handler.output())] as unknown as readonly [A, ...Outputs<Handlers>];
+			return [step.value, ...outputs()] as unknown as Result;
 		}
 
 		const clause = clauses.get(step.value.tag);
-		const answer = clause ? clause(step.value.payload) : yield step.value as Forwarded;
 
-		if (step.value.control === "abort") {
-			yield { ...step.value, payload: answer } as Forwarded;
-		} else {
-			input = answer;
+		if (!clause) {
+			input = yield step.value as Forwarded;
+			continue;
 		}
+
+		const answered = clause(step.value.payload);
+
+		if (answered.control === "abort") {
+			computation.return(undefined as unknown as A);
+
+			return [{ [ABORT]: answered.value }, ...outputs()] as unknown as Result;
+		}
+
+		input = answered.value;
 	}
 }
 
