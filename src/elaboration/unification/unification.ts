@@ -281,78 +281,78 @@ export const bind = function* (v: Meta, ty: NF.Value): Unification<Subst> {
 		.otherwise(() => false);
 	const canonical = stuck ? yield* NF.force(ty) : ty;
 
-	const registry = yield* Metas.registry.get();
-
-	if (!occursCheck(v, canonical, registry)) {
-		return Sub.of(v.val, canonical);
+	if (yield* occurs(v, canonical)) {
+		// solution is a mu type
+		throw new Error("Unification: Occurs check failed. Need to implement mu type");
 	}
 
-	// solution is a mu type
-	throw new Error("Unification: Occurs check failed. Need to implement mu type");
+	return Sub.of(v.val, canonical);
 };
 
-const occursCheck = (v: Meta, ty: NF.Value, registry: Metas.Registry): boolean => {
-	return match(ty)
-		.with(NF.Patterns.Var, ({ variable }) => _.isEqual(variable, v))
-		.with({ type: "Neutral" }, ({ value }) => occursCheck(v, value, registry))
-		.with(NF.Patterns.Proj, ({ base }) => occursCheck(v, base, registry))
-		.with(NF.Patterns.Match, ({ closure, scrutinee }) => occursCheck(v, scrutinee, registry) || occursInTerm(v, closure.term, registry))
-		.with(NF.Patterns.Inj, ({ base, injected }) => occursCheck(v, base, registry) || occursCheck(v, injected, registry))
-		.with(NF.Patterns.Lambda, ({ closure }) => occursInTerm(v, closure.term, registry))
-		.with(NF.Patterns.Pi, ({ closure }) => occursInTerm(v, closure.term, registry))
-		.with(NF.Patterns.Sigma, ({ closure }) => occursInTerm(v, closure.term, registry))
-		.with(NF.Patterns.App, ({ func, arg }) => occursCheck(v, func, registry) || occursCheck(v, arg, registry))
-		.with(NF.Patterns.Modal, ({ value, modalities }) => occursCheck(v, value, registry) || occursCheck(v, modalities.liquid, registry))
+/** The occurs check: get() once, both walkers close over the snapshot and the needle. */
+const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
+	const registry = yield* Metas.registry.get();
 
-		.with(NF.Patterns.Row, ({ row }) =>
-			R.fold(
-				row,
-				(nf, _l, acc) => acc || occursCheck(v, nf, registry),
-				rv => rv.type === "Meta" && _.isEqual(rv, v),
-				false,
-			),
-		)
-		.otherwise(() => false);
-};
+	const check = (value: NF.Value): boolean =>
+		match(value)
+			.with(NF.Patterns.Var, ({ variable }) => _.isEqual(variable, v))
+			.with({ type: "Neutral" }, ({ value: inner }) => check(inner))
+			.with(NF.Patterns.Proj, ({ base }) => check(base))
+			.with(NF.Patterns.Match, ({ closure, scrutinee }) => check(scrutinee) || inTerm(closure.term))
+			.with(NF.Patterns.Inj, ({ base, injected }) => check(base) || check(injected))
+			.with(NF.Patterns.Lambda, ({ closure }) => inTerm(closure.term))
+			.with(NF.Patterns.Pi, ({ closure }) => inTerm(closure.term))
+			.with(NF.Patterns.Sigma, ({ closure }) => inTerm(closure.term))
+			.with(NF.Patterns.App, ({ func, arg }) => check(func) || check(arg))
+			.with(NF.Patterns.Modal, ({ value: inner, modalities }) => check(inner) || check(modalities.liquid))
 
-const occursInTerm = (v: Meta, tm: EB.Term, registry: Metas.Registry): boolean => {
-	return match(tm)
-		.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
-			const solved = Metas.solution(registry, variable.val);
+			.with(NF.Patterns.Row, ({ row }) =>
+				R.fold(
+					row,
+					(nf, _l, acc) => acc || check(nf),
+					rv => rv.type === "Meta" && _.isEqual(rv, v),
+					false,
+				),
+			)
+			.otherwise(() => false);
 
-			if (solved) {
-				return occursCheck(v, solved, registry);
-			}
+	const inTerm = (tm: EB.Term): boolean =>
+		match(tm)
+			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
+				const solved = Metas.solution(registry, variable.val);
 
-			return _.isEqual(variable, v);
-		})
-		.with({ type: "Abs" }, ({ binding, body }) => occursInTerm(v, binding.annotation, registry) || occursInTerm(v, body, registry))
-		.with({ type: "App" }, ({ func, arg }) => occursInTerm(v, func, registry) || occursInTerm(v, arg, registry))
-		.with({ type: "Ann" }, ({ term }) => occursInTerm(v, term, registry))
-		.with(
-			{ type: "Match" },
-			({ scrutinee, alternatives }) => occursInTerm(v, scrutinee, registry) || alternatives.some(({ term }) => occursInTerm(v, term, registry)),
-		)
-		.with({ type: "Block" }, ({ return: ret, statements }) => occursInTerm(v, ret, registry) || statements.some(s => occursInTerm(v, s.value, registry)))
-		.with({ type: "Row" }, ({ row }) =>
-			R.fold(
-				row,
-				(nf, _l, acc) => acc || occursInTerm(v, nf, registry),
-				rv => {
-					const solved = rv.type === "Meta" ? Metas.solution(registry, rv.val) : undefined;
+				if (solved) {
+					return check(solved);
+				}
 
-					if (solved) {
-						return occursCheck(v, solved, registry);
-					}
+				return _.isEqual(variable, v);
+			})
+			.with({ type: "Abs" }, ({ binding, body }) => inTerm(binding.annotation) || inTerm(body))
+			.with({ type: "App" }, ({ func, arg }) => inTerm(func) || inTerm(arg))
+			.with({ type: "Ann" }, ({ term }) => inTerm(term))
+			.with({ type: "Match" }, ({ scrutinee, alternatives }) => inTerm(scrutinee) || alternatives.some(({ term }) => inTerm(term)))
+			.with({ type: "Block" }, ({ return: ret, statements }) => inTerm(ret) || statements.some(stmt => inTerm(stmt.value)))
+			.with({ type: "Row" }, ({ row }) =>
+				R.fold(
+					row,
+					(nf, _l, acc) => acc || inTerm(nf),
+					rv => {
+						const solved = rv.type === "Meta" ? Metas.solution(registry, rv.val) : undefined;
 
-					return _.isEqual(rv, v);
-				},
-				false,
-			),
-		)
-		.with({ type: "Proj" }, ({ term }) => occursInTerm(v, term, registry))
-		.with({ type: "Inj" }, ({ value, term }) => occursInTerm(v, value, registry) || occursInTerm(v, term, registry))
-		.with({ type: "Lit" }, () => false)
-		.with({ type: "Modal" }, ({ term }) => occursInTerm(v, term, registry))
-		.otherwise(() => false);
+						if (solved) {
+							return check(solved);
+						}
+
+						return _.isEqual(rv, v);
+					},
+					false,
+				),
+			)
+			.with({ type: "Proj" }, ({ term }) => inTerm(term))
+			.with({ type: "Inj" }, ({ value, term }) => inTerm(value) || inTerm(term))
+			.with({ type: "Lit" }, () => false)
+			.with({ type: "Modal" }, ({ term }) => inTerm(term))
+			.otherwise(() => false);
+
+	return check(ty);
 };
