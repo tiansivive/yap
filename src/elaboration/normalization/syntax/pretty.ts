@@ -12,7 +12,7 @@ import * as Eff from "@yap/utils/effects";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
-import { bind, Display, rowDocs } from "@yap/elaboration/pretty/pretty";
+import { bound, Display, rowDocs } from "@yap/elaboration/pretty/pretty";
 
 const identityRow = { term: (d: PP.Doc) => d, var: (v: PP.Doc) => v };
 
@@ -83,7 +83,7 @@ export const doc = function* (value: NF.Value, opts = { deBruijn: false }): Disp
 				.otherwise(() => "->");
 
 			/* The body displays under the closure's own scope: the stored env, plus the binder being introduced. */
-			const scope = binder.type === "Sigma" ? closure.ctx : bind(binder.variable)(closure.ctx);
+			const scope = binder.type === "Sigma" ? closure.ctx : bound(binder.variable)(closure.ctx);
 			const body = yield* M.reader.local(_ => scope, EB.Display.doc(closure.term, opts));
 
 			return PP.group([b, " ", arrow, PP.nest(2, [PP.line, PP.closure(body, EB.Display.Env(scope.env))])]);
@@ -107,7 +107,7 @@ export const doc = function* (value: NF.Value, opts = { deBruijn: false }): Disp
 		})
 		.with({ type: "Existential" }, function* (existential) {
 			const ctx = yield* M.reader.ask();
-			const xtended = bind(existential.variable)(ctx);
+			const xtended = bound(existential.variable)(ctx);
 			const packed = yield* M.reader.local(_ => xtended, go(existential.body.value));
 			return PP.group([
 				"∃(",

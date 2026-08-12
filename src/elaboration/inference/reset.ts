@@ -1,6 +1,5 @@
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
-import * as Metas from "@yap/elaboration/shared/metas";
 
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
@@ -37,12 +36,7 @@ export const infer = (reset: Reset): M.Elaboration<EB.AST> =>
 		};
 		yield* M.st.modify(update("delimitations", ds => [d, ...ds]));
 
-		const registry = yield* Metas.registry.get();
-		const metas = yield* Metas.asContext(registry);
-		const [tm, us] = yield* M.reader.local(
-			update("metas", ms => ({ ...ms, ...metas })),
-			EB.check(reset.term, d.answer.initial),
-		);
+		const [tm, us] = yield* EB.check(reset.term, d.answer.initial);
 		const {
 			delimitations: [{ shifted }],
 		} = yield* M.st.get();

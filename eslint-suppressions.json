@@ -165,7 +165,7 @@
 	},
 	"src/GRAM/translate.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
-			"count": 9
+			"count": 7
 		},
 		"no-restricted-syntax": {
 			"count": 9

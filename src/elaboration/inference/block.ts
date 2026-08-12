@@ -2,7 +2,6 @@ import * as A from "fp-ts/lib/Array";
 
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
-import * as Metas from "@yap/elaboration/shared/metas";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as NF from "@yap/elaboration/normalization";
@@ -12,7 +11,6 @@ import * as Src from "@yap/src/index";
 import * as Lit from "@yap/shared/literals";
 
 import { update } from "@yap/utils";
-import { compose } from "../unification/substitution";
 
 type Block = Extract<Src.Term, { type: "block" }>;
 
@@ -80,22 +78,12 @@ const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]):
 
 	const [t, ty, rus] = yield* EB.infer(ret);
 
-	const ctx = yield* M.reader.ask();
 	const { constraints } = yield* M.writer.peek();
-	const registry = yield* Metas.registry.get();
-	const metas = yield* Metas.asContext(registry);
-	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
 
-	const { resolutions } = yield* M.reader.local(_ => withMetas, EB.solve(constraints));
-	// The solver commits its solutions; the v2-view fields are rebuilt from the registry until context surgery.
-	const postSolve = yield* Metas.registry.get();
-
-	const postMetas = yield* Metas.asContext(postSolve);
-	const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postMetas }));
-	const zonked = update(withAllMetas, "zonker", z => compose(Metas.solutions(postSolve), z));
-	const value = yield* M.reader.local(_ => zonked, NF.normalize(t, { noInlineBindings: true }));
-	const forced = yield* M.reader.local(_ => zonked, NF.force(ty));
-	const generalized = yield* M.reader.local(_ => zonked, NF.abstract(forced, value, resolutions));
+	const { resolutions } = yield* EB.solve(constraints);
+	const value = yield* NF.normalize(t, { noInlineBindings: true });
+	const forced = yield* NF.force(ty);
+	const generalized = yield* NF.abstract(forced, value, resolutions);
 
 	return [EB.Constructors.Block(results, generalized.term), generalized.type, rus] satisfies EB.AST;
 };

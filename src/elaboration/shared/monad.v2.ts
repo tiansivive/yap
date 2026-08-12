@@ -19,11 +19,15 @@ import * as Metas from "./metas";
 export type Elaboration<A> = (ctx: EB.Context, w?: Omit<Collector<A>, "result">, st?: MutState) => [Collector<A>, MutState];
 export type Gelaboration<A> = Generator<Elaboration<any>, A, any>;
 
+/* The v2 channels' shapes, formerly Context fields; local to the dying monad. */
+type MetasView = Record<number, { meta: EB.Meta; ann: EB.Term }>;
+type Zonker = Sub.Subst;
+
 type Collector<A> = {
 	constraints: P.WithProvenance<EB.Constraint>[];
 	binders: EB.Binder[];
-	metas: EB.Context["metas"];
-	zonker: EB.Zonker;
+	metas: MetasView;
+	zonker: Zonker;
 	types: Record<EB.Term["id"], { nf: EB.NF.Value; modalities: Modal.Annotations<EB.Term> }>;
 	result: Either<Err, A>;
 };
@@ -159,7 +163,7 @@ type Payload<K extends Channel> = K extends "constraint"
 			: K extends "type"
 				? { term: EB.Term; nf: EB.NF.Value; modalities: Modal.Annotations<EB.Term> }
 				: K extends "zonker"
-					? EB.Zonker
+					? Zonker
 					: never;
 
 type OptionalLvl<T> = T extends { type: "assign"; lvl: infer L } ? Omit<T, "lvl"> & { lvl?: L } : T;
@@ -208,7 +212,7 @@ export const tell = function* <K extends Channel>(channel: K, payload: Payload<K
 				binders: [],
 				metas: {},
 				types: {},
-				zonker: (many as Payload<"zonker">[]).reduce((z, zk) => Sub.compose(zk, z), ctx.zonker),
+				zonker: (many as Payload<"zonker">[]).reduce((z, zk) => Sub.compose(zk, z), Sub.empty),
 			};
 		}
 		console.warn("Tell: unknown channel:", channel);

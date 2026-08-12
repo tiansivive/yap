@@ -14,8 +14,6 @@ import { match } from "ts-pattern";
 import { freshMeta } from "@yap/elaboration/shared/supply";
 
 import * as Sub from "@yap/elaboration/unification/substitution";
-import { compose } from "@yap/elaboration/unification/substitution";
-import { update } from "@yap/utils";
 import { replay } from "../solver/nondeterminism";
 import { unify } from "../unification";
 
@@ -72,22 +70,14 @@ export const infer = (stmt: Src.Statement): M.Elaboration<ElaboratedStmt> =>
 export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M.Elaboration<[Extract<EB.Statement, { type: "Let" }>, EB.Context]> {
 	const ctx = yield* M.reader.ask();
 	const { constraints } = yield* M.writer.peek();
-	const registry = yield* Metas.registry.get();
-	const metas = yield* Metas.asContext(registry);
-	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
 
-	const _letdec = (z: Record<number, NF.Value>) =>
+	/* Nondeterministic candidates seed the forked registry inside replay; the ctx is registry-free. */
+	const _letdec = (_z: Record<number, NF.Value>) =>
 		(function* (): M.Elaboration<[NF.Value, EB.Context, EB.Resolutions, boolean]> {
-			const nondet = update(withMetas, "zonker", old => ({ ...old, ...z }));
+			const { resolutions } = yield* EB.solve(constraints);
+			const next = ctx;
 
-			const { resolutions } = yield* M.reader.local(_ => nondet, EB.solve(constraints));
-			// The solver commits its solutions; the v2-view fields are rebuilt from the registry until context surgery.
-			const postSolve = yield* Metas.registry.get();
-			const postMetas = yield* Metas.asContext(postSolve);
-			const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postMetas }));
-			const next = update(withAllMetas, "zonker", z => compose(Metas.solutions(postSolve), z));
-
-			const forced = yield* M.reader.local(_ => next, NF.force(dec.annotation));
+			const forced = yield* NF.force(dec.annotation);
 			const [generalized, introduced] = yield* M.reader.local(
 				_ => EB.bind(next, { type: "Let", variable: dec.variable }, dec.annotation),
 				NF.generalize(forced, dec.value, resolutions),
@@ -102,12 +92,10 @@ export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M
 	const st = yield* M.st.get();
 	const [[instantiated, next, resolutions, introduced], ...rest] = R.isEmpty(st.nondeterminism.solution) ? [yield* _letdec({})] : yield* replay(_letdec);
 
-	let final = next;
-	for (const [type] of rest) {
+	yield* Eff.traverse(rest, function* ([type]) {
 		const [, solution] = yield* Eff.with([Sub.subst.handlers()], () => unify(instantiated, type, next.env.length));
 		yield* Metas.registry.modify(current => Metas.withSolutions(current, solution));
-		final = update(final, "zonker", z => compose(solution, z));
-	}
+	});
 
 	const xtended = EB.bind(next, { type: "Let", variable: dec.variable }, instantiated);
 	const wrapped = yield* M.reader.local(

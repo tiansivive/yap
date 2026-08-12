@@ -5,7 +5,6 @@ import * as EB from "@yap/elaboration"
 import * as Q from "@yap/shared/modalities/multiplicity"
 import * as Lit from "@yap/shared/literals"
 
-import * as Sub from "@yap/elaboration/unification/substitution"
 import * as Eff from "@yap/utils/effects"
 import * as M from "@yap/elaboration/shared/effects"
 import * as Metas from "@yap/elaboration/shared/metas"
@@ -20,9 +19,7 @@ export const defaultContext = () => ({
     record: {},
     trace: [],
     imports: Elaborated(),
-    zonker: Sub.empty,
     ffi: PrimOps,
-    metas: {},
 } satisfies EB.Context);
 
 export const Terms = () => ({
@@ -81,9 +78,7 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         record: {},
         trace: [],
         imports: PrimTypes,
-        zonker: Sub.empty,
         ffi: PrimOps,
-        metas: {},
     }
 
     const reflectLiquid = (returnType: EB.Term) => (f: (p: EB.Term, q: EB.Term) => EB.Term) => {
@@ -148,7 +143,7 @@ export const Elaborated: () => EB.Context['imports'] = () => {
 }
 
 /* FFI type errors render at a boundary: a run over a blank scope. */
-const blank: EB.Context = { env: [], implicits: [], labels: {}, sigma: {}, record: {}, zonker: Sub.empty, metas: {}, imports: {}, ffi: {}, trace: [] };
+const blank: EB.Context = { env: [], implicits: [], labels: {}, sigma: {}, record: {}, imports: {}, ffi: {}, trace: [] };
 const shown = (v: NF.Value): string => Eff.run(() => NF.display(v), [M.reader.handlers(blank), Metas.registry.handlers({})])[0];
 
 const typecheckNum = (val: NF.Value): val is NF.Value & { type: "Lit", value: { type: "Num", value: number } } => val.type === "Lit" && val.value.type === "Num"

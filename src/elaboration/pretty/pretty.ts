@@ -25,7 +25,7 @@ type Opts = { deBruijn: boolean; printEnv?: boolean };
  * pseudo-entry carries just the name display reads; it exists only for the
  * extent of a reader.local and never meets evaluation.
  */
-export const bind =
+export const bound =
 	(variable: string) =>
 	(ctx: EB.Context): EB.Context =>
 		// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- name-only display entry, read by nothing but display
@@ -98,7 +98,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				yield* go(binding.annotation),
 				"))",
 				" ->",
-				PP.nest(2, [PP.line, yield* M.reader.local(bind(binding.variable), doc(body, opts))]),
+				PP.nest(2, [PP.line, yield* M.reader.local(bound(binding.variable), doc(body, opts))]),
 			]);
 		})
 		.with({ type: "Abs" }, function* ({ binding, body }) {
@@ -121,7 +121,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				.with({ icit: "Implicit" }, () => "=>")
 				.otherwise(() => "->");
 
-			const inner = binding.type === "Sigma" ? go(body) : M.reader.local(bind(binding.variable), go(body));
+			const inner = binding.type === "Sigma" ? go(body) : M.reader.local(bound(binding.variable), go(body));
 
 			if (opts.printEnv) {
 				return PP.group(["(", b, " ", arrow, PP.nest(2, [PP.line, yield* inner])]);
@@ -145,8 +145,8 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		.with({ type: "Match" }, function* ({ scrutinee, alternatives }) {
 			const scrut = yield* go(scrutinee);
 			const alts = yield* Eff.traverse(alternatives, function* (a) {
-				const bound = (ctx: EB.Context) => a.binders.reduce((acc, [b]) => bind(b)(acc), ctx);
-				return PP.alt(Pat.doc(a.pattern), yield* M.reader.local(bound, doc(a.term, opts)));
+				const term = yield* M.reader.local(ctx => a.binders.reduce((acc, [b]) => bound(b)(acc), ctx), doc(a.term, opts));
+				return PP.alt(Pat.doc(a.pattern), term);
 			});
 			return PP.matchDoc(scrut, alts);
 		})
@@ -158,7 +158,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				const [stmt, ...tail] = rest;
 				const d = yield* Stmt.doc(stmt, opts);
 				if (stmt.type === "Let") {
-					return yield* M.reader.local(bind(stmt.variable), blocks(tail, [...stmtDocs, d]));
+					return yield* M.reader.local(bound(stmt.variable), blocks(tail, [...stmtDocs, d]));
 				}
 				return yield* blocks(tail, [...stmtDocs, d]);
 			};
@@ -254,7 +254,7 @@ const Stmt = {
 			})
 			.with({ type: "Let" }, function* ({ variable, value, annotation }) {
 				return yield* M.reader.local(
-					bind(variable),
+					bound(variable),
 					(function* (): Display<PP.Doc> {
 						return PP.letBinding(variable, yield* NF.doc(annotation, opts), yield* doc(value, opts));
 					})(),
@@ -278,8 +278,7 @@ export const Display = {
 	Context: displayContext,
 	Env: displayEnv,
 	Alternative: function* (alt: EB.Alternative, opts = { deBruijn: false }): Display<string> {
-		const bound = (ctx: EB.Context) => alt.binders.reduce((acc, [b]) => bind(b)(acc), ctx);
-		const term = yield* M.reader.local(bound, doc(alt.term, opts));
+		const term = yield* M.reader.local(ctx => alt.binders.reduce((acc, [b]) => bound(b)(acc), ctx), doc(alt.term, opts));
 
 		return PP.render(PP.alt(Pat.doc(alt.pattern), term));
 	},

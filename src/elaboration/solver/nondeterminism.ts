@@ -15,11 +15,10 @@ import { mapKeys } from "lodash";
  * forked registry seeded with the candidate; agreed-on solutions merge back.
  */
 export const replay = function* <T>(action: (zonker: Record<number, NF.Value>) => M.Elaboration<T>): M.Elaboration<T[]> {
-	const ctx = yield* M.reader.ask();
 	const state = yield* M.st.get();
 
 	if (R.isEmpty(state.nondeterminism.solution)) {
-		return [yield* action(ctx.zonker)];
+		return [yield* action({})];
 	}
 
 	const zonkers = F.pipe(

@@ -5,9 +5,6 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
-import { update } from "@yap/utils";
-import * as Metas from "@yap/elaboration/shared/metas";
-
 type Lambda = Extract<Src.Term, { type: "lambda" }>;
 
 export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
@@ -20,14 +17,8 @@ export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
 
 		const ty = yield* NF.normalize(ann);
 
-		const registry = yield* Metas.registry.get();
-		const metas = yield* Metas.asContext(registry);
-
 		const ast = yield* M.reader.local(
-			_ctx => {
-				const xtended = EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, ty);
-				return update(xtended, "metas", ms => ({ ...ms, ...metas }));
-			},
+			_ctx => EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, ty),
 			(function* () {
 				const inferred = yield* EB.infer(lam.body);
 				const [bTerm, bType, [_vu, ...bus]] = yield* EB.Icit.insert(inferred);

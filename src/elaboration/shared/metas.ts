@@ -39,15 +39,6 @@ export const withSolutions = (metas: Registry, subst: Sub.Subst): Registry =>
 
 export const register = (metas: Registry, entry: Entry): Registry => ({ ...metas, [entry.meta.val]: entry });
 
-/** The registry in the shape ctx.metas still expects, until the context field retires. */
-export const asContext = function* (metas: Registry): M.Elaboration<EB.Context["metas"]> {
-	const entries = yield* Eff.traverse(Object.values(metas), function* ({ meta, annotation }) {
-		return [meta.val, { meta, ann: yield* NF.quote(meta.lvl, annotation) }] as const;
-	});
-
-	return Object.fromEntries(entries);
-};
-
 export const solve = (metas: Registry, id: number, value: NF.Value): Registry => {
 	const entry = metas[id];
 	if (!entry) {

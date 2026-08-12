@@ -1,4 +1,7 @@
 import type * as EB from "@yap/elaboration";
+import * as Eff from "@yap/utils/effects";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "@yap/elaboration/normalization";
 import type { Row } from "@yap/shared/rows";
 import { match } from "ts-pattern";
@@ -142,7 +145,14 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 			const zonked = st.zonker?.[val];
 
 			if (zonked) {
-				return walk(NF.quote({ env: [], metas: {}, zonker: st.zonker } as unknown as EB.Context, lvl, zonked), st);
+				/* A lowering boundary: quote the solution under a blank scope and a registry built from the zonker. */
+				const blank: EB.Context = { env: [], implicits: [], labels: {}, sigma: {}, record: {}, imports: {}, ffi: {}, trace: [] };
+				const registry: Metas.Registry = Object.fromEntries(
+					Object.entries(st.zonker ?? {}).map(([id, solution]) => [id, { meta: { type: "Meta", val: Number(id), lvl: 0 }, annotation: solution, solution }]),
+				);
+				const term = Eff.run(() => NF.quote(lvl, zonked), [M.reader.handlers(blank), Metas.registry.handlers(registry)])[0];
+
+				return walk(term, st);
 			}
 			return emit(st, Tags.VAR_META, { val, lvl }, prov(tid, st));
 		})

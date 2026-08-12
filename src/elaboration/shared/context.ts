@@ -3,17 +3,11 @@ import * as NF from "@yap/elaboration/normalization";
 import * as EB from "@yap/elaboration";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
-import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as M from "@yap/elaboration/shared/effects";
 
 import * as Src from "@yap/src/index";
 import * as P from "@yap/shared/provenance";
 
-import * as U from "@yap/elaboration/unification/index";
-import * as Sub from "@yap/elaboration/unification/substitution";
-
-import * as F from "fp-ts/function";
-import * as E from "fp-ts/Either";
 import { match } from "ts-pattern";
 import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
@@ -33,14 +27,10 @@ export type Context = {
 	sigma: Record<string, { value: NF.Value }>;
 	record: Record<string, { term?: EB.Term; value?: NF.Value }>;
 
-	zonker: Sub.Subst;
-	metas: Record<number, { meta: EB.Meta; ann: EB.Term }>;
 	imports: Record<string, EB.AST>;
 	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
 	trace: P.Stack<Provenance>;
 };
-
-export type Zonker = Context["zonker"];
 
 export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
@@ -89,29 +79,6 @@ export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<EB.A
 		ctx.env.map(v => v.type),
 	);
 };
-
-export const resolveImplicit = (nf: NF.Value): V2.Elaboration<[EB.Term, Sub.Subst] | void> =>
-	V2.Do(function* () {
-		const ctx = yield* V2.ask();
-
-		const lookup = (implicits: Context["implicits"]): [EB.Term, Sub.Subst] | void => {
-			if (implicits.length === 0) {
-				return;
-			}
-
-			const [[term, value], ...rest] = implicits;
-			const unification = U.unify(nf, value, ctx.env.length, Sub.empty);
-			const [{ result }] = unification(ctx);
-
-			if (E.isRight(result)) {
-				return [NF.quote(ctx, ctx.env.length, term), result.right];
-			}
-			return lookup(rest);
-		};
-
-		return lookup(ctx.implicits);
-	});
-resolveImplicit.gen = F.flow(resolveImplicit, V2.pure);
 
 export const bind = (context: Context, binder: Binder, annotation: NF.Value, origin: Origin = "source"): Context => {
 	const { env } = context;
