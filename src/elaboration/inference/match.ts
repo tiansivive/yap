@@ -21,7 +21,7 @@ export const infer = (tm: Match): M.Elaboration<EB.AST> =>
 
 		// Ensure all alternatives have the same type - we pick the type of the first alternative as the common type
 		const common = alternatives[0][1];
-		yield* M.traverse(alternatives, ([_alt, ty, _us], i) => {
+		yield* M.traverse(alternatives, function* ([_alt, ty, _us], i) {
 			const provenance: P.Provenance[] = [
 				{
 					tag: "alt",
@@ -29,12 +29,12 @@ export const infer = (tm: Match): M.Elaboration<EB.AST> =>
 					metadata: {
 						action: "alternative",
 						type: ty,
-						motive: `attempting to unify with previous alternative of type ${NF.display(ty, ctx)}:\t${Src.Alt.display(tm.alternatives[i])}`,
+						motive: `attempting to unify with previous alternative of type ${yield* NF.display(ty)}:\t${Src.Alt.display(tm.alternatives[i])}`,
 					},
 				},
 				{ tag: "src", type: "term", term: tm.alternatives[i].term, metadata: { action: "infer", description: "" } },
 			];
-			return M.tracer.track(provenance, function* () {
+			return yield* M.tracer.track(provenance, function* () {
 				yield* M.constrain({ type: "assign", left: ty, right: common, lvl: ctx.env.length });
 			});
 		});

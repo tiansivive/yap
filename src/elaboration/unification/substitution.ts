@@ -1,7 +1,9 @@
 import * as NF from "@yap/elaboration/normalization";
 
 import * as Eff from "@yap/utils/effects";
-import * as EB from "@yap/elaboration";
+import * as M from "../shared/effects";
+import * as Metas from "../shared/metas";
+import type { Display } from "../pretty/pretty";
 
 const Substitution: unique symbol = Symbol("Substitution");
 export type Subst = Record<number, NF.Value> & { [Substitution]: void };
@@ -10,13 +12,23 @@ export const empty: Subst = { [Substitution]: void 0 };
 export const of = (k: number, v: NF.Value): Subst => ({ [k]: v, [Substitution]: void 0 });
 export const from = (record: Record<number, NF.Value>): Subst => ({ ...record, [Substitution]: void 0 });
 
-export const display = (subst: Subst, metas: EB.Context["metas"], separator = "\n"): string => {
+export const display = function* (subst: Subst, separator = "\n"): Display<string> {
 	if (Object.keys(subst).length === 0) {
 		return "empty";
 	}
-	return Object.entries(subst)
-		.map(([key, value]) => `?${key} |=> ${NF.display(value, { zonker: subst, metas, env: [] })}`)
-		.join(separator);
+
+	// Overlay the substitution onto the registry so nested metas resolve through it; scoped, never committed.
+	const current = yield* Metas.registry.get();
+	const [entries] = yield* Eff.with([Metas.registry.handlers(Metas.withSolutions(current, subst))], () =>
+		M.reader.local(
+			ctx => ({ ...ctx, env: [] }),
+			Eff.traverse(Object.entries(subst), function* ([key, value]) {
+				return `?${key} |=> ${yield* NF.display(value)}`;
+			}),
+		),
+	);
+
+	return entries.join(separator);
 };
 
 /*

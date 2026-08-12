@@ -12,6 +12,9 @@ import * as P from "./provenance";
 
 import * as Modal from "@yap/verification/modalities/shared";
 import * as Sub from "@yap/elaboration/unification/substitution";
+import * as Eff from "@yap/utils/effects";
+import * as M from "./effects";
+import * as Metas from "./metas";
 
 export type Elaboration<A> = (ctx: EB.Context, w?: Omit<Collector<A>, "result">, st?: MutState) => [Collector<A>, MutState];
 export type Gelaboration<A> = Generator<Elaboration<any>, A, any>;
@@ -60,8 +63,9 @@ export const initialState: MutState = { delimitations: [], nondeterminism: { sol
 export type Err = Cause & { provenance?: P.Provenance[]; ctx: EB.Context };
 
 export const display = (err: Err): string => {
-	const cause = Errors.display(err, err.ctx.zonker, err.ctx.metas);
-	const prov = err.provenance ? P.display(err.provenance, { cap: 100 }, err.ctx.zonker, err.ctx.metas) : "";
+	const boundary = [M.reader.handlers(err.ctx), Metas.registry.handlers({})] as const;
+	const cause = Eff.run(() => Errors.display(err), boundary)[0];
+	const prov = err.provenance ? Eff.run(() => P.display(err.provenance ?? [], { cap: 100 }), boundary)[0] : "";
 	return prov ? `${cause}\n\nTrace:\n${prov}` : cause;
 };
 

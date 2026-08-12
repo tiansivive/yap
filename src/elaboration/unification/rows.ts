@@ -112,9 +112,7 @@ const rewrite = function* (r: NF.Row, label: string): U.Unification<NF.Row> {
 			const rewritten = yield* rewrite(row, label);
 
 			if (rewritten.type !== "extension") {
-				return yield* M.fail(
-					Err.Impossible("Expected extension: " + R.display<NF.Value, NF.Variable>({ term: v => NF.display(v, ctx), var: v => JSON.stringify(v) })(rewritten)),
-				);
+				return yield* M.fail(Err.Impossible("Expected extension: " + (yield* NF.display(NF.Constructors.Row(rewritten)))));
 			}
 
 			return R.Constructors.Extension(rewritten.label, rewritten.value, R.Constructors.Extension(lbl, val, rewritten.row));

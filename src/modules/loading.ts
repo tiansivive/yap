@@ -5,6 +5,10 @@ import * as V2 from "@yap/elaboration/shared/monad.v2";
 
 import * as Sub from "@yap/elaboration/unification/substitution";
 
+import * as Eff from "@yap/utils/effects";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
+
 import { Either } from "fp-ts/lib/Either";
 import * as R from "fp-ts/lib/Record";
 import * as E from "fp-ts/lib/Either";
@@ -86,14 +90,14 @@ export const mkInterface = (moduleName: ModuleName, visited: string[] = [], opts
 	const iface: Interface = F.pipe(EB.Mod.elaborate(mod, localModuleCtx), setProp("imports", importsPerFile));
 	iface.errors.forEach(err => {
 		V2.display(err);
-		console.error(P.display(err.provenance || [], { cap: 100 }, Sub.empty, {}));
+		console.error(Eff.run(() => P.display(err.provenance || [], { cap: 100 }), [M.reader.handlers(err.ctx), Metas.registry.handlers({})])[0]);
 	});
 
 	iface.letdecs.forEach(([name, result]) => {
 		if (E.isLeft(result)) {
 			console.warn(`Error in module ${moduleName} for let ${name}:`);
 			V2.display(result.left);
-			console.error(P.display(result.left.provenance || [], { cap: 100 }, Sub.empty, {}));
+			console.error(Eff.run(() => P.display(result.left.provenance || [], { cap: 100 }), [M.reader.handlers(result.left.ctx), Metas.registry.handlers({})])[0]);
 		}
 	});
 

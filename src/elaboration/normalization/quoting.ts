@@ -130,8 +130,7 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 			});
 		})
 		.otherwise(function* (nf) {
-			const ctx = yield* M.reader.ask();
-			throw new Error("Quote: Not implemented yet: " + display(nf, ctx));
+			throw new Error("Quote: Not implemented yet: " + (yield* display(nf)));
 		});
 }
 

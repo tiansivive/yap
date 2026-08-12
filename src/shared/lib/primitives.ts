@@ -6,6 +6,9 @@ import * as Q from "@yap/shared/modalities/multiplicity"
 import * as Lit from "@yap/shared/literals"
 
 import * as Sub from "@yap/elaboration/unification/substitution"
+import * as Eff from "@yap/utils/effects"
+import * as M from "@yap/elaboration/shared/effects"
+import * as Metas from "@yap/elaboration/shared/metas"
 
 import { isEqual } from "lodash"
 
@@ -144,11 +147,15 @@ export const Elaborated: () => EB.Context['imports'] = () => {
     }
 }
 
+/* FFI type errors render at a boundary: a run over a blank scope. */
+const blank: EB.Context = { env: [], implicits: [], labels: {}, sigma: {}, record: {}, zonker: Sub.empty, metas: {}, imports: {}, ffi: {}, trace: [] };
+const shown = (v: NF.Value): string => Eff.run(() => NF.display(v), [M.reader.handlers(blank), Metas.registry.handlers({})])[0];
+
 const typecheckNum = (val: NF.Value): val is NF.Value & { type: "Lit", value: { type: "Num", value: number } } => val.type === "Lit" && val.value.type === "Num"
 const arithmetic = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => number): NF.Value => {
 
-    if (!typecheckNum(x)) throw new Error(`Expected number, got ${NF.display(x, { zonker: Sub.empty, metas: {}, env: [] })}`);
-    if (!typecheckNum(y)) throw new Error(`Expected number, got ${NF.display(y, { zonker: Sub.empty, metas: {}, env: [] })}`);
+    if (!typecheckNum(x)) throw new Error(`Expected number, got ${shown(x)}`);
+    if (!typecheckNum(y)) throw new Error(`Expected number, got ${shown(y)}`);
     const val = fn(x.value.value, y.value.value);
     return NF.Constructors.Lit(Lit.Num(val));
 }
@@ -157,15 +164,15 @@ const arithmetic = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => numb
 const typecheckBool = (val: NF.Value): val is NF.Value & { type: "Lit", value: { type: "Bool", value: boolean } } => val.type === "Lit" && val.value.type === "Bool"
 
 const logical = (x: NF.Value, y: NF.Value, fn: (a: boolean, b: boolean) => boolean): NF.Value => {
-    if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${NF.display(x, { zonker: Sub.empty, metas: {}, env: [] })}`);
-    if (!typecheckBool(y)) throw new Error(`Expected boolean, got ${NF.display(y, { zonker: Sub.empty, metas: {}, env: [] })}`);
+    if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${shown(x)}`);
+    if (!typecheckBool(y)) throw new Error(`Expected boolean, got ${shown(y)}`);
     const val = fn(x.value.value, y.value.value);
     return NF.Constructors.Lit(Lit.Bool(val));
 }
 
 const comparison = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => boolean): NF.Value => {
-    if (!typecheckNum(x)) throw new Error(`Expected number, got ${NF.display(x, { zonker: Sub.empty, metas: {}, env: [] })}`);
-    if (!typecheckNum(y)) throw new Error(`Expected number, got ${NF.display(y, { zonker: Sub.empty, metas: {}, env: [] })}`);
+    if (!typecheckNum(x)) throw new Error(`Expected number, got ${shown(x)}`);
+    if (!typecheckNum(y)) throw new Error(`Expected number, got ${shown(y)}`);
     const val = fn(x.value.value, y.value.value);
     return NF.Constructors.Lit(Lit.Bool(val));
 }
@@ -173,16 +180,16 @@ const comparison = (x: NF.Value, y: NF.Value, fn: (a: number, b: number) => bool
 const typecheckLit = (val: NF.Value): val is NF.Value & { type: "Lit" } => val.type === "Lit"
 
 const equality = (x: NF.Value, y: NF.Value, fn: (a: boolean) => boolean): NF.Value => {
-    if (!typecheckLit(x)) throw new Error(`Expected literal, got ${NF.display(x, { zonker: Sub.empty, metas: {}, env: [] })}`);
-    if (!typecheckLit(y)) throw new Error(`Expected literal, got ${NF.display(y, { zonker: Sub.empty, metas: {}, env: [] })}`);
+    if (!typecheckLit(x)) throw new Error(`Expected literal, got ${shown(x)}`);
+    if (!typecheckLit(y)) throw new Error(`Expected literal, got ${shown(y)}`);
     return NF.Constructors.Lit(Lit.Bool(fn(isEqual(x.value, y.value))));
 }
 
 const typecheckString = (val: NF.Value): val is NF.Value & { type: "Lit", value: { type: "String", value: string } } => val.type === "Lit" && val.value.type === "String"
 
 const concatenate = (x: NF.Value, y: NF.Value): NF.Value => {
-    if (!typecheckString(x)) throw new Error(`Expected string, got ${NF.display(x, { zonker: Sub.empty, metas: {}, env: [] })}`);
-    if (!typecheckString(y)) throw new Error(`Expected string, got ${NF.display(y, { zonker: Sub.empty, metas: {}, env: [] })}`);
+    if (!typecheckString(x)) throw new Error(`Expected string, got ${shown(x)}`);
+    if (!typecheckString(y)) throw new Error(`Expected string, got ${shown(y)}`);
     const val = x.value.value + y.value.value;
     return NF.Constructors.Lit(Lit.String(val));
 }
@@ -205,7 +212,7 @@ export const PrimOps: EB.Context['ffi'] = {
     $concat: { arity: 2, compute: (x: NF.Value, y: NF.Value) => concatenate(x, y) },
     $not: {
         arity: 1, compute: (x: NF.Value) => {
-            if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${NF.display(x, { zonker: Sub.empty, metas: {}, env: [] })}`);
+            if (!typecheckBool(x)) throw new Error(`Expected boolean, got ${shown(x)}`);
             return NF.Constructors.Lit(Lit.Bool(!x.value.value));
         }
     }

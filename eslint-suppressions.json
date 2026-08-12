@@ -276,18 +276,6 @@
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 1
 		},
-		"@typescript-eslint/no-explicit-any": {
-			"count": 4
-		},
-		"@typescript-eslint/no-unsafe-argument": {
-			"count": 9
-		},
-		"@typescript-eslint/no-unsafe-assignment": {
-			"count": 2
-		},
-		"@typescript-eslint/no-unsafe-member-access": {
-			"count": 1
-		},
 		"no-restricted-syntax": {
 			"count": 2
 		}
@@ -302,11 +290,6 @@
 			"count": 1
 		}
 	},
-	"src/elaboration/normalization/syntax/pretty.ts": {
-		"@typescript-eslint/consistent-type-assertions": {
-			"count": 2
-		}
-	},
 	"src/elaboration/normalization/syntax/term.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 1
@@ -318,11 +301,6 @@
 	"src/elaboration/pretty/pretty.test.ts": {
 		"no-restricted-syntax": {
 			"count": 1
-		}
-	},
-	"src/elaboration/pretty/pretty.ts": {
-		"@typescript-eslint/consistent-type-assertions": {
-			"count": 3
 		}
 	},
 	"src/elaboration/shared/cont.ts": {
@@ -371,11 +349,6 @@
 		},
 		"no-restricted-syntax": {
 			"count": 2
-		}
-	},
-	"src/elaboration/solver/solver.ts": {
-		"no-restricted-properties": {
-			"count": 1
 		}
 	},
 	"src/elaboration/syntax/term.ts": {

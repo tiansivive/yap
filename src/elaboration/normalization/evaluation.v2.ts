@@ -5,6 +5,8 @@
  */
 import { match, P } from "ts-pattern";
 
+import * as Eff from "@yap/utils/effects";
+
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
@@ -33,6 +35,10 @@ import * as Lit from "@yap/shared/literals";
 /** Default fuel cap for a drive; exceeding it throws. */
 export const MAX_STEPS = 10_000_000;
 
+/** Crash messages are plain expressions: a boundary run over snapshots, like any other boundary. */
+const shown = (ctx: EB.Context, program: () => ReturnType<typeof display>): string =>
+	Eff.run(program, [M.reader.handlers(ctx), Metas.registry.handlers({})])[0];
+
 export type EvalOptions = {
 	/** no δ-reduction: prevents inlining of definitions. Default is `false`. */
 	noInlineBindings?: boolean;
@@ -47,7 +53,7 @@ export function* evaluate(term: EB.Term, opts: EvalOptions = {}): Evaluation<NF.
 
 	const mark = yield* Stack.begin();
 	yield* Stack.eval(term, noInlineBindings);
-	yield* drain(mark, maxSteps, () => `Evaluation exceeded maximum steps (${maxSteps}). Possible infinite loop in: ${EB.Display.Term(term, ctx)}`);
+	yield* drain(mark, maxSteps, () => `Evaluation exceeded maximum steps (${maxSteps}). Possible infinite loop in: ${shown(ctx, () => EB.Display.Term(term))}`);
 
 	return yield* Stack.finish(mark);
 }
@@ -363,7 +369,10 @@ function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<voi
 			yield* Stack.eval(term);
 		})
 		.otherwise(function* (tm) {
-			console.log("Eval: Not implemented yet", EB.Display.Term(tm, ctx));
+			console.log(
+				"Eval: Not implemented yet",
+				shown(ctx, () => EB.Display.Term(tm)),
+			);
 			throw new Error("Not implemented");
 		});
 }
@@ -468,7 +477,7 @@ function* evalRowPush(row: EB.Row): Evaluation<void> {
 						.with({ type: "Row" }, deferred)
 						.with({ type: "Var" }, ({ variable }) => deferred(NF.Constructors.Row({ type: "variable", variable })))
 						.otherwise(nf => {
-							throw new Error("Solved meta in row position is not a row or variable: " + display(nf, ctx));
+							throw new Error("Solved meta in row position is not a row or variable: " + shown(ctx, () => display(nf)));
 						});
 				})
 				.with({ type: "Bound" }, function* (v) {
@@ -478,7 +487,7 @@ function* evalRowPush(row: EB.Row): Evaluation<void> {
 						.with({ type: "Row" }, deferred)
 						.with({ type: "Var" }, val => deferred(NF.Constructors.Row({ type: "variable", variable: val.variable })))
 						.otherwise(val => {
-							throw new Error("Evaluating a row variable that is not a row or a variable: " + display(val, ctx));
+							throw new Error("Evaluating a row variable that is not a row or a variable: " + shown(ctx, () => display(val)));
 						});
 				})
 				.otherwise(v => {

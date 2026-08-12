@@ -4,42 +4,77 @@ import * as NF from "../index";
 import * as Lit from "@yap/shared/literals";
 import * as Icit from "@yap/shared/implicitness";
 import * as Q from "@yap/shared/modalities/multiplicity";
-import * as R from "@yap/shared/rows";
 import * as PP from "@yap/shared/pretty";
+import * as R from "@yap/shared/rows";
+
+import * as Eff from "@yap/utils/effects";
 
 import * as EB from "@yap/elaboration";
-import { compose } from "../../unification";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
+import { bind, Display, rowDocs } from "@yap/elaboration/pretty/pretty";
 
-export const doc = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBruijn: false }): PP.Doc =>
-	match(value)
-		.with({ type: "Lit" }, ({ value }) => Lit.display(value))
-		.with({ type: "Var" }, ({ variable }) =>
-			match(variable)
-				.with({ type: "Bound" }, ({ lvl }) => {
-					const idx = ctx.env.length - 1 - lvl;
-					const name = ctx.env[idx]?.name.variable ?? `L${lvl}`;
+const identityRow = { term: (d: PP.Doc) => d, var: (v: PP.Doc) => v };
+
+export const doc = function* (value: NF.Value, opts = { deBruijn: false }): Display<PP.Doc> {
+	const go = (v: NF.Value) => doc(v, opts);
+
+	return yield* match(value)
+		.with({ type: "Lit" }, function* ({ value: lit }) {
+			return Lit.display(lit);
+		})
+		.with({ type: "Var" }, function* ({ variable }) {
+			return yield* match(variable)
+				.with({ type: "Bound" }, function* ({ lvl }) {
+					const { env } = yield* M.reader.ask();
+					const idx = env.length - 1 - lvl;
+					const name = env[idx]?.name.variable ?? `L${lvl}`;
 					return name + (opts.deBruijn ? `#L${lvl}` : "");
 				})
-				.with({ type: "Free" }, ({ name }) => name)
-				.with({ type: "Label" }, ({ name }) => `:${name}`)
-				.with({ type: "Foreign" }, ({ name }) => `FFI.${name}`)
-				.with({ type: "Meta" }, ({ val }) => {
-					const m = ctx.zonker[val] ? doc(ctx.zonker[val], ctx, opts) : `?${val}`;
-					return m;
+				.with({ type: "Free" }, function* ({ name }) {
+					return name;
 				})
-				.exhaustive(),
-		)
-		.with({ type: "Neutral" }, ({ value: v }) => doc(v, ctx, opts))
-		.with(NF.Patterns.Proj, ({ base, label }) => [doc(base, ctx, opts), ".", label])
-		.with(NF.Patterns.Match, ({ scrutinee }) => ["match ", doc(scrutinee, ctx, opts), " …"])
-		.with(NF.Patterns.Inj, ({ base, label, injected }) => ["inj ", label, " ", doc(injected, ctx, opts), " into ", doc(base, ctx, opts)])
-		.with({ type: "Abs", binder: { type: "Mu" } }, ({ binder }) => binder.source)
-		.with({ type: "Abs" }, ({ binder, closure }) => {
-			const b: PP.Doc = match(binder)
-				.with({ type: "Lambda" }, ({ variable, annotation }) => ["λ(", variable, ": ", doc(annotation, ctx, opts), ")"])
-				.with({ type: "Pi" }, ({ variable, annotation }) => ["Π(", variable, ": ", doc(annotation, ctx, opts), ")"])
-				.with({ type: "Mu" }, ({ variable, annotation }) => ["μ(", variable, ": ", doc(annotation, ctx, opts), ")"])
-				.with({ type: "Sigma" }, ({ variable }) => ["Σ(", variable, ": ", doc(binder.annotation, ctx, opts), ")"])
+				.with({ type: "Label" }, function* ({ name }) {
+					return `:${name}`;
+				})
+				.with({ type: "Foreign" }, function* ({ name }) {
+					return `FFI.${name}`;
+				})
+				.with({ type: "Meta" }, function* ({ val }) {
+					const entry = (yield* Metas.registry.get())[val];
+					return entry?.solution ? yield* go(entry.solution) : `?${val}`;
+				})
+				.exhaustive();
+		})
+		.with({ type: "Neutral" }, function* ({ value: v }) {
+			return yield* go(v);
+		})
+		.with(NF.Patterns.Proj, function* ({ base, label }) {
+			return [yield* go(base), ".", label] satisfies PP.Doc;
+		})
+		.with(NF.Patterns.Match, function* ({ scrutinee }) {
+			return ["match ", yield* go(scrutinee), " …"] satisfies PP.Doc;
+		})
+		.with(NF.Patterns.Inj, function* ({ base, label, injected }) {
+			return ["inj ", label, " ", yield* go(injected), " into ", yield* go(base)] satisfies PP.Doc;
+		})
+		.with({ type: "Abs", binder: { type: "Mu" } }, function* ({ binder }) {
+			return binder.source;
+		})
+		.with({ type: "Abs" }, function* ({ binder, closure }) {
+			const b: PP.Doc = yield* match(binder)
+				.with({ type: "Lambda" }, function* ({ variable, annotation }) {
+					return ["λ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+				})
+				.with({ type: "Pi" }, function* ({ variable, annotation }) {
+					return ["Π(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+				})
+				.with({ type: "Mu" }, function* ({ variable, annotation }) {
+					return ["μ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+				})
+				.with({ type: "Sigma" }, function* ({ variable, annotation }) {
+					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+				})
 				.exhaustive();
 
 			const arrow = match(binder)
@@ -47,59 +82,45 @@ export const doc = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBruijn: 
 				.with({ icit: "Implicit" }, () => "=>")
 				.otherwise(() => "->");
 
-			const z = compose(ctx.zonker, closure.ctx.zonker);
+			/* The body displays under the closure's own scope: the stored env, plus the binder being introduced. */
+			const scope = binder.type === "Sigma" ? closure.ctx : bind(binder.variable)(closure.ctx);
+			const body = yield* M.reader.local(_ => scope, EB.Display.doc(closure.term, opts));
 
-			const extended =
-				binder.type === "Sigma"
-					? closure.ctx
-					: ({
-							...closure.ctx,
-							metas: ctx.metas,
-							zonker: z,
-							env: [{ name: { variable: binder.variable } }, ...closure.ctx.env],
-						} as Pick<EB.Context, "env" | "zonker" | "metas">);
-
-			const printedEnv = extended.env.map(({ name }) => name.variable);
-			const prettyEnv = printedEnv.length > 0 ? `Γ: ${printedEnv.join("; ")}` : "·";
-
-			return PP.group([b, " ", arrow, PP.nest(2, [PP.line, PP.closure(EB.Display.doc(closure.term, extended, opts), prettyEnv)])]);
+			return PP.group([b, " ", arrow, PP.nest(2, [PP.line, PP.closure(body, EB.Display.Env(scope.env))])]);
 		})
-		.with({ type: "App" }, ({ func, arg, icit }) => {
+		.with({ type: "App" }, function* ({ func, arg, icit }) {
 			const needsFnParens = func.type !== "Var" && func.type !== "Lit" && func.type !== "App";
 			const needsArgParens = arg.type === "Abs" || arg.type === "App";
-			return PP.app(PP.parensIf(needsFnParens, doc(func, ctx, opts)), Icit.display(icit), PP.parensIf(needsArgParens, doc(arg, ctx, opts)));
+			return PP.app(PP.parensIf(needsFnParens, yield* go(func)), Icit.display(icit), PP.parensIf(needsArgParens, yield* go(arg)));
 		})
-		.with({ type: "Row" }, ({ row }) =>
-			R.displayDoc({
-				term: (t: NF.Value) => doc(t, ctx, opts),
-				var: (v: NF.Variable) => doc(NF.mk({ type: "Var", variable: v }), ctx, opts),
-			})(row),
-		)
-		.with({ type: "Modal" }, ({ modalities, value: v }) => [
-			"<",
-			Q.display(modalities.quantity),
-			"> ",
-			doc(v, ctx, opts),
-			" [| ",
-			doc(modalities.liquid, ctx, opts),
-			" |]",
-		])
-		.with({ type: "External" }, external => {
-			const args = external.args.map(a => ["(", doc(a, ctx, opts), ")"]);
+		.with({ type: "Row" }, function* ({ row }) {
+			return R.displayDoc(identityRow)(yield* rowDocs(row, go, (v: NF.Variable) => go(NF.mk({ type: "Var", variable: v }))));
+		})
+		.with({ type: "Modal" }, function* ({ modalities, value: v }) {
+			return ["<", Q.display(modalities.quantity), "> ", yield* go(v), " [| ", yield* go(modalities.liquid), " |]"] satisfies PP.Doc;
+		})
+		.with({ type: "External" }, function* (external) {
+			const args = yield* Eff.traverse(external.args, function* (a): Display<PP.Doc> {
+				return ["(", yield* go(a), ")"] satisfies PP.Doc;
+			});
 			return PP.group(["(", external.name, ":", PP.nest(2, [PP.line, ...PP.intersperse(" ", args)]), ")"]);
 		})
-		.with({ type: "Existential" }, existential => {
-			const xtended = { ...ctx, env: [{ name: { variable: existential.variable } }, ...ctx.env] } as EB.Context;
-			const prettyEnv = EB.Display.Env(xtended, opts);
+		.with({ type: "Existential" }, function* (existential) {
+			const ctx = yield* M.reader.ask();
+			const xtended = bind(existential.variable)(ctx);
+			const packed = yield* M.reader.local(_ => xtended, go(existential.body.value));
 			return PP.group([
 				"∃(",
 				existential.variable,
 				": ",
-				doc(existential.annotation, ctx, opts),
+				yield* go(existential.annotation),
 				").",
-				PP.nest(2, [PP.line, "<packed: ", doc(existential.body.value, xtended, opts), " -| ", prettyEnv, ">"]),
+				PP.nest(2, [PP.line, "<packed: ", packed, " -| ", EB.Display.Env(xtended.env), ">"]),
 			]);
 		})
 		.exhaustive();
+};
 
-export const display = (value: NF.Value, ctx: EB.DisplayContext, opts = { deBruijn: false }): string => PP.render(doc(value, ctx, opts));
+export const display = function* (value: NF.Value, opts = { deBruijn: false }): Display<string> {
+	return PP.render(yield* doc(value, opts));
+};
