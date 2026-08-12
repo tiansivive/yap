@@ -1,3 +1,5 @@
+import * as Eff from "@yap/utils/effects";
+
 import * as Src from "@yap/src/index";
 import * as EB from "@yap/elaboration";
 
@@ -78,13 +80,12 @@ export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M
 		(function* (): M.Elaboration<[NF.Value, EB.Context, EB.Resolutions, boolean]> {
 			const nondet = update(withMetas, "zonker", old => ({ ...old, ...z }));
 
-			const { zonker, resolutions } = yield* M.reader.local(_ => nondet, EB.solve(constraints));
-			// Bridge until the solver converts (M4): it reports solutions as a zonker; the registry is the authority downstream.
-			yield* Metas.registry.modify(current => Metas.withSolutions(current, zonker));
+			const { resolutions } = yield* M.reader.local(_ => nondet, EB.solve(constraints));
+			// The solver commits its solutions; the v2-view fields are rebuilt from the registry until context surgery.
 			const postSolve = yield* Metas.registry.get();
 			const postMetas = yield* Metas.asContext(postSolve);
 			const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postMetas }));
-			const next = update(withAllMetas, "zonker", z => compose(zonker, z));
+			const next = update(withAllMetas, "zonker", z => compose(Metas.solutions(postSolve), z));
 
 			const forced = yield* M.reader.local(_ => next, NF.force(dec.annotation));
 			const [generalized, introduced] = yield* M.reader.local(
@@ -103,7 +104,8 @@ export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M
 
 	let final = next;
 	for (const [type] of rest) {
-		const solution = yield* unify(instantiated, type, next.env.length, Sub.empty);
+		const [, solution] = yield* Eff.with([Sub.subst.handlers()], () => unify(instantiated, type, next.env.length));
+		yield* Metas.registry.modify(current => Metas.withSolutions(current, solution));
 		final = update(final, "zonker", z => compose(solution, z));
 	}
 

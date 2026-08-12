@@ -131,6 +131,9 @@ export type Handler<Row extends AnyAction, Output, Raises = never> = {
  */
 export type Actions<Effects> = Effects extends readonly unknown[] ? { [I in keyof Effects]: Offered<Effects[I]> }[number] : Offered<Effects>;
 
+/** The actions of an effect narrowed to specific tags: a row names exactly what it may yield. */
+export type Only<Effect, Tags extends Actions<Effect>["tag"]> = Extract<Actions<Effect>, { tag: Tags }>;
+
 type Offered<Effect> = Effect extends {
 	handlers: (...args: any[]) => Handler<infer Row, any, any>;
 }

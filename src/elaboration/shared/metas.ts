@@ -75,10 +75,16 @@ export const merge = (base: Registry, branches: readonly Registry[]): Registry =
  * ways to observe or move it, and the pure algebra above rides in payloads.
  */
 type Get = Eff.Action<"Registry.get", undefined, Registry>;
+type Register = Eff.Action<"Registry.register", Entry, Registry>;
 type Modify = Eff.Action<"Registry.modify", (registry: Registry) => Registry, Registry>;
 
 const get = function* () {
 	return yield* Eff.ctl.action<Get>("Registry.get", undefined);
+};
+
+/** Adds a fresh entry — minting's write, distinct from solving. Answers the registry after. */
+const registerOp = function* (entry: Entry) {
+	return yield* Eff.ctl.action<Register>("Registry.register", entry);
 };
 
 /** Answers with the registry after the change. */
@@ -86,13 +92,19 @@ const modify = function* (change: (registry: Registry) => Registry) {
 	return yield* Eff.ctl.action<Modify>("Registry.modify", change);
 };
 
-const handlers = (initial: Registry = empty): Eff.Handler<Get | Modify, Registry> => {
+const handlers = (initial: Registry = empty): Eff.Handler<Get | Register | Modify, Registry> => {
 	/* eslint-disable no-restricted-syntax -- this handler owns the registry cell */
 	let current = initial;
 
 	return {
 		clauses: {
 			"Registry.get": () => Eff.ctl.resume(current),
+
+			"Registry.register": entry => {
+				current = register(current, entry);
+
+				return Eff.ctl.resume(current);
+			},
 
 			"Registry.modify": change => {
 				current = change(current);
@@ -106,16 +118,19 @@ const handlers = (initial: Registry = empty): Eff.Handler<Get | Modify, Registry
 	/* eslint-enable no-restricted-syntax */
 };
 
-export const registry = { get, modify, handlers };
+export const registry = { get, register: registerOp, modify, handlers };
 
 /** A computation over the registry alone. */
 export type Effect<A> = Eff.Eff<Eff.Actions<typeof registry>, A>;
 
-export const fresh = function* (lvl: number, annotation: NF.Value): M.Elaboration<EB.Meta> {
+/** Minting: a fresh id and its registration, nothing else. */
+export type Minting<A> = Eff.Eff<Eff.Actions<typeof M.supply> | Eff.Only<typeof registry, "Registry.register">, A>;
+
+export const fresh = function* (lvl: number, annotation: NF.Value): Minting<EB.Meta> {
 	const id = yield* M.supply.fresh("meta");
 	const meta: EB.Meta = { type: "Meta", val: id, lvl };
 
-	yield* registry.modify(current => register(current, { meta, annotation }));
+	yield* registry.register({ meta, annotation });
 
 	return meta;
 };

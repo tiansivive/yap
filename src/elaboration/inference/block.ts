@@ -86,14 +86,13 @@ const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]):
 	const metas = yield* Metas.asContext(registry);
 	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
 
-	const { zonker, resolutions } = yield* M.reader.local(_ => withMetas, EB.solve(constraints));
-	// Bridge until the solver converts (M4): it reports solutions as a zonker; the registry is the authority downstream.
-	yield* Metas.registry.modify(current => Metas.withSolutions(current, zonker));
+	const { resolutions } = yield* M.reader.local(_ => withMetas, EB.solve(constraints));
+	// The solver commits its solutions; the v2-view fields are rebuilt from the registry until context surgery.
 	const postSolve = yield* Metas.registry.get();
 
 	const postMetas = yield* Metas.asContext(postSolve);
 	const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postMetas }));
-	const zonked = update(withAllMetas, "zonker", z => compose(zonker, z));
+	const zonked = update(withAllMetas, "zonker", z => compose(Metas.solutions(postSolve), z));
 	const value = yield* M.reader.local(_ => zonked, NF.normalize(t, { noInlineBindings: true }));
 	const forced = yield* M.reader.local(_ => zonked, NF.force(ty));
 	const generalized = yield* M.reader.local(_ => zonked, NF.abstract(forced, value, resolutions));

@@ -1,6 +1,8 @@
 import * as Eff from "@yap/utils/effects";
 
 import type * as EB from "@yap/elaboration";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
 import type { Implicitness } from "@yap/shared/implicitness";
 
 import * as Arity from "./arity";
@@ -76,6 +78,21 @@ export function* arity(ty: Value) {
 export function* unfoldMu(app: Extract<Value, { type: "App" }>) {
 	return yield* fresh(() => Recursion.unfoldMu(app));
 }
+
+/**
+ * A read-only probe: runs one public entry against snapshots of the scope and
+ * metacontext, discarding the run. For guard positions — a guard is a plain
+ * function and cannot yield, and a nested Eff.run is a plain expression.
+ * Sound because the public row is reader | Registry.get: the program provably
+ * writes nothing, and with no except in the row the answer cannot be an abort.
+ */
+export const probe =
+	(ctx: EB.Context, registry: Metas.Registry) =>
+	<A>(program: () => Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Only<typeof Metas.registry, "Registry.get">, A>): A => {
+		const [answer] = Eff.run(program, [M.reader.handlers(ctx), Metas.registry.handlers(registry)]);
+
+		return answer;
+	};
 
 export { meet, unwrapNeutral, ignoraModal, builtinsOps } from "./evaluation.v2";
 export type { View, MeetResult, EvalOptions } from "./evaluation.v2";

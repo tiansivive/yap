@@ -12,7 +12,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "ESNext",
-		"noErrorTruncation": false,
+		"noErrorTruncation": true,
 		"paths": {
 			"@yap/elaboration": ["./src/elaboration/index"],
 			"@yap/elaboration/*": ["./src/elaboration/*"],

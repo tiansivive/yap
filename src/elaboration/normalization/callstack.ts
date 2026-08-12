@@ -223,4 +223,4 @@ export const callstack = { begin, next, finish, eval: evalOp, ret, cont, delimit
  * continuation type, and going through the instance would make that
  * reference eagerly circular.
  */
-export type Evaluation<A> = Eff.Eff<Actions | Eff.Actions<typeof Metas.registry> | Eff.Actions<typeof M.reader>, A>;
+export type Evaluation<A> = Eff.Eff<Actions | Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof M.reader>, A>;
