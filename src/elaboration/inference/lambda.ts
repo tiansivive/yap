@@ -17,19 +17,23 @@ export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
 
 		const ty = yield* NF.normalize(ann);
 
-		const ast = yield* M.reader.local(
+		/*
+		 * Only the body is inferred under the binder — implicit insertion included,
+		 * since it mints its metas at the extended level. The Pi is built back out
+		 * here: its closure abstracts *over* the binder, so it must close at the
+		 * scope that does not yet have it.
+		 */
+		const [bTerm, bType, [_vu, ...bus]] = yield* M.reader.local(
 			_ctx => EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, ty),
 			(function* () {
-				const inferred = yield* EB.infer(lam.body);
-				const [bTerm, bType, [_vu, ...bus]] = yield* EB.Icit.insert(inferred);
-				//yield* M.constrain({ type: "usage", expected: mty[1], computed: vu });
-
-				const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm, ann);
-				const pi = NF.Constructors.Pi(lam.variable, lam.icit, ty, yield* NF.closeVal(bType));
-				const piTerm = yield* NF.quote(ctx.env.length, pi);
-				return [EB.Constructors.Ann(tm, piTerm), pi, bus] satisfies EB.AST;
+				return yield* EB.Icit.insert(yield* EB.infer(lam.body));
 			})(),
 		);
+		//yield* M.constrain({ type: "usage", expected: mty[1], computed: vu });
 
-		return ast satisfies EB.AST; // Remove the usage of the bound variable
+		const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm, ann);
+		const pi = NF.Constructors.Pi(lam.variable, lam.icit, ty, yield* NF.closeVal(bType));
+		const piTerm = yield* NF.quote(ctx.env.length, pi);
+
+		return [EB.Constructors.Ann(tm, piTerm), pi, bus] satisfies EB.AST; // Remove the usage of the bound variable
 	});
