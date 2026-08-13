@@ -66,12 +66,8 @@ export const initialState: MutState = { delimitations: [], nondeterminism: { sol
 
 export type Err = Cause & { provenance?: P.Provenance[]; ctx: EB.Context };
 
-export const display = (err: Err): string => {
-	const boundary = [M.reader.handlers(err.ctx), Metas.registry.handlers({})] as const;
-	const cause = Eff.run(() => Errors.display(err), boundary)[0];
-	const prov = err.provenance ? Eff.run(() => P.display(err.provenance ?? [], { cap: 100 }), boundary)[0] : "";
-	return prov ? `${cause}\n\nTrace:\n${prov}` : cause;
-};
+/* The legacy callers still want a string; the rendering itself is Errors.report's. */
+export const display = (err: Err): string => Eff.run(() => Errors.report(err), [M.reader.handlers(err.ctx), Metas.registry.handlers({})])[0];
 
 export const track: <A>(provenance: P.Provenance | P.Provenance[], fa: Elaboration<A>) => Elaboration<A> = (provenance, fa) => (ctx, w, st) => {
 	const extended = { ...ctx, trace: ctx.trace.concat(provenance) };

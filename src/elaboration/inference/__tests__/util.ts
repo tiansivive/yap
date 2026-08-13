@@ -105,7 +105,7 @@ export const elaborateFrom = (src: string) => {
 	const posed = shown(ctx, Metas.unsolved(registry));
 
 	if (Eff.failed(answer)) {
-		throw new Error(disp(() => Errors.display(answer[Eff.ABORT])));
+		throw new Error(disp(() => Errors.report(answer[Eff.ABORT])));
 	}
 
 	const [tm, ty] = answer;

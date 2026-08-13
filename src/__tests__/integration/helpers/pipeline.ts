@@ -55,7 +55,7 @@ type Elaborated = {
 const safe = <A>(fn: () => A): E.Either<string, A> => E.tryCatch(fn, e => (e instanceof Error ? e.message : String(e)));
 
 /** Errors render at a boundary run over their own captured scope. */
-const rendered = (e: M.Err): string => Eff.run(() => Errors.display(e), [M.reader.handlers(e.ctx), Metas.registry.handlers({})])[0];
+const rendered = (e: M.Err): string => Eff.run(() => Errors.report(e), [M.reader.handlers(e.ctx), Metas.registry.handlers({})])[0];
 
 const flatten = <A>(result: E.Either<M.Err, A>): E.Either<string, A> => E.mapLeft(rendered)(result);
 

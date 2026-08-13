@@ -27,11 +27,12 @@ type Metadata =
 	| { action: "alternative"; type: NF.Value; motive: string };
 
 /** Provenance displays under an empty scope: its values quote against no binders. */
-export const display = (provenance: Provenance[] = [], opts = { cap: 10 }): Display<string> =>
+export const display = (provenance: readonly Provenance[] = [], opts = { cap: 10 }): Display<string> =>
 	M.reader.local(ctx => ({ ...ctx, env: [] }), rendered(provenance, opts));
 
-const rendered = function* (provenance: Provenance[], opts: { cap: number }): Display<string> {
-	const entries = yield* Eff.traverse(A.reverse(provenance), function* (p): Display<string> {
+const rendered = function* (provenance: readonly Provenance[], opts: { cap: number }): Display<string> {
+	/* Innermost first: the stack reads as the path that led to the error. */
+	const entries = yield* Eff.traverse(A.reverse([...provenance]), function* (p): Display<string> {
 		const pretty = yield* (function* (prov: Provenance): Display<string> {
 			if (prov.tag === "unify" && prov.type === "nf") {
 				return `\n\t${yield* NF.display(prov.vals[0])}\nwith:\n\t${yield* NF.display(prov.vals[1])}`;

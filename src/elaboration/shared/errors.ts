@@ -2,6 +2,7 @@ import * as NF from "@yap/elaboration/normalization";
 import * as R from "@yap/shared/rows";
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as M from "./effects";
+import * as P from "./provenance";
 import type { Display } from "../pretty/pretty";
 
 export type Cause =
@@ -28,6 +29,19 @@ export const MultiplicityMismatch = (expected: Q.Multiplicity, right: Q.Multipli
 
 /** Errors display under an empty scope: their values quote against no binders. */
 export const display = (error: Cause): Display<string> => M.reader.local(ctx => ({ ...ctx, env: [] }), rendered(error));
+
+/**
+ * A raised error: its cause, and the provenance stack it was raised under.
+ *
+ * `display` answers for a bare cause; anything holding an `M.Err` wants this, since
+ * the trace is most of what makes a type error readable.
+ */
+export const report = function* (error: Cause & { provenance?: readonly P.Provenance[] }): Display<string> {
+	const cause = yield* display(error);
+	const trace = error.provenance?.length ? yield* P.display(error.provenance, { cap: 100 }) : "";
+
+	return trace ? `${cause}\n\nTrace:\n${trace}` : cause;
+};
 
 const rendered = function* (error: Cause): Display<string> {
 	switch (error.type) {

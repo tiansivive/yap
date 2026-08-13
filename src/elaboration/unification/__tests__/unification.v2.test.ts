@@ -29,7 +29,7 @@ const runUnify = (left: NF.Value, right: NF.Value, metas: readonly number[] = []
 
 const showSub = (out: ReturnType<typeof runUnify>) => shown(out.ctx, out.registry)(() => Sub.display(out.subst));
 
-const showErr = (out: ReturnType<typeof runUnify>, err: M.Err) => shown(out.ctx, out.registry)(() => Errors.display(err));
+const showErr = (out: ReturnType<typeof runUnify>, err: M.Err) => shown(out.ctx, out.registry)(() => Errors.report(err));
 
 const expectRight = (out: ReturnType<typeof runUnify>): Sub.Subst => {
 	if (Eff.failed(out.answer)) {

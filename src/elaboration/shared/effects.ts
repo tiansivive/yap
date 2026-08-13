@@ -45,11 +45,10 @@ export const constrain = function* (constraints: EB.Constraint | EB.Constraint[]
 	yield* writer.tell({ constraints: many.map(c => ({ ...c, trace: [] })) });
 };
 
-/* TODO(provenance): attach the tracer's stack once the main migration lands. */
 export const fail = function* (cause: Cause) {
 	const ctx = yield* reader.ask();
 
-	return yield* except.raise({ ...cause, ctx });
+	return yield* except.raise({ ...cause, ctx, provenance: [...(yield* tracer.trace())] });
 };
 
 export type MutState = {
