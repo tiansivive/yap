@@ -70,6 +70,13 @@ export const runEB = <A>(ctx: EB.Context, program: () => M.Elaboration<A>, regis
 	return { answer, collected, state, counts, registry: metas, trace } as const;
 };
 
+/** Displays and other read-only programs run over a finished run's outputs. */
+export const shown = (ctx: EB.Context, registry: Metas.Registry) => {
+	type Readonly<A> = () => Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Only<typeof Metas.registry, "Registry.get">, A>;
+
+	return <A>(program: Readonly<A>): A => Eff.run(program, [M.reader.handlers(ctx), Metas.registry.handlers(registry)])[0];
+};
+
 /** Runs a public-NbE program (reader + registry row) with a fresh machine. */
 export const runNF = <A>(
 	ctx: EB.Context,
@@ -93,8 +100,12 @@ export const elaborateFrom = (src: string) => {
 
 	const { answer, collected, state, registry } = runEB(ctx, () => EB.infer(term));
 
+	const disp = shown(ctx, registry);
+	/* Constraints are what unification was asked to prove, so they show the metas as posed. */
+	const posed = shown(ctx, Metas.unsolved(registry));
+
 	if (Eff.failed(answer)) {
-		throw new Error(Errors.display(answer[Eff.ABORT], Metas.solutions(registry), {}));
+		throw new Error(disp(() => Errors.display(answer[Eff.ABORT])));
 	}
 
 	const [tm, ty] = answer;
@@ -102,10 +113,9 @@ export const elaborateFrom = (src: string) => {
 	const zonker = Metas.solutions(registry);
 
 	const pretty = {
-		term: EB.Display.Term(tm, { env: ctx.env, zonker, metas: {} }),
-		type: NF.display(ty, { env: ctx.env, zonker, metas: {} }),
-		// use the registry's solutions to display metas in constraints
-		constraints: constraints.map((c: any) => EB.Display.Constraint(c, { env: ctx.env, zonker, metas: {} })),
+		term: disp(() => EB.Display.Term(tm)),
+		type: disp(() => NF.display(ty)),
+		constraints: constraints.map((c: any) => posed(() => EB.Display.Constraint(c))),
 	};
 
 	// Build a snapshot-friendly object

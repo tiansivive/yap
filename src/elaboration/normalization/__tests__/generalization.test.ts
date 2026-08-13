@@ -1,14 +1,27 @@
 import { describe, it, expect } from "vitest";
 
+import * as Eff from "@yap/utils/effects";
+
 import * as EB from "@yap/elaboration";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "@yap/elaboration/normalization";
 import * as Lit from "@yap/shared/literals";
-import { mkCtx, runNF } from "../../inference/__tests__/util";
+import { mkCtx, runEB, runNF, shown } from "../../inference/__tests__/util";
 
 import * as F from "fp-ts/function";
 
-const EBType = EB.Type;
-const EBRow = EB.Row;
+const seed = (...entries: Array<[number, NF.Value]>): Metas.Registry =>
+	entries.reduce((reg, [val, annotation]) => Metas.register(reg, { meta: EB.Constructors.Vars.Meta(val, 0), annotation }), Metas.empty);
+
+/** Runs an elaboration program that must not abort; answers with the final registry. */
+const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () => M.Elaboration<A>): [A, Metas.Registry] => {
+	const { answer, registry: final } = runEB(ctx, program, registry);
+	if (Eff.failed(answer)) {
+		throw new Error("unexpected abort in generalization test");
+	}
+	return [answer, final];
+};
 
 describe("Normalization: generalization", () => {
 	const noMetasTerm = EB.Constructors.Lit(Lit.Atom("Unit"));
@@ -17,82 +30,74 @@ describe("Normalization: generalization", () => {
 	describe("generalize", () => {
 		it("simple meta: ?1 |=> Π(a: Type) => a", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-
 			const meta = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
-			const [generalized, z] = NF.generalize(meta, noMetasTerm, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
+
+			const [[generalized], registry] = run(ctx, seed([1, NF.Type]), () => NF.generalize(meta, noMetasTerm, noResolutions));
+			const disp = shown(ctx, registry);
+
 			// Should be wrapped in an implicit Pi
-			const nf = NF.display(generalized, extendedCtx);
+			const nf = disp(() => NF.display(generalized));
 			expect(nf).toContain("=>");
 
-			const quoted = runNF(extendedCtx, () => NF.quote(ctx.env.length, generalized));
+			const quoted = runNF(ctx, () => NF.quote(ctx.env.length, generalized), registry);
 			expect({
 				nf,
-				eb: EB.Display.Term(quoted, extendedCtx),
+				eb: disp(() => EB.Display.Term(quoted)),
 			}).toMatchSnapshot();
 
-			// Extended context should have zonker entry for the meta
-			expect(extendedCtx.zonker[1]).toBeDefined();
+			// The registry should have a solution for the meta
+			expect(Metas.solution(registry, 1)).toBeDefined();
 		});
 
 		it("multiple metas: ?1 ?2 |=> Π(a: Type) => Π(b: Type) => a b", () => {
 			const ctx = mkCtx();
-			// Create metas ?1 :: Type and ?2 :: Type
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			// Create Pi type: ?1 -> ?2
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 			const meta2 = NF.Constructors.Flex({ type: "Meta", val: 2, lvl: 0 });
 			const piType = NF.Constructors.App(meta1, meta2, "Explicit");
 
-			const [generalized, z] = NF.generalize(piType, noMetasTerm, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
+			const [[generalized], registry] = run(ctx, seed([1, NF.Type], [2, NF.Type]), () => NF.generalize(piType, noMetasTerm, noResolutions));
+			const disp = shown(ctx, registry);
 
 			// Should be double-wrapped in implicit Pis
-			const nf = NF.display(generalized, extendedCtx);
+			const nf = disp(() => NF.display(generalized));
 			const matches = nf.match(/=>/g) || [];
 			expect(matches.length).toBe(2);
 
-			const quoted = runNF(extendedCtx, () => NF.quote(0, generalized));
+			const quoted = runNF(ctx, () => NF.quote(0, generalized), registry);
 			expect({
 				nf,
-				eb: EB.Display.Term(quoted, extendedCtx),
+				eb: disp(() => EB.Display.Term(quoted)),
 			}).toMatchSnapshot();
 
-			// Both metas should be in zonker
-			expect(extendedCtx.zonker[1]).toBeDefined();
-			expect(extendedCtx.zonker[2]).toBeDefined();
+			// Both metas should be solved
+			expect(Metas.solution(registry, 1)).toBeDefined();
+			expect(Metas.solution(registry, 2)).toBeDefined();
 		});
 
 		it("metas only in the term, not the type", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
 
 			// Type has no metas
 			const typeWithNoMetas = NF.Constructors.Lit(Lit.Atom("Num"));
 			// Term has ?1
 			const termWithMeta = EB.Constructors.Var({ type: "Meta", val: 1, lvl: 0 });
 
-			const [generalized, z] = NF.generalize(typeWithNoMetas, termWithMeta, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
+			const [[generalized], registry] = run(ctx, seed([1, NF.Type]), () => NF.generalize(typeWithNoMetas, termWithMeta, noResolutions));
 
 			// Even though type has no metas, ?1 in the term should be generalized
-			const nf = NF.display(generalized, extendedCtx);
+			const nf = shown(ctx, registry)(() => NF.display(generalized));
 			expect(nf).toContain("(a: Type) =>");
 			expect(nf).toContain("Num");
 
 			expect({ nf }).toMatchSnapshot();
 
-			expect(extendedCtx.zonker[1]).toBeDefined();
+			expect(Metas.solution(registry, 1)).toBeDefined();
 		});
 
 		it("generalizes metas in both type and term, eliminating duplicates", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
-			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: EBType };
 
 			// Type has ?1
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -104,10 +109,11 @@ describe("Normalization: generalization", () => {
 			const app1 = EB.Constructors.App("Explicit", meta2, meta3);
 			const termWithMetas = app1;
 
-			const [generalized, z] = NF.generalize(typeWithMeta, termWithMetas, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
+			const [[generalized], registry] = run(ctx, seed([1, NF.Type], [2, NF.Type], [3, NF.Type]), () =>
+				NF.generalize(typeWithMeta, termWithMetas, noResolutions),
+			);
 
-			const nf = NF.display(generalized, extendedCtx);
+			const nf = shown(ctx, registry)(() => NF.display(generalized));
 			// Should have three Pis (for ?1, ?2, ?3), not four
 			// even though ?1 appears in both type and term
 			const piMatches = nf.match(/=>/g) || [];
@@ -115,18 +121,13 @@ describe("Normalization: generalization", () => {
 
 			expect({ nf }).toMatchSnapshot();
 
-			expect(extendedCtx.zonker[1]).toBeDefined();
-			expect(extendedCtx.zonker[2]).toBeDefined();
-			expect(extendedCtx.zonker[3]).toBeDefined();
+			expect(Metas.solution(registry, 1)).toBeDefined();
+			expect(Metas.solution(registry, 2)).toBeDefined();
+			expect(Metas.solution(registry, 3)).toBeDefined();
 		});
 
 		it("uses alphabetic variable names (a, b, c...): ?1 ?2 ?3 |=> Π(a: Type) => Π(b: Type) => Π(c: Type) => a b c", () => {
 			const ctx = mkCtx();
-
-			// Create three metas
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
-			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: EBType };
 
 			// Create a term with all three metas
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -137,33 +138,30 @@ describe("Normalization: generalization", () => {
 			const app1 = NF.Constructors.App(meta1, meta2, "Explicit");
 			const app2 = NF.Constructors.App(app1, meta3, "Explicit");
 
-			const [generalized, z] = NF.generalize(app2, noMetasTerm, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
-			const display = NF.display(generalized, extendedCtx);
+			const [[generalized], registry] = run(ctx, seed([1, NF.Type], [2, NF.Type], [3, NF.Type]), () => NF.generalize(app2, noMetasTerm, noResolutions));
+			const disp = shown(ctx, registry);
+			const display = disp(() => NF.display(generalized));
 
 			// Should contain variable names a, b, c
 			expect(display).toContain("a");
 			expect(display).toContain("b");
 			expect(display).toContain("c");
 
-			const quoted = runNF(extendedCtx, () => NF.quote(0, generalized));
-			expect({ nf: display, eb: EB.Display.Term(quoted, extendedCtx) }).toMatchSnapshot();
+			const quoted = runNF(ctx, () => NF.quote(0, generalized), registry);
+			expect({ nf: display, eb: disp(() => EB.Display.Term(quoted)) }).toMatchSnapshot();
 		});
 
 		it("uses 'r' prefix for Row variables: ?1 ?2 |=> Π(r: Row) => Π(a: Type) => r → a", () => {
 			const ctx = mkCtx();
 
 			// Create metas: one Row, one Type
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBRow };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
-
-			// Type with both metas
 			const metaRow = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 			const metaType = NF.Constructors.Flex({ type: "Meta", val: 2, lvl: 0 });
 
-			const [generalized, z] = NF.generalize(NF.Constructors.App(metaRow, metaType, "Explicit"), noMetasTerm, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
-			const display = NF.display(generalized, extendedCtx);
+			const [[generalized], registry] = run(ctx, seed([1, NF.Row], [2, NF.Type]), () =>
+				NF.generalize(NF.Constructors.App(metaRow, metaType, "Explicit"), noMetasTerm, noResolutions),
+			);
+			const display = shown(ctx, registry)(() => NF.display(generalized));
 
 			// Should contain 'r' for Row variable and 'a' for Type variable
 			expect(display).toContain("r");
@@ -175,11 +173,6 @@ describe("Normalization: generalization", () => {
 		it("sequences type and row variables correctly: ?1 ?2 ?3 |=> Π(a: Type) => Π(b: Type) => Π(r: Row) => ...", () => {
 			const ctx = mkCtx();
 
-			// Create metas: two Types and one Row
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
-			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: EBRow };
-
 			// Type with all three metas
 			const m1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 			const m2 = NF.Constructors.Flex({ type: "Meta", val: 2, lvl: 0 });
@@ -188,9 +181,8 @@ describe("Normalization: generalization", () => {
 			const app1 = NF.Constructors.App(m1, m2, "Explicit");
 			const app2 = NF.Constructors.App(app1, m3, "Explicit");
 
-			const [generalized, z] = NF.generalize(app2, noMetasTerm, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
-			const display = NF.display(generalized, extendedCtx);
+			const [[generalized], registry] = run(ctx, seed([1, NF.Type], [2, NF.Type], [3, NF.Row]), () => NF.generalize(app2, noMetasTerm, noResolutions));
+			const display = shown(ctx, registry)(() => NF.display(generalized));
 
 			// Should have a, b for Type variables and r for Row
 			expect(display).toContain("a");
@@ -211,15 +203,14 @@ describe("Normalization: generalization", () => {
 			const ctx = mkCtx();
 
 			// Create metas: one Type constructor (Type -> Type), one regular Type
-			// We'll create the first meta with a Pi type annotation
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EB.Constructors.Pi("x", "Implicit", EB.Type, EB.Type) };
+			// We'll create the first meta with a Pi value annotation
+			const typeCtor = NF.Constructors.Pi("x", "Implicit", NF.Type, NF.Constructors.Closure(ctx, EB.Type));
 
 			// Type with both metas
 			const metaTypeCtor = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 
-			const [generalized, z] = NF.generalize(metaTypeCtor, noMetasTerm, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
-			const display = NF.display(generalized, extendedCtx);
+			const [[generalized], registry] = run(ctx, seed([1, typeCtor]), () => NF.generalize(metaTypeCtor, noMetasTerm, noResolutions));
+			const display = shown(ctx, registry)(() => NF.display(generalized));
 
 			// Should contain 'F' for TypeCtor variable and 'a' for Type variable
 			expect(display).toContain("F");
@@ -231,10 +222,6 @@ describe("Normalization: generalization", () => {
 
 		it("handles pi types: ?1 -> ?2 -> ?3 |=> Π(a: Type) => Π(b: Type) => Π(c: Type) => Π(x: a) -> Π(y: b) -> c", () => {
 			const ctx = mkCtx();
-			// Create three metas
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
-			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: EBType };
 
 			// Create a term with all three metas
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -245,68 +232,63 @@ describe("Normalization: generalization", () => {
 			const inner = EB.Constructors.Pi("y", "Explicit", meta2, meta3);
 			const outer = NF.Constructors.Pi("x", "Explicit", meta1, NF.Constructors.Closure(ctx, inner));
 
-			const [generalized, z] = NF.generalize(outer, noMetasTerm, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
+			const [[generalized], registry] = run(ctx, seed([1, NF.Type], [2, NF.Type], [3, NF.Type]), () => NF.generalize(outer, noMetasTerm, noResolutions));
+			const disp = shown(ctx, registry);
 
-			const display = NF.display(generalized, extendedCtx);
-			const quoted = runNF(extendedCtx, () => NF.quote(0, generalized));
-			expect({ nf: display, eb: EB.Display.Term(quoted, extendedCtx) }).toMatchSnapshot();
+			const display = disp(() => NF.display(generalized));
+			const quoted = runNF(ctx, () => NF.quote(0, generalized), registry);
+			expect({ nf: display, eb: disp(() => EB.Display.Term(quoted)) }).toMatchSnapshot();
 		});
 
 		it("correctly types metas: (?1:Type) -> (?2: Row)  |=> Π(a: Type) => Π(r: Row) => Π(x: a) -> r", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBRow };
 
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
 			const piType = NF.Constructors.Pi("x", "Explicit", meta1, NF.Constructors.Closure(ctx, meta2));
 
-			const [generalized, z] = NF.generalize(piType, noMetasTerm, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
+			const [[generalized], registry] = run(ctx, seed([1, NF.Type], [2, NF.Row]), () => NF.generalize(piType, noMetasTerm, noResolutions));
+			const disp = shown(ctx, registry);
 
-			const nf = NF.display(generalized, extendedCtx);
+			const nf = disp(() => NF.display(generalized));
 			expect(nf).toContain("a: Type");
 			expect(nf).toContain("r: Row");
 
-			const quoted = runNF(extendedCtx, () => NF.quote(0, generalized));
+			const quoted = runNF(ctx, () => NF.quote(0, generalized), registry);
 			expect({
 				nf,
-				eb: EB.Display.Term(quoted, extendedCtx),
+				eb: disp(() => EB.Display.Term(quoted)),
 			}).toMatchSnapshot();
 		});
 
-		it("preserves already-solved metas in zonker", () => {
+		it("preserves already-solved metas", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
-			ctx.zonker[2] = NF.Constructors.Lit(Lit.Atom("Num"));
+			const seeded = Metas.solve(seed([1, NF.Type], [2, NF.Type]), 2, NF.Constructors.Lit(Lit.Atom("Num")));
 
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
 			const piType = NF.Constructors.Pi("x", "Explicit", meta1, NF.Constructors.Closure(ctx, meta2));
 
-			const [generalized, z] = NF.generalize(piType, noMetasTerm, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
+			const [[generalized], registry] = run(ctx, seeded, () => NF.generalize(piType, noMetasTerm, noResolutions));
+			const disp = shown(ctx, registry);
+
 			// Only ?1 should be generalized
-			const nf = NF.display(generalized, extendedCtx);
+			const nf = disp(() => NF.display(generalized));
 			expect(nf).toContain("a: Type");
 			expect(nf).toContain("-> Num");
 
-			const quoted = runNF(extendedCtx, () => NF.quote(0, generalized));
+			const quoted = runNF(ctx, () => NF.quote(0, generalized), registry);
 			expect({
 				nf,
-				eb: EB.Display.Term(quoted, extendedCtx),
+				eb: disp(() => EB.Display.Term(quoted)),
 			}).toMatchSnapshot();
 
-			// Original zonker entry should be preserved
-			expect(extendedCtx.zonker["2"]).toBeDefined();
+			// Original solution should be preserved
+			expect(Metas.solution(registry, 2)).toBeDefined();
 		});
 
 		it("ignores metas that are in the resolutions parameter", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			// Both metas in the type
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -316,10 +298,9 @@ describe("Normalization: generalization", () => {
 			// ?2 is in resolutions (resolved implicitly), so it should not be generalized
 			const resolutions: EB.Resolutions = { 2: NF.Constructors.Lit(Lit.Atom("Num")) };
 
-			const [generalized, z] = NF.generalize(typeWithMetas, noMetasTerm, ctx, resolutions);
-			const extendedCtx = { ...ctx, zonker: z };
+			const [[generalized], registry] = run(ctx, seed([1, NF.Type], [2, NF.Type]), () => NF.generalize(typeWithMetas, noMetasTerm, resolutions));
 
-			const nf = NF.display(generalized, extendedCtx);
+			const nf = shown(ctx, registry)(() => NF.display(generalized));
 			// Should only have one Pi for ?1, not two
 			const piMatches = nf.match(/=>/g) || [];
 			expect(piMatches.length).toBe(1);
@@ -329,9 +310,6 @@ describe("Normalization: generalization", () => {
 
 		it("ignores resolved metas in both type and term", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
-			ctx.metas[3] = { meta: EB.Constructors.Vars.Meta(3, 0), ann: EBType };
 
 			// Type has ?1 and ?2
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -346,10 +324,11 @@ describe("Normalization: generalization", () => {
 			// ?2 is resolved
 			const resolutions: EB.Resolutions = { 2: NF.Constructors.Lit(Lit.Atom("Num")) };
 
-			const [generalized, z] = NF.generalize(typeWithMetas, termWithMetas, ctx, resolutions);
-			const extendedCtx = { ...ctx, zonker: z };
+			const [[generalized], registry] = run(ctx, seed([1, NF.Type], [2, NF.Type], [3, NF.Type]), () =>
+				NF.generalize(typeWithMetas, termWithMetas, resolutions),
+			);
 
-			const nf = NF.display(generalized, extendedCtx);
+			const nf = shown(ctx, registry)(() => NF.display(generalized));
 			// Should have two Pis: for ?1 and ?3 (not ?2, which is resolved)
 			const piMatches = nf.match(/=>/g) || [];
 			expect(piMatches.length).toBe(2);
@@ -361,34 +340,30 @@ describe("Normalization: generalization", () => {
 			const ctx = mkCtx();
 			const numType = NF.Constructors.Lit(Lit.Atom("Num"));
 
-			const [generalized, z] = NF.generalize(numType, noMetasTerm, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
+			const [[generalized], registry] = run(ctx, Metas.empty, () => NF.generalize(numType, noMetasTerm, noResolutions));
 
 			// Should be unchanged
 			expect(generalized).toBe(numType);
-			expect(extendedCtx).toStrictEqual(ctx);
+			expect(registry).toStrictEqual(Metas.empty);
 
-			expect({ nf: NF.display(generalized, ctx) }).toMatchSnapshot();
+			expect({ nf: shown(ctx, registry)(() => NF.display(generalized)) }).toMatchSnapshot();
 		});
 
 		it("introduces binder under existing environment entries", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
 			const xtended = EB.bind(ctx, { type: "Let", variable: "x" }, NF.Any);
 
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
-			const [generalized, z] = NF.generalize(meta1, noMetasTerm, xtended, noResolutions);
-			const extendedCtx = { ...xtended, zonker: z };
+			const [[generalized], registry] = run(xtended, seed([1, NF.Type]), () => NF.generalize(meta1, noMetasTerm, noResolutions));
+			const disp = shown(xtended, registry);
 
-			const quoted = runNF(extendedCtx, () => NF.quote(xtended.env.length, generalized));
+			const quoted = runNF(xtended, () => NF.quote(xtended.env.length, generalized), registry);
 
-			expect({ nf: NF.display(generalized, extendedCtx), eb: EB.Display.Term(quoted, extendedCtx) }).toMatchSnapshot();
+			expect({ nf: disp(() => NF.display(generalized)), eb: disp(() => EB.Display.Term(quoted)) }).toMatchSnapshot();
 		});
 
 		it("introduces multiple binders under existing environment entries", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 			const xtended = F.pipe(
 				ctx,
 				ctx => EB.bind(ctx, { type: "Let", variable: "x" }, NF.Any),
@@ -399,19 +374,16 @@ describe("Normalization: generalization", () => {
 			const meta2 = NF.Constructors.Flex({ type: "Meta", val: 2, lvl: 0 });
 			const app = NF.Constructors.App(meta1, meta2, "Explicit");
 
-			const [generalized, z] = NF.generalize(app, noMetasTerm, xtended, noResolutions);
-			const extendedCtx = { ...xtended, zonker: z };
+			const [[generalized], registry] = run(xtended, seed([1, NF.Type], [2, NF.Type]), () => NF.generalize(app, noMetasTerm, noResolutions));
+			const disp = shown(xtended, registry);
 
-			const quoted = runNF(extendedCtx, () => NF.quote(xtended.env.length, generalized));
+			const quoted = runNF(xtended, () => NF.quote(xtended.env.length, generalized), registry);
 
-			expect({ nf: NF.display(generalized, extendedCtx), eb: EB.Display.Term(quoted, extendedCtx) }).toMatchSnapshot();
+			expect({ nf: disp(() => NF.display(generalized)), eb: disp(() => EB.Display.Term(quoted)) }).toMatchSnapshot();
 		});
 
 		it("handles pi types under existing environment entries", () => {
 			const ctx = mkCtx();
-			// Create three metas
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			const xtended = F.pipe(
 				ctx,
@@ -425,23 +397,21 @@ describe("Normalization: generalization", () => {
 
 			// ?1 -> ?2
 			const pi = NF.Constructors.Pi("x", "Explicit", meta1, NF.Constructors.Closure(xtended, meta2));
-			const [generalized, z] = NF.generalize(pi, noMetasTerm, xtended, noResolutions);
-			const extendedCtx = { ...xtended, zonker: z };
+			const [[generalized], registry] = run(xtended, seed([1, NF.Type], [2, NF.Type]), () => NF.generalize(pi, noMetasTerm, noResolutions));
+			const disp = shown(xtended, registry);
 
-			const quoted = runNF(extendedCtx, () => NF.quote(xtended.env.length, generalized));
-			expect({ nf: NF.display(generalized, extendedCtx), eb: EB.Display.Term(quoted, extendedCtx) }).toMatchSnapshot();
+			const quoted = runNF(xtended, () => NF.quote(xtended.env.length, generalized), registry);
+			expect({ nf: disp(() => NF.display(generalized)), eb: disp(() => EB.Display.Term(quoted)) }).toMatchSnapshot();
 		});
 	});
 
 	describe("instantiate", () => {
 		it("instantiates unconstrained Type meta to Any", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-
 			const meta = NF.Constructors.Var({ type: "Meta", val: 1, lvl: 0 });
 
-			const instantiated = NF.instantiate(meta, ctx);
-			const nf = NF.display(instantiated, ctx);
+			const [instantiated, registry] = run(ctx, seed([1, NF.Type]), () => NF.instantiate(meta));
+			const nf = shown(ctx, registry)(() => NF.display(instantiated));
 			expect(nf).toBe("Any");
 
 			expect({ nf }).toMatchSnapshot();
@@ -449,12 +419,10 @@ describe("Normalization: generalization", () => {
 
 		it("instantiates unconstrained Row meta to empty row", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBRow };
-
 			const meta = NF.Constructors.Var({ type: "Meta", val: 1, lvl: 0 });
 
-			const instantiated = NF.instantiate(meta, ctx);
-			const nf = NF.display(instantiated, ctx);
+			const [instantiated, registry] = run(ctx, seed([1, NF.Row]), () => NF.instantiate(meta));
+			const nf = shown(ctx, registry)(() => NF.display(instantiated));
 			expect(nf).toBe("[]");
 
 			expect({ nf }).toMatchSnapshot();
@@ -462,13 +430,12 @@ describe("Normalization: generalization", () => {
 
 		it("leaves solved metas unchanged", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.zonker[1] = NF.Constructors.Lit(Lit.Atom("Num"));
+			const seeded = Metas.solve(seed([1, NF.Type]), 1, NF.Constructors.Lit(Lit.Atom("Num")));
 
 			const meta = NF.Constructors.Var({ type: "Meta", val: 1, lvl: 0 });
 
-			const instantiated = NF.instantiate(meta, ctx);
-			const nf = NF.display(instantiated, ctx);
+			const [instantiated, registry] = run(ctx, seeded, () => NF.instantiate(meta));
+			const nf = shown(ctx, registry)(() => NF.display(instantiated));
 			expect(nf).toBe("Num");
 
 			expect({ nf }).toMatchSnapshot();
@@ -478,18 +445,18 @@ describe("Normalization: generalization", () => {
 			const ctx = mkCtx();
 			const numLit = NF.Constructors.Lit(Lit.Num(42));
 
-			const instantiated = NF.instantiate(numLit, ctx);
+			const [instantiated, registry] = run(ctx, Metas.empty, () => NF.instantiate(numLit));
 
-			expect({ nf: NF.display(instantiated, ctx) }).toMatchSnapshot();
+			expect({ nf: shown(ctx, registry)(() => NF.display(instantiated)) }).toMatchSnapshot();
 		});
 
 		it("leaves bound variables unchanged", () => {
 			const ctx = mkCtx();
 			const boundVar = NF.Constructors.Var({ type: "Bound", lvl: 0 });
 
-			const instantiated = NF.instantiate(boundVar, ctx);
+			const [instantiated, registry] = run(ctx, Metas.empty, () => NF.instantiate(boundVar));
 
-			expect({ nf: NF.display(instantiated, ctx) }).toMatchSnapshot();
+			expect({ nf: shown(ctx, registry)(() => NF.display(instantiated)) }).toMatchSnapshot();
 		});
 	});
 
@@ -509,50 +476,48 @@ describe("Normalization: generalization", () => {
 
 			expect(trimmed.closure.ctx.env).toHaveLength(0);
 
-			expect({ nf: NF.display(trimmed, ctx) }).toMatchSnapshot();
+			expect({ nf: shown(ctx, Metas.empty)(() => NF.display(trimmed)) }).toMatchSnapshot();
 		});
 	});
 
 	describe("integration: generalize + instantiate round-trip", () => {
 		it("generalizes and then instantiates a polymorphic type", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-
 			const meta = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 
-			const [generalized, z] = NF.generalize(meta, noMetasTerm, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
-			const instantiated = NF.instantiate(generalized, extendedCtx);
+			const [[generalized, instantiated], registry] = run(ctx, seed([1, NF.Type]), function* () {
+				const [g] = yield* NF.generalize(meta, noMetasTerm, noResolutions);
+				return [g, yield* NF.instantiate(g)] as const;
+			});
+			const disp = shown(ctx, registry);
 
 			expect({
-				generalized: NF.display(generalized, extendedCtx),
-				instantiated: NF.display(instantiated, extendedCtx),
+				generalized: disp(() => NF.display(generalized)),
+				instantiated: disp(() => NF.display(instantiated)),
 			}).toMatchSnapshot();
 		});
 
 		it("generalizes a function type and instantiates it", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
 			const piType = NF.Constructors.Pi("x", "Explicit", meta1, NF.Constructors.Closure(ctx, meta2));
 
-			const [generalized, z] = NF.generalize(piType, noMetasTerm, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
-			const instantiated = NF.instantiate(generalized, extendedCtx);
+			const [[generalized, instantiated], registry] = run(ctx, seed([1, NF.Type], [2, NF.Type]), function* () {
+				const [g] = yield* NF.generalize(piType, noMetasTerm, noResolutions);
+				return [g, yield* NF.instantiate(g)] as const;
+			});
+			const disp = shown(ctx, registry);
 
 			expect({
-				generalized: NF.display(generalized, extendedCtx),
-				instantiated: NF.display(instantiated, extendedCtx),
+				generalized: disp(() => NF.display(generalized)),
+				instantiated: disp(() => NF.display(instantiated)),
 			}).toMatchSnapshot();
 		});
 
 		it("generalizes metas in term and type, then instantiates", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			// Type has ?1
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -560,20 +525,20 @@ describe("Normalization: generalization", () => {
 			// Term has ?2
 			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
 
-			const [generalized, z] = NF.generalize(meta1, meta2, ctx, noResolutions);
-			const extendedCtx = { ...ctx, zonker: z };
-			const instantiated = NF.instantiate(generalized, extendedCtx);
+			const [[generalized, instantiated], registry] = run(ctx, seed([1, NF.Type], [2, NF.Type]), function* () {
+				const [g] = yield* NF.generalize(meta1, meta2, noResolutions);
+				return [g, yield* NF.instantiate(g)] as const;
+			});
+			const disp = shown(ctx, registry);
 
 			expect({
-				generalized: NF.display(generalized, extendedCtx),
-				instantiated: NF.display(instantiated, extendedCtx),
+				generalized: disp(() => NF.display(generalized)),
+				instantiated: disp(() => NF.display(instantiated)),
 			}).toMatchSnapshot();
 		});
 
 		it("generalizes with resolutions and then instantiates", () => {
 			const ctx = mkCtx();
-			ctx.metas[1] = { meta: EB.Constructors.Vars.Meta(1, 0), ann: EBType };
-			ctx.metas[2] = { meta: EB.Constructors.Vars.Meta(2, 0), ann: EBType };
 
 			// Type has ?1
 			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
@@ -582,13 +547,15 @@ describe("Normalization: generalization", () => {
 
 			const resolutions: EB.Resolutions = { 2: NF.Constructors.Lit(Lit.Atom("Num")) };
 
-			const [generalized, z] = NF.generalize(meta1, meta2, ctx, resolutions);
-			const extendedCtx = { ...ctx, zonker: z };
-			const instantiated = NF.instantiate(generalized, extendedCtx);
+			const [[generalized, instantiated], registry] = run(ctx, seed([1, NF.Type], [2, NF.Type]), function* () {
+				const [g] = yield* NF.generalize(meta1, meta2, resolutions);
+				return [g, yield* NF.instantiate(g)] as const;
+			});
+			const disp = shown(ctx, registry);
 
 			expect({
-				generalized: NF.display(generalized, extendedCtx),
-				instantiated: NF.display(instantiated, extendedCtx),
+				generalized: disp(() => NF.display(generalized)),
+				instantiated: disp(() => NF.display(instantiated)),
 			}).toMatchSnapshot();
 		});
 	});

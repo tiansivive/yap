@@ -3,10 +3,10 @@ import { describe, it, expect } from "vitest";
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Lit from "@yap/shared/literals";
-import { mkCtx, runNF } from "../../inference/__tests__/util";
+import { mkCtx, runNF, shown } from "../../inference/__tests__/util";
 import * as Metas from "@yap/elaboration/shared/metas";
 
-const show = (v: NF.Value, ctx: EB.Context) => NF.display(v, { env: ctx.env, zonker: ctx.zonker, metas: ctx.metas });
+const show = (v: NF.Value, ctx: EB.Context, registry: Metas.Registry = {}) => shown(ctx, registry)(() => NF.display(v));
 
 describe("Normalization: force() and apply()", () => {
 	it("force resolves flexible metas via zonker mapping", () => {

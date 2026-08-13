@@ -1,18 +1,19 @@
 import Nearley from "nearley";
 import Grammar from "@yap/src/grammar";
 import * as Src from "@yap/src/index";
+import * as Eff from "@yap/utils/effects";
 import * as EB from "@yap/elaboration";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
+import * as Errors from "@yap/elaboration/shared/errors";
 import * as NF from "@yap/elaboration/normalization";
-import * as V2 from "@yap/elaboration/shared/monad.v2";
 import * as GRAM from "@yap/gram";
 import * as E from "fp-ts/lib/Either";
 import * as T from "fp-ts/lib/These";
 import * as O from "fp-ts/lib/Option";
-import * as A from "fp-ts/lib/Array";
 import * as RNEA from "fp-ts/lib/ReadonlyNonEmptyArray";
-import { pipe } from "fp-ts/lib/function";
 import { match } from "ts-pattern";
-import { update, set } from "@yap/utils";
+import { set } from "@yap/utils";
 import { defaultContext } from "@yap/shared/lib/constants";
 import { ARITIES } from "../../../lowering/shared/primops";
 import type { Module } from "../../../lowering/mir";
@@ -30,6 +31,7 @@ import { Print as IVLPrint } from "../../../verification/solver/ivl/print";
 import { Solver } from "../../../verification/solver/v2/solver";
 import * as Replay from "../../../verification/solver/v2/trace/replay";
 import { Validity } from "../../../verification/validity";
+import { shown } from "../../../elaboration/inference/__tests__/util";
 
 type StageName = "elaborated" | "type" | "normalized" | "ivl" | "validity" | "solverTrace" | "gram" | "mir" | "codegenJS" | "codegenC" | "codegenErlang";
 export type StageResults = { readonly [K in StageName]: string };
@@ -47,11 +49,15 @@ type Elaborated = {
 	readonly tm: EB.Term;
 	readonly ty: NF.Value;
 	readonly ctx: EB.Context;
+	readonly registry: Metas.Registry;
 };
 
 const safe = <A>(fn: () => A): E.Either<string, A> => E.tryCatch(fn, e => (e instanceof Error ? e.message : String(e)));
 
-const flatten = <A>(result: E.Either<V2.Err, A>): E.Either<string, A> => E.mapLeft(EB.V2.display)(result);
+/** Errors render at a boundary run over their own captured scope. */
+const rendered = (e: M.Err): string => Eff.run(() => Errors.display(e), [M.reader.handlers(e.ctx), Metas.registry.handlers({})])[0];
+
+const flatten = <A>(result: E.Either<M.Err, A>): E.Either<string, A> => E.mapLeft(rendered)(result);
 
 const get = E.getOrElse((): string => "");
 
@@ -65,12 +71,27 @@ const errs = (rs: ReadonlyArray<E.Either<string, unknown>>): ReadonlyArray<strin
 
 const toThese = <A>(errors: ReadonlyArray<string>, value: A): T.These<ReadonlyArray<string>, A> => T.rightOrBoth(value)(RNEA.fromReadonlyArray(errors));
 
-const pipeline = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, parentBinders?: ReadonlyArray<string>): T.These<ReadonlyArray<string>, StageResults> => {
+const pipeline = (
+	tm: EB.Term,
+	ty: NF.Value,
+	ctx: EB.Context,
+	registry: Metas.Registry,
+	parentBinders?: ReadonlyArray<string>,
+): T.These<ReadonlyArray<string>, StageResults> => {
 	const db = { deBruijn: false };
+	const disp = shown(ctx, registry);
 
-	const elaborated = safe(() => EB.Display.Term(tm, ctx, db));
-	const type = E.chain((q: EB.Term) => safe(() => EB.Display.Term(q, ctx, db)))(safe(() => EB.NF.quote(ctx, ctx.env.length, ty)));
-	const normalized = E.chain((nf: NF.Value) => safe(() => EB.NF.display(nf, ctx, db)))(safe(() => EB.NF.evaluate(ctx, tm)));
+	const elaborated = safe(() => disp(() => EB.Display.Term(tm, db)));
+	const type = safe(() =>
+		disp(function* () {
+			return yield* EB.Display.Term(yield* NF.quote(ctx.env.length, ty), db);
+		}),
+	);
+	const normalized = safe(() =>
+		disp(function* () {
+			return yield* NF.display(yield* NF.evaluate(tm), db);
+		}),
+	);
 
 	Build.simplify = true; // global state required by the verification library
 	const verified = safe(() => {
@@ -78,7 +99,7 @@ const pipeline = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, parentBinders?: Re
 		const [{ result }] = svc.check(tm, ty)(ctx);
 		return result;
 	});
-	const artefacts = E.map((r: E.Either<V2.Err, VerificationArtefacts>) => O.fromEither(r))(verified);
+	const artefacts = E.map((r: E.Either<M.Err, VerificationArtefacts>) => O.fromEither(r))(verified);
 	const ivl = E.chain(
 		O.fold(
 			() => E.right<string, string>(""),
@@ -114,7 +135,7 @@ const pipeline = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, parentBinders?: Re
 			(e: GRAM.Pipeline.CompileError) => E.left<string, GRAM.Graph>(`GRAM: ${JSON.stringify(e)}`),
 			(g: GRAM.Graph) => E.right<string, GRAM.Graph>(g),
 		),
-	)(safe(() => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities, parentBinders })));
+	)(safe(() => GRAM.Pipeline.compile(tm, { zonker: Metas.solutions(registry), arities, parentBinders })));
 	const gram = E.chain((g: GRAM.Graph) => safe(() => GRAM.display(g)))(gramGraph);
 	const mod = E.chain((g: GRAM.Graph) => safe(() => GRAM.Bridge.emit(g)))(gramGraph);
 	const mir = E.chain((m: Module) => safe(() => MIR.display.module(m)))(mod);
@@ -140,59 +161,44 @@ const pipeline = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, parentBinders?: Re
 };
 
 const Elaborate = {
-	foreign: (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context): E.Either<string, EB.Context> =>
-		pipe(
-			safe(() => EB.check(stmt.annotation, NF.Type)(ctx)),
-			E.chain(([{ result }]) => flatten(result)),
-			E.chain(([tm]) =>
-				safe(() => {
-					const nf = NF.evaluate(ctx, tm);
-					const v = EB.Constructors.Var({ type: "Foreign", name: stmt.variable });
-					const ar = NF.arity(ctx, nf);
-					const compute = (...args: NF.Value[]) => {
-						const ext = NF.Constructors.External(stmt.variable, ar, compute, args);
-						return NF.Constructors.Neutral("Sealed", ext);
-					};
-					const c1 = set(ctx, ["imports", stmt.variable] as const, [v, nf, []] satisfies EB.AST);
-					return set(c1, ["ffi", stmt.variable] as const, { arity: ar, compute });
-				}),
-			),
-		),
+	foreign: (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context, boundary: EB.Mod.Boundary): E.Either<string, [EB.Context, EB.Mod.Boundary]> => {
+		const [, result, next] = EB.Mod.foreign(stmt, ctx, boundary);
 
-	using: (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.Context): E.Either<string, EB.Context> =>
-		pipe(
-			safe(() => EB.Stmt.infer(stmt)(ctx)),
-			E.chain(([{ result }]) => flatten(result)),
-			E.map(([t, ty]) => update(ctx, "implicits", A.append<EB.Context["implicits"][number]>([NF.evaluate(ctx, t.value, { noInlineBindings: true }), ty]))),
-		),
+		return E.map(([, c1, decl]: [EB.AST, EB.Context, { arity: number }]): [EB.Context, EB.Mod.Boundary] => {
+			const compute = (...args: NF.Value[]): NF.Value => {
+				const ext = NF.Constructors.External(stmt.variable, decl.arity, compute, args);
+				return NF.Constructors.Neutral("Sealed", ext);
+			};
+			return [set(c1, ["ffi", stmt.variable] as const, { arity: decl.arity, compute }), next];
+		})(flatten(result));
+	},
 
-	letdec: (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): E.Either<string, Elaborated> =>
-		pipe(
-			safe(() =>
-				V2.Do(function* () {
-					const [elaborated, , us] = yield* EB.Stmt.infer.gen(stmt);
+	using: (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.Context, boundary: EB.Mod.Boundary): E.Either<string, [EB.Context, EB.Mod.Boundary]> => {
+		const [result, next] = EB.Mod.using(stmt, ctx, boundary);
 
-					if (elaborated.type !== "Let") {
-						throw new Error("Expected Let from let inference");
-					}
-					const [r, next] = yield* EB.Stmt.letdec(elaborated);
-					return { r, us, next };
-				})(ctx),
-			),
-			E.chain(([{ result }]) => flatten(result)),
-			E.map(({ r, us, next }) => ({
-				tm: r.value,
-				ty: r.annotation,
-				ctx: set(next, ["imports", stmt.variable] as const, [r.value, r.annotation, us] satisfies EB.AST),
-			})),
-		),
+		return E.map((c: EB.Context): [EB.Context, EB.Mod.Boundary] => [c, next])(flatten(result));
+	},
 
-	expression: (stmt: Extract<Src.Statement, { type: "expression" }>, ctx: EB.Context): E.Either<string, Elaborated> =>
-		pipe(
-			safe(() => EB.Mod.expression(stmt, ctx)),
-			E.chain(flatten),
-			E.map(([tm, ty, , next]) => ({ tm, ty, ctx: next })),
-		),
+	letdec: (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context, boundary: EB.Mod.Boundary): E.Either<string, [Elaborated, EB.Mod.Boundary]> => {
+		const [, result, next] = EB.Mod.letdec(stmt, ctx, boundary);
+
+		return E.map(([[tm, ty], nextCtx]: [EB.AST, EB.Context]): [Elaborated, EB.Mod.Boundary] => [{ tm, ty, ctx: nextCtx, registry: next.registry }, next])(
+			flatten(result),
+		);
+	},
+
+	expression: (
+		stmt: Extract<Src.Statement, { type: "expression" }>,
+		ctx: EB.Context,
+		boundary: EB.Mod.Boundary,
+	): E.Either<string, [Elaborated, EB.Mod.Boundary]> => {
+		const [result, next] = EB.Mod.expression(stmt, ctx, boundary);
+
+		return E.map(([tm, ty, , nextCtx]: readonly [EB.Term, NF.Value, unknown, EB.Context, unknown]): [Elaborated, EB.Mod.Boundary] => [
+			{ tm, ty, ctx: nextCtx, registry: next.registry },
+			next,
+		])(flatten(result));
+	},
 };
 
 const parse = (source: string): ReadonlyArray<Src.Statement> => {
@@ -214,46 +220,48 @@ const reset = () => {
 	NF.resetId();
 };
 
-type Acc = { readonly ctx: EB.Context; readonly declarations: ReadonlyArray<DeclarationResult> };
+type Acc = { readonly ctx: EB.Context; readonly boundary: EB.Mod.Boundary; readonly declarations: ReadonlyArray<DeclarationResult> };
 
 const keep = (acc: Acc, decl: DeclarationResult): Acc => ({
 	ctx: acc.ctx,
+	boundary: acc.boundary,
 	declarations: [...acc.declarations, decl],
 });
 
-const advance = (acc: Acc, decl: DeclarationResult, ctx: EB.Context): Acc => ({
+const advance = (acc: Acc, decl: DeclarationResult, ctx: EB.Context, boundary: EB.Mod.Boundary): Acc => ({
 	ctx,
+	boundary,
 	declarations: [...acc.declarations, decl],
 });
 
-const withContext = (acc: Acc, name: string, kind: DeclarationResult["kind"], result: E.Either<string, EB.Context>): Acc =>
+const withContext = (acc: Acc, name: string, kind: DeclarationResult["kind"], result: E.Either<string, [EB.Context, EB.Mod.Boundary]>): Acc =>
 	E.fold(
 		(error: string) => keep(acc, { name, kind, error }),
-		(ctx: EB.Context) => advance(acc, { name, kind }, ctx),
+		([ctx, boundary]: [EB.Context, EB.Mod.Boundary]) => advance(acc, { name, kind }, ctx, boundary),
 	)(result);
 
-const withStages = (acc: Acc, name: string, kind: DeclarationResult["kind"], result: E.Either<string, Elaborated>): Acc =>
+const withStages = (acc: Acc, name: string, kind: DeclarationResult["kind"], result: E.Either<string, [Elaborated, EB.Mod.Boundary]>): Acc =>
 	E.fold(
 		(error: string) => keep(acc, { name, kind, error }),
-		({ tm, ty, ctx }: Elaborated) =>
+		([{ tm, ty, ctx, registry }, boundary]: [Elaborated, EB.Mod.Boundary]) =>
 			T.fold(
-				(errors: ReadonlyArray<string>) => advance(acc, { name, kind, error: errors.join("; ") }, ctx),
-				(stages: StageResults) => advance(acc, { name, kind, stages }, ctx),
-				(errors: ReadonlyArray<string>, stages: StageResults) => advance(acc, { name, kind, stages, error: errors.join("; ") }, ctx),
-			)(pipeline(tm, ty, ctx, kind === "let" ? [name] : undefined)),
+				(errors: ReadonlyArray<string>) => advance(acc, { name, kind, error: errors.join("; ") }, ctx, boundary),
+				(stages: StageResults) => advance(acc, { name, kind, stages }, ctx, boundary),
+				(errors: ReadonlyArray<string>, stages: StageResults) => advance(acc, { name, kind, stages, error: errors.join("; ") }, ctx, boundary),
+			)(pipeline(tm, ty, ctx, registry, kind === "let" ? [name] : undefined)),
 	)(result);
 
 const process = (acc: Acc, stmt: Src.Statement): Acc =>
 	match(stmt)
-		.with({ type: "foreign" }, s => withContext(acc, s.variable, "foreign", Elaborate.foreign(s, acc.ctx)))
-		.with({ type: "using" }, s => withContext(acc, "(using)", "using", Elaborate.using(s, acc.ctx)))
-		.with({ type: "let" }, s => withStages(acc, s.variable, "let", Elaborate.letdec(s, acc.ctx)))
-		.with({ type: "expression" }, s => withStages(acc, "(expr)", "expression", Elaborate.expression(s, acc.ctx)))
+		.with({ type: "foreign" }, s => withContext(acc, s.variable, "foreign", Elaborate.foreign(s, acc.ctx, acc.boundary)))
+		.with({ type: "using" }, s => withContext(acc, "(using)", "using", Elaborate.using(s, acc.ctx, acc.boundary)))
+		.with({ type: "let" }, s => withStages(acc, s.variable, "let", Elaborate.letdec(s, acc.ctx, acc.boundary)))
+		.with({ type: "expression" }, s => withStages(acc, "(expr)", "expression", Elaborate.expression(s, acc.ctx, acc.boundary)))
 		.otherwise(() => acc);
 
 export const runScript = (source: string): ScriptResult => {
 	reset();
-	return parse(source).reduce(process, { ctx: { ...defaultContext }, declarations: [] });
+	return parse(source).reduce(process, { ctx: { ...defaultContext }, boundary: { registry: Metas.empty, counts: {} }, declarations: [] });
 };
 
 export const snap = (result: ScriptResult) =>

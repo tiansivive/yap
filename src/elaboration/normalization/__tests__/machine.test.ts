@@ -8,7 +8,6 @@ import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "@yap/elaboration/normalization";
 
 import * as Lit from "@yap/shared/literals";
-import * as Sub from "@yap/elaboration/unification/substitution";
 
 const ctx: EB.Context = {
 	env: [],
@@ -16,8 +15,6 @@ const ctx: EB.Context = {
 	labels: {},
 	sigma: {},
 	record: {},
-	zonker: Sub.empty,
-	metas: {},
 	imports: {},
 	ffi: {},
 	trace: [],

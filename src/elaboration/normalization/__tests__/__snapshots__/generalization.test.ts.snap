@@ -67,6 +67,13 @@ exports[`Normalization: generalization > generalize > multiple metas: ?1 ?2 |=> 
 }
 `;
 
+exports[`Normalization: generalization > generalize > preserves already-solved metas 1`] = `
+{
+  "eb": "Π(a: Type) => Π(x: a) -> Num",
+  "nf": "Π(a: Type) => (closure: Π(x: a) -> Num -| Γ: a)",
+}
+`;
+
 exports[`Normalization: generalization > generalize > preserves already-solved metas in zonker 1`] = `
 {
   "eb": "Π(a: Type) => Π(x: a) -> Num",

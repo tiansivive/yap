@@ -15,7 +15,7 @@ describe("inference: projection", () => {
 
 		expect(res.displays.type).toContain("(obj: ?1) -> (closure: (?2 :: Type)");
 		expect(res.displays.constraints).toContain("Schema [ x: ?2 | ?3 ] ~~ ?1");
-		expect(res.structure.metas[3].ann).toMatchObject({ type: "Lit", value: { value: "Row" } });
+		expect(res.structure.metas[3].annotation).toMatchObject({ type: "Lit", value: { value: "Row" } });
 		expect({ displays: res.displays }).toMatchSnapshot();
 	});
 
@@ -25,7 +25,7 @@ describe("inference: projection", () => {
 
 		//expect(res.displays.typedTerms["proj"].type).toContain("(obj: ?1) -> (closure: ?2 [ x: ?4 | ?5 ]");
 		// expect(res.displays.constraints).toContain("(?2) [ x: ?4 | ?5 ] ~~ ?1");
-		// expect(res.structure.metas[5].ann).toMatchObject({ type: "Lit", value: { value: "Row"} });
+		// expect(res.structure.metas[5].annotation).toMatchObject({ type: "Lit", value: { value: "Row"} });
 		expect({ displays: res.displays }).toMatchSnapshot();
 	});
 

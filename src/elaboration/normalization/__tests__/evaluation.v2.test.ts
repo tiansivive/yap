@@ -3,12 +3,12 @@ import { describe, it, expect } from "vitest";
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 
-import { elaborateFrom, mkCtx, runNF } from "../../inference/__tests__/util";
-import { update } from "@yap/utils";
+import { elaborateFrom, mkCtx, runNF, shown } from "../../inference/__tests__/util";
+import * as Metas from "@yap/elaboration/shared/metas";
 
 const ctxFor = (base = mkCtx()) => base;
 
-const show = (v: NF.Value, ctx: EB.Context) => NF.display(v, { env: ctx.env, zonker: ctx.zonker, metas: ctx.metas });
+const show = (v: NF.Value, ctx: EB.Context, registry: Metas.Registry = {}) => shown(ctx, registry)(() => NF.display(v));
 
 describe("Normalization v2 (stack-based): evaluation / reduce / matching", () => {
 	it("evaluates literals and arithmetic to WHNF", () => {
@@ -168,14 +168,14 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 				return while;
 			}`;
 
-			const { structure, displays, zonker } = elaborateFrom(src);
-			const ctx = update(ctxFor(mkCtx()), "zonker", z => ({ ...z, ...zonker }));
+			const { structure, displays } = elaborateFrom(src);
+			const ctx = ctxFor(mkCtx());
 
 			const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 			//expect(nf.type).toBe("Lit");
 			expect({
 				displays,
-				evaluation: show(nf, ctx),
+				evaluation: show(nf, ctx, structure.metas),
 			}).toMatchSnapshot();
 		});
 	});
