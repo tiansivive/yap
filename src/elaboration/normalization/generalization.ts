@@ -102,8 +102,6 @@ export const generalize = function* (ty: NF.Value, tm: EB.Term, resolutions: EB.
 		},
 		{ ctx, subst: Sub.empty },
 	);
-	const next = yield* Metas.registry.modify(current => Metas.withSolutions(current, subst));
-
 	// Wrap from inner to outer. Each Pi body is quoted with lvl equal to the number of binders in scope.
 	const wrap = function* (body: NF.Value, rest: readonly Meta[], i: number): Generalization<NF.Value> {
 		if (rest.length === 0) {
@@ -114,11 +112,21 @@ export const generalize = function* (ty: NF.Value, tm: EB.Term, resolutions: EB.
 		const trimmed = update(extendedCtx, "env", e => e.slice(i)); // trim the already introduced binders from the env for quoting
 		// Quote with all binders in scope: lvl = ms.length - i
 		const term = yield* M.reader.local(_ => trimmed, NF.quote(ctx.env.length + ms.length - i, body));
-		const { annotation } = next[m.val];
+		const { annotation } = registry[m.val];
 		const closureCtx = update(trimmed, "env", e => e.slice(1)); // drop the binder we are introducing now so it doesn't get captured in the closure
 		return yield* wrap(NF.Constructors.Pi(variable, "Implicit", annotation, NF.Constructors.Closure(closureCtx, term)), tail, i + 1);
 	};
 	const generalized = yield* wrap(ty, A.reverse(ms), 0);
+
+	/*
+	 * Recorded after the wrap, never before: the binders these metas map to only exist
+	 * in the telescope, so the mapping must not be readable while the body is being
+	 * quoted. Quoting descends into each closure's own spine, where that level denotes
+	 * a different binder — v2 got this from the zonker riding the ctx that quote swapped.
+	 * The metas stay symbolic in the generalized syntax and resolve at use, once the
+	 * telescope binder is actually in scope.
+	 */
+	yield* Metas.registry.modify(current => Metas.withSolutions(current, subst));
 
 	return [generalized, true];
 };
@@ -179,7 +187,6 @@ export const abstract = function* (ty: NF.Value, value: NF.Value, resolutions: E
 	const { entries, ctx: xtended } = yield* extend({ ctx, entries: [] }, ms, 0);
 
 	const subst = entries.reduce((sub, { meta, val }) => ({ ...sub, [meta.val]: val }), Sub.empty);
-	const next = yield* Metas.registry.modify(current => Metas.withSolutions(current, subst));
 
 	const wrap = function* (body: NF.Value, rest: readonly Entry[], i: number): Abstraction<NF.Value> {
 		if (rest.length === 0) {
@@ -189,7 +196,7 @@ export const abstract = function* (ty: NF.Value, value: NF.Value, resolutions: E
 		const variable = xtended.env[i].name.variable;
 		const trimmed = update(xtended, "env", env => env.slice(i));
 		const term = yield* M.reader.local(_ => trimmed, NF.quote(ctx.env.length + ms.length - i, body));
-		const { annotation } = next[meta.val];
+		const { annotation } = registry[meta.val];
 		const closureCtx = update(trimmed, "env", env => env.slice(1));
 		return yield* wrap(NF.Constructors.Pi(variable, "Implicit", annotation, NF.Constructors.Closure(closureCtx, term)), tail, i + 1);
 	};
@@ -197,6 +204,10 @@ export const abstract = function* (ty: NF.Value, value: NF.Value, resolutions: E
 
 	const body = yield* M.reader.local(_ => xtended, NF.quote(xtended.env.length, value));
 	const term = A.reverse(entries).reduce((body, { binding }) => EB.Constructors.Abs(binding, body), body);
+
+	/* As in generalize: the mapping is only readable once the inserted binders are in scope. */
+	yield* Metas.registry.modify(current => Metas.withSolutions(current, subst));
+
 	return { term, type };
 };
 
