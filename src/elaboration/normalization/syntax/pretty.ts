@@ -10,13 +10,14 @@ import * as R from "@yap/shared/rows";
 import * as Eff from "@yap/utils/effects";
 
 import * as EB from "@yap/elaboration";
+import { options } from "@yap/shared/config/options";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
-import { bound, Display, rowDocs } from "@yap/elaboration/pretty/pretty";
+import { bound, Display, type Opts, rowDocs } from "@yap/elaboration/pretty/pretty";
 
 const identityRow = { term: (d: PP.Doc) => d, var: (v: PP.Doc) => v };
 
-export const doc = function* (value: NF.Value, opts = { deBruijn: false }): Display<PP.Doc> {
+export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false }): Display<PP.Doc> {
 	const go = (v: NF.Value) => doc(v, opts);
 
 	return yield* match(value)
@@ -42,7 +43,13 @@ export const doc = function* (value: NF.Value, opts = { deBruijn: false }): Disp
 				})
 				.with({ type: "Meta" }, function* ({ val }) {
 					const entry = (yield* Metas.registry.get())[val];
-					return entry?.solution ? yield* go(entry.solution) : `?${val}`;
+					if (entry?.solution) {
+						return yield* go(entry.solution);
+					}
+					if (opts.annotated && options.verbose && entry) {
+						return ["(?", `${val}`, " :: ", yield* go(entry.annotation), ")"] satisfies PP.Doc;
+					}
+					return `?${val}`;
 				})
 				.exhaustive();
 		})
@@ -121,6 +128,6 @@ export const doc = function* (value: NF.Value, opts = { deBruijn: false }): Disp
 		.exhaustive();
 };
 
-export const display = function* (value: NF.Value, opts = { deBruijn: false }): Display<string> {
+export const display = function* (value: NF.Value, opts: Opts = { deBruijn: false }): Display<string> {
 	return PP.render(yield* doc(value, opts));
 };

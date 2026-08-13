@@ -18,7 +18,14 @@ import { options } from "@yap/shared/config/options";
 /** Display's row: the ambient scope and the metacontext, read-only. */
 export type Display<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Only<typeof Metas.registry, "Registry.get">, A>;
 
-type Opts = { deBruijn: boolean; printEnv?: boolean };
+/*
+ * `annotated` renders an unsolved meta as `(?n :: <its annotation>)`.  v2 got
+ * this for free: a meta's annotation was a Term, so it went through the term
+ * printer, which annotates, while semantic values went through NbE's, which
+ * does not.  Annotations are semantic now, so the two printers share one flag
+ * and it descends with the annotation being rendered.
+ */
+export type Opts = { deBruijn: boolean; printEnv?: boolean; annotated?: boolean };
 
 /*
  * Display's binder descent: v2's name-only entry, through the reader. The
@@ -77,7 +84,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 						return yield* NF.doc(entry.solution, opts);
 					}
 					if (options.verbose && entry) {
-						return ["(?", `${val}`, " :: ", yield* NF.doc(entry.annotation, opts), ")"] satisfies PP.Doc;
+						return ["(?", `${val}`, " :: ", yield* NF.doc(entry.annotation, { ...opts, annotated: true }), ")"] satisfies PP.Doc;
 					}
 					return `?${val}`;
 				})

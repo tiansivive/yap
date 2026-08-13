@@ -34,6 +34,17 @@ export const solution = (metas: Registry, id: number): NF.Value | undefined => m
 export const solutions = (metas: Registry): Sub.Subst =>
 	Sub.from(Object.fromEntries(Object.values(metas).flatMap(entry => (entry.solution ? [[entry.meta.val, entry.solution]] : []))));
 
+/**
+ * The metacontext with its solutions dropped: annotations and syntax only.
+ *
+ * Display expands a meta it can see a solution for, so what a rendering shows
+ * is decided by the registry it runs against. Constraints are the record of
+ * what unification was asked to do, so they render against this view — a
+ * constraint that reads `Num ~~ Num` after the fact says nothing.
+ */
+export const unsolved = (metas: Registry): Registry =>
+	Object.fromEntries(Object.entries(metas).map(([id, { meta, annotation }]) => [id, { meta, annotation }]));
+
 export const withSolutions = (metas: Registry, subst: Sub.Subst): Registry =>
 	Object.entries(subst).reduce((entries, [id, value]) => solve(entries, Number(id), value), metas);
 
