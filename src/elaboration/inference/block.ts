@@ -24,7 +24,25 @@ export const infer = (block: Block): M.Elaboration<EB.AST> =>
 			}
 
 			const [current, ...rest] = stmts;
-			const [stmt, _sty, sus] = yield* EB.Stmt.infer(current);
+
+			/*
+			 * A statement's constraints are its own. letdec solves what this statement told,
+			 * not everything the block has told so far — re-solving an earlier statement's
+			 * constraints would re-resolve metas that its generalization has since bound to
+			 * telescope levels, against the spines those values were built on. v2 got the
+			 * scope from listen; peek would hand over the whole block.
+			 *
+			 * The wrapper exists only to keep infer and letdec in one scope — letdec reads
+			 * its constraints with peek, so the caller has to bracket both. That belongs in
+			 * the let rule itself: z-yap/zettels/letdec-boundary-split.md.
+			 */
+			const [[stmt, sus, declared]] = yield* M.writer.listen(
+				(function* () {
+					const [elaborated, , usages] = yield* EB.Stmt.infer(current);
+
+					return [elaborated, usages, elaborated.type === "Let" ? yield* EB.Stmt.letdec(elaborated) : undefined] as const;
+				})(),
+			);
 
 			if (stmt.type === "Using") {
 				type Implicit = EB.Context["implicits"][0];
@@ -33,23 +51,23 @@ export const infer = (block: Block): M.Elaboration<EB.AST> =>
 				return yield* M.reader.local(ctx => update(ctx, "implicits", A.append<Implicit>([nfValue, stmt.annotation])), recurse(rest, [...results, stmt]));
 			}
 
-			if (stmt.type !== "Let") {
+			if (!declared) {
 				return yield* recurse(rest, [...results, stmt]);
 			}
 
-			const [r, next] = yield* EB.Stmt.letdec(stmt);
+			const [r, next] = declared;
 
 			// First evaluate the current let body in a context extended with itself, allowing for recursion
 			// Then extend the context for the remaining statements with the evaluated let binding
-			const recursiveCtx = EB.bind(next, { type: "Let", variable: stmt.variable }, r.annotation);
+			const recursiveCtx = EB.bind(next, { type: "Let", variable: r.variable }, r.annotation);
 			const nf = yield* M.reader.local(_ => recursiveCtx, NF.normalize(r.value));
 
 			return yield* M.reader.local(
 				_ => {
 					const entry: EB.Context["env"][number] = {
 						nf,
-						type: [{ type: "Let", variable: stmt.variable }, "source", r.annotation],
-						name: { type: "Let", variable: stmt.variable },
+						type: [{ type: "Let", variable: r.variable }, "source", r.annotation],
+						name: { type: "Let", variable: r.variable },
 					};
 					return update(next, "env", env => [entry, ...env]);
 				},
@@ -76,9 +94,8 @@ const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]):
 		return [tm, ty, Q.noUsage(env.length)] satisfies EB.AST;
 	}
 
-	const [t, ty, rus] = yield* EB.infer(ret);
-
-	const { constraints } = yield* M.writer.peek();
+	/* The return's own constraints, for the same reason the statements scope theirs. */
+	const [[t, ty, rus], { constraints }] = yield* M.writer.listen(EB.infer(ret));
 
 	const { resolutions } = yield* EB.solve(constraints);
 	const value = yield* NF.normalize(t, { noInlineBindings: true });

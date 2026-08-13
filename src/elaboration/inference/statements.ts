@@ -67,6 +67,13 @@ export const infer = (stmt: Src.Statement): M.Elaboration<ElaboratedStmt> =>
 			}),
 	);
 
+/*
+ * The let boundary, not inference: solve this declaration's constraints, generalize,
+ * instantiate, wrap the inserted implicit lambdas. Reading the constraints with peek
+ * makes the caller responsible for the scope, and the returned context is the ambient
+ * one unchanged — both are why this wants folding into infer's let case:
+ * z-yap/zettels/letdec-boundary-split.md.
+ */
 export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M.Elaboration<[Extract<EB.Statement, { type: "Let" }>, EB.Context]> {
 	const ctx = yield* M.reader.ask();
 	const { constraints } = yield* M.writer.peek();
