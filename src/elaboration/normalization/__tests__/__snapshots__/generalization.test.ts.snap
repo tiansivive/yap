@@ -15,8 +15,8 @@ exports[`Normalization: generalization > generalize > generalizes metas in both 
 
 exports[`Normalization: generalization > generalize > handles pi types under existing environment entries 1`] = `
 {
-  "eb": "Π(x: ?1) -> Num",
-  "nf": "Π(x: ?1) -> (closure: Num -| Γ: x; two; one)",
+  "eb": "Π(a: Type) => Π(b: Type) => Π(x: a) -> b",
+  "nf": "Π(a: Type) => (closure: Π(b: Type) => Π(x: a) -> b -| Γ: a; two; one)",
 }
 `;
 
@@ -42,15 +42,21 @@ exports[`Normalization: generalization > generalize > ignores resolved metas in 
 
 exports[`Normalization: generalization > generalize > introduces binder under existing environment entries 1`] = `
 {
-  "eb": "?1",
-  "nf": "?1",
+  "eb": "Π(a: Type) => a",
+  "nf": "Π(a: Type) => (closure: a -| Γ: a; x)",
 }
 `;
 
 exports[`Normalization: generalization > generalize > introduces multiple binders under existing environment entries 1`] = `
 {
-  "eb": "?1 Num",
-  "nf": "(?1) Num",
+  "eb": "Π(a: Type) => Π(b: Type) => a b",
+  "nf": "Π(a: Type) => (closure: Π(b: Type) => a b -| Γ: a; y; x)",
+}
+`;
+
+exports[`Normalization: generalization > generalize > leaves metas from outer scopes alone 1`] = `
+{
+  "nf": "(?1) ?2",
 }
 `;
 
@@ -68,13 +74,6 @@ exports[`Normalization: generalization > generalize > multiple metas: ?1 ?2 |=> 
 `;
 
 exports[`Normalization: generalization > generalize > preserves already-solved metas 1`] = `
-{
-  "eb": "Π(a: Type) => Π(x: a) -> Num",
-  "nf": "Π(a: Type) => (closure: Π(x: a) -> Num -| Γ: a)",
-}
-`;
-
-exports[`Normalization: generalization > generalize > preserves already-solved metas in zonker 1`] = `
 {
   "eb": "Π(a: Type) => Π(x: a) -> Num",
   "nf": "Π(a: Type) => (closure: Π(x: a) -> Num -| Γ: a)",
@@ -151,29 +150,29 @@ exports[`Normalization: generalization > instantiate > leaves solved metas uncha
 
 exports[`Normalization: generalization > integration: generalize + instantiate round-trip > generalizes a function type and instantiates it 1`] = `
 {
-  "generalized": "Π(x: Num) -> (closure: Num -| Γ: x)",
-  "instantiated": "Π(x: Num) -> (closure: Num -| Γ: x)",
+  "generalized": "Π(a: Type) => (closure: Π(b: Type) => Π(x: a) -> b -| Γ: a)",
+  "instantiated": "Π(a: Type) => (closure: Π(b: Type) => Π(x: a) -> b -| Γ: a)",
 }
 `;
 
 exports[`Normalization: generalization > integration: generalize + instantiate round-trip > generalizes and then instantiates a polymorphic type 1`] = `
 {
-  "generalized": "Num",
-  "instantiated": "Num",
+  "generalized": "Π(a: Type) => (closure: a -| Γ: a)",
+  "instantiated": "Π(a: Type) => (closure: a -| Γ: a)",
 }
 `;
 
 exports[`Normalization: generalization > integration: generalize + instantiate round-trip > generalizes metas in term and type, then instantiates 1`] = `
 {
-  "generalized": "Num",
-  "instantiated": "Num",
+  "generalized": "Π(a: Type) => (closure: Π(b: Type) => a -| Γ: a)",
+  "instantiated": "Π(a: Type) => (closure: Π(b: Type) => a -| Γ: a)",
 }
 `;
 
 exports[`Normalization: generalization > integration: generalize + instantiate round-trip > generalizes with resolutions and then instantiates 1`] = `
 {
-  "generalized": "Num",
-  "instantiated": "Num",
+  "generalized": "Π(a: Type) => (closure: a -| Γ: a)",
+  "instantiated": "Π(a: Type) => (closure: a -| Γ: a)",
 }
 `;
 

@@ -475,7 +475,15 @@ function* evalRowPush(row: EB.Row): Evaluation<void> {
 
 					yield* match(solved)
 						.with({ type: "Row" }, deferred)
-						.with({ type: "Var" }, ({ variable }) => deferred(NF.Constructors.Row({ type: "variable", variable })))
+						/*
+						 * A solution naming a variable is a reference, not an answer: the slot it
+						 * names is where instantiation installs the use site's fresh meta. Quoting
+						 * back to syntax and re-evaluating resolves it against the current scope,
+						 * exactly as the value path does for a solved meta.
+						 */
+						.with({ type: "Var" }, function* ({ variable }) {
+							yield* Stack.eval(yield* Quoting.quote(ctx.env.length, NF.Constructors.Row({ type: "variable", variable })));
+						})
 						.otherwise(nf => {
 							throw new Error("Solved meta in row position is not a row or variable: " + shown(ctx, () => display(nf)));
 						});

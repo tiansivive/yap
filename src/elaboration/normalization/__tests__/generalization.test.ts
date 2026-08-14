@@ -11,8 +11,8 @@ import { mkCtx, runEB, runNF, shown } from "../../inference/__tests__/util";
 
 import * as F from "fp-ts/function";
 
-const seed = (...entries: Array<[number, NF.Value]>): Metas.Registry =>
-	entries.reduce((reg, [val, annotation]) => Metas.register(reg, { meta: EB.Constructors.Vars.Meta(val, 0), annotation }), Metas.empty);
+const seed = (...entries: Array<[number, NF.Value, number?]>): Metas.Registry =>
+	entries.reduce((reg, [val, annotation, lvl = 0]) => Metas.register(reg, { meta: EB.Constructors.Vars.Meta(val, lvl), annotation }), Metas.empty);
 
 /** Runs an elaboration program that must not abort; answers with the final registry. */
 const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () => M.Elaboration<A>): [A, Metas.Registry] => {
@@ -298,7 +298,10 @@ describe("Normalization: generalization", () => {
 			// ?2 is in resolutions (resolved implicitly), so it should not be generalized
 			const resolutions: EB.Resolutions = { 2: NF.Constructors.Lit(Lit.Atom("Num")) };
 
-			const [[generalized], registry] = run(ctx, seed([1, NF.Type], [2, NF.Type]), () => NF.generalize(typeWithMetas, noMetasTerm, resolutions));
+			/* Solve committed ?2 to the registry before handing the same fact over as a resolution. */
+			const seeded = Metas.solve(seed([1, NF.Type], [2, NF.Type]), 2, resolutions[2]);
+
+			const [[generalized], registry] = run(ctx, seeded, () => NF.generalize(typeWithMetas, noMetasTerm, resolutions));
 
 			const nf = shown(ctx, registry)(() => NF.display(generalized));
 			// Should only have one Pi for ?1, not two
@@ -324,9 +327,9 @@ describe("Normalization: generalization", () => {
 			// ?2 is resolved
 			const resolutions: EB.Resolutions = { 2: NF.Constructors.Lit(Lit.Atom("Num")) };
 
-			const [[generalized], registry] = run(ctx, seed([1, NF.Type], [2, NF.Type], [3, NF.Type]), () =>
-				NF.generalize(typeWithMetas, termWithMetas, resolutions),
-			);
+			const seeded = Metas.solve(seed([1, NF.Type], [2, NF.Type], [3, NF.Type]), 2, resolutions[2]);
+
+			const [[generalized], registry] = run(ctx, seeded, () => NF.generalize(typeWithMetas, termWithMetas, resolutions));
 
 			const nf = shown(ctx, registry)(() => NF.display(generalized));
 			// Should have two Pis: for ?1 and ?3 (not ?2, which is resolved)
@@ -353,8 +356,9 @@ describe("Normalization: generalization", () => {
 			const ctx = mkCtx();
 			const xtended = EB.bind(ctx, { type: "Let", variable: "x" }, NF.Any);
 
-			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
-			const [[generalized], registry] = run(xtended, seed([1, NF.Type]), () => NF.generalize(meta1, noMetasTerm, noResolutions));
+			/* Minted under the binding, so the scope filter keeps it: this is the meta of the declaration being generalized. */
+			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 1 });
+			const [[generalized], registry] = run(xtended, seed([1, NF.Type, 1]), () => NF.generalize(meta1, noMetasTerm, noResolutions));
 			const disp = shown(xtended, registry);
 
 			const quoted = runNF(xtended, () => NF.quote(xtended.env.length, generalized), registry);
@@ -370,12 +374,16 @@ describe("Normalization: generalization", () => {
 				ctx => EB.bind(ctx, { type: "Let", variable: "y" }, NF.Any),
 			);
 
-			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
-			const meta2 = NF.Constructors.Flex({ type: "Meta", val: 2, lvl: 0 });
+			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 2 });
+			const meta2 = NF.Constructors.Flex({ type: "Meta", val: 2, lvl: 2 });
 			const app = NF.Constructors.App(meta1, meta2, "Explicit");
 
-			const [[generalized], registry] = run(xtended, seed([1, NF.Type], [2, NF.Type]), () => NF.generalize(app, noMetasTerm, noResolutions));
+			const [[generalized], registry] = run(xtended, seed([1, NF.Type, 2], [2, NF.Type, 2]), () => NF.generalize(app, noMetasTerm, noResolutions));
 			const disp = shown(xtended, registry);
+
+			// The inserted binders sit after the existing env, not on top of x and y
+			expect(Metas.solution(registry, 1)).toMatchObject({ variable: { type: "Bound", lvl: 2 } });
+			expect(Metas.solution(registry, 2)).toMatchObject({ variable: { type: "Bound", lvl: 3 } });
 
 			const quoted = runNF(xtended, () => NF.quote(xtended.env.length, generalized), registry);
 
@@ -392,16 +400,40 @@ describe("Normalization: generalization", () => {
 			);
 
 			// Create a term with both metas
-			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
-			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
+			const meta1 = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 2 });
+			const meta2 = EB.Constructors.Var({ type: "Meta", val: 2, lvl: 2 });
 
 			// ?1 -> ?2
 			const pi = NF.Constructors.Pi("x", "Explicit", meta1, NF.Constructors.Closure(xtended, meta2));
-			const [[generalized], registry] = run(xtended, seed([1, NF.Type], [2, NF.Type]), () => NF.generalize(pi, noMetasTerm, noResolutions));
+			const [[generalized], registry] = run(xtended, seed([1, NF.Type, 2], [2, NF.Type, 2]), () => NF.generalize(pi, noMetasTerm, noResolutions));
 			const disp = shown(xtended, registry);
 
 			const quoted = runNF(xtended, () => NF.quote(xtended.env.length, generalized), registry);
 			expect({ nf: disp(() => NF.display(generalized)), eb: disp(() => EB.Display.Term(quoted)) }).toMatchSnapshot();
+		});
+
+		it("leaves metas from outer scopes alone", () => {
+			const xtended = F.pipe(
+				mkCtx(),
+				ctx => EB.bind(ctx, { type: "Let", variable: "x" }, NF.Any),
+				ctx => EB.bind(ctx, { type: "Let", variable: "y" }, NF.Any),
+			);
+
+			/* Minted before either binding, so they belong to an enclosing scope and are that scope's to generalize. */
+			const app = NF.Constructors.App(
+				NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 }),
+				NF.Constructors.Flex({ type: "Meta", val: 2, lvl: 0 }),
+				"Explicit",
+			);
+
+			const [[generalized, quantified], registry] = run(xtended, seed([1, NF.Type], [2, NF.Type]), () => NF.generalize(app, noMetasTerm, noResolutions));
+
+			expect(quantified).toBe(false);
+			expect(generalized).toBe(app);
+			expect(Metas.solution(registry, 1)).toBeUndefined();
+			expect(Metas.solution(registry, 2)).toBeUndefined();
+
+			expect({ nf: shown(xtended, registry)(() => NF.display(generalized)) }).toMatchSnapshot();
 		});
 	});
 
