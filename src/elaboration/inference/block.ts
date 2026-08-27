@@ -46,7 +46,7 @@ export const infer = (block: Block): M.Elaboration<EB.AST> =>
 
 			if (stmt.type === "Using") {
 				type Implicit = EB.Context["implicits"][0];
-				const nfValue = yield* NF.normalize(stmt.value, { noInlineBindings: true });
+				const nfValue = yield* NF.whnf(stmt.value);
 
 				return yield* M.reader.local(ctx => update(ctx, "implicits", A.append<Implicit>([nfValue, stmt.annotation])), recurse(rest, [...results, stmt]));
 			}
@@ -98,8 +98,9 @@ const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]):
 	const [[t, ty, rus], { constraints }] = yield* M.writer.listen(EB.infer(ret));
 
 	const { resolutions } = yield* EB.solve(constraints);
-	const value = yield* NF.normalize(t, { noInlineBindings: true });
+	const value = yield* NF.whnf(t);
 	const forced = yield* NF.force(ty);
+
 	const generalized = yield* NF.abstract(forced, value, resolutions);
 
 	return [EB.Constructors.Block(results, generalized.term), generalized.type, rus] satisfies EB.AST;

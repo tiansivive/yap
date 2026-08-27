@@ -117,5 +117,16 @@ describe("Shift-reset", () => {
 			expect(pretty).toMatchSnapshot();
 			//expect(structure).toMatchSnapshot();
 		});
+
+		it("multiple resumes with incompatible dependent types", () => {
+			const src = `let test = {
+				let f: (x: Num) -> (match x | 0 -> Num | _ -> String)
+					 = \\x -> match x | 0 -> 0 | _ -> "hello"; 
+				
+				let foo = reset (f (shift ((resume 0) + (resume 10))));
+			}`;
+
+			expect(() => elaborate(src)).toThrow("Cannot unify String with Num");
+		});
 	});
 });

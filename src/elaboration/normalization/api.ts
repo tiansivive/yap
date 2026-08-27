@@ -9,7 +9,7 @@ import * as Arity from "./arity";
 import * as Machine from "./evaluation.v2";
 import * as Quoting from "./quoting";
 import * as Recursion from "./recursion";
-import { callstack, Evaluation } from "./callstack";
+import { callstack, Mode, defaultMode, Evaluation, type EvalMode } from "./callstack";
 import type { Closure, Value } from "./syntax/term";
 
 /*
@@ -24,8 +24,8 @@ import type { Closure, Value } from "./syntax/term";
  */
 
 /** Runs an internal-layer program on a fresh machine. */
-function* fresh<A>(program: () => Evaluation<A>) {
-	const [value] = yield* Eff.with([callstack.handlers()], program);
+function* fresh<A>(program: () => Evaluation<A>, mode: EvalMode = defaultMode) {
+	const [value] = yield* Eff.with([callstack.handlers(), Mode.handlers(mode)], program);
 
 	return value;
 }
@@ -37,6 +37,11 @@ export function* normalize(term: EB.Term, opts?: Machine.EvalOptions) {
 
 export function* evaluate(term: EB.Term, opts?: Machine.EvalOptions) {
 	return yield* fresh(() => Machine.evaluate(term, opts));
+}
+
+/** WHNF: seals bindings and does not reduce eliminations (projections, matches on known values). */
+export function* whnf(term: EB.Term, opts?: Machine.EvalOptions) {
+	return yield* fresh(() => Machine.evaluate(term, opts), { noInlineBindings: true, noReduceEliminations: true });
 }
 
 export function* quote(lvl: number, val: Value) {

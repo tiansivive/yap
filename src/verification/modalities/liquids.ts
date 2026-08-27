@@ -1,5 +1,8 @@
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
+import * as Eff from "@yap/utils/effects";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
 
 import * as Lit from "@yap/shared/literals";
 
@@ -15,13 +18,16 @@ const fresh = () => {
 };
 
 type Predicate = {
-	Kind: (ctx: EB.Context, arg: NF.Value) => NF.Value;
+	Kind: (arg: NF.Value) => Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Actions<typeof Metas.registry>, NF.Value>;
 	Neutral: (ann: EB.Term) => EB.Term;
 	NeutralNF: (ann: NF.Value, ctx: EB.Context) => NF.Value;
 };
 
 export const Predicate: Predicate = {
-	Kind: (ctx: EB.Context, arg: NF.Value) => NF.Constructors.Pi(fresh(), "Explicit", arg, NF.closeVal(ctx, NF.Constructors.Lit(Lit.Atom("Bool")))),
+	Kind: function* (arg: NF.Value) {
+		const closure = yield* NF.closeVal(NF.Constructors.Lit(Lit.Atom("Bool")));
+		return NF.Constructors.Pi(fresh(), "Explicit", arg, closure);
+	},
 	Neutral: (ann: EB.Term) => {
 		return EB.Constructors.Lambda(fresh(), "Explicit", EB.Constructors.Lit({ type: "Bool", value: true }), ann);
 	},

@@ -683,16 +683,25 @@ exports[`Let-polymorphism > polymorphism on block scope > polymorphic return val
       "Type ~~ Type",
       "Type ~~ Type",
       "Num ~~ Num",
-      "?1 @ Num",
+      "?2 @ Num",
       "Num ~~ Num",
+      "?3 @ Num",
+      "Num ~~ ?1",
     ],
     "term": "{
-  let f
-    : Π(i: Num) => (closure: Π(t1: Num) -> Num -| Γ: i)
-    = λ(i: Num) => λ(x: Num) -> x;
-  return f @(?1 :: Num) 1;
+  let p
+    : Π(A: Num) => (closure: Num -| Γ: A; p)
+    = λ(A: Num) =>
+      ({
+        let f
+          : Π(i: Num) => (closure: Π(t1: Num) -> Num -| Γ: i; p)
+          = λ(i: Num) => λ(x: Num) -> x;
+        return λ(A: Num) => f @A 1;
+      })
+        @A;
+  return p;
 }",
-    "type": "Num",
+    "type": "Π(A: Num) => (closure: Num -| Γ: A; p)",
   },
 }
 `;

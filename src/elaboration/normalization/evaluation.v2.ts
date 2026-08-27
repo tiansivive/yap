@@ -13,7 +13,7 @@ import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "./syntax/term";
 import { display } from "./syntax/pretty";
 
-import { callstack as Stack, Evaluation, Mark } from "./callstack";
+import { callstack as Stack, Mode, Evaluation, Mark } from "./callstack";
 import * as Quoting from "./quoting";
 
 import _ from "lodash";
@@ -40,19 +40,17 @@ const shown = (ctx: EB.Context, program: () => ReturnType<typeof display>): stri
 	Eff.run(program, [M.reader.handlers(ctx), Metas.registry.handlers({})])[0];
 
 export type EvalOptions = {
-	/** no δ-reduction: prevents inlining of definitions. Default is `false`. */
-	noInlineBindings?: boolean;
 	/** fuel cap: maximum number of evaluation steps before throwing an error. Default is `MAX_STEPS`. */
 	maxSteps?: number;
 };
 
 /** The evaluation procedure: one marked drive on the ambient machine, under the ambient env. */
 export function* evaluate(term: EB.Term, opts: EvalOptions = {}): Evaluation<NF.Value> {
-	const { noInlineBindings = false, maxSteps = MAX_STEPS } = opts;
+	const { maxSteps = MAX_STEPS } = opts;
 	const ctx = yield* M.reader.ask();
 
 	const mark = yield* Stack.begin();
-	yield* Stack.eval(term, noInlineBindings);
+	yield* Stack.eval(term);
 	yield* drain(mark, maxSteps, () => `Evaluation exceeded maximum steps (${maxSteps}). Possible infinite loop in: ${shown(ctx, () => EB.Display.Term(term))}`);
 
 	return yield* Stack.finish(mark);
@@ -76,14 +74,15 @@ function* drain(mark: Mark, maxSteps: number, blame: () => string): Evaluation<v
 
 		/* The driver re-binds the reader per step: the frame's env is the single authority. */
 		yield* match(step)
-			.with({ type: "Eval" }, ({ env: scope, term: tm, noInline }) => M.reader.local(_ => scope, evaluateTerm(tm, noInline)))
+			.with({ type: "Eval" }, ({ env: scope, term: tm }) => M.reader.local(_ => scope, evaluateTerm(tm)))
 			.with({ type: "Cont" }, ({ env: scope, k, args }) => M.reader.local(_ => scope, k(args)))
 			.exhaustive();
 	}
 }
 
-function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<void> {
+function* evaluateTerm(term: EB.Term): Evaluation<void> {
 	const ctx = yield* M.reader.ask();
+	const { noInlineBindings, noReduceEliminations } = yield* Mode.ask();
 
 	yield* match(term)
 		.with({ type: "Lit" }, function* ({ value }) {
@@ -241,8 +240,8 @@ function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<voi
 			yield* Stack.cont(2, function* ([funcVal, argVal]) {
 				yield* reduceAndPushStack(funcVal, argVal, icit);
 			});
-			yield* Stack.eval(arg, noInlineBindings);
-			yield* Stack.eval(func, noInlineBindings);
+			yield* Stack.eval(arg);
+			yield* Stack.eval(func);
 		})
 		.with({ type: "Row" }, function* ({ row }) {
 			const extractLabels = (r: EB.Row): { [key: string]: EB.Term } => {
@@ -270,8 +269,17 @@ function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<voi
 
 			yield* M.reader.local(_ => xtended, evalRowPush(row));
 		})
+		.with(
+			{ type: "Match" },
+			() => noReduceEliminations,
+			function* (v) {
+				yield* Stack.cont(1, function* ([scrutinee]) {
+					yield* Stack.ret(NF.Constructors.StuckMatch(NF.Constructors.Closure(ctx, v), scrutinee));
+				});
+				yield* Stack.eval(v.scrutinee);
+			},
+		)
 		.with({ type: "Match" }, function* (v) {
-			// Evaluate scrutinee, then match
 			yield* Stack.cont(1, function* ([scrutinee]) {
 				const known = yield* view(scrutinee);
 				if (known.kind !== "Sealed") {
@@ -283,15 +291,34 @@ function* evaluateTerm(term: EB.Term, noInlineBindings: boolean): Evaluation<voi
 			});
 			yield* Stack.eval(v.scrutinee);
 		})
+		.with(
+			{ type: "Proj" },
+			() => noReduceEliminations,
+			function* ({ term, label }) {
+				yield* Stack.cont(1, function* ([base]) {
+					yield* Stack.ret(NF.Constructors.StuckProj(base, label));
+				});
+				yield* Stack.eval(term);
+			},
+		)
 		.with({ type: "Proj" }, function* ({ term, label }) {
-			// Evaluate base, then project
 			yield* Stack.cont(1, function* ([base]) {
 				yield* Stack.ret(yield* projectValue(base, label));
 			});
 			yield* Stack.eval(term);
 		})
+		.with(
+			{ type: "Inj" },
+			() => noReduceEliminations,
+			function* ({ term, label, value: valueTerm }) {
+				yield* Stack.cont(2, function* ([base, injected]) {
+					yield* Stack.ret(NF.Constructors.StuckInj(base, label, injected));
+				});
+				yield* Stack.eval(valueTerm);
+				yield* Stack.eval(term);
+			},
+		)
 		.with({ type: "Inj" }, function* ({ term, label, value: valueTerm }) {
-			// Evaluate base and value, then inject
 			yield* Stack.cont(2, function* ([base, injected]) {
 				yield* Stack.ret(yield* injectValue(base, label, injected));
 			});
@@ -423,8 +450,8 @@ function* processStatementsAndPush(stmts: EB.Statement[], returnTerm: EB.Term): 
 			yield* Stack.eval(value);
 		})
 		.with({ type: "Using" }, function* ({ value, annotation }) {
-			// no delta-reduction: we don't want to inline the value, just evaluate it and add it to implicits
-			const nfValue = yield* evaluate(value, { noInlineBindings: true });
+			// no δ-reduction: we don't want to inline the value, just evaluate it and add it to implicits
+			const nfValue = yield* Mode.local(m => ({ ...m, noInlineBindings: true }), evaluate(value));
 			const updated = update(ctx, "implicits", A.append<EB.Context["implicits"][0]>([nfValue, annotation]));
 			yield* M.reader.local(_ => updated, processStatementsAndPush(rest, returnTerm));
 		})

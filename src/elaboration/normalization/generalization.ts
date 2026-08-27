@@ -202,11 +202,15 @@ export const abstract = function* (ty: NF.Value, value: NF.Value, resolutions: E
 	};
 	const type = yield* wrap(ty, A.reverse(entries), 0);
 
+	/*
+	 * The body must see the mapping so quoting resolves the metas to their introduced
+	 * binder variables. The type wrap above intentionally leaves them symbolic — those
+	 * metas resolve at each use site when the telescope binder is actually in scope.
+	 */
+	yield* Metas.registry.modify(current => Metas.withSolutions(current, subst));
+
 	const body = yield* M.reader.local(_ => xtended, NF.quote(xtended.env.length, value));
 	const term = A.reverse(entries).reduce((body, { binding }) => EB.Constructors.Abs(binding, body), body);
-
-	/* As in generalize: the mapping is only readable once the inserted binders are in scope. */
-	yield* Metas.registry.modify(current => Metas.withSolutions(current, subst));
 
 	return { term, type };
 };

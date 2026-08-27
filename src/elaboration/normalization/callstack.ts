@@ -9,6 +9,20 @@ import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "./syntax/term";
 
 /*
+ * Evaluation mode flags — a separate reader channel so evaluation options
+ * don't pollute the context/env reader. Namespaced to avoid tag collision.
+ */
+export type EvalMode = {
+	/** no δ-reduction: prevents inlining of let-bound definitions. */
+	noInlineBindings: boolean;
+	/** no ι-reduction: prevents reducing eliminations (projections, matches) on known values. */
+	noReduceEliminations: boolean;
+};
+
+export const defaultMode: EvalMode = { noInlineBindings: false, noReduceEliminations: false };
+export const Mode = Eff.reader<EvalMode>("EvalMode");
+
+/*
  * The NbE machine's stacks as an effect: one ambient machine per run, the
  * direct replacement of the old module-global work/result stacks. Every
  * evaluation entry is a marked drive on that same machine, so helpers that
@@ -25,7 +39,7 @@ import * as NF from "./syntax/term";
  */
 
 export type StackFrame =
-	| { type: "Eval"; env: EB.Context; term: EB.Term; noInline: boolean }
+	| { type: "Eval"; env: EB.Context; term: EB.Term }
 	| { type: "Cont"; env: EB.Context; arity: number; k: (results: NF.Value[]) => Evaluation<void> }
 	| { type: "Delimiter"; env: EB.Context; resultSize: number };
 
@@ -41,13 +55,13 @@ export type Mark = { work: number; results: number };
  * a no-op, so next absorbs them; only capture consumes their payload.
  */
 export type Step =
-	| { type: "Eval"; env: EB.Context; term: EB.Term; noInline: boolean }
+	| { type: "Eval"; env: EB.Context; term: EB.Term }
 	| { type: "Cont"; env: EB.Context; k: (results: NF.Value[]) => Evaluation<void>; args: NF.Value[] };
 
 type Begin = Eff.Action<"Callstack.begin", undefined, Mark>;
 type Next = Eff.Action<"Callstack.next", Mark, Step | undefined>;
 type Finish = Eff.Action<"Callstack.finish", Mark, NF.Value>;
-type Eval = Eff.Action<"Callstack.eval", { env: EB.Context; term: EB.Term; noInline: boolean }, undefined>;
+type Eval = Eff.Action<"Callstack.eval", { env: EB.Context; term: EB.Term }, undefined>;
 type Ret = Eff.Action<"Callstack.ret", NF.Value, undefined>;
 type Cont = Eff.Action<"Callstack.cont", { env: EB.Context; arity: number; k: (results: NF.Value[]) => Evaluation<void> }, undefined>;
 type Delimit = Eff.Action<"Callstack.delimit", EB.Context, undefined>;
@@ -72,10 +86,10 @@ const finish = function* (mark: Mark) {
 };
 
 /** Evaluate term next, under the environment the reader holds at scheduling time. */
-const evalOp = function* (term: EB.Term, noInline = false) {
+const evalOp = function* (term: EB.Term) {
 	const env = yield* M.reader.ask();
 
-	return yield* Eff.ctl.action<Eval>("Callstack.eval", { env, term, noInline });
+	return yield* Eff.ctl.action<Eval>("Callstack.eval", { env, term });
 };
 
 /** Return a finished value to the next continuation. */
@@ -127,7 +141,7 @@ const handlers = (): Eff.Handler<Actions, undefined> => {
 				while (workStack.length > mark.work) {
 					const step = match<StackFrame, Step | undefined>(workStack.pop() as StackFrame)
 						.with({ type: "Delimiter" }, () => undefined)
-						.with({ type: "Eval" }, ({ env, term, noInline }) => ({ type: "Eval", env, term, noInline }))
+						.with({ type: "Eval" }, ({ env, term }) => ({ type: "Eval", env, term }))
 						.with({ type: "Cont" }, ({ env, arity, k }) => {
 							const args = resultStack.splice(-arity, arity);
 
@@ -157,8 +171,8 @@ const handlers = (): Eff.Handler<Actions, undefined> => {
 				return Eff.ctl.resume(resultStack.pop() as NF.Value);
 			},
 
-			"Callstack.eval": ({ env, term, noInline }) => {
-				workStack.push({ type: "Eval", env, term, noInline });
+			"Callstack.eval": ({ env, term }) => {
+				workStack.push({ type: "Eval", env, term });
 
 				return Eff.ctl.resume(undefined);
 			},
@@ -218,9 +232,9 @@ export const callstack = { begin, next, finish, eval: evalOp, ret, cont, delimit
 
 /*
  * The machine's row: its own stacks, the metacontext for meta dereferencing,
- * and the reader as the single env authority. Spelled from the action union
- * rather than `typeof callstack` — the row is referenced from `cont`'s
- * continuation type, and going through the instance would make that
- * reference eagerly circular.
+ * the reader as the single env authority, and the evalMode reader for
+ * normalization flags. Spelled from the action union rather than `typeof
+ * callstack` — the row is referenced from `cont`'s continuation type, and
+ * going through the instance would make that reference eagerly circular.
  */
-export type Evaluation<A> = Eff.Eff<Actions | Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof M.reader>, A>;
+export type Evaluation<A> = Eff.Eff<Actions | Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof M.reader> | Eff.Actions<typeof Mode>, A>;

@@ -179,7 +179,7 @@ export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.C
 
 	return run(ctx, state, function* () {
 		const [t, ty] = yield* EB.Stmt.infer(stmt);
-		const nf = yield* NF.evaluate(t.value, { noInlineBindings: true });
+		const nf = yield* NF.whnf(t.value);
 		return update(ctx, "implicits", A.append<Implicit>([nf, ty]));
 	});
 };
