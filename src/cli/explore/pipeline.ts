@@ -5,6 +5,7 @@ import * as Src from "@yap/src/index";
 import * as EB from "@yap/elaboration";
 import * as GRAM from "@yap/gram";
 
+import * as Eff from "@yap/utils/effects";
 import * as E from "fp-ts/lib/Either";
 import fs from "fs";
 import { resolve } from "path";
@@ -168,16 +169,18 @@ export const run = (source: string, opts: Options): Result => {
 		result.raw.parsed = stmt.value;
 	}
 
-	const elaborated = attempt("Elaboration", () => EB.Mod.expression(stmt, defaultContext), errors);
-	if (!elaborated || E.isLeft(elaborated)) {
-		if (elaborated && E.isLeft(elaborated)) {
-			// eslint-disable-next-line no-restricted-syntax
-			errors.push(`[Elaboration] ${EB.V2.display(elaborated.left)}`);
-		}
+	const elaborationResult = attempt("Elaboration", () => EB.Mod.expression(stmt, defaultContext), errors);
+	if (!elaborationResult) {
+		return { ...result, errors };
+	}
+	const [elaborated, elabBoundary] = elaborationResult;
+	if (E.isLeft(elaborated)) {
+		errors.push(`[Elaboration] ${JSON.stringify(elaborated.left)}`);
 		return { ...result, errors };
 	}
 
 	const [tm, ty, _us, ctx, debug] = elaborated.right;
+	const elabRegistry = elabBoundary.registry;
 
 	result.elaborated = attempt("Typechecker / display", () => EB.Display.Term(tm, ctx, db), errors) ?? "";
 
@@ -267,13 +270,13 @@ export const run = (source: string, opts: Options): Result => {
 	const ivlArtefacts = attempt(
 		"Verification / IVL",
 		() => {
-			const V2 = VerificationServiceV2();
-			const [{ result: res }] = V2.check(tm, ty)(ctx);
+			const svc = VerificationServiceV2();
+			const { answer } = svc.check(tm, ty, ctx, elabRegistry);
 
-			if (res._tag === "Left") {
+			if (Eff.failed(answer)) {
 				return undefined;
 			}
-			return res.right;
+			return answer;
 		},
 		errors,
 	);

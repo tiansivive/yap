@@ -342,13 +342,13 @@ const displayValue = (v: Pipeline.Value): string => {
 	return String(v);
 };
 
-const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, display: DisplayOpts): void => {
+const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry, display: DisplayOpts): void => {
 	try {
 		const svc = VerificationServiceV2();
-		const [{ result }] = svc.check(tm, ty)(ctx);
+		const { answer } = svc.check(tm, ty, ctx, registry);
 
-		if (E.isRight(result)) {
-			const vc = result.right.vc;
+		if (!Eff.failed(answer)) {
+			const vc = answer.vc;
 
 			if (display.ivl) {
 				console.log("\n-------------- IVL VC ---------------");
@@ -371,7 +371,7 @@ const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, display: Di
 				})
 				.exhaustive();
 		} else {
-			console.warn("Verification error:", EB.V2.display(result.left));
+			console.warn("Verification error:", answer[Eff.ABORT]);
 		}
 	} catch (err) {
 		console.warn("Verification failed:", err instanceof Error ? err.message : String(err));
@@ -431,7 +431,7 @@ const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplS
 			}
 
 			if (opts.verify) {
-				runVerification(tm, ty, next, state.display);
+				runVerification(tm, ty, next, nextBoundary.registry, state.display);
 			}
 
 			const compiled = Pipeline.lowerTermWithContext(tm, next, Metas.solutions(nextBoundary.registry));
@@ -502,7 +502,7 @@ const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplS
 			}
 
 			if (opts.verify) {
-				runVerification(tm, ty, next, state.display);
+				runVerification(tm, ty, next, nextBoundary.registry, state.display);
 			}
 
 			const compiled = Pipeline.lowerTermWithContext(tm, next, Metas.solutions(nextBoundary.registry), { parentBinders: [name] });

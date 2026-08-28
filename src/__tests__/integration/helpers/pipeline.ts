@@ -96,10 +96,10 @@ const pipeline = (
 	Build.simplify = true; // global state required by the verification library
 	const verified = safe(() => {
 		const svc = VerificationServiceV2();
-		const [{ result }] = svc.check(tm, ty)(ctx);
-		return result;
+		const { answer } = svc.check(tm, ty, ctx, registry);
+		return answer;
 	});
-	const artefacts = E.map((r: E.Either<M.Err, VerificationArtefacts>) => O.fromEither(r))(verified);
+	const artefacts = E.map((a: VerificationArtefacts | Eff.Aborted<M.Err>) => (Eff.failed(a) ? O.none : O.some(a)))(verified);
 	const ivl = E.chain(
 		O.fold(
 			() => E.right<string, string>(""),
