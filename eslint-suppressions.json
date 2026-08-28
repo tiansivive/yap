@@ -545,9 +545,6 @@
 	"src/verification/V2/subtype.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 1
-		},
-		"no-restricted-properties": {
-			"count": 4
 		}
 	},
 	"src/verification/V2/synth.ts": {
