@@ -53,7 +53,7 @@ export const Liquid = {
 	mentions: (symbol: string): RegExp => new RegExp(escapeRegExp(symbol)),
 } as const;
 
-const initialState = (): M.MutState => ({ delimitations: [], nondeterminism: { solution: {} } });
+const initialState = (): M.MutState => ({ delimitations: [], nondeterminism: { solution: {} }, discharged: new Set() });
 
 /** Runs an elaboration program with a fresh handler set; answers with every handler's output. */
 export const runEB = <A>(ctx: EB.Context, program: () => M.Elaboration<A>, registry: Metas.Registry = Metas.empty) => {

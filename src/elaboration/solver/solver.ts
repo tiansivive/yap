@@ -8,8 +8,6 @@ import * as NF from "@yap/elaboration/normalization";
 import { match } from "ts-pattern";
 import * as Sub from "@yap/elaboration/unification/substitution";
 
-import { WithProvenance } from "../shared/provenance";
-
 import _ from "lodash";
 
 export type Constraint =
@@ -17,15 +15,16 @@ export type Constraint =
 	//| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity }
 	| { type: "resolve"; meta: EB.Meta; value: NF.Value; implicits: EB.Context["implicits"] };
 
-type Ctaint = WithProvenance<Constraint>;
+type Ctaint = M.Told;
 
-/** Solving's row: unification's, minus the accumulator it installs itself, plus the commit write. */
+/** Solving's row: unification's, minus the accumulator it installs itself, plus the commit write and discharge bookkeeping. */
 export type Solving<A> = Eff.Eff<
 	| Eff.Actions<typeof M.reader>
 	| Eff.Actions<typeof Metas.registry>
 	| Eff.Actions<typeof M.supply>
 	| Eff.Actions<typeof M.except>
-	| Eff.Actions<typeof M.tracer>,
+	| Eff.Actions<typeof M.tracer>
+	| Eff.Actions<typeof M.st>,
 	A
 >;
 
@@ -38,12 +37,26 @@ export type Resolutions = Record<number, NF.Value>;
  * unification binds nothing (see resolve).
  */
 export const solve = function* (cs: Array<Ctaint>): Solving<{ resolutions: Resolutions }> {
-	const unifications = cs.filter(c => c.type === "assign");
+	/*
+	 * Discharged constraints are proofs already used: a later boundary never re-runs
+	 * them. Not an optimization — a constraint's values are snapshots of the world
+	 * at telling time, and boundaries change that world (generalization rewires the
+	 * metas the snapshot mentions), so a replay compares across worlds.
+	 */
+	const { discharged } = yield* M.st.get();
+	const pending = cs.filter(c => !discharged.has(c.id));
+
+	const unifications = pending.filter(c => c.type === "assign");
 
 	const [, subst] = yield* Eff.with([Sub.subst.handlers()], () => _solve(unifications));
 	yield* Metas.registry.modify(current => Metas.withSolutions(current, subst));
 
-	const resolutions = yield* resolve(cs.filter(c => c.type === "resolve"));
+	const resolvable = pending.filter(c => c.type === "resolve");
+	const resolutions = yield* resolve(resolvable);
+
+	/* Assigns discharge on success (failure aborts the run); resolves only once resolved. */
+	const spent = [...unifications.map(c => c.id), ...resolvable.filter(c => resolutions[c.meta.val] !== undefined).map(c => c.id)];
+	yield* M.st.modify(s => ({ ...s, discharged: new Set([...s.discharged, ...spent]) }));
 
 	return { resolutions };
 };

@@ -39,7 +39,7 @@ const run = <A>(ctx: EB.Context, state: Boundary, program: () => M.Elaboration<A
 		M.writer.handlers(),
 		M.reader.handlers(ctx),
 		M.except.handlers(),
-		M.st.handlers({ delimitations: [], nondeterminism: { solution: {} } }),
+		M.st.handlers({ delimitations: [], nondeterminism: { solution: {} }, discharged: new Set() }),
 		M.supply.handlers(state.counts),
 		Metas.registry.handlers(state.registry),
 		M.tracer.handlers(),

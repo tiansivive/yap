@@ -16,8 +16,11 @@ export type Elaboration<A> = Eff.Eff<
 	A
 >;
 
+/** A told constraint: provenance plus a stable id, the unit the solver discharges by. */
+export type Told = P.WithProvenance<EB.Constraint> & { id: number };
+
 type Collector = {
-	constraints: P.WithProvenance<EB.Constraint>[];
+	constraints: Told[];
 };
 
 const monoid: Monoid<Collector> = {
@@ -36,7 +39,7 @@ export const tracer = Eff.tracer<P.Provenance>();
 
 export const st = Eff.st<MutState>();
 
-export const supply = Eff.supply<"meta" | "var" | "skolem">();
+export const supply = Eff.supply<"meta" | "var" | "skolem" | "constraint">();
 
 export const of = Eff.of;
 export const traverse = Eff.traverse;
@@ -45,7 +48,11 @@ export const traverse = Eff.traverse;
 export const constrain = function* (constraints: EB.Constraint | EB.Constraint[]) {
 	const many = Array.isArray(constraints) ? constraints : [constraints];
 
-	yield* writer.tell({ constraints: many.map(c => ({ ...c, trace: [] })) });
+	const told = yield* Eff.traverse(many, function* (c): Eff.Eff<Eff.Actions<typeof supply>, Told> {
+		return { ...c, trace: [], id: yield* supply.fresh("constraint") };
+	});
+
+	yield* writer.tell({ constraints: told });
 };
 
 export const fail = function* (cause: Cause) {
@@ -59,6 +66,8 @@ export type MutState = {
 	nondeterminism: {
 		solution: Record<number, EB.NF.Value[]>;
 	};
+	/** Ids of constraints a boundary has already solved: discharged proofs are never re-run. */
+	discharged: ReadonlySet<number>;
 };
 
 export type Delimitation = {
