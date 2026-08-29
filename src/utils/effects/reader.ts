@@ -12,11 +12,12 @@ import { Action, AnyAction, ctl, Eff, Handler } from "@yap/utils/effects/freer";
  * reader instances can coexist without intercepting each other's actions.
  */
 
-export function reader<R>(ns = "Reader" as const) {
-	type Ask = Action<`${typeof ns}.ask`, undefined, R>;
-	type Asks = Action<`${typeof ns}.asks`, (environment: R) => unknown, unknown>;
-	type Push = Action<`${typeof ns}.push`, (environment: R) => R, undefined>;
-	type Pop = Action<`${typeof ns}.pop`, undefined, undefined>;
+// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- generic default parameter: NS is only ever inferred from ns, so the default is exact
+export function reader<R, NS extends string = "Reader">(ns: NS = "Reader" as NS) {
+	type Ask = Action<`${NS}.ask`, undefined, R>;
+	type Asks = Action<`${NS}.asks`, (environment: R) => unknown, unknown>;
+	type Push = Action<`${NS}.push`, (environment: R) => R, undefined>;
+	type Pop = Action<`${NS}.pop`, undefined, undefined>;
 
 	const ask = function* () {
 		return yield* ctl.action<Ask>(`${ns}.ask`, undefined);
@@ -42,28 +43,29 @@ export function reader<R>(ns = "Reader" as const) {
 		const scopes: R[] = [initial];
 		const current = () => scopes[scopes.length - 1];
 
-		return {
-			clauses: {
-				[`${ns}.ask` as const]: () => ctl.resume(current()),
-				[`${ns}.asks` as const]: (project: (environment: R) => unknown) => ctl.resume(project(current())),
+		/* Computed template-literal keys over a generic NS collapse to an index
+		 * signature; one cast at the boundary recovers the precise clause map. */
+		// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+		const clauses = {
+			[`${ns}.ask`]: () => ctl.resume(current()),
+			[`${ns}.asks`]: (project: (environment: R) => unknown) => ctl.resume(project(current())),
 
-				[`${ns}.push` as const]: (modify: (environment: R) => R) => {
-					scopes.push(modify(current()));
+			[`${ns}.push`]: (modify: (environment: R) => R) => {
+				scopes.push(modify(current()));
 
-					return ctl.resume(undefined);
-				},
-
-				[`${ns}.pop` as const]: () => {
-					if (scopes.length > 1) {
-						scopes.pop();
-					}
-
-					return ctl.resume(undefined);
-				},
+				return ctl.resume(undefined);
 			},
 
-			output: () => undefined,
-		};
+			[`${ns}.pop`]: () => {
+				if (scopes.length > 1) {
+					scopes.pop();
+				}
+
+				return ctl.resume(undefined);
+			},
+		} as unknown as Handler<Ask | Asks | Push | Pop, undefined>["clauses"];
+
+		return { clauses, output: () => undefined };
 	};
 
 	return { ask, asks, local, handlers };

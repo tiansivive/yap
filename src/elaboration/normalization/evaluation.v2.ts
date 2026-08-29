@@ -272,7 +272,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<void> {
 		.with(
 			{ type: "Match" },
 			() => noReduceEliminations,
-			function* (v) {
+			function* (v: EB.Term & { type: "Match" }) {
 				yield* Stack.cont(1, function* ([scrutinee]) {
 					yield* Stack.ret(NF.Constructors.StuckMatch(NF.Constructors.Closure(ctx, v), scrutinee));
 				});
@@ -294,7 +294,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<void> {
 		.with(
 			{ type: "Proj" },
 			() => noReduceEliminations,
-			function* ({ term, label }) {
+			function* ({ term, label }: EB.Term & { type: "Proj" }) {
 				yield* Stack.cont(1, function* ([base]) {
 					yield* Stack.ret(NF.Constructors.StuckProj(base, label));
 				});
@@ -310,7 +310,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<void> {
 		.with(
 			{ type: "Inj" },
 			() => noReduceEliminations,
-			function* ({ term, label, value: valueTerm }) {
+			function* ({ term, label, value: valueTerm }: EB.Term & { type: "Inj" }) {
 				yield* Stack.cont(2, function* ([base, injected]) {
 					yield* Stack.ret(NF.Constructors.StuckInj(base, label, injected));
 				});

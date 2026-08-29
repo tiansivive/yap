@@ -20,7 +20,7 @@ export type EvalMode = {
 };
 
 export const defaultMode: EvalMode = { noInlineBindings: false, noReduceEliminations: false };
-export const Mode = Eff.reader<EvalMode>("EvalMode");
+export const Mode = Eff.reader<EvalMode, "EvalMode">("EvalMode");
 
 /*
  * The NbE machine's stacks as an effect: one ambient machine per run, the
