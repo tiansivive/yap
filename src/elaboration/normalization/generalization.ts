@@ -15,11 +15,11 @@ import * as Sub from "../unification/substitution";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
 
-/** Generalization touches the scope and the metacontext, nothing else. */
-export type Generalization<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Actions<typeof Metas.registry>, A>;
+/** Generalization touches the scope, the metacontext, and the supply (placeholder minting for the rewiring). */
+export type Generalization<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Actions<typeof Metas.registry> | Eff.Actions<typeof M.supply>, A>;
 
 /** Abstraction (binder wrapping) shares generalization's concerns. */
-export type Abstraction<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Actions<typeof Metas.registry>, A>;
+export type Abstraction<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Actions<typeof Metas.registry> | Eff.Actions<typeof M.supply>, A>;
 
 const charCodes = {
 	any: "A".charCodeAt(0),
@@ -94,7 +94,7 @@ export const generalize = function* (ty: NF.Value, tm: EB.Term, resolutions: EB.
 	const { ctx: extendedCtx, subst } = ms.reduce(
 		(acc, m, i) => {
 			const boundLvl = i + ctx.env.length; // outermost binder is the first one after the existing env
-			const { annotation } = registry[m.val];
+			const { annotation } = Metas.entry(registry, m.val);
 
 			const withBinder = EB.bind(acc.ctx, { type: "Pi", variable: getName(annotation) }, annotation, "inserted");
 			const next = { ...acc.subst, [m.val]: NF.Constructors.Var({ type: "Bound", lvl: boundLvl }) };
@@ -112,11 +112,33 @@ export const generalize = function* (ty: NF.Value, tm: EB.Term, resolutions: EB.
 		const trimmed = update(extendedCtx, "env", e => e.slice(i)); // trim the already introduced binders from the env for quoting
 		// Quote with all binders in scope: lvl = ms.length - i
 		const term = yield* M.reader.local(_ => trimmed, NF.quote(ctx.env.length + ms.length - i, body));
-		const { annotation } = registry[m.val];
+		const { annotation } = Metas.entry(registry, m.val);
 		const closureCtx = update(trimmed, "env", e => e.slice(1)); // drop the binder we are introducing now so it doesn't get captured in the closure
 		return yield* wrap(NF.Constructors.Pi(variable, "Implicit", annotation, NF.Constructors.Closure(closureCtx, term)), tail, i + 1);
 	};
 	const generalized = yield* wrap(ty, A.reverse(ms), 0);
+
+	/*
+	 * Rewiring (first-order partial renaming, degenerated to its stable form): an
+	 * outer solved meta whose solution mentions the generalized metas holds a
+	 * pre-telescope snapshot. Its truth after this commit is the generalized type:
+	 * the snapshot moves to a placeholder meta rooted under the telescope, and the
+	 * container re-solves to the telescope wrapper around the placeholder — every
+	 * dereference chain then routes through closures that carry the telescope slots.
+	 */
+	const generalizedIds = new Set(ms.map(m => m.val));
+	const containers = Object.values(registry).filter(
+		entry => entry.solution && entry.meta.lvl < ctx.env.length && nf(entry.solution).some(m => generalizedIds.has(m.val)),
+	);
+	yield* Eff.traverse(containers, function* (container): Generalization<void> {
+		const snapshot = container.solution;
+		if (!snapshot) {
+			return;
+		}
+		const placeholder = yield* Metas.fresh(ctx.env.length + ms.length, container.annotation);
+		const wrapper = yield* wrap(NF.Constructors.Var({ type: "Meta", val: placeholder.val, lvl: placeholder.lvl }), A.reverse(ms), 0);
+		yield* Metas.registry.modify(current => Metas.solve(Metas.solve(current, placeholder.val, snapshot), container.meta.val, wrapper));
+	});
 
 	/*
 	 * Recorded after the wrap, never before: the binders these metas map to only exist
@@ -165,7 +187,7 @@ export const abstract = function* (ty: NF.Value, value: NF.Value, resolutions: E
 			return acc;
 		}
 		const [m, ...tail] = rest;
-		const { annotation } = registry[m.val];
+		const { annotation } = Metas.entry(registry, m.val);
 		const variable = getName(annotation);
 		const binding: EB.Binding = {
 			type: "Lambda",
@@ -196,11 +218,26 @@ export const abstract = function* (ty: NF.Value, value: NF.Value, resolutions: E
 		const variable = xtended.env[i].name.variable;
 		const trimmed = update(xtended, "env", env => env.slice(i));
 		const term = yield* M.reader.local(_ => trimmed, NF.quote(ctx.env.length + ms.length - i, body));
-		const { annotation } = registry[meta.val];
+		const { annotation } = Metas.entry(registry, meta.val);
 		const closureCtx = update(trimmed, "env", env => env.slice(1));
 		return yield* wrap(NF.Constructors.Pi(variable, "Implicit", annotation, NF.Constructors.Closure(closureCtx, term)), tail, i + 1);
 	};
 	const type = yield* wrap(ty, A.reverse(entries), 0);
+
+	/* Rewiring: same first-order move as generalize — see the comment there. */
+	const generalizedIds = new Set(ms.map(m => m.val));
+	const containers = Object.values(registry).filter(
+		entry => entry.solution && entry.meta.lvl < ctx.env.length && nf(entry.solution).some(m => generalizedIds.has(m.val)),
+	);
+	yield* Eff.traverse(containers, function* (container): Abstraction<void> {
+		const snapshot = container.solution;
+		if (!snapshot) {
+			return;
+		}
+		const placeholder = yield* Metas.fresh(ctx.env.length + ms.length, container.annotation);
+		const wrapper = yield* wrap(NF.Constructors.Var({ type: "Meta", val: placeholder.val, lvl: placeholder.lvl }), A.reverse(entries), 0);
+		yield* Metas.registry.modify(current => Metas.solve(Metas.solve(current, placeholder.val, snapshot), container.meta.val, wrapper));
+	});
 
 	/*
 	 * The body must see the mapping so quoting resolves the metas to their introduced
@@ -248,7 +285,7 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 				return v;
 			}
 
-			const { annotation } = registry[v.variable.val];
+			const { annotation } = Metas.entry(registry, v.variable.val);
 			return match(annotation)
 				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => NF.Constructors.Row({ type: "empty" }))
 				.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => NF.Constructors.Lit({ type: "Atom", value: "Any" }))

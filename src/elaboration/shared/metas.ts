@@ -29,10 +29,26 @@ export const empty: Registry = {};
 
 export const lookup = (metas: Registry, id: number): Entry | undefined => metas[id];
 
+/** The entry an id denotes; asking for an unregistered meta is a caller bug. */
+export const entry = (metas: Registry, id: number): Entry => {
+	const found = lookup(metas, id);
+	if (!found) {
+		throw new Error(`Unregistered meta ?${id}`);
+	}
+	return found;
+};
+
 export const solution = (metas: Registry, id: number): NF.Value | undefined => metas[id]?.solution;
 
 export const solutions = (metas: Registry): Sub.Subst =>
-	Sub.from(Object.fromEntries(Object.values(metas).flatMap(entry => (entry.solution ? [[entry.meta.val, entry.solution]] : []))));
+	Sub.from(
+		Object.fromEntries(
+			Object.values(metas).flatMap(entry => {
+				const value = solution(metas, entry.meta.val);
+				return value ? [[entry.meta.val, value]] : [];
+			}),
+		),
+	);
 
 /**
  * The metacontext with its solutions dropped: annotations and syntax only.
@@ -51,11 +67,11 @@ export const withSolutions = (metas: Registry, subst: Sub.Subst): Registry =>
 export const register = (metas: Registry, entry: Entry): Registry => ({ ...metas, [entry.meta.val]: entry });
 
 export const solve = (metas: Registry, id: number, value: NF.Value): Registry => {
-	const entry = metas[id];
-	if (!entry) {
+	const found = metas[id];
+	if (!found) {
 		throw new Error(`Cannot solve unregistered meta ?${id}`);
 	}
-	return { ...metas, [id]: { ...entry, solution: value } };
+	return { ...metas, [id]: { ...found, solution: value } };
 };
 
 /** Keep only facts every replay branch agrees on; candidate-local solutions stay local. */
@@ -64,9 +80,9 @@ export const merge = (base: Registry, branches: readonly Registry[]): Registry =
 		return base;
 	}
 	return Object.values(base).reduce<Registry>((merged, entry) => {
-		const solutions = branches.map(branch => branch[entry.meta.val]?.solution);
-		const agreed = solutions.every(value => fp.isEqual(value, solutions[0]));
-		return agreed && solutions[0] ? solve(merged, entry.meta.val, solutions[0]) : merged;
+		const branchSolutions = branches.map(branch => solution(branch, entry.meta.val));
+		const agreed = branchSolutions.every(value => fp.isEqual(value, branchSolutions[0]));
+		return agreed && branchSolutions[0] ? solve(merged, entry.meta.val, branchSolutions[0]) : merged;
 	}, base);
 };
 

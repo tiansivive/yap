@@ -70,8 +70,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 			.with([NF.Patterns.Flex, NF.Patterns.Flex], function* ([meta1, meta2]) {
 				yield* Sub.subst.bind(yield* bind(meta1.variable, meta2));
 				const registry = yield* Metas.registry.get();
-				const ann1 = registry[meta1.variable.val].annotation;
-				const ann2 = registry[meta2.variable.val].annotation;
+				const ann1 = Metas.entry(registry, meta1.variable.val).annotation;
+				const ann2 = Metas.entry(registry, meta2.variable.val).annotation;
 				yield* unify(ann1, ann2, lvl);
 			})
 			.with(

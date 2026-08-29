@@ -98,7 +98,7 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			if (v.variable.lvl < ctx.env.length) {
 				return v;
 			}
-			const { annotation } = registry[v.variable.val];
+			const { annotation } = Metas.entry(registry, v.variable.val);
 
 			return match(annotation)
 				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.Constructors.Row({ type: "empty" }))
