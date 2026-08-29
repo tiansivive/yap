@@ -232,10 +232,14 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 
 			const branchArtefacts = yield* reader.local(extendCtx, check(branch, type));
 
-			let quantified = branchArtefacts.vc;
-			for (const [name, binderTy] of binders.slice().reverse()) {
-				quantified = yield* quantify(name, binderTy, quantified);
-			}
+			/* Quantify innermost binder first: fold right over the binder telescope. */
+			const quantified = yield* binders.reduceRight<Verification<IVL.Formula>>(
+				(acc, [name, binderTy]) =>
+					(function* (): Verification<IVL.Formula> {
+						return yield* quantify(name, binderTy, yield* acc);
+					})(),
+				Eff.of(branchArtefacts.vc),
+			);
 
 			const freshVar = yield* supply.freshNum();
 			const vc = yield* quantify(freshVar, met, quantified);

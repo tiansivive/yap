@@ -176,6 +176,7 @@ export const run = (source: string, opts: Options): Result => {
 	}
 	const [elaborated, elabBoundary] = elaborationResult;
 	if (E.isLeft(elaborated)) {
+		// eslint-disable-next-line no-restricted-syntax
 		errors.push(`[Elaboration] ${JSON.stringify(elaborated.left)}`);
 		return { ...result, errors };
 	}

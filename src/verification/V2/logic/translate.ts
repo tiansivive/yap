@@ -1,6 +1,8 @@
 import { match } from "ts-pattern";
 import assert from "assert";
 
+import * as Eff from "@yap/utils/effects";
+
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Metas from "@yap/elaboration/shared/metas";
@@ -174,8 +176,8 @@ const collectArgs = function* (value: NF.Value, rigids: Record<number, IVL.Term>
 			const translated = yield* term(arg, rigids);
 			return [...head, translated];
 		})
-		.otherwise(function* () {
-			return [] as IVL.Term[];
+		.otherwise(function* (): Verification<IVL.Term[]> {
+			return [];
 		});
 };
 
@@ -254,10 +256,7 @@ export const term = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = 
 			if (e.args.length !== e.arity) {
 				throw new Error("External with wrong arity in logical formulas");
 			}
-			const args: IVL.Term[] = [];
-			for (const arg of e.args) {
-				args.push(yield* term(arg, rigids));
-			}
+			const args = yield* Eff.traverse(e.args, arg => term(arg, rigids));
 			return match(e.name)
 				.with(OP_ADD, () => Build.arith("+", args[0], args[1], Build.Real))
 				.with(OP_SUB, () => Build.arith("-", args[0], args[1], Build.Real))
@@ -350,7 +349,7 @@ export const quantify = function* (variable: string, annotation: NF.Value, vc: I
 			assert(modalities.liquid.type === "Abs", "Liquid refinements must be unary functions");
 			const lvl = ctx.env.length;
 			const applied = yield* NF.apply(modalities.liquid.binder, modalities.liquid.closure, NF.Constructors.Rigid(lvl));
-			const rigids = { [lvl]: x } as Record<number, IVL.Term>;
+			const rigids: Record<number, IVL.Term> = { [lvl]: x };
 			const phi = yield* formula(applied, rigids);
 			return yield* obligations.record(`quantify:${variable}`, Build.forall([{ name: variable, sort }], Build.implies(phi, vc)), {
 				description: `Quantifying refined ${variable}`,
