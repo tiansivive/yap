@@ -43,6 +43,7 @@ const run = <A>(ctx: EB.Context, state: Boundary, program: () => M.Elaboration<A
 		M.supply.handlers(state.counts),
 		Metas.registry.handlers(state.registry),
 		M.tracer.handlers(),
+		M.recursion.handlers(),
 	]);
 
 	const next: Boundary = { registry, counts };
@@ -195,8 +196,6 @@ export const letdec = (
 
 		const ast: EB.AST = [r.value, r.annotation, us];
 		const final = [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
-		console.warn("Verification skipped for letdec: ", stmt.variable, " Needs to be replaced by IVL solver");
-		console.log("Elaborated letdec:", stmt.variable);
 		return final;
 	});
 

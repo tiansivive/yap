@@ -1222,6 +1222,267 @@ return main();
 ]
 `;
 
+exports[`Language Tour — Pattern Matching > recursive list type 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = {};
+  return v0;
+}
+return main();
+",
+    "elaborated": "List",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"List"}
+[3] mu {"variable":"x","source":"List","level":1}
+  :annotation -> [4]
+  :body -> [7]
+[4] pi {"variable":"t","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] lambda {"variable":"t","icit":"Explicit","level":2}
+  :annotation -> [8]
+  :body -> [9]
+  :env -> [32]
+[8] lit {"value":{"type":"Atom","value":"Type"}}
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Variant"}}
+[11] row:ext {"label":"cons"}
+  :rest -> [29]
+  :value -> [12]
+[12] sigma {"variable":"$sig","level":3}
+  :annotation -> [13]
+  :body -> [20]
+[13] row:ext {"label":"tail"}
+  :rest -> [17]
+  :value -> [14]
+[14] app {"icit":"Explicit"}
+  :arg -> [16]
+  :func -> [15]
+[15] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[16] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[17] row:ext {"label":"head"}
+  :rest -> [19]
+  :value -> [18]
+[18] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[19] row:empty
+[20] app {"icit":"Explicit"}
+  :arg -> [22]
+  :func -> [21]
+[21] lit {"value":{"type":"Atom","value":"Schema"}}
+[22] row:ext {"label":"tail"}
+  :rest -> [26]
+  :value -> [23]
+[23] app {"icit":"Explicit"}
+  :arg -> [25]
+  :func -> [24]
+[24] var:bound {"index":1}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[25] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[26] row:ext {"label":"head"}
+  :rest -> [28]
+  :value -> [27]
+[27] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[28] row:empty
+[29] row:ext {"label":"nil"}
+  :rest -> [31]
+  :value -> [30]
+[30] lit {"value":{"type":"Atom","value":"Unit"}}
+[31] row:empty
+[32] env
+  :capture -> [3] {"index":0}
+[33] closure
+  :body -> [7]
+  :env -> [32]",
+    "ivl": "true",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"List"}}
+      return v0",
+    "name": "List",
+    "normalized": "List",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
+    "type": "Π(t: Type) -> Type",
+    "validity": "valid",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = "cons";
+  const v1 = 1;
+  const v2 = "cons";
+  const v3 = 2;
+  const v4 = "nil";
+  const v5 = null;
+  const v6 = {
+    __tag: v4,
+    payload: v5
+  };
+  const v7 = {
+    head: v3,
+    tail: v6
+  };
+  const v8 = {
+    __tag: v2,
+    payload: v7
+  };
+  const v9 = {
+    head: v1,
+    tail: v8
+  };
+  const v10 = {
+    __tag: v0,
+    payload: v9
+  };
+  return v10;
+}
+return main();
+",
+    "elaborated": "Struct
+  [ __tag: cons,
+    payload: Struct
+      [ head: 1,
+        tail: Struct
+          [ __tag: cons,
+            payload: Struct
+              [ head: 2, tail: Struct [ __tag: nil, payload: unit ] ] ] ] ]",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"xs"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"cons"}}
+[5] struct
+  :field -> [6] {"label":"head"}
+  :field -> [7] {"label":"tail"}
+[6] lit {"value":{"type":"Num","value":1}}
+[7] struct
+  :field -> [8] {"label":"__tag"}
+  :field -> [9] {"label":"payload"}
+[8] lit {"value":{"type":"Atom","value":"cons"}}
+[9] struct
+  :field -> [10] {"label":"head"}
+  :field -> [11] {"label":"tail"}
+[10] lit {"value":{"type":"Num","value":2}}
+[11] struct
+  :field -> [12] {"label":"__tag"}
+  :field -> [13] {"label":"payload"}
+[12] lit {"value":{"type":"Atom","value":"nil"}}
+[13] lit {"value":{"type":"unit"}}",
+    "ivl": "true",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = cons
+      let v1 = 1
+      let v2 = cons
+      let v3 = 2
+      let v4 = nil
+      let v5 = unit
+      let v6 = alloc { __tag: v4, payload: v5 }
+      let v7 = alloc { head: v3, tail: v6 }
+      let v8 = alloc { __tag: v2, payload: v7 }
+      let v9 = alloc { head: v1, tail: v8 }
+      let v10 = alloc { __tag: v0, payload: v9 }
+      return v10",
+    "name": "xs",
+    "normalized": "Struct
+  [ __tag: cons,
+    payload: Struct
+      [ head: 1,
+        tail: Struct
+          [ __tag: cons,
+            payload: Struct
+              [ head: 2, tail: Struct [ __tag: nil, payload: unit ] ] ] ] ]",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
+    "type": "(List) Num",
+    "validity": "valid",
+  },
+]
+`;
+
 exports[`Language Tour — Pattern Matching > recursive record fields 1`] = `
 [
   {

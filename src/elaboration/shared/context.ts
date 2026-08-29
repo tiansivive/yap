@@ -34,18 +34,18 @@ export type Context = {
 
 export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
-export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<EB.AST> => {
+export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elaboration<EB.AST> {
 	const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
 	if (variable.type === "label") {
 		const type = ctx.labels[variable.value];
 		if (type) {
 			const tm = EB.Constructors.Var({ type: "Label", name: variable.value });
-			return M.of<EB.AST>([tm, type, zeros]);
+			return [tm, type, zeros] satisfies EB.AST;
 		}
 		throw new Error(`Label not found: ${variable.value}`);
 	}
 
-	const _lookup = (i: number, variable: Src.Variable, types: Array<Context["env"][number]["type"]>): M.Elaboration<EB.AST> => {
+	const _lookup = function* (i: number, variable: Src.Variable, types: Array<Context["env"][number]["type"]>): M.Elaboration<EB.AST> {
 		// free vars can be shadowed by bound vars, so only if no bound vars are found do we check for free vars
 		// QUESTION: should we disallow this shadowing?
 		if (types.length === 0) {
@@ -56,7 +56,7 @@ export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<EB.A
 				const tm = match(storedTm)
 					.with({ type: "Var", variable: { type: "Foreign" } }, t => EB.Constructors.Var({ type: "Foreign", name: t.variable.name }))
 					.otherwise(() => EB.Constructors.Var({ type: "Free", name: variable.value }));
-				return M.of<EB.AST>([tm, nf, Q.add(us, zeros)]);
+				return [tm, nf, Q.add(us, zeros)] satisfies EB.AST;
 			}
 
 			throw new Error(`Variable not found: ${variable.value}`);
@@ -66,14 +66,18 @@ export const lookup = (variable: Src.Variable, ctx: Context): M.Elaboration<EB.A
 		//const usages = []//unsafeUpdateAt(i, modalities.quantity, zeros);
 		// do we need to check origin here? I don't think it makes a difference whether it's an inserted (implicit) or source (explicit) binder
 		if (binder.variable === variable.value) {
-			const tm = EB.Constructors.Var({ type: "Bound", index: i });
-			return M.of<EB.AST>([tm, nf, zeros]);
+			/* A Mu-tagged binder means a type-level position (muContext): flag the open
+			 * let-window at this level, if any, so its boundary sees the recursion. */
+			if (binder.type === "Mu") {
+				yield* M.recursion.flag(ctx.env.length - 1 - i);
+			}
+			return [EB.Constructors.Var({ type: "Bound", index: i }), nf, zeros] satisfies EB.AST;
 		}
 
-		return _lookup(i + 1, variable, rest);
+		return yield* _lookup(i + 1, variable, rest);
 	};
 
-	return _lookup(
+	return yield* _lookup(
 		0,
 		variable,
 		ctx.env.map(v => v.type),

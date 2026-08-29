@@ -1,0 +1,160 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Recursive lets > Mu wrapping of self-referencing type definitions > wraps a ground recursive type 1`] = `
+{
+  "constraints": [
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+  ],
+  "solution": "empty",
+  "state": {
+    "nondeterminism": {},
+  },
+  "term": "let Tree
+  : Type
+  = ([μ = Tree](x: Type)) ->
+    Variant
+      [ node: Σ($sig: [ right: x, left: x ]) . Schema [ right: x, left: x ],
+        leaf: Unit ]",
+  "type": "Type",
+}
+`;
+
+exports[`Recursive lets > Mu wrapping of self-referencing type definitions > wraps a recursive type constructor 1`] = `
+{
+  "constraints": [
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+  ],
+  "solution": "empty",
+  "state": {
+    "nondeterminism": {},
+  },
+  "term": "let List
+  : Π(t: Type) -> (closure: Type -| Γ: t)
+  = ([μ = List](x: Π(t: Type) -> Type)) ->
+    λ(t: Type) ->
+      Variant
+        [ cons: Σ($sig: [ tail: x t, head: t ]) . Schema [ tail: x t, head: t ],
+          nil: Unit ]",
+  "type": "Π(t: Type) -> (closure: Type -| Γ: t)",
+}
+`;
+
+exports[`Recursive lets > Mu wrapping of self-referencing type definitions > wraps an unannotated recursive variant definition 1`] = `
+{
+  "constraints": [
+    "?1 ~~ Π(x: ?7) -> (closure: (?8 :: Type) -| Γ: x; t; List)",
+    "?2 ~~ ?7",
+    "?8 ~~ Type",
+    "?2 ~~ Type",
+    "Type ~~ Type",
+    "Π(t: ?2) -> (closure: Type -| Γ: t; List) ~~ ?1",
+  ],
+  "solution": "?1 |=> Π(x: Type) -> (closure: Type -| Γ: x; t; List)
+?2 |=> Type
+?7 |=> Type
+?8 |=> Type",
+  "state": {
+    "nondeterminism": {},
+  },
+  "term": "let List
+  : Π(x: Type) -> (closure: Type -| Γ: x; t; List)
+  = ([μ = List](x: Π(x: Type) -> (closure: Type -| Γ: x; t; List))) ->
+    (λ(t: Type) ->
+      Variant
+        [ cons: Σ($sig: [ tail: x t, head: t ]) . Schema [ tail: x t, head: t ],
+          nil: Unit ] : Π(t: Type) -> Type)",
+  "type": "Π(x: Type) -> (closure: Type -| Γ: x; t; List)",
+}
+`;
+
+exports[`Recursive lets > definitions that must not wrap > leaves a non-recursive type definition bare 1`] = `
+{
+  "constraints": [
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+  ],
+  "solution": "empty",
+  "state": {
+    "nondeterminism": {},
+  },
+  "term": "let Pair : Type = Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
+  "type": "Type",
+}
+`;
+
+exports[`Recursive lets > definitions that must not wrap > leaves a recursive value function bare 1`] = `
+{
+  "constraints": [
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Num ~~ Num",
+    "Num ~~ Num",
+  ],
+  "solution": "empty",
+  "state": {
+    "nondeterminism": {},
+  },
+  "term": "let f : Π(t1: Num) -> (closure: Num -| Γ: t1) = λ(n: Num) -> f n",
+  "type": "Π(t1: Num) -> (closure: Num -| Γ: t1)",
+}
+`;
+
+exports[`Recursive lets > definitions that must not wrap > leaves references to closed definitions bare 1`] = `
+{
+  "constraints": [
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Num ~~ ?1",
+  ],
+  "solution": "?1 |=> Num",
+  "state": {
+    "nondeterminism": {},
+  },
+  "term": "let m
+  : Num
+  = {
+    let A : Type = Σ($sig: [ x: Num ]) . Schema [ x: Num ];
+    let B : Type = Σ($sig: [ a: A ]) . Schema [ a: A ];
+    return 1;
+  }",
+  "type": "Num",
+}
+`;
+
+exports[`Recursive lets > nested windows > detects outer recursion through an inner let's window 1`] = `
+{
+  "constraints": [
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+    "Type ~~ Type",
+  ],
+  "solution": "empty",
+  "state": {
+    "nondeterminism": {},
+  },
+  "term": "let Outer
+  : Π(t: Type) -> (closure: Type -| Γ: t)
+  = ([μ = Outer](x: Π(t: Type) -> Type)) ->
+    λ(t: Type) ->
+      { let Inner : Type = Variant [ stop: Unit, wrap: x t ]; return Inner; }",
+  "type": "Π(t: Type) -> (closure: Type -| Γ: t)",
+}
+`;

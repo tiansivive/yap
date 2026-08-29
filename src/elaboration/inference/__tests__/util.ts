@@ -65,6 +65,7 @@ export const runEB = <A>(ctx: EB.Context, program: () => M.Elaboration<A>, regis
 		M.supply.handlers(),
 		Metas.registry.handlers(registry),
 		M.tracer.handlers(),
+		M.recursion.handlers(),
 	]);
 
 	return { answer, collected, state, counts, registry: metas, trace } as const;

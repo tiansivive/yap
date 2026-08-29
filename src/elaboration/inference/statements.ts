@@ -29,28 +29,26 @@ export const infer = (stmt: Src.Statement): M.Elaboration<ElaboratedStmt> =>
 					: ([EB.Constructors.Var(yield* freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
 				const va = yield* NF.normalize(ann[0]);
 
-				const inferred = yield* M.reader.local(
-					_ctx => EB.bind(_ctx, { type: "Let", variable: dec.variable }, va),
-					(function* () {
-						const inferred = yield* EB.check(dec.value, va);
-						const [bTerm, [_vu, ...bus]] = inferred;
-						//yield* M.constrain({ type: "usage", expected: q, computed: vu });
+				/* Check the value inside a recursion window at the let binder's level: lookup
+				 * flags it when the definition references itself from a type-level position. */
+				const [inferred, recursive] = yield* M.recursion.detect(ctx.env.length, () =>
+					M.reader.local(
+						_ctx => EB.bind(_ctx, { type: "Let", variable: dec.variable }, va),
+						(function* () {
+							const inferred = yield* EB.check(dec.value, va);
+							const [bTerm, [_vu, ...bus]] = inferred;
+							//yield* M.constrain({ type: "usage", expected: q, computed: vu });
 
-						return [bTerm, va, bus] satisfies EB.AST; // remove the usage of the bound variable (same as the lambda rule)
-					})(),
+							return [bTerm, va, bus] satisfies EB.AST; // remove the usage of the bound variable (same as the lambda rule)
+						})(),
+					),
 				);
 
-				// TODO(post-migration): recursive type-level lets are not wrapped in Mu right now.
-				// Agreed approach: no upward channel needed — wrap when va == Type and the elaborated
-				// body self-references (occurs-check for Var{Bound, index == depth} on inferred[0]).
-				// This drops v2's support for self-reference inside type annotations of value-level
-				// lets, which we consider degenerate and do not want to allow.
-				// v2 did it via the writer's binder channel:
-				// const { binders } = yield* V2.listen();
-				// const tm = binders.find(b => b.type === "Mu" && b.variable === dec.variable)
-				// 	? EB.Constructors.Mu("x", dec.variable, ann[0], inferred[0])
-				// 	: inferred[0];
-				const tm = inferred[0];
+				/*
+				 * A recursive type wraps in Mu so normalization seals its applications instead
+				 * of unfolding them — expansion is unification's, on demand.
+				 */
+				const tm = recursive ? EB.Constructors.Mu("x", dec.variable, ann[0], inferred[0]) : inferred[0];
 				const def = EB.Constructors.Stmt.Let(dec.variable, tm, va);
 				return [def, inferred[1], inferred[2]] satisfies ElaboratedStmt;
 			})
