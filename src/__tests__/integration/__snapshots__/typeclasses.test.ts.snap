@@ -1440,7 +1440,7 @@ return main();
             (forall ((t6 Type))
               (=>
                 (= t6 y)
-                (forall (($fresh7 Bool)) (=> (= $fresh7 true) (= x x)))))))
+                (forall (($fresh0 Bool)) (=> (= $fresh0 true) (= x x)))))))
         (= x x)
         (= y y)))))",
     "kind": "let",
@@ -1533,7 +1533,7 @@ return main();
               (forall ((t6 Type))
                 (=>
                   (= t6 y)
-                  (forall (($fresh7 Bool)) (=> (= $fresh7 true) (= x x)))))))
+                  (forall (($fresh0 Bool)) (=> (= $fresh0 true) (= x x)))))))
           (= x x)
           (= y y)))))
 
@@ -1576,7 +1576,7 @@ return main();
   t5=y -> residual
   t6=x -> residual
   t6=y -> residual
-  $fresh7=true -> residual
+  $fresh0=true -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",

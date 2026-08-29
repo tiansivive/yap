@@ -2180,9 +2180,9 @@ return main();
             (forall ((y Real))
               (=>
                 (= y 0)
-                (forall (($fresh1 Bool))
+                (forall (($fresh0 Bool))
                   (=>
-                    (and (= $fresh1 __external_$gt) (= $fresh1 true))
+                    (and (= $fresh0 __external_$gt) (= $fresh0 true))
                     (and (= a a) (forall ((v Real)) (=> (= v a) (> v 0))))))))))
         (= a a)
         (forall ((x Real))
@@ -2191,9 +2191,9 @@ return main();
             (forall ((y Real))
               (=>
                 (= y 0)
-                (forall (($fresh2 Bool))
+                (forall (($fresh1 Bool))
                   (=>
-                    (and (= $fresh2 __external_$gt) (= $fresh2 false))
+                    (and (= $fresh1 __external_$gt) (= $fresh1 false))
                     (forall (($e Real)) (=> (= $e 42) (> $e 0)))))))))))))",
     "kind": "let",
     "mir": "module
@@ -2230,9 +2230,9 @@ return main();
               (forall ((y Real))
                 (=>
                   (= y 0)
-                  (forall (($fresh1 Bool))
+                  (forall (($fresh0 Bool))
                     (=>
-                      (and (= $fresh1 __external_$gt) (= $fresh1 true))
+                      (and (= $fresh0 __external_$gt) (= $fresh0 true))
                       (and (= a a) (forall ((v Real)) (=> (= v a) (> v 0))))))))))
           (= a a)
           (forall ((x Real))
@@ -2241,9 +2241,9 @@ return main();
               (forall ((y Real))
                 (=>
                   (= y 0)
-                  (forall (($fresh2 Bool))
+                  (forall (($fresh1 Bool))
                     (=>
-                      (and (= $fresh2 __external_$gt) (= $fresh2 false))
+                      (and (= $fresh1 __external_$gt) (= $fresh1 false))
                       (forall (($e Real)) (=> (= $e 42) (> $e 0)))))))))))))
 
 === Variables ===
@@ -2287,15 +2287,15 @@ return main();
   y=0 -> residual
   y=a -> residual
   y=42 -> tautology
-  $fresh1=__external_$gt -> residual
-  $fresh1=true -> residual
-  $fresh1=false -> residual
+  $fresh0=__external_$gt -> residual
+  $fresh0=true -> residual
+  $fresh0=false -> residual
   v=0 -> residual
   v=a -> residual
   v=42 -> tautology
-  $fresh2=__external_$gt -> residual
-  $fresh2=true -> residual
-  $fresh2=false -> residual
+  $fresh1=__external_$gt -> residual
+  $fresh1=true -> residual
+  $fresh1=false -> residual
   $e=0 -> tautology
   $e=a -> residual
   $e=42 -> tautology

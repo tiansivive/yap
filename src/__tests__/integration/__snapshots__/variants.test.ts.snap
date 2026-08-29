@@ -89,9 +89,9 @@ return main();
   (and
     (= list list)
     (= list list)
-    (forall (($fresh3 Schema))
+    (forall (($fresh1 Schema))
       (=>
-        (and (= $fresh3 list) (= $fresh3 list))
+        (and (= $fresh1 list) (= $fresh1 list))
         (forall ((x Real)) (forall ((xs Schema)) (= x x)))))))",
     "kind": "let",
     "mir": "module
@@ -113,9 +113,9 @@ return main();
     (and
       (= list list)
       (= list list)
-      (forall (($fresh3 Schema))
+      (forall (($fresh1 Schema))
         (=>
-          (and (= $fresh3 list) (= $fresh3 list))
+          (and (= $fresh1 list) (= $fresh1 list))
           (forall ((x Real)) (forall ((xs Schema)) (= x x)))))))
 
 === Variables ===
@@ -148,7 +148,7 @@ return main();
 
 [mbqi] round 0: 0 lemmas
   list=list -> residual
-  $fresh3=list -> residual
+  $fresh1=list -> residual
   x=x -> residual
   xs=list -> residual
 [clauses]
@@ -248,9 +248,9 @@ return main();
   (and
     (= list list)
     (= list list)
-    (forall (($fresh6 Schema))
+    (forall (($fresh1 Schema))
       (=>
-        (and (= $fresh6 list) (= $fresh6 list))
+        (and (= $fresh1 list) (= $fresh1 list))
         (forall ((x Real)) (forall ((xs Schema)) (= xs xs)))))))",
     "kind": "let",
     "mir": "module
@@ -272,9 +272,9 @@ return main();
     (and
       (= list list)
       (= list list)
-      (forall (($fresh6 Schema))
+      (forall (($fresh1 Schema))
         (=>
-          (and (= $fresh6 list) (= $fresh6 list))
+          (and (= $fresh1 list) (= $fresh1 list))
           (forall ((x Real)) (forall ((xs Schema)) (= xs xs)))))))
 
 === Variables ===
@@ -308,14 +308,14 @@ return main();
 [mbqi] round 0: 0 lemmas
   list=list -> residual
   list=xs -> residual
-  $fresh6=list -> residual
-  $fresh6=xs -> residual
+  $fresh1=list -> residual
+  $fresh1=xs -> residual
   xs=list -> residual
   xs=xs -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
-    "type": "Π(t4: FFI.Indexed Num Num @FFI.defaultArray) ->
+    "type": "Π(t2: FFI.Indexed Num Num @FFI.defaultArray) ->
   FFI.Indexed Num Num @FFI.defaultArray",
     "validity": "valid",
   },
@@ -576,7 +576,7 @@ return main();
 [30] closure
   :body -> [3]
   :env -> [29]",
-    "ivl": "(forall (($fresh2 Schema))
+    "ivl": "(forall (($fresh0 Schema))
   (forall ((a Real)) (forall ((b Real)) (forall (($row_7 Row)) (= b b)))))",
     "kind": "let",
     "mir": "module
@@ -597,7 +597,7 @@ return main();
     "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
   (closure: match p | Struct [ x: a, y: b | $row_7 ] -> b -| Γ: p)",
     "solverTrace": "=== Formula ===
-  (forall (($fresh2 Schema))
+  (forall (($fresh0 Schema))
     (forall ((a Real)) (forall ((b Real)) (forall (($row_7 Row)) (= b b)))))
 
 === Variables ===
@@ -722,7 +722,7 @@ return main();
 [28] closure
   :body -> [3]
   :env -> [27]",
-    "ivl": "(forall (($fresh4 Schema)) (forall ((a Real)) (forall (($row_12 Row)) (= a a))))",
+    "ivl": "(forall (($fresh0 Schema)) (forall ((a Real)) (forall (($row_12 Row)) (= a a))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -740,7 +740,7 @@ return main();
     "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
   (closure: match p | Struct [ y: a | $row_12 ] -> a -| Γ: p)",
     "solverTrace": "=== Formula ===
-  (forall (($fresh4 Schema)) (forall ((a Real)) (forall (($row_12 Row)) (= a a))))
+  (forall (($fresh0 Schema)) (forall ((a Real)) (forall (($row_12 Row)) (= a a))))
 
 === Variables ===
   proxy p1: true
@@ -775,7 +775,7 @@ return main();
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
-    "type": "Π(t3: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
+    "type": "Π(t2: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
     "validity": "valid",
   },
 ]
