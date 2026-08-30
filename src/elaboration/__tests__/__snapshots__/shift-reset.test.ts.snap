@@ -76,7 +76,7 @@ exports[`Shift-reset > multiple shifts within reset > multiple shifts and multip
         "2",
       ],
       "9": [
-        "L1 1",
+        "(L1) 1",
         "1",
       ],
     },
@@ -196,7 +196,7 @@ exports[`Shift-reset > only one shift within reset > nested resumption 1`] = `
   "state": {
     "nondeterminism": {
       "5": [
-        "L1 10",
+        "(L1) 10",
         "10",
       ],
     },
@@ -226,7 +226,7 @@ exports[`Shift-reset > only one shift within reset > nested resumption with non-
   "state": {
     "nondeterminism": {
       "5": [
-        "L1 10",
+        "(L1) 10",
         "10",
       ],
     },

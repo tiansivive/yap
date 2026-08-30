@@ -68,10 +68,9 @@ return main();
     "ivl": "(and
   (forall ((x Real))
     (forall ((y Real))
-      (=> (= y 2) (forall ((r Real)) (=> (= r 0.5) (= r (/ 1 2)))))))
+      (=> (= y 2) (forall ((r Real)) (=> (= r 0.5) (= r 0.5))))))
   (forall ((x Real))
-    (forall ((y Real))
-      (=> (= y 2) (forall ((r Real)) (=> (= r 1) (= r (/ 2 2))))))))",
+    (forall ((y Real)) (=> (= y 2) (forall ((r Real)) (=> (= r 1) (= r 1)))))))",
     "kind": "expression",
     "mir": "module
   fn main entry=entry
@@ -94,10 +93,9 @@ return main();
   (and
     (forall ((x Real))
       (forall ((y Real))
-        (=> (= y 2) (forall ((r Real)) (=> (= r 0.5) (= r (/ 1 2)))))))
+        (=> (= y 2) (forall ((r Real)) (=> (= r 0.5) (= r 0.5))))))
     (forall ((x Real))
-      (forall ((y Real))
-        (=> (= y 2) (forall ((r Real)) (=> (= r 1) (= r (/ 2 2))))))))
+      (forall ((y Real)) (=> (= y 2) (forall ((r Real)) (=> (= r 1) (= r 1)))))))
 
 === Variables ===
   proxy p1: true

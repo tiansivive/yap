@@ -68,6 +68,10 @@ export function* matching(nf: Value, alts: EB.Alternative[]) {
 	return yield* fresh(() => Machine.matching(nf, alts));
 }
 
+export function* meet(ctx: EB.Context, pattern: EB.Pattern, nf: Value) {
+	return yield* fresh(() => Machine.meet(ctx, pattern, nf));
+}
+
 export function* apply(binder: EB.Binder, closure: Closure, value: Value) {
 	return yield* fresh(() => Machine.apply(binder, closure, value));
 }
@@ -99,6 +103,6 @@ export const probe =
 		return answer;
 	};
 
-export { meet, unwrapNeutral, ignoraModal, builtinsOps } from "./evaluation.v2";
-export type { View, MeetResult, EvalOptions } from "./evaluation.v2";
+export { unwrapNeutral, ignoraModal, builtinsOps } from "./evaluation.v2";
+export type { View, Meet, MeetResult, EvalOptions } from "./evaluation.v2";
 export { inert } from "./arity";

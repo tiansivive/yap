@@ -19,8 +19,6 @@ import * as Quoting from "./quoting";
 import _ from "lodash";
 
 import * as E from "fp-ts/lib/Either";
-import * as F from "fp-ts/lib/function";
-
 import * as R from "@yap/shared/rows";
 import { Option } from "fp-ts/lib/Option";
 import * as O from "fp-ts/lib/Option";
@@ -281,13 +279,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<void> {
 		)
 		.with({ type: "Match" }, function* (v) {
 			yield* Stack.cont(1, function* ([scrutinee]) {
-				const known = yield* view(scrutinee);
-				if (known.kind !== "Sealed") {
-					yield* Stack.ret(NF.Constructors.StuckMatch(NF.Constructors.Closure(ctx, v), scrutinee));
-					return;
-				}
-
-				yield* matchingAndPushStack(known.value, v.alternatives);
+				yield* matchingAndPushStack(scrutinee, v.alternatives, NF.Constructors.Closure(ctx, v));
 			});
 			yield* Stack.eval(v.scrutinee);
 		})
@@ -597,8 +589,14 @@ function* injectValue(base: NF.Value, label: string, injected: NF.Value): Evalua
  */
 function* reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evaluation<void> {
 	yield* match(nff)
-		.with({ type: "Neutral" }, function* ({ kind, value }) {
-			yield* Stack.ret(NF.Constructors.Neutral(kind, NF.Constructors.App(value, nfa, icit)));
+		.with({ type: "Neutral", kind: "Sealed" }, function* ({ value }) {
+			yield* Stack.ret(NF.Constructors.Neutral("Sealed", NF.Constructors.App(value, nfa, icit)));
+		})
+		.with({ type: "Neutral", kind: "Symbolic" }, function* () {
+			yield* Stack.ret(NF.Constructors.Neutral("Blocked", NF.Constructors.App(nff, nfa, icit)));
+		})
+		.with({ type: "Neutral", kind: "Blocked" }, function* ({ value }) {
+			yield* Stack.ret(NF.Constructors.Neutral("Blocked", NF.Constructors.App(value, nfa, icit)));
 		})
 		.with({ type: "Modal" }, function* ({ modalities, value }) {
 			console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
@@ -610,7 +608,6 @@ function* reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): 
 			yield* Stack.ret(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
 		})
 		.with({ type: "Abs" }, function* ({ closure, binder }) {
-			// Closure consumption: the closure's stored environment plus the argument
 			const extended = (cls: Exclude<NF.Closure, { type: "Continuation" }>) => {
 				if (binder.type !== "Sigma") {
 					return EB.extend(cls.ctx, binder, nfa);
@@ -636,7 +633,8 @@ function* reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): 
 			yield* Stack.ret(NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit));
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, function* () {
-			yield* Stack.ret(NF.Constructors.Neutral("Symbolic", NF.Constructors.App(nff, nfa, icit)));
+			const symbolic = NF.Constructors.Neutral("Symbolic", nff);
+			yield* Stack.ret(NF.Constructors.Neutral("Blocked", NF.Constructors.App(symbolic, nfa, icit)));
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, function* () {
 			yield* Stack.ret(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
@@ -660,8 +658,8 @@ function* reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): 
 				return;
 			}
 
-			if (accumulated.some(a => a.type === "Neutral")) {
-				yield* Stack.ret(NF.Constructors.Neutral("Sealed", NF.Constructors.External(name, arity, compute, accumulated)));
+			if (accumulated.some(blocksExternal)) {
+				yield* Stack.ret(NF.Constructors.Neutral("Blocked", NF.Constructors.External(name, arity, compute, accumulated)));
 				return;
 			}
 
@@ -675,30 +673,39 @@ function* reduceAndPushStack(nff: NF.Value, nfa: NF.Value, icit: Implicitness): 
 /**
  * Stack-based matching: push alternatives as work items instead of recursively calling evaluate.
  */
-function* matchingAndPushStack(nf: NF.Value, alts: EB.Alternative[]): Evaluation<void> {
+function* matchingAndPushStack(nf: NF.Value, alts: EB.Alternative[], closure: NF.Closure): Evaluation<void> {
 	if (alts.length === 0) {
 		throw new Error("Match: No alternative matched");
 	}
 
 	const ctx = yield* M.reader.ask();
 	const [alt, ...rest] = alts;
-	const meetResult = meet(ctx, alt.pattern, nf);
+	const meetResult = yield* meet(ctx, alt.pattern, nf);
 
-	if (O.isSome(meetResult)) {
-		// Pattern matched: enter the alternative under the binder-extended context
-		const binders = meetResult.value;
-		const extendedCtx = binders.reduce((_ctx, { binder, nf: bound }) => EB.extend(_ctx, binder, bound), ctx);
-		yield* M.reader.local(_ => extendedCtx, Stack.eval(alt.term));
-	} else {
-		// Pattern didn't match: try next alternative
-		yield* matchingAndPushStack(nf, rest);
-	}
+	yield* match(meetResult)
+		.with({ tag: "matched" }, function* ({ bindings }) {
+			const extendedCtx = bindings.reduce((_ctx, { binder, nf: bound }) => EB.extend(_ctx, binder, bound), ctx);
+			yield* M.reader.local(_ => extendedCtx, Stack.eval(alt.term));
+		})
+		.with({ tag: "blocked" }, function* () {
+			yield* Stack.ret(NF.Constructors.StuckMatch(closure, nf));
+		})
+		.with({ tag: "mismatch" }, function* () {
+			yield* matchingAndPushStack(nf, rest, closure);
+		})
+		.exhaustive();
 }
 
 export function* reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evaluation<NF.Value> {
 	return yield* match(nff)
-		.with({ type: "Neutral" }, function* ({ kind, value }) {
-			return NF.Constructors.Neutral(kind, NF.Constructors.App(value, nfa, icit));
+		.with({ type: "Neutral", kind: "Sealed" }, function* ({ value }) {
+			return NF.Constructors.Neutral("Sealed", NF.Constructors.App(value, nfa, icit));
+		})
+		.with({ type: "Neutral", kind: "Symbolic" }, function* () {
+			return NF.Constructors.Neutral("Blocked", NF.Constructors.App(nff, nfa, icit));
+		})
+		.with({ type: "Neutral", kind: "Blocked" }, function* ({ value }) {
+			return NF.Constructors.Neutral("Blocked", NF.Constructors.App(value, nfa, icit));
 		})
 		.with({ type: "Modal" }, function* ({ modalities, value }) {
 			console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
@@ -715,7 +722,8 @@ export function* reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evalu
 			return NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit);
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, function* (_) {
-			return NF.Constructors.Neutral("Symbolic", NF.Constructors.App(nff, nfa, icit));
+			const symbolic = NF.Constructors.Neutral("Symbolic", nff);
+			return NF.Constructors.Neutral("Blocked", NF.Constructors.App(symbolic, nfa, icit));
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, function* () {
 			return NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit));
@@ -735,9 +743,8 @@ export function* reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evalu
 				return NF.Constructors.External(name, arity, compute, accumulated);
 			}
 
-			if (accumulated.some(a => a.type === "Neutral")) {
-				const external = NF.Constructors.External(name, arity, compute, accumulated);
-				return NF.Constructors.Neutral("Sealed", external);
+			if (accumulated.some(blocksExternal)) {
+				return NF.Constructors.Neutral("Blocked", NF.Constructors.External(name, arity, compute, accumulated));
 			}
 
 			return compute(...accumulated.map(ignoraModal));
@@ -749,20 +756,25 @@ export function* reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evalu
 
 export function* matching(nf: NF.Value, alts: EB.Alternative[]): Evaluation<NF.Value | undefined> {
 	if (alts.length === 0) {
-		return undefined;
+		throw new Error("Match: No alternative matched");
 	}
 
 	const ctx = yield* M.reader.ask();
 	const [alt, ...rest] = alts;
-	const met = meet(ctx, alt.pattern, nf);
+	const met = yield* meet(ctx, alt.pattern, nf);
 
-	if (O.isNone(met)) {
-		return yield* matching(nf, rest);
-	}
-
-	const extended = met.value.reduce((_ctx, { binder, nf: bound }) => EB.extend(_ctx, binder, bound), ctx);
-
-	return yield* M.reader.local(_ => extended, evaluate(alt.term));
+	return yield* match(met)
+		.with({ tag: "blocked" }, function* () {
+			return undefined;
+		})
+		.with({ tag: "mismatch" }, function* () {
+			return yield* matching(nf, rest);
+		})
+		.with({ tag: "matched" }, function* ({ bindings }) {
+			const extended = bindings.reduce((_ctx, { binder, nf: bound }) => EB.extend(_ctx, binder, bound), ctx);
+			return yield* M.reader.local(_ => extended, evaluate(alt.term));
+		})
+		.exhaustive();
 }
 
 export function* apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): Evaluation<NF.Value> {
@@ -805,21 +817,36 @@ export function* resume(value: NF.Value): Evaluation<Option<NF.Value>> {
 				.otherwise(() => O.none);
 		})
 		.with(NF.Patterns.Match, function* ({ closure, scrutinee }) {
-			const known = yield* view(scrutinee);
-			if (known.kind !== "Sealed") {
-				return O.none;
-			}
 			assert(closure.type === "Closure", "Blocked match should retain a term closure");
 			assert(closure.term.type === "Match", "Blocked match closure should retain a match term");
 
-			const result = yield* M.reader.local(_ => closure.ctx, matching(known.value, closure.term.alternatives));
-			if (!result) {
-				throw new Error("Match: No alternative matched");
-			}
-			return O.some(result);
+			const result = yield* M.reader.local(_ => closure.ctx, matching(scrutinee, closure.term.alternatives));
+			return O.fromNullable(result);
 		})
 		.with(NF.Patterns.Inj, function* ({ base, label, injected }) {
 			return O.fromNullable(yield* inject(base, label, injected));
+		})
+		.with(NF.Patterns.App, function* ({ func, arg, icit: appIcit }) {
+			const forced = yield* force(func);
+
+			if (forced === func) {
+				return O.none;
+			}
+			return O.some(yield* reduce(forced, arg, appIcit));
+		})
+		.with({ type: "External" }, function* (ext) {
+			if (ext.args.length < ext.arity) {
+				return O.none;
+			}
+
+			const forced = yield* Eff.traverse(ext.args, force);
+			const changed = forced.some((arg, index) => arg !== ext.args[index]);
+
+			if (forced.some(blocksExternal)) {
+				return changed ? O.some(NF.Constructors.Neutral("Blocked", NF.Constructors.External(ext.name, ext.arity, ext.compute, forced))) : O.none;
+			}
+
+			return O.some(ext.compute(...forced.map(ignoraModal)));
 		})
 		.otherwise(function* () {
 			return O.none;
@@ -864,7 +891,9 @@ export function* force(value: NF.Value): Evaluation<NF.Value> {
 			return solution ? yield* force(solution) : value;
 		})
 		.otherwise(function* () {
-			return value;
+			const next = yield* resume(value);
+
+			return O.isNone(next) ? value : yield* force(next.value);
 		});
 }
 
@@ -888,129 +917,150 @@ export const ignoraModal = (value: NF.Value): NF.Value => {
 		.otherwise(() => value);
 };
 
+const blocksExternal = (value: NF.Value): boolean =>
+	match(ignoraModal(value))
+		.with(NF.Patterns.Unresolved, () => true)
+		.otherwise(() => false);
+
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];
 
 export type MeetResult = { binder: EB.Binder; nf: NF.Value };
+export type Meet = { tag: "matched"; bindings: MeetResult[] } | { tag: "mismatch" } | { tag: "blocked" };
 
-const ExtensionRow = O.fromPredicate((row: R.Row<EB.Pattern, string>): row is R.Extension<EB.Pattern, string> => row.type === "extension");
+const matched = (bindings: MeetResult[]): Meet => ({ tag: "matched", bindings });
+const mismatch = (): Meet => ({ tag: "mismatch" });
+const blocked = (): Meet => ({ tag: "blocked" });
 
-export const meet = (ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Option<MeetResult[]> => {
-	return match([unwrapNeutral(nf), pattern])
-		.with([P._, { type: "Wildcard" }], () => O.some([]))
-		.with([P._, { type: "Binder" }], ([v, p]) => {
-			const binder: EB.Binder = { type: "Lambda", variable: p.value };
-			return O.some<MeetResult[]>([{ binder, nf }]);
+const combineMeet = (left: Meet, right: Meet): Meet =>
+	match([left, right])
+		.with([{ tag: "mismatch" }, P._], [P._, { tag: "mismatch" }], mismatch)
+		.with([{ tag: "blocked" }, P._], [P._, { tag: "blocked" }], blocked)
+		.with([{ tag: "matched" }, { tag: "matched" }], ([l, r]) => matched([...l.bindings, ...r.bindings]))
+		.exhaustive();
+
+export function* meet(ctx: EB.Context, pattern: EB.Pattern, nf: NF.Value): Evaluation<Meet> {
+	const immediate = match(pattern)
+		.with({ type: "Wildcard" }, () => matched([]))
+		.with({ type: "Binder" }, ({ value }) => {
+			const binder: EB.Binder = { type: "Lambda", variable: value };
+			return matched([{ binder, nf }]);
+		})
+		.otherwise(() => undefined);
+
+	if (immediate) {
+		return immediate;
+	}
+
+	const known = yield* view(nf);
+	if (known.kind !== "Sealed") {
+		return blocked();
+	}
+
+	return yield* match([known.value, pattern])
+		.with([{ type: "Neutral" }, P._], function* () {
+			return blocked();
+		})
+		.with([{ type: "Lit" }, { type: "Lit" }], function* ([value, p]) {
+			return _.isEqual(value.value, p.value) ? matched([]) : mismatch();
 		})
 		.with(
-			[{ type: "Lit" }, { type: "Lit" }],
-			([v, p]) => _.isEqual(v.value, p.value),
-			() => O.some([]),
+			[NF.Patterns.Array, { type: "List" }],
+			([value, p]) => value.arg.row.type === "empty" && p.patterns.length === 0 && !p.rest,
+			function* () {
+				return matched([]);
+			},
 		)
 		.with(
 			[NF.Patterns.Array, { type: "List" }],
-			([v, p]) => v.arg.row.type === "empty" && p.patterns.length === 0 && !p.rest,
-			() => O.some([]),
+			([, p]) => p.patterns.length === 0 && !p.rest,
+			function* () {
+				return mismatch();
+			},
 		)
-		.with(
-			[NF.Patterns.Array, { type: "List" }],
-			([v, p]) => p.patterns.length === 0 && !p.rest,
-			() => O.none,
-		)
-		.with([NF.Patterns.Array, { type: "List" }], ([v, p]) => {
-			const zip = (patterns: EB.Pattern[], row: NF.Row): O.Option<MeetResult[]> => {
+		.with([NF.Patterns.Array, { type: "List" }], function* ([value, p]) {
+			const zip = function* (patterns: EB.Pattern[], row: NF.Row): Evaluation<Meet> {
 				if (patterns.length === 0) {
 					if (!p.rest) {
-						return O.some([]);
+						return matched([]);
 					}
 
-					const tail = NF.Constructors.Array(row);
 					const binder: EB.Binder = { type: "Lambda", variable: p.rest };
-					return O.some([{ binder, nf: tail }]);
+					return matched([{ binder, nf: NF.Constructors.Array(row) }]);
 				}
 
 				if (row.type !== "extension") {
-					return O.none;
+					return mismatch();
 				}
 
 				const [head, ...tail] = patterns;
-				return F.pipe(
-					O.Do,
-					O.apS("head", meet(ctx, head, row.value)),
-					O.apS("tail", zip(tail, row.row)),
-					O.map(({ head, tail }) => [...head, ...tail]),
-				);
+				const current = yield* meet(ctx, head, row.value);
+				const rest = yield* zip(tail, row.row);
+				return combineMeet(current, rest);
 			};
 
-			return zip(p.patterns, v.arg.row);
+			return yield* zip(p.patterns, value.arg.row);
 		})
-		.with([NF.Patterns.Schema, { type: "Struct" }], [NF.Patterns.Struct, { type: "Struct" }], ([{ arg }, p]) => meetAll(ctx, p.row, arg.row))
-		.with([NF.Patterns.Row, { type: "Row" }], ([v, p]) => {
-			return meetAll(ctx, p.row, v.row);
+		.with([NF.Patterns.Schema, { type: "Struct" }], [NF.Patterns.Struct, { type: "Struct" }], function* ([{ arg }, p]) {
+			return yield* meetAll(ctx, p.row, arg.row);
 		})
-		.with([NF.Patterns.Tagged, { type: "Variant", row: { type: "extension" } }], ([{ arg }, p]) => {
+		.with([NF.Patterns.Row, { type: "Row" }], function* ([value, p]) {
+			return yield* meetAll(ctx, p.row, value.row);
+		})
+		.with([NF.Patterns.Tagged, { type: "Variant", row: { type: "extension" } }], function* ([{ arg }, p]) {
 			const value = NF.TaggedValue.extract(arg.row);
 			if (!value) {
-				return O.none;
+				return mismatch();
 			}
 
-			return F.pipe(
-				R.rewrite(p.row, value.label),
-				E.fold(
-					() => O.none,
-					matched =>
-						F.pipe(
-							matched,
-							ExtensionRow,
-							O.chain(matched =>
-								F.pipe(
-									O.Do,
-									O.apS("payload", meet(ctx, matched.value, value.payload)),
-									O.apS("rest", meetAll(ctx, matched.row, R.Constructors.Empty())),
-									O.map(({ payload, rest }) => payload.concat(rest)),
-								),
-							),
-						),
-				),
-			);
-		})
-		.with([NF.Patterns.Variant, { type: "Variant" }], ([{ arg }, p]) => meetAll(ctx, p.row, arg.row))
-		.with([NF.Patterns.HashMap, { type: "List" }], ([v, p]) => {
-			console.warn("List pattern matching not yet implemented");
-			return O.some([]);
-		})
-		.with(
-			[NF.Patterns.Atom, { type: "Var" }],
-			([{ value: v }, { value: p }]) => v.value === p,
-			() => O.some([]),
-		)
-		.otherwise(() => O.none);
-};
+			const rewritten = R.rewrite(p.row, value.label);
+			if (E.isLeft(rewritten) || rewritten.right.type !== "extension") {
+				return mismatch();
+			}
 
-const meetAll = (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Option<MeetResult[]> => {
-	return match([pats, vals])
-		.with([{ type: "empty" }, P._], () => O.some([]))
-		.with([{ type: "variable" }, P._], ([r, tail]) => {
-			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
-			return O.some([{ binder, nf: NF.Constructors.Row(tail) }]);
+			const payload = yield* meet(ctx, rewritten.right.value, value.payload);
+			const rest = yield* meetAll(ctx, rewritten.right.row, R.Constructors.Empty());
+			return combineMeet(payload, rest);
 		})
-		.with([{ type: "extension" }, { type: "empty" }], () => O.none)
-		.with([{ type: "extension" }, { type: "variable" }], () => O.none)
-		.with([{ type: "extension" }, { type: "extension" }], ([r1, r2]) => {
+		.with([NF.Patterns.Variant, { type: "Variant" }], function* ([{ arg }, p]) {
+			return yield* meetAll(ctx, p.row, arg.row);
+		})
+		.with([NF.Patterns.HashMap, { type: "List" }], function* () {
+			console.warn("List pattern matching not yet implemented");
+			return matched([]);
+		})
+		.with([NF.Patterns.Atom, { type: "Var" }], function* ([{ value }, p]) {
+			return value.value === p.value ? matched([]) : mismatch();
+		})
+		.otherwise(function* () {
+			return mismatch();
+		});
+}
+
+const meetAll = function* (ctx: EB.Context, pats: R.Row<EB.Pattern, string>, vals: NF.Row): Evaluation<Meet> {
+	return yield* match([pats, vals])
+		.with([{ type: "empty" }, P._], function* () {
+			return matched([]);
+		})
+		.with([{ type: "variable" }, P._], function* ([r, tail]) {
+			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
+			return matched([{ binder, nf: NF.Constructors.Row(tail) }]);
+		})
+		.with([{ type: "extension" }, { type: "empty" }], [{ type: "extension" }, { type: "variable" }], function* () {
+			return mismatch();
+		})
+		.with([{ type: "extension" }, { type: "extension" }], function* ([r1, r2]) {
 			const rewritten = R.rewrite(r2, r1.label);
 			if (E.isLeft(rewritten)) {
-				return O.none;
+				return mismatch();
 			}
 
 			if (rewritten.right.type !== "extension") {
-				throw new Error("Rewritting a row extension should result in another row extension");
+				throw new Error("Rewriting a row extension should result in another row extension");
 			}
-			const { row } = rewritten.right;
-			return F.pipe(
-				O.Do,
-				O.apS("current", meet(ctx, r1.value, rewritten.right.value)),
-				O.apS("rest", meetAll(ctx, r1.row, row)),
-				O.map(({ current, rest }) => current.concat(rest)),
-			);
+
+			const current = yield* meet(ctx, r1.value, rewritten.right.value);
+			const rest = yield* meetAll(ctx, r1.row, rewritten.right.row);
+			return combineMeet(current, rest);
 		})
 		.exhaustive();
 };
