@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-syntax, no-restricted-properties, @typescript-eslint/no-unused-vars --
  * The NbE machine: evaluation drives an explicit work-stack owned by the callstack effect
  * (./callstack.ts), and shift/reset capture slices that stack for continuations. The driver
- * loop is the file's remaining imperative residue.
+ * loop is the intentional CEK core: mutation stays private to the machine-owning handler.
  */
 import { match, P } from "ts-pattern";
 

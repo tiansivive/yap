@@ -3,7 +3,7 @@ import type { Block, Declaration, Function, Instr } from "./mir";
 
 /**
  * Worklist frame for stack-based lowering (no recursion).
- * Same pattern as evaluation.v2.ts globalWorkStack.
+ * Same explicit-frame pattern as the effect-owned NbE CEK machine; lowering owns a separate worklist.
  */
 export type Frame =
 	| { type: "Lower"; ctx: LowerCtx; term: EB.Term }
