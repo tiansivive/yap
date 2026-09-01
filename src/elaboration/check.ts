@@ -203,17 +203,19 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					m.alternatives,
 					EB.Inference.Match.elaborate(ast, function* (src, [pat, _patty, , binders]) {
 						const ctx = yield* M.reader.ask();
-						const val = NF.Pats.evaluate(pat, ctx, binders);
-						const quoted = yield* NF.quote(ctx.env.length, val);
+						const branch = function* () {
+							const ctx = yield* M.reader.ask();
+							const branchTy = yield* NF.normalize(yield* NF.quote(ctx.env.length, ty));
+							return yield* EB.check(src, branchTy);
+						};
 
-						const [tm, us] = yield* M.reader.local(
-							c => narrow(val, quoted, c),
-							(function* () {
-								const ctx = yield* M.reader.ask();
-								const branchTy = yield* NF.normalize(yield* NF.quote(ctx.env.length, ty));
-								return yield* EB.check(src, branchTy);
-							})(),
-						);
+						const [tm, us] = yield* match(NF.Pats.evaluate(pat, ctx, binders))
+							.with({ _tag: "None" }, () => branch())
+							.with({ _tag: "Some" }, function* ({ value }) {
+								const quoted = yield* NF.quote(ctx.env.length, value);
+								return yield* M.reader.local(c => narrow(value, quoted, c), branch());
+							})
+							.exhaustive();
 
 						//const [tm, us] = yield* EB.check(src, narrow(val));
 						return [tm, ty, us] satisfies EB.AST;

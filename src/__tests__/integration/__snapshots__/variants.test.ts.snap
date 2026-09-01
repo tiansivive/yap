@@ -1573,14 +1573,292 @@ return main();
     "validity": "valid",
   },
   {
-    "error": "Expected number, got wildcard",
+    "codegenJS": "function main() {
+  const v0 = {};
+  const env_cls3 = {
+    v0: v0
+  };
+  const fnref_cls3 = closure_32;
+  const closure_cls3 = {
+    __fn: fnref_cls3,
+    __env: env_cls3
+  };
+  (v0.compute = closure_cls3);
+  return v0;
+}
+
+function closure_32(env1, n2) {
+  let __block = "entry";
+  let match1;
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        const cap_0 = env1.v0;
+        (__block = "sw2");
+        break;
+      }
+      case "sw2": {
+        if ((String(n2) === "0")) {
+          (__block = "case4");
+          break;
+        }
+        (__block = "default5");
+        break;
+      }
+      case "case4": {
+        const v5 = 1;
+        const __t0 = v5;
+        (match1 = __t0);
+        (__block = "join3");
+        break;
+      }
+      case "default5": {
+        const v6 = cap_0.compute;
+        const v7 = 1;
+        const v8 = (n2 - v7);
+        const fnref9 = v6.__fn;
+        const env10 = v6.__env;
+        const v11 = fnref9(env10, v8);
+        const v12 = (n2 * v11);
+        const __t0 = v12;
+        (match1 = __t0);
+        (__block = "join3");
+        break;
+      }
+      case "join3": {
+        return match1;
+      }
+    }
+  }
+}
+return main();
+",
+    "elaborated": "Struct
+  [ compute: λ(n: Num) ->
+      match n | 0 -> 1 | _ -> FFI.$mul n (:compute (FFI.$sub n 1)) ]",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"fact"}
+[3] struct
+  :field -> [4] {"label":"compute","backpatch":true}
+[4] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [31]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] match
+  :alt -> [8] {"index":0}
+  :alt -> [11] {"index":1}
+  :decision_tree -> [28]
+  :scrutinee -> [7]
+[7] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[8] case
+  :body -> [10]
+  :next -> [11]
+  :pattern -> [9]
+[9] pat:lit {"value":{"type":"Num","value":0}}
+[10] lit {"value":{"type":"Num","value":1}}
+[11] case
+  :body -> [26]
+  :pattern -> [12]
+[12] pat:wildcard
+[15] var:foreign {"name":"$mul","arity":2}
+[17] var:bound {"index":0}
+  :next -> [18]
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[18] app {"icit":"Explicit"}
+  :arg -> [27]
+  :func -> [19]
+[19] var:label {"name":"compute"}
+  :refers_to -> [4]
+  :scope -> [4] {"level":0}
+[22] var:foreign {"name":"$sub","arity":2}
+[24] var:bound {"index":0}
+  :next -> [25]
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[25] lit {"value":{"type":"Num","value":1}}
+[26] primop {"op":"$mul"}
+  :arg -> [17] {"index":0}
+  :arg -> [18] {"index":1}
+  :callee -> [15]
+[27] primop {"op":"$sub"}
+  :arg -> [24] {"index":0}
+  :arg -> [25] {"index":1}
+  :callee -> [22]
+[28] switch {"kind":"lit"}
+  :branch -> [29] {"value":{"type":"Num","value":0}}
+  :default -> [30]
+  :inspect -> [7]
+[29] leaf
+  :body -> [10]
+[30] leaf
+  :body -> [26]
+[31] env
+  :capture -> [3] {"index":0}
+[32] closure
+  :body -> [4]
+  :env -> [31]",
+    "ivl": "(forall ((n Real))
+  (and
+    (= n n)
+    (= n n)
+    (forall (($fresh1 Real))
+      (=> (and (= $fresh1 n) (= $fresh1 n)) (and (= n n) (= n n))))))",
     "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }
+      let env_cls3 = alloc { v0: v0 }
+      let fnref_cls3 = &closure_32
+      let closure_cls3 = alloc { __fn: fnref_cls3, __env: env_cls3 }
+      update-fbip v0 { compute: closure_cls3 }
+      return v0
+  fn closure_32(env1, n2) entry=entry
+    entry:
+      let cap_0 = read env1.v0
+      jump sw2
+    sw2:
+      branch n2 { 0 -> case4; default -> default5 }
+    case4:
+      let v5 = 1
+      jump join3(v5)
+    default5:
+      let v6 = read cap_0.compute
+      let v7 = 1
+      let v8 = -(n2, v7)
+      let fnref9 = read v6.__fn
+      let env10 = read v6.__env
+      let v11 = call *fnref9(env10, v8)
+      let v12 = *(n2, v11)
+      jump join3(v12)
+    join3(match1):
+      return match1",
     "name": "fact",
+    "normalized": "Struct
+  [ compute: λ(n: Num) ->
+      (closure: match n
+        | 0 -> 1
+        | _ -> FFI.$mul n (:compute (FFI.$sub n 1)) -| Γ: n) ]",
+    "solverTrace": "=== Formula ===
+  (forall ((n Real))
+    (and
+      (= n n)
+      (= n n)
+      (forall (($fresh1 Real))
+        (=> (and (= $fresh1 n) (= $fresh1 n)) (and (= n n) (= n n))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  n=n -> residual
+  $fresh1=n -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
+    "type": "Σ($sig: [ compute: Π(t1: Num) -> Num ]) . Schema [ compute: Π(t1: Num) -> Num ]",
+    "validity": "valid",
   },
   {
-    "error": "Variable not found: fact",
+    "codegenJS": "function main() {
+  const v0 = fact;
+  const v1 = v0.compute;
+  const v2 = 5;
+  const fnref3 = v1.__fn;
+  const env4 = v1.__env;
+  const v5 = fnref3(env4, v2);
+  return v5;
+}
+return main();
+",
+    "elaborated": "((fact).compute) 5",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"result"}
+[3] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [4]
+[4] proj {"label":"compute"}
+  :target -> [6]
+[5] var:free {"name":"fact"}
+[6] var:ref {"name":"fact"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] lit {"value":{"type":"Num","value":5}}",
+    "ivl": "true",
     "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = fact
+      let v1 = read v0.compute
+      let v2 = 5
+      let fnref3 = read v1.__fn
+      let env4 = read v1.__env
+      let v5 = call *fnref3(env4, v2)
+      return v5",
     "name": "result",
+    "normalized": "120",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
+    "type": "Num",
+    "validity": "valid",
   },
 ]
 `;
