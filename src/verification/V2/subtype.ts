@@ -205,12 +205,18 @@ export const subtype = function* (left: NF.Value, right: NF.Value): Verification
 			const unfolded = yield* NF.apply(mu.binder, mu.closure, mu);
 			return yield* subtype(ty, unfolded);
 		})
+		/* Blocked is outer state; an application residual and an application compare as applications. Ahead of the mu-unfolding fallthroughs, which reject a pair neither side of which is a bare App. */
+		.with([NF.Patterns.StuckApp, NF.Patterns.StuckApp], function* ([left, right]) {
+			return yield* subtype(left.value, right.value);
+		})
+		.with([NF.Patterns.StuckApp, NF.Patterns.App], function* ([stuck, app]) {
+			return yield* subtype(stuck.value, app);
+		})
+		.with([NF.Patterns.App, NF.Patterns.StuckApp], function* ([app, stuck]) {
+			return yield* subtype(app, stuck.value);
+		})
 		.with([NF.Patterns.App, NF.Patterns.App], function* ([left, right]) {
-			const isFlex = (t: NF.Value) =>
-				match(NF.unwrapNeutral(t))
-					.with(NF.Patterns.Flex, () => true)
-					.otherwise(() => false);
-			if ([left.func, right.func, left.arg, right.arg].some(isFlex)) {
+			if ([left.func, right.func, left.arg, right.arg].some(NF.isFlex)) {
 				const vc1 = yield* subtype(left.func, right.func);
 				const vc2 = yield* subtype(left.arg, right.arg);
 				return Build.and(vc1, vc2);

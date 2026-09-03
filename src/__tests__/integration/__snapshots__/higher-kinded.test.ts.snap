@@ -1018,7 +1018,7 @@ function closure_70(env0, f1) {
 }
 return main();
 ",
-    "elaborated": "λ(f: Π(t12: Type) -> Type) =>
+    "elaborated": "λ(f: Π(t11: Type) -> Type) =>
   λ(functor: Σ($sig: [ map: Π(a: Type) =>
       Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) .
     Schema
@@ -1026,7 +1026,7 @@ return main();
           Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) =>
     λ(a: Type) =>
       λ(b: Type) =>
-        λ(fn: Π(t14: a) -> b) ->
+        λ(fn: Π(t13: a) -> b) ->
           λ(container: f a) -> ((functor).map) @a @b fn container",
     "gram": "[1] root
   :entry -> [3]
@@ -1035,7 +1035,7 @@ return main();
   :annotation -> [4]
   :body -> [7]
   :env -> [67]
-[4] pi {"variable":"t12","icit":"Explicit","level":1}
+[4] pi {"variable":"t11","icit":"Explicit","level":1}
   :annotation -> [5]
   :body -> [6]
 [5] lit {"value":{"type":"Atom","value":"Type"}}
@@ -1203,7 +1203,7 @@ return main();
   :env -> [69]
 [46] lit {"value":{"type":"Atom","value":"Type"}}
 [48] lit {"value":{"type":"Atom","value":"Type"}}
-[50] pi {"variable":"t14","icit":"Explicit","level":5}
+[50] pi {"variable":"t13","icit":"Explicit","level":5}
   :annotation -> [51]
   :body -> [52]
 [51] var:bound {"index":0}
@@ -1303,7 +1303,7 @@ return main();
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2",
     "name": "fmap",
-    "normalized": "λ(f: Π(t12: Type) -> (closure: Type -| Γ: t12)) =>
+    "normalized": "λ(f: Π(t11: Type) -> (closure: Type -| Γ: t11)) =>
   (closure: λ(functor: Σ($sig: [ map: Π(a: Type) =>
       Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) .
     Schema
@@ -1311,7 +1311,7 @@ return main();
           Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) =>
     λ(a: Type) =>
       λ(b: Type) =>
-        λ(fn: Π(t14: a) -> b) ->
+        λ(fn: Π(t13: a) -> b) ->
           λ(container: f a) -> ((functor).map) @a @b fn container -| Γ: f)",
     "solverTrace": "=== Formula ===
   (forall ((a Type))
@@ -1356,13 +1356,13 @@ return main();
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
-    "type": "Π(f: Π(t12: Type) -> Type) =>
+    "type": "Π(f: Π(t11: Type) -> Type) =>
   Π(functor: Σ($sig: [ map: Π(a: Type) =>
       Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) .
     Schema
       [ map: Π(a: Type) =>
           Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) =>
-    Π(a: Type) => Π(b: Type) => Π(t13: Π(t14: a) -> b) -> Π(t15: f a) -> f b",
+    Π(a: Type) => Π(b: Type) => Π(t12: Π(t13: a) -> b) -> Π(t14: f a) -> f b",
     "validity": "valid",
   },
   {
@@ -1450,7 +1450,7 @@ function closure_67(env0, F1) {
 }
 return main();
 ",
-    "elaborated": "λ(F: Π(t12: Type) -> Type) =>
+    "elaborated": "λ(F: Π(t11: Type) -> Type) =>
   λ(a: Type) =>
     λ(A: Σ($sig: [ map: Π(a: Type) =>
         Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: F a) -> F b ]) .
@@ -1465,7 +1465,7 @@ return main();
   :annotation -> [4]
   :body -> [7]
   :env -> [64]
-[4] pi {"variable":"t12","icit":"Explicit","level":1}
+[4] pi {"variable":"t11","icit":"Explicit","level":1}
   :annotation -> [5]
   :body -> [6]
 [5] lit {"value":{"type":"Atom","value":"Type"}}
@@ -1771,7 +1771,7 @@ return main();
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2",
     "name": "strmap",
-    "normalized": "λ(F: Π(t12: Type) -> (closure: Type -| Γ: t12)) =>
+    "normalized": "λ(F: Π(t11: Type) -> (closure: Type -| Γ: t11)) =>
   (closure: λ(a: Type) =>
     λ(A: Σ($sig: [ map: Π(a: Type) =>
         Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: F a) -> F b ]) .
@@ -1815,14 +1815,14 @@ return main();
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
-    "type": "Π(F: Π(t12: Type) -> Type) =>
+    "type": "Π(F: Π(t11: Type) -> Type) =>
   Π(a: Type) =>
     Π(A: Σ($sig: [ map: Π(a: Type) =>
         Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: F a) -> F b ]) .
       Schema
         [ map: Π(a: Type) =>
             Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: F a) -> F b ]) =>
-      Π(t15: F a) -> F String",
+      Π(t14: F a) -> F String",
     "validity": "valid",
   },
   {

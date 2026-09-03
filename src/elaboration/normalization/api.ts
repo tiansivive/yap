@@ -103,6 +103,6 @@ export const probe =
 		return answer;
 	};
 
-export { unwrapNeutral, ignoraModal, builtinsOps } from "./evaluation.v2";
+export { unwrapNeutral, ignoraModal, isFlex, builtinsOps } from "./evaluation.v2";
 export type { View, Meet, MeetResult, EvalOptions } from "./evaluation.v2";
 export { inert } from "./arity";

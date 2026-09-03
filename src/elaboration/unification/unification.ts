@@ -204,13 +204,19 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 					yield* unify(value, resumed, lvl);
 				},
 			)
+			.with([NF.Patterns.StuckApp, NF.Patterns.StuckApp], function* ([left, right]) {
+				/* Both sides arrive forced, so a residual still blocked here is genuinely stuck. Blocked is outer state; the spine underneath is the structure to compare. */
+				yield* unify(left.value, right.value, lvl);
+			})
+			/* An application residual and an application compare as applications, so the spine decomposition below can solve the residual's head. Ahead of the mu-unfolding fallthroughs, which would otherwise take the pair and discard the spine. */
+			.with([NF.Patterns.StuckApp, NF.Patterns.App], function* ([stuck, app]) {
+				yield* unify(stuck.value, app, lvl);
+			})
+			.with([NF.Patterns.App, NF.Patterns.StuckApp], function* ([app, stuck]) {
+				yield* unify(app, stuck.value, lvl);
+			})
 			.with([NF.Patterns.App, NF.Patterns.App], function* ([left, right]) {
-				const isFlex = (t: NF.Value) =>
-					match(NF.unwrapNeutral(t))
-						.with(NF.Patterns.Flex, () => true)
-						.otherwise(() => false);
-
-				if ([left.func, right.func, left.arg, right.arg].some(isFlex)) {
+				if ([left.func, right.func, left.arg, right.arg].some(NF.isFlex)) {
 					yield* unify(left.func, right.func, lvl);
 					yield* unify(left.arg, right.arg, lvl);
 					return;

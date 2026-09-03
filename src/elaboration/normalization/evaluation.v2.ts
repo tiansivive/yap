@@ -905,11 +905,23 @@ export function* view(value: NF.Value): Evaluation<View> {
 		.otherwise(value => ({ kind: "Sealed", value }));
 }
 
+/*
+ * Strips the wrappers that carry no structural content: Symbolic marks an unknown,
+ * Sealed protects a concrete value, and under either sits the value itself. Blocked
+ * stays — it is the only thing distinguishing a suspended elimination from a
+ * reducible one, so consumers match it through the Stuck* patterns.
+ */
 export const unwrapNeutral = (value: NF.Value): NF.Value => {
 	return match(value)
 		.with({ type: "Neutral", kind: P.union("Symbolic", "Sealed") }, ({ value }) => unwrapNeutral(value))
 		.otherwise(() => value);
 };
+
+/** Whether a value is an unsolved meta once the informationless wrappers are off. Recursive peeling, so no finite pattern expresses it. */
+export const isFlex = (value: NF.Value): boolean =>
+	match(unwrapNeutral(value))
+		.with(NF.Patterns.Flex, () => true)
+		.otherwise(() => false);
 
 export const ignoraModal = (value: NF.Value): NF.Value => {
 	return match(value)

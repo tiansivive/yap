@@ -225,6 +225,7 @@ export const Patterns = {
 	Inj: { type: "Inj" } as const,
 	StuckMatch: { type: "Neutral", kind: "Blocked", value: { type: "Match" } } as const,
 	StuckProj: { type: "Neutral", kind: "Blocked", value: { type: "Proj" } } as const,
+	StuckApp: { type: "Neutral", kind: "Blocked", value: { type: "App" } } as const,
 	StuckInj: { type: "Neutral", kind: "Blocked", value: { type: "Inj" } } as const,
 
 	App: { type: "App" } as const,
