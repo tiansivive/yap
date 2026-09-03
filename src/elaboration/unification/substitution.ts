@@ -12,8 +12,11 @@ export const empty: Subst = { [Substitution]: void 0 };
 export const of = (k: number, v: NF.Value): Subst => ({ [k]: v, [Substitution]: void 0 });
 export const from = (record: Record<number, NF.Value>): Subst => ({ ...record, [Substitution]: void 0 });
 
+/** The brand is a symbol key, so enumerable keys are exactly the bindings. */
+export const isEmpty = (subst: Subst): boolean => Object.keys(subst).length === 0;
+
 export const display = function* (subst: Subst, separator = "\n"): Display<string> {
-	if (Object.keys(subst).length === 0) {
+	if (isEmpty(subst)) {
 		return "empty";
 	}
 

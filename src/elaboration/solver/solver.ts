@@ -8,8 +8,6 @@ import * as NF from "@yap/elaboration/normalization";
 import { match } from "ts-pattern";
 import * as Sub from "@yap/elaboration/unification/substitution";
 
-import _ from "lodash";
-
 export type Constraint =
 	| { type: "assign"; left: NF.Value; right: NF.Value; lvl: number }
 	//| { type: "usage"; computed: Q.Multiplicity; expected: Q.Multiplicity }
@@ -77,12 +75,6 @@ const _solve = function* (cs: Array<Ctaint>): U.Unification<void> {
 	yield* _solve(rest);
 };
 
-/** Delimits a candidate attempt: a raise answers this scope instead of the run. */
-const attempted: Eff.Handler<Eff.Actions<typeof M.except>, undefined, M.Err> = {
-	clauses: { "Except.raise": error => Eff.ctl.abort(error) },
-	output: () => undefined,
-};
-
 const resolve = function* (cs: Array<Extract<Constraint, { type: "resolve" }>>): Solving<Resolutions> {
 	const ctx = yield* M.reader.ask();
 
@@ -92,9 +84,10 @@ const resolve = function* (cs: Array<Extract<Constraint, { type: "resolve" }>>):
 		}
 
 		const [[term, value], ...rest] = implicits;
-		const [outcome, subst] = yield* Eff.with([attempted, Sub.subst.handlers()], () => U.unify(nf, value, ctx.env.length));
+		/* Except delimits the attempt here, so a mismatch answers this scope instead of the run; its slot carries nothing. */
+		const [outcome, , subst] = yield* Eff.with([M.except.handlers(), Sub.subst.handlers()], () => U.unify(nf, value, ctx.env.length));
 
-		if (!Eff.failed(outcome) && _.isEmpty(subst)) {
+		if (!Eff.failed(outcome) && Sub.isEmpty(subst)) {
 			return term;
 		}
 

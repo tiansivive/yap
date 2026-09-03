@@ -1,20 +1,13 @@
-import Nearley from "nearley";
-import Grammar from "@yap/src/grammar";
-import * as Src from "@yap/src/index";
 import * as Eff from "@yap/utils/effects";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
-import * as Errors from "@yap/elaboration/shared/errors";
 import * as NF from "@yap/elaboration/normalization";
 import * as GRAM from "@yap/gram";
 import * as E from "fp-ts/lib/Either";
 import * as T from "fp-ts/lib/These";
 import * as O from "fp-ts/lib/Option";
 import * as RNEA from "fp-ts/lib/ReadonlyNonEmptyArray";
-import { match } from "ts-pattern";
-import { set } from "@yap/utils";
-import { defaultContext } from "@yap/shared/lib/constants";
 import { ARITIES } from "../../../lowering/shared/primops";
 import type { Module } from "../../../lowering/mir";
 import * as MIR from "../../../lowering/pretty";
@@ -32,32 +25,21 @@ import { Solver } from "../../../verification/solver/v2/solver";
 import * as Replay from "../../../verification/solver/v2/trace/replay";
 import { Validity } from "../../../verification/validity";
 import { shown } from "../../../elaboration/inference/__tests__/util";
+import * as Mod from "../../../elaboration/__tests__/module";
 
 type StageName = "elaborated" | "type" | "normalized" | "ivl" | "validity" | "solverTrace" | "gram" | "mir" | "codegenJS" | "codegenC" | "codegenErlang";
 export type StageResults = { readonly [K in StageName]: string };
 
 export type DeclarationResult = {
 	readonly name: string;
-	readonly kind: "let" | "foreign" | "using" | "expression";
+	readonly kind: Mod.Kind;
 	readonly stages?: StageResults;
 	readonly error?: string;
 };
 
 export type ScriptResult = { readonly declarations: ReadonlyArray<DeclarationResult> };
 
-type Elaborated = {
-	readonly tm: EB.Term;
-	readonly ty: NF.Value;
-	readonly ctx: EB.Context;
-	readonly registry: Metas.Registry;
-};
-
 const safe = <A>(fn: () => A): E.Either<string, A> => E.tryCatch(fn, e => (e instanceof Error ? e.message : String(e)));
-
-/** Errors render at a boundary run over their own captured scope. */
-const rendered = (e: M.Err): string => Eff.run(() => Errors.report(e), [M.reader.handlers(e.ctx), Metas.registry.handlers({})])[0];
-
-const flatten = <A>(result: E.Either<M.Err, A>): E.Either<string, A> => E.mapLeft(rendered)(result);
 
 const get = E.getOrElse((): string => "");
 
@@ -160,109 +142,24 @@ const pipeline = (
 	});
 };
 
-const Elaborate = {
-	foreign: (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context, boundary: EB.Mod.Boundary): E.Either<string, [EB.Context, EB.Mod.Boundary]> => {
-		const [, result, next] = EB.Mod.foreign(stmt, ctx, boundary);
+/** Runs the downstream stages over one elaborated declaration; elaboration failures pass straight through. */
+const staged = (decl: Mod.Declaration): DeclarationResult => {
+	const { name, kind, elaborated } = decl;
 
-		return E.map(([, c1, decl]: [EB.AST, EB.Context, { arity: number }]): [EB.Context, EB.Mod.Boundary] => {
-			const compute = (...args: NF.Value[]): NF.Value => {
-				const ext = NF.Constructors.External(stmt.variable, decl.arity, compute, args);
-				return NF.Constructors.Neutral("Sealed", ext);
-			};
-			return [set(c1, ["ffi", stmt.variable] as const, { arity: decl.arity, compute }), next];
-		})(flatten(result));
-	},
-
-	using: (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.Context, boundary: EB.Mod.Boundary): E.Either<string, [EB.Context, EB.Mod.Boundary]> => {
-		const [result, next] = EB.Mod.using(stmt, ctx, boundary);
-
-		return E.map((c: EB.Context): [EB.Context, EB.Mod.Boundary] => [c, next])(flatten(result));
-	},
-
-	letdec: (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context, boundary: EB.Mod.Boundary): E.Either<string, [Elaborated, EB.Mod.Boundary]> => {
-		const [, result, next] = EB.Mod.letdec(stmt, ctx, boundary);
-
-		return E.map(([[tm, ty], nextCtx]: [EB.AST, EB.Context]): [Elaborated, EB.Mod.Boundary] => [{ tm, ty, ctx: nextCtx, registry: next.registry }, next])(
-			flatten(result),
-		);
-	},
-
-	expression: (
-		stmt: Extract<Src.Statement, { type: "expression" }>,
-		ctx: EB.Context,
-		boundary: EB.Mod.Boundary,
-	): E.Either<string, [Elaborated, EB.Mod.Boundary]> => {
-		const [result, next] = EB.Mod.expression(stmt, ctx, boundary);
-
-		return E.map(([tm, ty, , nextCtx]: readonly [EB.Term, NF.Value, unknown, EB.Context, unknown]): [Elaborated, EB.Mod.Boundary] => [
-			{ tm, ty, ctx: nextCtx, registry: next.registry },
-			next,
-		])(flatten(result));
-	},
-};
-
-const parse = (source: string): ReadonlyArray<Src.Statement> => {
-	const g = { ...Grammar, ParserStart: "Script" };
-	const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(g));
-	const sanitized = source.trim().endsWith(";") ? source : `${source};`;
-	const { results } = parser.feed(sanitized);
-
-	if (results.length !== 1) {
-		throw new Error(`Ambiguous or failed parse: expected 1, got ${results.length}`);
+	if (elaborated === undefined) {
+		return { name, kind, ...(decl.error === undefined ? {} : { error: decl.error }) };
 	}
-	return (results[0] as Src.Script).script;
+
+	const { tm, ty, ctx, registry } = elaborated;
+
+	return T.fold(
+		(errors: ReadonlyArray<string>): DeclarationResult => ({ name, kind, error: errors.join("; ") }),
+		(stages: StageResults): DeclarationResult => ({ name, kind, stages }),
+		(errors: ReadonlyArray<string>, stages: StageResults): DeclarationResult => ({ name, kind, stages, error: errors.join("; ") }),
+	)(pipeline(tm, ty, ctx, registry, kind === "let" ? [name] : undefined));
 };
 
-const reset = () => {
-	EB.resetSupply("meta");
-	EB.resetSupply("var");
-	EB.resetId();
-	NF.resetId();
-};
-
-type Acc = { readonly ctx: EB.Context; readonly boundary: EB.Mod.Boundary; readonly declarations: ReadonlyArray<DeclarationResult> };
-
-const keep = (acc: Acc, decl: DeclarationResult): Acc => ({
-	ctx: acc.ctx,
-	boundary: acc.boundary,
-	declarations: [...acc.declarations, decl],
-});
-
-const advance = (acc: Acc, decl: DeclarationResult, ctx: EB.Context, boundary: EB.Mod.Boundary): Acc => ({
-	ctx,
-	boundary,
-	declarations: [...acc.declarations, decl],
-});
-
-const withContext = (acc: Acc, name: string, kind: DeclarationResult["kind"], result: E.Either<string, [EB.Context, EB.Mod.Boundary]>): Acc =>
-	E.fold(
-		(error: string) => keep(acc, { name, kind, error }),
-		([ctx, boundary]: [EB.Context, EB.Mod.Boundary]) => advance(acc, { name, kind }, ctx, boundary),
-	)(result);
-
-const withStages = (acc: Acc, name: string, kind: DeclarationResult["kind"], result: E.Either<string, [Elaborated, EB.Mod.Boundary]>): Acc =>
-	E.fold(
-		(error: string) => keep(acc, { name, kind, error }),
-		([{ tm, ty, ctx, registry }, boundary]: [Elaborated, EB.Mod.Boundary]) =>
-			T.fold(
-				(errors: ReadonlyArray<string>) => advance(acc, { name, kind, error: errors.join("; ") }, ctx, boundary),
-				(stages: StageResults) => advance(acc, { name, kind, stages }, ctx, boundary),
-				(errors: ReadonlyArray<string>, stages: StageResults) => advance(acc, { name, kind, stages, error: errors.join("; ") }, ctx, boundary),
-			)(pipeline(tm, ty, ctx, registry, kind === "let" ? [name] : undefined)),
-	)(result);
-
-const process = (acc: Acc, stmt: Src.Statement): Acc =>
-	match(stmt)
-		.with({ type: "foreign" }, s => withContext(acc, s.variable, "foreign", Elaborate.foreign(s, acc.ctx, acc.boundary)))
-		.with({ type: "using" }, s => withContext(acc, "(using)", "using", Elaborate.using(s, acc.ctx, acc.boundary)))
-		.with({ type: "let" }, s => withStages(acc, s.variable, "let", Elaborate.letdec(s, acc.ctx, acc.boundary)))
-		.with({ type: "expression" }, s => withStages(acc, "(expr)", "expression", Elaborate.expression(s, acc.ctx, acc.boundary)))
-		.otherwise(() => acc);
-
-export const runScript = (source: string): ScriptResult => {
-	reset();
-	return parse(source).reduce(process, { ctx: { ...defaultContext }, boundary: { registry: Metas.empty, counts: {} }, declarations: [] });
-};
+export const runScript = (source: string): ScriptResult => ({ declarations: Mod.elaborateModule(source).declarations.map(staged) });
 
 export const snap = (result: ScriptResult) =>
 	result.declarations.map(d => ({
