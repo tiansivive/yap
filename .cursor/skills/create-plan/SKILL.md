@@ -46,7 +46,7 @@ The canonical procedure for plan authoring and execution. Rationale and design h
    - `pnpm test` (Vitest; `pnpm test -u` to update snapshots, `pnpm test <path>` for a file). Ask before running broad suites (`.cursor/rules/agent-behavior.mdc`).
    - `pnpm lint` before considering work done.
    - `pnpm yap <file>.yap` (or `pnpm yap repl`) to exercise behavior end-to-end.
-   - After grammar changes: `pnpm nearley` (Nearley) or `pnpm ts-dts` (tree-sitter).
+   - After grammar changes: `pnpm nearley` (the Nearley grammar is the only in-repo parser build).
    - Assess V2-migration impact when touching elaboration/inference/checking/parsing (`brainstorming/yap/V2-MIGRATION.md`).
 4. Append a **session block** to `z-yap/thread.md` (`RESOLVED`/`SPAWN`/`ENQUEUE`, edges) — per the zettelkasten skill.
 5. Create or update a **session zettel** for substantial design work (`refs: session:<uuid>`, `PRODUCED` links; `INCLUDES` from `[[sessions.hub]]`).
