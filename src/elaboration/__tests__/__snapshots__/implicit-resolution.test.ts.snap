@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Implicit resolution > passes over a candidate whose match would bind the goal's own meta 1`] = `
+{
+  "type": "Π(a: Type) => Π(A: Σ($sig: [ tag: a ]) . Schema [ tag: a ]) => Π(t2: a) -> a",
+}
+`;

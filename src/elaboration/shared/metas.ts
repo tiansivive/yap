@@ -7,134 +7,284 @@ import * as R from "@yap/shared/rows";
 import fp from "lodash/fp";
 import * as F from "fp-ts/function";
 
-import { Subst } from "../unification/substitution";
+import * as Eff from "@yap/utils/effects";
 
-type MetaNF = Extract<NF.Variable, { type: "Meta" }>;
+import * as Sub from "../unification/substitution";
+import * as M from "./effects";
 
-export const collectMetasNF = (val: NF.Value, zonker: Subst): MetaNF[] => {
-	const ms = match(val)
-		.with(NF.Patterns.Lit, () => [])
-		.with(NF.Patterns.Flex, ({ variable }) => {
-			if (!zonker[variable.val]) {
-				return [variable];
-			}
-			return collectMetasNF(zonker[variable.val], zonker);
-		})
-		.with(NF.Patterns.Var, () => [])
-		.with(NF.Patterns.App, ({ func, arg }) => [...collectMetasNF(func, zonker), ...collectMetasNF(arg, zonker)])
-		.with(NF.Patterns.Proj, ({ base }) => collectMetasNF(base, zonker))
-		.with(NF.Patterns.Match, ({ closure, scrutinee }) => [...collectMetasNF(scrutinee, zonker), ...collectMetasEB(closure.term, zonker)])
-		.with(NF.Patterns.Inj, ({ base, injected }) => [...collectMetasNF(base, zonker), ...collectMetasNF(injected, zonker)])
-		.with(NF.Patterns.Row, ({ row }) =>
-			R.fold(
-				row,
-				(val, l, ms) => ms.concat(collectMetasNF(val, zonker)),
-				(v, ms) => {
-					if (v.type !== "Meta") {
-						return ms;
-					}
-
-					if (!zonker[v.val]) {
-						return [v, ...ms];
-					}
-
-					return ms.concat(collectMetasNF(zonker[v.val], zonker));
-				},
-				[] as MetaNF[],
-			),
-		)
-		.with({ type: "Neutral" }, ({ value }) => collectMetasNF(value, zonker))
-		.with(NF.Patterns.Lambda, ({ closure }) => collectMetasEB(closure.term, zonker))
-		.with(NF.Patterns.Pi, ({ closure, binder }) => [...collectMetasNF(binder.annotation, zonker), ...collectMetasEB(closure.term, zonker)])
-		.with(NF.Patterns.Mu, ({ closure, binder }) => [...collectMetasNF(binder.annotation, zonker), ...collectMetasEB(closure.term, zonker)])
-		.with(NF.Patterns.Sigma, ({ closure, binder }) => [...collectMetasNF(binder.annotation, zonker), ...collectMetasEB(closure.term, zonker)])
-		.with(NF.Patterns.Modal, ({ value }) => collectMetasNF(value, zonker))
-		.with(NF.Patterns.External, ({ args }) => args.flatMap(arg => collectMetasNF(arg, zonker)))
-		.otherwise(() => {
-			throw new Error("metas: Not implemented yet");
-		});
-
-	return F.pipe(
-		ms,
-		fp.uniqBy(m => m.val),
-	);
+/**
+ * The authoritative metacontext.  A meta's syntax, annotation, and eventual
+ * semantic solution move together so consumers cannot accidentally observe
+ * different versions of those three facts.
+ */
+export type Entry = {
+	meta: EB.Meta;
+	annotation: NF.Value;
+	solution?: NF.Value;
 };
 
+export type Registry = Readonly<Record<number, Entry>>;
+
+export const empty: Registry = {};
+
+export const lookup = (metas: Registry, id: number): Entry | undefined => metas[id];
+
+/** The entry an id denotes; asking for an unregistered meta is a caller bug. */
+export const entry = (metas: Registry, id: number): Entry => {
+	const found = lookup(metas, id);
+	if (!found) {
+		throw new Error(`Unregistered meta ?${id}`);
+	}
+	return found;
+};
+
+export const solution = (metas: Registry, id: number): NF.Value | undefined => metas[id]?.solution;
+
+export const solutions = (metas: Registry): Sub.Subst =>
+	Sub.from(
+		Object.fromEntries(
+			Object.values(metas).flatMap(entry => {
+				const value = solution(metas, entry.meta.val);
+				return value ? [[entry.meta.val, value]] : [];
+			}),
+		),
+	);
+
+/**
+ * The metacontext with its solutions dropped: annotations and syntax only.
+ *
+ * Display expands a meta it can see a solution for, so what a rendering shows
+ * is decided by the registry it runs against. Constraints are the record of
+ * what unification was asked to do, so they render against this view — a
+ * constraint that reads `Num ~~ Num` after the fact says nothing.
+ */
+export const unsolved = (metas: Registry): Registry =>
+	Object.fromEntries(Object.entries(metas).map(([id, { meta, annotation }]) => [id, { meta, annotation }]));
+
+export const withSolutions = (metas: Registry, subst: Sub.Subst): Registry =>
+	Object.entries(subst).reduce((entries, [id, value]) => solve(entries, Number(id), value), metas);
+
+export const register = (metas: Registry, entry: Entry): Registry => ({ ...metas, [entry.meta.val]: entry });
+
+export const solve = (metas: Registry, id: number, value: NF.Value): Registry => {
+	const found = metas[id];
+	if (!found) {
+		throw new Error(`Cannot solve unregistered meta ?${id}`);
+	}
+	return { ...metas, [id]: { ...found, solution: value } };
+};
+
+/** Keep only facts every replay branch agrees on; candidate-local solutions stay local. */
+export const merge = (base: Registry, branches: readonly Registry[]): Registry => {
+	if (branches.length === 0) {
+		return base;
+	}
+	return Object.values(base).reduce<Registry>((merged, entry) => {
+		const branchSolutions = branches.map(branch => solution(branch, entry.meta.val));
+		const agreed = branchSolutions.every(value => fp.isEqual(value, branchSolutions[0]));
+		return agreed && branchSolutions[0] ? solve(merged, entry.meta.val, branchSolutions[0]) : merged;
+	}, base);
+};
+
+/*
+ * The registry as an ambient capability. One instance module-wide: an
+ * action's identity is its tag, so every row that mentions the registry
+ * must share this one. The handler owns the cell; get/modify are the only
+ * ways to observe or move it, and the pure algebra above rides in payloads.
+ */
+type Get = Eff.Action<"Registry.get", undefined, Registry>;
+type Register = Eff.Action<"Registry.register", Entry, Registry>;
+type Modify = Eff.Action<"Registry.modify", (registry: Registry) => Registry, Registry>;
+
+const get = function* () {
+	return yield* Eff.ctl.action<Get>("Registry.get", undefined);
+};
+
+/** Adds a fresh entry — minting's write, distinct from solving. Answers the registry after. */
+const registerOp = function* (entry: Entry) {
+	return yield* Eff.ctl.action<Register>("Registry.register", entry);
+};
+
+/** Answers with the registry after the change. */
+const modify = function* (change: (registry: Registry) => Registry) {
+	return yield* Eff.ctl.action<Modify>("Registry.modify", change);
+};
+
+const handlers = (initial: Registry = empty): Eff.Handler<Get | Register | Modify, Registry> => {
+	/* eslint-disable no-restricted-syntax -- this handler owns the registry cell */
+	let current = initial;
+
+	return {
+		clauses: {
+			"Registry.get": () => Eff.ctl.resume(current),
+
+			"Registry.register": entry => {
+				current = register(current, entry);
+
+				return Eff.ctl.resume(current);
+			},
+
+			"Registry.modify": change => {
+				current = change(current);
+
+				return Eff.ctl.resume(current);
+			},
+		},
+
+		output: () => current,
+	};
+	/* eslint-enable no-restricted-syntax */
+};
+
+export const registry = { get, register: registerOp, modify, handlers };
+
+/** A computation over the registry alone. */
+export type Effect<A> = Eff.Eff<Eff.Actions<typeof registry>, A>;
+
+/** Minting: a fresh id and its registration, nothing else. */
+export type Minting<A> = Eff.Eff<Eff.Actions<typeof M.supply> | Eff.Only<typeof registry, "Registry.register">, A>;
+
+export const fresh = function* (lvl: number, annotation: NF.Value): Minting<EB.Meta> {
+	const id = yield* M.supply.fresh("meta");
+	const meta: EB.Meta = { type: "Meta", val: id, lvl };
+
+	yield* registry.register({ meta, annotation });
+
+	return meta;
+};
+
+type MetaNF = Extract<NF.Variable, { type: "Meta" }>;
 type MetaEB = Extract<EB.Variable, { type: "Meta" }>;
-export const collectMetasEB = (tm: EB.Term, zonker: Subst): MetaEB[] => {
-	const _metas = (tm: EB.Term): MetaEB[] => {
-		const ms = match(tm)
+
+/** The collectors: get() once, both walkers close over the snapshot and recurse freely. */
+export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]; eb: (tm: EB.Term) => MetaEB[] }> {
+	const metas = yield* registry.get();
+
+	const nf = (val: NF.Value): MetaNF[] => {
+		const ms = match(val)
+			.with(NF.Patterns.Lit, () => [])
+			.with(NF.Patterns.Flex, ({ variable }) => {
+				const solved = solution(metas, variable.val);
+				if (!solved) {
+					return [variable];
+				}
+				return nf(solved);
+			})
+			.with(NF.Patterns.Var, () => [])
+			.with(NF.Patterns.App, ({ func, arg }) => [...nf(func), ...nf(arg)])
+			.with(NF.Patterns.Proj, ({ base }) => nf(base))
+			.with(NF.Patterns.Match, ({ closure, scrutinee }) => [...nf(scrutinee), ...eb(closure.term)])
+			.with(NF.Patterns.Inj, ({ base, injected }) => [...nf(base), ...nf(injected)])
+			.with(NF.Patterns.Row, ({ row }) =>
+				R.fold(
+					row,
+					(val, l, ms) => ms.concat(nf(val)),
+					(v, ms) => {
+						if (v.type !== "Meta") {
+							return ms;
+						}
+
+						const solved = solution(metas, v.val);
+						if (!solved) {
+							return [v, ...ms];
+						}
+
+						return ms.concat(nf(solved));
+					},
+					[] as MetaNF[],
+				),
+			)
+			.with({ type: "Neutral" }, ({ value }) => nf(value))
+			.with(NF.Patterns.Lambda, ({ closure }) => eb(closure.term))
+			.with(NF.Patterns.Pi, ({ closure, binder }) => [...nf(binder.annotation), ...eb(closure.term)])
+			.with(NF.Patterns.Mu, ({ closure, binder }) => [...nf(binder.annotation), ...eb(closure.term)])
+			.with(NF.Patterns.Sigma, ({ closure, binder }) => [...nf(binder.annotation), ...eb(closure.term)])
+			.with(NF.Patterns.Modal, ({ value }) => nf(value))
+			.with(NF.Patterns.External, ({ args }) => args.flatMap(arg => nf(arg)))
+			.otherwise(() => {
+				throw new Error("metas: Not implemented yet");
+			});
+
+		return F.pipe(
+			ms,
+			fp.uniqBy(m => m.val),
+		);
+	};
+
+	const eb = (tm: EB.Term): MetaEB[] =>
+		match(tm)
 			.with({ type: "Var" }, ({ variable }) => {
 				if (variable.type !== "Meta") {
 					return [];
 				}
 
-				if (!zonker[variable.val]) {
+				const solved = solution(metas, variable.val);
+				if (!solved) {
 					return [variable];
 				}
 
-				return collectMetasNF(zonker[variable.val], zonker);
+				return nf(solved);
 			})
 			.with({ type: "Lit" }, () => [])
-			.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body }) => _metas(body))
-			.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }) => [..._metas(binding.annotation), ..._metas(body)])
-			.with({ type: "Abs", binding: { type: "Mu" } }, ({ body, binding }) => [..._metas(binding.annotation), ..._metas(body)])
-			.with({ type: "Abs", binding: { type: "Sigma" } }, ({ body, binding }) => [..._metas(binding.annotation), ..._metas(body)])
-			.with({ type: "App" }, ({ func, arg }) => [..._metas(func), ..._metas(arg)])
+			.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body }) => eb(body))
+			.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }) => [...eb(binding.annotation), ...eb(body)])
+			.with({ type: "Abs", binding: { type: "Mu" } }, ({ body, binding }) => [...eb(binding.annotation), ...eb(body)])
+			.with({ type: "Abs", binding: { type: "Sigma" } }, ({ body, binding }) => [...eb(binding.annotation), ...eb(body)])
+			.with({ type: "App" }, ({ func, arg }) => [...eb(func), ...eb(arg)])
 			.with({ type: "Row" }, ({ row }) =>
 				R.fold(
 					row,
-					(val, l, ms) => ms.concat(_metas(val)),
+					(val, l, ms) => ms.concat(eb(val)),
 					(v, ms) => {
 						if (v.type !== "Meta") {
 							return ms;
 						}
-						if (!zonker[v.val]) {
+
+						const solved = solution(metas, v.val);
+						if (!solved) {
 							return [...ms, v];
 						}
-						return ms.concat(collectMetasNF(zonker[v.val], zonker));
+
+						return ms.concat(nf(solved));
 					},
 					[] as MetaEB[],
 				),
 			)
-			.with({ type: "Proj" }, ({ term }) => _metas(term))
-			.with({ type: "Inj" }, ({ value, term }) => [..._metas(value), ..._metas(term)])
-			.with({ type: "Ann" }, ({ term, ann }) => [..._metas(term), ..._metas(ann)])
-			.with({ type: "Match" }, ({ scrutinee, alternatives }) => [..._metas(scrutinee), ...alternatives.flatMap(alt => _metas(alt.term))])
-			.with({ type: "Block" }, ({ return: ret, statements }) => [..._metas(ret), ...statements.flatMap(s => _metas(s.value))])
-			.with({ type: "Modal" }, ({ term }) => _metas(term))
-			.with({ type: "Shift" }, ({ body }) => _metas(body))
-			.with({ type: "Bubble" }, ({ shift }) => _metas(shift))
-			.with({ type: "Reset" }, ({ term }) => _metas(term))
+			.with({ type: "Proj" }, ({ term }) => eb(term))
+			.with({ type: "Inj" }, ({ value, term }) => [...eb(value), ...eb(term)])
+			.with({ type: "Ann" }, ({ term, ann }) => [...eb(term), ...eb(ann)])
+			.with({ type: "Match" }, ({ scrutinee, alternatives }) => [...eb(scrutinee), ...alternatives.flatMap(alt => eb(alt.term))])
+			.with({ type: "Block" }, ({ return: ret, statements }) => [...eb(ret), ...statements.flatMap(s => eb(s.value))])
+			.with({ type: "Modal" }, ({ term }) => eb(term))
+			.with({ type: "Shift" }, ({ body }) => eb(body))
+			.with({ type: "Bubble" }, ({ shift }) => eb(shift))
+			.with({ type: "Reset" }, ({ term }) => eb(term))
 			.otherwise(() => {
 				throw new Error("metas: Not implemented yet");
 			});
 
-		return ms;
-	};
-	return _metas(tm);
+	return { nf, eb };
 };
 
 export const Annotations = {
-	closeOver: (ctx: EB.Context, seeds: readonly MetaNF[]): readonly MetaNF[] => {
+	/** Closes a set of metas over the metas appearing in their annotations, dependencies first. */
+	closeOver: function* (seeds: readonly MetaNF[]): Effect<readonly MetaNF[]> {
+		const metas = yield* registry.get();
+		const { nf } = yield* collectors();
+
 		// A pass over the collected metas rather than inlining into the collectors' Meta cases:
-		// those take (val, zonker), and threading ctx.metas through them to reach annotations is annoying.
+		// reaching annotations there would tangle the walkers with the registry entries.
 		type Acc = readonly [ReadonlySet<number>, readonly MetaNF[]];
 		const go = ([seen, out]: Acc, m: MetaNF): Acc =>
 			match(seen.has(m.val))
 				.with(true, (): Acc => [seen, out])
 				.otherwise((): Acc => {
-					const anns = match(ctx.metas[m.val])
+					const anns = match(metas[m.val])
 						.with(P.nullish, (): readonly MetaNF[] => [])
-						.otherwise(entry => collectMetasNF(entry.ann, ctx.zonker));
+						.otherwise(entry => nf(entry.annotation));
 					const [seen2, out2] = anns.reduce<Acc>(go, [new Set([...seen, m.val]), out]);
 					return [seen2, [...out2, m]];
 				});
 		return seeds.reduce<Acc>(go, [new Set<number>(), []])[1];
 	},
-};
-
-export const collect = {
-	nf: collectMetasNF,
-	eb: collectMetasEB,
 };

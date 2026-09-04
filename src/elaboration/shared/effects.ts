@@ -1,0 +1,84 @@
+import * as Eff from "@yap/utils/effects";
+
+import * as P from "@yap/elaboration/shared/provenance";
+import * as EB from "@yap/elaboration";
+import type * as Metas from "@yap/elaboration/shared/metas";
+
+import { Monoid } from "fp-ts/lib/Monoid";
+import { Cause } from "./errors";
+import { recursion } from "./recursion";
+
+export { recursion };
+
+/* No callstack here: NbE owns its machine and installs it at its own public entries. */
+export type Elaboration<A> = Eff.Eff<
+	Eff.Actions<[typeof writer, typeof reader, typeof except, typeof st, typeof supply, typeof tracer, typeof Metas.registry, typeof recursion]>,
+	A
+>;
+
+/** A told constraint: provenance plus a stable id, the unit the solver discharges by. */
+export type Told = P.WithProvenance<EB.Constraint> & { id: number };
+
+type Collector = {
+	constraints: Told[];
+};
+
+const monoid: Monoid<Collector> = {
+	empty: { constraints: [] },
+	concat: (x, y) => ({
+		constraints: [...x.constraints, ...y.constraints],
+	}),
+};
+
+export const writer = Eff.writer(monoid);
+export const reader = Eff.reader<EB.Context>();
+export const except = Eff.except<Err>();
+export type Err = Cause & { provenance?: P.Provenance[]; ctx: EB.Context };
+
+export const tracer = Eff.tracer<P.Provenance>();
+
+export const st = Eff.st<MutState>();
+
+export const supply = Eff.supply<"meta" | "var" | "skolem" | "constraint">();
+
+export const of = Eff.of;
+export const traverse = Eff.traverse;
+
+/* TODO(provenance): stamp `trace` from the tracer once the main migration lands. */
+export const constrain = function* (constraints: EB.Constraint | EB.Constraint[]) {
+	const many = Array.isArray(constraints) ? constraints : [constraints];
+
+	const told = yield* Eff.traverse(many, function* (c): Eff.Eff<Eff.Actions<typeof supply>, Told> {
+		return { ...c, trace: [], id: yield* supply.fresh("constraint") };
+	});
+
+	yield* writer.tell({ constraints: told });
+};
+
+export const fail = function* (cause: Cause) {
+	const ctx = yield* reader.ask();
+
+	return yield* except.raise({ ...cause, ctx, provenance: [...(yield* tracer.trace())] });
+};
+
+export type MutState = {
+	delimitations: Array<Delimitation>;
+	nondeterminism: {
+		solution: Record<number, EB.NF.Value[]>;
+	};
+	/** Ids of constraints a boundary has already solved: discharged proofs are never re-run. */
+	discharged: ReadonlySet<number>;
+};
+
+export type Delimitation = {
+	answer: { initial: EB.NF.Value; final: EB.NF.Value };
+	//handlerQ: Array<{ meta: EB.Meta, handler: Src.Term, ann: EB.NF.Value }>;
+	//solution: Record<number, { values: EB.NF.Value[], term: EB.Term }>;
+
+	/** `
+	 * Needed to know if any shift has occurred within the reset.
+	 * If `false`, we can enforce that the initial and final answer types are the same.
+	 * Dumb but effective.
+	 **/
+	shifted: boolean;
+};

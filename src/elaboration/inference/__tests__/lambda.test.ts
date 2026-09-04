@@ -11,7 +11,7 @@ describe("Inference: lambdas", () => {
 
 		const metas = Object.entries(structure.metas);
 		expect(metas).toHaveLength(1);
-		expect(structure.metas[1].ann).toMatchObject({ type: "Lit", value: { type: "Atom", value: "Type" } });
+		expect(structure.metas[1].annotation).toMatchObject({ type: "Lit", value: { type: "Atom", value: "Type" } });
 
 		expect({ displays }).toMatchSnapshot();
 	});
@@ -23,7 +23,7 @@ describe("Inference: lambdas", () => {
 
 		const metas = Object.entries(structure.metas);
 		expect(metas).toHaveLength(1);
-		expect(structure.metas[1].ann).toMatchObject({ type: "Lit", value: { type: "Atom", value: "Type" } });
+		expect(structure.metas[1].annotation).toMatchObject({ type: "Lit", value: { type: "Atom", value: "Type" } });
 
 		expect({ displays }).toMatchSnapshot();
 	});

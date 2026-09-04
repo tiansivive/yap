@@ -3,9 +3,7 @@ import * as E from "fp-ts/lib/Either";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
-import * as Eval from "../evaluation.v2";
-import { parseExpr, mkCtx } from "../../inference/__tests__/util";
-import * as Sub from "@yap/elaboration/unification/substitution";
+import { parseExpr, mkCtx, runNF, shown } from "../../inference/__tests__/util";
 
 describe("module.expression elaboration", () => {
 	it('elaborates and evaluates (\\x => \\(y: String) -> y) "hello" without crashing', () => {
@@ -18,14 +16,14 @@ describe("module.expression elaboration", () => {
 		const term = parseExpr(src);
 		const ctx = mkCtx();
 
-		const elaborated = EB.Mod.expression({ type: "expression", value: term, location: term.location }, ctx);
+		const [elaborated, boundary] = EB.Mod.expression({ type: "expression", value: term, location: term.location }, ctx);
 		expect(E.isRight(elaborated)).toBe(true);
 		if (E.isLeft(elaborated)) {
 			return;
 		}
 
 		const [tm, , , finalCtx] = elaborated.right;
-		expect(() => Eval.evaluate(finalCtx, tm)).not.toThrow();
+		expect(() => runNF(finalCtx, () => NF.normalize(tm), boundary.registry)).not.toThrow();
 	});
 
 	it("let-binding does not leak inner metas: { let id = \\x -> x; return id 42; }", () => {
@@ -38,7 +36,7 @@ describe("module.expression elaboration", () => {
 		const term = parseExpr(src);
 		const ctx = mkCtx();
 
-		const elaborated = EB.Mod.expression({ type: "expression", value: term, location: term.location }, ctx);
+		const [elaborated, boundary] = EB.Mod.expression({ type: "expression", value: term, location: term.location }, ctx);
 		expect(E.isRight(elaborated)).toBe(true);
 
 		if (E.isLeft(elaborated)) {
@@ -46,7 +44,7 @@ describe("module.expression elaboration", () => {
 		}
 
 		const [, ty] = elaborated.right;
-		const displayed = NF.display(ty, { env: ctx.env, zonker: Sub.empty, metas: {} });
+		const displayed = shown(ctx, boundary.registry)(() => NF.display(ty));
 		expect(displayed).toBe("Num");
 	});
 });

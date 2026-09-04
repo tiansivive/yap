@@ -1,17 +1,21 @@
+import * as Eff from "@yap/utils/effects";
+
 import * as EB from "@yap/elaboration";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
+import * as Errors from "@yap/elaboration/shared/errors";
 import * as NF from "@yap/elaboration/normalization";
 import * as Lib from "@yap/shared/lib/primitives";
 import * as Sub from "@yap/elaboration/unification/substitution";
 
 import Nearley from "nearley";
 import Grammar from "@yap/src/grammar";
-import { V2 } from "@yap/elaboration";
-import { update } from "@yap/utils";
 
-import * as E from "fp-ts/lib/Either";
 import * as F from "fp-ts/lib/function";
 import * as A from "fp-ts/lib/Array";
 import * as R from "fp-ts/lib/Record";
+
+import { runEB, shown } from "../inference/__tests__/util";
 
 export const mkParser = () => {
 	const g = { ...Grammar, ParserStart: "Letdec" };
@@ -38,33 +42,39 @@ export const elaborate = (src: string) => {
 		throw new Error("Expected a Let statement");
 	}
 
-	const [{ constraints, metas, zonker, result }, state] = V2.Do(function* () {
-		const ctx = yield* V2.ask();
+	const ctx = Lib.defaultContext();
 
-		const [elaborated, ty] = yield* EB.Stmt.infer.gen(stmt);
-		const { constraints, metas } = yield* V2.listen();
-		const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
-		const { zonker, resolutions } = yield* V2.local(_ => withMetas, EB.solve(constraints));
+	/* One run: inference and solving share the registry; the solver commits its solutions. */
+	const { answer, collected, state, registry } = runEB(ctx, function* () {
+		const inferred = yield* EB.Stmt.infer(stmt);
+		const { constraints } = yield* M.writer.peek();
+		const { resolutions } = yield* EB.solve(constraints);
 
-		return { term: elaborated, type: ty, solution: zonker, resolutions };
-	})(Lib.defaultContext());
+		return [inferred, resolutions] as const;
+	});
 
-	if (E.isLeft(result)) {
-		throw new Error(EB.V2.display(result.left));
+	const disp = shown(ctx, registry);
+	/* Constraints are what unification was asked to prove, so they show the metas as posed. */
+	const posed = shown(ctx, Metas.unsolved(registry));
+
+	if (Eff.failed(answer)) {
+		throw new Error(disp(() => Errors.report(answer[Eff.ABORT])));
 	}
 
-	const { term, type, solution, resolutions } = result.right;
+	const [[term, type], resolutions] = answer;
+	const constraints = collected.constraints;
+	const solution = Metas.solutions(registry);
 
 	const pretty = {
-		term: EB.Display.Statement(term, { zonker: solution, metas, env: [] }),
-		type: NF.display(type, { zonker: solution, metas, env: [] }),
-		solution: Sub.display(solution, metas),
-		constraints: constraints.map(c => EB.Display.Constraint(c, { zonker: Sub.empty, metas, env: [] })),
+		term: disp(() => EB.Display.Statement(term)),
+		type: disp(() => NF.display(type)),
+		solution: disp(() => Sub.display(solution)),
+		constraints: constraints.map(c => posed(() => EB.Display.Constraint(c))),
 		state: {
 			nondeterminism: F.pipe(
 				state.nondeterminism.solution,
 				R.toEntries,
-				A.map(([k, vs]): [string, string[]] => [k, vs.map(val => NF.display(val, { zonker: solution, metas, env: [] }))]),
+				A.map(([k, vs]): [string, string[]] => [k, vs.map(val => disp(() => NF.display(val)))]),
 				R.fromEntries,
 			),
 		},
@@ -74,7 +84,8 @@ export const elaborate = (src: string) => {
 		structure: {
 			term,
 			type,
-			metas,
+			metas: registry,
+			registry,
 			constraints,
 			state,
 			solution,

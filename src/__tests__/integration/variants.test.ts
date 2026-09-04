@@ -90,4 +90,13 @@ let result = fact.compute 5;
 		`);
 		expect(snap(result)).toMatchSnapshot();
 	});
+
+	/* Unrefined recursive type let: normalization must seal the Mu instead of unfolding it. */
+	test("recursive list type", () => {
+		const result = runScript(`
+let List: (t: Type) -> Type = \\t -> | #nil Unit | #cons { head: t, tail: List t };
+let xs: List Num = #cons { head: 1, tail: #cons { head: 2, tail: #nil ! } };
+		`);
+		expect(snap(result)).toMatchSnapshot();
+	});
 });

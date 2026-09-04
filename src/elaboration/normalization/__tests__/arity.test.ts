@@ -2,34 +2,42 @@ import { describe, it, expect } from "vitest";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
-import { mkCtx } from "../../inference/__tests__/util";
+import { mkCtx, runNF } from "../../inference/__tests__/util";
 
 const Num = NF.Constructors.Lit({ type: "Atom", value: "Num" });
 const Type = NF.Type;
 
 const simplePi = (variable: string, annotation: NF.Value, body: NF.Value) =>
-	NF.Constructors.Pi(variable, "Explicit", annotation, NF.Constructors.Closure(mkCtx(), NF.quote(mkCtx(), 0, body)));
+	NF.Constructors.Pi(
+		variable,
+		"Explicit",
+		annotation,
+		NF.Constructors.Closure(
+			mkCtx(),
+			runNF(mkCtx(), () => NF.quote(0, body)),
+		),
+	);
 
 describe("NF.arity", () => {
 	it("returns 0 for a ground type", () => {
-		expect(NF.arity(mkCtx(), Num)).toBe(0);
+		expect(runNF(mkCtx(), () => NF.arity(Num))).toBe(0);
 	});
 
 	it("returns 0 for Schema type", () => {
 		const schema = NF.Constructors.Schema({ type: "empty" });
-		expect(NF.arity(mkCtx(), schema)).toBe(0);
+		expect(runNF(mkCtx(), () => NF.arity(schema))).toBe(0);
 	});
 
 	it("counts 1 for Num -> Num", () => {
 		const ty = NF.Constructors.Pi("x", "Explicit", Num, NF.Constructors.Closure(mkCtx(), EB.Constructors.Lit({ type: "Atom", value: "Num" })));
-		expect(NF.arity(mkCtx(), ty)).toBe(1);
+		expect(runNF(mkCtx(), () => NF.arity(ty))).toBe(1);
 	});
 
 	it("counts 2 for Num -> Num -> Num", () => {
 		const inner = NF.Constructors.Pi("y", "Explicit", Num, NF.Constructors.Closure(mkCtx(), EB.Constructors.Lit({ type: "Atom", value: "Num" })));
-		const innerQuoted = NF.quote(mkCtx(), 0, inner);
+		const innerQuoted = runNF(mkCtx(), () => NF.quote(0, inner));
 		const ty = NF.Constructors.Pi("x", "Explicit", Num, NF.Constructors.Closure(mkCtx(), innerQuoted));
-		expect(NF.arity(mkCtx(), ty)).toBe(2);
+		expect(runNF(mkCtx(), () => NF.arity(ty))).toBe(2);
 	});
 
 	it("counts implicit binders toward arity", () => {
@@ -39,14 +47,14 @@ describe("NF.arity", () => {
 			NF.Constructors.Rigid(0),
 			NF.Constructors.Closure(mkCtx(), EB.Constructors.Var({ type: "Bound", index: 0 })),
 		);
-		const innerQuoted = NF.quote(mkCtx(), 1, inner);
+		const innerQuoted = runNF(mkCtx(), () => NF.quote(1, inner));
 		const ty = NF.Constructors.Pi("A", "Implicit", Type, NF.Constructors.Closure(mkCtx(), innerQuoted));
-		expect(NF.arity(mkCtx(), ty)).toBe(2);
+		expect(runNF(mkCtx(), () => NF.arity(ty))).toBe(2);
 	});
 
 	it("returns 0 for Variant type", () => {
 		const variant = NF.Constructors.Variant({ type: "extension", label: "Some", value: Num, row: { type: "empty" } });
-		expect(NF.arity(mkCtx(), variant)).toBe(0);
+		expect(runNF(mkCtx(), () => NF.arity(variant))).toBe(0);
 	});
 });
 

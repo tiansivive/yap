@@ -50,9 +50,14 @@ export const lowerTerm = (tm: EB.Term, iface: Interface, opts?: { parentBinders?
 		parentBinders: opts?.parentBinders,
 	});
 
-export const lowerTermWithContext = (tm: EB.Term, ctx: EB.Context, opts?: { parentBinders?: ReadonlyArray<string> }): E.Either<string, LowerResult> =>
+export const lowerTermWithContext = (
+	tm: EB.Term,
+	ctx: EB.Context,
+	zonker: Sub.Subst,
+	opts?: { parentBinders?: ReadonlyArray<string> },
+): E.Either<string, LowerResult> =>
 	lowerTermRaw(tm, {
-		zonker: ctx.zonker,
+		zonker,
 		arities: deriveAritiesFromContext(ctx),
 		parentBinders: opts?.parentBinders,
 	});

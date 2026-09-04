@@ -208,6 +208,7 @@ export const Patterns = {
 	Symbolic: { type: "Neutral", kind: "Symbolic" } as const,
 	Sealed: { type: "Neutral", kind: "Sealed" } as const,
 	Blocked: { type: "Neutral", kind: "Blocked" } as const,
+	Unresolved: { type: "Neutral", kind: P.union("Symbolic", "Blocked") } as const,
 
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } } as const,
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } } as const,
@@ -224,6 +225,7 @@ export const Patterns = {
 	Inj: { type: "Inj" } as const,
 	StuckMatch: { type: "Neutral", kind: "Blocked", value: { type: "Match" } } as const,
 	StuckProj: { type: "Neutral", kind: "Blocked", value: { type: "Proj" } } as const,
+	StuckApp: { type: "Neutral", kind: "Blocked", value: { type: "App" } } as const,
 	StuckInj: { type: "Neutral", kind: "Blocked", value: { type: "Inj" } } as const,
 
 	App: { type: "App" } as const,

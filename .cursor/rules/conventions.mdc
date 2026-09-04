@@ -28,14 +28,18 @@ alwaysApply: true
 - **CST nodes**: Use `SyntaxType.X` enum (e.g. `SyntaxType.Lambda`), not raw `"lambda"`
 - **One tsconfig for everything** — `tsconfig.json` covers src, tests, and `scripts/cli.ts`; tsc, ESLint, vitest, and the IDE all share it. Keep it clean: test files are type-checked by `pnpm typecheck` too (the old `tsc.tsconfig.json` test-exclusion split is retired)
 
-## Tree-sitter (v2)
+## Tree-sitter (side work, not the shipping parse path)
 
-- Grammar in `tree-sitter-yap` (external)
-- Regenerate types: `pnpm ts-dts` → `src/parser/types/generated.d.ts`
-- **Field access**: `CST.Utils.extractFields(node, "field1", "field2")` for named fields; `extractParam(node)` or `firstNamedChild` for empty/XOR fields
+Nearley parses what ships. Tree-sitter is a parallel, unscheduled effort — its surface does not exist in this repo, so don't write against it.
+
+- **Grammar repo**: `tree-sitter-yap` — local checkout `../tree-sitter-yap` (a folder in `yap.code-workspace`), remote `github.com/tiansivive/tree-sitter-yap`, branch `main`. Carries `grammar.js`, generated `src/`, `queries/`, and a `.wasm` build.
+- **Nothing is wired here**: no `ts-dts` script, no `src/parser/types/generated.d.ts`, no CST helper module, no tree-sitter dependency. Instructions to run `pnpm ts-dts` are stale.
+- **Stale integration attempts**: branch `tree-sitter` (146 ahead / 6 behind `main`) and `origin/copilot/replace-nearley-with-tree-sitter`. Superseded by the layering below — don't resume them.
+- **Target layering**: `CST → AST (Src.Term) → Core (Core.Term) → NF.Value`. Tree-sitter output is the CST; a CST→AST transform produces today's `Src.Term`. Surface sugar belongs in that transform, not in elaboration. Rationale: `z-yap/zettels/front-end-cst-layer.adr.md` (D-015).
 
 ## v2 elaboration
 
 - Inference dispatches per AST node via `ts-pattern` in `elaborate.ts`; per-construct handlers in `src/elaboration/inference/*` (lambda, pi, structs, rows, variants, tuples, injection, tagged, match, modal, …). Checking dispatches on `[term, type]` in `check.ts`.
 - `check`/`infer` still return `Q.Usages` alongside the term, but this usage threading is **deprecated**: the upcoming usage-semantics system enforces multiplicities in the verification pass and will not consume the elaboration-threaded vectors. Don't build on them; flag them for removal when that work lands.
 - V1 is the deprecated fp-ts-centric API style, kept for reference; the live path is the V2 generator monad.
+- **Layer names** — `Src.Term` is the AST; the elaborated core syntax is `Core.Term`; `elaborate.ts`'s result triple is `EB.Core`. The code still says `EB.Term` and `EB.AST`; the rename is recorded in `z-yap/zettels/core-layer-naming.adr.md` (D-016) and not yet applied.

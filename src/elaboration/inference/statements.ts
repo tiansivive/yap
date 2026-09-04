@@ -1,128 +1,115 @@
+import * as Eff from "@yap/utils/effects";
+
 import * as Src from "@yap/src/index";
 import * as EB from "@yap/elaboration";
 
 import * as NF from "@yap/elaboration/normalization";
 
-import * as V2 from "@yap/elaboration/shared/monad.v2";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
 import * as Q from "@yap/shared/modalities/multiplicity";
-import * as F from "fp-ts/lib/function";
 import * as R from "fp-ts/lib/Record";
 
 import { match } from "ts-pattern";
 import { freshMeta } from "@yap/elaboration/shared/supply";
 
 import * as Sub from "@yap/elaboration/unification/substitution";
-import { compose } from "@yap/elaboration/unification/substitution";
-import { update } from "@yap/utils";
 import { replay } from "../solver/nondeterminism";
 import { unify } from "../unification";
 
 export type ElaboratedStmt = [EB.Statement, NF.Value, Q.Usages];
-export const infer = (stmt: Src.Statement): V2.Elaboration<ElaboratedStmt> =>
-	V2.track(
-		{ tag: "src", type: "stmt", stmt, metadata: { action: "infer", description: "Statement" } },
-		(() =>
-			match(stmt)
-				.with({ type: "let" }, dec => {
-					return V2.Do(function* () {
-						const ctx = yield* V2.ask();
+export const infer = (stmt: Src.Statement): M.Elaboration<ElaboratedStmt> =>
+	M.tracer.track({ tag: "src", type: "stmt", stmt, metadata: { action: "infer", description: "Statement" } }, () =>
+		match(stmt)
+			.with({ type: "let" }, function* (dec) {
+				const ctx = yield* M.reader.ask();
 
-						const ann = dec.annotation
-							? yield* EB.check.gen(dec.annotation, NF.Type)
-							: ([EB.Constructors.Var(yield* freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
-						const va = NF.evaluate(ctx, ann[0]);
+				const ann = dec.annotation
+					? yield* EB.check(dec.annotation, NF.Type)
+					: ([EB.Constructors.Var(yield* freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
+				const va = yield* NF.normalize(ann[0]);
 
-						const inferred = yield* V2.local(
-							_ctx => EB.bind(_ctx, { type: "Let", variable: dec.variable }, va),
-							V2.Do(function* () {
-								const inferred = yield* EB.check.gen(dec.value, va);
-								const [bTerm, [_vu, ...bus]] = inferred;
-								//yield* V2.tell("constraint", { type: "usage", expected: q, computed: vu });
+				/* Check the value inside a recursion window at the let binder's level: lookup
+				 * flags it when the definition references itself from a type-level position. */
+				const [inferred, recursive] = yield* M.recursion.detect(ctx.env.length, () =>
+					M.reader.local(
+						_ctx => EB.bind(_ctx, { type: "Let", variable: dec.variable }, va),
+						(function* () {
+							const inferred = yield* EB.check(dec.value, va);
+							const [bTerm, [_vu, ...bus]] = inferred;
+							//yield* M.constrain({ type: "usage", expected: q, computed: vu });
 
-								return [bTerm, va, bus] satisfies EB.AST; // remove the usage of the bound variable (same as the lambda rule)
-							}),
-						);
-						const { binders } = yield* V2.listen();
+							return [bTerm, va, bus] satisfies EB.AST; // remove the usage of the bound variable (same as the lambda rule)
+						})(),
+					),
+				);
 
-						const tm = binders.find(b => b.type === "Mu" && b.variable === dec.variable)
-							? EB.Constructors.Mu("x", dec.variable, ann[0], inferred[0])
-							: inferred[0];
-						const def = EB.Constructors.Stmt.Let(dec.variable, tm, va);
-						return [def, inferred[1], inferred[2]] satisfies ElaboratedStmt;
-					});
-				})
-				.with({ type: "expression" }, ({ value }) =>
-					V2.Do(function* () {
-						const [expr, ty, us] = yield* EB.infer.gen(value);
-						return [EB.Constructors.Stmt.Expr(expr), ty, us] satisfies ElaboratedStmt;
-					}),
-				)
-				.with({ type: "using" }, ({ value }) =>
-					V2.Do(function* () {
-						const [tm, ty, us] = yield* EB.infer.gen(value);
-						return [{ type: "Using", value: tm, annotation: ty }, ty, us] satisfies ElaboratedStmt;
-					}),
-				)
-				.otherwise(() => {
-					throw new Error("Not implemented yet");
-				}))(),
+				/*
+				 * A recursive type wraps in Mu so normalization seals its applications instead
+				 * of unfolding them — expansion is unification's, on demand.
+				 */
+				const tm = recursive ? EB.Constructors.Mu("x", dec.variable, ann[0], inferred[0]) : inferred[0];
+				const def = EB.Constructors.Stmt.Let(dec.variable, tm, va);
+				return [def, inferred[1], inferred[2]] satisfies ElaboratedStmt;
+			})
+			.with({ type: "expression" }, function* ({ value }) {
+				const [expr, ty, us] = yield* EB.infer(value);
+				return [EB.Constructors.Stmt.Expr(expr), ty, us] satisfies ElaboratedStmt;
+			})
+			.with({ type: "using" }, function* ({ value }) {
+				const [tm, ty, us] = yield* EB.infer(value);
+				return [{ type: "Using", value: tm, annotation: ty }, ty, us] satisfies ElaboratedStmt;
+			})
+			.otherwise(() => {
+				throw new Error("Not implemented yet");
+			}),
 	);
 
-infer.gen = F.flow(infer, V2.pure);
+/*
+ * The let boundary, not inference: solve this declaration's constraints, generalize,
+ * instantiate, wrap the inserted implicit lambdas. Reading the constraints with peek
+ * makes the caller responsible for the scope, and the returned context is the ambient
+ * one unchanged — both are why this wants folding into infer's let case:
+ * z-yap/zettels/letdec-boundary-split.md.
+ */
+export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M.Elaboration<[Extract<EB.Statement, { type: "Let" }>, EB.Context]> {
+	const ctx = yield* M.reader.ask();
+	const { constraints } = yield* M.writer.peek();
 
-export const letdec = function* (
-	dec: Extract<EB.Statement, { type: "Let" }>,
-): Generator<V2.Elaboration<any>, [Extract<EB.Statement, { type: "Let" }>, EB.Context], any> {
-	const ctx = yield* V2.ask();
-	const { constraints, metas } = yield* V2.listen();
-	const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
+	/* Nondeterministic candidates seed the forked registry inside replay; the ctx is registry-free. */
+	const _letdec = (_z: Record<number, NF.Value>) =>
+		(function* (): M.Elaboration<[NF.Value, EB.Context, EB.Resolutions, boolean]> {
+			const { resolutions } = yield* EB.solve(constraints);
+			const next = ctx;
 
-	const _letdec = (z: Record<number, NF.Value>) =>
-		V2.Do(function* (): Generator<V2.Elaboration<any>, [NF.Value, EB.Context, EB.Resolutions], any> {
-			const nondet = update(withMetas, "zonker", old => ({ ...old, ...z }));
-
-			const { zonker, resolutions } = yield* V2.local(_ => nondet, EB.solve(constraints));
-			const { metas: postSolveMetas } = yield* V2.listen();
-			const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postSolveMetas }));
-			const zonked = update(withAllMetas, "zonker", z => compose(zonker, z));
-
-			const [generalized, subst] = NF.generalize(
-				NF.force(zonked, dec.annotation),
-				dec.value,
-				EB.bind(zonked, { type: "Let", variable: dec.variable }, dec.annotation),
-				resolutions,
+			const forced = yield* NF.force(dec.annotation);
+			const [generalized, introduced] = yield* M.reader.local(
+				_ => EB.bind(next, { type: "Let", variable: dec.variable }, dec.annotation),
+				NF.generalize(forced, dec.value, resolutions),
 			);
-			const next = update(zonked, "zonker", z => compose(subst, z));
-			const instantiated = NF.instantiate(generalized, EB.bind(next, { type: "Let", variable: dec.variable }, generalized));
-			return [instantiated, next, resolutions];
-		});
+			const instantiated = yield* M.reader.local(_ => EB.bind(next, { type: "Let", variable: dec.variable }, generalized), NF.instantiate(generalized));
+			return [instantiated, next, resolutions, introduced];
+		})();
 
 	// Extend again now that we have the generalized type
 	// Use the zonked context to avoid issues with the already generalized metas
 
-	const st = yield* V2.getSt();
-	// if (R.isEmpty(st.nondeterminism.solution)) {
-	// 	const [instantiated, next, resolutions] = yield _letdec({});
-	// 	const xtended = EB.bind(next, { type: "Let", variable: dec.variable }, instantiated);
-	// 	const wrapped = F.pipe(
-	// 		EB.Icit.wrapLambda(dec.value, instantiated, xtended),
-	// 		tm => EB.Icit.instantiate(tm, xtended, resolutions),
-	// 	);
+	const st = yield* M.st.get();
+	const [[instantiated, next, resolutions, introduced], ...rest] = R.isEmpty(st.nondeterminism.solution) ? [yield* _letdec({})] : yield* replay(_letdec);
 
-	// 	const statement = EB.Constructors.Stmt.Let(dec.variable, wrapped, instantiated);
-	// 	return [statement, next] as [Extract<EB.Statement, { type: "Let" }>, EB.Context];
-	// }
-
-	const [[instantiated, next, resolutions], ...rest] = R.isEmpty(st.nondeterminism.solution) ? [yield _letdec({})] : yield* replay(_letdec);
-
-	let final = next;
-	for (const [type] of rest) {
-		const solution = yield* unify.gen(instantiated, type, next.env.length, Sub.empty);
-		final = update(final, "zonker", z => compose(solution, z));
-	}
+	yield* Eff.traverse(rest, function* ([type]) {
+		const [, solution] = yield* Eff.with([Sub.subst.handlers()], () => unify(instantiated, type, next.env.length));
+		yield* Metas.registry.modify(current => Metas.withSolutions(current, solution));
+	});
 
 	const xtended = EB.bind(next, { type: "Let", variable: dec.variable }, instantiated);
-	const wrapped = F.pipe(EB.Icit.wrapLambda(dec.value, instantiated, xtended), tm => EB.Icit.instantiate(tm, xtended, resolutions));
+	const wrapped = yield* M.reader.local(
+		_ => xtended,
+		(function* (): M.Elaboration<EB.Term> {
+			const tm = introduced ? yield* EB.Icit.wrapLambda(dec.value, instantiated) : dec.value;
+			return yield* EB.Icit.instantiate(tm, resolutions);
+		})(),
+	);
 
 	const statement = EB.Constructors.Stmt.Let(dec.variable, wrapped, instantiated);
 	return [statement, next] as [Extract<EB.Statement, { type: "Let" }>, EB.Context];

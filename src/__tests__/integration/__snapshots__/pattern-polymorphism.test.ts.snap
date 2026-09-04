@@ -763,9 +763,9 @@ return main();
       (forall ((x Schema))
         (and
           (= x x)
-          (forall (($fresh1 Schema))
+          (forall (($fresh0 Schema))
             (=>
-              (and (= $fresh1 x) (= $fresh1 x))
+              (and (= $fresh0 x) (= $fresh0 x))
               (forall ((v Type)) (forall (($row_4 Row)) (= v v))))))))))",
     "kind": "expression",
     "mir": "module
@@ -820,9 +820,9 @@ return main();
         (forall ((x Schema))
           (and
             (= x x)
-            (forall (($fresh1 Schema))
+            (forall (($fresh0 Schema))
               (=>
-                (and (= $fresh1 x) (= $fresh1 x))
+                (and (= $fresh0 x) (= $fresh0 x))
                 (forall ((v Type)) (forall (($row_4 Row)) (= v v))))))))))
 
 === Variables ===
@@ -857,7 +857,7 @@ return main();
   a=v -> residual
   A=v -> residual
   x=x -> residual
-  $fresh1=x -> residual
+  $fresh0=x -> residual
   v=v -> residual
 [clauses]
   #0: p1 -> unit: p1

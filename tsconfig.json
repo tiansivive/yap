@@ -12,7 +12,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "ESNext",
-		"noErrorTruncation": false,
+		"noErrorTruncation": true,
 		"paths": {
 			"@yap/elaboration": ["./src/elaboration/index"],
 			"@yap/elaboration/*": ["./src/elaboration/*"],
@@ -21,6 +21,7 @@
 			"@yap/src/*": ["./src/parser/*"],
 			"@yap/shared/*": ["./src/shared/*"],
 			"@yap/utils": ["./src/utils/index"],
+			"@yap/utils/*": ["./src/utils/*"],
 			"@yap/gram": ["./src/GRAM/index"],
 			"@yap/gram/*": ["./src/GRAM/*"],
 			"@yap/pipeline": ["./src/pipeline/index"],

@@ -1,8 +1,10 @@
+import * as Eff from "@yap/utils/effects";
+
 import * as EB from "@yap/elaboration";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
-
-import * as V2 from "@yap/elaboration/shared/monad.v2";
 
 import { Either } from "fp-ts/lib/Either";
 
@@ -11,64 +13,99 @@ import * as F from "fp-ts/lib/function";
 
 import { set, update } from "@yap/utils";
 
+import * as Sub from "@yap/elaboration/unification/substitution";
+
 import { Declaration, Interface } from "../modules/loading";
 import * as A from "fp-ts/lib/Array";
 
-import * as Sub from "@yap/elaboration/unification/substitution";
 import { type Constraint, type Resolutions } from "./solver";
 import type { WithProvenance } from "./shared/provenance";
 
-type InterfaceFields = Omit<Interface, "imports" | "zonker">;
-type WithCtx = [InterfaceFields, EB.Context];
+/*
+ * The module driver is a true boundary: each statement elaborates under its
+ * own run, and what must survive between statements — the metacontext and
+ * the fresh-id counters — threads through the boundary state. Everything
+ * else (constraints, provenance, mutable machine state) is per-statement.
+ */
+export type Boundary = {
+	registry: Metas.Registry;
+	counts: Partial<Record<"meta" | "var" | "skolem", number>>;
+};
 
-export const elaborate = (mod: Src.Module, ctx: EB.Context): Omit<Interface, "imports"> => {
+export const boundary: Boundary = { registry: Metas.empty, counts: {} };
+
+const run = <A>(ctx: EB.Context, state: Boundary, program: () => M.Elaboration<A>): [Either<M.Err, A>, Boundary] => {
+	const [answer, , , , , counts, registry] = Eff.run(program, [
+		M.writer.handlers(),
+		M.reader.handlers(ctx),
+		M.except.handlers(),
+		M.st.handlers({ delimitations: [], nondeterminism: { solution: {} }, discharged: new Set() }),
+		M.supply.handlers(state.counts),
+		Metas.registry.handlers(state.registry),
+		M.tracer.handlers(),
+		M.recursion.handlers(),
+	]);
+
+	const next: Boundary = { registry, counts };
+
+	/* Concretely-typed narrowing: the generic A defeats Eff.failed's Aborted<unknown> predicate. */
+	const failed = (a: A | Eff.Aborted<M.Err>): a is Eff.Aborted<M.Err> => Eff.failed(a);
+
+	return [failed(answer) ? E.left(answer[Eff.ABORT]) : E.right(answer), next];
+};
+
+type InterfaceFields = Omit<Interface, "imports" | "zonker">;
+type WithCtx = [InterfaceFields, EB.Context, Boundary];
+
+export const elaborate = (mod: Src.Module, ctx: EB.Context, state: Boundary = boundary): Omit<Interface, "imports"> => {
 	const maybeExport =
 		(name: string) =>
-		([result, c]: WithCtx): WithCtx => {
+		([result, c, s]: WithCtx): WithCtx => {
 			if (
 				mod.exports.type === "*" ||
 				(mod.exports.type === "explicit" && mod.exports.names.includes(name)) ||
 				(mod.exports.type === "partial" && !mod.exports.hiding.includes(name))
 			) {
-				return [update(result, "exports", A.append(name)), c];
+				return [update(result, "exports", A.append(name)), c, s];
 			}
-			return [result, c];
+			return [result, c, s];
 		};
 
-	type Pair = [string, Either<EB.V2.Err, EB.AST>];
-	const next = (stmts: Src.Statement[], ctx: EB.Context): WithCtx => {
+	type Pair = [string, Either<M.Err, EB.AST>];
+	const next = (stmts: Src.Statement[], ctx: EB.Context, state: Boundary): WithCtx => {
 		if (stmts.length === 0) {
-			return [{ foreign: [], exports: [], letdecs: [], errors: [], declarations: {} }, ctx];
+			return [{ foreign: [], exports: [], letdecs: [], errors: [], declarations: {} }, ctx, state];
 		}
 
 		const [head, ...tail] = stmts;
 
 		if (head.type === "using") {
+			const [result, nextState] = using(head, ctx, state);
 			return F.pipe(
-				using(head, ctx),
+				result,
 				E.match(
 					e => {
-						const [r, c] = next(tail, ctx);
-						return [update(r, "errors", A.prepend(e)), c] satisfies WithCtx;
+						const [r, c, s] = next(tail, ctx, nextState);
+						return [update(r, "errors", A.prepend(e)), c, s] satisfies WithCtx;
 					},
-					ctx => next(tail, ctx),
+					ctx => next(tail, ctx, nextState),
 				),
 			);
 		}
 
 		if (head.type === "foreign") {
-			const [name, result] = foreign(head, ctx);
+			const [name, result, nextState] = foreign(head, ctx, state);
 			return F.pipe(
 				result,
 				E.match(
 					e => {
-						const [r, c] = next(tail, ctx);
-						return [update(r, "foreign", A.prepend<Pair>([name, E.left(e)])), c] satisfies WithCtx;
+						const [r, c, s] = next(tail, ctx, nextState);
+						return [update(r, "foreign", A.prepend<Pair>([name, E.left(e)])), c, s] satisfies WithCtx;
 					},
 					([ast, nextCtx, decl]) =>
 						F.pipe(
-							next(tail, nextCtx),
-							([r, c]) =>
+							next(tail, nextCtx, nextState),
+							([r, c, s]) =>
 								[
 									F.pipe(
 										r,
@@ -76,6 +113,7 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context): Omit<Interface, "im
 										update("declarations", (d: Record<string, Declaration>) => ({ ...d, [name]: decl })),
 									),
 									c,
+									s,
 								] satisfies WithCtx,
 							maybeExport(name),
 						),
@@ -84,26 +122,30 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context): Omit<Interface, "im
 		}
 
 		if (head.type === "let") {
-			const [name, result] = letdec(head, ctx);
+			const [name, result, nextState] = letdec(head, ctx, state);
 
 			return F.pipe(
 				result,
 				E.match(
 					e => {
-						const [r, c] = next(tail, ctx);
-						return [update(r, "letdecs", A.prepend<Pair>([name, E.left(e)])), c] satisfies WithCtx;
+						const [r, c, s] = next(tail, ctx, nextState);
+						return [update(r, "letdecs", A.prepend<Pair>([name, E.left(e)])), c, s] satisfies WithCtx;
 					},
 					([ast, nextCtx]) =>
-						F.pipe(next(tail, nextCtx), ([r, c]) => [update(r, "letdecs", A.prepend<Pair>([name, E.right(ast)])), c] satisfies WithCtx, maybeExport(name)),
+						F.pipe(
+							next(tail, nextCtx, nextState),
+							([r, c, s]) => [update(r, "letdecs", A.prepend<Pair>([name, E.right(ast)])), c, s] satisfies WithCtx,
+							maybeExport(name),
+						),
 				),
 			);
 		}
 
 		console.warn("Unrecognized statement", head);
-		return next(tail, ctx);
+		return next(tail, ctx, state);
 	};
 
-	const [result, finalCtx] = next(mod.content.script, ctx);
+	const [result, , finalState] = next(mod.content.script, ctx, state);
 	console.log("\n================ Module Elaboration ================\n");
 	console.log("Exports:");
 	console.log(result.exports);
@@ -114,43 +156,50 @@ export const elaborate = (mod: Src.Module, ctx: EB.Context): Omit<Interface, "im
 	console.log("Errors:");
 	console.log(result.errors);
 	console.log("\n===================================================\n");
-	return { ...result, zonker: finalCtx.zonker };
+	return { ...result, zonker: Metas.solutions(finalState.registry) };
 };
 
-export const foreign = (stmt: Extract<Src.Statement, { type: "foreign" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context, Declaration]>] => {
-	const check = EB.check(stmt.annotation, NF.Type);
-	const [{ result }] = check(ctx);
-	const e = E.Functor.map(result, ([tm, us]): [EB.AST, EB.Context, Declaration] => {
-		const nf = NF.evaluate(ctx, tm);
+export const foreign = (
+	stmt: Extract<Src.Statement, { type: "foreign" }>,
+	ctx: EB.Context,
+	state: Boundary = boundary,
+): [string, Either<M.Err, [EB.AST, EB.Context, Declaration]>, Boundary] => {
+	const [result, nextState] = run(ctx, state, function* () {
+		const [tm, us] = yield* EB.check(stmt.annotation, NF.Type);
+		const nf = yield* NF.evaluate(tm);
 		const v = EB.Constructors.Var({ type: "Foreign", name: stmt.variable });
-		const a = NF.arity(ctx, nf);
-		return [[v, nf, us], set(ctx, ["imports", stmt.variable] as const, [v, nf, us]), { arity: a, source: "ffi" }];
+		const a = yield* NF.arity(nf);
+		return [[v, nf, us], set(ctx, ["imports", stmt.variable] as const, [v, nf, us]), { arity: a, source: "ffi" }] satisfies [EB.AST, EB.Context, Declaration];
 	});
 
-	return [stmt.variable, e];
+	return [stmt.variable, result, nextState];
 };
 
-export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.Context): Either<V2.Err, EB.Context> => {
-	const infer = EB.Stmt.infer(stmt);
-	const [{ result }] = infer(ctx);
+export const using = (stmt: Extract<Src.Statement, { type: "using" }>, ctx: EB.Context, state: Boundary = boundary): [Either<M.Err, EB.Context>, Boundary] => {
 	type Implicit = EB.Context["implicits"][0];
-	return E.Functor.map(result, ([t, ty]) => update(ctx, "implicits", A.append<Implicit>([t.value, ty])));
+
+	return run(ctx, state, function* () {
+		const [t, ty] = yield* EB.Stmt.infer(stmt);
+		const nf = yield* NF.whnf(t.value);
+		return update(ctx, "implicits", A.append<Implicit>([nf, ty]));
+	});
 };
 
-export const letdec = (stmt: Extract<Src.Statement, { type: "let" }>, ctx: EB.Context): [string, Either<V2.Err, [EB.AST, EB.Context]>] => {
-	const inference = V2.Do(function* () {
-		const [elaborated, , us] = yield* EB.Stmt.infer.gen(stmt);
+export const letdec = (
+	stmt: Extract<Src.Statement, { type: "let" }>,
+	ctx: EB.Context,
+	state: Boundary = boundary,
+): [string, Either<M.Err, [EB.AST, EB.Context]>, Boundary] => {
+	const [result, nextState] = run(ctx, state, function* () {
+		const [elaborated, , us] = yield* EB.Stmt.infer(stmt);
 		const [r, next] = yield* EB.Stmt.letdec(elaborated as Extract<EB.Statement, { type: "Let" }>);
 
 		const ast: EB.AST = [r.value, r.annotation, us];
 		const final = [ast, set(next, ["imports", stmt.variable] as const, ast)] satisfies [EB.AST, EB.Context];
-		console.warn("Verification skipped for letdec: ", stmt.variable, " Needs to be replaced by IVL solver");
-		console.log("Elaborated letdec:", stmt.variable);
 		return final;
 	});
 
-	const [{ result }] = inference(ctx);
-	return [stmt.variable, result];
+	return [stmt.variable, result, nextState];
 };
 
 export type ElaborationDebug = {
@@ -159,26 +208,21 @@ export type ElaborationDebug = {
 	resolutions: Resolutions;
 };
 
-export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>, ctx: EB.Context) => {
-	const inference = V2.Do(function* () {
-		const [elaborated, ty, us] = yield* EB.infer.gen(stmt.value);
-		const { constraints, metas, zonker: toldZonker } = yield* V2.listen();
-		const withMetas = update(ctx, "metas", prev => ({ ...prev, ...metas }));
-		const { zonker, resolutions } = yield* V2.local(_ => withMetas, EB.solve(constraints));
-		const { metas: postSolveMetas } = yield* V2.listen();
-		const withAllMetas = update(withMetas, "metas", prev => ({ ...prev, ...postSolveMetas }));
-		const zonked = update(withAllMetas, "zonker", z => Sub.compose(zonker, Sub.compose(toldZonker, z)));
+export const expression = (stmt: Extract<Src.Statement, { type: "expression" }>, ctx: EB.Context, state: Boundary = boundary) => {
+	return run(ctx, state, function* () {
+		const [elaborated, ty, us] = yield* EB.infer(stmt.value);
+		const { constraints } = yield* M.writer.peek();
+		const { resolutions } = yield* EB.solve(constraints);
 
-		const [generalized, subst] = NF.generalize(NF.force(zonked, ty), elaborated, zonked, resolutions);
-		const next = update(zonked, "zonker", z => ({ ...z, ...subst }));
-		const instantiated = NF.instantiate(generalized, next);
+		const forced = yield* NF.force(ty);
+		const [generalized] = yield* NF.generalize(forced, elaborated, resolutions);
+		const instantiated = yield* NF.instantiate(generalized);
 
-		const wrapped = F.pipe(EB.Icit.wrapLambda(elaborated, instantiated, next), tm => EB.Icit.instantiate(tm, next, resolutions));
+		const tm = yield* EB.Icit.wrapLambda(elaborated, instantiated);
+		const wrapped = yield* EB.Icit.instantiate(tm, resolutions);
 
-		const debug: ElaborationDebug = { constraints, zonker, resolutions };
-		return [wrapped, instantiated, us, next, debug] as const;
+		const registry = yield* Metas.registry.get();
+		const debug: ElaborationDebug = { constraints, zonker: Metas.solutions(registry), resolutions };
+		return [wrapped, instantiated, us, ctx, debug] as const;
 	});
-
-	const [{ result }] = inference(ctx);
-	return result;
 };

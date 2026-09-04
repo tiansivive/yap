@@ -76,7 +76,7 @@ exports[`Shift-reset > multiple shifts within reset > multiple shifts and multip
         "2",
       ],
       "9": [
-        "L1 1",
+        "(L1) 1",
         "1",
       ],
     },
@@ -196,7 +196,7 @@ exports[`Shift-reset > only one shift within reset > nested resumption 1`] = `
   "state": {
     "nondeterminism": {
       "5": [
-        "L1 10",
+        "(L1) 10",
         "10",
       ],
     },
@@ -226,7 +226,7 @@ exports[`Shift-reset > only one shift within reset > nested resumption with non-
   "state": {
     "nondeterminism": {
       "5": [
-        "L1 10",
+        "(L1) 10",
         "10",
       ],
     },
@@ -298,54 +298,5 @@ exports[`Shift-reset > resets without shifts > literal value 1`] = `
   },
   "term": "let test : Num = reset |10|",
   "type": "Num",
-}
-`;
-
-exports[`Shift-reset > resumption of dependent continuation > resuming continuation with dependent type 1`] = `
-{
-  "constraints": [
-    "Type ~~ Type",
-    "Num ~~ Num",
-    "Type ~~ Type",
-    "?3 ~~ Num",
-    "Type ~~ Type",
-    "Type ~~ Type",
-    "Num ~~ Num",
-    "Num ~~ Num",
-    "?5 ~~ Num",
-    "String ~~ String",
-    "Num ~~ ?9",
-    "?7 ~~ ?8",
-    "?9 ~~ Num",
-    "match ?10 … ~~ ?7",
-    "?8 ~~ ?6",
-    "Unit ~~ ?1",
-  ],
-  "solution": "?1 |=> Unit
-?3 |=> Num
-?5 |=> Num
-?6 |=> match ?10 …
-?7 |=> match ?10 …
-?8 |=> match ?10 …
-?9 |=> Num",
-  "state": {
-    "nondeterminism": {
-      "10": [
-        "10",
-      ],
-    },
-  },
-  "term": "let test
-  : Unit
-  = {
-    let f
-      : Π(x: Num) -> (closure: match x | 0 -> Num | _ -> String -| Γ: x; test)
-      = λ(x: Num) -> match x | 0 -> 0 | _ -> "hello";
-    let foo
-      : String
-      = reset |f bubble#10 (shift (λ($k: Π($k: Num) -> match ?10 …) -> $k 10))|;
-    return unit;
-  }",
-  "type": "Unit",
 }
 `;

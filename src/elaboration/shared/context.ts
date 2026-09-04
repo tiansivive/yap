@@ -3,16 +3,11 @@ import * as NF from "@yap/elaboration/normalization";
 import * as EB from "@yap/elaboration";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
-import * as V2 from "@yap/elaboration/shared/monad.v2";
+import * as M from "@yap/elaboration/shared/effects";
 
 import * as Src from "@yap/src/index";
 import * as P from "@yap/shared/provenance";
 
-import * as U from "@yap/elaboration/unification/index";
-import * as Sub from "@yap/elaboration/unification/substitution";
-
-import * as F from "fp-ts/function";
-import * as E from "fp-ts/Either";
 import { match } from "ts-pattern";
 import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
@@ -26,35 +21,31 @@ export type Context = {
 		nf: NF.Value;
 		name: Binder;
 	}>;
-	implicits: Array<[EB.Term, NF.Value]>;
+	implicits: Array<[NF.Value, NF.Value]>;
 
 	labels: Record<string, NF.Value>;
 	sigma: Record<string, { value: NF.Value }>;
 	record: Record<string, { term?: EB.Term; value?: NF.Value }>;
 
-	zonker: Sub.Subst;
-	metas: Record<number, { meta: EB.Meta; ann: NF.Value }>;
 	imports: Record<string, EB.AST>;
 	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
 	trace: P.Stack<Provenance>;
 };
 
-export type Zonker = Context["zonker"];
-
 export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
-export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.AST> => {
+export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elaboration<EB.AST> {
 	const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
 	if (variable.type === "label") {
 		const type = ctx.labels[variable.value];
 		if (type) {
 			const tm = EB.Constructors.Var({ type: "Label", name: variable.value });
-			return V2.of<EB.AST>([tm, type, zeros]);
+			return [tm, type, zeros] satisfies EB.AST;
 		}
 		throw new Error(`Label not found: ${variable.value}`);
 	}
 
-	const _lookup = (i: number, variable: Src.Variable, types: Array<Context["env"][number]["type"]>): V2.Elaboration<EB.AST> => {
+	const _lookup = function* (i: number, variable: Src.Variable, types: Array<Context["env"][number]["type"]>): M.Elaboration<EB.AST> {
 		// free vars can be shadowed by bound vars, so only if no bound vars are found do we check for free vars
 		// QUESTION: should we disallow this shadowing?
 		if (types.length === 0) {
@@ -65,7 +56,7 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.
 				const tm = match(storedTm)
 					.with({ type: "Var", variable: { type: "Foreign" } }, t => EB.Constructors.Var({ type: "Foreign", name: t.variable.name }))
 					.otherwise(() => EB.Constructors.Var({ type: "Free", name: variable.value }));
-				return V2.of<EB.AST>([tm, nf, Q.add(us, zeros)]);
+				return [tm, nf, Q.add(us, zeros)] satisfies EB.AST;
 			}
 
 			throw new Error(`Variable not found: ${variable.value}`);
@@ -75,46 +66,23 @@ export const lookup = (variable: Src.Variable, ctx: Context): V2.Elaboration<EB.
 		//const usages = []//unsafeUpdateAt(i, modalities.quantity, zeros);
 		// do we need to check origin here? I don't think it makes a difference whether it's an inserted (implicit) or source (explicit) binder
 		if (binder.variable === variable.value) {
-			const tm = EB.Constructors.Var({ type: "Bound", index: i });
-			return V2.Do(function* () {
-				yield* V2.tell("binder", binder);
-				return [tm, nf, zeros] satisfies EB.AST;
-			});
+			/* A Mu-tagged binder means a type-level position (muContext): flag the open
+			 * let-window at this level, if any, so its boundary sees the recursion. */
+			if (binder.type === "Mu") {
+				yield* M.recursion.flag(ctx.env.length - 1 - i);
+			}
+			return [EB.Constructors.Var({ type: "Bound", index: i }), nf, zeros] satisfies EB.AST;
 		}
 
-		return _lookup(i + 1, variable, rest);
+		return yield* _lookup(i + 1, variable, rest);
 	};
 
-	return _lookup(
+	return yield* _lookup(
 		0,
 		variable,
 		ctx.env.map(v => v.type),
 	);
 };
-lookup.gen = F.flow(lookup, V2.pure);
-
-export const resolveImplicit = (nf: NF.Value): V2.Elaboration<[EB.Term, Sub.Subst] | void> =>
-	V2.Do(function* () {
-		const ctx = yield* V2.ask();
-
-		const lookup = (implicits: Context["implicits"]): [EB.Term, Sub.Subst] | void => {
-			if (implicits.length === 0) {
-				return;
-			}
-
-			const [[term, value], ...rest] = implicits;
-			const unification = U.unify(nf, value, ctx.env.length, Sub.empty);
-			const [{ result }] = unification(ctx);
-
-			if (E.isRight(result)) {
-				return [term, result.right];
-			}
-			return lookup(rest);
-		};
-
-		return lookup(ctx.implicits);
-	});
-resolveImplicit.gen = F.flow(resolveImplicit, V2.pure);
 
 export const bind = (context: Context, binder: Binder, annotation: NF.Value, origin: Origin = "source"): Context => {
 	const { env } = context;

@@ -1,18 +1,24 @@
-import * as NF from "@yap/elaboration/normalization";
+import * as Eff from "@yap/utils/effects";
 
-import * as V2 from "@yap/elaboration/shared/monad.v2";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
+import * as NF from "@yap/elaboration/normalization";
+import * as Sub from "@yap/elaboration/unification/substitution";
 
 import * as F from "fp-ts/lib/function";
 import * as A from "fp-ts/lib/Array";
 import * as R from "fp-ts/lib/Record";
 import { mapKeys } from "lodash";
 
-export const replay = function* <T>(action: (zonker: Record<number, NF.Value>) => V2.Elaboration<T>): Generator<V2.Elaboration<any>, T[], any> {
-	const ctx = yield* V2.ask();
-	const state = yield* V2.getSt();
+/**
+ * Runs action once per nondeterministic candidate solution, each under its own
+ * forked registry seeded with the candidate; agreed-on solutions merge back.
+ */
+export const replay = function* <T>(action: (zonker: Record<number, NF.Value>) => M.Elaboration<T>): M.Elaboration<T[]> {
+	const state = yield* M.st.get();
 
 	if (R.isEmpty(state.nondeterminism.solution)) {
-		return [yield* V2.pure(action(ctx.zonker))];
+		return [yield* action({})];
 	}
 
 	const zonkers = F.pipe(
@@ -24,17 +30,21 @@ export const replay = function* <T>(action: (zonker: Record<number, NF.Value>) =
 		}),
 	);
 
-	const answers: T[] = [];
-	for (const z of zonkers) {
-		const answer = yield* V2.pure(action(z));
-		answers.push(answer);
-	}
+	const attempt = function* (z: Record<number, NF.Value>): M.Elaboration<readonly [T, Metas.Registry]> {
+		const current = yield* Metas.registry.get();
+		const [answer, forked] = yield* Eff.with([Metas.registry.handlers(Metas.withSolutions(current, Sub.from(z)))], () => action(z));
 
-	return answers;
-	// return F.pipe(
-	//     A.zipWith(answers, answers.slice(1), (v1, v2) => unify(v1, v2, ctx.env.length, Sub.empty)(ctx)),
-	//     A.map(([{ result }]) => result),
-	//     E.sequenceArray,
-	//     E.map(_ => answers[0])
-	// )
+		return [answer, forked] as const;
+	};
+
+	const outcomes = yield* Eff.traverse(zonkers, attempt);
+
+	yield* Metas.registry.modify(current =>
+		Metas.merge(
+			current,
+			outcomes.map(([, forked]) => forked),
+		),
+	);
+
+	return outcomes.map(([answer]) => answer);
 };

@@ -5,6 +5,7 @@ import * as Src from "@yap/src/index";
 import * as EB from "@yap/elaboration";
 import * as GRAM from "@yap/gram";
 
+import * as Eff from "@yap/utils/effects";
 import * as E from "fp-ts/lib/Either";
 import fs from "fs";
 import { resolve } from "path";
@@ -19,6 +20,7 @@ import { emit as emitC } from "../../Codegen/v2/c/emit";
 import { print as printC } from "../../Codegen/v2/c/print";
 import { emit as emitErl } from "../../Codegen/v2/erlang/emit";
 import { print as printErl } from "../../Codegen/v2/erlang/print";
+import * as Metas from "@yap/elaboration/shared/metas";
 import * as Sub from "../../elaboration/unification/substitution";
 import { VerificationServiceV2 } from "../../verification/V2/service";
 import { Build } from "../../verification/solver/ivl/build";
@@ -168,21 +170,28 @@ export const run = (source: string, opts: Options): Result => {
 		result.raw.parsed = stmt.value;
 	}
 
-	const elaborated = attempt("Elaboration", () => EB.Mod.expression(stmt, defaultContext), errors);
-	if (!elaborated || E.isLeft(elaborated)) {
-		if (elaborated && E.isLeft(elaborated)) {
-			// eslint-disable-next-line no-restricted-syntax
-			errors.push(`[Elaboration] ${EB.V2.display(elaborated.left)}`);
-		}
+	const elaborationResult = attempt("Elaboration", () => EB.Mod.expression(stmt, defaultContext), errors);
+	if (!elaborationResult) {
+		return { ...result, errors };
+	}
+	const [elaborated, elabBoundary] = elaborationResult;
+	if (E.isLeft(elaborated)) {
+		// eslint-disable-next-line no-restricted-syntax
+		errors.push(`[Elaboration] ${JSON.stringify(elaborated.left)}`);
 		return { ...result, errors };
 	}
 
 	const [tm, ty, _us, ctx, debug] = elaborated.right;
+	const elabRegistry = elabBoundary.registry;
 
-	result.elaborated = attempt("Typechecker / display", () => EB.Display.Term(tm, ctx, db), errors) ?? "";
+	/* Read-only boundary runs over the elaborated scope and metacontext. */
+	const disp = EB.NF.probe(ctx, elabRegistry);
+	/* Constraints display against the unsolved registry: the metas as posed to unification. */
+	const posed = EB.NF.probe(ctx, Metas.unsolved(elabRegistry));
+
+	result.elaborated = attempt("Typechecker / display", () => disp(() => EB.Display.Term(tm, db)), errors) ?? "";
 
 	if (debug) {
-		const displayCtx = { zonker: ctx.zonker, metas: ctx.metas, env: ctx.env };
 		result.constraints =
 			attempt(
 				"Typechecker / constraints",
@@ -190,17 +199,7 @@ export const run = (source: string, opts: Options): Result => {
 					if (debug.constraints.length === 0) {
 						return "No constraints";
 					}
-					return debug.constraints
-						.map((c, i) => {
-							const prefix = `[${i}] `;
-							if (c.type === "assign") {
-								const l = EB.NF.display(c.left, displayCtx, db);
-								const r = EB.NF.display(c.right, displayCtx, db);
-								return `${prefix}${l}  ~  ${r}`;
-							}
-							return `${prefix}resolve ?${c.meta.val}`;
-						})
-						.join("\n");
+					return debug.constraints.map((c, i) => `[${i}] ${posed(() => EB.Display.Constraint(c, db))}`).join("\n");
 				},
 				errors,
 			) ?? "";
@@ -210,21 +209,21 @@ export const run = (source: string, opts: Options): Result => {
 				"Typechecker / metas",
 				() => {
 					const sections: string[] = [];
-					const zonkerStr = Sub.display(debug.zonker, ctx.metas);
+					const zonkerStr = disp(() => Sub.display(debug.zonker));
 					// eslint-disable-next-line no-restricted-syntax
 					sections.push(`Zonker:\n${zonkerStr}`);
 					const resKeys = Object.keys(debug.resolutions);
 					if (resKeys.length > 0) {
-						const resStr = resKeys.map(k => `  ?${k} |=> ${EB.Display.Term(debug.resolutions[Number(k)], displayCtx, db)}`).join("\n");
+						const resStr = resKeys.map(k => `  ?${k} |=> ${disp(() => EB.NF.display(debug.resolutions[Number(k)], db))}`).join("\n");
 						// eslint-disable-next-line no-restricted-syntax
 						sections.push(`\nResolutions:\n${resStr}`);
 					}
-					const metaKeys = Object.keys(ctx.metas);
+					const metaKeys = Object.keys(elabRegistry);
 					if (metaKeys.length > 0) {
 						const metaStr = metaKeys
 							.map(k => {
-								const m = ctx.metas[Number(k)];
-								return `  ?${k} : ${EB.NF.display(m.ann, displayCtx, db)}`;
+								const entry = elabRegistry[Number(k)];
+								return `  ?${k} : ${disp(() => EB.NF.display(entry.annotation, db))}`;
 							})
 							.join("\n");
 						// eslint-disable-next-line no-restricted-syntax
@@ -240,25 +239,32 @@ export const run = (source: string, opts: Options): Result => {
 		result.raw.elaborated = tm;
 	}
 
-	const quoted = attempt("Typechecker / quote", () => EB.NF.quote(ctx, ctx.env.length, ty), errors);
-	result.type = quoted ? (attempt("Typechecker / display", () => EB.Display.Term(quoted, ctx, db), errors) ?? "") : "";
+	const quoted = attempt("Typechecker / quote", () => disp(() => EB.NF.quote(ctx.env.length, ty)), errors);
+	result.type = quoted ? (attempt("Typechecker / display", () => disp(() => EB.Display.Term(quoted, db)), errors) ?? "") : "";
 
 	if (opts.rawJson && quoted) {
 		result.raw.type = quoted;
 	}
 
 	if (opts.deBruijn === "both" && quoted) {
-		result.type += `\n\n--- NF ---\n${attempt("Typechecker / normalize", () => EB.NF.display(ty, ctx, db), errors) ?? ""}`;
+		result.type += `\n\n--- NF ---\n${attempt("Typechecker / normalize", () => disp(() => EB.NF.display(ty, db)), errors) ?? ""}`;
 	}
 
 	if (opts.evaluate) {
-		const nf = attempt("Normalization", () => EB.NF.evaluate(ctx, tm), errors);
-		result.normalized = nf ? (attempt("Normalization / display", () => EB.NF.display(nf, ctx, db), errors) ?? "") : "";
+		const nf = attempt("Normalization", () => disp(() => EB.NF.evaluate(tm)), errors);
+		result.normalized = nf ? (attempt("Normalization / display", () => disp(() => EB.NF.display(nf, db)), errors) ?? "") : "";
 
 		if (opts.deBruijn === "both" && nf) {
-			const quotedNF = attempt("Normalization / quote", () => EB.NF.quote(ctx, ctx.env.length, nf), errors);
+			const quotedNF = attempt(
+				"Normalization / quote",
+				() =>
+					disp(function* () {
+						return yield* EB.NF.quote(ctx.env.length, nf);
+					}),
+				errors,
+			);
 			if (quotedNF) {
-				result.normalized += `\n\n--- Quoted ---\n${attempt("Normalization / display", () => EB.Display.Term(quotedNF, ctx, db), errors) ?? ""}`;
+				result.normalized += `\n\n--- Quoted ---\n${attempt("Normalization / display", () => disp(() => EB.Display.Term(quotedNF, db)), errors) ?? ""}`;
 			}
 		}
 	}
@@ -267,13 +273,13 @@ export const run = (source: string, opts: Options): Result => {
 	const ivlArtefacts = attempt(
 		"Verification / IVL",
 		() => {
-			const V2 = VerificationServiceV2();
-			const [{ result: res }] = V2.check(tm, ty)(ctx);
+			const svc = VerificationServiceV2();
+			const { answer } = svc.check(tm, ty, ctx, elabRegistry);
 
-			if (res._tag === "Left") {
+			if (Eff.failed(answer)) {
 				return undefined;
 			}
-			return res.right;
+			return answer;
 		},
 		errors,
 	);
@@ -294,7 +300,7 @@ export const run = (source: string, opts: Options): Result => {
 	}
 
 	const arities = Pipeline.deriveAritiesFromContext(ctx);
-	const gramResult = attempt("IR / GRAM", () => GRAM.Pipeline.compile(tm, { zonker: ctx.zonker, arities }), errors);
+	const gramResult = attempt("IR / GRAM", () => GRAM.Pipeline.compile(tm, { zonker: Metas.solutions(elabRegistry), arities }), errors);
 
 	const gramGraph = gramResult && E.isRight(gramResult) ? gramResult.right : undefined;
 	result.gram = gramGraph ? (attempt("IR / GRAM display", () => GRAM.display(gramGraph), errors) ?? "") : "";

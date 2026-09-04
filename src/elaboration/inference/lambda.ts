@@ -1,48 +1,39 @@
-import * as F from "fp-ts/lib/function";
-
 import * as EB from "@yap/elaboration";
-import * as V2 from "@yap/elaboration/shared/monad.v2";
+import * as M from "@yap/elaboration/shared/effects";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 
-import { update } from "@yap/utils";
-
 type Lambda = Extract<Src.Term, { type: "lambda" }>;
 
-export const infer = (lam: Lambda): V2.Elaboration<EB.AST> =>
-	V2.track(
-		{ tag: "src", type: "term", term: lam, metadata: { action: "infer", description: "Lambda" } },
-		V2.Do<EB.AST, EB.AST>(function* () {
-			const ctx = yield* V2.ask();
+export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
+	M.tracer.track({ tag: "src", type: "term", term: lam, metadata: { action: "infer", description: "Lambda" } }, function* () {
+		const ctx = yield* M.reader.ask();
 
-			const [ann, _us] = lam.annotation
-				? yield* EB.check.gen(lam.annotation, NF.Type)
-				: ([EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
+		const [ann, _us] = lam.annotation
+			? yield* EB.check(lam.annotation, NF.Type)
+			: ([EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)), Q.noUsage(ctx.env.length)] as const);
 
-			const ty = NF.evaluate(ctx, ann);
-			const { metas } = yield* V2.listen();
+		const ty = yield* NF.normalize(ann);
 
-			const ast = yield* V2.local(
-				_ctx => {
-					const xtended = EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, ty);
-					return update(xtended, "metas", ms => ({ ...ms, ...metas }));
-				},
-				V2.Do(function* () {
-					const inferred = yield* EB.infer.gen(lam.body);
-					const [bTerm, bType, [_vu, ...bus]] = yield* EB.Icit.insert.gen(inferred);
-					//yield* V2.tell("constraint", { type: "usage", expected: mty[1], computed: vu });
+		/*
+		 * Only the body is inferred under the binder — implicit insertion included,
+		 * since it mints its metas at the extended level. The Pi is built back out
+		 * here: its closure abstracts *over* the binder, so it must close at the
+		 * scope that does not yet have it.
+		 */
+		const [bTerm, bType, [_vu, ...bus]] = yield* M.reader.local(
+			_ctx => EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, ty),
+			(function* () {
+				return yield* EB.Icit.insert(yield* EB.infer(lam.body));
+			})(),
+		);
+		//yield* M.constrain({ type: "usage", expected: mty[1], computed: vu });
 
-					const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm, ann);
-					const pi = NF.Constructors.Pi(lam.variable, lam.icit, ty, NF.closeVal(ctx, bType));
-					const piTerm = NF.quote(ctx, ctx.env.length, pi);
-					return [EB.Constructors.Ann(tm, piTerm), pi, bus] satisfies EB.AST;
-				}),
-			);
+		const tm = EB.Constructors.Lambda(lam.variable, lam.icit, bTerm, ann);
+		const pi = NF.Constructors.Pi(lam.variable, lam.icit, ty, yield* NF.closeVal(bType));
+		const piTerm = yield* NF.quote(ctx.env.length, pi);
 
-			return ast satisfies EB.AST; // Remove the usage of the bound variable
-		}),
-	);
-
-infer.gen = F.flow(infer, V2.pure);
+		return [EB.Constructors.Ann(tm, piTerm), pi, bus] satisfies EB.AST; // Remove the usage of the bound variable
+	});

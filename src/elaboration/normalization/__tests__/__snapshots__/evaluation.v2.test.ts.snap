@@ -23,9 +23,10 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
       "Bool ~~ Bool",
       "Unit ~~ ?2",
       "Π(u: ?4) -> (closure: (?5 :: Type) -| Γ: u; go; body; cond; while) ~~ ?3",
-      "?9 @ Type",
+      "?10 @ Type",
       "Unit ~~ Unit",
-      "?9 ~~ ?1",
+      "?11 @ Type",
+      "?11 ~~ ?1",
       "?2 ~~ Unit",
     ],
     "term": "{
@@ -36,7 +37,7 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
     = λ(a: Type) =>
       λ(cond: Π(t2: Unit) -> Bool) ->
         λ(body: Π(t4: Unit) -> Unit) ->
-          reset |{
+          reset |({
             let go
               : Π(a: Type) =>
                 (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
@@ -46,8 +47,9 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
                     match body unit
                       | true -> { go unit; $k (a unit); return unit; }
                       | false -> unit)) : Π(u: Unit) -> a);
-            return go @a unit;
-          }|;
+            return λ(a: Type) => go @a unit;
+          })
+            @a|;
   return while;
 }",
     "type": "Π(a: Type) =>
@@ -57,7 +59,7 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
   "evaluation": "λ(a: Type) =>
   (closure: λ(cond: Π(t2: Unit) -> Bool) ->
     λ(body: Π(t4: Unit) -> Unit) ->
-      reset |{
+      reset |({
         let go
           : Π(a: Type) =>
             (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
@@ -67,8 +69,9 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
                 match body unit
                   | true -> { go unit; $k (a unit); return unit; }
                   | false -> unit)) : Π(u: Unit) -> a);
-        return go @a unit;
-      }| -| Γ: a; while)",
+        return λ(a: Type) => go @a unit;
+      })
+        @a| -| Γ: a; while)",
 }
 `;
 
@@ -85,7 +88,7 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
       "?5 ~~ Num",
       "Π(x: ?4) ->
   (closure: <ω> Num [| λ(r: Num) ->
-    FFI.$eq r (FFI.$add 1 (?6 :: ?5)) |] -| Γ: x; test) ~~ ?2",
+    FFI.$eq r (FFI.$add 1 (?6 :: (?5 :: Type))) |] -| Γ: x; test) ~~ ?2",
       "?3 ~~ ?1",
       "Num ~~ ?4",
     ],
@@ -93,36 +96,20 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
   let test
     : Π(x: Num) ->
       (closure: <ω> Num [| λ(r: Num) ->
-        FFI.$eq r
-          (FFI.$add 1
-            (?6 :: <ω> Num [| λ(r: Num) ->
-              (closure: FFI.$eq r
-                (FFI.$add x y) -| Γ: r; y; x) |])) |] -| Γ: x; test)
+        FFI.$eq r (FFI.$add 1 ($add: (x) (10))) |] -| Γ: x; test)
     = reset |(λ(x: Num) ->
       FFI.$add 1
         bubble#6 (shift (λ($k: Π($k: <ω> Num [| λ(r: Num) ->
           (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]) ->
           Π(x: Num) ->
             (closure: <ω> Num [| λ(r: Num) ->
-              FFI.$eq r
-                (FFI.$add 1
-                  (?6 :: <ω> Num [| λ(r: Num) ->
-                    (closure: FFI.$eq r
-                      (FFI.$add x y) -| Γ: r; y; x) |])) |] -| Γ: x; test)) ->
+              FFI.$eq r (FFI.$add 1 ($add: (x) (10))) |] -| Γ: x; test)) ->
           $k (FFI.$add x 10))) : Π(x: Num) ->
-      <ω> Num [| λ(r: Num) ->
-        FFI.$eq r
-          (FFI.$add 1
-            (?6 :: <ω> Num [| λ(r: Num) ->
-              (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |])) |])|;
+      <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add 1 ($add: (x) (10))) |])|;
   return test 5;
 }",
     "type": "<ω> Num [| λ(r: Num) ->
-  (closure: FFI.$eq r
-    (FFI.$add 1
-      (?6 :: <ω> Num [| λ(r: Num) ->
-        (closure: FFI.$eq r
-          (FFI.$add x y) -| Γ: r; y; x) |])) -| Γ: r; x; test) |]",
+  (closure: FFI.$eq r (FFI.$add 1 ($add: (x) (10))) -| Γ: r; x; test) |]",
   },
 }
 `;

@@ -14,6 +14,12 @@ Optimized for information density, variation, and forward progress. Governs pros
 - Don't summarize the previous turn unless asked. Don't repeat facts already established. Move forward with new information.
 - Present uncertainty explicitly and briefly. Concrete over generic. Compress obvious observations; expand only where detail creates value. Lists only when they improve clarity.
 - Before sending: cut sentences that merely restate input or earlier output; cut introductory and conclusion filler; delete any paragraph that loses no information when removed.
+- No em dashes.
+- Don't open a paragraph with a sentence that announces the paragraph. Start with the substance itself.
+- No sentence fragments used as standalone beats ("X done.", "N things happened.") — these read as broken speech.
+- No ceremonial language or narration of the event in place of the event. Write the thing, don't describe what you're about to write or frame what just happened.
+- Prose should build — each sentence motivating or contextualising the next. A paragraph that could be reordered without loss has no flow.
+- When writing PR descriptions: no references to z-yap zettels, ADR IDs, or internal design docs. The description must stand alone.
 
 ## Carve-outs
 

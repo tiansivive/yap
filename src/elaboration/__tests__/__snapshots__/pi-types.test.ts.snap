@@ -39,29 +39,3 @@ exports[`dependent types elaboration > dependent match with nested dependent typ
 | _ -> Bool -| Γ: x)",
 }
 `;
-
-exports[`dependent types elaboration > simple dependent match expression type 1`] = `
-{
-  "constraints": [
-    "Type ~~ Type",
-    "Num ~~ Num",
-    "Type ~~ Type",
-    "?2 ~~ Num",
-    "Type ~~ Type",
-    "Type ~~ Type",
-    "Num ~~ Num",
-    "Num ~~ Num",
-    "?4 ~~ Num",
-    "String ~~ String",
-  ],
-  "solution": "?2 |=> Num
-?4 |=> Num",
-  "state": {
-    "nondeterminism": {},
-  },
-  "term": "let f
-  : Π(x: Num) -> (closure: match x | 0 -> Num | _ -> String -| Γ: x)
-  = λ(x: Num) -> match x | 0 -> 10 | _ -> "10"",
-  "type": "Π(x: Num) -> (closure: match x | 0 -> Num | _ -> String -| Γ: x)",
-}
-`;

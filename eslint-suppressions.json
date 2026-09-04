@@ -165,7 +165,7 @@
 	},
 	"src/GRAM/translate.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
-			"count": 9
+			"count": 7
 		},
 		"no-restricted-syntax": {
 			"count": 9
@@ -189,7 +189,7 @@
 			"count": 1
 		},
 		"no-restricted-properties": {
-			"count": 4
+			"count": 3
 		}
 	},
 	"src/cli/explore/server.ts": {
@@ -211,7 +211,7 @@
 			"count": 1
 		},
 		"no-restricted-properties": {
-			"count": 10
+			"count": 8
 		},
 		"no-restricted-syntax": {
 			"count": 22
@@ -227,17 +227,12 @@
 	},
 	"src/elaboration/__tests__/pi-types.test.ts": {
 		"@typescript-eslint/no-unused-vars": {
-			"count": 2
+			"count": 1
 		}
 	},
 	"src/elaboration/__tests__/shift-reset.test.ts": {
 		"@typescript-eslint/no-unused-vars": {
 			"count": 10
-		}
-	},
-	"src/elaboration/__tests__/utils.ts": {
-		"@typescript-eslint/no-unused-vars": {
-			"count": 1
 		}
 	},
 	"src/elaboration/check.ts": {
@@ -251,11 +246,6 @@
 			"count": 1
 		}
 	},
-	"src/elaboration/inference/applications.ts": {
-		"@typescript-eslint/no-explicit-any": {
-			"count": 2
-		}
-	},
 	"src/elaboration/inference/patterns.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 5
@@ -267,29 +257,9 @@
 			"count": 1
 		}
 	},
-	"src/elaboration/inference/rows.ts": {
-		"@typescript-eslint/no-explicit-any": {
-			"count": 2
-		}
-	},
 	"src/elaboration/inference/statements.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 1
-		},
-		"@typescript-eslint/no-explicit-any": {
-			"count": 4
-		},
-		"@typescript-eslint/no-unsafe-argument": {
-			"count": 9
-		},
-		"@typescript-eslint/no-unsafe-assignment": {
-			"count": 2
-		},
-		"@typescript-eslint/no-unsafe-member-access": {
-			"count": 1
-		},
-		"no-restricted-syntax": {
-			"count": 2
 		}
 	},
 	"src/elaboration/module.ts": {
@@ -300,11 +270,6 @@
 	"src/elaboration/normalization/__tests__/arity.test.ts": {
 		"@typescript-eslint/no-unused-vars": {
 			"count": 1
-		}
-	},
-	"src/elaboration/normalization/syntax/pretty.ts": {
-		"@typescript-eslint/consistent-type-assertions": {
-			"count": 2
 		}
 	},
 	"src/elaboration/normalization/syntax/term.ts": {
@@ -318,11 +283,6 @@
 	"src/elaboration/pretty/pretty.test.ts": {
 		"no-restricted-syntax": {
 			"count": 1
-		}
-	},
-	"src/elaboration/pretty/pretty.ts": {
-		"@typescript-eslint/consistent-type-assertions": {
-			"count": 3
 		}
 	},
 	"src/elaboration/shared/cont.ts": {
@@ -342,9 +302,6 @@
 		},
 		"@typescript-eslint/no-unsafe-assignment": {
 			"count": 1
-		},
-		"no-restricted-properties": {
-			"count": 1
 		}
 	},
 	"src/elaboration/shared/errors.ts": {
@@ -362,19 +319,6 @@
 	},
 	"src/elaboration/shared/provenance.ts": {
 		"no-restricted-syntax": {
-			"count": 1
-		}
-	},
-	"src/elaboration/solver/nondeterminism.ts": {
-		"@typescript-eslint/no-explicit-any": {
-			"count": 2
-		},
-		"no-restricted-syntax": {
-			"count": 2
-		}
-	},
-	"src/elaboration/solver/solver.ts": {
-		"no-restricted-properties": {
 			"count": 1
 		}
 	},
@@ -557,24 +501,13 @@
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 4
 		},
-		"@typescript-eslint/no-unused-vars": {
-			"count": 1
-		},
 		"no-restricted-properties": {
-			"count": 2
-		}
-	},
-	"src/verification/V2/logic/translate.ts": {
-		"@typescript-eslint/consistent-type-assertions": {
 			"count": 1
 		}
 	},
 	"src/verification/V2/subtype.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 1
-		},
-		"no-restricted-properties": {
-			"count": 4
 		}
 	},
 	"src/verification/V2/synth.ts": {
@@ -588,9 +521,6 @@
 	"src/verification/V2/utils/context.ts": {
 		"no-restricted-properties": {
 			"count": 1
-		},
-		"no-restricted-syntax": {
-			"count": 8
 		}
 	},
 	"src/verification/V2/utils/refinements.ts": {

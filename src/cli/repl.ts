@@ -3,6 +3,9 @@ import Grammar from "@yap/src/grammar";
 
 import * as Src from "@yap/src/index";
 import * as EB from "@yap/elaboration";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
+import * as Eff from "@yap/utils/effects";
 import * as NF from "@yap/elaboration/normalization";
 import * as GRAM from "@yap/gram";
 import * as Pipeline from "@yap/pipeline";
@@ -52,9 +55,26 @@ type DisplayOpts = {
 
 type ReplState = {
 	ctx: EB.Context;
+	boundary: EB.Mod.Boundary;
 	runtime: Pipeline.Runtime;
 	display: DisplayOpts;
 };
+
+/* The repl is a boundary: displays and normalizations run over the state it holds. */
+const shown = (ctx: EB.Context, registry: Metas.Registry) => {
+	type Program<A> = () => Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Only<typeof Metas.registry, "Registry.get">, A>;
+
+	return <A>(program: Program<A>): A => Eff.run(program, [M.reader.handlers(ctx), Metas.registry.handlers(registry)])[0];
+};
+
+const normalize = (ctx: EB.Context, registry: Metas.Registry, tm: EB.Term): EB.Term =>
+	Eff.run(
+		() =>
+			(function* () {
+				return yield* NF.quote(ctx.env.length, yield* NF.evaluate(tm));
+			})(),
+		[M.reader.handlers(ctx), Metas.registry.handlers(registry)],
+	)[0];
 
 const computeArity = (fn: unknown): number => {
 	let arity = 0;
@@ -80,6 +100,7 @@ const computeArity = (fn: unknown): number => {
 
 const initialState = (): ReplState => ({
 	ctx: defaultContext,
+	boundary: { registry: Metas.empty, counts: {} },
 	runtime: Pipeline.emptyRuntime(),
 	display: { elaboration: false, nf: false, gram: false, mir: false, ivl: false },
 });
@@ -237,10 +258,11 @@ export function repl(opts: ReplOpts = { codegen: false, target: "js", verify: tr
 
 			if ([":implicits"].includes(trimmed)) {
 				console.log("\nImplicits:");
+				const disp = shown(state.ctx, state.boundary.registry);
 				state.ctx.implicits.forEach(([tm, ty], i) => {
 					console.log(`\n  [${i}]:`);
-					console.log(`	Term: ${EB.Display.Term(tm, state.ctx)}`);
-					console.log(`	Type: ${NF.display(ty, state.ctx)}`);
+					console.log(`	Term: ${disp(() => NF.display(tm))}`);
+					console.log(`	Type: ${disp(() => NF.display(ty))}`);
 				});
 				console.log("");
 				return rl.prompt();
@@ -320,13 +342,13 @@ const displayValue = (v: Pipeline.Value): string => {
 	return String(v);
 };
 
-const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, display: DisplayOpts): void => {
+const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry, display: DisplayOpts): void => {
 	try {
 		const svc = VerificationServiceV2();
-		const [{ result }] = svc.check(tm, ty)(ctx);
+		const { answer } = svc.check(tm, ty, ctx, registry);
 
-		if (E.isRight(result)) {
-			const vc = result.right.vc;
+		if (!Eff.failed(answer)) {
+			const vc = answer.vc;
 
 			if (display.ivl) {
 				console.log("\n-------------- IVL VC ---------------");
@@ -349,7 +371,7 @@ const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, display: Di
 				})
 				.exhaustive();
 		} else {
-			console.warn("Verification error:", EB.V2.display(result.left));
+			console.warn("Verification error:", answer[Eff.ABORT]);
 		}
 	} catch (err) {
 		console.warn("Verification failed:", err instanceof Error ? err.message : String(err));
@@ -386,35 +408,36 @@ const evalCodegenErlang = (mod: MIR.Module): null => {
 const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplState =>
 	match(stmt)
 		.with({ type: "expression" }, s => {
-			const elaborated = EB.Mod.expression(s, state.ctx);
+			const [elaborated, nextBoundary] = EB.Mod.expression(s, state.ctx, state.boundary);
 			if (E.isLeft(elaborated)) {
 				console.warn(EB.V2.display(elaborated.left));
 				return state;
 			}
 
 			const [tm, ty, _us, next, _debug] = elaborated.right;
+			const disp = shown(next, nextBoundary.registry);
 
 			if (state.display.elaboration) {
 				console.log("\n------------ Elaboration ------------");
-				console.log(EB.Display.Term(tm, next));
+				console.log(disp(() => EB.Display.Term(tm)));
 				console.log("-------------------------------------\n");
 			}
 
 			if (state.display.nf) {
-				const normal = NF.quote(next, next.env.length, NF.evaluate(next, tm));
+				const normal = normalize(next, nextBoundary.registry, tm);
 				console.log("\n--------------- NF ------------------");
-				console.log(EB.Display.Term(normal, next));
+				console.log(disp(() => EB.Display.Term(normal)));
 				console.log("-------------------------------------\n");
 			}
 
 			if (opts.verify) {
-				runVerification(tm, ty, next, state.display);
+				runVerification(tm, ty, next, nextBoundary.registry, state.display);
 			}
 
-			const compiled = Pipeline.lowerTermWithContext(tm, next);
+			const compiled = Pipeline.lowerTermWithContext(tm, next, Metas.solutions(nextBoundary.registry));
 			if (E.isLeft(compiled)) {
 				console.error(compiled.left);
-				return { ...state, ctx: next };
+				return { ...state, ctx: next, boundary: nextBoundary };
 			}
 
 			const { graph, mod } = compiled.right;
@@ -441,45 +464,51 @@ const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplS
 					: Pipeline.run(mod, state.runtime);
 
 				if (opts.target === "js" || !opts.codegen) {
-					console.log(displayValue(result as Pipeline.Value), "::", NF.display(ty, next), "\n");
+					console.log(
+						displayValue(result as Pipeline.Value),
+						"::",
+						disp(() => NF.display(ty)),
+						"\n",
+					);
 				}
 			} catch (err) {
 				console.error("Runtime error:", err instanceof Error ? err.message : String(err));
 			}
 
-			return { ...state, ctx: next };
+			return { ...state, ctx: next, boundary: nextBoundary };
 		})
 		.with({ type: "let" }, s => {
-			const [name, result] = EB.Mod.letdec(s, state.ctx);
+			const [name, result, nextBoundary] = EB.Mod.letdec(s, state.ctx, state.boundary);
 			if (E.isLeft(result)) {
 				console.warn(EB.V2.display(result.left));
 				return state;
 			}
 
 			const [[tm, ty, _us], next] = result.right;
+			const disp = shown(next, nextBoundary.registry);
 
 			if (state.display.elaboration) {
 				console.log("\n------------ Elaboration ------------");
-				console.log(`let ${name} = ${EB.Display.Term(tm, next)}`);
-				console.log(`  : ${NF.display(ty, next)}`);
+				console.log(`let ${name} = ${disp(() => EB.Display.Term(tm))}`);
+				console.log(`  : ${disp(() => NF.display(ty))}`);
 				console.log("-------------------------------------\n");
 			}
 
 			if (state.display.nf) {
-				const normal = NF.quote(next, next.env.length, NF.evaluate(next, tm));
+				const normal = normalize(next, nextBoundary.registry, tm);
 				console.log("\n--------------- NF ------------------");
-				console.log(`let ${name} = ${EB.Display.Term(normal, next)}`);
+				console.log(`let ${name} = ${disp(() => EB.Display.Term(normal))}`);
 				console.log("-------------------------------------\n");
 			}
 
 			if (opts.verify) {
-				runVerification(tm, ty, next, state.display);
+				runVerification(tm, ty, next, nextBoundary.registry, state.display);
 			}
 
-			const compiled = Pipeline.lowerTermWithContext(tm, next, { parentBinders: [name] });
+			const compiled = Pipeline.lowerTermWithContext(tm, next, Metas.solutions(nextBoundary.registry), { parentBinders: [name] });
 			if (E.isLeft(compiled)) {
 				console.error(compiled.left);
-				return { ...state, ctx: next };
+				return { ...state, ctx: next, boundary: nextBoundary };
 			}
 
 			const { graph, mod } = compiled.right;
@@ -508,49 +537,41 @@ const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplS
 				newGlobals.set(name, value);
 			} catch (err) {
 				console.error("Runtime error:", err instanceof Error ? err.message : String(err));
-				return { ...state, ctx: next, runtime: { ...state.runtime, functions: newFunctions } };
+				return { ...state, ctx: next, boundary: nextBoundary, runtime: { ...state.runtime, functions: newFunctions } };
 			}
 
-			console.log(`${name} : ${NF.display(ty, next)}\n`);
+			console.log(`${name} : ${disp(() => NF.display(ty))}\n`);
 
-			return { ...state, ctx: next, runtime: { ...state.runtime, functions: newFunctions, globals: newGlobals } };
+			return { ...state, ctx: next, boundary: nextBoundary, runtime: { ...state.runtime, functions: newFunctions, globals: newGlobals } };
 		})
 		.with({ type: "using" }, s => {
-			const result = EB.Mod.using(s, state.ctx);
+			const [result, nextBoundary] = EB.Mod.using(s, state.ctx, state.boundary);
 			if (E.isLeft(result)) {
 				console.warn(EB.V2.display(result.left));
 				return state;
 			}
 			console.log("(using registered)\n");
-			return { ...state, ctx: result.right };
+			return { ...state, ctx: result.right, boundary: nextBoundary };
 		})
 		.with({ type: "foreign" }, s => {
-			const result = F.pipe(
-				E.tryCatch(
-					() => EB.check(s.annotation, NF.Type)(state.ctx),
-					e => (e instanceof Error ? e.message : String(e)),
-				),
-				E.chain(([{ result: r }]) => (E.isLeft(r) ? E.left(EB.V2.display(r.left)) : E.right(r.right))),
-				E.map(([tm]) => {
-					const nf = NF.evaluate(state.ctx, tm);
-					const v = EB.Constructors.Var({ type: "Foreign", name: s.variable });
-					const ar = NF.arity(state.ctx, nf);
-					const compute = (...args: NF.Value[]) => {
-						const ext = NF.Constructors.External(s.variable, ar, compute, args);
-						return NF.Constructors.Neutral("Sealed", ext);
-					};
-					const c1: EB.Context = { ...state.ctx, imports: { ...state.ctx.imports, [s.variable]: [v, nf, []] } };
-					return { ...c1, ffi: { ...c1.ffi, [s.variable]: { arity: ar, compute } } };
-				}),
-			);
+			const [, result, nextBoundary] = EB.Mod.foreign(s, state.ctx, state.boundary);
 
 			if (E.isLeft(result)) {
-				console.warn(result.left);
+				console.warn(EB.V2.display(result.left));
 				return state;
 			}
 
-			console.log(`foreign ${s.variable} : ... (arity ${result.right.ffi[s.variable].arity})\n`);
-			return { ...state, ctx: result.right };
+			const [[v, nf], c1, decl] = result.right;
+			void v;
+			void nf;
+			const compute = (...args: NF.Value[]): NF.Value => {
+				const ext = NF.Constructors.External(s.variable, decl.arity, compute, args);
+				return NF.Constructors.Neutral("Sealed", ext);
+			};
+			const next = { ...c1, ffi: { ...c1.ffi, [s.variable]: { arity: decl.arity, compute } } };
+
+			console.log(`foreign ${s.variable} : ... (arity ${decl.arity})\n`);
+			return { ...state, ctx: next, boundary: nextBoundary };
 		})
 		.otherwise(() => {
 			console.error("Unsupported statement type");

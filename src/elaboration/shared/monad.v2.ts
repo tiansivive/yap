@@ -12,15 +12,22 @@ import * as P from "./provenance";
 
 import * as Modal from "@yap/verification/modalities/shared";
 import * as Sub from "@yap/elaboration/unification/substitution";
+import * as Eff from "@yap/utils/effects";
+import * as M from "./effects";
+import * as Metas from "./metas";
 
 export type Elaboration<A> = (ctx: EB.Context, w?: Omit<Collector<A>, "result">, st?: MutState) => [Collector<A>, MutState];
 export type Gelaboration<A> = Generator<Elaboration<any>, A, any>;
 
+/* The v2 channels' shapes, formerly Context fields; local to the dying monad. */
+type MetasView = Record<number, { meta: EB.Meta; ann: EB.Term }>;
+type Zonker = Sub.Subst;
+
 type Collector<A> = {
 	constraints: P.WithProvenance<EB.Constraint>[];
 	binders: EB.Binder[];
-	metas: EB.Context["metas"];
-	zonker: EB.Zonker;
+	metas: MetasView;
+	zonker: Zonker;
 	types: Record<EB.Term["id"], { nf: EB.NF.Value; modalities: Modal.Annotations<EB.Term> }>;
 	result: Either<Err, A>;
 };
@@ -59,11 +66,8 @@ export const initialState: MutState = { delimitations: [], nondeterminism: { sol
 
 export type Err = Cause & { provenance?: P.Provenance[]; ctx: EB.Context };
 
-export const display = (err: Err): string => {
-	const cause = Errors.display(err, err.ctx.zonker, err.ctx.metas);
-	const prov = err.provenance ? P.display(err.provenance, { cap: 100 }, err.ctx.zonker, err.ctx.metas) : "";
-	return prov ? `${cause}\n\nTrace:\n${prov}` : cause;
-};
+/* The legacy callers still want a string; the rendering itself is Errors.report's. */
+export const display = (err: Err): string => Eff.run(() => Errors.report(err), [M.reader.handlers(err.ctx), Metas.registry.handlers({})])[0];
 
 export const track: <A>(provenance: P.Provenance | P.Provenance[], fa: Elaboration<A>) => Elaboration<A> = (provenance, fa) => (ctx, w, st) => {
 	const extended = { ...ctx, trace: ctx.trace.concat(provenance) };
@@ -151,11 +155,11 @@ type Payload<K extends Channel> = K extends "constraint"
 	: K extends "binder"
 		? EB.Binder
 		: K extends "meta"
-			? { meta: EB.Meta; ann: EB.NF.Value }
+			? { meta: EB.Meta; ann: EB.Term }
 			: K extends "type"
 				? { term: EB.Term; nf: EB.NF.Value; modalities: Modal.Annotations<EB.Term> }
 				: K extends "zonker"
-					? EB.Zonker
+					? Zonker
 					: never;
 
 type OptionalLvl<T> = T extends { type: "assign"; lvl: infer L } ? Omit<T, "lvl"> & { lvl?: L } : T;
@@ -204,7 +208,7 @@ export const tell = function* <K extends Channel>(channel: K, payload: Payload<K
 				binders: [],
 				metas: {},
 				types: {},
-				zonker: (many as Payload<"zonker">[]).reduce((z, zk) => Sub.compose(zk, z), ctx.zonker),
+				zonker: (many as Payload<"zonker">[]).reduce((z, zk) => Sub.compose(zk, z), Sub.empty),
 			};
 		}
 		console.warn("Tell: unknown channel:", channel);

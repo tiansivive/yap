@@ -1,5 +1,5 @@
 ---
-description: Yap coding style — immutable, terse, ts-pattern, V2 Do
+description: Yap coding style — immutable, terse, ts-pattern, freer effects
 globs: "**/*.ts"
 alwaysApply: true
 ---
@@ -11,7 +11,7 @@ alwaysApply: true
 - **Prefer immutable code**
 - **Prefer declarative over imperative**
 - **Prefer recursion over imperative looping**
-- **Prefer simple, linear flow** via V2 Do notation (`src/elaboration/shared/monad.v2.ts`)
+- **Prefer simple, linear effect flow** via generator delegation (`yield*`) over explicit capability rows (`src/utils/effects/`, `src/elaboration/shared/effects.ts`)
 - **Avoid long fp-ts pipelines** — they make debugging harder
 - **Prefer function composition** to interstitial variables that add no semantic value
 - **Prefer iterators and built-in HOFs** (map, filter, reduce) over manual loops
@@ -33,10 +33,13 @@ alwaysApply: true
 - **Use `.otherwise`** for fallthrough
 - See `.cursor/rules/pattern-matching.mdc` for pattern objects
 
-## Elaboration monad
+## Elaboration effects
 
-- **V2 is canonical** — V1 (fp-ts-centric API style) is deprecated, kept for reference
-- `V2.Do()` takes a generator; yields use ReaderWriterEither semantics
+- **The freer runtime is canonical** — V1 and the fixed `V2.Do`/RWSE runtime are legacy compatibility surfaces, not the live elaboration architecture
+- Elaboration programs yield only the capabilities they need; compose nested programs with `yield*`
+- Install complete handler sets at true boundaries. Inside an active run, use `Eff.with` for private/scoped effects and forward the remaining row; do not start a nested run that forks ambient state
+- The metacontext registry is separate from lexical `EB.Context`; do not recreate `ctx.metas`, `ctx.zonker`, or writer-to-reader synchronization
+- NbE owns its callstack and hides it behind public normalization entries; callstack actions do not belong in the elaboration row
 - Inference: dispatch in `src/elaboration/elaborate.ts` + `src/elaboration/inference/*` (per-construct handlers)
 - Checking: `src/elaboration/check.ts` (dispatches on `[term, type]`)
 
@@ -44,7 +47,7 @@ alwaysApply: true
 
 - **`pnpm lint` stays green** — pre-existing debt is baselined in `eslint-suppressions.json`; new violations fail. Fix suppressed ones opportunistically, then `pnpm eslint . --prune-suppressions`.
 - **`_`-prefix declares a binding intentionally unused** (params, destructured elements, locals kept for documentation). Unprefixed unused bindings are errors — treat them as rot or bug symptoms.
-- **Sanctioned mutable cores** — fresh-name supplies, the generator-monad Do drivers (`elaboration/shared/monad.v2.ts`, `verification/solver/v2/core.ts`), and the NbE evaluator (`evaluation.v2.ts`, pending its monad rework) are deliberately imperative and carry scoped lint carve-outs. Don't cite them as precedent for mutation elsewhere.
+- **Sanctioned mutable cores** — fresh-name supplies, effect interpreters that own handler state, the independent solver-v2 driver (`verification/solver/v2/core.ts`), and the NbE CEK driver (`evaluation.v2.ts`) are deliberately imperative and carry scoped lint carve-outs. The evaluator loop is intentional architecture; machine state belongs to the private callstack handler. Don't cite these cores as precedent for mutation elsewhere.
 
 ## Comments
 

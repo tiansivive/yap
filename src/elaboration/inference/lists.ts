@@ -1,7 +1,5 @@
-import * as F from "fp-ts/lib/function";
-
 import * as EB from "@yap/elaboration";
-import * as V2 from "@yap/elaboration/shared/monad.v2";
+import * as M from "@yap/elaboration/shared/effects";
 
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
@@ -11,35 +9,30 @@ import * as Lit from "@yap/shared/literals";
 
 type List = Extract<Src.Term, { type: "list" }>;
 
-export const infer = (list: List): V2.Elaboration<EB.AST> =>
-	V2.track(
-		{ tag: "src", type: "term", term: list, metadata: { action: "infer", description: "List" } },
-		V2.Do(function* () {
-			const ctx = yield* V2.ask();
-			const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
-			const mvar = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
-			const v = NF.evaluate(ctx, mvar);
+export const infer = (list: List): M.Elaboration<EB.AST> =>
+	M.tracer.track({ tag: "src", type: "term", term: list, metadata: { action: "infer", description: "List" } }, function* () {
+		const ctx = yield* M.reader.ask();
+		const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+		const mvar = EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind));
+		const v = yield* NF.normalize(mvar);
 
-			const validate = (tm: Src.Term) =>
-				V2.Do(function* () {
-					const inferred = yield* EB.infer.gen(tm);
-					yield* V2.tell("constraint", { type: "assign", left: inferred[1], right: v, lvl: ctx.env.length });
-					return inferred;
-				});
+		const validate = function* (tm: Src.Term) {
+			const inferred = yield* EB.infer(tm);
+			yield* M.constrain({ type: "assign", left: inferred[1], right: v, lvl: ctx.env.length });
+			return inferred;
+		};
 
-			const es = yield* V2.pure(V2.traverse(list.elements, validate));
-			const usages = es.reduce((acc, [, , us]) => Q.add(acc, us), Q.noUsage(ctx.env.length));
+		const es = yield* M.traverse(list.elements, validate);
+		const usages = es.reduce((acc, [, , us]) => Q.add(acc, us), Q.noUsage(ctx.env.length));
 
-			const ty = NF.Constructors.Indexed(NF.Constructors.Lit(Lit.Atom("Num")), v, NF.Constructors.Var({ type: "Foreign", name: "defaultArray" }));
+		const ty = NF.Constructors.Indexed(NF.Constructors.Lit(Lit.Atom("Num")), v, NF.Constructors.Var({ type: "Foreign", name: "defaultArray" }));
 
-			const row = es.reduceRight(
-				(r: EB.Row, [tm], i) => {
-					const label = i.toString();
-					return { type: "extension", label, value: tm, row: r } satisfies EB.Row;
-				},
-				{ type: "empty" },
-			);
-			return [EB.Constructors.Array(row), ty, usages] satisfies EB.AST;
-		}),
-	);
-infer.gen = F.flow(infer, V2.pure);
+		const row = es.reduceRight(
+			(r: EB.Row, [tm], i) => {
+				const label = i.toString();
+				return { type: "extension", label, value: tm, row: r } satisfies EB.Row;
+			},
+			{ type: "empty" },
+		);
+		return [EB.Constructors.Array(row), ty, usages] satisfies EB.AST;
+	});

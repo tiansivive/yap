@@ -89,9 +89,9 @@ return main();
   (and
     (= list list)
     (= list list)
-    (forall (($fresh3 Schema))
+    (forall (($fresh1 Schema))
       (=>
-        (and (= $fresh3 list) (= $fresh3 list))
+        (and (= $fresh1 list) (= $fresh1 list))
         (forall ((x Real)) (forall ((xs Schema)) (= x x)))))))",
     "kind": "let",
     "mir": "module
@@ -113,9 +113,9 @@ return main();
     (and
       (= list list)
       (= list list)
-      (forall (($fresh3 Schema))
+      (forall (($fresh1 Schema))
         (=>
-          (and (= $fresh3 list) (= $fresh3 list))
+          (and (= $fresh1 list) (= $fresh1 list))
           (forall ((x Real)) (forall ((xs Schema)) (= x x)))))))
 
 === Variables ===
@@ -148,7 +148,7 @@ return main();
 
 [mbqi] round 0: 0 lemmas
   list=list -> residual
-  $fresh3=list -> residual
+  $fresh1=list -> residual
   x=x -> residual
   xs=list -> residual
 [clauses]
@@ -248,9 +248,9 @@ return main();
   (and
     (= list list)
     (= list list)
-    (forall (($fresh6 Schema))
+    (forall (($fresh1 Schema))
       (=>
-        (and (= $fresh6 list) (= $fresh6 list))
+        (and (= $fresh1 list) (= $fresh1 list))
         (forall ((x Real)) (forall ((xs Schema)) (= xs xs)))))))",
     "kind": "let",
     "mir": "module
@@ -272,9 +272,9 @@ return main();
     (and
       (= list list)
       (= list list)
-      (forall (($fresh6 Schema))
+      (forall (($fresh1 Schema))
         (=>
-          (and (= $fresh6 list) (= $fresh6 list))
+          (and (= $fresh1 list) (= $fresh1 list))
           (forall ((x Real)) (forall ((xs Schema)) (= xs xs)))))))
 
 === Variables ===
@@ -308,14 +308,14 @@ return main();
 [mbqi] round 0: 0 lemmas
   list=list -> residual
   list=xs -> residual
-  $fresh6=list -> residual
-  $fresh6=xs -> residual
+  $fresh1=list -> residual
+  $fresh1=xs -> residual
   xs=list -> residual
   xs=xs -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
-    "type": "Π(t4: FFI.Indexed Num Num @FFI.defaultArray) ->
+    "type": "Π(t2: FFI.Indexed Num Num @FFI.defaultArray) ->
   FFI.Indexed Num Num @FFI.defaultArray",
     "validity": "valid",
   },
@@ -576,7 +576,7 @@ return main();
 [30] closure
   :body -> [3]
   :env -> [29]",
-    "ivl": "(forall (($fresh2 Schema))
+    "ivl": "(forall (($fresh0 Schema))
   (forall ((a Real)) (forall ((b Real)) (forall (($row_7 Row)) (= b b)))))",
     "kind": "let",
     "mir": "module
@@ -597,7 +597,7 @@ return main();
     "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
   (closure: match p | Struct [ x: a, y: b | $row_7 ] -> b -| Γ: p)",
     "solverTrace": "=== Formula ===
-  (forall (($fresh2 Schema))
+  (forall (($fresh0 Schema))
     (forall ((a Real)) (forall ((b Real)) (forall (($row_7 Row)) (= b b)))))
 
 === Variables ===
@@ -722,7 +722,7 @@ return main();
 [28] closure
   :body -> [3]
   :env -> [27]",
-    "ivl": "(forall (($fresh4 Schema)) (forall ((a Real)) (forall (($row_12 Row)) (= a a))))",
+    "ivl": "(forall (($fresh0 Schema)) (forall ((a Real)) (forall (($row_12 Row)) (= a a))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -740,7 +740,7 @@ return main();
     "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
   (closure: match p | Struct [ y: a | $row_12 ] -> a -| Γ: p)",
     "solverTrace": "=== Formula ===
-  (forall (($fresh4 Schema)) (forall ((a Real)) (forall (($row_12 Row)) (= a a))))
+  (forall (($fresh0 Schema)) (forall ((a Real)) (forall (($row_12 Row)) (= a a))))
 
 === Variables ===
   proxy p1: true
@@ -775,7 +775,7 @@ return main();
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
-    "type": "Π(t3: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
+    "type": "Π(t2: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
     "validity": "valid",
   },
 ]
@@ -1222,6 +1222,267 @@ return main();
 ]
 `;
 
+exports[`Language Tour — Pattern Matching > recursive list type 1`] = `
+[
+  {
+    "codegenJS": "function main() {
+  const v0 = {};
+  return v0;
+}
+return main();
+",
+    "elaborated": "List",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"List"}
+[3] mu {"variable":"x","source":"List","level":1}
+  :annotation -> [4]
+  :body -> [7]
+[4] pi {"variable":"t","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] lambda {"variable":"t","icit":"Explicit","level":2}
+  :annotation -> [8]
+  :body -> [9]
+  :env -> [32]
+[8] lit {"value":{"type":"Atom","value":"Type"}}
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Variant"}}
+[11] row:ext {"label":"cons"}
+  :rest -> [29]
+  :value -> [12]
+[12] sigma {"variable":"$sig","level":3}
+  :annotation -> [13]
+  :body -> [20]
+[13] row:ext {"label":"tail"}
+  :rest -> [17]
+  :value -> [14]
+[14] app {"icit":"Explicit"}
+  :arg -> [16]
+  :func -> [15]
+[15] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[16] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[17] row:ext {"label":"head"}
+  :rest -> [19]
+  :value -> [18]
+[18] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[19] row:empty
+[20] app {"icit":"Explicit"}
+  :arg -> [22]
+  :func -> [21]
+[21] lit {"value":{"type":"Atom","value":"Schema"}}
+[22] row:ext {"label":"tail"}
+  :rest -> [26]
+  :value -> [23]
+[23] app {"icit":"Explicit"}
+  :arg -> [25]
+  :func -> [24]
+[24] var:bound {"index":1}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[25] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[26] row:ext {"label":"head"}
+  :rest -> [28]
+  :value -> [27]
+[27] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[28] row:empty
+[29] row:ext {"label":"nil"}
+  :rest -> [31]
+  :value -> [30]
+[30] lit {"value":{"type":"Atom","value":"Unit"}}
+[31] row:empty
+[32] env
+  :capture -> [3] {"index":0}
+[33] closure
+  :body -> [7]
+  :env -> [32]",
+    "ivl": "true",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"List"}}
+      return v0",
+    "name": "List",
+    "normalized": "List",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
+    "type": "Π(t: Type) -> Type",
+    "validity": "valid",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = "cons";
+  const v1 = 1;
+  const v2 = "cons";
+  const v3 = 2;
+  const v4 = "nil";
+  const v5 = null;
+  const v6 = {
+    __tag: v4,
+    payload: v5
+  };
+  const v7 = {
+    head: v3,
+    tail: v6
+  };
+  const v8 = {
+    __tag: v2,
+    payload: v7
+  };
+  const v9 = {
+    head: v1,
+    tail: v8
+  };
+  const v10 = {
+    __tag: v0,
+    payload: v9
+  };
+  return v10;
+}
+return main();
+",
+    "elaborated": "Struct
+  [ __tag: cons,
+    payload: Struct
+      [ head: 1,
+        tail: Struct
+          [ __tag: cons,
+            payload: Struct
+              [ head: 2, tail: Struct [ __tag: nil, payload: unit ] ] ] ] ]",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"xs"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"cons"}}
+[5] struct
+  :field -> [6] {"label":"head"}
+  :field -> [7] {"label":"tail"}
+[6] lit {"value":{"type":"Num","value":1}}
+[7] struct
+  :field -> [8] {"label":"__tag"}
+  :field -> [9] {"label":"payload"}
+[8] lit {"value":{"type":"Atom","value":"cons"}}
+[9] struct
+  :field -> [10] {"label":"head"}
+  :field -> [11] {"label":"tail"}
+[10] lit {"value":{"type":"Num","value":2}}
+[11] struct
+  :field -> [12] {"label":"__tag"}
+  :field -> [13] {"label":"payload"}
+[12] lit {"value":{"type":"Atom","value":"nil"}}
+[13] lit {"value":{"type":"unit"}}",
+    "ivl": "true",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = cons
+      let v1 = 1
+      let v2 = cons
+      let v3 = 2
+      let v4 = nil
+      let v5 = unit
+      let v6 = alloc { __tag: v4, payload: v5 }
+      let v7 = alloc { head: v3, tail: v6 }
+      let v8 = alloc { __tag: v2, payload: v7 }
+      let v9 = alloc { head: v1, tail: v8 }
+      let v10 = alloc { __tag: v0, payload: v9 }
+      return v10",
+    "name": "xs",
+    "normalized": "Struct
+  [ __tag: cons,
+    payload: Struct
+      [ head: 1,
+        tail: Struct
+          [ __tag: cons,
+            payload: Struct
+              [ head: 2, tail: Struct [ __tag: nil, payload: unit ] ] ] ] ]",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
+    "type": "(List) Num",
+    "validity": "valid",
+  },
+]
+`;
+
 exports[`Language Tour — Pattern Matching > recursive record fields 1`] = `
 [
   {
@@ -1312,14 +1573,292 @@ return main();
     "validity": "valid",
   },
   {
-    "error": "Expected number, got wildcard",
+    "codegenJS": "function main() {
+  const v0 = {};
+  const env_cls3 = {
+    v0: v0
+  };
+  const fnref_cls3 = closure_32;
+  const closure_cls3 = {
+    __fn: fnref_cls3,
+    __env: env_cls3
+  };
+  (v0.compute = closure_cls3);
+  return v0;
+}
+
+function closure_32(env1, n2) {
+  let __block = "entry";
+  let match1;
+  while (true) {
+    switch (__block) {
+      case "entry": {
+        const cap_0 = env1.v0;
+        (__block = "sw2");
+        break;
+      }
+      case "sw2": {
+        if ((String(n2) === "0")) {
+          (__block = "case4");
+          break;
+        }
+        (__block = "default5");
+        break;
+      }
+      case "case4": {
+        const v5 = 1;
+        const __t0 = v5;
+        (match1 = __t0);
+        (__block = "join3");
+        break;
+      }
+      case "default5": {
+        const v6 = cap_0.compute;
+        const v7 = 1;
+        const v8 = (n2 - v7);
+        const fnref9 = v6.__fn;
+        const env10 = v6.__env;
+        const v11 = fnref9(env10, v8);
+        const v12 = (n2 * v11);
+        const __t0 = v12;
+        (match1 = __t0);
+        (__block = "join3");
+        break;
+      }
+      case "join3": {
+        return match1;
+      }
+    }
+  }
+}
+return main();
+",
+    "elaborated": "Struct
+  [ compute: λ(n: Num) ->
+      match n | 0 -> 1 | _ -> FFI.$mul n (:compute (FFI.$sub n 1)) ]",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"fact"}
+[3] struct
+  :field -> [4] {"label":"compute","backpatch":true}
+[4] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [31]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] match
+  :alt -> [8] {"index":0}
+  :alt -> [11] {"index":1}
+  :decision_tree -> [28]
+  :scrutinee -> [7]
+[7] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[8] case
+  :body -> [10]
+  :next -> [11]
+  :pattern -> [9]
+[9] pat:lit {"value":{"type":"Num","value":0}}
+[10] lit {"value":{"type":"Num","value":1}}
+[11] case
+  :body -> [26]
+  :pattern -> [12]
+[12] pat:wildcard
+[15] var:foreign {"name":"$mul","arity":2}
+[17] var:bound {"index":0}
+  :next -> [18]
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[18] app {"icit":"Explicit"}
+  :arg -> [27]
+  :func -> [19]
+[19] var:label {"name":"compute"}
+  :refers_to -> [4]
+  :scope -> [4] {"level":0}
+[22] var:foreign {"name":"$sub","arity":2}
+[24] var:bound {"index":0}
+  :next -> [25]
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[25] lit {"value":{"type":"Num","value":1}}
+[26] primop {"op":"$mul"}
+  :arg -> [17] {"index":0}
+  :arg -> [18] {"index":1}
+  :callee -> [15]
+[27] primop {"op":"$sub"}
+  :arg -> [24] {"index":0}
+  :arg -> [25] {"index":1}
+  :callee -> [22]
+[28] switch {"kind":"lit"}
+  :branch -> [29] {"value":{"type":"Num","value":0}}
+  :default -> [30]
+  :inspect -> [7]
+[29] leaf
+  :body -> [10]
+[30] leaf
+  :body -> [26]
+[31] env
+  :capture -> [3] {"index":0}
+[32] closure
+  :body -> [4]
+  :env -> [31]",
+    "ivl": "(forall ((n Real))
+  (and
+    (= n n)
+    (= n n)
+    (forall (($fresh1 Real))
+      (=> (and (= $fresh1 n) (= $fresh1 n)) (and (= n n) (= n n))))))",
     "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }
+      let env_cls3 = alloc { v0: v0 }
+      let fnref_cls3 = &closure_32
+      let closure_cls3 = alloc { __fn: fnref_cls3, __env: env_cls3 }
+      update-fbip v0 { compute: closure_cls3 }
+      return v0
+  fn closure_32(env1, n2) entry=entry
+    entry:
+      let cap_0 = read env1.v0
+      jump sw2
+    sw2:
+      branch n2 { 0 -> case4; default -> default5 }
+    case4:
+      let v5 = 1
+      jump join3(v5)
+    default5:
+      let v6 = read cap_0.compute
+      let v7 = 1
+      let v8 = -(n2, v7)
+      let fnref9 = read v6.__fn
+      let env10 = read v6.__env
+      let v11 = call *fnref9(env10, v8)
+      let v12 = *(n2, v11)
+      jump join3(v12)
+    join3(match1):
+      return match1",
     "name": "fact",
+    "normalized": "Struct
+  [ compute: λ(n: Num) ->
+      (closure: match n
+        | 0 -> 1
+        | _ -> FFI.$mul n (:compute (FFI.$sub n 1)) -| Γ: n) ]",
+    "solverTrace": "=== Formula ===
+  (forall ((n Real))
+    (and
+      (= n n)
+      (= n n)
+      (forall (($fresh1 Real))
+        (=> (and (= $fresh1 n) (= $fresh1 n)) (and (= n n) (= n n))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  n=n -> residual
+  $fresh1=n -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1",
+    "type": "Σ($sig: [ compute: Π(t1: Num) -> Num ]) . Schema [ compute: Π(t1: Num) -> Num ]",
+    "validity": "valid",
   },
   {
-    "error": "Variable not found: fact",
+    "codegenJS": "function main() {
+  const v0 = fact;
+  const v1 = v0.compute;
+  const v2 = 5;
+  const fnref3 = v1.__fn;
+  const env4 = v1.__env;
+  const v5 = fnref3(env4, v2);
+  return v5;
+}
+return main();
+",
+    "elaborated": "((fact).compute) 5",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"result"}
+[3] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [4]
+[4] proj {"label":"compute"}
+  :target -> [6]
+[5] var:free {"name":"fact"}
+[6] var:ref {"name":"fact"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] lit {"value":{"type":"Num","value":5}}",
+    "ivl": "true",
     "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = fact
+      let v1 = read v0.compute
+      let v2 = 5
+      let fnref3 = read v1.__fn
+      let env4 = read v1.__env
+      let v5 = call *fnref3(env4, v2)
+      return v5",
     "name": "result",
+    "normalized": "120",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
+    "type": "Num",
+    "validity": "valid",
   },
 ]
 `;

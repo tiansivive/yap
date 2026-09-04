@@ -1,34 +1,48 @@
 import { describe, it, expect } from "vitest";
 
+import * as Eff from "@yap/utils/effects";
+
 import * as EB from "@yap/elaboration";
+import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
+import * as Errors from "@yap/elaboration/shared/errors";
 import * as NF from "@yap/elaboration/normalization";
 import * as U from "@yap/elaboration/unification";
 import * as Sub from "@yap/elaboration/unification/substitution";
 import * as Lit from "@yap/shared/literals";
 import * as R from "@yap/shared/rows";
 import * as Lib from "@yap/shared/lib/primitives";
+import { shown } from "../../inference/__tests__/util";
 
-const runUnify = (left: NF.Value, right: NF.Value) => {
+/* Metas these values mention: elaboration would have minted them, so the registry knows them. */
+const declared = (ids: readonly number[]): Metas.Registry =>
+	ids.reduce((registry, val) => Metas.register(registry, { meta: { type: "Meta", val, lvl: 0 }, annotation: NF.Any }), Metas.empty);
+
+const runUnify = (left: NF.Value, right: NF.Value, metas: readonly number[] = []) => {
 	const ctx = Lib.defaultContext();
-	const [result] = EB.V2.Do(function* () {
-		const sub = yield* U.unify.gen(left, right, ctx.env.length, Sub.empty);
-		return sub;
-	})(ctx);
-	return result;
+	const [answer, subst, registry] = Eff.run(
+		() => U.unify(left, right, ctx.env.length),
+		[Sub.subst.handlers(), Metas.registry.handlers(declared(metas)), M.reader.handlers(ctx), M.except.handlers(), M.tracer.handlers(), M.supply.handlers()],
+	);
+	return { answer, subst, registry, ctx };
 };
 
-const expectRight = <A>(out: ReturnType<typeof runUnify>): A => {
-	if (out.result._tag === "Left") {
-		throw new Error(EB.V2.display(out.result.left));
+const showSub = (out: ReturnType<typeof runUnify>) => shown(out.ctx, out.registry)(() => Sub.display(out.subst));
+
+const showErr = (out: ReturnType<typeof runUnify>, err: M.Err) => shown(out.ctx, out.registry)(() => Errors.report(err));
+
+const expectRight = (out: ReturnType<typeof runUnify>): Sub.Subst => {
+	if (Eff.failed(out.answer)) {
+		throw new Error(showErr(out, out.answer[Eff.ABORT]));
 	}
-	return out.result.right as unknown as A;
+	return out.subst;
 };
 
 const expectLeft = (out: ReturnType<typeof runUnify>) => {
-	if (out.result._tag === "Right") {
+	if (!Eff.failed(out.answer)) {
 		throw new Error("Expected unification to fail");
 	}
-	return out.result.left;
+	return out.answer[Eff.ABORT];
 };
 
 describe("Unification (V2)", () => {
@@ -36,8 +50,8 @@ describe("Unification (V2)", () => {
 		const l = NF.Constructors.Lit(Lit.Num(42));
 		const r = NF.Constructors.Lit(Lit.Num(42));
 		const out = runUnify(l, r);
-		const sub = expectRight<Sub.Subst>(out);
-		expect(Sub.display(sub, out.metas)).toBe("empty");
+		expectRight(out);
+		expect(showSub(out)).toBe("empty");
 	});
 
 	it("fails on different literals", () => {
@@ -46,7 +60,7 @@ describe("Unification (V2)", () => {
 		const out = runUnify(l, r);
 		const err = expectLeft(out);
 		expect(err.type).toBe("UnificationFailure");
-		expect({ message: EB.V2.display(err) }).toMatchSnapshot();
+		expect({ message: showErr(out, err) }).toMatchSnapshot();
 	});
 
 	it("unifies lambdas (same icit and body)", () => {
@@ -55,8 +69,8 @@ describe("Unification (V2)", () => {
 		const lam1 = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure(ctx, body), NF.Any);
 		const lam2 = NF.Constructors.Lambda("x", "Explicit", NF.Constructors.Closure(ctx, body), NF.Any);
 		const out = runUnify(lam1, lam2);
-		const sub = expectRight<Sub.Subst>(out);
-		expect(Sub.display(sub, out.metas)).toBe("empty");
+		expectRight(out);
+		expect(showSub(out)).toBe("empty");
 	});
 
 	it("fails on lambda icit mismatch", () => {
@@ -67,7 +81,7 @@ describe("Unification (V2)", () => {
 		const out = runUnify(lam1, lam2);
 		const err = expectLeft(out);
 		expect(err.type).toBe("TypeMismatch");
-		expect({ message: EB.V2.display(err) }).toMatchSnapshot();
+		expect({ message: showErr(out, err) }).toMatchSnapshot();
 	});
 
 	it("unifies Pis (annotation and body)", () => {
@@ -77,8 +91,8 @@ describe("Unification (V2)", () => {
 		const pi1 = NF.Constructors.Pi("x", "Explicit", ann, NF.Constructors.Closure(ctx, body));
 		const pi2 = NF.Constructors.Pi("x", "Explicit", ann, NF.Constructors.Closure(ctx, body));
 		const out = runUnify(pi1, pi2);
-		const sub = expectRight<Sub.Subst>(out);
-		expect(Sub.display(sub, out.metas)).toBe("empty");
+		expectRight(out);
+		expect(showSub(out)).toBe("empty");
 	});
 
 	it("rigid variable mismatch", () => {
@@ -87,23 +101,23 @@ describe("Unification (V2)", () => {
 		const out = runUnify(l, r);
 		const err = expectLeft(out);
 		expect(err.type).toBe("RigidVariableMismatch");
-		expect({ message: EB.V2.display(err) }).toMatchSnapshot();
+		expect({ message: showErr(out, err) }).toMatchSnapshot();
 	});
 
 	it("unifies meta with value (bind)", () => {
 		const meta = NF.Constructors.Flex({ type: "Meta", val: 1, lvl: 0 });
 		const val = NF.Constructors.Lit(Lit.Num(7));
-		const out = runUnify(meta, val);
-		const sub = expectRight<Sub.Subst>(out);
-		expect(Sub.display(sub, out.metas)).toContain("?1 |=> 7");
+		const out = runUnify(meta, val, [1]);
+		expectRight(out);
+		expect(showSub(out)).toContain("?1 |=> 7");
 	});
 
 	it("ignores modalities during unification", () => {
 		const base = NF.Constructors.Lit(Lit.Num(9));
 		const modal = NF.Constructors.Modal(base, { quantity: { tag: "Many" } as any, liquid: NF.Constructors.Lit(Lit.Bool(true)) });
 		const out = runUnify(modal, base);
-		const sub = expectRight<Sub.Subst>(out);
-		expect(Sub.display(sub, out.metas)).toBe("empty");
+		expectRight(out);
+		expect(showSub(out)).toBe("empty");
 	});
 
 	describe("Row Unification", () => {
@@ -111,8 +125,8 @@ describe("Unification (V2)", () => {
 			const l = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(1)), R.Constructors.Empty()));
 			const r = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(1)), R.Constructors.Empty()));
 			const out = runUnify(l, r);
-			const sub = expectRight<Sub.Subst>(out);
-			expect(Sub.display(sub, out.metas)).toBe("empty");
+			expectRight(out);
+			expect(showSub(out)).toBe("empty");
 		});
 
 		it("fails on missing label", () => {
@@ -121,15 +135,15 @@ describe("Unification (V2)", () => {
 			const out = runUnify(l, r);
 			const err = expectLeft(out);
 			expect(err.type === "MissingLabel" || err.type === "RowMismatch").toBeTruthy();
-			expect({ message: EB.V2.display(err) }).toMatchSnapshot();
+			expect({ message: showErr(out, err) }).toMatchSnapshot();
 		});
 
 		it("unifies polymorphic row with concrete row", () => {
 			const l = NF.Constructors.Row(R.Constructors.Variable({ type: "Meta", val: 10, lvl: 0 }));
 			const r = NF.Constructors.Row(R.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(2)), R.Constructors.Empty()));
-			const out = runUnify(l, r);
-			const sub = expectRight<Sub.Subst>(out);
-			expect(Sub.display(sub, out.metas)).toContain("?10 |=> [ x: 2 ]");
+			const out = runUnify(l, r, [10]);
+			expectRight(out);
+			expect(showSub(out)).toContain("?10 |=> [ x: 2 ]");
 		});
 
 		it("merges two polymorphic rows", () => {
@@ -139,9 +153,9 @@ describe("Unification (V2)", () => {
 			const r = NF.Constructors.Row(
 				R.Constructors.Extension("y", NF.Constructors.Lit(Lit.Num(43)), R.Constructors.Variable({ type: "Meta", val: 101, lvl: 0 })),
 			);
-			const out = runUnify(l, r);
-			const sub = expectRight<Sub.Subst>(out);
-			const printed = Sub.display(sub, out.metas);
+			const out = runUnify(l, r, [100, 101]);
+			expectRight(out);
+			const printed = showSub(out);
 			expect(printed).toContain("?100 |=> [ y: 43 | ?");
 			expect(printed).toContain("?101 |=> [ x: 42 | ?");
 		});
@@ -154,8 +168,8 @@ describe("Unification (V2)", () => {
 				const sig1 = NF.Constructors.Sigma("r", emptyRow, NF.Constructors.Closure(ctx, schema));
 				const sig2 = NF.Constructors.Sigma("r", emptyRow, NF.Constructors.Closure(ctx, schema));
 				const out = runUnify(sig1, sig2);
-				const sub = expectRight<Sub.Subst>(out);
-				expect(Sub.display(sub, out.metas)).toBe("empty");
+				expectRight(out);
+				expect(showSub(out)).toBe("empty");
 			});
 
 			it("unifies Sigmas with single-field row", () => {
@@ -165,8 +179,8 @@ describe("Unification (V2)", () => {
 				const sig1 = NF.Constructors.Sigma("r", row, NF.Constructors.Closure(ctx, schema));
 				const sig2 = NF.Constructors.Sigma("r", row, NF.Constructors.Closure(ctx, schema));
 				const out = runUnify(sig1, sig2);
-				const sub = expectRight<Sub.Subst>(out);
-				expect(Sub.display(sub, out.metas)).toBe("empty");
+				expectRight(out);
+				expect(showSub(out)).toBe("empty");
 			});
 
 			it("fails on Sigma row annotation mismatch", () => {
@@ -179,7 +193,7 @@ describe("Unification (V2)", () => {
 				const out = runUnify(sig1, sig2);
 				const err = expectLeft(out);
 				expect(err.type === "MissingLabel" || err.type === "RowMismatch" || err.type === "TypeMismatch").toBeTruthy();
-				expect({ message: EB.V2.display(err) }).toMatchSnapshot();
+				expect({ message: showErr(out, err) }).toMatchSnapshot();
 			});
 
 			it("unifies Sigmas with polymorphic row variables", () => {
@@ -189,9 +203,9 @@ describe("Unification (V2)", () => {
 				const schema = EB.Constructors.Schema(R.Constructors.Variable({ type: "Meta", val: 2, lvl: 0 }));
 				const sig1 = NF.Constructors.Sigma("r", rowVar, NF.Constructors.Closure(ctx, schema));
 				const sig2 = NF.Constructors.Sigma("r", concreteRow, NF.Constructors.Closure(ctx, schema));
-				const out = runUnify(sig1, sig2);
-				const sub = expectRight<Sub.Subst>(out);
-				expect(Sub.display(sub, out.metas)).toContain("?1 |=> [ field: Type ]");
+				const out = runUnify(sig1, sig2, [1, 2]);
+				expectRight(out);
+				expect(showSub(out)).toContain("?1 |=> [ field: Type ]");
 			});
 
 			it("unifies Sigma with polymorphic row bodies", () => {
@@ -204,10 +218,10 @@ describe("Unification (V2)", () => {
 				const schema2 = EB.Constructors.Schema(schemaRow2);
 				const sig1 = NF.Constructors.Sigma("r", row, NF.Constructors.Closure(ctx, schema1));
 				const sig2 = NF.Constructors.Sigma("r", row, NF.Constructors.Closure(ctx, schema2));
-				const out = runUnify(sig1, sig2);
-				const sub = expectRight<Sub.Subst>(out);
+				const out = runUnify(sig1, sig2, [3, 4]);
+				expectRight(out);
 
-				const printed = Sub.display(sub, out.metas);
+				const printed = showSub(out);
 				expect(printed).toContain("?3");
 				expect(printed).toContain("?4");
 			});
@@ -231,8 +245,8 @@ describe("Unification (V2)", () => {
 			const mu1 = NF.Constructors.Mu("T", "id", NF.Type, NF.Constructors.Closure(ctx, body));
 			const mu2 = NF.Constructors.Mu("T", "id", NF.Type, NF.Constructors.Closure(ctx, body));
 			const out = runUnify(mu1, mu2);
-			const sub = expectRight<Sub.Subst>(out);
-			expect(Sub.display(sub, out.metas)).toBe("empty");
+			expectRight(out);
+			expect(showSub(out)).toBe("empty");
 		});
 
 		it("unfolds Mu in application context during unification (positive)", () => {
@@ -241,8 +255,8 @@ describe("Unification (V2)", () => {
 			const app = NF.Constructors.App(mu, arg, "Explicit");
 			// Since the body is constant 0, App(mu, arg) should unify with 0
 			const out = runUnify(app, NF.Constructors.Lit(Lit.Num(0)));
-			const sub = expectRight<Sub.Subst>(out);
-			expect(Sub.display(sub, out.metas)).toBe("empty");
+			expectRight(out);
+			expect(showSub(out)).toBe("empty");
 		});
 
 		it("unfolds Mu in application context during unification (negative)", () => {
@@ -253,7 +267,7 @@ describe("Unification (V2)", () => {
 			const out = runUnify(app, NF.Constructors.Lit(Lit.Num(1)));
 			const err = expectLeft(out);
 			expect(err.type).toBe("UnificationFailure");
-			expect({ message: EB.V2.display(err) }).toMatchSnapshot();
+			expect({ message: showErr(out, err) }).toMatchSnapshot();
 		});
 
 		it("unfolds Mu without application when comparing against value (non-function body)", () => {
@@ -262,8 +276,8 @@ describe("Unification (V2)", () => {
 			const body = EB.Constructors.Lit(Lit.Num(1));
 			const mu = NF.Constructors.Mu("T", "one", NF.Type, NF.Constructors.Closure(ctx, body));
 			const out = runUnify(mu, NF.Constructors.Lit(Lit.Num(1)));
-			const sub = expectRight<Sub.Subst>(out);
-			expect(Sub.display(sub, out.metas)).toBe("empty");
+			expectRight(out);
+			expect(showSub(out)).toBe("empty");
 		});
 
 		it("fails when unfolding Mu without application hits mismatch (non-function body)", () => {
@@ -273,7 +287,7 @@ describe("Unification (V2)", () => {
 			const out = runUnify(mu, NF.Constructors.Lit(Lit.Num(0)));
 			const err = expectLeft(out);
 			expect(err.type).toBe("UnificationFailure");
-			expect({ message: EB.V2.display(err) }).toMatchSnapshot();
+			expect({ message: showErr(out, err) }).toMatchSnapshot();
 		});
 	});
 
@@ -282,8 +296,8 @@ describe("Unification (V2)", () => {
 			const l = NF.Constructors.Var({ type: "Foreign", name: "Indexed" });
 			const r = NF.Constructors.Var({ type: "Foreign", name: "Indexed" });
 			const out = runUnify(l, r);
-			const sub = expectRight<Sub.Subst>(out);
-			expect(Sub.display(sub, out.metas)).toBe("empty");
+			expectRight(out);
+			expect(showSub(out)).toBe("empty");
 		});
 
 		it("fails for different foreign symbols", () => {
@@ -292,7 +306,7 @@ describe("Unification (V2)", () => {
 			const out = runUnify(l, r);
 			const err = expectLeft(out);
 			expect(err.type).toBe("TypeMismatch");
-			expect({ message: EB.V2.display(err) }).toMatchSnapshot();
+			expect({ message: showErr(out, err) }).toMatchSnapshot();
 		});
 	});
 });
