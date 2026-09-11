@@ -7,6 +7,8 @@ import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "./syntax/term";
+import type * as Modal from "@yap/verification/modalities/shared";
+import type { Meet, Project, View } from "./evaluation.v2";
 
 /*
  * Evaluation mode flags — a separate reader channel so evaluation options
@@ -117,27 +119,35 @@ const evalOp = function* (term: EB.Term) {
 	return yield* Eff.ctl.action<Eval>("Callstack.eval", { env, mode, term });
 };
 
-/** Return a finished value to the next continuation. */
-const ret = function* (value: NF.Value) {
-	return yield* Eff.ctl.action<Ret>("Callstack.ret", value);
-};
+/**
+ * Answers the operation in progress, doing no work. A value rides the result stack raw — that path
+ * is hot and every frame but the observation ones expects one — and any other kind rides tagged, so
+ * `capture` can recognise an answer a continuation closure could not carry.
+ */
+function of(value: NF.Value): Evaluation<undefined>;
+function of<K extends Kind>(kind: K, value: Answers[K]): Evaluation<undefined>;
+function* of(...args: [NF.Value] | [Kind, Answers[Kind]]) {
+	const [kind, value] = args.length === 1 ? (["value", args[0]] as const) : args;
 
-/** Return a finished answer that is not a value: it rides tagged so `capture` can recognise it. */
-const answer = function* <A>(kind: string, value: A) {
-	return yield* Eff.ctl.action<Answer>("Callstack.answer", { [ANSWER]: kind, value });
-};
+	return yield* kind === "value"
+		? Eff.ctl.action<Ret>("Callstack.ret", value as NF.Value)
+		: Eff.ctl.action<Answer>("Callstack.answer", { [ANSWER]: kind, value });
+}
 
 /**
  * Continuation: run k over the next `arity` answers, under the scheduling-time environment.
- * What a frame consumes is the frame's own business, so the stored form forgets it and `A`
- * defaults to `NF.Value`, which is what every frame but the observation ones expects.
+ * What a frame consumes is the frame's own business, so the stored form forgets it; naming no
+ * kind means values, which is what almost every frame expects.
  */
-const cont = function* <A = NF.Value>(arity: number, k: (results: A[]) => Evaluation<void>) {
+function cont(arity: number, k: (values: NF.Value[]) => Evaluation<void>): Evaluation<undefined>;
+function cont<K extends Kind>(kind: K, arity: number, k: (answers: Answers[K][]) => Evaluation<void>): Evaluation<undefined>;
+function* cont(...args: [number, Body] | [Kind, number, Body]) {
+	const [arity, k] = args.length === 2 ? args : [args[1], args[2]];
 	const env = yield* M.reader.ask();
 	const mode = yield* Mode.ask();
 
 	return yield* Eff.ctl.action<Cont>("Callstack.cont", { env, mode, arity, k: k as (results: unknown[]) => Evaluation<void> });
-};
+}
 
 /** Marks a reset boundary for continuation capture. */
 const delimit = function* () {
@@ -298,7 +308,32 @@ const handlers = (): Eff.Handler<Actions, undefined> => {
 	};
 };
 
-export const callstack = { begin, next, finish, eval: evalOp, ret, answer, cont, delimit, delimited, capture, resume, handlers };
+/*
+ * What each kind of answer carries. A frame names the kind it expects and the type follows, which
+ * is what lets the machine stay heterogeneous while both sides of an answer stay checked: `of`
+ * cannot push the wrong shape and `cont` cannot read one.
+ */
+export type Answers = {
+	value: NF.Value;
+	view: View;
+	observation: Meet;
+	projection: Project;
+	injection: NF.Value | undefined;
+	modality: Modal.Annotations<NF.Value>;
+	quotation: EB.Term;
+	row: EB.Row;
+	terms: EB.Term[];
+	closure: NF.Closure;
+};
+
+export type Kind = keyof Answers;
+
+type Body = (answers: never[]) => Evaluation<void>;
+
+/** What a frame is made of: the work to run next, and the answer to hand back. */
+export const Frame = { of, cont, eval: evalOp };
+
+export const callstack = { begin, next, finish, eval: evalOp, cont, delimit, delimited, capture, resume, handlers };
 
 /*
  * The machine's row: its own stacks, the metacontext for meta dereferencing,

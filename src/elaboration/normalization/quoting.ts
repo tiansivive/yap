@@ -1,10 +1,12 @@
 import * as EB from "@yap/elaboration";
+import * as Eff from "@yap/utils/effects";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 
 import * as NF from "./syntax/term";
 import { display } from "./syntax/pretty";
-import { callstack as Stack, Evaluation } from "./callstack";
+import { callstack as Stack, Frame, Evaluation } from "./callstack";
+import { Do } from "./do";
 import { schedule } from "./evaluation.v2";
 import { match } from "ts-pattern";
 import assert from "node:assert";
@@ -39,20 +41,20 @@ const symbolicRow = (annotation: NF.Value): NF.Row => {
 export function* quote(lvl: number, val: NF.Value): Evaluation<void> {
 	yield* match(val)
 		.with({ type: "Lit" }, function* ({ value }) {
-			yield* Stack.answer<EB.Term>("quotation", EB.Constructors.Lit(value));
+			yield* Frame.of("quotation", EB.Constructors.Lit(value));
 		})
 		.with({ type: "Var" }, function* ({ variable }) {
 			yield* match(variable)
 				.with({ type: "Bound" }, function* (v) {
-					yield* Stack.answer<EB.Term>("quotation", EB.Constructors.Var({ type: "Bound", index: lvl - v.lvl - 1 }));
+					yield* Frame.of("quotation", EB.Constructors.Var({ type: "Bound", index: lvl - v.lvl - 1 }));
 				})
 				.with({ type: "Meta" }, function* (v) {
 					const solved = Metas.solution(yield* Metas.registry.get(), v.val);
 
-					yield* solved ? quote(lvl, solved) : Stack.answer<EB.Term>("quotation", EB.Constructors.Var(v));
+					yield* solved ? quote(lvl, solved) : Frame.of("quotation", EB.Constructors.Var(v));
 				})
 				.otherwise(function* (v) {
-					yield* Stack.answer<EB.Term>("quotation", EB.Constructors.Var(v));
+					yield* Frame.of("quotation", EB.Constructors.Var(v));
 				});
 		})
 
@@ -62,142 +64,79 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<void> {
 
 			const alternatives = closure.term.alternatives;
 
-			yield* Stack.cont<EB.Term>(1, function* ([quoted]) {
-				yield* Stack.answer<EB.Term>("quotation", EB.Constructors.Match(quoted, alternatives));
-			});
-
-			yield* quote(lvl, scrutinee);
+			yield* Do.bind("quotation", "quoted", () => quote(lvl, scrutinee)).chain(({ quoted }) =>
+				Frame.of("quotation", EB.Constructors.Match(quoted, alternatives)),
+			);
 		})
-		.with(NF.Patterns.StuckProj, function* ({ value: { label, base } }) {
-			yield* Stack.cont<EB.Term>(1, function* ([quoted]) {
-				yield* Stack.answer<EB.Term>("quotation", EB.Constructors.Proj(label, quoted));
-			});
-
-			yield* quote(lvl, base);
-		})
-		.with(NF.Patterns.StuckInj, function* ({ value: { label, base, injected } }) {
-			yield* Stack.cont<EB.Term>(1, function* ([value]) {
-				yield* Stack.cont<EB.Term>(1, function* ([target]) {
-					yield* Stack.answer<EB.Term>("quotation", EB.Constructors.Inj(label, value, target));
-				});
-
-				yield* quote(lvl, base);
-			});
-
-			yield* quote(lvl, injected);
-		})
+		.with(NF.Patterns.StuckProj, ({ value: { label, base } }) =>
+			Do.bind("quotation", "quoted", () => quote(lvl, base)).chain(({ quoted }) => Frame.of("quotation", EB.Constructors.Proj(label, quoted))),
+		)
+		.with(NF.Patterns.StuckInj, ({ value: { label, base, injected } }) =>
+			Do.bind("quotation", "value", () => quote(lvl, injected))
+				.bind("quotation", "target", () => quote(lvl, base))
+				.chain(({ value, target }) => Frame.of("quotation", EB.Constructors.Inj(label, value, target))),
+		)
 		.with({ type: "Neutral" }, function* ({ value }) {
 			yield* quote(lvl, value);
 		})
-		.with({ type: "App" }, function* ({ func, arg, icit }) {
-			yield* Stack.cont<EB.Term>(1, function* ([f]) {
-				yield* Stack.cont<EB.Term>(1, function* ([a]) {
-					yield* Stack.answer<EB.Term>("quotation", EB.Constructors.App(icit, f, a));
-				});
-
-				yield* quote(lvl, arg);
-			});
-
-			yield* quote(lvl, func);
-		})
+		.with({ type: "App" }, ({ func, arg, icit }) =>
+			Do.bind("quotation", "f", () => quote(lvl, func))
+				.bind("quotation", "a", () => quote(lvl, arg))
+				.chain(({ f, a }) => Frame.of("quotation", EB.Constructors.App(icit, f, a))),
+		)
 		.with({ type: "Abs", binder: { type: "Lambda" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
 
-			yield* Stack.cont(1, function* ([applied]) {
-				yield* Stack.cont<EB.Term>(1, function* ([body]) {
-					yield* Stack.cont<EB.Term>(1, function* ([ann]) {
-						yield* Stack.answer<EB.Term>("quotation", EB.Constructors.Lambda(variable, icit, body, ann));
-					});
-
-					yield* quote(lvl, annotation);
-				});
-
-				yield* M.reader.local(_ => closure.ctx, quote(lvl + 1, applied));
-			});
-
-			yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
+			yield* Do.bind("applied", () => schedule.apply(binder, closure, NF.Constructors.Rigid(lvl)))
+				.bind("quotation", "body", ({ applied }) => M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)))
+				.bind("quotation", "ann", () => quote(lvl, annotation))
+				.chain(({ body, ann }) => Frame.of("quotation", EB.Constructors.Lambda(variable, icit, body, ann)));
 		})
 		.with({ type: "Abs", binder: { type: "Pi" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
 
-			yield* Stack.cont(1, function* ([applied]) {
-				yield* Stack.cont<EB.Term>(1, function* ([body]) {
-					yield* Stack.cont<EB.Term>(1, function* ([ann]) {
-						yield* Stack.answer<EB.Term>("quotation", EB.Constructors.Pi(variable, icit, ann, body));
-					});
-
-					yield* quote(lvl, annotation);
-				});
-
-				yield* M.reader.local(_ => closure.ctx, quote(lvl + 1, applied));
-			});
-
-			yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
+			yield* Do.bind("applied", () => schedule.apply(binder, closure, NF.Constructors.Rigid(lvl)))
+				.bind("quotation", "body", ({ applied }) => M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)))
+				.bind("quotation", "ann", () => quote(lvl, annotation))
+				.chain(({ body, ann }) => Frame.of("quotation", EB.Constructors.Pi(variable, icit, ann, body)));
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, function* ({ binder, closure }) {
 			const { variable, source, annotation } = binder;
 
-			yield* Stack.cont(1, function* ([applied]) {
-				yield* Stack.cont<EB.Term>(1, function* ([body]) {
-					yield* Stack.cont<EB.Term>(1, function* ([ann]) {
-						yield* Stack.answer<EB.Term>("quotation", EB.Constructors.Mu(variable, source, ann, body));
-					});
-
-					yield* quote(lvl, annotation);
-				});
-
-				yield* M.reader.local(_ => closure.ctx, quote(lvl + 1, applied));
-			});
-
-			yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
+			yield* Do.bind("applied", () => schedule.apply(binder, closure, NF.Constructors.Rigid(lvl)))
+				.bind("quotation", "body", ({ applied }) => M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)))
+				.bind("quotation", "ann", () => quote(lvl, annotation))
+				.chain(({ body, ann }) => Frame.of("quotation", EB.Constructors.Mu(variable, source, ann, body)));
 		})
 		.with({ type: "Abs", binder: { type: "Sigma" } }, function* ({ binder, closure }) {
 			const { variable, annotation } = binder;
 
-			yield* Stack.cont(1, function* ([applied]) {
-				yield* Stack.cont<EB.Term>(1, function* ([body]) {
-					yield* Stack.cont<EB.Term>(1, function* ([ann]) {
-						yield* Stack.answer<EB.Term>("quotation", EB.Constructors.Sigma(variable, ann, body));
-					});
-
-					yield* quote(lvl, annotation);
-				});
-
-				yield* M.reader.local(_ => closure.ctx, quote(lvl, applied));
-			});
-
 			// Apply with symbolic label neutrals so matches get stuck instead of crashing.
 			// Analogous to Pi quoting applying with Rigid(lvl).
-			yield* schedule.apply(binder, closure, NF.Constructors.Row(symbolicRow(annotation)));
+			yield* Do.bind("applied", () => schedule.apply(binder, closure, NF.Constructors.Row(symbolicRow(annotation))))
+				.bind("quotation", "body", ({ applied }) => M.reader.local(_ => closure.ctx, quote(lvl, applied)))
+				.bind("quotation", "ann", () => quote(lvl, annotation))
+				.chain(({ body, ann }) => Frame.of("quotation", EB.Constructors.Sigma(variable, ann, body)));
 		})
-		.with({ type: "Row" }, function* ({ row }) {
-			yield* Stack.cont<EB.Row>(1, function* ([quoted]) {
-				yield* Stack.answer<EB.Term>("quotation", EB.Constructors.Row(quoted));
-			});
-
-			yield* quoteRow(lvl, row);
-		})
+		.with({ type: "Row" }, ({ row }) =>
+			Do.bind("row", "quoted", () => quoteRow(lvl, row)).chain(({ quoted }) => Frame.of("quotation", EB.Constructors.Row(quoted))),
+		)
 		.with({ type: "External" }, function* ({ name, args }) {
-			yield* Stack.cont<EB.Term[]>(1, function* ([quoted]) {
-				yield* Stack.answer<EB.Term>(
+			yield* Frame.cont("quotation", args.length, function* (quoted) {
+				yield* Frame.of(
 					"quotation",
 					quoted.reduce<EB.Term>((acc, arg) => EB.Constructors.App("Explicit", acc, arg), EB.Constructors.Var({ type: "Foreign", name })),
 				);
 			});
 
-			yield* quoteEach(lvl, args);
+			/* Back to front: the driver pops last-in-first, so the arguments answer in order. */
+			yield* Eff.traverse([...args].reverse(), arg => Stack.cont(0, () => quote(lvl, arg)));
 		})
-		.with({ type: "Modal" }, function* ({ value, modalities }) {
-			yield* Stack.cont<EB.Term>(1, function* ([quoted]) {
-				yield* Stack.cont<EB.Term>(1, function* ([liquid]) {
-					yield* Stack.answer<EB.Term>("quotation", EB.Constructors.Modal(quoted, { quantity: modalities.quantity, liquid }));
-				});
-
-				yield* quote(lvl, modalities.liquid);
-			});
-
-			yield* quote(lvl, value);
-		})
+		.with({ type: "Modal" }, ({ value, modalities }) =>
+			Do.bind("quotation", "quoted", () => quote(lvl, value))
+				.bind("quotation", "liquid", () => quote(lvl, modalities.liquid))
+				.chain(({ quoted, liquid }) => Frame.of("quotation", EB.Constructors.Modal(quoted, { quantity: modalities.quantity, liquid }))),
+		)
 		.otherwise(function* (nf) {
 			throw new Error("Quote: Not implemented yet: " + (yield* display(nf)));
 		});
@@ -206,54 +145,25 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<void> {
 const quoteRow = function* (lvl: number, row: NF.Row): Evaluation<void> {
 	yield* match(row)
 		.with({ type: "empty" }, function* () {
-			yield* Stack.answer<EB.Row>("quotation", { type: "empty" });
+			yield* Frame.of("row", { type: "empty" });
 		})
-		.with({ type: "extension" }, function* ({ label, value, row: rest }) {
-			yield* Stack.cont<EB.Term>(1, function* ([quoted]) {
-				yield* Stack.cont<EB.Row>(1, function* ([tail]) {
-					yield* Stack.answer<EB.Row>("quotation", EB.Constructors.Extension(label, quoted, tail));
-				});
-
-				yield* quoteRow(lvl, rest);
-			});
-
-			yield* quote(lvl, value);
-		})
+		.with({ type: "extension" }, ({ label, value, row: rest }) =>
+			Do.bind("quotation", "quoted", () => quote(lvl, value))
+				.bind("row", "tail", () => quoteRow(lvl, rest))
+				.chain(({ quoted, tail }) => Frame.of("row", EB.Constructors.Extension(label, quoted, tail))),
+		)
 		.with({ type: "variable" }, function* ({ variable }) {
 			const v = match(variable)
 				.with({ type: "Bound" }, (b): EB.Variable => ({ type: "Bound", index: lvl - b.lvl - 1 }))
 				.otherwise(b => b);
 
-			yield* Stack.answer<EB.Row>("quotation", { type: "variable", variable: v });
+			yield* Frame.of("row", { type: "variable", variable: v });
 		})
 		.exhaustive();
-};
-
-const quoteEach = function* (lvl: number, values: NF.Value[]): Evaluation<void> {
-	if (values.length === 0) {
-		yield* Stack.answer<EB.Term[]>("quotation", []);
-		return;
-	}
-
-	const [head, ...tail] = values;
-
-	yield* Stack.cont<EB.Term>(1, function* ([first]) {
-		yield* Stack.cont<EB.Term[]>(1, function* ([rest]) {
-			yield* Stack.answer<EB.Term[]>("quotation", [first, ...rest]);
-		});
-
-		yield* quoteEach(lvl, tail);
-	});
-
-	yield* quote(lvl, head);
 };
 
 export function* closeVal(value: NF.Value): Evaluation<void> {
 	const ctx = yield* M.reader.ask();
 
-	yield* Stack.cont<EB.Term>(1, function* ([term]) {
-		yield* Stack.answer<NF.Closure>("quotation", { type: "Closure", ctx, term });
-	});
-
-	yield* quote(ctx.env.length + 1, value);
+	yield* Do.bind("quotation", "term", () => quote(ctx.env.length + 1, value)).chain(({ term }) => Frame.of("closure", { type: "Closure", ctx, term }));
 }
