@@ -1,6 +1,6 @@
 import * as Eff from "@yap/utils/effects";
 
-import type * as EB from "@yap/elaboration";
+import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 import type { Implicitness } from "@yap/shared/implicitness";
@@ -45,11 +45,15 @@ export function* whnf(term: EB.Term, opts?: Machine.EvalOptions) {
 }
 
 export function* quote(lvl: number, val: Value) {
-	return yield* fresh(() => Quoting.quote(lvl, val));
+	return yield* fresh(() =>
+		Machine.drive<EB.Term>(Quoting.quote(lvl, val), Machine.MAX_STEPS, () => `Quotation exceeded maximum steps (${Machine.MAX_STEPS}).`),
+	);
 }
 
 export function* closeVal(value: Value) {
-	return yield* fresh(() => Quoting.closeVal(value));
+	return yield* fresh(() =>
+		Machine.drive<Closure>(Quoting.closeVal(value), Machine.MAX_STEPS, () => `Quotation exceeded maximum steps (${Machine.MAX_STEPS}).`),
+	);
 }
 
 export function* force(value: Value) {
@@ -64,12 +68,8 @@ export function* resume(value: Value) {
 	return yield* fresh(() => Machine.resume(value));
 }
 
-export function* matching(nf: Value, alts: EB.Alternative[]) {
-	return yield* fresh(() => Machine.matching(nf, alts));
-}
-
-export function* meet(ctx: EB.Context, pattern: EB.Pattern, nf: Value) {
-	return yield* fresh(() => Machine.meet(ctx, pattern, nf));
+export function* meet(pattern: EB.Pattern, nf: Value) {
+	return yield* fresh(() => Machine.meet(pattern, nf));
 }
 
 export function* apply(binder: EB.Binder, closure: Closure, value: Value) {
