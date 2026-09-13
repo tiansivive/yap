@@ -9,7 +9,8 @@ import * as Arity from "./arity";
 import * as Machine from "./evaluation.v2";
 import * as Quoting from "./quoting";
 import * as Recursion from "./recursion";
-import { callstack, Mode, defaultMode, Evaluation, type EvalMode } from "./callstack";
+import { handlers } from "./machine/handlers";
+import { Mode, defaultMode, type EvalMode, type Evaluation } from "./effects";
 import type { Closure, Value } from "./syntax/term";
 
 /*
@@ -23,37 +24,33 @@ import type { Closure, Value } from "./syntax/term";
  * the ambient machine inside the internal layer.
  */
 
-/** Runs an internal-layer program on a fresh machine. */
-function* fresh<A>(program: () => Evaluation<A>, mode: EvalMode = defaultMode) {
-	const [value] = yield* Eff.with([callstack.handlers(), Mode.handlers(mode)], program);
+/** Runs an internal-layer program on a fresh machine, under its own fuel cap. */
+function* fresh<A>(program: () => Evaluation<A>, mode: EvalMode = defaultMode, maxSteps = Machine.MAX_STEPS) {
+	const [value] = yield* Eff.with([handlers(maxSteps), Mode.handlers(mode)], program);
 
 	return value;
 }
 
 /** The elaboration-facing entry, and the NbE-mode toggle point. */
 export function* normalize(term: EB.Term, opts?: Machine.EvalOptions) {
-	return yield* fresh(() => Machine.evaluate(term, opts));
+	return yield* fresh(() => Machine.evaluate(term), defaultMode, opts?.maxSteps);
 }
 
 export function* evaluate(term: EB.Term, opts?: Machine.EvalOptions) {
-	return yield* fresh(() => Machine.evaluate(term, opts));
+	return yield* fresh(() => Machine.evaluate(term), defaultMode, opts?.maxSteps);
 }
 
 /** WHNF: seals bindings and does not reduce eliminations (projections, matches on known values). */
 export function* whnf(term: EB.Term, opts?: Machine.EvalOptions) {
-	return yield* fresh(() => Machine.evaluate(term, opts), { noInlineBindings: true, noReduceEliminations: true });
+	return yield* fresh(() => Machine.evaluate(term), { noInlineBindings: true, noReduceEliminations: true }, opts?.maxSteps);
 }
 
 export function* quote(lvl: number, val: Value) {
-	return yield* fresh(() =>
-		Machine.drive<EB.Term>(Quoting.quote(lvl, val), Machine.MAX_STEPS, () => `Quotation exceeded maximum steps (${Machine.MAX_STEPS}).`),
-	);
+	return yield* fresh(() => Machine.drive(Quoting.quote(lvl, val), steps => `Quotation exceeded maximum steps (${steps}).`));
 }
 
 export function* closeVal(value: Value) {
-	return yield* fresh(() =>
-		Machine.drive<Closure>(Quoting.closeVal(value), Machine.MAX_STEPS, () => `Quotation exceeded maximum steps (${Machine.MAX_STEPS}).`),
-	);
+	return yield* fresh(() => Machine.drive(Quoting.closeVal(value), steps => `Quotation exceeded maximum steps (${steps}).`));
 }
 
 export function* force(value: Value) {
@@ -103,6 +100,6 @@ export const probe =
 		return answer;
 	};
 
-export { unwrapNeutral, ignoraModal, isFlex, builtinsOps } from "./evaluation.v2";
+export { unwrapNeutral, ignoreModal, isFlex, builtinsOps } from "./evaluation.v2";
 export type { View, Meet, MeetResult, EvalOptions } from "./evaluation.v2";
 export { inert } from "./arity";

@@ -2,7 +2,7 @@ import * as NF from "./syntax/term";
 
 import { match } from "ts-pattern";
 
-import { Evaluation } from "./callstack";
+import type { Evaluation } from "./effects";
 import { apply, reduce } from "./evaluation.v2";
 
 export function* unfoldMu(app: Extract<NF.Value, { type: "App" }>): Evaluation<NF.Value | undefined> {

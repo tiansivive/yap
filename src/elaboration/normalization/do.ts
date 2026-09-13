@@ -1,55 +1,29 @@
-/* eslint-disable @typescript-eslint/consistent-type-assertions -- the builder erases its accumulator to run it; the casts never reach a call site */
-import type * as NF from "./syntax/term";
-import { Frame, type Answers, type Kind, type Evaluation } from "./callstack";
+/* eslint-disable @typescript-eslint/consistent-type-assertions -- the group is erased to run it; the cast never reaches a call site */
+
+import { Frame } from "./machine/actions";
+import type { Evaluation } from "./effects";
 
 /*
- * Sequencing. A chain names each answer it binds, so a later step reads every earlier one by name
- * rather than through nested closures, and the steps read in the order they run. One bind is one
- * frame — the same shape the hand-written pair has, with the ordering fixed by construction.
+ * `let` does not sequence: nothing has run when it is called, so a work cannot read an earlier name.
+ * A step that needs an earlier answer belongs in a group of its own, nested inside the `in` that
+ * produced it.
  */
 type Bindings = Record<string, unknown>;
-type Step = { name: string; kind: Kind; make: (bindings: Bindings) => Evaluation<void> };
+type Step = { name: string; work: Evaluation<unknown> };
 
-const walk = function* (steps: readonly Step[], bindings: Bindings, last: (bindings: Bindings) => Evaluation<void>): Evaluation<void> {
-	const [head, ...rest] = steps;
-
-	if (!head) {
-		yield* last(bindings);
-		return;
-	}
-
-	yield* Frame.cont(head.kind, 1, function* ([value]) {
-		yield* walk(rest, { ...bindings, [head.name]: value }, last);
-	});
-
-	yield* head.make(bindings);
-};
-
-/*
- * `bind` takes its kind first, where a parameter that decides a type belongs, and overloads it
- * away: a step with no kind binds a value, which is what almost every step binds.
- */
 export type Chain<S extends Bindings> = {
-	/** Runs `make`, binding its answer to `name` for every step after it. */
-	bind: {
-		<N extends string>(name: N, make: (bindings: S) => Evaluation<void>): Chain<S & { readonly [P in N]: NF.Value }>;
-		<K extends Kind, N extends string>(kind: K, name: N, make: (bindings: S) => Evaluation<void>): Chain<S & { readonly [P in N]: Answers[K] }>;
-	};
-	/** Ends the chain by running `f` over everything it bound. */
-	chain: (f: (bindings: S) => Evaluation<void>) => Evaluation<void>;
+	let: <N extends string, T>(name: N, work: Evaluation<T>) => Chain<S & { readonly [P in N]: T }>;
+	in: <T>(body: (bindings: S) => Evaluation<T>) => Evaluation<T>;
 };
 
-const from = <S extends Bindings>(steps: readonly Step[]): Chain<S> => {
-	function bind<N extends string>(name: N, make: (bindings: S) => Evaluation<void>): Chain<S & { readonly [P in N]: NF.Value }>;
-	function bind<K extends Kind, N extends string>(kind: K, name: N, make: (bindings: S) => Evaluation<void>): Chain<S & { readonly [P in N]: Answers[K] }>;
-	function bind(...args: [string, (bindings: S) => Evaluation<void>] | [Kind, string, (bindings: S) => Evaluation<void>]) {
-		const [kind, name, make] = args.length === 2 ? (["value", args[0], args[1]] as const) : args;
+const from = <S extends Bindings>(steps: readonly Step[]): Chain<S> => ({
+	let: (name, work) => from([...steps, { name, work }]),
+	in: body =>
+		Frame.group(
+			steps.map(({ work }) => work),
+			answers => body(Object.fromEntries(steps.map(({ name }, index) => [name, answers[index]])) as S),
+		),
+});
 
-		return from([...steps, { name, kind, make: bindings => make(bindings as S) }]);
-	}
-
-	return { bind, chain: f => walk(steps, {}, bindings => f(bindings as S)) };
-};
-
-/** An empty chain: start here. */
+/** An empty group: start here. */
 export const Do: Chain<Record<never, never>> = from([]);

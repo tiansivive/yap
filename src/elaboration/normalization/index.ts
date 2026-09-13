@@ -5,7 +5,9 @@ export * from "./generalization";
 export * as DSL from "./syntax/dsl";
 
 export * from "./api";
-export { callstack, Mode, defaultMode } from "./callstack";
-export type { StackFrame, Captured, Mark, Step, Progress, Evaluation, EvalMode } from "./callstack";
+export { Stack } from "./machine/actions";
+export { Mode, defaultMode } from "./effects";
+export type { StackFrame, Captured, Mark, Runnable } from "./machine/frames";
+export type { Evaluation, EvalMode } from "./effects";
 
 export * as Pats from "./patterns";

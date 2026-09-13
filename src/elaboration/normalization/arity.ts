@@ -3,7 +3,7 @@ import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import { match, P } from "ts-pattern";
 
-import { Evaluation } from "./callstack";
+import type { Evaluation } from "./effects";
 import { apply, unwrapNeutral } from "./evaluation.v2";
 
 const { Patterns } = NF;
