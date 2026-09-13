@@ -4,9 +4,7 @@ import * as Metas from "@yap/elaboration/shared/metas";
 
 import * as NF from "./syntax/term";
 import { display } from "./syntax/pretty";
-import { Frame } from "./machine/actions";
-import { type Evaluation } from "./effects";
-import { Do } from "./do";
+import { Do, group, result, type Evaluation } from "./effects";
 import { schedule } from "./evaluation.v2";
 import { match } from "ts-pattern";
 import assert from "node:assert";
@@ -35,26 +33,26 @@ const symbolicRow = (annotation: NF.Value): NF.Row => {
  * Every sub-quotation is scheduled and its result arrives in a frame, so the traversal costs
  * machine frames rather than host ones; the depth of a quoted value is the depth of whatever
  * the program built, which is exactly what must not reach the host stack. Children are chained
- * rather than scheduled side by side, so each one is answered before the next is scheduled and
+ * rather than scheduled side by side, so each one has its result before the next is scheduled and
  * the order is the order the constructors read in.
  */
 export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 	return yield* match(val)
 		.with({ type: "Lit" }, function* ({ value }) {
-			return yield* Frame.of(EB.Constructors.Lit(value));
+			return yield* result(EB.Constructors.Lit(value));
 		})
 		.with({ type: "Var" }, function* ({ variable }) {
 			return yield* match(variable)
 				.with({ type: "Bound" }, function* (v) {
-					return yield* Frame.of(EB.Constructors.Var({ type: "Bound", index: lvl - v.lvl - 1 }));
+					return yield* result(EB.Constructors.Var({ type: "Bound", index: lvl - v.lvl - 1 }));
 				})
 				.with({ type: "Meta" }, function* (v) {
 					const solved = Metas.solution(yield* Metas.registry.get(), v.val);
 
-					return yield* solved ? quote(lvl, solved) : Frame.of(EB.Constructors.Var(v));
+					return yield* solved ? quote(lvl, solved) : result(EB.Constructors.Var(v));
 				})
 				.otherwise(function* (v) {
-					return yield* Frame.of(EB.Constructors.Var(v));
+					return yield* result(EB.Constructors.Var(v));
 				});
 		})
 
@@ -64,15 +62,15 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 
 			const alternatives = closure.term.alternatives;
 
-			return yield* Do.let("quoted", quote(lvl, scrutinee)).in(({ quoted }) => Frame.of(EB.Constructors.Match(quoted, alternatives)));
+			return yield* Do.let("quoted", quote(lvl, scrutinee)).in(({ quoted }) => result(EB.Constructors.Match(quoted, alternatives)));
 		})
 		.with(NF.Patterns.StuckProj, ({ value: { label, base } }) =>
-			Do.let("quoted", quote(lvl, base)).in(({ quoted }) => Frame.of(EB.Constructors.Proj(label, quoted))),
+			Do.let("quoted", quote(lvl, base)).in(({ quoted }) => result(EB.Constructors.Proj(label, quoted))),
 		)
 		.with(NF.Patterns.StuckInj, ({ value: { label, base, injected } }) =>
 			Do.let("value", quote(lvl, injected))
 				.let("target", quote(lvl, base))
-				.in(({ value, target }) => Frame.of(EB.Constructors.Inj(label, value, target))),
+				.in(({ value, target }) => result(EB.Constructors.Inj(label, value, target))),
 		)
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* quote(lvl, value);
@@ -80,7 +78,7 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 		.with({ type: "App" }, ({ func, arg, icit }) =>
 			Do.let("f", quote(lvl, func))
 				.let("a", quote(lvl, arg))
-				.in(({ f, a }) => Frame.of(EB.Constructors.App(icit, f, a))),
+				.in(({ f, a }) => result(EB.Constructors.App(icit, f, a))),
 		)
 		.with({ type: "Abs", binder: { type: "Lambda" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
@@ -91,7 +89,7 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
 				)
 					.let("ann", quote(lvl, annotation))
-					.in(({ body, ann }) => Frame.of(EB.Constructors.Lambda(variable, icit, body, ann))),
+					.in(({ body, ann }) => result(EB.Constructors.Lambda(variable, icit, body, ann))),
 			);
 		})
 		.with({ type: "Abs", binder: { type: "Pi" } }, function* ({ binder, closure }) {
@@ -103,7 +101,7 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
 				)
 					.let("ann", quote(lvl, annotation))
-					.in(({ body, ann }) => Frame.of(EB.Constructors.Pi(variable, icit, ann, body))),
+					.in(({ body, ann }) => result(EB.Constructors.Pi(variable, icit, ann, body))),
 			);
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, function* ({ binder, closure }) {
@@ -115,7 +113,7 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
 				)
 					.let("ann", quote(lvl, annotation))
-					.in(({ body, ann }) => Frame.of(EB.Constructors.Mu(variable, source, ann, body))),
+					.in(({ body, ann }) => result(EB.Constructors.Mu(variable, source, ann, body))),
 			);
 		})
 		.with({ type: "Abs", binder: { type: "Sigma" } }, function* ({ binder, closure }) {
@@ -129,24 +127,22 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 					M.reader.local(_ => closure.ctx, quote(lvl, applied)),
 				)
 					.let("ann", quote(lvl, annotation))
-					.in(({ body, ann }) => Frame.of(EB.Constructors.Sigma(variable, ann, body))),
+					.in(({ body, ann }) => result(EB.Constructors.Sigma(variable, ann, body))),
 			);
 		})
-		.with({ type: "Row" }, ({ row }) => Do.let("quoted", quoteRow(lvl, row)).in(({ quoted }) => Frame.of(EB.Constructors.Row(quoted))))
+		.with({ type: "Row" }, ({ row }) => Do.let("quoted", quoteRow(lvl, row)).in(({ quoted }) => result(EB.Constructors.Row(quoted))))
 		.with({ type: "External" }, function* ({ name, args }) {
-			return yield* Frame.group(
+			return yield* group(
 				args.map(arg => quote(lvl, arg)),
 				function* (quoted) {
-					return yield* Frame.of(
-						quoted.reduce<EB.Term>((acc, arg) => EB.Constructors.App("Explicit", acc, arg), EB.Constructors.Var({ type: "Foreign", name })),
-					);
+					return yield* result(quoted.reduce<EB.Term>((acc, arg) => EB.Constructors.App("Explicit", acc, arg), EB.Constructors.Var({ type: "Foreign", name })));
 				},
 			);
 		})
 		.with({ type: "Modal" }, ({ value, modalities }) =>
 			Do.let("quoted", quote(lvl, value))
 				.let("liquid", quote(lvl, modalities.liquid))
-				.in(({ quoted, liquid }) => Frame.of(EB.Constructors.Modal(quoted, { quantity: modalities.quantity, liquid }))),
+				.in(({ quoted, liquid }) => result(EB.Constructors.Modal(quoted, { quantity: modalities.quantity, liquid }))),
 		)
 		.otherwise(function* (nf) {
 			throw new Error("Quote: Not implemented yet: " + (yield* display(nf)));
@@ -156,19 +152,19 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 const quoteRow = function* (lvl: number, row: NF.Row): Evaluation<EB.Row> {
 	return yield* match(row)
 		.with({ type: "empty" }, function* () {
-			return yield* Frame.of<EB.Row>({ type: "empty" });
+			return yield* result<EB.Row>({ type: "empty" });
 		})
 		.with({ type: "extension" }, ({ label, value, row: rest }) =>
 			Do.let("quoted", quote(lvl, value))
 				.let("tail", quoteRow(lvl, rest))
-				.in(({ quoted, tail }) => Frame.of(EB.Constructors.Extension(label, quoted, tail))),
+				.in(({ quoted, tail }) => result(EB.Constructors.Extension(label, quoted, tail))),
 		)
 		.with({ type: "variable" }, function* ({ variable }) {
 			const v = match(variable)
 				.with({ type: "Bound" }, (b): EB.Variable => ({ type: "Bound", index: lvl - b.lvl - 1 }))
 				.otherwise(b => b);
 
-			return yield* Frame.of<EB.Row>({ type: "variable", variable: v });
+			return yield* result<EB.Row>({ type: "variable", variable: v });
 		})
 		.exhaustive();
 };
@@ -176,5 +172,5 @@ const quoteRow = function* (lvl: number, row: NF.Row): Evaluation<EB.Row> {
 export function* closeVal(value: NF.Value): Evaluation<NF.Closure> {
 	const ctx = yield* M.reader.ask();
 
-	return yield* Do.let("term", quote(ctx.env.length + 1, value)).in(({ term }) => Frame.of({ type: "Closure", ctx, term }));
+	return yield* Do.let("term", quote(ctx.env.length + 1, value)).in(({ term }) => result({ type: "Closure", ctx, term }));
 }

@@ -6,8 +6,8 @@ import * as Eff from "@yap/utils/effects";
 import type { Actions } from "./actions";
 import type { Captured, Mark, Runnable, StackFrame } from "./frames";
 
-export const handlers = (maxSteps: number): Eff.Handler<Actions, undefined> => {
-	const workStack: StackFrame[] = [];
+export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, undefined> => {
+	const workStack: StackFrame<S, C>[] = [];
 	let spent = 0;
 
 	const slot = (mark: Mark) => {
@@ -24,7 +24,7 @@ export const handlers = (maxSteps: number): Eff.Handler<Actions, undefined> => {
 		const index = workStack.findLastIndex(frame => frame.type === "Result" || (frame.type === "Cont" && frame.operands.length < frame.arity));
 
 		if (index < 0) {
-			throw new Error("An operation answered with no frame waiting for it");
+			throw new Error("An operation produced a result with no frame waiting for it");
 		}
 
 		(workStack[index] as { operands: unknown[] }).operands.push(value);
@@ -40,12 +40,12 @@ export const handlers = (maxSteps: number): Eff.Handler<Actions, undefined> => {
 
 			"Machine.next": mark => {
 				const index = workStack.findLastIndex(runnable);
-				const frame = index >= mark.work ? (workStack[index] as Runnable) : undefined;
+				const frame = index >= mark.work ? (workStack[index] as Runnable<S, C>) : undefined;
 
 				workStack.length = Math.max(index, mark.work);
 
 				if (!frame) {
-					return Eff.ctl.resume<Runnable | undefined>(undefined);
+					return Eff.ctl.resume<Runnable<S, C> | undefined>(undefined);
 				}
 
 				if (frame.type === "Cont" && frame.operands.length !== frame.arity) {
@@ -58,7 +58,7 @@ export const handlers = (maxSteps: number): Eff.Handler<Actions, undefined> => {
 					throw new Error(slot(mark).blame(maxSteps));
 				}
 
-				return Eff.ctl.resume<Runnable | undefined>(frame);
+				return Eff.ctl.resume<Runnable<S, C> | undefined>(frame);
 			},
 
 			"Machine.finish": mark => {
@@ -73,43 +73,41 @@ export const handlers = (maxSteps: number): Eff.Handler<Actions, undefined> => {
 				return Eff.ctl.resume(drive.operands[0]);
 			},
 
-			"Machine.eval": ({ env, mode, term }) => {
-				workStack.push({ type: "Eval", env, mode, term });
+			"Machine.push": ({ scope, control }) => {
+				workStack.push({ type: "Control", scope, control });
 
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Machine.of": value => {
+			"Machine.fill": value => {
 				fill(value);
 
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Machine.cont": ({ env, mode, arity, k }) => {
-				workStack.push({ type: "Cont", env, mode, arity, operands: [], k });
+			"Machine.cont": ({ scope, arity, k }) => {
+				workStack.push({ type: "Cont", scope, arity, operands: [], k });
 
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Machine.delimit": env => {
-				workStack.push({ type: "Delimiter", env });
+			"Machine.delimit": scope => {
+				workStack.push({ type: "Delimiter", scope });
 
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Machine.delimited": () => Eff.ctl.resume(workStack.some(frame => frame.type === "Delimiter")),
+			"Machine.find": match => Eff.ctl.resume(workStack.findLast(match)),
 
 			"Machine.capture": () => {
 				const index = workStack.findLastIndex(frame => frame.type === "Delimiter");
 
-				const captured = match<StackFrame | undefined, Captured | undefined>(workStack[index])
-					.with({ type: "Delimiter" }, ({ env }) => {
+				const captured = match<StackFrame<S, C> | undefined, Captured<S, C> | undefined>(workStack[index])
+					.with({ type: "Delimiter" }, ({ scope }) => {
 						const frames = workStack.slice(index + 1);
-
-						/* The shift aborts the inner continuation: drop the delimiter and everything above it. */
 						workStack.splice(index);
 
-						return { frames, env };
+						return { frames, scope };
 					})
 					.otherwise(() => undefined);
 
@@ -117,7 +115,7 @@ export const handlers = (maxSteps: number): Eff.Handler<Actions, undefined> => {
 			},
 
 			"Machine.resume": ({ captured, value }) => {
-				/* One capture, many applications: each takes its own operands. */
+				// Copying the captured frames to the work stack preserves the original continuation structure in each resumption.
 				workStack.push(...captured.frames.map(frame => ("operands" in frame ? { ...frame, operands: [...frame.operands] } : frame)));
 				fill(value);
 
@@ -129,4 +127,4 @@ export const handlers = (maxSteps: number): Eff.Handler<Actions, undefined> => {
 	};
 };
 
-const runnable = (frame: StackFrame): frame is Runnable => frame.type === "Eval" || frame.type === "Cont";
+const runnable = <S, C>(frame: StackFrame<S, C>): frame is Runnable<S, C> => frame.type === "Control" || frame.type === "Cont";
