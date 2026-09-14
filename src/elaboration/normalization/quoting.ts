@@ -29,12 +29,6 @@ const symbolicRow = (annotation: NF.Value): NF.Row => {
  * Quotes a value at the given level, under the ambient context.
  * We explicitly pass the level to avoid extending the context when quoting under binders.
  * Closure bodies quote under their own stored context — closure consumption, via reader.local.
- *
- * Every sub-quotation is scheduled and its result arrives in a frame, so the traversal costs
- * machine frames rather than host ones; the depth of a quoted value is the depth of whatever
- * the program built, which is exactly what must not reach the host stack. Children are chained
- * rather than scheduled side by side, so each one has its result before the next is scheduled and
- * the order is the order the constructors read in.
  */
 export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>> {
 	return yield* match(val)
