@@ -6,7 +6,7 @@ import * as NF from "./syntax/term";
 import { display } from "./syntax/pretty";
 import { Do, group, result, type Evaluation, type Machine } from "./effects";
 import { schedule } from "./evaluation.v2";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import assert from "node:assert";
 
 const symbolicRow = (annotation: NF.Value): NF.Row => {
@@ -39,6 +39,9 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 			return yield* match(variable)
 				.with({ type: "Bound" }, function* (v) {
 					return yield* result(EB.Constructors.Var({ type: "Bound", index: lvl - v.lvl - 1 }));
+				})
+				.with({ type: P.union("DepLabel", "NuLabel") }, function* (v) {
+					return yield* result(EB.Constructors.Var({ type: v.type, name: v.name, index: lvl - v.lvl - 1 }));
 				})
 				.with({ type: "Meta" }, function* (v) {
 					const solved = Metas.solution(yield* Metas.registry.get(), v.val);
@@ -124,6 +127,30 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 					.in(({ body, ann }) => result(EB.Constructors.Sigma(variable, ann, body))),
 			);
 		})
+		.with({ type: "Abs", binder: { type: "SigmaV2" } }, function* ({ binder, closure }) {
+			const { variable, annotation } = binder;
+
+			return yield* Do.let("applied", schedule.apply(binder, closure, NF.Constructors.Rigid(lvl))).in(({ applied }) =>
+				Do.let(
+					"body",
+					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
+				)
+					.let("ann", quote(lvl + 1, annotation))
+					.in(({ body, ann }) => result(EB.Constructors.SigmaV2(variable, ann, body))),
+			);
+		})
+		.with({ type: "Abs", binder: { type: "Nu" } }, function* ({ binder, closure }) {
+			const { variable, annotation } = binder;
+
+			return yield* Do.let("applied", schedule.apply(binder, closure, NF.Constructors.Rigid(lvl))).in(({ applied }) =>
+				Do.let(
+					"body",
+					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
+				)
+					.let("ann", quote(lvl, annotation))
+					.in(({ body, ann }) => result(EB.Constructors.Nu(variable, ann, body))),
+			);
+		})
 		.with({ type: "Row" }, ({ row }) => Do.let("quoted", quoteRow(lvl, row)).in(({ quoted }) => result(EB.Constructors.Row(quoted))))
 		.with({ type: "External" }, function* ({ name, args }) {
 			return yield* group(
@@ -156,6 +183,7 @@ const quoteRow = function* (lvl: number, row: NF.Row): Evaluation<Machine<EB.Row
 		.with({ type: "variable" }, function* ({ variable }) {
 			const v = match(variable)
 				.with({ type: "Bound" }, (b): EB.Variable => ({ type: "Bound", index: lvl - b.lvl - 1 }))
+				.with({ type: P.union("DepLabel", "NuLabel") }, (b): EB.Variable => ({ type: b.type, name: b.name, index: lvl - b.lvl - 1 }))
 				.otherwise(b => b);
 
 			return yield* result<EB.Row>({ type: "variable", variable: v });

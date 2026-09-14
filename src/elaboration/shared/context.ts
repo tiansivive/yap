@@ -2,6 +2,7 @@ import { replicate } from "fp-ts/lib/Array";
 import * as NF from "@yap/elaboration/normalization";
 import * as EB from "@yap/elaboration";
 import * as Q from "@yap/shared/modalities/multiplicity";
+import * as R from "@yap/shared/rows";
 
 import * as M from "@yap/elaboration/shared/effects";
 
@@ -12,6 +13,7 @@ import { match } from "ts-pattern";
 import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
 import { Provenance } from "./provenance";
+import assert from "node:assert";
 
 type Origin = "inserted" | "source";
 
@@ -49,6 +51,10 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 		// free vars can be shadowed by bound vars, so only if no bound vars are found do we check for free vars
 		// QUESTION: should we disallow this shadowing?
 		if (types.length === 0) {
+			if (variable.type === "dep-label" || variable.type === "nu-label") {
+				throw new Error(`No enclosing record field named ${variable.value}`);
+			}
+
 			const free = ctx.imports[variable.value];
 			if (free) {
 				const [storedTm, nf, us] = free;
@@ -72,6 +78,27 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 				yield* M.recursion.flag(ctx.env.length - 1 - i);
 			}
 			return [EB.Constructors.Var({ type: "Bound", index: i }), nf, zeros] satisfies EB.AST;
+		}
+
+		/* A field reference belongs to the nearest enclosing binder that carries the label. A
+		 * binder of the right kind without it is not the one, so the search continues outward.
+		 * The resolved index rides in the variable, so consumers keep the choice between the
+		 * symbolic label and the projection it desugars to. */
+		const field = match([nf, variable, binder] as const)
+			.with([NF.Patterns.Row, Src.Patterns.Vars.DepLabel, EB.BindingPatterns.SigmaV2], ([{ row }, { value }]) =>
+				R.lookup(row, value) ? ({ type: "DepLabel", name: value, index: i } as const) : undefined,
+			)
+			.with([NF.Patterns.Row, Src.Patterns.Vars.NuLabel, EB.BindingPatterns.Nu], ([{ row }, { value }]) =>
+				R.lookup(row, value) ? ({ type: "NuLabel", name: value, index: i } as const) : undefined,
+			)
+			.otherwise(() => undefined);
+
+		if (field) {
+			const type = match(nf)
+				.with(NF.Patterns.Row, ({ row }) => R.lookup(row, field.name))
+				.otherwise(() => undefined);
+			assert(type, "A resolved field reference must have a type in the binder's row");
+			return [EB.Constructors.Var(field), type, zeros] satisfies EB.AST;
 		}
 
 		return yield* _lookup(i + 1, variable, rest);

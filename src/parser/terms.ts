@@ -68,7 +68,18 @@ type BareStatement =
 	| { type: "using"; value: Term }
 	| { type: "foreign"; variable: string; annotation: Term };
 
-export type Variable = WithLocation<{ type: "name"; value: string } | { type: "label"; value: string }>;
+export type Variable = WithLocation<
+	{ type: "name"; value: string } | { type: "label"; value: string } | { type: "dep-label"; value: string } | { type: "nu-label"; value: string }
+>;
+
+export const Patterns = {
+	Vars: {
+		Name: { type: "name" },
+		Label: { type: "label" },
+		DepLabel: { type: "dep-label" },
+		NuLabel: { type: "nu-label" },
+	},
+} as const;
 export type Row = WithLocation<R.Row<Term, Variable>>;
 
 export type Module = { type: "module"; imports: Import[]; exports: Export; content: Script };

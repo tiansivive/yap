@@ -42,13 +42,17 @@ export type Binder =
 	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }
 	| { type: "Lambda"; variable: string; annotation: Value; icit: Implicitness }
 	| { type: "Mu"; variable: string; annotation: Value; source: string }
-	| { type: "Sigma"; variable: string; annotation: Value };
+	| { type: "Sigma"; variable: string; annotation: Value }
+	| { type: "SigmaV2"; variable: string; annotation: Value }
+	| { type: "Nu"; variable: string; annotation: Value };
 
 export type Variable =
 	| { type: "Bound"; lvl: number }
 	| { type: "Free"; name: string }
 	| { type: "Label"; name: string }
 	| { type: "Foreign"; name: string }
+	| { type: "DepLabel"; name: string; lvl: number }
+	| { type: "NuLabel"; name: string; lvl: number }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
@@ -79,6 +83,8 @@ export const Constructors = {
 			closure,
 		}) as Value & { type: "Abs"; binder: { type: "Pi" } },
 	Sigma: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Sigma", variable, annotation }, closure }),
+	SigmaV2: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "SigmaV2", variable, annotation }, closure }),
+	Nu: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Nu", variable, annotation }, closure }),
 	Mu: (variable: string, source: string, annotation: Value, closure: Closure): Value =>
 		mk({
 			type: "Abs" as const,
@@ -152,6 +158,8 @@ export const Constructors = {
 	Inj: (base: Value, label: string, injected: Value): Value => mk({ type: "Inj", base, label, injected }),
 	StuckMatch: (closure: Closure, scrutinee: Value): Value => Constructors.Neutral("Blocked", Constructors.Match(closure, scrutinee)),
 	StuckProj: (base: Value, label: string): Value => Constructors.Neutral("Blocked", Constructors.Proj(base, label)),
+	DepLabel: (name: string, lvl: number): Value => Constructors.Neutral("Symbolic", Constructors.Var({ type: "DepLabel", name, lvl })),
+	NuLabel: (name: string, lvl: number): Value => Constructors.Neutral("Symbolic", Constructors.Var({ type: "NuLabel", name, lvl })),
 	StuckInj: (base: Value, label: string, injected: Value): Value => Constructors.Neutral("Blocked", Constructors.Inj(base, label, injected)),
 	Modal: (value: Value, modalities: Modalities): Value =>
 		mk({
@@ -198,6 +206,8 @@ export const Patterns = {
 	Flex: { type: "Var", variable: { type: "Meta" } } as const,
 	Free: { type: "Var", variable: { type: "Free" } } as const,
 	Label: { type: "Var", variable: { type: "Label" } } as const,
+	DepLabel: { type: "Var", variable: { type: "DepLabel" } } as const,
+	NuLabel: { type: "Var", variable: { type: "NuLabel" } } as const,
 
 	Lit: { type: "Lit" } as const,
 	Atom: { type: "Lit", value: { type: "Atom" } } as const,
@@ -231,8 +241,10 @@ export const Patterns = {
 	App: { type: "App" } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,
 	Sigma: { type: "Abs", binder: { type: "Sigma" } } as const,
+	SigmaV2: { type: "Abs", binder: { type: "SigmaV2" } } as const,
 	Lambda: { type: "Abs", binder: { type: "Lambda" } } as const,
 	Mu: { type: "Abs", binder: { type: "Mu" } } as const,
+	Nu: { type: "Abs", binder: { type: "Nu" } } as const,
 	Row: { type: "Row" } as const,
 	Modal: { type: "Modal" } as const,
 

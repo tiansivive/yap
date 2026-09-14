@@ -137,6 +137,11 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 				const body2 = yield* NF.apply(sig2.binder, sig2.closure, sig2.binder.annotation);
 				yield* unify(body1, body2, lvl + 1);
 			})
+			.with([NF.Patterns.SigmaV2, NF.Patterns.SigmaV2], function* ([sig1, sig2]) {
+				const body1 = yield* NF.apply(sig1.binder, sig1.closure, NF.Constructors.Rigid(lvl));
+				const body2 = yield* NF.apply(sig2.binder, sig2.closure, NF.Constructors.Rigid(lvl));
+				yield* unify(body1, body2, lvl + 1);
+			})
 			.with([P._, NF.Patterns.Mu], function* ([v, mu]) {
 				const unfolded = yield* NF.apply(mu.binder, mu.closure, mu);
 				yield* M.reader.local(ctx => EB.unfoldMu(ctx, { type: "Mu", variable: mu.binder.variable }, mu), unify(v, unfolded, lvl + 1));
@@ -150,12 +155,29 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 					return yield* M.fail(Err.RigidVariableMismatch(rigid1, rigid2));
 				}
 			})
+			.with([NF.Patterns.DepLabel, NF.Patterns.DepLabel], [NF.Patterns.NuLabel, NF.Patterns.NuLabel], function* ([l1, l2]) {
+				if (!_.isEqual(l1.variable, l2.variable)) {
+					return yield* M.fail(Err.TypeMismatch(l1, l2));
+				}
+			})
 			.with([NF.Patterns.Schema, NF.Patterns.Sigma], function* ([schema, sig]) {
 				const applied = yield* NF.apply(sig.binder, sig.closure, schema.arg);
 				yield* unify(schema, applied, lvl);
 			})
 
 			.with([NF.Patterns.Sigma, NF.Patterns.Schema], function* ([sig, schema]) {
+				const applied = yield* NF.apply(sig.binder, sig.closure, schema.arg);
+				yield* unify(applied, schema, lvl);
+			})
+
+			/* The inference path still mints bare Schemas, so a SigmaV2 meets one whenever a
+			 * checked struct type is compared against an inferred one. Instantiate the binder at
+			 * the schema's own row and compare the result. */
+			.with([NF.Patterns.Schema, NF.Patterns.SigmaV2], function* ([schema, sig]) {
+				const applied = yield* NF.apply(sig.binder, sig.closure, schema.arg);
+				yield* unify(schema, applied, lvl);
+			})
+			.with([NF.Patterns.SigmaV2, NF.Patterns.Schema], function* ([sig, schema]) {
 				const applied = yield* NF.apply(sig.binder, sig.closure, schema.arg);
 				yield* unify(applied, schema, lvl);
 			})
@@ -175,6 +197,15 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 			.with([NF.Patterns.Recursive, NF.Patterns.Recursive], function* ([left, right]) {
 				yield* unify(left.func, right.func, lvl);
 				yield* unify(left.arg, right.arg, lvl);
+			})
+
+			/* A stuck projection is a neutral spine, so it unifies as App does: the labels must agree
+			 * and the bases unify. Reachable once a field's type is read off an abstract record. */
+			.with([NF.Patterns.StuckProj, NF.Patterns.StuckProj], function* ([left, right]) {
+				if (left.value.label !== right.value.label) {
+					return yield* M.fail(Err.TypeMismatch(left, right));
+				}
+				yield* unify(left.value.base, right.value.base, lvl);
 			})
 
 			.with([NF.Patterns.StuckMatch, NF.Patterns.StuckMatch], () => {
@@ -308,7 +339,7 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			.with(NF.Patterns.Inj, ({ base, injected }) => check(base) || check(injected))
 			.with(NF.Patterns.Lambda, ({ closure }) => inTerm(closure.term))
 			.with(NF.Patterns.Pi, ({ closure }) => inTerm(closure.term))
-			.with(NF.Patterns.Sigma, ({ closure }) => inTerm(closure.term))
+			.with(NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure }) => inTerm(closure.term))
 			.with(NF.Patterns.App, ({ func, arg }) => check(func) || check(arg))
 			.with(NF.Patterns.Modal, ({ value: inner, modalities }) => check(inner) || check(modalities.liquid))
 

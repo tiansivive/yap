@@ -17,6 +17,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as R from "@yap/shared/rows";
 
 import { freshMeta } from "./shared/supply";
+import * as DependentRows from "./inference/dependent-rows";
 
 import _ from "lodash";
 import { extract } from "./inference/rows";
@@ -84,11 +85,13 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				return [EB.Constructors.Schema(r), us] satisfies Result;
 			})
 			.with([{ type: "struct" }, NF.Patterns.Type], function* ([{ row }]) {
-				const [r, us] = yield* Check.row(row, NF.Type, ctx.env.length);
+				const prepared = yield* DependentRows.prepare(row, ctx.env.length);
+				const [body, us] = yield* M.reader.local(
+					c => EB.bind(c, { type: "SigmaV2", variable: "$sig" }, NF.Constructors.Row(prepared.value)),
+					DependentRows.annotate(row, prepared),
+				);
 
-				const sigma = EB.Constructors.Sigma("$sig", EB.Constructors.Row(r), EB.Constructors.Schema(r));
-				return [sigma, us] satisfies Result;
-				//return [EB.Constructors.Schema(r), us] satisfies Result;
+				return [EB.Constructors.SigmaV2("$sig", EB.Constructors.Row(prepared.core), EB.Constructors.Schema(body)), us] satisfies Result;
 			})
 
 			.with([{ type: "injection" }, NF.Patterns.Type], function* ([inj, ty]) {
@@ -111,6 +114,31 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					lvl: ctx.env.length,
 				});
 				return [EB.Constructors.Struct(r), us] satisfies Result;
+			})
+			.with([{ type: "struct" }, NF.Patterns.SigmaV2], function* ([tm, sig]) {
+				const inferred = yield* DependentRows.prepare(tm.row, ctx.env.length);
+				const valueRow = yield* M.reader.local(
+					c => EB.bind(c, { type: "Nu", variable: "$nu" }, NF.Constructors.Row(inferred.value)),
+					(function* () {
+						const row = yield* DependentRows.infer(tm.row, inferred);
+						const value = yield* NF.normalize(EB.Constructors.Struct(row.term));
+						const values = NF.rowOf(value);
+						assert(values, "Expected inferred dependent struct to normalize to a row");
+						return values;
+					})(),
+				);
+
+				const expected = yield* NF.apply(sig.binder, sig.closure, NF.Constructors.Row(valueRow));
+				const expectedRow = NF.rowOf(expected);
+				assert(expectedRow, "Expected the applied SigmaV2 body to contain a row");
+
+				const checked = yield* DependentRows.prepare(tm.row, ctx.env.length);
+				const [body, us] = yield* M.reader.local(
+					c => EB.bind(c, { type: "Nu", variable: "$nu" }, NF.Constructors.Row(checked.value)),
+					DependentRows.check(tm.row, expectedRow, checked),
+				);
+
+				return [EB.Constructors.Nu("$nu", EB.Constructors.Row(checked.core), EB.Constructors.Struct(body)), us] satisfies Result;
 			})
 			.with([{ type: "struct" }, NF.Patterns.Schema], function* ([tm, val]) {
 				const bindings = yield* extract(tm.row, ctx.env.length);

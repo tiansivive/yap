@@ -1,3 +1,5 @@
+import { match } from "ts-pattern";
+
 import * as Eff from "@yap/utils/effects";
 
 import * as EB from "@yap/elaboration";
@@ -11,7 +13,8 @@ import * as Quoting from "./quoting";
 import * as Recursion from "./recursion";
 import { handlers } from "./machine/handlers";
 import { Mode, defaultMode, type EvalMode, type Evaluation } from "./effects";
-import type { Closure, Value } from "./syntax/term";
+import type { Closure, Row, Value } from "./syntax/term";
+import { Patterns } from "./syntax/term";
 
 /*
  * The consumer-facing surface. Each entry installs a fresh machine via
@@ -99,6 +102,15 @@ export const probe =
 
 		return answer;
 	};
+
+/**
+ * The inverse of `Constructors.Schema`/`Variant`/`Struct`: the row a sealed row type wraps.
+ * `undefined` when the value is not one, so callers decide whether that is an error.
+ */
+export const rowOf = (value: Value): Row | undefined =>
+	match(Machine.unwrapNeutral(value))
+		.with(Patterns.Schema, Patterns.Variant, Patterns.Struct, ({ arg }) => arg.row)
+		.otherwise(() => undefined);
 
 export { unwrapNeutral, ignoreModal, isFlex, builtinsOps } from "./evaluation.v2";
 export type { View, Meet, MeetResult, EvalOptions } from "./evaluation.v2";

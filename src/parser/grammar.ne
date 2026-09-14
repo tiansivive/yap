@@ -51,6 +51,8 @@
 		bar: /\|/,
 		at: /@/,
 		hash: /#/,
+		ampersand: /&/,
+		dollar: /\$/,
 		hole: /_/,
 		space: { match: /[ \n\t]+/, lineBreaks: true },
 
@@ -234,6 +236,8 @@ Foreign -> "foreign" %space Identifier %space:? %colon %space:? TypeExpr 	{% P.F
 # ------------------------------------
 Identifier -> %variable {% P.Name %}
 			| %colon %variable {% P.Label %}
+			| %ampersand %variable {% P.DepLabel %}
+			| %dollar %variable {% P.NuLabel %}
 
 # Multiplicity
 Quantity -> "1" {% () => Q.One %}
