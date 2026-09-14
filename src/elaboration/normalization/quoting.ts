@@ -4,7 +4,7 @@ import * as Metas from "@yap/elaboration/shared/metas";
 
 import * as NF from "./syntax/term";
 import { display } from "./syntax/pretty";
-import { Do, group, result, type Evaluation } from "./effects";
+import { Do, group, result, type Evaluation, type Machine } from "./effects";
 import { schedule } from "./evaluation.v2";
 import { match } from "ts-pattern";
 import assert from "node:assert";
@@ -36,7 +36,7 @@ const symbolicRow = (annotation: NF.Value): NF.Row => {
  * rather than scheduled side by side, so each one has its result before the next is scheduled and
  * the order is the order the constructors read in.
  */
-export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
+export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>> {
 	return yield* match(val)
 		.with({ type: "Lit" }, function* ({ value }) {
 			return yield* result(EB.Constructors.Lit(value));
@@ -149,7 +149,7 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
 		});
 }
 
-const quoteRow = function* (lvl: number, row: NF.Row): Evaluation<EB.Row> {
+const quoteRow = function* (lvl: number, row: NF.Row): Evaluation<Machine<EB.Row>> {
 	return yield* match(row)
 		.with({ type: "empty" }, function* () {
 			return yield* result<EB.Row>({ type: "empty" });
@@ -169,7 +169,7 @@ const quoteRow = function* (lvl: number, row: NF.Row): Evaluation<EB.Row> {
 		.exhaustive();
 };
 
-export function* closeVal(value: NF.Value): Evaluation<NF.Closure> {
+export function* closeVal(value: NF.Value): Evaluation<Machine<NF.Closure>> {
 	const ctx = yield* M.reader.ask();
 
 	return yield* Do.let("term", quote(ctx.env.length + 1, value)).in(({ term }) => result({ type: "Closure", ctx, term }));

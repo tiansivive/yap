@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/consistent-type-assertions -- a scheduled frame produces its result later, so push/cont/resume/finish claim the type it will be given */
+/* eslint-disable @typescript-eslint/consistent-type-assertions -- `finish` takes a real value off the slot, and a stored continuation's row is erased */
 import * as Eff from "@yap/utils/effects";
 
-import type { Blame, Captured, Mark, Runnable, StackFrame, Stored } from "./frames";
+import { scheduled, type Blame, type Captured, type Machine, type Mark, type Runnable, type StackFrame, type Stored } from "./frames";
 
 export type Actions<S, C> = Begin | Next<S, C> | Finish | Push<S, C> | Fill | Cont<S> | Delimit<S> | Find<S, C> | Capture<S, C> | Resume<S, C>;
 
@@ -22,24 +22,24 @@ export function* finish<V>(mark: Mark) {
 }
 
 type Push<S, C> = Eff.Action<"Machine.push", { scope: S; control: C }, undefined>;
-export function* push<V, S, C>(scope: S, control: C): Eff.Eff<Push<S, C>, V> {
+export function* push<V, S, C>(scope: S, control: C): Eff.Eff<Push<S, C>, Machine<V>> {
 	yield* Eff.ctl.action<Push<S, C>>("Machine.push", { scope, control });
 
-	return undefined as V; // We cast so typing works
+	return scheduled;
 }
 
 type Fill = Eff.Action<"Machine.fill", unknown, undefined>;
-export function* fill<V>(value: V): Eff.Eff<Fill, V> {
+export function* fill<V>(value: V): Eff.Eff<Fill, Machine<V>> {
 	yield* Eff.ctl.action<Fill>("Machine.fill", value);
 
-	return value;
+	return scheduled;
 }
 
 type Cont<S> = Eff.Action<"Machine.cont", { scope: S; arity: number; k: Stored }, undefined>;
-export function* cont<A, T, R extends Eff.AnyAction, S>(scope: S, arity: number, k: (operands: A[]) => Eff.Eff<R, T>): Eff.Eff<Cont<S>, T> {
+export function* cont<A, T, R extends Eff.AnyAction, S>(scope: S, arity: number, k: (operands: A[]) => Eff.Eff<R, Machine<T>>): Eff.Eff<Cont<S>, Machine<T>> {
 	yield* Eff.ctl.action<Cont<S>>("Machine.cont", { scope, arity, k: k as Stored });
 
-	return undefined as T;
+	return scheduled;
 }
 
 type Delimit<S> = Eff.Action<"Machine.delimit", S, undefined>;
@@ -59,8 +59,8 @@ export function* capture<S, C>() {
 }
 
 type Resume<S, C> = Eff.Action<"Machine.resume", { captured: Captured<S, C>; value: unknown }, undefined>;
-export function* resume<V, S, C>(captured: Captured<S, C>, value: unknown): Eff.Eff<Resume<S, C>, V> {
+export function* resume<V, S, C>(captured: Captured<S, C>, value: unknown): Eff.Eff<Resume<S, C>, Machine<V>> {
 	yield* Eff.ctl.action<Resume<S, C>>("Machine.resume", { captured, value });
 
-	return undefined as V;
+	return scheduled;
 }

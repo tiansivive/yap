@@ -3,7 +3,7 @@ import * as Eff from "@yap/utils/effects";
 import type * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import type * as Metas from "@yap/elaboration/shared/metas";
-import type * as Machine from "./machine/actions";
+import type * as Stack from "./machine/actions";
 import type * as Frames from "./machine/frames";
 import { notation } from "./machine/do";
 
@@ -25,7 +25,9 @@ export type Scope = { env: EB.Context; mode: EvalMode };
 type Ambient = Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof M.reader> | Eff.Actions<typeof Mode>;
 
 /** NbE is the machine instantiated at a scope of env and mode, terms as control, and values as results. */
-export type Evaluation<A> = Eff.Eff<Machine.Actions<Scope, EB.Term> | Ambient, A>;
+export type Evaluation<A> = Eff.Eff<Stack.Actions<Scope, EB.Term> | Ambient, A>;
+
+export type Machine<A> = Frames.Machine<A>;
 
 export type StackFrame = Frames.StackFrame<Scope, EB.Term>;
 

@@ -2,6 +2,7 @@
 import * as Eff from "@yap/utils/effects";
 
 import { cont, fill, type Actions } from "./actions";
+import type { Machine } from "./frames";
 
 type Bindings = Record<string, unknown>;
 
@@ -13,22 +14,22 @@ export const notation = <S, C, R extends Eff.AnyAction>(scope: () => Eff.Eff<R, 
 	type Program<T> = Eff.Eff<R | Actions<S, C>, T>;
 
 	type Chain<B extends Bindings> = {
-		let: <N extends string, T>(name: N, work: Program<T>) => Chain<B & { readonly [P in N]: T }>;
-		in: <T>(body: (bindings: B) => Program<T>) => Program<T>;
+		let: <N extends string, T>(name: N, work: Program<Machine<T>>) => Chain<B & { readonly [P in N]: T }>;
+		in: <T>(body: (bindings: B) => Program<Machine<T>>) => Program<Machine<T>>;
 	};
 
-	const step = function* <T>(work: Program<T>): Program<T> {
+	const step = function* <T>(work: Program<Machine<T>>): Program<Machine<T>> {
 		return yield* cont(yield* scope(), 0, () => work);
 	};
 
-	const group = function* <A, T>(works: readonly Program<A>[], k: (results: A[]) => Program<T>): Program<T> {
+	const group = function* <A, T>(works: readonly Program<Machine<A>>[], k: (results: A[]) => Program<Machine<T>>): Program<Machine<T>> {
 		const result = yield* cont(yield* scope(), works.length, k);
 		yield* Eff.traverse(works.toReversed(), step);
 
 		return result;
 	};
 
-	const from = <B extends Bindings>(steps: readonly { name: string; work: Program<unknown> }[]): Chain<B> => ({
+	const from = <B extends Bindings>(steps: readonly { name: string; work: Program<Machine<unknown>> }[]): Chain<B> => ({
 		let: (name, work) => from([...steps, { name, work }]),
 		in: body =>
 			group(

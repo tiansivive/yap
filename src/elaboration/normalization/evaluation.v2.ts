@@ -14,9 +14,9 @@ import * as NF from "./syntax/term";
 import * as DSL from "./syntax/dsl";
 import { display } from "./syntax/pretty";
 
-import * as Machine from "./machine/actions";
+import * as Stack from "./machine/actions";
 import type { Blame, Mark } from "./machine/frames";
-import { Do, Mode, group, result, scope, step, type Evaluation, type Scope } from "./effects";
+import { Do, Mode, group, result, scope, step, type Evaluation, type Machine, type Scope } from "./effects";
 import * as Quoting from "./quoting";
 
 import _ from "lodash";
@@ -62,18 +62,18 @@ export function* evaluate(term: EB.Term): Evaluation<NF.Value> {
  * boundary operation — the evaluation path schedules instead, and `schedule` is the
  * canonical form every operation here is written in.
  */
-export function* drive<A>(work: Evaluation<A>, blame: Blame): Evaluation<A> {
-	const mark = yield* Machine.begin(blame);
+export function* drive<A>(work: Evaluation<Machine<A>>, blame: Blame): Evaluation<A> {
+	const mark = yield* Stack.begin(blame);
 	yield* work;
 	yield* trampoline(mark);
 
-	return yield* Machine.finish<A>(mark);
+	return yield* Stack.finish<A>(mark);
 }
 
 /** Runs a drive's frames to exhaustion. Fuel is the machine's, so the cap is enforced where it is counted. */
 function* trampoline(mark: Mark): Evaluation<void> {
 	while (true) {
-		const frame = yield* Machine.next<Scope, EB.Term>(mark);
+		const frame = yield* Stack.next<Scope, EB.Term>(mark);
 
 		if (!frame) {
 			break;
@@ -97,7 +97,7 @@ function* trampoline(mark: Mark): Evaluation<void> {
 	}
 }
 
-function* evaluateTerm(term: EB.Term): Evaluation<NF.Value> {
+function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 	const ctx = yield* M.reader.ask();
 	const { noInlineBindings, noReduceEliminations } = yield* Mode.ask();
 
@@ -332,7 +332,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<NF.Value> {
 		})
 		.with({ type: "Reset" }, function* ({ term }) {
 			// Reset establishes a delimiter for continuation capture.
-			yield* Machine.delimit(yield* scope());
+			yield* Stack.delimit(yield* scope());
 			return yield* schedule.eval(term);
 		})
 		.with({ type: "Shift" }, function* ({ body }) {
@@ -346,7 +346,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<NF.Value> {
 			// Reset-delimiter, package it as a function value, and apply the
 			// body-lambda to that continuation.
 			return yield* Do.let("h", schedule.eval(body)).in(function* ({ h }) {
-				const captured = yield* Machine.capture<Scope, EB.Term>();
+				const captured = yield* Stack.capture<Scope, EB.Term>();
 				if (!captured) {
 					throw new Error("Shift without enclosing reset");
 				}
@@ -367,7 +367,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<NF.Value> {
 			});
 		})
 		.with({ type: "Bubble" }, function* ({ meta, shift }) {
-			if (yield* Machine.find<Scope, EB.Term>(frame => frame.type === "Delimiter")) {
+			if (yield* Stack.find<Scope, EB.Term>(frame => frame.type === "Delimiter")) {
 				return yield* schedule.eval(shift);
 			}
 
@@ -388,7 +388,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<NF.Value> {
 /**
  * Process block statements, evaluating let bindings and extending context.
  */
-function* processStatementsAndPush(stmts: EB.Statement[], returnTerm: EB.Term): Evaluation<NF.Value> {
+function* processStatementsAndPush(stmts: EB.Statement[], returnTerm: EB.Term): Evaluation<Machine<NF.Value>> {
 	if (stmts.length === 0) {
 		// No more statements, evaluate the return term
 		return yield* schedule.eval(returnTerm);
@@ -436,11 +436,11 @@ function* processStatementsAndPush(stmts: EB.Statement[], returnTerm: EB.Term): 
  * Schedule the evaluation of a row, built up from right to left.
  */
 /** Rows complete right-to-left, so a leaf goes through an arity-0 continuation to keep result order. */
-function* deferred(value: NF.Value): Evaluation<NF.Value> {
+function* deferred(value: NF.Value): Evaluation<Machine<NF.Value>> {
 	return yield* step(result(value));
 }
 
-function* evalRowPush(row: EB.Row): Evaluation<NF.Value> {
+function* evalRowPush(row: EB.Row): Evaluation<Machine<NF.Value>> {
 	return yield* match(row)
 		.with({ type: "empty" }, r => deferred(NF.Constructors.Row(r)))
 		.with({ type: "extension" }, function* ({ label, value: term, row: restRow }) {
@@ -506,7 +506,7 @@ function* evalRowPush(row: EB.Row): Evaluation<NF.Value> {
 
 export type Project = { tag: "found"; value: NF.Value } | { tag: "blocked" } | { tag: "missing" } | { tag: "not-applicable" };
 
-const project = function* (base: NF.Value, label: string): Evaluation<Project> {
+const project = function* (base: NF.Value, label: string): Evaluation<Machine<Project>> {
 	const ctx = yield* M.reader.ask();
 
 	const current = match(base)
@@ -535,7 +535,7 @@ const project = function* (base: NF.Value, label: string): Evaluation<Project> {
 	);
 };
 
-const projectValue = function* (base: NF.Value, label: string): Evaluation<NF.Value> {
+const projectValue = function* (base: NF.Value, label: string): Evaluation<Machine<NF.Value>> {
 	return yield* Do.let("found", project(base, label)).in(({ found }) =>
 		result(
 			match(found)
@@ -548,7 +548,7 @@ const projectValue = function* (base: NF.Value, label: string): Evaluation<NF.Va
 	);
 };
 
-const inject = function* (base: NF.Value, label: string, injected: NF.Value): Evaluation<NF.Value | undefined> {
+const inject = function* (base: NF.Value, label: string, injected: NF.Value): Evaluation<Machine<NF.Value | undefined>> {
 	const set = (row: NF.Row): NF.Row =>
 		match(row)
 			.with({ type: "empty" }, (): NF.Row => NF.Constructors.Extension(label, injected, row))
@@ -576,7 +576,7 @@ const inject = function* (base: NF.Value, label: string, injected: NF.Value): Ev
 	);
 };
 
-const injectValue = function* (base: NF.Value, label: string, injected: NF.Value): Evaluation<NF.Value> {
+const injectValue = function* (base: NF.Value, label: string, injected: NF.Value): Evaluation<Machine<NF.Value>> {
 	return yield* Do.let("replaced", inject(base, label, injected)).in(({ replaced }) => result(replaced ?? NF.Constructors.StuckInj(base, label, injected)));
 };
 
@@ -588,12 +588,12 @@ const injectValue = function* (base: NF.Value, label: string, injected: NF.Value
  */
 export const schedule = {
 	/** Schedules a term: the driver reads it, and its result is the term's value. */
-	*eval(term: EB.Term): Evaluation<NF.Value> {
-		return yield* Machine.push<NF.Value, Scope, EB.Term>(yield* scope(), term);
+	*eval(term: EB.Term): Evaluation<Machine<NF.Value>> {
+		return yield* Stack.push<NF.Value, Scope, EB.Term>(yield* scope(), term);
 	},
 
 	/** Applies a function value to an argument, deferring the body rather than driving it. */
-	*reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evaluation<NF.Value> {
+	*reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evaluation<Machine<NF.Value>> {
 		return yield* match(nff)
 			.with({ type: "Neutral", kind: "Sealed" }, function* ({ value }) {
 				return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(value, nfa, icit)));
@@ -656,7 +656,7 @@ export const schedule = {
 	},
 
 	/** Consumes a closure with an argument: the body's scope, or the primop's result, or the continuation's replay. */
-	*apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): Evaluation<NF.Value> {
+	*apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value): Evaluation<Machine<NF.Value>> {
 		const extended = (cls: Exclude<NF.Closure, { type: "Continuation" }>) => {
 			if (binder.type !== "Sigma") {
 				return EB.extend(cls.ctx, binder, value);
@@ -675,13 +675,13 @@ export const schedule = {
 			})
 			.with({ type: "Continuation" }, function* (cont) {
 				// Replay the captured continuation with the argument at the shift point.
-				return yield* Machine.resume<NF.Value, Scope, EB.Term>({ frames: cont.frames, scope: { env: cont.ctx, mode: yield* Mode.ask() } }, value);
+				return yield* Stack.resume<NF.Value, Scope, EB.Term>({ frames: cont.frames, scope: { env: cont.ctx, mode: yield* Mode.ask() } }, value);
 			})
 			.exhaustive();
 	},
 
 	/** Runs the alternative that fires; a blocked match results in the suspension so `resume` can retry it. */
-	*matching(nf: NF.Value, alts: EB.Alternative[], suspension: NF.Value): Evaluation<NF.Value> {
+	*matching(nf: NF.Value, alts: EB.Alternative[], suspension: NF.Value): Evaluation<Machine<NF.Value>> {
 		if (alts.length === 0) {
 			throw new Error("Match: No alternative matched");
 		}
@@ -710,7 +710,7 @@ export const schedule = {
 	 * scheduled and the dispatch it feeds becomes the frame that receives it; what the recursive
 	 * form returned, this hands to `k`.
 	 */
-	*meet(pattern: EB.Pattern, nf: NF.Value): Evaluation<Meet> {
+	*meet(pattern: EB.Pattern, nf: NF.Value): Evaluation<Machine<Meet>> {
 		const immediate = match(pattern)
 			.with({ type: "Wildcard" }, () => matched([]))
 			.with({ type: "Binder" }, ({ value }) => {
@@ -742,7 +742,7 @@ export const schedule = {
 					() => result(mismatch()),
 				)
 				.with([NF.Patterns.Array, { type: "List" }], ([value, p]) => {
-					const zip = function* (patterns: EB.Pattern[], row: NF.Row): Evaluation<Meet> {
+					const zip = function* (patterns: EB.Pattern[], row: NF.Row): Evaluation<Machine<Meet>> {
 						if (patterns.length === 0) {
 							if (!p.rest) {
 								return yield* result(matched([]));
@@ -800,16 +800,16 @@ export const schedule = {
 	 * is handed back to the driver rather than delegated to, so a chain of residuals is a run of
 	 * frames and a label or meta that resolves back to itself spends the machine's fuel.
 	 */
-	*force(value: NF.Value): Evaluation<NF.Value> {
+	*force(value: NF.Value): Evaluation<Machine<NF.Value>> {
 		/* A meta reached bare or under a Symbolic wrapper resolves the same way; only the route to it differs. */
-		const solved = function* (meta: Extract<NF.Variable, { type: "Meta" }>): Evaluation<NF.Value> {
+		const solved = function* (meta: Extract<NF.Variable, { type: "Meta" }>): Evaluation<Machine<NF.Value>> {
 			const solution = Metas.solution(yield* Metas.registry.get(), meta.val);
 
 			return yield* solution ? step(schedule.force(solution)) : result(value);
 		};
 
 		/* Likewise a blocked elimination, wrapped or bare: retry it, and keep forcing while it progresses. */
-		const retry = (subject: NF.Value): Evaluation<NF.Value> =>
+		const retry = (subject: NF.Value): Evaluation<Machine<NF.Value>> =>
 			Do.let("next", schedule.resume(subject)).in(({ next }) => (next === subject ? result(value) : schedule.force(next)));
 
 		return yield* match(value)
@@ -838,7 +838,7 @@ export const schedule = {
 	 * conjoins them, which needs application and quotation, so it belongs to the machine rather
 	 * than to verification — it is only ever reached from the Modal arm, mid-drive.
 	 */
-	*combine(a: Modal.Annotations<NF.Value>, b: Modal.Annotations<NF.Value>): Evaluation<Modal.Annotations<NF.Value>> {
+	*combine(a: Modal.Annotations<NF.Value>, b: Modal.Annotations<NF.Value>): Evaluation<Machine<Modal.Annotations<NF.Value>>> {
 		assert(a.liquid.type === "Abs" && a.liquid.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
 		assert(b.liquid.type === "Abs" && b.liquid.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
 
@@ -865,7 +865,7 @@ export const schedule = {
 	 * are the three requests a consumer makes of a value's neutral status, and this is the one
 	 * that results in a classification rather than a value.
 	 */
-	*view(value: NF.Value): Evaluation<View> {
+	*view(value: NF.Value): Evaluation<Machine<View>> {
 		return yield* Do.let("forced", schedule.force(value)).in(({ forced }) =>
 			result(
 				match<NF.Value, View>(forced)
@@ -880,7 +880,7 @@ export const schedule = {
 	 * fired, which is the only signal needed: every arm forces what it inspects first, so a
 	 * suspension that survives a retry is stable.
 	 */
-	*resume(value: NF.Value): Evaluation<NF.Value> {
+	*resume(value: NF.Value): Evaluation<Machine<NF.Value>> {
 		return yield* match(value)
 			.with(NF.Patterns.Proj, function* ({ base, label }) {
 				return yield* Do.let("found", project(base, label)).in(({ found }) =>
@@ -1029,7 +1029,7 @@ const combineMeet = (left: Meet, right: Meet): Meet =>
 		.with([{ tag: "matched" }, { tag: "matched" }], ([l, r]) => matched([...l.bindings, ...r.bindings]))
 		.exhaustive();
 
-const meetAll = function* (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Evaluation<Meet> {
+const meetAll = function* (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Evaluation<Machine<Meet>> {
 	return yield* match([pats, vals])
 		.with([{ type: "empty" }, P._], () => result(matched([])))
 		.with([{ type: "variable" }, P._], ([r, tail]) => {
