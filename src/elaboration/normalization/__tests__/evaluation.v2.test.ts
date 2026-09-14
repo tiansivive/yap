@@ -60,6 +60,34 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 		expect(show(nf, ctx)).toBe("2");
 	});
 
+	/*
+	 * A `using` value is evaluated in a drive of its own. Its steps are the machine's, so a
+	 * budget the surrounding block alone stays well under is still exhausted by the work
+	 * inside — the counter cannot restart per drive, or a cycle spread across nested drives
+	 * never reaches the cap and the host stack gives out first.
+	 */
+	describe("the step budget spans nested drives", () => {
+		const fields = Array.from({ length: 30 }, (_, i) => `f${i}: ${i} + ${i}`).join(", ");
+		const normalize = (src: string, maxSteps: number) => {
+			const { structure } = elaborateFrom(src);
+
+			return runNF(ctxFor(mkCtx()), () => NF.normalize(structure.term, { maxSteps }), structure.metas);
+		};
+
+		it("charges a nested drive's steps to the budget", () => {
+			const src = `{
+			using { ${fields} };
+			return 1;
+		}`;
+
+			expect(() => normalize(src, 8)).toThrow(/exceeded maximum steps \(8\)/);
+		});
+
+		it("leaves a block that fits the budget alone", () => {
+			expect(normalize("{ return 1; }", 8)).toMatchObject({ type: "Lit" });
+		});
+	});
+
 	// Shared CI runners can be much slower under full-suite load.
 	it.sequential(
 		"handles deeply nested recursion without stack overflow",

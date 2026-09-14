@@ -206,15 +206,15 @@ describe("Normalization: force() and apply()", () => {
 		const value = NF.Constructors.Struct(NF.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(1)), R.Constructors.Empty()));
 		const pattern = EB.Constructors.Patterns.Struct(EB.Constructors.Patterns.Extension("x", EB.Constructors.Patterns.Lit(Lit.Num(1)), R.Constructors.Empty()));
 
-		expect(runNF(ctx, () => NF.meet(ctx, pattern, value))).toEqual({ tag: "matched", bindings: [] });
+		expect(runNF(ctx, () => NF.meet(pattern, value))).toEqual({ tag: "matched", bindings: [] });
 	});
 
 	it("distinguishes non-observing matches from blocked observations", () => {
 		const ctx = mkCtx();
 		const symbolic = NF.Constructors.Flex({ type: "Meta", val: 8, lvl: 0 });
 
-		expect(runNF(ctx, () => NF.meet(ctx, EB.Constructors.Patterns.Wildcard(), symbolic))).toEqual({ tag: "matched", bindings: [] });
-		expect(runNF(ctx, () => NF.meet(ctx, EB.Constructors.Patterns.Lit(Lit.Num(1)), symbolic))).toEqual({ tag: "blocked" });
+		expect(runNF(ctx, () => NF.meet(EB.Constructors.Patterns.Wildcard(), symbolic))).toEqual({ tag: "matched", bindings: [] });
+		expect(runNF(ctx, () => NF.meet(EB.Constructors.Patterns.Lit(Lit.Num(1)), symbolic))).toEqual({ tag: "blocked" });
 	});
 
 	it("does not fall through an inspecting pattern while its scrutinee is unresolved", () => {

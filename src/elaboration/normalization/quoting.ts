@@ -1,12 +1,11 @@
 import * as EB from "@yap/elaboration";
-import * as Eff from "@yap/utils/effects";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 
 import * as NF from "./syntax/term";
 import { display } from "./syntax/pretty";
-import { Evaluation } from "./callstack";
-import { apply } from "./evaluation.v2";
+import { Do, group, result, type Evaluation, type Machine } from "./effects";
+import { schedule } from "./evaluation.v2";
 import { match } from "ts-pattern";
 import assert from "node:assert";
 
@@ -31,115 +30,141 @@ const symbolicRow = (annotation: NF.Value): NF.Row => {
  * We explicitly pass the level to avoid extending the context when quoting under binders.
  * Closure bodies quote under their own stored context — closure consumption, via reader.local.
  */
-export function* quote(lvl: number, val: NF.Value): Evaluation<EB.Term> {
+export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>> {
 	return yield* match(val)
 		.with({ type: "Lit" }, function* ({ value }) {
-			return EB.Constructors.Lit(value);
+			return yield* result(EB.Constructors.Lit(value));
 		})
 		.with({ type: "Var" }, function* ({ variable }) {
 			return yield* match(variable)
 				.with({ type: "Bound" }, function* (v) {
-					return EB.Constructors.Var({ type: "Bound", index: lvl - v.lvl - 1 });
+					return yield* result(EB.Constructors.Var({ type: "Bound", index: lvl - v.lvl - 1 }));
 				})
 				.with({ type: "Meta" }, function* (v) {
 					const solved = Metas.solution(yield* Metas.registry.get(), v.val);
 
-					return solved ? yield* quote(lvl, solved) : EB.Constructors.Var(v);
+					return yield* solved ? quote(lvl, solved) : result(EB.Constructors.Var(v));
 				})
 				.otherwise(function* (v) {
-					return EB.Constructors.Var(v);
+					return yield* result(EB.Constructors.Var(v));
 				});
 		})
 
 		.with(NF.Patterns.StuckMatch, function* ({ value: { closure, scrutinee } }) {
 			assert(closure.type === "Closure", "Blocked match should retain a term closure");
 			assert(closure.term.type === "Match", "Blocked match closure should retain a match term");
-			return EB.Constructors.Match(yield* quote(lvl, scrutinee), closure.term.alternatives);
+
+			const alternatives = closure.term.alternatives;
+
+			return yield* Do.let("quoted", quote(lvl, scrutinee)).in(({ quoted }) => result(EB.Constructors.Match(quoted, alternatives)));
 		})
-		.with(NF.Patterns.StuckProj, function* ({ value: { label, base } }) {
-			return EB.Constructors.Proj(label, yield* quote(lvl, base));
-		})
-		.with(NF.Patterns.StuckInj, function* ({ value: { label, base, injected } }) {
-			return EB.Constructors.Inj(label, yield* quote(lvl, injected), yield* quote(lvl, base));
-		})
+		.with(NF.Patterns.StuckProj, ({ value: { label, base } }) =>
+			Do.let("quoted", quote(lvl, base)).in(({ quoted }) => result(EB.Constructors.Proj(label, quoted))),
+		)
+		.with(NF.Patterns.StuckInj, ({ value: { label, base, injected } }) =>
+			Do.let("value", quote(lvl, injected))
+				.let("target", quote(lvl, base))
+				.in(({ value, target }) => result(EB.Constructors.Inj(label, value, target))),
+		)
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* quote(lvl, value);
 		})
-		.with({ type: "App" }, function* ({ func, arg, icit }) {
-			return EB.Constructors.App(icit, yield* quote(lvl, func), yield* quote(lvl, arg));
-		})
+		.with({ type: "App" }, ({ func, arg, icit }) =>
+			Do.let("f", quote(lvl, func))
+				.let("a", quote(lvl, arg))
+				.in(({ f, a }) => result(EB.Constructors.App(icit, f, a))),
+		)
 		.with({ type: "Abs", binder: { type: "Lambda" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
-			const val = yield* apply(binder, closure, NF.Constructors.Rigid(lvl));
-			const body = yield* M.reader.local(_ => closure.ctx, quote(lvl + 1, val));
-			const ann = yield* quote(lvl, annotation);
-			return EB.Constructors.Lambda(variable, icit, body, ann);
+
+			return yield* Do.let("applied", schedule.apply(binder, closure, NF.Constructors.Rigid(lvl))).in(({ applied }) =>
+				Do.let(
+					"body",
+					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
+				)
+					.let("ann", quote(lvl, annotation))
+					.in(({ body, ann }) => result(EB.Constructors.Lambda(variable, icit, body, ann))),
+			);
 		})
 		.with({ type: "Abs", binder: { type: "Pi" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
-			const val = yield* apply(binder, closure, NF.Constructors.Rigid(lvl));
-			const body = yield* M.reader.local(_ => closure.ctx, quote(lvl + 1, val));
-			const ann = yield* quote(lvl, annotation);
-			return EB.Constructors.Pi(variable, icit, ann, body);
+
+			return yield* Do.let("applied", schedule.apply(binder, closure, NF.Constructors.Rigid(lvl))).in(({ applied }) =>
+				Do.let(
+					"body",
+					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
+				)
+					.let("ann", quote(lvl, annotation))
+					.in(({ body, ann }) => result(EB.Constructors.Pi(variable, icit, ann, body))),
+			);
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, function* ({ binder, closure }) {
 			const { variable, source, annotation } = binder;
-			const val = yield* apply(binder, closure, NF.Constructors.Rigid(lvl));
-			const body = yield* M.reader.local(_ => closure.ctx, quote(lvl + 1, val));
-			const ann = yield* quote(lvl, annotation);
-			return EB.Constructors.Mu(variable, source, ann, body);
+
+			return yield* Do.let("applied", schedule.apply(binder, closure, NF.Constructors.Rigid(lvl))).in(({ applied }) =>
+				Do.let(
+					"body",
+					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
+				)
+					.let("ann", quote(lvl, annotation))
+					.in(({ body, ann }) => result(EB.Constructors.Mu(variable, source, ann, body))),
+			);
 		})
 		.with({ type: "Abs", binder: { type: "Sigma" } }, function* ({ binder, closure }) {
 			const { variable, annotation } = binder;
+
 			// Apply with symbolic label neutrals so matches get stuck instead of crashing.
 			// Analogous to Pi quoting applying with Rigid(lvl).
-			const symbolic = NF.Constructors.Row(symbolicRow(annotation));
-			const val = yield* apply(binder, closure, symbolic);
-			const body = yield* M.reader.local(_ => closure.ctx, quote(lvl, val));
-			const ann = yield* quote(lvl, annotation);
-			return EB.Constructors.Sigma(variable, ann, body);
+			return yield* Do.let("applied", schedule.apply(binder, closure, NF.Constructors.Row(symbolicRow(annotation)))).in(({ applied }) =>
+				Do.let(
+					"body",
+					M.reader.local(_ => closure.ctx, quote(lvl, applied)),
+				)
+					.let("ann", quote(lvl, annotation))
+					.in(({ body, ann }) => result(EB.Constructors.Sigma(variable, ann, body))),
+			);
 		})
-		.with({ type: "Row" }, function* ({ row }) {
-			const _quote = function* (r: NF.Row): Evaluation<EB.Row> {
-				return yield* match(r)
-					.with({ type: "empty" }, function* (): Evaluation<EB.Row> {
-						return { type: "empty" };
-					})
-					.with({ type: "extension" }, function* ({ label, value, row }) {
-						return EB.Constructors.Extension(label, yield* quote(lvl, value), yield* _quote(row));
-					})
-					.with({ type: "variable" }, function* ({ variable }): Evaluation<EB.Row> {
-						const v = match(variable)
-							.with({ type: "Bound" }, (b): EB.Variable => ({ type: "Bound", index: lvl - b.lvl - 1 }))
-							.otherwise(b => b);
-						return { type: "variable", variable: v };
-					})
-					.exhaustive();
-			};
-
-			return EB.Constructors.Row(yield* _quote(row));
-		})
+		.with({ type: "Row" }, ({ row }) => Do.let("quoted", quoteRow(lvl, row)).in(({ quoted }) => result(EB.Constructors.Row(quoted))))
 		.with({ type: "External" }, function* ({ name, args }) {
-			const quoted = yield* Eff.traverse(args, arg => quote(lvl, arg));
-			return quoted.reduce<EB.Term>((acc, arg) => EB.Constructors.App("Explicit", acc, arg), EB.Constructors.Var({ type: "Foreign", name }));
+			return yield* group(
+				args.map(arg => quote(lvl, arg)),
+				function* (quoted) {
+					return yield* result(quoted.reduce<EB.Term>((acc, arg) => EB.Constructors.App("Explicit", acc, arg), EB.Constructors.Var({ type: "Foreign", name })));
+				},
+			);
 		})
-		.with({ type: "Modal" }, function* ({ value, modalities }) {
-			return EB.Constructors.Modal(yield* quote(lvl, value), {
-				quantity: modalities.quantity,
-				liquid: yield* quote(lvl, modalities.liquid),
-			});
-		})
+		.with({ type: "Modal" }, ({ value, modalities }) =>
+			Do.let("quoted", quote(lvl, value))
+				.let("liquid", quote(lvl, modalities.liquid))
+				.in(({ quoted, liquid }) => result(EB.Constructors.Modal(quoted, { quantity: modalities.quantity, liquid }))),
+		)
 		.otherwise(function* (nf) {
 			throw new Error("Quote: Not implemented yet: " + (yield* display(nf)));
 		});
 }
 
-export function* closeVal(value: NF.Value): Evaluation<NF.Closure> {
+const quoteRow = function* (lvl: number, row: NF.Row): Evaluation<Machine<EB.Row>> {
+	return yield* match(row)
+		.with({ type: "empty" }, function* () {
+			return yield* result<EB.Row>({ type: "empty" });
+		})
+		.with({ type: "extension" }, ({ label, value, row: rest }) =>
+			Do.let("quoted", quote(lvl, value))
+				.let("tail", quoteRow(lvl, rest))
+				.in(({ quoted, tail }) => result(EB.Constructors.Extension(label, quoted, tail))),
+		)
+		.with({ type: "variable" }, function* ({ variable }) {
+			const v = match(variable)
+				.with({ type: "Bound" }, (b): EB.Variable => ({ type: "Bound", index: lvl - b.lvl - 1 }))
+				.otherwise(b => b);
+
+			return yield* result<EB.Row>({ type: "variable", variable: v });
+		})
+		.exhaustive();
+};
+
+export function* closeVal(value: NF.Value): Evaluation<Machine<NF.Closure>> {
 	const ctx = yield* M.reader.ask();
 
-	return {
-		type: "Closure",
-		ctx,
-		term: yield* quote(ctx.env.length + 1, value),
-	};
+	return yield* Do.let("term", quote(ctx.env.length + 1, value)).in(({ term }) => result({ type: "Closure", ctx, term }));
 }

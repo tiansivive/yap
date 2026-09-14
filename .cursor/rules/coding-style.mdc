@@ -25,6 +25,13 @@ alwaysApply: true
 - **KISS and DRY** — small functions compose
 - **Avoid bloated code** — strive for minimalism, avoid cryptic cleverness
 
+## File layout
+
+- **Files read top-down** — the main subject first, then whatever it needs, cascading. Don't open with a wall of types followed by a wall of functions
+- **Colocate types with their use** — a type belongs next to the function or namespace that consumes it
+- **Define things where they're used** — a helper with one caller belongs inline at that caller
+- **No echo types** — a type whose name restates the variable (`blame: Blame`, `runnable(f): f is Runnable`) hides the structure and adds a lookup. Write the structure unless the name classifies something with several inhabitants or uses, or enforces a distinction the structure can't
+
 ## ts-pattern
 
 - **Prefer `match` with guards** over if/else chains and ternaries for multi-way dispatch
@@ -39,7 +46,7 @@ alwaysApply: true
 - Elaboration programs yield only the capabilities they need; compose nested programs with `yield*`
 - Install complete handler sets at true boundaries. Inside an active run, use `Eff.with` for private/scoped effects and forward the remaining row; do not start a nested run that forks ambient state
 - The metacontext registry is separate from lexical `EB.Context`; do not recreate `ctx.metas`, `ctx.zonker`, or writer-to-reader synchronization
-- NbE owns its callstack and hides it behind public normalization entries; callstack actions do not belong in the elaboration row
+- NbE owns its machine (`elaboration/normalization/machine/`) and hides it behind public normalization entries; machine actions do not belong in the elaboration row
 - Inference: dispatch in `src/elaboration/elaborate.ts` + `src/elaboration/inference/*` (per-construct handlers)
 - Checking: `src/elaboration/check.ts` (dispatches on `[term, type]`)
 
@@ -47,11 +54,13 @@ alwaysApply: true
 
 - **`pnpm lint` stays green** — pre-existing debt is baselined in `eslint-suppressions.json`; new violations fail. Fix suppressed ones opportunistically, then `pnpm eslint . --prune-suppressions`.
 - **`_`-prefix declares a binding intentionally unused** (params, destructured elements, locals kept for documentation). Unprefixed unused bindings are errors — treat them as rot or bug symptoms.
-- **Sanctioned mutable cores** — fresh-name supplies, effect interpreters that own handler state, the independent solver-v2 driver (`verification/solver/v2/core.ts`), and the NbE CEK driver (`evaluation.v2.ts`) are deliberately imperative and carry scoped lint carve-outs. The evaluator loop is intentional architecture; machine state belongs to the private callstack handler. Don't cite these cores as precedent for mutation elsewhere.
+- **Sanctioned mutable cores** — fresh-name supplies, effect interpreters that own handler state, the independent solver-v2 driver (`verification/solver/v2/core.ts`), and the NbE CEK driver (`evaluation.v2.ts`) are deliberately imperative and carry scoped lint carve-outs. The evaluator loop is intentional architecture; machine state belongs to the machine's private handler (`normalization/machine/handlers.ts`). Don't cite these cores as precedent for mutation elsewhere.
 
 ## Comments
 
-- **Avoid unneeded comments** — code should be self-documenting
+- **A comment is the exception, not the rule** — the default is none; code and types carry the meaning
+- **A comment earns its place** by explaining a *why* that can't be recovered from the code, or by flagging where the code is knowingly not ideal
+- **Never restate the signature** — a doc line that names the parameters again is noise
+- **Rationale for a change belongs in the commit message**, not above the function forever
 - **Use types to document intent**
-- **Comments explain "why"**, not "what"
 - Brief and to the point
