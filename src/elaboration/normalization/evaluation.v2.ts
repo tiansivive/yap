@@ -545,8 +545,7 @@ function* evalRowPush(row: EB.Row): Evaluation<Machine<NF.Value>> {
 
 export type Project = { tag: "found"; value: NF.Value } | { tag: "blocked" } | { tag: "missing" } | { tag: "not-applicable" };
 
-type Observation = Project | { tag: "field"; term: EB.Term; ctx: EB.Context };
-
+/** Nu observation is copattern elimination: select one field rule, tie self, and schedule only that rule. */
 const observe = function* (base: NF.Value & { type: "Abs" }, label: string): Evaluation<Machine<Project>> {
 	const { binder, closure } = base;
 	if (closure.type !== "Closure") {
@@ -560,23 +559,26 @@ const observe = function* (base: NF.Value & { type: "Abs" }, label: string): Eva
 		return yield* result<Project>({ tag: "not-applicable" });
 	}
 
-	const select = (r: EB.Row): Observation =>
-		match(r)
-			.with({ type: "empty" }, (): Observation => ({ tag: "missing" }))
-			.with({ type: "variable" }, (): Observation => ({ tag: "blocked" }))
-			.with({ type: "extension" }, ({ label: current, value, row: rest }): Observation =>
-				current === label ? { tag: "field", term: value, ctx: EB.extend(closure.ctx, binder, base) } : select(rest),
+	const select = function* (r: EB.Row): Evaluation<Machine<Project>> {
+		return yield* match(r)
+			.with({ type: "empty" }, () => result<Project>({ tag: "missing" }))
+			.with({ type: "variable" }, () => result<Project>({ tag: "blocked" }))
+			.with(
+				{ type: "extension" },
+				({ label: current }) => current === label,
+				function* ({ value }) {
+					const ctx = EB.extend(closure.ctx, binder, base);
+					return yield* Do.let(
+						"value",
+						M.reader.local(_ => ctx, schedule.eval(value)),
+					).in(({ value }) => result<Project>({ tag: "found", value }));
+				},
 			)
+			.with({ type: "extension" }, ({ row: rest }) => select(rest))
 			.exhaustive();
+	};
 
-	return yield* match(select(row))
-		.with({ tag: "field" }, ({ term, ctx }) =>
-			Do.let(
-				"value",
-				M.reader.local(_ => ctx, schedule.eval(term)),
-			).in(({ value }) => result<Project>({ tag: "found", value })),
-		)
-		.otherwise(projected => result<Project>(projected));
+	return yield* select(row);
 };
 
 const project = function* (base: NF.Value, label: string): Evaluation<Machine<Project>> {
@@ -604,7 +606,6 @@ const project = function* (base: NF.Value, label: string): Evaluation<Machine<Pr
 						.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => lookup(value.row))
 						.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value }) => lookup(value.arg.row))
 						.with({ kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) => lookup(value.arg.row))
-						.with({ kind: "Sealed", value: NF.Patterns.Variant }, ({ value }) => lookup(value.arg.row))
 						.otherwise((): Project => ({ tag: "not-applicable" })),
 				),
 			);
@@ -642,9 +643,6 @@ const inject = function* (base: NF.Value, label: string, injected: NF.Value): Ev
 					NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit),
 				)
 				.with({ kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) =>
-					NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit),
-				)
-				.with({ kind: "Sealed", value: NF.Patterns.Variant }, ({ value }) =>
 					NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit),
 				)
 				.otherwise(() => undefined),
