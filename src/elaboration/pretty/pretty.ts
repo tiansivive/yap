@@ -78,6 +78,12 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				.with({ type: "Label" }, function* ({ name }) {
 					return `:${name}`;
 				})
+				.with({ type: "DepLabel" }, function* ({ name }) {
+					return `&${name}`;
+				})
+				.with({ type: "NuLabel" }, function* ({ name }) {
+					return `$${name}`;
+				})
 				.with({ type: "Meta" }, function* ({ val }) {
 					const entry = (yield* Metas.registry.get())[val];
 					if (entry?.solution) {
@@ -119,12 +125,18 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				.with({ type: "Pi" }, function* ({ variable, annotation }) {
 					return ["Π(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
+				.with({ type: "SigmaV2" }, function* ({ variable, annotation }) {
+					return ["Σ(", variable, ": ", yield* M.reader.local(bound(variable), go(annotation)), ")"] satisfies PP.Doc;
+				})
+				.with({ type: "Nu" }, function* ({ variable, annotation }) {
+					return ["ν(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+				})
 				.otherwise(() => {
 					throw new Error("_display Term Binder: Not implemented");
 				});
 
 			const arrow = match(binding)
-				.with({ type: "Sigma" }, () => ".")
+				.with({ type: "Sigma" }, { type: "SigmaV2" }, { type: "Nu" }, () => ".")
 				.with({ icit: "Implicit" }, () => "=>")
 				.otherwise(() => "->");
 

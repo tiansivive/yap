@@ -13,6 +13,10 @@ export const infer = (ast: Src.Term): M.Elaboration<AST> => {
 	const result = M.tracer.track({ tag: "src", type: "term", term: ast, metadata: { action: "infer" } }, function* () {
 		const ctx = yield* M.reader.ask();
 		const elaboration = match(ast)
+			/* `&foo` / `$foo` elaborate to the label variable itself, not to a projection. The
+			 * projection is what a reducible position wants, so the sites that need one desugar
+			 * explicitly; everything else keeps a symbolic reference that never reduces. */
+			.with({ type: "var", variable: { type: "dep-label" } }, { type: "var", variable: { type: "nu-label" } }, ({ variable }) => EB.lookup(variable, ctx))
 			.with({ type: "var" }, ({ variable }) => EB.lookup(variable, ctx))
 
 			.with({ type: "lit" }, EB.Lit.infer)

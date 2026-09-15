@@ -4,7 +4,7 @@ import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "@yap/elaboration/normalization";
 import type { Row } from "@yap/shared/rows";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import type { Subst } from "@yap/elaboration/unification/substitution";
 
 import type { Graph, NodeId, Payload } from "./graph";
@@ -111,6 +111,12 @@ const walk = (term: EB.Term, st: State): [NodeId, State] =>
 		.with({ type: "Abs", binding: { type: "Pi" } }, t => abs(Tags.PI, t, st))
 		.with({ type: "Abs", binding: { type: "Sigma" } }, t => abs(Tags.SIGMA, t, st))
 		.with({ type: "Abs", binding: { type: "Mu" } }, t => mu(t, st))
+		.with({ type: "Abs", binding: { type: "Nu" } }, () => {
+			throw new Error("Nu not yet lowered — Phase 2");
+		})
+		.with({ type: "Abs", binding: { type: "SigmaV2" } }, () => {
+			throw new Error("SigmaV2 not yet lowered — Phase 2");
+		})
 		.with({ type: "Abs", binding: { type: "Let" } }, t => letBinding(t, st))
 		.with({ type: "App" }, t => app(t, st))
 		.with({ type: "Row" }, t => row(t.row, t.id, st))
@@ -141,6 +147,9 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 		.with({ type: "Free" }, ({ name }) => intern(Tags.VAR_FREE, name, "freeVars", tid, st))
 		.with({ type: "Foreign" }, ({ name }) => intern(Tags.VAR_FOREIGN, name, "foreignVars", tid, st))
 		.with({ type: "Label" }, ({ name }) => emit(st, Tags.VAR_LABEL, { name }, prov(tid, st)))
+		.with({ type: P.union("DepLabel", "NuLabel") }, ({ name }) => {
+			throw new Error(`Cannot lower an unresolved field reference: ${name}`);
+		})
 		.with({ type: "Meta" }, ({ val, lvl }) => {
 			const zonked = st.zonker?.[val];
 
@@ -184,6 +193,12 @@ const bindingPayload = (b: EB.Binding, level: number): Payload =>
 		.with({ type: "Pi" }, b => ({ variable: b.variable, icit: b.icit, level }))
 		.with({ type: "Sigma" }, b => ({ variable: b.variable, level }))
 		.with({ type: "Mu" }, b => ({ variable: b.variable, source: b.source, level }))
+		.with({ type: "Nu" }, () => {
+			throw new Error("Nu not yet lowered — Phase 2");
+		})
+		.with({ type: "SigmaV2" }, () => {
+			throw new Error("SigmaV2 not yet lowered — Phase 2");
+		})
 		.with({ type: "Let" }, b => ({ variable: b.variable, level }))
 		.exhaustive();
 

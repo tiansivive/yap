@@ -41,6 +41,12 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 				.with({ type: "Foreign" }, function* ({ name }) {
 					return `FFI.${name}`;
 				})
+				.with({ type: "DepLabel" }, function* ({ name }) {
+					return `&${name}`;
+				})
+				.with({ type: "NuLabel" }, function* ({ name }) {
+					return `$${name}`;
+				})
 				.with({ type: "Meta" }, function* ({ val }) {
 					const entry = (yield* Metas.registry.get())[val];
 					if (entry?.solution) {
@@ -82,10 +88,17 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 				.with({ type: "Sigma" }, function* ({ variable, annotation }) {
 					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
+				.with({ type: "SigmaV2" }, function* ({ variable, annotation }) {
+					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+				})
+				.with({ type: "Nu" }, function* ({ variable, annotation }) {
+					return ["ν(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+				})
 				.exhaustive();
 
 			const arrow = match(binder)
 				.with({ type: "Sigma" }, () => ".")
+				.with({ type: "SigmaV2" }, () => ".")
 				.with({ icit: "Implicit" }, () => "=>")
 				.otherwise(() => "->");
 
