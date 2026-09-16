@@ -34,8 +34,14 @@ import assert from "assert";
 import * as Lit from "@yap/shared/literals";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
-/** Default fuel cap for a drive; exceeding it throws. */
-export const MAX_STEPS = 10_000_000;
+/**
+ * Default fuel cap for a drive; exceeding it throws. Override with `YAP_MAX_STEPS`.
+ *
+ * The cap bounds steps, not allocation: a loop that allocates per step can exhaust the heap
+ * long before the counter arrives, which reports as an OOM instead of a blamed term. A lower
+ * cap trades headroom for a diagnostic that names the divergent term.
+ */
+export const MAX_STEPS = Number(process.env.YAP_MAX_STEPS) || 10_000_000;
 
 /** Crash messages are plain expressions: a boundary run over snapshots, like any other boundary. */
 const shown = (ctx: EB.Context, program: () => ReturnType<typeof display>): string =>

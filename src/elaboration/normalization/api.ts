@@ -48,12 +48,12 @@ export function* whnf(term: EB.Term, opts?: Machine.EvalOptions) {
 	return yield* fresh(() => Machine.evaluate(term), { noInlineBindings: true, noReduceEliminations: true }, opts?.maxSteps);
 }
 
-export function* quote(lvl: number, val: Value) {
-	return yield* fresh(() => Machine.drive(Quoting.quote(lvl, val), steps => `Quotation exceeded maximum steps (${steps}).`));
+export function* quote(lvl: number, val: Value, opts?: Machine.EvalOptions) {
+	return yield* fresh(() => Machine.drive(Quoting.quote(lvl, val), steps => `Quotation exceeded maximum steps (${steps}).`), defaultMode, opts?.maxSteps);
 }
 
-export function* closeVal(value: Value) {
-	return yield* fresh(() => Machine.drive(Quoting.closeVal(value), steps => `Quotation exceeded maximum steps (${steps}).`));
+export function* closeVal(value: Value, opts?: Machine.EvalOptions) {
+	return yield* fresh(() => Machine.drive(Quoting.closeVal(value), steps => `Quotation exceeded maximum steps (${steps}).`), defaultMode, opts?.maxSteps);
 }
 
 export function* force(value: Value) {

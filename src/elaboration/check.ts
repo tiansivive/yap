@@ -86,8 +86,11 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 			})
 			.with([{ type: "struct" }, NF.Patterns.Type], function* ([{ row }]) {
 				const prepared = yield* DependentRows.prepare(row, ctx.env.length);
+				/* A struct checked against Type is a type-level position, so muContext must tag the
+				 * enclosing lets — otherwise a self-reference in a field is not flagged and the
+				 * definition never gets its Mu wrap. Variants and rows do this at their own entries. */
 				const [body, us] = yield* M.reader.local(
-					c => EB.bind(c, { type: "SigmaV2", variable: "$sig" }, NF.Constructors.Row(prepared.value)),
+					c => EB.bind(EB.muContext(c), { type: "SigmaV2", variable: "$sig" }, NF.Constructors.Row(prepared.value)),
 					DependentRows.annotate(row, prepared),
 				);
 
