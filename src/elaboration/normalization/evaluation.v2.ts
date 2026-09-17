@@ -213,6 +213,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		)
 		.with({ type: "Var", variable: { type: "Bound" } }, function* ({ variable }) {
 			const entry = ctx.env[variable.index];
+
 			return yield* match(entry.type[0])
 				.with({ type: "Mu" }, function* () {
 					return yield* result(NF.Constructors.Neutral("Sealed", entry.nf));

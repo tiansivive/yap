@@ -228,6 +228,13 @@ export const BindingPatterns = {
 
 export const CtorPatterns = {
 	Var: { type: "Var" },
+	Vars: {
+		Bound: { type: "Var", variable: { type: "Bound" } },
+		Foreign: { type: "Var", variable: { type: "Foreign" } },
+		DepLabel: { type: "Var", variable: { type: "DepLabel" } },
+		NuLabel: { type: "Var", variable: { type: "NuLabel" } },
+		Meta: { type: "Var", variable: { type: "Meta" } },
+	},
 	Lit: { type: "Lit" },
 	Lambda: { type: "Abs", binding: { type: "Lambda" } },
 	Pi: { type: "Abs", binding: { type: "Pi" } },

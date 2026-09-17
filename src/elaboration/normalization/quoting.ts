@@ -135,7 +135,7 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 					"body",
 					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
 				)
-					.let("ann", quote(lvl + 1, annotation))
+					.let("ann", quote(lvl, annotation))
 					.in(({ body, ann }) => result(EB.Constructors.SigmaV2(variable, ann, body))),
 			);
 		})

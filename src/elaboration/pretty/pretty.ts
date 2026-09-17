@@ -78,11 +78,11 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				.with({ type: "Label" }, function* ({ name }) {
 					return `:${name}`;
 				})
-				.with({ type: "DepLabel" }, function* ({ name }) {
-					return `&${name}`;
+				.with({ type: "DepLabel" }, function* ({ name, index }) {
+					return `&${name}` + (opts.deBruijn ? `#I${index}` : "");
 				})
-				.with({ type: "NuLabel" }, function* ({ name }) {
-					return `$${name}`;
+				.with({ type: "NuLabel" }, function* ({ name, index }) {
+					return `$${name}` + (opts.deBruijn ? `#I${index}` : "");
 				})
 				.with({ type: "Meta" }, function* ({ val }) {
 					const entry = (yield* Metas.registry.get())[val];
@@ -126,7 +126,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 					return ["Π(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
 				.with({ type: "SigmaV2" }, function* ({ variable, annotation }) {
-					return ["Σ(", variable, ": ", yield* M.reader.local(bound(variable), go(annotation)), ")"] satisfies PP.Doc;
+					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
 				.with({ type: "Nu" }, function* ({ variable, annotation }) {
 					return ["ν(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;

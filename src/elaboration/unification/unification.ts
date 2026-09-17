@@ -88,11 +88,11 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 					yield* unify(v, subst[meta.variable.val], lvl);
 				},
 			)
-			.with([NF.Patterns.Flex, P._], function* ([meta, v]) {
-				yield* Sub.subst.bind(yield* bind(meta.variable, v));
+			.with([NF.Patterns.Flex, P._], function* ([meta, _]) {
+				yield* Sub.subst.bind(yield* bind(meta.variable, r));
 			})
-			.with([P._, NF.Patterns.Flex], function* ([v, meta]) {
-				yield* Sub.subst.bind(yield* bind(meta.variable, v));
+			.with([P._, NF.Patterns.Flex], function* ([_, meta]) {
+				yield* Sub.subst.bind(yield* bind(meta.variable, l));
 			})
 			.with([NF.Patterns.Lit, NF.Patterns.Lit], function* ([lit1, lit2]) {
 				if (!_.isEqual(lit1.value, lit2.value)) {

@@ -13,6 +13,7 @@ import { match } from "ts-pattern";
 import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
 import { Provenance } from "./provenance";
+import { freshMeta } from "./supply";
 import assert from "node:assert";
 
 type Origin = "inserted" | "source";
@@ -84,24 +85,24 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 		 * binder of the right kind without it is not the one, so the search continues outward.
 		 * The resolved index rides in the variable, so consumers keep the choice between the
 		 * symbolic label and the projection it desugars to. */
-		const field = match([nf, variable, binder] as const)
-			.with([NF.Patterns.Row, Src.Patterns.Vars.DepLabel, EB.BindingPatterns.SigmaV2], ([{ row }, { value }]) =>
-				R.lookup(row, value) ? ({ type: "DepLabel", name: value, index: i } as const) : undefined,
-			)
-			.with([NF.Patterns.Row, Src.Patterns.Vars.NuLabel, EB.BindingPatterns.Nu], ([{ row }, { value }]) =>
-				R.lookup(row, value) ? ({ type: "NuLabel", name: value, index: i } as const) : undefined,
-			)
-			.otherwise(() => undefined);
+		const carries = ([{ row }, { value }]: readonly [Extract<NF.Value, { type: "Row" }>, Src.Variable, unknown]) => R.lookup(row, value) !== undefined;
 
-		if (field) {
-			const type = match(nf)
-				.with(NF.Patterns.Row, ({ row }) => R.lookup(row, field.name))
-				.otherwise(() => undefined);
-			assert(type, "A resolved field reference must have a type in the binder's row");
-			return [EB.Constructors.Var(field), type, zeros] satisfies EB.AST;
-		}
+		return yield* match([nf, variable, binder] as const)
+			/* `&foo` denotes the sibling's *value*, whose type is unknown until the row has been
+			 * elaborated — the Sigma boundary constrains this meta then. */
+			.with([NF.Patterns.Row, Src.Patterns.Vars.DepLabel, EB.BindingPatterns.SigmaV2], carries, function* ([, { value }]) {
+				const meta = yield* freshMeta(ctx.env.length, NF.Type);
 
-		return yield* _lookup(i + 1, variable, rest);
+				return [EB.Constructors.Var({ type: "DepLabel", name: value, index: i }), NF.Constructors.Flex(meta), zeros] satisfies EB.AST;
+			})
+			/* `$foo` keeps the slot, because a ν annotation carries field types, not field values. */
+			.with([NF.Patterns.Row, Src.Patterns.Vars.NuLabel, EB.BindingPatterns.Nu], carries, function* ([{ row }, { value }]) {
+				const type = R.lookup(row, value);
+				assert(type, "A resolved field reference must have a type in the binder's row");
+
+				return [EB.Constructors.Var({ type: "NuLabel", name: value, index: i }), type, zeros] satisfies EB.AST;
+			})
+			.otherwise(() => _lookup(i + 1, variable, rest));
 	};
 
 	return yield* _lookup(

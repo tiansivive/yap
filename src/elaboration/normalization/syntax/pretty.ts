@@ -41,11 +41,11 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 				.with({ type: "Foreign" }, function* ({ name }) {
 					return `FFI.${name}`;
 				})
-				.with({ type: "DepLabel" }, function* ({ name }) {
-					return `&${name}`;
+				.with({ type: "DepLabel" }, function* ({ name, lvl }) {
+					return `&${name}` + (opts.deBruijn ? `#L${lvl}` : "");
 				})
-				.with({ type: "NuLabel" }, function* ({ name }) {
-					return `$${name}`;
+				.with({ type: "NuLabel" }, function* ({ name, lvl }) {
+					return `$${name}` + (opts.deBruijn ? `#L${lvl}` : "");
 				})
 				.with({ type: "Meta" }, function* ({ val }) {
 					const entry = (yield* Metas.registry.get())[val];

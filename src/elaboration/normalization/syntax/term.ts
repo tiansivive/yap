@@ -180,6 +180,17 @@ export const Row: Value = mk({
 	value: { type: "Atom", value: "Row" },
 });
 
+/*
+ * Occupies a slot that exists only so the slot has a name. A Sigma's annotation row is opened
+ * to make sibling labels resolvable, not to say anything about them, so its entries carry no
+ * information and nothing may read one. It is deliberately conspicuous: a check that meets it
+ * should fail rather than quietly succeed.
+ */
+export const Irrelevant: Value = mk({
+	type: "Lit",
+	value: { type: "Atom", value: "Irrelevant" },
+});
+
 export const Indexed: Value = mk({
 	type: "Var",
 	variable: { type: "Foreign", name: "Indexed" },
@@ -246,6 +257,7 @@ export const Patterns = {
 	Mu: { type: "Abs", binder: { type: "Mu" } } as const,
 	Nu: { type: "Abs", binder: { type: "Nu" } } as const,
 	Row: { type: "Row" } as const,
+	Irrelevant: { type: "Lit", value: { type: "Atom", value: "Irrelevant" } } as const,
 	Modal: { type: "Modal" } as const,
 
 	Recursive: {
