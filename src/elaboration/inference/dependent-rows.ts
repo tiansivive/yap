@@ -15,6 +15,9 @@ import assert from "node:assert";
 type Source = R.Row<Src.Term, Src.Variable>;
 
 const Patterns = {
+	Terms: {
+		Struct: { type: "struct" } as const,
+	},
 	Rows: {
 		Empty: { type: "empty" } as const,
 		Extension: { type: "extension" } as const,
@@ -51,17 +54,15 @@ export const check = function* (source: Source, expected: NF.Row, placeholders: 
 				),
 			),
 		)
-		.with(
-			[Patterns.Rows.Variable, Patterns.Rows.Empty],
-			[Patterns.Rows.Variable, Patterns.Rows.Extension],
-			[Patterns.Rows.Empty, Patterns.Rows.Variable],
-			function* ([, src]) {
-				const inferred = yield* infer(src, placeholders);
-				yield* M.constrain({ type: "assign", left: NF.Constructors.Row(inferred.type), right: NF.Constructors.Row(expected), lvl: ctx.env.length });
+		.with([Patterns.Rows.Variable, Patterns.Rows.Empty], [Patterns.Rows.Variable, Patterns.Rows.Extension], function* ([, src]) {
+			const inferred = yield* infer(src, placeholders);
+			yield* M.constrain({ type: "assign", left: NF.Constructors.Row(inferred.type), right: NF.Constructors.Row(expected), lvl: ctx.env.length });
 
-				return [inferred.term, inferred.usages] satisfies [EB.Row, Q.Usages];
-			},
-		)
+			return [inferred.term, inferred.usages] satisfies [EB.Row, Q.Usages];
+		})
+		.with([Patterns.Rows.Empty, Patterns.Rows.Variable], function* () {
+			return yield* M.fail(Err.Impossible("Dependent value row cannot have a tail variable"));
+		})
 		.with([Patterns.Rows.Extension, Patterns.Rows.Variable], ([exp, src]) => M.fail(Err.MissingLabel(exp.label, src)))
 		.with([Patterns.Rows.Empty, Patterns.Rows.Extension], ([, src]) => M.fail(Err.MissingLabel(src.label, expected)))
 		.otherwise(function* () {
@@ -109,6 +110,9 @@ export const infer = function* (source: Source, placeholders: NF.Row): M.Elabora
 
 			return { term: R.Constructors.Variable(term.variable), type: slot, usages } satisfies Inferred;
 		})
+		.with([Patterns.Rows.Variable, Patterns.Rows.Empty], [Patterns.Rows.Variable, Patterns.Rows.Extension], function* () {
+			return yield* M.fail(Err.Impossible("Dependent value row cannot have a tail variable"));
+		})
 		.otherwise(function* () {
 			const ctx = yield* M.reader.ask();
 
@@ -128,7 +132,12 @@ export const fields = function* (source: Source): M.Elaboration<[EB.Row, Q.Usage
 			return [R.Constructors.Empty<EB.Term, EB.Variable>(), Q.noUsage(ctx.env.length)] satisfies [EB.Row, Q.Usages];
 		})
 		.with(Patterns.Rows.Extension, function* ({ label, value, row }) {
-			const [term, , usages] = yield* EB.infer(value);
+			const [term, usages] = yield* match(value)
+				.with(Patterns.Terms.Struct, () => EB.check(value, NF.Type))
+				.otherwise(function* () {
+					const [term, , usages] = yield* EB.infer(value);
+					return [term, usages] as const;
+				});
 			const [rest, restUsages] = yield* fields(row);
 
 			return [R.Constructors.Extension(label, term, rest), Q.add(usages, restUsages)] satisfies [EB.Row, Q.Usages];
@@ -158,15 +167,13 @@ export const placeholders = (source: Source, lvl: number): M.Elaboration<EB.Row>
 	shaped(source, lvl, () => M.of<EB.Term>(EB.Constructors.Lit({ type: "Atom", value: "Irrelevant" })));
 
 /** Built from the source so the labels agree by construction and the walkers above descend both rows in step. */
-const shaped = function* (source: Source, lvl: number, slot: () => M.Elaboration<EB.Term>): M.Elaboration<EB.Row> {
+const shaped = function* (source: Source, _lvl: number, slot: () => M.Elaboration<EB.Term>): M.Elaboration<EB.Row> {
 	return yield* match(source)
 		.with(Patterns.Rows.Empty, () => M.of<EB.Row>(R.Constructors.Empty<EB.Term, EB.Variable>()))
 		.with(Patterns.Rows.Extension, function* ({ label, row }) {
-			return R.Constructors.Extension<EB.Term, EB.Variable>(label, yield* slot(), yield* shaped(row, lvl, slot));
+			return R.Constructors.Extension<EB.Term, EB.Variable>(label, yield* slot(), yield* shaped(row, _lvl, slot));
 		})
-		.with(Patterns.Rows.Variable, function* () {
-			return R.Constructors.Variable<EB.Term, EB.Variable>(yield* EB.freshMeta(lvl, NF.Row));
-		})
+		.with(Patterns.Rows.Variable, () => M.of<EB.Row>(R.Constructors.Empty<EB.Term, EB.Variable>()))
 		.exhaustive();
 };
 
