@@ -653,27 +653,39 @@ const projectValue = function* (base: NF.Value, label: string): Evaluation<Machi
 };
 
 const inject = function* (base: NF.Value, label: string, injected: NF.Value): Evaluation<Machine<NF.Value | undefined>> {
-	const set = (row: NF.Row): NF.Row =>
-		match(row)
-			.with({ type: "empty" }, (): NF.Row => NF.Constructors.Extension(label, injected, row))
-			.with({ type: "variable" }, (): NF.Row => NF.Constructors.Extension(label, injected, row))
-			.with({ type: "extension" }, ({ label: current, value, row }) =>
-				current === label ? NF.Constructors.Extension(label, injected, row) : NF.Constructors.Extension(current, value, set(row)),
-			)
-			.exhaustive();
-
 	return yield* Do.let("known", schedule.view(base)).in(({ known }) =>
-		result(
-			match(known)
-				.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => NF.Constructors.Row(set(value.row)))
-				.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value }) =>
-					NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit),
-				)
-				.with({ kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) =>
-					NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit),
-				)
-				.otherwise(() => undefined),
-		),
+		match(known)
+			.with({ kind: "Sealed", value: NF.Patterns.Nu }, function* ({ value }) {
+				if (value.closure.type !== "Closure" || value.binder.annotation.type !== "Row") {
+					return yield* result(undefined);
+				}
+				const body = match(value.closure.term)
+					.with(EB.CtorPatterns.Struct, ({ arg }) => arg.row)
+					.otherwise(() => undefined);
+				if (!body) {
+					return yield* result(undefined);
+				}
+
+				const annotation = NF.Constructors.Row(NF.Constructors.Extension(label, NF.Irrelevant, value.binder.annotation.row));
+				const ctx = yield* M.reader.ask();
+				return yield* Do.let("quoted", Quoting.quote(ctx.env.length + 1, injected)).in(({ quoted }) =>
+					result(
+						NF.Constructors.Nu(
+							value.binder.variable,
+							annotation,
+							NF.Constructors.Closure(value.closure.ctx, EB.Constructors.Struct(R.Constructors.Extension(label, quoted, body))),
+						),
+					),
+				);
+			})
+			.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value }) =>
+				result(NF.Constructors.App(value.func, NF.Constructors.Row(NF.Constructors.Extension(label, injected, value.arg.row)), value.icit)),
+			)
+			.with({ kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) =>
+				result(NF.Constructors.App(value.func, NF.Constructors.Row(NF.Constructors.Extension(label, injected, value.arg.row)), value.icit)),
+			)
+			.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => result(NF.Constructors.Row(NF.Constructors.Extension(label, injected, value.row))))
+			.otherwise(() => result(undefined)),
 	);
 };
 

@@ -80,6 +80,7 @@ const DOWNSTREAM = [
 	/synth: case not implemented for term [\s\S]*?(?=; (?:synth|Subtype|Projection|\w+ not yet)|$)/g,
 	/Subtype not implemented for [\s\S]*?(?=; (?:synth|Subtype|Projection|\w+ not yet)|$)/g,
 	/Projection expected a Sigma type[^;]*/g,
+	/Injection expected a Schema or Variant type[^;]*/g,
 ];
 
 const elaborationErrors = (source: string): string[] =>

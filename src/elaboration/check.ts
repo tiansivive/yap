@@ -160,8 +160,9 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					c => EB.bind(c, { type: "Nu", variable: "$nu" }, NF.Constructors.Row(checkedWit)),
 					DependentRows.check(tm.row, expectedRow, checkedWit),
 				);
+				const annotation = yield* DependentRows.placeholders(tm.row, ctx.env.length);
 
-				return [EB.Constructors.Nu("$nu", EB.Constructors.Row(checked), EB.Constructors.Struct(body)), us] satisfies Result;
+				return [EB.Constructors.Nu("$nu", EB.Constructors.Row(annotation), EB.Constructors.Struct(body)), us] satisfies Result;
 			})
 			.with([{ type: "struct" }, NF.Patterns.Schema], function* ([tm, val]) {
 				const bindings = yield* extract(tm.row, ctx.env.length);
