@@ -47,6 +47,26 @@ export const MAX_STEPS = Number(process.env.YAP_MAX_STEPS) || 10_000_000;
 const shown = (ctx: EB.Context, program: () => ReturnType<typeof display>): string =>
 	Eff.run(program, [M.reader.handlers(ctx), Metas.registry.handlers({})])[0];
 
+const traceMatch = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]) => {
+	if (process.env.YAP_TRACE_MATCH !== "1") {
+		return;
+	}
+
+	console.error("\n[YAP_TRACE_MATCH] alternatives:", alts.length);
+	console.error(
+		"[YAP_TRACE_MATCH] scrutinee:",
+		shown(ctx, () => display(nf)),
+	);
+	try {
+		console.error(
+			"[YAP_TRACE_MATCH] raw:",
+			JSON.stringify(nf, (_key, value: unknown) => (typeof value === "function" ? "[Function]" : value), 2),
+		);
+	} catch (error) {
+		console.error("[YAP_TRACE_MATCH] raw: <unprintable>", error);
+	}
+};
+
 export type EvalOptions = {
 	/** fuel cap: maximum number of evaluation steps before throwing an error. Default is `MAX_STEPS`. */
 	maxSteps?: number;
@@ -766,11 +786,13 @@ export const schedule = {
 
 	/** Runs the alternative that fires; a blocked match results in the suspension so `resume` can retry it. */
 	*matching(nf: NF.Value, alts: EB.Alternative[], suspension: NF.Value): Evaluation<Machine<NF.Value>> {
+		const ctx = yield* M.reader.ask();
+		traceMatch(ctx, nf, alts);
+
 		if (alts.length === 0) {
 			throw new Error("Match: No alternative matched");
 		}
 
-		const ctx = yield* M.reader.ask();
 		const [alt, ...rest] = alts;
 
 		return yield* Do.let("verdict", schedule.meet(alt.pattern, nf)).in(({ verdict }) =>
@@ -851,6 +873,14 @@ export const schedule = {
 					return zip(p.patterns, value.arg.row);
 				})
 				.with([NF.Patterns.Schema, { type: "Struct" }], [NF.Patterns.Struct, { type: "Struct" }], ([{ arg }, p]) => meetAll(p.row, arg.row))
+				.with([NF.Patterns.Nu, { type: "Struct" }], function* ([value, p]) {
+					assert(value.binder.annotation.type === "Row", "Nu binder annotation must be a Row");
+					/**
+					 * Nu abstractions are data under a binder. We use the annotation to identify the labels we want to observe.
+					 * This is typical of coinductive data which is defined by destructors and copatterns.
+					 */
+					return yield* meetAll(p.row, value.binder.annotation.row, label => observe(value, label));
+				})
 				.with([NF.Patterns.Row, { type: "Row" }], ([value, p]) => meetAll(p.row, value.row))
 				.with([NF.Patterns.Tagged, { type: "Variant", row: { type: "extension" } }], function* ([{ arg }, p]) {
 					const value = NF.TaggedValue.extract(arg.row);
@@ -1113,7 +1143,16 @@ const combineMeet = (left: Meet, right: Meet): Meet =>
 		.with([{ tag: "matched" }, { tag: "matched" }], ([l, r]) => matched([...l.bindings, ...r.bindings]))
 		.exhaustive();
 
-const meetAll = function* (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Evaluation<Machine<Meet>> {
+/**
+ *
+ * Row shaped data is sometimes defined in terms of abstractions which carry a closure.
+ * In those cases, we need to oberseve the fields through the closure hence the callback param.
+ */
+const meetAll = function* (
+	pats: R.Row<EB.Pattern, string>,
+	vals: NF.Row,
+	observe?: (label: string) => Evaluation<Machine<Project>>,
+): Evaluation<Machine<Meet>> {
 	return yield* match([pats, vals])
 		.with([{ type: "empty" }, P._], () => result(matched([])))
 		.with([{ type: "variable" }, P._], ([r, tail]) => {
@@ -1133,8 +1172,17 @@ const meetAll = function* (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Evalu
 
 			const tail = rewritten.right;
 
-			return yield* Do.let("current", schedule.meet(r1.value, tail.value))
-				.let("rest", meetAll(r1.row, tail.row))
+			const current = observe
+				? Do.let("projected", observe(r1.label)).in(({ projected }) =>
+						match(projected)
+							.with({ tag: "found" }, ({ value }) => schedule.meet(r1.value, value))
+							.with({ tag: "blocked" }, () => result(blocked()))
+							.otherwise(() => result(mismatch())),
+					)
+				: schedule.meet(r1.value, tail.value);
+
+			return yield* Do.let("current", current)
+				.let("rest", meetAll(r1.row, tail.row, observe))
 				.in(({ current, rest }) => result(combineMeet(current, rest)));
 		})
 		.exhaustive();

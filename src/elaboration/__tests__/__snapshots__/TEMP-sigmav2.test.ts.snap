@@ -53,6 +53,14 @@ normal     ν($nu: [ a: Num, b: Num ]) -> (closure: Struct [ a: 1, b: $a ] -| Γ
 readback   ν($nu: [ a: Num, b: Num ]) . Struct [ a: 1, b: $a ]"
 `;
 
+exports[`sigma and nu > 04 nu-label refs, inference path > 010 $foo self cycle is inert until projected 1`] = `
+"source     { a: $a }
+elaborated ν($nu: [ a: ?1 ]) . Struct [ a: $a ]
+type       Schema [ a: ?1 ]
+normal     ν($nu: [ a: ?1 ]) -> (closure: Struct [ a: $a ] -| Γ: $nu)
+readback   ν($nu: [ a: ?1 ]) . Struct [ a: $a ]"
+`;
+
 exports[`sigma and nu > 05 nu elimination by projection > 011 project a plain field 1`] = `
 "source     { let P: Type = { a: Num }; let p: P = { a: 1 }; return p.a; }
 elaborated {

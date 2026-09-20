@@ -116,7 +116,16 @@ describe("sigma and nu", () => {
 
 	describe("04 nu-label refs, inference path", () => {
 		works("009 $foo in a field value", `{ a: 1, b: $a }`);
-		rejects("010 $foo self cycle", `{ a: $a }`, "No enclosing record field named a");
+		it("010 $foo self cycle is inert until projected", () => {
+			/*
+			 * A self-reference inside Nu is inert until an observation demands it. This raw expression
+			 * has no generalization boundary, so the field type remains an unconstrained meta; the point
+			 * is that the Nu value itself reaches WHNF. Projection observes the cyclic field and is
+			 * bounded by evaluator fuel.
+			 */
+			expect(run(`{ a: $a }`)).toMatchSnapshot();
+			expect(() => run(`{ a: $a }.a`)).toThrow("exceeded maximum steps");
+		});
 	});
 
 	describe("05 nu elimination by projection", () => {
