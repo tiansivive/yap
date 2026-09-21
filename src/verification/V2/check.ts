@@ -95,6 +95,33 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					});
 					return { vc } satisfies VerificationArtefacts;
 				})
+				.with([EB.CtorPatterns.Nu, NF.Patterns.SigmaV2], function* ([term, type]) {
+					const value = yield* NF.evaluate(term);
+					return yield* match(value)
+						.with(NF.Patterns.Nu, function* () {
+							const schema = yield* NF.apply(type.binder, type.closure, value);
+							return yield* check(term, schema);
+						})
+						.otherwise(function* () {
+							throw new Error("Nu checking expected a Nu value");
+						});
+				})
+				.with([EB.CtorPatterns.Nu, NF.Patterns.Schema], function* ([term, type]) {
+					const value = yield* NF.evaluate(term);
+					return yield* match(value)
+						.with(NF.Patterns.Nu, function* ({ binder, closure }) {
+							return yield* match(closure)
+								.with({ type: "Closure", term: EB.CtorPatterns.Struct }, ({ ctx, term: body }) =>
+									reader.local(_ => EB.extend(ctx, binder, value), check(body, type)),
+								)
+								.otherwise(function* () {
+									throw new Error("Nu checking expected a Struct closure body");
+								});
+						})
+						.otherwise(function* () {
+							throw new Error("Nu checking expected a Nu value");
+						});
+				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Sigma], function* ([term, type]) {
 					const evaluated = yield* NF.evaluate(term);
 					const innerViewed = yield* NF.view(evaluated);

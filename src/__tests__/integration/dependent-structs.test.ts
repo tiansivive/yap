@@ -2,6 +2,16 @@ import { describe, expect, test } from "vitest";
 import { runScript, snap } from "./helpers/pipeline";
 
 describe("Integration — Nested dependent structs", () => {
+	test("Nu self-observation verifies against a dependent schema", () => {
+		const result = runScript(`
+let pair: { a: Num, b: Num[| \\v -> v == (&a + 1) |] } = { a: 2, b: $a + 1 };
+		`);
+		const decl = result.declarations.find(d => d.name === "pair");
+
+		expect(decl?.stages?.ivl).not.toBe("");
+		expect(decl?.stages?.validity).toBe("valid");
+	});
+
 	test("nested dependent struct with sibling-label projection", () => {
 		const result = runScript(`{ point: { x: 1, y: 2 }, halved: { a: :point.x / 2, b: :point.y / 2 } }`);
 		const decl = result.declarations[0];

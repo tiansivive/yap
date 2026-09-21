@@ -60,7 +60,7 @@ export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 		.with(NF.Patterns.Row, function* () {
 			return Build.Row;
 		})
-		.with(NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Schema, NF.Patterns.Variant, NF.Patterns.Indexed, function* () {
+		.with(NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, NF.Patterns.Schema, NF.Patterns.Variant, NF.Patterns.Indexed, function* () {
 			return Build.uninterpreted("Schema");
 		})
 		.with(NF.Patterns.Mu, function* (mu) {
@@ -86,7 +86,7 @@ export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 		.with({ type: "External" }, function* (e) {
 			return Build.uninterpreted(`External:${e.name}`);
 		})
-		.with(NF.Patterns.DepLabel, ({ variable }) => mkSort(variable.annotation))
+		.with(NF.Patterns.DepLabel, NF.Patterns.NuLabel, ({ variable }) => mkSort(variable.annotation))
 		.with(NF.Patterns.Var, function* (v) {
 			if (v.variable.type === "Bound") {
 				return yield* mkSort(ctx.env[EB.lvl2idx(ctx, v.variable.lvl)].type[2]);
@@ -220,6 +220,9 @@ export const term = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = 
 		})
 		.with(NF.Patterns.DepLabel, function* ({ variable }) {
 			return Build.const_(`&${variable.lvl}.${variable.name}`, yield* mkSort(variable.annotation));
+		})
+		.with(NF.Patterns.NuLabel, function* ({ variable }) {
+			return Build.const_(`$${variable.lvl}.${variable.name}`, yield* mkSort(variable.annotation));
 		})
 		.with(NF.Patterns.Var, function* (v) {
 			if (v.variable.type === "Bound") {

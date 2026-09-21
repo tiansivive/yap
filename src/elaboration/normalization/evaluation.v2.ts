@@ -137,7 +137,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			const lvl = ctx.env.length - 1 - variable.index;
 			const symbolic = match(variable)
 				.with({ type: "DepLabel" }, v => NF.Constructors.DepLabel(v.name, lvl, v.annotation))
-				.with({ type: "NuLabel" }, v => NF.Constructors.NuLabel(v.name, lvl))
+				.with({ type: "NuLabel" }, v => NF.Constructors.NuLabel(v.name, lvl, v.annotation))
 				.exhaustive();
 			const base = ctx.env[variable.index]?.nf;
 

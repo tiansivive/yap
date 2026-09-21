@@ -101,7 +101,7 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 				const type = R.lookup(row, value);
 				assert(type, "A resolved field reference must have a type in the binder's row");
 
-				return [EB.Constructors.Var({ type: "NuLabel", name: value, index: i }), type, zeros] satisfies EB.AST;
+				return [EB.Constructors.Var({ type: "NuLabel", name: value, index: i, annotation: type }), type, zeros] satisfies EB.AST;
 			})
 			.otherwise(() => _lookup(i + 1, variable, rest));
 	};

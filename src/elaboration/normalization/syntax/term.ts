@@ -52,7 +52,7 @@ export type Variable =
 	| { type: "Label"; name: string }
 	| { type: "Foreign"; name: string }
 	| { type: "DepLabel"; name: string; lvl: number; annotation: Value }
-	| { type: "NuLabel"; name: string; lvl: number }
+	| { type: "NuLabel"; name: string; lvl: number; annotation: Value }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
@@ -160,7 +160,8 @@ export const Constructors = {
 	StuckProj: (base: Value, label: string): Value => Constructors.Neutral("Blocked", Constructors.Proj(base, label)),
 	DepLabel: (name: string, lvl: number, annotation: Value): Value =>
 		Constructors.Neutral("Symbolic", Constructors.Var({ type: "DepLabel", name, lvl, annotation })),
-	NuLabel: (name: string, lvl: number): Value => Constructors.Neutral("Symbolic", Constructors.Var({ type: "NuLabel", name, lvl })),
+	NuLabel: (name: string, lvl: number, annotation: Value): Value =>
+		Constructors.Neutral("Symbolic", Constructors.Var({ type: "NuLabel", name, lvl, annotation })),
 	StuckInj: (base: Value, label: string, injected: Value): Value => Constructors.Neutral("Blocked", Constructors.Inj(base, label, injected)),
 	Modal: (value: Value, modalities: Modalities): Value =>
 		mk({

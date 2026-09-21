@@ -70,6 +70,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 		.with({ type: "Var", variable: { type: "DepLabel" } }, function* ({ variable }) {
 			return [variable.annotation, { vc: Build.true_() }] satisfies SynthResult;
 		})
+		.with({ type: "Var", variable: { type: "NuLabel" } }, function* ({ variable }) {
+			return [variable.annotation, { vc: Build.true_() }] satisfies SynthResult;
+		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, function* (tm) {
 			const symbol = primopMapping[tm.variable.name] ?? tm.variable.name;
 			const entry = ctx.imports[symbol];
@@ -118,6 +121,20 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 		})
 		.with(EB.CtorPatterns.SigmaV2, function* () {
 			return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
+		})
+		.with(EB.CtorPatterns.Nu, function* (tm) {
+			const value = yield* NF.evaluate(tm);
+			return yield* match(value)
+				.with(NF.Patterns.Nu, function* ({ binder, closure }) {
+					return yield* match(closure)
+						.with({ type: "Closure", term: EB.CtorPatterns.Struct }, ({ ctx, term }) => reader.local(_ => EB.extend(ctx, binder, value), synth(term)))
+						.otherwise(function* () {
+							throw new Error("Nu synthesis expected a Struct closure body");
+						});
+				})
+				.otherwise(function* () {
+					throw new Error("Nu synthesis expected a Nu value");
+				});
 		})
 		.with(EB.CtorPatterns.Lambda, function* (tm) {
 			const annotation = yield* NF.evaluate(tm.binding.annotation);
