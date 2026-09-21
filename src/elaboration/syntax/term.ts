@@ -36,7 +36,7 @@ export type Variable =
 	| { type: "Foreign"; name: string }
 	| { type: "Label"; name: string }
 	/** @see NF.Variable: `&label` / `$label` carry a de Bruijn index like any bound variable. */
-	| { type: "DepLabel"; name: string; index: number }
+	| { type: "DepLabel"; name: string; index: number; annotation: NF.Value }
 	| { type: "NuLabel"; name: string; index: number }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
@@ -145,7 +145,7 @@ export const Constructors = {
 		Free: (name: string): Variable => ({ type: "Free", name }),
 		Foreign: (name: string): Variable => ({ type: "Foreign", name }),
 		Label: (name: string): Variable => ({ type: "Label", name }),
-		DepLabel: (name: string, index: number): Variable => ({ type: "DepLabel", name, index }),
+		DepLabel: (name: string, index: number, annotation: NF.Value): Variable => ({ type: "DepLabel", name, index, annotation }),
 		NuLabel: (name: string, index: number): Variable => ({ type: "NuLabel", name, index }),
 		Meta: (val: number, lvl: number): Extract<Variable, { type: "Meta" }> => ({ type: "Meta", val, lvl }),
 	},

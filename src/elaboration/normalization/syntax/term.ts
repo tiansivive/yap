@@ -51,7 +51,7 @@ export type Variable =
 	| { type: "Free"; name: string }
 	| { type: "Label"; name: string }
 	| { type: "Foreign"; name: string }
-	| { type: "DepLabel"; name: string; lvl: number }
+	| { type: "DepLabel"; name: string; lvl: number; annotation: Value }
 	| { type: "NuLabel"; name: string; lvl: number }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
@@ -158,7 +158,8 @@ export const Constructors = {
 	Inj: (base: Value, label: string, injected: Value): Value => mk({ type: "Inj", base, label, injected }),
 	StuckMatch: (closure: Closure, scrutinee: Value): Value => Constructors.Neutral("Blocked", Constructors.Match(closure, scrutinee)),
 	StuckProj: (base: Value, label: string): Value => Constructors.Neutral("Blocked", Constructors.Proj(base, label)),
-	DepLabel: (name: string, lvl: number): Value => Constructors.Neutral("Symbolic", Constructors.Var({ type: "DepLabel", name, lvl })),
+	DepLabel: (name: string, lvl: number, annotation: Value): Value =>
+		Constructors.Neutral("Symbolic", Constructors.Var({ type: "DepLabel", name, lvl, annotation })),
 	NuLabel: (name: string, lvl: number): Value => Constructors.Neutral("Symbolic", Constructors.Var({ type: "NuLabel", name, lvl })),
 	StuckInj: (base: Value, label: string, injected: Value): Value => Constructors.Neutral("Blocked", Constructors.Inj(base, label, injected)),
 	Modal: (value: Value, modalities: Modalities): Value =>

@@ -40,8 +40,11 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 				.with({ type: "Bound" }, function* (v) {
 					return yield* result(EB.Constructors.Var({ type: "Bound", index: lvl - v.lvl - 1 }));
 				})
-				.with({ type: P.union("DepLabel", "NuLabel") }, function* (v) {
-					return yield* result(EB.Constructors.Var({ type: v.type, name: v.name, index: lvl - v.lvl - 1 }));
+				.with({ type: "DepLabel" }, function* (v) {
+					return yield* result(EB.Constructors.Var({ type: "DepLabel", name: v.name, index: lvl - v.lvl - 1, annotation: v.annotation }));
+				})
+				.with({ type: "NuLabel" }, function* (v) {
+					return yield* result(EB.Constructors.Var({ type: "NuLabel", name: v.name, index: lvl - v.lvl - 1 }));
 				})
 				.with({ type: "Meta" }, function* (v) {
 					const solved = Metas.solution(yield* Metas.registry.get(), v.val);
@@ -183,7 +186,8 @@ const quoteRow = function* (lvl: number, row: NF.Row): Evaluation<Machine<EB.Row
 		.with({ type: "variable" }, function* ({ variable }) {
 			const v = match(variable)
 				.with({ type: "Bound" }, (b): EB.Variable => ({ type: "Bound", index: lvl - b.lvl - 1 }))
-				.with({ type: P.union("DepLabel", "NuLabel") }, (b): EB.Variable => ({ type: b.type, name: b.name, index: lvl - b.lvl - 1 }))
+				.with({ type: "DepLabel" }, (b): EB.Variable => ({ type: "DepLabel", name: b.name, index: lvl - b.lvl - 1, annotation: b.annotation }))
+				.with({ type: "NuLabel" }, (b): EB.Variable => ({ type: "NuLabel", name: b.name, index: lvl - b.lvl - 1 }))
 				.otherwise(b => b);
 
 			return yield* result<EB.Row>({ type: "variable", variable: v });

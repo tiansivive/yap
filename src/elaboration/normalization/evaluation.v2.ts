@@ -135,7 +135,10 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		})
 		.with(FieldRef, function* ({ variable }) {
 			const lvl = ctx.env.length - 1 - variable.index;
-			const symbolic = NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: variable.type, name: variable.name, lvl }));
+			const symbolic = match(variable)
+				.with({ type: "DepLabel" }, v => NF.Constructors.DepLabel(v.name, lvl, v.annotation))
+				.with({ type: "NuLabel" }, v => NF.Constructors.NuLabel(v.name, lvl))
+				.exhaustive();
 			const base = ctx.env[variable.index]?.nf;
 
 			if (!base) {

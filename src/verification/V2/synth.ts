@@ -1,4 +1,4 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import assert from "node:assert";
 
 import * as EB from "@yap/elaboration";
@@ -67,6 +67,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
 			return [type, { vc: yield* formula(predicate) }] satisfies SynthResult;
 		})
+		.with({ type: "Var", variable: { type: "DepLabel" } }, function* ({ variable }) {
+			return [variable.annotation, { vc: Build.true_() }] satisfies SynthResult;
+		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, function* (tm) {
 			const symbol = primopMapping[tm.variable.name] ?? tm.variable.name;
 			const entry = ctx.imports[symbol];
@@ -111,6 +114,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Sigma, function* () {
+			return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
+		})
+		.with(EB.CtorPatterns.SigmaV2, function* () {
 			return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Lambda, function* (tm) {
@@ -260,6 +266,26 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 									throw new Error("Projected label is not an extension in Sigma: " + label);
 								}
 								return rewritten.right.value;
+							})
+							.with(NF.Patterns.SigmaV2, function* ({ binder, closure }) {
+								const witness = yield* NF.evaluate(proj.term);
+								const schema = yield* NF.apply(binder, closure, witness);
+								const row = NF.rowOf(schema);
+
+								return yield* match(row)
+									.with(P.nonNullable, function* (row) {
+										const rewritten = Row.rewrite(row, label);
+										if (E.isLeft(rewritten)) {
+											throw new Error("Projection label not found in SigmaV2: " + label);
+										}
+										if (rewritten.right.type !== "extension") {
+											throw new Error("Projected label is not an extension in SigmaV2: " + label);
+										}
+										return rewritten.right.value;
+									})
+									.otherwise(function* () {
+										throw new Error("SigmaV2 projection expected a Schema body");
+									});
 							})
 							.otherwise(() => {
 								throw new Error("Projection expected a Sigma type");

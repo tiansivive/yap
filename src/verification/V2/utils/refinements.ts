@@ -161,5 +161,5 @@ export const extractModalities: ExtractModalitiesFn = (nf, ctx) =>
 export const isFirstOrder = (ty: NF.Value): boolean =>
 	match(NF.unwrapNeutral(ty))
 		.with({ type: "Modal" }, ({ value }) => isFirstOrder(value))
-		.with(NF.Patterns.Pi, NF.Patterns.Lambda, NF.Patterns.Sigma, () => false)
+		.with(NF.Patterns.Pi, NF.Patterns.Lambda, NF.Patterns.Sigma, NF.Patterns.SigmaV2, () => false)
 		.otherwise(() => true);

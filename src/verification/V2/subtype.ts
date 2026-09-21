@@ -93,12 +93,28 @@ export const subtype = function* (left: NF.Value, right: NF.Value): Verification
 			const vcBody = yield* subtype(bodyA, bodyB);
 			return Build.and(vc, vcBody);
 		})
+		.with([NF.Patterns.SigmaV2, NF.Patterns.SigmaV2], function* ([a, b]) {
+			const lvl = ctx.env.length;
+			const witness = NF.Constructors.Rigid(lvl);
+			const bodyA = yield* NF.apply(a.binder, a.closure, witness);
+			const bodyB = yield* NF.apply(b.binder, b.closure, witness);
+
+			return yield* subtype(bodyA, bodyB);
+		})
 		.with([NF.Patterns.Schema, NF.Patterns.Sigma], function* ([schema, sig]) {
 			const body = yield* NF.apply(sig.binder, sig.closure, NF.Constructors.Row(schema.arg.row));
 			return yield* subtype(schema, body);
 		})
 		.with([NF.Patterns.Sigma, NF.Patterns.Schema], function* ([sig, schema]) {
 			const body = yield* NF.apply(sig.binder, sig.closure, NF.Constructors.Row(schema.arg.row));
+			return yield* subtype(body, schema);
+		})
+		.with([NF.Patterns.Schema, NF.Patterns.SigmaV2], function* ([schema, sig]) {
+			const body = yield* NF.apply(sig.binder, sig.closure, schema.arg);
+			return yield* subtype(schema, body);
+		})
+		.with([NF.Patterns.SigmaV2, NF.Patterns.Schema], function* ([sig, schema]) {
+			const body = yield* NF.apply(sig.binder, sig.closure, schema.arg);
 			return yield* subtype(body, schema);
 		})
 		.with([NF.Patterns.Schema, NF.Patterns.Schema], function* ([{ arg: a }, { arg: b }]) {

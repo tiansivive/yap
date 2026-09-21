@@ -107,6 +107,22 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 						});
 					return yield* check(term, schema);
 				})
+				.with([EB.CtorPatterns.Struct, NF.Patterns.SigmaV2], function* ([term, type]) {
+					const evaluated = yield* NF.evaluate(term);
+					const innerViewed = yield* NF.view(evaluated);
+					return yield* match(innerViewed)
+						.with({ kind: "Sealed", value: NF.Patterns.Struct }, function* ({ value }) {
+							const schema = yield* NF.apply(type.binder, type.closure, NF.Constructors.Row(value.arg.row));
+							return yield* match(NF.rowOf(schema))
+								.with(P.nonNullable, () => check(term, schema))
+								.otherwise(function* () {
+									throw new Error("SigmaV2 closure expected a Schema body");
+								});
+						})
+						.otherwise(function* () {
+							throw new Error("Expected struct to evaluate to a sealed struct");
+						});
+				})
 				.with([EB.CtorPatterns.Tagged, NF.Patterns.Variant], function* ([term, type]) {
 					const value = EB.TaggedTerm.extract(term.arg.row);
 					assert(value, "Tagged pattern expected __tag atom and payload fields");

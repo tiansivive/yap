@@ -92,8 +92,9 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 			 * elaborated — the Sigma boundary constrains this meta then. */
 			.with([NF.Patterns.Row, Src.Patterns.Vars.DepLabel, EB.BindingPatterns.SigmaV2], carries, function* ([, { value }]) {
 				const meta = yield* freshMeta(ctx.env.length, NF.Type);
+				const annotation = NF.Constructors.Flex(meta);
 
-				return [EB.Constructors.Var({ type: "DepLabel", name: value, index: i }), NF.Constructors.Flex(meta), zeros] satisfies EB.AST;
+				return [EB.Constructors.Var({ type: "DepLabel", name: value, index: i, annotation }), annotation, zeros] satisfies EB.AST;
 			})
 			/* `$foo` keeps the slot, because a ν annotation carries field types, not field values. */
 			.with([NF.Patterns.Row, Src.Patterns.Vars.NuLabel, EB.BindingPatterns.Nu], carries, function* ([{ row }, { value }]) {

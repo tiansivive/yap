@@ -156,7 +156,7 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 				}
 			})
 			.with([NF.Patterns.DepLabel, NF.Patterns.DepLabel], [NF.Patterns.NuLabel, NF.Patterns.NuLabel], function* ([l1, l2]) {
-				if (!_.isEqual(l1.variable, l2.variable)) {
+				if (l1.variable.name !== l2.variable.name || l1.variable.lvl !== l2.variable.lvl) {
 					return yield* M.fail(Err.TypeMismatch(l1, l2));
 				}
 			})
