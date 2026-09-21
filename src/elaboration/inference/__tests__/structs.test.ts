@@ -33,8 +33,12 @@ describe("Inference: Structs", () => {
 	});
 
 	describe("dependent structs", () => {
-		it("fields depending on previous fields: { x: 1, y: :x + 2 }", () => {
-			const { displays } = elaborateFrom("{ x: 1, y: :x + 2 }");
+		it("rejects an unknown Nu label", () => {
+			expect(() => elaborateFrom("{ a: 1, b: $nope }")).toThrow("No enclosing record field named nope");
+		});
+
+		it("fields depending on previous fields: { x: 1, y: $x + 2 }", () => {
+			const { displays } = elaborateFrom("{ x: 1, y: $x + 2 }");
 			expect(displays.type).toMatch("Schema");
 			expect(displays.type).toMatch(Field.bare("x", TypeText.lit("Num")));
 			expect(displays.type).toMatch(Field.modal("y", TypeText.lit("Num")));
@@ -43,8 +47,8 @@ describe("Inference: Structs", () => {
 			expect({ displays }).toMatchSnapshot();
 		});
 
-		it("nested dependent fields: { point: { x: 1, y: 2 }, halved: { a: :point.x / 2, b: :point.y / 2 } }", () => {
-			const { displays } = elaborateFrom("{ point: { x: 1, y: 2 }, halved: { a: :point.x / 2, b: :point.y / 2 } }");
+		it("nested dependent fields: { point: { x: 1, y: 2 }, halved: { a: $point.x / 2, b: $point.y / 2 } }", () => {
+			const { displays } = elaborateFrom("{ point: { x: 1, y: 2 }, halved: { a: $point.x / 2, b: $point.y / 2 } }");
 			expect(displays.type).toMatch("Schema");
 			expect(displays.type).toMatch(Field.schema("point"));
 			expect(displays.type).toMatch(Field.bare("x", TypeText.lit("Num")));
@@ -57,8 +61,8 @@ describe("Inference: Structs", () => {
 			expect({ displays }).toMatchSnapshot();
 		});
 
-		it("dependent field referring to later field: { y: :x + 2, x: 1 }", () => {
-			const { displays } = elaborateFrom("{ y: :x + 2, x: 1 }");
+		it("dependent field referring to later field: { y: $x + 2, x: 1 }", () => {
+			const { displays } = elaborateFrom("{ y: $x + 2, x: 1 }");
 			expect(displays.type).toMatch("Schema");
 			expect(displays.type).toMatch(Field.bare("x", TypeText.lit("Num")));
 			expect(displays.type).toMatch(Field.modal("y", TypeText.lit("Num")));
@@ -67,8 +71,8 @@ describe("Inference: Structs", () => {
 			expect({ displays }).toMatchSnapshot();
 		});
 
-		it("mutually dependent fields: { a: :b + 1, b: :a + 1 }", () => {
-			const { displays } = elaborateFrom("{ a: :b + 1, b: :a + 1 }");
+		it("mutually dependent fields: { a: $b + 1, b: $a + 1 }", () => {
+			const { displays } = elaborateFrom("{ a: $b + 1, b: $a + 1 }");
 			expect(displays.type).toMatch("Schema");
 			expect(displays.type).toMatch(Field.modal("a", TypeText.lit("Num")));
 			expect(displays.type).toMatch(Field.modal("b", TypeText.lit("Num")));
@@ -77,8 +81,8 @@ describe("Inference: Structs", () => {
 			expect({ displays }).toMatchSnapshot();
 		});
 
-		it('nested shadowing dependencies: { overriden: 1, foo: { inner: :overriden }, bar: { overriden: "hello", inner: :overriden }', () => {
-			const { displays } = elaborateFrom('{ overriden: 1, foo: { inner: :overriden }, bar: { overriden: "hello", inner: :overriden } }');
+		it('nested shadowing dependencies: { overriden: 1, foo: { inner: $overriden }, bar: { overriden: "hello", inner: $overriden }', () => {
+			const { displays } = elaborateFrom('{ overriden: 1, foo: { inner: $overriden }, bar: { overriden: "hello", inner: $overriden } }');
 			expect(displays.type).toMatch("Schema");
 			expect(displays.type).toMatch(Field.bare("overriden", TypeText.lit("Num")));
 			expect(displays.type).toMatch(Field.schema("foo", Field.meta("inner")));

@@ -13,7 +13,7 @@ let person: { name: String, age: Num } = { name: "Alice", age: 30 };
 	test("self-referencing fields", () => {
 		const result = runScript(`
 let rectangle: { width: Num, height: Num, area: Num }
-    = { width: 10, height: 20, area: :width * :height };
+    = { width: 10, height: 20, area: $width * $height };
 		`);
 		expect(snap(result)).toMatchSnapshot();
 	});

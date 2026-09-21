@@ -124,7 +124,7 @@ let nat5 = checkNum (\\n -> n >= 0) 5;
 
 	test("ordered pair", () => {
 		const result = runScript(`
-let OrderedPair: Type = { fst: Num, snd: Num[| \\v -> v > :fst |] };
+let OrderedPair: Type = { fst: Num, snd: Num[| \\v -> v > &fst |] };
 let valid: OrderedPair = { fst: 3, snd: 5 };
 		`);
 		expect(snap(result)).toMatchSnapshot();
@@ -180,7 +180,7 @@ let compute: Num -> Num
 let test = {
 	let Pair
 	: (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
-	= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p :fst v |] };
+	= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p &fst v |] };
 
 	let p
 	: Pair Num Num (\\x -> \\y -> x < y )
@@ -196,7 +196,7 @@ let test = {
 let testFail = {
 	let Pair
 	: (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
-	= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p :fst v |] };
+	= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p &fst v |] };
 
 	let p
 	: Pair Num Num (\\x -> \\y -> x < y )
@@ -211,7 +211,7 @@ let testFail = {
 
 	test("ordered lists with refinement polymorphism", () => {
 		const result = runScript(`
-let OrderedList: (t: Type) -> (p: t -> t -> Bool) -> Type = \\t -> \\p -> | #nil Unit | #cons { head: t, tail: OrderedList (t[| \\v -> p :head v |]) p };
+let OrderedList: (t: Type) -> (p: t -> t -> Bool) -> Type = \\t -> \\p -> | #nil Unit | #cons { head: t, tail: OrderedList (t[| \\v -> p &head v |]) p };
 let ascending: OrderedList Num (\\x -> \\y -> x < y) = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
 let descending: OrderedList Num (\\x -> \\y -> x > y) = #cons { head: 3, tail: #cons { head: 2, tail: #cons { head: 1, tail: #nil ! } } };
 		`);
@@ -224,7 +224,7 @@ let orderedListTestFail = {
 	let List
 	: (a: Type) -> (p: a -> a -> Bool) -> Type
 	= \\t -> \\p -> | #nil Unit
-	| #cons { head: t, tail: List (t[| \\v -> p :head v |]) p };
+	| #cons { head: t, tail: List (t[| \\v -> p &head v |]) p };
 
 	let ol
 	: List Num (\\x -> \\y -> x < y )

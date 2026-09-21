@@ -85,7 +85,7 @@ let length: (a: Type) => List a -> Num = \\list -> match list
 let Factorial: Type = { compute: Num -> Num };
 let fact: Factorial = { compute: \\n -> match n
     | 0 -> 1
-    | _ -> n * (:compute (n - 1)) };
+    | _ -> n * ($compute (n - 1)) };
 let result = fact.compute 5;
 		`);
 		expect(snap(result)).toMatchSnapshot();

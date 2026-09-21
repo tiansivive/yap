@@ -51,13 +51,40 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 	});
 
 	it("evaluates dependent record projection", () => {
-		const src = "{ x: 1, y: :x + 1 }.y";
+		const src = "{ x: 1, y: $x + 1 }.y";
 		const { structure } = elaborateFrom(src);
 		const ctx = ctxFor(mkCtx());
 
 		const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 		expect(nf.type).toBe("Lit");
 		expect(show(nf, ctx)).toBe("2");
+	});
+
+	it("observes nested Nu fields through projection", () => {
+		const { structure } = elaborateFrom("{ q: { c: 2 } }.q.c");
+		const ctx = ctxFor(mkCtx());
+
+		const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
+		expect(show(nf, ctx)).toBe("2");
+	});
+
+	it("keeps Nu cycles inert until observation", () => {
+		const self = elaborateFrom("{ a: $a }");
+		const selfCtx = ctxFor(mkCtx());
+		const selfValue = runNF(selfCtx, () => NF.normalize(self.structure.term, { maxSteps: 20_000 }), self.structure.metas);
+		expect(selfValue).toMatchObject({ type: "Abs", binder: { type: "Nu" } });
+
+		const projectedSelf = elaborateFrom("{ a: $a }.a");
+		const projectedSelfCtx = ctxFor(mkCtx());
+		expect(() => runNF(projectedSelfCtx, () => NF.normalize(projectedSelf.structure.term, { maxSteps: 20_000 }), projectedSelf.structure.metas)).toThrow(
+			"exceeded maximum steps",
+		);
+
+		const projectedMutual = elaborateFrom("{ a: $b, b: $a }.a");
+		const projectedMutualCtx = ctxFor(mkCtx());
+		expect(() => runNF(projectedMutualCtx, () => NF.normalize(projectedMutual.structure.term, { maxSteps: 20_000 }), projectedMutual.structure.metas)).toThrow(
+			"exceeded maximum steps",
+		);
 	});
 
 	/*

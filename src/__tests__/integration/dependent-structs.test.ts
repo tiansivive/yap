@@ -13,7 +13,7 @@ let pair: { a: Num, b: Num[| \\v -> v == (&a + 1) |] } = { a: 2, b: $a + 1 };
 	});
 
 	test("nested dependent struct with sibling-label projection", () => {
-		const result = runScript(`{ point: { x: 1, y: 2 }, halved: { a: :point.x / 2, b: :point.y / 2 } }`);
+		const result = runScript(`{ point: { x: 1, y: 2 }, halved: { a: $point.x / 2, b: $point.y / 2 } }`);
 		const decl = result.declarations[0];
 
 		expect(decl?.error).toBeUndefined();
