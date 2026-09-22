@@ -8,6 +8,7 @@ import type { Graph } from "../graph";
 import { translate } from "../translate";
 import type { Location } from "../provenance";
 import { descriptor as resolveLabels } from "../passes/resolve-labels";
+import { descriptor as hoist } from "../passes/hoist";
 import { descriptor as labelCycles } from "../passes/label-cycles";
 import { descriptor as eta } from "../passes/eta";
 import { descriptor as saturate } from "../passes/saturate";
@@ -42,6 +43,7 @@ export type CompileOpts = {
 
 export const defaultPipeline: E.Either<ReadonlyArray<Inconsistency>, Pipeline> = configure(
 	resolveLabels,
+	hoist,
 	eta,
 	saturate,
 	pap,

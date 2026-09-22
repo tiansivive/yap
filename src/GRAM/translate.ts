@@ -4,7 +4,7 @@ import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "@yap/elaboration/normalization";
 import type { Row } from "@yap/shared/rows";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 import type { Subst } from "@yap/elaboration/unification/substitution";
 
 import type { Graph, NodeId, Payload } from "./graph";
@@ -111,9 +111,7 @@ const walk = (term: EB.Term, st: State): [NodeId, State] =>
 		.with({ type: "Abs", binding: { type: "Pi" } }, t => abs(Tags.PI, t, st))
 		.with({ type: "Abs", binding: { type: "Sigma" } }, t => abs(Tags.SIGMA, t, st))
 		.with({ type: "Abs", binding: { type: "Mu" } }, t => mu(t, st))
-		.with({ type: "Abs", binding: { type: "Nu" } }, () => {
-			throw new Error("Nu not yet lowered — Phase 2");
-		})
+		.with({ type: "Abs", binding: { type: "Nu" } }, t => abs(Tags.NU, t, st))
 		.with({ type: "Abs", binding: { type: "SigmaV2" } }, () => {
 			throw new Error("SigmaV2 not yet lowered — Phase 2");
 		})
@@ -147,7 +145,8 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 		.with({ type: "Free" }, ({ name }) => intern(Tags.VAR_FREE, name, "freeVars", tid, st))
 		.with({ type: "Foreign" }, ({ name }) => intern(Tags.VAR_FOREIGN, name, "foreignVars", tid, st))
 		.with({ type: "Label" }, ({ name }) => emit(st, Tags.VAR_LABEL, { name }, prov(tid, st)))
-		.with({ type: P.union("DepLabel", "NuLabel") }, ({ name }) => {
+		.with({ type: "NuLabel" }, ({ name, index }) => scoped(Tags.VAR_NU_LABEL, name, index, tid, st))
+		.with({ type: "DepLabel" }, ({ name }) => {
 			throw new Error(`Cannot lower an unresolved field reference: ${name}`);
 		})
 		.with({ type: "Meta" }, ({ val, lvl }) => {
@@ -166,6 +165,15 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 			return emit(st, Tags.VAR_META, { val, lvl }, prov(tid, st));
 		})
 		.exhaustive();
+
+const scoped = (tag: string, name: string, index: number, tid: number, st: State): [NodeId, State] => {
+	const [id, s] = emit(st, tag, { name, index }, prov(tid, st));
+	const owner = resolve(st, index);
+	const start = st.binders.length - 1 - index;
+	const binders = start >= 0 ? st.binders.slice(start) : [];
+	const withScopes = binders.reduce((acc, binderId, level) => link(acc, id, Labels.SCOPE, binderId, { level, owner: binderId === owner }), s);
+	return [id, withScopes];
+};
 
 const intern = (tag: string, name: string, pool: "freeVars" | "foreignVars", tid: number, st: State): [NodeId, State] => {
 	let defId = st[pool].get(name);
@@ -193,9 +201,7 @@ const bindingPayload = (b: EB.Binding, level: number): Payload =>
 		.with({ type: "Pi" }, b => ({ variable: b.variable, icit: b.icit, level }))
 		.with({ type: "Sigma" }, b => ({ variable: b.variable, level }))
 		.with({ type: "Mu" }, b => ({ variable: b.variable, source: b.source, level }))
-		.with({ type: "Nu" }, () => {
-			throw new Error("Nu not yet lowered — Phase 2");
-		})
+		.with({ type: "Nu" }, b => ({ variable: b.variable, level }))
 		.with({ type: "SigmaV2" }, () => {
 			throw new Error("SigmaV2 not yet lowered — Phase 2");
 		})

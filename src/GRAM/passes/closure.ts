@@ -42,6 +42,10 @@ const capturesOf = (lamId: NodeId, g: Graph): ReadonlyArray<NodeId> => {
 					const s = structOf(ref.target, g);
 					return s !== undefined ? [s] : [];
 				})
+				.with(Tags.VAR_NU_LABEL, () => {
+					const s = structOf(ref.target, g);
+					return s !== undefined ? [s] : [];
+				})
 				.otherwise(() => (isCapture(lamId, lamLvl, g)(ref) ? [ref.target] : []));
 		});
 	return [...new Set(targets)];
@@ -99,7 +103,7 @@ export const closureConvert: Pass = (g: Graph): Graph => close(capture(g));
 export const descriptor: Descriptor = {
 	name: "closure",
 	requires: {
-		tags: new Set([Tags.LAMBDA, Tags.VAR_BOUND, Tags.VAR_REF]),
+		tags: new Set([Tags.LAMBDA, Tags.VAR_BOUND, Tags.VAR_REF, Tags.VAR_NU_LABEL]),
 		labels: new Set([Labels.SCOPE, Labels.REFERS_TO]),
 	},
 	delta: {

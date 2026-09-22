@@ -6,12 +6,14 @@ export const Tags = {
 	VAR_FREE: "var:free",
 	VAR_FOREIGN: "var:foreign",
 	VAR_LABEL: "var:label",
+	VAR_NU_LABEL: "var:nu-label",
 	VAR_META: "var:meta",
 	VAR_REF: "var:ref",
 
 	LAMBDA: "lambda",
 	PI: "pi",
 	SIGMA: "sigma",
+	NU: "nu",
 	MU: "mu",
 	LET: "let",
 	APP: "app",
@@ -100,6 +102,8 @@ export const Labels = {
 	STMT: ":stmt",
 	ALT: ":alt",
 	CAPTURE: ":capture",
+	BACKPATCH: ":backpatch",
+	HOIST: ":hoist",
 	NEXT: ":next",
 
 	PATTERN: ":pattern",

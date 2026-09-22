@@ -35,6 +35,11 @@ const collectRefs = (id: NodeId, guarded: boolean, fields: ReadonlyMap<NodeId, s
 			const to = target !== undefined ? fields.get(target) : undefined;
 			return to !== undefined ? [{ to, guarded }] : [];
 		})
+		.with(Tags.VAR_NU_LABEL, () => {
+			const target = Edges.one(id, Labels.REFERS_TO)(g)?.target;
+			const to = target !== undefined ? fields.get(target) : undefined;
+			return to !== undefined ? [{ to, guarded }] : [];
+		})
 		.with(Tags.LAMBDA, () => structuralChildren(id, g).flatMap(c => collectRefs(c, true, fields, g)))
 		.otherwise(() => structuralChildren(id, g).flatMap(c => collectRefs(c, guarded, fields, g)));
 };
@@ -83,7 +88,7 @@ export const flagCycles: Pass = (g: Graph): Graph => [...Query.byTag(Tags.STRUCT
 
 export const descriptor: Descriptor = {
 	name: "label-cycles",
-	requires: { tags: new Set([Tags.STRUCT, Tags.VAR_LABEL, Tags.LAMBDA]), labels: new Set([Labels.FIELD, Labels.REFERS_TO]) },
+	requires: { tags: new Set([Tags.STRUCT, Tags.VAR_LABEL, Tags.VAR_NU_LABEL, Tags.LAMBDA]), labels: new Set([Labels.FIELD, Labels.REFERS_TO]) },
 	delta: { tags: none, labels: none },
 	run: flagCycles,
 };
