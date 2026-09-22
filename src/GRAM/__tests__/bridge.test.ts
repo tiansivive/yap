@@ -103,6 +103,20 @@ describe("GRAM Bridge: Phase 1 — leaves and structural ops", () => {
 		expect(readsRecord).toBe(true);
 	});
 
+	it("Nu fields reach MIR through their resolved label", () => {
+		const term = EB.DSL.nu([
+			{ label: "x", value: EB.DSL.num(1) },
+			{ label: "y", value: EB.DSL.Labels.nu("x") },
+		]);
+		expect(via(term)).toEqual({ x: 1, y: 1 });
+	});
+
+	it("guarded Nu recursion reaches MIR through fbip", () => {
+		const record = EB.DSL.nu([{ label: "loop", value: EB.DSL.lambda("n", EB.DSL.Labels.nu("loop", 1), EB.DSL.type("Num")) }]);
+		const term = EB.DSL.app(EB.DSL.proj("loop", record), EB.DSL.num(0));
+		expect(via(term)).toEqual(expect.any(Object));
+	});
+
 	it("let x = 42 in x", () => {
 		const term = EB.mk({
 			type: "Abs",

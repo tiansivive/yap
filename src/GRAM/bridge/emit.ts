@@ -45,10 +45,12 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.VAR_FREE, () => Leaves.free(id, ctx))
 		.with(Tags.VAR_FOREIGN, () => Leaves.foreign(id, ctx))
 		.with(Tags.VAR_LABEL, () => labelRef(id, ctx))
+		.with(Tags.VAR_NU_LABEL, () => labelRef(id, ctx))
 		.with(Tags.VAR_META, () => erase(id, ctx))
 		.with(Tags.PI, () => erase(id, ctx))
 		.with(Tags.SIGMA, () => erase(id, ctx))
 		.with(Tags.MU, () => erase(id, ctx))
+		.with(Tags.NU, () => nu(id, ctx))
 		.with(Tags.PROJ, () => Structural.read(id, walk, ctx))
 		.with(Tags.INJ, () => Structural.update(id, walk, ctx))
 		.with(Tags.APP, () => app(id, ctx))
@@ -78,6 +80,12 @@ const lambda = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 const ref = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const target = Edges.one(id, Labels.REFERS_TO)(ctx.graph)?.target;
 	return target !== undefined ? walk(target, ctx) : Leaves.passthrough(id, ctx);
+};
+
+const nu = (id: NodeId, ctx: Ctx): [string, Ctx] => {
+	const body = Edges.one(id, Labels.BODY)(ctx.graph)?.target;
+	const [value, c1] = body !== undefined ? walk(body, ctx) : C.name(ctx);
+	return [value, C.bind(c1, id, value)];
 };
 
 // VAR_LABEL nodes resolve through :refers_to (wired by the resolve-labels pass). When the
@@ -138,13 +146,12 @@ const letNode = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	return bodyEdge !== undefined ? walk(bodyEdge.target, c2) : [val, c2];
 };
 
-// Struct value → Alloc Record. Fields a closure captures the record through are marked
-// `backpatch` by the knot pass: allocate the record without them, bind it, then fbip-fill
-// once those closures (which now reference the allocated record) are built.
+// Struct value → Alloc Record. :backpatch identifies fields filled after record allocation.
 const struct = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const fields = Edges.byLabel(id, Labels.FIELD)(ctx.graph);
-	const plain = fields.filter(e => e.payload.backpatch !== true);
-	const knotted = fields.filter(e => e.payload.backpatch === true);
+	const backpatched = new Set(Edges.byLabel(id, Labels.BACKPATCH)(ctx.graph).map(e => e.target));
+	const plain = fields.filter(e => !backpatched.has(e.target));
+	const knotted = fields.filter(e => backpatched.has(e.target));
 
 	const [pairs, c1] = plain.reduce<[ReadonlyArray<{ label: string; value: string }>, Ctx]>(
 		([acc, c], e) => {

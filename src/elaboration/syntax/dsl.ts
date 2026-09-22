@@ -101,6 +101,12 @@ export const struct = (fields: Array<{ label: string; value: EB.Term }>): EB.Ter
 	return EB.Constructors.Struct(row);
 };
 
+export const Labels = {
+	nu: (name: string, index = 0): EB.Term => EB.Constructors.Var(EB.Constructors.Vars.NuLabel(name, index, NF.Type)),
+};
+
+export const nu = (fields: Array<{ label: string; value: EB.Term }>): EB.Term => EB.Constructors.Nu("$nu", type("Row"), struct(fields));
+
 export const proj = (label: string, term: EB.Term): EB.Term => EB.Constructors.Proj(label, term);
 
 export const inj = (label: string, value: EB.Term, term: EB.Term): EB.Term => EB.Constructors.Inj(label, value, term);
