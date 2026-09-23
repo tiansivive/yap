@@ -49,6 +49,7 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.VAR_META, () => erase(id, ctx))
 		.with(Tags.PI, () => erase(id, ctx))
 		.with(Tags.SIGMA, () => erase(id, ctx))
+		.with(Tags.SIGMA_V2, () => erase(id, ctx))
 		.with(Tags.MU, () => erase(id, ctx))
 		.with(Tags.NU, () => nu(id, ctx))
 		.with(Tags.PROJ, () => Structural.read(id, walk, ctx))

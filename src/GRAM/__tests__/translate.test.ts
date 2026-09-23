@@ -5,7 +5,7 @@ import * as NF from "@yap/elaboration/normalization";
 
 import { translate } from "../translate";
 import { display } from "../display";
-import { resetId, Nodes, Query } from "../graph";
+import { resetId, Nodes, Edges, Query } from "../graph";
 import { Tags, Labels } from "../vocabulary";
 
 describe("GRAM translate", () => {
@@ -55,6 +55,18 @@ describe("GRAM translate", () => {
 
 		const ref = Query.follow(bodyId ?? -1, Labels.REFERS_TO)(g);
 		expect(ref).toBe(lamId);
+	});
+
+	it("SigmaV2 preserves its binder and scoped dependent labels", () => {
+		const label = EB.Constructors.Var(EB.Constructors.Vars.DepLabel("x", 0, NF.Type));
+		const g = translate(EB.Constructors.SigmaV2("$sig", EB.DSL.type("Row"), label));
+
+		const sigma = [...Query.byTag(Tags.SIGMA_V2)(g)][0];
+		const labels = [...Query.byTag(Tags.VAR_DEP_LABEL)(g)];
+
+		expect(sigma).toBeDefined();
+		expect(labels).toHaveLength(1);
+		expect(Edges.byLabel(labels[0], Labels.SCOPE)(g).some(e => e.target === sigma && e.payload.owner === true)).toBe(true);
 	});
 
 	it("nested lambdas — de Bruijn resolution", () => {

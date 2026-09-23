@@ -9,7 +9,7 @@ import * as Nullable from "../../utils/Nullable";
 import { match } from "ts-pattern";
 
 const { Instr, Expr } = Constructors;
-const erasable = new Set<string>([Tags.MU, Tags.PI, Tags.SIGMA, Tags.VAR_META]);
+const erasable = new Set<string>([Tags.MU, Tags.PI, Tags.SIGMA, Tags.SIGMA_V2, Tags.VAR_META]);
 const strOf = (v: unknown): string => (typeof v === "string" ? v : "");
 
 export const lower = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], ctx: Ctx): [string, Ctx] => {

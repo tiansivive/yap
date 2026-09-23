@@ -3,6 +3,7 @@ import * as E from "fp-ts/Either";
 import { pipe } from "fp-ts/function";
 
 import * as EB from "@yap/elaboration";
+import * as NF from "@yap/elaboration/normalization";
 import * as GRAM from "../index";
 import { interpret } from "../../lowering/interpret";
 import { resetId } from "../graph";
@@ -140,6 +141,14 @@ describe("GRAM Bridge: Phase 1 — leaves and structural ops", () => {
 		expect(erased).toMatchObject({ alloc: { debug: { erasure: { tag: "mu", source: "Peano" } } } });
 		expect(display.module(mod)).toContain('let Peano1 = v0  // {"erasure":{"tag":"mu","source":"Peano"}}');
 		expect(interpret(mod)).toBeNull();
+	});
+
+	it("erases SigmaV2 with debug provenance", () => {
+		const label = EB.Constructors.Var(EB.Constructors.Vars.DepLabel("x", 0, NF.Type));
+		const mod = bridge(EB.Constructors.SigmaV2("$sig", EB.DSL.type("Row"), label));
+		const erased = mod.functions[0].blocks.flatMap(block => block.instrs).find(instr => instr.type === "Alloc" && instr.alloc.debug?.erasure !== undefined);
+
+		expect(erased).toMatchObject({ alloc: { debug: { erasure: { tag: "sigma:v2", source: "$sig" } } } });
 	});
 
 	it("snapshot: struct { x: 1 }", () => {
