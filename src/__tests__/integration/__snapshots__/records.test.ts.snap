@@ -159,15 +159,27 @@ exports[`Language Tour — Records & Tuples > field access 1`] = `
 }
 return main();
 ",
-    "elaborated": "Struct [ x: 10, y: 20 ]",
+    "elaborated": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 10, y: 20 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"point"}
-[3] struct
-  :field -> [4] {"label":"x"}
-  :field -> [5] {"label":"y"}
-[4] lit {"value":{"type":"Num","value":10}}
-[5] lit {"value":{"type":"Num","value":20}}",
+[3] nu {"variable":"$nu","level":1}
+  :annotation -> [4]
+  :body -> [9]
+[4] row:ext {"label":"x"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] struct
+  :field -> [10] {"label":"x"}
+  :field -> [11] {"label":"y"}
+[10] lit {"value":{"type":"Num","value":10}}
+[11] lit {"value":{"type":"Num","value":20}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -178,7 +190,8 @@ return main();
       let v2 = alloc { x: v0, y: v1 }
       return v2",
     "name": "point",
-    "normalized": "Struct [ x: 10, y: 20 ]",
+    "normalized": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) ->
+  (closure: Struct [ x: 10, y: 20 ] -| Γ: $nu)",
     "solverTrace": "=== Formula ===
   true
 
@@ -280,7 +293,8 @@ function closure_20(env0, p1) {
 }
 return main();
 ",
-    "elaborated": "λ(p: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> (p).x",
+    "elaborated": "λ(p: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]) ->
+  (p).x",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"getX"}
@@ -288,27 +302,27 @@ return main();
   :annotation -> [4]
   :body -> [17]
   :env -> [19]
-[4] sigma {"variable":"$sig","level":1}
+[4] sigma:v2 {"variable":"$sig","level":1}
   :annotation -> [5]
   :body -> [10]
-[5] row:ext {"label":"y"}
+[5] row:ext {"label":"x"}
   :rest -> [7]
   :value -> [6]
-[6] lit {"value":{"type":"Atom","value":"Num"}}
-[7] row:ext {"label":"x"}
+[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[7] row:ext {"label":"y"}
   :rest -> [9]
   :value -> [8]
-[8] lit {"value":{"type":"Atom","value":"Num"}}
+[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
 [9] row:empty
 [10] app {"icit":"Explicit"}
   :arg -> [12]
   :func -> [11]
 [11] lit {"value":{"type":"Atom","value":"Schema"}}
-[12] row:ext {"label":"y"}
+[12] row:ext {"label":"x"}
   :rest -> [14]
   :value -> [13]
 [13] lit {"value":{"type":"Atom","value":"Num"}}
-[14] row:ext {"label":"x"}
+[14] row:ext {"label":"y"}
   :rest -> [16]
   :value -> [15]
 [15] lit {"value":{"type":"Atom","value":"Num"}}
@@ -337,7 +351,8 @@ return main();
       let v0 = read p1.x
       return v0",
     "name": "getX",
-    "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
+    "normalized": "λ(p: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+  (closure: Schema [ x: Num, y: Num ] -| Γ: $sig)) ->
   (closure: (p).x -| Γ: p)",
     "solverTrace": "=== Formula ===
   true
@@ -364,7 +379,8 @@ return main();
   feasible
 
 [sat]",
-    "type": "Π(t1: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
+    "type": "Π(t1: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]) ->
+  Num",
     "validity": "valid",
   },
 ]
@@ -571,36 +587,49 @@ exports[`Language Tour — Records & Tuples > records 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = 10;
-  const v1 = 0;
+  const v0 = 0;
+  const v1 = 10;
   const v2 = {
-    y: v0,
-    x: v1
+    x: v0,
+    y: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ y: 10, x: 0 ]",
+    "elaborated": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 0, y: 10 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"point"}
-[3] struct
-  :field -> [4] {"label":"y"}
-  :field -> [5] {"label":"x"}
-[4] lit {"value":{"type":"Num","value":10}}
-[5] lit {"value":{"type":"Num","value":0}}",
+[3] nu {"variable":"$nu","level":1}
+  :annotation -> [4]
+  :body -> [9]
+[4] row:ext {"label":"x"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] struct
+  :field -> [10] {"label":"x"}
+  :field -> [11] {"label":"y"}
+[10] lit {"value":{"type":"Num","value":0}}
+[11] lit {"value":{"type":"Num","value":10}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 10
-      let v1 = 0
-      let v2 = alloc { y: v0, x: v1 }
+      let v0 = 0
+      let v1 = 10
+      let v2 = alloc { x: v0, y: v1 }
       return v2",
     "name": "point",
-    "normalized": "Struct [ y: 10, x: 0 ]",
+    "normalized": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) ->
+  (closure: Struct [ x: 0, y: 10 ] -| Γ: $nu)",
     "solverTrace": "=== Formula ===
   true
 
@@ -626,41 +655,55 @@ return main();
   feasible
 
 [sat]",
-    "type": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
+    "type": "Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]",
     "validity": "valid",
   },
   {
     "codegenJS": "function main() {
-  const v0 = 30;
-  const v1 = "Alice";
+  const v0 = "Alice";
+  const v1 = 30;
   const v2 = {
-    age: v0,
-    name: v1
+    name: v0,
+    age: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ age: 30, name: "Alice" ]",
+    "elaborated": "ν($nu: [ name: Irrelevant, age: Irrelevant ]) .
+  Struct [ name: "Alice", age: 30 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"person"}
-[3] struct
-  :field -> [4] {"label":"age"}
-  :field -> [5] {"label":"name"}
-[4] lit {"value":{"type":"Num","value":30}}
-[5] lit {"value":{"type":"String","value":"Alice"}}",
+[3] nu {"variable":"$nu","level":1}
+  :annotation -> [4]
+  :body -> [9]
+[4] row:ext {"label":"name"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"age"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] struct
+  :field -> [10] {"label":"name"}
+  :field -> [11] {"label":"age"}
+[10] lit {"value":{"type":"String","value":"Alice"}}
+[11] lit {"value":{"type":"Num","value":30}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 30
-      let v1 = "Alice"
-      let v2 = alloc { age: v0, name: v1 }
+      let v0 = "Alice"
+      let v1 = 30
+      let v2 = alloc { name: v0, age: v1 }
       return v2",
     "name": "person",
-    "normalized": "Struct [ age: 30, name: "Alice" ]",
+    "normalized": "ν($nu: [ name: Irrelevant, age: Irrelevant ]) ->
+  (closure: Struct [ name: "Alice", age: 30 ] -| Γ: $nu)",
     "solverTrace": "=== Formula ===
   true
 
@@ -686,7 +729,8 @@ return main();
   feasible
 
 [sat]",
-    "type": "Σ($sig: [ age: Num, name: String ]) . Schema [ age: Num, name: String ]",
+    "type": "Σ($sig: [ name: Irrelevant, age: Irrelevant ]) .
+  Schema [ name: String, age: Num ]",
     "validity": "valid",
   },
 ]
@@ -696,50 +740,72 @@ exports[`Language Tour — Records & Tuples > self-referencing fields 1`] = `
 [
   {
     "codegenJS": "function main() {
-  const v0 = 20;
-  const v1 = 10;
-  const v2 = (v1 * v0);
+  const v0 = 10;
+  const v1 = 20;
+  const v2 = (v0 * v1);
   const v3 = {
-    height: v0,
-    width: v1,
+    width: v0,
+    height: v1,
     area: v2
   };
   return v3;
 }
 return main();
 ",
-    "elaborated": "Struct [ area: FFI.$mul :width :height, height: 20, width: 10 ]",
+    "elaborated": "ν($nu: [ width: Irrelevant, height: Irrelevant, area: Irrelevant ]) .
+  Struct [ width: 10, height: 20, area: FFI.$mul $width $height ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"rectangle"}
-[3] struct
-  :field -> [10] {"label":"height"}
-  :field -> [11] {"label":"width"}
-  :field -> [12] {"label":"area"}
-[6] var:foreign {"name":"$mul","arity":2}
-[8] var:label {"name":"width"}
-  :next -> [9]
-  :refers_to -> [11]
-[9] var:label {"name":"height"}
-  :refers_to -> [10]
-[10] lit {"value":{"type":"Num","value":20}}
-[11] lit {"value":{"type":"Num","value":10}}
-[12] primop {"op":"$mul"}
-  :arg -> [8] {"index":0}
-  :arg -> [9] {"index":1}
-  :callee -> [6]",
+[3] nu {"variable":"$nu","level":1}
+  :annotation -> [4]
+  :body -> [11]
+[4] row:ext {"label":"width"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"height"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:ext {"label":"area"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[10] row:empty
+[11] struct
+  :field -> [12] {"label":"width"}
+  :field -> [13] {"label":"height"}
+  :field -> [20] {"label":"area"}
+  :hoist -> [12]
+[12] lit {"value":{"type":"Num","value":10}}
+[13] lit {"value":{"type":"Num","value":20}}
+[16] var:foreign {"name":"$mul","arity":2}
+[18] var:nu-label {"name":"width","index":0}
+  :next -> [19]
+  :refers_to -> [12]
+  :scope -> [3] {"level":0,"owner":true}
+[19] var:nu-label {"name":"height","index":0}
+  :refers_to -> [13]
+  :scope -> [3] {"level":0,"owner":true}
+[20] primop {"op":"$mul"}
+  :arg -> [18] {"index":0}
+  :arg -> [19] {"index":1}
+  :callee -> [16]",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 20
-      let v1 = 10
-      let v2 = *(v1, v0)
-      let v3 = alloc { height: v0, width: v1, area: v2 }
+      let v0 = 10
+      let v1 = 20
+      let v2 = *(v0, v1)
+      let v3 = alloc { width: v0, height: v1, area: v2 }
       return v3",
     "name": "rectangle",
-    "normalized": "Struct [ area: 200, height: 20, width: 10 ]",
+    "normalized": "ν($nu: [ width: Irrelevant, height: Irrelevant, area: Irrelevant ]) ->
+  (closure: Struct
+    [ width: 10, height: 20, area: FFI.$mul $width $height ] -| Γ: $nu)",
     "solverTrace": "=== Formula ===
   true
 
@@ -765,8 +831,8 @@ return main();
   feasible
 
 [sat]",
-    "type": "Σ($sig: [ area: Num, height: Num, width: Num ]) .
-  Schema [ area: Num, height: Num, width: Num ]",
+    "type": "Σ($sig: [ width: Irrelevant, height: Irrelevant, area: Irrelevant ]) .
+  Schema [ width: Num, height: Num, area: Num ]",
     "validity": "valid",
   },
 ]
@@ -786,15 +852,27 @@ exports[`Language Tour — Records & Tuples > tuples 1`] = `
 }
 return main();
 ",
-    "elaborated": "Struct [ 0: 42, 1: "answer" ]",
+    "elaborated": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) . Struct [ 0: 42, 1: "answer" ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"pair"}
-[3] struct
-  :field -> [4] {"label":"0"}
-  :field -> [5] {"label":"1"}
-[4] lit {"value":{"type":"Num","value":42}}
-[5] lit {"value":{"type":"String","value":"answer"}}",
+[3] nu {"variable":"$nu","level":1}
+  :annotation -> [4]
+  :body -> [9]
+[4] row:ext {"label":"0"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"1"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] struct
+  :field -> [10] {"label":"0"}
+  :field -> [11] {"label":"1"}
+[10] lit {"value":{"type":"Num","value":42}}
+[11] lit {"value":{"type":"String","value":"answer"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -805,7 +883,8 @@ return main();
       let v2 = alloc { 0: v0, 1: v1 }
       return v2",
     "name": "pair",
-    "normalized": "Struct [ 0: 42, 1: "answer" ]",
+    "normalized": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) ->
+  (closure: Struct [ 0: 42, 1: "answer" ] -| Γ: $nu)",
     "solverTrace": "=== Formula ===
   true
 
@@ -836,36 +915,49 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = "answer";
-  const v1 = 42;
+  const v0 = 42;
+  const v1 = "answer";
   const v2 = {
-    "1": v0,
-    "0": v1
+    "0": v0,
+    "1": v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ 1: "answer", 0: 42 ]",
+    "elaborated": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) . Struct [ 0: 42, 1: "answer" ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"pairExplicit"}
-[3] struct
-  :field -> [4] {"label":"1"}
-  :field -> [5] {"label":"0"}
-[4] lit {"value":{"type":"String","value":"answer"}}
-[5] lit {"value":{"type":"Num","value":42}}",
+[3] nu {"variable":"$nu","level":1}
+  :annotation -> [4]
+  :body -> [9]
+[4] row:ext {"label":"0"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"1"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] struct
+  :field -> [10] {"label":"0"}
+  :field -> [11] {"label":"1"}
+[10] lit {"value":{"type":"Num","value":42}}
+[11] lit {"value":{"type":"String","value":"answer"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = "answer"
-      let v1 = 42
-      let v2 = alloc { 1: v0, 0: v1 }
+      let v0 = 42
+      let v1 = "answer"
+      let v2 = alloc { 0: v0, 1: v1 }
       return v2",
     "name": "pairExplicit",
-    "normalized": "Struct [ 1: "answer", 0: 42 ]",
+    "normalized": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) ->
+  (closure: Struct [ 0: 42, 1: "answer" ] -| Γ: $nu)",
     "solverTrace": "=== Formula ===
   true
 
@@ -891,7 +983,7 @@ return main();
   feasible
 
 [sat]",
-    "type": "Σ($sig: [ 1: String, 0: Num ]) . Schema [ 1: String, 0: Num ]",
+    "type": "Σ($sig: [ 0: Irrelevant, 1: Irrelevant ]) . Schema [ 0: Num, 1: String ]",
     "validity": "valid",
   },
 ]

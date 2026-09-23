@@ -6,7 +6,7 @@ exports[`inference: injection > { { x: 1 } | y = 2 } 1`] = `
     "constraints": [
       "Num ~~ ?1",
     ],
-    "term": "{ Struct [ x: 1 ] | y = 2 }",
+    "term": "{ ν($nu: [ x: Irrelevant ]) . Struct [ x: 1 ] | y = 2 }",
     "type": "Schema [ y: Num, x: Num ]",
   },
 }

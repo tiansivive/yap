@@ -518,43 +518,39 @@ exports[`Language Tour — Defining Types > type aliases 1`] = `
 }
 return main();
 ",
-    "elaborated": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
+    "elaborated": "Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"Point"}
-[3] sigma {"variable":"$sig","level":1}
+[3] sigma:v2 {"variable":"$sig","level":1}
   :annotation -> [4]
-  :body -> [10]
-[4] row:ext {"label":"y"}
-  :rest -> [7]
-  :value -> [6]
-[5] var:free {"name":"Num"}
-[6] var:ref {"name":"Num"}
-  :refers_to -> [5]
-  :scope -> [2] {"level":0}
-[7] row:ext {"label":"x"}
-  :rest -> [9]
-  :value -> [8]
-[8] var:ref {"name":"Num"}
-  :refers_to -> [5]
-  :scope -> [2] {"level":0}
-[9] row:empty
-[10] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [11]
-[11] lit {"value":{"type":"Atom","value":"Schema"}}
-[12] row:ext {"label":"y"}
+  :body -> [9]
+[4] row:ext {"label":"x"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"x"}
   :rest -> [14]
   :value -> [13]
+[12] var:free {"name":"Num"}
 [13] var:ref {"name":"Num"}
-  :refers_to -> [5]
+  :refers_to -> [12]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-[14] row:ext {"label":"x"}
+[14] row:ext {"label":"y"}
   :rest -> [16]
   :value -> [15]
 [15] var:ref {"name":"Num"}
-  :refers_to -> [5]
+  :refers_to -> [12]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
 [16] row:empty",
@@ -563,10 +559,11 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       return v0",
     "name": "Point",
-    "normalized": "Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)",
+    "normalized": "Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+  (closure: Schema [ x: Num, y: Num ] -| Γ: $sig)",
     "solverTrace": "=== Formula ===
   true
 
@@ -600,22 +597,34 @@ return main();
   const v0 = 0;
   const v1 = 0;
   const v2 = {
-    y: v0,
-    x: v1
+    x: v0,
+    y: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ y: 0, x: 0 ]",
+    "elaborated": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 0, y: 0 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"origin"}
-[3] struct
-  :field -> [4] {"label":"y"}
-  :field -> [5] {"label":"x"}
-[4] lit {"value":{"type":"Num","value":0}}
-[5] lit {"value":{"type":"Num","value":0}}",
+[3] nu {"variable":"$nu","level":1}
+  :annotation -> [4]
+  :body -> [9]
+[4] row:ext {"label":"x"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"y"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] struct
+  :field -> [10] {"label":"x"}
+  :field -> [11] {"label":"y"}
+[10] lit {"value":{"type":"Num","value":0}}
+[11] lit {"value":{"type":"Num","value":0}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -623,10 +632,11 @@ return main();
     entry:
       let v0 = 0
       let v1 = 0
-      let v2 = alloc { y: v0, x: v1 }
+      let v2 = alloc { x: v0, y: v1 }
       return v2",
     "name": "origin",
-    "normalized": "Struct [ y: 0, x: 0 ]",
+    "normalized": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) ->
+  (closure: Struct [ x: 0, y: 0 ] -| Γ: $nu)",
     "solverTrace": "=== Formula ===
   true
 
@@ -652,7 +662,7 @@ return main();
   feasible
 
 [sat]",
-    "type": "Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
+    "type": "Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]",
     "validity": "valid",
   },
 ]

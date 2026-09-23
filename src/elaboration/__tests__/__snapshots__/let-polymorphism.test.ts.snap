@@ -537,11 +537,11 @@ exports[`Let-polymorphism > let-polymorphism with complex types > polymorphic fu
     "constraints": [
       "Schema [ x: ?3 | ?4 ] ~~ ?2",
       "Π(p: ?2) -> (closure: (?3 :: Type) -| Γ: p; fst) ~~ ?1",
-      "Num ~~ ?8",
       "Num ~~ ?7",
+      "Num ~~ ?8",
       "Schema [ x: Num, y: Num ] ~~ ?6",
-      "Bool ~~ ?11",
       "Bool ~~ ?10",
+      "Bool ~~ ?11",
       "Schema [ x: Bool, y: Bool ] ~~ ?9",
       "?13 @ Row",
       "?14 @ Type",
@@ -559,8 +559,12 @@ exports[`Let-polymorphism > let-polymorphism with complex types > polymorphic fu
     = λ(r: Row) =>
       λ(a: Type) =>
         (λ(p: Schema [ x: a | r ]) -> (p).x : Π(p: Schema [ x: a | r ]) -> a);
-  let val1 : Schema [ x: Num, y: Num ] = Struct [ x: 1, y: 2 ];
-  let val2 : Schema [ x: Bool, y: Bool ] = Struct [ x: true, y: false ];
+  let val1
+    : Schema [ x: Num, y: Num ]
+    = ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 1, y: 2 ];
+  let val2
+    : Schema [ x: Bool, y: Bool ]
+    = ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: true, y: false ];
   let a : Num = fst @[ y: Num ] @Num val1;
   let b : Bool = fst @[ y: Bool ] @Bool val2;
   return unit;

@@ -87,8 +87,13 @@ describe("Inference: Structs", () => {
 			expect(displays.type).toMatch(Field.bare("overriden", TypeText.lit("Num")));
 			expect(displays.type).toMatch(Field.schema("foo", Field.meta("inner")));
 			expect(displays.type).toMatch(Field.schema("bar", Field.bare("overriden", TypeText.lit("String")), Field.meta("inner")));
-			expect(displays.constraints).toContain("Num ~~ ?1");
-			expect(displays.constraints).toContain("String ~~ ?4");
+
+			const fooInner = displays.type.match(/\bfoo:\s+Schema\s+\[\s*inner:\s+(\?\d+)\s*\]/)?.[1];
+			const barInner = displays.type.match(/\bbar:\s+Schema\s+\[\s*overriden:\s+String,\s+inner:\s+(\?\d+)\s*\]/)?.[1];
+			expect(fooInner).toMatch(/^\?\d+$/);
+			expect(barInner).toMatch(/^\?\d+$/);
+			expect(displays.constraints).toContain(`Num ~~ ${fooInner}`);
+			expect(displays.constraints).toContain(`String ~~ ${barInner}`);
 
 			expect({ displays }).toMatchSnapshot();
 		});

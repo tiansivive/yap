@@ -1429,37 +1429,37 @@ exports[`Language Tour — Refinement Types > dependent record construction 1`] 
   {
     "codegenJS": "function main() {
   const env_cls2 = {};
-  const fnref_cls2 = closure_38;
+  const fnref_cls2 = closure_43;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
   };
   const Pair3 = closure_cls2;
-  const v4 = 2;
-  const v5 = 1;
+  const v4 = 1;
+  const v5 = 2;
   const v6 = {
-    snd: v4,
-    fst: v5
+    fst: v4,
+    snd: v5
   };
   const p7 = v6;
   const v8 = null;
   return v8;
 }
 
-function closure_40(env0, p1) {
+function closure_45(env0, p1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const v0 = {};
   return v0;
 }
 
-function closure_39(env0, b1) {
+function closure_44(env0, b1) {
   const cap_0 = env0.v0;
   const env_cls2 = {
-    v0: b1,
-    v1: cap_0
+    v0: cap_0,
+    v1: b1
   };
-  const fnref_cls2 = closure_40;
+  const fnref_cls2 = closure_45;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1467,11 +1467,11 @@ function closure_39(env0, b1) {
   return closure_cls2;
 }
 
-function closure_38(env0, a1) {
+function closure_43(env0, a1) {
   const env_cls2 = {
     v0: a1
   };
-  const fnref_cls2 = closure_39;
+  const fnref_cls2 = closure_44;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1488,42 +1488,41 @@ return main();
     = λ(a: Type) ->
       λ(b: Type) ->
         λ(p: Π(t1: a) -> Π(t2: b) -> Bool) ->
-          Σ($sig: [ snd: <ω> b [| λ(v: b) -> p :fst v |], fst: a ]) .
-            Schema [ snd: <ω> b [| λ(v: b) -> p :fst v |], fst: a ];
+          Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+            Schema [ fst: a, snd: <ω> b [| λ(v: b) -> p &fst v |] ];
   let p
-    : Σ($sig: [ snd: <ω> Num [| λ(v: Num) ->
-        (closure: p :fst v -| Γ: v; p; b; a; Pair; test) |],
-      fst: Num ]) .
+    : Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
       (closure: Schema
-        [ snd: <ω> b [| λ(v: b) -> p :fst v |],
-          fst: a ] -| Γ: p; b; a; Pair; test)
-    = Struct [ snd: 2, fst: 1 ];
+        [ fst: a,
+          snd: <ω> b [| λ(v: b) ->
+            p &fst v |] ] -| Γ: $sig; p; b; a; Pair; test)
+    = ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) . Struct [ fst: 1, snd: 2 ];
   return unit;
 }",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"test"}
 [3] block
-  :return -> [34]
+  :return -> [39]
   :stmt -> [4] {"index":0}
-  :stmt -> [30] {"index":1}
+  :stmt -> [29] {"index":1}
 [4] stmt:let {"variable":"Pair"}
-  :next -> [30]
+  :next -> [29]
   :value -> [5]
 [5] lambda {"variable":"a","icit":"Explicit","level":2}
   :annotation -> [6]
   :body -> [7]
-  :env -> [35]
+  :env -> [40]
 [6] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lambda {"variable":"b","icit":"Explicit","level":3}
   :annotation -> [8]
   :body -> [9]
-  :env -> [36]
+  :env -> [41]
 [8] lit {"value":{"type":"Atom","value":"Type"}}
 [9] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [10]
   :body -> [15]
-  :env -> [37]
+  :env -> [42]
 [10] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [11]
   :body -> [12]
@@ -1544,53 +1543,39 @@ return main();
   :scope -> [7] {"level":3}
   :scope -> [10] {"level":4}
 [14] lit {"value":{"type":"Atom","value":"Bool"}}
-[15] sigma {"variable":"$sig","level":5}
+[15] sigma:v2 {"variable":"$sig","level":5}
   :annotation -> [16]
-  :body -> [22]
-[16] row:ext {"label":"snd"}
-  :rest -> [19]
+  :body -> [21]
+[16] row:ext {"label":"fst"}
+  :rest -> [18]
   :value -> [17]
-[17] modal {"quantity":"Many"}
-  :term -> [18]
-[18] var:bound {"index":1}
-  :refers_to -> [7]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [9] {"level":4}
-[19] row:ext {"label":"fst"}
-  :rest -> [21]
-  :value -> [20]
-[20] var:bound {"index":2}
+[17] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[18] row:ext {"label":"snd"}
+  :rest -> [20]
+  :value -> [19]
+[19] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[20] row:empty
+[21] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [22]
+[22] lit {"value":{"type":"Atom","value":"Schema"}}
+[23] row:ext {"label":"fst"}
+  :rest -> [25]
+  :value -> [24]
+[24] var:bound {"index":3}
   :refers_to -> [5]
   :scope -> [2] {"level":0}
   :scope -> [4] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [9] {"level":4}
-[21] row:empty
-[22] app {"icit":"Explicit"}
-  :arg -> [24]
-  :func -> [23]
-[23] lit {"value":{"type":"Atom","value":"Schema"}}
-[24] row:ext {"label":"snd"}
-  :rest -> [27]
-  :value -> [25]
-[25] modal {"quantity":"Many"}
-  :term -> [26]
-[26] var:bound {"index":1}
-  :refers_to -> [9]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [9] {"level":4}
   :scope -> [15] {"level":5}
-[27] row:ext {"label":"fst"}
-  :rest -> [29]
-  :value -> [28]
-[28] var:bound {"index":2}
+[25] row:ext {"label":"snd"}
+  :rest -> [28]
+  :value -> [26]
+[26] modal {"quantity":"Many"}
+  :term -> [27]
+[27] var:bound {"index":2}
   :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [4] {"level":1}
@@ -1598,68 +1583,80 @@ return main();
   :scope -> [7] {"level":3}
   :scope -> [9] {"level":4}
   :scope -> [15] {"level":5}
-[29] row:empty
-[30] stmt:let {"variable":"p"}
-  :value -> [31]
-[31] struct
-  :field -> [32] {"label":"snd"}
-  :field -> [33] {"label":"fst"}
-[32] lit {"value":{"type":"Num","value":2}}
-[33] lit {"value":{"type":"Num","value":1}}
-[34] lit {"value":{"type":"unit"}}
-[35] env
-[36] env
+[28] row:empty
+[29] stmt:let {"variable":"p"}
+  :value -> [30]
+[30] nu {"variable":"$nu","level":3}
+  :annotation -> [31]
+  :body -> [36]
+[31] row:ext {"label":"fst"}
+  :rest -> [33]
+  :value -> [32]
+[32] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[33] row:ext {"label":"snd"}
+  :rest -> [35]
+  :value -> [34]
+[34] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[35] row:empty
+[36] struct
+  :field -> [37] {"label":"fst"}
+  :field -> [38] {"label":"snd"}
+[37] lit {"value":{"type":"Num","value":1}}
+[38] lit {"value":{"type":"Num","value":2}}
+[39] lit {"value":{"type":"unit"}}
+[40] env
+[41] env
   :capture -> [5] {"index":0}
-[37] env
-  :capture -> [7] {"index":0}
-  :capture -> [5] {"index":1}
-[38] closure
+[42] env
+  :capture -> [5] {"index":0}
+  :capture -> [7] {"index":1}
+[43] closure
   :body -> [5]
-  :env -> [35]
-[39] closure
+  :env -> [40]
+[44] closure
   :body -> [7]
-  :env -> [36]
-[40] closure
+  :env -> [41]
+[45] closure
   :body -> [9]
-  :env -> [37]",
-    "ivl": "(forall ((p Schema)) (forall (($a Real)) (=> (= $a 2) (< 1 $a))))",
+  :env -> [42]",
+    "ivl": "(forall ((p Schema)) (forall (($b Real)) (=> (= $b 2) (< 1 $b))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_38
+      let fnref_cls2 = &closure_43
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       let Pair3 = closure_cls2
-      let v4 = 2
-      let v5 = 1
-      let v6 = alloc { snd: v4, fst: v5 }
+      let v4 = 1
+      let v5 = 2
+      let v6 = alloc { fst: v4, snd: v5 }
       let p7 = v6
       let v8 = unit
       return v8
-  fn closure_40(env0, p1) entry=entry
+  fn closure_45(env0, p1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
-      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       return v0
-  fn closure_39(env0, b1) entry=entry
+  fn closure_44(env0, b1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let env_cls2 = alloc { v0: b1, v1: cap_0 }
-      let fnref_cls2 = &closure_40
+      let env_cls2 = alloc { v0: cap_0, v1: b1 }
+      let fnref_cls2 = &closure_45
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_38(env0, a1) entry=entry
+  fn closure_43(env0, a1) entry=entry
     entry:
       let env_cls2 = alloc { v0: a1 }
-      let fnref_cls2 = &closure_39
+      let fnref_cls2 = &closure_44
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2",
     "name": "test",
     "normalized": "unit",
     "solverTrace": "=== Formula ===
-  (forall ((p Schema)) (forall (($a Real)) (=> (= $a 2) (< 1 $a))))
+  (forall ((p Schema)) (forall (($b Real)) (=> (= $b 2) (< 1 $b))))
 
 === Variables ===
   proxy p1: true
@@ -1690,8 +1687,8 @@ return main();
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  $a=2 -> tautology
-  $a=1 -> tautology
+  $b=2 -> tautology
+  $b=1 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
@@ -1706,37 +1703,37 @@ exports[`Language Tour — Refinement Types > dependent record construction reje
   {
     "codegenJS": "function main() {
   const env_cls2 = {};
-  const fnref_cls2 = closure_38;
+  const fnref_cls2 = closure_43;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
   };
   const Pair3 = closure_cls2;
-  const v4 = 1;
-  const v5 = 2;
+  const v4 = 2;
+  const v5 = 1;
   const v6 = {
-    snd: v4,
-    fst: v5
+    fst: v4,
+    snd: v5
   };
   const p7 = v6;
   const v8 = 1;
   return v8;
 }
 
-function closure_40(env0, p1) {
+function closure_45(env0, p1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const v0 = {};
   return v0;
 }
 
-function closure_39(env0, b1) {
+function closure_44(env0, b1) {
   const cap_0 = env0.v0;
   const env_cls2 = {
-    v0: b1,
-    v1: cap_0
+    v0: cap_0,
+    v1: b1
   };
-  const fnref_cls2 = closure_40;
+  const fnref_cls2 = closure_45;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1744,11 +1741,11 @@ function closure_39(env0, b1) {
   return closure_cls2;
 }
 
-function closure_38(env0, a1) {
+function closure_43(env0, a1) {
   const env_cls2 = {
     v0: a1
   };
-  const fnref_cls2 = closure_39;
+  const fnref_cls2 = closure_44;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1765,42 +1762,41 @@ return main();
     = λ(a: Type) ->
       λ(b: Type) ->
         λ(p: Π(t1: a) -> Π(t2: b) -> Bool) ->
-          Σ($sig: [ snd: <ω> b [| λ(v: b) -> p :fst v |], fst: a ]) .
-            Schema [ snd: <ω> b [| λ(v: b) -> p :fst v |], fst: a ];
+          Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+            Schema [ fst: a, snd: <ω> b [| λ(v: b) -> p &fst v |] ];
   let p
-    : Σ($sig: [ snd: <ω> Num [| λ(v: Num) ->
-        (closure: p :fst v -| Γ: v; p; b; a; Pair; testFail) |],
-      fst: Num ]) .
+    : Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
       (closure: Schema
-        [ snd: <ω> b [| λ(v: b) -> p :fst v |],
-          fst: a ] -| Γ: p; b; a; Pair; testFail)
-    = Struct [ snd: 1, fst: 2 ];
+        [ fst: a,
+          snd: <ω> b [| λ(v: b) ->
+            p &fst v |] ] -| Γ: $sig; p; b; a; Pair; testFail)
+    = ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) . Struct [ fst: 2, snd: 1 ];
   return 1;
 }",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"testFail"}
 [3] block
-  :return -> [34]
+  :return -> [39]
   :stmt -> [4] {"index":0}
-  :stmt -> [30] {"index":1}
+  :stmt -> [29] {"index":1}
 [4] stmt:let {"variable":"Pair"}
-  :next -> [30]
+  :next -> [29]
   :value -> [5]
 [5] lambda {"variable":"a","icit":"Explicit","level":2}
   :annotation -> [6]
   :body -> [7]
-  :env -> [35]
+  :env -> [40]
 [6] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lambda {"variable":"b","icit":"Explicit","level":3}
   :annotation -> [8]
   :body -> [9]
-  :env -> [36]
+  :env -> [41]
 [8] lit {"value":{"type":"Atom","value":"Type"}}
 [9] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [10]
   :body -> [15]
-  :env -> [37]
+  :env -> [42]
 [10] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [11]
   :body -> [12]
@@ -1821,53 +1817,39 @@ return main();
   :scope -> [7] {"level":3}
   :scope -> [10] {"level":4}
 [14] lit {"value":{"type":"Atom","value":"Bool"}}
-[15] sigma {"variable":"$sig","level":5}
+[15] sigma:v2 {"variable":"$sig","level":5}
   :annotation -> [16]
-  :body -> [22]
-[16] row:ext {"label":"snd"}
-  :rest -> [19]
+  :body -> [21]
+[16] row:ext {"label":"fst"}
+  :rest -> [18]
   :value -> [17]
-[17] modal {"quantity":"Many"}
-  :term -> [18]
-[18] var:bound {"index":1}
-  :refers_to -> [7]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [9] {"level":4}
-[19] row:ext {"label":"fst"}
-  :rest -> [21]
-  :value -> [20]
-[20] var:bound {"index":2}
+[17] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[18] row:ext {"label":"snd"}
+  :rest -> [20]
+  :value -> [19]
+[19] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[20] row:empty
+[21] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [22]
+[22] lit {"value":{"type":"Atom","value":"Schema"}}
+[23] row:ext {"label":"fst"}
+  :rest -> [25]
+  :value -> [24]
+[24] var:bound {"index":3}
   :refers_to -> [5]
   :scope -> [2] {"level":0}
   :scope -> [4] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [7] {"level":3}
   :scope -> [9] {"level":4}
-[21] row:empty
-[22] app {"icit":"Explicit"}
-  :arg -> [24]
-  :func -> [23]
-[23] lit {"value":{"type":"Atom","value":"Schema"}}
-[24] row:ext {"label":"snd"}
-  :rest -> [27]
-  :value -> [25]
-[25] modal {"quantity":"Many"}
-  :term -> [26]
-[26] var:bound {"index":1}
-  :refers_to -> [9]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [7] {"level":3}
-  :scope -> [9] {"level":4}
   :scope -> [15] {"level":5}
-[27] row:ext {"label":"fst"}
-  :rest -> [29]
-  :value -> [28]
-[28] var:bound {"index":2}
+[25] row:ext {"label":"snd"}
+  :rest -> [28]
+  :value -> [26]
+[26] modal {"quantity":"Many"}
+  :term -> [27]
+[27] var:bound {"index":2}
   :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [4] {"level":1}
@@ -1875,68 +1857,80 @@ return main();
   :scope -> [7] {"level":3}
   :scope -> [9] {"level":4}
   :scope -> [15] {"level":5}
-[29] row:empty
-[30] stmt:let {"variable":"p"}
-  :value -> [31]
-[31] struct
-  :field -> [32] {"label":"snd"}
-  :field -> [33] {"label":"fst"}
-[32] lit {"value":{"type":"Num","value":1}}
-[33] lit {"value":{"type":"Num","value":2}}
-[34] lit {"value":{"type":"Num","value":1}}
-[35] env
-[36] env
+[28] row:empty
+[29] stmt:let {"variable":"p"}
+  :value -> [30]
+[30] nu {"variable":"$nu","level":3}
+  :annotation -> [31]
+  :body -> [36]
+[31] row:ext {"label":"fst"}
+  :rest -> [33]
+  :value -> [32]
+[32] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[33] row:ext {"label":"snd"}
+  :rest -> [35]
+  :value -> [34]
+[34] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[35] row:empty
+[36] struct
+  :field -> [37] {"label":"fst"}
+  :field -> [38] {"label":"snd"}
+[37] lit {"value":{"type":"Num","value":2}}
+[38] lit {"value":{"type":"Num","value":1}}
+[39] lit {"value":{"type":"Num","value":1}}
+[40] env
+[41] env
   :capture -> [5] {"index":0}
-[37] env
-  :capture -> [7] {"index":0}
-  :capture -> [5] {"index":1}
-[38] closure
+[42] env
+  :capture -> [5] {"index":0}
+  :capture -> [7] {"index":1}
+[43] closure
   :body -> [5]
-  :env -> [35]
-[39] closure
+  :env -> [40]
+[44] closure
   :body -> [7]
-  :env -> [36]
-[40] closure
+  :env -> [41]
+[45] closure
   :body -> [9]
-  :env -> [37]",
-    "ivl": "(forall ((p Schema)) (forall (($a Real)) (=> (= $a 1) (< 2 $a))))",
+  :env -> [42]",
+    "ivl": "(forall ((p Schema)) (forall (($b Real)) (=> (= $b 1) (< 2 $b))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_38
+      let fnref_cls2 = &closure_43
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       let Pair3 = closure_cls2
-      let v4 = 1
-      let v5 = 2
-      let v6 = alloc { snd: v4, fst: v5 }
+      let v4 = 2
+      let v5 = 1
+      let v6 = alloc { fst: v4, snd: v5 }
       let p7 = v6
       let v8 = 1
       return v8
-  fn closure_40(env0, p1) entry=entry
+  fn closure_45(env0, p1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
-      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       return v0
-  fn closure_39(env0, b1) entry=entry
+  fn closure_44(env0, b1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let env_cls2 = alloc { v0: b1, v1: cap_0 }
-      let fnref_cls2 = &closure_40
+      let env_cls2 = alloc { v0: cap_0, v1: b1 }
+      let fnref_cls2 = &closure_45
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_38(env0, a1) entry=entry
+  fn closure_43(env0, a1) entry=entry
     entry:
       let env_cls2 = alloc { v0: a1 }
-      let fnref_cls2 = &closure_39
+      let fnref_cls2 = &closure_44
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2",
     "name": "testFail",
     "normalized": "1",
     "solverTrace": "=== Formula ===
-  (forall ((p Schema)) (forall (($a Real)) (=> (= $a 1) (< 2 $a))))
+  (forall ((p Schema)) (forall (($b Real)) (=> (= $b 1) (< 2 $b))))
 
 === Variables ===
   proxy p1: true
@@ -1967,8 +1961,8 @@ return main();
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 1 lemmas
-  $a=1 -> contradiction
-  $a=2 -> tautology
+  $b=1 -> contradiction
+  $b=2 -> tautology
   lemma mbqi:forall: #2:  (mbqi:forall:gen0)
 [clauses]
   #0: p1 -> unit: p1
@@ -3733,23 +3727,26 @@ return main();
         (closure: λ(y: Num) -> FFI.$lt x y -| Γ: x; List; orderedListTestFail))
     = Struct
       [ __tag: cons,
-        payload: Struct
-          [ head: 2,
-            tail: Struct
-              [ __tag: cons,
-                payload: Struct
-                  [ head: 1, tail: Struct [ __tag: nil, payload: unit ] ] ] ] ];
+        payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+          Struct
+            [ head: 2,
+              tail: Struct
+                [ __tag: cons,
+                  payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+                    Struct
+                      [ head: 1,
+                        tail: Struct [ __tag: nil, payload: unit ] ] ] ] ];
   return 1;
 }",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"orderedListTestFail"}
 [3] block
-  :return -> [65]
+  :return -> [72]
   :stmt -> [4] {"index":0}
-  :stmt -> [53] {"index":1}
+  :stmt -> [48] {"index":1}
 [4] stmt:let {"variable":"List"}
-  :next -> [53]
+  :next -> [48]
   :value -> [5]
 [5] mu {"variable":"x","source":"List","level":2}
   :annotation -> [6]
@@ -3790,12 +3787,12 @@ return main();
 [16] lambda {"variable":"t","icit":"Explicit","level":3}
   :annotation -> [17]
   :body -> [18]
-  :env -> [66]
+  :env -> [73]
 [17] lit {"value":{"type":"Atom","value":"Type"}}
 [18] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [19]
   :body -> [24]
-  :env -> [67]
+  :env -> [74]
 [19] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [20]
   :body -> [21]
@@ -3821,145 +3818,135 @@ return main();
   :func -> [25]
 [25] lit {"value":{"type":"Atom","value":"Variant"}}
 [26] row:ext {"label":"cons"}
-  :rest -> [50]
+  :rest -> [45]
   :value -> [27]
-[27] sigma {"variable":"$sig","level":5}
+[27] sigma:v2 {"variable":"$sig","level":5}
   :annotation -> [28]
-  :body -> [38]
-[28] row:ext {"label":"tail"}
-  :rest -> [35]
+  :body -> [33]
+[28] row:ext {"label":"head"}
+  :rest -> [30]
   :value -> [29]
-[29] app {"icit":"Explicit"}
-  :arg -> [34]
-  :func -> [30]
-[30] app {"icit":"Explicit"}
-  :arg -> [32]
-  :func -> [31]
-[31] var:bound {"index":2}
+[29] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[30] row:ext {"label":"tail"}
+  :rest -> [32]
+  :value -> [31]
+[31] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[32] row:empty
+[33] app {"icit":"Explicit"}
+  :arg -> [35]
+  :func -> [34]
+[34] lit {"value":{"type":"Atom","value":"Schema"}}
+[35] row:ext {"label":"head"}
+  :rest -> [37]
+  :value -> [36]
+[36] var:bound {"index":2}
+  :refers_to -> [16]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [16] {"level":3}
+  :scope -> [18] {"level":4}
+  :scope -> [27] {"level":5}
+[37] row:ext {"label":"tail"}
+  :rest -> [44]
+  :value -> [38]
+[38] app {"icit":"Explicit"}
+  :arg -> [43]
+  :func -> [39]
+[39] app {"icit":"Explicit"}
+  :arg -> [41]
+  :func -> [40]
+[40] var:bound {"index":3}
   :refers_to -> [5]
   :scope -> [2] {"level":0}
   :scope -> [4] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [16] {"level":3}
   :scope -> [18] {"level":4}
-[32] modal {"quantity":"Many"}
-  :term -> [33]
-[33] var:bound {"index":1}
+  :scope -> [27] {"level":5}
+[41] modal {"quantity":"Many"}
+  :term -> [42]
+[42] var:bound {"index":2}
   :refers_to -> [16]
   :scope -> [2] {"level":0}
   :scope -> [4] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [16] {"level":3}
   :scope -> [18] {"level":4}
-[34] var:bound {"index":0}
+  :scope -> [27] {"level":5}
+[43] var:bound {"index":1}
   :refers_to -> [18]
   :scope -> [2] {"level":0}
   :scope -> [4] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [16] {"level":3}
   :scope -> [18] {"level":4}
-[35] row:ext {"label":"head"}
-  :rest -> [37]
-  :value -> [36]
-[36] var:bound {"index":1}
-  :refers_to -> [16]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [16] {"level":3}
-  :scope -> [18] {"level":4}
-[37] row:empty
-[38] app {"icit":"Explicit"}
-  :arg -> [40]
-  :func -> [39]
-[39] lit {"value":{"type":"Atom","value":"Schema"}}
-[40] row:ext {"label":"tail"}
+  :scope -> [27] {"level":5}
+[44] row:empty
+[45] row:ext {"label":"nil"}
   :rest -> [47]
-  :value -> [41]
-[41] app {"icit":"Explicit"}
-  :arg -> [46]
-  :func -> [42]
-[42] app {"icit":"Explicit"}
-  :arg -> [44]
-  :func -> [43]
-[43] var:bound {"index":2}
-  :refers_to -> [16]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [16] {"level":3}
-  :scope -> [18] {"level":4}
-  :scope -> [27] {"level":5}
-[44] modal {"quantity":"Many"}
-  :term -> [45]
-[45] var:bound {"index":1}
-  :refers_to -> [18]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [16] {"level":3}
-  :scope -> [18] {"level":4}
-  :scope -> [27] {"level":5}
-[46] var:bound {"index":0}
-  :refers_to -> [27]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [16] {"level":3}
-  :scope -> [18] {"level":4}
-  :scope -> [27] {"level":5}
-[47] row:ext {"label":"head"}
-  :rest -> [49]
-  :value -> [48]
-[48] var:bound {"index":1}
-  :refers_to -> [18]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [16] {"level":3}
-  :scope -> [18] {"level":4}
-  :scope -> [27] {"level":5}
-[49] row:empty
-[50] row:ext {"label":"nil"}
-  :rest -> [52]
-  :value -> [51]
-[51] lit {"value":{"type":"Atom","value":"Unit"}}
-[52] row:empty
-[53] stmt:let {"variable":"ol"}
-  :value -> [54]
-[54] struct
-  :field -> [55] {"label":"__tag"}
-  :field -> [56] {"label":"payload"}
-[55] lit {"value":{"type":"Atom","value":"cons"}}
-[56] struct
-  :field -> [57] {"label":"head"}
-  :field -> [58] {"label":"tail"}
-[57] lit {"value":{"type":"Num","value":2}}
-[58] struct
-  :field -> [59] {"label":"__tag"}
-  :field -> [60] {"label":"payload"}
-[59] lit {"value":{"type":"Atom","value":"cons"}}
-[60] struct
-  :field -> [61] {"label":"head"}
-  :field -> [62] {"label":"tail"}
-[61] lit {"value":{"type":"Num","value":1}}
-[62] struct
-  :field -> [63] {"label":"__tag"}
-  :field -> [64] {"label":"payload"}
-[63] lit {"value":{"type":"Atom","value":"nil"}}
-[64] lit {"value":{"type":"unit"}}
-[65] lit {"value":{"type":"Num","value":1}}
-[66] env
+  :value -> [46]
+[46] lit {"value":{"type":"Atom","value":"Unit"}}
+[47] row:empty
+[48] stmt:let {"variable":"ol"}
+  :value -> [49]
+[49] struct
+  :field -> [50] {"label":"__tag"}
+  :field -> [51] {"label":"payload"}
+[50] lit {"value":{"type":"Atom","value":"cons"}}
+[51] nu {"variable":"$nu","level":3}
+  :annotation -> [52]
+  :body -> [57]
+[52] row:ext {"label":"head"}
+  :rest -> [54]
+  :value -> [53]
+[53] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[54] row:ext {"label":"tail"}
+  :rest -> [56]
+  :value -> [55]
+[55] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[56] row:empty
+[57] struct
+  :field -> [58] {"label":"head"}
+  :field -> [59] {"label":"tail"}
+[58] lit {"value":{"type":"Num","value":2}}
+[59] struct
+  :field -> [60] {"label":"__tag"}
+  :field -> [61] {"label":"payload"}
+[60] lit {"value":{"type":"Atom","value":"cons"}}
+[61] nu {"variable":"$nu","level":4}
+  :annotation -> [62]
+  :body -> [67]
+[62] row:ext {"label":"head"}
+  :rest -> [64]
+  :value -> [63]
+[63] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[64] row:ext {"label":"tail"}
+  :rest -> [66]
+  :value -> [65]
+[65] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[66] row:empty
+[67] struct
+  :field -> [68] {"label":"head"}
+  :field -> [69] {"label":"tail"}
+[68] lit {"value":{"type":"Num","value":1}}
+[69] struct
+  :field -> [70] {"label":"__tag"}
+  :field -> [71] {"label":"payload"}
+[70] lit {"value":{"type":"Atom","value":"nil"}}
+[71] lit {"value":{"type":"unit"}}
+[72] lit {"value":{"type":"Num","value":1}}
+[73] env
   :capture -> [5] {"index":0}
-[67] env
-  :capture -> [5] {"index":0}
-  :capture -> [16] {"index":1}
-[68] closure
+[74] env
+  :capture -> [16] {"index":0}
+  :capture -> [5] {"index":1}
+[75] closure
   :body -> [16]
-  :env -> [66]
-[69] closure
+  :env -> [73]
+[76] closure
   :body -> [18]
-  :env -> [67]",
+  :env -> [74]",
     "ivl": "(forall ((ol App_App_Mu_List_Real_Function))
   (forall (($b Real)) (=> (= $b 1) (< 2 $b))))",
     "kind": "let",
@@ -4092,12 +4079,12 @@ return main();
 [14] lambda {"variable":"t","icit":"Explicit","level":2}
   :annotation -> [15]
   :body -> [16]
-  :env -> [51]
+  :env -> [46]
 [15] lit {"value":{"type":"Atom","value":"Type"}}
 [16] lambda {"variable":"p","icit":"Explicit","level":3}
   :annotation -> [17]
   :body -> [22]
-  :env -> [52]
+  :env -> [47]
 [17] pi {"variable":"t1","icit":"Explicit","level":3}
   :annotation -> [18]
   :body -> [19]
@@ -4121,113 +4108,83 @@ return main();
   :func -> [23]
 [23] lit {"value":{"type":"Atom","value":"Variant"}}
 [24] row:ext {"label":"cons"}
-  :rest -> [48]
+  :rest -> [43]
   :value -> [25]
-[25] sigma {"variable":"$sig","level":4}
+[25] sigma:v2 {"variable":"$sig","level":4}
   :annotation -> [26]
-  :body -> [36]
-[26] row:ext {"label":"tail"}
-  :rest -> [33]
+  :body -> [31]
+[26] row:ext {"label":"head"}
+  :rest -> [28]
   :value -> [27]
-[27] app {"icit":"Explicit"}
-  :arg -> [32]
-  :func -> [28]
-[28] app {"icit":"Explicit"}
-  :arg -> [30]
-  :func -> [29]
-[29] var:bound {"index":2}
+[27] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[28] row:ext {"label":"tail"}
+  :rest -> [30]
+  :value -> [29]
+[29] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[30] row:empty
+[31] app {"icit":"Explicit"}
+  :arg -> [33]
+  :func -> [32]
+[32] lit {"value":{"type":"Atom","value":"Schema"}}
+[33] row:ext {"label":"head"}
+  :rest -> [35]
+  :value -> [34]
+[34] var:bound {"index":2}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+  :scope -> [25] {"level":4}
+[35] row:ext {"label":"tail"}
+  :rest -> [42]
+  :value -> [36]
+[36] app {"icit":"Explicit"}
+  :arg -> [41]
+  :func -> [37]
+[37] app {"icit":"Explicit"}
+  :arg -> [39]
+  :func -> [38]
+[38] var:bound {"index":3}
   :refers_to -> [3]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [14] {"level":2}
   :scope -> [16] {"level":3}
-[30] modal {"quantity":"Many"}
-  :term -> [31]
-[31] var:bound {"index":1}
+  :scope -> [25] {"level":4}
+[39] modal {"quantity":"Many"}
+  :term -> [40]
+[40] var:bound {"index":2}
   :refers_to -> [14]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [14] {"level":2}
   :scope -> [16] {"level":3}
-[32] var:bound {"index":0}
+  :scope -> [25] {"level":4}
+[41] var:bound {"index":1}
   :refers_to -> [16]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [14] {"level":2}
   :scope -> [16] {"level":3}
-[33] row:ext {"label":"head"}
-  :rest -> [35]
-  :value -> [34]
-[34] var:bound {"index":1}
-  :refers_to -> [14]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [14] {"level":2}
-  :scope -> [16] {"level":3}
-[35] row:empty
-[36] app {"icit":"Explicit"}
-  :arg -> [38]
-  :func -> [37]
-[37] lit {"value":{"type":"Atom","value":"Schema"}}
-[38] row:ext {"label":"tail"}
+  :scope -> [25] {"level":4}
+[42] row:empty
+[43] row:ext {"label":"nil"}
   :rest -> [45]
-  :value -> [39]
-[39] app {"icit":"Explicit"}
-  :arg -> [44]
-  :func -> [40]
-[40] app {"icit":"Explicit"}
-  :arg -> [42]
-  :func -> [41]
-[41] var:bound {"index":2}
-  :refers_to -> [14]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [14] {"level":2}
-  :scope -> [16] {"level":3}
-  :scope -> [25] {"level":4}
-[42] modal {"quantity":"Many"}
-  :term -> [43]
-[43] var:bound {"index":1}
-  :refers_to -> [16]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [14] {"level":2}
-  :scope -> [16] {"level":3}
-  :scope -> [25] {"level":4}
-[44] var:bound {"index":0}
-  :refers_to -> [25]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [14] {"level":2}
-  :scope -> [16] {"level":3}
-  :scope -> [25] {"level":4}
-[45] row:ext {"label":"head"}
-  :rest -> [47]
-  :value -> [46]
-[46] var:bound {"index":1}
-  :refers_to -> [16]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [14] {"level":2}
-  :scope -> [16] {"level":3}
-  :scope -> [25] {"level":4}
-[47] row:empty
-[48] row:ext {"label":"nil"}
-  :rest -> [50]
-  :value -> [49]
-[49] lit {"value":{"type":"Atom","value":"Unit"}}
-[50] row:empty
-[51] env
+  :value -> [44]
+[44] lit {"value":{"type":"Atom","value":"Unit"}}
+[45] row:empty
+[46] env
   :capture -> [3] {"index":0}
-[52] env
-  :capture -> [3] {"index":0}
-  :capture -> [14] {"index":1}
-[53] closure
+[47] env
+  :capture -> [14] {"index":0}
+  :capture -> [3] {"index":1}
+[48] closure
   :body -> [14]
-  :env -> [51]
-[54] closure
+  :env -> [46]
+[49] closure
   :body -> [16]
-  :env -> [52]",
+  :env -> [47]",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -4309,17 +4266,22 @@ return main();
 ",
     "elaborated": "Struct
   [ __tag: cons,
-    payload: Struct
-      [ head: 1,
-        tail: Struct
-          [ __tag: cons,
-            payload: Struct
-              [ head: 2,
-                tail: Struct
-                  [ __tag: cons,
-                    payload: Struct
-                      [ head: 3,
-                        tail: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
+    payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+      Struct
+        [ head: 1,
+          tail: Struct
+            [ __tag: cons,
+              payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+                Struct
+                  [ head: 2,
+                    tail: Struct
+                      [ __tag: cons,
+                        payload: ν($nu: [ head: Irrelevant,
+                          tail: Irrelevant ]) .
+                          Struct
+                            [ head: 3,
+                              tail: Struct
+                                [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ascending"}
@@ -4327,31 +4289,67 @@ return main();
   :field -> [4] {"label":"__tag"}
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"cons"}}
-[5] struct
-  :field -> [6] {"label":"head"}
-  :field -> [7] {"label":"tail"}
-[6] lit {"value":{"type":"Num","value":1}}
-[7] struct
-  :field -> [8] {"label":"__tag"}
-  :field -> [9] {"label":"payload"}
-[8] lit {"value":{"type":"Atom","value":"cons"}}
-[9] struct
-  :field -> [10] {"label":"head"}
-  :field -> [11] {"label":"tail"}
-[10] lit {"value":{"type":"Num","value":2}}
+[5] nu {"variable":"$nu","level":1}
+  :annotation -> [6]
+  :body -> [11]
+[6] row:ext {"label":"head"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:ext {"label":"tail"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[10] row:empty
 [11] struct
-  :field -> [12] {"label":"__tag"}
-  :field -> [13] {"label":"payload"}
-[12] lit {"value":{"type":"Atom","value":"cons"}}
+  :field -> [12] {"label":"head"}
+  :field -> [13] {"label":"tail"}
+[12] lit {"value":{"type":"Num","value":1}}
 [13] struct
-  :field -> [14] {"label":"head"}
-  :field -> [15] {"label":"tail"}
-[14] lit {"value":{"type":"Num","value":3}}
-[15] struct
-  :field -> [16] {"label":"__tag"}
-  :field -> [17] {"label":"payload"}
-[16] lit {"value":{"type":"Atom","value":"nil"}}
-[17] lit {"value":{"type":"unit"}}",
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"cons"}}
+[15] nu {"variable":"$nu","level":2}
+  :annotation -> [16]
+  :body -> [21]
+[16] row:ext {"label":"head"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[18] row:ext {"label":"tail"}
+  :rest -> [20]
+  :value -> [19]
+[19] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[20] row:empty
+[21] struct
+  :field -> [22] {"label":"head"}
+  :field -> [23] {"label":"tail"}
+[22] lit {"value":{"type":"Num","value":2}}
+[23] struct
+  :field -> [24] {"label":"__tag"}
+  :field -> [25] {"label":"payload"}
+[24] lit {"value":{"type":"Atom","value":"cons"}}
+[25] nu {"variable":"$nu","level":3}
+  :annotation -> [26]
+  :body -> [31]
+[26] row:ext {"label":"head"}
+  :rest -> [28]
+  :value -> [27]
+[27] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[28] row:ext {"label":"tail"}
+  :rest -> [30]
+  :value -> [29]
+[29] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[30] row:empty
+[31] struct
+  :field -> [32] {"label":"head"}
+  :field -> [33] {"label":"tail"}
+[32] lit {"value":{"type":"Num","value":3}}
+[33] struct
+  :field -> [34] {"label":"__tag"}
+  :field -> [35] {"label":"payload"}
+[34] lit {"value":{"type":"Atom","value":"nil"}}
+[35] lit {"value":{"type":"unit"}}",
     "ivl": "(and
   (forall (($b Real)) (=> (= $b 2) (< 1 $b)))
   (forall (($c Real)) (=> (= $c 3) (and (< 1 $c) (< 2 $c)))))",
@@ -4378,17 +4376,23 @@ return main();
     "name": "ascending",
     "normalized": "Struct
   [ __tag: cons,
-    payload: Struct
-      [ head: 1,
-        tail: Struct
-          [ __tag: cons,
-            payload: Struct
-              [ head: 2,
-                tail: Struct
-                  [ __tag: cons,
-                    payload: Struct
-                      [ head: 3,
-                        tail: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
+    payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) ->
+      (closure: Struct
+        [ head: 1,
+          tail: Struct
+            [ __tag: cons,
+              payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+                Struct
+                  [ head: 2,
+                    tail: Struct
+                      [ __tag: cons,
+                        payload: ν($nu: [ head: Irrelevant,
+                          tail: Irrelevant ]) .
+                          Struct
+                            [ head: 3,
+                              tail: Struct
+                                [ __tag: nil,
+                                  payload: unit ] ] ] ] ] ] -| Γ: $nu) ]",
     "solverTrace": "=== Formula ===
   (and
     (forall (($b Real)) (=> (= $b 2) (< 1 $b)))
@@ -4479,17 +4483,22 @@ return main();
 ",
     "elaborated": "Struct
   [ __tag: cons,
-    payload: Struct
-      [ head: 3,
-        tail: Struct
-          [ __tag: cons,
-            payload: Struct
-              [ head: 2,
-                tail: Struct
-                  [ __tag: cons,
-                    payload: Struct
-                      [ head: 1,
-                        tail: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
+    payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+      Struct
+        [ head: 3,
+          tail: Struct
+            [ __tag: cons,
+              payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+                Struct
+                  [ head: 2,
+                    tail: Struct
+                      [ __tag: cons,
+                        payload: ν($nu: [ head: Irrelevant,
+                          tail: Irrelevant ]) .
+                          Struct
+                            [ head: 1,
+                              tail: Struct
+                                [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"descending"}
@@ -4497,31 +4506,67 @@ return main();
   :field -> [4] {"label":"__tag"}
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"cons"}}
-[5] struct
-  :field -> [6] {"label":"head"}
-  :field -> [7] {"label":"tail"}
-[6] lit {"value":{"type":"Num","value":3}}
-[7] struct
-  :field -> [8] {"label":"__tag"}
-  :field -> [9] {"label":"payload"}
-[8] lit {"value":{"type":"Atom","value":"cons"}}
-[9] struct
-  :field -> [10] {"label":"head"}
-  :field -> [11] {"label":"tail"}
-[10] lit {"value":{"type":"Num","value":2}}
+[5] nu {"variable":"$nu","level":1}
+  :annotation -> [6]
+  :body -> [11]
+[6] row:ext {"label":"head"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:ext {"label":"tail"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[10] row:empty
 [11] struct
-  :field -> [12] {"label":"__tag"}
-  :field -> [13] {"label":"payload"}
-[12] lit {"value":{"type":"Atom","value":"cons"}}
+  :field -> [12] {"label":"head"}
+  :field -> [13] {"label":"tail"}
+[12] lit {"value":{"type":"Num","value":3}}
 [13] struct
-  :field -> [14] {"label":"head"}
-  :field -> [15] {"label":"tail"}
-[14] lit {"value":{"type":"Num","value":1}}
-[15] struct
-  :field -> [16] {"label":"__tag"}
-  :field -> [17] {"label":"payload"}
-[16] lit {"value":{"type":"Atom","value":"nil"}}
-[17] lit {"value":{"type":"unit"}}",
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"cons"}}
+[15] nu {"variable":"$nu","level":2}
+  :annotation -> [16]
+  :body -> [21]
+[16] row:ext {"label":"head"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[18] row:ext {"label":"tail"}
+  :rest -> [20]
+  :value -> [19]
+[19] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[20] row:empty
+[21] struct
+  :field -> [22] {"label":"head"}
+  :field -> [23] {"label":"tail"}
+[22] lit {"value":{"type":"Num","value":2}}
+[23] struct
+  :field -> [24] {"label":"__tag"}
+  :field -> [25] {"label":"payload"}
+[24] lit {"value":{"type":"Atom","value":"cons"}}
+[25] nu {"variable":"$nu","level":3}
+  :annotation -> [26]
+  :body -> [31]
+[26] row:ext {"label":"head"}
+  :rest -> [28]
+  :value -> [27]
+[27] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[28] row:ext {"label":"tail"}
+  :rest -> [30]
+  :value -> [29]
+[29] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[30] row:empty
+[31] struct
+  :field -> [32] {"label":"head"}
+  :field -> [33] {"label":"tail"}
+[32] lit {"value":{"type":"Num","value":1}}
+[33] struct
+  :field -> [34] {"label":"__tag"}
+  :field -> [35] {"label":"payload"}
+[34] lit {"value":{"type":"Atom","value":"nil"}}
+[35] lit {"value":{"type":"unit"}}",
     "ivl": "(and
   (forall (($b Real)) (=> (= $b 2) (> 3 $b)))
   (forall (($c Real)) (=> (= $c 1) (and (> 3 $c) (> 2 $c)))))",
@@ -4548,17 +4593,23 @@ return main();
     "name": "descending",
     "normalized": "Struct
   [ __tag: cons,
-    payload: Struct
-      [ head: 3,
-        tail: Struct
-          [ __tag: cons,
-            payload: Struct
-              [ head: 2,
-                tail: Struct
-                  [ __tag: cons,
-                    payload: Struct
-                      [ head: 1,
-                        tail: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
+    payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) ->
+      (closure: Struct
+        [ head: 3,
+          tail: Struct
+            [ __tag: cons,
+              payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+                Struct
+                  [ head: 2,
+                    tail: Struct
+                      [ __tag: cons,
+                        payload: ν($nu: [ head: Irrelevant,
+                          tail: Irrelevant ]) .
+                          Struct
+                            [ head: 1,
+                              tail: Struct
+                                [ __tag: nil,
+                                  payload: unit ] ] ] ] ] ] -| Γ: $nu) ]",
     "solverTrace": "=== Formula ===
   (and
     (forall (($b Real)) (=> (= $b 2) (> 3 $b)))
@@ -4617,63 +4668,56 @@ exports[`Language Tour — Refinement Types > ordered pair 1`] = `
 }
 return main();
 ",
-    "elaborated": "Σ($sig: [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ]) .
-  Schema [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ]",
+    "elaborated": "Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+  Schema [ fst: Num, snd: <ω> Num [| λ(v: Num) -> FFI.$gt v &fst |] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"OrderedPair"}
-[3] sigma {"variable":"$sig","level":1}
+[3] sigma:v2 {"variable":"$sig","level":1}
   :annotation -> [4]
-  :body -> [11]
-[4] row:ext {"label":"snd"}
-  :rest -> [8]
+  :body -> [9]
+[4] row:ext {"label":"fst"}
+  :rest -> [6]
   :value -> [5]
-[5] modal {"quantity":"Many"}
-  :term -> [7]
-[6] var:free {"name":"Num"}
-[7] var:ref {"name":"Num"}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-[8] row:ext {"label":"fst"}
-  :rest -> [10]
-  :value -> [9]
-[9] var:ref {"name":"Num"}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-[10] row:empty
-[11] app {"icit":"Explicit"}
-  :arg -> [13]
-  :func -> [12]
-[12] lit {"value":{"type":"Atom","value":"Schema"}}
-[13] row:ext {"label":"snd"}
-  :rest -> [16]
-  :value -> [14]
-[14] modal {"quantity":"Many"}
-  :term -> [15]
-[15] var:ref {"name":"Num"}
-  :refers_to -> [6]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"snd"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"fst"}
+  :rest -> [14]
+  :value -> [13]
+[12] var:free {"name":"Num"}
+[13] var:ref {"name":"Num"}
+  :refers_to -> [12]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-[16] row:ext {"label":"fst"}
-  :rest -> [18]
-  :value -> [17]
-[17] var:ref {"name":"Num"}
-  :refers_to -> [6]
+[14] row:ext {"label":"snd"}
+  :rest -> [17]
+  :value -> [15]
+[15] modal {"quantity":"Many"}
+  :term -> [16]
+[16] var:ref {"name":"Num"}
+  :refers_to -> [12]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-[18] row:empty",
+[17] row:empty",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       return v0",
     "name": "OrderedPair",
-    "normalized": "Σ($sig: [ snd: <ω> Num [| λ(v: Num) -> (closure: FFI.$gt v :fst -| Γ: v) |],
-  fst: Num ]) .
+    "normalized": "Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
   (closure: Schema
-    [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ] -| ·)",
+    [ fst: Num, snd: <ω> Num [| λ(v: Num) -> FFI.$gt v &fst |] ] -| Γ: $sig)",
     "solverTrace": "=== Formula ===
   true
 
@@ -4704,38 +4748,51 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = 5;
-  const v1 = 3;
+  const v0 = 3;
+  const v1 = 5;
   const v2 = {
-    snd: v0,
-    fst: v1
+    fst: v0,
+    snd: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ snd: 5, fst: 3 ]",
+    "elaborated": "ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) . Struct [ fst: 3, snd: 5 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"valid"}
-[3] struct
-  :field -> [4] {"label":"snd"}
-  :field -> [5] {"label":"fst"}
-[4] lit {"value":{"type":"Num","value":5}}
-[5] lit {"value":{"type":"Num","value":3}}",
-    "ivl": "(forall (($a Real)) (=> (= $a 5) (> $a 3)))",
+[3] nu {"variable":"$nu","level":1}
+  :annotation -> [4]
+  :body -> [9]
+[4] row:ext {"label":"fst"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"snd"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] struct
+  :field -> [10] {"label":"fst"}
+  :field -> [11] {"label":"snd"}
+[10] lit {"value":{"type":"Num","value":3}}
+[11] lit {"value":{"type":"Num","value":5}}",
+    "ivl": "(forall (($b Real)) (=> (= $b 5) (> $b 3)))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 5
-      let v1 = 3
-      let v2 = alloc { snd: v0, fst: v1 }
+      let v0 = 3
+      let v1 = 5
+      let v2 = alloc { fst: v0, snd: v1 }
       return v2",
     "name": "valid",
-    "normalized": "Struct [ snd: 5, fst: 3 ]",
+    "normalized": "ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) ->
+  (closure: Struct [ fst: 3, snd: 5 ] -| Γ: $nu)",
     "solverTrace": "=== Formula ===
-  (forall (($a Real)) (=> (= $a 5) (> $a 3)))
+  (forall (($b Real)) (=> (= $b 5) (> $b 3)))
 
 === Variables ===
   proxy p1: true
@@ -4766,13 +4823,13 @@ return main();
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  $a=5 -> tautology
-  $a=3 -> tautology
+  $b=5 -> tautology
+  $b=3 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
-    "type": "Σ($sig: [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ]) .
-  Schema [ snd: <ω> Num [| λ(v: Num) -> FFI.$gt v :fst |], fst: Num ]",
+    "type": "Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+  Schema [ fst: Num, snd: <ω> Num [| λ(v: Num) -> FFI.$gt v ($sig).fst |] ]",
     "validity": "valid",
   },
 ]

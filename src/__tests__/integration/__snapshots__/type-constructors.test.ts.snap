@@ -412,7 +412,8 @@ return main();
 ",
     "elaborated": "Struct
   [ __tag: cons,
-    payload: Struct [ 0: 1, 1: Struct [ __tag: nil, payload: unit ] ] ]",
+    payload: ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) .
+      Struct [ 0: 1, 1: Struct [ __tag: nil, payload: unit ] ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"listOf1"}
@@ -420,15 +421,27 @@ return main();
   :field -> [4] {"label":"__tag"}
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"cons"}}
-[5] struct
-  :field -> [6] {"label":"0"}
-  :field -> [7] {"label":"1"}
-[6] lit {"value":{"type":"Num","value":1}}
-[7] struct
-  :field -> [8] {"label":"__tag"}
-  :field -> [9] {"label":"payload"}
-[8] lit {"value":{"type":"Atom","value":"nil"}}
-[9] lit {"value":{"type":"unit"}}",
+[5] nu {"variable":"$nu","level":1}
+  :annotation -> [6]
+  :body -> [11]
+[6] row:ext {"label":"0"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:ext {"label":"1"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[10] row:empty
+[11] struct
+  :field -> [12] {"label":"0"}
+  :field -> [13] {"label":"1"}
+[12] lit {"value":{"type":"Num","value":1}}
+[13] struct
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"nil"}}
+[15] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -445,7 +458,9 @@ return main();
     "name": "listOf1",
     "normalized": "Struct
   [ __tag: cons,
-    payload: Struct [ 0: 1, 1: Struct [ __tag: nil, payload: unit ] ] ]",
+    payload: ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) ->
+      (closure: Struct
+        [ 0: 1, 1: Struct [ __tag: nil, payload: unit ] ] -| Γ: $nu) ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -518,17 +533,21 @@ return main();
 ",
     "elaborated": "Struct
   [ __tag: cons,
-    payload: Struct
-      [ 0: 1,
-        1: Struct
-          [ __tag: cons,
-            payload: Struct
-              [ 0: 2,
-                1: Struct
-                  [ __tag: cons,
-                    payload: Struct
-                      [ 0: 3,
-                        1: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
+    payload: ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) .
+      Struct
+        [ 0: 1,
+          1: Struct
+            [ __tag: cons,
+              payload: ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) .
+                Struct
+                  [ 0: 2,
+                    1: Struct
+                      [ __tag: cons,
+                        payload: ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) .
+                          Struct
+                            [ 0: 3,
+                              1: Struct
+                                [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"listOf3"}
@@ -536,31 +555,67 @@ return main();
   :field -> [4] {"label":"__tag"}
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"cons"}}
-[5] struct
-  :field -> [6] {"label":"0"}
-  :field -> [7] {"label":"1"}
-[6] lit {"value":{"type":"Num","value":1}}
-[7] struct
-  :field -> [8] {"label":"__tag"}
-  :field -> [9] {"label":"payload"}
-[8] lit {"value":{"type":"Atom","value":"cons"}}
-[9] struct
-  :field -> [10] {"label":"0"}
-  :field -> [11] {"label":"1"}
-[10] lit {"value":{"type":"Num","value":2}}
+[5] nu {"variable":"$nu","level":1}
+  :annotation -> [6]
+  :body -> [11]
+[6] row:ext {"label":"0"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:ext {"label":"1"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[10] row:empty
 [11] struct
-  :field -> [12] {"label":"__tag"}
-  :field -> [13] {"label":"payload"}
-[12] lit {"value":{"type":"Atom","value":"cons"}}
+  :field -> [12] {"label":"0"}
+  :field -> [13] {"label":"1"}
+[12] lit {"value":{"type":"Num","value":1}}
 [13] struct
-  :field -> [14] {"label":"0"}
-  :field -> [15] {"label":"1"}
-[14] lit {"value":{"type":"Num","value":3}}
-[15] struct
-  :field -> [16] {"label":"__tag"}
-  :field -> [17] {"label":"payload"}
-[16] lit {"value":{"type":"Atom","value":"nil"}}
-[17] lit {"value":{"type":"unit"}}",
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"cons"}}
+[15] nu {"variable":"$nu","level":2}
+  :annotation -> [16]
+  :body -> [21]
+[16] row:ext {"label":"0"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[18] row:ext {"label":"1"}
+  :rest -> [20]
+  :value -> [19]
+[19] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[20] row:empty
+[21] struct
+  :field -> [22] {"label":"0"}
+  :field -> [23] {"label":"1"}
+[22] lit {"value":{"type":"Num","value":2}}
+[23] struct
+  :field -> [24] {"label":"__tag"}
+  :field -> [25] {"label":"payload"}
+[24] lit {"value":{"type":"Atom","value":"cons"}}
+[25] nu {"variable":"$nu","level":3}
+  :annotation -> [26]
+  :body -> [31]
+[26] row:ext {"label":"0"}
+  :rest -> [28]
+  :value -> [27]
+[27] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[28] row:ext {"label":"1"}
+  :rest -> [30]
+  :value -> [29]
+[29] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[30] row:empty
+[31] struct
+  :field -> [32] {"label":"0"}
+  :field -> [33] {"label":"1"}
+[32] lit {"value":{"type":"Num","value":3}}
+[33] struct
+  :field -> [34] {"label":"__tag"}
+  :field -> [35] {"label":"payload"}
+[34] lit {"value":{"type":"Atom","value":"nil"}}
+[35] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -585,17 +640,22 @@ return main();
     "name": "listOf3",
     "normalized": "Struct
   [ __tag: cons,
-    payload: Struct
-      [ 0: 1,
-        1: Struct
-          [ __tag: cons,
-            payload: Struct
-              [ 0: 2,
-                1: Struct
-                  [ __tag: cons,
-                    payload: Struct
-                      [ 0: 3,
-                        1: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
+    payload: ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) ->
+      (closure: Struct
+        [ 0: 1,
+          1: Struct
+            [ __tag: cons,
+              payload: ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) .
+                Struct
+                  [ 0: 2,
+                    1: Struct
+                      [ __tag: cons,
+                        payload: ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) .
+                          Struct
+                            [ 0: 3,
+                              1: Struct
+                                [ __tag: nil,
+                                  payload: unit ] ] ] ] ] ] -| Γ: $nu) ]",
     "solverTrace": "=== Formula ===
   true
 
