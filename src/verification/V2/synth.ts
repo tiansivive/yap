@@ -361,6 +361,28 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 
 								return NF.Constructors.Sigma(binder.variable, NF.Constructors.Row(rewritten.right), closure);
 							})
+							.with(NF.Patterns.SigmaV2, function* ({ binder, closure }) {
+								if (binder.annotation.type !== "Row") {
+									throw new Error("SigmaV2 binder annotation must be a Row");
+								}
+
+								const rewritten = Row.rewrite(binder.annotation.row, label);
+								if (E.isLeft(rewritten)) {
+									const extended = Row.Constructors.Extension(label, NF.Irrelevant, binder.annotation.row);
+									const ann = NF.Constructors.Row(extended);
+									const quotedPayload = yield* NF.quote(ctx.env.length, payloadTy);
+
+									const schema = match(closure.term)
+										.with(EB.CtorPatterns.Schema, ({ arg }) => EB.Constructors.Schema(EB.Constructors.Extension(label, quotedPayload, arg.row)))
+										.otherwise(_ => {
+											throw new Error("Injection expected a Schema type in SigmaV2 injection");
+										});
+
+									return NF.Constructors.SigmaV2(binder.variable, ann, NF.Constructors.Closure(closure.ctx, schema));
+								}
+
+								return NF.Constructors.SigmaV2(binder.variable, NF.Constructors.Row(rewritten.right), closure);
+							})
 							.otherwise(() => {
 								throw new Error("Injection expected a Schema or Variant type");
 							});
