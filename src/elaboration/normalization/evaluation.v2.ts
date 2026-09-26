@@ -999,6 +999,7 @@ export const schedule = {
 			result(
 				match<NF.Value, View>(forced)
 					.with({ type: "Neutral" }, ({ kind, value }) => ({ kind, value }))
+					.with(NF.Patterns.Rigid, NF.Patterns.Flex, value => ({ kind: "Symbolic", value }))
 					.otherwise(value => ({ kind: "Sealed", value })),
 			),
 		);
@@ -1082,6 +1083,14 @@ export function* apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value):
 }
 
 export type View = { kind: NF.Neutral; value: NF.Value };
+
+export const ViewPatterns = {
+	Sealed: { kind: "Sealed" } as const,
+	Symbolic: { kind: "Symbolic" } as const,
+	Blocked: { kind: "Blocked" } as const,
+	Flex: { kind: "Symbolic", value: NF.Patterns.Flex } as const,
+	Rigid: { kind: "Symbolic", value: NF.Patterns.Rigid } as const,
+};
 
 /** The driven form of `schedule.resume`; getting the same value back means nothing fired. */
 export function* resume(value: NF.Value): Evaluation<Option<NF.Value>> {

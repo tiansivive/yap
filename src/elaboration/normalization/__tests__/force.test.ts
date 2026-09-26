@@ -46,6 +46,15 @@ describe("Normalization: force() and apply()", () => {
 		expect(runNF(ctx, () => NF.view(label)).kind).toBe("Symbolic");
 	});
 
+	it("view classifies raw bound and meta variables as symbolic", () => {
+		const ctx = mkCtx();
+		const rigid = NF.Constructors.Var({ type: "Bound", lvl: 0 });
+		const flex = NF.Constructors.Var({ type: "Meta", val: 2, lvl: 0 });
+
+		expect(runNF(ctx, () => NF.view(rigid)).kind).toBe("Symbolic");
+		expect(runNF(ctx, () => NF.view(flex)).kind).toBe("Symbolic");
+	});
+
 	it("force resolves labels through concrete sigma values", () => {
 		const label = NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Label", name: "point" }));
 		const point = NF.Constructors.Lit(Lit.Num(1));
