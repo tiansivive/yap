@@ -30,10 +30,80 @@ export const subtype = function* (left: NF.Value, right: NF.Value): Verification
 		display(() => NF.display(right, { deBruijn: true })),
 	);
 
-	const forcedLeft = yield* NF.force(NF.unwrapNeutral(left));
-	const forcedRight = yield* NF.force(NF.unwrapNeutral(right));
+	const result = yield* dispatch(left, right);
 
-	const result = yield* match([forcedLeft, forcedRight])
+	yield* logger.exit();
+	return result;
+};
+
+const dispatch = function* (left: NF.Value, right: NF.Value): Verification<IVL.Formula> {
+	const ctx = yield* reader.ask();
+	const registry = yield* Metas.registry.get();
+	const [a, b] = [yield* NF.view(left), yield* NF.view(right)];
+
+	return yield* match([a, b])
+		.with([NF.ViewPatterns.Blocked, P._], ([left, right]) => subtype(left.value, right.value))
+		.with([P._, NF.ViewPatterns.Blocked], ([left, right]) => subtype(left.value, right.value))
+		.with([NF.ViewPatterns.Sealed, P._], ([left, right]) => structural(left.value, right.value))
+		.with([P._, NF.ViewPatterns.Sealed], ([left, right]) => structural(left.value, right.value))
+		.with([NF.ViewPatterns.Flex, P._], function* ([flex]) {
+			const solution = Metas.solution(registry, flex.value.variable.val);
+			if (!solution) {
+				throw new Error("Unbound meta variable in subtype");
+			}
+			return yield* subtype(solution, right);
+		})
+		.with([P._, NF.ViewPatterns.Flex], function* ([, flex]) {
+			const solution = Metas.solution(registry, flex.value.variable.val);
+			if (!solution) {
+				throw new Error("Unbound meta variable in subtype");
+			}
+			return yield* subtype(left, solution);
+		})
+		.with([NF.ViewPatterns.Rigid, NF.ViewPatterns.Rigid], function* ([rigid1, rigid2]) {
+			if (rigid1.value.variable.lvl === rigid2.value.variable.lvl) {
+				return Build.true_();
+			}
+			throw new Error("Rigid variables do not match in subtype");
+		})
+		.with([NF.ViewPatterns.Rigid, P._], function* ([rigid]) {
+			const entry = ctx.env[EB.lvl2idx(ctx, rigid.value.variable.lvl)];
+			if (!entry) {
+				throw new Error("Unbound variable in subtype");
+			}
+			return yield* subtype(entry.nf, right);
+		})
+		.with([P._, NF.ViewPatterns.Rigid], function* ([, rigid]) {
+			const entry = ctx.env[EB.lvl2idx(ctx, rigid.value.variable.lvl)];
+			if (!entry) {
+				throw new Error("Unbound variable in subtype");
+			}
+			return yield* subtype(left, entry.nf);
+		})
+		.otherwise(() => unsupported(left, right));
+};
+
+const unsupported = function* (a: NF.Value, b: NF.Value): Verification<never> {
+	const ctx = yield* reader.ask();
+	const registry = yield* Metas.registry.get();
+	const display = NF.probe(ctx, registry);
+
+	yield* logger.log(
+		"Subtype not implemented for",
+		display(() => NF.display(a)),
+		"<:",
+		display(() => NF.display(b)),
+	);
+	throw new Error(`Subtype not implemented for ${display(() => NF.display(a))} <: ${display(() => NF.display(b))}`);
+};
+
+const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formula> {
+	const ctx = yield* reader.ask();
+	const registry = yield* Metas.registry.get();
+	const display = NF.probe(ctx, registry);
+
+	const [left, right] = [NF.unwrapNeutral(a), NF.unwrapNeutral(b)];
+	return yield* match([left, right])
 		.with([NF.Patterns.Any, P._], function* ([, b]) {
 			yield* logger.log(
 				"subtype: Any <:",
@@ -221,16 +291,6 @@ export const subtype = function* (left: NF.Value, right: NF.Value): Verification
 			const unfolded = yield* NF.apply(mu.binder, mu.closure, mu);
 			return yield* subtype(ty, unfolded);
 		})
-		/* Blocked is outer state; an application residual and an application compare as applications. Ahead of the mu-unfolding fallthroughs, which reject a pair neither side of which is a bare App. */
-		.with([NF.Patterns.StuckApp, NF.Patterns.StuckApp], function* ([left, right]) {
-			return yield* subtype(left.value, right.value);
-		})
-		.with([NF.Patterns.StuckApp, NF.Patterns.App], function* ([stuck, app]) {
-			return yield* subtype(stuck.value, app);
-		})
-		.with([NF.Patterns.App, NF.Patterns.StuckApp], function* ([app, stuck]) {
-			return yield* subtype(app, stuck.value);
-		})
 		.with([NF.Patterns.App, NF.Patterns.App], function* ([left, right]) {
 			if ([left.func, right.func, left.arg, right.arg].some(NF.isFlex)) {
 				const vc1 = yield* subtype(left.func, right.func);
@@ -283,42 +343,18 @@ export const subtype = function* (left: NF.Value, right: NF.Value): Verification
 		.with([P._, NF.Patterns.App], function* ([ty, folded]) {
 			const unfolded = yield* NF.unfoldMu(folded);
 			if (unfolded === undefined) {
-				yield* logger.log(
-					"Subtype not implemented for",
-					display(() => NF.display(ty)),
-					"<:",
-					display(() => NF.display(folded)),
-				);
-				throw new Error(`Subtype not implemented for ${display(() => NF.display(ty))} <: ${display(() => NF.display(folded))}`);
+				return yield* unsupported(ty, folded);
 			}
 			return yield* subtype(ty, unfolded);
 		})
 		.with([NF.Patterns.App, P._], function* ([folded, ty]) {
 			const unfolded = yield* NF.unfoldMu(folded);
 			if (unfolded === undefined) {
-				yield* logger.log(
-					"Subtype not implemented for",
-					display(() => NF.display(folded)),
-					"<:",
-					display(() => NF.display(ty)),
-				);
-				throw new Error(`Subtype not implemented for ${display(() => NF.display(folded))} <: ${display(() => NF.display(ty))}`);
+				return yield* unsupported(folded, ty);
 			}
 			return yield* subtype(unfolded, ty);
 		})
-
-		.otherwise(function* ([a, b]) {
-			yield* logger.log(
-				"Subtype not implemented for",
-				display(() => NF.display(a)),
-				"<:",
-				display(() => NF.display(b)),
-			);
-			throw new Error(`Subtype not implemented for ${display(() => NF.display(a))} <: ${display(() => NF.display(b))}`);
-		});
-
-	yield* logger.exit();
-	return result;
+		.otherwise(([a, b]) => unsupported(a, b));
 };
 
 const contains = function* (a: NF.Row, b: NF.Row): Verification<IVL.Formula> {
