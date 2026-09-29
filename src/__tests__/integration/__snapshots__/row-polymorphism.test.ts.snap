@@ -697,8 +697,8 @@ return main();
       let v10 = call *fnref8(env9, v7)
       return v10",
     "name": "p1",
-    "normalized": "ν($nu: [ z: Irrelevant, x: Irrelevant, y: Irrelevant ]) ->
-  (closure: Struct [ z: 0, x: 1, y: 2 ] -| Γ: $nu)",
+    "normalized": "ν($nu: [ x: Irrelevant, y: Irrelevant, z: Irrelevant ]) ->
+  (closure: Struct [ x: 1, y: 2, z: 0 ] -| Γ: $nu)",
     "solverTrace": "=== Formula ===
   true
 
@@ -817,8 +817,8 @@ return main();
       let v12 = call *fnref10(env11, v9)
       return v12",
     "name": "p2",
-    "normalized": "ν($nu: [ z: Irrelevant, x: Irrelevant, y: Irrelevant, color: Irrelevant ]) ->
-  (closure: Struct [ z: 0, x: 5, y: 10, color: "red" ] -| Γ: $nu)",
+    "normalized": "ν($nu: [ x: Irrelevant, y: Irrelevant, color: Irrelevant, z: Irrelevant ]) ->
+  (closure: Struct [ x: 5, y: 10, color: "red", z: 0 ] -| Γ: $nu)",
     "solverTrace": "",
     "type": "Σ($sig: [ x: Irrelevant, y: Irrelevant, z: Irrelevant ]) .
   Schema [ x: Num, y: Num, z: Num | [ color: String ] ]",

@@ -1,5 +1,17 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`inference: injection > { { x: 1 } | x = 2 } 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Num ~~ ?1",
+    ],
+    "term": "{ ν($nu: [ x: Irrelevant ]) . Struct [ x: 1 ] | x = 2 }",
+    "type": "Schema [ x: Num ]",
+  },
+}
+`;
+
 exports[`inference: injection > { { x: 1 } | y = 2 } 1`] = `
 {
   "displays": {

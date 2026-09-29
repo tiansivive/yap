@@ -32,6 +32,7 @@ let getX: { x: Num, y: Num } -> Num = \\p -> p.x;
 let point = { x: 10 };
 let point3d = { point | y = 20, z = 30 };
 let updated = { point | x = 100 };
+let updatedX = updated.x;
 		`);
 		expect(snap(result)).toMatchSnapshot();
 	});

@@ -398,13 +398,21 @@ exports[`Language Tour — Records & Tuples > field extension 1`] = `
 }
 return main();
 ",
-    "elaborated": "Struct [ x: 10 ]",
+    "elaborated": "ν($nu: [ x: Irrelevant ]) . Struct [ x: 10 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"point"}
-[3] struct
-  :field -> [4] {"label":"x"}
-[4] lit {"value":{"type":"Num","value":10}}",
+[3] nu {"variable":"$nu","level":1}
+  :annotation -> [4]
+  :body -> [7]
+[4] row:ext {"label":"x"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:empty
+[7] struct
+  :field -> [8] {"label":"x"}
+[8] lit {"value":{"type":"Num","value":10}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -414,7 +422,7 @@ return main();
       let v1 = alloc { x: v0 }
       return v1",
     "name": "point",
-    "normalized": "Struct [ x: 10 ]",
+    "normalized": "ν($nu: [ x: Irrelevant ]) -> (closure: Struct [ x: 10 ] -| Γ: $nu)",
     "solverTrace": "=== Formula ===
   true
 
@@ -488,7 +496,8 @@ return main();
       let v4 = update-immutable v3 { z: v0 }
       return v4",
     "name": "point3d",
-    "normalized": "Struct [ x: 10, y: 20, z: 30 ]",
+    "normalized": "ν($nu: [ x: Irrelevant, y: Irrelevant, z: Irrelevant ]) ->
+  (closure: Struct [ x: 10, y: 20, z: 30 ] -| Γ: $nu; point)",
     "solverTrace": "=== Formula ===
   true
 
@@ -551,7 +560,7 @@ return main();
       let v2 = update-immutable v1 { x: v0 }
       return v2",
     "name": "updated",
-    "normalized": "Struct [ x: 100 ]",
+    "normalized": "ν($nu: [ x: Irrelevant ]) -> (closure: Struct [ x: 100 ] -| Γ: $nu; point)",
     "solverTrace": "=== Formula ===
   true
 
@@ -578,6 +587,62 @@ return main();
 
 [sat]",
     "type": "Schema [ x: Num ]",
+    "validity": "valid",
+  },
+  {
+    "codegenJS": "function main() {
+  const v0 = updated;
+  const v1 = v0.x;
+  return v1;
+}
+return main();
+",
+    "elaborated": "(updated).x",
+    "gram": "[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"updatedX"}
+[3] proj {"label":"x"}
+  :target -> [5]
+[4] var:free {"name":"updated"}
+[5] var:ref {"name":"updated"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}",
+    "ivl": "true",
+    "kind": "let",
+    "mir": "module
+  fn main entry=entry
+    entry:
+      let v0 = updated
+      let v1 = read v0.x
+      return v1",
+    "name": "updatedX",
+    "normalized": "100",
+    "solverTrace": "=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]",
+    "type": "Num",
     "validity": "valid",
   },
 ]

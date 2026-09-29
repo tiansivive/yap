@@ -655,6 +655,18 @@ const projectValue = function* (base: NF.Value, label: string): Evaluation<Machi
 	);
 };
 
+const overwrite = <T, V>(row: R.Row<T, V>, label: string, value: T): R.Row<T, V> =>
+	match(row)
+		.with({ type: "empty" }, () => R.Constructors.Extension(label, value, row))
+		.with({ type: "variable" }, () => R.Constructors.Extension(label, value, row))
+		.with(
+			{ type: "extension" },
+			({ label: current }) => current === label,
+			({ row: rest }) => R.Constructors.Extension(label, value, rest),
+		)
+		.with({ type: "extension" }, ({ label: current, value: existing, row: rest }) => R.Constructors.Extension(current, existing, overwrite(rest, label, value)))
+		.exhaustive();
+
 const inject = function* (base: NF.Value, label: string, injected: NF.Value): Evaluation<Machine<NF.Value | undefined>> {
 	return yield* Do.let("known", schedule.view(base)).in(({ known }) =>
 		match(known)
@@ -669,25 +681,25 @@ const inject = function* (base: NF.Value, label: string, injected: NF.Value): Ev
 					return yield* result(undefined);
 				}
 
-				const annotation = NF.Constructors.Row(NF.Constructors.Extension(label, NF.Irrelevant, value.binder.annotation.row));
+				const annotation = NF.Constructors.Row(overwrite(value.binder.annotation.row, label, NF.Irrelevant));
 				const ctx = yield* M.reader.ask();
 				return yield* Do.let("quoted", Quoting.quote(ctx.env.length + 1, injected)).in(({ quoted }) =>
 					result(
 						NF.Constructors.Nu(
 							value.binder.variable,
 							annotation,
-							NF.Constructors.Closure(value.closure.ctx, EB.Constructors.Struct(R.Constructors.Extension(label, quoted, body))),
+							NF.Constructors.Closure(value.closure.ctx, EB.Constructors.Struct(overwrite(body, label, quoted))),
 						),
 					),
 				);
 			})
 			.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value }) =>
-				result(NF.Constructors.App(value.func, NF.Constructors.Row(NF.Constructors.Extension(label, injected, value.arg.row)), value.icit)),
+				result(NF.Constructors.App(value.func, NF.Constructors.Row(overwrite(value.arg.row, label, injected)), value.icit)),
 			)
 			.with({ kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) =>
-				result(NF.Constructors.App(value.func, NF.Constructors.Row(NF.Constructors.Extension(label, injected, value.arg.row)), value.icit)),
+				result(NF.Constructors.App(value.func, NF.Constructors.Row(overwrite(value.arg.row, label, injected)), value.icit)),
 			)
-			.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => result(NF.Constructors.Row(NF.Constructors.Extension(label, injected, value.row))))
+			.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => result(NF.Constructors.Row(overwrite(value.row, label, injected))))
 			.otherwise(() => result(undefined)),
 	);
 };
