@@ -150,7 +150,7 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 
 			if (zonked) {
 				/* A lowering boundary: quote the solution under a blank scope and a registry built from the zonker. */
-				const blank: EB.Context = { env: [], implicits: [], labels: {}, sigma: {}, record: {}, imports: {}, ffi: {}, trace: [] };
+				const blank: EB.Context = { env: [], implicits: [], labels: {}, sigma: {}, record: {}, local: [], imports: {}, ffi: {}, trace: [] };
 				const registry: Metas.Registry = Object.fromEntries(
 					Object.entries(st.zonker ?? {}).map(([id, solution]) => [id, { meta: { type: "Meta", val: Number(id), lvl: 0 }, annotation: solution, solution }]),
 				);

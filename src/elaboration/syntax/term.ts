@@ -37,7 +37,8 @@ export type Variable =
 	| { type: "Label"; name: string }
 	/** @see NF.Variable: `&label` / `$label` carry a de Bruijn index like any bound variable. */
 	| { type: "DepLabel"; name: string; index: number; annotation: NF.Value }
-	| { type: "NuLabel"; name: string; index: number; annotation: NF.Value }
+	/** `index` counts Nu frames on `ctx.local`, not env binders. `meta` stands for a field still being elaborated. */
+	| { type: "NuLabel"; name: string; index: number; annotation: NF.Value; meta?: Meta }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
@@ -52,7 +53,7 @@ export type Binding = (
 	| { type: "Lambda"; variable: string; icit: Implicitness }
 	| { type: "Mu"; variable: string; source: string }
 	| { type: "Pi"; variable: string; icit: Implicitness }
-	| { type: "Nu"; variable: string }
+	| { type: "Nu"; variable: string; mode: "strict" | "lazy"; labels: readonly string[]; scoped: Row }
 	| { type: "Sigma"; variable: string }
 	| { type: "SigmaV2"; variable: string }
 ) & { annotation: Term };
@@ -123,10 +124,10 @@ export const Constructors = {
 			binding: { type: "SigmaV2" as const, variable, annotation },
 			body,
 		}),
-	Nu: (variable: string, annotation: Term, body: Term): Term =>
+	Nu: ({ mode, labels, scoped }: Pick<Extract<Binding, { type: "Nu" }>, "mode" | "labels" | "scoped">, body: Term): Term =>
 		mk({
 			type: "Abs",
-			binding: { type: "Nu" as const, variable, annotation },
+			binding: { type: "Nu" as const, variable: "$nu", mode, labels, scoped, annotation: Constructors.Lit({ type: "Atom", value: "Irrelevant" }) },
 			body,
 		}),
 	Mu: (variable: string, source: string, annotation: Term, body: Term): Term =>
@@ -146,7 +147,13 @@ export const Constructors = {
 		Foreign: (name: string): Variable => ({ type: "Foreign", name }),
 		Label: (name: string): Variable => ({ type: "Label", name }),
 		DepLabel: (name: string, index: number, annotation: NF.Value): Variable => ({ type: "DepLabel", name, index, annotation }),
-		NuLabel: (name: string, index: number, annotation: NF.Value): Variable => ({ type: "NuLabel", name, index, annotation }),
+		NuLabel: (name: string, index: number, annotation: NF.Value, meta?: Meta): Variable => ({
+			type: "NuLabel",
+			name,
+			index,
+			annotation,
+			...(meta && { meta }),
+		}),
 		Meta: (val: number, lvl: number): Extract<Variable, { type: "Meta" }> => ({ type: "Meta", val, lvl }),
 	},
 	App: (icit: Implicitness, func: Term, arg: Term): Term =>

@@ -128,8 +128,8 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				.with({ type: "SigmaV2" }, function* ({ variable, annotation }) {
 					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
-				.with({ type: "Nu" }, function* ({ variable, annotation }) {
-					return ["ν(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+				.with({ type: "Nu" }, function* ({ mode, scoped }) {
+					return ["ν", mode, " ", yield* go(EB.Constructors.Row(scoped))] satisfies PP.Doc;
 				})
 				.otherwise(() => {
 					throw new Error("_display Term Binder: Not implemented");
@@ -140,7 +140,8 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				.with({ icit: "Implicit" }, () => "=>")
 				.otherwise(() => "->");
 
-			const inner = binding.type === "Sigma" ? go(body) : M.reader.local(bound(binding.variable), go(body));
+			/* Sigma and Nu bind labels, not env variables. */
+			const inner = binding.type === "Sigma" || binding.type === "Nu" ? go(body) : M.reader.local(bound(binding.variable), go(body));
 
 			if (opts.printEnv) {
 				return PP.group(["(", b, " ", arrow, PP.nest(2, [PP.line, yield* inner])]);

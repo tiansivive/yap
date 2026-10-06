@@ -30,10 +30,19 @@ export type Context = {
 	sigma: Record<string, { value: NF.Value }>;
 	record: Record<string, { term?: EB.Term; value?: NF.Value }>;
 
+	/** The label stack: Nu frames, newest first, indexed by `$label` references independently of `env`. */
+	local: Frame[];
 	imports: Record<string, EB.AST>;
 	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
 	trace: P.Stack<Provenance>;
 };
+
+/**
+ * A Nu's field scope. `ctx` is where the record was defined, without this frame. A label in `labels`
+ * missing from `terms` has not been elaborated yet, or is held symbolic while quoting.
+ * `slots` carries each field's provisional type during elaboration.
+ */
+export type Frame = { labels: readonly string[]; ctx: Context; slots: Record<string, NF.Value>; terms: EB.Row };
 
 export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 

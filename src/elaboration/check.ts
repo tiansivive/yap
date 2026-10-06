@@ -98,7 +98,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				 * The window collects the metas standing for sibling values. A dep-label's type is
 				 * only knowable once the row it points into has been elaborated, which is here.
 				 */
-				const [[body, us], labels] = yield* M.windows.within<{ label: string; meta: EB.Meta }>()(ctx.env.length, () =>
+				const [[body, us], labels] = yield* M.windows.within<{ label: string; meta: EB.Meta }>()({ scope: "env", lvl: ctx.env.length }, () =>
 					M.reader.local(xtended, DependentRows.fields(row)),
 				);
 

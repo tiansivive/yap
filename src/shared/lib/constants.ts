@@ -7,6 +7,7 @@ export const defaultContext: EB.Context = {
     labels: {},
     sigma: {},
     record: {},
+    local: [],
     trace: [],
     imports: { ...Lib.Elaborated() },
     ffi: Lib.PrimOps,

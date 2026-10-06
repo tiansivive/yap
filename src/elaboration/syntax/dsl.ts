@@ -96,16 +96,19 @@ export const lte = (p: EB.Term, q: EB.Term): EB.Term => {
 };
 
 // Structural: struct, proj, inj
-export const struct = (fields: Array<{ label: string; value: EB.Term }>): EB.Term => {
-	const row = fields.reduceRight<EB.Row>((acc, { label, value }) => R.Constructors.Extension(label, value, acc), R.Constructors.Empty() satisfies EB.Row);
-	return EB.Constructors.Struct(row);
-};
+type Fields = Array<{ label: string; value: EB.Term }>;
+
+const row = (fields: Fields): EB.Row =>
+	fields.reduceRight<EB.Row>((acc, { label, value }) => R.Constructors.Extension(label, value, acc), R.Constructors.Empty() satisfies EB.Row);
+
+export const struct = (fields: Fields): EB.Term => EB.Constructors.Struct(row(fields));
 
 export const Labels = {
 	nu: (name: string, index = 0): EB.Term => EB.Constructors.Var(EB.Constructors.Vars.NuLabel(name, index, NF.Type)),
 };
 
-export const nu = (fields: Array<{ label: string; value: EB.Term }>): EB.Term => EB.Constructors.Nu("$nu", type("Row"), struct(fields));
+export const nu = (fields: Fields): EB.Term =>
+	EB.Constructors.Nu({ mode: "strict", labels: fields.map(({ label }) => label), scoped: row(fields) }, struct(fields));
 
 export const proj = (label: string, term: EB.Term): EB.Term => EB.Constructors.Proj(label, term);
 

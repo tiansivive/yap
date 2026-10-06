@@ -44,7 +44,7 @@ export type Binder =
 	| { type: "Mu"; variable: string; annotation: Value; source: string }
 	| { type: "Sigma"; variable: string; annotation: Value }
 	| { type: "SigmaV2"; variable: string; annotation: Value }
-	| { type: "Nu"; variable: string; annotation: Value };
+	| { type: "Nu"; variable: string; annotation: Value; mode: "strict" | "lazy"; labels: readonly string[]; scoped: EB.Row };
 
 export type Variable =
 	| { type: "Bound"; lvl: number }
@@ -52,6 +52,7 @@ export type Variable =
 	| { type: "Label"; name: string }
 	| { type: "Foreign"; name: string }
 	| { type: "DepLabel"; name: string; lvl: number; annotation: Value }
+	/** `lvl` is a label-stack level (`ctx.local`), not an env level. */
 	| { type: "NuLabel"; name: string; lvl: number; annotation: Value }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
@@ -84,7 +85,12 @@ export const Constructors = {
 		}) as Value & { type: "Abs"; binder: { type: "Pi" } },
 	Sigma: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Sigma", variable, annotation }, closure }),
 	SigmaV2: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "SigmaV2", variable, annotation }, closure }),
-	Nu: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Nu", variable, annotation }, closure }),
+	Nu: ({ variable, mode, labels, scoped }: Pick<Extract<Binder, { type: "Nu" }>, "variable" | "mode" | "labels" | "scoped">, closure: Closure) =>
+		mk({
+			type: "Abs" as const,
+			binder: { type: "Nu", variable, mode, labels, scoped, annotation: Constructors.Lit({ type: "Atom", value: "Irrelevant" }) },
+			closure,
+		}),
 	Mu: (variable: string, source: string, annotation: Value, closure: Closure): Value =>
 		mk({
 			type: "Abs" as const,
