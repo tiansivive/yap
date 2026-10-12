@@ -137,32 +137,16 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				return [EB.Constructors.Struct(r), us] satisfies Result;
 			})
 			.with([{ type: "struct" }, NF.Patterns.SigmaV2], function* ([tm, sig]) {
-				const inferred = yield* DependentRows.prepare(tm.row, ctx.env.length);
-				const wit = yield* DependentRows.witness(inferred);
-				const rv = yield* M.reader.local(
-					c => EB.bind(c, { type: "Nu", variable: "$nu" }, NF.Constructors.Row(wit)),
-					(function* () {
-						const row = yield* DependentRows.infer(tm.row, wit);
-						const value = yield* NF.normalize(EB.Constructors.Struct(row.term));
-						const values = NF.rowOf(value);
-						assert(values, "Expected inferred dependent struct to normalize to a row");
-						return values;
-					})(),
-				);
+				/* The expected row depends on the struct's own values, so the struct is inferred once for them. */
+				const [inferred] = yield* EB.Struct.infer(tm);
+				const values = NF.rowOf(yield* NF.normalize(inferred));
+				assert(values, "Expected a strict struct to normalize to a row");
 
-				const expected = yield* NF.apply(sig.binder, sig.closure, NF.Constructors.Row(rv));
-				const expectedRow = NF.rowOf(expected);
-				assert(expectedRow, "Expected the applied SigmaV2 body to contain a row");
+				const expected = NF.rowOf(yield* NF.apply(sig.binder, sig.closure, NF.Constructors.Row(values)));
+				assert(expected, "Expected the applied SigmaV2 body to contain a row");
 
-				const checked = yield* DependentRows.prepare(tm.row, ctx.env.length);
-				const checkedWit = yield* DependentRows.witness(checked);
-				const [body, us] = yield* M.reader.local(
-					c => EB.bind(c, { type: "Nu", variable: "$nu" }, NF.Constructors.Row(checkedWit)),
-					DependentRows.check(tm.row, expectedRow, checkedWit),
-				);
-				const annotation = yield* DependentRows.placeholders(tm.row, ctx.env.length);
-
-				return [EB.Constructors.Nu("$nu", EB.Constructors.Row(annotation), EB.Constructors.Struct(body)), us] satisfies Result;
+				const [binder, checked] = yield* DependentRows.nu(tm.row, slots => DependentRows.check(tm.row, expected, slots));
+				return [EB.Constructors.Nu(binder, EB.Constructors.Struct(checked.term)), checked.usages] satisfies Result;
 			})
 			.with([{ type: "struct" }, NF.Patterns.Schema], function* ([tm, val]) {
 				const bindings = yield* extract(tm.row, ctx.env.length);

@@ -42,7 +42,7 @@ export type Context = {
  * missing from `terms` has not been elaborated yet, or is held symbolic while quoting.
  * `slots` carries each field's provisional type during elaboration.
  */
-export type Frame = { labels: readonly string[]; ctx: Context; slots: Record<string, NF.Value>; terms: EB.Row };
+export type Frame = { labels: readonly string[]; ctx: Context; slots: NF.Row; terms: EB.Row };
 
 export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
@@ -56,12 +56,15 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 		}
 		throw new Error(`Label not found: ${variable.value}`);
 	}
+	if (variable.type === "nu-label") {
+		return yield* field(variable.value, ctx, zeros);
+	}
 
 	const _lookup = function* (i: number, variable: Src.Variable, types: Array<Context["env"][number]["type"]>): M.Elaboration<EB.AST> {
 		// free vars can be shadowed by bound vars, so only if no bound vars are found do we check for free vars
 		// QUESTION: should we disallow this shadowing?
 		if (types.length === 0) {
-			if (variable.type === "dep-label" || variable.type === "nu-label") {
+			if (variable.type === "dep-label") {
 				throw new Error(`No enclosing record field named ${variable.value}`);
 			}
 
@@ -105,13 +108,6 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 
 				return [EB.Constructors.Var({ type: "DepLabel", name: value, index: i, annotation }), annotation, zeros] satisfies EB.AST;
 			})
-			/* `$foo` keeps the slot, because a ν annotation carries field types, not field values. */
-			.with([NF.Patterns.Row, Src.Patterns.Vars.NuLabel, EB.BindingPatterns.Nu], carries, function* ([{ row }, { value }]) {
-				const type = R.lookup(row, value);
-				assert(type, "A resolved field reference must have a type in the binder's row");
-
-				return [EB.Constructors.Var({ type: "NuLabel", name: value, index: i, annotation: type }), type, zeros] satisfies EB.AST;
-			})
 			.otherwise(() => _lookup(i + 1, variable, rest));
 	};
 
@@ -121,6 +117,40 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 		ctx.env.map(v => v.type),
 	);
 };
+
+/**
+ * `$foo` resolves on the label stack, never the env. A field not yet elaborated stands in as a fresh
+ * value meta, which the Nu boundary solves directly once every field has its term.
+ */
+const field = function* (name: string, ctx: Context, zeros: Q.Usages): M.Elaboration<EB.AST> {
+	const index = ctx.local.findIndex(frame => frame.labels.includes(name));
+	const frame = ctx.local[index];
+	if (!frame) {
+		throw new Error(`No enclosing record field named ${name}`);
+	}
+
+	const slot = R.lookup(frame.slots, name);
+	assert(slot, "A frame's labels and slots agree");
+
+	const meta = R.lookup(frame.terms, name) ? undefined : yield* freshMeta(frame.ctx.env.length, slot);
+	yield* reference(ctx, index, { label: name, meta, applied: false });
+
+	return [EB.Constructors.Var(EB.Constructors.Vars.NuLabel(name, index, slot, meta)), slot, zeros] satisfies EB.AST;
+};
+
+export type Reference = { label: string; meta?: EB.Meta; guarded: boolean; applied: boolean };
+
+/**
+ * Records a field reference into the window of the field being elaborated in the frame at `index`.
+ * It is guarded when a lambda was entered since the record began: the binders above the frame's env.
+ * TODO: match binders are bound as Lambda too, so a reference inside a match arm counts as guarded
+ * until pattern variables get their own binder kind.
+ */
+export const reference = (ctx: Context, index: number, item: Omit<Reference, "guarded">) =>
+	M.windows.record(
+		{ scope: "local", lvl: ctx.local.length - 1 - index },
+		{ ...item, guarded: ctx.env.slice(0, ctx.env.length - ctx.local[index].ctx.env.length).some(({ name }) => name.type === "Lambda") },
+	);
 
 export const bind = (context: Context, binder: Binder, annotation: NF.Value, origin: Origin = "source"): Context => {
 	const { env } = context;

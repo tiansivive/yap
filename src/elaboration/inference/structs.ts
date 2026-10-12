@@ -18,17 +18,8 @@ export const infer = (node: Struct): M.Elaboration<EB.AST> =>
 	);
 
 export const struct = function* (row: Src.Row): M.Elaboration<EB.AST> {
-	const ctx = yield* M.reader.ask();
-
-	const prepared = yield* DependentRows.prepare(row, ctx.env.length);
-	const annotation = yield* DependentRows.placeholders(row, ctx.env.length);
-	const witness = yield* DependentRows.witness(prepared);
-	const inferred = yield* M.reader.local(c => EB.bind(c, { type: "Nu", variable: "$nu" }, NF.Constructors.Row(witness)), DependentRows.infer(row, witness));
-	return [
-		EB.Constructors.Nu("$nu", EB.Constructors.Row(annotation), EB.Constructors.Struct(inferred.term)),
-		NF.Constructors.Schema(inferred.type),
-		inferred.usages,
-	] satisfies EB.AST;
+	const [binder, inferred] = yield* DependentRows.nu(row, slots => DependentRows.infer(row, slots));
+	return [EB.Constructors.Nu(binder, EB.Constructors.Struct(inferred.term)), NF.Constructors.Schema(inferred.type), inferred.usages] satisfies EB.AST;
 };
 
 const tail = function* (row: Src.Row): M.Elaboration<EB.AST> {
