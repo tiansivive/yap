@@ -232,7 +232,7 @@ export const nu = function* <A>(row: Source, elaborate: (slots: NF.Row) => M.Ela
 	const slots = yield* witness(yield* prepare(row, ctx.env.length));
 	const frame: EB.Frame = { labels: labels(row), ctx, slots, terms: R.Constructors.Empty() };
 
-	const elaborated = yield* M.reader.local(c => ({ ...c, local: [frame, ...c.local] }), elaborate(slots));
+	const elaborated = yield* M.reader.local(_ => EB.enter(frame), elaborate(slots));
 	yield* acyclic(elaborated.references);
 
 	/* A `$label` met before its field was elaborated stands in as a value meta. That meta is not an
@@ -245,7 +245,7 @@ export const nu = function* <A>(row: Source, elaborate: (slots: NF.Row) => M.Ela
 			const term = R.lookup(elaborated.term, label);
 			assert(term, "A referenced label names a field of its record");
 
-			const value = yield* M.reader.local(_ => ({ ...ctx, local: [complete, ...ctx.local] }), NF.normalize(term));
+			const value = yield* M.reader.local(_ => EB.enter(complete), NF.normalize(term));
 			yield* Metas.registry.modify(r => Metas.solve(r, meta.val, value));
 		},
 	);

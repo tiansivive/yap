@@ -325,10 +325,10 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 			return NF.Constructors.SigmaV2(binder.variable, ann, { ...closure, term });
 		})
 		.with(NF.Patterns.Nu, function* ({ binder, closure }) {
-			const ann = yield* instantiate(binder.annotation);
-			const xtended = EB.bind(closure.ctx, binder, ann);
-			const term = yield* M.reader.local(_ => xtended, EB.Icit.instantiate(closure.term, {}));
-			return NF.Constructors.Nu(binder.variable, ann, { ...closure, term });
+			const within = EB.enter({ labels: binder.labels, ctx: closure.ctx, slots: R.Constructors.Empty(), terms: binder.scoped });
+			const term = yield* M.reader.local(_ => within, EB.Icit.instantiate(closure.term, {}));
+			const scoped = yield* M.reader.local(_ => within, EB.Icit.instantiate(EB.Constructors.Row(binder.scoped), {}));
+			return NF.Constructors.Nu({ ...binder, scoped: scoped.type === "Row" ? scoped.row : binder.scoped }, { ...closure, term });
 		})
 		.with({ type: "App" }, function* ({ icit, func, arg }) {
 			return NF.Constructors.App(yield* instantiate(func), yield* instantiate(arg), icit);

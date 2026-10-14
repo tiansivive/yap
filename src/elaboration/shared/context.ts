@@ -44,6 +44,9 @@ export type Context = {
  */
 export type Frame = { labels: readonly string[]; ctx: Context; slots: NF.Row; terms: EB.Row };
 
+/** Re-enters a frame: its fields are evaluated where the record was defined, with the frame itself in scope. */
+export const enter = (frame: Frame): Context => ({ ...frame.ctx, local: [frame, ...frame.ctx.local] });
+
 export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
 export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elaboration<EB.AST> {

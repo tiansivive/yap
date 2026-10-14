@@ -114,6 +114,11 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			const body = yield* M.reader.local(_ => xtended, instantiate(sig.body, resolutions));
 			return EB.Constructors.Abs({ ...sig.binding, annotation }, body);
 		})
+		.with(EB.CtorPatterns.Nu, function* ({ binding, body }) {
+			const frame = { labels: binding.labels, ctx, slots: R.Constructors.Empty<NF.Value, NF.Variable>(), terms: binding.scoped };
+			const scoped = yield* M.reader.local(_ => EB.enter(frame), instantiateRow(binding.scoped));
+			return EB.Constructors.Nu({ ...binding, scoped }, yield* M.reader.local(_ => EB.enter(frame), instantiate(body, resolutions)));
+		})
 		.with({ type: "Abs" }, function* (abs) {
 			const annotation = yield* instantiate(abs.binding.annotation, resolutions);
 			const extended = EB.bind(ctx, abs.binding, yield* NF.normalize(annotation));
