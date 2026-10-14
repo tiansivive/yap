@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
+import * as R from "@yap/shared/rows";
 
 import { elaborateFrom, mkCtx, runNF, shown } from "../../inference/__tests__/util";
 import * as Metas from "@yap/elaboration/shared/metas";
@@ -68,23 +69,32 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 		expect(show(nf, ctx)).toBe("2");
 	});
 
-	it("keeps Nu cycles inert until observation", () => {
-		const self = elaborateFrom("{ a: $a }");
-		const selfCtx = ctxFor(mkCtx());
-		const selfValue = runNF(selfCtx, () => NF.normalize(self.structure.term, { maxSteps: 20_000 }), self.structure.metas);
-		expect(selfValue).toMatchObject({ type: "Abs", binder: { type: "Nu" } });
+	it("rejects strict record cycles at elaboration", () => {
+		expect(() => elaborateFrom("{ a: $a }.a")).toThrow("Record Cycle");
+		expect(() => elaborateFrom("{ a: $b, b: $a }.a")).toThrow("Record Cycle");
+	});
 
-		const projectedSelf = elaborateFrom("{ a: $a }.a");
-		const projectedSelfCtx = ctxFor(mkCtx());
-		expect(() => runNF(projectedSelfCtx, () => NF.normalize(projectedSelf.structure.term, { maxSteps: 20_000 }), projectedSelf.structure.metas)).toThrow(
-			"exceeded maximum steps",
-		);
+	/* No syntax builds a lazy record yet, so the term is written by hand. */
+	describe("lazy records", () => {
+		const a = (value: EB.Term) => R.Constructors.Extension("a", value, R.Constructors.Empty<EB.Term, EB.Variable>());
+		const lazy = (value: EB.Term) => EB.Constructors.Nu({ mode: "lazy", labels: ["a"], scoped: a(value) }, EB.Constructors.Struct(a(value)));
+		const normalize = (term: EB.Term) => runNF(ctxFor(mkCtx()), () => NF.normalize(term, { maxSteps: 20_000 }));
 
-		const projectedMutual = elaborateFrom("{ a: $b, b: $a }.a");
-		const projectedMutualCtx = ctxFor(mkCtx());
-		expect(() => runNF(projectedMutualCtx, () => NF.normalize(projectedMutual.structure.term, { maxSteps: 20_000 }), projectedMutual.structure.metas)).toThrow(
-			"exceeded maximum steps",
-		);
+		it("stays a value until observed", () => {
+			expect(normalize(lazy(EB.DSL.Labels.nu("a")))).toMatchObject({ type: "Abs", binder: { type: "Nu", mode: "lazy" } });
+		});
+
+		it("observes a field under its frame", () => {
+			const record = EB.Constructors.Nu(
+				{ mode: "lazy", labels: ["a", "b"], scoped: R.Constructors.Extension("b", EB.Constructors.Lit({ type: "Num", value: 2 }), a(EB.DSL.Labels.nu("b"))) },
+				EB.Constructors.Struct(R.Constructors.Extension("b", EB.Constructors.Lit({ type: "Num", value: 2 }), a(EB.DSL.Labels.nu("b")))),
+			);
+			expect(show(normalize(EB.Constructors.Proj("a", record)), mkCtx())).toBe("2");
+		});
+
+		it("keeps a cycle inert until observation", () => {
+			expect(() => normalize(EB.Constructors.Proj("a", lazy(EB.DSL.Labels.nu("a"))))).toThrow("exceeded maximum steps");
+		});
 	});
 
 	/*

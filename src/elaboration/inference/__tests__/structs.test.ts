@@ -71,14 +71,21 @@ describe("Inference: Structs", () => {
 			expect({ displays }).toMatchSnapshot();
 		});
 
-		it("mutually dependent fields: { a: $b + 1, b: $a + 1 }", () => {
-			const { displays } = elaborateFrom("{ a: $b + 1, b: $a + 1 }");
-			expect(displays.type).toMatch("Schema");
-			expect(displays.type).toMatch(Field.modal("a", TypeText.lit("Num")));
-			expect(displays.type).toMatch(Field.modal("b", TypeText.lit("Num")));
-			expect(displays.type).toMatch(Liquid.mentions("FFI.$add"));
+		it("rejects mutually dependent fields: { a: $b + 1, b: $a + 1 }", () => {
+			expect(() => elaborateFrom("{ a: $b + 1, b: $a + 1 }")).toThrow("Record Cycle: fields $a -> $b -> $a");
+		});
 
-			expect({ displays }).toMatchSnapshot();
+		it("rejects a field reading itself: { a: { x: $a } }", () => {
+			expect(() => elaborateFrom("{ a: { x: $a } }")).toThrow("Record Cycle: fields $a -> $a");
+		});
+
+		it("rejects calling a field during construction: { f: \\x -> x, g: $f 1 }", () => {
+			expect(() => elaborateFrom("{ f: \\x -> x, g: $f 1 }")).toThrow("Record Call: $f");
+		});
+
+		it("accepts a field read under a lambda: { f: \\x -> $g, g: 1 }", () => {
+			const { displays } = elaborateFrom("{ f: \\x -> $g, g: 1 }");
+			expect(displays.term).toMatch("νstrict [ g: 1 ]");
 		});
 
 		it('nested shadowing dependencies: { overriden: 1, foo: { inner: $overriden }, bar: { overriden: "hello", inner: $overriden }', () => {

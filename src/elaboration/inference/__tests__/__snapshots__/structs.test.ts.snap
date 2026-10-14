@@ -9,7 +9,7 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
       "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?1",
       "Num ~~ ?2",
     ],
-    "term": "ν($nu: [ y: Irrelevant, x: Irrelevant ]) . Struct [ y: FFI.$add $x 2, x: 1 ]",
+    "term": "νstrict [ x: 1 ] . Struct [ y: FFI.$add $x 2, x: 1 ]",
     "type": "Schema
   [ y: <ω> Num [| λ(r: Num) ->
       (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |],
@@ -45,7 +45,7 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
       "Num ~~ Num",
       "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?2",
     ],
-    "term": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 1, y: FFI.$add $x 2 ]",
+    "term": "νstrict [ x: 1 ] . Struct [ x: 1, y: FFI.$add $x 2 ]",
     "type": "Schema
   [ x: Num,
     y: <ω> Num [| λ(r: Num) ->
@@ -136,10 +136,10 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
     b: <ω> Num [| λ(r: Num) ->
       (closure: FFI.$eq r (FFI.$div x y) -| Γ: r; y; x) |] ] ~~ ?2",
     ],
-    "term": "ν($nu: [ point: Irrelevant, halved: Irrelevant ]) .
+    "term": "νstrict [ point: νstrict [] . Struct [ x: 1, y: 2 ] ] .
   Struct
-    [ point: ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 1, y: 2 ],
-      halved: ν($nu: [ a: Irrelevant, b: Irrelevant ]) .
+    [ point: νstrict [] . Struct [ x: 1, y: 2 ],
+      halved: νstrict [] .
         Struct [ a: FFI.$div ($point).x 2, b: FFI.$div ($point).y 2 ] ]",
     "type": "Schema
   [ point: Schema [ x: Num, y: Num ],
@@ -198,11 +198,11 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
       "?5 ~~ ?6",
       "Schema [ overriden: String, inner: ?5 ] ~~ ?3",
     ],
-    "term": "ν($nu: [ overriden: Irrelevant, foo: Irrelevant, bar: Irrelevant ]) .
+    "term": "νstrict [ overriden: 1 ] .
   Struct
     [ overriden: 1,
-      foo: ν($nu: [ inner: Irrelevant ]) . Struct [ inner: $overriden ],
-      bar: ν($nu: [ overriden: Irrelevant, inner: Irrelevant ]) .
+      foo: νstrict [] . Struct [ inner: $overriden ],
+      bar: νstrict [ overriden: "hello" ] .
         Struct [ overriden: "hello", inner: $overriden ] ]",
     "type": "Schema
   [ overriden: Num,
@@ -242,7 +242,7 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 1`] = `
       "Num ~~ ?1",
       "String ~~ ?2",
     ],
-    "term": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 1, y: "hello" ]",
+    "term": "νstrict [] . Struct [ x: 1, y: "hello" ]",
     "type": "Schema [ x: Num, y: String ]",
   },
 }
@@ -257,10 +257,7 @@ exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A
       "Schema [ x: Num, y: Num ] ~~ ?1",
       "String ~~ ?2",
     ],
-    "term": "ν($nu: [ point: Irrelevant, label: Irrelevant ]) .
-  Struct
-    [ point: ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 1, y: 2 ],
-      label: "A" ]",
+    "term": "νstrict [] . Struct [ point: νstrict [] . Struct [ x: 1, y: 2 ], label: "A" ]",
     "type": "Schema [ point: Schema [ x: Num, y: Num ], label: String ]",
   },
 }
@@ -275,8 +272,7 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
       "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?1",
       "String ~~ ?2",
     ],
-    "term": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) .
-  Struct [ x: FFI.$add 1 2, y: "hello" ]",
+    "term": "νstrict [] . Struct [ x: FFI.$add 1 2, y: "hello" ]",
     "type": "Schema
   [ x: <ω> Num [| λ(r: Num) ->
       (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |],

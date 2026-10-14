@@ -21,7 +21,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
   let p
     : Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
       (closure: Schema [ fst: Num, snd: &fst ] -| Γ: $sig; Pair)
-    = ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) . Struct [ fst: 1, snd: 1 ];
+    = νstrict [] . Struct [ fst: 1, snd: 1 ];
   return p;
 }",
     "type": "Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
@@ -63,8 +63,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
   let p
     : Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
       (closure: Schema [ fst: a, snd: p &fst ] -| Γ: $sig; p; a; Pair)
-    = ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) .
-      Struct [ fst: 1, snd: "hello" ];
+    = νstrict [] . Struct [ fst: 1, snd: "hello" ];
   return unit;
 }",
     "type": "Unit",
