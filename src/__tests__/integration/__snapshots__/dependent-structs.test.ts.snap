@@ -28,43 +28,62 @@ exports[`Integration — Nested dependent structs > nested dependent struct with
 }
 return main();
 ",
-    "elaborated": "Struct
-  [ point: Struct [ x: 1, y: 2 ],
-    halved: Struct [ a: FFI.$div (:point).x 2, b: FFI.$div (:point).y 2 ] ]",
+    "elaborated": "νstrict [ point: νstrict [] . Struct [ x: 1, y: 2 ] ] .
+  Struct
+    [ point: νstrict [] . Struct [ x: 1, y: 2 ],
+      halved: νstrict [] .
+        Struct [ a: FFI.$div ($point).x 2, b: FFI.$div ($point).y 2 ] ]",
     "gram": "[1] root
   :entry -> [2]
-[2] struct
-  :field -> [3] {"label":"point"}
-  :field -> [6] {"label":"halved"}
-[3] struct
-  :field -> [4] {"label":"x"}
-  :field -> [5] {"label":"y"}
-[4] lit {"value":{"type":"Num","value":1}}
-[5] lit {"value":{"type":"Num","value":2}}
-[6] struct
-  :field -> [20] {"label":"a"}
-  :field -> [21] {"label":"b"}
-[9] var:foreign {"name":"$div","arity":2}
-[11] proj {"label":"x"}
-  :next -> [13]
-  :target -> [12]
-[12] var:label {"name":"point"}
-  :refers_to -> [3]
-[13] lit {"value":{"type":"Num","value":2}}
-[17] proj {"label":"y"}
+[2] nu {"variable":"$nu","level":0}
+  :annotation -> [3]
+  :body -> [4]
+[3] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[4] struct
+  :field -> [5] {"label":"point"}
+  :field -> [10] {"label":"halved"}
+  :hoist -> [5]
+[5] nu {"variable":"$nu","level":1}
+  :annotation -> [6]
+  :body -> [7]
+[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[7] struct
+  :field -> [8] {"label":"x"}
+  :field -> [9] {"label":"y"}
+[8] lit {"value":{"type":"Num","value":1}}
+[9] lit {"value":{"type":"Num","value":2}}
+[10] nu {"variable":"$nu","level":1}
+  :annotation -> [11]
+  :body -> [12]
+[11] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[12] struct
+  :field -> [26] {"label":"a"}
+  :field -> [27] {"label":"b"}
+[15] var:foreign {"name":"$div","arity":2}
+[17] proj {"label":"x"}
   :next -> [19]
   :target -> [18]
-[18] var:label {"name":"point"}
-  :refers_to -> [3]
+[18] var:nu-label {"name":"point","index":1}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0,"owner":true}
+  :scope -> [10] {"level":1,"owner":false}
 [19] lit {"value":{"type":"Num","value":2}}
-[20] primop {"op":"$div"}
-  :arg -> [11] {"index":0}
-  :arg -> [13] {"index":1}
-  :callee -> [9]
-[21] primop {"op":"$div"}
+[23] proj {"label":"y"}
+  :next -> [25]
+  :target -> [24]
+[24] var:nu-label {"name":"point","index":1}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0,"owner":true}
+  :scope -> [10] {"level":1,"owner":false}
+[25] lit {"value":{"type":"Num","value":2}}
+[26] primop {"op":"$div"}
   :arg -> [17] {"index":0}
   :arg -> [19] {"index":1}
-  :callee -> [9]",
+  :callee -> [15]
+[27] primop {"op":"$div"}
+  :arg -> [23] {"index":0}
+  :arg -> [25] {"index":1}
+  :callee -> [15]",
     "ivl": "(and
   (forall ((x Real))
     (forall ((y Real))
@@ -141,8 +160,8 @@ return main();
     "type": "Schema
   [ point: Schema [ x: Num, y: Num ],
     halved: Schema
-      [ a: <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$div (:point).x 2) |],
-        b: <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$div (:point).y 2) |] ] ]",
+      [ a: <ω> Num [| λ(r: Num) -> FFI.$eq r 0.5 |],
+        b: <ω> Num [| λ(r: Num) -> FFI.$eq r 1 |] ] ]",
     "validity": "valid",
   },
 ]

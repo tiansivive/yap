@@ -604,27 +604,19 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 0, y: 0 ]",
+    "elaborated": "νstrict [] . Struct [ x: 0, y: 0 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"origin"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"x"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"y"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"x"}
-  :field -> [11] {"label":"y"}
-[10] lit {"value":{"type":"Num","value":0}}
-[11] lit {"value":{"type":"Num","value":0}}",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"x"}
+  :field -> [7] {"label":"y"}
+[6] lit {"value":{"type":"Num","value":0}}
+[7] lit {"value":{"type":"Num","value":0}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -635,8 +627,7 @@ return main();
       let v2 = alloc { x: v0, y: v1 }
       return v2",
     "name": "origin",
-    "normalized": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) ->
-  (closure: Struct [ x: 0, y: 0 ] -| Γ: $nu)",
+    "normalized": "Struct [ x: 0, y: 0 ]",
     "solverTrace": "=== Formula ===
   true
 

@@ -264,30 +264,25 @@ function pap_fn1(env2, arg3) {
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ show: Irrelevant ]) .
-  Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]",
+    "elaborated": "νstrict [] . Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ShowNum"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [7]
-[4] row:ext {"label":"show"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:empty
-[7] struct
-  :field -> [16] {"label":"show"}
-[9] lit {"value":{"type":"Atom","value":"Num"}}
-[12] var:foreign {"name":"stringify","arity":2}
-[14] lit {"value":{"type":"Atom","value":"Num"}}
-[16] external {"name":"stringify","arity":2,"args":1,"saturated":false}
-  :arg -> [14] {"index":0}
-  :callee -> [12]
-[17] pap {"remaining":1}
-  :captured -> [14] {"index":0}
-  :materializes -> [16]",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [14] {"label":"show"}
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:foreign {"name":"stringify","arity":2}
+[12] lit {"value":{"type":"Atom","value":"Num"}}
+[14] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [12] {"index":0}
+  :callee -> [10]
+[15] pap {"remaining":1}
+  :captured -> [12] {"index":0}
+  :materializes -> [14]",
     "ivl": "(forall ((n Real)) (= n n))",
     "kind": "let",
     "mir": "module
@@ -305,8 +300,7 @@ return main();
       let result_pap_fn1 = call stringify(cap_0, arg3)
       return result_pap_fn1",
     "name": "ShowNum",
-    "normalized": "ν($nu: [ show: Irrelevant ]) ->
-  (closure: Struct [ show: λ(n: Num) -> FFI.stringify @Num n ] -| Γ: $nu)",
+    "normalized": "Struct [ show: λ(n: Num) -> (closure: FFI.stringify @Num n -| Γ: n) ]",
     "solverTrace": "=== Formula ===
   (forall ((n Real)) (= n n))
 
@@ -349,7 +343,7 @@ return main();
   {
     "codegenJS": "function main() {
   const env_cls2 = {};
-  const fnref_cls2 = closure_22;
+  const fnref_cls2 = closure_20;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -360,7 +354,7 @@ return main();
   return v3;
 }
 
-function closure_22(env0, b1) {
+function closure_20(env0, b1) {
   let __block = "entry";
   let match0;
   while (true) {
@@ -401,70 +395,66 @@ function closure_22(env0, b1) {
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ show: Irrelevant ]) .
+    "elaborated": "νstrict [] .
   Struct [ show: λ(b: Bool) -> match b | true -> "true" | false -> "false" ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ShowBool"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [7]
-[4] row:ext {"label":"show"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:empty
-[7] struct
-  :field -> [8] {"label":"show"}
-[8] lambda {"variable":"b","icit":"Explicit","level":2}
-  :annotation -> [9]
-  :body -> [10]
-  :env -> [21]
-[9] lit {"value":{"type":"Atom","value":"Bool"}}
-[10] match
-  :alt -> [12] {"index":0}
-  :alt -> [15] {"index":1}
-  :decision_tree -> [18]
-  :scrutinee -> [11]
-[11] var:bound {"index":0}
-  :refers_to -> [8]
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"show"}
+[6] lambda {"variable":"b","icit":"Explicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [19]
+[7] lit {"value":{"type":"Atom","value":"Bool"}}
+[8] match
+  :alt -> [10] {"index":0}
+  :alt -> [13] {"index":1}
+  :decision_tree -> [16]
+  :scrutinee -> [9]
+[9] var:bound {"index":0}
+  :refers_to -> [6]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-  :scope -> [8] {"level":2}
-[12] case
-  :body -> [14]
-  :next -> [15]
-  :pattern -> [13]
-[13] pat:lit {"value":{"type":"Bool","value":true}}
-[14] lit {"value":{"type":"String","value":"true"}}
-[15] case
-  :body -> [17]
-  :pattern -> [16]
-[16] pat:lit {"value":{"type":"Bool","value":false}}
-[17] lit {"value":{"type":"String","value":"false"}}
-[18] switch {"kind":"lit"}
-  :branch -> [19] {"value":{"type":"Bool","value":true}}
-  :branch -> [20] {"value":{"type":"Bool","value":false}}
-  :inspect -> [11]
-[19] leaf
-  :body -> [14]
-[20] leaf
-  :body -> [17]
-[21] env
-[22] closure
-  :body -> [8]
-  :env -> [21]",
+  :scope -> [6] {"level":2}
+[10] case
+  :body -> [12]
+  :next -> [13]
+  :pattern -> [11]
+[11] pat:lit {"value":{"type":"Bool","value":true}}
+[12] lit {"value":{"type":"String","value":"true"}}
+[13] case
+  :body -> [15]
+  :pattern -> [14]
+[14] pat:lit {"value":{"type":"Bool","value":false}}
+[15] lit {"value":{"type":"String","value":"false"}}
+[16] switch {"kind":"lit"}
+  :branch -> [17] {"value":{"type":"Bool","value":true}}
+  :branch -> [18] {"value":{"type":"Bool","value":false}}
+  :inspect -> [9]
+[17] leaf
+  :body -> [12]
+[18] leaf
+  :body -> [15]
+[19] env
+[20] closure
+  :body -> [6]
+  :env -> [19]",
     "ivl": "(forall ((b Bool)) (and (= b b) (= b b)))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_22
+      let fnref_cls2 = &closure_20
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       let v3 = alloc { show: closure_cls2 }
       return v3
-  fn closure_22(env0, b1) entry=entry
+  fn closure_20(env0, b1) entry=entry
     entry:
       jump sw1
     sw1:
@@ -478,10 +468,9 @@ return main();
     join2(match0):
       return match0",
     "name": "ShowBool",
-    "normalized": "ν($nu: [ show: Irrelevant ]) ->
-  (closure: Struct
-    [ show: λ(b: Bool) ->
-        match b | true -> "true" | false -> "false" ] -| Γ: $nu)",
+    "normalized": "Struct
+  [ show: λ(b: Bool) ->
+      (closure: match b | true -> "true" | false -> "false" -| Γ: b) ]",
     "solverTrace": "=== Formula ===
   (forall ((b Bool)) (and (= b b) (= b b)))
 
@@ -531,30 +520,25 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ eq: Irrelevant ]) .
-  Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ]",
+    "elaborated": "νstrict [] . Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ]",
     "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"EqNum"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [7]
-[4] row:ext {"label":"eq"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:empty
-[7] struct
-  :field -> [15] {"label":"eq"}
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [13] {"label":"eq"}
+[7] lit {"value":{"type":"Atom","value":"Num"}}
 [9] lit {"value":{"type":"Atom","value":"Num"}}
-[11] lit {"value":{"type":"Atom","value":"Num"}}
-[14] var:foreign {"name":"$eq","arity":2}
-[15] var:ref {"name":"$eq"}
-  :refers_to -> [14]
+[12] var:foreign {"name":"$eq","arity":2}
+[13] var:ref {"name":"$eq"}
+  :refers_to -> [12]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-  :scope -> [15] {"level":2}",
+  :scope -> [13] {"level":2}",
     "ivl": "(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))",
     "kind": "let",
     "mir": "module
@@ -564,8 +548,7 @@ return main();
       let v1 = alloc { eq: v0 }
       return v1",
     "name": "EqNum",
-    "normalized": "ν($nu: [ eq: Irrelevant ]) ->
-  (closure: Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ] -| Γ: $nu)",
+    "normalized": "Struct [ eq: λ(x: Num) -> (closure: λ(y: Num) -> FFI.$eq x y -| Γ: x) ]",
     "solverTrace": "=== Formula ===
   (forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
 
@@ -1979,30 +1962,25 @@ function pap_fn1(env2, arg3) {
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ show: Irrelevant ]) .
-  Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]",
+    "elaborated": "νstrict [] . Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ShowNum"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [7]
-[4] row:ext {"label":"show"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:empty
-[7] struct
-  :field -> [16] {"label":"show"}
-[9] lit {"value":{"type":"Atom","value":"Num"}}
-[12] var:foreign {"name":"stringify","arity":2}
-[14] lit {"value":{"type":"Atom","value":"Num"}}
-[16] external {"name":"stringify","arity":2,"args":1,"saturated":false}
-  :arg -> [14] {"index":0}
-  :callee -> [12]
-[17] pap {"remaining":1}
-  :captured -> [14] {"index":0}
-  :materializes -> [16]",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [14] {"label":"show"}
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:foreign {"name":"stringify","arity":2}
+[12] lit {"value":{"type":"Atom","value":"Num"}}
+[14] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [12] {"index":0}
+  :callee -> [10]
+[15] pap {"remaining":1}
+  :captured -> [12] {"index":0}
+  :materializes -> [14]",
     "ivl": "(forall ((n Real)) (= n n))",
     "kind": "let",
     "mir": "module
@@ -2020,8 +1998,7 @@ return main();
       let result_pap_fn1 = call stringify(cap_0, arg3)
       return result_pap_fn1",
     "name": "ShowNum",
-    "normalized": "ν($nu: [ show: Irrelevant ]) ->
-  (closure: Struct [ show: λ(n: Num) -> FFI.stringify @Num n ] -| Γ: $nu)",
+    "normalized": "Struct [ show: λ(n: Num) -> (closure: FFI.stringify @Num n -| Γ: n) ]",
     "solverTrace": "=== Formula ===
   (forall ((n Real)) (= n n))
 
@@ -2071,30 +2048,25 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ eq: Irrelevant ]) .
-  Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ]",
+    "elaborated": "νstrict [] . Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ]",
     "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"EqNum"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [7]
-[4] row:ext {"label":"eq"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:empty
-[7] struct
-  :field -> [15] {"label":"eq"}
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [13] {"label":"eq"}
+[7] lit {"value":{"type":"Atom","value":"Num"}}
 [9] lit {"value":{"type":"Atom","value":"Num"}}
-[11] lit {"value":{"type":"Atom","value":"Num"}}
-[14] var:foreign {"name":"$eq","arity":2}
-[15] var:ref {"name":"$eq"}
-  :refers_to -> [14]
+[12] var:foreign {"name":"$eq","arity":2}
+[13] var:ref {"name":"$eq"}
+  :refers_to -> [12]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-  :scope -> [15] {"level":2}",
+  :scope -> [13] {"level":2}",
     "ivl": "(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))",
     "kind": "let",
     "mir": "module
@@ -2104,8 +2076,7 @@ return main();
       let v1 = alloc { eq: v0 }
       return v1",
     "name": "EqNum",
-    "normalized": "ν($nu: [ eq: Irrelevant ]) ->
-  (closure: Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ] -| Γ: $nu)",
+    "normalized": "Struct [ eq: λ(x: Num) -> (closure: λ(y: Num) -> FFI.$eq x y -| Γ: x) ]",
     "solverTrace": "=== Formula ===
   (forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
 
@@ -2954,30 +2925,25 @@ function pap_fn1(env2, arg3) {
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ show: Irrelevant ]) .
-  Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]",
+    "elaborated": "νstrict [] . Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"ShowNum"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [7]
-[4] row:ext {"label":"show"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:empty
-[7] struct
-  :field -> [16] {"label":"show"}
-[9] lit {"value":{"type":"Atom","value":"Num"}}
-[12] var:foreign {"name":"stringify","arity":2}
-[14] lit {"value":{"type":"Atom","value":"Num"}}
-[16] external {"name":"stringify","arity":2,"args":1,"saturated":false}
-  :arg -> [14] {"index":0}
-  :callee -> [12]
-[17] pap {"remaining":1}
-  :captured -> [14] {"index":0}
-  :materializes -> [16]",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [14] {"label":"show"}
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:foreign {"name":"stringify","arity":2}
+[12] lit {"value":{"type":"Atom","value":"Num"}}
+[14] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [12] {"index":0}
+  :callee -> [10]
+[15] pap {"remaining":1}
+  :captured -> [12] {"index":0}
+  :materializes -> [14]",
     "ivl": "(forall ((n Real)) (= n n))",
     "kind": "let",
     "mir": "module
@@ -2995,8 +2961,7 @@ return main();
       let result_pap_fn1 = call stringify(cap_0, arg3)
       return result_pap_fn1",
     "name": "ShowNum",
-    "normalized": "ν($nu: [ show: Irrelevant ]) ->
-  (closure: Struct [ show: λ(n: Num) -> FFI.stringify @Num n ] -| Γ: $nu)",
+    "normalized": "Struct [ show: λ(n: Num) -> (closure: FFI.stringify @Num n -| Γ: n) ]",
     "solverTrace": "=== Formula ===
   (forall ((n Real)) (= n n))
 
@@ -3046,30 +3011,25 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ eq: Irrelevant ]) .
-  Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ]",
+    "elaborated": "νstrict [] . Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ]",
     "error": "emit_erl: unknown function arity for "unknown"",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"EqNum"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [7]
-[4] row:ext {"label":"eq"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:empty
-[7] struct
-  :field -> [15] {"label":"eq"}
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [13] {"label":"eq"}
+[7] lit {"value":{"type":"Atom","value":"Num"}}
 [9] lit {"value":{"type":"Atom","value":"Num"}}
-[11] lit {"value":{"type":"Atom","value":"Num"}}
-[14] var:foreign {"name":"$eq","arity":2}
-[15] var:ref {"name":"$eq"}
-  :refers_to -> [14]
+[12] var:foreign {"name":"$eq","arity":2}
+[13] var:ref {"name":"$eq"}
+  :refers_to -> [12]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-  :scope -> [15] {"level":2}",
+  :scope -> [13] {"level":2}",
     "ivl": "(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))",
     "kind": "let",
     "mir": "module
@@ -3079,8 +3039,7 @@ return main();
       let v1 = alloc { eq: v0 }
       return v1",
     "name": "EqNum",
-    "normalized": "ν($nu: [ eq: Irrelevant ]) ->
-  (closure: Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ] -| Γ: $nu)",
+    "normalized": "Struct [ eq: λ(x: Num) -> (closure: λ(y: Num) -> FFI.$eq x y -| Γ: x) ]",
     "solverTrace": "=== Formula ===
   (forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
 

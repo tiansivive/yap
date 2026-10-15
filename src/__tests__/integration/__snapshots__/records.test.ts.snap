@@ -159,27 +159,19 @@ exports[`Language Tour — Records & Tuples > field access 1`] = `
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 10, y: 20 ]",
+    "elaborated": "νstrict [] . Struct [ x: 10, y: 20 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"point"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"x"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"y"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"x"}
-  :field -> [11] {"label":"y"}
-[10] lit {"value":{"type":"Num","value":10}}
-[11] lit {"value":{"type":"Num","value":20}}",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"x"}
+  :field -> [7] {"label":"y"}
+[6] lit {"value":{"type":"Num","value":10}}
+[7] lit {"value":{"type":"Num","value":20}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -190,8 +182,7 @@ return main();
       let v2 = alloc { x: v0, y: v1 }
       return v2",
     "name": "point",
-    "normalized": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) ->
-  (closure: Struct [ x: 10, y: 20 ] -| Γ: $nu)",
+    "normalized": "Struct [ x: 10, y: 20 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -398,21 +389,17 @@ exports[`Language Tour — Records & Tuples > field extension 1`] = `
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ x: Irrelevant ]) . Struct [ x: 10 ]",
+    "elaborated": "νstrict [] . Struct [ x: 10 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"point"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [7]
-[4] row:ext {"label":"x"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:empty
-[7] struct
-  :field -> [8] {"label":"x"}
-[8] lit {"value":{"type":"Num","value":10}}",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"x"}
+[6] lit {"value":{"type":"Num","value":10}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -422,7 +409,7 @@ return main();
       let v1 = alloc { x: v0 }
       return v1",
     "name": "point",
-    "normalized": "ν($nu: [ x: Irrelevant ]) -> (closure: Struct [ x: 10 ] -| Γ: $nu)",
+    "normalized": "Struct [ x: 10 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -496,8 +483,7 @@ return main();
       let v4 = update-immutable v3 { z: v0 }
       return v4",
     "name": "point3d",
-    "normalized": "ν($nu: [ x: Irrelevant, y: Irrelevant, z: Irrelevant ]) ->
-  (closure: Struct [ x: 10, y: 20, z: 30 ] -| Γ: $nu; point)",
+    "normalized": "Struct [ x: 10, y: 20, z: 30 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -560,7 +546,7 @@ return main();
       let v2 = update-immutable v1 { x: v0 }
       return v2",
     "name": "updated",
-    "normalized": "ν($nu: [ x: Irrelevant ]) -> (closure: Struct [ x: 100 ] -| Γ: $nu; point)",
+    "normalized": "Struct [ x: 100 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -662,27 +648,19 @@ exports[`Language Tour — Records & Tuples > records 1`] = `
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 0, y: 10 ]",
+    "elaborated": "νstrict [] . Struct [ x: 0, y: 10 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"point"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"x"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"y"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"x"}
-  :field -> [11] {"label":"y"}
-[10] lit {"value":{"type":"Num","value":0}}
-[11] lit {"value":{"type":"Num","value":10}}",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"x"}
+  :field -> [7] {"label":"y"}
+[6] lit {"value":{"type":"Num","value":0}}
+[7] lit {"value":{"type":"Num","value":10}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -693,8 +671,7 @@ return main();
       let v2 = alloc { x: v0, y: v1 }
       return v2",
     "name": "point",
-    "normalized": "ν($nu: [ x: Irrelevant, y: Irrelevant ]) ->
-  (closure: Struct [ x: 0, y: 10 ] -| Γ: $nu)",
+    "normalized": "Struct [ x: 0, y: 10 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -735,28 +712,19 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ name: Irrelevant, age: Irrelevant ]) .
-  Struct [ name: "Alice", age: 30 ]",
+    "elaborated": "νstrict [] . Struct [ name: "Alice", age: 30 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"person"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"name"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"age"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"name"}
-  :field -> [11] {"label":"age"}
-[10] lit {"value":{"type":"String","value":"Alice"}}
-[11] lit {"value":{"type":"Num","value":30}}",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"name"}
+  :field -> [7] {"label":"age"}
+[6] lit {"value":{"type":"String","value":"Alice"}}
+[7] lit {"value":{"type":"Num","value":30}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -767,8 +735,7 @@ return main();
       let v2 = alloc { name: v0, age: v1 }
       return v2",
     "name": "person",
-    "normalized": "ν($nu: [ name: Irrelevant, age: Irrelevant ]) ->
-  (closure: Struct [ name: "Alice", age: 30 ] -| Γ: $nu)",
+    "normalized": "Struct [ name: "Alice", age: 30 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -817,46 +784,34 @@ exports[`Language Tour — Records & Tuples > self-referencing fields 1`] = `
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ width: Irrelevant, height: Irrelevant, area: Irrelevant ]) .
+    "elaborated": "νstrict [ width: 10, height: 20 ] .
   Struct [ width: 10, height: 20, area: FFI.$mul $width $height ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"rectangle"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [11]
-[4] row:ext {"label":"width"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"height"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:ext {"label":"area"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[10] row:empty
-[11] struct
-  :field -> [12] {"label":"width"}
-  :field -> [13] {"label":"height"}
-  :field -> [20] {"label":"area"}
-  :hoist -> [12]
-[12] lit {"value":{"type":"Num","value":10}}
-[13] lit {"value":{"type":"Num","value":20}}
-[16] var:foreign {"name":"$mul","arity":2}
-[18] var:nu-label {"name":"width","index":0}
-  :next -> [19]
-  :refers_to -> [12]
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"width"}
+  :field -> [7] {"label":"height"}
+  :field -> [14] {"label":"area"}
+  :hoist -> [6]
+[6] lit {"value":{"type":"Num","value":10}}
+[7] lit {"value":{"type":"Num","value":20}}
+[10] var:foreign {"name":"$mul","arity":2}
+[12] var:nu-label {"name":"width","index":0}
+  :next -> [13]
+  :refers_to -> [6]
   :scope -> [3] {"level":0,"owner":true}
-[19] var:nu-label {"name":"height","index":0}
-  :refers_to -> [13]
+[13] var:nu-label {"name":"height","index":0}
+  :refers_to -> [7]
   :scope -> [3] {"level":0,"owner":true}
-[20] primop {"op":"$mul"}
-  :arg -> [18] {"index":0}
-  :arg -> [19] {"index":1}
-  :callee -> [16]",
+[14] primop {"op":"$mul"}
+  :arg -> [12] {"index":0}
+  :arg -> [13] {"index":1}
+  :callee -> [10]",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -868,9 +823,7 @@ return main();
       let v3 = alloc { width: v0, height: v1, area: v2 }
       return v3",
     "name": "rectangle",
-    "normalized": "ν($nu: [ width: Irrelevant, height: Irrelevant, area: Irrelevant ]) ->
-  (closure: Struct
-    [ width: 10, height: 20, area: FFI.$mul $width $height ] -| Γ: $nu)",
+    "normalized": "Struct [ width: 10, height: 20, area: 200 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -917,27 +870,19 @@ exports[`Language Tour — Records & Tuples > tuples 1`] = `
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) . Struct [ 0: 42, 1: "answer" ]",
+    "elaborated": "νstrict [] . Struct [ 0: 42, 1: "answer" ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"pair"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"0"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"1"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"0"}
-  :field -> [11] {"label":"1"}
-[10] lit {"value":{"type":"Num","value":42}}
-[11] lit {"value":{"type":"String","value":"answer"}}",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[6] lit {"value":{"type":"Num","value":42}}
+[7] lit {"value":{"type":"String","value":"answer"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -948,8 +893,7 @@ return main();
       let v2 = alloc { 0: v0, 1: v1 }
       return v2",
     "name": "pair",
-    "normalized": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) ->
-  (closure: Struct [ 0: 42, 1: "answer" ] -| Γ: $nu)",
+    "normalized": "Struct [ 0: 42, 1: "answer" ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -990,27 +934,19 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) . Struct [ 0: 42, 1: "answer" ]",
+    "elaborated": "νstrict [] . Struct [ 0: 42, 1: "answer" ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"pairExplicit"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"0"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"1"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"0"}
-  :field -> [11] {"label":"1"}
-[10] lit {"value":{"type":"Num","value":42}}
-[11] lit {"value":{"type":"String","value":"answer"}}",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[6] lit {"value":{"type":"Num","value":42}}
+[7] lit {"value":{"type":"String","value":"answer"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1021,8 +957,7 @@ return main();
       let v2 = alloc { 0: v0, 1: v1 }
       return v2",
     "name": "pairExplicit",
-    "normalized": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) ->
-  (closure: Struct [ 0: 42, 1: "answer" ] -| Γ: $nu)",
+    "normalized": "Struct [ 0: 42, 1: "answer" ]",
     "solverTrace": "=== Formula ===
   true
 

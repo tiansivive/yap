@@ -1429,7 +1429,7 @@ exports[`Language Tour — Refinement Types > dependent record construction 1`] 
   {
     "codegenJS": "function main() {
   const env_cls2 = {};
-  const fnref_cls2 = closure_43;
+  const fnref_cls2 = closure_39;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1446,20 +1446,20 @@ exports[`Language Tour — Refinement Types > dependent record construction 1`] 
   return v8;
 }
 
-function closure_45(env0, p1) {
+function closure_41(env0, p1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const v0 = {};
   return v0;
 }
 
-function closure_44(env0, b1) {
+function closure_40(env0, b1) {
   const cap_0 = env0.v0;
   const env_cls2 = {
     v0: cap_0,
     v1: b1
   };
-  const fnref_cls2 = closure_45;
+  const fnref_cls2 = closure_41;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1467,11 +1467,11 @@ function closure_44(env0, b1) {
   return closure_cls2;
 }
 
-function closure_43(env0, a1) {
+function closure_39(env0, a1) {
   const env_cls2 = {
     v0: a1
   };
-  const fnref_cls2 = closure_44;
+  const fnref_cls2 = closure_40;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1496,14 +1496,14 @@ return main();
         [ fst: a,
           snd: <ω> b [| λ(v: b) ->
             p &fst v |] ] -| Γ: $sig; p; b; a; Pair; test)
-    = ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) . Struct [ fst: 1, snd: 2 ];
+    = νstrict [] . Struct [ fst: 1, snd: 2 ];
   return unit;
 }",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"test"}
 [3] block
-  :return -> [39]
+  :return -> [35]
   :stmt -> [4] {"index":0}
   :stmt -> [29] {"index":1}
 [4] stmt:let {"variable":"Pair"}
@@ -1512,17 +1512,17 @@ return main();
 [5] lambda {"variable":"a","icit":"Explicit","level":2}
   :annotation -> [6]
   :body -> [7]
-  :env -> [40]
+  :env -> [36]
 [6] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lambda {"variable":"b","icit":"Explicit","level":3}
   :annotation -> [8]
   :body -> [9]
-  :env -> [41]
+  :env -> [37]
 [8] lit {"value":{"type":"Atom","value":"Type"}}
 [9] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [10]
   :body -> [15]
-  :env -> [42]
+  :env -> [38]
 [10] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [11]
   :body -> [12]
@@ -1588,44 +1588,36 @@ return main();
   :value -> [30]
 [30] nu {"variable":"$nu","level":3}
   :annotation -> [31]
-  :body -> [36]
-[31] row:ext {"label":"fst"}
-  :rest -> [33]
-  :value -> [32]
-[32] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[33] row:ext {"label":"snd"}
-  :rest -> [35]
-  :value -> [34]
-[34] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[35] row:empty
-[36] struct
-  :field -> [37] {"label":"fst"}
-  :field -> [38] {"label":"snd"}
-[37] lit {"value":{"type":"Num","value":1}}
-[38] lit {"value":{"type":"Num","value":2}}
-[39] lit {"value":{"type":"unit"}}
-[40] env
-[41] env
+  :body -> [32]
+[31] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[32] struct
+  :field -> [33] {"label":"fst"}
+  :field -> [34] {"label":"snd"}
+[33] lit {"value":{"type":"Num","value":1}}
+[34] lit {"value":{"type":"Num","value":2}}
+[35] lit {"value":{"type":"unit"}}
+[36] env
+[37] env
   :capture -> [5] {"index":0}
-[42] env
+[38] env
   :capture -> [5] {"index":0}
   :capture -> [7] {"index":1}
-[43] closure
+[39] closure
   :body -> [5]
-  :env -> [40]
-[44] closure
+  :env -> [36]
+[40] closure
   :body -> [7]
-  :env -> [41]
-[45] closure
+  :env -> [37]
+[41] closure
   :body -> [9]
-  :env -> [42]",
+  :env -> [38]",
     "ivl": "(forall ((p Schema)) (forall (($b Real)) (=> (= $b 2) (< 1 $b))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_43
+      let fnref_cls2 = &closure_39
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       let Pair3 = closure_cls2
       let v4 = 1
@@ -1634,23 +1626,23 @@ return main();
       let p7 = v6
       let v8 = unit
       return v8
-  fn closure_45(env0, p1) entry=entry
+  fn closure_41(env0, p1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
       let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       return v0
-  fn closure_44(env0, b1) entry=entry
+  fn closure_40(env0, b1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let env_cls2 = alloc { v0: cap_0, v1: b1 }
-      let fnref_cls2 = &closure_45
+      let fnref_cls2 = &closure_41
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_43(env0, a1) entry=entry
+  fn closure_39(env0, a1) entry=entry
     entry:
       let env_cls2 = alloc { v0: a1 }
-      let fnref_cls2 = &closure_44
+      let fnref_cls2 = &closure_40
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2",
     "name": "test",
@@ -1703,7 +1695,7 @@ exports[`Language Tour — Refinement Types > dependent record construction reje
   {
     "codegenJS": "function main() {
   const env_cls2 = {};
-  const fnref_cls2 = closure_43;
+  const fnref_cls2 = closure_39;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1720,20 +1712,20 @@ exports[`Language Tour — Refinement Types > dependent record construction reje
   return v8;
 }
 
-function closure_45(env0, p1) {
+function closure_41(env0, p1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const v0 = {};
   return v0;
 }
 
-function closure_44(env0, b1) {
+function closure_40(env0, b1) {
   const cap_0 = env0.v0;
   const env_cls2 = {
     v0: cap_0,
     v1: b1
   };
-  const fnref_cls2 = closure_45;
+  const fnref_cls2 = closure_41;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1741,11 +1733,11 @@ function closure_44(env0, b1) {
   return closure_cls2;
 }
 
-function closure_43(env0, a1) {
+function closure_39(env0, a1) {
   const env_cls2 = {
     v0: a1
   };
-  const fnref_cls2 = closure_44;
+  const fnref_cls2 = closure_40;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1770,14 +1762,14 @@ return main();
         [ fst: a,
           snd: <ω> b [| λ(v: b) ->
             p &fst v |] ] -| Γ: $sig; p; b; a; Pair; testFail)
-    = ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) . Struct [ fst: 2, snd: 1 ];
+    = νstrict [] . Struct [ fst: 2, snd: 1 ];
   return 1;
 }",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"testFail"}
 [3] block
-  :return -> [39]
+  :return -> [35]
   :stmt -> [4] {"index":0}
   :stmt -> [29] {"index":1}
 [4] stmt:let {"variable":"Pair"}
@@ -1786,17 +1778,17 @@ return main();
 [5] lambda {"variable":"a","icit":"Explicit","level":2}
   :annotation -> [6]
   :body -> [7]
-  :env -> [40]
+  :env -> [36]
 [6] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lambda {"variable":"b","icit":"Explicit","level":3}
   :annotation -> [8]
   :body -> [9]
-  :env -> [41]
+  :env -> [37]
 [8] lit {"value":{"type":"Atom","value":"Type"}}
 [9] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [10]
   :body -> [15]
-  :env -> [42]
+  :env -> [38]
 [10] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [11]
   :body -> [12]
@@ -1862,44 +1854,36 @@ return main();
   :value -> [30]
 [30] nu {"variable":"$nu","level":3}
   :annotation -> [31]
-  :body -> [36]
-[31] row:ext {"label":"fst"}
-  :rest -> [33]
-  :value -> [32]
-[32] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[33] row:ext {"label":"snd"}
-  :rest -> [35]
-  :value -> [34]
-[34] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[35] row:empty
-[36] struct
-  :field -> [37] {"label":"fst"}
-  :field -> [38] {"label":"snd"}
-[37] lit {"value":{"type":"Num","value":2}}
-[38] lit {"value":{"type":"Num","value":1}}
-[39] lit {"value":{"type":"Num","value":1}}
-[40] env
-[41] env
+  :body -> [32]
+[31] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[32] struct
+  :field -> [33] {"label":"fst"}
+  :field -> [34] {"label":"snd"}
+[33] lit {"value":{"type":"Num","value":2}}
+[34] lit {"value":{"type":"Num","value":1}}
+[35] lit {"value":{"type":"Num","value":1}}
+[36] env
+[37] env
   :capture -> [5] {"index":0}
-[42] env
+[38] env
   :capture -> [5] {"index":0}
   :capture -> [7] {"index":1}
-[43] closure
+[39] closure
   :body -> [5]
-  :env -> [40]
-[44] closure
+  :env -> [36]
+[40] closure
   :body -> [7]
-  :env -> [41]
-[45] closure
+  :env -> [37]
+[41] closure
   :body -> [9]
-  :env -> [42]",
+  :env -> [38]",
     "ivl": "(forall ((p Schema)) (forall (($b Real)) (=> (= $b 1) (< 2 $b))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_43
+      let fnref_cls2 = &closure_39
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       let Pair3 = closure_cls2
       let v4 = 2
@@ -1908,23 +1892,23 @@ return main();
       let p7 = v6
       let v8 = 1
       return v8
-  fn closure_45(env0, p1) entry=entry
+  fn closure_41(env0, p1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
       let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       return v0
-  fn closure_44(env0, b1) entry=entry
+  fn closure_40(env0, b1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let env_cls2 = alloc { v0: cap_0, v1: b1 }
-      let fnref_cls2 = &closure_45
+      let fnref_cls2 = &closure_41
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_43(env0, a1) entry=entry
+  fn closure_39(env0, a1) entry=entry
     entry:
       let env_cls2 = alloc { v0: a1 }
-      let fnref_cls2 = &closure_44
+      let fnref_cls2 = &closure_40
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2",
     "name": "testFail",
@@ -3727,12 +3711,12 @@ return main();
         (closure: λ(y: Num) -> FFI.$lt x y -| Γ: x; List; orderedListTestFail))
     = Struct
       [ __tag: cons,
-        payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+        payload: νstrict [] .
           Struct
             [ head: 2,
               tail: Struct
                 [ __tag: cons,
-                  payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+                  payload: νstrict [] .
                     Struct
                       [ head: 1,
                         tail: Struct [ __tag: nil, payload: unit ] ] ] ] ];
@@ -3742,7 +3726,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"orderedListTestFail"}
 [3] block
-  :return -> [72]
+  :return -> [64]
   :stmt -> [4] {"index":0}
   :stmt -> [48] {"index":1}
 [4] stmt:let {"variable":"List"}
@@ -3787,12 +3771,12 @@ return main();
 [16] lambda {"variable":"t","icit":"Explicit","level":3}
   :annotation -> [17]
   :body -> [18]
-  :env -> [73]
+  :env -> [65]
 [17] lit {"value":{"type":"Atom","value":"Type"}}
 [18] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [19]
   :body -> [24]
-  :env -> [74]
+  :env -> [66]
 [19] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [20]
   :body -> [21]
@@ -3896,57 +3880,41 @@ return main();
 [50] lit {"value":{"type":"Atom","value":"cons"}}
 [51] nu {"variable":"$nu","level":3}
   :annotation -> [52]
-  :body -> [57]
-[52] row:ext {"label":"head"}
-  :rest -> [54]
-  :value -> [53]
-[53] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[54] row:ext {"label":"tail"}
-  :rest -> [56]
-  :value -> [55]
-[55] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[56] row:empty
-[57] struct
-  :field -> [58] {"label":"head"}
-  :field -> [59] {"label":"tail"}
-[58] lit {"value":{"type":"Num","value":2}}
+  :body -> [53]
+[52] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[53] struct
+  :field -> [54] {"label":"head"}
+  :field -> [55] {"label":"tail"}
+[54] lit {"value":{"type":"Num","value":2}}
+[55] struct
+  :field -> [56] {"label":"__tag"}
+  :field -> [57] {"label":"payload"}
+[56] lit {"value":{"type":"Atom","value":"cons"}}
+[57] nu {"variable":"$nu","level":4}
+  :annotation -> [58]
+  :body -> [59]
+[58] lit {"value":{"type":"Atom","value":"Irrelevant"}}
 [59] struct
-  :field -> [60] {"label":"__tag"}
-  :field -> [61] {"label":"payload"}
-[60] lit {"value":{"type":"Atom","value":"cons"}}
-[61] nu {"variable":"$nu","level":4}
-  :annotation -> [62]
-  :body -> [67]
-[62] row:ext {"label":"head"}
-  :rest -> [64]
-  :value -> [63]
-[63] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[64] row:ext {"label":"tail"}
-  :rest -> [66]
-  :value -> [65]
-[65] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[66] row:empty
-[67] struct
-  :field -> [68] {"label":"head"}
-  :field -> [69] {"label":"tail"}
-[68] lit {"value":{"type":"Num","value":1}}
-[69] struct
-  :field -> [70] {"label":"__tag"}
-  :field -> [71] {"label":"payload"}
-[70] lit {"value":{"type":"Atom","value":"nil"}}
-[71] lit {"value":{"type":"unit"}}
-[72] lit {"value":{"type":"Num","value":1}}
-[73] env
+  :field -> [60] {"label":"head"}
+  :field -> [61] {"label":"tail"}
+[60] lit {"value":{"type":"Num","value":1}}
+[61] struct
+  :field -> [62] {"label":"__tag"}
+  :field -> [63] {"label":"payload"}
+[62] lit {"value":{"type":"Atom","value":"nil"}}
+[63] lit {"value":{"type":"unit"}}
+[64] lit {"value":{"type":"Num","value":1}}
+[65] env
   :capture -> [5] {"index":0}
-[74] env
+[66] env
   :capture -> [16] {"index":0}
   :capture -> [5] {"index":1}
-[75] closure
+[67] closure
   :body -> [16]
-  :env -> [73]
-[76] closure
+  :env -> [65]
+[68] closure
   :body -> [18]
-  :env -> [74]",
+  :env -> [66]",
     "ivl": "(forall ((ol App_App_Mu_List_Real_Function))
   (forall (($b Real)) (=> (= $b 1) (< 2 $b))))",
     "kind": "let",
@@ -4266,18 +4234,17 @@ return main();
 ",
     "elaborated": "Struct
   [ __tag: cons,
-    payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+    payload: νstrict [] .
       Struct
         [ head: 1,
           tail: Struct
             [ __tag: cons,
-              payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+              payload: νstrict [] .
                 Struct
                   [ head: 2,
                     tail: Struct
                       [ __tag: cons,
-                        payload: ν($nu: [ head: Irrelevant,
-                          tail: Irrelevant ]) .
+                        payload: νstrict [] .
                           Struct
                             [ head: 3,
                               tail: Struct
@@ -4291,65 +4258,41 @@ return main();
 [4] lit {"value":{"type":"Atom","value":"cons"}}
 [5] nu {"variable":"$nu","level":1}
   :annotation -> [6]
-  :body -> [11]
-[6] row:ext {"label":"head"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:ext {"label":"tail"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[10] row:empty
-[11] struct
-  :field -> [12] {"label":"head"}
-  :field -> [13] {"label":"tail"}
-[12] lit {"value":{"type":"Num","value":1}}
+  :body -> [7]
+[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[7] struct
+  :field -> [8] {"label":"head"}
+  :field -> [9] {"label":"tail"}
+[8] lit {"value":{"type":"Num","value":1}}
+[9] struct
+  :field -> [10] {"label":"__tag"}
+  :field -> [11] {"label":"payload"}
+[10] lit {"value":{"type":"Atom","value":"cons"}}
+[11] nu {"variable":"$nu","level":2}
+  :annotation -> [12]
+  :body -> [13]
+[12] lit {"value":{"type":"Atom","value":"Irrelevant"}}
 [13] struct
-  :field -> [14] {"label":"__tag"}
-  :field -> [15] {"label":"payload"}
-[14] lit {"value":{"type":"Atom","value":"cons"}}
-[15] nu {"variable":"$nu","level":2}
-  :annotation -> [16]
-  :body -> [21]
-[16] row:ext {"label":"head"}
-  :rest -> [18]
-  :value -> [17]
-[17] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[18] row:ext {"label":"tail"}
-  :rest -> [20]
-  :value -> [19]
-[19] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[20] row:empty
+  :field -> [14] {"label":"head"}
+  :field -> [15] {"label":"tail"}
+[14] lit {"value":{"type":"Num","value":2}}
+[15] struct
+  :field -> [16] {"label":"__tag"}
+  :field -> [17] {"label":"payload"}
+[16] lit {"value":{"type":"Atom","value":"cons"}}
+[17] nu {"variable":"$nu","level":3}
+  :annotation -> [18]
+  :body -> [19]
+[18] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[19] struct
+  :field -> [20] {"label":"head"}
+  :field -> [21] {"label":"tail"}
+[20] lit {"value":{"type":"Num","value":3}}
 [21] struct
-  :field -> [22] {"label":"head"}
-  :field -> [23] {"label":"tail"}
-[22] lit {"value":{"type":"Num","value":2}}
-[23] struct
-  :field -> [24] {"label":"__tag"}
-  :field -> [25] {"label":"payload"}
-[24] lit {"value":{"type":"Atom","value":"cons"}}
-[25] nu {"variable":"$nu","level":3}
-  :annotation -> [26]
-  :body -> [31]
-[26] row:ext {"label":"head"}
-  :rest -> [28]
-  :value -> [27]
-[27] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[28] row:ext {"label":"tail"}
-  :rest -> [30]
-  :value -> [29]
-[29] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[30] row:empty
-[31] struct
-  :field -> [32] {"label":"head"}
-  :field -> [33] {"label":"tail"}
-[32] lit {"value":{"type":"Num","value":3}}
-[33] struct
-  :field -> [34] {"label":"__tag"}
-  :field -> [35] {"label":"payload"}
-[34] lit {"value":{"type":"Atom","value":"nil"}}
-[35] lit {"value":{"type":"unit"}}",
+  :field -> [22] {"label":"__tag"}
+  :field -> [23] {"label":"payload"}
+[22] lit {"value":{"type":"Atom","value":"nil"}}
+[23] lit {"value":{"type":"unit"}}",
     "ivl": "(and
   (forall (($b Real)) (=> (= $b 2) (< 1 $b)))
   (forall (($c Real)) (=> (= $c 3) (and (< 1 $c) (< 2 $c)))))",
@@ -4376,23 +4319,17 @@ return main();
     "name": "ascending",
     "normalized": "Struct
   [ __tag: cons,
-    payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) ->
-      (closure: Struct
-        [ head: 1,
-          tail: Struct
-            [ __tag: cons,
-              payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
-                Struct
-                  [ head: 2,
-                    tail: Struct
-                      [ __tag: cons,
-                        payload: ν($nu: [ head: Irrelevant,
-                          tail: Irrelevant ]) .
-                          Struct
-                            [ head: 3,
-                              tail: Struct
-                                [ __tag: nil,
-                                  payload: unit ] ] ] ] ] ] -| Γ: $nu) ]",
+    payload: Struct
+      [ head: 1,
+        tail: Struct
+          [ __tag: cons,
+            payload: Struct
+              [ head: 2,
+                tail: Struct
+                  [ __tag: cons,
+                    payload: Struct
+                      [ head: 3,
+                        tail: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
     "solverTrace": "=== Formula ===
   (and
     (forall (($b Real)) (=> (= $b 2) (< 1 $b)))
@@ -4483,18 +4420,17 @@ return main();
 ",
     "elaborated": "Struct
   [ __tag: cons,
-    payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+    payload: νstrict [] .
       Struct
         [ head: 3,
           tail: Struct
             [ __tag: cons,
-              payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+              payload: νstrict [] .
                 Struct
                   [ head: 2,
                     tail: Struct
                       [ __tag: cons,
-                        payload: ν($nu: [ head: Irrelevant,
-                          tail: Irrelevant ]) .
+                        payload: νstrict [] .
                           Struct
                             [ head: 1,
                               tail: Struct
@@ -4508,65 +4444,41 @@ return main();
 [4] lit {"value":{"type":"Atom","value":"cons"}}
 [5] nu {"variable":"$nu","level":1}
   :annotation -> [6]
-  :body -> [11]
-[6] row:ext {"label":"head"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:ext {"label":"tail"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[10] row:empty
-[11] struct
-  :field -> [12] {"label":"head"}
-  :field -> [13] {"label":"tail"}
-[12] lit {"value":{"type":"Num","value":3}}
+  :body -> [7]
+[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[7] struct
+  :field -> [8] {"label":"head"}
+  :field -> [9] {"label":"tail"}
+[8] lit {"value":{"type":"Num","value":3}}
+[9] struct
+  :field -> [10] {"label":"__tag"}
+  :field -> [11] {"label":"payload"}
+[10] lit {"value":{"type":"Atom","value":"cons"}}
+[11] nu {"variable":"$nu","level":2}
+  :annotation -> [12]
+  :body -> [13]
+[12] lit {"value":{"type":"Atom","value":"Irrelevant"}}
 [13] struct
-  :field -> [14] {"label":"__tag"}
-  :field -> [15] {"label":"payload"}
-[14] lit {"value":{"type":"Atom","value":"cons"}}
-[15] nu {"variable":"$nu","level":2}
-  :annotation -> [16]
-  :body -> [21]
-[16] row:ext {"label":"head"}
-  :rest -> [18]
-  :value -> [17]
-[17] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[18] row:ext {"label":"tail"}
-  :rest -> [20]
-  :value -> [19]
-[19] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[20] row:empty
+  :field -> [14] {"label":"head"}
+  :field -> [15] {"label":"tail"}
+[14] lit {"value":{"type":"Num","value":2}}
+[15] struct
+  :field -> [16] {"label":"__tag"}
+  :field -> [17] {"label":"payload"}
+[16] lit {"value":{"type":"Atom","value":"cons"}}
+[17] nu {"variable":"$nu","level":3}
+  :annotation -> [18]
+  :body -> [19]
+[18] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[19] struct
+  :field -> [20] {"label":"head"}
+  :field -> [21] {"label":"tail"}
+[20] lit {"value":{"type":"Num","value":1}}
 [21] struct
-  :field -> [22] {"label":"head"}
-  :field -> [23] {"label":"tail"}
-[22] lit {"value":{"type":"Num","value":2}}
-[23] struct
-  :field -> [24] {"label":"__tag"}
-  :field -> [25] {"label":"payload"}
-[24] lit {"value":{"type":"Atom","value":"cons"}}
-[25] nu {"variable":"$nu","level":3}
-  :annotation -> [26]
-  :body -> [31]
-[26] row:ext {"label":"head"}
-  :rest -> [28]
-  :value -> [27]
-[27] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[28] row:ext {"label":"tail"}
-  :rest -> [30]
-  :value -> [29]
-[29] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[30] row:empty
-[31] struct
-  :field -> [32] {"label":"head"}
-  :field -> [33] {"label":"tail"}
-[32] lit {"value":{"type":"Num","value":1}}
-[33] struct
-  :field -> [34] {"label":"__tag"}
-  :field -> [35] {"label":"payload"}
-[34] lit {"value":{"type":"Atom","value":"nil"}}
-[35] lit {"value":{"type":"unit"}}",
+  :field -> [22] {"label":"__tag"}
+  :field -> [23] {"label":"payload"}
+[22] lit {"value":{"type":"Atom","value":"nil"}}
+[23] lit {"value":{"type":"unit"}}",
     "ivl": "(and
   (forall (($b Real)) (=> (= $b 2) (> 3 $b)))
   (forall (($c Real)) (=> (= $c 1) (and (> 3 $c) (> 2 $c)))))",
@@ -4593,23 +4505,17 @@ return main();
     "name": "descending",
     "normalized": "Struct
   [ __tag: cons,
-    payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) ->
-      (closure: Struct
-        [ head: 3,
-          tail: Struct
-            [ __tag: cons,
-              payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
-                Struct
-                  [ head: 2,
-                    tail: Struct
-                      [ __tag: cons,
-                        payload: ν($nu: [ head: Irrelevant,
-                          tail: Irrelevant ]) .
-                          Struct
-                            [ head: 1,
-                              tail: Struct
-                                [ __tag: nil,
-                                  payload: unit ] ] ] ] ] ] -| Γ: $nu) ]",
+    payload: Struct
+      [ head: 3,
+        tail: Struct
+          [ __tag: cons,
+            payload: Struct
+              [ head: 2,
+                tail: Struct
+                  [ __tag: cons,
+                    payload: Struct
+                      [ head: 1,
+                        tail: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
     "solverTrace": "=== Formula ===
   (and
     (forall (($b Real)) (=> (= $b 2) (> 3 $b)))
@@ -4758,27 +4664,19 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) . Struct [ fst: 3, snd: 5 ]",
+    "elaborated": "νstrict [] . Struct [ fst: 3, snd: 5 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"valid"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"fst"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"snd"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"fst"}
-  :field -> [11] {"label":"snd"}
-[10] lit {"value":{"type":"Num","value":3}}
-[11] lit {"value":{"type":"Num","value":5}}",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"fst"}
+  :field -> [7] {"label":"snd"}
+[6] lit {"value":{"type":"Num","value":3}}
+[7] lit {"value":{"type":"Num","value":5}}",
     "ivl": "(forall (($b Real)) (=> (= $b 5) (> $b 3)))",
     "kind": "let",
     "mir": "module
@@ -4789,8 +4687,7 @@ return main();
       let v2 = alloc { fst: v0, snd: v1 }
       return v2",
     "name": "valid",
-    "normalized": "ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) ->
-  (closure: Struct [ fst: 3, snd: 5 ] -| Γ: $nu)",
+    "normalized": "Struct [ fst: 3, snd: 5 ]",
     "solverTrace": "=== Formula ===
   (forall (($b Real)) (=> (= $b 5) (> $b 3)))
 

@@ -153,8 +153,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "getX @[ y: Num ]
-  (ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 10, y: 20 ])",
+    "elaborated": "getX @[ y: Num ] (νstrict [] . Struct [ x: 10, y: 20 ])",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"p1"}
@@ -175,21 +174,13 @@ return main();
 [9] row:empty
 [10] nu {"variable":"$nu","level":1}
   :annotation -> [11]
-  :body -> [16]
-[11] row:ext {"label":"x"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[13] row:ext {"label":"y"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[15] row:empty
-[16] struct
-  :field -> [17] {"label":"x"}
-  :field -> [18] {"label":"y"}
-[17] lit {"value":{"type":"Num","value":10}}
-[18] lit {"value":{"type":"Num","value":20}}",
+  :body -> [12]
+[11] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[12] struct
+  :field -> [13] {"label":"x"}
+  :field -> [14] {"label":"y"}
+[13] lit {"value":{"type":"Num","value":10}}
+[14] lit {"value":{"type":"Num","value":20}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -265,9 +256,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "getX @[ y: Num, z: Num ]
-  (ν($nu: [ x: Irrelevant, y: Irrelevant, z: Irrelevant ]) .
-    Struct [ x: 5, y: 3, z: 7 ])",
+    "elaborated": "getX @[ y: Num, z: Num ] (νstrict [] . Struct [ x: 5, y: 3, z: 7 ])",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"p2"}
@@ -292,27 +281,15 @@ return main();
 [11] row:empty
 [12] nu {"variable":"$nu","level":1}
   :annotation -> [13]
-  :body -> [20]
-[13] row:ext {"label":"x"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[15] row:ext {"label":"y"}
-  :rest -> [17]
-  :value -> [16]
-[16] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[17] row:ext {"label":"z"}
-  :rest -> [19]
-  :value -> [18]
-[18] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[19] row:empty
-[20] struct
-  :field -> [21] {"label":"x"}
-  :field -> [22] {"label":"y"}
-  :field -> [23] {"label":"z"}
-[21] lit {"value":{"type":"Num","value":5}}
-[22] lit {"value":{"type":"Num","value":3}}
-[23] lit {"value":{"type":"Num","value":7}}",
+  :body -> [14]
+[13] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[14] struct
+  :field -> [15] {"label":"x"}
+  :field -> [16] {"label":"y"}
+  :field -> [17] {"label":"z"}
+[15] lit {"value":{"type":"Num","value":5}}
+[16] lit {"value":{"type":"Num","value":3}}
+[17] lit {"value":{"type":"Num","value":7}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -386,9 +363,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "getX @[ name: String ]
-  (ν($nu: [ x: Irrelevant, name: Irrelevant ]) .
-    Struct [ x: 100, name: "point" ])",
+    "elaborated": "getX @[ name: String ] (νstrict [] . Struct [ x: 100, name: "point" ])",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"p3"}
@@ -409,21 +384,13 @@ return main();
 [9] row:empty
 [10] nu {"variable":"$nu","level":1}
   :annotation -> [11]
-  :body -> [16]
-[11] row:ext {"label":"x"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[13] row:ext {"label":"name"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[15] row:empty
-[16] struct
-  :field -> [17] {"label":"x"}
-  :field -> [18] {"label":"name"}
-[17] lit {"value":{"type":"Num","value":100}}
-[18] lit {"value":{"type":"String","value":"point"}}",
+  :body -> [12]
+[11] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[12] struct
+  :field -> [13] {"label":"x"}
+  :field -> [14] {"label":"name"}
+[13] lit {"value":{"type":"Num","value":100}}
+[14] lit {"value":{"type":"String","value":"point"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -647,7 +614,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "addZ @[] (ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 1, y: 2 ])",
+    "elaborated": "addZ @[] (νstrict [] . Struct [ x: 1, y: 2 ])",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"p1"}
@@ -664,21 +631,13 @@ return main();
 [7] row:empty
 [8] nu {"variable":"$nu","level":1}
   :annotation -> [9]
-  :body -> [14]
-[9] row:ext {"label":"x"}
-  :rest -> [11]
-  :value -> [10]
-[10] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[11] row:ext {"label":"y"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[13] row:empty
-[14] struct
-  :field -> [15] {"label":"x"}
-  :field -> [16] {"label":"y"}
-[15] lit {"value":{"type":"Num","value":1}}
-[16] lit {"value":{"type":"Num","value":2}}",
+  :body -> [10]
+[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[10] struct
+  :field -> [11] {"label":"x"}
+  :field -> [12] {"label":"y"}
+[11] lit {"value":{"type":"Num","value":1}}
+[12] lit {"value":{"type":"Num","value":2}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -697,8 +656,7 @@ return main();
       let v10 = call *fnref8(env9, v7)
       return v10",
     "name": "p1",
-    "normalized": "ν($nu: [ x: Irrelevant, y: Irrelevant, z: Irrelevant ]) ->
-  (closure: Struct [ x: 1, y: 2, z: 0 ] -| Γ: $nu)",
+    "normalized": "Struct [ x: 1, y: 2, z: 0 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -753,9 +711,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "addZ @[ color: String ]
-  (ν($nu: [ x: Irrelevant, y: Irrelevant, color: Irrelevant ]) .
-    Struct [ x: 5, y: 10, color: "red" ])",
+    "elaborated": "addZ @[ color: String ] (νstrict [] . Struct [ x: 5, y: 10, color: "red" ])",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"p2"}
@@ -776,27 +732,15 @@ return main();
 [9] row:empty
 [10] nu {"variable":"$nu","level":1}
   :annotation -> [11]
-  :body -> [18]
-[11] row:ext {"label":"x"}
-  :rest -> [13]
-  :value -> [12]
-[12] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[13] row:ext {"label":"y"}
-  :rest -> [15]
-  :value -> [14]
-[14] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[15] row:ext {"label":"color"}
-  :rest -> [17]
-  :value -> [16]
-[16] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[17] row:empty
-[18] struct
-  :field -> [19] {"label":"x"}
-  :field -> [20] {"label":"y"}
-  :field -> [21] {"label":"color"}
-[19] lit {"value":{"type":"Num","value":5}}
-[20] lit {"value":{"type":"Num","value":10}}
-[21] lit {"value":{"type":"String","value":"red"}}",
+  :body -> [12]
+[11] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[12] struct
+  :field -> [13] {"label":"x"}
+  :field -> [14] {"label":"y"}
+  :field -> [15] {"label":"color"}
+[13] lit {"value":{"type":"Num","value":5}}
+[14] lit {"value":{"type":"Num","value":10}}
+[15] lit {"value":{"type":"String","value":"red"}}",
     "ivl": "",
     "kind": "let",
     "mir": "module
@@ -817,8 +761,7 @@ return main();
       let v12 = call *fnref10(env11, v9)
       return v12",
     "name": "p2",
-    "normalized": "ν($nu: [ x: Irrelevant, y: Irrelevant, color: Irrelevant, z: Irrelevant ]) ->
-  (closure: Struct [ x: 5, y: 10, color: "red", z: 0 ] -| Γ: $nu)",
+    "normalized": "Struct [ x: 5, y: 10, color: "red", z: 0 ]",
     "solverTrace": "",
     "type": "Σ($sig: [ x: Irrelevant, y: Irrelevant, z: Irrelevant ]) .
   Schema [ x: Num, y: Num, z: Num | [ color: String ] ]",
@@ -972,28 +915,19 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ name: Irrelevant, age: Irrelevant ]) .
-  Struct [ name: "Alice", age: 30 ]",
+    "elaborated": "νstrict [] . Struct [ name: "Alice", age: 30 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"person"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"name"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"age"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"name"}
-  :field -> [11] {"label":"age"}
-[10] lit {"value":{"type":"String","value":"Alice"}}
-[11] lit {"value":{"type":"Num","value":30}}",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"name"}
+  :field -> [7] {"label":"age"}
+[6] lit {"value":{"type":"String","value":"Alice"}}
+[7] lit {"value":{"type":"Num","value":30}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1004,8 +938,7 @@ return main();
       let v2 = alloc { name: v0, age: v1 }
       return v2",
     "name": "person",
-    "normalized": "ν($nu: [ name: Irrelevant, age: Irrelevant ]) ->
-  (closure: Struct [ name: "Alice", age: 30 ] -| Γ: $nu)",
+    "normalized": "Struct [ name: "Alice", age: 30 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -1048,34 +981,21 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ name: Irrelevant, author: Irrelevant, pages: Irrelevant ]) .
-  Struct [ name: "1984", author: "Orwell", pages: 328 ]",
+    "elaborated": "νstrict [] . Struct [ name: "1984", author: "Orwell", pages: 328 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"book"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [11]
-[4] row:ext {"label":"name"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"author"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:ext {"label":"pages"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[10] row:empty
-[11] struct
-  :field -> [12] {"label":"name"}
-  :field -> [13] {"label":"author"}
-  :field -> [14] {"label":"pages"}
-[12] lit {"value":{"type":"String","value":"1984"}}
-[13] lit {"value":{"type":"String","value":"Orwell"}}
-[14] lit {"value":{"type":"Num","value":328}}",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"name"}
+  :field -> [7] {"label":"author"}
+  :field -> [8] {"label":"pages"}
+[6] lit {"value":{"type":"String","value":"1984"}}
+[7] lit {"value":{"type":"String","value":"Orwell"}}
+[8] lit {"value":{"type":"Num","value":328}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1087,8 +1007,7 @@ return main();
       let v3 = alloc { name: v0, author: v1, pages: v2 }
       return v3",
     "name": "book",
-    "normalized": "ν($nu: [ name: Irrelevant, author: Irrelevant, pages: Irrelevant ]) ->
-  (closure: Struct [ name: "1984", author: "Orwell", pages: 328 ] -| Γ: $nu)",
+    "normalized": "Struct [ name: "1984", author: "Orwell", pages: 328 ]",
     "solverTrace": "=== Formula ===
   true
 

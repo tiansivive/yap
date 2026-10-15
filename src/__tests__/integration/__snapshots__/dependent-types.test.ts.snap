@@ -391,31 +391,23 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) . Struct [ fst: Num, snd: 42 ]",
+    "elaborated": "νstrict [] . Struct [ fst: Num, snd: 42 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"numPair"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"fst"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"snd"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [11] {"label":"fst"}
-  :field -> [12] {"label":"snd"}
-[10] var:free {"name":"Num"}
-[11] var:ref {"name":"Num"}
-  :refers_to -> [10]
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [7] {"label":"fst"}
+  :field -> [8] {"label":"snd"}
+[6] var:free {"name":"Num"}
+[7] var:ref {"name":"Num"}
+  :refers_to -> [6]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-[12] lit {"value":{"type":"Num","value":42}}",
+[8] lit {"value":{"type":"Num","value":42}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -426,8 +418,7 @@ return main();
       let v2 = alloc { fst: v0, snd: v1 }
       return v2",
     "name": "numPair",
-    "normalized": "ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) ->
-  (closure: Struct [ fst: Num, snd: 42 ] -| Γ: $nu)",
+    "normalized": "Struct [ fst: Num, snd: 42 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -469,32 +460,23 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) .
-  Struct [ fst: String, snd: "hello" ]",
+    "elaborated": "νstrict [] . Struct [ fst: String, snd: "hello" ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"strPair"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"fst"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"snd"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [11] {"label":"fst"}
-  :field -> [12] {"label":"snd"}
-[10] var:free {"name":"String"}
-[11] var:ref {"name":"String"}
-  :refers_to -> [10]
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [7] {"label":"fst"}
+  :field -> [8] {"label":"snd"}
+[6] var:free {"name":"String"}
+[7] var:ref {"name":"String"}
+  :refers_to -> [6]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-[12] lit {"value":{"type":"String","value":"hello"}}",
+[8] lit {"value":{"type":"String","value":"hello"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -505,8 +487,7 @@ return main();
       let v2 = alloc { fst: v0, snd: v1 }
       return v2",
     "name": "strPair",
-    "normalized": "ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) ->
-  (closure: Struct [ fst: String, snd: "hello" ] -| Γ: $nu)",
+    "normalized": "Struct [ fst: String, snd: "hello" ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -709,27 +690,19 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) . Struct [ fst: 42, snd: "hello" ]",
+    "elaborated": "νstrict [] . Struct [ fst: 42, snd: "hello" ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"exampleP1"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"fst"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"snd"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"fst"}
-  :field -> [11] {"label":"snd"}
-[10] lit {"value":{"type":"Num","value":42}}
-[11] lit {"value":{"type":"String","value":"hello"}}",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"fst"}
+  :field -> [7] {"label":"snd"}
+[6] lit {"value":{"type":"Num","value":42}}
+[7] lit {"value":{"type":"String","value":"hello"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -740,8 +713,7 @@ return main();
       let v2 = alloc { fst: v0, snd: v1 }
       return v2",
     "name": "exampleP1",
-    "normalized": "ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) ->
-  (closure: Struct [ fst: 42, snd: "hello" ] -| Γ: $nu)",
+    "normalized": "Struct [ fst: 42, snd: "hello" ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -782,27 +754,19 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) . Struct [ fst: true, snd: 100 ]",
+    "elaborated": "νstrict [] . Struct [ fst: true, snd: 100 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"exampleP2"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"fst"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"snd"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"fst"}
-  :field -> [11] {"label":"snd"}
-[10] lit {"value":{"type":"Bool","value":true}}
-[11] lit {"value":{"type":"Num","value":100}}",
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"fst"}
+  :field -> [7] {"label":"snd"}
+[6] lit {"value":{"type":"Bool","value":true}}
+[7] lit {"value":{"type":"Num","value":100}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -813,8 +777,7 @@ return main();
       let v2 = alloc { fst: v0, snd: v1 }
       return v2",
     "name": "exampleP2",
-    "normalized": "ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) ->
-  (closure: Struct [ fst: true, snd: 100 ] -| Γ: $nu)",
+    "normalized": "Struct [ fst: true, snd: 100 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -1087,29 +1050,21 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) . Struct [ 0: 10, 1: vec0 ]",
+    "elaborated": "νstrict [] . Struct [ 0: 10, 1: vec0 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"vec1"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"0"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"1"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"0"}
-  :field -> [12] {"label":"1"}
-[10] lit {"value":{"type":"Num","value":10}}
-[11] var:free {"name":"vec0"}
-[12] var:ref {"name":"vec0"}
-  :refers_to -> [11]
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"0"}
+  :field -> [8] {"label":"1"}
+[6] lit {"value":{"type":"Num","value":10}}
+[7] var:free {"name":"vec0"}
+[8] var:ref {"name":"vec0"}
+  :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}",
     "ivl": "true",
@@ -1122,8 +1077,7 @@ return main();
       let v2 = alloc { 0: v0, 1: v1 }
       return v2",
     "name": "vec1",
-    "normalized": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) ->
-  (closure: Struct [ 0: 10, 1: vec0 ] -| Γ: $nu)",
+    "normalized": "Struct [ 0: 10, 1: unit ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -1164,29 +1118,21 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) . Struct [ 0: 20, 1: vec1 ]",
+    "elaborated": "νstrict [] . Struct [ 0: 20, 1: vec1 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"vec2"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"0"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"1"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"0"}
-  :field -> [12] {"label":"1"}
-[10] lit {"value":{"type":"Num","value":20}}
-[11] var:free {"name":"vec1"}
-[12] var:ref {"name":"vec1"}
-  :refers_to -> [11]
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"0"}
+  :field -> [8] {"label":"1"}
+[6] lit {"value":{"type":"Num","value":20}}
+[7] var:free {"name":"vec1"}
+[8] var:ref {"name":"vec1"}
+  :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}",
     "ivl": "true",
@@ -1199,8 +1145,7 @@ return main();
       let v2 = alloc { 0: v0, 1: v1 }
       return v2",
     "name": "vec2",
-    "normalized": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) ->
-  (closure: Struct [ 0: 20, 1: vec1 ] -| Γ: $nu)",
+    "normalized": "Struct [ 0: 20, 1: Struct [ 0: 10, 1: unit ] ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -1241,29 +1186,21 @@ return main();
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) . Struct [ 0: 30, 1: vec2 ]",
+    "elaborated": "νstrict [] . Struct [ 0: 30, 1: vec2 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"vec3"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [9]
-[4] row:ext {"label":"0"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:ext {"label":"1"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:empty
-[9] struct
-  :field -> [10] {"label":"0"}
-  :field -> [12] {"label":"1"}
-[10] lit {"value":{"type":"Num","value":30}}
-[11] var:free {"name":"vec2"}
-[12] var:ref {"name":"vec2"}
-  :refers_to -> [11]
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"0"}
+  :field -> [8] {"label":"1"}
+[6] lit {"value":{"type":"Num","value":30}}
+[7] var:free {"name":"vec2"}
+[8] var:ref {"name":"vec2"}
+  :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}",
     "ivl": "true",
@@ -1276,8 +1213,7 @@ return main();
       let v2 = alloc { 0: v0, 1: v1 }
       return v2",
     "name": "vec3",
-    "normalized": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) ->
-  (closure: Struct [ 0: 30, 1: vec2 ] -| Γ: $nu)",
+    "normalized": "Struct [ 0: 30, 1: Struct [ 0: 20, 1: Struct [ 0: 10, 1: unit ] ] ]",
     "solverTrace": "=== Formula ===
   true
 

@@ -1384,12 +1384,12 @@ return main();
 ",
     "elaborated": "Struct
   [ __tag: cons,
-    payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+    payload: νstrict [] .
       Struct
         [ head: 1,
           tail: Struct
             [ __tag: cons,
-              payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
+              payload: νstrict [] .
                 Struct
                   [ head: 2, tail: Struct [ __tag: nil, payload: unit ] ] ] ] ]",
     "gram": "[1] root
@@ -1401,45 +1401,29 @@ return main();
 [4] lit {"value":{"type":"Atom","value":"cons"}}
 [5] nu {"variable":"$nu","level":1}
   :annotation -> [6]
-  :body -> [11]
-[6] row:ext {"label":"head"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:ext {"label":"tail"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[10] row:empty
-[11] struct
-  :field -> [12] {"label":"head"}
-  :field -> [13] {"label":"tail"}
-[12] lit {"value":{"type":"Num","value":1}}
+  :body -> [7]
+[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[7] struct
+  :field -> [8] {"label":"head"}
+  :field -> [9] {"label":"tail"}
+[8] lit {"value":{"type":"Num","value":1}}
+[9] struct
+  :field -> [10] {"label":"__tag"}
+  :field -> [11] {"label":"payload"}
+[10] lit {"value":{"type":"Atom","value":"cons"}}
+[11] nu {"variable":"$nu","level":2}
+  :annotation -> [12]
+  :body -> [13]
+[12] lit {"value":{"type":"Atom","value":"Irrelevant"}}
 [13] struct
-  :field -> [14] {"label":"__tag"}
-  :field -> [15] {"label":"payload"}
-[14] lit {"value":{"type":"Atom","value":"cons"}}
-[15] nu {"variable":"$nu","level":2}
-  :annotation -> [16]
-  :body -> [21]
-[16] row:ext {"label":"head"}
-  :rest -> [18]
-  :value -> [17]
-[17] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[18] row:ext {"label":"tail"}
-  :rest -> [20]
-  :value -> [19]
-[19] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[20] row:empty
-[21] struct
-  :field -> [22] {"label":"head"}
-  :field -> [23] {"label":"tail"}
-[22] lit {"value":{"type":"Num","value":2}}
-[23] struct
-  :field -> [24] {"label":"__tag"}
-  :field -> [25] {"label":"payload"}
-[24] lit {"value":{"type":"Atom","value":"nil"}}
-[25] lit {"value":{"type":"unit"}}",
+  :field -> [14] {"label":"head"}
+  :field -> [15] {"label":"tail"}
+[14] lit {"value":{"type":"Num","value":2}}
+[15] struct
+  :field -> [16] {"label":"__tag"}
+  :field -> [17] {"label":"payload"}
+[16] lit {"value":{"type":"Atom","value":"nil"}}
+[17] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1460,16 +1444,12 @@ return main();
     "name": "xs",
     "normalized": "Struct
   [ __tag: cons,
-    payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) ->
-      (closure: Struct
-        [ head: 1,
-          tail: Struct
-            [ __tag: cons,
-              payload: ν($nu: [ head: Irrelevant, tail: Irrelevant ]) .
-                Struct
-                  [ head: 2,
-                    tail: Struct
-                      [ __tag: nil, payload: unit ] ] ] ] -| Γ: $nu) ]",
+    payload: Struct
+      [ head: 1,
+        tail: Struct
+          [ __tag: cons,
+            payload: Struct
+              [ head: 2, tail: Struct [ __tag: nil, payload: unit ] ] ] ] ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -1583,66 +1563,64 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = {};
-  const env_cls3 = {
-    v0: v0
+  const env_cls2 = {};
+  const fnref_cls2 = closure_34;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
   };
-  const fnref_cls3 = closure_36;
-  const closure_cls3 = {
-    __fn: fnref_cls3,
-    __env: env_cls3
+  const v3 = {
+    compute: closure_cls2
   };
-  (v0.compute = closure_cls3);
-  return v0;
+  return v3;
 }
 
-function closure_36(env1, n2) {
+function closure_34(env0, n1) {
   let __block = "entry";
-  let match1;
+  let match0;
   while (true) {
     switch (__block) {
       case "entry": {
-        const cap_0 = env1.v0;
-        (__block = "sw2");
+        (__block = "sw1");
         break;
       }
-      case "sw2": {
-        if ((String(n2) === "0")) {
-          (__block = "case4");
+      case "sw1": {
+        if ((String(n1) === "0")) {
+          (__block = "case3");
           break;
         }
-        (__block = "default5");
+        (__block = "default4");
         break;
       }
-      case "case4": {
-        const v5 = 1;
-        const __t0 = v5;
-        (match1 = __t0);
-        (__block = "join3");
+      case "case3": {
+        const v4 = 1;
+        const __t0 = v4;
+        (match0 = __t0);
+        (__block = "join2");
         break;
       }
-      case "default5": {
-        const v6 = cap_0.compute;
-        const v7 = 1;
-        const v8 = (n2 - v7);
-        const fnref9 = v6.__fn;
-        const env10 = v6.__env;
-        const v11 = fnref9(env10, v8);
-        const v12 = (n2 * v11);
-        const __t0 = v12;
-        (match1 = __t0);
-        (__block = "join3");
+      case "default4": {
+        const v6 = 1;
+        const v7 = (n1 - v6);
+        const fnref8 = v5.__fn;
+        const env9 = v5.__env;
+        const v10 = fnref8(env9, v7);
+        const v11 = (n1 * v10);
+        const __t0 = v11;
+        (match0 = __t0);
+        (__block = "join2");
         break;
       }
-      case "join3": {
-        return match1;
+      case "join2": {
+        return match0;
       }
     }
   }
 }
 return main();
 ",
-    "elaborated": "ν($nu: [ compute: Irrelevant ]) .
+    "elaborated": "νstrict [ compute: λ(n: Num) ->
+    match n | 0 -> 1 | _ -> FFI.$mul n ($compute (FFI.$sub n 1)) ] .
   Struct
     [ compute: λ(n: Num) ->
         match n | 0 -> 1 | _ -> FFI.$mul n ($compute (FFI.$sub n 1)) ]",
@@ -1651,84 +1629,75 @@ return main();
 [2] stmt:let {"variable":"fact"}
 [3] nu {"variable":"$nu","level":1}
   :annotation -> [4]
-  :body -> [7]
-[4] row:ext {"label":"compute"}
-  :rest -> [6]
-  :value -> [5]
-[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[6] row:empty
-[7] struct
-  :backpatch -> [8]
-  :field -> [8] {"label":"compute"}
-  :hoist -> [8]
-[8] lambda {"variable":"n","icit":"Explicit","level":2}
-  :annotation -> [9]
-  :body -> [10]
-  :env -> [35]
-[9] lit {"value":{"type":"Atom","value":"Num"}}
-[10] match
-  :alt -> [12] {"index":0}
-  :alt -> [15] {"index":1}
-  :decision_tree -> [32]
-  :scrutinee -> [11]
-[11] var:bound {"index":0}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [8] {"level":2}
-[12] case
-  :body -> [14]
-  :next -> [15]
-  :pattern -> [13]
-[13] pat:lit {"value":{"type":"Num","value":0}}
-[14] lit {"value":{"type":"Num","value":1}}
-[15] case
-  :body -> [30]
-  :pattern -> [16]
-[16] pat:wildcard
-[19] var:foreign {"name":"$mul","arity":2}
-[21] var:bound {"index":0}
-  :next -> [22]
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [8] {"level":2}
-[22] app {"icit":"Explicit"}
-  :arg -> [31]
-  :func -> [23]
-[23] var:nu-label {"name":"compute","index":1}
-  :refers_to -> [8]
-  :scope -> [3] {"level":0,"owner":true}
-  :scope -> [8] {"level":1,"owner":false}
-[26] var:foreign {"name":"$sub","arity":2}
-[28] var:bound {"index":0}
-  :next -> [29]
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [8] {"level":2}
-[29] lit {"value":{"type":"Num","value":1}}
-[30] primop {"op":"$mul"}
-  :arg -> [21] {"index":0}
-  :arg -> [22] {"index":1}
-  :callee -> [19]
-[31] primop {"op":"$sub"}
-  :arg -> [28] {"index":0}
-  :arg -> [29] {"index":1}
-  :callee -> [26]
-[32] switch {"kind":"lit"}
-  :branch -> [33] {"value":{"type":"Num","value":0}}
-  :default -> [34]
-  :inspect -> [11]
-[33] leaf
-  :body -> [14]
-[34] leaf
-  :body -> [30]
-[35] env
-  :capture -> [7] {"index":0}
-[36] closure
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[5] struct
+  :field -> [6] {"label":"compute"}
+[6] lambda {"variable":"n","icit":"Explicit","level":2}
+  :annotation -> [7]
   :body -> [8]
-  :env -> [35]",
+  :env -> [33]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] match
+  :alt -> [10] {"index":0}
+  :alt -> [13] {"index":1}
+  :decision_tree -> [30]
+  :scrutinee -> [9]
+[9] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [6] {"level":2}
+[10] case
+  :body -> [12]
+  :next -> [13]
+  :pattern -> [11]
+[11] pat:lit {"value":{"type":"Num","value":0}}
+[12] lit {"value":{"type":"Num","value":1}}
+[13] case
+  :body -> [28]
+  :pattern -> [14]
+[14] pat:wildcard
+[17] var:foreign {"name":"$mul","arity":2}
+[19] var:bound {"index":0}
+  :next -> [20]
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [6] {"level":2}
+[20] app {"icit":"Explicit"}
+  :arg -> [29]
+  :func -> [21]
+[21] var:nu-label {"name":"compute","index":0}
+  :scope -> [6] {"level":0,"owner":true}
+[24] var:foreign {"name":"$sub","arity":2}
+[26] var:bound {"index":0}
+  :next -> [27]
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [6] {"level":2}
+[27] lit {"value":{"type":"Num","value":1}}
+[28] primop {"op":"$mul"}
+  :arg -> [19] {"index":0}
+  :arg -> [20] {"index":1}
+  :callee -> [17]
+[29] primop {"op":"$sub"}
+  :arg -> [26] {"index":0}
+  :arg -> [27] {"index":1}
+  :callee -> [24]
+[30] switch {"kind":"lit"}
+  :branch -> [31] {"value":{"type":"Num","value":0}}
+  :default -> [32]
+  :inspect -> [9]
+[31] leaf
+  :body -> [12]
+[32] leaf
+  :body -> [28]
+[33] env
+[34] closure
+  :body -> [6]
+  :env -> [33]",
     "ivl": "(forall ((n Real))
   (and
     (= n n)
@@ -1750,39 +1719,35 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }
-      let env_cls3 = alloc { v0: v0 }
-      let fnref_cls3 = &closure_36
-      let closure_cls3 = alloc { __fn: fnref_cls3, __env: env_cls3 }
-      update-fbip v0 { compute: closure_cls3 }
-      return v0
-  fn closure_36(env1, n2) entry=entry
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_34
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      let v3 = alloc { compute: closure_cls2 }
+      return v3
+  fn closure_34(env0, n1) entry=entry
     entry:
-      let cap_0 = read env1.v0
-      jump sw2
-    sw2:
-      branch n2 { 0 -> case4; default -> default5 }
-    case4:
-      let v5 = 1
-      jump join3(v5)
-    default5:
-      let v6 = read cap_0.compute
-      let v7 = 1
-      let v8 = -(n2, v7)
-      let fnref9 = read v6.__fn
-      let env10 = read v6.__env
-      let v11 = call *fnref9(env10, v8)
-      let v12 = *(n2, v11)
-      jump join3(v12)
-    join3(match1):
-      return match1",
+      jump sw1
+    sw1:
+      branch n1 { 0 -> case3; default -> default4 }
+    case3:
+      let v4 = 1
+      jump join2(v4)
+    default4:
+      let v6 = 1
+      let v7 = -(n1, v6)
+      let fnref8 = read v5.__fn
+      let env9 = read v5.__env
+      let v10 = call *fnref8(env9, v7)
+      let v11 = *(n1, v10)
+      jump join2(v11)
+    join2(match0):
+      return match0",
     "name": "fact",
-    "normalized": "ν($nu: [ compute: Irrelevant ]) ->
-  (closure: Struct
-    [ compute: λ(n: Num) ->
-        match n
-          | 0 -> 1
-          | _ -> FFI.$mul n ($compute (FFI.$sub n 1)) ] -| Γ: $nu)",
+    "normalized": "Struct
+  [ compute: λ(n: Num) ->
+      (closure: match n
+        | 0 -> 1
+        | _ -> FFI.$mul n ($compute (FFI.$sub n 1)) -| Γ: n) ]",
     "solverTrace": "=== Formula ===
   (forall ((n Real))
     (and
@@ -2738,10 +2703,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct
-  [ __tag: rectangle,
-    payload: ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) .
-      Struct [ 0: 10, 1: 20 ] ]",
+    "elaborated": "Struct [ __tag: rectangle, payload: νstrict [] . Struct [ 0: 10, 1: 20 ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"r"}
@@ -2751,21 +2713,13 @@ return main();
 [4] lit {"value":{"type":"Atom","value":"rectangle"}}
 [5] nu {"variable":"$nu","level":1}
   :annotation -> [6]
-  :body -> [11]
-[6] row:ext {"label":"0"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:ext {"label":"1"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[10] row:empty
-[11] struct
-  :field -> [12] {"label":"0"}
-  :field -> [13] {"label":"1"}
-[12] lit {"value":{"type":"Num","value":10}}
-[13] lit {"value":{"type":"Num","value":20}}",
+  :body -> [7]
+[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[7] struct
+  :field -> [8] {"label":"0"}
+  :field -> [9] {"label":"1"}
+[8] lit {"value":{"type":"Num","value":10}}
+[9] lit {"value":{"type":"Num","value":20}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -2778,10 +2732,7 @@ return main();
       let v4 = alloc { __tag: v0, payload: v3 }
       return v4",
     "name": "r",
-    "normalized": "Struct
-  [ __tag: rectangle,
-    payload: ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) ->
-      (closure: Struct [ 0: 10, 1: 20 ] -| Γ: $nu) ]",
+    "normalized": "Struct [ __tag: rectangle, payload: Struct [ 0: 10, 1: 20 ] ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -2831,9 +2782,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct
-  [ __tag: point,
-    payload: ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 0, y: 0 ] ]",
+    "elaborated": "Struct [ __tag: point, payload: νstrict [] . Struct [ x: 0, y: 0 ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"p"}
@@ -2843,21 +2792,13 @@ return main();
 [4] lit {"value":{"type":"Atom","value":"point"}}
 [5] nu {"variable":"$nu","level":1}
   :annotation -> [6]
-  :body -> [11]
-[6] row:ext {"label":"x"}
-  :rest -> [8]
-  :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[8] row:ext {"label":"y"}
-  :rest -> [10]
-  :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[10] row:empty
-[11] struct
-  :field -> [12] {"label":"x"}
-  :field -> [13] {"label":"y"}
-[12] lit {"value":{"type":"Num","value":0}}
-[13] lit {"value":{"type":"Num","value":0}}",
+  :body -> [7]
+[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[7] struct
+  :field -> [8] {"label":"x"}
+  :field -> [9] {"label":"y"}
+[8] lit {"value":{"type":"Num","value":0}}
+[9] lit {"value":{"type":"Num","value":0}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -2870,10 +2811,7 @@ return main();
       let v4 = alloc { __tag: v0, payload: v3 }
       return v4",
     "name": "p",
-    "normalized": "Struct
-  [ __tag: point,
-    payload: ν($nu: [ x: Irrelevant, y: Irrelevant ]) ->
-      (closure: Struct [ x: 0, y: 0 ] -| Γ: $nu) ]",
+    "normalized": "Struct [ __tag: point, payload: Struct [ x: 0, y: 0 ] ]",
     "solverTrace": "=== Formula ===
   true
 
