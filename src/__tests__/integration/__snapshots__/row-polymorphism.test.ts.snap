@@ -173,14 +173,12 @@ return main();
 [8] lit {"value":{"type":"Atom","value":"Num"}}
 [9] row:empty
 [10] nu {"variable":"$nu","level":1}
-  :annotation -> [11]
-  :body -> [12]
-[11] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[12] struct
-  :field -> [13] {"label":"x"}
-  :field -> [14] {"label":"y"}
-[13] lit {"value":{"type":"Num","value":10}}
-[14] lit {"value":{"type":"Num","value":20}}",
+  :body -> [11]
+[11] struct
+  :field -> [12] {"label":"x"}
+  :field -> [13] {"label":"y"}
+[12] lit {"value":{"type":"Num","value":10}}
+[13] lit {"value":{"type":"Num","value":20}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -280,16 +278,14 @@ return main();
 [10] lit {"value":{"type":"Atom","value":"Num"}}
 [11] row:empty
 [12] nu {"variable":"$nu","level":1}
-  :annotation -> [13]
-  :body -> [14]
-[13] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[14] struct
-  :field -> [15] {"label":"x"}
-  :field -> [16] {"label":"y"}
-  :field -> [17] {"label":"z"}
-[15] lit {"value":{"type":"Num","value":5}}
-[16] lit {"value":{"type":"Num","value":3}}
-[17] lit {"value":{"type":"Num","value":7}}",
+  :body -> [13]
+[13] struct
+  :field -> [14] {"label":"x"}
+  :field -> [15] {"label":"y"}
+  :field -> [16] {"label":"z"}
+[14] lit {"value":{"type":"Num","value":5}}
+[15] lit {"value":{"type":"Num","value":3}}
+[16] lit {"value":{"type":"Num","value":7}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -383,14 +379,12 @@ return main();
 [8] lit {"value":{"type":"Atom","value":"String"}}
 [9] row:empty
 [10] nu {"variable":"$nu","level":1}
-  :annotation -> [11]
-  :body -> [12]
-[11] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[12] struct
-  :field -> [13] {"label":"x"}
-  :field -> [14] {"label":"name"}
-[13] lit {"value":{"type":"Num","value":100}}
-[14] lit {"value":{"type":"String","value":"point"}}",
+  :body -> [11]
+[11] struct
+  :field -> [12] {"label":"x"}
+  :field -> [13] {"label":"name"}
+[12] lit {"value":{"type":"Num","value":100}}
+[13] lit {"value":{"type":"String","value":"point"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -630,14 +624,12 @@ return main();
   :scope -> [2] {"level":0}
 [7] row:empty
 [8] nu {"variable":"$nu","level":1}
-  :annotation -> [9]
-  :body -> [10]
-[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[10] struct
-  :field -> [11] {"label":"x"}
-  :field -> [12] {"label":"y"}
-[11] lit {"value":{"type":"Num","value":1}}
-[12] lit {"value":{"type":"Num","value":2}}",
+  :body -> [9]
+[9] struct
+  :field -> [10] {"label":"x"}
+  :field -> [11] {"label":"y"}
+[10] lit {"value":{"type":"Num","value":1}}
+[11] lit {"value":{"type":"Num","value":2}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -731,16 +723,14 @@ return main();
 [8] lit {"value":{"type":"Atom","value":"String"}}
 [9] row:empty
 [10] nu {"variable":"$nu","level":1}
-  :annotation -> [11]
-  :body -> [12]
-[11] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[12] struct
-  :field -> [13] {"label":"x"}
-  :field -> [14] {"label":"y"}
-  :field -> [15] {"label":"color"}
-[13] lit {"value":{"type":"Num","value":5}}
-[14] lit {"value":{"type":"Num","value":10}}
-[15] lit {"value":{"type":"String","value":"red"}}",
+  :body -> [11]
+[11] struct
+  :field -> [12] {"label":"x"}
+  :field -> [13] {"label":"y"}
+  :field -> [14] {"label":"color"}
+[12] lit {"value":{"type":"Num","value":5}}
+[13] lit {"value":{"type":"Num","value":10}}
+[14] lit {"value":{"type":"String","value":"red"}}",
     "ivl": "",
     "kind": "let",
     "mir": "module
@@ -920,14 +910,12 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"person"}
 [3] nu {"variable":"$nu","level":1}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[5] struct
-  :field -> [6] {"label":"name"}
-  :field -> [7] {"label":"age"}
-[6] lit {"value":{"type":"String","value":"Alice"}}
-[7] lit {"value":{"type":"Num","value":30}}",
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"name"}
+  :field -> [6] {"label":"age"}
+[5] lit {"value":{"type":"String","value":"Alice"}}
+[6] lit {"value":{"type":"Num","value":30}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -986,16 +974,14 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"book"}
 [3] nu {"variable":"$nu","level":1}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[5] struct
-  :field -> [6] {"label":"name"}
-  :field -> [7] {"label":"author"}
-  :field -> [8] {"label":"pages"}
-[6] lit {"value":{"type":"String","value":"1984"}}
-[7] lit {"value":{"type":"String","value":"Orwell"}}
-[8] lit {"value":{"type":"Num","value":328}}",
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"name"}
+  :field -> [6] {"label":"author"}
+  :field -> [7] {"label":"pages"}
+[5] lit {"value":{"type":"String","value":"1984"}}
+[6] lit {"value":{"type":"String","value":"Orwell"}}
+[7] lit {"value":{"type":"Num","value":328}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module

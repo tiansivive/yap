@@ -609,14 +609,12 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"origin"}
 [3] nu {"variable":"$nu","level":1}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[5] struct
-  :field -> [6] {"label":"x"}
-  :field -> [7] {"label":"y"}
-[6] lit {"value":{"type":"Num","value":0}}
-[7] lit {"value":{"type":"Num","value":0}}",
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"x"}
+  :field -> [6] {"label":"y"}
+[5] lit {"value":{"type":"Num","value":0}}
+[6] lit {"value":{"type":"Num","value":0}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module

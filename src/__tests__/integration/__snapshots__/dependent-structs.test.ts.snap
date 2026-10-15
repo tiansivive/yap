@@ -36,54 +36,46 @@ return main();
     "gram": "[1] root
   :entry -> [2]
 [2] nu {"variable":"$nu","level":0}
-  :annotation -> [3]
-  :body -> [4]
-[3] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[4] struct
-  :field -> [5] {"label":"point"}
-  :field -> [10] {"label":"halved"}
-  :hoist -> [5]
-[5] nu {"variable":"$nu","level":1}
-  :annotation -> [6]
-  :body -> [7]
-[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[7] struct
-  :field -> [8] {"label":"x"}
-  :field -> [9] {"label":"y"}
-[8] lit {"value":{"type":"Num","value":1}}
-[9] lit {"value":{"type":"Num","value":2}}
-[10] nu {"variable":"$nu","level":1}
-  :annotation -> [11]
-  :body -> [12]
-[11] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[12] struct
-  :field -> [26] {"label":"a"}
-  :field -> [27] {"label":"b"}
-[15] var:foreign {"name":"$div","arity":2}
-[17] proj {"label":"x"}
-  :next -> [19]
-  :target -> [18]
-[18] var:nu-label {"name":"point","index":1}
-  :refers_to -> [5]
+  :body -> [3]
+[3] struct
+  :field -> [4] {"label":"point"}
+  :field -> [8] {"label":"halved"}
+  :hoist -> [4]
+[4] nu {"variable":"$nu","level":0}
+  :body -> [5]
+[5] struct
+  :field -> [6] {"label":"x"}
+  :field -> [7] {"label":"y"}
+[6] lit {"value":{"type":"Num","value":1}}
+[7] lit {"value":{"type":"Num","value":2}}
+[8] nu {"variable":"$nu","level":0}
+  :body -> [9]
+[9] struct
+  :field -> [23] {"label":"a"}
+  :field -> [24] {"label":"b"}
+[12] var:foreign {"name":"$div","arity":2}
+[14] proj {"label":"x"}
+  :next -> [16]
+  :target -> [15]
+[15] var:nu-label {"name":"point","index":1}
+  :refers_to -> [4]
   :scope -> [2] {"level":0,"owner":true}
-  :scope -> [10] {"level":1,"owner":false}
-[19] lit {"value":{"type":"Num","value":2}}
-[23] proj {"label":"y"}
-  :next -> [25]
-  :target -> [24]
-[24] var:nu-label {"name":"point","index":1}
-  :refers_to -> [5]
+[16] lit {"value":{"type":"Num","value":2}}
+[20] proj {"label":"y"}
+  :next -> [22]
+  :target -> [21]
+[21] var:nu-label {"name":"point","index":1}
+  :refers_to -> [4]
   :scope -> [2] {"level":0,"owner":true}
-  :scope -> [10] {"level":1,"owner":false}
-[25] lit {"value":{"type":"Num","value":2}}
-[26] primop {"op":"$div"}
-  :arg -> [17] {"index":0}
-  :arg -> [19] {"index":1}
-  :callee -> [15]
-[27] primop {"op":"$div"}
-  :arg -> [23] {"index":0}
-  :arg -> [25] {"index":1}
-  :callee -> [15]",
+[22] lit {"value":{"type":"Num","value":2}}
+[23] primop {"op":"$div"}
+  :arg -> [14] {"index":0}
+  :arg -> [16] {"index":1}
+  :callee -> [12]
+[24] primop {"op":"$div"}
+  :arg -> [20] {"index":0}
+  :arg -> [22] {"index":1}
+  :callee -> [12]",
     "ivl": "(and
   (forall ((x Real))
     (forall ((y Real))

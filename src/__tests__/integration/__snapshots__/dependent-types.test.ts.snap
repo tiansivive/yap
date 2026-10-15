@@ -396,18 +396,15 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"numPair"}
 [3] nu {"variable":"$nu","level":1}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[5] struct
-  :field -> [7] {"label":"fst"}
-  :field -> [8] {"label":"snd"}
-[6] var:free {"name":"Num"}
-[7] var:ref {"name":"Num"}
-  :refers_to -> [6]
+  :body -> [4]
+[4] struct
+  :field -> [6] {"label":"fst"}
+  :field -> [7] {"label":"snd"}
+[5] var:free {"name":"Num"}
+[6] var:ref {"name":"Num"}
+  :refers_to -> [5]
   :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-[8] lit {"value":{"type":"Num","value":42}}",
+[7] lit {"value":{"type":"Num","value":42}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -465,18 +462,15 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"strPair"}
 [3] nu {"variable":"$nu","level":1}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[5] struct
-  :field -> [7] {"label":"fst"}
-  :field -> [8] {"label":"snd"}
-[6] var:free {"name":"String"}
-[7] var:ref {"name":"String"}
-  :refers_to -> [6]
+  :body -> [4]
+[4] struct
+  :field -> [6] {"label":"fst"}
+  :field -> [7] {"label":"snd"}
+[5] var:free {"name":"String"}
+[6] var:ref {"name":"String"}
+  :refers_to -> [5]
   :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-[8] lit {"value":{"type":"String","value":"hello"}}",
+[7] lit {"value":{"type":"String","value":"hello"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -695,14 +689,12 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"exampleP1"}
 [3] nu {"variable":"$nu","level":1}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[5] struct
-  :field -> [6] {"label":"fst"}
-  :field -> [7] {"label":"snd"}
-[6] lit {"value":{"type":"Num","value":42}}
-[7] lit {"value":{"type":"String","value":"hello"}}",
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"fst"}
+  :field -> [6] {"label":"snd"}
+[5] lit {"value":{"type":"Num","value":42}}
+[6] lit {"value":{"type":"String","value":"hello"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -759,14 +751,12 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"exampleP2"}
 [3] nu {"variable":"$nu","level":1}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[5] struct
-  :field -> [6] {"label":"fst"}
-  :field -> [7] {"label":"snd"}
-[6] lit {"value":{"type":"Bool","value":true}}
-[7] lit {"value":{"type":"Num","value":100}}",
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"fst"}
+  :field -> [6] {"label":"snd"}
+[5] lit {"value":{"type":"Bool","value":true}}
+[6] lit {"value":{"type":"Num","value":100}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1055,18 +1045,15 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"vec1"}
 [3] nu {"variable":"$nu","level":1}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[5] struct
-  :field -> [6] {"label":"0"}
-  :field -> [8] {"label":"1"}
-[6] lit {"value":{"type":"Num","value":10}}
-[7] var:free {"name":"vec0"}
-[8] var:ref {"name":"vec0"}
-  :refers_to -> [7]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}",
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":10}}
+[6] var:free {"name":"vec0"}
+[7] var:ref {"name":"vec0"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1123,18 +1110,15 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"vec2"}
 [3] nu {"variable":"$nu","level":1}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[5] struct
-  :field -> [6] {"label":"0"}
-  :field -> [8] {"label":"1"}
-[6] lit {"value":{"type":"Num","value":20}}
-[7] var:free {"name":"vec1"}
-[8] var:ref {"name":"vec1"}
-  :refers_to -> [7]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}",
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":20}}
+[6] var:free {"name":"vec1"}
+[7] var:ref {"name":"vec1"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1191,18 +1175,15 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"vec3"}
 [3] nu {"variable":"$nu","level":1}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[5] struct
-  :field -> [6] {"label":"0"}
-  :field -> [8] {"label":"1"}
-[6] lit {"value":{"type":"Num","value":30}}
-[7] var:free {"name":"vec2"}
-[8] var:ref {"name":"vec2"}
-  :refers_to -> [7]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}",
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":30}}
+[6] var:free {"name":"vec2"}
+[7] var:ref {"name":"vec2"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}",
     "ivl": "true",
     "kind": "let",
     "mir": "module

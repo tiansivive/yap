@@ -1400,30 +1400,26 @@ return main();
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"cons"}}
 [5] nu {"variable":"$nu","level":1}
-  :annotation -> [6]
-  :body -> [7]
-[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[7] struct
-  :field -> [8] {"label":"head"}
-  :field -> [9] {"label":"tail"}
-[8] lit {"value":{"type":"Num","value":1}}
-[9] struct
-  :field -> [10] {"label":"__tag"}
-  :field -> [11] {"label":"payload"}
-[10] lit {"value":{"type":"Atom","value":"cons"}}
-[11] nu {"variable":"$nu","level":2}
-  :annotation -> [12]
-  :body -> [13]
-[12] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"head"}
+  :field -> [8] {"label":"tail"}
+[7] lit {"value":{"type":"Num","value":1}}
+[8] struct
+  :field -> [9] {"label":"__tag"}
+  :field -> [10] {"label":"payload"}
+[9] lit {"value":{"type":"Atom","value":"cons"}}
+[10] nu {"variable":"$nu","level":1}
+  :body -> [11]
+[11] struct
+  :field -> [12] {"label":"head"}
+  :field -> [13] {"label":"tail"}
+[12] lit {"value":{"type":"Num","value":2}}
 [13] struct
-  :field -> [14] {"label":"head"}
-  :field -> [15] {"label":"tail"}
-[14] lit {"value":{"type":"Num","value":2}}
-[15] struct
-  :field -> [16] {"label":"__tag"}
-  :field -> [17] {"label":"payload"}
-[16] lit {"value":{"type":"Atom","value":"nil"}}
-[17] lit {"value":{"type":"unit"}}",
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"nil"}}
+[15] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1563,56 +1559,59 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const env_cls2 = {};
-  const fnref_cls2 = closure_34;
-  const closure_cls2 = {
-    __fn: fnref_cls2,
-    __env: env_cls2
+  const v0 = {};
+  const env_cls3 = {
+    v0: v0
   };
-  const v3 = {
-    compute: closure_cls2
+  const fnref_cls3 = closure_33;
+  const closure_cls3 = {
+    __fn: fnref_cls3,
+    __env: env_cls3
   };
-  return v3;
+  (v0.compute = closure_cls3);
+  return v0;
 }
 
-function closure_34(env0, n1) {
+function closure_33(env1, n2) {
   let __block = "entry";
-  let match0;
+  let match1;
   while (true) {
     switch (__block) {
       case "entry": {
-        (__block = "sw1");
+        const cap_0 = env1.v0;
+        (__block = "sw2");
         break;
       }
-      case "sw1": {
-        if ((String(n1) === "0")) {
-          (__block = "case3");
+      case "sw2": {
+        if ((String(n2) === "0")) {
+          (__block = "case4");
           break;
         }
-        (__block = "default4");
+        (__block = "default5");
         break;
       }
-      case "case3": {
-        const v4 = 1;
-        const __t0 = v4;
-        (match0 = __t0);
-        (__block = "join2");
+      case "case4": {
+        const v5 = 1;
+        const __t0 = v5;
+        (match1 = __t0);
+        (__block = "join3");
         break;
       }
-      case "default4": {
-        const v6 = 1;
-        const v7 = (n1 - v6);
-        const fnref8 = v5.__fn;
-        const env9 = v5.__env;
-        const v10 = fnref8(env9, v7);
-        const v11 = (n1 * v10);
-        const __t0 = v11;
-        (match0 = __t0);
-        (__block = "join2");
+      case "default5": {
+        const v6 = cap_0.compute;
+        const v7 = 1;
+        const v8 = (n2 - v7);
+        const fnref9 = v6.__fn;
+        const env10 = v6.__env;
+        const v11 = fnref9(env10, v8);
+        const v12 = (n2 * v11);
+        const __t0 = v12;
+        (match1 = __t0);
+        (__block = "join3");
         break;
       }
-      case "join2": {
-        return match0;
+      case "join3": {
+        return match1;
       }
     }
   }
@@ -1628,76 +1627,76 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"fact"}
 [3] nu {"variable":"$nu","level":1}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[5] struct
-  :field -> [6] {"label":"compute"}
-[6] lambda {"variable":"n","icit":"Explicit","level":2}
-  :annotation -> [7]
-  :body -> [8]
-  :env -> [33]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
-[8] match
-  :alt -> [10] {"index":0}
-  :alt -> [13] {"index":1}
-  :decision_tree -> [30]
-  :scrutinee -> [9]
-[9] var:bound {"index":0}
-  :refers_to -> [6]
+  :body -> [4]
+[4] struct
+  :backpatch -> [5]
+  :field -> [5] {"label":"compute"}
+  :hoist -> [5]
+[5] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [6]
+  :body -> [7]
+  :env -> [32]
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[7] match
+  :alt -> [9] {"index":0}
+  :alt -> [12] {"index":1}
+  :decision_tree -> [29]
+  :scrutinee -> [8]
+[8] var:bound {"index":0}
+  :refers_to -> [5]
   :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [6] {"level":2}
-[10] case
-  :body -> [12]
-  :next -> [13]
-  :pattern -> [11]
-[11] pat:lit {"value":{"type":"Num","value":0}}
-[12] lit {"value":{"type":"Num","value":1}}
-[13] case
-  :body -> [28]
-  :pattern -> [14]
-[14] pat:wildcard
-[17] var:foreign {"name":"$mul","arity":2}
-[19] var:bound {"index":0}
-  :next -> [20]
-  :refers_to -> [6]
+  :scope -> [5] {"level":1}
+[9] case
+  :body -> [11]
+  :next -> [12]
+  :pattern -> [10]
+[10] pat:lit {"value":{"type":"Num","value":0}}
+[11] lit {"value":{"type":"Num","value":1}}
+[12] case
+  :body -> [27]
+  :pattern -> [13]
+[13] pat:wildcard
+[16] var:foreign {"name":"$mul","arity":2}
+[18] var:bound {"index":0}
+  :next -> [19]
+  :refers_to -> [5]
   :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [6] {"level":2}
-[20] app {"icit":"Explicit"}
-  :arg -> [29]
-  :func -> [21]
-[21] var:nu-label {"name":"compute","index":0}
-  :scope -> [6] {"level":0,"owner":true}
-[24] var:foreign {"name":"$sub","arity":2}
-[26] var:bound {"index":0}
-  :next -> [27]
-  :refers_to -> [6]
+  :scope -> [5] {"level":1}
+[19] app {"icit":"Explicit"}
+  :arg -> [28]
+  :func -> [20]
+[20] var:nu-label {"name":"compute","index":0}
+  :refers_to -> [5]
+  :scope -> [3] {"level":0,"owner":true}
+  :scope -> [5] {"level":1,"owner":false}
+[23] var:foreign {"name":"$sub","arity":2}
+[25] var:bound {"index":0}
+  :next -> [26]
+  :refers_to -> [5]
   :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [6] {"level":2}
-[27] lit {"value":{"type":"Num","value":1}}
-[28] primop {"op":"$mul"}
-  :arg -> [19] {"index":0}
-  :arg -> [20] {"index":1}
-  :callee -> [17]
-[29] primop {"op":"$sub"}
-  :arg -> [26] {"index":0}
-  :arg -> [27] {"index":1}
-  :callee -> [24]
-[30] switch {"kind":"lit"}
-  :branch -> [31] {"value":{"type":"Num","value":0}}
-  :default -> [32]
-  :inspect -> [9]
+  :scope -> [5] {"level":1}
+[26] lit {"value":{"type":"Num","value":1}}
+[27] primop {"op":"$mul"}
+  :arg -> [18] {"index":0}
+  :arg -> [19] {"index":1}
+  :callee -> [16]
+[28] primop {"op":"$sub"}
+  :arg -> [25] {"index":0}
+  :arg -> [26] {"index":1}
+  :callee -> [23]
+[29] switch {"kind":"lit"}
+  :branch -> [30] {"value":{"type":"Num","value":0}}
+  :default -> [31]
+  :inspect -> [8]
+[30] leaf
+  :body -> [11]
 [31] leaf
-  :body -> [12]
-[32] leaf
-  :body -> [28]
-[33] env
-[34] closure
-  :body -> [6]
-  :env -> [33]",
+  :body -> [27]
+[32] env
+  :capture -> [4] {"index":0}
+[33] closure
+  :body -> [5]
+  :env -> [32]",
     "ivl": "(forall ((n Real))
   (and
     (= n n)
@@ -1719,29 +1718,32 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_34
-      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
-      let v3 = alloc { compute: closure_cls2 }
-      return v3
-  fn closure_34(env0, n1) entry=entry
+      let v0 = alloc {  }
+      let env_cls3 = alloc { v0: v0 }
+      let fnref_cls3 = &closure_33
+      let closure_cls3 = alloc { __fn: fnref_cls3, __env: env_cls3 }
+      update-fbip v0 { compute: closure_cls3 }
+      return v0
+  fn closure_33(env1, n2) entry=entry
     entry:
-      jump sw1
-    sw1:
-      branch n1 { 0 -> case3; default -> default4 }
-    case3:
-      let v4 = 1
-      jump join2(v4)
-    default4:
-      let v6 = 1
-      let v7 = -(n1, v6)
-      let fnref8 = read v5.__fn
-      let env9 = read v5.__env
-      let v10 = call *fnref8(env9, v7)
-      let v11 = *(n1, v10)
-      jump join2(v11)
-    join2(match0):
-      return match0",
+      let cap_0 = read env1.v0
+      jump sw2
+    sw2:
+      branch n2 { 0 -> case4; default -> default5 }
+    case4:
+      let v5 = 1
+      jump join3(v5)
+    default5:
+      let v6 = read cap_0.compute
+      let v7 = 1
+      let v8 = -(n2, v7)
+      let fnref9 = read v6.__fn
+      let env10 = read v6.__env
+      let v11 = call *fnref9(env10, v8)
+      let v12 = *(n2, v11)
+      jump join3(v12)
+    join3(match1):
+      return match1",
     "name": "fact",
     "normalized": "Struct
   [ compute: λ(n: Num) ->
@@ -2712,14 +2714,12 @@ return main();
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"rectangle"}}
 [5] nu {"variable":"$nu","level":1}
-  :annotation -> [6]
-  :body -> [7]
-[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[7] struct
-  :field -> [8] {"label":"0"}
-  :field -> [9] {"label":"1"}
-[8] lit {"value":{"type":"Num","value":10}}
-[9] lit {"value":{"type":"Num","value":20}}",
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"0"}
+  :field -> [8] {"label":"1"}
+[7] lit {"value":{"type":"Num","value":10}}
+[8] lit {"value":{"type":"Num","value":20}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -2791,14 +2791,12 @@ return main();
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"point"}}
 [5] nu {"variable":"$nu","level":1}
-  :annotation -> [6]
-  :body -> [7]
-[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[7] struct
-  :field -> [8] {"label":"x"}
-  :field -> [9] {"label":"y"}
-[8] lit {"value":{"type":"Num","value":0}}
-[9] lit {"value":{"type":"Num","value":0}}",
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"x"}
+  :field -> [8] {"label":"y"}
+[7] lit {"value":{"type":"Num","value":0}}
+[8] lit {"value":{"type":"Num","value":0}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module

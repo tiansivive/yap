@@ -1429,7 +1429,7 @@ exports[`Language Tour — Refinement Types > dependent record construction 1`] 
   {
     "codegenJS": "function main() {
   const env_cls2 = {};
-  const fnref_cls2 = closure_39;
+  const fnref_cls2 = closure_38;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1446,20 +1446,20 @@ exports[`Language Tour — Refinement Types > dependent record construction 1`] 
   return v8;
 }
 
-function closure_41(env0, p1) {
+function closure_40(env0, p1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const v0 = {};
   return v0;
 }
 
-function closure_40(env0, b1) {
+function closure_39(env0, b1) {
   const cap_0 = env0.v0;
   const env_cls2 = {
     v0: cap_0,
     v1: b1
   };
-  const fnref_cls2 = closure_41;
+  const fnref_cls2 = closure_40;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1467,11 +1467,11 @@ function closure_40(env0, b1) {
   return closure_cls2;
 }
 
-function closure_39(env0, a1) {
+function closure_38(env0, a1) {
   const env_cls2 = {
     v0: a1
   };
-  const fnref_cls2 = closure_40;
+  const fnref_cls2 = closure_39;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1503,7 +1503,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"test"}
 [3] block
-  :return -> [35]
+  :return -> [34]
   :stmt -> [4] {"index":0}
   :stmt -> [29] {"index":1}
 [4] stmt:let {"variable":"Pair"}
@@ -1512,17 +1512,17 @@ return main();
 [5] lambda {"variable":"a","icit":"Explicit","level":2}
   :annotation -> [6]
   :body -> [7]
-  :env -> [36]
+  :env -> [35]
 [6] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lambda {"variable":"b","icit":"Explicit","level":3}
   :annotation -> [8]
   :body -> [9]
-  :env -> [37]
+  :env -> [36]
 [8] lit {"value":{"type":"Atom","value":"Type"}}
 [9] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [10]
   :body -> [15]
-  :env -> [38]
+  :env -> [37]
 [10] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [11]
   :body -> [12]
@@ -1587,37 +1587,35 @@ return main();
 [29] stmt:let {"variable":"p"}
   :value -> [30]
 [30] nu {"variable":"$nu","level":3}
-  :annotation -> [31]
-  :body -> [32]
-[31] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[32] struct
-  :field -> [33] {"label":"fst"}
-  :field -> [34] {"label":"snd"}
-[33] lit {"value":{"type":"Num","value":1}}
-[34] lit {"value":{"type":"Num","value":2}}
-[35] lit {"value":{"type":"unit"}}
+  :body -> [31]
+[31] struct
+  :field -> [32] {"label":"fst"}
+  :field -> [33] {"label":"snd"}
+[32] lit {"value":{"type":"Num","value":1}}
+[33] lit {"value":{"type":"Num","value":2}}
+[34] lit {"value":{"type":"unit"}}
+[35] env
 [36] env
+  :capture -> [5] {"index":0}
 [37] env
   :capture -> [5] {"index":0}
-[38] env
-  :capture -> [5] {"index":0}
   :capture -> [7] {"index":1}
-[39] closure
+[38] closure
   :body -> [5]
+  :env -> [35]
+[39] closure
+  :body -> [7]
   :env -> [36]
 [40] closure
-  :body -> [7]
-  :env -> [37]
-[41] closure
   :body -> [9]
-  :env -> [38]",
+  :env -> [37]",
     "ivl": "(forall ((p Schema)) (forall (($b Real)) (=> (= $b 2) (< 1 $b))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_39
+      let fnref_cls2 = &closure_38
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       let Pair3 = closure_cls2
       let v4 = 1
@@ -1626,23 +1624,23 @@ return main();
       let p7 = v6
       let v8 = unit
       return v8
-  fn closure_41(env0, p1) entry=entry
+  fn closure_40(env0, p1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
       let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       return v0
-  fn closure_40(env0, b1) entry=entry
+  fn closure_39(env0, b1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let env_cls2 = alloc { v0: cap_0, v1: b1 }
-      let fnref_cls2 = &closure_41
+      let fnref_cls2 = &closure_40
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_39(env0, a1) entry=entry
+  fn closure_38(env0, a1) entry=entry
     entry:
       let env_cls2 = alloc { v0: a1 }
-      let fnref_cls2 = &closure_40
+      let fnref_cls2 = &closure_39
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2",
     "name": "test",
@@ -1695,7 +1693,7 @@ exports[`Language Tour — Refinement Types > dependent record construction reje
   {
     "codegenJS": "function main() {
   const env_cls2 = {};
-  const fnref_cls2 = closure_39;
+  const fnref_cls2 = closure_38;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1712,20 +1710,20 @@ exports[`Language Tour — Refinement Types > dependent record construction reje
   return v8;
 }
 
-function closure_41(env0, p1) {
+function closure_40(env0, p1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const v0 = {};
   return v0;
 }
 
-function closure_40(env0, b1) {
+function closure_39(env0, b1) {
   const cap_0 = env0.v0;
   const env_cls2 = {
     v0: cap_0,
     v1: b1
   };
-  const fnref_cls2 = closure_41;
+  const fnref_cls2 = closure_40;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1733,11 +1731,11 @@ function closure_40(env0, b1) {
   return closure_cls2;
 }
 
-function closure_39(env0, a1) {
+function closure_38(env0, a1) {
   const env_cls2 = {
     v0: a1
   };
-  const fnref_cls2 = closure_40;
+  const fnref_cls2 = closure_39;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -1769,7 +1767,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"testFail"}
 [3] block
-  :return -> [35]
+  :return -> [34]
   :stmt -> [4] {"index":0}
   :stmt -> [29] {"index":1}
 [4] stmt:let {"variable":"Pair"}
@@ -1778,17 +1776,17 @@ return main();
 [5] lambda {"variable":"a","icit":"Explicit","level":2}
   :annotation -> [6]
   :body -> [7]
-  :env -> [36]
+  :env -> [35]
 [6] lit {"value":{"type":"Atom","value":"Type"}}
 [7] lambda {"variable":"b","icit":"Explicit","level":3}
   :annotation -> [8]
   :body -> [9]
-  :env -> [37]
+  :env -> [36]
 [8] lit {"value":{"type":"Atom","value":"Type"}}
 [9] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [10]
   :body -> [15]
-  :env -> [38]
+  :env -> [37]
 [10] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [11]
   :body -> [12]
@@ -1853,37 +1851,35 @@ return main();
 [29] stmt:let {"variable":"p"}
   :value -> [30]
 [30] nu {"variable":"$nu","level":3}
-  :annotation -> [31]
-  :body -> [32]
-[31] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[32] struct
-  :field -> [33] {"label":"fst"}
-  :field -> [34] {"label":"snd"}
-[33] lit {"value":{"type":"Num","value":2}}
+  :body -> [31]
+[31] struct
+  :field -> [32] {"label":"fst"}
+  :field -> [33] {"label":"snd"}
+[32] lit {"value":{"type":"Num","value":2}}
+[33] lit {"value":{"type":"Num","value":1}}
 [34] lit {"value":{"type":"Num","value":1}}
-[35] lit {"value":{"type":"Num","value":1}}
+[35] env
 [36] env
+  :capture -> [5] {"index":0}
 [37] env
   :capture -> [5] {"index":0}
-[38] env
-  :capture -> [5] {"index":0}
   :capture -> [7] {"index":1}
-[39] closure
+[38] closure
   :body -> [5]
+  :env -> [35]
+[39] closure
+  :body -> [7]
   :env -> [36]
 [40] closure
-  :body -> [7]
-  :env -> [37]
-[41] closure
   :body -> [9]
-  :env -> [38]",
+  :env -> [37]",
     "ivl": "(forall ((p Schema)) (forall (($b Real)) (=> (= $b 1) (< 2 $b))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_39
+      let fnref_cls2 = &closure_38
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       let Pair3 = closure_cls2
       let v4 = 2
@@ -1892,23 +1888,23 @@ return main();
       let p7 = v6
       let v8 = 1
       return v8
-  fn closure_41(env0, p1) entry=entry
+  fn closure_40(env0, p1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
       let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       return v0
-  fn closure_40(env0, b1) entry=entry
+  fn closure_39(env0, b1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let env_cls2 = alloc { v0: cap_0, v1: b1 }
-      let fnref_cls2 = &closure_41
+      let fnref_cls2 = &closure_40
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_39(env0, a1) entry=entry
+  fn closure_38(env0, a1) entry=entry
     entry:
       let env_cls2 = alloc { v0: a1 }
-      let fnref_cls2 = &closure_40
+      let fnref_cls2 = &closure_39
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2",
     "name": "testFail",
@@ -3726,7 +3722,7 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"orderedListTestFail"}
 [3] block
-  :return -> [64]
+  :return -> [62]
   :stmt -> [4] {"index":0}
   :stmt -> [48] {"index":1}
 [4] stmt:let {"variable":"List"}
@@ -3771,12 +3767,12 @@ return main();
 [16] lambda {"variable":"t","icit":"Explicit","level":3}
   :annotation -> [17]
   :body -> [18]
-  :env -> [65]
+  :env -> [63]
 [17] lit {"value":{"type":"Atom","value":"Type"}}
 [18] lambda {"variable":"p","icit":"Explicit","level":4}
   :annotation -> [19]
   :body -> [24]
-  :env -> [66]
+  :env -> [64]
 [19] pi {"variable":"t1","icit":"Explicit","level":4}
   :annotation -> [20]
   :body -> [21]
@@ -3879,42 +3875,38 @@ return main();
   :field -> [51] {"label":"payload"}
 [50] lit {"value":{"type":"Atom","value":"cons"}}
 [51] nu {"variable":"$nu","level":3}
-  :annotation -> [52]
-  :body -> [53]
-[52] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[53] struct
-  :field -> [54] {"label":"head"}
-  :field -> [55] {"label":"tail"}
-[54] lit {"value":{"type":"Num","value":2}}
-[55] struct
-  :field -> [56] {"label":"__tag"}
-  :field -> [57] {"label":"payload"}
-[56] lit {"value":{"type":"Atom","value":"cons"}}
-[57] nu {"variable":"$nu","level":4}
-  :annotation -> [58]
-  :body -> [59]
-[58] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+  :body -> [52]
+[52] struct
+  :field -> [53] {"label":"head"}
+  :field -> [54] {"label":"tail"}
+[53] lit {"value":{"type":"Num","value":2}}
+[54] struct
+  :field -> [55] {"label":"__tag"}
+  :field -> [56] {"label":"payload"}
+[55] lit {"value":{"type":"Atom","value":"cons"}}
+[56] nu {"variable":"$nu","level":3}
+  :body -> [57]
+[57] struct
+  :field -> [58] {"label":"head"}
+  :field -> [59] {"label":"tail"}
+[58] lit {"value":{"type":"Num","value":1}}
 [59] struct
-  :field -> [60] {"label":"head"}
-  :field -> [61] {"label":"tail"}
-[60] lit {"value":{"type":"Num","value":1}}
-[61] struct
-  :field -> [62] {"label":"__tag"}
-  :field -> [63] {"label":"payload"}
-[62] lit {"value":{"type":"Atom","value":"nil"}}
-[63] lit {"value":{"type":"unit"}}
-[64] lit {"value":{"type":"Num","value":1}}
-[65] env
+  :field -> [60] {"label":"__tag"}
+  :field -> [61] {"label":"payload"}
+[60] lit {"value":{"type":"Atom","value":"nil"}}
+[61] lit {"value":{"type":"unit"}}
+[62] lit {"value":{"type":"Num","value":1}}
+[63] env
   :capture -> [5] {"index":0}
-[66] env
+[64] env
   :capture -> [16] {"index":0}
   :capture -> [5] {"index":1}
-[67] closure
+[65] closure
   :body -> [16]
-  :env -> [65]
-[68] closure
+  :env -> [63]
+[66] closure
   :body -> [18]
-  :env -> [66]",
+  :env -> [64]",
     "ivl": "(forall ((ol App_App_Mu_List_Real_Function))
   (forall (($b Real)) (=> (= $b 1) (< 2 $b))))",
     "kind": "let",
@@ -4257,42 +4249,36 @@ return main();
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"cons"}}
 [5] nu {"variable":"$nu","level":1}
-  :annotation -> [6]
-  :body -> [7]
-[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[7] struct
-  :field -> [8] {"label":"head"}
-  :field -> [9] {"label":"tail"}
-[8] lit {"value":{"type":"Num","value":1}}
-[9] struct
-  :field -> [10] {"label":"__tag"}
-  :field -> [11] {"label":"payload"}
-[10] lit {"value":{"type":"Atom","value":"cons"}}
-[11] nu {"variable":"$nu","level":2}
-  :annotation -> [12]
-  :body -> [13]
-[12] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"head"}
+  :field -> [8] {"label":"tail"}
+[7] lit {"value":{"type":"Num","value":1}}
+[8] struct
+  :field -> [9] {"label":"__tag"}
+  :field -> [10] {"label":"payload"}
+[9] lit {"value":{"type":"Atom","value":"cons"}}
+[10] nu {"variable":"$nu","level":1}
+  :body -> [11]
+[11] struct
+  :field -> [12] {"label":"head"}
+  :field -> [13] {"label":"tail"}
+[12] lit {"value":{"type":"Num","value":2}}
 [13] struct
-  :field -> [14] {"label":"head"}
-  :field -> [15] {"label":"tail"}
-[14] lit {"value":{"type":"Num","value":2}}
-[15] struct
-  :field -> [16] {"label":"__tag"}
-  :field -> [17] {"label":"payload"}
-[16] lit {"value":{"type":"Atom","value":"cons"}}
-[17] nu {"variable":"$nu","level":3}
-  :annotation -> [18]
-  :body -> [19]
-[18] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[19] struct
-  :field -> [20] {"label":"head"}
-  :field -> [21] {"label":"tail"}
-[20] lit {"value":{"type":"Num","value":3}}
-[21] struct
-  :field -> [22] {"label":"__tag"}
-  :field -> [23] {"label":"payload"}
-[22] lit {"value":{"type":"Atom","value":"nil"}}
-[23] lit {"value":{"type":"unit"}}",
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"cons"}}
+[15] nu {"variable":"$nu","level":1}
+  :body -> [16]
+[16] struct
+  :field -> [17] {"label":"head"}
+  :field -> [18] {"label":"tail"}
+[17] lit {"value":{"type":"Num","value":3}}
+[18] struct
+  :field -> [19] {"label":"__tag"}
+  :field -> [20] {"label":"payload"}
+[19] lit {"value":{"type":"Atom","value":"nil"}}
+[20] lit {"value":{"type":"unit"}}",
     "ivl": "(and
   (forall (($b Real)) (=> (= $b 2) (< 1 $b)))
   (forall (($c Real)) (=> (= $c 3) (and (< 1 $c) (< 2 $c)))))",
@@ -4443,42 +4429,36 @@ return main();
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"cons"}}
 [5] nu {"variable":"$nu","level":1}
-  :annotation -> [6]
-  :body -> [7]
-[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[7] struct
-  :field -> [8] {"label":"head"}
-  :field -> [9] {"label":"tail"}
-[8] lit {"value":{"type":"Num","value":3}}
-[9] struct
-  :field -> [10] {"label":"__tag"}
-  :field -> [11] {"label":"payload"}
-[10] lit {"value":{"type":"Atom","value":"cons"}}
-[11] nu {"variable":"$nu","level":2}
-  :annotation -> [12]
-  :body -> [13]
-[12] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"head"}
+  :field -> [8] {"label":"tail"}
+[7] lit {"value":{"type":"Num","value":3}}
+[8] struct
+  :field -> [9] {"label":"__tag"}
+  :field -> [10] {"label":"payload"}
+[9] lit {"value":{"type":"Atom","value":"cons"}}
+[10] nu {"variable":"$nu","level":1}
+  :body -> [11]
+[11] struct
+  :field -> [12] {"label":"head"}
+  :field -> [13] {"label":"tail"}
+[12] lit {"value":{"type":"Num","value":2}}
 [13] struct
-  :field -> [14] {"label":"head"}
-  :field -> [15] {"label":"tail"}
-[14] lit {"value":{"type":"Num","value":2}}
-[15] struct
-  :field -> [16] {"label":"__tag"}
-  :field -> [17] {"label":"payload"}
-[16] lit {"value":{"type":"Atom","value":"cons"}}
-[17] nu {"variable":"$nu","level":3}
-  :annotation -> [18]
-  :body -> [19]
-[18] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[19] struct
-  :field -> [20] {"label":"head"}
-  :field -> [21] {"label":"tail"}
-[20] lit {"value":{"type":"Num","value":1}}
-[21] struct
-  :field -> [22] {"label":"__tag"}
-  :field -> [23] {"label":"payload"}
-[22] lit {"value":{"type":"Atom","value":"nil"}}
-[23] lit {"value":{"type":"unit"}}",
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"cons"}}
+[15] nu {"variable":"$nu","level":1}
+  :body -> [16]
+[16] struct
+  :field -> [17] {"label":"head"}
+  :field -> [18] {"label":"tail"}
+[17] lit {"value":{"type":"Num","value":1}}
+[18] struct
+  :field -> [19] {"label":"__tag"}
+  :field -> [20] {"label":"payload"}
+[19] lit {"value":{"type":"Atom","value":"nil"}}
+[20] lit {"value":{"type":"unit"}}",
     "ivl": "(and
   (forall (($b Real)) (=> (= $b 2) (> 3 $b)))
   (forall (($c Real)) (=> (= $c 1) (and (> 3 $c) (> 2 $c)))))",
@@ -4669,14 +4649,12 @@ return main();
   :entry -> [3]
 [2] stmt:let {"variable":"valid"}
 [3] nu {"variable":"$nu","level":1}
-  :annotation -> [4]
-  :body -> [5]
-[4] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[5] struct
-  :field -> [6] {"label":"fst"}
-  :field -> [7] {"label":"snd"}
-[6] lit {"value":{"type":"Num","value":3}}
-[7] lit {"value":{"type":"Num","value":5}}",
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"fst"}
+  :field -> [6] {"label":"snd"}
+[5] lit {"value":{"type":"Num","value":3}}
+[6] lit {"value":{"type":"Num","value":5}}",
     "ivl": "(forall (($b Real)) (=> (= $b 5) (> $b 3)))",
     "kind": "let",
     "mir": "module

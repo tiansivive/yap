@@ -422,18 +422,16 @@ return main();
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"cons"}}
 [5] nu {"variable":"$nu","level":1}
-  :annotation -> [6]
-  :body -> [7]
-[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[7] struct
-  :field -> [8] {"label":"0"}
-  :field -> [9] {"label":"1"}
-[8] lit {"value":{"type":"Num","value":1}}
-[9] struct
-  :field -> [10] {"label":"__tag"}
-  :field -> [11] {"label":"payload"}
-[10] lit {"value":{"type":"Atom","value":"nil"}}
-[11] lit {"value":{"type":"unit"}}",
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"0"}
+  :field -> [8] {"label":"1"}
+[7] lit {"value":{"type":"Num","value":1}}
+[8] struct
+  :field -> [9] {"label":"__tag"}
+  :field -> [10] {"label":"payload"}
+[9] lit {"value":{"type":"Atom","value":"nil"}}
+[10] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -546,42 +544,36 @@ return main();
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"cons"}}
 [5] nu {"variable":"$nu","level":1}
-  :annotation -> [6]
-  :body -> [7]
-[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[7] struct
-  :field -> [8] {"label":"0"}
-  :field -> [9] {"label":"1"}
-[8] lit {"value":{"type":"Num","value":1}}
-[9] struct
-  :field -> [10] {"label":"__tag"}
-  :field -> [11] {"label":"payload"}
-[10] lit {"value":{"type":"Atom","value":"cons"}}
-[11] nu {"variable":"$nu","level":2}
-  :annotation -> [12]
-  :body -> [13]
-[12] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"0"}
+  :field -> [8] {"label":"1"}
+[7] lit {"value":{"type":"Num","value":1}}
+[8] struct
+  :field -> [9] {"label":"__tag"}
+  :field -> [10] {"label":"payload"}
+[9] lit {"value":{"type":"Atom","value":"cons"}}
+[10] nu {"variable":"$nu","level":1}
+  :body -> [11]
+[11] struct
+  :field -> [12] {"label":"0"}
+  :field -> [13] {"label":"1"}
+[12] lit {"value":{"type":"Num","value":2}}
 [13] struct
-  :field -> [14] {"label":"0"}
-  :field -> [15] {"label":"1"}
-[14] lit {"value":{"type":"Num","value":2}}
-[15] struct
-  :field -> [16] {"label":"__tag"}
-  :field -> [17] {"label":"payload"}
-[16] lit {"value":{"type":"Atom","value":"cons"}}
-[17] nu {"variable":"$nu","level":3}
-  :annotation -> [18]
-  :body -> [19]
-[18] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[19] struct
-  :field -> [20] {"label":"0"}
-  :field -> [21] {"label":"1"}
-[20] lit {"value":{"type":"Num","value":3}}
-[21] struct
-  :field -> [22] {"label":"__tag"}
-  :field -> [23] {"label":"payload"}
-[22] lit {"value":{"type":"Atom","value":"nil"}}
-[23] lit {"value":{"type":"unit"}}",
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"cons"}}
+[15] nu {"variable":"$nu","level":1}
+  :body -> [16]
+[16] struct
+  :field -> [17] {"label":"0"}
+  :field -> [18] {"label":"1"}
+[17] lit {"value":{"type":"Num","value":3}}
+[18] struct
+  :field -> [19] {"label":"__tag"}
+  :field -> [20] {"label":"payload"}
+[19] lit {"value":{"type":"Atom","value":"nil"}}
+[20] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
