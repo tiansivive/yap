@@ -1,3 +1,4 @@
+import { runInNewContext } from "node:vm";
 import { describe, expect, test } from "vitest";
 import { runScript, snap } from "./helpers/pipeline";
 
@@ -51,5 +52,26 @@ let array: { [Num]: Num } = [1, 2, 3];
 let dict: { [String]: Num } = { one: 1, two: 2, three: 3 };
 		`);
 		expect(snap(result)).toMatchSnapshot();
+	});
+});
+
+describe("Language Tour — Records in generated code", () => {
+	/* Runs a declaration's generated JS and returns the value it builds. */
+	const run = (src: string) => runInNewContext(`(function () { ${runScript(src).declarations[0]?.stages?.codegenJS ?? ""} })()`);
+
+	test("a field reads a variable bound outside the record", () => {
+		const mk = run(`let mk = \\(y: Num) -> { a: y };`);
+		expect(mk.__fn(mk.__env, 5)).toEqual({ a: 5 });
+	});
+
+	test("a label read under a lambda sees its record", () => {
+		const { add } = run(`let counter = { base: 10, add: \\(n: Num) -> n + $base };`);
+		expect(add.__fn(add.__env, 5)).toBe(15);
+	});
+
+	test("a lambda in a record reads both a label and an outer variable", () => {
+		const mk = run(`let mk = \\y -> { base: y, add: \\n -> n + $base };`);
+		const { add } = mk.__fn(mk.__env, 7);
+		expect(add.__fn(add.__env, 5)).toBe(12);
 	});
 });

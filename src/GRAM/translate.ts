@@ -15,9 +15,13 @@ import { TRANSLATE } from "./provenance";
 
 // ── State ──
 
+/** A Nu's frame: `depth` is how many binders were open when it was entered. Frames are counted by `$label` indices, binders by `Bound` ones. */
+type Frame = { readonly id: NodeId; readonly depth: number };
+
 type State = {
 	readonly graph: Graph;
 	readonly binders: ReadonlyArray<NodeId>;
+	readonly frames: ReadonlyArray<Frame>;
 	readonly freeVars: ReadonlyMap<string, NodeId>;
 	readonly foreignVars: ReadonlyMap<string, NodeId>;
 	readonly locations: ReadonlyMap<number, Location>;
@@ -45,6 +49,7 @@ const mkState = (opts?: {
 	return {
 		graph,
 		binders,
+		frames: [],
 		freeVars: new Map(),
 		foreignVars: new Map(),
 		locations: opts?.locations ?? new Map(),
@@ -112,7 +117,7 @@ const walk = (term: EB.Term, st: State): [NodeId, State] =>
 		.with({ type: "Abs", binding: { type: "Sigma" } }, t => abs(Tags.SIGMA, t, st))
 		.with({ type: "Abs", binding: { type: "SigmaV2" } }, t => abs(Tags.SIGMA_V2, t, st))
 		.with({ type: "Abs", binding: { type: "Mu" } }, t => mu(t, st))
-		.with({ type: "Abs", binding: { type: "Nu" } }, t => abs(Tags.NU, t, st))
+		.with({ type: "Abs", binding: { type: "Nu" } }, t => nu(t, st))
 		.with({ type: "Abs", binding: { type: "Let" } }, t => letBinding(t, st))
 		.with({ type: "App" }, t => app(t, st))
 		.with({ type: "Row" }, t => row(t.row, t.id, st))
@@ -144,7 +149,7 @@ const variable = (v: EB.Variable, tid: number, st: State): [NodeId, State] =>
 		.with({ type: "Foreign" }, ({ name }) => intern(Tags.VAR_FOREIGN, name, "foreignVars", tid, st))
 		.with({ type: "Label" }, ({ name }) => emit(st, Tags.VAR_LABEL, { name }, prov(tid, st)))
 		.with({ type: "DepLabel" }, ({ name, index }) => scoped(Tags.VAR_DEP_LABEL, name, index, tid, st))
-		.with({ type: "NuLabel" }, ({ name, index }) => scoped(Tags.VAR_NU_LABEL, name, index, tid, st))
+		.with({ type: "NuLabel" }, ({ name, index }) => nuLabel(name, index, tid, st))
 		.with({ type: "Meta" }, ({ val, lvl }) => {
 			const zonked = st.zonker?.[val];
 
@@ -169,6 +174,14 @@ const scoped = (tag: string, name: string, index: number, tid: number, st: State
 	const binders = start >= 0 ? st.binders.slice(start) : [];
 	const withScopes = binders.reduce((acc, binderId, level) => link(acc, id, Labels.SCOPE, binderId, { level, owner: binderId === owner }), s);
 	return [id, withScopes];
+};
+
+// The owner is the frame `index` Nus out. Its :scope edge is flagged, followed by the binders opened since it.
+const nuLabel = (name: string, index: number, tid: number, st: State): [NodeId, State] => {
+	const [id, s] = emit(st, Tags.VAR_NU_LABEL, { name, index }, prov(tid, st));
+	const frame = st.frames[st.frames.length - 1 - index];
+	const crossed = frame !== undefined ? [frame.id, ...st.binders.slice(frame.depth)] : [];
+	return [id, crossed.reduce((acc, binderId, level) => link(acc, id, Labels.SCOPE, binderId, { level, owner: level === 0 }), s)];
 };
 
 const intern = (tag: string, name: string, pool: "freeVars" | "foreignVars", tid: number, st: State): [NodeId, State] => {
@@ -208,6 +221,13 @@ const abs = (tag: string, t: EB.Term & { type: "Abs" }, st: State): [NodeId, Sta
 	const s3 = link(s2, id, Labels.ANNOTATION, ann);
 	const [body, s4] = walk(t.body, push(s3, id));
 	return [id, link(pop(s4), id, Labels.BODY, body)];
+};
+
+// A Nu binds labels, not env variables, so it opens a frame and leaves the binder stack alone.
+const nu = (t: EB.Term & { type: "Abs"; binding: { type: "Nu" } }, st: State): [NodeId, State] => {
+	const [id, s1] = emit(st, Tags.NU, bindingPayload(t.binding, st.binders.length), prov(t.id, st));
+	const [body, s2] = walk(t.body, { ...s1, frames: [...s1.frames, { id, depth: s1.binders.length }] });
+	return [id, link({ ...s2, frames: s1.frames }, id, Labels.BODY, body)];
 };
 
 const mu = (t: EB.Term & { type: "Abs"; binding: { type: "Mu" } }, st: State): [NodeId, State] => {

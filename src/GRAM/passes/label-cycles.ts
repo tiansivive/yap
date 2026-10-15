@@ -12,6 +12,10 @@ import { none } from "../pipeline/descriptor";
 // passes through a lambda is a recursive function: admitted, and the struct is flagged so the
 // bridge allocates-then-backpatches. A cycle made only of eager references (value-level codata
 // or an ill-founded self-reference) has no construction order and is rejected.
+//
+// NOTE: elaboration already rejects unguarded cycles in strict records (`Record Cycle`), so for terms the
+// elaborator produced this check repeats that one.
+// QUESTION: keep it as a safety net for terms built any other way, remove it, or make it an assertion?
 
 type Ref = { readonly to: string; readonly guarded: boolean };
 type Edge = { readonly from: string } & Ref;

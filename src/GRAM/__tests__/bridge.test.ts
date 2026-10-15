@@ -113,7 +113,7 @@ describe("GRAM Bridge: Phase 1 — leaves and structural ops", () => {
 	});
 
 	it("guarded Nu recursion reaches MIR through fbip", () => {
-		const record = EB.DSL.nu([{ label: "loop", value: EB.DSL.lambda("n", EB.DSL.Labels.nu("loop", 1), EB.DSL.type("Num")) }]);
+		const record = EB.DSL.nu([{ label: "loop", value: EB.DSL.lambda("n", EB.DSL.Labels.nu("loop"), EB.DSL.type("Num")) }]);
 		const term = EB.DSL.app(EB.DSL.proj("loop", record), EB.DSL.num(0));
 		expect(via(term)).toEqual(expect.any(Object));
 	});

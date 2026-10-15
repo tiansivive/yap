@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import * as EB from "@yap/elaboration";
-import * as NF from "@yap/elaboration/normalization";
 
 import { Edges, Nodes, Query, resetId } from "../graph";
 import { compile } from "../pipeline";
@@ -9,10 +8,8 @@ import { resolveLabels } from "../passes/resolve-labels";
 import { translate } from "../translate";
 import { Labels, Tags } from "../vocabulary";
 
-const nuLabel = (name: string, index = 0): EB.Term => EB.Constructors.Var(EB.Constructors.Vars.NuLabel(name, index, NF.Type));
-
-const nu = (fields: ReadonlyArray<{ readonly label: string; readonly value: EB.Term }>): EB.Term =>
-	EB.Constructors.Nu("$nu", EB.DSL.type("Row"), EB.DSL.struct([...fields]));
+const { nu } = EB.DSL;
+const nuLabel = EB.DSL.Labels.nu;
 
 const reset = () => {
 	EB.resetId();
@@ -87,7 +84,7 @@ describe("Nu GRAM enrichment", () => {
 	});
 
 	it("adds capture and backpatch edges for guarded Nu recursion", () => {
-		const result = compile(nu([{ label: "loop", value: EB.DSL.lambda("n", nuLabel("loop", 1), EB.DSL.type("Num")) }]));
+		const result = compile(nu([{ label: "loop", value: EB.DSL.lambda("n", nuLabel("loop"), EB.DSL.type("Num")) }]));
 
 		expect(result._tag).toBe("Right");
 		if (result._tag === "Left") {
@@ -108,7 +105,7 @@ describe("Nu GRAM enrichment", () => {
 	});
 
 	it("captures Nu records only across lambdas nested inside the Nu", () => {
-		const term = EB.DSL.lambda("outer", nu([{ label: "loop", value: EB.DSL.lambda("inner", nuLabel("loop", 1), EB.DSL.type("Num")) }]), EB.DSL.type("Num"));
+		const term = EB.DSL.lambda("outer", nu([{ label: "loop", value: EB.DSL.lambda("inner", nuLabel("loop"), EB.DSL.type("Num")) }]), EB.DSL.type("Num"));
 		const result = compile(term);
 
 		expect(result._tag).toBe("Right");
