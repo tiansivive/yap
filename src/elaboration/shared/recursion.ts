@@ -10,13 +10,9 @@ import * as Eff from "@yap/utils/effects";
  *
  * Windows are keyed by scope as well as level because a Nu frame lives on the label stack, not the
  * env: a field window and its enclosing let window can share a level number.
- *
- * Consumers: the let boundary, whose item is unit because only "did anything record" matters;
- * the SigmaV2 boundary, whose item is the meta standing for a sibling's value; and the Nu
- * boundary, whose items are the field references.
  */
 
-export type Key = { scope: "env" | "local"; lvl: number };
+type Key = { scope: "env" | "local"; lvl: number };
 
 type Push = Eff.Action<"Recursion.push", Key, undefined>;
 type Record = Eff.Action<"Recursion.record", { key: Key; item: unknown }, undefined>;

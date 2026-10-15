@@ -30,7 +30,7 @@ export type Context = {
 	sigma: Record<string, { value: NF.Value }>;
 	record: Record<string, { term?: EB.Term; value?: NF.Value }>;
 
-	/** The label stack: Nu frames, newest first, indexed by `$label` references independently of `env`. */
+	/** Nu frames, newest first, indexed by `$label` references independently of `env`. */
 	local: Frame[];
 	imports: Record<string, EB.AST>;
 	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
@@ -40,12 +40,15 @@ export type Context = {
 /**
  * A Nu's field scope. `ctx` is where the record was defined, without this frame. A label in `labels`
  * missing from `terms` has not been elaborated yet, or is held symbolic while quoting.
- * `slots` carries each field's provisional type during elaboration.
+ * `slots` carries each field's provisional type, and only exists while elaborating.
  */
-export type Frame = { labels: readonly string[]; ctx: Context; slots: NF.Row; terms: EB.Row };
+export type Frame = { labels: readonly string[]; ctx: Context; slots?: NF.Row; terms: EB.Row };
 
 /** Re-enters a frame: its fields are evaluated where the record was defined, with the frame itself in scope. */
 export const enter = (frame: Frame): Context => ({ ...frame.ctx, local: [frame, ...frame.ctx.local] });
+
+/** Enters the frame a Nu binder describes, for the record defined in `ctx`. */
+export const open = ({ labels, scoped }: { labels: readonly string[]; scoped: EB.Row }, ctx: Context): Context => enter({ labels, ctx, terms: scoped });
 
 export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
@@ -121,10 +124,9 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 	);
 };
 
-/**
- * `$foo` resolves on the label stack, never the env. A field not yet elaborated stands in as a fresh
- * value meta, which the Nu boundary solves directly once every field has its term.
- */
+export type Reference = { label: string; meta?: EB.Meta; guarded: boolean; applied: boolean };
+
+/** A field not yet elaborated stands in as a fresh value meta, which the Nu boundary solves once every field has its term. */
 const field = function* (name: string, ctx: Context, zeros: Q.Usages): M.Elaboration<EB.AST> {
 	const index = ctx.local.findIndex(frame => frame.labels.includes(name));
 	const frame = ctx.local[index];
@@ -132,8 +134,8 @@ const field = function* (name: string, ctx: Context, zeros: Q.Usages): M.Elabora
 		throw new Error(`No enclosing record field named ${name}`);
 	}
 
-	const slot = R.lookup(frame.slots, name);
-	assert(slot, "A frame's labels and slots agree");
+	const slot = frame.slots && R.lookup(frame.slots, name);
+	assert(slot, "An elaborating frame has a slot for each of its labels");
 
 	const meta = R.lookup(frame.terms, name) ? undefined : yield* freshMeta(frame.ctx.env.length, slot);
 	yield* reference(ctx, index, { label: name, meta, applied: false });
@@ -141,11 +143,8 @@ const field = function* (name: string, ctx: Context, zeros: Q.Usages): M.Elabora
 	return [EB.Constructors.Var(EB.Constructors.Vars.NuLabel(name, index, slot, meta)), slot, zeros] satisfies EB.AST;
 };
 
-export type Reference = { label: string; meta?: EB.Meta; guarded: boolean; applied: boolean };
-
 /**
- * Records a field reference into the window of the field being elaborated in the frame at `index`.
- * It is guarded when a lambda was entered since the record began: the binders above the frame's env.
+ * A reference is guarded when a lambda was entered since the record began: a binder above the frame's env.
  * TODO: match binders are bound as Lambda too, so a reference inside a match arm counts as guarded
  * until pattern variables get their own binder kind.
  */

@@ -146,7 +146,7 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 		})
 		.with({ type: "Abs", binder: { type: "Nu" } }, function* ({ binder, closure }) {
 			/* Fields read back under the frame held symbolic, so `$label`s quote as references instead of unfolding. */
-			const held = EB.enter({ labels: binder.labels, ctx: closure.ctx, slots: R.Constructors.Empty(), terms: R.Constructors.Empty() });
+			const held = EB.open({ ...binder, scoped: R.Constructors.Empty() }, closure.ctx);
 			const back = (term: EB.Term) =>
 				M.reader.local(
 					_ => held,
@@ -180,7 +180,6 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 }
 
 const quoteRow = function* (lvl: number, row: NF.Row): Evaluation<Machine<EB.Row>> {
-	const { local } = yield* M.reader.ask();
 	return yield* match(row)
 		.with({ type: "empty" }, function* () {
 			return yield* result<EB.Row>({ type: "empty" });
@@ -191,6 +190,7 @@ const quoteRow = function* (lvl: number, row: NF.Row): Evaluation<Machine<EB.Row
 				.in(({ quoted, tail }) => result(EB.Constructors.Extension(label, quoted, tail))),
 		)
 		.with({ type: "variable" }, function* ({ variable }) {
+			const { local } = yield* M.reader.ask();
 			const v = match(variable)
 				.with({ type: "Bound" }, (b): EB.Variable => ({ type: "Bound", index: lvl - b.lvl - 1 }))
 				.with({ type: "DepLabel" }, (b): EB.Variable => ({ type: "DepLabel", name: b.name, index: lvl - b.lvl - 1, annotation: b.annotation }))

@@ -115,9 +115,9 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			return EB.Constructors.Abs({ ...sig.binding, annotation }, body);
 		})
 		.with(EB.CtorPatterns.Nu, function* ({ binding, body }) {
-			const frame = { labels: binding.labels, ctx, slots: R.Constructors.Empty<NF.Value, NF.Variable>(), terms: binding.scoped };
-			const scoped = yield* M.reader.local(_ => EB.enter(frame), instantiateRow(binding.scoped));
-			return EB.Constructors.Nu({ ...binding, scoped }, yield* M.reader.local(_ => EB.enter(frame), instantiate(body, resolutions)));
+			const within = EB.open(binding, ctx);
+			const scoped = yield* M.reader.local(_ => within, instantiateRow(binding.scoped));
+			return EB.Constructors.Nu({ ...binding, scoped }, yield* M.reader.local(_ => within, instantiate(body, resolutions)));
 		})
 		.with({ type: "Abs" }, function* (abs) {
 			const annotation = yield* instantiate(abs.binding.annotation, resolutions);

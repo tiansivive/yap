@@ -88,7 +88,7 @@ export const Constructors = {
 	Nu: ({ variable, mode, labels, scoped }: Pick<Extract<Binder, { type: "Nu" }>, "variable" | "mode" | "labels" | "scoped">, closure: Closure) =>
 		mk({
 			type: "Abs" as const,
-			binder: { type: "Nu", variable, mode, labels, scoped, annotation: Constructors.Lit({ type: "Atom", value: "Irrelevant" }) },
+			binder: { type: "Nu", variable, mode, labels, scoped, annotation: Irrelevant },
 			closure,
 		}),
 	Mu: (variable: string, source: string, annotation: Value, closure: Closure): Value =>

@@ -107,8 +107,10 @@ export const Labels = {
 	nu: (name: string, index = 0): EB.Term => EB.Constructors.Var(EB.Constructors.Vars.NuLabel(name, index, NF.Type)),
 };
 
-export const nu = (fields: Fields): EB.Term =>
-	EB.Constructors.Nu({ mode: "strict", labels: fields.map(({ label }) => label), scoped: row(fields) }, struct(fields));
+export const nu = (fields: Fields): EB.Term => {
+	const scoped = row(fields);
+	return EB.Constructors.Nu({ mode: "strict", labels: fields.map(({ label }) => label), scoped }, EB.Constructors.Struct(scoped));
+};
 
 export const proj = (label: string, term: EB.Term): EB.Term => EB.Constructors.Proj(label, term);
 

@@ -82,6 +82,8 @@ export const check = function* (source: Source, expected: NF.Row, placeholders: 
 		});
 };
 
+type References = Record<string, readonly EB.Reference[]>;
+
 type Checked = Omit<Inferred, "type">;
 
 type Inferred = {
@@ -206,9 +208,6 @@ export const witness = function* (row: EB.Row): M.Elaboration<NF.Row> {
 	return value.row;
 };
 
-type References = Record<string, readonly EB.Reference[]>;
-
-/** Elaborates one field inside its own reference window; the remaining fields then see its term in the frame. */
 const scoped = function* <A extends readonly [EB.Term, ...unknown[]], B>(label: string, elaborate: () => M.Elaboration<A>, rest: () => M.Elaboration<B>) {
 	const ctx = yield* M.reader.ask();
 	const [elaborated, references] = yield* M.windows.within<EB.Reference>()({ scope: "local", lvl: ctx.local.length - 1 }, elaborate);
@@ -221,13 +220,12 @@ const scoped = function* <A extends readonly [EB.Term, ...unknown[]], B>(label: 
 	return [elaborated, references, remaining] as const;
 };
 
-export const labels = (row: Source): string[] =>
+const labels = (row: Source): string[] =>
 	match(row)
 		.with(Patterns.Rows.Extension, ({ label, row }) => [label, ...labels(row)])
 		.otherwise(() => []);
 
-/** Elaborates a strict record's fields under its own frame on the label stack, then closes it. */
-export const nu = function* <A>(row: Source, elaborate: (slots: NF.Row) => M.Elaboration<A & { term: EB.Row; references: References }>) {
+export const nu = function* <A extends Checked>(row: Source, elaborate: (slots: NF.Row) => M.Elaboration<A>) {
 	const ctx = yield* M.reader.ask();
 	const slots = yield* witness(yield* prepare(row, ctx.env.length));
 	const frame: EB.Frame = { labels: labels(row), ctx, slots, terms: R.Constructors.Empty() };
@@ -235,9 +233,8 @@ export const nu = function* <A>(row: Source, elaborate: (slots: NF.Row) => M.Ela
 	const elaborated = yield* M.reader.local(_ => EB.enter(frame), elaborate(slots));
 	yield* acyclic(elaborated.references);
 
-	/* A `$label` met before its field was elaborated stands in as a value meta. That meta is not an
-	 * unknown to infer: its solution is the field's value, known now that every field has a term,
-	 * so it is written directly rather than posed as a constraint. */
+	/* A `$label` met before its field was elaborated stands in as a value meta. Its solution is not an
+	 * unknown to infer but the field's value, known now that every field has a term. */
 	const complete = { ...frame, terms: elaborated.term };
 	yield* M.traverse(
 		Object.values(elaborated.references).flatMap(refs => refs.flatMap(({ label, meta }) => (meta ? [{ label, meta }] : []))),
@@ -266,15 +263,15 @@ const acyclic = function* (references: References): M.Elaboration<void> {
 		return yield* M.fail(Err.RecordCall(call.label));
 	}
 
-	const found = cycle(Object.fromEntries(Object.entries(unguarded).map(([label, refs]) => [label, refs.map(ref => ref.label)])));
+	const found = cycle(unguarded);
 	if (found) {
 		return yield* M.fail(Err.RecordCycle(found));
 	}
 };
 
-const cycle = (edges: Record<string, readonly string[]>): string[] | undefined => {
+const cycle = (edges: References): string[] | undefined => {
 	const visit = (label: string, path: readonly string[]): string[] | undefined =>
-		path.includes(label) ? [...path.slice(path.indexOf(label)), label] : edges[label]?.map(next => visit(next, [...path, label])).find(Boolean);
+		path.includes(label) ? [...path.slice(path.indexOf(label)), label] : edges[label]?.map(({ label: next }) => visit(next, [...path, label])).find(Boolean);
 
 	return Object.keys(edges)
 		.map(label => visit(label, []))

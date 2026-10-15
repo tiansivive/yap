@@ -307,12 +307,9 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				result(NF.Constructors.SigmaV2(binding.variable, ann, NF.Constructors.Closure(ctx, body))),
 			);
 		})
-		/* A strict record is built now, under its frame; a lazy one waits for observation. */
 		.with(EB.CtorPatterns.Nu, ({ body, binding }) =>
 			match(binding.mode)
-				.with("strict", () =>
-					M.reader.local(_ => EB.enter({ labels: binding.labels, ctx, slots: R.Constructors.Empty(), terms: binding.scoped }), schedule.eval(body)),
-				)
+				.with("strict", () => M.reader.local(_ => EB.open(binding, ctx), schedule.eval(body)))
 				.with("lazy", () => result(NF.Constructors.Nu(binding, NF.Constructors.Closure(ctx, body))))
 				.exhaustive(),
 		)
@@ -606,10 +603,9 @@ const observe = function* (base: NF.Value & { type: "Abs"; binder: { type: "Nu" 
 				{ type: "extension" },
 				({ label: current }) => current === label,
 				function* ({ value }) {
-					const frame = { labels: binder.labels, ctx: closure.ctx, slots: R.Constructors.Empty<NF.Value, NF.Variable>(), terms: binder.scoped };
 					return yield* Do.let(
 						"value",
-						M.reader.local(_ => EB.enter(frame), schedule.eval(value)),
+						M.reader.local(_ => EB.open(binder, closure.ctx), schedule.eval(value)),
 					).in(({ value }) => result<Project>({ tag: "found", value }));
 				},
 			)
