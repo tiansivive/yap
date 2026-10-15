@@ -8,7 +8,7 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 1`] = `
       "Num ~~ ?2",
       "Schema [ x: Num, y: Num ] ~~ Schema [ x: Num, y: Num ]",
     ],
-    "term": "(ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 1, y: 2 ]).x",
+    "term": "(νstrict [] . Struct [ x: 1, y: 2 ]).x",
     "type": "Num",
   },
 }
@@ -82,8 +82,7 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
   let p
     : Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
       (closure: Schema [ fst: a, snd: p &fst ] -| Γ: $sig; p; a; Pair)
-    = ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) .
-      Struct [ fst: 1, snd: "hello" ];
+    = νstrict [] . Struct [ fst: 1, snd: "hello" ];
   return (p).snd;
 }",
     "type": "String",

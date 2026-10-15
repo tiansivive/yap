@@ -7,7 +7,7 @@ exports[`inference: tuple > {1, 2} 1`] = `
       "Num ~~ ?1",
       "Num ~~ ?2",
     ],
-    "term": "ν($nu: [ 0: Irrelevant, 1: Irrelevant ]) . Struct [ 0: 1, 1: 2 ]",
+    "term": "νstrict [] . Struct [ 0: 1, 1: 2 ]",
     "type": "Schema [ 0: Num, 1: Num ]",
   },
 }

@@ -559,12 +559,10 @@ exports[`Let-polymorphism > let-polymorphism with complex types > polymorphic fu
     = λ(r: Row) =>
       λ(a: Type) =>
         (λ(p: Schema [ x: a | r ]) -> (p).x : Π(p: Schema [ x: a | r ]) -> a);
-  let val1
-    : Schema [ x: Num, y: Num ]
-    = ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: 1, y: 2 ];
+  let val1 : Schema [ x: Num, y: Num ] = νstrict [] . Struct [ x: 1, y: 2 ];
   let val2
     : Schema [ x: Bool, y: Bool ]
-    = ν($nu: [ x: Irrelevant, y: Irrelevant ]) . Struct [ x: true, y: false ];
+    = νstrict [] . Struct [ x: true, y: false ];
   let a : Num = fst @[ y: Num ] @Num val1;
   let b : Bool = fst @[ y: Bool ] @Bool val2;
   return unit;

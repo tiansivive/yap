@@ -28,8 +28,7 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 1`] = `
       "?3 ~~ ?3",
       "?3 ~~ ?6",
     ],
-    "term": "match ν($nu: [ x: Irrelevant ]) . Struct [ x: 1 ]
-  | Struct [ x: a | $row_4 ] -> a",
+    "term": "match νstrict [] . Struct [ x: 1 ] | Struct [ x: a | $row_4 ] -> a",
     "type": "?6",
   },
 }
