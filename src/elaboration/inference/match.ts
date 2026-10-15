@@ -65,7 +65,7 @@ export const elaborate =
 	(alt: Src.Alternative): M.Elaboration<AltNode> =>
 		M.tracer.track({ tag: "alt", alt, metadata: { action: "alternative", motive: "elaborating pattern", type: scuty } }, function* () {
 			const extend = (binders: Patterns.Binder[]) => (ctx_: EB.Context) =>
-				binders.reduce((ctx, [name, va]) => EB.bind(ctx, { type: "Lambda", variable: name }, va), ctx_);
+				binders.reduce((ctx, [name, va]) => EB.bind(ctx, { type: "Pattern", variable: name }, va), ctx_);
 
 			const inferAltBy =
 				<K extends keyof Patterns.Inference<Src.Pattern, "type">>(key: K) =>

@@ -246,6 +246,7 @@ const displayBinder = (binder: EB.Binder["type"]): string =>
 		.with("Lambda", () => "λ")
 		.with("Pi", () => "Π")
 		.with("Mu", () => "μ")
+		.with("Pattern", () => "pat")
 		.otherwise(() => "Binder Display: Not implemented");
 
 const Pat = {

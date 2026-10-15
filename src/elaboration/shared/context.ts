@@ -50,7 +50,10 @@ export const enter = (frame: Frame): Context => ({ ...frame.ctx, local: [frame, 
 /** Enters the frame a Nu binder describes, for the record defined in `ctx`. */
 export const open = ({ labels, scoped }: { labels: readonly string[]; scoped: EB.Row }, ctx: Context): Context => enter({ labels, ctx, terms: scoped });
 
-export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
+export type Binder =
+	| Pick<EB.Binding, "type" | "variable">
+	| { type: "Pattern"; variable: string }
+	| { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
 export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elaboration<EB.AST> {
 	const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
@@ -145,8 +148,7 @@ const field = function* (name: string, ctx: Context, zeros: Q.Usages): M.Elabora
 
 /**
  * A reference is guarded when a lambda was entered since the record began: a binder above the frame's env.
- * TODO: match binders are bound as Lambda too, so a reference inside a match arm counts as guarded
- * until pattern variables get their own binder kind.
+ * A match arm runs during construction, which is why pattern variables are not Lambda binders.
  */
 export const reference = (ctx: Context, index: number, item: Omit<Reference, "guarded">) =>
 	M.windows.record(

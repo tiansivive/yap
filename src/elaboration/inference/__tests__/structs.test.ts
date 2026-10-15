@@ -83,6 +83,20 @@ describe("Inference: Structs", () => {
 			expect(() => elaborateFrom("{ f: \\x -> x, g: $f 1 }")).toThrow("Record Call: $f");
 		});
 
+		it("rejects a field read in a match arm: { a: match 0 | x -> $a }", () => {
+			expect(() => elaborateFrom("{ a: match 0 | x -> $a }")).toThrow("Record Cycle: fields $a -> $a");
+		});
+
+		it("accepts a field read in a match arm when no cycle forms: { a: 1, b: match 0 | x -> $a }", () => {
+			const { displays } = elaborateFrom("{ a: 1, b: match 0 | x -> $a }");
+			expect(displays.term).toMatch("νstrict [ a: 1 ]");
+		});
+
+		it("accepts a field read under a lambda inside a match arm: { f: \\x -> match x | y -> $f y }", () => {
+			const { displays } = elaborateFrom("{ f: \\x -> match x | y -> $f y }");
+			expect(displays.term).toMatch("νstrict [ f:");
+		});
+
 		it("accepts a field read under a lambda: { f: \\x -> $g, g: 1 }", () => {
 			const { displays } = elaborateFrom("{ f: \\x -> $g, g: 1 }");
 			expect(displays.term).toMatch("νstrict [ g: 1 ]");

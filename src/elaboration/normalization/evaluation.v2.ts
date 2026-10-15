@@ -858,7 +858,7 @@ export const schedule = {
 		const immediate = match(pattern)
 			.with({ type: "Wildcard" }, () => matched([]))
 			.with({ type: "Binder" }, ({ value }) => {
-				const binder: EB.Binder = { type: "Lambda", variable: value };
+				const binder: EB.Binder = { type: "Pattern", variable: value };
 				return matched([{ binder, nf }]);
 			})
 			.otherwise(() => undefined);
@@ -892,7 +892,7 @@ export const schedule = {
 								return yield* result(matched([]));
 							}
 
-							const binder: EB.Binder = { type: "Lambda", variable: p.rest };
+							const binder: EB.Binder = { type: "Pattern", variable: p.rest };
 							return yield* result(matched([{ binder, nf: NF.Constructors.Array(row) }]));
 						}
 
@@ -1200,7 +1200,7 @@ const meetAll = function* (
 	return yield* match([pats, vals])
 		.with([{ type: "empty" }, P._], () => result(matched([])))
 		.with([{ type: "variable" }, P._], ([r, tail]) => {
-			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
+			const binder: EB.Binder = { type: "Pattern", variable: r.variable };
 			return result(matched([{ binder, nf: NF.Constructors.Row(tail) }]));
 		})
 		.with([{ type: "extension" }, { type: "empty" }], [{ type: "extension" }, { type: "variable" }], () => result(mismatch()))

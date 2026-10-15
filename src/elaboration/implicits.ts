@@ -143,7 +143,7 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 		.with({ type: "Match" }, function* ({ scrutinee, alternatives }) {
 			const scrut = yield* instantiate(scrutinee, resolutions);
 			const alts = yield* Eff.traverse(alternatives, function* (alt) {
-				const xtended = alt.binders.reduce((acc, [bv, bty]) => EB.bind(acc, { type: "Let", variable: bv }, bty), ctx);
+				const xtended = alt.binders.reduce((acc, [bv, bty]) => EB.bind(acc, { type: "Pattern", variable: bv }, bty), ctx);
 				const tm = yield* M.reader.local(_ => xtended, instantiate(alt.term, resolutions));
 				return { pattern: alt.pattern, term: tm, binders: alt.binders };
 			});
