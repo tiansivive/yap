@@ -123,18 +123,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Nu, function* (tm) {
-			const value = yield* NF.evaluate(tm);
-			return yield* match(value)
-				.with(NF.Patterns.Nu, function* ({ binder, closure }) {
-					return yield* match(closure)
-						.with({ type: "Closure", term: EB.CtorPatterns.Struct }, ({ ctx, term }) => reader.local(_ => EB.extend(ctx, binder, value), synth(term)))
-						.otherwise(function* () {
-							throw new Error("Nu synthesis expected a Struct closure body");
-						});
-				})
-				.otherwise(function* () {
-					throw new Error("Nu synthesis expected a Nu value");
-				});
+			// TODO: lazy records are verified by observation, once something can build one
+			assert(tm.binding.mode === "strict", "Verification supports strict records only");
+			return yield* reader.local(_ => EB.open(tm.binding, ctx), synth(tm.body));
 		})
 		.with(EB.CtorPatterns.Lambda, function* (tm) {
 			const annotation = yield* NF.evaluate(tm.binding.annotation);

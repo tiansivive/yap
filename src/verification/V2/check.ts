@@ -95,32 +95,10 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					});
 					return { vc } satisfies VerificationArtefacts;
 				})
-				.with([EB.CtorPatterns.Nu, NF.Patterns.SigmaV2], function* ([term, type]) {
-					const value = yield* NF.evaluate(term);
-					return yield* match(value)
-						.with(NF.Patterns.Nu, function* () {
-							const schema = yield* NF.apply(type.binder, type.closure, value);
-							return yield* check(term, schema);
-						})
-						.otherwise(function* () {
-							throw new Error("Nu checking expected a Nu value");
-						});
-				})
 				.with([EB.CtorPatterns.Nu, NF.Patterns.Schema], function* ([term, type]) {
-					const value = yield* NF.evaluate(term);
-					return yield* match(value)
-						.with(NF.Patterns.Nu, function* ({ binder, closure }) {
-							return yield* match(closure)
-								.with({ type: "Closure", term: EB.CtorPatterns.Struct }, ({ ctx, term: body }) =>
-									reader.local(_ => EB.extend(ctx, binder, value), check(body, type)),
-								)
-								.otherwise(function* () {
-									throw new Error("Nu checking expected a Struct closure body");
-								});
-						})
-						.otherwise(function* () {
-							throw new Error("Nu checking expected a Nu value");
-						});
+					// TODO: lazy records are verified by observation, once something can build one
+					assert(term.binding.mode === "strict", "Verification supports strict records only");
+					return yield* reader.local(_ => EB.open(term.binding, ctx), check(term.body, type));
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Sigma], function* ([term, type]) {
 					const evaluated = yield* NF.evaluate(term);
@@ -134,7 +112,7 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 						});
 					return yield* check(term, schema);
 				})
-				.with([EB.CtorPatterns.Struct, NF.Patterns.SigmaV2], function* ([term, type]) {
+				.with([P.union(EB.CtorPatterns.Struct, EB.CtorPatterns.Nu), NF.Patterns.SigmaV2], function* ([term, type]) {
 					const evaluated = yield* NF.evaluate(term);
 					const innerViewed = yield* NF.view(evaluated);
 					return yield* match(innerViewed)
