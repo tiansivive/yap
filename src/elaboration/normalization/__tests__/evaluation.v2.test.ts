@@ -77,7 +77,8 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 	/* No syntax builds a lazy record yet, so the term is written by hand. */
 	describe("lazy records", () => {
 		const a = (value: EB.Term) => R.Constructors.Extension("a", value, R.Constructors.Empty<EB.Term, EB.Variable>());
-		const lazy = (value: EB.Term) => EB.Constructors.Nu({ mode: "lazy", labels: ["a"], scoped: a(value) }, EB.Constructors.Struct(a(value)));
+		const types = EB.Constructors.Row(R.Constructors.Empty<EB.Term, EB.Variable>());
+		const lazy = (value: EB.Term) => EB.Constructors.Nu({ mode: "lazy", labels: ["a"], scoped: a(value), annotation: types }, EB.Constructors.Struct(a(value)));
 		const normalize = (term: EB.Term) => runNF(ctxFor(mkCtx()), () => NF.normalize(term, { maxSteps: 20_000 }));
 
 		it("stays a value until observed", () => {
@@ -86,7 +87,12 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 
 		it("observes a field under its frame", () => {
 			const record = EB.Constructors.Nu(
-				{ mode: "lazy", labels: ["a", "b"], scoped: R.Constructors.Extension("b", EB.Constructors.Lit({ type: "Num", value: 2 }), a(EB.DSL.Labels.nu("b"))) },
+				{
+					mode: "lazy",
+					labels: ["a", "b"],
+					scoped: R.Constructors.Extension("b", EB.Constructors.Lit({ type: "Num", value: 2 }), a(EB.DSL.Labels.nu("b"))),
+					annotation: types,
+				},
 				EB.Constructors.Struct(R.Constructors.Extension("b", EB.Constructors.Lit({ type: "Num", value: 2 }), a(EB.DSL.Labels.nu("b")))),
 			);
 			expect(show(normalize(EB.Constructors.Proj("a", record)), mkCtx())).toBe("2");

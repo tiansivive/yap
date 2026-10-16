@@ -1,4 +1,4 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
@@ -9,7 +9,6 @@ import * as Src from "@yap/src/index";
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as R from "@yap/shared/rows";
 import * as E from "fp-ts/lib/Either";
-import { pipe } from "fp-ts/lib/function";
 
 import assert from "node:assert";
 
@@ -30,44 +29,43 @@ const Patterns = {
  * A row variable on either side means the shapes are not aligned field-by-field,
  * so the source is inferred whole and the two rows unified.
  */
-export const check = function* (source: Source, expected: NF.Row, placeholders: NF.Row): M.Elaboration<Checked> {
+export const check = function* (source: Source, expected: NF.Row): M.Elaboration<Inferred> {
 	const ctx = yield* M.reader.ask();
 
 	return yield* match([expected, source] as const)
 		.with([Patterns.Rows.Empty, Patterns.Rows.Empty], () =>
-			M.of<Checked>({ term: R.Constructors.Empty<EB.Term, EB.Variable>(), usages: Q.noUsage(ctx.env.length), references: {} }),
+			M.of<Inferred>({
+				term: R.Constructors.Empty<EB.Term, EB.Variable>(),
+				type: R.Constructors.Empty<NF.Value, NF.Variable>(),
+				usages: Q.noUsage(ctx.env.length),
+				references: {},
+			}),
 		)
 		.with([Patterns.Rows.Extension, Patterns.Rows.Extension], ([exp, src]) =>
-			pipe(
-				E.Do,
-				E.apS("field", R.rewrite(src, exp.label)),
-				E.apS("slot", R.rewrite(placeholders, exp.label)),
-				E.match(
-					() => M.fail(Err.MissingLabel(exp.label, src)),
-					function* ({ field, slot }): M.Elaboration<Checked> {
-						assert(field.type === "extension" && slot.type === "extension", "A rewritten row begins with the requested label");
+			E.match(
+				(): M.Elaboration<Inferred> => M.fail(Err.MissingLabel(exp.label, src)),
+				function* (field: Source): M.Elaboration<Inferred> {
+					assert(field.type === "extension", "A rewritten row begins with the requested label");
 
-						const [[term, usages], references, rest] = yield* scoped(
-							exp.label,
-							function* () {
-								const checked = yield* EB.check(field.value, exp.value);
-								yield* M.constrain({ type: "assign", left: exp.value, right: slot.value, lvl: ctx.env.length });
-								return checked;
-							},
-							() => check(field.row, exp.row, slot.row),
-						);
+					const [[term, usages], references, rest] = yield* scoped(
+						exp.label,
+						function* () {
+							return [yield* EB.check(field.value, exp.value), exp.value] as const;
+						},
+						() => check(field.row, exp.row),
+					);
 
-						return {
-							term: R.Constructors.Extension(exp.label, term, rest.term),
-							usages: Q.add(usages, rest.usages),
-							references: { [exp.label]: references, ...rest.references },
-						};
-					},
-				),
-			),
+					return {
+						term: R.Constructors.Extension(exp.label, term, rest.term),
+						type: R.Constructors.Extension(exp.label, exp.value, rest.type),
+						usages: Q.add(usages, rest.usages),
+						references: { [exp.label]: references, ...rest.references },
+					};
+				},
+			)(R.rewrite(src, exp.label)),
 		)
 		.with([Patterns.Rows.Variable, Patterns.Rows.Empty], [Patterns.Rows.Variable, Patterns.Rows.Extension], function* ([, src]) {
-			const inferred = yield* infer(src, placeholders);
+			const inferred = yield* infer(src);
 			yield* M.constrain({ type: "assign", left: NF.Constructors.Row(inferred.type), right: NF.Constructors.Row(expected), lvl: ctx.env.length });
 
 			return inferred;
@@ -84,8 +82,6 @@ export const check = function* (source: Source, expected: NF.Row, placeholders: 
 
 type References = Record<string, readonly EB.Reference[]>;
 
-type Checked = Omit<Inferred, "type">;
-
 type Inferred = {
 	term: EB.Row;
 	type: NF.Row;
@@ -93,18 +89,16 @@ type Inferred = {
 	references: References;
 };
 
-export const infer = function* (source: Source, placeholders: NF.Row): M.Elaboration<Inferred> {
-	return yield* match([source, placeholders] as const)
-		.with([Patterns.Rows.Extension, Patterns.Rows.Extension], function* ([src, slot]) {
+export const infer = function* (source: Source): M.Elaboration<Inferred> {
+	return yield* match(source)
+		.with(Patterns.Rows.Extension, function* (src) {
 			const [[term, type, usages], references, rest] = yield* scoped(
 				src.label,
 				function* () {
 					const ast = yield* EB.infer(src.value);
-					const ctx = yield* M.reader.ask();
-					yield* M.constrain({ type: "assign", left: ast[1], right: slot.value, lvl: ctx.env.length });
-					return ast;
+					return [ast, ast[1]] as const;
 				},
-				() => infer(src.row, slot.row),
+				() => infer(src.row),
 			);
 
 			return {
@@ -114,29 +108,8 @@ export const infer = function* (source: Source, placeholders: NF.Row): M.Elabora
 				references: { [src.label]: references, ...rest.references },
 			} satisfies Inferred;
 		})
-		.with([Patterns.Rows.Variable, Patterns.Rows.Variable], function* ([src, slot]) {
-			const ctx = yield* M.reader.ask();
-			const [term, type, usages] = yield* EB.lookup(src.variable, ctx);
-			assert(term.type === "Var", "Dependent row tails must elaborate to variables");
-
-			/* The tail's own type is a struct over the remaining slots, however it is presented. */
-			yield* match(type)
-				.with(NF.Patterns.Schema, function* ({ arg }) {
-					yield* M.constrain({ type: "assign", left: arg, right: NF.Constructors.Row(slot), lvl: ctx.env.length });
-				})
-				.with(NF.Patterns.Flex, function* () {
-					yield* M.constrain({ type: "assign", left: type, right: NF.Constructors.Schema(slot), lvl: ctx.env.length });
-				})
-				.otherwise(function* () {
-					return yield* M.fail(Err.Impossible("Dependent value row tail must have a struct type"));
-				});
-
-			return { term: R.Constructors.Variable(term.variable), type: slot, usages, references: {} } satisfies Inferred;
-		})
-		.with([Patterns.Rows.Variable, Patterns.Rows.Empty], [Patterns.Rows.Variable, Patterns.Rows.Extension], function* () {
-			return yield* M.fail(Err.Impossible("Dependent value row cannot have a tail variable"));
-		})
-		.otherwise(function* () {
+		.with(Patterns.Rows.Variable, () => M.fail(Err.Impossible("Dependent value row cannot have a tail variable")))
+		.with(Patterns.Rows.Empty, function* () {
 			const ctx = yield* M.reader.ask();
 
 			return {
@@ -145,7 +118,8 @@ export const infer = function* (source: Source, placeholders: NF.Row): M.Elabora
 				usages: Q.noUsage(ctx.env.length),
 				references: {},
 			} satisfies Inferred;
-		});
+		})
+		.exhaustive();
 };
 
 export const fields = function* (source: Source): M.Elaboration<[EB.Row, Q.Usages]> {
@@ -177,11 +151,6 @@ export const fields = function* (source: Source): M.Elaboration<[EB.Row, Q.Usage
 		.exhaustive();
 };
 
-export const prepare = (source: Source, lvl: number): M.Elaboration<EB.Row> =>
-	shaped(source, lvl, function* () {
-		return EB.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
-	});
-
 /**
  * Elaborating a sigma row is similar to toplevel mutual definitions which are typically solved with a 2-phase approach: first prepare the row with placeholders, then elaborate the actual fields.
  * The Sigma binder is just a mechanism to allow these 2 phases and so its annotation only neds to care about the labels themselves.
@@ -208,14 +177,20 @@ export const witness = function* (row: EB.Row): M.Elaboration<NF.Row> {
 	return value.row;
 };
 
-const scoped = function* <A extends readonly [EB.Term, ...unknown[]], B>(label: string, elaborate: () => M.Elaboration<A>, rest: () => M.Elaboration<B>) {
+const scoped = function* <A extends readonly [EB.Term, ...unknown[]], B>(
+	label: string,
+	elaborate: () => M.Elaboration<readonly [A, NF.Value]>,
+	rest: () => M.Elaboration<B>,
+) {
 	const ctx = yield* M.reader.ask();
-	const [elaborated, references] = yield* M.windows.within<EB.Reference>()({ scope: "local", lvl: ctx.local.length - 1 }, elaborate);
+	const [[elaborated, type], references] = yield* M.windows.within<EB.Reference>()({ scope: "local", lvl: ctx.local.length - 1 }, elaborate);
 	const [frame, ...outer] = ctx.local;
-	const remaining = yield* M.reader.local(
-		c => ({ ...c, local: [{ ...frame, terms: R.Constructors.Extension(label, elaborated[0], frame.terms) }, ...outer] }),
-		rest(),
-	);
+	const done = {
+		...frame,
+		terms: R.Constructors.Extension(label, elaborated[0], frame.terms),
+		types: R.Constructors.Extension(label, type, frame.types ?? R.Constructors.Empty<NF.Value, NF.Variable>()),
+	};
+	const remaining = yield* M.reader.local(c => ({ ...c, local: [done, ...outer] }), rest());
 
 	return [elaborated, references, remaining] as const;
 };
@@ -225,32 +200,43 @@ const labels = (row: Source): string[] =>
 		.with(Patterns.Rows.Extension, ({ label, row }) => [label, ...labels(row)])
 		.otherwise(() => []);
 
-export const nu = function* <A extends Checked>(row: Source, elaborate: (slots: NF.Row) => M.Elaboration<A>) {
+export const nu = function* <A extends Inferred>(row: Source, elaborate: () => M.Elaboration<A>) {
 	const ctx = yield* M.reader.ask();
-	const slots = yield* witness(yield* prepare(row, ctx.env.length));
-	const frame: EB.Frame = { labels: labels(row), ctx, slots, terms: R.Constructors.Empty() };
+	const frame: EB.Frame = { labels: labels(row), ctx, types: R.Constructors.Empty(), terms: R.Constructors.Empty() };
 
-	const elaborated = yield* M.reader.local(_ => EB.enter(frame), elaborate(slots));
+	const elaborated = yield* M.reader.local(_ => EB.enter(frame), elaborate());
 	yield* acyclic(elaborated.references);
 
-	/* A `$label` met before its field was elaborated stands in as a value meta. Its solution is not an
-	 * unknown to infer but the field's value, known now that every field has a term. */
-	const complete = { ...frame, terms: elaborated.term };
+	/* A `$label` met before its field was elaborated stands in as a pair of metas, for the field's value and its type.
+	 * Their solutions are not unknowns to infer but the field's own, known now that every field is done. */
+	const complete = { ...frame, terms: elaborated.term, types: elaborated.type };
 	yield* M.traverse(
-		Object.values(elaborated.references).flatMap(refs => refs.flatMap(({ label, meta }) => (meta ? [{ label, meta }] : []))),
-		function* ({ label, meta }) {
+		Object.values(elaborated.references).flatMap(refs => refs.flatMap(({ label, meta, typeMeta }) => (meta && typeMeta ? [{ label, meta, typeMeta }] : []))),
+		function* ({ label, meta, typeMeta }) {
 			const term = R.lookup(elaborated.term, label);
-			assert(term, "A referenced label names a field of its record");
+			const type = R.lookup(elaborated.type, label);
+			assert(term && type, "A referenced label names a field of its record");
 
-			const value = yield* M.reader.local(_ => EB.enter(complete), NF.normalize(term));
-			yield* Metas.registry.modify(r => Metas.solve(r, meta.val, value));
+			yield* fill(meta, yield* M.reader.local(_ => EB.enter(complete), NF.normalize(term)));
+			yield* fill(typeMeta, type);
 		},
 	);
 
 	const referenced = new Set(Object.values(elaborated.references).flatMap(refs => refs.map(({ label }) => label)));
-	const binder = { mode: "strict", labels: frame.labels, scoped: requested(elaborated.term, referenced) } as const;
+	const annotation = yield* M.reader.local(_ => EB.enter(complete), NF.quote(ctx.env.length, NF.Constructors.Row(elaborated.type)));
+	const binder = { mode: "strict", labels: frame.labels, scoped: requested(elaborated.term, referenced), annotation } as const;
 
 	return [binder, elaborated] as const;
+};
+
+/** A meta that a nested boundary already solved is unified with the value, not overwritten. */
+const fill = function* (meta: EB.Meta, value: NF.Value): M.Elaboration<void> {
+	const ctx = yield* M.reader.ask();
+	const registry = yield* Metas.registry.get();
+
+	yield* match(Metas.solution(registry, meta.val))
+		.with(P.nonNullable, () => M.constrain({ type: "assign", left: NF.Constructors.Flex(meta), right: value, lvl: ctx.env.length }))
+		.otherwise(() => Metas.registry.modify(r => Metas.solve(r, meta.val, value)));
 };
 
 /** OCaml's `let rec` check: a field may not be called, nor read in a cycle, outside a lambda. */

@@ -18,7 +18,7 @@ export const infer = (node: Struct): M.Elaboration<EB.AST> =>
 	);
 
 export const struct = function* (row: Src.Row): M.Elaboration<EB.AST> {
-	const [binder, inferred] = yield* DependentRows.nu(row, slots => DependentRows.infer(row, slots));
+	const [binder, inferred] = yield* DependentRows.nu(row, () => DependentRows.infer(row));
 	return [EB.Constructors.Nu(binder, EB.Constructors.Struct(inferred.term)), NF.Constructors.Schema(inferred.type), inferred.usages] satisfies EB.AST;
 };
 

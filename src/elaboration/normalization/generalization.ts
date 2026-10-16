@@ -330,7 +330,8 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 			const term = yield* M.reader.local(_ => within, EB.Icit.instantiate(closure.term, {}));
 			const scoped = yield* M.reader.local(_ => within, EB.Icit.instantiate(EB.Constructors.Row(binder.scoped), {}));
 			assert(scoped.type === "Row", "A row instantiates to a row");
-			return NF.Constructors.Nu({ ...binder, scoped: scoped.row }, { ...closure, term });
+			const annotation = yield* M.reader.local(_ => within, instantiate(binder.annotation));
+			return NF.Constructors.Nu({ ...binder, scoped: scoped.row, annotation }, { ...closure, term });
 		})
 		.with({ type: "App" }, function* ({ icit, func, arg }) {
 			return NF.Constructors.App(yield* instantiate(func), yield* instantiate(arg), icit);

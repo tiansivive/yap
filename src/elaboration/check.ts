@@ -145,7 +145,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				const expected = NF.rowOf(yield* NF.apply(sig.binder, sig.closure, NF.Constructors.Row(values)));
 				assert(expected, "Expected the applied SigmaV2 body to contain a row");
 
-				const [binder, checked] = yield* DependentRows.nu(tm.row, slots => DependentRows.check(tm.row, expected, slots));
+				const [binder, checked] = yield* DependentRows.nu(tm.row, () => DependentRows.check(tm.row, expected));
 				return [EB.Constructors.Nu(binder, EB.Constructors.Struct(checked.term)), checked.usages] satisfies Result;
 			})
 			.with([{ type: "struct" }, NF.Patterns.Schema], function* ([tm, val]) {

@@ -85,10 +85,13 @@ export const Constructors = {
 		}) as Value & { type: "Abs"; binder: { type: "Pi" } },
 	Sigma: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Sigma", variable, annotation }, closure }),
 	SigmaV2: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "SigmaV2", variable, annotation }, closure }),
-	Nu: ({ variable, mode, labels, scoped }: Pick<Extract<Binder, { type: "Nu" }>, "variable" | "mode" | "labels" | "scoped">, closure: Closure) =>
+	Nu: (
+		{ variable, mode, labels, scoped, annotation }: Pick<Extract<Binder, { type: "Nu" }>, "variable" | "mode" | "labels" | "scoped" | "annotation">,
+		closure: Closure,
+	) =>
 		mk({
 			type: "Abs" as const,
-			binder: { type: "Nu", variable, mode, labels, scoped, annotation: Irrelevant },
+			binder: { type: "Nu", variable, mode, labels, scoped, annotation },
 			closure,
 		}),
 	Mu: (variable: string, source: string, annotation: Value, closure: Closure): Value =>

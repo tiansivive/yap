@@ -14,7 +14,6 @@ import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
 import { Provenance } from "./provenance";
 import { freshMeta } from "./supply";
-import assert from "node:assert";
 
 type Origin = "inserted" | "source";
 
@@ -40,9 +39,10 @@ export type Context = {
 /**
  * A Nu's field scope. `ctx` is where the record was defined, without this frame. A label in `labels`
  * missing from `terms` has not been elaborated yet, or is held symbolic while quoting.
- * `slots` carries each field's provisional type, and only exists while elaborating.
+ * `types` holds the evaluated type of each completed field, as an env entry holds its evaluated annotation. Only
+ * elaboration reads it, so a frame entered from a binder leaves it unset.
  */
-export type Frame = { labels: readonly string[]; ctx: Context; slots?: NF.Row; terms: EB.Row };
+export type Frame = { labels: readonly string[]; ctx: Context; types?: NF.Row; terms: EB.Row };
 
 /** Re-enters a frame: its fields are evaluated where the record was defined, with the frame itself in scope. */
 export const enter = (frame: Frame): Context => ({ ...frame.ctx, local: [frame, ...frame.ctx.local] });
@@ -127,7 +127,7 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 	);
 };
 
-export type Reference = { label: string; meta?: EB.Meta; guarded: boolean; applied: boolean };
+export type Reference = { label: string; meta?: EB.Meta; typeMeta?: EB.Meta; guarded: boolean; applied: boolean };
 
 /** A field not yet elaborated stands in as a fresh value meta, which the Nu boundary solves once every field has its term. */
 const field = function* (name: string, ctx: Context, zeros: Q.Usages): M.Elaboration<EB.AST> {
@@ -137,13 +137,18 @@ const field = function* (name: string, ctx: Context, zeros: Q.Usages): M.Elabora
 		throw new Error(`No enclosing record field named ${name}`);
 	}
 
-	const slot = frame.slots && R.lookup(frame.slots, name);
-	assert(slot, "An elaborating frame has a slot for each of its labels");
+	const known = frame.types && R.lookup(frame.types, name);
+	if (known) {
+		yield* reference(ctx, index, { label: name, applied: false });
+		return [EB.Constructors.Var(EB.Constructors.Vars.NuLabel(name, index, known)), known, zeros] satisfies EB.AST;
+	}
 
-	const meta = R.lookup(frame.terms, name) ? undefined : yield* freshMeta(frame.ctx.env.length, slot);
-	yield* reference(ctx, index, { label: name, meta, applied: false });
+	const typeMeta = yield* freshMeta(frame.ctx.env.length, NF.Type);
+	const type = NF.Constructors.Flex(typeMeta);
+	const meta = yield* freshMeta(frame.ctx.env.length, type);
+	yield* reference(ctx, index, { label: name, meta, typeMeta, applied: false });
 
-	return [EB.Constructors.Var(EB.Constructors.Vars.NuLabel(name, index, slot, meta)), slot, zeros] satisfies EB.AST;
+	return [EB.Constructors.Var(EB.Constructors.Vars.NuLabel(name, index, type, meta)), type, zeros] satisfies EB.AST;
 };
 
 /**

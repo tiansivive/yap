@@ -124,10 +124,10 @@ export const Constructors = {
 			binding: { type: "SigmaV2" as const, variable, annotation },
 			body,
 		}),
-	Nu: ({ mode, labels, scoped }: Pick<Extract<Binding, { type: "Nu" }>, "mode" | "labels" | "scoped">, body: Term): Term =>
+	Nu: ({ mode, labels, scoped, annotation }: Pick<Extract<Binding, { type: "Nu" }>, "mode" | "labels" | "scoped" | "annotation">, body: Term): Term =>
 		mk({
 			type: "Abs",
-			binding: { type: "Nu" as const, variable: "$nu", mode, labels, scoped, annotation: Constructors.Lit({ type: "Atom", value: "Irrelevant" }) },
+			binding: { type: "Nu" as const, variable: "$nu", mode, labels, scoped, annotation },
 			body,
 		}),
 	Mu: (variable: string, source: string, annotation: Term, body: Term): Term =>

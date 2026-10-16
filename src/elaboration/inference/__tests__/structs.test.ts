@@ -106,15 +106,8 @@ describe("Inference: Structs", () => {
 			const { displays } = elaborateFrom('{ overriden: 1, foo: { inner: $overriden }, bar: { overriden: "hello", inner: $overriden } }');
 			expect(displays.type).toMatch("Schema");
 			expect(displays.type).toMatch(Field.bare("overriden", TypeText.lit("Num")));
-			expect(displays.type).toMatch(Field.schema("foo", Field.meta("inner")));
-			expect(displays.type).toMatch(Field.schema("bar", Field.bare("overriden", TypeText.lit("String")), Field.meta("inner")));
-
-			const fooInner = displays.type.match(/\bfoo:\s+Schema\s+\[\s*inner:\s+(\?\d+)\s*\]/)?.[1];
-			const barInner = displays.type.match(/\bbar:\s+Schema\s+\[\s*overriden:\s+String,\s+inner:\s+(\?\d+)\s*\]/)?.[1];
-			expect(fooInner).toMatch(/^\?\d+$/);
-			expect(barInner).toMatch(/^\?\d+$/);
-			expect(displays.constraints).toContain(`Num ~~ ${fooInner}`);
-			expect(displays.constraints).toContain(`String ~~ ${barInner}`);
+			expect(displays.type).toMatch(Field.schema("foo", Field.bare("inner", TypeText.lit("Num"))));
+			expect(displays.type).toMatch(Field.schema("bar", Field.bare("overriden", TypeText.lit("String")), Field.bare("inner", TypeText.lit("String"))));
 
 			expect({ displays }).toMatchSnapshot();
 		});

@@ -155,9 +155,13 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 
 			return yield* Do.let("body", back(closure.term))
 				.let("scoped", back(EB.Constructors.Row(binder.scoped)))
-				.in(function* ({ body, scoped }) {
+				.let(
+					"annotation",
+					M.reader.local(_ => held, quote(lvl, binder.annotation)),
+				)
+				.in(function* ({ body, scoped, annotation }) {
 					assert(scoped.type === "Row", "A row reads back as a row");
-					return yield* result(EB.Constructors.Nu({ mode: binder.mode, labels: binder.labels, scoped: scoped.row }, body));
+					return yield* result(EB.Constructors.Nu({ mode: binder.mode, labels: binder.labels, scoped: scoped.row, annotation }, body));
 				});
 		})
 		.with({ type: "Row" }, ({ row }) => Do.let("quoted", quoteRow(lvl, row)).in(({ quoted }) => result(EB.Constructors.Row(quoted))))

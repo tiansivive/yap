@@ -310,7 +310,12 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		.with(EB.CtorPatterns.Nu, ({ body, binding }) =>
 			match(binding.mode)
 				.with("strict", () => M.reader.local(_ => EB.open(binding, ctx), schedule.eval(body)))
-				.with("lazy", () => result(NF.Constructors.Nu(binding, NF.Constructors.Closure(ctx, body))))
+				.with("lazy", () =>
+					Do.let(
+						"annotation",
+						M.reader.local(_ => EB.open(binding, ctx), schedule.eval(binding.annotation)),
+					).in(({ annotation }) => result(NF.Constructors.Nu({ ...binding, annotation }, NF.Constructors.Closure(ctx, body)))),
+				)
 				.exhaustive(),
 		)
 		.with({ type: "Abs", binding: { type: "Mu" } }, function* (mu) {
