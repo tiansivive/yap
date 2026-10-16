@@ -7,11 +7,7 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
       "Type ~~ Type",
       "Num ~~ ?1",
       "Type ~~ Type",
-      "Num ~~ ?2",
-      "Num ~~ ?3",
       "Num ~~ Num",
-      "Num ~~ ?4",
-      "1 ~~ ?5",
     ],
     "term": "{
   let Pair
@@ -46,12 +42,8 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "Num ~~ ?2",
-      "String ~~ ?3",
       "Num ~~ Num",
-      "Num ~~ ?4",
       "String ~~ String",
-      "String ~~ ?5",
     ],
     "term": "{
   let Pair

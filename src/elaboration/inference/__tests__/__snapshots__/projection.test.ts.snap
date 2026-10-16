@@ -4,8 +4,6 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 1`] = `
 {
   "displays": {
     "constraints": [
-      "Num ~~ ?1",
-      "Num ~~ ?2",
       "Schema [ x: Num, y: Num ] ~~ Schema [ x: Num, y: Num ]",
     ],
     "term": "(νstrict [] . Struct [ x: 1, y: 2 ]).x",
@@ -64,12 +62,8 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "Num ~~ ?2",
-      "String ~~ ?3",
       "Num ~~ Num",
-      "Num ~~ ?4",
       "String ~~ String",
-      "String ~~ ?5",
       "Schema [ fst: Num, snd: String ] ~~ Schema [ fst: Num, snd: String ]",
     ],
     "term": "{

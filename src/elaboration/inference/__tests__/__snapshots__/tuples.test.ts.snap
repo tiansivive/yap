@@ -3,10 +3,7 @@
 exports[`inference: tuple > {1, 2} 1`] = `
 {
   "displays": {
-    "constraints": [
-      "Num ~~ ?1",
-      "Num ~~ ?2",
-    ],
+    "constraints": [],
     "term": "νstrict [] . Struct [ 0: 1, 1: 2 ]",
     "type": "Schema [ 0: Num, 1: Num ]",
   },

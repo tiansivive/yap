@@ -3,9 +3,7 @@
 exports[`inference: injection > { { x: 1 } | x = 2 } 1`] = `
 {
   "displays": {
-    "constraints": [
-      "Num ~~ ?1",
-    ],
+    "constraints": [],
     "term": "{ νstrict [] . Struct [ x: 1 ] | x = 2 }",
     "type": "Schema [ x: Num ]",
   },
@@ -15,9 +13,7 @@ exports[`inference: injection > { { x: 1 } | x = 2 } 1`] = `
 exports[`inference: injection > { { x: 1 } | y = 2 } 1`] = `
 {
   "displays": {
-    "constraints": [
-      "Num ~~ ?1",
-    ],
+    "constraints": [],
     "term": "{ νstrict [] . Struct [ x: 1 ] | y = 2 }",
     "type": "Schema [ y: Num, x: Num ]",
   },
