@@ -15,6 +15,7 @@ const ctx: EB.Context = {
 	labels: {},
 	sigma: {},
 	record: {},
+	local: [],
 	imports: {},
 	ffi: {},
 	trace: [],

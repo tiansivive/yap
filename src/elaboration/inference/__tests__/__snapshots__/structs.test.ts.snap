@@ -1,15 +1,13 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Inference: Structs > dependent structs > dependent field referring to later field: { y: :x + 2, x: 1 } 1`] = `
+exports[`Inference: Structs > dependent structs > dependent field referring to later field: { y: $x + 2, x: 1 } 1`] = `
 {
   "displays": {
     "constraints": [
-      "Num ~~ ?2",
-      "?2 ~~ Num",
+      "?1 ~~ Num",
       "Num ~~ Num",
-      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?1",
     ],
-    "term": "Struct [ y: FFI.$add :x 2, x: 1 ]",
+    "term": "νstrict [ x: 1 ] . Struct [ y: FFI.$add $x 2, x: 1 ]",
     "type": "Schema
   [ y: <ω> Num [| λ(r: Num) ->
       (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |],
@@ -18,16 +16,14 @@ exports[`Inference: Structs > dependent structs > dependent field referring to l
 }
 `;
 
-exports[`Inference: Structs > dependent structs > fields depending on previous fields: { x: 1, y: :x + 2 } 1`] = `
+exports[`Inference: Structs > dependent structs > fields depending on previous fields: { x: 1, y: $x + 2 } 1`] = `
 {
   "displays": {
     "constraints": [
-      "?1 ~~ Num",
       "Num ~~ Num",
-      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?2",
-      "Num ~~ ?1",
+      "Num ~~ Num",
     ],
-    "term": "Struct [ x: 1, y: FFI.$add :x 2 ]",
+    "term": "νstrict [ x: 1 ] . Struct [ x: 1, y: FFI.$add $x 2 ]",
     "type": "Schema
   [ x: Num,
     y: <ω> Num [| λ(r: Num) ->
@@ -36,51 +32,22 @@ exports[`Inference: Structs > dependent structs > fields depending on previous f
 }
 `;
 
-exports[`Inference: Structs > dependent structs > mutually dependent fields: { a: :b + 1, b: :a + 1 } 1`] = `
+exports[`Inference: Structs > dependent structs > nested dependent fields: { point: { x: 1, y: 2 }, halved: { a: $point.x / 2, b: $point.y / 2 } } 1`] = `
 {
   "displays": {
     "constraints": [
-      "?1 ~~ Num",
+      "Schema [ x: Num, y: Num ] ~~ Schema [ x: Num, y: Num ]",
       "Num ~~ Num",
-      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?2",
-      "?2 ~~ Num",
       "Num ~~ Num",
-      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?1",
+      "Schema [ x: Num, y: Num ] ~~ Schema [ x: Num, y: Num ]",
+      "Num ~~ Num",
+      "Num ~~ Num",
     ],
-    "term": "Struct [ a: FFI.$add :b 1, b: FFI.$add :a 1 ]",
-    "type": "Schema
-  [ a: <ω> Num [| λ(r: Num) ->
-      (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |],
-    b: <ω> Num [| λ(r: Num) ->
-      (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ]",
-  },
-}
-`;
-
-exports[`Inference: Structs > dependent structs > nested dependent fields: { point: { x: 1, y: 2 }, halved: { a: :point.x / 2, b: :point.y / 2 } } 1`] = `
-{
-  "displays": {
-    "constraints": [
-      "Schema [ y: ?5 | ?6 ] ~~ ?1",
-      "?5 ~~ Num",
-      "Num ~~ Num",
-      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$div x y) -| Γ: r; y; x) |] ~~ ?4",
-      "Schema [ x: ?7 | ?8 ] ~~ ?1",
-      "?7 ~~ Num",
-      "Num ~~ Num",
-      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$div x y) -| Γ: r; y; x) |] ~~ ?3",
-      "Schema
-  [ a: <ω> Num [| λ(r: Num) ->
-      (closure: FFI.$eq r (FFI.$div x y) -| Γ: r; y; x) |],
-    b: <ω> Num [| λ(r: Num) ->
-      (closure: FFI.$eq r (FFI.$div x y) -| Γ: r; y; x) |] ] ~~ ?2",
-      "Num ~~ ?10",
-      "Num ~~ ?9",
-      "Schema [ x: Num, y: Num ] ~~ ?1",
-    ],
-    "term": "Struct
-  [ point: Struct [ x: 1, y: 2 ],
-    halved: Struct [ a: FFI.$div (:point).x 2, b: FFI.$div (:point).y 2 ] ]",
+    "term": "νstrict [ point: νstrict [] . Struct [ x: 1, y: 2 ] ] .
+  Struct
+    [ point: νstrict [] . Struct [ x: 1, y: 2 ],
+      halved: νstrict [] .
+        Struct [ a: FFI.$div ($point).x 2, b: FFI.$div ($point).y 2 ] ]",
     "type": "Schema
   [ point: Schema [ x: Num, y: Num ],
     halved: Schema
@@ -92,25 +59,20 @@ exports[`Inference: Structs > dependent structs > nested dependent fields: { poi
 }
 `;
 
-exports[`Inference: Structs > dependent structs > nested shadowing dependencies: { overriden: 1, foo: { inner: :overriden }, bar: { overriden: "hello", inner: :overriden } 1`] = `
+exports[`Inference: Structs > dependent structs > nested shadowing dependencies: { overriden: 1, foo: { inner: $overriden }, bar: { overriden: "hello", inner: $overriden } 1`] = `
 {
   "displays": {
-    "constraints": [
-      "?4 ~~ ?5",
-      "String ~~ ?4",
-      "Schema [ overriden: String, inner: ?4 ] ~~ ?3",
-      "?1 ~~ ?6",
-      "Schema [ inner: ?1 ] ~~ ?2",
-      "Num ~~ ?1",
-    ],
-    "term": "Struct
-  [ overriden: 1,
-    foo: Struct [ inner: :overriden ],
-    bar: Struct [ overriden: "hello", inner: :overriden ] ]",
+    "constraints": [],
+    "term": "νstrict [ overriden: 1 ] .
+  Struct
+    [ overriden: 1,
+      foo: νstrict [] . Struct [ inner: $overriden ],
+      bar: νstrict [ overriden: "hello" ] .
+        Struct [ overriden: "hello", inner: $overriden ] ]",
     "type": "Schema
   [ overriden: Num,
-    foo: Schema [ inner: ?1 ],
-    bar: Schema [ overriden: String, inner: ?4 ] ]",
+    foo: Schema [ inner: Num ],
+    bar: Schema [ overriden: String, inner: String ] ]",
   },
 }
 `;
@@ -118,11 +80,8 @@ exports[`Inference: Structs > dependent structs > nested shadowing dependencies:
 exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 1`] = `
 {
   "displays": {
-    "constraints": [
-      "String ~~ ?2",
-      "Num ~~ ?1",
-    ],
-    "term": "Struct [ x: 1, y: "hello" ]",
+    "constraints": [],
+    "term": "νstrict [] . Struct [ x: 1, y: "hello" ]",
     "type": "Schema [ x: Num, y: String ]",
   },
 }
@@ -131,13 +90,8 @@ exports[`Inference: Structs > multiple fields: { x: 1, y: "hello" } 1`] = `
 exports[`Inference: Structs > nested structs: { point: { x: 1, y: 2 }, label: "A" } 1`] = `
 {
   "displays": {
-    "constraints": [
-      "String ~~ ?2",
-      "Num ~~ ?4",
-      "Num ~~ ?3",
-      "Schema [ x: Num, y: Num ] ~~ ?1",
-    ],
-    "term": "Struct [ point: Struct [ x: 1, y: 2 ], label: "A" ]",
+    "constraints": [],
+    "term": "νstrict [] . Struct [ point: νstrict [] . Struct [ x: 1, y: 2 ], label: "A" ]",
     "type": "Schema [ point: Schema [ x: Num, y: Num ], label: String ]",
   },
 }
@@ -147,12 +101,10 @@ exports[`Inference: Structs > struct with computed field: { x: 1 + 2, y: "hello"
 {
   "displays": {
     "constraints": [
-      "String ~~ ?2",
       "Num ~~ Num",
       "Num ~~ Num",
-      "<ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |] ~~ ?1",
     ],
-    "term": "Struct [ x: FFI.$add 1 2, y: "hello" ]",
+    "term": "νstrict [] . Struct [ x: FFI.$add 1 2, y: "hello" ]",
     "type": "Schema
   [ x: <ω> Num [| λ(r: Num) ->
       (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |],

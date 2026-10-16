@@ -42,13 +42,18 @@ export type Binder =
 	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }
 	| { type: "Lambda"; variable: string; annotation: Value; icit: Implicitness }
 	| { type: "Mu"; variable: string; annotation: Value; source: string }
-	| { type: "Sigma"; variable: string; annotation: Value };
+	| { type: "Sigma"; variable: string; annotation: Value }
+	| { type: "SigmaV2"; variable: string; annotation: Value }
+	| { type: "Nu"; variable: string; annotation: Value; mode: "strict" | "lazy"; labels: readonly string[]; scoped: EB.Row };
 
 export type Variable =
 	| { type: "Bound"; lvl: number }
 	| { type: "Free"; name: string }
 	| { type: "Label"; name: string }
 	| { type: "Foreign"; name: string }
+	| { type: "DepLabel"; name: string; lvl: number; annotation: Value }
+	/** `lvl` is a label-stack level (`ctx.local`), not an env level. */
+	| { type: "NuLabel"; name: string; lvl: number; annotation: Value }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
@@ -79,6 +84,16 @@ export const Constructors = {
 			closure,
 		}) as Value & { type: "Abs"; binder: { type: "Pi" } },
 	Sigma: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Sigma", variable, annotation }, closure }),
+	SigmaV2: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "SigmaV2", variable, annotation }, closure }),
+	Nu: (
+		{ variable, mode, labels, scoped, annotation }: Pick<Extract<Binder, { type: "Nu" }>, "variable" | "mode" | "labels" | "scoped" | "annotation">,
+		closure: Closure,
+	) =>
+		mk({
+			type: "Abs" as const,
+			binder: { type: "Nu", variable, mode, labels, scoped, annotation },
+			closure,
+		}),
 	Mu: (variable: string, source: string, annotation: Value, closure: Closure): Value =>
 		mk({
 			type: "Abs" as const,
@@ -152,6 +167,10 @@ export const Constructors = {
 	Inj: (base: Value, label: string, injected: Value): Value => mk({ type: "Inj", base, label, injected }),
 	StuckMatch: (closure: Closure, scrutinee: Value): Value => Constructors.Neutral("Blocked", Constructors.Match(closure, scrutinee)),
 	StuckProj: (base: Value, label: string): Value => Constructors.Neutral("Blocked", Constructors.Proj(base, label)),
+	DepLabel: (name: string, lvl: number, annotation: Value): Value =>
+		Constructors.Neutral("Symbolic", Constructors.Var({ type: "DepLabel", name, lvl, annotation })),
+	NuLabel: (name: string, lvl: number, annotation: Value): Value =>
+		Constructors.Neutral("Symbolic", Constructors.Var({ type: "NuLabel", name, lvl, annotation })),
 	StuckInj: (base: Value, label: string, injected: Value): Value => Constructors.Neutral("Blocked", Constructors.Inj(base, label, injected)),
 	Modal: (value: Value, modalities: Modalities): Value =>
 		mk({
@@ -170,6 +189,17 @@ export const Type: Value = mk({
 export const Row: Value = mk({
 	type: "Lit",
 	value: { type: "Atom", value: "Row" },
+});
+
+/*
+ * Occupies a slot that exists only so the slot has a name. A Sigma's annotation row is opened
+ * to make sibling labels resolvable, not to say anything about them, so its entries carry no
+ * information and nothing may read one. It is deliberately conspicuous: a check that meets it
+ * should fail rather than quietly succeed.
+ */
+export const Irrelevant: Value = mk({
+	type: "Lit",
+	value: { type: "Atom", value: "Irrelevant" },
 });
 
 export const Indexed: Value = mk({
@@ -198,6 +228,8 @@ export const Patterns = {
 	Flex: { type: "Var", variable: { type: "Meta" } } as const,
 	Free: { type: "Var", variable: { type: "Free" } } as const,
 	Label: { type: "Var", variable: { type: "Label" } } as const,
+	DepLabel: { type: "Var", variable: { type: "DepLabel" } } as const,
+	NuLabel: { type: "Var", variable: { type: "NuLabel" } } as const,
 
 	Lit: { type: "Lit" } as const,
 	Atom: { type: "Lit", value: { type: "Atom" } } as const,
@@ -231,9 +263,12 @@ export const Patterns = {
 	App: { type: "App" } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,
 	Sigma: { type: "Abs", binder: { type: "Sigma" } } as const,
+	SigmaV2: { type: "Abs", binder: { type: "SigmaV2" } } as const,
 	Lambda: { type: "Abs", binder: { type: "Lambda" } } as const,
 	Mu: { type: "Abs", binder: { type: "Mu" } } as const,
+	Nu: { type: "Abs", binder: { type: "Nu" } } as const,
 	Row: { type: "Row" } as const,
+	Irrelevant: { type: "Lit", value: { type: "Atom", value: "Irrelevant" } } as const,
 	Modal: { type: "Modal" } as const,
 
 	Recursive: {

@@ -142,11 +142,6 @@
 			"count": 2
 		}
 	},
-	"src/GRAM/passes/resolve-labels.ts": {
-		"@typescript-eslint/no-base-to-string": {
-			"count": 3
-		}
-	},
 	"src/GRAM/pipeline/configure.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 1

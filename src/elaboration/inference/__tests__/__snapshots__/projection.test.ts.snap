@@ -4,11 +4,9 @@ exports[`inference: projection > ( { x: 1, y: 2 } ).x 1`] = `
 {
   "displays": {
     "constraints": [
-      "Num ~~ ?2",
-      "Num ~~ ?1",
       "Schema [ x: Num, y: Num ] ~~ Schema [ x: Num, y: Num ]",
     ],
-    "term": "(Struct [ x: 1, y: 2 ]).x",
+    "term": "(νstrict [] . Struct [ x: 1, y: 2 ]).x",
     "type": "Num",
   },
 }
@@ -60,28 +58,25 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       "Type ~~ Type",
       "Type ~~ Type",
       "?1 ~~ L1",
+      "L1 ~~ ?1",
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "Type ~~ Type",
-      "Type ~~ Type",
-      "String ~~ ?4",
-      "Num ~~ ?3",
-      "String ~~ String",
-      "String ~~ ?6",
       "Num ~~ Num",
-      "Num ~~ ?5",
+      "String ~~ String",
+      "Schema [ fst: Num, snd: String ] ~~ Schema [ fst: Num, snd: String ]",
     ],
     "term": "{
   let Pair
     : Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
     = λ(a: Type) ->
       λ(p: Π(t1: a) -> Type) ->
-        Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
+        Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+          Schema [ fst: a, snd: p &fst ];
   let p
-    : Σ($sig: [ snd: String, fst: Num ]) .
-      (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p; a; Pair)
-    = Struct [ snd: "hello", fst: 1 ];
+    : Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+      (closure: Schema [ fst: a, snd: p &fst ] -| Γ: $sig; p; a; Pair)
+    = νstrict [] . Struct [ fst: 1, snd: "hello" ];
   return (p).snd;
 }",
     "type": "String",

@@ -28,7 +28,7 @@ let vec3: Vec 3 Num = { 30, vec2 };
 
 	test("dependent records (sigma types)", () => {
 		const result = runScript(`
-let DependentPair: Type = { fst: Type, snd: :fst };
+let DependentPair: Type = { fst: Type, snd: &fst };
 let numPair: DependentPair = { fst: Num, snd: 42 };
 let strPair: DependentPair = { fst: String, snd: "hello" };
 		`);
@@ -38,7 +38,7 @@ let strPair: DependentPair = { fst: String, snd: "hello" };
 	test("generic dependent pairs", () => {
 		const result = runScript(`
 let Pair: (a: Type) -> (p: a -> Type) -> Type
-    = \\a p -> { fst: a, snd: p :fst };
+    = \\a p -> { fst: a, snd: p &fst };
 let exampleP1: Pair Num (\\n -> String) = { fst: 42, snd: "hello" };
 let exampleP2: Pair Bool (\\b -> match b | true -> Num | false -> String)
     = { fst: true, snd: 100 };

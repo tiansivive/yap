@@ -1,0 +1,737 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`sigma and nu > 01 struct types > 001 plain struct type 1`] = `
+"source     { a: Num, b: String }
+elaborated ν($nu: [ a: Irrelevant, b: Irrelevant ]) . Struct [ a: Num, b: String ]
+type       Schema [ a: Type, b: Type ]
+normal     ν($nu: [ a: Irrelevant, b: Irrelevant ]) ->
+             (closure: Struct [ a: Num, b: String ] -| Γ: $nu)
+readback   ν($nu: [ a: Irrelevant, b: Irrelevant ]) . Struct [ a: Num, b: String ]"
+`;
+
+exports[`sigma and nu > 01 struct types > 002 empty struct type 1`] = `
+"source     {}
+elaborated ν($nu: []) . Struct []
+type       Schema []
+normal     ν($nu: []) -> (closure: Struct [] -| Γ: $nu)
+readback   ν($nu: []) . Struct []"
+`;
+
+exports[`sigma and nu > 01 struct types > 003 nested struct type 1`] = `
+"source     { a: Num, b: { c: String } }
+elaborated ν($nu: [ a: Irrelevant, b: Irrelevant ]) .
+             Struct [ a: Num, b: ν($nu: [ c: Irrelevant ]) . Struct [ c: String ] ]
+type       Schema [ a: Type, b: Schema [ c: Type ] ]
+normal     ν($nu: [ a: Irrelevant, b: Irrelevant ]) ->
+             (closure: Struct
+               [ a: Num, b: ν($nu: [ c: Irrelevant ]) . Struct [ c: String ] ] -| Γ: $nu)
+readback   ν($nu: [ a: Irrelevant, b: Irrelevant ]) .
+             Struct [ a: Num, b: ν($nu: [ c: Irrelevant ]) . Struct [ c: String ] ]"
+`;
+
+exports[`sigma and nu > 02 struct values > 004 plain struct value 1`] = `
+"source     { a: 1, b: "x" }
+elaborated ν($nu: [ a: Irrelevant, b: Irrelevant ]) . Struct [ a: 1, b: "x" ]
+type       Schema [ a: Num, b: String ]
+normal     ν($nu: [ a: Irrelevant, b: Irrelevant ]) ->
+             (closure: Struct [ a: 1, b: "x" ] -| Γ: $nu)
+readback   ν($nu: [ a: Irrelevant, b: Irrelevant ]) . Struct [ a: 1, b: "x" ]"
+`;
+
+exports[`sigma and nu > 02 struct values > 005 projection off a literal 1`] = `
+"source     { a: 1, b: "x" }.a
+elaborated (ν($nu: [ a: Irrelevant, b: Irrelevant ]) . Struct [ a: 1, b: "x" ]).a
+type       Num
+normal     1
+readback   1"
+`;
+
+exports[`sigma and nu > 04 nu-label refs, inference path > 009 $foo in a field value 1`] = `
+"source     { a: 1, b: $a }
+elaborated ν($nu: [ a: Irrelevant, b: Irrelevant ]) . Struct [ a: 1, b: $a ]
+type       Schema [ a: Num, b: Num ]
+normal     ν($nu: [ a: Irrelevant, b: Irrelevant ]) ->
+             (closure: Struct [ a: 1, b: $a ] -| Γ: $nu)
+readback   ν($nu: [ a: Irrelevant, b: Irrelevant ]) . Struct [ a: 1, b: $a ]"
+`;
+
+exports[`sigma and nu > 04 nu-label refs, inference path > 010 $foo self cycle is inert until projected 1`] = `
+"source     { a: $a }
+elaborated ν($nu: [ a: Irrelevant ]) . Struct [ a: $a ]
+type       Schema [ a: ?1 ]
+normal     ν($nu: [ a: Irrelevant ]) -> (closure: Struct [ a: $a ] -| Γ: $nu)
+readback   ν($nu: [ a: Irrelevant ]) . Struct [ a: $a ]"
+`;
+
+exports[`sigma and nu > 05 nu elimination by projection > 011 project a plain field 1`] = `
+"source     { let P: Type = { a: Num }; let p: P = { a: 1 }; return p.a; }
+elaborated {
+             let P : Type = Σ($sig: [ a: Irrelevant ]) . Schema [ a: Num ];
+             let p
+               : Σ($sig: [ a: Irrelevant ]) . (closure: Schema [ a: Num ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant ]) . Struct [ a: 1 ];
+             return (p).a;
+           }
+type       Num
+normal     1
+readback   1"
+`;
+
+exports[`sigma and nu > 05 nu elimination by projection > 012 project the other field 1`] = `
+"source     { let P: Type = { a: Num, b: String }; let p: P = { a: 1, b: "x" }; return p.b; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant ]) . Schema [ a: Num, b: String ];
+             let p
+               : Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+                 (closure: Schema [ a: Num, b: String ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant, b: Irrelevant ]) . Struct [ a: 1, b: "x" ];
+             return (p).b;
+           }
+type       String
+normal     "x"
+readback   "x""
+`;
+
+exports[`sigma and nu > 05 nu elimination by projection > 013 project a dependent field 1`] = `
+"source     { let P: Type = { n: Num, m: &n }; let p: P = { n: 1, m: 1 }; return p.m; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ n: Irrelevant, m: Irrelevant ]) . Schema [ n: Num, m: &n ];
+             let p
+               : Σ($sig: [ n: Irrelevant, m: Irrelevant ]) .
+                 (closure: Schema [ n: Num, m: &n ] -| Γ: $sig; P)
+               = ν($nu: [ n: Irrelevant, m: Irrelevant ]) . Struct [ n: 1, m: 1 ];
+             return (p).m;
+           }
+type       1
+normal     1
+readback   1"
+`;
+
+exports[`sigma and nu > 05 nu elimination by projection > 014 project through a nested nu 1`] = `
+"source     { let Q: Type = { c: Num }; let P: Type = { q: Q }; let p: P = { q: { c: 2 } }; return p.q.c; }
+elaborated {
+             let Q : Type = Σ($sig: [ c: Irrelevant ]) . Schema [ c: Num ];
+             let P : Type = Σ($sig: [ q: Irrelevant ]) . Schema [ q: Q ];
+             let p
+               : Σ($sig: [ q: Irrelevant ]) . (closure: Schema [ q: Q ] -| Γ: $sig; P; Q)
+               = ν($nu: [ q: Irrelevant ]) .
+                 Struct [ q: ν($nu: [ c: Irrelevant ]) . Struct [ c: 2 ] ];
+             return ((p).q).c;
+           }
+type       Num
+normal     2
+readback   2"
+`;
+
+exports[`sigma and nu > 05 nu elimination by projection > 015 arithmetic on a projected field 1`] = `
+"source     { let P: Type = { a: Num }; let p: P = { a: 1 }; return p.a + 1; }
+elaborated {
+             let P : Type = Σ($sig: [ a: Irrelevant ]) . Schema [ a: Num ];
+             let p
+               : Σ($sig: [ a: Irrelevant ]) . (closure: Schema [ a: Num ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant ]) . Struct [ a: 1 ];
+             return FFI.$add (p).a 1;
+           }
+type       <ω> Num [| λ(r: Num) -> (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
+normal     2
+readback   2"
+`;
+
+exports[`sigma and nu > 06 label resolution and scoping > 017 known label resolves 1`] = `
+"source     { let P: Type = { n: Num, m: &n }; return P; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ n: Irrelevant, m: Irrelevant ]) . Schema [ n: Num, m: &n ];
+             return P;
+           }
+type       Type
+normal     Σ($sig: [ n: Irrelevant, m: Irrelevant ]) .
+             (closure: Schema [ n: Num, m: &n ] -| Γ: $sig; P)
+readback   Σ($sig: [ n: Irrelevant, m: Irrelevant ]) . Schema [ n: Num, m: ($sig).n ]"
+`;
+
+exports[`sigma and nu > 06 label resolution and scoping > 018 inner scope reaches outward 1`] = `
+"source     { let P: Type = { a: Num, b: { c: &a } }; return P; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+                 Schema [ a: Num, b: Σ($sig: [ c: Irrelevant ]) . Schema [ c: &a ] ];
+             return P;
+           }
+type       Type
+normal     Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+             (closure: Schema
+               [ a: Num, b: Σ($sig: [ c: Irrelevant ]) . Schema [ c: &a ] ] -| Γ: $sig; P)
+readback   Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+             Schema [ a: Num, b: Σ($sig: [ c: Irrelevant ]) . Schema [ c: ($sig).a ] ]"
+`;
+
+exports[`sigma and nu > 06 label resolution and scoping > 019 inner shadows on its own label 1`] = `
+"source     { let P: Type = { a: Num, b: { a: String, c: &a } }; return P; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+                 Schema
+                   [ a: Num,
+                     b: Σ($sig: [ a: Irrelevant, c: Irrelevant ]) .
+                       Schema [ a: String, c: &a ] ];
+             return P;
+           }
+type       Type
+normal     Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+             (closure: Schema
+               [ a: Num,
+                 b: Σ($sig: [ a: Irrelevant, c: Irrelevant ]) .
+                   Schema [ a: String, c: &a ] ] -| Γ: $sig; P)
+readback   Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+             Schema
+               [ a: Num,
+                 b: Σ($sig: [ a: Irrelevant, c: Irrelevant ]) .
+                   Schema [ a: String, c: ($sig).a ] ]"
+`;
+
+exports[`sigma and nu > 07 nested struct types > 021 type only 1`] = `
+"source     { let Q: Type = { c: Num }; let P: Type = { q: Q }; return P; }
+elaborated {
+             let Q : Type = Σ($sig: [ c: Irrelevant ]) . Schema [ c: Num ];
+             let P : Type = Σ($sig: [ q: Irrelevant ]) . Schema [ q: Q ];
+             return P;
+           }
+type       Type
+normal     Σ($sig: [ q: Irrelevant ]) . (closure: Schema [ q: Q ] -| Γ: $sig; P; Q)
+readback   Σ($sig: [ q: Irrelevant ]) .
+             Schema [ q: Σ($sig: [ c: Irrelevant ]) . Schema [ c: Num ] ]"
+`;
+
+exports[`sigma and nu > 07 nested struct types > 022 inline nested type 1`] = `
+"source     { let P: Type = { q: { c: Num } }; return P; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ q: Irrelevant ]) .
+                 Schema [ q: Σ($sig: [ c: Irrelevant ]) . Schema [ c: Num ] ];
+             return P;
+           }
+type       Type
+normal     Σ($sig: [ q: Irrelevant ]) .
+             (closure: Schema
+               [ q: Σ($sig: [ c: Irrelevant ]) . Schema [ c: Num ] ] -| Γ: $sig; P)
+readback   Σ($sig: [ q: Irrelevant ]) .
+             Schema [ q: Σ($sig: [ c: Irrelevant ]) . Schema [ c: Num ] ]"
+`;
+
+exports[`sigma and nu > 07 nested struct types > 023 value, no projection 1`] = `
+"source     { let Q: Type = { c: Num }; let P: Type = { q: Q }; let p: P = { q: { c: 2 } }; return p; }
+elaborated {
+             let Q : Type = Σ($sig: [ c: Irrelevant ]) . Schema [ c: Num ];
+             let P : Type = Σ($sig: [ q: Irrelevant ]) . Schema [ q: Q ];
+             let p
+               : Σ($sig: [ q: Irrelevant ]) . (closure: Schema [ q: Q ] -| Γ: $sig; P; Q)
+               = ν($nu: [ q: Irrelevant ]) .
+                 Struct [ q: ν($nu: [ c: Irrelevant ]) . Struct [ c: 2 ] ];
+             return p;
+           }
+type       Σ($sig: [ q: Irrelevant ]) . (closure: Schema [ q: Q ] -| Γ: $sig; P; Q)
+normal     ν($nu: [ q: Irrelevant ]) ->
+             (closure: Struct
+               [ q: ν($nu: [ c: Irrelevant ]) . Struct [ c: 2 ] ] -| Γ: $nu; p; P; Q)
+readback   ν($nu: [ q: Irrelevant ]) .
+             Struct [ q: ν($nu: [ c: Irrelevant ]) . Struct [ c: 2 ] ]"
+`;
+
+exports[`sigma and nu > 07 nested struct types > 024 value against inline nested 1`] = `
+"source     { let P: Type = { q: { c: Num } }; let p: P = { q: { c: 2 } }; return p; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ q: Irrelevant ]) .
+                 Schema [ q: Σ($sig: [ c: Irrelevant ]) . Schema [ c: Num ] ];
+             let p
+               : Σ($sig: [ q: Irrelevant ]) .
+                 (closure: Schema
+                   [ q: Σ($sig: [ c: Irrelevant ]) . Schema [ c: Num ] ] -| Γ: $sig; P)
+               = ν($nu: [ q: Irrelevant ]) .
+                 Struct [ q: ν($nu: [ c: Irrelevant ]) . Struct [ c: 2 ] ];
+             return p;
+           }
+type       Σ($sig: [ q: Irrelevant ]) .
+             (closure: Schema
+               [ q: Σ($sig: [ c: Irrelevant ]) . Schema [ c: Num ] ] -| Γ: $sig; P)
+normal     ν($nu: [ q: Irrelevant ]) ->
+             (closure: Struct
+               [ q: ν($nu: [ c: Irrelevant ]) . Struct [ c: 2 ] ] -| Γ: $nu; p; P)
+readback   ν($nu: [ q: Irrelevant ]) .
+             Struct [ q: ν($nu: [ c: Irrelevant ]) . Struct [ c: 2 ] ]"
+`;
+
+exports[`sigma and nu > 07 nested struct types > 025 outer projection only 1`] = `
+"source     { let Q: Type = { c: Num }; let P: Type = { q: Q }; let p: P = { q: { c: 2 } }; return p.q; }
+elaborated {
+             let Q : Type = Σ($sig: [ c: Irrelevant ]) . Schema [ c: Num ];
+             let P : Type = Σ($sig: [ q: Irrelevant ]) . Schema [ q: Q ];
+             let p
+               : Σ($sig: [ q: Irrelevant ]) . (closure: Schema [ q: Q ] -| Γ: $sig; P; Q)
+               = ν($nu: [ q: Irrelevant ]) .
+                 Struct [ q: ν($nu: [ c: Irrelevant ]) . Struct [ c: 2 ] ];
+             return (p).q;
+           }
+type       Σ($sig: [ c: Irrelevant ]) . (closure: Schema [ c: Num ] -| Γ: $sig; Q)
+normal     ν($nu: [ c: Irrelevant ]) -> (closure: Struct [ c: 2 ] -| Γ: $nu; $nu; p; P; Q)
+readback   ν($nu: [ c: Irrelevant ]) . Struct [ c: 2 ]"
+`;
+
+exports[`sigma and nu > 08 schema meets sigma > 026 inferred arg into annotated domain 1`] = `
+"source     { let f = \\(x: { a: Num }) -> x.a; return f { a: 1 }; }
+elaborated {
+             let f
+               : Π(x: Σ($sig: [ a: Irrelevant ]) .
+                 (closure: Schema [ a: Num ] -| Γ: $sig; f)) ->
+                 (closure: Num -| Γ: x; f)
+               = (λ(x: Σ($sig: [ a: Irrelevant ]) . Schema [ a: Num ]) ->
+                 (x).a : Π(x: Σ($sig: [ a: Irrelevant ]) . Schema [ a: Num ]) -> Num);
+             return f (ν($nu: [ a: Irrelevant ]) . Struct [ a: 1 ]);
+           }
+type       Num
+normal     1
+readback   1"
+`;
+
+exports[`sigma and nu > 08 schema meets sigma > 027 annotated arg into inferred domain 1`] = `
+"source     { let P: Type = { a: Num }; let p: P = { a: 1 }; let f = \\x -> x.a; return f p; }
+elaborated {
+             let P : Type = Σ($sig: [ a: Irrelevant ]) . Schema [ a: Num ];
+             let p
+               : Σ($sig: [ a: Irrelevant ]) . (closure: Schema [ a: Num ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant ]) . Struct [ a: 1 ];
+             let f
+               : Π(r: Row) =>
+                 (closure: Π(a: Type) => Π(x: Schema [ a: a | r ]) -> a -| Γ: r; f; p; P)
+               = λ(r: Row) =>
+                 λ(a: Type) =>
+                   (λ(x: Schema [ a: a | r ]) -> (x).a : Π(x: Schema [ a: a | r ]) -> a);
+             return f @[] @Num p;
+           }
+type       Num
+normal     1
+readback   1"
+`;
+
+exports[`sigma and nu > 08 schema meets sigma > 028 annotated value into annotated domain 1`] = `
+"source     { let P: Type = { a: Num }; let p: P = { a: 1 }; let f = \\(x: { a: Num }) -> x.a; return f p; }
+elaborated {
+             let P : Type = Σ($sig: [ a: Irrelevant ]) . Schema [ a: Num ];
+             let p
+               : Σ($sig: [ a: Irrelevant ]) . (closure: Schema [ a: Num ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant ]) . Struct [ a: 1 ];
+             let f
+               : Π(x: Σ($sig: [ a: Irrelevant ]) .
+                 (closure: Schema [ a: Num ] -| Γ: $sig; f; p; P)) ->
+                 (closure: Num -| Γ: x; f; p; P)
+               = (λ(x: Σ($sig: [ a: Irrelevant ]) . Schema [ a: Num ]) ->
+                 (x).a : Π(x: Σ($sig: [ a: Irrelevant ]) . Schema [ a: Num ]) -> Num);
+             return f p;
+           }
+type       Num
+normal     1
+readback   1"
+`;
+
+exports[`sigma and nu > 08 schema meets sigma > 029 inferred value against annotated type 1`] = `
+"source     { let P: Type = { a: Num }; let v = { a: 1 }; let p: P = v; return p; }
+elaborated {
+             let P : Type = Σ($sig: [ a: Irrelevant ]) . Schema [ a: Num ];
+             let v : Schema [ a: Num ] = ν($nu: [ a: Irrelevant ]) . Struct [ a: 1 ];
+             let p
+               : Σ($sig: [ a: Irrelevant ]) . (closure: Schema [ a: Num ] -| Γ: $sig; P)
+               = v;
+             return p;
+           }
+type       Σ($sig: [ a: Irrelevant ]) . (closure: Schema [ a: Num ] -| Γ: $sig; P)
+normal     ν($nu: [ a: Irrelevant ]) -> (closure: Struct [ a: 1 ] -| Γ: $nu; v; P)
+readback   ν($nu: [ a: Irrelevant ]) . Struct [ a: 1 ]"
+`;
+
+exports[`sigma and nu > 09 nu-label, checked path > 030 sibling reference 1`] = `
+"source     { let P: Type = { a: Num, b: Num }; let p: P = { a: 1, b: $a }; return p; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant ]) . Schema [ a: Num, b: Num ];
+             let p
+               : Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+                 (closure: Schema [ a: Num, b: Num ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant, b: Irrelevant ]) . Struct [ a: 1, b: $a ];
+             return p;
+           }
+type       Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+             (closure: Schema [ a: Num, b: Num ] -| Γ: $sig; P)
+normal     ν($nu: [ a: Irrelevant, b: Irrelevant ]) ->
+             (closure: Struct [ a: 1, b: $a ] -| Γ: $nu; p; P)
+readback   ν($nu: [ a: Irrelevant, b: Irrelevant ]) . Struct [ a: 1, b: ($nu).a ]"
+`;
+
+exports[`sigma and nu > 09 nu-label, checked path > 031 sibling then project 1`] = `
+"source     { let P: Type = { a: Num, b: Num }; let p: P = { a: 1, b: $a }; return p.b; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant ]) . Schema [ a: Num, b: Num ];
+             let p
+               : Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+                 (closure: Schema [ a: Num, b: Num ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant, b: Irrelevant ]) . Struct [ a: 1, b: $a ];
+             return (p).b;
+           }
+type       Num
+normal     1
+readback   1"
+`;
+
+exports[`sigma and nu > 09 nu-label, checked path > 032 arithmetic on a sibling 1`] = `
+"source     { let P: Type = { a: Num, b: Num }; let p: P = { a: 1, b: $a + 1 }; return p.b; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant ]) . Schema [ a: Num, b: Num ];
+             let p
+               : Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+                 (closure: Schema [ a: Num, b: Num ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant, b: Irrelevant ]) .
+                 Struct [ a: 1, b: FFI.$add $a 1 ];
+             return (p).b;
+           }
+type       Num
+normal     2
+readback   2"
+`;
+
+exports[`sigma and nu > 09 nu-label, checked path > 033 self cycle 1`] = `
+"source     { let P: Type = { a: Num }; let p: P = { a: $a }; return p; }
+elaborated {
+             let P : Type = Σ($sig: [ a: Irrelevant ]) . Schema [ a: Num ];
+             let p
+               : Σ($sig: [ a: Irrelevant ]) . (closure: Schema [ a: Num ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant ]) . Struct [ a: $a ];
+             return p;
+           }
+type       Σ($sig: [ a: Irrelevant ]) . (closure: Schema [ a: Num ] -| Γ: $sig; P)
+normal     ν($nu: [ a: Irrelevant ]) -> (closure: Struct [ a: $a ] -| Γ: $nu; p; P)
+readback   ν($nu: [ a: Irrelevant ]) . Struct [ a: ($nu).a ]"
+`;
+
+exports[`sigma and nu > 09 nu-label, checked path > 037 forward reference 1`] = `
+"source     { let P: Type = { a: Num, b: Num }; let p: P = { a: $b, b: 2 }; return p.a; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant ]) . Schema [ a: Num, b: Num ];
+             let p
+               : Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+                 (closure: Schema [ a: Num, b: Num ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant, b: Irrelevant ]) . Struct [ a: $b, b: 2 ];
+             return (p).a;
+           }
+type       Num
+normal     2
+readback   2"
+`;
+
+exports[`sigma and nu > 10 dep-label by use position > 038 type position 1`] = `
+"source     { let P: Type = { fst: Num, snd: &fst }; return P; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+                 Schema [ fst: Num, snd: &fst ];
+             return P;
+           }
+type       Type
+normal     Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+             (closure: Schema [ fst: Num, snd: &fst ] -| Γ: $sig; P)
+readback   Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+             Schema [ fst: Num, snd: ($sig).fst ]"
+`;
+
+exports[`sigma and nu > 10 dep-label by use position > 039 refinement position 1`] = `
+"source     { let P: Type = { fst: Num, snd: Num[| \\v -> v > &fst |] }; return P; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+                 Schema [ fst: Num, snd: <ω> Num [| λ(v: Num) -> FFI.$gt v &fst |] ];
+             return P;
+           }
+type       Type
+normal     Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+             (closure: Schema
+               [ fst: Num, snd: <ω> Num [| λ(v: Num) -> FFI.$gt v &fst |] ] -| Γ: $sig; P)
+readback   Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+             Schema [ fst: Num, snd: <ω> Num [| λ(v: Num) -> FFI.$gt v ($sig).fst |] ]"
+`;
+
+exports[`sigma and nu > 11 row extension > 041 extension function 1`] = `
+"source     { let addZ: (r: Row) => { x: Num | r } -> { x: Num, z: Num | r } = \\rec -> { rec | z = 0 }; return addZ; }
+elaborated {
+             let addZ
+               : Π(r: Row) =>
+                 (closure: Π(t1: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) ->
+                   Σ($sig: [ x: Irrelevant, z: Irrelevant ]) .
+                     Schema [ x: Num, z: Num | r ] -| Γ: r)
+               = λ(r: Row) =>
+                 λ(rec: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) ->
+                   { rec | z = 0 };
+             return addZ;
+           }
+type       Π(r: Row) =>
+             (closure: Π(t1: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) ->
+               Σ($sig: [ x: Irrelevant, z: Irrelevant ]) .
+                 Schema [ x: Num, z: Num | r ] -| Γ: r)
+normal     λ(r: Row) =>
+             (closure: λ(rec: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) ->
+               { rec | z = 0 } -| Γ: r; addZ)
+readback   λ(r: Row) =>
+             λ(rec: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) -> { rec | z = 0 }"
+`;
+
+exports[`sigma and nu > 11 row extension > 042 extension applied 1`] = `
+"source     { let addZ: (r: Row) => { x: Num | r } -> { x: Num, z: Num | r } = \\rec -> { rec | z = 0 }; let p = addZ { x: 1 }; return p; }
+elaborated {
+             let addZ
+               : Π(r: Row) =>
+                 (closure: Π(t1: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) ->
+                   Σ($sig: [ x: Irrelevant, z: Irrelevant ]) .
+                     Schema [ x: Num, z: Num | r ] -| Γ: r)
+               = λ(r: Row) =>
+                 λ(rec: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) ->
+                   { rec | z = 0 };
+             let p
+               : Σ($sig: [ x: Irrelevant, z: Irrelevant ]) .
+                 (closure: Schema [ x: Num, z: Num | r ] -| Γ: $sig; t1; r)
+               = addZ @[] (ν($nu: [ x: Irrelevant ]) . Struct [ x: 1 ]);
+             return p;
+           }
+type       Σ($sig: [ x: Irrelevant, z: Irrelevant ]) .
+             (closure: Schema [ x: Num, z: Num | r ] -| Γ: $sig; t1; r)
+normal     ν($nu: [ z: Irrelevant, x: Irrelevant ]) ->
+             (closure: Struct [ z: 0, x: 1 ] -| Γ: $nu; p; addZ)
+readback   ν($nu: [ z: Irrelevant, x: Irrelevant ]) . Struct [ z: 0, x: 1 ]"
+`;
+
+exports[`sigma and nu > 11 row extension > 043 open row annotation keeps its tail 1`] = `
+"source     { let f: (r: Row) => { x: Num | r } -> Num = \\rec -> rec.x; return f; }
+elaborated {
+             let f
+               : Π(r: Row) =>
+                 (closure: Π(t1: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) ->
+                   Num -| Γ: r)
+               = λ(r: Row) =>
+                 λ(rec: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) -> (rec).x;
+             return f;
+           }
+type       Π(r: Row) =>
+             (closure: Π(t1: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) ->
+               Num -| Γ: r)
+normal     λ(r: Row) =>
+             (closure: λ(rec: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) ->
+               (rec).x -| Γ: r; f)
+readback   λ(r: Row) =>
+             λ(rec: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) -> (rec).x"
+`;
+
+exports[`sigma and nu > 12 dependent rejection > 045 amp match must pass 1`] = `
+"source     { let P: Type = { fst: Num, snd: &fst }; let p: P = { fst: 1, snd: 1 }; return p; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+                 Schema [ fst: Num, snd: &fst ];
+             let p
+               : Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+                 (closure: Schema [ fst: Num, snd: &fst ] -| Γ: $sig; P)
+               = ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) . Struct [ fst: 1, snd: 1 ];
+             return p;
+           }
+type       Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+             (closure: Schema [ fst: Num, snd: &fst ] -| Γ: $sig; P)
+normal     ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) ->
+             (closure: Struct [ fst: 1, snd: 1 ] -| Γ: $nu; p; P)
+readback   ν($nu: [ fst: Irrelevant, snd: Irrelevant ]) . Struct [ fst: 1, snd: 1 ]"
+`;
+
+exports[`sigma and nu > 13 annotated bindings > 047 value against struct type 1`] = `
+"source     { let P: Type = { a: Num }; let p: P = { a: 1 }; return p; }
+elaborated {
+             let P : Type = Σ($sig: [ a: Irrelevant ]) . Schema [ a: Num ];
+             let p
+               : Σ($sig: [ a: Irrelevant ]) . (closure: Schema [ a: Num ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant ]) . Struct [ a: 1 ];
+             return p;
+           }
+type       Σ($sig: [ a: Irrelevant ]) . (closure: Schema [ a: Num ] -| Γ: $sig; P)
+normal     ν($nu: [ a: Irrelevant ]) -> (closure: Struct [ a: 1 ] -| Γ: $nu; p; P)
+readback   ν($nu: [ a: Irrelevant ]) . Struct [ a: 1 ]"
+`;
+
+exports[`sigma and nu > 13 annotated bindings > 048 projection off annotated 1`] = `
+"source     { let P: Type = { a: Num }; let p: P = { a: 1 }; return p.a; }
+elaborated {
+             let P : Type = Σ($sig: [ a: Irrelevant ]) . Schema [ a: Num ];
+             let p
+               : Σ($sig: [ a: Irrelevant ]) . (closure: Schema [ a: Num ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant ]) . Struct [ a: 1 ];
+             return (p).a;
+           }
+type       Num
+normal     1
+readback   1"
+`;
+
+exports[`sigma and nu > 13 annotated bindings > 049 dependent singleton 1`] = `
+"source     { let P: Type = { n: Num, m: &n }; let p: P = { n: 1, m: 1 }; return p; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ n: Irrelevant, m: Irrelevant ]) . Schema [ n: Num, m: &n ];
+             let p
+               : Σ($sig: [ n: Irrelevant, m: Irrelevant ]) .
+                 (closure: Schema [ n: Num, m: &n ] -| Γ: $sig; P)
+               = ν($nu: [ n: Irrelevant, m: Irrelevant ]) . Struct [ n: 1, m: 1 ];
+             return p;
+           }
+type       Σ($sig: [ n: Irrelevant, m: Irrelevant ]) .
+             (closure: Schema [ n: Num, m: &n ] -| Γ: $sig; P)
+normal     ν($nu: [ n: Irrelevant, m: Irrelevant ]) ->
+             (closure: Struct [ n: 1, m: 1 ] -| Γ: $nu; p; P)
+readback   ν($nu: [ n: Irrelevant, m: Irrelevant ]) . Struct [ n: 1, m: 1 ]"
+`;
+
+exports[`sigma and nu > 15 chained dependent references > 076 two links, type only 1`] = `
+"source     { let P: Type = { a: Num, b: &a, c: &b }; return P; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+                 Schema [ a: Num, b: &a, c: &b ];
+             return P;
+           }
+type       Type
+normal     Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+             (closure: Schema [ a: Num, b: &a, c: &b ] -| Γ: $sig; P)
+readback   Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+             Schema [ a: Num, b: ($sig).a, c: ($sig).b ]"
+`;
+
+exports[`sigma and nu > 15 chained dependent references > 077 two links, value accepted 1`] = `
+"source     { let P: Type = { a: Num, b: &a, c: &b }; let p: P = { a: 1, b: 1, c: 1 }; return p; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+                 Schema [ a: Num, b: &a, c: &b ];
+             let p
+               : Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+                 (closure: Schema [ a: Num, b: &a, c: &b ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+                 Struct [ a: 1, b: 1, c: 1 ];
+             return p;
+           }
+type       Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+             (closure: Schema [ a: Num, b: &a, c: &b ] -| Γ: $sig; P)
+normal     ν($nu: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) ->
+             (closure: Struct [ a: 1, b: 1, c: 1 ] -| Γ: $nu; p; P)
+readback   ν($nu: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+             Struct [ a: 1, b: 1, c: 1 ]"
+`;
+
+exports[`sigma and nu > 15 chained dependent references > 080 project through the chain 1`] = `
+"source     { let P: Type = { a: Num, b: &a, c: &b }; let p: P = { a: 1, b: 1, c: 1 }; return p.c; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+                 Schema [ a: Num, b: &a, c: &b ];
+             let p
+               : Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+                 (closure: Schema [ a: Num, b: &a, c: &b ] -| Γ: $sig; P)
+               = ν($nu: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+                 Struct [ a: 1, b: 1, c: 1 ];
+             return (p).c;
+           }
+type       1
+normal     1
+readback   1"
+`;
+
+exports[`sigma and nu > 15 chained dependent references > 082 three links 1`] = `
+"source     { let P: Type = { a: Num, b: &a, c: &b, d: &c }; return P; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant, d: Irrelevant ]) .
+                 Schema [ a: Num, b: &a, c: &b, d: &c ];
+             return P;
+           }
+type       Type
+normal     Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant, d: Irrelevant ]) .
+             (closure: Schema [ a: Num, b: &a, c: &b, d: &c ] -| Γ: $sig; P)
+readback   Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant, d: Irrelevant ]) .
+             Schema [ a: Num, b: ($sig).a, c: ($sig).b, d: ($sig).c ]"
+`;
+
+exports[`sigma and nu > 15 chained dependent references > 084 refinement carries the chain instead 1`] = `
+"source     { let P: Type = { a: Num, b: Num[| \\v -> v == &a |], c: Num[| \\v -> v > &b |] }; return P; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+                 Schema
+                   [ a: Num,
+                     b: <ω> Num [| λ(v: Num) -> FFI.$eq v &a |],
+                     c: <ω> Num [| λ(v: Num) -> FFI.$gt v &b |] ];
+             return P;
+           }
+type       Type
+normal     Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+             (closure: Schema
+               [ a: Num,
+                 b: <ω> Num [| λ(v: Num) -> FFI.$eq v &a |],
+                 c: <ω> Num [| λ(v: Num) -> FFI.$gt v &b |] ] -| Γ: $sig; P)
+readback   Σ($sig: [ a: Irrelevant, b: Irrelevant, c: Irrelevant ]) .
+             Schema
+               [ a: Num,
+                 b: <ω> Num [| λ(v: Num) -> FFI.$eq v ($sig).a |],
+                 c: <ω> Num [| λ(v: Num) -> FFI.$gt v ($sig).b |] ]"
+`;
+
+exports[`sigma and nu > 15 chained dependent references > 085 abstract scrutinee keeps the projection stuck 1`] = `
+"source     { let P: Type = { a: Num, b: &a }; let f = \\(r: P) -> r.b; return f; }
+elaborated {
+             let P
+               : Type
+               = Σ($sig: [ a: Irrelevant, b: Irrelevant ]) . Schema [ a: Num, b: &a ];
+             let f
+               : Π(r: Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+                 (closure: Schema [ a: Num, b: &a ] -| Γ: $sig; P)) ->
+                 (closure: (r).a -| Γ: r; f; P)
+               = (λ(r: P) -> (r).b : Π(r: Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+                 Schema [ a: Num, b: ($sig).a ]) ->
+                 (r).a);
+             return f;
+           }
+type       Π(r: Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+             (closure: Schema [ a: Num, b: &a ] -| Γ: $sig; P)) ->
+             (closure: (r).a -| Γ: r; f; P)
+normal     λ(r: Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+             (closure: Schema [ a: Num, b: &a ] -| Γ: $sig; P)) ->
+             (closure: (r).b -| Γ: r; f; P)
+readback   λ(r: Σ($sig: [ a: Irrelevant, b: Irrelevant ]) .
+             Schema [ a: Num, b: ($sig).a ]) ->
+             (r).b"
+`;

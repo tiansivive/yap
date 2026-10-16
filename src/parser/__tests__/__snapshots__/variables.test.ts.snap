@@ -1,5 +1,87 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`parser: variables > dep-label in struct field: { n: 1, vec: &n } 1`] = `
+{
+  "row": {
+    "label": "n",
+    "row": {
+      "label": "vec",
+      "row": {
+        "type": "empty",
+      },
+      "type": "extension",
+      "value": {
+        "type": "var",
+        "variable": {
+          "type": "dep-label",
+          "value": "n",
+        },
+      },
+    },
+    "type": "extension",
+    "value": {
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "struct",
+}
+`;
+
+exports[`parser: variables > dep-label: &foo 1`] = `
+{
+  "type": "var",
+  "variable": {
+    "type": "dep-label",
+    "value": "foo",
+  },
+}
+`;
+
+exports[`parser: variables > nu-label in struct field: { a: 1, b: $a } 1`] = `
+{
+  "row": {
+    "label": "a",
+    "row": {
+      "label": "b",
+      "row": {
+        "type": "empty",
+      },
+      "type": "extension",
+      "value": {
+        "type": "var",
+        "variable": {
+          "type": "nu-label",
+          "value": "a",
+        },
+      },
+    },
+    "type": "extension",
+    "value": {
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+  },
+  "type": "struct",
+}
+`;
+
+exports[`parser: variables > nu-label: $foo 1`] = `
+{
+  "type": "var",
+  "variable": {
+    "type": "nu-label",
+    "value": "foo",
+  },
+}
+`;
+
 exports[`parser: variables > variable: x 1`] = `
 {
   "type": "var",

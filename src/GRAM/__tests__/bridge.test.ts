@@ -3,6 +3,7 @@ import * as E from "fp-ts/Either";
 import { pipe } from "fp-ts/function";
 
 import * as EB from "@yap/elaboration";
+import * as NF from "@yap/elaboration/normalization";
 import * as GRAM from "../index";
 import { interpret } from "../../lowering/interpret";
 import { resetId } from "../graph";
@@ -103,6 +104,20 @@ describe("GRAM Bridge: Phase 1 — leaves and structural ops", () => {
 		expect(readsRecord).toBe(true);
 	});
 
+	it("Nu fields reach MIR through their resolved label", () => {
+		const term = EB.DSL.nu([
+			{ label: "x", value: EB.DSL.num(1) },
+			{ label: "y", value: EB.DSL.Labels.nu("x") },
+		]);
+		expect(via(term)).toEqual({ x: 1, y: 1 });
+	});
+
+	it("guarded Nu recursion reaches MIR through fbip", () => {
+		const record = EB.DSL.nu([{ label: "loop", value: EB.DSL.lambda("n", EB.DSL.Labels.nu("loop"), EB.DSL.type("Num")) }]);
+		const term = EB.DSL.app(EB.DSL.proj("loop", record), EB.DSL.num(0));
+		expect(via(term)).toEqual(expect.any(Object));
+	});
+
 	it("let x = 42 in x", () => {
 		const term = EB.mk({
 			type: "Abs",
@@ -126,6 +141,14 @@ describe("GRAM Bridge: Phase 1 — leaves and structural ops", () => {
 		expect(erased).toMatchObject({ alloc: { debug: { erasure: { tag: "mu", source: "Peano" } } } });
 		expect(display.module(mod)).toContain('let Peano1 = v0  // {"erasure":{"tag":"mu","source":"Peano"}}');
 		expect(interpret(mod)).toBeNull();
+	});
+
+	it("erases SigmaV2 with debug provenance", () => {
+		const label = EB.Constructors.Var(EB.Constructors.Vars.DepLabel("x", 0, NF.Type));
+		const mod = bridge(EB.Constructors.SigmaV2("$sig", EB.DSL.type("Row"), label));
+		const erased = mod.functions[0].blocks.flatMap(block => block.instrs).find(instr => instr.type === "Alloc" && instr.alloc.debug?.erasure !== undefined);
+
+		expect(erased).toMatchObject({ alloc: { debug: { erasure: { tag: "sigma:v2", source: "$sig" } } } });
 	});
 
 	it("snapshot: struct { x: 1 }", () => {

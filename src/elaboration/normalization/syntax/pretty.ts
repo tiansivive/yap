@@ -41,6 +41,12 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 				.with({ type: "Foreign" }, function* ({ name }) {
 					return `FFI.${name}`;
 				})
+				.with({ type: "DepLabel" }, function* ({ name, lvl }) {
+					return `&${name}` + (opts.deBruijn ? `#L${lvl}` : "");
+				})
+				.with({ type: "NuLabel" }, function* ({ name, lvl }) {
+					return `$${name}` + (opts.deBruijn ? `#L${lvl}` : "");
+				})
 				.with({ type: "Meta" }, function* ({ val }) {
 					const entry = (yield* Metas.registry.get())[val];
 					if (entry?.solution) {
@@ -82,15 +88,23 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 				.with({ type: "Sigma" }, function* ({ variable, annotation }) {
 					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
+				.with({ type: "SigmaV2" }, function* ({ variable, annotation }) {
+					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+				})
+				.with({ type: "Nu" }, function* ({ mode, scoped }) {
+					return ["ν", mode, " ", yield* M.reader.local(_ => closure.ctx, EB.Display.doc(EB.Constructors.Row(scoped), opts))] satisfies PP.Doc;
+				})
 				.exhaustive();
 
 			const arrow = match(binder)
 				.with({ type: "Sigma" }, () => ".")
+				.with({ type: "SigmaV2" }, () => ".")
+				.with({ type: "Nu" }, () => ".")
 				.with({ icit: "Implicit" }, () => "=>")
 				.otherwise(() => "->");
 
 			/* The body displays under the closure's own scope: the stored env, plus the binder being introduced. */
-			const scope = binder.type === "Sigma" ? closure.ctx : bound(binder.variable)(closure.ctx);
+			const scope = binder.type === "Sigma" || binder.type === "Nu" ? closure.ctx : bound(binder.variable)(closure.ctx);
 			const body = yield* M.reader.local(_ => scope, EB.Display.doc(closure.term, opts));
 
 			return PP.group([b, " ", arrow, PP.nest(2, [PP.line, PP.closure(body, EB.Display.Env(scope.env))])]);

@@ -29,6 +29,14 @@ const inferFn = (node: Application) =>
 	M.tracer.track({ tag: "src", type: "term", term: node.fn, metadata: { action: "infer", description: "inferring function type" } }, function* () {
 		const inferred = yield* EB.infer(node.fn);
 
+		/* Calling a field of a record under construction demands everything its body reads (OCaml's `let rec` dereference). */
+		yield* match(inferred[0])
+			.with(EB.CtorPatterns.Vars.NuLabel, function* ({ variable }) {
+				const ctx = yield* M.reader.ask();
+				yield* EB.reference(ctx, variable.index, { label: variable.name, applied: true });
+			})
+			.otherwise(function* () {});
+
 		if (node.icit !== "Explicit") {
 			return inferred;
 		}

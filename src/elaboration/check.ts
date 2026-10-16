@@ -9,6 +9,7 @@ import * as Rec from "fp-ts/lib/Record";
 import * as EB from ".";
 import * as NF from "./normalization";
 
+import * as Eff from "@yap/utils/effects";
 import * as M from "./shared/effects";
 
 import * as Src from "@yap/src/index";
@@ -17,6 +18,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as R from "@yap/shared/rows";
 
 import { freshMeta } from "./shared/supply";
+import * as DependentRows from "./inference/dependent-rows";
 
 import _ from "lodash";
 import { extract } from "./inference/rows";
@@ -84,11 +86,33 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				return [EB.Constructors.Schema(r), us] satisfies Result;
 			})
 			.with([{ type: "struct" }, NF.Patterns.Type], function* ([{ row }]) {
-				const [r, us] = yield* Check.row(row, NF.Type, ctx.env.length);
+				const irrelevant = yield* DependentRows.placeholders(row, ctx.env.length);
+				const r = yield* DependentRows.witness(irrelevant);
+				const xtended = (c: EB.Context) => EB.bind(EB.muContext(c), { type: "SigmaV2", variable: "$sig" }, NF.Constructors.Row(r));
 
-				const sigma = EB.Constructors.Sigma("$sig", EB.Constructors.Row(r), EB.Constructors.Schema(r));
-				return [sigma, us] satisfies Result;
-				//return [EB.Constructors.Schema(r), us] satisfies Result;
+				/*
+				 * A struct checked against Type is a type-level position, so muContext must tag the
+				 * enclosing lets — otherwise a self-reference in a field is not flagged and the
+				 * definition never gets its Mu wrap. Variants and rows do this at their own entries.
+				 *
+				 * The window collects the metas standing for sibling values. A dep-label's type is
+				 * only knowable once the row it points into has been elaborated, which is here.
+				 */
+				const [[body, us], labels] = yield* M.windows.within<{ label: string; meta: EB.Meta }>()({ scope: "env", lvl: ctx.env.length }, () =>
+					M.reader.local(xtended, DependentRows.fields(row)),
+				);
+
+				const schema = EB.Constructors.Schema(body);
+
+				yield* M.reader.local(
+					xtended,
+					Eff.traverse(labels, function* ({ label, meta }) {
+						const sibling = yield* NF.normalize(EB.Constructors.Proj(label, schema));
+						yield* M.constrain({ type: "assign", left: sibling, right: NF.Constructors.Flex(meta), lvl: ctx.env.length + 1 });
+					}),
+				);
+
+				return [EB.Constructors.SigmaV2("$sig", EB.Constructors.Row(irrelevant), schema), us] satisfies Result;
 			})
 
 			.with([{ type: "injection" }, NF.Patterns.Type], function* ([inj, ty]) {
@@ -111,6 +135,18 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					lvl: ctx.env.length,
 				});
 				return [EB.Constructors.Struct(r), us] satisfies Result;
+			})
+			.with([{ type: "struct" }, NF.Patterns.SigmaV2], function* ([tm, sig]) {
+				/* The expected row depends on the struct's own values, so the struct is inferred once for them. */
+				const [inferred] = yield* EB.Struct.infer(tm);
+				const values = NF.rowOf(yield* NF.normalize(inferred));
+				assert(values, "Expected a strict struct to normalize to a row");
+
+				const expected = NF.rowOf(yield* NF.apply(sig.binder, sig.closure, NF.Constructors.Row(values)));
+				assert(expected, "Expected the applied SigmaV2 body to contain a row");
+
+				const [binder, checked] = yield* DependentRows.nu(tm.row, () => DependentRows.check(tm.row, expected));
+				return [EB.Constructors.Nu(binder, EB.Constructors.Struct(checked.term)), checked.usages] satisfies Result;
 			})
 			.with([{ type: "struct" }, NF.Patterns.Schema], function* ([tm, val]) {
 				const bindings = yield* extract(tm.row, ctx.env.length);

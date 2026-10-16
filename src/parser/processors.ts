@@ -65,6 +65,32 @@ export const Label: PostProcessor<[Colon, Token], Variable> = ([, tok]) => {
 	);
 };
 
+export const DepLabel: PostProcessor<[Token, Token], Variable> = ([, tok]) => {
+	return F.pipe(
+		[tok],
+		sourceLoc,
+		Sourced.fold<unknown, Variable>((value, location) => {
+			if (typeof value !== "string") {
+				throw new Error("Expected string for dep-label");
+			}
+			return { type: "dep-label", value, location };
+		}),
+	);
+};
+
+export const NuLabel: PostProcessor<[Token, Token], Variable> = ([, tok]) => {
+	return F.pipe(
+		[tok],
+		sourceLoc,
+		Sourced.fold<unknown, Variable>((value, location) => {
+			if (typeof value !== "string") {
+				throw new Error("Expected string for nu-label");
+			}
+			return { type: "nu-label", value, location };
+		}),
+	);
+};
+
 export const Str: PostProcessor<[Sourced<string>], Sourced<Literal>> = F.flow(
 	NEA.head,
 	Sourced.map(value => ({ type: "String", value })),

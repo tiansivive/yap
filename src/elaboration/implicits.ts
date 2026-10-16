@@ -114,6 +114,12 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			const body = yield* M.reader.local(_ => xtended, instantiate(sig.body, resolutions));
 			return EB.Constructors.Abs({ ...sig.binding, annotation }, body);
 		})
+		.with(EB.CtorPatterns.Nu, function* ({ binding, body }) {
+			const within = EB.open(binding, ctx);
+			const scoped = yield* M.reader.local(_ => within, instantiateRow(binding.scoped));
+			const annotation = yield* M.reader.local(_ => within, instantiate(binding.annotation, resolutions));
+			return EB.Constructors.Nu({ ...binding, scoped, annotation }, yield* M.reader.local(_ => within, instantiate(body, resolutions)));
+		})
 		.with({ type: "Abs" }, function* (abs) {
 			const annotation = yield* instantiate(abs.binding.annotation, resolutions);
 			const extended = EB.bind(ctx, abs.binding, yield* NF.normalize(annotation));
@@ -138,7 +144,7 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 		.with({ type: "Match" }, function* ({ scrutinee, alternatives }) {
 			const scrut = yield* instantiate(scrutinee, resolutions);
 			const alts = yield* Eff.traverse(alternatives, function* (alt) {
-				const xtended = alt.binders.reduce((acc, [bv, bty]) => EB.bind(acc, { type: "Let", variable: bv }, bty), ctx);
+				const xtended = alt.binders.reduce((acc, [bv, bty]) => EB.bind(acc, { type: "Pattern", variable: bv }, bty), ctx);
 				const tm = yield* M.reader.local(_ => xtended, instantiate(alt.term, resolutions));
 				return { pattern: alt.pattern, term: tm, binders: alt.binders };
 			});

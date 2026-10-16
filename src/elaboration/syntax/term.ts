@@ -35,6 +35,10 @@ export type Variable =
 	| { type: "Free"; name: string }
 	| { type: "Foreign"; name: string }
 	| { type: "Label"; name: string }
+	/** @see NF.Variable: `&label` / `$label` carry a de Bruijn index like any bound variable. */
+	| { type: "DepLabel"; name: string; index: number; annotation: NF.Value }
+	/** `index` counts Nu frames on `ctx.local`, not env binders. `meta` stands for a field still being elaborated. */
+	| { type: "NuLabel"; name: string; index: number; annotation: NF.Value; meta?: Meta }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
 	 */
@@ -49,7 +53,9 @@ export type Binding = (
 	| { type: "Lambda"; variable: string; icit: Implicitness }
 	| { type: "Mu"; variable: string; source: string }
 	| { type: "Pi"; variable: string; icit: Implicitness }
+	| { type: "Nu"; variable: string; mode: "strict" | "lazy"; labels: readonly string[]; scoped: Row }
 	| { type: "Sigma"; variable: string }
+	| { type: "SigmaV2"; variable: string }
 ) & { annotation: Term };
 
 export type Alternative = { pattern: Pattern; term: Term; binders: Pat.Binder[] };
@@ -112,6 +118,18 @@ export const Constructors = {
 			binding: { type: "Sigma" as const, variable, annotation },
 			body,
 		}),
+	SigmaV2: (variable: string, annotation: Term, body: Term): Term =>
+		mk({
+			type: "Abs",
+			binding: { type: "SigmaV2" as const, variable, annotation },
+			body,
+		}),
+	Nu: ({ mode, labels, scoped, annotation }: Pick<Extract<Binding, { type: "Nu" }>, "mode" | "labels" | "scoped" | "annotation">, body: Term): Term =>
+		mk({
+			type: "Abs",
+			binding: { type: "Nu" as const, variable: "$nu", mode, labels, scoped, annotation },
+			body,
+		}),
 	Mu: (variable: string, source: string, annotation: Term, body: Term): Term =>
 		mk({
 			type: "Abs",
@@ -128,6 +146,14 @@ export const Constructors = {
 		Free: (name: string): Variable => ({ type: "Free", name }),
 		Foreign: (name: string): Variable => ({ type: "Foreign", name }),
 		Label: (name: string): Variable => ({ type: "Label", name }),
+		DepLabel: (name: string, index: number, annotation: NF.Value): Variable => ({ type: "DepLabel", name, index, annotation }),
+		NuLabel: (name: string, index: number, annotation: NF.Value, meta?: Meta): Variable => ({
+			type: "NuLabel",
+			name,
+			index,
+			annotation,
+			...(meta && { meta }),
+		}),
 		Meta: (val: number, lvl: number): Extract<Variable, { type: "Meta" }> => ({ type: "Meta", val, lvl }),
 	},
 	App: (icit: Implicitness, func: Term, arg: Term): Term =>
@@ -196,13 +222,33 @@ export const Constructors = {
 	},
 };
 
+/** Bare `Binding` patterns, for matching a binder on its own rather than the Abs that carries it. */
+export const BindingPatterns = {
+	Let: { type: "Let" },
+	Lambda: { type: "Lambda" },
+	Pi: { type: "Pi" },
+	Mu: { type: "Mu" },
+	Nu: { type: "Nu" },
+	Sigma: { type: "Sigma" },
+	SigmaV2: { type: "SigmaV2" },
+} as const;
+
 export const CtorPatterns = {
 	Var: { type: "Var" },
+	Vars: {
+		Bound: { type: "Var", variable: { type: "Bound" } },
+		Foreign: { type: "Var", variable: { type: "Foreign" } },
+		DepLabel: { type: "Var", variable: { type: "DepLabel" } },
+		NuLabel: { type: "Var", variable: { type: "NuLabel" } },
+		Meta: { type: "Var", variable: { type: "Meta" } },
+	},
 	Lit: { type: "Lit" },
 	Lambda: { type: "Abs", binding: { type: "Lambda" } },
 	Pi: { type: "Abs", binding: { type: "Pi" } },
 	Mu: { type: "Abs", binding: { type: "Mu" } },
+	Nu: { type: "Abs", binding: { type: "Nu" } },
 	Sigma: { type: "Abs", binding: { type: "Sigma" } },
+	SigmaV2: { type: "Abs", binding: { type: "SigmaV2" } },
 	Match: { type: "Match" },
 	Row: { type: "Row" },
 	Proj: { type: "Proj" },

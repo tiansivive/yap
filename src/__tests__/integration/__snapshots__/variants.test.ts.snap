@@ -503,8 +503,8 @@ function closure_30(env0, p1) {
 }
 return main();
 ",
-    "elaborated": "λ(p: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) ->
-  match p | Struct [ x: a, y: b | $row_7 ] -> b",
+    "elaborated": "λ(p: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]) ->
+  match p | Struct [ x: a, y: b | $row_5 ] -> b",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"getY"}
@@ -512,27 +512,27 @@ return main();
   :annotation -> [4]
   :body -> [17]
   :env -> [29]
-[4] sigma {"variable":"$sig","level":1}
+[4] sigma:v2 {"variable":"$sig","level":1}
   :annotation -> [5]
   :body -> [10]
-[5] row:ext {"label":"y"}
+[5] row:ext {"label":"x"}
   :rest -> [7]
   :value -> [6]
-[6] lit {"value":{"type":"Atom","value":"Num"}}
-[7] row:ext {"label":"x"}
+[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[7] row:ext {"label":"y"}
   :rest -> [9]
   :value -> [8]
-[8] lit {"value":{"type":"Atom","value":"Num"}}
+[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
 [9] row:empty
 [10] app {"icit":"Explicit"}
   :arg -> [12]
   :func -> [11]
 [11] lit {"value":{"type":"Atom","value":"Schema"}}
-[12] row:ext {"label":"y"}
+[12] row:ext {"label":"x"}
   :rest -> [14]
   :value -> [13]
 [13] lit {"value":{"type":"Atom","value":"Num"}}
-[14] row:ext {"label":"x"}
+[14] row:ext {"label":"y"}
   :rest -> [16]
   :value -> [15]
 [15] lit {"value":{"type":"Atom","value":"Num"}}
@@ -577,7 +577,7 @@ return main();
   :body -> [3]
   :env -> [29]",
     "ivl": "(forall (($fresh0 Schema))
-  (forall ((a Real)) (forall ((b Real)) (forall (($row_7 Row)) (= b b)))))",
+  (forall ((a Real)) (forall ((b Real)) (forall (($row_5 Row)) (= b b)))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -594,11 +594,12 @@ return main();
       let b = v1
       return b",
     "name": "getY",
-    "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
-  (closure: match p | Struct [ x: a, y: b | $row_7 ] -> b -| Γ: p)",
+    "normalized": "λ(p: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+  (closure: Schema [ x: Num, y: Num ] -| Γ: $sig)) ->
+  (closure: match p | Struct [ x: a, y: b | $row_5 ] -> b -| Γ: p)",
     "solverTrace": "=== Formula ===
   (forall (($fresh0 Schema))
-    (forall ((a Real)) (forall ((b Real)) (forall (($row_7 Row)) (= b b)))))
+    (forall ((a Real)) (forall ((b Real)) (forall (($row_5 Row)) (= b b)))))
 
 === Variables ===
   proxy p1: true
@@ -634,7 +635,8 @@ return main();
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
-    "type": "Π(t1: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
+    "type": "Π(t1: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]) ->
+  Num",
     "validity": "valid",
   },
   {
@@ -655,8 +657,8 @@ function closure_28(env0, p1) {
 }
 return main();
 ",
-    "elaborated": "λ(p: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) ->
-  match p | Struct [ y: a | $row_12 ] -> a",
+    "elaborated": "λ(p: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]) ->
+  match p | Struct [ y: a | $row_8 ] -> a",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"getY2"}
@@ -664,27 +666,27 @@ return main();
   :annotation -> [4]
   :body -> [17]
   :env -> [27]
-[4] sigma {"variable":"$sig","level":1}
+[4] sigma:v2 {"variable":"$sig","level":1}
   :annotation -> [5]
   :body -> [10]
-[5] row:ext {"label":"y"}
+[5] row:ext {"label":"x"}
   :rest -> [7]
   :value -> [6]
-[6] lit {"value":{"type":"Atom","value":"Num"}}
-[7] row:ext {"label":"x"}
+[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[7] row:ext {"label":"y"}
   :rest -> [9]
   :value -> [8]
-[8] lit {"value":{"type":"Atom","value":"Num"}}
+[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
 [9] row:empty
 [10] app {"icit":"Explicit"}
   :arg -> [12]
   :func -> [11]
 [11] lit {"value":{"type":"Atom","value":"Schema"}}
-[12] row:ext {"label":"y"}
+[12] row:ext {"label":"x"}
   :rest -> [14]
   :value -> [13]
 [13] lit {"value":{"type":"Atom","value":"Num"}}
-[14] row:ext {"label":"x"}
+[14] row:ext {"label":"y"}
   :rest -> [16]
   :value -> [15]
 [15] lit {"value":{"type":"Atom","value":"Num"}}
@@ -722,7 +724,7 @@ return main();
 [28] closure
   :body -> [3]
   :env -> [27]",
-    "ivl": "(forall (($fresh0 Schema)) (forall ((a Real)) (forall (($row_12 Row)) (= a a))))",
+    "ivl": "(forall (($fresh0 Schema)) (forall ((a Real)) (forall (($row_8 Row)) (= a a))))",
     "kind": "let",
     "mir": "module
   fn main entry=entry
@@ -737,10 +739,11 @@ return main();
       let a = v0
       return a",
     "name": "getY2",
-    "normalized": "λ(p: Σ($sig: [ y: Num, x: Num ]) . (closure: Schema [ y: Num, x: Num ] -| ·)) ->
-  (closure: match p | Struct [ y: a | $row_12 ] -> a -| Γ: p)",
+    "normalized": "λ(p: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+  (closure: Schema [ x: Num, y: Num ] -| Γ: $sig)) ->
+  (closure: match p | Struct [ y: a | $row_8 ] -> a -| Γ: p)",
     "solverTrace": "=== Formula ===
-  (forall (($fresh0 Schema)) (forall ((a Real)) (forall (($row_12 Row)) (= a a))))
+  (forall (($fresh0 Schema)) (forall ((a Real)) (forall (($row_8 Row)) (= a a))))
 
 === Variables ===
   proxy p1: true
@@ -775,7 +778,8 @@ return main();
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
-    "type": "Π(t2: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]) -> Num",
+    "type": "Π(t2: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]) ->
+  Num",
     "validity": "valid",
   },
 ]
@@ -1246,85 +1250,69 @@ return main();
 [7] lambda {"variable":"t","icit":"Explicit","level":2}
   :annotation -> [8]
   :body -> [9]
-  :env -> [32]
+  :env -> [30]
 [8] lit {"value":{"type":"Atom","value":"Type"}}
 [9] app {"icit":"Explicit"}
   :arg -> [11]
   :func -> [10]
 [10] lit {"value":{"type":"Atom","value":"Variant"}}
 [11] row:ext {"label":"cons"}
-  :rest -> [29]
+  :rest -> [27]
   :value -> [12]
-[12] sigma {"variable":"$sig","level":3}
+[12] sigma:v2 {"variable":"$sig","level":3}
   :annotation -> [13]
-  :body -> [20]
-[13] row:ext {"label":"tail"}
-  :rest -> [17]
+  :body -> [18]
+[13] row:ext {"label":"head"}
+  :rest -> [15]
   :value -> [14]
-[14] app {"icit":"Explicit"}
-  :arg -> [16]
-  :func -> [15]
-[15] var:bound {"index":1}
-  :refers_to -> [3]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [7] {"level":2}
-[16] var:bound {"index":0}
+[14] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[15] row:ext {"label":"tail"}
+  :rest -> [17]
+  :value -> [16]
+[16] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[17] row:empty
+[18] app {"icit":"Explicit"}
+  :arg -> [20]
+  :func -> [19]
+[19] lit {"value":{"type":"Atom","value":"Schema"}}
+[20] row:ext {"label":"head"}
+  :rest -> [22]
+  :value -> [21]
+[21] var:bound {"index":1}
   :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [7] {"level":2}
-[17] row:ext {"label":"head"}
-  :rest -> [19]
-  :value -> [18]
-[18] var:bound {"index":0}
-  :refers_to -> [7]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [7] {"level":2}
-[19] row:empty
-[20] app {"icit":"Explicit"}
-  :arg -> [22]
-  :func -> [21]
-[21] lit {"value":{"type":"Atom","value":"Schema"}}
+  :scope -> [12] {"level":3}
 [22] row:ext {"label":"tail"}
   :rest -> [26]
   :value -> [23]
 [23] app {"icit":"Explicit"}
   :arg -> [25]
   :func -> [24]
-[24] var:bound {"index":1}
+[24] var:bound {"index":2}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[25] var:bound {"index":1}
   :refers_to -> [7]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [7] {"level":2}
   :scope -> [12] {"level":3}
-[25] var:bound {"index":0}
-  :refers_to -> [12]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [7] {"level":2}
-  :scope -> [12] {"level":3}
-[26] row:ext {"label":"head"}
-  :rest -> [28]
-  :value -> [27]
-[27] var:bound {"index":0}
-  :refers_to -> [12]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [7] {"level":2}
-  :scope -> [12] {"level":3}
-[28] row:empty
-[29] row:ext {"label":"nil"}
-  :rest -> [31]
-  :value -> [30]
-[30] lit {"value":{"type":"Atom","value":"Unit"}}
-[31] row:empty
-[32] env
+[26] row:empty
+[27] row:ext {"label":"nil"}
+  :rest -> [29]
+  :value -> [28]
+[28] lit {"value":{"type":"Atom","value":"Unit"}}
+[29] row:empty
+[30] env
   :capture -> [3] {"index":0}
-[33] closure
+[31] closure
   :body -> [7]
-  :env -> [32]",
+  :env -> [30]",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1396,12 +1384,14 @@ return main();
 ",
     "elaborated": "Struct
   [ __tag: cons,
-    payload: Struct
-      [ head: 1,
-        tail: Struct
-          [ __tag: cons,
-            payload: Struct
-              [ head: 2, tail: Struct [ __tag: nil, payload: unit ] ] ] ] ]",
+    payload: νstrict [] .
+      Struct
+        [ head: 1,
+          tail: Struct
+            [ __tag: cons,
+              payload: νstrict [] .
+                Struct
+                  [ head: 2, tail: Struct [ __tag: nil, payload: unit ] ] ] ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"xs"}
@@ -1409,23 +1399,27 @@ return main();
   :field -> [4] {"label":"__tag"}
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"cons"}}
-[5] struct
-  :field -> [6] {"label":"head"}
-  :field -> [7] {"label":"tail"}
-[6] lit {"value":{"type":"Num","value":1}}
-[7] struct
-  :field -> [8] {"label":"__tag"}
-  :field -> [9] {"label":"payload"}
-[8] lit {"value":{"type":"Atom","value":"cons"}}
-[9] struct
-  :field -> [10] {"label":"head"}
-  :field -> [11] {"label":"tail"}
-[10] lit {"value":{"type":"Num","value":2}}
+[5] nu {"variable":"$nu","level":1}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"head"}
+  :field -> [8] {"label":"tail"}
+[7] lit {"value":{"type":"Num","value":1}}
+[8] struct
+  :field -> [9] {"label":"__tag"}
+  :field -> [10] {"label":"payload"}
+[9] lit {"value":{"type":"Atom","value":"cons"}}
+[10] nu {"variable":"$nu","level":1}
+  :body -> [11]
 [11] struct
-  :field -> [12] {"label":"__tag"}
-  :field -> [13] {"label":"payload"}
-[12] lit {"value":{"type":"Atom","value":"nil"}}
-[13] lit {"value":{"type":"unit"}}",
+  :field -> [12] {"label":"head"}
+  :field -> [13] {"label":"tail"}
+[12] lit {"value":{"type":"Num","value":2}}
+[13] struct
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"nil"}}
+[15] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -1492,58 +1486,49 @@ exports[`Language Tour — Pattern Matching > recursive record fields 1`] = `
 }
 return main();
 ",
-    "elaborated": "Σ($sig: [ compute: Π(t1: Num) -> Num ]) . Schema [ compute: Π(t1: Num) -> Num ]",
+    "elaborated": "Σ($sig: [ compute: Irrelevant ]) . Schema [ compute: Π(t1: Num) -> Num ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"Factorial"}
-[3] sigma {"variable":"$sig","level":1}
+[3] sigma:v2 {"variable":"$sig","level":1}
   :annotation -> [4]
-  :body -> [10]
+  :body -> [7]
 [4] row:ext {"label":"compute"}
-  :rest -> [9]
+  :rest -> [6]
   :value -> [5]
-[5] pi {"variable":"t1","icit":"Explicit","level":1}
-  :annotation -> [7]
-  :body -> [8]
-[6] var:free {"name":"Num"}
-[7] var:ref {"name":"Num"}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-[8] var:ref {"name":"Num"}
-  :refers_to -> [6]
-  :scope -> [2] {"level":0}
-  :scope -> [5] {"level":1}
-[9] row:empty
-[10] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [11]
-[11] lit {"value":{"type":"Atom","value":"Schema"}}
-[12] row:ext {"label":"compute"}
-  :rest -> [16]
-  :value -> [13]
-[13] pi {"variable":"t1","icit":"Explicit","level":2}
-  :annotation -> [14]
-  :body -> [15]
-[14] var:ref {"name":"Num"}
-  :refers_to -> [6]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:empty
+[7] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [8]
+[8] lit {"value":{"type":"Atom","value":"Schema"}}
+[9] row:ext {"label":"compute"}
+  :rest -> [14]
+  :value -> [10]
+[10] pi {"variable":"t1","icit":"Explicit","level":2}
+  :annotation -> [12]
+  :body -> [13]
+[11] var:free {"name":"Num"}
+[12] var:ref {"name":"Num"}
+  :refers_to -> [11]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-[15] var:ref {"name":"Num"}
-  :refers_to -> [6]
+[13] var:ref {"name":"Num"}
+  :refers_to -> [11]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-  :scope -> [13] {"level":2}
-[16] row:empty",
+  :scope -> [10] {"level":2}
+[14] row:empty",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       return v0",
     "name": "Factorial",
-    "normalized": "Σ($sig: [ compute: Π(t1: Num) -> (closure: Num -| Γ: t1) ]) .
-  (closure: Schema [ compute: Π(t1: Num) -> Num ] -| ·)",
+    "normalized": "Σ($sig: [ compute: Irrelevant ]) .
+  (closure: Schema [ compute: Π(t1: Num) -> Num ] -| Γ: $sig)",
     "solverTrace": "=== Formula ===
   true
 
@@ -1578,7 +1563,7 @@ return main();
   const env_cls3 = {
     v0: v0
   };
-  const fnref_cls3 = closure_32;
+  const fnref_cls3 = closure_33;
   const closure_cls3 = {
     __fn: fnref_cls3,
     __env: env_cls3
@@ -1587,7 +1572,7 @@ return main();
   return v0;
 }
 
-function closure_32(env1, n2) {
+function closure_33(env1, n2) {
   let __block = "entry";
   let match1;
   while (true) {
@@ -1633,78 +1618,85 @@ function closure_32(env1, n2) {
 }
 return main();
 ",
-    "elaborated": "Struct
-  [ compute: λ(n: Num) ->
-      match n | 0 -> 1 | _ -> FFI.$mul n (:compute (FFI.$sub n 1)) ]",
+    "elaborated": "νstrict [ compute: λ(n: Num) ->
+    match n | 0 -> 1 | _ -> FFI.$mul n ($compute (FFI.$sub n 1)) ] .
+  Struct
+    [ compute: λ(n: Num) ->
+        match n | 0 -> 1 | _ -> FFI.$mul n ($compute (FFI.$sub n 1)) ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"fact"}
-[3] struct
-  :field -> [4] {"label":"compute","backpatch":true}
-[4] lambda {"variable":"n","icit":"Explicit","level":1}
-  :annotation -> [5]
-  :body -> [6]
-  :env -> [31]
-[5] lit {"value":{"type":"Atom","value":"Num"}}
-[6] match
-  :alt -> [8] {"index":0}
-  :alt -> [11] {"index":1}
-  :decision_tree -> [28]
-  :scrutinee -> [7]
-[7] var:bound {"index":0}
-  :refers_to -> [4]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-[8] case
-  :body -> [10]
-  :next -> [11]
-  :pattern -> [9]
-[9] pat:lit {"value":{"type":"Num","value":0}}
-[10] lit {"value":{"type":"Num","value":1}}
-[11] case
-  :body -> [26]
-  :pattern -> [12]
-[12] pat:wildcard
-[15] var:foreign {"name":"$mul","arity":2}
-[17] var:bound {"index":0}
-  :next -> [18]
-  :refers_to -> [4]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-[18] app {"icit":"Explicit"}
-  :arg -> [27]
-  :func -> [19]
-[19] var:label {"name":"compute"}
-  :refers_to -> [4]
-  :scope -> [4] {"level":0}
-[22] var:foreign {"name":"$sub","arity":2}
-[24] var:bound {"index":0}
-  :next -> [25]
-  :refers_to -> [4]
-  :scope -> [2] {"level":0}
-  :scope -> [4] {"level":1}
-[25] lit {"value":{"type":"Num","value":1}}
-[26] primop {"op":"$mul"}
-  :arg -> [17] {"index":0}
-  :arg -> [18] {"index":1}
-  :callee -> [15]
-[27] primop {"op":"$sub"}
-  :arg -> [24] {"index":0}
-  :arg -> [25] {"index":1}
-  :callee -> [22]
-[28] switch {"kind":"lit"}
-  :branch -> [29] {"value":{"type":"Num","value":0}}
-  :default -> [30]
-  :inspect -> [7]
-[29] leaf
-  :body -> [10]
-[30] leaf
-  :body -> [26]
-[31] env
-  :capture -> [3] {"index":0}
-[32] closure
+[3] nu {"variable":"$nu","level":1}
   :body -> [4]
-  :env -> [31]",
+[4] struct
+  :backpatch -> [5]
+  :field -> [5] {"label":"compute"}
+  :hoist -> [5]
+[5] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [6]
+  :body -> [7]
+  :env -> [32]
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[7] match
+  :alt -> [9] {"index":0}
+  :alt -> [12] {"index":1}
+  :decision_tree -> [29]
+  :scrutinee -> [8]
+[8] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[9] case
+  :body -> [11]
+  :next -> [12]
+  :pattern -> [10]
+[10] pat:lit {"value":{"type":"Num","value":0}}
+[11] lit {"value":{"type":"Num","value":1}}
+[12] case
+  :body -> [27]
+  :pattern -> [13]
+[13] pat:wildcard
+[16] var:foreign {"name":"$mul","arity":2}
+[18] var:bound {"index":0}
+  :next -> [19]
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[19] app {"icit":"Explicit"}
+  :arg -> [28]
+  :func -> [20]
+[20] var:nu-label {"name":"compute","index":0}
+  :refers_to -> [5]
+  :scope -> [3] {"level":0,"owner":true}
+  :scope -> [5] {"level":1,"owner":false}
+[23] var:foreign {"name":"$sub","arity":2}
+[25] var:bound {"index":0}
+  :next -> [26]
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[26] lit {"value":{"type":"Num","value":1}}
+[27] primop {"op":"$mul"}
+  :arg -> [18] {"index":0}
+  :arg -> [19] {"index":1}
+  :callee -> [16]
+[28] primop {"op":"$sub"}
+  :arg -> [25] {"index":0}
+  :arg -> [26] {"index":1}
+  :callee -> [23]
+[29] switch {"kind":"lit"}
+  :branch -> [30] {"value":{"type":"Num","value":0}}
+  :default -> [31]
+  :inspect -> [8]
+[30] leaf
+  :body -> [11]
+[31] leaf
+  :body -> [27]
+[32] env
+  :capture -> [4] {"index":0}
+[33] closure
+  :body -> [5]
+  :env -> [32]",
     "ivl": "(forall ((n Real))
   (and
     (= n n)
@@ -1717,11 +1709,11 @@ return main();
     entry:
       let v0 = alloc {  }
       let env_cls3 = alloc { v0: v0 }
-      let fnref_cls3 = &closure_32
+      let fnref_cls3 = &closure_33
       let closure_cls3 = alloc { __fn: fnref_cls3, __env: env_cls3 }
       update-fbip v0 { compute: closure_cls3 }
       return v0
-  fn closure_32(env1, n2) entry=entry
+  fn closure_33(env1, n2) entry=entry
     entry:
       let cap_0 = read env1.v0
       jump sw2
@@ -1746,7 +1738,7 @@ return main();
   [ compute: λ(n: Num) ->
       (closure: match n
         | 0 -> 1
-        | _ -> FFI.$mul n (:compute (FFI.$sub n 1)) -| Γ: n) ]",
+        | _ -> FFI.$mul n ($compute (FFI.$sub n 1)) -| Γ: n) ]",
     "solverTrace": "=== Formula ===
   (forall ((n Real))
     (and
@@ -1789,7 +1781,7 @@ return main();
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
-    "type": "Σ($sig: [ compute: Π(t1: Num) -> Num ]) . Schema [ compute: Π(t1: Num) -> Num ]",
+    "type": "Σ($sig: [ compute: Irrelevant ]) . Schema [ compute: Π(t1: Num) -> Num ]",
     "validity": "valid",
   },
   {
@@ -1883,7 +1875,8 @@ exports[`Language Tour — Pattern Matching > variant patterns 1`] = `
 return main();
 ",
     "elaborated": "Variant
-  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      Schema [ x: Num, y: Num ],
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]",
     "gram": "[1] root
@@ -1896,39 +1889,35 @@ return main();
 [5] row:ext {"label":"point"}
   :rest -> [20]
   :value -> [6]
-[6] sigma {"variable":"$sig","level":1}
+[6] sigma:v2 {"variable":"$sig","level":1}
   :annotation -> [7]
-  :body -> [13]
-[7] row:ext {"label":"y"}
-  :rest -> [10]
-  :value -> [9]
-[8] var:free {"name":"Num"}
-[9] var:ref {"name":"Num"}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-[10] row:ext {"label":"x"}
-  :rest -> [12]
-  :value -> [11]
-[11] var:ref {"name":"Num"}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-[12] row:empty
-[13] app {"icit":"Explicit"}
-  :arg -> [15]
-  :func -> [14]
-[14] lit {"value":{"type":"Atom","value":"Schema"}}
-[15] row:ext {"label":"y"}
+  :body -> [12]
+[7] row:ext {"label":"x"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[9] row:ext {"label":"y"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[11] row:empty
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Schema"}}
+[14] row:ext {"label":"x"}
   :rest -> [17]
   :value -> [16]
+[15] var:free {"name":"Num"}
 [16] var:ref {"name":"Num"}
-  :refers_to -> [8]
+  :refers_to -> [15]
   :scope -> [2] {"level":0}
   :scope -> [6] {"level":1}
-[17] row:ext {"label":"x"}
+[17] row:ext {"label":"y"}
   :rest -> [19]
   :value -> [18]
 [18] var:ref {"name":"Num"}
-  :refers_to -> [8]
+  :refers_to -> [15]
   :scope -> [2] {"level":0}
   :scope -> [6] {"level":1}
 [19] row:empty
@@ -1943,20 +1932,20 @@ return main();
   :rest -> [25]
   :value -> [24]
 [24] var:ref {"name":"Num"}
-  :refers_to -> [8]
+  :refers_to -> [15]
   :scope -> [2] {"level":0}
 [25] row:ext {"label":"0"}
   :rest -> [27]
   :value -> [26]
 [26] var:ref {"name":"Num"}
-  :refers_to -> [8]
+  :refers_to -> [15]
   :scope -> [2] {"level":0}
 [27] row:empty
 [28] row:ext {"label":"circle"}
   :rest -> [30]
   :value -> [29]
 [29] var:ref {"name":"Num"}
-  :refers_to -> [8]
+  :refers_to -> [15]
   :scope -> [2] {"level":0}
 [30] row:empty",
     "ivl": "true",
@@ -1964,15 +1953,15 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       let v1 = Num
       let v2 = alloc { 1: v1, 0: v1 }
       let v3 = alloc { point: v0, rectangle: v2, circle: v1 }
       return v3",
     "name": "Shape",
     "normalized": "Variant
-  [ point: Σ($sig: [ y: Num, x: Num ]) .
-      (closure: Schema [ y: Num, x: Num ] -| ·),
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      (closure: Schema [ x: Num, y: Num ] -| Γ: $sig),
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]",
     "solverTrace": "=== Formula ===
@@ -2076,14 +2065,15 @@ function closure_68(env0, s1) {
 return main();
 ",
     "elaborated": "λ(s: Variant
-  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      Schema [ x: Num, y: Num ],
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]) ->
   match s
-    | Variant [ circle: r | $row_10 ] -> "Circle with radius"
-    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_15 ] | $row_16 ] ->
+    | Variant [ circle: r | $row_8 ] -> "Circle with radius"
+    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_13 ] | $row_14 ] ->
         "Rectangle"
-    | Variant [ point: Struct [ x: _, y: _ | $row_21 ] | $row_22 ] ->
+    | Variant [ point: Struct [ x: _, y: _ | $row_19 ] | $row_20 ] ->
         "Point at coordinates"",
     "gram": "[1] root
   :entry -> [3]
@@ -2099,27 +2089,27 @@ return main();
 [6] row:ext {"label":"point"}
   :rest -> [20]
   :value -> [7]
-[7] sigma {"variable":"$sig","level":1}
+[7] sigma:v2 {"variable":"$sig","level":1}
   :annotation -> [8]
   :body -> [13]
-[8] row:ext {"label":"y"}
+[8] row:ext {"label":"x"}
   :rest -> [10]
   :value -> [9]
-[9] lit {"value":{"type":"Atom","value":"Num"}}
-[10] row:ext {"label":"x"}
+[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[10] row:ext {"label":"y"}
   :rest -> [12]
   :value -> [11]
-[11] lit {"value":{"type":"Atom","value":"Num"}}
+[11] lit {"value":{"type":"Atom","value":"Irrelevant"}}
 [12] row:empty
 [13] app {"icit":"Explicit"}
   :arg -> [15]
   :func -> [14]
 [14] lit {"value":{"type":"Atom","value":"Schema"}}
-[15] row:ext {"label":"y"}
+[15] row:ext {"label":"x"}
   :rest -> [17]
   :value -> [16]
 [16] lit {"value":{"type":"Atom","value":"Num"}}
-[17] row:ext {"label":"x"}
+[17] row:ext {"label":"y"}
   :rest -> [19]
   :value -> [18]
 [18] lit {"value":{"type":"Atom","value":"Num"}}
@@ -2265,15 +2255,15 @@ return main();
       return match1",
     "name": "describeShape",
     "normalized": "λ(s: Variant
-  [ point: Σ($sig: [ y: Num, x: Num ]) .
-      (closure: Schema [ y: Num, x: Num ] -| ·),
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      (closure: Schema [ x: Num, y: Num ] -| Γ: $sig),
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]) ->
   (closure: match s
-    | Variant [ circle: r | $row_10 ] -> "Circle with radius"
-    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_15 ] | $row_16 ] ->
+    | Variant [ circle: r | $row_8 ] -> "Circle with radius"
+    | Variant [ rectangle: Struct [ 0: w, 1: h | $row_13 ] | $row_14 ] ->
         "Rectangle"
-    | Variant [ point: Struct [ x: _, y: _ | $row_21 ] | $row_22 ] ->
+    | Variant [ point: Struct [ x: _, y: _ | $row_19 ] | $row_20 ] ->
         "Point at coordinates" -| Γ: s)",
     "solverTrace": "=== Formula ===
   (forall ((s Schema)) (and (= s s) (= s s) (= s s)))
@@ -2312,7 +2302,8 @@ return main();
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1",
     "type": "Π(t1: Variant
-  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      Schema [ x: Num, y: Num ],
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]) ->
   String",
@@ -2481,7 +2472,8 @@ exports[`Language Tour — Variants & Tagged Values > variants with data 1`] = `
 return main();
 ",
     "elaborated": "Variant
-  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      Schema [ x: Num, y: Num ],
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]",
     "gram": "[1] root
@@ -2494,39 +2486,35 @@ return main();
 [5] row:ext {"label":"point"}
   :rest -> [20]
   :value -> [6]
-[6] sigma {"variable":"$sig","level":1}
+[6] sigma:v2 {"variable":"$sig","level":1}
   :annotation -> [7]
-  :body -> [13]
-[7] row:ext {"label":"y"}
-  :rest -> [10]
-  :value -> [9]
-[8] var:free {"name":"Num"}
-[9] var:ref {"name":"Num"}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-[10] row:ext {"label":"x"}
-  :rest -> [12]
-  :value -> [11]
-[11] var:ref {"name":"Num"}
-  :refers_to -> [8]
-  :scope -> [2] {"level":0}
-[12] row:empty
-[13] app {"icit":"Explicit"}
-  :arg -> [15]
-  :func -> [14]
-[14] lit {"value":{"type":"Atom","value":"Schema"}}
-[15] row:ext {"label":"y"}
+  :body -> [12]
+[7] row:ext {"label":"x"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[9] row:ext {"label":"y"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[11] row:empty
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Schema"}}
+[14] row:ext {"label":"x"}
   :rest -> [17]
   :value -> [16]
+[15] var:free {"name":"Num"}
 [16] var:ref {"name":"Num"}
-  :refers_to -> [8]
+  :refers_to -> [15]
   :scope -> [2] {"level":0}
   :scope -> [6] {"level":1}
-[17] row:ext {"label":"x"}
+[17] row:ext {"label":"y"}
   :rest -> [19]
   :value -> [18]
 [18] var:ref {"name":"Num"}
-  :refers_to -> [8]
+  :refers_to -> [15]
   :scope -> [2] {"level":0}
   :scope -> [6] {"level":1}
 [19] row:empty
@@ -2541,20 +2529,20 @@ return main();
   :rest -> [25]
   :value -> [24]
 [24] var:ref {"name":"Num"}
-  :refers_to -> [8]
+  :refers_to -> [15]
   :scope -> [2] {"level":0}
 [25] row:ext {"label":"0"}
   :rest -> [27]
   :value -> [26]
 [26] var:ref {"name":"Num"}
-  :refers_to -> [8]
+  :refers_to -> [15]
   :scope -> [2] {"level":0}
 [27] row:empty
 [28] row:ext {"label":"circle"}
   :rest -> [30]
   :value -> [29]
 [29] var:ref {"name":"Num"}
-  :refers_to -> [8]
+  :refers_to -> [15]
   :scope -> [2] {"level":0}
 [30] row:empty",
     "ivl": "true",
@@ -2562,15 +2550,15 @@ return main();
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       let v1 = Num
       let v2 = alloc { 1: v1, 0: v1 }
       let v3 = alloc { point: v0, rectangle: v2, circle: v1 }
       return v3",
     "name": "Shape",
     "normalized": "Variant
-  [ point: Σ($sig: [ y: Num, x: Num ]) .
-      (closure: Schema [ y: Num, x: Num ] -| ·),
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      (closure: Schema [ x: Num, y: Num ] -| Γ: $sig),
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]",
     "solverTrace": "=== Formula ===
@@ -2659,7 +2647,8 @@ return main();
 
 [sat]",
     "type": "Variant
-  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      Schema [ x: Num, y: Num ],
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]",
     "validity": "valid",
@@ -2681,7 +2670,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct [ __tag: rectangle, payload: Struct [ 0: 10, 1: 20 ] ]",
+    "elaborated": "Struct [ __tag: rectangle, payload: νstrict [] . Struct [ 0: 10, 1: 20 ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"r"}
@@ -2689,11 +2678,13 @@ return main();
   :field -> [4] {"label":"__tag"}
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"rectangle"}}
-[5] struct
-  :field -> [6] {"label":"0"}
-  :field -> [7] {"label":"1"}
-[6] lit {"value":{"type":"Num","value":10}}
-[7] lit {"value":{"type":"Num","value":20}}",
+[5] nu {"variable":"$nu","level":1}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"0"}
+  :field -> [8] {"label":"1"}
+[7] lit {"value":{"type":"Num","value":10}}
+[8] lit {"value":{"type":"Num","value":20}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -2733,7 +2724,8 @@ return main();
 
 [sat]",
     "type": "Variant
-  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      Schema [ x: Num, y: Num ],
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]",
     "validity": "valid",
@@ -2755,7 +2747,7 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct [ __tag: point, payload: Struct [ x: 0, y: 0 ] ]",
+    "elaborated": "Struct [ __tag: point, payload: νstrict [] . Struct [ x: 0, y: 0 ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"p"}
@@ -2763,11 +2755,13 @@ return main();
   :field -> [4] {"label":"__tag"}
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"point"}}
-[5] struct
-  :field -> [6] {"label":"x"}
-  :field -> [7] {"label":"y"}
-[6] lit {"value":{"type":"Num","value":0}}
-[7] lit {"value":{"type":"Num","value":0}}",
+[5] nu {"variable":"$nu","level":1}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"x"}
+  :field -> [8] {"label":"y"}
+[7] lit {"value":{"type":"Num","value":0}}
+[8] lit {"value":{"type":"Num","value":0}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -2807,7 +2801,8 @@ return main();
 
 [sat]",
     "type": "Variant
-  [ point: Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ],
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      Schema [ x: Num, y: Num ],
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]",
     "validity": "valid",
