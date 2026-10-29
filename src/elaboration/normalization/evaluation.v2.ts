@@ -586,7 +586,10 @@ function* evalRowPush(row: EB.Row): Evaluation<Machine<NF.Value>> {
 
 export type Project = { tag: "found"; value: NF.Value } | { tag: "blocked" } | { tag: "missing" } | { tag: "not-applicable" };
 
-/** Evaluates only the requested field of a lazy record. */
+/**
+ * Evaluates only the requested field of a lazy record.
+ * This is copattern elimination.
+ */
 const observe = function* (base: NF.Value & { type: "Abs"; binder: { type: "Nu" } }, label: string): Evaluation<Machine<Project>> {
 	const { binder, closure } = base;
 	if (closure.type !== "Closure") {
@@ -911,7 +914,7 @@ export const schedule = {
 				})
 				.with([NF.Patterns.Schema, { type: "Struct" }], [NF.Patterns.Struct, { type: "Struct" }], ([{ arg }, p]) => meetAll(p.row, arg.row))
 				.with([NF.Patterns.Nu, { type: "Struct" }], function* ([value, p]) {
-					/* A lazy record is matched by observing only the fields the pattern names. */
+					/* A lazy record is matched by observing only the fields the pattern names, as copatterns would. */
 					const shape = value.binder.labels.reduceRight<NF.Row>((row, label) => R.Constructors.Extension(label, NF.Irrelevant, row), R.Constructors.Empty());
 					return yield* meetAll(p.row, shape, label => observe(value, label));
 				})
@@ -1186,8 +1189,12 @@ const combineMeet = (left: Meet, right: Meet): Meet =>
 		.with([{ tag: "matched" }, { tag: "matched" }], ([l, r]) => matched([...l.bindings, ...r.bindings]))
 		.exhaustive();
 
-/** When `read` is given, fields are read through it and `vals` only supplies the labels. */
-const meetAll = function* (pats: R.Row<EB.Pattern, string>, vals: NF.Row, read?: (label: string) => Evaluation<Machine<Project>>): Evaluation<Machine<Meet>> {
+/** When `observe` is given, fields are read through it and `vals` only supplies the labels. */
+const meetAll = function* (
+	pats: R.Row<EB.Pattern, string>,
+	vals: NF.Row,
+	observe?: (label: string) => Evaluation<Machine<Project>>,
+): Evaluation<Machine<Meet>> {
 	return yield* match([pats, vals])
 		.with([{ type: "empty" }, P._], () => result(matched([])))
 		.with([{ type: "variable" }, P._], ([r, tail]) => {
@@ -1207,8 +1214,8 @@ const meetAll = function* (pats: R.Row<EB.Pattern, string>, vals: NF.Row, read?:
 
 			const tail = rewritten.right;
 
-			const current = read
-				? Do.let("projected", read(r1.label)).in(({ projected }) =>
+			const current = observe
+				? Do.let("projected", observe(r1.label)).in(({ projected }) =>
 						match(projected)
 							.with({ tag: "found" }, ({ value }) => schedule.meet(r1.value, value))
 							.with({ tag: "blocked" }, () => result(blocked()))
@@ -1217,7 +1224,7 @@ const meetAll = function* (pats: R.Row<EB.Pattern, string>, vals: NF.Row, read?:
 				: schedule.meet(r1.value, tail.value);
 
 			return yield* Do.let("current", current)
-				.let("rest", meetAll(r1.row, tail.row, read))
+				.let("rest", meetAll(r1.row, tail.row, observe))
 				.in(({ current, rest }) => result(combineMeet(current, rest)));
 		})
 		.exhaustive();

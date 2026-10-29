@@ -17,14 +17,14 @@ export const infer = (ast: Src.Term): M.Elaboration<AST> => {
 			 * the field's value builds the projection itself. The meta typing `&foo` is recorded for
 			 * the Sigma binder it resolved to, which constrains it once its row is elaborated. */
 			.with({ type: "var", variable: Src.Patterns.Vars.DepLabel }, function* ({ variable }) {
-				const resolved = yield* EB.lookup(variable, ctx);
-				yield* match([resolved[0], NF.unwrapNeutral(resolved[1])] as const)
+				const ast = yield* EB.lookup(variable, ctx);
+				yield* match([ast[0], NF.unwrapNeutral(ast[1])] as const)
 					.with([EB.CtorPatterns.Vars.DepLabel, NF.Patterns.Flex], function* ([term, ref]) {
 						yield* M.windows.record({ scope: "env", lvl: ctx.env.length - 1 - term.variable.index }, { label: term.variable.name, meta: ref.variable });
 					})
 					.otherwise(function* () {});
 
-				return resolved;
+				return ast;
 			})
 			.with({ type: "var" }, ({ variable }) => EB.lookup(variable, ctx))
 

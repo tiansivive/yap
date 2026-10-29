@@ -87,7 +87,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 			.with([{ type: "struct" }, NF.Patterns.Type], function* ([{ row }]) {
 				const irrelevant = DependentRows.placeholders(row);
 				const r = yield* DependentRows.witness(irrelevant);
-				const extended = (c: EB.Context) => EB.bind(EB.muContext(c), { type: "SigmaV2", variable: "$sig" }, NF.Constructors.Row(r));
+				const xtended = (c: EB.Context) => EB.bind(EB.muContext(c), { type: "SigmaV2", variable: "$sig" }, NF.Constructors.Row(r));
 
 				/*
 				 * A struct checked against `Type` describes a type, so `muContext` turns the enclosing
@@ -100,13 +100,13 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				 * constrained against the matching fields of the finished schema.
 				 */
 				const [[body, us], labels] = yield* M.windows.within<{ label: string; meta: EB.Meta }>()({ scope: "env", lvl: ctx.env.length }, () =>
-					M.reader.local(extended, DependentRows.fields(row)),
+					M.reader.local(xtended, DependentRows.fields(row)),
 				);
 
 				const schema = EB.Constructors.Schema(body);
 
 				yield* M.reader.local(
-					extended,
+					xtended,
 					M.traverse(labels, function* ({ label, meta }) {
 						const sibling = yield* NF.normalize(EB.Constructors.Proj(label, schema));
 						yield* M.constrain({ type: "assign", left: sibling, right: NF.Constructors.Flex(meta), lvl: ctx.env.length + 1 });

@@ -5,9 +5,9 @@ import type { References } from "./record";
 
 /**
  * Rejects a record that cannot be built in any order, by the same rule as OCaml's `let rec`.
- * Outside a lambda, a field may not call any field of its record, and fields may not read each
- * other in a cycle. A lambda body runs only once the record exists, so references inside one are
- * always allowed.
+ * Outside a lambda, no field of the record may be applied as a function, and fields may not read
+ * each other in a cycle. A lambda body runs only once the record exists, so references inside one
+ * are always allowed.
  */
 export const acyclic = function* (references: References): M.Elaboration<void> {
 	const unguarded = Object.fromEntries(Object.entries(references).map(([label, refs]) => [label, refs.filter(({ guarded }) => !guarded)]));

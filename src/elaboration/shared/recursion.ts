@@ -17,7 +17,7 @@ import * as Eff from "@yap/utils/effects";
 type Key = { scope: "env" | "local"; lvl: number };
 
 type Push = Eff.Action<"Recursion.push", Key, undefined>;
-type Note = Eff.Action<"Recursion.record", { key: Key; item: unknown }, undefined>;
+type Record = Eff.Action<"Recursion.record", { key: Key; item: unknown }, undefined>;
 type Pop<T> = Eff.Action<"Recursion.pop", undefined, T[]>;
 
 /** The item type is supplied first because TypeScript cannot infer `Row` and `A` once any argument is explicit. */
@@ -33,12 +33,12 @@ const within = <T>() =>
 	};
 
 const record = function* (key: Key, item: unknown) {
-	return yield* Eff.ctl.action<Note>("Recursion.record", { key, item });
+	return yield* Eff.ctl.action<Record>("Recursion.record", { key, item });
 };
 
 type Frame = { key: Key; items: unknown[] };
 
-const handlers = (): Eff.Handler<Push | Note | Pop<unknown>, readonly Frame[]> => {
+const handlers = (): Eff.Handler<Push | Record | Pop<unknown>, readonly Frame[]> => {
 	const frames: Frame[] = [];
 
 	return {

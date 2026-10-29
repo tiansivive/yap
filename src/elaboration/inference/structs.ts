@@ -14,7 +14,7 @@ type Field = { label: string; term: EB.Term; value: NF.Value };
 
 export const infer = (node: Struct): M.Elaboration<EB.AST> =>
 	M.tracer.track({ tag: "src", type: "term", term: node, metadata: { action: "infer", description: "Struct" } }, () =>
-		closed(node.row) ? struct(node.row) : open(node.row),
+		closed(node.row) ? struct(node.row) : tail(node.row),
 	);
 
 export const struct = function* (row: Src.Row): M.Elaboration<EB.AST> {
@@ -22,7 +22,7 @@ export const struct = function* (row: Src.Row): M.Elaboration<EB.AST> {
 	return [EB.Constructors.Nu(binder, EB.Constructors.Struct(inferred.term)), NF.Constructors.Schema(inferred.type), inferred.usages] satisfies EB.AST;
 };
 
-const open = function* (row: Src.Row): M.Elaboration<EB.AST> {
+const tail = function* (row: Src.Row): M.Elaboration<EB.AST> {
 	const ctx = yield* M.reader.ask();
 	const { fields, tail } = yield* EB.Rows.withLabelContext(row, EB.Rows.collect(row));
 	if (!tail) {

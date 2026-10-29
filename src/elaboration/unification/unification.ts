@@ -198,8 +198,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 				yield* unify(left.arg, right.arg, lvl);
 			})
 
-			/* A projection that cannot reduce behaves like a blocked application: the labels must
-			 * agree and the bases must unify. This happens once a field's type is read off an
+			/* A stuck projection is a neutral spine, so it unifies as an application does: the labels
+			 * must agree and the bases must unify. This happens once a field's type is read off an
 			 * abstract record. */
 			.with([NF.Patterns.StuckProj, NF.Patterns.StuckProj], function* ([left, right]) {
 				if (left.value.label !== right.value.label) {
