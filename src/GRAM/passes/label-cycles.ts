@@ -13,9 +13,8 @@ import { none } from "../pipeline/descriptor";
 // bridge allocates-then-backpatches. A cycle made only of eager references (value-level codata
 // or an ill-founded self-reference) has no construction order and is rejected.
 //
-// NOTE: elaboration already rejects unguarded cycles in strict records (`Record Cycle`), so for terms the
-// elaborator produced this check repeats that one.
-// QUESTION: keep it as a safety net for terms built any other way, remove it, or make it an assertion?
+// Elaboration already rejects unguarded cycles in strict records (`Record Cycle`), so for elaborated
+// terms this mostly repeats that check. TODO: decide whether to keep it as a safety net or remove it.
 
 type Ref = { readonly to: string; readonly guarded: boolean };
 type Edge = { readonly from: string } & Ref;
@@ -34,12 +33,7 @@ const collectRefs = (id: NodeId, guarded: boolean, fields: ReadonlyMap<NodeId, s
 		return [];
 	}
 	return match(node.tag)
-		.with(Tags.VAR_LABEL, () => {
-			const target = Edges.one(id, Labels.REFERS_TO)(g)?.target;
-			const to = target !== undefined ? fields.get(target) : undefined;
-			return to !== undefined ? [{ to, guarded }] : [];
-		})
-		.with(Tags.VAR_NU_LABEL, () => {
+		.with(Tags.VAR_LABEL, Tags.VAR_NU_LABEL, () => {
 			const target = Edges.one(id, Labels.REFERS_TO)(g)?.target;
 			const to = target !== undefined ? fields.get(target) : undefined;
 			return to !== undefined ? [{ to, guarded }] : [];

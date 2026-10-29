@@ -44,8 +44,7 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.VAR_REF, () => ref(id, ctx))
 		.with(Tags.VAR_FREE, () => Leaves.free(id, ctx))
 		.with(Tags.VAR_FOREIGN, () => Leaves.foreign(id, ctx))
-		.with(Tags.VAR_LABEL, () => labelRef(id, ctx))
-		.with(Tags.VAR_NU_LABEL, () => labelRef(id, ctx))
+		.with(Tags.VAR_LABEL, Tags.VAR_NU_LABEL, () => labelRef(id, ctx))
 		.with(Tags.VAR_META, () => erase(id, ctx))
 		.with(Tags.PI, () => erase(id, ctx))
 		.with(Tags.SIGMA, () => erase(id, ctx))
@@ -147,7 +146,8 @@ const letNode = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	return bodyEdge !== undefined ? walk(bodyEdge.target, c2) : [val, c2];
 };
 
-// Struct value → Alloc Record. :backpatch identifies fields filled after record allocation.
+// Struct value → Alloc Record. A field marked :backpatch holds a closure that captures the record
+// itself, so it is filled in once the record has been allocated.
 const struct = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const fields = Edges.byLabel(id, Labels.FIELD)(ctx.graph);
 	const backpatched = new Set(Edges.byLabel(id, Labels.BACKPATCH)(ctx.graph).map(e => e.target));

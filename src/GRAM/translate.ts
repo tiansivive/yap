@@ -15,7 +15,7 @@ import { TRANSLATE } from "./provenance";
 
 // ── State ──
 
-/** A Nu's frame: `depth` is how many binders were open when it was entered. Frames are counted by `$label` indices, binders by `Bound` ones. */
+/** A Nu's frame: `depth` is how many binders were open when it was entered. A `$label` index counts enclosing frames; a `Bound` index counts binders. */
 type Frame = { readonly id: NodeId; readonly depth: number };
 
 type State = {
@@ -176,7 +176,8 @@ const scoped = (tag: string, name: string, index: number, tid: number, st: State
 	return [id, withScopes];
 };
 
-// The owner is the frame `index` Nus out. Its :scope edge is flagged, followed by the binders opened since it.
+// `index` counts enclosing Nu frames outward from the reference. The :scope edge to that frame's Nu
+// carries `owner: true`, followed by one edge per binder opened inside it.
 const nuLabel = (name: string, index: number, tid: number, st: State): [NodeId, State] => {
 	const [id, s] = emit(st, Tags.VAR_NU_LABEL, { name, index }, prov(tid, st));
 	const frame = st.frames[st.frames.length - 1 - index];
@@ -223,7 +224,6 @@ const abs = (tag: string, t: EB.Term & { type: "Abs" }, st: State): [NodeId, Sta
 	return [id, link(pop(s4), id, Labels.BODY, body)];
 };
 
-// A Nu binds labels, not env variables, so it opens a frame and leaves the binder stack alone.
 const nu = (t: EB.Term & { type: "Abs"; binding: { type: "Nu" } }, st: State): [NodeId, State] => {
 	const [id, s1] = emit(st, Tags.NU, bindingPayload(t.binding, st.binders.length), prov(t.id, st));
 	const [body, s2] = walk(t.body, { ...s1, frames: [...s1.frames, { id, depth: s1.binders.length }] });

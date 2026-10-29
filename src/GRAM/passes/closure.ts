@@ -38,11 +38,7 @@ const capturesOf = (lamId: NodeId, g: Graph): ReadonlyArray<NodeId> => {
 			// referenced field), so the label reads its field off the captured record. The
 			// de Bruijn level filter applies only to bound-variable captures.
 			return match(Nodes.get(e.source)(g)?.tag)
-				.with(Tags.VAR_LABEL, () => {
-					const s = structOf(ref.target, g);
-					return s !== undefined ? [s] : [];
-				})
-				.with(Tags.VAR_NU_LABEL, () => {
+				.with(Tags.VAR_LABEL, Tags.VAR_NU_LABEL, () => {
 					const s = structOf(ref.target, g);
 					return s !== undefined ? [s] : [];
 				})

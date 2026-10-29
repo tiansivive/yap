@@ -7,8 +7,9 @@ import * as Strategy from "../grs/strategy";
 import type { Descriptor } from "../pipeline/descriptor";
 import { none } from "../pipeline/descriptor";
 
-// A struct field whose closure captures its owner receives a :backpatch edge. The semantic
-// :field edge remains intact; bridge lowering can read the additive capture/backpatch view.
+// A struct field whose closure captures the struct itself gets a :backpatch edge from the struct,
+// alongside its :field edge. The bridge then allocates the struct first and fills that field in
+// afterwards, once the closure has the struct to capture.
 
 const lhsNodes = [
 	{ bind: "$closure", tag: Tags.CLOSURE },

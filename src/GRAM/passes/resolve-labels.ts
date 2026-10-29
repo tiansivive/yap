@@ -9,12 +9,13 @@ import { none } from "../pipeline/descriptor";
 
 // Resolve label references the way bound variables resolve. The descent carries a scope stack
 // of label frames (a struct's :field edges, a sigma binder's variable) interleaved with the
-// lambdas crossed to reach them. Legacy labels resolve through the nearest frame. Nu labels
-// retain their binder owner from translation and resolve against that owner's struct body.
+// lambdas crossed to reach them. For each `:label` reference:
 //   - :refers_to → the field it names (nearest enclosing frame, innermost shadows);
 //   - :scope → each lambda pushed after that frame, i.e. the lambdas the reference escapes.
 // A lambda above the resolved frame is a boundary the closure must capture across; one below
 // it (the target is local to the lambda) is not, and gets no :scope edge.
+// A `$label` reference already has its :scope edges from translation, and the one marked `owner`
+// points at its record. Here it only gains :refers_to, to the field of that record it names.
 
 type Frame = ReadonlyMap<string, NodeId>;
 type Scope = { readonly kind: "frame"; readonly frame: Frame } | { readonly kind: "lambda"; readonly lam: NodeId };
