@@ -79,7 +79,7 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 		const a = (value: EB.Term) => R.Constructors.Extension("a", value, R.Constructors.Empty<EB.Term, EB.Variable>());
 		const types = EB.Constructors.Row(R.Constructors.Empty<EB.Term, EB.Variable>());
 		const lazy = (value: EB.Term) => EB.Constructors.Nu({ mode: "lazy", labels: ["a"], scoped: a(value), annotation: types }, EB.Constructors.Struct(a(value)));
-		const normalize = (term: EB.Term) => runNF(ctxFor(mkCtx()), () => NF.normalize(term, { maxSteps: 20_000 }));
+		const normalize = (term: EB.Term) => runNF(ctxFor(mkCtx()), () => NF.normalize(term, { maxSteps: 2_000 }));
 
 		it("stays a value until observed", () => {
 			expect(normalize(lazy(EB.DSL.Labels.nu("a")))).toMatchObject({ type: "Abs", binder: { type: "Nu", mode: "lazy" } });
