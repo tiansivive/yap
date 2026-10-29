@@ -9,7 +9,6 @@ import * as Rec from "fp-ts/lib/Record";
 import * as EB from ".";
 import * as NF from "./normalization";
 
-import * as Eff from "@yap/utils/effects";
 import * as M from "./shared/effects";
 
 import * as Src from "@yap/src/index";
@@ -86,27 +85,29 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				return [EB.Constructors.Schema(r), us] satisfies Result;
 			})
 			.with([{ type: "struct" }, NF.Patterns.Type], function* ([{ row }]) {
-				const irrelevant = yield* DependentRows.placeholders(row, ctx.env.length);
+				const irrelevant = DependentRows.placeholders(row);
 				const r = yield* DependentRows.witness(irrelevant);
-				const xtended = (c: EB.Context) => EB.bind(EB.muContext(c), { type: "SigmaV2", variable: "$sig" }, NF.Constructors.Row(r));
+				const extended = (c: EB.Context) => EB.bind(EB.muContext(c), { type: "SigmaV2", variable: "$sig" }, NF.Constructors.Row(r));
 
 				/*
-				 * A struct checked against Type is a type-level position, so muContext must tag the
-				 * enclosing lets — otherwise a self-reference in a field is not flagged and the
-				 * definition never gets its Mu wrap. Variants and rows do this at their own entries.
+				 * A struct checked against `Type` describes a type, so `muContext` turns the enclosing
+				 * lets into Mu binders. A field that refers to a definition being declared then counts
+				 * as a recursive reference, and that definition is wrapped in Mu. Variants and rows
+				 * turn the lets into Mu binders where they are elaborated.
 				 *
-				 * The window collects the metas standing for sibling values. A dep-label's type is
-				 * only knowable once the row it points into has been elaborated, which is here.
+				 * Each `&label` records a meta standing for the value of the sibling it names. That
+				 * value is known once the whole row is elaborated, so the metas are collected here and
+				 * constrained against the matching fields of the finished schema.
 				 */
 				const [[body, us], labels] = yield* M.windows.within<{ label: string; meta: EB.Meta }>()({ scope: "env", lvl: ctx.env.length }, () =>
-					M.reader.local(xtended, DependentRows.fields(row)),
+					M.reader.local(extended, DependentRows.fields(row)),
 				);
 
 				const schema = EB.Constructors.Schema(body);
 
 				yield* M.reader.local(
-					xtended,
-					Eff.traverse(labels, function* ({ label, meta }) {
+					extended,
+					M.traverse(labels, function* ({ label, meta }) {
 						const sibling = yield* NF.normalize(EB.Constructors.Proj(label, schema));
 						yield* M.constrain({ type: "assign", left: sibling, right: NF.Constructors.Flex(meta), lvl: ctx.env.length + 1 });
 					}),
@@ -137,7 +138,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				return [EB.Constructors.Struct(r), us] satisfies Result;
 			})
 			.with([{ type: "struct" }, NF.Patterns.SigmaV2], function* ([tm, sig]) {
-				/* The expected row depends on the struct's own values, so the struct is inferred once for them. */
+				/* The expected row depends on the struct's own values, so the struct is first inferred to obtain them. */
 				const [inferred] = yield* EB.Struct.infer(tm);
 				const values = NF.rowOf(yield* NF.normalize(inferred));
 				assert(values, "Expected a strict struct to normalize to a row");
