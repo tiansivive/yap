@@ -23,13 +23,12 @@ exports[`inference: match > match { x: 1 } | { x: a } -> a 1`] = `
 {
   "displays": {
     "constraints": [
-      "Num ~~ ?1",
-      "Schema [ x: ?3 | ?4 ] ~~ Schema [ x: Num ]",
-      "?3 ~~ ?3",
-      "?3 ~~ ?6",
+      "Schema [ x: ?2 | ?3 ] ~~ Schema [ x: Num ]",
+      "?2 ~~ ?2",
+      "?2 ~~ ?5",
     ],
-    "term": "match Struct [ x: 1 ] | Struct [ x: a | $row_4 ] -> a",
-    "type": "?6",
+    "term": "match νstrict [] . Struct [ x: 1 ] | Struct [ x: a | $row_3 ] -> a",
+    "type": "?5",
   },
 }
 `;

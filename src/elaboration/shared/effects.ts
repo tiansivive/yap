@@ -6,9 +6,9 @@ import type * as Metas from "@yap/elaboration/shared/metas";
 
 import { Monoid } from "fp-ts/lib/Monoid";
 import { Cause } from "./errors";
-import { recursion } from "./recursion";
+import { recursion, windows } from "./recursion";
 
-export { recursion };
+export { recursion, windows };
 
 /* No callstack here: NbE owns its machine and installs it at its own public entries. */
 export type Elaboration<A> = Eff.Eff<

@@ -65,6 +65,23 @@ export const Label: PostProcessor<[Colon, Token], Variable> = ([, tok]) => {
 	);
 };
 
+const sigiled =
+	(type: "dep-label" | "nu-label"): PostProcessor<[Token, Token], Variable> =>
+	([, tok]) =>
+		F.pipe(
+			[tok],
+			sourceLoc,
+			Sourced.fold<unknown, Variable>((value, location) => {
+				if (typeof value !== "string") {
+					throw new Error(`Expected string for ${type}`);
+				}
+				return { type, value, location };
+			}),
+		);
+
+export const DepLabel = sigiled("dep-label");
+export const NuLabel = sigiled("nu-label");
+
 export const Str: PostProcessor<[Sourced<string>], Sourced<Literal>> = F.flow(
 	NEA.head,
 	Sourced.map(value => ({ type: "String", value })),

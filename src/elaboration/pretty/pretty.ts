@@ -78,6 +78,12 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				.with({ type: "Label" }, function* ({ name }) {
 					return `:${name}`;
 				})
+				.with({ type: "DepLabel" }, function* ({ name, index }) {
+					return `&${name}` + (opts.deBruijn ? `#I${index}` : "");
+				})
+				.with({ type: "NuLabel" }, function* ({ name, index }) {
+					return `$${name}` + (opts.deBruijn ? `#I${index}` : "");
+				})
 				.with({ type: "Meta" }, function* ({ val }) {
 					const entry = (yield* Metas.registry.get())[val];
 					if (entry?.solution) {
@@ -113,22 +119,26 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				.with({ type: "Lambda" }, function* ({ variable, annotation }) {
 					return ["λ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
-				.with({ type: "Sigma" }, function* ({ variable, annotation }) {
+				.with({ type: "Sigma" }, { type: "SigmaV2" }, function* ({ variable, annotation }) {
 					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
 				.with({ type: "Pi" }, function* ({ variable, annotation }) {
 					return ["Π(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
+				})
+				.with({ type: "Nu" }, function* ({ mode, scoped }) {
+					return ["ν", mode, " ", yield* go(EB.Constructors.Row(scoped))] satisfies PP.Doc;
 				})
 				.otherwise(() => {
 					throw new Error("_display Term Binder: Not implemented");
 				});
 
 			const arrow = match(binding)
-				.with({ type: "Sigma" }, () => ".")
+				.with({ type: "Sigma" }, { type: "SigmaV2" }, { type: "Nu" }, () => ".")
 				.with({ icit: "Implicit" }, () => "=>")
 				.otherwise(() => "->");
 
-			const inner = binding.type === "Sigma" ? go(body) : M.reader.local(bound(binding.variable), go(body));
+			/* Sigma and Nu add no env entry, so their bodies display in the current scope. */
+			const inner = binding.type === "Sigma" || binding.type === "Nu" ? go(body) : M.reader.local(bound(binding.variable), go(body));
 
 			if (opts.printEnv) {
 				return PP.group(["(", b, " ", arrow, PP.nest(2, [PP.line, yield* inner])]);
@@ -233,6 +243,7 @@ const displayBinder = (binder: EB.Binder["type"]): string =>
 		.with("Lambda", () => "λ")
 		.with("Pi", () => "Π")
 		.with("Mu", () => "μ")
+		.with("Pattern", () => "pat")
 		.otherwise(() => "Binder Display: Not implemented");
 
 const Pat = {

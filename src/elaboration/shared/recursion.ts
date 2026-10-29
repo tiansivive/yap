@@ -2,66 +2,60 @@
 import * as Eff from "@yap/utils/effects";
 
 /*
- * Open let-windows for recursive-definition detection.
+ * A window collects the items recorded while a scope is elaborated: a let window learns whether its
+ * definition refers to itself, a Sigma window collects the metas of its `&label` references, and a
+ * record field window collects the `$label` references the field makes. Windows nest with their
+ * scopes, so the open windows of one scope have strictly increasing levels and an item matches at
+ * most one of them. A sibling scope can reuse a level because the earlier window has closed by then.
+ * An item recorded at a level with no open window is dropped, which is how a reference to a scope
+ * that has already closed is ignored.
  *
- * The freer replacement of v2's writer binder channel, scoped to its one
- * producer/consumer pair: the let boundary runs its value-check inside a
- * window (detect), and lookup flags the window whose level it resolved
- * through when the binder is Mu-tagged (muContext) — a type-level reference
- * to an in-progress let. A flag with no open window at that level is a
- * reference to an already-closed definition and is deliberately a no-op.
- *
- * Frame lifetime is the scoping: a window at level L opens under an env of
- * length L and nested windows open under deeper envs, so stacked levels
- * strictly increase and a flag matches at most one frame. Levels reused by
- * sibling scopes cannot collide because the dead window's frame is gone.
+ * Windows are keyed by scope as well as level because record frames live on the label stack, which
+ * is numbered separately from the env: a field window and its enclosing let window can share a level.
  */
 
-type Frame = { lvl: number; recursed: boolean };
+type Key = { scope: "env" | "local"; lvl: number };
 
-type Push = Eff.Action<"Recursion.push", number, undefined>;
-type Flag = Eff.Action<"Recursion.flag", number, undefined>;
-type Pop = Eff.Action<"Recursion.pop", undefined, boolean>;
+type Push = Eff.Action<"Recursion.push", Key, undefined>;
+type Record = Eff.Action<"Recursion.record", { key: Key; item: unknown }, undefined>;
+type Pop<T> = Eff.Action<"Recursion.pop", undefined, T[]>;
 
-/** Flags the open window at lvl, if any: a type-level reference to the let it belongs to. */
-const flag = function* (lvl: number) {
-	return yield* Eff.ctl.action<Flag>("Recursion.flag", lvl);
+/** The item type is supplied first because TypeScript cannot infer `Row` and `A` once any argument is explicit. */
+const within = <T>() =>
+	function* <Row extends Eff.AnyAction, A>(key: Key, program: () => Eff.Eff<Row, A>) {
+		yield* Eff.ctl.action<Push>("Recursion.push", key);
+
+		const value = yield* program();
+
+		const items = yield* Eff.ctl.action<Pop<T>>("Recursion.pop", undefined);
+
+		return [value, items] as const;
+	};
+
+const record = function* (key: Key, item: unknown) {
+	return yield* Eff.ctl.action<Record>("Recursion.record", { key, item });
 };
 
-/** Runs program inside a window at lvl; answers with its value and whether the window was flagged. */
-const detect = function* <Row extends Eff.AnyAction, A>(lvl: number, program: () => Eff.Eff<Row, A>) {
-	yield* Eff.ctl.action<Push>("Recursion.push", lvl);
+type Frame = { key: Key; items: unknown[] };
 
-	const value = yield* program();
-
-	const recursed = yield* Eff.ctl.action<Pop>("Recursion.pop", undefined);
-
-	return [value, recursed] as const;
-};
-
-const handlers = (): Eff.Handler<Push | Flag | Pop, readonly Frame[]> => {
-	/* This handler owns the stack; its clauses are the only way to move it. */
+const handlers = (): Eff.Handler<Push | Record | Pop<unknown>, readonly Frame[]> => {
 	const frames: Frame[] = [];
 
 	return {
 		clauses: {
-			"Recursion.push": lvl => {
-				frames.push({ lvl, recursed: false });
+			"Recursion.push": key => {
+				frames.push({ key, items: [] });
 
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Recursion.flag": lvl => {
-				const frame = frames.find(f => f.lvl === lvl);
-
-				if (frame) {
-					frame.recursed = true;
-				}
+			"Recursion.record": ({ key, item }) => {
+				frames.find(f => f.key.scope === key.scope && f.key.lvl === key.lvl)?.items.push(item);
 
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Recursion.pop": () => Eff.ctl.resume(frames.pop()?.recursed ?? false),
+			"Recursion.pop": () => Eff.ctl.resume(frames.pop()?.items ?? []),
 		},
 
 		/* Empty after a completed run; whatever was open when an abort stopped it. */
@@ -69,4 +63,17 @@ const handlers = (): Eff.Handler<Push | Flag | Pop, readonly Frame[]> => {
 	};
 };
 
-export const recursion = { flag, detect, handlers };
+export const windows = { record, within };
+
+/** The item is unit, so only its presence carries meaning. */
+export const recursion = {
+	flag: function* (lvl: number) {
+		return yield* record({ scope: "env", lvl }, undefined);
+	},
+	detect: function* <Row extends Eff.AnyAction, A>(lvl: number, program: () => Eff.Eff<Row, A>) {
+		const [value, items] = yield* within<unknown>()({ scope: "env", lvl }, program);
+
+		return [value, items.length > 0] as const;
+	},
+	handlers,
+};

@@ -5,8 +5,6 @@ exports[`Recursive lets > Mu wrapping of self-referencing type definitions > wra
   "constraints": [
     "Type ~~ Type",
     "Type ~~ Type",
-    "Type ~~ Type",
-    "Type ~~ Type",
   ],
   "solution": "empty",
   "state": {
@@ -16,7 +14,8 @@ exports[`Recursive lets > Mu wrapping of self-referencing type definitions > wra
   : Type
   = ([μ = Tree](x: Type)) ->
     Variant
-      [ node: Σ($sig: [ right: x, left: x ]) . Schema [ right: x, left: x ],
+      [ node: Σ($sig: [ left: Irrelevant, right: Irrelevant ]) .
+          Schema [ left: x, right: x ],
         leaf: Unit ]",
   "type": "Type",
 }
@@ -25,8 +24,6 @@ exports[`Recursive lets > Mu wrapping of self-referencing type definitions > wra
 exports[`Recursive lets > Mu wrapping of self-referencing type definitions > wraps a recursive type constructor 1`] = `
 {
   "constraints": [
-    "Type ~~ Type",
-    "Type ~~ Type",
     "Type ~~ Type",
     "Type ~~ Type",
     "Type ~~ Type",
@@ -42,7 +39,8 @@ exports[`Recursive lets > Mu wrapping of self-referencing type definitions > wra
   = ([μ = List](x: Π(t: Type) -> Type)) ->
     λ(t: Type) ->
       Variant
-        [ cons: Σ($sig: [ tail: x t, head: t ]) . Schema [ tail: x t, head: t ],
+        [ cons: Σ($sig: [ head: Irrelevant, tail: Irrelevant ]) .
+            Schema [ head: t, tail: x t ],
           nil: Unit ]",
   "type": "Π(t: Type) -> (closure: Type -| Γ: t)",
 }
@@ -51,28 +49,26 @@ exports[`Recursive lets > Mu wrapping of self-referencing type definitions > wra
 exports[`Recursive lets > Mu wrapping of self-referencing type definitions > wraps an unannotated recursive variant definition 1`] = `
 {
   "constraints": [
-    "?1 ~~ Π(x: ?7) -> (closure: (?8 :: Type) -| Γ: x; t; List)",
-    "?2 ~~ ?7",
-    "?8 ~~ Type",
-    "?2 ~~ Type",
+    "?1 ~~ Π(x: ?5) -> (closure: (?6 :: Type) -| Γ: x; $sig; t; List)",
+    "?2 ~~ ?5",
     "Type ~~ Type",
     "Π(t: ?2) -> (closure: Type -| Γ: t; List) ~~ ?1",
   ],
-  "solution": "?1 |=> Π(x: Type) -> (closure: Type -| Γ: x; t; List)
-?2 |=> Type
-?7 |=> Type
-?8 |=> Type",
+  "solution": "?1 |=> Π(x: ?5) -> (closure: Type -| Γ: x; $sig; t; List)
+?2 |=> ?5
+?6 |=> Type",
   "state": {
     "nondeterminism": {},
   },
   "term": "let List
-  : Π(x: Type) -> (closure: Type -| Γ: x; t; List)
-  = ([μ = List](x: Π(x: Type) -> (closure: Type -| Γ: x; t; List))) ->
-    (λ(t: Type) ->
+  : Π(x: ?5) -> (closure: Type -| Γ: x; $sig; t; List)
+  = ([μ = List](x: Π(x: ?5) -> (closure: Type -| Γ: x; $sig; t; List))) ->
+    (λ(t: ?5) ->
       Variant
-        [ cons: Σ($sig: [ tail: x t, head: t ]) . Schema [ tail: x t, head: t ],
-          nil: Unit ] : Π(t: Type) -> Type)",
-  "type": "Π(x: Type) -> (closure: Type -| Γ: x; t; List)",
+        [ cons: Σ($sig: [ head: Irrelevant, tail: Irrelevant ]) .
+            Schema [ head: t, tail: x t ],
+          nil: Unit ] : Π(t: ?5) -> Type)",
+  "type": "Π(x: ?5) -> (closure: Type -| Γ: x; $sig; t; List)",
 }
 `;
 
@@ -80,14 +76,14 @@ exports[`Recursive lets > definitions that must not wrap > leaves a non-recursiv
 {
   "constraints": [
     "Type ~~ Type",
-    "Type ~~ Type",
-    "Type ~~ Type",
   ],
   "solution": "empty",
   "state": {
     "nondeterminism": {},
   },
-  "term": "let Pair : Type = Σ($sig: [ y: Num, x: Num ]) . Schema [ y: Num, x: Num ]",
+  "term": "let Pair
+  : Type
+  = Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]",
   "type": "Type",
 }
 `;
@@ -115,8 +111,6 @@ exports[`Recursive lets > definitions that must not wrap > leaves references to 
   "constraints": [
     "Type ~~ Type",
     "Type ~~ Type",
-    "Type ~~ Type",
-    "Type ~~ Type",
     "Num ~~ ?1",
   ],
   "solution": "?1 |=> Num",
@@ -126,8 +120,8 @@ exports[`Recursive lets > definitions that must not wrap > leaves references to 
   "term": "let m
   : Num
   = {
-    let A : Type = Σ($sig: [ x: Num ]) . Schema [ x: Num ];
-    let B : Type = Σ($sig: [ a: A ]) . Schema [ a: A ];
+    let A : Type = Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num ];
+    let B : Type = Σ($sig: [ a: Irrelevant ]) . Schema [ a: A ];
     return 1;
   }",
   "type": "Num",

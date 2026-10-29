@@ -102,6 +102,10 @@ export const project = function* (label: string, tm: EB.Term, ty: NF.Value, us: 
 
 			return yield* from(label, binder.annotation.row);
 		})
+		.with(NF.Patterns.SigmaV2, function* (sig) {
+			const self = yield* NF.normalize(tm);
+			return yield* project(label, tm, yield* NF.apply(sig.binder, sig.closure, self), us);
+		})
 		.otherwise(_ => {
 			throw new Error("Expected Row Type");
 		});

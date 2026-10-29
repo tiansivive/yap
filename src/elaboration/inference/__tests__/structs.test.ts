@@ -33,8 +33,12 @@ describe("Inference: Structs", () => {
 	});
 
 	describe("dependent structs", () => {
-		it("fields depending on previous fields: { x: 1, y: :x + 2 }", () => {
-			const { displays } = elaborateFrom("{ x: 1, y: :x + 2 }");
+		it("rejects an unknown Nu label", () => {
+			expect(() => elaborateFrom("{ a: 1, b: $nope }")).toThrow("No enclosing record field named nope");
+		});
+
+		it("fields depending on previous fields: { x: 1, y: $x + 2 }", () => {
+			const { displays } = elaborateFrom("{ x: 1, y: $x + 2 }");
 			expect(displays.type).toMatch("Schema");
 			expect(displays.type).toMatch(Field.bare("x", TypeText.lit("Num")));
 			expect(displays.type).toMatch(Field.modal("y", TypeText.lit("Num")));
@@ -43,8 +47,8 @@ describe("Inference: Structs", () => {
 			expect({ displays }).toMatchSnapshot();
 		});
 
-		it("nested dependent fields: { point: { x: 1, y: 2 }, halved: { a: :point.x / 2, b: :point.y / 2 } }", () => {
-			const { displays } = elaborateFrom("{ point: { x: 1, y: 2 }, halved: { a: :point.x / 2, b: :point.y / 2 } }");
+		it("nested dependent fields: { point: { x: 1, y: 2 }, halved: { a: $point.x / 2, b: $point.y / 2 } }", () => {
+			const { displays } = elaborateFrom("{ point: { x: 1, y: 2 }, halved: { a: $point.x / 2, b: $point.y / 2 } }");
 			expect(displays.type).toMatch("Schema");
 			expect(displays.type).toMatch(Field.schema("point"));
 			expect(displays.type).toMatch(Field.bare("x", TypeText.lit("Num")));
@@ -57,8 +61,8 @@ describe("Inference: Structs", () => {
 			expect({ displays }).toMatchSnapshot();
 		});
 
-		it("dependent field referring to later field: { y: :x + 2, x: 1 }", () => {
-			const { displays } = elaborateFrom("{ y: :x + 2, x: 1 }");
+		it("dependent field referring to later field: { y: $x + 2, x: 1 }", () => {
+			const { displays } = elaborateFrom("{ y: $x + 2, x: 1 }");
 			expect(displays.type).toMatch("Schema");
 			expect(displays.type).toMatch(Field.bare("x", TypeText.lit("Num")));
 			expect(displays.type).toMatch(Field.modal("y", TypeText.lit("Num")));
@@ -67,24 +71,43 @@ describe("Inference: Structs", () => {
 			expect({ displays }).toMatchSnapshot();
 		});
 
-		it("mutually dependent fields: { a: :b + 1, b: :a + 1 }", () => {
-			const { displays } = elaborateFrom("{ a: :b + 1, b: :a + 1 }");
-			expect(displays.type).toMatch("Schema");
-			expect(displays.type).toMatch(Field.modal("a", TypeText.lit("Num")));
-			expect(displays.type).toMatch(Field.modal("b", TypeText.lit("Num")));
-			expect(displays.type).toMatch(Liquid.mentions("FFI.$add"));
-
-			expect({ displays }).toMatchSnapshot();
+		it("rejects mutually dependent fields: { a: $b + 1, b: $a + 1 }", () => {
+			expect(() => elaborateFrom("{ a: $b + 1, b: $a + 1 }")).toThrow("Record Cycle: fields $a -> $b -> $a");
 		});
 
-		it('nested shadowing dependencies: { overriden: 1, foo: { inner: :overriden }, bar: { overriden: "hello", inner: :overriden }', () => {
-			const { displays } = elaborateFrom('{ overriden: 1, foo: { inner: :overriden }, bar: { overriden: "hello", inner: :overriden } }');
+		it("rejects a field reading itself: { a: { x: $a } }", () => {
+			expect(() => elaborateFrom("{ a: { x: $a } }")).toThrow("Record Cycle: fields $a -> $a");
+		});
+
+		it("rejects calling a field during construction: { f: \\x -> x, g: $f 1 }", () => {
+			expect(() => elaborateFrom("{ f: \\x -> x, g: $f 1 }")).toThrow("Record Call: $f");
+		});
+
+		it("rejects a field read in a match arm: { a: match 0 | x -> $a }", () => {
+			expect(() => elaborateFrom("{ a: match 0 | x -> $a }")).toThrow("Record Cycle: fields $a -> $a");
+		});
+
+		it("accepts a field read in a match arm when no cycle forms: { a: 1, b: match 0 | x -> $a }", () => {
+			const { displays } = elaborateFrom("{ a: 1, b: match 0 | x -> $a }");
+			expect(displays.term).toMatch("νstrict [ a: 1 ]");
+		});
+
+		it("accepts a field read under a lambda inside a match arm: { f: \\x -> match x | y -> $f y }", () => {
+			const { displays } = elaborateFrom("{ f: \\x -> match x | y -> $f y }");
+			expect(displays.term).toMatch("νstrict [ f:");
+		});
+
+		it("accepts a field read under a lambda: { f: \\x -> $g, g: 1 }", () => {
+			const { displays } = elaborateFrom("{ f: \\x -> $g, g: 1 }");
+			expect(displays.term).toMatch("νstrict [ g: 1 ]");
+		});
+
+		it('nested shadowing dependencies: { overriden: 1, foo: { inner: $overriden }, bar: { overriden: "hello", inner: $overriden }', () => {
+			const { displays } = elaborateFrom('{ overriden: 1, foo: { inner: $overriden }, bar: { overriden: "hello", inner: $overriden } }');
 			expect(displays.type).toMatch("Schema");
 			expect(displays.type).toMatch(Field.bare("overriden", TypeText.lit("Num")));
-			expect(displays.type).toMatch(Field.schema("foo", Field.meta("inner")));
-			expect(displays.type).toMatch(Field.schema("bar", Field.bare("overriden", TypeText.lit("String")), Field.meta("inner")));
-			expect(displays.constraints).toContain("Num ~~ ?1");
-			expect(displays.constraints).toContain("String ~~ ?4");
+			expect(displays.type).toMatch(Field.schema("foo", Field.bare("inner", TypeText.lit("Num"))));
+			expect(displays.type).toMatch(Field.schema("bar", Field.bare("overriden", TypeText.lit("String")), Field.bare("inner", TypeText.lit("String"))));
 
 			expect({ displays }).toMatchSnapshot();
 		});

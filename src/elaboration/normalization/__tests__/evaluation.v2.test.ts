@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
+import * as R from "@yap/shared/rows";
 
 import { elaborateFrom, mkCtx, runNF, shown } from "../../inference/__tests__/util";
 import * as Metas from "@yap/elaboration/shared/metas";
@@ -51,13 +52,55 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 	});
 
 	it("evaluates dependent record projection", () => {
-		const src = "{ x: 1, y: :x + 1 }.y";
+		const src = "{ x: 1, y: $x + 1 }.y";
 		const { structure } = elaborateFrom(src);
 		const ctx = ctxFor(mkCtx());
 
 		const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
 		expect(nf.type).toBe("Lit");
 		expect(show(nf, ctx)).toBe("2");
+	});
+
+	it("observes nested Nu fields through projection", () => {
+		const { structure } = elaborateFrom("{ q: { c: 2 } }.q.c");
+		const ctx = ctxFor(mkCtx());
+
+		const nf = runNF(ctx, () => NF.normalize(structure.term), structure.metas);
+		expect(show(nf, ctx)).toBe("2");
+	});
+
+	it("rejects strict record cycles at elaboration", () => {
+		expect(() => elaborateFrom("{ a: $a }.a")).toThrow("Record Cycle");
+		expect(() => elaborateFrom("{ a: $b, b: $a }.a")).toThrow("Record Cycle");
+	});
+
+	/* No syntax builds a lazy record yet, so the term is written by hand. */
+	describe("lazy records", () => {
+		const a = (value: EB.Term) => R.Constructors.Extension("a", value, R.Constructors.Empty<EB.Term, EB.Variable>());
+		const types = EB.Constructors.Row(R.Constructors.Empty<EB.Term, EB.Variable>());
+		const lazy = (value: EB.Term) => EB.Constructors.Nu({ mode: "lazy", labels: ["a"], scoped: a(value), annotation: types }, EB.Constructors.Struct(a(value)));
+		const normalize = (term: EB.Term) => runNF(ctxFor(mkCtx()), () => NF.normalize(term, { maxSteps: 2_000 }));
+
+		it("stays a value until observed", () => {
+			expect(normalize(lazy(EB.DSL.Labels.nu("a")))).toMatchObject({ type: "Abs", binder: { type: "Nu", mode: "lazy" } });
+		});
+
+		it("observes a field under its frame", () => {
+			const record = EB.Constructors.Nu(
+				{
+					mode: "lazy",
+					labels: ["a", "b"],
+					scoped: R.Constructors.Extension("b", EB.Constructors.Lit({ type: "Num", value: 2 }), a(EB.DSL.Labels.nu("b"))),
+					annotation: types,
+				},
+				EB.Constructors.Struct(R.Constructors.Extension("b", EB.Constructors.Lit({ type: "Num", value: 2 }), a(EB.DSL.Labels.nu("b")))),
+			);
+			expect(show(normalize(EB.Constructors.Proj("a", record)), mkCtx())).toBe("2");
+		});
+
+		it("keeps a cycle inert until observation", () => {
+			expect(() => normalize(EB.Constructors.Proj("a", lazy(EB.DSL.Labels.nu("a"))))).toThrow("exceeded maximum steps");
+		});
 	});
 
 	/*

@@ -412,7 +412,8 @@ return main();
 ",
     "elaborated": "Struct
   [ __tag: cons,
-    payload: Struct [ 0: 1, 1: Struct [ __tag: nil, payload: unit ] ] ]",
+    payload: νstrict [] .
+      Struct [ 0: 1, 1: Struct [ __tag: nil, payload: unit ] ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"listOf1"}
@@ -420,15 +421,17 @@ return main();
   :field -> [4] {"label":"__tag"}
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"cons"}}
-[5] struct
-  :field -> [6] {"label":"0"}
-  :field -> [7] {"label":"1"}
-[6] lit {"value":{"type":"Num","value":1}}
-[7] struct
-  :field -> [8] {"label":"__tag"}
-  :field -> [9] {"label":"payload"}
-[8] lit {"value":{"type":"Atom","value":"nil"}}
-[9] lit {"value":{"type":"unit"}}",
+[5] nu {"variable":"$nu","level":1}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"0"}
+  :field -> [8] {"label":"1"}
+[7] lit {"value":{"type":"Num","value":1}}
+[8] struct
+  :field -> [9] {"label":"__tag"}
+  :field -> [10] {"label":"payload"}
+[9] lit {"value":{"type":"Atom","value":"nil"}}
+[10] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
@@ -518,17 +521,21 @@ return main();
 ",
     "elaborated": "Struct
   [ __tag: cons,
-    payload: Struct
-      [ 0: 1,
-        1: Struct
-          [ __tag: cons,
-            payload: Struct
-              [ 0: 2,
-                1: Struct
-                  [ __tag: cons,
-                    payload: Struct
-                      [ 0: 3,
-                        1: Struct [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
+    payload: νstrict [] .
+      Struct
+        [ 0: 1,
+          1: Struct
+            [ __tag: cons,
+              payload: νstrict [] .
+                Struct
+                  [ 0: 2,
+                    1: Struct
+                      [ __tag: cons,
+                        payload: νstrict [] .
+                          Struct
+                            [ 0: 3,
+                              1: Struct
+                                [ __tag: nil, payload: unit ] ] ] ] ] ] ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"listOf3"}
@@ -536,31 +543,37 @@ return main();
   :field -> [4] {"label":"__tag"}
   :field -> [5] {"label":"payload"}
 [4] lit {"value":{"type":"Atom","value":"cons"}}
-[5] struct
-  :field -> [6] {"label":"0"}
-  :field -> [7] {"label":"1"}
-[6] lit {"value":{"type":"Num","value":1}}
-[7] struct
-  :field -> [8] {"label":"__tag"}
-  :field -> [9] {"label":"payload"}
-[8] lit {"value":{"type":"Atom","value":"cons"}}
-[9] struct
-  :field -> [10] {"label":"0"}
-  :field -> [11] {"label":"1"}
-[10] lit {"value":{"type":"Num","value":2}}
+[5] nu {"variable":"$nu","level":1}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"0"}
+  :field -> [8] {"label":"1"}
+[7] lit {"value":{"type":"Num","value":1}}
+[8] struct
+  :field -> [9] {"label":"__tag"}
+  :field -> [10] {"label":"payload"}
+[9] lit {"value":{"type":"Atom","value":"cons"}}
+[10] nu {"variable":"$nu","level":1}
+  :body -> [11]
 [11] struct
-  :field -> [12] {"label":"__tag"}
-  :field -> [13] {"label":"payload"}
-[12] lit {"value":{"type":"Atom","value":"cons"}}
+  :field -> [12] {"label":"0"}
+  :field -> [13] {"label":"1"}
+[12] lit {"value":{"type":"Num","value":2}}
 [13] struct
-  :field -> [14] {"label":"0"}
-  :field -> [15] {"label":"1"}
-[14] lit {"value":{"type":"Num","value":3}}
-[15] struct
-  :field -> [16] {"label":"__tag"}
-  :field -> [17] {"label":"payload"}
-[16] lit {"value":{"type":"Atom","value":"nil"}}
-[17] lit {"value":{"type":"unit"}}",
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"cons"}}
+[15] nu {"variable":"$nu","level":1}
+  :body -> [16]
+[16] struct
+  :field -> [17] {"label":"0"}
+  :field -> [18] {"label":"1"}
+[17] lit {"value":{"type":"Num","value":3}}
+[18] struct
+  :field -> [19] {"label":"__tag"}
+  :field -> [20] {"label":"payload"}
+[19] lit {"value":{"type":"Atom","value":"nil"}}
+[20] lit {"value":{"type":"unit"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module

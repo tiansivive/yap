@@ -95,6 +95,11 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					});
 					return { vc } satisfies VerificationArtefacts;
 				})
+				.with([EB.CtorPatterns.Nu, NF.Patterns.Schema], function* ([term, type]) {
+					// TODO: lazy records, once some syntax can build one
+					assert(term.binding.mode === "strict", "Verification supports strict records only");
+					return yield* reader.local(c => EB.open(term.binding, c), check(term.body, type));
+				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Sigma], function* ([term, type]) {
 					const evaluated = yield* NF.evaluate(term);
 					const innerViewed = yield* NF.view(evaluated);
@@ -106,6 +111,22 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 							throw new Error("Expected struct to evaluate to a sealed struct");
 						});
 					return yield* check(term, schema);
+				})
+				.with([P.union(EB.CtorPatterns.Struct, EB.CtorPatterns.Nu), NF.Patterns.SigmaV2], function* ([term, type]) {
+					const evaluated = yield* NF.evaluate(term);
+					const innerViewed = yield* NF.view(evaluated);
+					return yield* match(innerViewed)
+						.with({ kind: "Sealed", value: NF.Patterns.Struct }, function* ({ value }) {
+							const schema = yield* NF.apply(type.binder, type.closure, NF.Constructors.Row(value.arg.row));
+							return yield* match(NF.rowOf(schema))
+								.with(P.nonNullable, () => check(term, schema))
+								.otherwise(function* () {
+									throw new Error("SigmaV2 closure expected a Schema body");
+								});
+						})
+						.otherwise(function* () {
+							throw new Error("Expected struct to evaluate to a sealed struct");
+						});
 				})
 				.with([EB.CtorPatterns.Tagged, NF.Patterns.Variant], function* ([term, type]) {
 					const value = EB.TaggedTerm.extract(term.arg.row);

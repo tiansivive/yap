@@ -7,6 +7,8 @@ import { repl } from "../src/cli/repl";
 import { start as startExplorer } from "../src/cli/explore";
 import { Build } from "../src/verification/solver/ivl/build";
 
+options.maxSteps = Number(process.env.YAP_MAX_STEPS) || options.maxSteps;
+
 const program = new Command();
 
 program

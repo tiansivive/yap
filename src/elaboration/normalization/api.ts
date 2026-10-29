@@ -1,9 +1,12 @@
+import { match } from "ts-pattern";
+
 import * as Eff from "@yap/utils/effects";
 
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 import type { Implicitness } from "@yap/shared/implicitness";
+import { options } from "@yap/shared/config/options";
 
 import * as Arity from "./arity";
 import * as Machine from "./evaluation.v2";
@@ -11,7 +14,8 @@ import * as Quoting from "./quoting";
 import * as Recursion from "./recursion";
 import { handlers } from "./machine/handlers";
 import { Mode, defaultMode, type EvalMode, type Evaluation } from "./effects";
-import type { Closure, Value } from "./syntax/term";
+import type { Closure, Row, Value } from "./syntax/term";
+import { Patterns } from "./syntax/term";
 
 /*
  * The consumer-facing surface. Each entry installs a fresh machine via
@@ -25,7 +29,7 @@ import type { Closure, Value } from "./syntax/term";
  */
 
 /** Runs an internal-layer program on a fresh machine, under its own fuel cap. */
-function* fresh<A>(program: () => Evaluation<A>, mode: EvalMode = defaultMode, maxSteps = Machine.MAX_STEPS) {
+function* fresh<A>(program: () => Evaluation<A>, mode: EvalMode = defaultMode, maxSteps = options.maxSteps) {
 	const [value] = yield* Eff.with([handlers(maxSteps), Mode.handlers(mode)], program);
 
 	return value;
@@ -45,12 +49,12 @@ export function* whnf(term: EB.Term, opts?: Machine.EvalOptions) {
 	return yield* fresh(() => Machine.evaluate(term), { noInlineBindings: true, noReduceEliminations: true }, opts?.maxSteps);
 }
 
-export function* quote(lvl: number, val: Value) {
-	return yield* fresh(() => Machine.drive(Quoting.quote(lvl, val), steps => `Quotation exceeded maximum steps (${steps}).`));
+export function* quote(lvl: number, val: Value, opts?: Machine.EvalOptions) {
+	return yield* fresh(() => Machine.drive(Quoting.quote(lvl, val), steps => `Quotation exceeded maximum steps (${steps}).`), defaultMode, opts?.maxSteps);
 }
 
-export function* closeVal(value: Value) {
-	return yield* fresh(() => Machine.drive(Quoting.closeVal(value), steps => `Quotation exceeded maximum steps (${steps}).`));
+export function* closeVal(value: Value, opts?: Machine.EvalOptions) {
+	return yield* fresh(() => Machine.drive(Quoting.closeVal(value), steps => `Quotation exceeded maximum steps (${steps}).`), defaultMode, opts?.maxSteps);
 }
 
 export function* force(value: Value) {
@@ -100,6 +104,12 @@ export const probe =
 		return answer;
 	};
 
-export { unwrapNeutral, ignoreModal, isFlex, builtinsOps } from "./evaluation.v2";
+/** The row a sealed `Schema`, `Variant` or `Struct` wraps. */
+export const rowOf = (value: Value): Row | undefined =>
+	match(Machine.unwrapNeutral(value))
+		.with(Patterns.Schema, Patterns.Variant, Patterns.Struct, ({ arg }) => arg.row)
+		.otherwise(() => undefined);
+
+export { unwrapNeutral, ignoreModal, isFlex, builtinsOps, ViewPatterns } from "./evaluation.v2";
 export type { View, Meet, MeetResult, EvalOptions } from "./evaluation.v2";
 export { inert } from "./arity";

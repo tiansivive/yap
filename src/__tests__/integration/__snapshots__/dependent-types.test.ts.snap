@@ -311,45 +311,46 @@ exports[`Language Tour — Dependent Types > dependent records (sigma types) 1`]
 }
 return main();
 ",
-    "elaborated": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: :fst, fst: Type ]",
+    "elaborated": "Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) . Schema [ fst: Type, snd: &fst ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"DependentPair"}
-[3] sigma {"variable":"$sig","level":1}
+[3] sigma:v2 {"variable":"$sig","level":1}
   :annotation -> [4]
   :body -> [9]
-[4] row:ext {"label":"snd"}
+[4] row:ext {"label":"fst"}
   :rest -> [6]
   :value -> [5]
-[5] var:label {"name":"fst"}
-[6] row:ext {"label":"fst"}
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"snd"}
   :rest -> [8]
   :value -> [7]
-[7] lit {"value":{"type":"Atom","value":"Type"}}
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
 [8] row:empty
 [9] app {"icit":"Explicit"}
   :arg -> [11]
   :func -> [10]
 [10] lit {"value":{"type":"Atom","value":"Schema"}}
-[11] row:ext {"label":"snd"}
+[11] row:ext {"label":"fst"}
   :rest -> [13]
   :value -> [12]
-[12] var:label {"name":"fst"}
-[13] row:ext {"label":"fst"}
+[12] lit {"value":{"type":"Atom","value":"Type"}}
+[13] row:ext {"label":"snd"}
   :rest -> [15]
   :value -> [14]
-[14] lit {"value":{"type":"Atom","value":"Type"}}
+[14] var:dep-label {"name":"fst","index":0}
+  :scope -> [3] {"level":0,"owner":true}
 [15] row:empty",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       return v0",
     "name": "DependentPair",
-    "normalized": "Σ($sig: [ snd: :fst, fst: Type ]) .
-  (closure: Schema [ snd: :fst, fst: Type ] -| ·)",
+    "normalized": "Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+  (closure: Schema [ fst: Type, snd: &fst ] -| Γ: $sig)",
     "solverTrace": "=== Formula ===
   true
 
@@ -380,39 +381,41 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = 42;
-  const v1 = Num;
+  const v0 = Num;
+  const v1 = 42;
   const v2 = {
-    snd: v0,
-    fst: v1
+    fst: v0,
+    snd: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ snd: 42, fst: Num ]",
+    "elaborated": "νstrict [] . Struct [ fst: Num, snd: 42 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"numPair"}
-[3] struct
-  :field -> [4] {"label":"snd"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
   :field -> [6] {"label":"fst"}
-[4] lit {"value":{"type":"Num","value":42}}
+  :field -> [7] {"label":"snd"}
 [5] var:free {"name":"Num"}
 [6] var:ref {"name":"Num"}
   :refers_to -> [5]
-  :scope -> [2] {"level":0}",
+  :scope -> [2] {"level":0}
+[7] lit {"value":{"type":"Num","value":42}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 42
-      let v1 = Num
-      let v2 = alloc { snd: v0, fst: v1 }
+      let v0 = Num
+      let v1 = 42
+      let v2 = alloc { fst: v0, snd: v1 }
       return v2",
     "name": "numPair",
-    "normalized": "Struct [ snd: 42, fst: Num ]",
+    "normalized": "Struct [ fst: Num, snd: 42 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -438,44 +441,47 @@ return main();
   feasible
 
 [sat]",
-    "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: :fst, fst: Type ]",
+    "type": "Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+  Schema [ fst: Type, snd: ($sig).fst ]",
     "validity": "valid",
   },
   {
     "codegenJS": "function main() {
-  const v0 = "hello";
-  const v1 = String;
+  const v0 = String;
+  const v1 = "hello";
   const v2 = {
-    snd: v0,
-    fst: v1
+    fst: v0,
+    snd: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ snd: "hello", fst: String ]",
+    "elaborated": "νstrict [] . Struct [ fst: String, snd: "hello" ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"strPair"}
-[3] struct
-  :field -> [4] {"label":"snd"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
   :field -> [6] {"label":"fst"}
-[4] lit {"value":{"type":"String","value":"hello"}}
+  :field -> [7] {"label":"snd"}
 [5] var:free {"name":"String"}
 [6] var:ref {"name":"String"}
   :refers_to -> [5]
-  :scope -> [2] {"level":0}",
+  :scope -> [2] {"level":0}
+[7] lit {"value":{"type":"String","value":"hello"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = "hello"
-      let v1 = String
-      let v2 = alloc { snd: v0, fst: v1 }
+      let v0 = String
+      let v1 = "hello"
+      let v2 = alloc { fst: v0, snd: v1 }
       return v2",
     "name": "strPair",
-    "normalized": "Struct [ snd: "hello", fst: String ]",
+    "normalized": "Struct [ fst: String, snd: "hello" ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -501,7 +507,8 @@ return main();
   feasible
 
 [sat]",
-    "type": "Σ($sig: [ snd: :fst, fst: Type ]) . Schema [ snd: :fst, fst: Type ]",
+    "type": "Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+  Schema [ fst: Type, snd: ($sig).fst ]",
     "validity": "valid",
   },
 ]
@@ -512,7 +519,7 @@ exports[`Language Tour — Dependent Types > generic dependent pairs 1`] = `
   {
     "codegenJS": "function main() {
   const env_cls2 = {};
-  const fnref_cls2 = closure_28;
+  const fnref_cls2 = closure_26;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -520,17 +527,17 @@ exports[`Language Tour — Dependent Types > generic dependent pairs 1`] = `
   return closure_cls2;
 }
 
-function closure_29(env0, p1) {
+function closure_27(env0, p1) {
   const cap_0 = env0.v0;
   const v0 = {};
   return v0;
 }
 
-function closure_28(env0, a1) {
+function closure_26(env0, a1) {
   const env_cls2 = {
     v0: a1
   };
-  const fnref_cls2 = closure_29;
+  const fnref_cls2 = closure_27;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -541,19 +548,20 @@ return main();
 ",
     "elaborated": "λ(a: Type) ->
   λ(p: Π(t1: a) -> Type) ->
-    Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ]",
+    Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+      Schema [ fst: a, snd: p &fst ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"Pair"}
 [3] lambda {"variable":"a","icit":"Explicit","level":1}
   :annotation -> [4]
   :body -> [5]
-  :env -> [26]
+  :env -> [24]
 [4] lit {"value":{"type":"Atom","value":"Type"}}
 [5] lambda {"variable":"p","icit":"Explicit","level":2}
   :annotation -> [6]
   :body -> [9]
-  :env -> [27]
+  :env -> [25]
 [6] pi {"variable":"t1","icit":"Explicit","level":2}
   :annotation -> [7]
   :body -> [8]
@@ -562,90 +570,80 @@ return main();
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
 [8] lit {"value":{"type":"Atom","value":"Type"}}
-[9] sigma {"variable":"$sig","level":3}
+[9] sigma:v2 {"variable":"$sig","level":3}
   :annotation -> [10]
-  :body -> [17]
-[10] row:ext {"label":"snd"}
-  :rest -> [14]
+  :body -> [15]
+[10] row:ext {"label":"fst"}
+  :rest -> [12]
   :value -> [11]
-[11] app {"icit":"Explicit"}
-  :arg -> [13]
-  :func -> [12]
-[12] var:bound {"index":0}
-  :refers_to -> [5]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [5] {"level":2}
-[13] var:label {"name":"fst"}
-[14] row:ext {"label":"fst"}
-  :rest -> [16]
-  :value -> [15]
-[15] var:bound {"index":1}
+[11] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[12] row:ext {"label":"snd"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[14] row:empty
+[15] app {"icit":"Explicit"}
+  :arg -> [17]
+  :func -> [16]
+[16] lit {"value":{"type":"Atom","value":"Schema"}}
+[17] row:ext {"label":"fst"}
+  :rest -> [19]
+  :value -> [18]
+[18] var:bound {"index":2}
   :refers_to -> [3]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
-[16] row:empty
-[17] app {"icit":"Explicit"}
-  :arg -> [19]
-  :func -> [18]
-[18] lit {"value":{"type":"Atom","value":"Schema"}}
+  :scope -> [9] {"level":3}
 [19] row:ext {"label":"snd"}
   :rest -> [23]
   :value -> [20]
 [20] app {"icit":"Explicit"}
   :arg -> [22]
   :func -> [21]
-[21] var:bound {"index":0}
-  :refers_to -> [9]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [5] {"level":2}
-  :scope -> [9] {"level":3}
-[22] var:label {"name":"fst"}
-[23] row:ext {"label":"fst"}
-  :rest -> [25]
-  :value -> [24]
-[24] var:bound {"index":1}
+[21] var:bound {"index":1}
   :refers_to -> [5]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
   :scope -> [9] {"level":3}
-[25] row:empty
-[26] env
-[27] env
+[22] var:dep-label {"name":"fst","index":0}
+  :scope -> [9] {"level":0,"owner":true}
+[23] row:empty
+[24] env
+[25] env
   :capture -> [3] {"index":0}
-[28] closure
+[26] closure
   :body -> [3]
-  :env -> [26]
-[29] closure
+  :env -> [24]
+[27] closure
   :body -> [5]
-  :env -> [27]",
+  :env -> [25]",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
       let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_28
+      let fnref_cls2 = &closure_26
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_29(env0, p1) entry=entry
+  fn closure_27(env0, p1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let v0 = alloc {  }  // {"erasure":{"tag":"sigma","source":"$sig"}}
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
       return v0
-  fn closure_28(env0, a1) entry=entry
+  fn closure_26(env0, a1) entry=entry
     entry:
       let env_cls2 = alloc { v0: a1 }
-      let fnref_cls2 = &closure_29
+      let fnref_cls2 = &closure_27
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2",
     "name": "Pair",
     "normalized": "λ(a: Type) ->
   (closure: λ(p: Π(t1: a) -> Type) ->
-    Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ] -| Γ: a)",
+    Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+      Schema [ fst: a, snd: p &fst ] -| Γ: a)",
     "solverTrace": "=== Formula ===
   true
 
@@ -676,36 +674,38 @@ return main();
   },
   {
     "codegenJS": "function main() {
-  const v0 = "hello";
-  const v1 = 42;
+  const v0 = 42;
+  const v1 = "hello";
   const v2 = {
-    snd: v0,
-    fst: v1
+    fst: v0,
+    snd: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ snd: "hello", fst: 42 ]",
+    "elaborated": "νstrict [] . Struct [ fst: 42, snd: "hello" ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"exampleP1"}
-[3] struct
-  :field -> [4] {"label":"snd"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
   :field -> [5] {"label":"fst"}
-[4] lit {"value":{"type":"String","value":"hello"}}
-[5] lit {"value":{"type":"Num","value":42}}",
+  :field -> [6] {"label":"snd"}
+[5] lit {"value":{"type":"Num","value":42}}
+[6] lit {"value":{"type":"String","value":"hello"}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = "hello"
-      let v1 = 42
-      let v2 = alloc { snd: v0, fst: v1 }
+      let v0 = 42
+      let v1 = "hello"
+      let v2 = alloc { fst: v0, snd: v1 }
       return v2",
     "name": "exampleP1",
-    "normalized": "Struct [ snd: "hello", fst: 42 ]",
+    "normalized": "Struct [ fst: 42, snd: "hello" ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -731,41 +731,43 @@ return main();
   feasible
 
 [sat]",
-    "type": "Σ($sig: [ snd: String, fst: Num ]) . Schema [ snd: String, fst: Num ]",
+    "type": "Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) . Schema [ fst: Num, snd: String ]",
     "validity": "valid",
   },
   {
     "codegenJS": "function main() {
-  const v0 = 100;
-  const v1 = true;
+  const v0 = true;
+  const v1 = 100;
   const v2 = {
-    snd: v0,
-    fst: v1
+    fst: v0,
+    snd: v1
   };
   return v2;
 }
 return main();
 ",
-    "elaborated": "Struct [ snd: 100, fst: true ]",
+    "elaborated": "νstrict [] . Struct [ fst: true, snd: 100 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"exampleP2"}
-[3] struct
-  :field -> [4] {"label":"snd"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
   :field -> [5] {"label":"fst"}
-[4] lit {"value":{"type":"Num","value":100}}
-[5] lit {"value":{"type":"Bool","value":true}}",
+  :field -> [6] {"label":"snd"}
+[5] lit {"value":{"type":"Bool","value":true}}
+[6] lit {"value":{"type":"Num","value":100}}",
     "ivl": "true",
     "kind": "let",
     "mir": "module
   fn main entry=entry
     entry:
-      let v0 = 100
-      let v1 = true
-      let v2 = alloc { snd: v0, fst: v1 }
+      let v0 = true
+      let v1 = 100
+      let v2 = alloc { fst: v0, snd: v1 }
       return v2",
     "name": "exampleP2",
-    "normalized": "Struct [ snd: 100, fst: true ]",
+    "normalized": "Struct [ fst: true, snd: 100 ]",
     "solverTrace": "=== Formula ===
   true
 
@@ -791,8 +793,8 @@ return main();
   feasible
 
 [sat]",
-    "type": "Σ($sig: [ snd: match :fst | true -> Num | false -> String, fst: Bool ]) .
-  Schema [ snd: match :fst | true -> Num | false -> String, fst: Bool ]",
+    "type": "Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+  Schema [ fst: Bool, snd: match ($sig).fst | true -> Num | false -> String ]",
     "validity": "valid",
   },
 ]
@@ -1038,17 +1040,19 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct [ 0: 10, 1: vec0 ]",
+    "elaborated": "νstrict [] . Struct [ 0: 10, 1: vec0 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"vec1"}
-[3] struct
-  :field -> [4] {"label":"0"}
-  :field -> [6] {"label":"1"}
-[4] lit {"value":{"type":"Num","value":10}}
-[5] var:free {"name":"vec0"}
-[6] var:ref {"name":"vec0"}
-  :refers_to -> [5]
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":10}}
+[6] var:free {"name":"vec0"}
+[7] var:ref {"name":"vec0"}
+  :refers_to -> [6]
   :scope -> [2] {"level":0}",
     "ivl": "true",
     "kind": "let",
@@ -1101,17 +1105,19 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct [ 0: 20, 1: vec1 ]",
+    "elaborated": "νstrict [] . Struct [ 0: 20, 1: vec1 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"vec2"}
-[3] struct
-  :field -> [4] {"label":"0"}
-  :field -> [6] {"label":"1"}
-[4] lit {"value":{"type":"Num","value":20}}
-[5] var:free {"name":"vec1"}
-[6] var:ref {"name":"vec1"}
-  :refers_to -> [5]
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":20}}
+[6] var:free {"name":"vec1"}
+[7] var:ref {"name":"vec1"}
+  :refers_to -> [6]
   :scope -> [2] {"level":0}",
     "ivl": "true",
     "kind": "let",
@@ -1164,17 +1170,19 @@ return main();
 }
 return main();
 ",
-    "elaborated": "Struct [ 0: 30, 1: vec2 ]",
+    "elaborated": "νstrict [] . Struct [ 0: 30, 1: vec2 ]",
     "gram": "[1] root
   :entry -> [3]
 [2] stmt:let {"variable":"vec3"}
-[3] struct
-  :field -> [4] {"label":"0"}
-  :field -> [6] {"label":"1"}
-[4] lit {"value":{"type":"Num","value":30}}
-[5] var:free {"name":"vec2"}
-[6] var:ref {"name":"vec2"}
-  :refers_to -> [5]
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":30}}
+[6] var:free {"name":"vec2"}
+[7] var:ref {"name":"vec2"}
+  :refers_to -> [6]
   :scope -> [2] {"level":0}",
     "ivl": "true",
     "kind": "let",

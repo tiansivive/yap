@@ -2,6 +2,7 @@ import { replicate } from "fp-ts/lib/Array";
 import * as NF from "@yap/elaboration/normalization";
 import * as EB from "@yap/elaboration";
 import * as Q from "@yap/shared/modalities/multiplicity";
+import * as R from "@yap/shared/rows";
 
 import * as M from "@yap/elaboration/shared/effects";
 
@@ -12,6 +13,7 @@ import { match } from "ts-pattern";
 import * as A from "fp-ts/Array";
 import { set, update } from "@yap/utils";
 import { Provenance } from "./provenance";
+import { freshMeta } from "./supply";
 
 type Origin = "inserted" | "source";
 
@@ -27,12 +29,30 @@ export type Context = {
 	sigma: Record<string, { value: NF.Value }>;
 	record: Record<string, { term?: EB.Term; value?: NF.Value }>;
 
+	/** Nu frames, newest first, indexed by `$label` references independently of `env`. */
+	local: Frame[];
 	imports: Record<string, EB.AST>;
 	ffi: Record<string, { arity: number; compute: (...args: NF.Value[]) => NF.Value }>;
 	trace: P.Stack<Provenance>;
 };
 
-export type Binder = Pick<EB.Binding, "type" | "variable"> | { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
+/**
+ * A Nu's field scope. `ctx` is where the record was defined, without this frame. A label in `labels`
+ * missing from `terms` has not been elaborated yet, or belongs to a frame that quoting opened
+ * without terms so that its `$label`s read back as references.
+ * `types` holds the evaluated type of each completed field, as an env entry holds its evaluated annotation. Only
+ * elaboration reads it, so a frame entered from a binder leaves it unset.
+ */
+export type Frame = { labels: readonly string[]; ctx: Context; types?: NF.Row; terms: EB.Row };
+
+export const enter = (frame: Frame): Context => ({ ...frame.ctx, local: [frame, ...frame.ctx.local] });
+
+export const open = ({ labels, scoped }: { labels: readonly string[]; scoped: EB.Row }, ctx: Context): Context => enter({ labels, ctx, terms: scoped });
+
+export type Binder =
+	| Pick<EB.Binding, "type" | "variable">
+	| { type: "Pattern"; variable: string }
+	| { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
 export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elaboration<EB.AST> {
 	const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);
@@ -44,11 +64,18 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 		}
 		throw new Error(`Label not found: ${variable.value}`);
 	}
+	if (variable.type === "nu-label") {
+		return yield* field(variable.value, ctx, zeros);
+	}
 
 	const _lookup = function* (i: number, variable: Src.Variable, types: Array<Context["env"][number]["type"]>): M.Elaboration<EB.AST> {
 		// free vars can be shadowed by bound vars, so only if no bound vars are found do we check for free vars
 		// QUESTION: should we disallow this shadowing?
 		if (types.length === 0) {
+			if (variable.type === "dep-label") {
+				throw new Error(`No enclosing record field named ${variable.value}`);
+			}
+
 			const free = ctx.imports[variable.value];
 			if (free) {
 				const [storedTm, nf, us] = free;
@@ -74,7 +101,18 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 			return [EB.Constructors.Var({ type: "Bound", index: i }), nf, zeros] satisfies EB.AST;
 		}
 
-		return yield* _lookup(i + 1, variable, rest);
+		const carries = ([{ row }, { value }]: readonly [Extract<NF.Value, { type: "Row" }>, Src.Variable, unknown]) => R.lookup(row, value) !== undefined;
+
+		return yield* match([nf, variable, binder] as const)
+			/* `&foo` denotes the sibling's *value*. Its type is a fresh meta until the row has been
+			 * elaborated, when the Sigma binder constrains it. */
+			.with([NF.Patterns.Row, Src.Patterns.Vars.DepLabel, EB.BindingPatterns.SigmaV2], carries, function* ([, { value }]) {
+				const meta = yield* freshMeta(ctx.env.length, NF.Type);
+				const annotation = NF.Constructors.Flex(meta);
+
+				return [EB.Constructors.Var({ type: "DepLabel", name: value, index: i, annotation }), annotation, zeros] satisfies EB.AST;
+			})
+			.otherwise(() => _lookup(i + 1, variable, rest));
 	};
 
 	return yield* _lookup(
@@ -83,6 +121,41 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 		ctx.env.map(v => v.type),
 	);
 };
+
+export type Reference = { label: string; meta?: EB.Meta; typeMeta?: EB.Meta; guarded: boolean; applied: boolean };
+
+/** Metas for a field not yet elaborated are assigned by `nu` once every field is elaborated. */
+const field = function* (name: string, ctx: Context, zeros: Q.Usages): M.Elaboration<EB.AST> {
+	const index = ctx.local.findIndex(frame => frame.labels.includes(name));
+	const frame = ctx.local[index];
+	if (!frame) {
+		throw new Error(`No enclosing record field named ${name}`);
+	}
+
+	const known = frame.types && R.lookup(frame.types, name);
+	if (known) {
+		yield* reference(ctx, index, { label: name, applied: false });
+		return [EB.Constructors.Var(EB.Constructors.Vars.NuLabel(name, index, known)), known, zeros] satisfies EB.AST;
+	}
+
+	const typeMeta = yield* freshMeta(frame.ctx.env.length, NF.Type);
+	const type = NF.Constructors.Flex(typeMeta);
+	const meta = yield* freshMeta(frame.ctx.env.length, type);
+	yield* reference(ctx, index, { label: name, meta, typeMeta, applied: false });
+
+	return [EB.Constructors.Var(EB.Constructors.Vars.NuLabel(name, index, type, meta)), type, zeros] satisfies EB.AST;
+};
+
+/**
+ * A reference is guarded when a lambda was entered since the record began, i.e. the env has a Lambda
+ * binder above the frame's own env. A lambda body runs once the record is built. Match arms run while
+ * it is built, so pattern variables have their own binder kind (`Pattern`) and do not guard.
+ */
+export const reference = (ctx: Context, index: number, item: Omit<Reference, "guarded">) =>
+	M.windows.record(
+		{ scope: "local", lvl: ctx.local.length - 1 - index },
+		{ ...item, guarded: ctx.env.slice(0, ctx.env.length - ctx.local[index].ctx.env.length).some(({ name }) => name.type === "Lambda") },
+	);
 
 export const bind = (context: Context, binder: Binder, annotation: NF.Value, origin: Origin = "source"): Context => {
 	const { env } = context;

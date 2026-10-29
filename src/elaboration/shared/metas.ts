@@ -196,9 +196,10 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 			)
 			.with({ type: "Neutral" }, ({ value }) => nf(value))
 			.with(NF.Patterns.Lambda, ({ closure }) => eb(closure.term))
-			.with(NF.Patterns.Pi, ({ closure, binder }) => [...nf(binder.annotation), ...eb(closure.term)])
-			.with(NF.Patterns.Mu, ({ closure, binder }) => [...nf(binder.annotation), ...eb(closure.term)])
-			.with(NF.Patterns.Sigma, ({ closure, binder }) => [...nf(binder.annotation), ...eb(closure.term)])
+			.with(NF.Patterns.Pi, NF.Patterns.Mu, NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure, binder }) => [
+				...nf(binder.annotation),
+				...eb(closure.term),
+			])
 			.with(NF.Patterns.Modal, ({ value }) => nf(value))
 			.with(NF.Patterns.External, ({ args }) => args.flatMap(arg => nf(arg)))
 			.otherwise(() => {
@@ -227,9 +228,10 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 			})
 			.with({ type: "Lit" }, () => [])
 			.with({ type: "Abs", binding: { type: "Lambda" } }, ({ body }) => eb(body))
-			.with({ type: "Abs", binding: { type: "Pi" } }, ({ body, binding }) => [...eb(binding.annotation), ...eb(body)])
-			.with({ type: "Abs", binding: { type: "Mu" } }, ({ body, binding }) => [...eb(binding.annotation), ...eb(body)])
-			.with({ type: "Abs", binding: { type: "Sigma" } }, ({ body, binding }) => [...eb(binding.annotation), ...eb(body)])
+			.with(EB.CtorPatterns.Pi, EB.CtorPatterns.Mu, EB.CtorPatterns.Sigma, EB.CtorPatterns.SigmaV2, EB.CtorPatterns.Nu, ({ body, binding }) => [
+				...eb(binding.annotation),
+				...eb(body),
+			])
 			.with({ type: "App" }, ({ func, arg }) => [...eb(func), ...eb(arg)])
 			.with({ type: "Row" }, ({ row }) =>
 				R.fold(

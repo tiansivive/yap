@@ -5,27 +5,23 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Depende
   "displays": {
     "constraints": [
       "Type ~~ Type",
-      "?1 ~~ Type",
+      "Num ~~ ?1",
       "Type ~~ Type",
-      "Type ~~ Type",
-      "Num ~~ ?4",
-      "Num ~~ ?3",
-      "1 ~~ ?6",
       "Num ~~ Num",
-      "Num ~~ ?5",
     ],
     "term": "{
   let Pair
     : Type
-    = Σ($sig: [ snd: :fst, fst: Num ]) . Schema [ snd: :fst, fst: Num ];
+    = Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+      Schema [ fst: Num, snd: &fst ];
   let p
-    : Σ($sig: [ snd: :fst, fst: Num ]) .
-      (closure: Schema [ snd: :fst, fst: Num ] -| Γ: Pair)
-    = Struct [ snd: 1, fst: 1 ];
+    : Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+      (closure: Schema [ fst: Num, snd: &fst ] -| Γ: $sig; Pair)
+    = νstrict [] . Struct [ fst: 1, snd: 1 ];
   return p;
 }",
-    "type": "Σ($sig: [ snd: :fst, fst: Num ]) .
-  (closure: Schema [ snd: :fst, fst: Num ] -| Γ: Pair)",
+    "type": "Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+  (closure: Schema [ fst: Num, snd: &fst ] -| Γ: $sig; Pair)",
   },
 }
 `;
@@ -42,28 +38,24 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair in
       "Type ~~ Type",
       "Type ~~ Type",
       "?1 ~~ L1",
+      "L1 ~~ ?1",
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "Type ~~ Type",
-      "Type ~~ Type",
-      "String ~~ ?4",
-      "Num ~~ ?3",
-      "String ~~ String",
-      "String ~~ ?6",
       "Num ~~ Num",
-      "Num ~~ ?5",
+      "String ~~ String",
     ],
     "term": "{
   let Pair
     : Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
     = λ(a: Type) ->
       λ(p: Π(t1: a) -> Type) ->
-        Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
+        Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+          Schema [ fst: a, snd: p &fst ];
   let p
-    : Σ($sig: [ snd: String, fst: Num ]) .
-      (closure: Schema [ snd: p :fst, fst: a ] -| Γ: p; a; Pair)
-    = Struct [ snd: "hello", fst: 1 ];
+    : Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+      (closure: Schema [ fst: a, snd: p &fst ] -| Γ: $sig; p; a; Pair)
+    = νstrict [] . Struct [ fst: 1, snd: "hello" ];
   return unit;
 }",
     "type": "Unit",
@@ -83,15 +75,15 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Pair: d
       "Type ~~ Type",
       "Type ~~ Type",
       "?1 ~~ L1",
-      "Type ~~ Type",
-      "Type ~~ Type",
+      "L1 ~~ ?1",
     ],
     "term": "{
   let Pair
     : Π(a: Type) -> (closure: Π(p: Π(t1: a) -> Type) -> Type -| Γ: a)
     = λ(a: Type) ->
       λ(p: Π(t1: a) -> Type) ->
-        Σ($sig: [ snd: p :fst, fst: a ]) . Schema [ snd: p :fst, fst: a ];
+        Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+          Schema [ fst: a, snd: p &fst ];
   return unit;
 }",
     "type": "Unit",
@@ -104,13 +96,13 @@ exports[`Dependent Records > dependent pairs with path-dependent types > Simple 
   "displays": {
     "constraints": [
       "Type ~~ Type",
-      "?1 ~~ Type",
-      "Type ~~ Type",
+      "Num ~~ ?1",
     ],
     "term": "{
   let Pair
     : Type
-    = Σ($sig: [ snd: :fst, fst: Num ]) . Schema [ snd: :fst, fst: Num ];
+    = Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+      Schema [ fst: Num, snd: &fst ];
   return unit;
 }",
     "type": "Unit",
@@ -133,11 +125,10 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "Type ~~ Type",
       "?1 ~~ L1",
       "L2 ~~ L2",
       "Bool ~~ Bool",
-      "Type ~~ Type",
+      "L1 ~~ ?1",
     ],
     "term": "{
   let Pair
@@ -147,8 +138,8 @@ exports[`Dependent Records > dependent pairs with refinement types > Dependent p
     = λ(a: Type) ->
       λ(b: Type) ->
         λ(p: Π(t1: a) -> Π(t2: b) -> Bool) ->
-          Σ($sig: [ snd: <ω> b [| λ(v: b) -> p :fst v |], fst: a ]) .
-            Schema [ snd: <ω> b [| λ(v: b) -> p :fst v |], fst: a ];
+          Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+            Schema [ fst: a, snd: <ω> b [| λ(v: b) -> p &fst v |] ];
   return unit;
 }",
     "type": "Unit",

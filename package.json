@@ -35,6 +35,7 @@
 		"railroad": "nearley-railroad src/parser/grammar.ne -o gen/parser/grammar.html",
 		"release": "release-it",
 		"test": "vitest",
+		"trace": "TS_NODE_TRANSPILE_ONLY=true node --require ts-node/register ./tmp/trace.ts",
 		"tsc": "tsc",
 		"typecheck": "tsc --noEmit",
 		"yap": "TS_NODE_TRANSPILE_ONLY=true node --stack-size=131072 --require ts-node/register ./scripts/cli.ts"

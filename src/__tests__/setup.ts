@@ -1,5 +1,9 @@
 import { expect } from "vitest";
 
+import { options } from "@yap/shared/config/options";
+
+options.maxSteps = Number(process.env.YAP_MAX_STEPS) || options.maxSteps;
+
 /**
  * Recursively removes specified keys from an object.
  * Used by the snapshot serializer to strip non-deterministic or verbose keys.

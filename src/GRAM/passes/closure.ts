@@ -38,7 +38,7 @@ const capturesOf = (lamId: NodeId, g: Graph): ReadonlyArray<NodeId> => {
 			// referenced field), so the label reads its field off the captured record. The
 			// de Bruijn level filter applies only to bound-variable captures.
 			return match(Nodes.get(e.source)(g)?.tag)
-				.with(Tags.VAR_LABEL, () => {
+				.with(Tags.VAR_LABEL, Tags.VAR_NU_LABEL, () => {
 					const s = structOf(ref.target, g);
 					return s !== undefined ? [s] : [];
 				})
@@ -99,7 +99,7 @@ export const closureConvert: Pass = (g: Graph): Graph => close(capture(g));
 export const descriptor: Descriptor = {
 	name: "closure",
 	requires: {
-		tags: new Set([Tags.LAMBDA, Tags.VAR_BOUND, Tags.VAR_REF]),
+		tags: new Set([Tags.LAMBDA, Tags.VAR_BOUND, Tags.VAR_REF, Tags.VAR_NU_LABEL]),
 		labels: new Set([Labels.SCOPE, Labels.REFERS_TO]),
 	},
 	delta: {

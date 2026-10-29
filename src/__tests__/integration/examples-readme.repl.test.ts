@@ -51,7 +51,7 @@ let point: { x: Num, y: Num } = { x: 10, y: 20 };
 let person: { name: String, age: Num } = { name: "Alice", age: 30 };
 let xCoord = point.x;
 let getX: { x: Num, y: Num } -> Num = \\p -> p.x;
-let rectangle: { width: Num, height: Num, area: Num } = { width: 10, height: 20, area: :width * :height };
+let rectangle: { width: Num, height: Num, area: Num } = { width: 10, height: 20, area: $width * $height };
 let point3d = { point | y = 20, z = 30 };
 let updated = { point | x = 100 };
 let pair: { Num, String } = { 42, "answer" };
@@ -257,10 +257,10 @@ let vec2: Vec 2 Num = { 20, vec1 };
 let vec3: Vec 3 Num = { 30, vec2 };
 let head: (n: Num) -> (a: Type) -> Vec (n + 1) a -> a = \\n -> \\a -> \\vec -> match vec
     | { x, xs } -> x;
-let DependentPair: Type = { fst: Type, snd: :fst };
+let DependentPair: Type = { fst: Type, snd: &fst };
 let numPair: DependentPair = { fst: Num, snd: 42 };
 let strPair: DependentPair = { fst: String, snd: "hello" };
-let Pair: (a: Type) -> (p: a -> Type) -> Type = \\a -> \\p -> { fst: a, snd: p :fst };
+let Pair: (a: Type) -> (p: a -> Type) -> Type = \\a -> \\p -> { fst: a, snd: p &fst };
 let examplePair: Pair Num (\\n -> String) = { fst: 42, snd: "hello" };
 let example2: Pair Bool (\\b -> match b | true -> Num | false -> String) = { fst: true, snd: 100 };
 let processDependent: (b: Bool) -> (v: match b | true -> Num | false -> String) -> String =
@@ -286,7 +286,7 @@ let lengthList: (a: Type) => List a -> Num = \\list -> match list
 let Factorial: Type = { compute: Num -> Num };
 let fact: Factorial = { compute: \\n -> match n
     | 0 -> 1
-    | _ -> n * (:compute (n - 1)) };
+    | _ -> n * ($compute (n - 1)) };
 fact.compute 5;
 		`.trim(),
 	},
@@ -310,7 +310,7 @@ let natToNum: NatRefined -> Num = \\x -> x;
 let posToNum: Pos -> Num = \\x -> x;
 let resultNatFn = takePosFunction natToNum;
 let resultPosFn = takePosFunction posToNum;
-let OrderedPair: Type = { fst: Num, snd: Num [|\\v -> v > :fst |] };
+let OrderedPair: Type = { fst: Num, snd: Num [|\\v -> v > &fst |] };
 let validPair: OrderedPair = { fst: 3, snd: 5 };
 		`.trim(),
 	},
@@ -318,11 +318,11 @@ let validPair: OrderedPair = { fst: 3, snd: 5 };
 		id: "ordered-lists",
 		description: "Ordered Lists with Refinements",
 		code: `
-let OrderedList: Type -> Type = \\t -> | #nil Unit | #cons { head: t, tail: OrderedList (t[|\\v -> v > :head |]) };
+let OrderedList: Type -> Type = \\t -> | #nil Unit | #cons { head: t, tail: OrderedList (t[|\\v -> v > &head |]) };
 let orderedList: OrderedList Num = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
 let OrderedListPoly: (t: Type) -> (p: t -> t -> Bool) -> Type =
 		 -> \\p -> | #nil Unit
-				| #cons { head: t, tail: OrderedListPoly (t[|\\v -> p :head v |]) p };
+				| #cons { head: t, tail: OrderedListPoly (t[|\\v -> p &head v |]) p };
 let ascending: OrderedListPoly Num (\\x y -> x < y) =
     #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
 let descending: OrderedListPoly Num (\\x y -> x > y) =

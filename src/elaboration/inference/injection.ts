@@ -43,7 +43,7 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 			assert(sig.binder.annotation.type === "Row", "Injection: Expected Row type in Sigma binder annotation");
 			const rewritten = R.rewrite(sig.binder.annotation.row, label);
 			if (isLeft(rewritten)) {
-				const ann = NF.Constructors.Row(NF.Constructors.Extension(label, value[1], sig.binder.annotation.row));
+				const ann = NF.Constructors.Row(NF.Constructors.Extension(label, NF.Type, sig.binder.annotation.row));
 				const quoted = yield* NF.quote(ctx.env.length, value[1]);
 
 				const schema = match(sig.closure.term)
@@ -56,6 +56,24 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 			}
 
 			return NF.Constructors.Sigma(sig.binder.variable, NF.Constructors.Row(rewritten.right), sig.closure);
+		})
+		.with(NF.Patterns.SigmaV2, function* (sig) {
+			assert(sig.binder.annotation.type === "Row", "Injection: Expected Row type in SigmaV2 binder annotation");
+			const rewritten = R.rewrite(sig.binder.annotation.row, label);
+			if (isLeft(rewritten)) {
+				const ann = NF.Constructors.Row(NF.Constructors.Extension(label, NF.Type, sig.binder.annotation.row));
+				const quoted = yield* NF.quote(ctx.env.length, value[1]);
+
+				const schema = match(sig.closure.term)
+					.with(EB.CtorPatterns.Schema, ({ arg }) => EB.Constructors.Schema(EB.Constructors.Extension(label, quoted, arg.row)))
+					.otherwise(_ => {
+						throw new Error("Injection: Expected Schema type in SigmaV2 injection");
+					});
+
+				return NF.Constructors.SigmaV2(sig.binder.variable, ann, NF.Constructors.Closure(sig.closure.ctx, schema));
+			}
+
+			return NF.Constructors.SigmaV2(sig.binder.variable, NF.Constructors.Row(rewritten.right), sig.closure);
 		})
 		.with(NF.Patterns.Schema, NF.Patterns.Variant, ({ func, arg }) => {
 			const rewritten = R.rewrite(arg.row, label);

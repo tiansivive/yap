@@ -34,7 +34,7 @@ describe("inference: projection", () => {
 			const src = `{
 			let Pair
 					: (a: Type) -> (p: a -> Type) -> Type
-					= \\a -> \\p -> { fst: a, snd: p :fst };
+					= \\a -> \\p -> { fst: a, snd: p &fst };
 
 		let p: Pair Num (\\n -> String) = { fst: 1, snd: "hello" };
 			return p.snd;

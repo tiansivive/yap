@@ -12,6 +12,9 @@ import { none } from "../pipeline/descriptor";
 // passes through a lambda is a recursive function: admitted, and the struct is flagged so the
 // bridge allocates-then-backpatches. A cycle made only of eager references (value-level codata
 // or an ill-founded self-reference) has no construction order and is rejected.
+//
+// Elaboration already rejects unguarded cycles in strict records (`Record Cycle`), so for elaborated
+// terms this mostly repeats that check. TODO: decide whether to keep it as a safety net or remove it.
 
 type Ref = { readonly to: string; readonly guarded: boolean };
 type Edge = { readonly from: string } & Ref;
@@ -30,7 +33,7 @@ const collectRefs = (id: NodeId, guarded: boolean, fields: ReadonlyMap<NodeId, s
 		return [];
 	}
 	return match(node.tag)
-		.with(Tags.VAR_LABEL, () => {
+		.with(Tags.VAR_LABEL, Tags.VAR_NU_LABEL, () => {
 			const target = Edges.one(id, Labels.REFERS_TO)(g)?.target;
 			const to = target !== undefined ? fields.get(target) : undefined;
 			return to !== undefined ? [{ to, guarded }] : [];
@@ -83,7 +86,7 @@ export const flagCycles: Pass = (g: Graph): Graph => [...Query.byTag(Tags.STRUCT
 
 export const descriptor: Descriptor = {
 	name: "label-cycles",
-	requires: { tags: new Set([Tags.STRUCT, Tags.VAR_LABEL, Tags.LAMBDA]), labels: new Set([Labels.FIELD, Labels.REFERS_TO]) },
+	requires: { tags: new Set([Tags.STRUCT, Tags.VAR_LABEL, Tags.VAR_NU_LABEL, Tags.LAMBDA]), labels: new Set([Labels.FIELD, Labels.REFERS_TO]) },
 	delta: { tags: none, labels: none },
 	run: flagCycles,
 };

@@ -12,6 +12,8 @@ export type Cause =
 	| { type: "MissingLabel"; label: string; row: R.Row<any, any> }
 	| { type: "TypeMismatch"; left: NF.Value; right: NF.Value }
 	| { type: "Impossible"; message: string; extra?: any }
+	| { type: "RecordCycle"; path: readonly string[] }
+	| { type: "RecordCall"; label: string }
 	| { type: "MultiplicityMismatch"; expected: Q.Multiplicity; right: Q.Multiplicity; reason?: string };
 
 export const UnificationFailure = (left: NF.Value, right: NF.Value): Cause => ({ type: "UnificationFailure", left, right });
@@ -19,6 +21,8 @@ export const RigidVariableMismatch = (left: NF.Value, right: NF.Value): Cause =>
 export const RowMismatch = (left: NF.Row, right: NF.Row, reason: string): Cause => ({ type: "RowMismatch", left, right, reason });
 export const TypeMismatch = (left: NF.Value, right: NF.Value): Cause => ({ type: "TypeMismatch", left, right });
 export const Impossible = (message: string, extra?: any): Cause => ({ type: "Impossible", message, extra });
+export const RecordCycle = (path: readonly string[]): Cause => ({ type: "RecordCycle", path });
+export const RecordCall = (label: string): Cause => ({ type: "RecordCall", label });
 export const MissingLabel = <T, V>(label: string, row: R.Row<T, V>): Cause => ({ type: "MissingLabel", label, row });
 export const MultiplicityMismatch = (expected: Q.Multiplicity, right: Q.Multiplicity, reason?: string): Cause => ({
 	type: "MultiplicityMismatch",
@@ -57,6 +61,10 @@ const rendered = function* (error: Cause): Display<string> {
 			return `Impossible! ${error.message}`;
 		case "MissingLabel":
 			return `Missing Label: ${error.label}`;
+		case "RecordCycle":
+			return `Record Cycle: fields ${error.path.map(label => `$${label}`).join(" -> ")} depend on each other during construction`;
+		case "RecordCall":
+			return `Record Call: $${error.label} is called while its record is being constructed`;
 		case "MultiplicityMismatch":
 			return `Multiplicity Mismatch: Expected "${Q.display(error.expected)}" but got "${Q.display(error.right)}".`;
 	}

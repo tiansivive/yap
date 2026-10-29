@@ -14,7 +14,7 @@ import { resetSupply } from "../context";
 import * as Pretty from "../pretty";
 
 /* Display is a boundary run: DSL terms are closed, so an empty scope and registry suffice. */
-const ctx: EB.Context = { env: [], implicits: [], labels: {}, sigma: {}, record: {}, imports: {}, ffi: {}, trace: [] };
+const ctx: EB.Context = { env: [], implicits: [], labels: {}, sigma: {}, record: {}, local: [], imports: {}, ffi: {}, trace: [] };
 const disp = (term: EB.Term): string => Eff.run(() => EB.Display.Term(term), [M.reader.handlers(ctx), Metas.registry.handlers()])[0];
 
 describe("Lowering: primitives and ops", () => {

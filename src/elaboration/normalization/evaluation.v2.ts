@@ -34,15 +34,32 @@ import assert from "assert";
 import * as Lit from "@yap/shared/literals";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
-/** Default fuel cap for a drive; exceeding it throws. */
-export const MAX_STEPS = 10_000_000;
-
 /** Crash messages are plain expressions: a boundary run over snapshots, like any other boundary. */
 const shown = (ctx: EB.Context, program: () => ReturnType<typeof display>): string =>
 	Eff.run(program, [M.reader.handlers(ctx), Metas.registry.handlers({})])[0];
 
+const traceMatch = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]) => {
+	if (process.env.YAP_TRACE_MATCH !== "1") {
+		return;
+	}
+
+	console.error("\n[YAP_TRACE_MATCH] alternatives:", alts.length);
+	console.error(
+		"[YAP_TRACE_MATCH] scrutinee:",
+		shown(ctx, () => display(nf)),
+	);
+	try {
+		console.error(
+			"[YAP_TRACE_MATCH] raw:",
+			JSON.stringify(nf, (_key, value: unknown) => (typeof value === "function" ? "[Function]" : value), 2),
+		);
+	} catch (error) {
+		console.error("[YAP_TRACE_MATCH] raw: <unprintable>", error);
+	}
+};
+
 export type EvalOptions = {
-	/** fuel cap: maximum number of evaluation steps before throwing an error. Default is `MAX_STEPS`. */
+	/** fuel cap: maximum number of evaluation steps before throwing an error. Default is `options.maxSteps`. */
 	maxSteps?: number;
 };
 
@@ -104,6 +121,43 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 	return yield* match(term)
 		.with({ type: "Lit" }, function* ({ value }) {
 			return yield* result(NF.Constructors.Lit(value));
+		})
+		/* A `$label` reads its field from the frame it resolved to, the way a free variable reads its import. */
+		.with(EB.CtorPatterns.Vars.NuLabel, function* ({ variable }) {
+			const frame = ctx.local[variable.index];
+			const term = frame && !noReduceEliminations ? R.lookup(frame.terms, variable.name) : undefined;
+
+			return yield* match([term, variable.meta])
+				.with([P.nonNullable, P._], ([term]) => M.reader.local(_ => EB.enter(frame), schedule.eval(term)))
+				.with([undefined, P.nonNullable], ([, meta]) => schedule.eval(EB.Constructors.Var(meta)))
+				.otherwise(() => result(NF.Constructors.NuLabel(variable.name, ctx.local.length - 1 - variable.index, variable.annotation)));
+		})
+		.with(EB.CtorPatterns.Vars.DepLabel, function* ({ variable }) {
+			const lvl = ctx.env.length - 1 - variable.index;
+			const symbolic = NF.Constructors.DepLabel(variable.name, lvl, variable.annotation);
+			const base = ctx.env[variable.index]?.nf;
+
+			if (!base) {
+				return yield* result(symbolic);
+			}
+
+			return yield* Do.let("known", schedule.view(base)).in(function* ({ known }) {
+				const uninstantiated = match(known)
+					.with({ kind: "Symbolic", value: NF.Patterns.Rigid }, ({ value }) => value.variable.lvl === lvl)
+					.otherwise(() => false);
+
+				if (uninstantiated || noReduceEliminations) {
+					return yield* result(symbolic);
+				}
+
+				return yield* Do.let("projected", project(base, variable.name)).in(({ projected }) =>
+					result(
+						match(projected)
+							.with({ tag: "found" }, ({ value }) => value)
+							.otherwise(() => NF.Constructors.StuckProj(base, variable.name)),
+					),
+				);
+			});
 		})
 		.with({ type: "Var", variable: { type: "Label" } }, function* ({ variable }) {
 			const sig = ctx.sigma[variable.name];
@@ -178,6 +232,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		)
 		.with({ type: "Var", variable: { type: "Bound" } }, function* ({ variable }) {
 			const entry = ctx.env[variable.index];
+
 			return yield* match(entry.type[0])
 				.with({ type: "Mu" }, function* () {
 					return yield* result(NF.Constructors.Neutral("Sealed", entry.nf));
@@ -238,6 +293,22 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				M.reader.local(_ => xtended, evalRowPush(annotation)),
 			).in(({ ann }) => result(NF.Constructors.Sigma(binding.variable, ann, NF.Constructors.Closure(ctx, body))));
 		})
+		.with(EB.CtorPatterns.SigmaV2, function* ({ body, binding }) {
+			return yield* Do.let("ann", schedule.eval(binding.annotation)).in(({ ann }) =>
+				result(NF.Constructors.SigmaV2(binding.variable, ann, NF.Constructors.Closure(ctx, body))),
+			);
+		})
+		.with(EB.CtorPatterns.Nu, ({ body, binding }) =>
+			match(binding.mode)
+				.with("strict", () => M.reader.local(_ => EB.open(binding, ctx), schedule.eval(body)))
+				.with("lazy", () =>
+					Do.let(
+						"annotation",
+						M.reader.local(_ => EB.open(binding, ctx), schedule.eval(binding.annotation)),
+					).in(({ annotation }) => result(NF.Constructors.Nu({ ...binding, annotation }, NF.Constructors.Closure(ctx, body)))),
+				)
+				.exhaustive(),
+		)
 		.with({ type: "Abs", binding: { type: "Mu" } }, function* (mu) {
 			// Evaluate annotation, then construct Mu
 			return yield* Do.let("ann", schedule.eval(mu.binding.annotation)).in(({ ann }) =>
@@ -506,6 +577,44 @@ function* evalRowPush(row: EB.Row): Evaluation<Machine<NF.Value>> {
 
 export type Project = { tag: "found"; value: NF.Value } | { tag: "blocked" } | { tag: "missing" } | { tag: "not-applicable" };
 
+/**
+ * Evaluates only the requested field of a lazy record.
+ * This is copattern elimination.
+ */
+const observe = function* (base: NF.Value & { type: "Abs"; binder: { type: "Nu" } }, label: string): Evaluation<Machine<Project>> {
+	const { binder, closure } = base;
+	if (closure.type !== "Closure") {
+		return yield* result<Project>({ tag: "not-applicable" });
+	}
+
+	const row = match(closure.term)
+		.with(EB.CtorPatterns.Struct, ({ arg }) => arg.row)
+		.otherwise(() => undefined);
+	if (!row) {
+		return yield* result<Project>({ tag: "not-applicable" });
+	}
+
+	const select = function* (r: EB.Row): Evaluation<Machine<Project>> {
+		return yield* match(r)
+			.with({ type: "empty" }, () => result<Project>({ tag: "missing" }))
+			.with({ type: "variable" }, () => result<Project>({ tag: "blocked" }))
+			.with(
+				{ type: "extension" },
+				({ label: current }) => current === label,
+				function* ({ value }) {
+					return yield* Do.let(
+						"value",
+						M.reader.local(_ => EB.open(binder, closure.ctx), schedule.eval(value)),
+					).in(({ value }) => result<Project>({ tag: "found", value }));
+				},
+			)
+			.with({ type: "extension" }, ({ row: rest }) => select(rest))
+			.exhaustive();
+	};
+
+	return yield* select(row);
+};
+
 const project = function* (base: NF.Value, label: string): Evaluation<Machine<Project>> {
 	const ctx = yield* M.reader.ask();
 
@@ -520,19 +629,21 @@ const project = function* (base: NF.Value, label: string): Evaluation<Machine<Pr
 			.with({ type: "extension" }, ({ label: current, value, row }) => (current === label ? ({ tag: "found", value } satisfies Project) : lookup(row)))
 			.exhaustive();
 
-	/* A sigma label stands for the value bound at that field; observe through it, not at it. */
-	return yield* Do.let("known", schedule.view(current)).in(({ known }) =>
-		result(
-			match(known)
-				.with({ kind: "Symbolic" }, (): Project => ({ tag: "blocked" }))
-				.with({ kind: "Blocked" }, (): Project => ({ tag: "blocked" }))
-				.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => lookup(value.row))
-				.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value }) => lookup(value.arg.row))
-				.with({ kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) => lookup(value.arg.row))
-				.with({ kind: "Sealed", value: NF.Patterns.Variant }, ({ value }) => lookup(value.arg.row))
-				.otherwise((): Project => ({ tag: "not-applicable" })),
-		),
-	);
+	return yield* Do.let("known", schedule.view(current)).in(function* ({ known }) {
+		return yield* match(known)
+			.with({ kind: "Sealed", value: NF.Patterns.Nu }, ({ value }) => observe(value, label))
+			.otherwise(visible =>
+				result(
+					match(visible)
+						.with({ kind: "Symbolic" }, (): Project => ({ tag: "blocked" }))
+						.with({ kind: "Blocked" }, (): Project => ({ tag: "blocked" }))
+						.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => lookup(value.row))
+						.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value }) => lookup(value.arg.row))
+						.with({ kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) => lookup(value.arg.row))
+						.otherwise((): Project => ({ tag: "not-applicable" })),
+				),
+			);
+	});
 };
 
 const projectValue = function* (base: NF.Value, label: string): Evaluation<Machine<NF.Value>> {
@@ -548,31 +659,55 @@ const projectValue = function* (base: NF.Value, label: string): Evaluation<Machi
 	);
 };
 
-const inject = function* (base: NF.Value, label: string, injected: NF.Value): Evaluation<Machine<NF.Value | undefined>> {
-	const set = (row: NF.Row): NF.Row =>
-		match(row)
-			.with({ type: "empty" }, (): NF.Row => NF.Constructors.Extension(label, injected, row))
-			.with({ type: "variable" }, (): NF.Row => NF.Constructors.Extension(label, injected, row))
-			.with({ type: "extension" }, ({ label: current, value, row }) =>
-				current === label ? NF.Constructors.Extension(label, injected, row) : NF.Constructors.Extension(current, value, set(row)),
-			)
-			.exhaustive();
+const overwrite = <T, V>(row: R.Row<T, V>, label: string, value: T): R.Row<T, V> =>
+	match(row)
+		.with({ type: "empty" }, () => R.Constructors.Extension(label, value, row))
+		.with({ type: "variable" }, () => R.Constructors.Extension(label, value, row))
+		.with(
+			{ type: "extension" },
+			({ label: current }) => current === label,
+			({ row: rest }) => R.Constructors.Extension(label, value, rest),
+		)
+		.with({ type: "extension" }, ({ label: current, value: existing, row: rest }) => R.Constructors.Extension(current, existing, overwrite(rest, label, value)))
+		.exhaustive();
 
+const inject = function* (base: NF.Value, label: string, injected: NF.Value): Evaluation<Machine<NF.Value | undefined>> {
 	return yield* Do.let("known", schedule.view(base)).in(({ known }) =>
-		result(
-			match(known)
-				.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => NF.Constructors.Row(set(value.row)))
-				.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value }) =>
-					NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit),
-				)
-				.with({ kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) =>
-					NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit),
-				)
-				.with({ kind: "Sealed", value: NF.Patterns.Variant }, ({ value }) =>
-					NF.Constructors.App(value.func, NF.Constructors.Row(set(value.arg.row)), value.icit),
-				)
-				.otherwise(() => undefined),
-		),
+		match(known)
+			/*
+			 * TODO: injection into a lazy Nu. Strict records are plain structs by the time they are injected into,
+			 * and nothing builds a lazy one yet. The old arm below needs porting to the frame representation:
+			 * overwrite the field in the body and in `binder.scoped`, extend `binder.labels`, and rebuild with
+			 * `NF.Constructors.Nu(binder, closure)`; the annotation slots it maintains no longer exist.
+			 */
+			// .with({ kind: "Sealed", value: NF.Patterns.Nu }, function* ({ value }) {
+			// 	if (value.closure.type !== "Closure" || value.binder.annotation.type !== "Row") {
+			// 		return yield* result(undefined);
+			// 	}
+			// 	const body = match(value.closure.term)
+			// 		.with(EB.CtorPatterns.Struct, ({ arg }) => arg.row)
+			// 		.otherwise(() => undefined);
+			// 	if (!body) {
+			// 		return yield* result(undefined);
+			// 	}
+			//
+			// 	const annotation = NF.Constructors.Row(overwrite(value.binder.annotation.row, label, NF.Irrelevant));
+			// 	const ctx = yield* M.reader.ask();
+			// 	return yield* Do.let("quoted", Quoting.quote(ctx.env.length + 1, injected)).in(({ quoted }) =>
+			// 		result(
+			// 			NF.Constructors.Nu(
+			// 				value.binder.variable,
+			// 				annotation,
+			// 				NF.Constructors.Closure(value.closure.ctx, EB.Constructors.Struct(overwrite(body, label, quoted))),
+			// 			),
+			// 		),
+			// 	);
+			// })
+			.with({ kind: "Sealed", value: NF.Patterns.Struct }, { kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) =>
+				result(NF.Constructors.App(value.func, NF.Constructors.Row(overwrite(value.arg.row, label, injected)), value.icit)),
+			)
+			.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => result(NF.Constructors.Row(overwrite(value.row, label, injected))))
+			.otherwise(() => result(undefined)),
 	);
 };
 
@@ -608,7 +743,7 @@ export const schedule = {
 				console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
 				return yield* schedule.reduce(value, nfa, icit);
 			})
-			.with({ type: "Abs", binder: { type: "Mu" } }, function* () {
+			.with({ type: "Abs", binder: { type: "Mu" } }, NF.Patterns.Nu, function* () {
 				// Do not unfold mu during normalization - defer to unification
 				return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
 			})
@@ -682,11 +817,13 @@ export const schedule = {
 
 	/** Runs the alternative that fires; a blocked match results in the suspension so `resume` can retry it. */
 	*matching(nf: NF.Value, alts: EB.Alternative[], suspension: NF.Value): Evaluation<Machine<NF.Value>> {
+		const ctx = yield* M.reader.ask();
+		traceMatch(ctx, nf, alts);
+
 		if (alts.length === 0) {
 			throw new Error("Match: No alternative matched");
 		}
 
-		const ctx = yield* M.reader.ask();
 		const [alt, ...rest] = alts;
 
 		return yield* Do.let("verdict", schedule.meet(alt.pattern, nf)).in(({ verdict }) =>
@@ -714,7 +851,7 @@ export const schedule = {
 		const immediate = match(pattern)
 			.with({ type: "Wildcard" }, () => matched([]))
 			.with({ type: "Binder" }, ({ value }) => {
-				const binder: EB.Binder = { type: "Lambda", variable: value };
+				const binder: EB.Binder = { type: "Pattern", variable: value };
 				return matched([{ binder, nf }]);
 			})
 			.otherwise(() => undefined);
@@ -748,7 +885,7 @@ export const schedule = {
 								return yield* result(matched([]));
 							}
 
-							const binder: EB.Binder = { type: "Lambda", variable: p.rest };
+							const binder: EB.Binder = { type: "Pattern", variable: p.rest };
 							return yield* result(matched([{ binder, nf: NF.Constructors.Array(row) }]));
 						}
 
@@ -767,6 +904,11 @@ export const schedule = {
 					return zip(p.patterns, value.arg.row);
 				})
 				.with([NF.Patterns.Schema, { type: "Struct" }], [NF.Patterns.Struct, { type: "Struct" }], ([{ arg }, p]) => meetAll(p.row, arg.row))
+				.with([NF.Patterns.Nu, { type: "Struct" }], function* ([value, p]) {
+					/* A lazy record is matched by observing only the fields the pattern names, as copatterns would. */
+					const shape = value.binder.labels.reduceRight<NF.Row>((row, label) => R.Constructors.Extension(label, NF.Irrelevant, row), R.Constructors.Empty());
+					return yield* meetAll(p.row, shape, label => observe(value, label));
+				})
 				.with([NF.Patterns.Row, { type: "Row" }], ([value, p]) => meetAll(p.row, value.row))
 				.with([NF.Patterns.Tagged, { type: "Variant", row: { type: "extension" } }], function* ([{ arg }, p]) {
 					const value = NF.TaggedValue.extract(arg.row);
@@ -870,6 +1012,7 @@ export const schedule = {
 			result(
 				match<NF.Value, View>(forced)
 					.with({ type: "Neutral" }, ({ kind, value }) => ({ kind, value }))
+					.with(NF.Patterns.Rigid, NF.Patterns.Flex, value => ({ kind: "Symbolic", value }))
 					.otherwise(value => ({ kind: "Sealed", value })),
 			),
 		);
@@ -954,6 +1097,14 @@ export function* apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value):
 
 export type View = { kind: NF.Neutral; value: NF.Value };
 
+export const ViewPatterns = {
+	Sealed: { kind: "Sealed" } as const,
+	Symbolic: { kind: "Symbolic" } as const,
+	Blocked: { kind: "Blocked" } as const,
+	Flex: { kind: "Symbolic", value: NF.Patterns.Flex } as const,
+	Rigid: { kind: "Symbolic", value: NF.Patterns.Rigid } as const,
+};
+
 /** The driven form of `schedule.resume`; getting the same value back means nothing fired. */
 export function* resume(value: NF.Value): Evaluation<Option<NF.Value>> {
 	const ctx = yield* M.reader.ask();
@@ -1029,11 +1180,16 @@ const combineMeet = (left: Meet, right: Meet): Meet =>
 		.with([{ tag: "matched" }, { tag: "matched" }], ([l, r]) => matched([...l.bindings, ...r.bindings]))
 		.exhaustive();
 
-const meetAll = function* (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Evaluation<Machine<Meet>> {
+/** When `observe` is given, fields are read through it and `vals` only supplies the labels. */
+const meetAll = function* (
+	pats: R.Row<EB.Pattern, string>,
+	vals: NF.Row,
+	observe?: (label: string) => Evaluation<Machine<Project>>,
+): Evaluation<Machine<Meet>> {
 	return yield* match([pats, vals])
 		.with([{ type: "empty" }, P._], () => result(matched([])))
 		.with([{ type: "variable" }, P._], ([r, tail]) => {
-			const binder: EB.Binder = { type: "Lambda", variable: r.variable };
+			const binder: EB.Binder = { type: "Pattern", variable: r.variable };
 			return result(matched([{ binder, nf: NF.Constructors.Row(tail) }]));
 		})
 		.with([{ type: "extension" }, { type: "empty" }], [{ type: "extension" }, { type: "variable" }], () => result(mismatch()))
@@ -1049,8 +1205,17 @@ const meetAll = function* (pats: R.Row<EB.Pattern, string>, vals: NF.Row): Evalu
 
 			const tail = rewritten.right;
 
-			return yield* Do.let("current", schedule.meet(r1.value, tail.value))
-				.let("rest", meetAll(r1.row, tail.row))
+			const current = observe
+				? Do.let("projected", observe(r1.label)).in(({ projected }) =>
+						match(projected)
+							.with({ tag: "found" }, ({ value }) => schedule.meet(r1.value, value))
+							.with({ tag: "blocked" }, () => result(blocked()))
+							.otherwise(() => result(mismatch())),
+					)
+				: schedule.meet(r1.value, tail.value);
+
+			return yield* Do.let("current", current)
+				.let("rest", meetAll(r1.row, tail.row, observe))
 				.in(({ current, rest }) => result(combineMeet(current, rest)));
 		})
 		.exhaustive();
