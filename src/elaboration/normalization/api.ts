@@ -6,6 +6,7 @@ import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 import type { Implicitness } from "@yap/shared/implicitness";
+import { options } from "@yap/shared/config/options";
 
 import * as Arity from "./arity";
 import * as Machine from "./evaluation.v2";
@@ -28,7 +29,7 @@ import { Patterns } from "./syntax/term";
  */
 
 /** Runs an internal-layer program on a fresh machine, under its own fuel cap. */
-function* fresh<A>(program: () => Evaluation<A>, mode: EvalMode = defaultMode, maxSteps = Machine.MAX_STEPS) {
+function* fresh<A>(program: () => Evaluation<A>, mode: EvalMode = defaultMode, maxSteps = options.maxSteps) {
 	const [value] = yield* Eff.with([handlers(maxSteps), Mode.handlers(mode)], program);
 
 	return value;

@@ -34,15 +34,6 @@ import assert from "assert";
 import * as Lit from "@yap/shared/literals";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
-/**
- * Default fuel cap for a drive; exceeding it throws. Override with `YAP_MAX_STEPS`.
- *
- * The cap counts steps. A loop that allocates on every step can exhaust the heap before reaching
- * it, and that failure names no term. A lower cap trades headroom for a diagnostic that names the
- * divergent term.
- */
-export const MAX_STEPS = Number(process.env.YAP_MAX_STEPS) || 10_000_000;
-
 /** Crash messages are plain expressions: a boundary run over snapshots, like any other boundary. */
 const shown = (ctx: EB.Context, program: () => ReturnType<typeof display>): string =>
 	Eff.run(program, [M.reader.handlers(ctx), Metas.registry.handlers({})])[0];
@@ -68,7 +59,7 @@ const traceMatch = (ctx: EB.Context, nf: NF.Value, alts: EB.Alternative[]) => {
 };
 
 export type EvalOptions = {
-	/** fuel cap: maximum number of evaluation steps before throwing an error. Default is `MAX_STEPS`. */
+	/** fuel cap: maximum number of evaluation steps before throwing an error. Default is `options.maxSteps`. */
 	maxSteps?: number;
 };
 
