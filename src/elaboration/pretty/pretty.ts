@@ -119,14 +119,11 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				.with({ type: "Lambda" }, function* ({ variable, annotation }) {
 					return ["λ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
-				.with({ type: "Sigma" }, function* ({ variable, annotation }) {
+				.with({ type: "Sigma" }, { type: "SigmaV2" }, function* ({ variable, annotation }) {
 					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
 				.with({ type: "Pi" }, function* ({ variable, annotation }) {
 					return ["Π(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
-				})
-				.with({ type: "SigmaV2" }, function* ({ variable, annotation }) {
-					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
 				.with({ type: "Nu" }, function* ({ mode, scoped }) {
 					return ["ν", mode, " ", yield* go(EB.Constructors.Row(scoped))] satisfies PP.Doc;
@@ -140,7 +137,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 				.with({ icit: "Implicit" }, () => "=>")
 				.otherwise(() => "->");
 
-			/* Sigma and Nu bind labels, not env variables. */
+			/* Sigma and Nu add no env entry, so their bodies display in the current scope. */
 			const inner = binding.type === "Sigma" || binding.type === "Nu" ? go(body) : M.reader.local(bound(binding.variable), go(body));
 
 			if (opts.printEnv) {

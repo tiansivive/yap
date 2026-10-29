@@ -52,7 +52,7 @@ export type Variable =
 	| { type: "Label"; name: string }
 	| { type: "Foreign"; name: string }
 	| { type: "DepLabel"; name: string; lvl: number; annotation: Value }
-	/** `lvl` is a label-stack level (`ctx.local`), not an env level. */
+	/** `lvl` is a level on the label stack (`ctx.local`), which is separate from the env. */
 	| { type: "NuLabel"; name: string; lvl: number; annotation: Value }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
@@ -192,10 +192,10 @@ export const Row: Value = mk({
 });
 
 /*
- * Occupies a slot that exists only so the slot has a name. A Sigma's annotation row is opened
- * to make sibling labels resolvable, not to say anything about them, so its entries carry no
- * information and nothing may read one. It is deliberately conspicuous: a check that meets it
- * should fail rather than quietly succeed.
+ * Fills a row slot whose only purpose is to carry a field name: the entries of a Sigma
+ * annotation, which exists so sibling labels resolve, and the shape used to match a lazy record's
+ * fields. Such an entry carries no information and nothing may read it. The value is deliberately
+ * conspicuous, so a check that does read one fails visibly.
  */
 export const Irrelevant: Value = mk({
 	type: "Lit",

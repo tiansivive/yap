@@ -43,9 +43,6 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 			assert(sig.binder.annotation.type === "Row", "Injection: Expected Row type in Sigma binder annotation");
 			const rewritten = R.rewrite(sig.binder.annotation.row, label);
 			if (isLeft(rewritten)) {
-				/* The annotation row holds kinds, one per label, so an added field contributes `Type`
-				 * and not the injected value's type — putting the latter there makes the binder
-				 * disagree with every other SigmaV2 about what its row means. */
 				const ann = NF.Constructors.Row(NF.Constructors.Extension(label, NF.Type, sig.binder.annotation.row));
 				const quoted = yield* NF.quote(ctx.env.length, value[1]);
 
@@ -64,9 +61,6 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 			assert(sig.binder.annotation.type === "Row", "Injection: Expected Row type in SigmaV2 binder annotation");
 			const rewritten = R.rewrite(sig.binder.annotation.row, label);
 			if (isLeft(rewritten)) {
-				/* The annotation row holds kinds, one per label, so an added field contributes `Type`
-				 * and not the injected value's type — putting the latter there makes the binder
-				 * disagree with every other SigmaV2 about what its row means. */
 				const ann = NF.Constructors.Row(NF.Constructors.Extension(label, NF.Type, sig.binder.annotation.row));
 				const quoted = yield* NF.quote(ctx.env.length, value[1]);
 

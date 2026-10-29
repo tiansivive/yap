@@ -38,16 +38,15 @@ export type Context = {
 
 /**
  * A Nu's field scope. `ctx` is where the record was defined, without this frame. A label in `labels`
- * missing from `terms` has not been elaborated yet, or is held symbolic while quoting.
+ * missing from `terms` has not been elaborated yet, or belongs to a frame that quoting opened
+ * without terms so that its `$label`s read back as references.
  * `types` holds the evaluated type of each completed field, as an env entry holds its evaluated annotation. Only
  * elaboration reads it, so a frame entered from a binder leaves it unset.
  */
 export type Frame = { labels: readonly string[]; ctx: Context; types?: NF.Row; terms: EB.Row };
 
-/** Re-enters a frame: its fields are evaluated where the record was defined, with the frame itself in scope. */
 export const enter = (frame: Frame): Context => ({ ...frame.ctx, local: [frame, ...frame.ctx.local] });
 
-/** Enters the frame a Nu binder describes, for the record defined in `ctx`. */
 export const open = ({ labels, scoped }: { labels: readonly string[]; scoped: EB.Row }, ctx: Context): Context => enter({ labels, ctx, terms: scoped });
 
 export type Binder =
@@ -102,15 +101,11 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 			return [EB.Constructors.Var({ type: "Bound", index: i }), nf, zeros] satisfies EB.AST;
 		}
 
-		/* A field reference belongs to the nearest enclosing binder that carries the label. A
-		 * binder of the right kind without it is not the one, so the search continues outward.
-		 * The resolved index rides in the variable, so consumers keep the choice between the
-		 * symbolic label and the projection it desugars to. */
 		const carries = ([{ row }, { value }]: readonly [Extract<NF.Value, { type: "Row" }>, Src.Variable, unknown]) => R.lookup(row, value) !== undefined;
 
 		return yield* match([nf, variable, binder] as const)
-			/* `&foo` denotes the sibling's *value*, whose type is unknown until the row has been
-			 * elaborated — the Sigma boundary constrains this meta then. */
+			/* `&foo` denotes the sibling's *value*. Its type is a fresh meta until the row has been
+			 * elaborated, when the Sigma binder constrains it. */
 			.with([NF.Patterns.Row, Src.Patterns.Vars.DepLabel, EB.BindingPatterns.SigmaV2], carries, function* ([, { value }]) {
 				const meta = yield* freshMeta(ctx.env.length, NF.Type);
 				const annotation = NF.Constructors.Flex(meta);
@@ -129,7 +124,7 @@ export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elabor
 
 export type Reference = { label: string; meta?: EB.Meta; typeMeta?: EB.Meta; guarded: boolean; applied: boolean };
 
-/** A field not yet elaborated stands in as a fresh value meta, which the Nu boundary solves once every field has its term. */
+/** Metas for a field not yet elaborated are assigned by `nu` once every field is elaborated. */
 const field = function* (name: string, ctx: Context, zeros: Q.Usages): M.Elaboration<EB.AST> {
 	const index = ctx.local.findIndex(frame => frame.labels.includes(name));
 	const frame = ctx.local[index];
@@ -152,8 +147,9 @@ const field = function* (name: string, ctx: Context, zeros: Q.Usages): M.Elabora
 };
 
 /**
- * A reference is guarded when a lambda was entered since the record began: a binder above the frame's env.
- * A match arm runs during construction, which is why pattern variables are not Lambda binders.
+ * A reference is guarded when a lambda was entered since the record began, i.e. the env has a Lambda
+ * binder above the frame's own env. A lambda body runs once the record is built. Match arms run while
+ * it is built, so pattern variables have their own binder kind (`Pattern`) and do not guard.
  */
 export const reference = (ctx: Context, index: number, item: Omit<Reference, "guarded">) =>
 	M.windows.record(

@@ -13,23 +13,19 @@ export const infer = (ast: Src.Term): M.Elaboration<AST> => {
 	const result = M.tracer.track({ tag: "src", type: "term", term: ast, metadata: { action: "infer" } }, function* () {
 		const ctx = yield* M.reader.ask();
 		const elaboration = match(ast)
-			/* `&foo` / `$foo` elaborate to the label variable itself, not to a projection. The
-			 * projection is what a reducible position wants, so the sites that need one desugar
-			 * explicitly; everything else keeps a symbolic reference that never reduces. */
-			/* A Σ dep-label's type is a fresh meta standing for the sibling's value. Register it
-			 * against the binder it resolved through, so that binder's boundary can constrain it
-			 * once the row is elaborated. The resolved index rides in the returned variable. */
-			.with({ type: "var", variable: { type: "dep-label" } }, function* ({ variable }) {
-				const ast = yield* EB.lookup(variable, ctx);
-				yield* match([ast[0], NF.unwrapNeutral(ast[1])] as const)
+			/* `&foo` and `$foo` elaborate to label variables, which never reduce; a site that needs
+			 * the field's value builds the projection itself. The meta typing `&foo` is recorded for
+			 * the Sigma binder it resolved to, which constrains it once its row is elaborated. */
+			.with({ type: "var", variable: Src.Patterns.Vars.DepLabel }, function* ({ variable }) {
+				const resolved = yield* EB.lookup(variable, ctx);
+				yield* match([resolved[0], NF.unwrapNeutral(resolved[1])] as const)
 					.with([EB.CtorPatterns.Vars.DepLabel, NF.Patterns.Flex], function* ([term, ref]) {
 						yield* M.windows.record({ scope: "env", lvl: ctx.env.length - 1 - term.variable.index }, { label: term.variable.name, meta: ref.variable });
 					})
 					.otherwise(function* () {});
 
-				return ast;
+				return resolved;
 			})
-			.with({ type: "var", variable: { type: "nu-label" } }, ({ variable }) => EB.lookup(variable, ctx))
 			.with({ type: "var" }, ({ variable }) => EB.lookup(variable, ctx))
 
 			.with({ type: "lit" }, EB.Lit.infer)

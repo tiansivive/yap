@@ -85,10 +85,7 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 				.with({ type: "Mu" }, function* ({ variable, annotation }) {
 					return ["μ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
-				.with({ type: "Sigma" }, function* ({ variable, annotation }) {
-					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
-				})
-				.with({ type: "SigmaV2" }, function* ({ variable, annotation }) {
+				.with({ type: "Sigma" }, { type: "SigmaV2" }, function* ({ variable, annotation }) {
 					return ["Σ(", variable, ": ", yield* go(annotation), ")"] satisfies PP.Doc;
 				})
 				.with({ type: "Nu" }, function* ({ mode, scoped }) {
@@ -97,13 +94,11 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 				.exhaustive();
 
 			const arrow = match(binder)
-				.with({ type: "Sigma" }, () => ".")
-				.with({ type: "SigmaV2" }, () => ".")
-				.with({ type: "Nu" }, () => ".")
+				.with({ type: "Sigma" }, { type: "SigmaV2" }, { type: "Nu" }, () => ".")
 				.with({ icit: "Implicit" }, () => "=>")
 				.otherwise(() => "->");
 
-			/* The body displays under the closure's own scope: the stored env, plus the binder being introduced. */
+			/* Sigma and Nu add no env entry, so their bodies display under the stored env alone. */
 			const scope = binder.type === "Sigma" || binder.type === "Nu" ? closure.ctx : bound(binder.variable)(closure.ctx);
 			const body = yield* M.reader.local(_ => scope, EB.Display.doc(closure.term, opts));
 

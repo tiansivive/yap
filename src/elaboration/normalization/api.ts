@@ -103,10 +103,7 @@ export const probe =
 		return answer;
 	};
 
-/**
- * The inverse of `Constructors.Schema`/`Variant`/`Struct`: the row a sealed row type wraps.
- * `undefined` when the value is not one, so callers decide whether that is an error.
- */
+/** The row a sealed `Schema`, `Variant` or `Struct` wraps. */
 export const rowOf = (value: Value): Row | undefined =>
 	match(Machine.unwrapNeutral(value))
 		.with(Patterns.Schema, Patterns.Variant, Patterns.Struct, ({ arg }) => arg.row)

@@ -35,9 +35,9 @@ export type Variable =
 	| { type: "Free"; name: string }
 	| { type: "Foreign"; name: string }
 	| { type: "Label"; name: string }
-	/** @see NF.Variable: `&label` / `$label` carry a de Bruijn index like any bound variable. */
+	/** `&label`: `index` is a de Bruijn index into the env, pointing at the Sigma binder the label resolved to. */
 	| { type: "DepLabel"; name: string; index: number; annotation: NF.Value }
-	/** `index` counts Nu frames on `ctx.local`, not env binders. `meta` stands for a field still being elaborated. */
+	/** `$label`: `index` counts frames on the label stack (`ctx.local`), which is separate from the env. `meta` stands for the value of a field not yet elaborated. */
 	| { type: "NuLabel"; name: string; index: number; annotation: NF.Value; meta?: Meta }
 	/**
 	 * @see Unification.bind for the reason why we need to store the level
@@ -222,7 +222,6 @@ export const Constructors = {
 	},
 };
 
-/** Bare `Binding` patterns, for matching a binder on its own rather than the Abs that carries it. */
 export const BindingPatterns = {
 	Let: { type: "Let" },
 	Lambda: { type: "Lambda" },

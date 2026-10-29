@@ -56,7 +56,6 @@ let dict: { [String]: Num } = { one: 1, two: 2, three: 3 };
 });
 
 describe("Language Tour — Records in generated code", () => {
-	/* Runs a declaration's generated JS and returns the value it builds. */
 	const run = (src: string) => runInNewContext(`(function () { ${runScript(src).declarations[0]?.stages?.codegenJS ?? ""} })()`);
 
 	test("a field reads a variable bound outside the record", () => {

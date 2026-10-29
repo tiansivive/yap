@@ -2,20 +2,22 @@
 import * as Eff from "@yap/utils/effects";
 
 /*
- * Frame lifetime is the scoping: a window at level L opens under a stack of length L and nested
- * windows open under deeper stacks, so within one scope stacked levels strictly increase and a
- * record matches at most one frame. Levels reused by sibling scopes cannot collide because the
- * dead window's frame is gone. Recording against a level with no open window is deliberately a
- * no-op — that is how a reference to an already-closed scope is ignored.
+ * A window collects the items recorded while a scope is elaborated: a let window learns whether its
+ * definition refers to itself, a Sigma window collects the metas of its `&label` references, and a
+ * record field window collects the `$label` references the field makes. Windows nest with their
+ * scopes, so the open windows of one scope have strictly increasing levels and an item matches at
+ * most one of them. A sibling scope can reuse a level because the earlier window has closed by then.
+ * An item recorded at a level with no open window is dropped, which is how a reference to a scope
+ * that has already closed is ignored.
  *
- * Windows are keyed by scope as well as level because a Nu frame lives on the label stack, not the
- * env: a field window and its enclosing let window can share a level number.
+ * Windows are keyed by scope as well as level because record frames live on the label stack, which
+ * is numbered separately from the env: a field window and its enclosing let window can share a level.
  */
 
 type Key = { scope: "env" | "local"; lvl: number };
 
 type Push = Eff.Action<"Recursion.push", Key, undefined>;
-type Record = Eff.Action<"Recursion.record", { key: Key; item: unknown }, undefined>;
+type Note = Eff.Action<"Recursion.record", { key: Key; item: unknown }, undefined>;
 type Pop<T> = Eff.Action<"Recursion.pop", undefined, T[]>;
 
 /** The item type is supplied first because TypeScript cannot infer `Row` and `A` once any argument is explicit. */
@@ -31,12 +33,12 @@ const within = <T>() =>
 	};
 
 const record = function* (key: Key, item: unknown) {
-	return yield* Eff.ctl.action<Record>("Recursion.record", { key, item });
+	return yield* Eff.ctl.action<Note>("Recursion.record", { key, item });
 };
 
 type Frame = { key: Key; items: unknown[] };
 
-const handlers = (): Eff.Handler<Push | Record | Pop<unknown>, readonly Frame[]> => {
+const handlers = (): Eff.Handler<Push | Note | Pop<unknown>, readonly Frame[]> => {
 	const frames: Frame[] = [];
 
 	return {

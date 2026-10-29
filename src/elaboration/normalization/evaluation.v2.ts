@@ -37,9 +37,9 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 /**
  * Default fuel cap for a drive; exceeding it throws. Override with `YAP_MAX_STEPS`.
  *
- * The cap bounds steps, not allocation: a loop that allocates per step can exhaust the heap
- * long before the counter arrives, which reports as an OOM instead of a blamed term. A lower
- * cap trades headroom for a diagnostic that names the divergent term.
+ * The cap counts steps. A loop that allocates on every step can exhaust the heap before reaching
+ * it, and that failure names no term. A lower cap trades headroom for a diagnostic that names the
+ * divergent term.
  */
 export const MAX_STEPS = Number(process.env.YAP_MAX_STEPS) || 10_000_000;
 
@@ -586,7 +586,7 @@ function* evalRowPush(row: EB.Row): Evaluation<Machine<NF.Value>> {
 
 export type Project = { tag: "found"; value: NF.Value } | { tag: "blocked" } | { tag: "missing" } | { tag: "not-applicable" };
 
-/** Nu observation is copattern elimination: select one field rule, tie self, and schedule only that rule. */
+/** Evaluates only the requested field of a lazy record. */
 const observe = function* (base: NF.Value & { type: "Abs"; binder: { type: "Nu" } }, label: string): Evaluation<Machine<Project>> {
 	const { binder, closure } = base;
 	if (closure.type !== "Closure") {
@@ -709,10 +709,7 @@ const inject = function* (base: NF.Value, label: string, injected: NF.Value): Ev
 			// 		),
 			// 	);
 			// })
-			.with({ kind: "Sealed", value: NF.Patterns.Struct }, ({ value }) =>
-				result(NF.Constructors.App(value.func, NF.Constructors.Row(overwrite(value.arg.row, label, injected)), value.icit)),
-			)
-			.with({ kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) =>
+			.with({ kind: "Sealed", value: NF.Patterns.Struct }, { kind: "Sealed", value: NF.Patterns.Schema }, ({ value }) =>
 				result(NF.Constructors.App(value.func, NF.Constructors.Row(overwrite(value.arg.row, label, injected)), value.icit)),
 			)
 			.with({ kind: "Sealed", value: NF.Patterns.Row }, ({ value }) => result(NF.Constructors.Row(overwrite(value.row, label, injected))))
@@ -752,11 +749,8 @@ export const schedule = {
 				console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
 				return yield* schedule.reduce(value, nfa, icit);
 			})
-			.with({ type: "Abs", binder: { type: "Mu" } }, function* () {
+			.with({ type: "Abs", binder: { type: "Mu" } }, NF.Patterns.Nu, function* () {
 				// Do not unfold mu during normalization - defer to unification
-				return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
-			})
-			.with(NF.Patterns.Nu, function* () {
 				return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
 			})
 			.with({ type: "Abs" }, ({ closure, binder }) => schedule.apply(binder, closure, nfa))
@@ -917,7 +911,7 @@ export const schedule = {
 				})
 				.with([NF.Patterns.Schema, { type: "Struct" }], [NF.Patterns.Struct, { type: "Struct" }], ([{ arg }, p]) => meetAll(p.row, arg.row))
 				.with([NF.Patterns.Nu, { type: "Struct" }], function* ([value, p]) {
-					/* A lazy record is matched by observing each field the pattern names, as copatterns would. */
+					/* A lazy record is matched by observing only the fields the pattern names. */
 					const shape = value.binder.labels.reduceRight<NF.Row>((row, label) => R.Constructors.Extension(label, NF.Irrelevant, row), R.Constructors.Empty());
 					return yield* meetAll(p.row, shape, label => observe(value, label));
 				})
@@ -1192,16 +1186,8 @@ const combineMeet = (left: Meet, right: Meet): Meet =>
 		.with([{ tag: "matched" }, { tag: "matched" }], ([l, r]) => matched([...l.bindings, ...r.bindings]))
 		.exhaustive();
 
-/**
- *
- * Row shaped data is sometimes defined in terms of abstractions which carry a closure.
- * In those cases, we need to oberseve the fields through the closure hence the callback param.
- */
-const meetAll = function* (
-	pats: R.Row<EB.Pattern, string>,
-	vals: NF.Row,
-	observe?: (label: string) => Evaluation<Machine<Project>>,
-): Evaluation<Machine<Meet>> {
+/** When `read` is given, fields are read through it and `vals` only supplies the labels. */
+const meetAll = function* (pats: R.Row<EB.Pattern, string>, vals: NF.Row, read?: (label: string) => Evaluation<Machine<Project>>): Evaluation<Machine<Meet>> {
 	return yield* match([pats, vals])
 		.with([{ type: "empty" }, P._], () => result(matched([])))
 		.with([{ type: "variable" }, P._], ([r, tail]) => {
@@ -1221,8 +1207,8 @@ const meetAll = function* (
 
 			const tail = rewritten.right;
 
-			const current = observe
-				? Do.let("projected", observe(r1.label)).in(({ projected }) =>
+			const current = read
+				? Do.let("projected", read(r1.label)).in(({ projected }) =>
 						match(projected)
 							.with({ tag: "found" }, ({ value }) => schedule.meet(r1.value, value))
 							.with({ tag: "blocked" }, () => result(blocked()))
@@ -1231,7 +1217,7 @@ const meetAll = function* (
 				: schedule.meet(r1.value, tail.value);
 
 			return yield* Do.let("current", current)
-				.let("rest", meetAll(r1.row, tail.row, observe))
+				.let("rest", meetAll(r1.row, tail.row, read))
 				.in(({ current, rest }) => result(combineMeet(current, rest)));
 		})
 		.exhaustive();

@@ -88,10 +88,10 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 					yield* unify(v, subst[meta.variable.val], lvl);
 				},
 			)
-			.with([NF.Patterns.Flex, P._], function* ([meta, _]) {
+			.with([NF.Patterns.Flex, P._], function* ([meta]) {
 				yield* Sub.subst.bind(yield* bind(meta.variable, r));
 			})
-			.with([P._, NF.Patterns.Flex], function* ([_, meta]) {
+			.with([P._, NF.Patterns.Flex], function* ([, meta]) {
 				yield* Sub.subst.bind(yield* bind(meta.variable, l));
 			})
 			.with([NF.Patterns.Lit, NF.Patterns.Lit], function* ([lit1, lit2]) {
@@ -170,9 +170,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 				yield* unify(applied, schema, lvl);
 			})
 
-			/* The inference path still mints bare Schemas, so a SigmaV2 meets one whenever a
-			 * checked struct type is compared against an inferred one. Instantiate the binder at
-			 * the schema's own row and compare the result. */
+			/* Inference still produces bare Schemas, so a checked struct type, which is a SigmaV2,
+			 * meets one whenever the two are compared. */
 			.with([NF.Patterns.Schema, NF.Patterns.SigmaV2], function* ([schema, sig]) {
 				const applied = yield* NF.apply(sig.binder, sig.closure, schema.arg);
 				yield* unify(schema, applied, lvl);
@@ -199,8 +198,9 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 				yield* unify(left.arg, right.arg, lvl);
 			})
 
-			/* A stuck projection is a neutral spine, so it unifies as App does: the labels must agree
-			 * and the bases unify. Reachable once a field's type is read off an abstract record. */
+			/* A projection that cannot reduce behaves like a blocked application: the labels must
+			 * agree and the bases must unify. This happens once a field's type is read off an
+			 * abstract record. */
 			.with([NF.Patterns.StuckProj, NF.Patterns.StuckProj], function* ([left, right]) {
 				if (left.value.label !== right.value.label) {
 					return yield* M.fail(Err.TypeMismatch(left, right));

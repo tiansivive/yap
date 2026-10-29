@@ -103,7 +103,6 @@ export const project = function* (label: string, tm: EB.Term, ty: NF.Value, us: 
 			return yield* from(label, binder.annotation.row);
 		})
 		.with(NF.Patterns.SigmaV2, function* (sig) {
-			// Instantiating a sigma with the value computes the dependent type
 			const self = yield* NF.normalize(tm);
 			return yield* project(label, tm, yield* NF.apply(sig.binder, sig.closure, self), us);
 		})

@@ -145,7 +145,7 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 			);
 		})
 		.with({ type: "Abs", binder: { type: "Nu" } }, function* ({ binder, closure }) {
-			/* Fields read back under the frame held symbolic, so `$label`s quote as references instead of unfolding. */
+			/* The frame is opened without field terms, so a `$label` finds nothing to evaluate and quotes back as a reference. */
 			const held = EB.open({ ...binder, scoped: R.Constructors.Empty() }, closure.ctx);
 			const back = (term: EB.Term) =>
 				M.reader.local(
