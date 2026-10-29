@@ -1,0 +1,13 @@
+## Factorial (let)
+true
+
+## fact (let)
+(forall ((n Real))
+  (and
+    (= n n)
+    (= n n)
+    (forall (($fresh1 Real))
+      (=> (and (= $fresh1 n) (= $fresh1 n)) (and (= n n) (= n n))))))
+
+## result (let)
+true

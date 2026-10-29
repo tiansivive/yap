@@ -1,0 +1,5 @@
+## List (let)
+Π(t1: Type) -> Type
+
+## length (let)
+Π(a: Type) => Π(t2: (List) a) -> Num

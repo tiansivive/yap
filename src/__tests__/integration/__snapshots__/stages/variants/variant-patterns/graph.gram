@@ -1,0 +1,216 @@
+## Shape (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Shape"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Variant"}}
+[5] row:ext {"label":"point"}
+  :rest -> [20]
+  :value -> [6]
+[6] sigma:v2 {"variable":"$sig","level":1}
+  :annotation -> [7]
+  :body -> [12]
+[7] row:ext {"label":"x"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[9] row:ext {"label":"y"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[11] row:empty
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Schema"}}
+[14] row:ext {"label":"x"}
+  :rest -> [17]
+  :value -> [16]
+[15] var:free {"name":"Num"}
+[16] var:ref {"name":"Num"}
+  :refers_to -> [15]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[17] row:ext {"label":"y"}
+  :rest -> [19]
+  :value -> [18]
+[18] var:ref {"name":"Num"}
+  :refers_to -> [15]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[19] row:empty
+[20] row:ext {"label":"rectangle"}
+  :rest -> [28]
+  :value -> [21]
+[21] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [22]
+[22] lit {"value":{"type":"Atom","value":"Schema"}}
+[23] row:ext {"label":"1"}
+  :rest -> [25]
+  :value -> [24]
+[24] var:ref {"name":"Num"}
+  :refers_to -> [15]
+  :scope -> [2] {"level":0}
+[25] row:ext {"label":"0"}
+  :rest -> [27]
+  :value -> [26]
+[26] var:ref {"name":"Num"}
+  :refers_to -> [15]
+  :scope -> [2] {"level":0}
+[27] row:empty
+[28] row:ext {"label":"circle"}
+  :rest -> [30]
+  :value -> [29]
+[29] var:ref {"name":"Num"}
+  :refers_to -> [15]
+  :scope -> [2] {"level":0}
+[30] row:empty
+
+## describeShape (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"describeShape"}
+[3] lambda {"variable":"s","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [31]
+  :env -> [67]
+[4] app {"icit":"Explicit"}
+  :arg -> [6]
+  :func -> [5]
+[5] lit {"value":{"type":"Atom","value":"Variant"}}
+[6] row:ext {"label":"point"}
+  :rest -> [20]
+  :value -> [7]
+[7] sigma:v2 {"variable":"$sig","level":1}
+  :annotation -> [8]
+  :body -> [13]
+[8] row:ext {"label":"x"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[10] row:ext {"label":"y"}
+  :rest -> [12]
+  :value -> [11]
+[11] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[12] row:empty
+[13] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] lit {"value":{"type":"Atom","value":"Schema"}}
+[15] row:ext {"label":"x"}
+  :rest -> [17]
+  :value -> [16]
+[16] lit {"value":{"type":"Atom","value":"Num"}}
+[17] row:ext {"label":"y"}
+  :rest -> [19]
+  :value -> [18]
+[18] lit {"value":{"type":"Atom","value":"Num"}}
+[19] row:empty
+[20] row:ext {"label":"rectangle"}
+  :rest -> [28]
+  :value -> [21]
+[21] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [22]
+[22] lit {"value":{"type":"Atom","value":"Schema"}}
+[23] row:ext {"label":"1"}
+  :rest -> [25]
+  :value -> [24]
+[24] lit {"value":{"type":"Atom","value":"Num"}}
+[25] row:ext {"label":"0"}
+  :rest -> [27]
+  :value -> [26]
+[26] lit {"value":{"type":"Atom","value":"Num"}}
+[27] row:empty
+[28] row:ext {"label":"circle"}
+  :rest -> [30]
+  :value -> [29]
+[29] lit {"value":{"type":"Atom","value":"Num"}}
+[30] row:empty
+[31] match
+  :alt -> [33] {"index":0}
+  :alt -> [38] {"index":1}
+  :alt -> [46] {"index":2}
+  :decision_tree -> [54]
+  :scrutinee -> [32]
+[32] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[33] case
+  :body -> [37]
+  :next -> [38]
+  :pattern -> [34]
+[34] pat:variant {"label":"circle"}
+  :payload -> [35]
+[35] pat:binder {"name":"r","level":2}
+[36] pat:wildcard
+[37] lit {"value":{"type":"String","value":"Circle with radius"}}
+[38] case
+  :body -> [45]
+  :next -> [46]
+  :pattern -> [39]
+[39] pat:variant {"label":"rectangle"}
+  :payload -> [40]
+[40] pat:struct
+  :field -> [41] {"label":"0"}
+  :field -> [42] {"label":"1"}
+[41] pat:binder {"name":"w","level":2}
+[42] pat:binder {"name":"h","level":3}
+[43] pat:wildcard
+[44] pat:wildcard
+[45] lit {"value":{"type":"String","value":"Rectangle"}}
+[46] case
+  :body -> [53]
+  :pattern -> [47]
+[47] pat:variant {"label":"point"}
+  :payload -> [48]
+[48] pat:struct
+  :field -> [49] {"label":"x"}
+  :field -> [50] {"label":"y"}
+[49] pat:wildcard
+[50] pat:wildcard
+[51] pat:wildcard
+[52] pat:wildcard
+[53] lit {"value":{"type":"String","value":"Point at coordinates"}}
+[54] switch {"kind":"tag"}
+  :branch -> [56] {"label":"circle"}
+  :branch -> [58] {"label":"rectangle"}
+  :branch -> [63] {"label":"point"}
+  :inspect -> [32]
+[55] proj {"label":"payload"}
+  :target -> [32]
+[56] leaf
+  :bind -> [55] {"name":"r","binder":35}
+  :body -> [37]
+[57] proj {"label":"payload"}
+  :target -> [32]
+[58] switch {"kind":"struct"}
+  :branch -> [61]
+  :inspect -> [57]
+[59] proj {"label":"0"}
+  :target -> [57]
+[60] proj {"label":"1"}
+  :target -> [57]
+[61] leaf
+  :bind -> [59] {"name":"w","binder":41}
+  :bind -> [60] {"name":"h","binder":42}
+  :body -> [45]
+[62] proj {"label":"payload"}
+  :target -> [32]
+[63] switch {"kind":"struct"}
+  :branch -> [66]
+  :inspect -> [62]
+[64] proj {"label":"x"}
+  :target -> [62]
+[65] proj {"label":"y"}
+  :target -> [62]
+[66] leaf
+  :body -> [53]
+[67] env
+[68] closure
+  :body -> [3]
+  :env -> [67]

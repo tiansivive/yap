@@ -1,0 +1,5 @@
+## (expr) (expression)
+(forall ((r Row))
+  (forall ((a Type))
+    (forall ((A Type))
+      (forall ((b Type)) (forall ((B Type)) (forall ((x Schema)) (= x x)))))))

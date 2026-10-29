@@ -1,0 +1,230 @@
+## stringify (foreign)
+
+
+## Show (let)
+=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+## Eq (let)
+=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+## ShowNum (let)
+=== Formula ===
+  (forall ((n Real)) (= n n))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  n=n -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+## EqNum (let)
+=== Formula ===
+  (forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+  x=y -> residual
+  y=x -> residual
+  y=y -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+## displayIfEqual (let)
+=== Formula ===
+  (forall ((t Type))
+    (forall ((x Type))
+      (forall ((y Type))
+        (and
+          (= x x)
+          (= y y)
+          (forall ((t5 Type))
+            (=>
+              (= t5 x)
+              (forall ((t6 Type))
+                (=>
+                  (= t6 y)
+                  (forall (($fresh0 Bool)) (=> (= $fresh0 true) (= x x)))))))
+          (= x x)
+          (= y y)))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  t=x -> residual
+  t=y -> residual
+  x=x -> residual
+  x=y -> residual
+  y=x -> residual
+  y=y -> residual
+  t5=x -> residual
+  t5=y -> residual
+  t6=x -> residual
+  t6=y -> residual
+  $fresh0=true -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+## (using) (using)
+
+
+## (using) (using)
+
+
+## msg (let)
+=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]

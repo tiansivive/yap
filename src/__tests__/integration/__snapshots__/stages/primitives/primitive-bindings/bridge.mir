@@ -1,0 +1,27 @@
+## greeting (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = "Hello, Yap!"
+      return v0
+
+## life (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 42
+      return v0
+
+## b (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = true
+      return v0
+
+## u (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = unit
+      return v0

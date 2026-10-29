@@ -1,0 +1,11 @@
+## List (let)
+valid
+
+## Functor (let)
+valid
+
+## mapList (let)
+error: Cannot read properties of undefined (reading 'type')
+
+## ListFunctor (let)
+valid

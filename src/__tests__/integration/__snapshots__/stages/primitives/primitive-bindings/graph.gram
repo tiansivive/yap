@@ -1,0 +1,23 @@
+## greeting (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"greeting"}
+[3] lit {"value":{"type":"String","value":"Hello, Yap!"}}
+
+## life (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"life"}
+[3] lit {"value":{"type":"Num","value":42}}
+
+## b (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"b"}
+[3] lit {"value":{"type":"Bool","value":true}}
+
+## u (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"u"}
+[3] lit {"value":{"type":"unit"}}

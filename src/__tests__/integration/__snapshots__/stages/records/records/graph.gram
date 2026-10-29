@@ -1,0 +1,23 @@
+## point (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"point"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"x"}
+  :field -> [6] {"label":"y"}
+[5] lit {"value":{"type":"Num","value":0}}
+[6] lit {"value":{"type":"Num","value":10}}
+
+## person (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"person"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"name"}
+  :field -> [6] {"label":"age"}
+[5] lit {"value":{"type":"String","value":"Alice"}}
+[6] lit {"value":{"type":"Num","value":30}}

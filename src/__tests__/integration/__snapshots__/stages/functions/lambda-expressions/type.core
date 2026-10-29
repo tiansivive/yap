@@ -1,0 +1,5 @@
+## identity (let)
+Π(t1: Num) -> Num
+
+## const (let)
+Π(t2: Num) -> Π(t3: String) -> Num

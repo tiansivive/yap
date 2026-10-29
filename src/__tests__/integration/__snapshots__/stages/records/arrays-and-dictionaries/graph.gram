@@ -1,0 +1,33 @@
+## array (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"array"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Array"}}
+[5] row:ext {"label":"0"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Num","value":1}}
+[7] row:ext {"label":"1"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Num","value":2}}
+[9] row:ext {"label":"2"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Num","value":3}}
+[11] row:empty
+
+## dict (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"dict"}
+[3] struct
+  :field -> [4] {"label":"three"}
+  :field -> [5] {"label":"two"}
+  :field -> [6] {"label":"one"}
+[4] lit {"value":{"type":"Num","value":3}}
+[5] lit {"value":{"type":"Num","value":2}}
+[6] lit {"value":{"type":"Num","value":1}}

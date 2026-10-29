@@ -1,0 +1,17 @@
+## stringify (foreign)
+
+
+## Show (let)
+true
+
+## Eq (let)
+true
+
+## ShowNum (let)
+(forall ((n Real)) (= n n))
+
+## ShowBool (let)
+(forall ((b Bool)) (and (= b b) (= b b)))
+
+## EqNum (let)
+(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))

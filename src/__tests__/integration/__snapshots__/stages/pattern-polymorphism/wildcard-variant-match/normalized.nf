@@ -1,0 +1,12 @@
+## (expr) (expression)
+λ(a: Type) =>
+  (closure: λ(A: a) =>
+    λ(r: Row) =>
+      λ(b: Type) =>
+        λ(B: b) =>
+          (λ(x: Variant [ nil: A | [ cons: B | r ] ]) ->
+            match x
+              | Variant [ nil: _ | $row_4 ] -> 0
+              | Variant [ cons: _ | $row_7 ] -> 1 : Π(x: Variant
+            [ nil: A | [ cons: B | r ] ]) ->
+            Num) -| Γ: a)

@@ -1,0 +1,37 @@
+## Pair (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_26
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_27(env0, p1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
+      return v0
+  fn closure_26(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: a1 }
+      let fnref_cls2 = &closure_27
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+
+## exampleP1 (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 42
+      let v1 = "hello"
+      let v2 = alloc { fst: v0, snd: v1 }
+      return v2
+
+## exampleP2 (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = true
+      let v1 = 100
+      let v2 = alloc { fst: v0, snd: v1 }
+      return v2

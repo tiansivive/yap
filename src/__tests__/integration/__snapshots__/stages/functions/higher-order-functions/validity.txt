@@ -1,0 +1,14 @@
+## compose (let)
+valid
+
+## add1 (let)
+valid
+
+## add5 (let)
+valid
+
+## double (let)
+valid
+
+## add1ThenDouble (let)
+valid

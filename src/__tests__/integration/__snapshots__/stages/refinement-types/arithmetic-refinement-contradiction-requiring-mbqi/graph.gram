@@ -1,0 +1,5 @@
+## badOne (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"badOne"}
+[3] lit {"value":{"type":"Num","value":1}}

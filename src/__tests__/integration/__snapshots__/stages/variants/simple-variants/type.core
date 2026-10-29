@@ -1,0 +1,5 @@
+## TrafficLight (let)
+Type
+
+## light (let)
+Variant [ green: Unit, yellow: Unit, red: Unit ]

@@ -1,0 +1,77 @@
+## stringify (foreign)
+
+
+## Show (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc { v0: String }
+      let fnref_cls2 = &closure_18
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_18(env0, t1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
+      return v0
+
+## Eq (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc { v0: Bool }
+      let fnref_cls2 = &closure_20
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_20(env0, t1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
+      return v0
+
+## ShowNum (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = Num
+      let env_cls1 = alloc { v0: v0 }
+      let fnref_cls1 = &pap_fn1
+      let closure_cls1 = alloc { __fn: fnref_cls1, __env: env_cls1 }
+      let v2 = alloc { show: closure_cls1 }
+      return v2
+  fn pap_fn1(env2, arg3) entry=pap_fn1_entry
+    pap_fn1_entry:
+      let cap_0 = read env2.v0
+      let result_pap_fn1 = call stringify(cap_0, arg3)
+      return result_pap_fn1
+
+## ShowBool (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_19
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      let v3 = alloc { show: closure_cls2 }
+      return v3
+  fn closure_19(env0, b1) entry=entry
+    entry:
+      jump sw1
+    sw1:
+      branch b1 { true -> case3 | false -> case4 }
+    case3:
+      let v4 = "true"
+      jump join2(v4)
+    case4:
+      let v5 = "false"
+      jump join2(v5)
+    join2(match0):
+      return match0
+
+## EqNum (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = &unknown
+      let v1 = alloc { eq: v0 }
+      return v1

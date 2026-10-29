@@ -1,0 +1,6 @@
+## id (let)
+(forall ((a Type)) (forall ((x Type)) (= x x)))
+
+## const (let)
+(forall ((a Type))
+  (forall ((b Type)) (forall ((x Type)) (forall ((y Type)) (= x x)))))

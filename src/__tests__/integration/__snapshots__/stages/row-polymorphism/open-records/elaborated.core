@@ -1,0 +1,12 @@
+## getX (let)
+λ(r: Row) =>
+  λ(record: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) -> (record).x
+
+## p1 (let)
+getX @[ y: Num ] (νstrict [] . Struct [ x: 10, y: 20 ])
+
+## p2 (let)
+getX @[ y: Num, z: Num ] (νstrict [] . Struct [ x: 5, y: 3, z: 7 ])
+
+## p3 (let)
+getX @[ name: String ] (νstrict [] . Struct [ x: 100, name: "point" ])

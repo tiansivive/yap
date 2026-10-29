@@ -1,0 +1,20 @@
+## Nat (let)
+true
+
+## Pos (let)
+true
+
+## takePosFunction (let)
+(forall (($a Real)) (=> (= $a 10) (> $a 0)))
+
+## natToNum (let)
+(forall ((x Real)) (=> (>= x 0) (and (>= x 0) (= x Num))))
+
+## posToNum (let)
+(forall ((x Real)) (=> (> x 0) (and (> x 0) (= x Num))))
+
+## result1 (let)
+(forall ((p Real)) (=> (> p 0) (>= p 0)))
+
+## result2 (let)
+(forall ((p Real)) (=> (> p 0) (> p 0)))

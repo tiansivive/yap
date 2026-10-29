@@ -1,0 +1,12 @@
+## Factorial (let)
+Σ($sig: [ compute: Irrelevant ]) . Schema [ compute: Π(t1: Num) -> Num ]
+
+## fact (let)
+νstrict [ compute: λ(n: Num) ->
+    match n | 0 -> 1 | _ -> FFI.$mul n ($compute (FFI.$sub n 1)) ] .
+  Struct
+    [ compute: λ(n: Num) ->
+        match n | 0 -> 1 | _ -> FFI.$mul n ($compute (FFI.$sub n 1)) ]
+
+## result (let)
+((fact).compute) 5

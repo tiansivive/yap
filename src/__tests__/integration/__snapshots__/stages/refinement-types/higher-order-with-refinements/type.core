@@ -1,0 +1,14 @@
+## Nat (let)
+Type
+
+## Pos (let)
+Type
+
+## hof (let)
+Π(f: Π(t1: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) ->
+  <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) ->
+  <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]
+
+## hof2 (let)
+Π(t2: Π(t3: Num) -> <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) ->
+  <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]

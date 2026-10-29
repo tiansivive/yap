@@ -1,0 +1,5 @@
+## List (let)
+valid
+
+## length (let)
+error: Unbound bound variable in synth

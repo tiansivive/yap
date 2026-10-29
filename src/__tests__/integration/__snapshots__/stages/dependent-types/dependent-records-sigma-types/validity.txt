@@ -1,0 +1,8 @@
+## DependentPair (let)
+valid
+
+## numPair (let)
+valid
+
+## strPair (let)
+valid

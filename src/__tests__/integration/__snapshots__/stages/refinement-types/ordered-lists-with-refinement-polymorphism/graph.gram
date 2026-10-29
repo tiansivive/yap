@@ -1,0 +1,226 @@
+## OrderedList (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"OrderedList"}
+[3] mu {"variable":"x","source":"OrderedList","level":1}
+  :annotation -> [4]
+  :body -> [14]
+[4] pi {"variable":"t","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] pi {"variable":"p","icit":"Explicit","level":2}
+  :annotation -> [7]
+  :body -> [13]
+[7] pi {"variable":"t1","icit":"Explicit","level":2}
+  :annotation -> [8]
+  :body -> [9]
+[8] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[9] pi {"variable":"t2","icit":"Explicit","level":3}
+  :annotation -> [10]
+  :body -> [12]
+[10] var:bound {"index":1}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [7] {"level":2}
+[11] var:free {"name":"Bool"}
+[12] var:ref {"name":"Bool"}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [9] {"level":3}
+[13] lit {"value":{"type":"Atom","value":"Type"}}
+[14] lambda {"variable":"t","icit":"Explicit","level":2}
+  :annotation -> [15]
+  :body -> [16]
+  :env -> [46]
+[15] lit {"value":{"type":"Atom","value":"Type"}}
+[16] lambda {"variable":"p","icit":"Explicit","level":3}
+  :annotation -> [17]
+  :body -> [22]
+  :env -> [47]
+[17] pi {"variable":"t1","icit":"Explicit","level":3}
+  :annotation -> [18]
+  :body -> [19]
+[18] var:bound {"index":0}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+[19] pi {"variable":"t2","icit":"Explicit","level":4}
+  :annotation -> [20]
+  :body -> [21]
+[20] var:bound {"index":1}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [17] {"level":3}
+[21] lit {"value":{"type":"Atom","value":"Bool"}}
+[22] app {"icit":"Explicit"}
+  :arg -> [24]
+  :func -> [23]
+[23] lit {"value":{"type":"Atom","value":"Variant"}}
+[24] row:ext {"label":"cons"}
+  :rest -> [43]
+  :value -> [25]
+[25] sigma:v2 {"variable":"$sig","level":4}
+  :annotation -> [26]
+  :body -> [31]
+[26] row:ext {"label":"head"}
+  :rest -> [28]
+  :value -> [27]
+[27] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[28] row:ext {"label":"tail"}
+  :rest -> [30]
+  :value -> [29]
+[29] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[30] row:empty
+[31] app {"icit":"Explicit"}
+  :arg -> [33]
+  :func -> [32]
+[32] lit {"value":{"type":"Atom","value":"Schema"}}
+[33] row:ext {"label":"head"}
+  :rest -> [35]
+  :value -> [34]
+[34] var:bound {"index":2}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+  :scope -> [25] {"level":4}
+[35] row:ext {"label":"tail"}
+  :rest -> [42]
+  :value -> [36]
+[36] app {"icit":"Explicit"}
+  :arg -> [41]
+  :func -> [37]
+[37] app {"icit":"Explicit"}
+  :arg -> [39]
+  :func -> [38]
+[38] var:bound {"index":3}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+  :scope -> [25] {"level":4}
+[39] modal {"quantity":"Many"}
+  :term -> [40]
+[40] var:bound {"index":2}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+  :scope -> [25] {"level":4}
+[41] var:bound {"index":1}
+  :refers_to -> [16]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [14] {"level":2}
+  :scope -> [16] {"level":3}
+  :scope -> [25] {"level":4}
+[42] row:empty
+[43] row:ext {"label":"nil"}
+  :rest -> [45]
+  :value -> [44]
+[44] lit {"value":{"type":"Atom","value":"Unit"}}
+[45] row:empty
+[46] env
+  :capture -> [3] {"index":0}
+[47] env
+  :capture -> [14] {"index":0}
+  :capture -> [3] {"index":1}
+[48] closure
+  :body -> [14]
+  :env -> [46]
+[49] closure
+  :body -> [16]
+  :env -> [47]
+
+## ascending (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"ascending"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"cons"}}
+[5] nu {"variable":"$nu","level":1}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"head"}
+  :field -> [8] {"label":"tail"}
+[7] lit {"value":{"type":"Num","value":1}}
+[8] struct
+  :field -> [9] {"label":"__tag"}
+  :field -> [10] {"label":"payload"}
+[9] lit {"value":{"type":"Atom","value":"cons"}}
+[10] nu {"variable":"$nu","level":1}
+  :body -> [11]
+[11] struct
+  :field -> [12] {"label":"head"}
+  :field -> [13] {"label":"tail"}
+[12] lit {"value":{"type":"Num","value":2}}
+[13] struct
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"cons"}}
+[15] nu {"variable":"$nu","level":1}
+  :body -> [16]
+[16] struct
+  :field -> [17] {"label":"head"}
+  :field -> [18] {"label":"tail"}
+[17] lit {"value":{"type":"Num","value":3}}
+[18] struct
+  :field -> [19] {"label":"__tag"}
+  :field -> [20] {"label":"payload"}
+[19] lit {"value":{"type":"Atom","value":"nil"}}
+[20] lit {"value":{"type":"unit"}}
+
+## descending (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"descending"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"cons"}}
+[5] nu {"variable":"$nu","level":1}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"head"}
+  :field -> [8] {"label":"tail"}
+[7] lit {"value":{"type":"Num","value":3}}
+[8] struct
+  :field -> [9] {"label":"__tag"}
+  :field -> [10] {"label":"payload"}
+[9] lit {"value":{"type":"Atom","value":"cons"}}
+[10] nu {"variable":"$nu","level":1}
+  :body -> [11]
+[11] struct
+  :field -> [12] {"label":"head"}
+  :field -> [13] {"label":"tail"}
+[12] lit {"value":{"type":"Num","value":2}}
+[13] struct
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"cons"}}
+[15] nu {"variable":"$nu","level":1}
+  :body -> [16]
+[16] struct
+  :field -> [17] {"label":"head"}
+  :field -> [18] {"label":"tail"}
+[17] lit {"value":{"type":"Num","value":1}}
+[18] struct
+  :field -> [19] {"label":"__tag"}
+  :field -> [20] {"label":"payload"}
+[19] lit {"value":{"type":"Atom","value":"nil"}}
+[20] lit {"value":{"type":"unit"}}

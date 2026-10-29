@@ -1,0 +1,10 @@
+## List (let)
+List
+
+## length (let)
+λ(a: Type) =>
+  (closure: λ(list: (List) a) ->
+    match list
+      | Variant [ nil: _ | $row_7 ] -> 0
+      | Variant [ cons: Struct [ 0: x, 1: xs | $row_12 ] | $row_13 ] ->
+          FFI.$add 1 (I6 @a xs) -| Γ: a)

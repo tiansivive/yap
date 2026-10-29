@@ -1,0 +1,8 @@
+## inc (let)
+(λ(x: Num) -> FFI.$add x 1 : Π(x: Num) ->
+  <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add x 1) |])
+
+## fst (let)
+λ(a: Type) =>
+  λ(b: Type) =>
+    (λ(x: a) -> (λ(y: b) -> x : Π(y: b) -> a) : Π(x: a) -> Π(y: b) -> a)

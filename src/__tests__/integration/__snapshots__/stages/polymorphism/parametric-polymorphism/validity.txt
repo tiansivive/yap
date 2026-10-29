@@ -1,0 +1,5 @@
+## id (let)
+valid
+
+## const (let)
+valid

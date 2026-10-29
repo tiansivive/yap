@@ -1,0 +1,11 @@
+## identity (let)
+λ(x: Num) -> x
+
+## add (let)
+λ(x: Num) -> λ(y: Num) -> FFI.$add x y
+
+## forty2 (let)
+identity 42
+
+## added (let)
+add 10 20

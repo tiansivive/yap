@@ -1,0 +1,20 @@
+## stringify (foreign)
+
+
+## Show (let)
+λ(t: Type) ->
+  Σ($sig: [ show: Irrelevant ]) . Schema [ show: Π(t3: t) -> String ]
+
+## Eq (let)
+λ(t: Type) ->
+  Σ($sig: [ eq: Irrelevant ]) . Schema [ eq: Π(t5: t) -> Π(t6: t) -> Bool ]
+
+## ShowNum (let)
+νstrict [] . Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]
+
+## ShowBool (let)
+νstrict [] .
+  Struct [ show: λ(b: Bool) -> match b | true -> "true" | false -> "false" ]
+
+## EqNum (let)
+νstrict [] . Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ]

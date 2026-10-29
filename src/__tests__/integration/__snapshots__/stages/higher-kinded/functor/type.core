@@ -1,0 +1,14 @@
+## List (let)
+Π(t1: Type) -> Type
+
+## Functor (let)
+Π(t2: Π(t3: Type) -> Type) -> Type
+
+## mapList (let)
+Π(a: Type) => Π(b: Type) => Π(t7: Π(t8: a) -> b) -> Π(t9: (List) a) -> (List) b
+
+## ListFunctor (let)
+Σ($sig: [ map: Irrelevant ]) .
+  Schema
+    [ map: Π(a: Type) =>
+        Π(b: Type) => Π(t4: Π(t5: a) -> b) -> Π(t6: (List) a) -> (List) b ]

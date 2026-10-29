@@ -1,0 +1,2 @@
+## block (let)
+<ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]

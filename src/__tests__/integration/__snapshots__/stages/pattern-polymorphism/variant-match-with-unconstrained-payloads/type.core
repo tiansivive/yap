@@ -1,0 +1,11 @@
+## (expr) (expression)
+Π(a: Type) =>
+  Π(A: a) =>
+    Π(r: Row) =>
+      Π(s: Row) =>
+        Π(b: Type) =>
+          Π(B: b) =>
+            Π(c: Type) =>
+              Π(C: c) =>
+                Π(x: Variant [ nil: A, cons: Schema [ 0: B, 1: C | s ] | r ]) ->
+                  Num

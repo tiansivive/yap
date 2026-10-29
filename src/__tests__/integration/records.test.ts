@@ -3,55 +3,55 @@ import { describe, expect, test } from "vitest";
 import { runScript, snap } from "./helpers/pipeline";
 
 describe("Language Tour — Records & Tuples", () => {
-	test("records", () => {
+	test("records", async () => {
 		const result = runScript(`
 let point: { x: Num, y: Num } = { x: 0, y: 10 };
 let person: { name: String, age: Num } = { name: "Alice", age: 30 };
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("self-referencing fields", () => {
+	test("self-referencing fields", async () => {
 		const result = runScript(`
 let rectangle: { width: Num, height: Num, area: Num }
     = { width: 10, height: 20, area: $width * $height };
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("field access", () => {
+	test("field access", async () => {
 		const result = runScript(`
 let point = { x: 10, y: 20 };
 let xCoord = point.x;
 let getX: { x: Num, y: Num } -> Num = \\p -> p.x;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("field extension", () => {
+	test("field extension", async () => {
 		const result = runScript(`
 let point = { x: 10 };
 let point3d = { point | y = 20, z = 30 };
 let updated = { point | x = 100 };
 let updatedX = updated.x;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("tuples", () => {
+	test("tuples", async () => {
 		const result = runScript(`
 let pair: { Num, String } = { 42, "answer" };
 let pairExplicit: { 0: Num, 1: String } = { 0: 42, 1: "answer" };
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("arrays and dictionaries", () => {
+	test("arrays and dictionaries", async () => {
 		const result = runScript(`
 let array: { [Num]: Num } = [1, 2, 3];
 let dict: { [String]: Num } = { one: 1, two: 2, three: 3 };
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 });
 

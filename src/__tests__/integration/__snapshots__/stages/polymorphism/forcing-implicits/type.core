@@ -1,0 +1,5 @@
+## id (let)
+Π(a: Type) => Π(t1: a) -> a
+
+## forcedStr (let)
+String

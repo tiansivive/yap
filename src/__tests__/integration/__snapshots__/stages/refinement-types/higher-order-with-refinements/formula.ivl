@@ -1,0 +1,20 @@
+## Nat (let)
+true
+
+## Pos (let)
+true
+
+## hof (let)
+(and
+  (forall (($a Real)) (=> (= $a 1) (>= $a 0)))
+  (forall ((t1 Real)) (=> (= t1 1) (forall ((n Real)) (=> (>= n 0) (>= n 0))))))
+
+## hof2 (let)
+(forall ((t3 Real))
+  (=>
+    (= t3 1)
+    (forall ((x Real))
+      (=>
+        (>= x 0)
+        (forall ((y Real))
+          (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (> r 0)))))))))

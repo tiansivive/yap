@@ -29,7 +29,7 @@
 		}
 	},
 	"include": ["src", "scripts/cli.ts"],
-	"exclude": ["src/cli/explore/static", "tooling/syntax-highlighting"],
+	"exclude": ["src/cli/explore/static", "tooling/syntax-highlighting", "**/__snapshots__/stages"],
 	"ts-node": {
 		"require": ["tsconfig-paths/register"]
 	}

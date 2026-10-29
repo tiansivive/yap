@@ -1,0 +1,6 @@
+## exactOne (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 1
+      return v0

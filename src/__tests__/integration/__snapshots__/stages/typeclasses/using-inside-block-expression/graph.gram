@@ -1,0 +1,256 @@
+## stringify (foreign)
+
+
+## Show (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Show"}
+[3] lambda {"variable":"t","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [17]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] sigma:v2 {"variable":"$sig","level":2}
+  :annotation -> [6]
+  :body -> [9]
+[6] row:ext {"label":"show"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"show"}
+  :rest -> [16]
+  :value -> [12]
+[12] pi {"variable":"t3","icit":"Explicit","level":3}
+  :annotation -> [13]
+  :body -> [15]
+[13] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[14] var:free {"name":"String"}
+[15] var:ref {"name":"String"}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [12] {"level":3}
+[16] row:empty
+[17] env
+  :capture -> [14] {"index":0}
+[18] closure
+  :body -> [3]
+  :env -> [17]
+
+## Eq (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Eq"}
+[3] lambda {"variable":"t","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [19]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] sigma:v2 {"variable":"$sig","level":2}
+  :annotation -> [6]
+  :body -> [9]
+[6] row:ext {"label":"eq"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"eq"}
+  :rest -> [18]
+  :value -> [12]
+[12] pi {"variable":"t5","icit":"Explicit","level":3}
+  :annotation -> [13]
+  :body -> [14]
+[13] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[14] pi {"variable":"t6","icit":"Explicit","level":4}
+  :annotation -> [15]
+  :body -> [17]
+[15] var:bound {"index":2}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [12] {"level":3}
+[16] var:free {"name":"Bool"}
+[17] var:ref {"name":"Bool"}
+  :refers_to -> [16]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [12] {"level":3}
+  :scope -> [14] {"level":4}
+[18] row:empty
+[19] env
+  :capture -> [16] {"index":0}
+[20] closure
+  :body -> [3]
+  :env -> [19]
+
+## ShowNum (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"ShowNum"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [13] {"label":"show"}
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[9] var:foreign {"name":"stringify","arity":2}
+[11] lit {"value":{"type":"Atom","value":"Num"}}
+[13] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [11] {"index":0}
+  :callee -> [9]
+[14] pap {"remaining":1}
+  :captured -> [11] {"index":0}
+  :materializes -> [13]
+
+## EqNum (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"EqNum"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [12] {"label":"eq"}
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[11] var:foreign {"name":"$eq","arity":2}
+[12] var:ref {"name":"$eq"}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [12] {"level":1}
+
+## areEqual (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"areEqual"}
+[3] lambda {"variable":"t","icit":"Implicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [29]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] lambda {"variable":"eq","icit":"Implicit","level":2}
+  :annotation -> [6]
+  :body -> [25]
+  :env -> [30]
+[6] sigma:v2 {"variable":"$sig","level":2}
+  :annotation -> [7]
+  :body -> [10]
+[7] row:ext {"label":"eq"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[9] row:empty
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Schema"}}
+[12] row:ext {"label":"eq"}
+  :rest -> [18]
+  :value -> [13]
+[13] pi {"variable":"t5","icit":"Explicit","level":3}
+  :annotation -> [14]
+  :body -> [15]
+[14] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[15] pi {"variable":"t6","icit":"Explicit","level":4}
+  :annotation -> [16]
+  :body -> [17]
+[16] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [13] {"level":3}
+[17] lit {"value":{"type":"Atom","value":"Bool"}}
+[18] row:empty
+[20] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[22] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[25] proj {"label":"eq"}
+  :target -> [26]
+[26] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[29] env
+[30] env
+  :capture -> [3] {"index":0}
+[31] closure
+  :body -> [3]
+  :env -> [29]
+[32] closure
+  :body -> [5]
+  :env -> [30]
+
+## result (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"result"}
+[3] block
+  :return -> [18]
+  :stmt -> [4] {"index":0}
+  :stmt -> [7] {"index":1}
+[4] stmt:using
+  :next -> [7]
+  :value -> [6]
+[5] var:free {"name":"EqNum"}
+[6] var:ref {"name":"EqNum"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] stmt:let {"variable":"same"}
+  :value -> [8]
+[8] app {"icit":"Explicit"}
+  :arg -> [17]
+  :func -> [9]
+[9] app {"icit":"Explicit"}
+  :arg -> [16]
+  :func -> [10]
+[10] app {"icit":"Implicit"}
+  :arg -> [15]
+  :func -> [11]
+[11] app {"icit":"Implicit"}
+  :arg -> [14]
+  :func -> [13]
+[12] var:free {"name":"areEqual"}
+[13] var:ref {"name":"areEqual"}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [7] {"level":1}
+[14] lit {"value":{"type":"Atom","value":"Num"}}
+[15] var:ref {"name":"EqNum"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [7] {"level":1}
+[16] lit {"value":{"type":"Num","value":10}}
+[17] lit {"value":{"type":"Num","value":10}}
+[18] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [7] {"level":1}

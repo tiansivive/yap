@@ -1,0 +1,6 @@
+## firstOrZero (let)
+Π(t1: FFI.Indexed Num Num @FFI.defaultArray) -> Num
+
+## tail (let)
+Π(t2: FFI.Indexed Num Num @FFI.defaultArray) ->
+  FFI.Indexed Num Num @FFI.defaultArray

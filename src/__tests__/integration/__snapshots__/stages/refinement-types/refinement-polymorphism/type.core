@@ -1,0 +1,5 @@
+## checkNum (let)
+Π(p: Π(t1: Num) -> Bool) -> Π(t2: <ω> Num [| λ(v: Num) -> p v |]) -> Num
+
+## nat5 (let)
+Num

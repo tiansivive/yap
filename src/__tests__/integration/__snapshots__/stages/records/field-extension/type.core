@@ -1,0 +1,11 @@
+## point (let)
+Schema [ x: Num ]
+
+## point3d (let)
+Schema [ z: Num, y: Num, x: Num ]
+
+## updated (let)
+Schema [ x: Num ]
+
+## updatedX (let)
+Num

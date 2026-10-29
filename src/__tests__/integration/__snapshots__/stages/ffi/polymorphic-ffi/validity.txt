@@ -1,0 +1,11 @@
+## prepend (foreign)
+
+
+## id (foreign)
+
+
+## nums (let)
+valid
+
+## strs (let)
+valid

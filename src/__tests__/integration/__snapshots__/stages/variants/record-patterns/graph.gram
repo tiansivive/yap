@@ -1,0 +1,139 @@
+## getY (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"getY"}
+[3] lambda {"variable":"p","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [17]
+  :env -> [29]
+[4] sigma:v2 {"variable":"$sig","level":1}
+  :annotation -> [5]
+  :body -> [10]
+[5] row:ext {"label":"x"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[7] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[9] row:empty
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Schema"}}
+[12] row:ext {"label":"x"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Atom","value":"Num"}}
+[14] row:ext {"label":"y"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"Atom","value":"Num"}}
+[16] row:empty
+[17] match
+  :alt -> [19] {"index":0}
+  :decision_tree -> [25]
+  :scrutinee -> [18]
+[18] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[19] case
+  :body -> [24]
+  :pattern -> [20]
+[20] pat:struct
+  :field -> [21] {"label":"x"}
+  :field -> [22] {"label":"y"}
+[21] pat:binder {"name":"a","level":2}
+[22] pat:binder {"name":"b","level":3}
+[23] pat:wildcard
+[24] var:bound {"index":1}
+  :refers_to -> [22]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [21] {"level":2}
+  :scope -> [22] {"level":3}
+  :scope -> [23] {"level":4}
+[25] switch {"kind":"struct"}
+  :branch -> [28]
+  :inspect -> [18]
+[26] proj {"label":"x"}
+  :target -> [18]
+[27] proj {"label":"y"}
+  :target -> [18]
+[28] leaf
+  :bind -> [26] {"name":"a","binder":21}
+  :bind -> [27] {"name":"b","binder":22}
+  :body -> [24]
+[29] env
+[30] closure
+  :body -> [3]
+  :env -> [29]
+
+## getY2 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"getY2"}
+[3] lambda {"variable":"p","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [17]
+  :env -> [27]
+[4] sigma:v2 {"variable":"$sig","level":1}
+  :annotation -> [5]
+  :body -> [10]
+[5] row:ext {"label":"x"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[7] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[9] row:empty
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Schema"}}
+[12] row:ext {"label":"x"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Atom","value":"Num"}}
+[14] row:ext {"label":"y"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"Atom","value":"Num"}}
+[16] row:empty
+[17] match
+  :alt -> [19] {"index":0}
+  :decision_tree -> [24]
+  :scrutinee -> [18]
+[18] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[19] case
+  :body -> [23]
+  :pattern -> [20]
+[20] pat:struct
+  :field -> [21] {"label":"y"}
+[21] pat:binder {"name":"a","level":2}
+[22] pat:wildcard
+[23] var:bound {"index":1}
+  :refers_to -> [21]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [21] {"level":2}
+  :scope -> [22] {"level":3}
+[24] switch {"kind":"struct"}
+  :branch -> [26]
+  :inspect -> [18]
+[25] proj {"label":"y"}
+  :target -> [18]
+[26] leaf
+  :bind -> [25] {"name":"a","binder":21}
+  :body -> [23]
+[27] env
+[28] closure
+  :body -> [3]
+  :env -> [27]

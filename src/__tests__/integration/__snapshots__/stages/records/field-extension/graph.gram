@@ -1,0 +1,50 @@
+## point (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"point"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"x"}
+[5] lit {"value":{"type":"Num","value":10}}
+
+## point3d (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"point3d"}
+[3] inj {"label":"z"}
+  :target -> [5]
+  :value -> [4]
+[4] lit {"value":{"type":"Num","value":30}}
+[5] inj {"label":"y"}
+  :target -> [8]
+  :value -> [6]
+[6] lit {"value":{"type":"Num","value":20}}
+[7] var:free {"name":"point"}
+[8] var:ref {"name":"point"}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+
+## updated (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"updated"}
+[3] inj {"label":"x"}
+  :target -> [6]
+  :value -> [4]
+[4] lit {"value":{"type":"Num","value":100}}
+[5] var:free {"name":"point"}
+[6] var:ref {"name":"point"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+
+## updatedX (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"updatedX"}
+[3] proj {"label":"x"}
+  :target -> [5]
+[4] var:free {"name":"updated"}
+[5] var:ref {"name":"updated"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}

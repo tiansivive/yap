@@ -1,0 +1,169 @@
+## Nat (let)
+=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+## Pos (let)
+=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+## n (let)
+=== Formula ===
+  (forall (($a Real)) (=> (= $a 42) (>= $a 0)))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  $a=42 -> tautology
+  $a=0 -> tautology
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+## p (let)
+=== Formula ===
+  (forall (($a Real)) (=> (= $a 42) (> $a 0)))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  $a=42 -> tautology
+  $a=0 -> tautology
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+## zero (let)
+=== Formula ===
+  (forall (($a Real)) (=> (= $a 0) (>= $a 0)))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  $a=0 -> tautology
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1

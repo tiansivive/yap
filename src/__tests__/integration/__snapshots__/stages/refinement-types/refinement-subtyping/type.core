@@ -1,0 +1,14 @@
+## Nat (let)
+Type
+
+## Pos (let)
+Type
+
+## useNat (let)
+Π(t1: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) -> Num
+
+## p (let)
+<ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]
+
+## result (let)
+Num

@@ -1,0 +1,116 @@
+## OrderedList (let)
+=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+## ascending (let)
+=== Formula ===
+  (and
+    (forall (($b Real)) (=> (= $b 2) (< 1 $b)))
+    (forall (($c Real)) (=> (= $c 3) (and (< 1 $c) (< 2 $c)))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  $b=2 -> tautology
+  $b=1 -> tautology
+  $b=3 -> tautology
+  $c=2 -> tautology
+  $c=1 -> tautology
+  $c=3 -> tautology
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+## descending (let)
+=== Formula ===
+  (and
+    (forall (($b Real)) (=> (= $b 2) (> 3 $b)))
+    (forall (($c Real)) (=> (= $c 1) (and (> 3 $c) (> 2 $c)))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  $b=2 -> tautology
+  $b=3 -> tautology
+  $b=1 -> tautology
+  $c=2 -> tautology
+  $c=3 -> tautology
+  $c=1 -> tautology
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1

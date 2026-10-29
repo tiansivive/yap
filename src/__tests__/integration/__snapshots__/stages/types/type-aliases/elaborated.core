@@ -1,0 +1,5 @@
+## Point (let)
+Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]
+
+## origin (let)
+νstrict [] . Struct [ x: 0, y: 0 ]

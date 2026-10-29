@@ -1,0 +1,45 @@
+## Nat (let)
+module
+  fn main entry=entry
+    entry:
+      return v0
+
+## Pos (let)
+module
+  fn main entry=entry
+    entry:
+      return v0
+
+## hof (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_13
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_13(env0, f1) entry=entry
+    entry:
+      let v0 = 1
+      let fnref1 = read f1.__fn
+      let env2 = read f1.__env
+      let v3 = call *fnref1(env2, v0)
+      return v3
+
+## hof2 (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_18
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_18(env0, f1) entry=entry
+    entry:
+      let v0 = 1
+      let fnref1 = read f1.__fn
+      let env2 = read f1.__env
+      let v3 = call *fnref1(env2, v0)
+      let v4 = 1
+      let v5 = +(v3, v4)
+      return v5

@@ -1,0 +1,15 @@
+## getName (let)
+Π(r: Row) =>
+  Π(t1: Σ($sig: [ name: Irrelevant ]) . Schema [ name: String | r ]) -> String
+
+## person (let)
+Schema [ name: String, age: Num ]
+
+## book (let)
+Schema [ name: String, author: String, pages: Num ]
+
+## n1 (let)
+String
+
+## n2 (let)
+String

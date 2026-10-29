@@ -1,0 +1,14 @@
+## Nat (let)
+valid
+
+## Pos (let)
+valid
+
+## useNat (let)
+invalid
+
+## p (let)
+valid
+
+## result (let)
+valid

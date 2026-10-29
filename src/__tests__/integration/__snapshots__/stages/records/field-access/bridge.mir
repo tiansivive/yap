@@ -1,0 +1,29 @@
+## point (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 10
+      let v1 = 20
+      let v2 = alloc { x: v0, y: v1 }
+      return v2
+
+## xCoord (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = point
+      let v1 = read v0.x
+      return v1
+
+## getX (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_20
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_20(env0, p1) entry=entry
+    entry:
+      let v0 = read p1.x
+      return v0

@@ -1,0 +1,174 @@
+## negTestCheckLiteral (let)
+=== Formula ===
+  (forall (($a Real)) (=> (= $a 2) (= $a 1)))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 1 lemmas
+  $a=2 -> contradiction
+  $a=1 -> tautology
+  lemma mbqi:forall: #2:  (mbqi:forall:gen0)
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+  #2:  -> empty!
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+  #2:  -> empty!
+
+[theory] all assert p1: ok
+
+[conflict] #2:  (mbqi:forall:gen0) -- all literals false
+
+[unsat] core: [#0, #1, #2]
+
+## negFnApp (let)
+=== Formula ===
+  (forall ((x Real))
+    (=>
+      (= x 1)
+      (forall ((y Real)) (=> (= y 2) (forall ((r Real)) (=> (= r 3) (= r 0)))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 1 lemmas
+  x=1 -> residual
+  x=2 -> tautology
+  x=3 -> tautology
+  x=0 -> tautology
+  y=1 -> tautology
+  y=2 -> residual
+  y=3 -> tautology
+  y=0 -> tautology
+  r=1 -> tautology
+  r=2 -> tautology
+  r=3 -> contradiction
+  r=0 -> tautology
+  lemma mbqi:forall: #2:  (mbqi:forall:gen0)
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+  #2:  -> empty!
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+  #2:  -> empty!
+
+[theory] all assert p1: ok
+
+[conflict] #2:  (mbqi:forall:gen0) -- all literals false
+
+[unsat] core: [#0, #1, #2]
+
+## negTestCheckLambdaPreAndPostCondition (let)
+=== Formula ===
+  (forall ((x Real)) (=> (> x 0) (forall (($a Real)) (=> (= $a 0) (> $a 0)))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 1 lemmas
+  x=0 -> tautology
+  $a=0 -> contradiction
+  lemma mbqi:forall: #2:  (mbqi:forall:gen0)
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+  #2:  -> empty!
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+  #2:  -> empty!
+
+[theory] all assert p1: ok
+
+[conflict] #2:  (mbqi:forall:gen0) -- all literals false
+
+[unsat] core: [#0, #1, #2]

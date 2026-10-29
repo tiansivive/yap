@@ -1,0 +1,14 @@
+## Vec (let)
+Vec
+
+## vec0 (let)
+unit
+
+## vec1 (let)
+νstrict [] . Struct [ 0: 10, 1: vec0 ]
+
+## vec2 (let)
+νstrict [] . Struct [ 0: 20, 1: vec1 ]
+
+## vec3 (let)
+νstrict [] . Struct [ 0: 30, 1: vec2 ]

@@ -1,0 +1,9 @@
+## point (let)
+νstrict [] . Struct [ x: 10, y: 20 ]
+
+## xCoord (let)
+(point).x
+
+## getX (let)
+λ(p: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]) ->
+  (p).x

@@ -1,0 +1,13 @@
+## compute (let)
+λ(x: Num) ->
+  {
+    let doubled
+      : <ω> Num [| λ(r: Num) ->
+        (closure: FFI.$eq r (FFI.$mul x y) -| Γ: r; y; x) |]
+      = FFI.$mul x 2;
+    let added
+      : <ω> Num [| λ(r: Num) ->
+        (closure: FFI.$eq r (FFI.$add x y) -| Γ: r; y; x) |]
+      = FFI.$add doubled 10;
+    return added;
+  }

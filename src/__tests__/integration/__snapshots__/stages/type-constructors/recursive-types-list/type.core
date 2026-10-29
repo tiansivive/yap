@@ -1,0 +1,11 @@
+## List (let)
+Π(t1: Type) -> Type
+
+## empty (let)
+(List) Num
+
+## listOf1 (let)
+(List) Num
+
+## listOf3 (let)
+(List) Num

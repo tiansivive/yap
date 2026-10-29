@@ -1,0 +1,63 @@
+## Nat (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Nat"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+
+## Pos (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Pos"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+
+## useNat (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"useNat"}
+[3] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [6]
+  :env -> [7]
+[4] modal {"quantity":"Many"}
+  :term -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[7] env
+[8] closure
+  :body -> [3]
+  :env -> [7]
+
+## p (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"p"}
+[3] lit {"value":{"type":"Num","value":42}}
+
+## result (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"result"}
+[3] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [5]
+[4] var:free {"name":"useNat"}
+[5] var:ref {"name":"useNat"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[6] var:free {"name":"p"}
+[7] var:ref {"name":"p"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}

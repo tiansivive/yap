@@ -1,0 +1,40 @@
+## negTestCheckLambdaPostCondition (let)
+=== Formula ===
+  (forall ((x Real)) (and (= x x) (forall ((v Real)) (=> (= v x) (> v 0)))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=x -> residual
+  x=0 -> residual
+  v=x -> residual
+  v=0 -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1

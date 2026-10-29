@@ -1,0 +1,2 @@
+## (expr) (expression)
+(forall ((r Row)) (forall ((a Type)) (forall ((obj Schema)) (= obj obj))))

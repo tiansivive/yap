@@ -1,0 +1,13 @@
+## inc (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_13
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_13(env0, x1) entry=entry
+    entry:
+      let v0 = 1
+      let v1 = +(x1, v0)
+      return v1

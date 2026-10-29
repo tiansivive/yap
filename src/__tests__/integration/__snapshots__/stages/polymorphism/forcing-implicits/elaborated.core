@@ -1,0 +1,5 @@
+## id (let)
+λ(a: Type) => λ(x: a) -> x
+
+## forcedStr (let)
+id @String "hello"

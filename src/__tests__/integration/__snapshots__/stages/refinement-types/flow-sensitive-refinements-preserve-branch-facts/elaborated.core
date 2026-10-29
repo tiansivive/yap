@@ -1,0 +1,8 @@
+## test (let)
+{
+  let a : Num = 1;
+  let b
+    : <ω> Num [| λ(n: Num) -> (closure: FFI.$gt n 0 -| Γ: n; a; test) |]
+    = match FFI.$gt a 0 | true -> a | false -> 42;
+  return 1;
+}

@@ -1,0 +1,30 @@
+## compute (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc { v0: doubled, v1: added }
+      let fnref_cls2 = &closure_24
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_24(env0, x1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let v0 = 2
+      let v1 = *(x1, v0)
+      let doubled2 = v1
+      let v3 = 10
+      let v4 = +(doubled2, v3)
+      let added5 = v4
+      return added5
+
+## result (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = compute
+      let v1 = 5
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      return v4

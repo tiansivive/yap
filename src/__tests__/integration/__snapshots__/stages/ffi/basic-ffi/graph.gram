@@ -1,0 +1,40 @@
+## print (foreign)
+
+
+## stringify (foreign)
+
+
+## greet (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"greet"}
+[3] lambda {"variable":"name","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [19]
+[4] lit {"value":{"type":"Atom","value":"String"}}
+[5] block
+  :return -> [16]
+  :stmt -> [6] {"index":0}
+[6] stmt:expr
+  :value -> [17]
+[8] var:foreign {"name":"print","arity":1}
+[12] var:foreign {"name":"$concat","arity":2}
+[14] lit {"value":{"type":"String","value":"Hello, "}}
+  :next -> [15]
+[15] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[16] lit {"value":{"type":"unit"}}
+[17] external {"name":"print","arity":1,"args":1,"saturated":true}
+  :arg -> [18] {"index":0}
+  :callee -> [8]
+[18] primop {"op":"$concat"}
+  :arg -> [14] {"index":0}
+  :arg -> [15] {"index":1}
+  :callee -> [12]
+[19] env
+[20] closure
+  :body -> [3]
+  :env -> [19]

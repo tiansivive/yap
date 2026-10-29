@@ -1,0 +1,20 @@
+## test (let)
+module
+  fn main entry=entry
+    entry:
+      let b9 = match4
+      let v10 = 1
+      jump sw5
+    sw5:
+      let v0 = 1
+      let a1 = v0
+      let v2 = 0
+      let v3 = >(a1, v2)
+      branch v3 { true -> case7 | false -> case8 }
+    case7:
+      jump join6(a1)
+    case8:
+      let v9 = 42
+      jump join6(v9)
+    join6(match4):
+      return match4

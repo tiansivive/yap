@@ -1,0 +1,11 @@
+## prepend (foreign)
+
+
+## id (foreign)
+
+
+## nums (let)
+FFI.Indexed Num Num @FFI.defaultArray
+
+## strs (let)
+FFI.Indexed Num String @FFI.defaultArray

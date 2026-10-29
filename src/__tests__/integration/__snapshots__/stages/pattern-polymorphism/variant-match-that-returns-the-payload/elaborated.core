@@ -1,0 +1,8 @@
+## (expr) (expression)
+λ(r: Row) =>
+  λ(a: Type) =>
+    λ(A: a) =>
+      (λ(x: Variant [ some: A | r ]) ->
+        match x | Variant [ some: v | $row_4 ] -> v : Π(x: Variant
+        [ some: A | r ]) ->
+        A)

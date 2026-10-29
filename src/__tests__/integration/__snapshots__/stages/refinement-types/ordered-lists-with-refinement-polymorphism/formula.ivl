@@ -1,0 +1,12 @@
+## OrderedList (let)
+true
+
+## ascending (let)
+(and
+  (forall (($b Real)) (=> (= $b 2) (< 1 $b)))
+  (forall (($c Real)) (=> (= $c 3) (and (< 1 $c) (< 2 $c)))))
+
+## descending (let)
+(and
+  (forall (($b Real)) (=> (= $b 2) (> 3 $b)))
+  (forall (($c Real)) (=> (= $c 1) (and (> 3 $c) (> 2 $c)))))

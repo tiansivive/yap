@@ -1,0 +1,97 @@
+## firstOrZero (let)
+=== Formula ===
+  (forall ((list Schema))
+    (and
+      (= list list)
+      (= list list)
+      (forall (($fresh1 Schema))
+        (=>
+          (and (= $fresh1 list) (= $fresh1 list))
+          (forall ((x Real)) (forall ((xs Schema)) (= x x)))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  list=list -> residual
+  $fresh1=list -> residual
+  x=x -> residual
+  xs=list -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+## tail (let)
+=== Formula ===
+  (forall ((list Schema))
+    (and
+      (= list list)
+      (= list list)
+      (forall (($fresh1 Schema))
+        (=>
+          (and (= $fresh1 list) (= $fresh1 list))
+          (forall ((x Real)) (forall ((xs Schema)) (= xs xs)))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  list=list -> residual
+  list=xs -> residual
+  $fresh1=list -> residual
+  $fresh1=xs -> residual
+  xs=list -> residual
+  xs=xs -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1

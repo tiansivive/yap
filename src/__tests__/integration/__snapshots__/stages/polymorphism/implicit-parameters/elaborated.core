@@ -1,0 +1,8 @@
+## id (let)
+λ(a: Type) => λ(x: a) -> x
+
+## n2 (let)
+id @Num 42
+
+## s2 (let)
+id @String "hello"

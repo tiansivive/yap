@@ -1,0 +1,9 @@
+## point (let)
+Schema [ x: Num, y: Num ]
+
+## xCoord (let)
+Num
+
+## getX (let)
+Π(t1: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]) ->
+  Num

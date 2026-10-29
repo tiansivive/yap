@@ -1,0 +1,2 @@
+## negTestCheckLambdaPostCondition (let)
+Π(t1: Num) -> <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]

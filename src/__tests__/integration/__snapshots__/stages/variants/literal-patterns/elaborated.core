@@ -1,0 +1,2 @@
+## isZero (let)
+λ(n: Num) -> match n | 0 -> true | _ -> false

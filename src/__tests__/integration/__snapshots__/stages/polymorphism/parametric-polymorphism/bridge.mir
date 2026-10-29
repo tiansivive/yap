@@ -1,0 +1,50 @@
+## id (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_10
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_11(env0, x1) entry=entry
+    entry:
+      return x1
+  fn closure_10(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_11
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+
+## const (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_16
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_19(env0, y1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      return cap_0
+  fn closure_18(env0, x1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: x1 }
+      let fnref_cls2 = &closure_19
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_17(env0, b1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: b1 }
+      let fnref_cls2 = &closure_18
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_16(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: a1 }
+      let fnref_cls2 = &closure_17
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2

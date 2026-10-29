@@ -1,0 +1,9 @@
+## Pair (let)
+Π(a: Type) -> Π(p: Π(t1: a) -> Type) -> Type
+
+## exampleP1 (let)
+Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) . Schema [ fst: Num, snd: String ]
+
+## exampleP2 (let)
+Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+  Schema [ fst: Bool, snd: match ($sig).fst | true -> Num | false -> String ]

@@ -1,0 +1,6 @@
+## (expr) (expression)
+Schema
+  [ point: Schema [ x: Num, y: Num ],
+    halved: Schema
+      [ a: <ω> Num [| λ(r: Num) -> FFI.$eq r 0.5 |],
+        b: <ω> Num [| λ(r: Num) -> FFI.$eq r 1 |] ] ]

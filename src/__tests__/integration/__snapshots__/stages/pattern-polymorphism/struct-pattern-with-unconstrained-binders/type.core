@@ -1,0 +1,5 @@
+## (expr) (expression)
+Π(r: Row) =>
+  Π(a: Type) =>
+    Π(A: a) =>
+      Π(b: Type) => Π(B: b) => Π(x: Schema [ foo: A, bar: B | r ]) -> Num

@@ -1,0 +1,43 @@
+## Shape (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
+      let v1 = Num
+      let v2 = alloc { 1: v1, 0: v1 }
+      let v3 = alloc { point: v0, rectangle: v2, circle: v1 }
+      return v3
+
+## describeShape (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_68
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_68(env0, s1) entry=entry
+    entry:
+      jump sw2
+    sw2:
+      let tag0 = read s1.__tag
+      branch tag0 { circle -> case4 | rectangle -> case5 | point -> case6 }
+    case4:
+      let v5 = read s1.payload
+      let r = v5
+      let v6 = "Circle with radius"
+      jump join3(v6)
+    case5:
+      let v6 = read s1.payload
+      let v7 = read v6.0
+      let w = v7
+      let v8 = read v6.1
+      let h = v8
+      let v9 = "Rectangle"
+      jump join3(v9)
+    case6:
+      let v7 = read s1.payload
+      let v8 = "Point at coordinates"
+      jump join3(v8)
+    join3(match1):
+      return match1

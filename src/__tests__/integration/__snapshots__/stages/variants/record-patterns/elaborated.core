@@ -1,0 +1,7 @@
+## getY (let)
+λ(p: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]) ->
+  match p | Struct [ x: a, y: b | $row_5 ] -> b
+
+## getY2 (let)
+λ(p: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]) ->
+  match p | Struct [ y: a | $row_8 ] -> a

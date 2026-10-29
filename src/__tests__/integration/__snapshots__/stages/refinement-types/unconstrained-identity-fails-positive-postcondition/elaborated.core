@@ -1,0 +1,2 @@
+## negTestCheckLambdaPostCondition (let)
+λ(x: Num) -> x

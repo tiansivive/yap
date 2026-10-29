@@ -1,0 +1,8 @@
+## DependentPair (let)
+Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) . Schema [ fst: Type, snd: &fst ]
+
+## numPair (let)
+νstrict [] . Struct [ fst: Num, snd: 42 ]
+
+## strPair (let)
+νstrict [] . Struct [ fst: String, snd: "hello" ]

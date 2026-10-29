@@ -1,0 +1,9 @@
+## inc (let)
+(forall ((x Real))
+  (and
+    (= x x)
+    (forall ((x Real))
+      (=>
+        (= x x)
+        (forall ((y Real))
+          (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))

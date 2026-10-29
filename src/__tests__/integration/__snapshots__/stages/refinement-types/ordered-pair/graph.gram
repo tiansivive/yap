@@ -1,0 +1,50 @@
+## OrderedPair (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"OrderedPair"}
+[3] sigma:v2 {"variable":"$sig","level":1}
+  :annotation -> [4]
+  :body -> [9]
+[4] row:ext {"label":"fst"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"snd"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"fst"}
+  :rest -> [14]
+  :value -> [13]
+[12] var:free {"name":"Num"}
+[13] var:ref {"name":"Num"}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[14] row:ext {"label":"snd"}
+  :rest -> [17]
+  :value -> [15]
+[15] modal {"quantity":"Many"}
+  :term -> [16]
+[16] var:ref {"name":"Num"}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[17] row:empty
+
+## valid (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"valid"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"fst"}
+  :field -> [6] {"label":"snd"}
+[5] lit {"value":{"type":"Num","value":3}}
+[6] lit {"value":{"type":"Num","value":5}}

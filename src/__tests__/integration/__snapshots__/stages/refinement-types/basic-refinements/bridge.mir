@@ -1,0 +1,32 @@
+## Nat (let)
+module
+  fn main entry=entry
+    entry:
+      return v0
+
+## Pos (let)
+module
+  fn main entry=entry
+    entry:
+      return v0
+
+## n (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 42
+      return v0
+
+## p (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 42
+      return v0
+
+## zero (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 0
+      return v0

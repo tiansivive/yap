@@ -1,26 +1,26 @@
-import { describe, expect, test } from "vitest";
+import { describe, test } from "vitest";
 import { runScript, snap } from "./helpers/pipeline";
 
 describe("Language Tour — Functions & Application", () => {
-	test("lambda expressions", () => {
+	test("lambda expressions", async () => {
 		const result = runScript(`
 let identity: Num -> Num = \\x -> x;
 let const: Num -> String -> Num = \\x y -> x;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("function application", () => {
+	test("function application", async () => {
 		const result = runScript(`
 let identity: Num -> Num = \\x -> x;
 let add: Num -> Num -> Num = \\x y -> x + y;
 let forty2 = identity 42;
 let added = add 10 20;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("higher-order functions", () => {
+	test("higher-order functions", async () => {
 		const result = runScript(`
 let compose: (Num -> Num) -> (Num -> Num) -> Num -> Num = \\f g x -> f (g x);
 let add1 = \\x -> x + 1;
@@ -28,12 +28,12 @@ let add5 = \\x -> x + 5;
 let double = \\x -> x * 2;
 let add1ThenDouble = compose double add1;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 });
 
 describe("Language Tour — Statement Blocks", () => {
-	test("block with local bindings", () => {
+	test("block with local bindings", async () => {
 		const result = runScript(`
 let compute: Num -> Num = \\x -> {
     let doubled = x * 2;
@@ -42,10 +42,10 @@ let compute: Num -> Num = \\x -> {
 };
 let result = compute 5;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("side effects in blocks", () => {
+	test("side effects in blocks", async () => {
 		const result = runScript(`
 foreign print: String -> Unit;
 foreign stringify: (a: Type) => a -> String;
@@ -56,6 +56,6 @@ let debug: Num -> Num = \\x -> {
     return result;
 };
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 });

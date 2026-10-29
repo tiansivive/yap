@@ -1,0 +1,86 @@
+## Nat (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Nat"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+
+## Pos (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Pos"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+
+## hof (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"hof"}
+[3] lambda {"variable":"f","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [9]
+  :env -> [12]
+[4] pi {"variable":"t1","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [7]
+[5] modal {"quantity":"Many"}
+  :term -> [6]
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[7] modal {"quantity":"Many"}
+  :term -> [8]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[11] lit {"value":{"type":"Num","value":1}}
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [12]
+
+## hof2 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"hof2"}
+[3] lambda {"variable":"f","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [16]
+  :env -> [17]
+[4] pi {"variable":"t3","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] modal {"quantity":"Many"}
+  :term -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:foreign {"name":"$add","arity":2}
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+  :next -> [15]
+[13] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[14] lit {"value":{"type":"Num","value":1}}
+[15] lit {"value":{"type":"Num","value":1}}
+[16] primop {"op":"$add"}
+  :arg -> [12] {"index":0}
+  :arg -> [15] {"index":1}
+  :callee -> [10]
+[17] env
+[18] closure
+  :body -> [3]
+  :env -> [17]

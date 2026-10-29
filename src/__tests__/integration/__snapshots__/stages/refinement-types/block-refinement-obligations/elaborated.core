@@ -1,0 +1,8 @@
+## block (let)
+{
+  let f
+    : Π(t1: <ω> Num [| λ(n: Num) -> (closure: FFI.$gt n 0 -| Γ: n; block) |]) ->
+      (closure: <ω> Num [| λ(p: Num) -> FFI.$gt p 1 |] -| Γ: t1; block)
+    = λ(o: <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]) -> FFI.$add o 1;
+  return f 1;
+}

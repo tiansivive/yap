@@ -1,0 +1,14 @@
+## Vec (let)
+(forall ((n Real)) (forall ((t Type)) (and (= n n) (= n n))))
+
+## vec0 (let)
+true
+
+## vec1 (let)
+true
+
+## vec2 (let)
+true
+
+## vec3 (let)
+true

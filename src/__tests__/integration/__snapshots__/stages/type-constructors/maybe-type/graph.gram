@@ -1,0 +1,49 @@
+## Maybe (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Maybe"}
+[3] lambda {"variable":"a","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [12]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [6]
+[6] lit {"value":{"type":"Atom","value":"Variant"}}
+[7] row:ext {"label":"just"}
+  :rest -> [9]
+  :value -> [8]
+[8] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[9] row:ext {"label":"nothing"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Unit"}}
+[11] row:empty
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [12]
+
+## maybeNum (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"maybeNum"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"just"}}
+[5] lit {"value":{"type":"Num","value":42}}
+
+## maybeStr (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"maybeStr"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"nothing"}}
+[5] lit {"value":{"type":"unit"}}

@@ -1,0 +1,37 @@
+## fn (let)
+true
+
+## posTestCheckLambdaPostCondition (let)
+(forall ((x Real)) (forall (($a Real)) (=> (= $a 1) (= $a 1))))
+
+## posTestCheckLambdaPreCondition (let)
+(forall ((x Real)) (=> (> x 0) (and (> x 0) (= x x))))
+
+## posTestCheckLambdaPreAndPostCondition (let)
+(forall ((x Real))
+  (=>
+    (> x 0)
+    (and
+      (> x 0)
+      (= x x)
+      (forall ((n Real)) (=> (and (> n 0) (= n n)) (> n 0))))))
+
+## posTestCheckRefinedResultLambda (let)
+(forall ((x Real))
+  (and
+    (= x x)
+    (forall ((x Real))
+      (=>
+        (= x x)
+        (forall ((y Real))
+          (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))
+
+## inc (let)
+(forall ((x Real))
+  (and
+    (= x x)
+    (forall ((x Real))
+      (=>
+        (= x x)
+        (forall ((y Real))
+          (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))

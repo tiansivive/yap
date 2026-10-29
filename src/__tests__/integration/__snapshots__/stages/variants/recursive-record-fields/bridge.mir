@@ -1,0 +1,49 @@
+## Factorial (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
+      return v0
+
+## fact (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }
+      let env_cls3 = alloc { v0: v0 }
+      let fnref_cls3 = &closure_33
+      let closure_cls3 = alloc { __fn: fnref_cls3, __env: env_cls3 }
+      update-fbip v0 { compute: closure_cls3 }
+      return v0
+  fn closure_33(env1, n2) entry=entry
+    entry:
+      let cap_0 = read env1.v0
+      jump sw2
+    sw2:
+      branch n2 { 0 -> case4; default -> default5 }
+    case4:
+      let v5 = 1
+      jump join3(v5)
+    default5:
+      let v6 = read cap_0.compute
+      let v7 = 1
+      let v8 = -(n2, v7)
+      let fnref9 = read v6.__fn
+      let env10 = read v6.__env
+      let v11 = call *fnref9(env10, v8)
+      let v12 = *(n2, v11)
+      jump join3(v12)
+    join3(match1):
+      return match1
+
+## result (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = fact
+      let v1 = read v0.compute
+      let v2 = 5
+      let fnref3 = read v1.__fn
+      let env4 = read v1.__env
+      let v5 = call *fnref3(env4, v2)
+      return v5

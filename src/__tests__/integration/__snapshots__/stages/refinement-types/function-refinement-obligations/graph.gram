@@ -1,0 +1,119 @@
+## fn (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"fn"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [6]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] lit {"value":{"type":"Num","value":2}}
+[6] env
+[7] closure
+  :body -> [3]
+  :env -> [6]
+
+## posTestCheckLambdaPostCondition (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"posTestCheckLambdaPostCondition"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [6]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] lit {"value":{"type":"Num","value":1}}
+[6] env
+[7] closure
+  :body -> [3]
+  :env -> [6]
+
+## posTestCheckLambdaPreCondition (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"posTestCheckLambdaPreCondition"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [6]
+  :env -> [7]
+[4] modal {"quantity":"Many"}
+  :term -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[7] env
+[8] closure
+  :body -> [3]
+  :env -> [7]
+
+## posTestCheckLambdaPreAndPostCondition (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"posTestCheckLambdaPreAndPostCondition"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [6]
+  :env -> [7]
+[4] modal {"quantity":"Many"}
+  :term -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[7] env
+[8] closure
+  :body -> [3]
+  :env -> [7]
+
+## posTestCheckRefinedResultLambda (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"posTestCheckRefinedResultLambda"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [11]
+  :env -> [12]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[7] var:foreign {"name":"$add","arity":2}
+[9] var:bound {"index":0}
+  :next -> [10]
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[10] lit {"value":{"type":"Num","value":1}}
+[11] primop {"op":"$add"}
+  :arg -> [9] {"index":0}
+  :arg -> [10] {"index":1}
+  :callee -> [7]
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [12]
+
+## inc (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"inc"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [11]
+  :env -> [12]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[7] var:foreign {"name":"$add","arity":2}
+[9] var:bound {"index":0}
+  :next -> [10]
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[10] lit {"value":{"type":"Num","value":1}}
+[11] primop {"op":"$add"}
+  :arg -> [9] {"index":0}
+  :arg -> [10] {"index":1}
+  :callee -> [7]
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [12]

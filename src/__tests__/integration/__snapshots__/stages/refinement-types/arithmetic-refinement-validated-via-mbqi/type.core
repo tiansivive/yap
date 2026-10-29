@@ -1,0 +1,2 @@
+## goodOne (let)
+<ω> Num [| λ(v: Num) -> FFI.$lt v 10 |]

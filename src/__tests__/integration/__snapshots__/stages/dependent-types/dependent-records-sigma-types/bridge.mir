@@ -1,0 +1,24 @@
+## DependentPair (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
+      return v0
+
+## numPair (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = Num
+      let v1 = 42
+      let v2 = alloc { fst: v0, snd: v1 }
+      return v2
+
+## strPair (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = String
+      let v1 = "hello"
+      let v2 = alloc { fst: v0, snd: v1 }
+      return v2

@@ -1,16 +1,16 @@
-import { describe, expect, test } from "vitest";
+import { describe, test } from "vitest";
 import { runScript, snap } from "./helpers/pipeline";
 
 describe("Language Tour — Variants & Tagged Values", () => {
-	test("simple variants", () => {
+	test("simple variants", async () => {
 		const result = runScript(`
 let TrafficLight: Type = | #red Unit | #yellow Unit | #green Unit;
 let light: TrafficLight = #red !;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("variants with data", () => {
+	test("variants with data", async () => {
 		const result = runScript(`
 let Shape: Type
     = | #circle Num
@@ -20,31 +20,31 @@ let c: Shape = #circle 5.0;
 let r: Shape = #rectangle { 10, 20 };
 let p: Shape = #point { x: 0, y: 0 };
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 });
 
 describe("Language Tour — Pattern Matching", () => {
-	test("literal patterns", () => {
+	test("literal patterns", async () => {
 		const result = runScript(`
 let isZero: Num -> Bool = \\n -> match n
     | 0 -> true
     | _ -> false;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("record patterns", () => {
+	test("record patterns", async () => {
 		const result = runScript(`
 let getY: { x: Num, y: Num } -> Num = \\p -> match p
     | { x: a, y: b } -> b;
 let getY2: { x: Num, y: Num } -> Num = \\p -> match p
     | { y: a } -> a;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("variant patterns", () => {
+	test("variant patterns", async () => {
 		const result = runScript(`
 let Shape: Type
     = | #circle Num
@@ -55,10 +55,10 @@ let describeShape: Shape -> String = \\s -> match s
     | #rectangle { w, h } -> "Rectangle"
     | #point { x: _, y: _ } -> "Point at coordinates";
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("list patterns", () => {
+	test("list patterns", async () => {
 		const result = runScript(`
 let firstOrZero: { [Num]: Num } -> Num = \\list -> match list
     | [] -> 0
@@ -67,20 +67,20 @@ let tail: { [Num]: Num } -> { [Num]: Num } = \\list -> match list
     | [] -> []
     | [x | xs] -> xs;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("recursive functions", () => {
+	test("recursive functions", async () => {
 		const result = runScript(`
 let List: Type -> Type = \\a -> | #nil Unit | #cons { a, List a };
 let length: (a: Type) => List a -> Num = \\list -> match list
     | #nil _ -> 0
     | #cons { x, xs } -> 1 + (length xs);
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("recursive record fields", () => {
+	test("recursive record fields", async () => {
 		const result = runScript(`
 let Factorial: Type = { compute: Num -> Num };
 let fact: Factorial = { compute: \\n -> match n
@@ -88,15 +88,15 @@ let fact: Factorial = { compute: \\n -> match n
     | _ -> n * ($compute (n - 1)) };
 let result = fact.compute 5;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
 	/* Unrefined recursive type let: normalization must seal the Mu instead of unfolding it. */
-	test("recursive list type", () => {
+	test("recursive list type", async () => {
 		const result = runScript(`
 let List: (t: Type) -> Type = \\t -> | #nil Unit | #cons { head: t, tail: List t };
 let xs: List Num = #cons { head: 1, tail: #cons { head: 2, tail: #nil ! } };
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 });

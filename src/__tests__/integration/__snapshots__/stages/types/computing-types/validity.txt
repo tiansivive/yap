@@ -1,0 +1,8 @@
+## chooseType (let)
+valid
+
+## T1 (let)
+valid
+
+## T2 (let)
+valid

@@ -1,0 +1,70 @@
+## block (let)
+=== Formula ===
+  (and
+    (forall ((o Real))
+      (=>
+        (> o 0)
+        (and
+          (> o 0)
+          (= o o)
+          (forall ((x Real))
+            (=>
+              (and (> x 0) (= x x))
+              (forall ((y Real))
+                (=> (= y 1) (forall ((r Real)) (=> (= r (+ o 1)) (> r 1))))))))))
+    (forall (($b Real)) (=> (= $b 1) (> $b 0)))
+    (forall ((t1 Real)) (=> (= t1 1) (forall ((p Real)) (=> (> p 1) (> p 0))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  o=0 -> tautology
+  o=o -> residual
+  o=1 -> residual
+  x=0 -> tautology
+  x=o -> residual
+  x=1 -> residual
+  y=0 -> tautology
+  y=o -> residual
+  y=1 -> residual
+  r=0 -> residual
+  r=o -> residual
+  r=1 -> residual
+  $b=0 -> tautology
+  $b=o -> residual
+  $b=1 -> tautology
+  t1=0 -> tautology
+  t1=o -> residual
+  t1=1 -> residual
+  p=0 -> tautology
+  p=o -> residual
+  p=1 -> tautology
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1

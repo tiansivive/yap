@@ -1,0 +1,60 @@
+## Peano (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Peano"}
+[3] mu {"variable":"x","source":"Peano","level":1}
+  :annotation -> [4]
+  :body -> [5]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [6]
+[6] lit {"value":{"type":"Atom","value":"Variant"}}
+[7] row:ext {"label":"succ"}
+  :rest -> [9]
+  :value -> [8]
+[8] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[9] row:ext {"label":"zero"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Unit"}}
+[11] row:empty
+
+## zero (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"zero"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"zero"}}
+[5] lit {"value":{"type":"unit"}}
+
+## first (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"first"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [6] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"succ"}}
+[5] var:free {"name":"zero"}
+[6] var:ref {"name":"zero"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+
+## second (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"second"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [6] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"succ"}}
+[5] var:free {"name":"first"}
+[6] var:ref {"name":"first"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}

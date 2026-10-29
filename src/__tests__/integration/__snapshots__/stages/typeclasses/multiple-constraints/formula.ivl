@@ -1,0 +1,40 @@
+## stringify (foreign)
+
+
+## Show (let)
+true
+
+## Eq (let)
+true
+
+## ShowNum (let)
+(forall ((n Real)) (= n n))
+
+## EqNum (let)
+(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
+
+## displayIfEqual (let)
+(forall ((t Type))
+  (forall ((x Type))
+    (forall ((y Type))
+      (and
+        (= x x)
+        (= y y)
+        (forall ((t5 Type))
+          (=>
+            (= t5 x)
+            (forall ((t6 Type))
+              (=>
+                (= t6 y)
+                (forall (($fresh0 Bool)) (=> (= $fresh0 true) (= x x)))))))
+        (= x x)
+        (= y y)))))
+
+## (using) (using)
+
+
+## (using) (using)
+
+
+## msg (let)
+true

@@ -1,0 +1,77 @@
+## fn (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_7
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_7(env0, x1) entry=entry
+    entry:
+      let v0 = 2
+      return v0
+
+## posTestCheckLambdaPostCondition (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_7
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_7(env0, x1) entry=entry
+    entry:
+      let v0 = 1
+      return v0
+
+## posTestCheckLambdaPreCondition (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_8
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_8(env0, x1) entry=entry
+    entry:
+      return x1
+
+## posTestCheckLambdaPreAndPostCondition (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_8
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_8(env0, x1) entry=entry
+    entry:
+      return x1
+
+## posTestCheckRefinedResultLambda (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_13
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_13(env0, x1) entry=entry
+    entry:
+      let v0 = 1
+      let v1 = +(x1, v0)
+      return v1
+
+## inc (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_13
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_13(env0, x1) entry=entry
+    entry:
+      let v0 = 1
+      let v1 = +(x1, v0)
+      return v1

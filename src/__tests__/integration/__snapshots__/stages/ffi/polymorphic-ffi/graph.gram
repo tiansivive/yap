@@ -1,0 +1,65 @@
+## prepend (foreign)
+
+
+## id (foreign)
+
+
+## nums (let)
+[1] root
+  :entry -> [19]
+[2] stmt:let {"variable":"nums"}
+[6] var:foreign {"name":"prepend","arity":3}
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+  :next -> [9]
+[9] lit {"value":{"type":"Num","value":42}}
+  :next -> [10]
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Array"}}
+[12] row:ext {"label":"0"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Num","value":1}}
+[14] row:ext {"label":"1"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"Num","value":2}}
+[16] row:ext {"label":"2"}
+  :rest -> [18]
+  :value -> [17]
+[17] lit {"value":{"type":"Num","value":3}}
+[18] row:empty
+[19] external {"name":"prepend","arity":3,"args":3,"saturated":true}
+  :arg -> [8] {"index":0}
+  :arg -> [9] {"index":1}
+  :arg -> [10] {"index":2}
+  :callee -> [6]
+
+## strs (let)
+[1] root
+  :entry -> [17]
+[2] stmt:let {"variable":"strs"}
+[6] var:foreign {"name":"prepend","arity":3}
+[8] lit {"value":{"type":"Atom","value":"String"}}
+  :next -> [9]
+[9] lit {"value":{"type":"String","value":"a"}}
+  :next -> [10]
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Array"}}
+[12] row:ext {"label":"0"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"String","value":"b"}}
+[14] row:ext {"label":"1"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"String","value":"c"}}
+[16] row:empty
+[17] external {"name":"prepend","arity":3,"args":3,"saturated":true}
+  :arg -> [8] {"index":0}
+  :arg -> [9] {"index":1}
+  :arg -> [10] {"index":2}
+  :callee -> [6]

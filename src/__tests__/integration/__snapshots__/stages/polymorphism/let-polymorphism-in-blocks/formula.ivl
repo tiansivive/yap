@@ -1,0 +1,4 @@
+## letpoly (let)
+(and
+  (forall ((a Type)) (forall ((x Type)) (= x x)))
+  (forall ((n Real)) (forall ((s String)) (= n n))))

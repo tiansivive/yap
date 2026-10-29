@@ -1,0 +1,121 @@
+## Nat (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Nat"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+
+## Pos (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Pos"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+
+## takePosFunction (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"takePosFunction"}
+[3] lambda {"variable":"f","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [8]
+  :env -> [11]
+[4] pi {"variable":"t2","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [7]
+[5] modal {"quantity":"Many"}
+  :term -> [6]
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[8] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [9]
+[9] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[10] lit {"value":{"type":"Num","value":10}}
+[11] env
+[12] closure
+  :body -> [3]
+  :env -> [11]
+
+## natToNum (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"natToNum"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [6]
+  :env -> [7]
+[4] modal {"quantity":"Many"}
+  :term -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[7] env
+[8] closure
+  :body -> [3]
+  :env -> [7]
+
+## posToNum (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"posToNum"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [6]
+  :env -> [7]
+[4] modal {"quantity":"Many"}
+  :term -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[7] env
+[8] closure
+  :body -> [3]
+  :env -> [7]
+
+## result1 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"result1"}
+[3] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [5]
+[4] var:free {"name":"takePosFunction"}
+[5] var:ref {"name":"takePosFunction"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[6] var:free {"name":"natToNum"}
+[7] var:ref {"name":"natToNum"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+
+## result2 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"result2"}
+[3] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [5]
+[4] var:free {"name":"takePosFunction"}
+[5] var:ref {"name":"takePosFunction"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[6] var:free {"name":"posToNum"}
+[7] var:ref {"name":"posToNum"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}

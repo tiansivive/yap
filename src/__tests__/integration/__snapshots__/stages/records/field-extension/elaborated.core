@@ -1,0 +1,11 @@
+## point (let)
+νstrict [] . Struct [ x: 10 ]
+
+## point3d (let)
+{ { point | y = 20 } | z = 30 }
+
+## updated (let)
+{ point | x = 100 }
+
+## updatedX (let)
+(updated).x

@@ -1,0 +1,37 @@
+## stringify (foreign)
+
+
+## Show (let)
+λ(t: Type) ->
+  Σ($sig: [ show: Irrelevant ]) . Schema [ show: Π(t3: t) -> String ]
+
+## Eq (let)
+λ(t: Type) ->
+  Σ($sig: [ eq: Irrelevant ]) . Schema [ eq: Π(t5: t) -> Π(t6: t) -> Bool ]
+
+## ShowNum (let)
+νstrict [] . Struct [ show: λ(n: Num) -> FFI.stringify @Num n ]
+
+## EqNum (let)
+νstrict [] . Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ]
+
+## displayIfEqual (let)
+λ(t: Type) =>
+  λ(show: Σ($sig: [ show: Irrelevant ]) .
+    Schema [ show: Π(t3: t) -> String ]) =>
+    λ(eq: Σ($sig: [ eq: Irrelevant ]) .
+      Schema [ eq: Π(t5: t) -> Π(t6: t) -> Bool ]) =>
+      λ(x: t) ->
+        λ(y: t) ->
+          match ((eq).eq) x y
+            | true -> FFI.$concat "Equal: " (((show).show) x)
+            | false -> "Not equal"
+
+## (using) (using)
+
+
+## (using) (using)
+
+
+## msg (let)
+displayIfEqual @Num @ShowNum @EqNum 5 5

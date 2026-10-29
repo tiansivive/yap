@@ -1,0 +1,5 @@
+## id (let)
+λ(a: Type) -> λ(x: a) -> x
+
+## const (let)
+λ(a: Type) -> λ(b: Type) -> λ(x: a) -> λ(y: b) -> x

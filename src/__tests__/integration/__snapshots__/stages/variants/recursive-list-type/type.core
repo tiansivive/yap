@@ -1,0 +1,5 @@
+## List (let)
+Π(t: Type) -> Type
+
+## xs (let)
+(List) Num

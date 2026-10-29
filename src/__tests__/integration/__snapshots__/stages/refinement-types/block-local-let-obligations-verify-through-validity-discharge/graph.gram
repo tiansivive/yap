@@ -1,0 +1,55 @@
+## compute (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"compute"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [23]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] block
+  :return -> [20]
+  :stmt -> [6] {"index":0}
+  :stmt -> [13] {"index":1}
+[6] stmt:let {"variable":"doubled"}
+  :next -> [13]
+  :value -> [21]
+[9] var:foreign {"name":"$mul","arity":2}
+[11] var:bound {"index":1}
+  :next -> [12]
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [6] {"level":2}
+[12] lit {"value":{"type":"Num","value":2}}
+[13] stmt:let {"variable":"added"}
+  :value -> [22]
+[16] var:foreign {"name":"$add","arity":2}
+[18] var:bound {"index":1}
+  :next -> [19]
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [13] {"level":3}
+[19] lit {"value":{"type":"Num","value":10}}
+[20] var:bound {"index":0}
+  :refers_to -> [13]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [13] {"level":3}
+[21] primop {"op":"$mul"}
+  :arg -> [11] {"index":0}
+  :arg -> [12] {"index":1}
+  :callee -> [9]
+[22] primop {"op":"$add"}
+  :arg -> [18] {"index":0}
+  :arg -> [19] {"index":1}
+  :callee -> [16]
+[23] env
+  :capture -> [6] {"index":0}
+  :capture -> [13] {"index":1}
+[24] closure
+  :body -> [3]
+  :env -> [23]

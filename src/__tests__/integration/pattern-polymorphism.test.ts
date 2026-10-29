@@ -12,28 +12,28 @@ describe("Pattern matching — polymorphic generalization", () => {
 		return result;
 	};
 
-	test("variant match with unconstrained payloads", () => {
+	test("variant match with unconstrained payloads", async () => {
 		const result = typeOf(`\\x -> match x | #nil a -> 0 | #cons {el, rest} -> 1`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("single-arm variant with unused payload", () => {
+	test("single-arm variant with unused payload", async () => {
 		const result = typeOf(`\\x -> match x | #nil a -> 0`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("variant match that returns the payload", () => {
+	test("variant match that returns the payload", async () => {
 		const result = typeOf(`\\x -> match x | #some v -> v`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("struct pattern with unconstrained binders", () => {
+	test("struct pattern with unconstrained binders", async () => {
 		const result = typeOf(`\\x -> match x | { foo: y, bar: z } -> 0`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("wildcard variant match", () => {
+	test("wildcard variant match", async () => {
 		const result = typeOf(`\\x -> match x | #nil _ -> 0 | #cons _ -> 1`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 });

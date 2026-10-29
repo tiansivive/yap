@@ -1,0 +1,89 @@
+## compose (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_21
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_23(env0, x1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let fnref0 = read cap_1.__fn
+      let env1 = read cap_1.__env
+      let v2 = call *fnref0(env1, x1)
+      let fnref3 = read cap_0.__fn
+      let env4 = read cap_0.__env
+      let v5 = call *fnref3(env4, v2)
+      return v5
+  fn closure_22(env0, g1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0, v1: g1 }
+      let fnref_cls2 = &closure_23
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_21(env0, f1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: f1 }
+      let fnref_cls2 = &closure_22
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+
+## add1 (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_13
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_13(env0, x1) entry=entry
+    entry:
+      let v0 = 1
+      let v1 = +(x1, v0)
+      return v1
+
+## add5 (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_13
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_13(env0, x1) entry=entry
+    entry:
+      let v0 = 5
+      let v1 = +(x1, v0)
+      return v1
+
+## double (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_13
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_13(env0, x1) entry=entry
+    entry:
+      let v0 = 2
+      let v1 = *(x1, v0)
+      return v1
+
+## add1ThenDouble (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = compose
+      let v1 = double
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      let v5 = add1
+      let fnref6 = read v4.__fn
+      let env7 = read v4.__env
+      let v8 = call *fnref6(env7, v5)
+      return v8

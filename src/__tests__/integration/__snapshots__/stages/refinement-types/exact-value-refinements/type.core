@@ -1,0 +1,2 @@
+## exactOne (let)
+<ω> Num [| λ(v: Num) -> FFI.$eq v 1 |]

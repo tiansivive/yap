@@ -1,0 +1,48 @@
+## (expr) (expression)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_38
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_43(env0, x1) entry=entry
+    entry:
+      let v0 = read x1.bar
+      let z = v0
+      let v1 = read x1.foo
+      let y = v1
+      let v2 = 0
+      return v2
+  fn closure_42(env0, B1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_43
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_41(env0, b1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_42
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_40(env0, A1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: A1 }
+      let fnref_cls2 = &closure_41
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_39(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_40
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_38(env0, r1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_39
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2

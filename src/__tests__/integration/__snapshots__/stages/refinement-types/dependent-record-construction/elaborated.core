@@ -1,0 +1,20 @@
+## test (let)
+{
+  let Pair
+    : Π(a: Type) ->
+      (closure: Π(b: Type) ->
+        Π(p: Π(t1: a) -> Π(t2: b) -> Bool) -> Type -| Γ: a; test)
+    = λ(a: Type) ->
+      λ(b: Type) ->
+        λ(p: Π(t1: a) -> Π(t2: b) -> Bool) ->
+          Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+            Schema [ fst: a, snd: <ω> b [| λ(v: b) -> p &fst v |] ];
+  let p
+    : Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+      (closure: Schema
+        [ fst: a,
+          snd: <ω> b [| λ(v: b) ->
+            p &fst v |] ] -| Γ: $sig; p; b; a; Pair; test)
+    = νstrict [] . Struct [ fst: 1, snd: 2 ];
+  return unit;
+}

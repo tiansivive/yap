@@ -1,0 +1,24 @@
+## orderedListTestFail (let)
+{
+  let List
+    : Π(a: Type) ->
+      (closure: Π(p: Π(t1: a) -> Π(t2: a) -> Bool) ->
+        Type -| Γ: a; orderedListTestFail)
+    = List;
+  let ol
+    : (List) Num
+      (λ(x: Num) ->
+        (closure: λ(y: Num) -> FFI.$lt x y -| Γ: x; List; orderedListTestFail))
+    = Struct
+      [ __tag: cons,
+        payload: νstrict [] .
+          Struct
+            [ head: 2,
+              tail: Struct
+                [ __tag: cons,
+                  payload: νstrict [] .
+                    Struct
+                      [ head: 1,
+                        tail: Struct [ __tag: nil, payload: unit ] ] ] ] ];
+  return 1;
+}

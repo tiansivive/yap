@@ -1,0 +1,33 @@
+## testFail (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_38
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      let Pair3 = closure_cls2
+      let v4 = 2
+      let v5 = 1
+      let v6 = alloc { fst: v4, snd: v5 }
+      let p7 = v6
+      let v8 = 1
+      return v8
+  fn closure_40(env0, p1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
+      return v0
+  fn closure_39(env0, b1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0, v1: b1 }
+      let fnref_cls2 = &closure_40
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_38(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: a1 }
+      let fnref_cls2 = &closure_39
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2

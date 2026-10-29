@@ -1,0 +1,9 @@
+## rectangle (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 10
+      let v1 = 20
+      let v2 = *(v0, v1)
+      let v3 = alloc { width: v0, height: v1, area: v2 }
+      return v3

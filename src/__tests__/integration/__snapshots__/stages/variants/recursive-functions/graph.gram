@@ -1,0 +1,249 @@
+## List (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"List"}
+[3] mu {"variable":"x","source":"List","level":1}
+  :annotation -> [4]
+  :body -> [7]
+[4] pi {"variable":"t1","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] lambda {"variable":"a","icit":"Explicit","level":2}
+  :annotation -> [8]
+  :body -> [9]
+  :env -> [24]
+[8] lit {"value":{"type":"Atom","value":"Type"}}
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Variant"}}
+[11] row:ext {"label":"cons"}
+  :rest -> [21]
+  :value -> [12]
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Schema"}}
+[14] row:ext {"label":"1"}
+  :rest -> [18]
+  :value -> [15]
+[15] app {"icit":"Explicit"}
+  :arg -> [17]
+  :func -> [16]
+[16] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[17] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[18] row:ext {"label":"0"}
+  :rest -> [20]
+  :value -> [19]
+[19] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[20] row:empty
+[21] row:ext {"label":"nil"}
+  :rest -> [23]
+  :value -> [22]
+[22] lit {"value":{"type":"Atom","value":"Unit"}}
+[23] row:empty
+[24] env
+  :capture -> [3] {"index":0}
+[25] closure
+  :body -> [7]
+  :env -> [24]
+
+## length (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"length"}
+[3] lambda {"variable":"a","icit":"Implicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [62]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] lambda {"variable":"list","icit":"Explicit","level":2}
+  :annotation -> [6]
+  :body -> [29]
+  :env -> [63]
+[6] app {"icit":"Explicit"}
+  :arg -> [28]
+  :func -> [7]
+[7] mu {"variable":"x","source":"List","level":2}
+  :annotation -> [8]
+  :body -> [11]
+[8] pi {"variable":"t1","icit":"Explicit","level":2}
+  :annotation -> [9]
+  :body -> [10]
+[9] lit {"value":{"type":"Atom","value":"Type"}}
+[10] lit {"value":{"type":"Atom","value":"Type"}}
+[11] lambda {"variable":"a","icit":"Explicit","level":3}
+  :annotation -> [12]
+  :body -> [13]
+  :env -> [64]
+[12] lit {"value":{"type":"Atom","value":"Type"}}
+[13] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] lit {"value":{"type":"Atom","value":"Variant"}}
+[15] row:ext {"label":"cons"}
+  :rest -> [25]
+  :value -> [16]
+[16] app {"icit":"Explicit"}
+  :arg -> [18]
+  :func -> [17]
+[17] lit {"value":{"type":"Atom","value":"Schema"}}
+[18] row:ext {"label":"1"}
+  :rest -> [22]
+  :value -> [19]
+[19] app {"icit":"Explicit"}
+  :arg -> [21]
+  :func -> [20]
+[20] var:bound {"index":1}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [11] {"level":3}
+[21] var:bound {"index":0}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [11] {"level":3}
+[22] row:ext {"label":"0"}
+  :rest -> [24]
+  :value -> [23]
+[23] var:bound {"index":0}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [11] {"level":3}
+[24] row:empty
+[25] row:ext {"label":"nil"}
+  :rest -> [27]
+  :value -> [26]
+[26] lit {"value":{"type":"Atom","value":"Unit"}}
+[27] row:empty
+[28] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[29] match
+  :alt -> [31] {"index":0}
+  :alt -> [36] {"index":1}
+  :decision_tree -> [54]
+  :scrutinee -> [30]
+[30] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[31] case
+  :body -> [35]
+  :next -> [36]
+  :pattern -> [32]
+[32] pat:variant {"label":"nil"}
+  :payload -> [33]
+[33] pat:wildcard
+[34] pat:wildcard
+[35] lit {"value":{"type":"Num","value":0}}
+[36] case
+  :body -> [53]
+  :pattern -> [37]
+[37] pat:variant {"label":"cons"}
+  :payload -> [38]
+[38] pat:struct
+  :field -> [39] {"label":"0"}
+  :field -> [40] {"label":"1"}
+[39] pat:binder {"name":"x","level":3}
+[40] pat:binder {"name":"xs","level":4}
+[41] pat:wildcard
+[42] pat:wildcard
+[45] var:foreign {"name":"$add","arity":2}
+[47] lit {"value":{"type":"Num","value":1}}
+  :next -> [48]
+[48] app {"icit":"Explicit"}
+  :arg -> [52]
+  :func -> [49]
+[49] app {"icit":"Implicit"}
+  :arg -> [51]
+  :func -> [50]
+[50] var:bound {"index":6}
+  :refers_to -> [2]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [39] {"level":3}
+  :scope -> [40] {"level":4}
+  :scope -> [41] {"level":5}
+  :scope -> [42] {"level":6}
+[51] var:bound {"index":5}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [39] {"level":3}
+  :scope -> [40] {"level":4}
+  :scope -> [41] {"level":5}
+  :scope -> [42] {"level":6}
+[52] var:bound {"index":2}
+  :refers_to -> [40]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [39] {"level":3}
+  :scope -> [40] {"level":4}
+  :scope -> [41] {"level":5}
+  :scope -> [42] {"level":6}
+[53] primop {"op":"$add"}
+  :arg -> [47] {"index":0}
+  :arg -> [48] {"index":1}
+  :callee -> [45]
+[54] switch {"kind":"tag"}
+  :branch -> [56] {"label":"nil"}
+  :branch -> [58] {"label":"cons"}
+  :inspect -> [30]
+[55] proj {"label":"payload"}
+  :target -> [30]
+[56] leaf
+  :body -> [35]
+[57] proj {"label":"payload"}
+  :target -> [30]
+[58] switch {"kind":"struct"}
+  :branch -> [61]
+  :inspect -> [57]
+[59] proj {"label":"0"}
+  :target -> [57]
+[60] proj {"label":"1"}
+  :target -> [57]
+[61] leaf
+  :bind -> [59] {"name":"x","binder":39}
+  :bind -> [60] {"name":"xs","binder":40}
+  :body -> [53]
+[62] env
+  :capture -> [2] {"index":0}
+[63] env
+  :capture -> [2] {"index":0}
+  :capture -> [3] {"index":1}
+[64] env
+  :capture -> [7] {"index":0}
+[65] closure
+  :body -> [3]
+  :env -> [62]
+[66] closure
+  :body -> [5]
+  :env -> [63]
+[67] closure
+  :body -> [11]
+  :env -> [64]

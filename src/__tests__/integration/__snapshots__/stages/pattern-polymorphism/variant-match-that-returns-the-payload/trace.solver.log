@@ -1,0 +1,50 @@
+## (expr) (expression)
+=== Formula ===
+  (forall ((r Row))
+    (forall ((a Type))
+      (forall ((A Type))
+        (forall ((x Schema))
+          (and
+            (= x x)
+            (forall (($fresh0 Schema))
+              (=>
+                (and (= $fresh0 x) (= $fresh0 x))
+                (forall ((v Type)) (forall (($row_4 Row)) (= v v))))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  a=v -> residual
+  A=v -> residual
+  x=x -> residual
+  $fresh0=x -> residual
+  v=v -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1

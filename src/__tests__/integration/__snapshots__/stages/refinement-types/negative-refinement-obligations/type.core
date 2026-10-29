@@ -1,0 +1,9 @@
+## negTestCheckLiteral (let)
+<ω> Num [| λ(v: Num) -> FFI.$eq v 1 |]
+
+## negFnApp (let)
+<ω> Num [| λ(v: Num) -> FFI.$eq v 0 |]
+
+## negTestCheckLambdaPreAndPostCondition (let)
+Π(n: <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]) ->
+  <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]

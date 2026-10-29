@@ -1,0 +1,20 @@
+## Nat (let)
+valid
+
+## Pos (let)
+valid
+
+## takePosFunction (let)
+valid
+
+## natToNum (let)
+invalid
+
+## posToNum (let)
+invalid
+
+## result1 (let)
+valid
+
+## result2 (let)
+valid

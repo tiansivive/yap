@@ -1,0 +1,130 @@
+## (expr) (expression)
+[1] root
+  :entry -> [2]
+[2] lambda {"variable":"r","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [32]
+[3] lit {"value":{"type":"Atom","value":"Row"}}
+[4] lambda {"variable":"a","icit":"Implicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [33]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lambda {"variable":"A","icit":"Implicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [34]
+[7] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[8] lambda {"variable":"b","icit":"Implicit","level":3}
+  :annotation -> [9]
+  :body -> [10]
+  :env -> [35]
+[9] lit {"value":{"type":"Atom","value":"Type"}}
+[10] lambda {"variable":"B","icit":"Implicit","level":4}
+  :annotation -> [11]
+  :body -> [12]
+  :env -> [36]
+[11] var:bound {"index":0}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+[12] lambda {"variable":"x","icit":"Explicit","level":5}
+  :annotation -> [13]
+  :body -> [20]
+  :env -> [37]
+[13] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] lit {"value":{"type":"Atom","value":"Schema"}}
+[15] row:ext {"label":"foo"}
+  :rest -> [17]
+  :value -> [16]
+[16] var:bound {"index":2}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+[17] row:ext {"label":"bar"}
+  :rest -> [19]
+  :value -> [18]
+[18] var:bound {"index":0}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+[19] var:bound {"index":0}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+[20] match
+  :alt -> [22] {"index":0}
+  :decision_tree -> [28]
+  :scrutinee -> [21]
+[21] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+  :scope -> [10] {"level":4}
+  :scope -> [12] {"level":5}
+[22] case
+  :body -> [27]
+  :pattern -> [23]
+[23] pat:struct
+  :field -> [24] {"label":"foo"}
+  :field -> [25] {"label":"bar"}
+[24] pat:binder {"name":"y","level":6}
+[25] pat:binder {"name":"z","level":7}
+[26] pat:wildcard
+[27] lit {"value":{"type":"Num","value":0}}
+[28] switch {"kind":"struct"}
+  :branch -> [31]
+  :inspect -> [21]
+[29] proj {"label":"bar"}
+  :target -> [21]
+[30] proj {"label":"foo"}
+  :target -> [21]
+[31] leaf
+  :bind -> [29] {"name":"z","binder":25}
+  :bind -> [30] {"name":"y","binder":24}
+  :body -> [27]
+[32] env
+[33] env
+[34] env
+[35] env
+  :capture -> [6] {"index":0}
+[36] env
+  :capture -> [6] {"index":0}
+[37] env
+[38] closure
+  :body -> [2]
+  :env -> [32]
+[39] closure
+  :body -> [4]
+  :env -> [33]
+[40] closure
+  :body -> [6]
+  :env -> [34]
+[41] closure
+  :body -> [8]
+  :env -> [35]
+[42] closure
+  :body -> [10]
+  :env -> [36]
+[43] closure
+  :body -> [12]
+  :env -> [37]

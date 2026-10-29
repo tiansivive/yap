@@ -1,0 +1,35 @@
+## negTestCheckLiteral (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"negTestCheckLiteral"}
+[3] lit {"value":{"type":"Num","value":2}}
+
+## negFnApp (let)
+[1] root
+  :entry -> [9]
+[2] stmt:let {"variable":"negFnApp"}
+[5] var:foreign {"name":"$add","arity":2}
+[7] lit {"value":{"type":"Num","value":1}}
+  :next -> [8]
+[8] lit {"value":{"type":"Num","value":2}}
+[9] primop {"op":"$add"}
+  :arg -> [7] {"index":0}
+  :arg -> [8] {"index":1}
+  :callee -> [5]
+
+## negTestCheckLambdaPreAndPostCondition (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"negTestCheckLambdaPreAndPostCondition"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [6]
+  :env -> [7]
+[4] modal {"quantity":"Many"}
+  :term -> [5]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] lit {"value":{"type":"Num","value":0}}
+[7] env
+[8] closure
+  :body -> [3]
+  :env -> [7]

@@ -1,0 +1,14 @@
+## Nat (let)
+<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]
+
+## Pos (let)
+<ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]
+
+## n (let)
+42
+
+## p (let)
+42
+
+## zero (let)
+0

@@ -1,0 +1,8 @@
+## print (foreign)
+
+
+## stringify (foreign)
+
+
+## greet (let)
+(forall ((name String)) (= name name))

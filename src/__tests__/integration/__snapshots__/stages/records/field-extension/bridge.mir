@@ -1,0 +1,35 @@
+## point (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 10
+      let v1 = alloc { x: v0 }
+      return v1
+
+## point3d (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 30
+      let v1 = 20
+      let v2 = point
+      let v3 = update-immutable v2 { y: v1 }
+      let v4 = update-immutable v3 { z: v0 }
+      return v4
+
+## updated (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 100
+      let v1 = point
+      let v2 = update-immutable v1 { x: v0 }
+      return v2
+
+## updatedX (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = updated
+      let v1 = read v0.x
+      return v1

@@ -1,0 +1,17 @@
+## stringify (foreign)
+
+
+## Show (let)
+valid
+
+## Eq (let)
+valid
+
+## ShowNum (let)
+valid
+
+## ShowBool (let)
+valid
+
+## EqNum (let)
+valid

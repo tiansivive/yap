@@ -1,0 +1,29 @@
+## stringify (foreign)
+
+
+## List (let)
+valid
+
+## Functor (let)
+valid
+
+## mapList (let)
+error: Cannot read properties of undefined (reading 'type')
+
+## ListFunctor (let)
+valid
+
+## fmap (let)
+valid
+
+## (using) (using)
+
+
+## strmap (let)
+valid
+
+## listOf1 (let)
+valid
+
+## strList (let)
+valid

@@ -1,0 +1,70 @@
+## getName (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_19
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_20(env0, obj1) entry=entry
+    entry:
+      let v0 = read obj1.name
+      return v0
+  fn closure_19(env0, r1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_20
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+
+## person (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = "Alice"
+      let v1 = 30
+      let v2 = alloc { name: v0, age: v1 }
+      return v2
+
+## book (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = "1984"
+      let v1 = "Orwell"
+      let v2 = 328
+      let v3 = alloc { name: v0, author: v1, pages: v2 }
+      return v3
+
+## n1 (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = getName
+      let v1 = Num
+      let v2 = alloc { age: v1 }
+      let fnref3 = read v0.__fn
+      let env4 = read v0.__env
+      let v5 = call *fnref3(env4, v2)
+      let v6 = person
+      let fnref7 = read v5.__fn
+      let env8 = read v5.__env
+      let v9 = call *fnref7(env8, v6)
+      return v9
+
+## n2 (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = getName
+      let v1 = String
+      let v2 = Num
+      let v3 = alloc { author: v1, pages: v2 }
+      let fnref4 = read v0.__fn
+      let env5 = read v0.__env
+      let v6 = call *fnref4(env5, v3)
+      let v7 = book
+      let fnref8 = read v6.__fn
+      let env9 = read v6.__env
+      let v10 = call *fnref8(env9, v7)
+      return v10

@@ -1,0 +1,136 @@
+## getX (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"getX"}
+[3] lambda {"variable":"r","icit":"Implicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [17]
+[4] lit {"value":{"type":"Atom","value":"Row"}}
+[5] lambda {"variable":"record","icit":"Explicit","level":2}
+  :annotation -> [6]
+  :body -> [15]
+  :env -> [18]
+[6] sigma:v2 {"variable":"$sig","level":2}
+  :annotation -> [7]
+  :body -> [10]
+[7] row:ext {"label":"x"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[9] row:empty
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Schema"}}
+[12] row:ext {"label":"x"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Atom","value":"Num"}}
+[14] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [6] {"level":2}
+[15] proj {"label":"x"}
+  :target -> [16]
+[16] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[17] env
+[18] env
+[19] closure
+  :body -> [3]
+  :env -> [17]
+[20] closure
+  :body -> [5]
+  :env -> [18]
+
+## p1 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"p1"}
+[3] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [4]
+[4] app {"icit":"Implicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:free {"name":"getX"}
+[6] var:ref {"name":"getX"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] row:empty
+[10] nu {"variable":"$nu","level":1}
+  :body -> [11]
+[11] struct
+  :field -> [12] {"label":"x"}
+  :field -> [13] {"label":"y"}
+[12] lit {"value":{"type":"Num","value":10}}
+[13] lit {"value":{"type":"Num","value":20}}
+
+## p2 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"p2"}
+[3] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [4]
+[4] app {"icit":"Implicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:free {"name":"getX"}
+[6] var:ref {"name":"getX"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[9] row:ext {"label":"z"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[11] row:empty
+[12] nu {"variable":"$nu","level":1}
+  :body -> [13]
+[13] struct
+  :field -> [14] {"label":"x"}
+  :field -> [15] {"label":"y"}
+  :field -> [16] {"label":"z"}
+[14] lit {"value":{"type":"Num","value":5}}
+[15] lit {"value":{"type":"Num","value":3}}
+[16] lit {"value":{"type":"Num","value":7}}
+
+## p3 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"p3"}
+[3] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [4]
+[4] app {"icit":"Implicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:free {"name":"getX"}
+[6] var:ref {"name":"getX"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] row:ext {"label":"name"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"String"}}
+[9] row:empty
+[10] nu {"variable":"$nu","level":1}
+  :body -> [11]
+[11] struct
+  :field -> [12] {"label":"x"}
+  :field -> [13] {"label":"name"}
+[12] lit {"value":{"type":"Num","value":100}}
+[13] lit {"value":{"type":"String","value":"point"}}

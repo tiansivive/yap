@@ -1,0 +1,39 @@
+## checkNum (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_13
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_14(env0, x1) entry=entry
+    entry:
+      return x1
+  fn closure_13(env0, p1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_14
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+
+## nat5 (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = checkNum
+      let env_cls3 = alloc {  }
+      let fnref_cls3 = &closure_18
+      let closure_cls3 = alloc { __fn: fnref_cls3, __env: env_cls3 }
+      let fnref4 = read v0.__fn
+      let env5 = read v0.__env
+      let v6 = call *fnref4(env5, closure_cls3)
+      let v7 = 5
+      let fnref8 = read v6.__fn
+      let env9 = read v6.__env
+      let v10 = call *fnref8(env9, v7)
+      return v10
+  fn closure_18(env1, n2) entry=entry
+    entry:
+      let v1 = 0
+      let v2 = >=(n2, v1)
+      return v2
