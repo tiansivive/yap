@@ -1,0 +1,48 @@
+## OrderedList (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"OrderedList"}}
+      return v0
+
+## ascending (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = cons
+      let v1 = 1
+      let v2 = cons
+      let v3 = 2
+      let v4 = cons
+      let v5 = 3
+      let v6 = nil
+      let v7 = unit
+      let v8 = alloc { __tag: v6, payload: v7 }
+      let v9 = alloc { head: v5, tail: v8 }
+      let v10 = alloc { __tag: v4, payload: v9 }
+      let v11 = alloc { head: v3, tail: v10 }
+      let v12 = alloc { __tag: v2, payload: v11 }
+      let v13 = alloc { head: v1, tail: v12 }
+      let v14 = alloc { __tag: v0, payload: v13 }
+      return v14
+
+## descending (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = cons
+      let v1 = 3
+      let v2 = cons
+      let v3 = 2
+      let v4 = cons
+      let v5 = 1
+      let v6 = nil
+      let v7 = unit
+      let v8 = alloc { __tag: v6, payload: v7 }
+      let v9 = alloc { head: v5, tail: v8 }
+      let v10 = alloc { __tag: v4, payload: v9 }
+      let v11 = alloc { head: v3, tail: v10 }
+      let v12 = alloc { __tag: v2, payload: v11 }
+      let v13 = alloc { head: v1, tail: v12 }
+      let v14 = alloc { __tag: v0, payload: v13 }
+      return v14

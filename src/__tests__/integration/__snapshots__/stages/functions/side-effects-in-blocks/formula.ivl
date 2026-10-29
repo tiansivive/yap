@@ -1,0 +1,25 @@
+## print (foreign)
+
+
+## stringify (foreign)
+
+
+## debug (let)
+(forall ((x Real))
+  (forall ((result Real))
+    (=>
+      (= result (* result 2))
+      (and
+        (= x x)
+        (forall ((x Real))
+          (=>
+            (= x x)
+            (forall ((y Real))
+              (=>
+                (= y 2)
+                (forall ((r Real)) (=> (= r (* x 2)) (= r (* result 2))))))))
+        (= result (* result 2))
+        (= result 2)
+        (forall ((r Real)) (=> (and (= r (* result 2)) (= r 2)) (= r (* x 2))))
+        (= result (* result 2))
+        (= result 2)))))

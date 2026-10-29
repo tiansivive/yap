@@ -1,0 +1,5 @@
+## Shape (let)
+true
+
+## describeShape (let)
+(forall ((s Schema)) (and (= s s) (= s s) (= s s)))

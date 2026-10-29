@@ -1,0 +1,2 @@
+## testFail (let)
+(forall ((p Schema)) (forall (($b Real)) (=> (= $b 1) (< 2 $b))))

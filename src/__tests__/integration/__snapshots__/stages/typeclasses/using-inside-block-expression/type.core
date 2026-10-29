@@ -1,0 +1,23 @@
+## stringify (foreign)
+
+
+## Show (let)
+Π(t2: Type) -> Type
+
+## Eq (let)
+Π(t4: Type) -> Type
+
+## ShowNum (let)
+Σ($sig: [ show: Irrelevant ]) . Schema [ show: Π(t3: Num) -> String ]
+
+## EqNum (let)
+Σ($sig: [ eq: Irrelevant ]) . Schema [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]
+
+## areEqual (let)
+Π(t: Type) =>
+  Π(eq: Σ($sig: [ eq: Irrelevant ]) .
+    Schema [ eq: Π(t5: t) -> Π(t6: t) -> Bool ]) =>
+    Π(x: t) -> Π(y: t) -> Bool
+
+## result (let)
+Bool

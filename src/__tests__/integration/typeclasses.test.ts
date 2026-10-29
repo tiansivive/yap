@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { runScript, snap } from "./helpers/pipeline";
 
 describe("Language Tour — Typeclasses", () => {
-	test("interfaces via records", () => {
+	test("interfaces via records", async () => {
 		const result = runScript(`
 foreign stringify: (a: Type) => a -> String;
 let Show: Type -> Type = \\t -> { show: t -> String };
@@ -11,10 +11,10 @@ let ShowNum: Show Num = { show: \\n -> stringify n };
 let ShowBool: Show Bool = { show: \\b -> match b | true -> "true" | false -> "false" };
 let EqNum: Eq Num = { eq: \\x y -> x == y };
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("traits with implicits", () => {
+	test("traits with implicits", async () => {
 		const result = runScript(`
 foreign stringify: (a: Type) => a -> String;
 let Show: Type -> Type = \\t -> { show: t -> String };
@@ -28,10 +28,10 @@ using EqNum;
 let shown = display 42;
 let same = areEqual 10 10;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("using inside block expression", () => {
+	test("using inside block expression", async () => {
 		const result = runScript(`
 foreign stringify: (a: Type) => a -> String;
 let Show: Type -> Type = \\t -> { show: t -> String };
@@ -45,10 +45,10 @@ let result = {
   return same;
 };
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("multiple constraints", () => {
+	test("multiple constraints", async () => {
 		const result = runScript(`
 foreign stringify: (a: Type) => a -> String;
 let Show: Type -> Type = \\t -> { show: t -> String };
@@ -63,6 +63,7 @@ using ShowNum;
 using EqNum;
 let msg = displayIfEqual 5 5;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
+		expect(result.declarations.find(d => d.name === "msg")?.errors).toEqual({});
 	});
 });

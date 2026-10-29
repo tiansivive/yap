@@ -1,0 +1,11 @@
+## (expr) (expression)
+(forall ((r Row))
+  (forall ((a Type))
+    (forall ((A Type))
+      (forall ((x Schema))
+        (and
+          (= x x)
+          (forall (($fresh0 Schema))
+            (=>
+              (and (= $fresh0 x) (= $fresh0 x))
+              (forall ((v Type)) (forall (($row_4 Row)) (= v v))))))))))

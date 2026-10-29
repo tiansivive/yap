@@ -1,0 +1,40 @@
+## block (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"block"}
+[3] block
+  :return -> [14]
+  :stmt -> [4] {"index":0}
+[4] stmt:let {"variable":"f"}
+  :value -> [5]
+[5] lambda {"variable":"o","icit":"Explicit","level":2}
+  :annotation -> [6]
+  :body -> [17]
+  :env -> [18]
+[6] modal {"quantity":"Many"}
+  :term -> [7]
+[7] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:foreign {"name":"$add","arity":2}
+[12] var:bound {"index":0}
+  :next -> [13]
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [5] {"level":2}
+[13] lit {"value":{"type":"Num","value":1}}
+[14] app {"icit":"Explicit"}
+  :arg -> [16]
+  :func -> [15]
+[15] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[16] lit {"value":{"type":"Num","value":1}}
+[17] primop {"op":"$add"}
+  :arg -> [12] {"index":0}
+  :arg -> [13] {"index":1}
+  :callee -> [10]
+[18] env
+[19] closure
+  :body -> [5]
+  :env -> [18]

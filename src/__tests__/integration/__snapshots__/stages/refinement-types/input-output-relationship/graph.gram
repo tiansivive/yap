@@ -1,0 +1,24 @@
+## inc (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"inc"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [11]
+  :env -> [12]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[7] var:foreign {"name":"$add","arity":2}
+[9] var:bound {"index":0}
+  :next -> [10]
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[10] lit {"value":{"type":"Num","value":1}}
+[11] primop {"op":"$add"}
+  :arg -> [9] {"index":0}
+  :arg -> [10] {"index":1}
+  :callee -> [7]
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [12]

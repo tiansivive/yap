@@ -1,0 +1,11 @@
+## (expr) (expression)
+{
+  let proj
+    : Π(r: Row) =>
+      (closure: Π(a: Type) => Π(obj: Schema [ x: a | r ]) -> a -| Γ: r; proj)
+    = λ(r: Row) =>
+      λ(a: Type) =>
+        (λ(obj: Schema [ x: a | r ]) -> (obj).x : Π(obj: Schema [ x: a | r ]) ->
+          a);
+  return unit;
+}

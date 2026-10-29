@@ -1,0 +1,14 @@
+## Vec (let)
+valid
+
+## vec0 (let)
+valid
+
+## vec1 (let)
+valid
+
+## vec2 (let)
+valid
+
+## vec3 (let)
+valid

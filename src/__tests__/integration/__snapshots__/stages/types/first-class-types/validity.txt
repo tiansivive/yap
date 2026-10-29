@@ -1,0 +1,11 @@
+## MyNum (let)
+valid
+
+## MyString (let)
+valid
+
+## n (let)
+valid
+
+## s (let)
+valid

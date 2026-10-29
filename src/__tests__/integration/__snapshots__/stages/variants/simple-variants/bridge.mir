@@ -1,0 +1,18 @@
+## TrafficLight (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = Unit
+      let v1 = Unit
+      let v2 = Unit
+      let v3 = alloc { green: v0, yellow: v1, red: v2 }
+      return v3
+
+## light (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = red
+      let v1 = unit
+      let v2 = alloc { __tag: v0, payload: v1 }
+      return v2

@@ -1,0 +1,11 @@
+## prepend (foreign)
+
+
+## id (foreign)
+
+
+## nums (let)
+FFI.prepend @Num 42 (Array [ 0: 1, 1: 2, 2: 3 ])
+
+## strs (let)
+FFI.prepend @String "a" (Array [ 0: "b", 1: "c" ])

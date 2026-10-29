@@ -1,0 +1,40 @@
+## Vec (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"Vec"}}
+      return v0
+
+## vec0 (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = unit
+      return v0
+
+## vec1 (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 10
+      let v1 = vec0
+      let v2 = alloc { 0: v0, 1: v1 }
+      return v2
+
+## vec2 (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 20
+      let v1 = vec1
+      let v2 = alloc { 0: v0, 1: v1 }
+      return v2
+
+## vec3 (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 30
+      let v1 = vec2
+      let v2 = alloc { 0: v0, 1: v1 }
+      return v2

@@ -1,0 +1,73 @@
+## Nat (let)
+module
+  fn main entry=entry
+    entry:
+      return v0
+
+## Pos (let)
+module
+  fn main entry=entry
+    entry:
+      return v0
+
+## takePosFunction (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_12
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_12(env0, f1) entry=entry
+    entry:
+      let v0 = 10
+      let fnref1 = read f1.__fn
+      let env2 = read f1.__env
+      let v3 = call *fnref1(env2, v0)
+      return v3
+
+## natToNum (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_8
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_8(env0, x1) entry=entry
+    entry:
+      return x1
+
+## posToNum (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_8
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_8(env0, x1) entry=entry
+    entry:
+      return x1
+
+## result1 (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = takePosFunction
+      let v1 = natToNum
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      return v4
+
+## result2 (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = takePosFunction
+      let v1 = posToNum
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      return v4

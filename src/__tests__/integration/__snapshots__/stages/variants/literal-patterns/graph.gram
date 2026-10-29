@@ -1,0 +1,41 @@
+## isZero (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"isZero"}
+[3] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [16]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] match
+  :alt -> [7] {"index":0}
+  :alt -> [10] {"index":1}
+  :decision_tree -> [13]
+  :scrutinee -> [6]
+[6] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[7] case
+  :body -> [9]
+  :next -> [10]
+  :pattern -> [8]
+[8] pat:lit {"value":{"type":"Num","value":0}}
+[9] lit {"value":{"type":"Bool","value":true}}
+[10] case
+  :body -> [12]
+  :pattern -> [11]
+[11] pat:wildcard
+[12] lit {"value":{"type":"Bool","value":false}}
+[13] switch {"kind":"lit"}
+  :branch -> [14] {"value":{"type":"Num","value":0}}
+  :default -> [15]
+  :inspect -> [6]
+[14] leaf
+  :body -> [9]
+[15] leaf
+  :body -> [12]
+[16] env
+[17] closure
+  :body -> [3]
+  :env -> [16]

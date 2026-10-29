@@ -1,0 +1,124 @@
+## Factorial (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Factorial"}
+[3] sigma:v2 {"variable":"$sig","level":1}
+  :annotation -> [4]
+  :body -> [7]
+[4] row:ext {"label":"compute"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:empty
+[7] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [8]
+[8] lit {"value":{"type":"Atom","value":"Schema"}}
+[9] row:ext {"label":"compute"}
+  :rest -> [14]
+  :value -> [10]
+[10] pi {"variable":"t1","icit":"Explicit","level":2}
+  :annotation -> [12]
+  :body -> [13]
+[11] var:free {"name":"Num"}
+[12] var:ref {"name":"Num"}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[13] var:ref {"name":"Num"}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [10] {"level":2}
+[14] row:empty
+
+## fact (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"fact"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :backpatch -> [5]
+  :field -> [5] {"label":"compute"}
+  :hoist -> [5]
+[5] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [6]
+  :body -> [7]
+  :env -> [32]
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[7] match
+  :alt -> [9] {"index":0}
+  :alt -> [12] {"index":1}
+  :decision_tree -> [29]
+  :scrutinee -> [8]
+[8] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[9] case
+  :body -> [11]
+  :next -> [12]
+  :pattern -> [10]
+[10] pat:lit {"value":{"type":"Num","value":0}}
+[11] lit {"value":{"type":"Num","value":1}}
+[12] case
+  :body -> [27]
+  :pattern -> [13]
+[13] pat:wildcard
+[16] var:foreign {"name":"$mul","arity":2}
+[18] var:bound {"index":0}
+  :next -> [19]
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[19] app {"icit":"Explicit"}
+  :arg -> [28]
+  :func -> [20]
+[20] var:nu-label {"name":"compute","index":0}
+  :refers_to -> [5]
+  :scope -> [3] {"level":0,"owner":true}
+  :scope -> [5] {"level":1,"owner":false}
+[23] var:foreign {"name":"$sub","arity":2}
+[25] var:bound {"index":0}
+  :next -> [26]
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[26] lit {"value":{"type":"Num","value":1}}
+[27] primop {"op":"$mul"}
+  :arg -> [18] {"index":0}
+  :arg -> [19] {"index":1}
+  :callee -> [16]
+[28] primop {"op":"$sub"}
+  :arg -> [25] {"index":0}
+  :arg -> [26] {"index":1}
+  :callee -> [23]
+[29] switch {"kind":"lit"}
+  :branch -> [30] {"value":{"type":"Num","value":0}}
+  :default -> [31]
+  :inspect -> [8]
+[30] leaf
+  :body -> [11]
+[31] leaf
+  :body -> [27]
+[32] env
+  :capture -> [4] {"index":0}
+[33] closure
+  :body -> [5]
+  :env -> [32]
+
+## result (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"result"}
+[3] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [4]
+[4] proj {"label":"compute"}
+  :target -> [6]
+[5] var:free {"name":"fact"}
+[6] var:ref {"name":"fact"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] lit {"value":{"type":"Num","value":5}}

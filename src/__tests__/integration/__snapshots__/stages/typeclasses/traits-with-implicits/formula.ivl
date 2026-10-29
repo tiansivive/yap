@@ -1,0 +1,33 @@
+## stringify (foreign)
+
+
+## Show (let)
+true
+
+## Eq (let)
+true
+
+## ShowNum (let)
+(forall ((n Real)) (= n n))
+
+## EqNum (let)
+(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
+
+## display (let)
+(forall ((t Type)) (forall ((x Type)) (= x x)))
+
+## areEqual (let)
+(forall ((t Type))
+  (forall ((x Type)) (forall ((y Type)) (and (= x x) (= y y)))))
+
+## (using) (using)
+
+
+## (using) (using)
+
+
+## shown (let)
+true
+
+## same (let)
+true

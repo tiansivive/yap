@@ -1,0 +1,5 @@
+## OrderedPair (let)
+true
+
+## valid (let)
+(forall (($b Real)) (=> (= $b 5) (> $b 3)))

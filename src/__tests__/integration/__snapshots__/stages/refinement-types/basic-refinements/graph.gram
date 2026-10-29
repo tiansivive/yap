@@ -1,0 +1,39 @@
+## Nat (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Nat"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+
+## Pos (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Pos"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+
+## n (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"n"}
+[3] lit {"value":{"type":"Num","value":42}}
+
+## p (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"p"}
+[3] lit {"value":{"type":"Num","value":42}}
+
+## zero (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"zero"}
+[3] lit {"value":{"type":"Num","value":0}}

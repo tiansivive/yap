@@ -1,0 +1,16 @@
+## (expr) (expression)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 1
+      let v1 = 2
+      let v2 = alloc { x: v0, y: v1 }
+      let v3 = read v2.x
+      let v4 = 2
+      let v5 = /(v3, v4)
+      let v6 = read v2.y
+      let v7 = 2
+      let v8 = /(v6, v7)
+      let v9 = alloc { a: v5, b: v8 }
+      let v10 = alloc { point: v2, halved: v9 }
+      return v10

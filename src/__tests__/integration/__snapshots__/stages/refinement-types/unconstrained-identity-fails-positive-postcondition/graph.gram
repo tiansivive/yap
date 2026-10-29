@@ -1,0 +1,17 @@
+## negTestCheckLambdaPostCondition (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"negTestCheckLambdaPostCondition"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [6]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[6] env
+[7] closure
+  :body -> [3]
+  :env -> [6]

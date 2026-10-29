@@ -1,0 +1,11 @@
+## Peano (let)
+Peano
+
+## zero (let)
+Struct [ __tag: zero, payload: unit ]
+
+## first (let)
+Struct [ __tag: succ, payload: zero ]
+
+## second (let)
+Struct [ __tag: succ, payload: first ]

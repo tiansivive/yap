@@ -1,0 +1,30 @@
+## List (let)
+List
+
+## empty (let)
+Struct [ __tag: nil, payload: unit ]
+
+## listOf1 (let)
+Struct
+  [ __tag: cons,
+    payload: νstrict [] .
+      Struct [ 0: 1, 1: Struct [ __tag: nil, payload: unit ] ] ]
+
+## listOf3 (let)
+Struct
+  [ __tag: cons,
+    payload: νstrict [] .
+      Struct
+        [ 0: 1,
+          1: Struct
+            [ __tag: cons,
+              payload: νstrict [] .
+                Struct
+                  [ 0: 2,
+                    1: Struct
+                      [ __tag: cons,
+                        payload: νstrict [] .
+                          Struct
+                            [ 0: 3,
+                              1: Struct
+                                [ __tag: nil, payload: unit ] ] ] ] ] ] ]

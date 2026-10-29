@@ -1,0 +1,8 @@
+## chooseType (let)
+Π(t1: Bool) -> Type
+
+## T1 (let)
+Type
+
+## T2 (let)
+Type

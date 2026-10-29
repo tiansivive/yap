@@ -1,0 +1,59 @@
+## identity (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"identity"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [6]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[6] env
+[7] closure
+  :body -> [3]
+  :env -> [6]
+
+## add (let)
+[1] root
+  :entry -> [10]
+[2] stmt:let {"variable":"add"}
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[9] var:foreign {"name":"$add","arity":2}
+[10] var:ref {"name":"$add"}
+  :refers_to -> [9]
+  :scope -> [2] {"level":0}
+  :scope -> [10] {"level":1}
+
+## forty2 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"forty2"}
+[3] app {"icit":"Explicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"identity"}
+[5] var:ref {"name":"identity"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[6] lit {"value":{"type":"Num","value":42}}
+
+## added (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"added"}
+[3] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [4]
+[4] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:free {"name":"add"}
+[6] var:ref {"name":"add"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] lit {"value":{"type":"Num","value":10}}
+[8] lit {"value":{"type":"Num","value":20}}

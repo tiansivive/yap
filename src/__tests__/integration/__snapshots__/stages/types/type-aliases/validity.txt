@@ -1,0 +1,5 @@
+## Point (let)
+valid
+
+## origin (let)
+valid

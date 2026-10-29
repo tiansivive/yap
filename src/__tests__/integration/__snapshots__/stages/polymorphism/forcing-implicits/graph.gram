@@ -1,0 +1,50 @@
+## id (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"id"}
+[3] lambda {"variable":"a","icit":"Implicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [8]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] lambda {"variable":"x","icit":"Explicit","level":2}
+  :annotation -> [6]
+  :body -> [7]
+  :env -> [9]
+[6] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[7] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[8] env
+[9] env
+[10] closure
+  :body -> [3]
+  :env -> [8]
+[11] closure
+  :body -> [5]
+  :env -> [9]
+
+## forcedStr (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"forcedStr"}
+[3] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [4]
+[4] app {"icit":"Implicit"}
+  :arg -> [8]
+  :func -> [6]
+[5] var:free {"name":"id"}
+[6] var:ref {"name":"id"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] var:free {"name":"String"}
+[8] var:ref {"name":"String"}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+[9] lit {"value":{"type":"String","value":"hello"}}

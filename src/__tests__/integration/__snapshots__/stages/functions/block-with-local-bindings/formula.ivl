@@ -1,0 +1,35 @@
+## compute (let)
+(forall ((x Real))
+  (forall ((doubled Real))
+    (=>
+      (= doubled (* doubled 2))
+      (and
+        (= x x)
+        (forall ((x Real))
+          (=>
+            (= x x)
+            (forall ((y Real))
+              (=>
+                (= y 2)
+                (forall ((r Real)) (=> (= r (* x 2)) (= r (* doubled 2))))))))
+        (forall ((added Real))
+          (=>
+            (= added (+ (* doubled 2) 10))
+            (and
+              (= doubled (* doubled 2))
+              (= doubled 2)
+              (forall ((x Real))
+                (=>
+                  (and (= x (* doubled 2)) (= x 2))
+                  (forall ((y Real))
+                    (=>
+                      (= y 10)
+                      (forall ((r Real))
+                        (=>
+                          (= r (+ doubled 10))
+                          (= r (+ (* doubled 2) 10))))))))
+              (= added (+ (* doubled 2) 10))
+              (= added added))))))))
+
+## result (let)
+true

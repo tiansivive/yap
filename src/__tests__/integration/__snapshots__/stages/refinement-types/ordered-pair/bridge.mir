@@ -1,0 +1,15 @@
+## OrderedPair (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
+      return v0
+
+## valid (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 3
+      let v1 = 5
+      let v2 = alloc { fst: v0, snd: v1 }
+      return v2

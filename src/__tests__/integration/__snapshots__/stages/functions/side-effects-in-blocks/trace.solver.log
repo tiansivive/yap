@@ -1,0 +1,71 @@
+## print (foreign)
+
+
+## stringify (foreign)
+
+
+## debug (let)
+=== Formula ===
+  (forall ((x Real))
+    (forall ((result Real))
+      (=>
+        (= result (* result 2))
+        (and
+          (= x x)
+          (forall ((x Real))
+            (=>
+              (= x x)
+              (forall ((y Real))
+                (=>
+                  (= y 2)
+                  (forall ((r Real)) (=> (= r (* x 2)) (= r (* result 2))))))))
+          (= result (* result 2))
+          (= result 2)
+          (forall ((r Real)) (=> (and (= r (* result 2)) (= r 2)) (= r (* x 2))))
+          (= result (* result 2))
+          (= result 2)))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x=result -> residual
+  x=2 -> residual
+  x=x -> residual
+  result=result -> residual
+  result=2 -> residual
+  result=x -> residual
+  y=result -> residual
+  y=2 -> residual
+  y=x -> residual
+  r=result -> residual
+  r=2 -> residual
+  r=x -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1

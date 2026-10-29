@@ -1,0 +1,60 @@
+## DependentPair (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"DependentPair"}
+[3] sigma:v2 {"variable":"$sig","level":1}
+  :annotation -> [4]
+  :body -> [9]
+[4] row:ext {"label":"fst"}
+  :rest -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[6] row:ext {"label":"snd"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"fst"}
+  :rest -> [13]
+  :value -> [12]
+[12] lit {"value":{"type":"Atom","value":"Type"}}
+[13] row:ext {"label":"snd"}
+  :rest -> [15]
+  :value -> [14]
+[14] var:dep-label {"name":"fst","index":0}
+  :scope -> [3] {"level":0,"owner":true}
+[15] row:empty
+
+## numPair (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"numPair"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [6] {"label":"fst"}
+  :field -> [7] {"label":"snd"}
+[5] var:free {"name":"Num"}
+[6] var:ref {"name":"Num"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] lit {"value":{"type":"Num","value":42}}
+
+## strPair (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"strPair"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [6] {"label":"fst"}
+  :field -> [7] {"label":"snd"}
+[5] var:free {"name":"String"}
+[6] var:ref {"name":"String"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] lit {"value":{"type":"String","value":"hello"}}

@@ -1,0 +1,11 @@
+## Nat (let)
+true
+
+## safe (let)
+(forall ((x Real))
+  (=>
+    (>= x 0)
+    (and
+      (>= x 0)
+      (= x Num)
+      (forall ((n Real)) (=> (and (>= n 0) (= n Num)) (>= n 0))))))

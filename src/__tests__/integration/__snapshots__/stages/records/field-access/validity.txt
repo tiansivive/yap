@@ -1,0 +1,8 @@
+## point (let)
+valid
+
+## xCoord (let)
+valid
+
+## getX (let)
+valid

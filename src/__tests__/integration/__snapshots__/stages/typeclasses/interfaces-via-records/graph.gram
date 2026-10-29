@@ -1,0 +1,184 @@
+## stringify (foreign)
+
+
+## Show (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Show"}
+[3] lambda {"variable":"t","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [17]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] sigma:v2 {"variable":"$sig","level":2}
+  :annotation -> [6]
+  :body -> [9]
+[6] row:ext {"label":"show"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"show"}
+  :rest -> [16]
+  :value -> [12]
+[12] pi {"variable":"t3","icit":"Explicit","level":3}
+  :annotation -> [13]
+  :body -> [15]
+[13] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[14] var:free {"name":"String"}
+[15] var:ref {"name":"String"}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [12] {"level":3}
+[16] row:empty
+[17] env
+  :capture -> [14] {"index":0}
+[18] closure
+  :body -> [3]
+  :env -> [17]
+
+## Eq (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Eq"}
+[3] lambda {"variable":"t","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [19]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] sigma:v2 {"variable":"$sig","level":2}
+  :annotation -> [6]
+  :body -> [9]
+[6] row:ext {"label":"eq"}
+  :rest -> [8]
+  :value -> [7]
+[7] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[8] row:empty
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Schema"}}
+[11] row:ext {"label":"eq"}
+  :rest -> [18]
+  :value -> [12]
+[12] pi {"variable":"t5","icit":"Explicit","level":3}
+  :annotation -> [13]
+  :body -> [14]
+[13] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[14] pi {"variable":"t6","icit":"Explicit","level":4}
+  :annotation -> [15]
+  :body -> [17]
+[15] var:bound {"index":2}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [12] {"level":3}
+[16] var:free {"name":"Bool"}
+[17] var:ref {"name":"Bool"}
+  :refers_to -> [16]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [12] {"level":3}
+  :scope -> [14] {"level":4}
+[18] row:empty
+[19] env
+  :capture -> [16] {"index":0}
+[20] closure
+  :body -> [3]
+  :env -> [19]
+
+## ShowNum (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"ShowNum"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [13] {"label":"show"}
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[9] var:foreign {"name":"stringify","arity":2}
+[11] lit {"value":{"type":"Atom","value":"Num"}}
+[13] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [11] {"index":0}
+  :callee -> [9]
+[14] pap {"remaining":1}
+  :captured -> [11] {"index":0}
+  :materializes -> [13]
+
+## ShowBool (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"ShowBool"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"show"}
+[5] lambda {"variable":"b","icit":"Explicit","level":1}
+  :annotation -> [6]
+  :body -> [7]
+  :env -> [18]
+[6] lit {"value":{"type":"Atom","value":"Bool"}}
+[7] match
+  :alt -> [9] {"index":0}
+  :alt -> [12] {"index":1}
+  :decision_tree -> [15]
+  :scrutinee -> [8]
+[8] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [5] {"level":1}
+[9] case
+  :body -> [11]
+  :next -> [12]
+  :pattern -> [10]
+[10] pat:lit {"value":{"type":"Bool","value":true}}
+[11] lit {"value":{"type":"String","value":"true"}}
+[12] case
+  :body -> [14]
+  :pattern -> [13]
+[13] pat:lit {"value":{"type":"Bool","value":false}}
+[14] lit {"value":{"type":"String","value":"false"}}
+[15] switch {"kind":"lit"}
+  :branch -> [16] {"value":{"type":"Bool","value":true}}
+  :branch -> [17] {"value":{"type":"Bool","value":false}}
+  :inspect -> [8]
+[16] leaf
+  :body -> [11]
+[17] leaf
+  :body -> [14]
+[18] env
+[19] closure
+  :body -> [5]
+  :env -> [18]
+
+## EqNum (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"EqNum"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [12] {"label":"eq"}
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[11] var:foreign {"name":"$eq","arity":2}
+[12] var:ref {"name":"$eq"}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [12] {"level":1}

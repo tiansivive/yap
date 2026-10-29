@@ -1,0 +1,52 @@
+## addImplicit (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_16
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_17(env0, x1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let v0 = +(x1, cap_0)
+      return v0
+  fn closure_16(env0, n1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: n1 }
+      let fnref_cls2 = &closure_17
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+
+## (using) (using)
+
+
+## eleven (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = addImplicit
+      let v1 = 10
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      let v5 = 1
+      let fnref6 = read v4.__fn
+      let env7 = read v4.__env
+      let v8 = call *fnref6(env7, v5)
+      return v8
+
+## fifteen (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = addImplicit
+      let v1 = 10
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      let v5 = 5
+      let fnref6 = read v4.__fn
+      let env7 = read v4.__env
+      let v8 = call *fnref6(env7, v5)
+      return v8

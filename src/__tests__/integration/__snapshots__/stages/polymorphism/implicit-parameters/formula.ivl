@@ -1,0 +1,8 @@
+## id (let)
+(forall ((a Type)) (forall ((x Type)) (= x x)))
+
+## n2 (let)
+true
+
+## s2 (let)
+true

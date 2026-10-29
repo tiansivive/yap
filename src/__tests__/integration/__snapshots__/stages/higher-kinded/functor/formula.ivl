@@ -1,0 +1,11 @@
+## List (let)
+true
+
+## Functor (let)
+true
+
+## mapList (let)
+error: Cannot read properties of undefined (reading 'type')
+
+## ListFunctor (let)
+(forall ((a Type)) (forall ((b Type)) (and (= a a) (= b b))))

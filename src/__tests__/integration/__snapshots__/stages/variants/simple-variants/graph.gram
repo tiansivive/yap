@@ -1,0 +1,31 @@
+## TrafficLight (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"TrafficLight"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Variant"}}
+[5] row:ext {"label":"green"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Atom","value":"Unit"}}
+[7] row:ext {"label":"yellow"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Unit"}}
+[9] row:ext {"label":"red"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Unit"}}
+[11] row:empty
+
+## light (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"light"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"red"}}
+[5] lit {"value":{"type":"unit"}}

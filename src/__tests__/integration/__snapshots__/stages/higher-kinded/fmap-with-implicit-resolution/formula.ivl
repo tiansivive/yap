@@ -1,0 +1,32 @@
+## stringify (foreign)
+
+
+## List (let)
+true
+
+## Functor (let)
+true
+
+## mapList (let)
+error: Cannot read properties of undefined (reading 'type')
+
+## ListFunctor (let)
+(forall ((a Type)) (forall ((b Type)) (and (= a a) (= b b))))
+
+## fmap (let)
+(forall ((a Type))
+  (forall ((b Type))
+    (forall ((container App_Fn_Type_Type_Type))
+      (and (= a a) (= b b) (= container container)))))
+
+## (using) (using)
+
+
+## strmap (let)
+(forall ((a Type)) (and (= a a) (= a a)))
+
+## listOf1 (let)
+true
+
+## strList (let)
+true

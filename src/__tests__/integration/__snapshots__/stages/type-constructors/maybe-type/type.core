@@ -1,0 +1,8 @@
+## Maybe (let)
+Π(t1: Type) -> Type
+
+## maybeNum (let)
+Variant [ just: Num, nothing: Unit ]
+
+## maybeStr (let)
+Variant [ just: String, nothing: Unit ]

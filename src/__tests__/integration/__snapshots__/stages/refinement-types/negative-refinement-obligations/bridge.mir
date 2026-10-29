@@ -1,0 +1,28 @@
+## negTestCheckLiteral (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 2
+      return v0
+
+## negFnApp (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 1
+      let v1 = 2
+      let v2 = +(v0, v1)
+      return v2
+
+## negTestCheckLambdaPreAndPostCondition (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_8
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_8(env0, x1) entry=entry
+    entry:
+      let v0 = 0
+      return v0

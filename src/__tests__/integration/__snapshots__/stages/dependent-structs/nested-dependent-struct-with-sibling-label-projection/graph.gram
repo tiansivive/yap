@@ -1,0 +1,44 @@
+## (expr) (expression)
+[1] root
+  :entry -> [2]
+[2] nu {"variable":"$nu","level":0}
+  :body -> [3]
+[3] struct
+  :field -> [4] {"label":"point"}
+  :field -> [8] {"label":"halved"}
+  :hoist -> [4]
+[4] nu {"variable":"$nu","level":0}
+  :body -> [5]
+[5] struct
+  :field -> [6] {"label":"x"}
+  :field -> [7] {"label":"y"}
+[6] lit {"value":{"type":"Num","value":1}}
+[7] lit {"value":{"type":"Num","value":2}}
+[8] nu {"variable":"$nu","level":0}
+  :body -> [9]
+[9] struct
+  :field -> [23] {"label":"a"}
+  :field -> [24] {"label":"b"}
+[12] var:foreign {"name":"$div","arity":2}
+[14] proj {"label":"x"}
+  :next -> [16]
+  :target -> [15]
+[15] var:nu-label {"name":"point","index":1}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0,"owner":true}
+[16] lit {"value":{"type":"Num","value":2}}
+[20] proj {"label":"y"}
+  :next -> [22]
+  :target -> [21]
+[21] var:nu-label {"name":"point","index":1}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0,"owner":true}
+[22] lit {"value":{"type":"Num","value":2}}
+[23] primop {"op":"$div"}
+  :arg -> [14] {"index":0}
+  :arg -> [16] {"index":1}
+  :callee -> [12]
+[24] primop {"op":"$div"}
+  :arg -> [20] {"index":0}
+  :arg -> [22] {"index":1}
+  :callee -> [12]

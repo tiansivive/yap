@@ -1,0 +1,15 @@
+## Point (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
+      return v0
+
+## origin (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 0
+      let v1 = 0
+      let v2 = alloc { x: v0, y: v1 }
+      return v2

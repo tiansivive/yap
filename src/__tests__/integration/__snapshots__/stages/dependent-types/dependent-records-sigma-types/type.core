@@ -1,0 +1,10 @@
+## DependentPair (let)
+Type
+
+## numPair (let)
+Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+  Schema [ fst: Type, snd: ($sig).fst ]
+
+## strPair (let)
+Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+  Schema [ fst: Type, snd: ($sig).fst ]

@@ -1,0 +1,14 @@
+## addZ (let)
+Π(r: Row) =>
+  Π(t1: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+    Schema [ x: Num, y: Num | r ]) ->
+    Σ($sig: [ x: Irrelevant, y: Irrelevant, z: Irrelevant ]) .
+      Schema [ x: Num, y: Num, z: Num | r ]
+
+## p1 (let)
+Σ($sig: [ x: Irrelevant, y: Irrelevant, z: Irrelevant ]) .
+  Schema [ x: Num, y: Num, z: Num | [] ]
+
+## p2 (let)
+Σ($sig: [ x: Irrelevant, y: Irrelevant, z: Irrelevant ]) .
+  Schema [ x: Num, y: Num, z: Num | [ color: String ] ]

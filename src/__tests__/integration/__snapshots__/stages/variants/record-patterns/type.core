@@ -1,0 +1,7 @@
+## getY (let)
+Π(t1: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]) ->
+  Num
+
+## getY2 (let)
+Π(t2: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]) ->
+  Num

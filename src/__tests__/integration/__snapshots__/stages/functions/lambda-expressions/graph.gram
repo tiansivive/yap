@@ -1,0 +1,46 @@
+## identity (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"identity"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [6]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[6] env
+[7] closure
+  :body -> [3]
+  :env -> [6]
+
+## const (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"const"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [8]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] lambda {"variable":"y","icit":"Explicit","level":2}
+  :annotation -> [6]
+  :body -> [7]
+  :env -> [9]
+[6] lit {"value":{"type":"Atom","value":"String"}}
+[7] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[8] env
+[9] env
+  :capture -> [3] {"index":0}
+[10] closure
+  :body -> [3]
+  :env -> [8]
+[11] closure
+  :body -> [5]
+  :env -> [9]

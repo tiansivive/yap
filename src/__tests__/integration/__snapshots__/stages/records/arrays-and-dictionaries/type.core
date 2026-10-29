@@ -1,0 +1,5 @@
+## array (let)
+FFI.Indexed Num Num @FFI.defaultArray
+
+## dict (let)
+FFI.Indexed String Num @FFI.defaultHashMap

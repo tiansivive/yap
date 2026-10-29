@@ -1,0 +1,135 @@
+## firstOrZero (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"firstOrZero"}
+[3] lambda {"variable":"list","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [13]
+  :env -> [26]
+[4] app {"icit":"Implicit"}
+  :arg -> [12]
+  :func -> [5]
+[5] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [8]
+[7] var:foreign {"name":"Indexed"}
+[8] var:ref {"name":"Indexed"}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[11] var:foreign {"name":"defaultArray"}
+[12] var:ref {"name":"defaultArray"}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+[13] match
+  :alt -> [15] {"index":0}
+  :alt -> [18] {"index":1}
+  :decision_tree -> [22]
+  :scrutinee -> [14]
+[14] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[15] case
+  :body -> [17]
+  :next -> [18]
+  :pattern -> [16]
+[16] pat:struct
+[17] lit {"value":{"type":"Num","value":0}}
+[18] case
+  :body -> [21]
+  :pattern -> [19]
+[19] pat:struct
+  :field -> [20] {"label":"0"}
+[20] pat:binder {"name":"x","level":2}
+[21] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [20] {"level":2}
+[22] switch {"kind":"struct"}
+  :branch -> [25]
+  :inspect -> [14]
+[23] proj {"label":"0"}
+  :target -> [14]
+[24] pat:wildcard
+[25] leaf
+  :body -> [17]
+[26] env
+[27] closure
+  :body -> [3]
+  :env -> [26]
+
+## tail (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"tail"}
+[3] lambda {"variable":"list","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [13]
+  :env -> [28]
+[4] app {"icit":"Implicit"}
+  :arg -> [12]
+  :func -> [5]
+[5] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [6]
+[6] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [8]
+[7] var:foreign {"name":"Indexed"}
+[8] var:ref {"name":"Indexed"}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[11] var:foreign {"name":"defaultArray"}
+[12] var:ref {"name":"defaultArray"}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+[13] match
+  :alt -> [15] {"index":0}
+  :alt -> [20] {"index":1}
+  :decision_tree -> [24]
+  :scrutinee -> [14]
+[14] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[15] case
+  :body -> [17]
+  :next -> [20]
+  :pattern -> [16]
+[16] pat:struct
+[17] app {"icit":"Explicit"}
+  :arg -> [19]
+  :func -> [18]
+[18] lit {"value":{"type":"Atom","value":"Array"}}
+[19] row:empty
+[20] case
+  :body -> [23]
+  :pattern -> [21]
+[21] pat:struct
+  :field -> [22] {"label":"0"}
+[22] pat:binder {"name":"x","level":2}
+[23] var:bound {"index":0}
+  :refers_to -> [22]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [22] {"level":2}
+[24] switch {"kind":"struct"}
+  :branch -> [27]
+  :inspect -> [14]
+[25] proj {"label":"0"}
+  :target -> [14]
+[26] pat:wildcard
+[27] leaf
+  :body -> [17]
+[28] env
+[29] closure
+  :body -> [3]
+  :env -> [28]

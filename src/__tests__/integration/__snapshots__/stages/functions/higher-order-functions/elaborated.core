@@ -1,0 +1,17 @@
+## compose (let)
+λ(f: Π(t2: Num) -> Num) -> λ(g: Π(t4: Num) -> Num) -> λ(x: Num) -> f (g x)
+
+## add1 (let)
+(λ(x: Num) -> FFI.$add x 1 : Π(x: Num) ->
+  <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add x 1) |])
+
+## add5 (let)
+(λ(x: Num) -> FFI.$add x 5 : Π(x: Num) ->
+  <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add x 5) |])
+
+## double (let)
+(λ(x: Num) -> FFI.$mul x 2 : Π(x: Num) ->
+  <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$mul x 2) |])
+
+## add1ThenDouble (let)
+compose double add1

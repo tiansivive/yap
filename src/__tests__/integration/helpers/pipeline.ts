@@ -1,3 +1,6 @@
+import { basename } from "node:path";
+import { expect } from "vitest";
+
 import * as Eff from "@yap/utils/effects";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
@@ -5,9 +8,8 @@ import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "@yap/elaboration/normalization";
 import * as GRAM from "@yap/gram";
 import * as E from "fp-ts/lib/Either";
-import * as T from "fp-ts/lib/These";
 import * as O from "fp-ts/lib/Option";
-import * as RNEA from "fp-ts/lib/ReadonlyNonEmptyArray";
+import * as Rec from "fp-ts/lib/Record";
 import { ARITIES } from "../../../lowering/shared/primops";
 import type { Module } from "../../../lowering/mir";
 import * as MIR from "../../../lowering/pretty";
@@ -34,7 +36,7 @@ export type DeclarationResult = {
 	readonly name: string;
 	readonly kind: Mod.Kind;
 	readonly stages?: StageResults;
-	readonly error?: string;
+	readonly errors: Partial<Record<StageName, string>>;
 };
 
 export type ScriptResult = { readonly declarations: ReadonlyArray<DeclarationResult> };
@@ -43,23 +45,13 @@ const safe = <A>(fn: () => A): E.Either<string, A> => E.tryCatch(fn, e => (e ins
 
 const get = E.getOrElse((): string => "");
 
-const errs = (rs: ReadonlyArray<E.Either<string, unknown>>): ReadonlyArray<string> =>
-	rs.flatMap(
-		E.fold(
-			e => [e],
-			() => [],
-		),
-	);
-
-const toThese = <A>(errors: ReadonlyArray<string>, value: A): T.These<ReadonlyArray<string>, A> => T.rightOrBoth(value)(RNEA.fromReadonlyArray(errors));
-
 const pipeline = (
 	tm: EB.Term,
 	ty: NF.Value,
 	ctx: EB.Context,
 	registry: Metas.Registry,
 	parentBinders?: ReadonlyArray<string>,
-): T.These<ReadonlyArray<string>, StageResults> => {
+): Pick<Required<DeclarationResult>, "stages" | "errors"> => {
 	const db = { deBruijn: false };
 	const disp = shown(ctx, registry);
 
@@ -125,58 +117,58 @@ const pipeline = (
 	const codegenC = E.chain((m: Module) => safe(() => printC(emitC(m))))(mod);
 	const codegenErlang = E.chain((m: Module) => safe(() => printErl(emitErl(m))))(mod);
 
-	const all = [elaborated, type, normalized, ivl, validity, solverTrace, gram, mir, codegenJS, codegenC, codegenErlang];
+	const results = { elaborated, type, normalized, ivl, validity, solverTrace, gram, mir, codegenJS, codegenC, codegenErlang };
 
-	return toThese(errs(all), {
-		elaborated: get(elaborated),
-		type: get(type),
-		normalized: get(normalized),
-		ivl: get(ivl),
-		validity: get(validity),
-		solverTrace: get(solverTrace),
-		gram: get(gram),
-		mir: get(mir),
-		codegenJS: get(codegenJS),
-		codegenC: get(codegenC),
-		codegenErlang: get(codegenErlang),
-	});
+	return { stages: Rec.map(get)(results), errors: Rec.filterMap(O.getLeft)(results) };
 };
 
-/** Runs the downstream stages over one elaborated declaration; elaboration failures pass straight through. */
+/** Runs the downstream stages over one elaborated declaration; an elaboration failure is recorded against the elaborated stage. */
 const staged = (decl: Mod.Declaration): DeclarationResult => {
 	const { name, kind, elaborated } = decl;
 
 	if (elaborated === undefined) {
-		return { name, kind, ...(decl.error === undefined ? {} : { error: decl.error }) };
+		return { name, kind, errors: decl.error === undefined ? {} : { elaborated: decl.error } };
 	}
 
 	const { tm, ty, ctx, registry } = elaborated;
 
-	return T.fold(
-		(errors: ReadonlyArray<string>): DeclarationResult => ({ name, kind, error: errors.join("; ") }),
-		(stages: StageResults): DeclarationResult => ({ name, kind, stages }),
-		(errors: ReadonlyArray<string>, stages: StageResults): DeclarationResult => ({ name, kind, stages, error: errors.join("; ") }),
-	)(pipeline(tm, ty, ctx, registry, kind === "let" ? [name] : undefined));
+	return { name, kind, ...pipeline(tm, ty, ctx, registry, kind === "let" ? [name] : undefined) };
 };
 
 export const runScript = (source: string): ScriptResult => ({ declarations: Mod.elaborateModule(source).declarations.map(staged) });
 
-export const snap = (result: ScriptResult) =>
-	result.declarations.map(d => ({
-		name: d.name,
-		kind: d.kind,
-		...(d.error ? { error: d.error } : {}),
-		...(d.stages
-			? {
-					type: d.stages.type,
-					elaborated: d.stages.elaborated,
-					normalized: d.stages.normalized,
-					ivl: d.stages.ivl,
-					validity: d.stages.validity,
-					solverTrace: d.stages.solverTrace,
-					gram: d.stages.gram,
-					mir: d.stages.mir,
-					codegenJS: d.stages.codegenJS,
-				}
-			: {}),
-	}));
+/**
+ * Snapshots each stage to its own file under `__snapshots__/stages/<test file>/<test name>/`, so a
+ * change shows which stages it touched. Soft assertions report every mismatched stage in one run.
+ */
+export const snap = async (result: ScriptResult) => {
+	const { testPath = "", currentTestName = "" } = expect.getState();
+	const dir = `__snapshots__/stages/${basename(testPath, ".test.ts")}/${slug(currentTestName.split(" > ").at(-1) ?? "")}`;
+
+	await Promise.all(Stages.map(([stage, file]) => expect.soft(render(result, stage)).toMatchFileSnapshot(`${dir}/${file}`)));
+};
+
+const Stages = [
+	["type", "type.core"],
+	["elaborated", "elaborated.core"],
+	["normalized", "normalized.nf"],
+	["ivl", "formula.ivl"],
+	["validity", "validity.txt"],
+	["solverTrace", "trace.solver.log"],
+	["gram", "graph.gram"],
+	["mir", "bridge.mir"],
+	["codegenJS", "codegen.js"],
+	["codegenC", "codegen.c"],
+	["codegenErlang", "codegen.erl"],
+] as const satisfies ReadonlyArray<readonly [StageName, string]>;
+
+const render = (result: ScriptResult, stage: StageName) =>
+	result.declarations
+		.map(d => `## ${d.name} (${d.kind})\n${d.errors[stage] === undefined ? (d.stages?.[stage] ?? "") : `error: ${d.errors[stage]}`}\n`)
+		.join("\n");
+
+const slug = (name: string) =>
+	name
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-|-$/g, "");

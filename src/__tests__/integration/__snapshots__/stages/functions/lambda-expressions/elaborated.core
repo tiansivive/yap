@@ -1,0 +1,5 @@
+## identity (let)
+λ(x: Num) -> x
+
+## const (let)
+λ(x: Num) -> λ(y: String) -> x

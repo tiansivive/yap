@@ -9,7 +9,7 @@ const Verdict = {
 };
 
 describe("Language Tour — Refinement Types", () => {
-	test("basic refinements", () => {
+	test("basic refinements", async () => {
 		const result = runScript(`
 let Nat: Type = Num [| \\n -> n >= 0 |];
 let Pos: Type = Num [| \\p -> p > 0 |];
@@ -17,17 +17,17 @@ let n: Nat = 42;
 let p: Pos = 42;
 let zero: Nat = 0;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("exact value refinements", () => {
+	test("exact value refinements", async () => {
 		const result = runScript(`
 let exactOne: Num [| \\v -> v == 1 |] = 1;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("negative refinement obligations", () => {
+	test("negative refinement obligations", async () => {
 		const result = runScript(`
 let negTestCheckLiteral: Num [| \\v -> v == 1 |] = 2;
 let negFnApp: Num [| \\v -> v == 0 |] = 1 + 2;
@@ -36,18 +36,18 @@ let negTestCheckLambdaPreAndPostCondition: (n: Num [| \\n -> n > 0 |]) -> Num [|
 		Verdict.expect(result, "negTestCheckLiteral", "invalid");
 		Verdict.expect(result, "negFnApp", "invalid");
 		Verdict.expect(result, "negTestCheckLambdaPreAndPostCondition", "invalid");
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("unconstrained identity fails positive postcondition", () => {
+	test("unconstrained identity fails positive postcondition", async () => {
 		const result = runScript(`
 let negTestCheckLambdaPostCondition: Num -> Num [| \\n -> n > 0|] = \\x -> x;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 		Verdict.expect(result, "negTestCheckLambdaPostCondition", "invalid");
 	});
 
-	test("function refinement obligations", () => {
+	test("function refinement obligations", async () => {
 		const result = runScript(`
 let fn: Num -> Num = \\x -> 2;
 let posTestCheckLambdaPostCondition: Num -> Num [| \\v -> v == 1 |] = \\x -> 1;
@@ -62,35 +62,35 @@ let inc: (x: Num) -> Num [| \\v -> v == (x + 1) |] = \\x -> x + 1;
 		Verdict.expect(result, "posTestCheckLambdaPreAndPostCondition", "valid");
 		Verdict.expect(result, "posTestCheckRefinedResultLambda", "valid");
 		Verdict.expect(result, "inc", "valid");
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("pre and postconditions", () => {
+	test("pre and postconditions", async () => {
 		const result = runScript(`
 let Nat: Type = Num [| \\n -> n >= 0 |];
 let safe: (n: Nat) -> Nat = \\x -> x;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("input-output relationship", () => {
+	test("input-output relationship", async () => {
 		const result = runScript(`
 let inc: (x: Num) -> Num [| \\v -> v == (x + 1) |] = \\x -> x + 1;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("higher-order with refinements", () => {
+	test("higher-order with refinements", async () => {
 		const result = runScript(`
 let Nat: Type = Num [| \\n -> n >= 0 |];
 let Pos: Type = Num [| \\p -> p > 0 |];
 let hof: (f: Nat -> Nat) -> Nat = \\f -> f 1;
 let hof2: (Num -> Nat) -> Pos = \\f -> (f 1) + 1;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("refinement subtyping", () => {
+	test("refinement subtyping", async () => {
 		const result = runScript(`
 let Nat: Type = Num [| \\n -> n >= 0 |];
 let Pos: Type = Num [| \\p -> p > 0 |];
@@ -98,10 +98,10 @@ let useNat: Nat -> Num = \\n -> n;
 let p: Pos = 42;
 let result = useNat p;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("contravariance", () => {
+	test("contravariance", async () => {
 		const result = runScript(`
 let Nat: Type = Num [| \\n -> n >= 0 |];
 let Pos: Type = Num [| \\p -> p > 0 |];
@@ -111,26 +111,26 @@ let posToNum: Pos -> Num = \\x -> x;
 let result1 = takePosFunction natToNum;
 let result2 = takePosFunction posToNum;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("refinement polymorphism", () => {
+	test("refinement polymorphism", async () => {
 		const result = runScript(`
 let checkNum: (p: Num -> Bool) -> Num[| \\v -> p v |] -> Num = \\p x -> x;
 let nat5 = checkNum (\\n -> n >= 0) 5;
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("ordered pair", () => {
+	test("ordered pair", async () => {
 		const result = runScript(`
 let OrderedPair: Type = { fst: Num, snd: Num[| \\v -> v > &fst |] };
 let valid: OrderedPair = { fst: 3, snd: 5 };
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("arithmetic refinement contradiction requiring MBQI", () => {
+	test("arithmetic refinement contradiction requiring MBQI", async () => {
 		const result = runScript(`
 let badOne: Num [| \\v -> v > 10 |] = 1;
 		`);
@@ -138,10 +138,10 @@ let badOne: Num [| \\v -> v > 10 |] = 1;
 		expect(decl.stages?.solverTrace).toContain("[mbqi]");
 		expect(decl.stages?.solverTrace).toContain("[unsat]");
 		Verdict.expect(result, "badOne", "invalid");
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("arithmetic refinement validated via MBQI", () => {
+	test("arithmetic refinement validated via MBQI", async () => {
 		const result = runScript(`
 let goodOne: Num [| \\v -> v < 10 |] = 1;
 		`);
@@ -149,20 +149,20 @@ let goodOne: Num [| \\v -> v < 10 |] = 1;
 		expect(decl.stages?.solverTrace).toContain("[mbqi]");
 		expect(decl.stages?.solverTrace).toContain("[sat]");
 		Verdict.expect(result, "goodOne", "valid");
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("block refinement obligations", () => {
+	test("block refinement obligations", async () => {
 		const result = runScript(`
 let block: Num [| \\n -> n > 0 |] = {
 	let f: Num [| \\n -> n > 0 |] -> Num [| \\p -> p > 1 |] = \\o -> o + 1;
 	return (f 1);
 };
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("block-local let obligations verify through validity discharge", () => {
+	test("block-local let obligations verify through validity discharge", async () => {
 		const result = runScript(`
 let compute: Num -> Num
 	= \\x -> {
@@ -171,11 +171,11 @@ let compute: Num -> Num
 		return added;
 	};
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 		Verdict.expect(result, "compute", "valid");
 	});
 
-	test("dependent record construction", () => {
+	test("dependent record construction", async () => {
 		const result = runScript(`
 let test = {
 	let Pair
@@ -188,10 +188,10 @@ let test = {
 };
 		`);
 		Verdict.expect(result, "test", "valid");
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("dependent record construction rejects invalid field", () => {
+	test("dependent record construction rejects invalid field", async () => {
 		const result = runScript(`
 let testFail = {
 	let Pair
@@ -206,19 +206,19 @@ let testFail = {
 };
 		`);
 		Verdict.expect(result, "testFail", "invalid");
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("ordered lists with refinement polymorphism", () => {
+	test("ordered lists with refinement polymorphism", async () => {
 		const result = runScript(`
 let OrderedList: (t: Type) -> (p: t -> t -> Bool) -> Type = \\t -> \\p -> | #nil Unit | #cons { head: t, tail: OrderedList (t[| \\v -> p &head v |]) p };
 let ascending: OrderedList Num (\\x -> \\y -> x < y) = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
 let descending: OrderedList Num (\\x -> \\y -> x > y) = #cons { head: 3, tail: #cons { head: 2, tail: #cons { head: 1, tail: #nil ! } } };
 		`);
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("ordered list construction rejects descending tail", () => {
+	test("ordered list construction rejects descending tail", async () => {
 		const result = runScript(`
 let orderedListTestFail = {
 	let List
@@ -234,10 +234,10 @@ let orderedListTestFail = {
 };
 		`);
 		Verdict.expect(result, "orderedListTestFail", "invalid");
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 
-	test("flow-sensitive refinements preserve branch facts", () => {
+	test("flow-sensitive refinements preserve branch facts", async () => {
 		const result = runScript(`
 let test = {
 	let a = 1;
@@ -248,6 +248,6 @@ let test = {
 };
 		`);
 		Verdict.expect(result, "test", "valid");
-		expect(snap(result)).toMatchSnapshot();
+		await snap(result);
 	});
 });

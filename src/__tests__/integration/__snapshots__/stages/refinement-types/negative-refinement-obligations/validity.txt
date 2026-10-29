@@ -1,0 +1,8 @@
+## negTestCheckLiteral (let)
+invalid
+
+## negFnApp (let)
+invalid
+
+## negTestCheckLambdaPreAndPostCondition (let)
+invalid

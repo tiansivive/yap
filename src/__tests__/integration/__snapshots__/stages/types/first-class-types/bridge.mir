@@ -1,0 +1,27 @@
+## MyNum (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = Num
+      return v0
+
+## MyString (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = String
+      return v0
+
+## n (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 42
+      return v0
+
+## s (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = "hi"
+      return v0

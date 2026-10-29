@@ -1,0 +1,77 @@
+## makeType (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"makeType"}
+[3] lambda {"variable":"b","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [18]
+[4] lit {"value":{"type":"Atom","value":"Bool"}}
+[5] match
+  :alt -> [7] {"index":0}
+  :alt -> [11] {"index":1}
+  :decision_tree -> [15]
+  :scrutinee -> [6]
+[6] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[7] case
+  :body -> [10]
+  :next -> [11]
+  :pattern -> [8]
+[8] pat:lit {"value":{"type":"Bool","value":true}}
+[9] var:free {"name":"Num"}
+[10] var:ref {"name":"Num"}
+  :refers_to -> [9]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[11] case
+  :body -> [14]
+  :pattern -> [12]
+[12] pat:lit {"value":{"type":"Bool","value":false}}
+[13] var:free {"name":"String"}
+[14] var:ref {"name":"String"}
+  :refers_to -> [13]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[15] switch {"kind":"lit"}
+  :branch -> [16] {"value":{"type":"Bool","value":true}}
+  :branch -> [17] {"value":{"type":"Bool","value":false}}
+  :inspect -> [6]
+[16] leaf
+  :body -> [10]
+[17] leaf
+  :body -> [14]
+[18] env
+  :capture -> [9] {"index":0}
+  :capture -> [13] {"index":1}
+[19] closure
+  :body -> [3]
+  :env -> [18]
+
+## T1 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"T1"}
+[3] app {"icit":"Explicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"makeType"}
+[5] var:ref {"name":"makeType"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[6] lit {"value":{"type":"Bool","value":true}}
+
+## T2 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"T2"}
+[3] app {"icit":"Explicit"}
+  :arg -> [6]
+  :func -> [5]
+[4] var:free {"name":"makeType"}
+[5] var:ref {"name":"makeType"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+[6] lit {"value":{"type":"Bool","value":false}}

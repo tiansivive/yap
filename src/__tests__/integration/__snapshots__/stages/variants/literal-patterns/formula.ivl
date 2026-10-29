@@ -1,0 +1,2 @@
+## isZero (let)
+(forall ((n Real)) (and (= n n) (= n n)))

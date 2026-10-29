@@ -1,0 +1,112 @@
+## Shape (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Shape"}
+[3] app {"icit":"Explicit"}
+  :arg -> [5]
+  :func -> [4]
+[4] lit {"value":{"type":"Atom","value":"Variant"}}
+[5] row:ext {"label":"point"}
+  :rest -> [20]
+  :value -> [6]
+[6] sigma:v2 {"variable":"$sig","level":1}
+  :annotation -> [7]
+  :body -> [12]
+[7] row:ext {"label":"x"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[9] row:ext {"label":"y"}
+  :rest -> [11]
+  :value -> [10]
+[10] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[11] row:empty
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] lit {"value":{"type":"Atom","value":"Schema"}}
+[14] row:ext {"label":"x"}
+  :rest -> [17]
+  :value -> [16]
+[15] var:free {"name":"Num"}
+[16] var:ref {"name":"Num"}
+  :refers_to -> [15]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[17] row:ext {"label":"y"}
+  :rest -> [19]
+  :value -> [18]
+[18] var:ref {"name":"Num"}
+  :refers_to -> [15]
+  :scope -> [2] {"level":0}
+  :scope -> [6] {"level":1}
+[19] row:empty
+[20] row:ext {"label":"rectangle"}
+  :rest -> [28]
+  :value -> [21]
+[21] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [22]
+[22] lit {"value":{"type":"Atom","value":"Schema"}}
+[23] row:ext {"label":"1"}
+  :rest -> [25]
+  :value -> [24]
+[24] var:ref {"name":"Num"}
+  :refers_to -> [15]
+  :scope -> [2] {"level":0}
+[25] row:ext {"label":"0"}
+  :rest -> [27]
+  :value -> [26]
+[26] var:ref {"name":"Num"}
+  :refers_to -> [15]
+  :scope -> [2] {"level":0}
+[27] row:empty
+[28] row:ext {"label":"circle"}
+  :rest -> [30]
+  :value -> [29]
+[29] var:ref {"name":"Num"}
+  :refers_to -> [15]
+  :scope -> [2] {"level":0}
+[30] row:empty
+
+## c (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"c"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"circle"}}
+[5] lit {"value":{"type":"Num","value":5}}
+
+## r (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"r"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"rectangle"}}
+[5] nu {"variable":"$nu","level":1}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"0"}
+  :field -> [8] {"label":"1"}
+[7] lit {"value":{"type":"Num","value":10}}
+[8] lit {"value":{"type":"Num","value":20}}
+
+## p (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"p"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"point"}}
+[5] nu {"variable":"$nu","level":1}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"x"}
+  :field -> [8] {"label":"y"}
+[7] lit {"value":{"type":"Num","value":0}}
+[8] lit {"value":{"type":"Num","value":0}}

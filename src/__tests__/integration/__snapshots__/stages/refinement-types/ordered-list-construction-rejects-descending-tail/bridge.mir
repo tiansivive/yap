@@ -1,0 +1,20 @@
+## orderedListTestFail (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"List"}}
+      let List1 = v0  // {"erasure":{"tag":"mu","source":"List"}}
+      let v2 = cons
+      let v3 = 2
+      let v4 = cons
+      let v5 = 1
+      let v6 = nil
+      let v7 = unit
+      let v8 = alloc { __tag: v6, payload: v7 }
+      let v9 = alloc { head: v5, tail: v8 }
+      let v10 = alloc { __tag: v4, payload: v9 }
+      let v11 = alloc { head: v3, tail: v10 }
+      let v12 = alloc { __tag: v2, payload: v11 }
+      let ol13 = v12
+      let v14 = 1
+      return v14

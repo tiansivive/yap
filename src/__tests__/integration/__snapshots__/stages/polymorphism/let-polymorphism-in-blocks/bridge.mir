@@ -1,0 +1,36 @@
+## letpoly (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_25
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      let innerID3 = closure_cls2
+      let v4 = Num
+      let fnref5 = read innerID3.__fn
+      let env6 = read innerID3.__env
+      let v7 = call *fnref5(env6, v4)
+      let v8 = 42
+      let fnref9 = read v7.__fn
+      let env10 = read v7.__env
+      let v11 = call *fnref9(env10, v8)
+      let n12 = v11
+      let v13 = String
+      let fnref14 = read innerID3.__fn
+      let env15 = read innerID3.__env
+      let v16 = call *fnref14(env15, v13)
+      let v17 = "hi"
+      let fnref18 = read v16.__fn
+      let env19 = read v16.__env
+      let v20 = call *fnref18(env19, v17)
+      let s21 = v20
+      return n12
+  fn closure_26(env0, x1) entry=entry
+    entry:
+      return x1
+  fn closure_25(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_26
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2

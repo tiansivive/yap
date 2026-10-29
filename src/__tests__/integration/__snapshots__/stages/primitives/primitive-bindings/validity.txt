@@ -1,0 +1,11 @@
+## greeting (let)
+valid
+
+## life (let)
+valid
+
+## b (let)
+valid
+
+## u (let)
+valid

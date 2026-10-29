@@ -1,0 +1,8 @@
+## Maybe (let)
+λ(a: Type) -> Variant [ just: a, nothing: Unit ]
+
+## maybeNum (let)
+Struct [ __tag: just, payload: 42 ]
+
+## maybeStr (let)
+Struct [ __tag: nothing, payload: unit ]

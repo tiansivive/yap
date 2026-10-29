@@ -1,0 +1,25 @@
+## print (foreign)
+
+
+## stringify (foreign)
+
+
+## debug (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc { v0: result }
+      let fnref_cls2 = &closure_34
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_34(env0, x1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let v0 = "Computing..."
+      let v1 = call print(v0)
+      let v2 = 2
+      let v3 = *(x1, v2)
+      let result4 = v3
+      let v6 = call stringify(v5, result4)
+      let v7 = call print(v6)
+      return result4

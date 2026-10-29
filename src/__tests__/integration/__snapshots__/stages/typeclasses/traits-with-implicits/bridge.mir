@@ -1,0 +1,142 @@
+## stringify (foreign)
+
+
+## Show (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc { v0: String }
+      let fnref_cls2 = &closure_18
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_18(env0, t1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
+      return v0
+
+## Eq (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc { v0: Bool }
+      let fnref_cls2 = &closure_20
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_20(env0, t1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
+      return v0
+
+## ShowNum (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = Num
+      let env_cls1 = alloc { v0: v0 }
+      let fnref_cls1 = &pap_fn1
+      let closure_cls1 = alloc { __fn: fnref_cls1, __env: env_cls1 }
+      let v2 = alloc { show: closure_cls1 }
+      return v2
+  fn pap_fn1(env2, arg3) entry=pap_fn1_entry
+    pap_fn1_entry:
+      let cap_0 = read env2.v0
+      let result_pap_fn1 = call stringify(cap_0, arg3)
+      return result_pap_fn1
+
+## EqNum (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = &unknown
+      let v1 = alloc { eq: v0 }
+      return v1
+
+## display (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_25
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_26(env0, show1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let v0 = read show1.show
+      return v0
+  fn closure_25(env0, t1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: t1 }
+      let fnref_cls2 = &closure_26
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+
+## areEqual (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_31
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_32(env0, eq1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let v0 = read eq1.eq
+      return v0
+  fn closure_31(env0, t1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: t1 }
+      let fnref_cls2 = &closure_32
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+
+## (using) (using)
+
+
+## (using) (using)
+
+
+## shown (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = display
+      let v1 = Num
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      let v5 = ShowNum
+      let fnref6 = read v4.__fn
+      let env7 = read v4.__env
+      let v8 = call *fnref6(env7, v5)
+      let v9 = 42
+      let fnref10 = read v8.__fn
+      let env11 = read v8.__env
+      let v12 = call *fnref10(env11, v9)
+      return v12
+
+## same (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = areEqual
+      let v1 = Num
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      let v5 = EqNum
+      let fnref6 = read v4.__fn
+      let env7 = read v4.__env
+      let v8 = call *fnref6(env7, v5)
+      let v9 = 10
+      let fnref10 = read v8.__fn
+      let env11 = read v8.__env
+      let v12 = call *fnref10(env11, v9)
+      let v13 = 10
+      let fnref14 = read v12.__fn
+      let env15 = read v12.__env
+      let v16 = call *fnref14(env15, v13)
+      return v16

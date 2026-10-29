@@ -1,0 +1,5 @@
+## pair (let)
+Schema [ 1: String, 0: Num ]
+
+## pairExplicit (let)
+Σ($sig: [ 0: Irrelevant, 1: Irrelevant ]) . Schema [ 0: Num, 1: String ]

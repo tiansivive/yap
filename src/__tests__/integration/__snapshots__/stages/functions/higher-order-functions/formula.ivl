@@ -1,0 +1,47 @@
+## compose (let)
+(forall ((x Real)) (= x x))
+
+## add1 (let)
+(and
+  (forall ((x Real))
+    (and
+      (= x x)
+      (forall ((x Real))
+        (=>
+          (= x x)
+          (forall ((y Real))
+            (=>
+              (= y 1)
+              (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))
+  (forall ((x Real)) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))
+
+## add5 (let)
+(and
+  (forall ((x Real))
+    (and
+      (= x x)
+      (forall ((x Real))
+        (=>
+          (= x x)
+          (forall ((y Real))
+            (=>
+              (= y 5)
+              (forall ((r Real)) (=> (= r (+ x 5)) (= r (+ x 5))))))))))
+  (forall ((x Real)) (forall ((r Real)) (=> (= r (+ x 5)) (= r (+ x 5))))))
+
+## double (let)
+(and
+  (forall ((x Real))
+    (and
+      (= x x)
+      (forall ((x Real))
+        (=>
+          (= x x)
+          (forall ((y Real))
+            (=>
+              (= y 2)
+              (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))))))
+  (forall ((x Real)) (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))
+
+## add1ThenDouble (let)
+true

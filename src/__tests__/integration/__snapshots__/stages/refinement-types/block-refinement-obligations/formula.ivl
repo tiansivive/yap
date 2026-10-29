@@ -1,0 +1,15 @@
+## block (let)
+(and
+  (forall ((o Real))
+    (=>
+      (> o 0)
+      (and
+        (> o 0)
+        (= o o)
+        (forall ((x Real))
+          (=>
+            (and (> x 0) (= x x))
+            (forall ((y Real))
+              (=> (= y 1) (forall ((r Real)) (=> (= r (+ o 1)) (> r 1))))))))))
+  (forall (($b Real)) (=> (= $b 1) (> $b 0)))
+  (forall ((t1 Real)) (=> (= t1 1) (forall ((p Real)) (=> (> p 1) (> p 0))))))

@@ -1,0 +1,19 @@
+## array (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 1
+      let v1 = 2
+      let v2 = 3
+      let v3 = alloc { 0: v0, 1: v1, 2: v2 }
+      return v3
+
+## dict (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 3
+      let v1 = 2
+      let v2 = 1
+      let v3 = alloc { three: v0, two: v1, one: v2 }
+      return v3

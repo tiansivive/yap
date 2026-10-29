@@ -1,0 +1,78 @@
+## letpoly (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"letpoly"}
+[3] block
+  :return -> [22]
+  :stmt -> [4] {"index":0}
+  :stmt -> [10] {"index":1}
+  :stmt -> [16] {"index":2}
+[4] stmt:let {"variable":"innerID"}
+  :next -> [10]
+  :value -> [5]
+[5] lambda {"variable":"a","icit":"Implicit","level":2}
+  :annotation -> [6]
+  :body -> [7]
+  :env -> [23]
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] lambda {"variable":"x","icit":"Explicit","level":3}
+  :annotation -> [8]
+  :body -> [9]
+  :env -> [24]
+[8] var:bound {"index":0}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [5] {"level":2}
+[9] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+[10] stmt:let {"variable":"n"}
+  :next -> [16]
+  :value -> [11]
+[11] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [12]
+[12] app {"icit":"Implicit"}
+  :arg -> [14]
+  :func -> [13]
+[13] var:bound {"index":1}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [10] {"level":2}
+[14] lit {"value":{"type":"Atom","value":"Num"}}
+[15] lit {"value":{"type":"Num","value":42}}
+[16] stmt:let {"variable":"s"}
+  :value -> [17]
+[17] app {"icit":"Explicit"}
+  :arg -> [21]
+  :func -> [18]
+[18] app {"icit":"Implicit"}
+  :arg -> [20]
+  :func -> [19]
+[19] var:bound {"index":2}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [10] {"level":2}
+  :scope -> [16] {"level":3}
+[20] lit {"value":{"type":"Atom","value":"String"}}
+[21] lit {"value":{"type":"String","value":"hi"}}
+[22] var:bound {"index":1}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [10] {"level":2}
+  :scope -> [16] {"level":3}
+[23] env
+[24] env
+[25] closure
+  :body -> [5]
+  :env -> [23]
+[26] closure
+  :body -> [7]
+  :env -> [24]

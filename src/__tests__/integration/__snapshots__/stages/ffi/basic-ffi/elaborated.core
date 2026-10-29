@@ -1,0 +1,8 @@
+## print (foreign)
+
+
+## stringify (foreign)
+
+
+## greet (let)
+λ(name: String) -> { FFI.print (FFI.$concat "Hello, " name); return unit; }

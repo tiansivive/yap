@@ -1,0 +1,11 @@
+## Pair (let)
+λ(a: Type) ->
+  λ(p: Π(t1: a) -> Type) ->
+    Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
+      Schema [ fst: a, snd: p &fst ]
+
+## exampleP1 (let)
+νstrict [] . Struct [ fst: 42, snd: "hello" ]
+
+## exampleP2 (let)
+νstrict [] . Struct [ fst: true, snd: 100 ]

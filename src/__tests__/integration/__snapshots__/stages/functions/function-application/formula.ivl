@@ -1,0 +1,11 @@
+## identity (let)
+(forall ((x Real)) (= x x))
+
+## add (let)
+(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
+
+## forty2 (let)
+true
+
+## added (let)
+true

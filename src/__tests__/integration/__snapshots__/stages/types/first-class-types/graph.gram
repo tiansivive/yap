@@ -1,0 +1,29 @@
+## MyNum (let)
+[1] root
+  :entry -> [4]
+[2] stmt:let {"variable":"MyNum"}
+[3] var:free {"name":"Num"}
+[4] var:ref {"name":"Num"}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+
+## MyString (let)
+[1] root
+  :entry -> [4]
+[2] stmt:let {"variable":"MyString"}
+[3] var:free {"name":"String"}
+[4] var:ref {"name":"String"}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+
+## n (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"n"}
+[3] lit {"value":{"type":"Num","value":42}}
+
+## s (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"s"}
+[3] lit {"value":{"type":"String","value":"hi"}}

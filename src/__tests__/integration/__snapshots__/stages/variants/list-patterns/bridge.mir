@@ -1,0 +1,25 @@
+## firstOrZero (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_27
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_27(env0, list1) entry=entry
+    entry:
+      let v0 = 0
+      return v0
+
+## tail (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_29
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_29(env0, list1) entry=entry
+    entry:
+      let v0 = alloc {  }
+      return v0

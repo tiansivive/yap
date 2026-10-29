@@ -1,0 +1,11 @@
+## addImplicit (let)
+λ(n: Num) => λ(x: Num) -> FFI.$add x n
+
+## (using) (using)
+
+
+## eleven (let)
+addImplicit @10 1
+
+## fifteen (let)
+addImplicit @10 5

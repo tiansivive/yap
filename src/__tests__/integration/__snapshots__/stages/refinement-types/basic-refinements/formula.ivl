@@ -1,0 +1,14 @@
+## Nat (let)
+true
+
+## Pos (let)
+true
+
+## n (let)
+(forall (($a Real)) (=> (= $a 42) (>= $a 0)))
+
+## p (let)
+(forall (($a Real)) (=> (= $a 42) (> $a 0)))
+
+## zero (let)
+(forall (($a Real)) (=> (= $a 0) (>= $a 0)))

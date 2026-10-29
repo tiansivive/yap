@@ -1,0 +1,2 @@
+## negTestCheckLambdaPostCondition (let)
+(forall ((x Real)) (and (= x x) (forall ((v Real)) (=> (= v x) (> v 0)))))

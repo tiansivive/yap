@@ -1,0 +1,23 @@
+## pair (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"pair"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [6] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":42}}
+[6] lit {"value":{"type":"String","value":"answer"}}
+
+## pairExplicit (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"pairExplicit"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [6] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":42}}
+[6] lit {"value":{"type":"String","value":"answer"}}

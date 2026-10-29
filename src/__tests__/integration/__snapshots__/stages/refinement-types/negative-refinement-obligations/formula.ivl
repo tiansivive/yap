@@ -1,0 +1,11 @@
+## negTestCheckLiteral (let)
+(forall (($a Real)) (=> (= $a 2) (= $a 1)))
+
+## negFnApp (let)
+(forall ((x Real))
+  (=>
+    (= x 1)
+    (forall ((y Real)) (=> (= y 2) (forall ((r Real)) (=> (= r 3) (= r 0)))))))
+
+## negTestCheckLambdaPreAndPostCondition (let)
+(forall ((x Real)) (=> (> x 0) (forall (($a Real)) (=> (= $a 0) (> $a 0)))))

@@ -1,0 +1,20 @@
+## Nat (let)
+Type
+
+## Pos (let)
+Type
+
+## takePosFunction (let)
+Π(t1: Π(t2: <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]) -> Num) -> Num
+
+## natToNum (let)
+Π(t3: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) -> Num
+
+## posToNum (let)
+Π(t4: <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]) -> Num
+
+## result1 (let)
+Num
+
+## result2 (let)
+Num

@@ -1,0 +1,23 @@
+## List (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"List"}}
+      return v0
+
+## xs (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = cons
+      let v1 = 1
+      let v2 = cons
+      let v3 = 2
+      let v4 = nil
+      let v5 = unit
+      let v6 = alloc { __tag: v4, payload: v5 }
+      let v7 = alloc { head: v3, tail: v6 }
+      let v8 = alloc { __tag: v2, payload: v7 }
+      let v9 = alloc { head: v1, tail: v8 }
+      let v10 = alloc { __tag: v0, payload: v9 }
+      return v10

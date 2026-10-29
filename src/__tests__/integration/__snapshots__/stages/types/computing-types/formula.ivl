@@ -1,0 +1,8 @@
+## chooseType (let)
+(forall ((b Bool)) (and (= b b) (= b b)))
+
+## T1 (let)
+true
+
+## T2 (let)
+true

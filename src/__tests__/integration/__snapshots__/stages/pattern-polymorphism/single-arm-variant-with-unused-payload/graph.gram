@@ -1,0 +1,84 @@
+## (expr) (expression)
+[1] root
+  :entry -> [2]
+[2] lambda {"variable":"r","icit":"Implicit","level":0}
+  :annotation -> [3]
+  :body -> [4]
+  :env -> [24]
+[3] lit {"value":{"type":"Atom","value":"Row"}}
+[4] lambda {"variable":"a","icit":"Implicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+  :env -> [25]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lambda {"variable":"A","icit":"Implicit","level":2}
+  :annotation -> [7]
+  :body -> [8]
+  :env -> [26]
+[7] var:bound {"index":0}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[8] lambda {"variable":"x","icit":"Explicit","level":3}
+  :annotation -> [9]
+  :body -> [14]
+  :env -> [27]
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Variant"}}
+[11] row:ext {"label":"nil"}
+  :rest -> [13]
+  :value -> [12]
+[12] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[13] var:bound {"index":0}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[14] match
+  :alt -> [16] {"index":0}
+  :decision_tree -> [21]
+  :scrutinee -> [15]
+[15] var:bound {"index":0}
+  :refers_to -> [8]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+  :scope -> [8] {"level":3}
+[16] case
+  :body -> [20]
+  :pattern -> [17]
+[17] pat:variant {"label":"nil"}
+  :payload -> [18]
+[18] pat:binder {"name":"a","level":4}
+[19] pat:wildcard
+[20] lit {"value":{"type":"Num","value":0}}
+[21] switch {"kind":"tag"}
+  :branch -> [23] {"label":"nil"}
+  :inspect -> [15]
+[22] proj {"label":"payload"}
+  :target -> [15]
+[23] leaf
+  :bind -> [22] {"name":"a","binder":18}
+  :body -> [20]
+[24] env
+[25] env
+[26] env
+[27] env
+[28] closure
+  :body -> [2]
+  :env -> [24]
+[29] closure
+  :body -> [4]
+  :env -> [25]
+[30] closure
+  :body -> [6]
+  :env -> [26]
+[31] closure
+  :body -> [8]
+  :env -> [27]

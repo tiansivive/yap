@@ -1,0 +1,17 @@
+## point (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = 0
+      let v1 = 10
+      let v2 = alloc { x: v0, y: v1 }
+      return v2
+
+## person (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = "Alice"
+      let v1 = 30
+      let v2 = alloc { name: v0, age: v1 }
+      return v2

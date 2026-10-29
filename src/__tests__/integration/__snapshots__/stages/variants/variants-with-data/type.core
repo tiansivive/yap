@@ -1,0 +1,23 @@
+## Shape (let)
+Type
+
+## c (let)
+Variant
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      Schema [ x: Num, y: Num ],
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]
+
+## r (let)
+Variant
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      Schema [ x: Num, y: Num ],
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]
+
+## p (let)
+Variant
+  [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
+      Schema [ x: Num, y: Num ],
+    rectangle: Schema [ 1: Num, 0: Num ],
+    circle: Num ]

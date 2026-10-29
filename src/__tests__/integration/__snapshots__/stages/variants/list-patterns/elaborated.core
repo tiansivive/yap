@@ -1,0 +1,7 @@
+## firstOrZero (let)
+λ(list: FFI.Indexed Num Num @FFI.defaultArray) ->
+  match list | [  ] -> 0 | [ x,  | xs ] -> x
+
+## tail (let)
+λ(list: FFI.Indexed Num Num @FFI.defaultArray) ->
+  match list | [  ] -> Array [] | [ x,  | xs ] -> xs

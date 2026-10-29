@@ -1,0 +1,5 @@
+## point (let)
+νstrict [] . Struct [ x: 0, y: 10 ]
+
+## person (let)
+νstrict [] . Struct [ name: "Alice", age: 30 ]

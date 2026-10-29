@@ -1,0 +1,11 @@
+## getX (let)
+valid
+
+## p1 (let)
+valid
+
+## p2 (let)
+valid
+
+## p3 (let)
+valid

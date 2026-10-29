@@ -1,0 +1,9 @@
+## letpoly (let)
+{
+  let innerID
+    : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; innerID; letpoly)
+    = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> a);
+  let n : Num = innerID @Num 42;
+  let s : String = innerID @String "hi";
+  return n;
+}

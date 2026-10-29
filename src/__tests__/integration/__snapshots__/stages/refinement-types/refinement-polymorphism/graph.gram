@@ -1,0 +1,69 @@
+## checkNum (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"checkNum"}
+[3] lambda {"variable":"p","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [7]
+  :env -> [11]
+[4] pi {"variable":"t1","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] lit {"value":{"type":"Atom","value":"Bool"}}
+[7] lambda {"variable":"x","icit":"Explicit","level":2}
+  :annotation -> [8]
+  :body -> [10]
+  :env -> [12]
+[8] modal {"quantity":"Many"}
+  :term -> [9]
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] var:bound {"index":0}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+[11] env
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [11]
+[14] closure
+  :body -> [7]
+  :env -> [12]
+
+## nat5 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"nat5"}
+[3] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [4]
+[4] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [6]
+[5] var:free {"name":"checkNum"}
+[6] var:ref {"name":"checkNum"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [8]
+  :body -> [16]
+  :env -> [17]
+[8] lit {"value":{"type":"Atom","value":"Num"}}
+[11] var:foreign {"name":"$gte","arity":2}
+[13] var:bound {"index":0}
+  :next -> [14]
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [7] {"level":1}
+[14] lit {"value":{"type":"Num","value":0}}
+[15] lit {"value":{"type":"Num","value":5}}
+[16] primop {"op":"$gte"}
+  :arg -> [13] {"index":0}
+  :arg -> [14] {"index":1}
+  :callee -> [11]
+[17] env
+[18] closure
+  :body -> [7]
+  :env -> [17]

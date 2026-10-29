@@ -1,0 +1,5 @@
+## id (let)
+Π(a: Type) -> Π(t1: a) -> a
+
+## const (let)
+Π(a: Type) -> Π(b: Type) -> Π(t2: a) -> Π(t3: b) -> a

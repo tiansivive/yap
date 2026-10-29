@@ -1,0 +1,164 @@
+## compose (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"compose"}
+[3] lambda {"variable":"f","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [7]
+  :env -> [18]
+[4] pi {"variable":"t2","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] lit {"value":{"type":"Atom","value":"Num"}}
+[7] lambda {"variable":"g","icit":"Explicit","level":2}
+  :annotation -> [8]
+  :body -> [11]
+  :env -> [19]
+[8] pi {"variable":"t4","icit":"Explicit","level":2}
+  :annotation -> [9]
+  :body -> [10]
+[9] lit {"value":{"type":"Atom","value":"Num"}}
+[10] lit {"value":{"type":"Atom","value":"Num"}}
+[11] lambda {"variable":"x","icit":"Explicit","level":3}
+  :annotation -> [12]
+  :body -> [13]
+  :env -> [20]
+[12] lit {"value":{"type":"Atom","value":"Num"}}
+[13] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[14] var:bound {"index":2}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [11] {"level":3}
+[15] app {"icit":"Explicit"}
+  :arg -> [17]
+  :func -> [16]
+[16] var:bound {"index":1}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [11] {"level":3}
+[17] var:bound {"index":0}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [11] {"level":3}
+[18] env
+[19] env
+  :capture -> [3] {"index":0}
+[20] env
+  :capture -> [3] {"index":0}
+  :capture -> [7] {"index":1}
+[21] closure
+  :body -> [3]
+  :env -> [18]
+[22] closure
+  :body -> [7]
+  :env -> [19]
+[23] closure
+  :body -> [11]
+  :env -> [20]
+
+## add1 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"add1"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [11]
+  :env -> [12]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[7] var:foreign {"name":"$add","arity":2}
+[9] var:bound {"index":0}
+  :next -> [10]
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[10] lit {"value":{"type":"Num","value":1}}
+[11] primop {"op":"$add"}
+  :arg -> [9] {"index":0}
+  :arg -> [10] {"index":1}
+  :callee -> [7]
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [12]
+
+## add5 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"add5"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [11]
+  :env -> [12]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[7] var:foreign {"name":"$add","arity":2}
+[9] var:bound {"index":0}
+  :next -> [10]
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[10] lit {"value":{"type":"Num","value":5}}
+[11] primop {"op":"$add"}
+  :arg -> [9] {"index":0}
+  :arg -> [10] {"index":1}
+  :callee -> [7]
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [12]
+
+## double (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"double"}
+[3] lambda {"variable":"x","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [11]
+  :env -> [12]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[7] var:foreign {"name":"$mul","arity":2}
+[9] var:bound {"index":0}
+  :next -> [10]
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[10] lit {"value":{"type":"Num","value":2}}
+[11] primop {"op":"$mul"}
+  :arg -> [9] {"index":0}
+  :arg -> [10] {"index":1}
+  :callee -> [7]
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [12]
+
+## add1ThenDouble (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"add1ThenDouble"}
+[3] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [4]
+[4] app {"icit":"Explicit"}
+  :arg -> [8]
+  :func -> [6]
+[5] var:free {"name":"compose"}
+[6] var:ref {"name":"compose"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] var:free {"name":"double"}
+[8] var:ref {"name":"double"}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+[9] var:free {"name":"add1"}
+[10] var:ref {"name":"add1"}
+  :refers_to -> [9]
+  :scope -> [2] {"level":0}

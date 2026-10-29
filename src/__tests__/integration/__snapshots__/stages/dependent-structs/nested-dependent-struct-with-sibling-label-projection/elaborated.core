@@ -1,0 +1,6 @@
+## (expr) (expression)
+νstrict [ point: νstrict [] . Struct [ x: 1, y: 2 ] ] .
+  Struct
+    [ point: νstrict [] . Struct [ x: 1, y: 2 ],
+      halved: νstrict [] .
+        Struct [ a: FFI.$div ($point).x 2, b: FFI.$div ($point).y 2 ] ]

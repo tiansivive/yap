@@ -1,0 +1,2 @@
+## inc (let)
+λ(x: Num) -> FFI.$add x 1

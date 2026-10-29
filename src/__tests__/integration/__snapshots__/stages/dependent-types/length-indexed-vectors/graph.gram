@@ -1,0 +1,173 @@
+## Vec (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Vec"}
+[3] mu {"variable":"x","source":"Vec","level":1}
+  :annotation -> [4]
+  :body -> [10]
+[4] pi {"variable":"t1","icit":"Explicit","level":1}
+  :annotation -> [6]
+  :body -> [7]
+[5] var:free {"name":"Num"}
+[6] var:ref {"name":"Num"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] pi {"variable":"t2","icit":"Explicit","level":2}
+  :annotation -> [8]
+  :body -> [9]
+[8] lit {"value":{"type":"Atom","value":"Type"}}
+[9] lit {"value":{"type":"Atom","value":"Type"}}
+[10] lambda {"variable":"n","icit":"Explicit","level":2}
+  :annotation -> [11]
+  :body -> [12]
+  :env -> [41]
+[11] lit {"value":{"type":"Atom","value":"Num"}}
+[12] lambda {"variable":"t","icit":"Explicit","level":3}
+  :annotation -> [13]
+  :body -> [14]
+  :env -> [42]
+[13] lit {"value":{"type":"Atom","value":"Type"}}
+[14] match
+  :alt -> [16] {"index":0}
+  :alt -> [19] {"index":1}
+  :decision_tree -> [38]
+  :scrutinee -> [15]
+[15] var:bound {"index":1}
+  :refers_to -> [10]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [10] {"level":2}
+  :scope -> [12] {"level":3}
+[16] case
+  :body -> [18]
+  :next -> [19]
+  :pattern -> [17]
+[17] pat:lit {"value":{"type":"Num","value":0}}
+[18] lit {"value":{"type":"Atom","value":"Unit"}}
+[19] case
+  :body -> [21]
+  :pattern -> [20]
+[20] pat:binder {"name":"l","level":4}
+[21] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [22]
+[22] lit {"value":{"type":"Atom","value":"Schema"}}
+[23] row:ext {"label":"1"}
+  :rest -> [34]
+  :value -> [24]
+[24] app {"icit":"Explicit"}
+  :arg -> [33]
+  :func -> [25]
+[25] app {"icit":"Explicit"}
+  :arg -> [37]
+  :func -> [26]
+[26] var:bound {"index":3}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [10] {"level":2}
+  :scope -> [12] {"level":3}
+  :scope -> [20] {"level":4}
+[29] var:foreign {"name":"$sub","arity":2}
+[31] var:bound {"index":0}
+  :next -> [32]
+  :refers_to -> [20]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [10] {"level":2}
+  :scope -> [12] {"level":3}
+  :scope -> [20] {"level":4}
+[32] lit {"value":{"type":"Num","value":1}}
+[33] var:bound {"index":1}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [10] {"level":2}
+  :scope -> [12] {"level":3}
+  :scope -> [20] {"level":4}
+[34] row:ext {"label":"0"}
+  :rest -> [36]
+  :value -> [35]
+[35] var:bound {"index":1}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [10] {"level":2}
+  :scope -> [12] {"level":3}
+  :scope -> [20] {"level":4}
+[36] row:empty
+[37] primop {"op":"$sub"}
+  :arg -> [31] {"index":0}
+  :arg -> [32] {"index":1}
+  :callee -> [29]
+[38] switch {"kind":"lit"}
+  :branch -> [39] {"value":{"type":"Num","value":0}}
+  :default -> [40]
+  :inspect -> [15]
+[39] leaf
+  :body -> [18]
+[40] leaf
+  :bind -> [15] {"name":"l","binder":20}
+  :body -> [21]
+[41] env
+  :capture -> [3] {"index":0}
+[42] env
+  :capture -> [10] {"index":0}
+  :capture -> [3] {"index":1}
+[43] closure
+  :body -> [10]
+  :env -> [41]
+[44] closure
+  :body -> [12]
+  :env -> [42]
+
+## vec0 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"vec0"}
+[3] lit {"value":{"type":"unit"}}
+
+## vec1 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"vec1"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":10}}
+[6] var:free {"name":"vec0"}
+[7] var:ref {"name":"vec0"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+
+## vec2 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"vec2"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":20}}
+[6] var:free {"name":"vec1"}
+[7] var:ref {"name":"vec1"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+
+## vec3 (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"vec3"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"0"}
+  :field -> [7] {"label":"1"}
+[5] lit {"value":{"type":"Num","value":30}}
+[6] var:free {"name":"vec2"}
+[7] var:ref {"name":"vec2"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}

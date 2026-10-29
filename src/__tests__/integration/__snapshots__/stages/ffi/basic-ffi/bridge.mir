@@ -1,0 +1,21 @@
+## print (foreign)
+
+
+## stringify (foreign)
+
+
+## greet (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_20
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_20(env0, name1) entry=entry
+    entry:
+      let v0 = "Hello, "
+      let v1 = ++(v0, name1)
+      let v2 = call print(v1)
+      let v3 = unit
+      return v3

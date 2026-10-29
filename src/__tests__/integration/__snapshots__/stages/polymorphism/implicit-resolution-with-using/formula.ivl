@@ -1,0 +1,11 @@
+## addImplicit (let)
+(forall ((n Real)) (forall ((x Real)) (and (= x x) (= n n))))
+
+## (using) (using)
+
+
+## eleven (let)
+true
+
+## fifteen (let)
+true

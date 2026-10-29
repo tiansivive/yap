@@ -1,0 +1,14 @@
+## Nat (let)
+true
+
+## Pos (let)
+true
+
+## useNat (let)
+(forall ((n Real)) (=> (>= n 0) (and (>= n 0) (= n Num))))
+
+## p (let)
+(forall (($a Real)) (=> (= $a 42) (> $a 0)))
+
+## result (let)
+(forall ((p Real)) (=> (> p 0) (>= p 0)))

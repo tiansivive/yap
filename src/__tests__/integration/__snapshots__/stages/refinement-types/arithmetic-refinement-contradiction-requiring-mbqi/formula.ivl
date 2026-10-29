@@ -1,0 +1,2 @@
+## badOne (let)
+(forall (($a Real)) (=> (= $a 1) (> $a 10)))

@@ -1,0 +1,25 @@
+## rectangle (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"rectangle"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"width"}
+  :field -> [6] {"label":"height"}
+  :field -> [13] {"label":"area"}
+  :hoist -> [5]
+[5] lit {"value":{"type":"Num","value":10}}
+[6] lit {"value":{"type":"Num","value":20}}
+[9] var:foreign {"name":"$mul","arity":2}
+[11] var:nu-label {"name":"width","index":0}
+  :next -> [12]
+  :refers_to -> [5]
+  :scope -> [3] {"level":0,"owner":true}
+[12] var:nu-label {"name":"height","index":0}
+  :refers_to -> [6]
+  :scope -> [3] {"level":0,"owner":true}
+[13] primop {"op":"$mul"}
+  :arg -> [11] {"index":0}
+  :arg -> [12] {"index":1}
+  :callee -> [9]

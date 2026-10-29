@@ -1,0 +1,17 @@
+## Nat (let)
+module
+  fn main entry=entry
+    entry:
+      return v0
+
+## safe (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_8
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_8(env0, x1) entry=entry
+    entry:
+      return x1

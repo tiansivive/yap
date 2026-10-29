@@ -1,0 +1,8 @@
+## id (let)
+Π(a: Type) => Π(t1: a) -> a
+
+## n2 (let)
+Num
+
+## s2 (let)
+String

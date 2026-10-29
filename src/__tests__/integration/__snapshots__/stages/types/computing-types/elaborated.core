@@ -1,0 +1,8 @@
+## chooseType (let)
+λ(b: Bool) -> match b | true -> Num | false -> String
+
+## T1 (let)
+chooseType true
+
+## T2 (let)
+chooseType false

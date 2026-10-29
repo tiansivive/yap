@@ -1,0 +1,108 @@
+## List (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"List"}
+[3] mu {"variable":"x","source":"List","level":1}
+  :annotation -> [4]
+  :body -> [7]
+[4] pi {"variable":"t","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] lambda {"variable":"t","icit":"Explicit","level":2}
+  :annotation -> [8]
+  :body -> [9]
+  :env -> [30]
+[8] lit {"value":{"type":"Atom","value":"Type"}}
+[9] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[10] lit {"value":{"type":"Atom","value":"Variant"}}
+[11] row:ext {"label":"cons"}
+  :rest -> [27]
+  :value -> [12]
+[12] sigma:v2 {"variable":"$sig","level":3}
+  :annotation -> [13]
+  :body -> [18]
+[13] row:ext {"label":"head"}
+  :rest -> [15]
+  :value -> [14]
+[14] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[15] row:ext {"label":"tail"}
+  :rest -> [17]
+  :value -> [16]
+[16] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[17] row:empty
+[18] app {"icit":"Explicit"}
+  :arg -> [20]
+  :func -> [19]
+[19] lit {"value":{"type":"Atom","value":"Schema"}}
+[20] row:ext {"label":"head"}
+  :rest -> [22]
+  :value -> [21]
+[21] var:bound {"index":1}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[22] row:ext {"label":"tail"}
+  :rest -> [26]
+  :value -> [23]
+[23] app {"icit":"Explicit"}
+  :arg -> [25]
+  :func -> [24]
+[24] var:bound {"index":2}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[25] var:bound {"index":1}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[26] row:empty
+[27] row:ext {"label":"nil"}
+  :rest -> [29]
+  :value -> [28]
+[28] lit {"value":{"type":"Atom","value":"Unit"}}
+[29] row:empty
+[30] env
+  :capture -> [3] {"index":0}
+[31] closure
+  :body -> [7]
+  :env -> [30]
+
+## xs (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"xs"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"cons"}}
+[5] nu {"variable":"$nu","level":1}
+  :body -> [6]
+[6] struct
+  :field -> [7] {"label":"head"}
+  :field -> [8] {"label":"tail"}
+[7] lit {"value":{"type":"Num","value":1}}
+[8] struct
+  :field -> [9] {"label":"__tag"}
+  :field -> [10] {"label":"payload"}
+[9] lit {"value":{"type":"Atom","value":"cons"}}
+[10] nu {"variable":"$nu","level":1}
+  :body -> [11]
+[11] struct
+  :field -> [12] {"label":"head"}
+  :field -> [13] {"label":"tail"}
+[12] lit {"value":{"type":"Num","value":2}}
+[13] struct
+  :field -> [14] {"label":"__tag"}
+  :field -> [15] {"label":"payload"}
+[14] lit {"value":{"type":"Atom","value":"nil"}}
+[15] lit {"value":{"type":"unit"}}

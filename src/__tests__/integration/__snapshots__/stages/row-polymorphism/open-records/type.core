@@ -1,0 +1,11 @@
+## getX (let)
+Π(r: Row) => Π(t1: Σ($sig: [ x: Irrelevant ]) . Schema [ x: Num | r ]) -> Num
+
+## p1 (let)
+Num
+
+## p2 (let)
+Num
+
+## p3 (let)
+Num

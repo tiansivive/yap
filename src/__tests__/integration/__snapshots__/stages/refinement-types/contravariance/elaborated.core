@@ -1,0 +1,20 @@
+## Nat (let)
+<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]
+
+## Pos (let)
+<ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]
+
+## takePosFunction (let)
+λ(f: Π(t2: <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]) -> Num) -> f 10
+
+## natToNum (let)
+λ(x: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) -> x
+
+## posToNum (let)
+λ(x: <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]) -> x
+
+## result1 (let)
+takePosFunction natToNum
+
+## result2 (let)
+takePosFunction posToNum

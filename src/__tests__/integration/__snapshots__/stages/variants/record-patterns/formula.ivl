@@ -1,0 +1,6 @@
+## getY (let)
+(forall (($fresh0 Schema))
+  (forall ((a Real)) (forall ((b Real)) (forall (($row_5 Row)) (= b b)))))
+
+## getY2 (let)
+(forall (($fresh0 Schema)) (forall ((a Real)) (forall (($row_8 Row)) (= a a))))

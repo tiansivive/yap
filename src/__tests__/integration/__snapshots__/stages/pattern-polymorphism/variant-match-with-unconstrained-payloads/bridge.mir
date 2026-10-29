@@ -1,0 +1,83 @@
+## (expr) (expression)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_64
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_72(env0, x1) entry=entry
+    entry:
+      jump sw2
+    sw2:
+      let tag0 = read x1.__tag
+      branch tag0 { nil -> case4 | cons -> case5 }
+    case4:
+      let v5 = read x1.payload
+      let a = v5
+      let v6 = 0
+      jump join3(v6)
+    case5:
+      let v6 = read x1.payload
+      let v7 = read v6.0
+      let el = v7
+      let v8 = read v6.1
+      let rest = v8
+      let v9 = 1
+      jump join3(v9)
+    join3(match1):
+      return match1
+  fn closure_71(env0, C1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_72
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_70(env0, c1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_71
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_69(env0, B1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_70
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_68(env0, b1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_69
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_67(env0, s1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_68
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_66(env0, r1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0 }
+      let fnref_cls2 = &closure_67
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_65(env0, A1) entry=entry
+    entry:
+      let env_cls2 = alloc { v0: A1 }
+      let fnref_cls2 = &closure_66
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_64(env0, a1) entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_65
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2

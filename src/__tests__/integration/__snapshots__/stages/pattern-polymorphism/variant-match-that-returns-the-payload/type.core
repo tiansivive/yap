@@ -1,0 +1,2 @@
+## (expr) (expression)
+Π(r: Row) => Π(a: Type) => Π(A: a) => Π(x: Variant [ some: A | r ]) -> A

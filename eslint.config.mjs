@@ -75,6 +75,7 @@ export default tseslint.config(
 			"node_modules",
 			"pnpm-lock.yaml",
 			"**/*.snap",
+			"**/__snapshots__/stages/",
 			"src/parser/grammar.ts",
 			// Build artifacts
 			"bin",
@@ -290,6 +291,8 @@ export default tseslint.config(
 		plugins: { vitest },
 		rules: {
 			...vitest.configs.recommended.rules,
+			// `snap` asserts every pipeline stage against its file snapshot.
+			"vitest/expect-expect": ["error", { assertFunctionNames: ["expect", "assert", "snap"] }],
 
 			// These on-by-default rules aren't useful in test files.
 			"@typescript-eslint/no-unsafe-assignment": "off",

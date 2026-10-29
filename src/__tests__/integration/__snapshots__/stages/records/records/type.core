@@ -1,0 +1,6 @@
+## point (let)
+Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]
+
+## person (let)
+Σ($sig: [ name: Irrelevant, age: Irrelevant ]) .
+  Schema [ name: String, age: Num ]

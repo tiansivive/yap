@@ -1,0 +1,8 @@
+## Factorial (let)
+valid
+
+## fact (let)
+valid
+
+## result (let)
+valid

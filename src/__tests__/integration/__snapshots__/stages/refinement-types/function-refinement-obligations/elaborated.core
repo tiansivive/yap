@@ -1,0 +1,17 @@
+## fn (let)
+λ(x: Num) -> 2
+
+## posTestCheckLambdaPostCondition (let)
+λ(x: Num) -> 1
+
+## posTestCheckLambdaPreCondition (let)
+λ(x: <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]) -> x
+
+## posTestCheckLambdaPreAndPostCondition (let)
+λ(x: <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]) -> x
+
+## posTestCheckRefinedResultLambda (let)
+λ(x: Num) -> FFI.$add x 1
+
+## inc (let)
+λ(x: Num) -> FFI.$add x 1

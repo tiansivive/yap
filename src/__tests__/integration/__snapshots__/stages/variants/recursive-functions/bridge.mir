@@ -1,0 +1,50 @@
+## List (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"mu","source":"List"}}
+      return v0
+
+## length (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc { v0: length }
+      let fnref_cls2 = &closure_65
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_66(env0, list1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      jump sw2
+    sw2:
+      let tag0 = read list1.__tag
+      branch tag0 { nil -> case4 | cons -> case5 }
+    case4:
+      let v5 = 0
+      jump join3(v5)
+    case5:
+      let v6 = read list1.payload
+      let v7 = read v6.0
+      let x = v7
+      let v8 = read v6.1
+      let xs = v8
+      let v9 = 1
+      let fnref10 = read cap_0.__fn
+      let env11 = read cap_0.__env
+      let v12 = call *fnref10(env11, cap_1)
+      let fnref13 = read v12.__fn
+      let env14 = read v12.__env
+      let v15 = call *fnref13(env14, xs)
+      let v16 = +(v9, v15)
+      jump join3(v16)
+    join3(match1):
+      return match1
+  fn closure_65(env0, a1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: cap_0, v1: a1 }
+      let fnref_cls2 = &closure_66
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2

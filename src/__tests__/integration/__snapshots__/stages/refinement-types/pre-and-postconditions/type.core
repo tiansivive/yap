@@ -1,0 +1,6 @@
+## Nat (let)
+Type
+
+## safe (let)
+Π(n: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) ->
+  <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]

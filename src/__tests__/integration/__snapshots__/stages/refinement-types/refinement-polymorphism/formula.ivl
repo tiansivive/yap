@@ -1,0 +1,6 @@
+## checkNum (let)
+(forall ((x Real))
+  (=> (= (select p x) true) (and (= (select p x) true) (= x x))))
+
+## nat5 (let)
+(and (forall ((n Real)) (= n n)) (forall (($b Real)) (=> (= $b 5) (>= $b 0))))

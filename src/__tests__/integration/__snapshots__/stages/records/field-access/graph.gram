@@ -1,0 +1,66 @@
+## point (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"point"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [5] {"label":"x"}
+  :field -> [6] {"label":"y"}
+[5] lit {"value":{"type":"Num","value":10}}
+[6] lit {"value":{"type":"Num","value":20}}
+
+## xCoord (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"xCoord"}
+[3] proj {"label":"x"}
+  :target -> [5]
+[4] var:free {"name":"point"}
+[5] var:ref {"name":"point"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+
+## getX (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"getX"}
+[3] lambda {"variable":"p","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [17]
+  :env -> [19]
+[4] sigma:v2 {"variable":"$sig","level":1}
+  :annotation -> [5]
+  :body -> [10]
+[5] row:ext {"label":"x"}
+  :rest -> [7]
+  :value -> [6]
+[6] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[7] row:ext {"label":"y"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[9] row:empty
+[10] app {"icit":"Explicit"}
+  :arg -> [12]
+  :func -> [11]
+[11] lit {"value":{"type":"Atom","value":"Schema"}}
+[12] row:ext {"label":"x"}
+  :rest -> [14]
+  :value -> [13]
+[13] lit {"value":{"type":"Atom","value":"Num"}}
+[14] row:ext {"label":"y"}
+  :rest -> [16]
+  :value -> [15]
+[15] lit {"value":{"type":"Atom","value":"Num"}}
+[16] row:empty
+[17] proj {"label":"x"}
+  :target -> [18]
+[18] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[19] env
+[20] closure
+  :body -> [3]
+  :env -> [19]

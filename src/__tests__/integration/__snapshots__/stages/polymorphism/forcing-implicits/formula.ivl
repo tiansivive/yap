@@ -1,0 +1,5 @@
+## id (let)
+(forall ((a Type)) (forall ((x Type)) (= x x)))
+
+## forcedStr (let)
+true

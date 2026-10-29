@@ -1,0 +1,17 @@
+## fn (let)
+valid
+
+## posTestCheckLambdaPostCondition (let)
+valid
+
+## posTestCheckLambdaPreCondition (let)
+valid
+
+## posTestCheckLambdaPreAndPostCondition (let)
+valid
+
+## posTestCheckRefinedResultLambda (let)
+valid
+
+## inc (let)
+valid

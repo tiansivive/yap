@@ -1,0 +1,3 @@
+## orderedListTestFail (let)
+(forall ((ol App_App_Mu_List_Real_Function))
+  (forall (($b Real)) (=> (= $b 1) (< 2 $b))))

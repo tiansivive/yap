@@ -1,0 +1,28 @@
+## test (let)
+(forall ((a Real))
+  (forall ((b Real))
+    (=>
+      (> b 0)
+      (and
+        (= a a)
+        (forall ((x Real))
+          (=>
+            (= x a)
+            (forall ((y Real))
+              (=>
+                (= y 0)
+                (forall (($fresh0 Bool))
+                  (=>
+                    (and (= $fresh0 __external_$gt) (= $fresh0 true))
+                    (and (= a a) (forall ((v Real)) (=> (= v a) (> v 0))))))))))
+        (= a a)
+        (forall ((x Real))
+          (=>
+            (= x a)
+            (forall ((y Real))
+              (=>
+                (= y 0)
+                (forall (($fresh1 Bool))
+                  (=>
+                    (and (= $fresh1 __external_$gt) (= $fresh1 false))
+                    (forall (($e Real)) (=> (= $e 42) (> $e 0)))))))))))))

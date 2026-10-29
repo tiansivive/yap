@@ -1,0 +1,11 @@
+## Nat (let)
+valid
+
+## Pos (let)
+valid
+
+## hof (let)
+valid
+
+## hof2 (let)
+valid
