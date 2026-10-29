@@ -42,10 +42,10 @@ const dispatch = function* (left: NF.Value, right: NF.Value): Verification<IVL.F
 	const [a, b] = [yield* NF.view(left), yield* NF.view(right)];
 
 	return yield* match([a, b])
-		.with([NF.ViewPatterns.Blocked, P._], ([left, right]) => subtype(left.value, right.value))
-		.with([P._, NF.ViewPatterns.Blocked], ([left, right]) => subtype(left.value, right.value))
-		.with([NF.ViewPatterns.Sealed, P._], ([left, right]) => structural(left.value, right.value))
-		.with([P._, NF.ViewPatterns.Sealed], ([left, right]) => structural(left.value, right.value))
+		.with([NF.ViewPatterns.Blocked, P._], ([l, r]) => subtype(l.value, r.value))
+		.with([P._, NF.ViewPatterns.Blocked], ([l, r]) => subtype(l.value, r.value))
+		.with([NF.ViewPatterns.Sealed, P._], ([l, r]) => structural(l.value, r.value))
+		.with([P._, NF.ViewPatterns.Sealed], ([l, r]) => structural(l.value, r.value))
 		.with([NF.ViewPatterns.Flex, P._], function* ([flex]) {
 			const solution = Metas.solution(registry, flex.value.variable.val);
 			if (!solution) {

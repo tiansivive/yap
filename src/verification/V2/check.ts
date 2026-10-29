@@ -96,9 +96,9 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					return { vc } satisfies VerificationArtefacts;
 				})
 				.with([EB.CtorPatterns.Nu, NF.Patterns.Schema], function* ([term, type]) {
-					// TODO: lazy records are verified by observation, once something can build one
+					// TODO: lazy records, once some syntax can build one
 					assert(term.binding.mode === "strict", "Verification supports strict records only");
-					return yield* reader.local(_ => EB.open(term.binding, ctx), check(term.body, type));
+					return yield* reader.local(c => EB.open(term.binding, c), check(term.body, type));
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Sigma], function* ([term, type]) {
 					const evaluated = yield* NF.evaluate(term);

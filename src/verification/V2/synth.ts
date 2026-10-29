@@ -67,10 +67,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
 			return [type, { vc: yield* formula(predicate) }] satisfies SynthResult;
 		})
-		.with({ type: "Var", variable: { type: "DepLabel" } }, function* ({ variable }) {
-			return [variable.annotation, { vc: Build.true_() }] satisfies SynthResult;
-		})
-		.with({ type: "Var", variable: { type: "NuLabel" } }, function* ({ variable }) {
+		.with(EB.CtorPatterns.Vars.DepLabel, EB.CtorPatterns.Vars.NuLabel, function* ({ variable }) {
 			return [variable.annotation, { vc: Build.true_() }] satisfies SynthResult;
 		})
 		.with({ type: "Var", variable: { type: "Foreign" } }, function* (tm) {
@@ -123,9 +120,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			return [NF.Type, { vc: Build.true_() }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Nu, function* (tm) {
-			// TODO: lazy records are verified by observation, once something can build one
+			// TODO: lazy records, once some syntax can build one
 			assert(tm.binding.mode === "strict", "Verification supports strict records only");
-			return yield* reader.local(_ => EB.open(tm.binding, ctx), synth(tm.body));
+			return yield* reader.local(c => EB.open(tm.binding, c), synth(tm.body));
 		})
 		.with(EB.CtorPatterns.Lambda, function* (tm) {
 			const annotation = yield* NF.evaluate(tm.binding.annotation);
@@ -282,14 +279,17 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 
 								return yield* match(row)
 									.with(P.nonNullable, function* (row) {
-										const rewritten = Row.rewrite(row, label);
-										if (E.isLeft(rewritten)) {
-											throw new Error("Projection label not found in SigmaV2: " + label);
-										}
-										if (rewritten.right.type !== "extension") {
-											throw new Error("Projected label is not an extension in SigmaV2: " + label);
-										}
-										return rewritten.right.value;
+										return E.match(
+											(): NF.Value => {
+												throw new Error("Projection label not found in SigmaV2: " + label);
+											},
+											(rewritten: NF.Row) =>
+												match(rewritten)
+													.with({ type: "extension" }, ({ value }) => value)
+													.otherwise(() => {
+														throw new Error("Projected label is not an extension in SigmaV2: " + label);
+													}),
+										)(Row.rewrite(row, label));
 									})
 									.otherwise(function* () {
 										throw new Error("SigmaV2 projection expected a Schema body");
@@ -357,22 +357,25 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 									throw new Error("SigmaV2 binder annotation must be a Row");
 								}
 
-								const rewritten = Row.rewrite(binder.annotation.row, label);
-								if (E.isLeft(rewritten)) {
-									const extended = Row.Constructors.Extension(label, NF.Irrelevant, binder.annotation.row);
-									const ann = NF.Constructors.Row(extended);
-									const quotedPayload = yield* NF.quote(ctx.env.length, payloadTy);
+								const slots = binder.annotation.row;
 
-									const schema = match(closure.term)
-										.with(EB.CtorPatterns.Schema, ({ arg }) => EB.Constructors.Schema(EB.Constructors.Extension(label, quotedPayload, arg.row)))
-										.otherwise(_ => {
-											throw new Error("Injection expected a Schema type in SigmaV2 injection");
-										});
+								return yield* E.match(
+									function* (): Verification<NF.Value> {
+										const ann = NF.Constructors.Row(Row.Constructors.Extension(label, NF.Irrelevant, slots));
+										const quotedPayload = yield* NF.quote(ctx.env.length, payloadTy);
 
-									return NF.Constructors.SigmaV2(binder.variable, ann, NF.Constructors.Closure(closure.ctx, schema));
-								}
+										const schema = match(closure.term)
+											.with(EB.CtorPatterns.Schema, ({ arg }) => EB.Constructors.Schema(EB.Constructors.Extension(label, quotedPayload, arg.row)))
+											.otherwise(_ => {
+												throw new Error("Injection expected a Schema type in SigmaV2 injection");
+											});
 
-								return NF.Constructors.SigmaV2(binder.variable, NF.Constructors.Row(rewritten.right), closure);
+										return NF.Constructors.SigmaV2(binder.variable, ann, NF.Constructors.Closure(closure.ctx, schema));
+									},
+									function* (rewritten: NF.Row): Verification<NF.Value> {
+										return NF.Constructors.SigmaV2(binder.variable, NF.Constructors.Row(rewritten), closure);
+									},
+								)(Row.rewrite(slots, label));
 							})
 							.otherwise(() => {
 								throw new Error("Injection expected a Schema or Variant type");
