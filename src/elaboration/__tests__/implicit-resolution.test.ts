@@ -44,11 +44,11 @@ describe("Implicit resolution", () => {
 		expect((inner.binding as { icit: string }).icit).toBe("Implicit");
 
 		const disp = shown(ctx, registry);
-		const readback = (unfold: boolean) =>
+		const readback = (unfold: NF.Unfolding) =>
 			disp(function* () {
 				return yield* EB.Display.Term(yield* NF.quote(ctx.env.length, ty, { unfold }), { deBruijn: false });
 			});
-		const [type, unfolded] = [readback(false), readback(true)];
+		const [type, unfolded] = [readback("none"), readback("definitions")];
 
 		/* The dictionary binder survives in the principal type; committing @NumTag erases it entirely. */
 		expect(type).toContain("Tag a");

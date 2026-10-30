@@ -63,7 +63,7 @@ const pipeline = (
 	);
 	const normalized = safe(() =>
 		disp(function* () {
-			return yield* NF.display(yield* NF.evaluate(tm), { ...db, unfold: true });
+			return yield* NF.display(yield* NF.evaluate(tm), { ...db, unfold: "definitions" });
 		}),
 	);
 

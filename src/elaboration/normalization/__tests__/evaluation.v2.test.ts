@@ -306,9 +306,9 @@ describe("Normalization v2: glued references", () => {
 		expect(runNF(ctx, () => NF.view(nf))).toMatchObject({ kind: "Sealed", value: NF.Patterns.Variant });
 	});
 
-	it("reads back the reference, or with unfold what it computes", () => {
+	it("reads back the reference, or with unfolded definitions what it computes", () => {
 		const nf = runNF(ctx, () => NF.normalize(optionNum));
-		const readback = (unfold: boolean) =>
+		const readback = (unfold: NF.Unfolding) =>
 			shown(
 				ctx,
 				{},
@@ -316,8 +316,8 @@ describe("Normalization v2: glued references", () => {
 				return yield* EB.Display.Term(yield* NF.quote(ctx.env.length, nf, { unfold }), { deBruijn: false });
 			});
 
-		expect(readback(false)).toBe("Option Num");
-		expect(readback(true)).toContain("some: Num");
+		expect(readback("none")).toBe("Option Num");
+		expect(readback("definitions")).toContain("some: Num");
 		expect(show(nf, ctx)).toBe("Option Num");
 	});
 

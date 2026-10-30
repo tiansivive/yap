@@ -31,12 +31,12 @@ const symbolicRow = (annotation: NF.Value): NF.Row => {
  * We explicitly pass the level to avoid extending the context when quoting under binders.
  * Closure bodies quote under their own stored context — closure consumption, via reader.local.
  *
- * Glue reads back as the reference it came from. `unfold` reads back what references compute
- * instead, at every depth, which is what showing a normal form means.
+ * Glue reads back as the reference it came from. Unfolding definitions reads back what references
+ * compute instead, at every depth, which is what showing a normal form means.
  */
-export function* quote(lvl: number, val: NF.Value, unfold = false): Evaluation<Machine<EB.Term>> {
+export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"): Evaluation<Machine<EB.Term>> {
 	return yield* match(val)
-		.with(NF.Patterns.Glued, ({ folded, unfolded }) => quote(lvl, unfold ? unfolded : folded, unfold))
+		.with(NF.Patterns.Glued, ({ folded, unfolded }) => quote(lvl, unfold === "definitions" ? unfolded : folded, unfold))
 		.with({ type: "Lit" }, function* ({ value }) {
 			return yield* result(EB.Constructors.Lit(value));
 		})
@@ -187,7 +187,7 @@ export function* quote(lvl: number, val: NF.Value, unfold = false): Evaluation<M
 		});
 }
 
-const quoteRow = function* (lvl: number, row: NF.Row, unfold: boolean): Evaluation<Machine<EB.Row>> {
+const quoteRow = function* (lvl: number, row: NF.Row, unfold: NF.Unfolding): Evaluation<Machine<EB.Row>> {
 	return yield* match(row)
 		.with({ type: "empty" }, function* () {
 			return yield* result<EB.Row>({ type: "empty" });

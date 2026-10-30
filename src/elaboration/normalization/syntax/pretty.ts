@@ -21,7 +21,7 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 	const go = (v: NF.Value) => doc(v, opts);
 	const face = (v: NF.Value): NF.Value =>
 		match(v)
-			.with(NF.Patterns.Glued, ({ folded, unfolded }) => face(opts.unfold ? unfolded : folded))
+			.with(NF.Patterns.Glued, ({ folded, unfolded }) => face(opts.unfold === "definitions" ? unfolded : folded))
 			.otherwise(() => v);
 
 	return yield* match(value)

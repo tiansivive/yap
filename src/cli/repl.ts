@@ -71,7 +71,7 @@ const normalize = (ctx: EB.Context, registry: Metas.Registry, tm: EB.Term): EB.T
 	Eff.run(
 		() =>
 			(function* () {
-				return yield* NF.quote(ctx.env.length, yield* NF.evaluate(tm), { unfold: true });
+				return yield* NF.quote(ctx.env.length, yield* NF.evaluate(tm), { unfold: "definitions" });
 			})(),
 		[M.reader.handlers(ctx), Metas.registry.handlers(registry)],
 	)[0];

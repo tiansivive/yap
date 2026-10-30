@@ -14,7 +14,7 @@ import * as Quoting from "./quoting";
 import * as Recursion from "./recursion";
 import { handlers } from "./machine/handlers";
 import { Mode, defaultMode, type EvalMode, type Evaluation } from "./effects";
-import type { Closure, Row, Value } from "./syntax/term";
+import type { Closure, Row, Unfolding, Value } from "./syntax/term";
 import { Patterns } from "./syntax/term";
 
 /*
@@ -49,7 +49,7 @@ export function* whnf(term: EB.Term, opts?: Machine.EvalOptions) {
 	return yield* fresh(() => Machine.evaluate(term), { noInlineBindings: true, noReduceEliminations: true }, opts?.maxSteps);
 }
 
-export function* quote(lvl: number, val: Value, opts?: Machine.EvalOptions & { unfold?: boolean }) {
+export function* quote(lvl: number, val: Value, opts?: Machine.EvalOptions & { unfold?: Unfolding }) {
 	return yield* fresh(
 		() => Machine.drive(Quoting.quote(lvl, val, opts?.unfold), steps => `Quotation exceeded maximum steps (${steps}).`),
 		defaultMode,

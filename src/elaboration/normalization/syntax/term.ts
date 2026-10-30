@@ -52,6 +52,8 @@ type Constructor =
 export type Row = R.Row<Value, Variable>;
 export type TaggedParts = { label: string; payload: Value };
 export type Neutral = "Symbolic" | "Sealed" | "Blocked";
+/** Which face readback emits for glue: the reference as written, or what definitions compute. */
+export type Unfolding = "none" | "definitions";
 
 export type Binder =
 	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }

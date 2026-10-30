@@ -9,6 +9,7 @@ import { apply, unglue, unwrapNeutral } from "./evaluation.v2";
 const { Patterns } = NF;
 
 /** The structure under a type: the wrappers carry none, and neither does the name it was reached through. */
+// TODO: observe through `view` (or whatever replaces it); `unwrapNeutral` is deprecated and this is a pure stand-in for it.
 const peel = (v: NF.Value): NF.Value => unwrapNeutral(unglue(v));
 
 /**

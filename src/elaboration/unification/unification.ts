@@ -1,4 +1,4 @@
-import { isMatching, match, P } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import _ from "lodash";
 
 import * as O from "fp-ts/Option";
@@ -94,8 +94,24 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 			.with([P._, NF.Patterns.Flex], function* ([, meta]) {
 				yield* Sub.subst.bind(yield* bind(meta.variable, l));
 			})
-			/* Glue never reaches the structural clauses below: `faces` picks which faces to compare and hands them back. */
-			.with([NF.Patterns.Glued, P._], [P._, NF.Patterns.Glued], ([a, b]) => faces(a, b, lvl))
+			/*
+			 * Glue never reaches the structural clauses below: these only choose which faces to compare.
+			 * A meta-headed spine has no unfolding to offer, so it approximates against the folded face and
+			 * the meta is solved with the definition rather than its encoding; everything else unfolds.
+			 */
+			.with([NF.Patterns.Glued, NF.Patterns.Glued], ([a, b]) => same(a, b, lvl))
+			.with(
+				[NF.Patterns.Glued, NF.Patterns.StuckApp],
+				([g, stuck]) => approximable(g, stuck.value),
+				([g, stuck]) => unify(g.folded, stuck, lvl),
+			)
+			.with(
+				[NF.Patterns.StuckApp, NF.Patterns.Glued],
+				([stuck, g]) => approximable(g, stuck.value),
+				([stuck, g]) => unify(stuck, g.folded, lvl),
+			)
+			.with([NF.Patterns.Glued, P._], ([g, v]) => unify(g.unfolded, v, lvl))
+			.with([P._, NF.Patterns.Glued], ([v, g]) => unify(v, g.unfolded, lvl))
 			.with([NF.Patterns.Lit, NF.Patterns.Lit], function* ([lit1, lit2]) {
 				if (!_.isEqual(lit1.value, lit2.value)) {
 					return yield* M.fail(Err.UnificationFailure(lit1, lit2));
@@ -310,34 +326,12 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 type Glued = NF.Value & { type: "Glued" };
 
 /*
- * Conversion through glue consults the folded face before the unfolded one, and only for the
- * moves the folded face licenses. Nothing here decomposes a value: each case chooses a pair
- * of faces and the structural clauses compare them. The cases are disjoint, so their order
- * carries no meaning.
- */
-const faces = (l: NF.Value, r: NF.Value, lvl: number): Unification<void> =>
-	match([l, r])
-		.with([NF.Patterns.Glued, NF.Patterns.Glued], ([a, b]) => same(a, b, lvl))
-		.with(
-			[NF.Patterns.Glued, P._],
-			([, v]) => !isMatching(NF.Patterns.Glued, v),
-			([g, v]) => unify(approximable(g, v) ? g.folded : g.unfolded, v, lvl),
-		)
-		.with(
-			[P._, NF.Patterns.Glued],
-			([v]) => !isMatching(NF.Patterns.Glued, v),
-			([v, g]) => unify(v, approximable(g, v) ? g.folded : g.unfolded, lvl),
-		)
-		.otherwise(() => {
-			throw new Error("Impossible: conversion through glue reached with no glued side");
-		});
-
-/*
  * Two references to one definition. Unapplied, they are equal by name. Applied, their
  * arguments are compared first, but that comparison may not bind anything: `Const Unit ?a`
  * and `Const Unit Num` agree without `?a = Num`, since a definition need not use every
  * argument. Where it does, the unfolded faces solve the meta anyway.
  */
+// TODO: revisit `speculate` and `reference` once the top-level dispatch no longer goes through `unwrapNeutral`.
 const same = (a: Glued, b: Glued, lvl: number): Unification<void> =>
 	match([a.folded, b.folded])
 		.with(
@@ -364,14 +358,10 @@ const reference = (glued: Glued): string | undefined =>
 		.with({ type: "App", func: NF.Patterns.Glued }, ({ func }) => reference(func))
 		.otherwise(() => undefined);
 
-/*
- * A stuck application headed by an unsolved meta, against an applied definition. The meta
- * side has no unfolding to offer, so first-order approximation is made against the folded
- * face, and the meta is solved with the definition rather than its encoding.
- */
-const approximable = (glued: Glued, v: NF.Value): boolean =>
-	match([glued.folded, v])
-		.with([NF.Patterns.App, NF.Patterns.StuckApp], ([, stuck]) => NF.isFlex(head(stuck.value)))
+/** An applied definition against a spine headed by an unsolved meta. */
+const approximable = (glued: Glued, spine: NF.Value): boolean =>
+	match(glued.folded)
+		.with(NF.Patterns.App, () => NF.isFlex(head(spine)))
 		.otherwise(() => false);
 
 const head = (v: NF.Value): NF.Value =>
