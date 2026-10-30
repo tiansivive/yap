@@ -313,20 +313,17 @@ export const Patterns = {
 	} as const,
 
 	HashMap: {
-		type: "Neutral",
-		value: {
+		type: "App",
+		icit: "Implicit",
+		func: {
 			type: "App",
-			icit: "Implicit",
 			func: {
 				type: "App",
 				func: {
-					type: "App",
-					func: {
-						type: "Var",
-						variable: { type: "Foreign", name: "Indexed" },
-					},
-					arg: { type: "Lit", value: { type: "Atom", value: "String" } },
+					type: "Var",
+					variable: { type: "Foreign", name: "Indexed" },
 				},
+				arg: { type: "Lit", value: { type: "Atom", value: "String" } },
 			},
 		},
 	} as const,

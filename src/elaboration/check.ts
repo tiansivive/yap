@@ -1,4 +1,4 @@
-import { match, P } from "ts-pattern";
+import { isMatching, match, P } from "ts-pattern";
 
 import * as F from "fp-ts/lib/function";
 import * as E from "fp-ts/lib/Either";
@@ -19,7 +19,6 @@ import * as R from "@yap/shared/rows";
 import { freshMeta } from "./shared/supply";
 import * as DependentRows from "./inference/dependent-rows";
 
-import _ from "lodash";
 import { extract } from "./inference/rows";
 import { entries, set, update } from "@yap/utils";
 
@@ -33,282 +32,294 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 	M.tracer.track({ tag: "src", type: "term", term, metadata: { action: "checking", against: type } }, function* () {
 		const ctx = yield* M.reader.ask();
 
-		const result = match<[Src.Term, NF.Value], M.Elaboration<[EB.Term, Q.Usages]>>([term, NF.unglue(type)])
+		const viewed = yield* NF.view(type);
+
+		const result = match<[Src.Term, NF.View], M.Elaboration<Result>>([term, viewed])
 			.with([{ type: "hole" }, P._], function* () {
 				const k = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 				return [EB.Constructors.Var(yield* freshMeta(ctx.env.length, k)), []] satisfies Result;
 			})
-			.with(
-				[{ type: "lambda" }, { type: "Abs", binder: { type: "Pi" } }],
-				([tm, ty]) => tm.icit === ty.binder.icit,
-				function* ([tm, ty]) {
-					const bType = yield* NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
-
-					const ann = tm.annotation ? (yield* EB.check(tm.annotation, ty.binder.annotation))[0] : yield* NF.quote(ctx.env.length, ty.binder.annotation);
-
-					return yield* M.reader.local(
-						ctx => EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation),
-						(function* () {
-							const [body, us] = yield* Check.val(tm.body, bType);
-							// const [vu] = us;
-							//yield* M.constrain({ type: "usage", expected: ty.binder.annotation.nf, computed: vu });
-							return [EB.Constructors.Lambda(tm.variable, tm.icit, body, ann), us] satisfies Result;
-						})(),
-					);
-				},
-			)
-			.with(
-				[P._, { type: "Abs", binder: { type: "Pi" } }],
-				([_, ty]) => ty.binder.icit === "Implicit",
-				function* ([tm, ty]) {
-					const ann = yield* NF.quote(ctx.env.length, ty.binder.annotation);
-
-					return yield* M.reader.local(
-						ctx => EB.bind(ctx, { type: "Lambda", variable: ty.binder.variable }, ty.binder.annotation, "inserted"),
-						(function* () {
-							const bType = yield* NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
-							const [_tm, us] = yield* Check.val(tm, bType);
-							const [vu] = us;
-							//	yield* M.constrain({ type: "usage", expected: ty.binder.annotation[1], computed: vu });
-							return [EB.Constructors.Lambda(ty.binder.variable, "Implicit", _tm, ann), us] satisfies Result;
-						})(),
-					);
-				},
-			)
-
-			.with([{ type: "variant" }, NF.Patterns.Type], function* ([{ row }]) {
-				const [r, us] = yield* Check.row(row, NF.Type, ctx.env.length);
-				return [EB.Constructors.Variant(r), us] satisfies Result;
-			})
-			.with([{ type: "tuple" }, NF.Patterns.Type], function* ([{ row }]) {
-				const [r, us] = yield* Check.row(row, NF.Type, ctx.env.length);
-				return [EB.Constructors.Schema(r), us] satisfies Result;
-			})
-			.with([{ type: "struct" }, NF.Patterns.Type], function* ([{ row }]) {
-				const irrelevant = DependentRows.placeholders(row);
-				const r = yield* DependentRows.witness(irrelevant);
-				const xtended = (c: EB.Context) => EB.bind(EB.muContext(c), { type: "SigmaV2", variable: "$sig" }, NF.Constructors.Row(r));
-
-				/*
-				 * A struct checked against `Type` describes a type, so `muContext` turns the enclosing
-				 * lets into Mu binders. A field that refers to a definition being declared then counts
-				 * as a recursive reference, and that definition is wrapped in Mu. Variants and rows
-				 * turn the lets into Mu binders where they are elaborated.
-				 *
-				 * Each `&label` records a meta standing for the value of the sibling it names. That
-				 * value is known once the whole row is elaborated, so the metas are collected here and
-				 * constrained against the matching fields of the finished schema.
-				 */
-				const [[body, us], labels] = yield* M.windows.within<{ label: string; meta: EB.Meta }>()({ scope: "env", lvl: ctx.env.length }, () =>
-					M.reader.local(xtended, DependentRows.fields(row)),
-				);
-
-				const schema = EB.Constructors.Schema(body);
-
-				yield* M.reader.local(
-					xtended,
-					M.traverse(labels, function* ({ label, meta }) {
-						const sibling = yield* NF.normalize(EB.Constructors.Proj(label, schema));
-						yield* M.constrain({ type: "assign", left: sibling, right: NF.Constructors.Flex(meta), lvl: ctx.env.length + 1 });
-					}),
-				);
-
-				return [EB.Constructors.SigmaV2("$sig", EB.Constructors.Row(irrelevant), schema), us] satisfies Result;
-			})
-
-			.with([{ type: "injection" }, NF.Patterns.Type], function* ([inj, ty]) {
-				const [tm, us] = yield* Check.val(inj.value, ty);
-				const [checked] = yield* Check.val(inj.term, ty);
-
-				return [EB.Constructors.Inj(inj.label, tm, checked), us] satisfies Result;
-			})
-			// QUESTION: How to check the resulting proj type is a NF.Type? Should we?
-			// .with([{ type: "projection"}, NF.Patterns.Type], function* ([proj, ty]) {
-			// 	const [tm, inferred, us] = yield* EB.infer(proj);
-			// 	return [EB.Constructors.Proj(proj.label, tm), us] satisfies Result;
-			// })
-			.with([{ type: "struct" }, NF.Patterns.HashMap], function* ([struct, hashmap]) {
-				const [r, us] = yield* Check.row(struct.row, hashmap.value.func.arg, ctx.env.length);
-				yield* M.constrain({
-					type: "assign",
-					left: hashmap.value.arg,
-					right: NF.Constructors.Var({ type: "Foreign", name: "defaultHashMap" }),
-					lvl: ctx.env.length,
-				});
-				return [EB.Constructors.Struct(r), us] satisfies Result;
-			})
-			.with([{ type: "struct" }, NF.Patterns.SigmaV2], function* ([tm, sig]) {
-				/* The expected row depends on the struct's own values, so the struct is first inferred to obtain them. */
-				const [inferred] = yield* EB.Struct.infer(tm);
-				const values = NF.rowOf(yield* NF.normalize(inferred));
-				assert(values, "Expected a strict struct to normalize to a row");
-
-				const expected = NF.rowOf(yield* NF.apply(sig.binder, sig.closure, NF.Constructors.Row(values)));
-				assert(expected, "Expected the applied SigmaV2 body to contain a row");
-
-				const [binder, checked] = yield* DependentRows.nu(tm.row, () => DependentRows.check(tm.row, expected));
-				return [EB.Constructors.Nu(binder, EB.Constructors.Struct(checked.term)), checked.usages] satisfies Result;
-			})
-			.with([{ type: "struct" }, NF.Patterns.Schema], function* ([tm, val]) {
-				const bindings = yield* extract(tm.row, ctx.env.length);
-				const [r, us] = yield* M.reader.local(
-					ctx => entries(bindings).reduce((ctx, [label, type]) => EB.extendLabel(ctx, label, type), ctx),
-					Check.row.traverse(tm.row, val.arg.row, Q.noUsage(ctx.env.length), bindings),
-				);
-
-				return [EB.Constructors.Struct(r), us] satisfies Result;
-			})
-			.with([{ type: "struct" }, NF.Patterns.Sigma], function* ([tm, sig]) {
-				// Infer the struct to get the value row, apply the sigma closure, then re-check
-				// the source struct against the resulting type. This elaborates the source struct
-				// twice: once to infer (for the value row), once to check (preserving bidir checking).
-				// TODO:QUESTION: can we avoid the double elaboration? e.g. extract values without full inference
-				const [rtm] = yield* EB.infer(tm);
-
-				const rv = yield* NF.normalize(rtm);
-				assert(rv.type === "App" && rv.arg.type === "Row", "Expected struct term to evaluate to an application of a Row");
-				const valueRow = rv.arg.row;
-				const ty = yield* NF.apply(sig.binder, sig.closure, NF.Constructors.Row(valueRow));
-
-				// The re-check evaluates each field value; sibling `:label` refs resolve through
-				// ctx.sigma at eval time, so make the inferred field values visible.
-				return yield* M.reader.local(c => EB.extendSigma(c, valueRow), Check.val(tm, ty));
-			})
-			.with([{ type: "match" }, NF.Patterns.Type], function* ([match, ty]) {
-				const ast = yield* EB.infer(match.scrutinee);
-
-				const alternatives = yield* M.traverse(
-					match.alternatives,
-					EB.Inference.Match.elaborate(ast, function* (src) {
-						const [tm, us] = yield* EB.check(src, ty);
-						return [tm, ty, us] satisfies EB.AST;
-					}),
-				);
-
-				const [scrutinee, , sus] = ast;
-				const tm = EB.Constructors.Match(
-					scrutinee,
-					alternatives.map(([alt]) => alt),
-				);
-
-				return [tm, sus] satisfies Result;
-			})
-			.with([{ type: "match" }, P._], function* ([m, ty]) {
-				const ast = yield* EB.infer(m.scrutinee);
-				const [scrutinee, , sus] = ast;
-				// if (scrutinee.type !== "Var") {
-				// 	const inferred = yield* EB.infer(m);
-				// 	yield* M.constrain({ type: "assign", left: inferred[1], right: ty, lvl: ctx.env.length });
-				// 	return [inferred[0], inferred[2]] satisfies Result;
-				// }
-
-				const narrow = (nf: NF.Value, quoted: EB.Term, ctx: EB.Context) => {
-					const next = match(scrutinee)
-						.with({ type: "Var", variable: { type: "Bound" } }, bound =>
-							update(
-								ctx,
-								"env",
-								F.flow(
-									A.modifyAt<EB.Context["env"][number]>(bound.variable.index, set("nf", nf)),
-									O.getOrElse(() => ctx.env),
-								),
-							),
-						)
-						.with({ type: "Var", variable: { type: "Free" } }, free =>
-							update(ctx, "imports", imports =>
-								F.pipe(
-									imports,
-									Rec.modifyAt(free.variable.name, set("0", quoted)),
-									O.getOrElse(() => imports),
-								),
-							),
-						)
-						.with({ type: "Var", variable: { type: "Label" } }, label =>
-							update(ctx, "sigma", sigma =>
-								F.pipe(
-									sigma,
-									Rec.modifyAt(label.variable.name, set("value", nf)),
-									O.getOrElse(() => sigma),
-								),
-							),
-						)
-						.otherwise(() => ctx);
-					return next;
-				};
-
-				const alternatives = yield* M.traverse(
-					m.alternatives,
-					EB.Inference.Match.elaborate(ast, function* (src, [pat, _patty, , binders]) {
-						const ctx = yield* M.reader.ask();
-						const branch = function* () {
-							const ctx = yield* M.reader.ask();
-							const branchTy = yield* NF.normalize(yield* NF.quote(ctx.env.length, ty));
-							return yield* EB.check(src, branchTy);
-						};
-
-						const [tm, us] = yield* match(NF.Pats.evaluate(pat, ctx, binders))
-							.with({ _tag: "None" }, () => branch())
-							.with({ _tag: "Some" }, function* ({ value }) {
-								const quoted = yield* NF.quote(ctx.env.length, value);
-								return yield* M.reader.local(c => narrow(value, quoted, c), branch());
-							})
-							.exhaustive();
-
-						//const [tm, us] = yield* EB.check(src, narrow(val));
-						return [tm, ty, us] satisfies EB.AST;
-					}),
-				);
-
-				const tm = EB.Constructors.Match(
-					scrutinee,
-					alternatives.map(([alt]) => alt),
-				);
-
-				return [tm, sus] satisfies Result;
-			})
-			.with(
-				[
-					{ type: "lit", value: { type: "Num" } },
-					{ type: "Lit", value: { type: "Num" } },
-				],
-				([tm, val]) => {
-					if (tm.value.value === val.value.value) {
-						return M.of([EB.Constructors.Lit(tm.value), Q.noUsage(ctx.env.length)] satisfies Result);
-					}
-					return M.fail(Err.TypeMismatch(NF.Constructors.Lit(tm.value), val));
-				},
-			)
-			.with([{ type: "lit", value: { type: "Num" } }, NF.Patterns.Type], ([tm, _]) => {
-				return M.of([EB.Constructors.Lit(tm.value), Q.noUsage(ctx.env.length)] satisfies Result);
-			})
-			.with([P._, { type: "Modal" }], ([tm, val]) => Check.val(tm, val.value))
-			.with([{ type: "modal" }, P._], function* ([tm, val]) {
-				const [checked, us] = yield* Check.val(tm.term, val);
-
-				const liquid = tm.modalities.liquid
-					? yield* EB.Liquid.typecheck(tm.modalities.liquid, yield* NF.normalize(checked))
-					: Liquid.Predicate.Neutral(checked);
-				const quantity = tm.modalities.quantity ?? Q.Many;
-
-				return [EB.Constructors.Modal(checked, { liquid, quantity }), us] satisfies Result;
-			})
-
-			.otherwise(([src, ty]) =>
-				M.reader.local(
-					ctx => (_.isEqual(ty, NF.Type) ? EB.muContext(ctx) : ctx),
-					(function* () {
-						const ast: EB.AST = yield* EB.infer(src);
-						const [tm, inferred, us]: EB.AST = yield* EB.Icit.insert(ast);
-						yield* M.constrain({ type: "assign", left: inferred, right: type, lvl: ctx.env.length });
-						return [tm, us] satisfies Result;
-					})(),
-				),
-			);
+			.with([P._, NF.View.Sealed()], ([tm, { value }]) => structural(tm, value))
+			.otherwise(([tm]) => general(tm));
 
 		const [tm, us] = yield* result;
 		//yield* M.writer.tell({ types: [{ term: tm, nf: type, modalities: {} as any }] });
 
 		return [tm, us];
+
+		function* structural(term: Src.Term, structure: NF.Value): M.Elaboration<Result> {
+			return yield* match<[Src.Term, NF.Value], M.Elaboration<Result>>([term, structure])
+				.with(
+					[{ type: "lambda" }, NF.Patterns.Pi],
+					([tm, ty]) => tm.icit === ty.binder.icit,
+					function* ([tm, ty]) {
+						const bType = yield* NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
+
+						const ann = tm.annotation ? (yield* EB.check(tm.annotation, ty.binder.annotation))[0] : yield* NF.quote(ctx.env.length, ty.binder.annotation);
+
+						return yield* M.reader.local(
+							ctx => EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation),
+							(function* () {
+								const [body, us] = yield* Check.val(tm.body, bType);
+								// const [vu] = us;
+								//yield* M.constrain({ type: "usage", expected: ty.binder.annotation.nf, computed: vu });
+								return [EB.Constructors.Lambda(tm.variable, tm.icit, body, ann), us] satisfies Result;
+							})(),
+						);
+					},
+				)
+				.with(
+					[P._, NF.Patterns.Pi],
+					([_, ty]) => ty.binder.icit === "Implicit",
+					function* ([tm, ty]) {
+						const ann = yield* NF.quote(ctx.env.length, ty.binder.annotation);
+
+						return yield* M.reader.local(
+							ctx => EB.bind(ctx, { type: "Lambda", variable: ty.binder.variable }, ty.binder.annotation, "inserted"),
+							(function* () {
+								const bType = yield* NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
+								const [_tm, us] = yield* Check.val(tm, bType);
+								const [vu] = us;
+								//	yield* M.constrain({ type: "usage", expected: ty.binder.annotation[1], computed: vu });
+								return [EB.Constructors.Lambda(ty.binder.variable, "Implicit", _tm, ann), us] satisfies Result;
+							})(),
+						);
+					},
+				)
+
+				.with([{ type: "variant" }, NF.Patterns.Type], function* ([{ row }]) {
+					const [r, us] = yield* Check.row(row, NF.Type, ctx.env.length);
+					return [EB.Constructors.Variant(r), us] satisfies Result;
+				})
+				.with([{ type: "tuple" }, NF.Patterns.Type], function* ([{ row }]) {
+					const [r, us] = yield* Check.row(row, NF.Type, ctx.env.length);
+					return [EB.Constructors.Schema(r), us] satisfies Result;
+				})
+				.with([{ type: "struct" }, NF.Patterns.Type], function* ([{ row }]) {
+					const irrelevant = DependentRows.placeholders(row);
+					const r = yield* DependentRows.witness(irrelevant);
+					const xtended = (c: EB.Context) => EB.bind(EB.muContext(c), { type: "SigmaV2", variable: "$sig" }, NF.Constructors.Row(r));
+
+					/*
+					 * A struct checked against `Type` describes a type, so `muContext` turns the enclosing
+					 * lets into Mu binders. A field that refers to a definition being declared then counts
+					 * as a recursive reference, and that definition is wrapped in Mu. Variants and rows
+					 * turn the lets into Mu binders where they are elaborated.
+					 *
+					 * Each `&label` records a meta standing for the value of the sibling it names. That
+					 * value is known once the whole row is elaborated, so the metas are collected here and
+					 * constrained against the matching fields of the finished schema.
+					 */
+					const [[body, us], labels] = yield* M.windows.within<{ label: string; meta: EB.Meta }>()({ scope: "env", lvl: ctx.env.length }, () =>
+						M.reader.local(xtended, DependentRows.fields(row)),
+					);
+
+					const schema = EB.Constructors.Schema(body);
+
+					yield* M.reader.local(
+						xtended,
+						M.traverse(labels, function* ({ label, meta }) {
+							const sibling = yield* NF.normalize(EB.Constructors.Proj(label, schema));
+							yield* M.constrain({ type: "assign", left: sibling, right: NF.Constructors.Flex(meta), lvl: ctx.env.length + 1 });
+						}),
+					);
+
+					return [EB.Constructors.SigmaV2("$sig", EB.Constructors.Row(irrelevant), schema), us] satisfies Result;
+				})
+
+				.with([{ type: "injection" }, NF.Patterns.Type], function* ([inj, ty]) {
+					const [tm, us] = yield* Check.val(inj.value, ty);
+					const [checked] = yield* Check.val(inj.term, ty);
+
+					return [EB.Constructors.Inj(inj.label, tm, checked), us] satisfies Result;
+				})
+				// QUESTION: How to check the resulting proj type is a NF.Type? Should we?
+				// .with([{ type: "projection"}, NF.Patterns.Type], function* ([proj, ty]) {
+				// 	const [tm, inferred, us] = yield* EB.infer(proj);
+				// 	return [EB.Constructors.Proj(proj.label, tm), us] satisfies Result;
+				// })
+				.with([{ type: "struct" }, NF.Patterns.HashMap], function* ([struct, hashmap]) {
+					const [r, us] = yield* Check.row(struct.row, hashmap.func.arg, ctx.env.length);
+					yield* M.constrain({
+						type: "assign",
+						left: hashmap.arg,
+						right: NF.Constructors.Var({ type: "Foreign", name: "defaultHashMap" }),
+						lvl: ctx.env.length,
+					});
+					return [EB.Constructors.Struct(r), us] satisfies Result;
+				})
+				.with([{ type: "struct" }, NF.Patterns.SigmaV2], function* ([tm, sig]) {
+					/* The expected row depends on the struct's own values, so the struct is first inferred to obtain them. */
+					const [inferred] = yield* EB.Struct.infer(tm);
+					const values = yield* NF.rowOf(yield* NF.normalize(inferred));
+					assert(values, "Expected a strict struct to normalize to a row");
+
+					const expected = yield* NF.rowOf(yield* NF.apply(sig.binder, sig.closure, NF.Constructors.Row(values)));
+					assert(expected, "Expected the applied SigmaV2 body to contain a row");
+
+					const [binder, checked] = yield* DependentRows.nu(tm.row, () => DependentRows.check(tm.row, expected));
+					return [EB.Constructors.Nu(binder, EB.Constructors.Struct(checked.term)), checked.usages] satisfies Result;
+				})
+				.with([{ type: "struct" }, NF.Patterns.Schema], function* ([tm, val]) {
+					const bindings = yield* extract(tm.row, ctx.env.length);
+					const [r, us] = yield* M.reader.local(
+						ctx => entries(bindings).reduce((ctx, [label, type]) => EB.extendLabel(ctx, label, type), ctx),
+						Check.row.traverse(tm.row, val.arg.row, Q.noUsage(ctx.env.length), bindings),
+					);
+
+					return [EB.Constructors.Struct(r), us] satisfies Result;
+				})
+				.with([{ type: "struct" }, NF.Patterns.Sigma], function* ([tm, sig]) {
+					// Infer the struct to get the value row, apply the sigma closure, then re-check
+					// the source struct against the resulting type. This elaborates the source struct
+					// twice: once to infer (for the value row), once to check (preserving bidir checking).
+					// TODO:QUESTION: can we avoid the double elaboration? e.g. extract values without full inference
+					const [rtm] = yield* EB.infer(tm);
+
+					const rv = yield* NF.normalize(rtm);
+					assert(rv.type === "App" && rv.arg.type === "Row", "Expected struct term to evaluate to an application of a Row");
+					const valueRow = rv.arg.row;
+					const ty = yield* NF.apply(sig.binder, sig.closure, NF.Constructors.Row(valueRow));
+
+					// The re-check evaluates each field value; sibling `:label` refs resolve through
+					// ctx.sigma at eval time, so make the inferred field values visible.
+					return yield* M.reader.local(c => EB.extendSigma(c, valueRow), Check.val(tm, ty));
+				})
+				.with([{ type: "match" }, NF.Patterns.Type], function* ([match, ty]) {
+					const ast = yield* EB.infer(match.scrutinee);
+
+					const alternatives = yield* M.traverse(
+						match.alternatives,
+						EB.Inference.Match.elaborate(ast, function* (src) {
+							const [tm, us] = yield* EB.check(src, ty);
+							return [tm, ty, us] satisfies EB.AST;
+						}),
+					);
+
+					const [scrutinee, , sus] = ast;
+					const tm = EB.Constructors.Match(
+						scrutinee,
+						alternatives.map(([alt]) => alt),
+					);
+
+					return [tm, sus] satisfies Result;
+				})
+				.with(
+					[
+						{ type: "lit", value: { type: "Num" } },
+						{ type: "Lit", value: { type: "Num" } },
+					],
+					([tm, val]) => {
+						if (tm.value.value === val.value.value) {
+							return M.of([EB.Constructors.Lit(tm.value), Q.noUsage(ctx.env.length)] satisfies Result);
+						}
+						return M.fail(Err.TypeMismatch(NF.Constructors.Lit(tm.value), val));
+					},
+				)
+				.with([{ type: "lit", value: { type: "Num" } }, NF.Patterns.Type], ([tm, _]) => {
+					return M.of([EB.Constructors.Lit(tm.value), Q.noUsage(ctx.env.length)] satisfies Result);
+				})
+				.with([{ type: P.not("match") }, NF.Patterns.Modal], ([tm, val]) => Check.val(tm, val.value))
+				.otherwise(([tm]) => general(tm));
+		}
+
+		function* general(term: Src.Term): M.Elaboration<Result> {
+			return yield* match<Src.Term, M.Elaboration<Result>>(term)
+				.with({ type: "match" }, function* (m) {
+					const ast = yield* EB.infer(m.scrutinee);
+					const [scrutinee, , sus] = ast;
+					// if (scrutinee.type !== "Var") {
+					// 	const inferred = yield* EB.infer(m);
+					// 	yield* M.constrain({ type: "assign", left: inferred[1], right: ty, lvl: ctx.env.length });
+					// 	return [inferred[0], inferred[2]] satisfies Result;
+					// }
+
+					const narrow = (nf: NF.Value, quoted: EB.Term, ctx: EB.Context) => {
+						const next = match(scrutinee)
+							.with({ type: "Var", variable: { type: "Bound" } }, bound =>
+								update(
+									ctx,
+									"env",
+									F.flow(
+										A.modifyAt<EB.Context["env"][number]>(bound.variable.index, set("nf", nf)),
+										O.getOrElse(() => ctx.env),
+									),
+								),
+							)
+							.with({ type: "Var", variable: { type: "Free" } }, free =>
+								update(ctx, "imports", imports =>
+									F.pipe(
+										imports,
+										Rec.modifyAt(free.variable.name, set("0", quoted)),
+										O.getOrElse(() => imports),
+									),
+								),
+							)
+							.with({ type: "Var", variable: { type: "Label" } }, label =>
+								update(ctx, "sigma", sigma =>
+									F.pipe(
+										sigma,
+										Rec.modifyAt(label.variable.name, set("value", nf)),
+										O.getOrElse(() => sigma),
+									),
+								),
+							)
+							.otherwise(() => ctx);
+						return next;
+					};
+
+					const alternatives = yield* M.traverse(
+						m.alternatives,
+						EB.Inference.Match.elaborate(ast, function* (src, [pat, _patty, , binders]) {
+							const ctx = yield* M.reader.ask();
+							const branch = function* () {
+								const ctx = yield* M.reader.ask();
+								const branchTy = yield* NF.normalize(yield* NF.quote(ctx.env.length, type));
+								return yield* EB.check(src, branchTy);
+							};
+
+							const [tm, us] = yield* match(NF.Pats.evaluate(pat, ctx, binders))
+								.with({ _tag: "None" }, () => branch())
+								.with({ _tag: "Some" }, function* ({ value }) {
+									const quoted = yield* NF.quote(ctx.env.length, value);
+									return yield* M.reader.local(c => narrow(value, quoted, c), branch());
+								})
+								.exhaustive();
+
+							//const [tm, us] = yield* EB.check(src, narrow(val));
+							return [tm, type, us] satisfies EB.AST;
+						}),
+					);
+
+					const tm = EB.Constructors.Match(
+						scrutinee,
+						alternatives.map(([alt]) => alt),
+					);
+
+					return [tm, sus] satisfies Result;
+				})
+				.with({ type: "modal" }, function* (tm) {
+					const [checked, us] = yield* Check.val(tm.term, type);
+
+					const liquid = tm.modalities.liquid
+						? yield* EB.Liquid.typecheck(tm.modalities.liquid, yield* NF.normalize(checked))
+						: Liquid.Predicate.Neutral(checked);
+					const quantity = tm.modalities.quantity ?? Q.Many;
+
+					return [EB.Constructors.Modal(checked, { liquid, quantity }), us] satisfies Result;
+				})
+				.otherwise(src =>
+					M.reader.local(
+						ctx => (isMatching(NF.View.Sealed(NF.Patterns.Type), viewed) ? EB.muContext(ctx) : ctx),
+						(function* () {
+							const ast: EB.AST = yield* EB.infer(src);
+							const [tm, inferred, us]: EB.AST = yield* EB.Icit.insert(ast);
+							yield* M.constrain({ type: "assign", left: inferred, right: type, lvl: ctx.env.length });
+							return [tm, us] satisfies Result;
+						})(),
+					),
+				);
+		}
 	});
 
 /**

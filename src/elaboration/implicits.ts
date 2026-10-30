@@ -5,7 +5,7 @@ import * as NF from "@yap/elaboration/normalization";
 
 import * as Eff from "@yap/utils/effects";
 
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 
 import * as R from "@yap/shared/rows";
 import assert from "assert";
@@ -13,12 +13,14 @@ import assert from "assert";
 /** Zonking resolves metas through the registry under the current scope, nothing else. */
 export type Zonking<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Actions<typeof Metas.registry>, A>;
 
+const ImplicitPi = NF.View.Sealed({ type: "Abs", binder: { type: "Pi", icit: "Implicit" } });
+
 export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 	const [term, ty, us] = node;
 	const ctx = yield* M.reader.ask();
 
-	const r = match<EB.AST>([term, NF.unglue(ty), us])
-		.with([P._, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._], ([, pi]) =>
+	const r = match(yield* NF.view(ty))
+		.with(ImplicitPi, ({ value: pi }) =>
 			(function* () {
 				const meta = yield* EB.freshMeta(ctx.env.length, pi.binder.annotation);
 				const mvar = EB.Constructors.Var(meta);
@@ -40,15 +42,15 @@ export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 export const wrapLambda = function* (term: EB.Term, ty: NF.Value): NF.Abstraction<EB.Term> {
 	const ctx = yield* M.reader.ask();
 
-	return yield* match(NF.unglue(ty))
+	return yield* match(yield* NF.view(ty))
 		.with(
-			{ type: "Abs", binder: { type: "Pi", icit: "Implicit" } },
+			ImplicitPi,
 			_ => term.type === "Abs" && (term.binding.type === "Lambda" || term.binding.type === "Pi") && term.binding.icit === "Implicit",
 			function* () {
 				return term;
 			},
 		)
-		.with({ type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, function* (pi) {
+		.with(ImplicitPi, function* ({ value: pi }) {
 			const lvl = ctx.env.length;
 			const ann = yield* NF.quote(lvl, pi.binder.annotation);
 			const binding: EB.Binding = { type: "Lambda", variable: pi.binder.variable, icit: pi.binder.icit, annotation: ann };

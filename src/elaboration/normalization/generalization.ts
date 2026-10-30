@@ -48,14 +48,17 @@ const nextCode = (counters: ReturnType<typeof mkCounters>) => (category: keyof t
 const getNameFactory = (counters: ReturnType<typeof mkCounters>) => {
 	const inc = nextCode(counters);
 
-	return (ann: NF.Value): string =>
-		match(NF.unglue(ann))
+	return function* (ann: NF.Value): Generalization<string> {
+		const { value } = yield* NF.view(ann);
+
+		return match(value)
 			.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => inc("type"))
 			.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => inc("row"))
 			.with({ type: "Lit", value: { type: "Num" } }, () => inc("num"))
 			.with(NF.Patterns.Pi, () => inc("typeCtor"))
 			.with(NF.Patterns.Lambda, () => inc("fun"))
 			.otherwise(() => inc("any"));
+	};
 };
 /**
  * Generalizes a value by replacing meta variables with bound variables, which are introduced by wrapping the value in a Pi type for each meta variable.
@@ -90,6 +93,8 @@ export const generalize = function* (ty: NF.Value, tm: EB.Term, resolutions: EB.
 		return [ty, false];
 	}
 
+	const names = yield* Eff.traverse(ms, m => getName(Metas.entry(registry, m.val).annotation));
+
 	// Build a single closure context that has all generalized metas mapped to the corresponding bound variables.
 	// We also pre-extend names/types/env so quoting inside closures sees the right level indices.
 	const { ctx: extendedCtx, subst } = ms.reduce(
@@ -97,7 +102,7 @@ export const generalize = function* (ty: NF.Value, tm: EB.Term, resolutions: EB.
 			const boundLvl = i + ctx.env.length; // outermost binder is the first one after the existing env
 			const { annotation } = Metas.entry(registry, m.val);
 
-			const withBinder = EB.bind(acc.ctx, { type: "Pi", variable: getName(annotation) }, annotation, "inserted");
+			const withBinder = EB.bind(acc.ctx, { type: "Pi", variable: names[i] }, annotation, "inserted");
 			const next = { ...acc.subst, [m.val]: NF.Constructors.Var({ type: "Bound", lvl: boundLvl }) };
 			return { ctx: withBinder, subst: next };
 		},
@@ -189,7 +194,7 @@ export const abstract = function* (ty: NF.Value, value: NF.Value, resolutions: E
 		}
 		const [m, ...tail] = rest;
 		const { annotation } = Metas.entry(registry, m.val);
-		const variable = getName(annotation);
+		const variable = yield* getName(annotation);
 		const binding: EB.Binding = {
 			type: "Lambda",
 			variable,

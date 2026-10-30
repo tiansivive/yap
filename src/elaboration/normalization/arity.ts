@@ -1,49 +1,47 @@
 import * as NF from "./syntax/term";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 
 import type { Evaluation } from "./effects";
-import { apply, unglue, unwrapNeutral } from "./evaluation.v2";
+import { apply, view, View } from "./evaluation.v2";
 
 const { Patterns } = NF;
 
-/** The structure under a type: the wrappers carry none, and neither does the name it was reached through. */
-// TODO: observe through `view` (or whatever replaces it); `unwrapNeutral` is deprecated and this is a pure stand-in for it.
-const peel = (v: NF.Value): NF.Value => unwrapNeutral(unglue(v));
-
 /**
- * Walk an App spine to its head (peeling Neutral along the way).
+ * Walk an App spine to its head.
  */
-const head = (v: NF.Value): NF.Value =>
-	match(peel(v))
+function* head(v: NF.Value): Evaluation<NF.Value> {
+	const { value } = yield* view(v);
+
+	return yield* match(value)
 		.with(Patterns.App, ({ func }) => head(func))
-		.otherwise(x => x);
+		.otherwise(function* (x) {
+			return x;
+		});
+}
 
 /**
  * A type's head is "inert" when it cannot reduce to a Pi regardless of what
  * information becomes available. Concrete type constructors (Lit, Foreign) are
  * inert. Stuck rigids (Bound applied to args), unsolved metas, and stuck
- * matches are NOT inert — they could potentially hide more Pi binders.
+ * eliminations are NOT inert — they could potentially hide more Pi binders.
  */
-export const inert = (ty: NF.Value): boolean => {
-	const val = peel(ty);
-	return match(val)
-		.with(Patterns.Flex, () => false)
-		.with(Patterns.Pi, () => false)
-		.with(Patterns.Modal, ({ value }) => inert(value))
-		.with(Patterns.StuckMatch, () => false)
-		.with(Patterns.StuckProj, () => false)
-		.with(Patterns.StuckInj, () => false)
-		.with(Patterns.App, app => {
-			const h = head(app.func);
-			return match(h)
-				.with({ type: "Var", variable: { type: "Bound" } }, () => false)
-				.with({ type: "Var", variable: { type: "Meta" } }, () => false)
+export function* inert(ty: NF.Value): Evaluation<boolean> {
+	return yield* match(yield* view(ty))
+		.with(View.Flex, View.Blocked(), View.Sealed(Patterns.Pi), function* () {
+			return false;
+		})
+		.with(View.Sealed(Patterns.Modal), ({ value }) => inert(value.value))
+		.with(View.Sealed(Patterns.App), View.Symbolic(Patterns.App), function* ({ value: app }) {
+			return match(yield* head(app.func))
+				.with(Patterns.Rigid, Patterns.Flex, () => false)
 				.otherwise(() => true);
 		})
-		.otherwise(() => true);
-};
+		.otherwise(function* () {
+			return true;
+		});
+}
 
 /**
  * Compute the runtime arity of a type by walking its Pi telescope.
@@ -53,10 +51,8 @@ export const inert = (ty: NF.Value): boolean => {
  * Throws if the return type has a non-inert head (value-dependent arity).
  */
 export function* arity(ty: NF.Value): Evaluation<number> {
-	const val = peel(ty);
-
-	return yield* match(val)
-		.with(Patterns.Pi, function* ({ binder, closure }) {
+	return yield* match(yield* view(ty))
+		.with(View.Sealed(Patterns.Pi), function* ({ value: { binder, closure } }) {
 			const ctx = yield* M.reader.ask();
 			const rigid = NF.Constructors.Rigid(ctx.env.length);
 			const extended = EB.bind(ctx, { type: "Pi", variable: binder.variable }, binder.annotation);
@@ -64,14 +60,14 @@ export function* arity(ty: NF.Value): Evaluation<number> {
 
 			return 1 + (yield* M.reader.local(_ => extended, arity(returnType)));
 		})
-		.with(
-			P._,
-			v => !inert(v),
-			function* () {
-				throw new Error("Foreign type has undecidable arity: head is not inert");
-			},
-		)
 		.otherwise(function* () {
-			return 0;
+			return yield* match(yield* inert(ty))
+				.with(true, function* () {
+					return 0;
+				})
+				.with(false, function* () {
+					throw new Error("Foreign type has undecidable arity: head is not inert");
+				})
+				.exhaustive();
 		});
 }

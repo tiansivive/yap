@@ -14,7 +14,7 @@ import * as Quoting from "./quoting";
 import * as Recursion from "./recursion";
 import { handlers } from "./machine/handlers";
 import { Mode, defaultMode, type EvalMode, type Evaluation } from "./effects";
-import type { Closure, Row, Unfolding, Value } from "./syntax/term";
+import type { Closure, Unfolding, Value } from "./syntax/term";
 import { Patterns } from "./syntax/term";
 
 /*
@@ -89,6 +89,10 @@ export function* arity(ty: Value) {
 	return yield* fresh(() => Arity.arity(ty));
 }
 
+export function* inert(ty: Value) {
+	return yield* fresh(() => Arity.inert(ty));
+}
+
 export function* unfoldMu(app: Extract<Value, { type: "App" }>) {
 	return yield* fresh(() => Recursion.unfoldMu(app));
 }
@@ -109,11 +113,11 @@ export const probe =
 	};
 
 /** The row a sealed `Schema`, `Variant` or `Struct` wraps. */
-export const rowOf = (value: Value): Row | undefined =>
-	match(Machine.unwrapNeutral(Machine.unglue(value)))
-		.with(Patterns.Schema, Patterns.Variant, Patterns.Struct, ({ arg }) => arg.row)
+export function* rowOf(value: Value) {
+	return match(yield* view(value))
+		.with(Machine.View.Sealed(Patterns.Schema), Machine.View.Sealed(Patterns.Variant), Machine.View.Sealed(Patterns.Struct), ({ value: { arg } }) => arg.row)
 		.otherwise(() => undefined);
+}
 
-export { unwrapNeutral, unglue, ignoreModal, isFlex, builtinsOps, ViewPatterns } from "./evaluation.v2";
-export type { View, Meet, MeetResult, EvalOptions } from "./evaluation.v2";
-export { inert } from "./arity";
+export { unwrapNeutral, unglue, ignoreModal, isFlex, builtinsOps, View } from "./evaluation.v2";
+export type { Meet, MeetResult, EvalOptions } from "./evaluation.v2";

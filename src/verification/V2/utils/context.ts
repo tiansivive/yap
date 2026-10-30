@@ -62,6 +62,6 @@ export const withRowLabels = function* <A>(row: NF.Row, comp: Verification<A>): 
 };
 
 export const unwrapExistential = (nf: NF.Value): NF.Value =>
-	match(NF.unwrapNeutral(NF.unglue(nf)))
+	match(NF.unwrapNeutral(nf))
 		.with({ type: "Existential" }, e => unwrapExistential(e.body.value))
 		.otherwise(() => nf);

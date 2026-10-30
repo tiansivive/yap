@@ -1,5 +1,5 @@
 import assert from "assert";
-import { match, P } from "ts-pattern";
+import { isMatching, match, P } from "ts-pattern";
 
 import * as Eff from "@yap/utils/effects";
 import * as EB from "@yap/elaboration";
@@ -36,7 +36,7 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 
 	const viewed = yield* NF.view(ty);
 	const result = yield* match(viewed)
-		.with({ kind: "Sealed" }, function* ({ value: type }) {
+		.with(NF.View.Sealed(), function* ({ value: type }) {
 			return yield* match([tm, type])
 				.with([{ type: "Modal" }, NF.Patterns.Type], function* ([term, type]) {
 					return yield* check(term.term, type);
@@ -61,8 +61,8 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 							const tyBody = yield* NF.apply(type.binder, type.closure, NF.Constructors.Rigid(ctx.env.length));
 							const artefacts = yield* check(term.body, tyBody);
 
-							const modalities = extractModalities(type.binder.annotation, extended);
-							if (NF.unglue(type.binder.annotation).type === "Abs") {
+							const modalities = yield* extractModalities(type.binder.annotation, extended);
+							if (isMatching(NF.View.Sealed({ type: "Abs" }), yield* NF.view(type.binder.annotation))) {
 								return artefacts;
 							}
 
@@ -104,7 +104,7 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					const evaluated = yield* NF.evaluate(term);
 					const innerViewed = yield* NF.view(evaluated);
 					const schema = yield* match(innerViewed)
-						.with({ kind: "Sealed", value: NF.Patterns.Struct }, function* ({ value }) {
+						.with(NF.View.Sealed(NF.Patterns.Struct), function* ({ value }) {
 							return yield* NF.apply(type.binder, type.closure, NF.Constructors.Row(value.arg.row));
 						})
 						.otherwise(function* () {
@@ -116,9 +116,9 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					const evaluated = yield* NF.evaluate(term);
 					const innerViewed = yield* NF.view(evaluated);
 					return yield* match(innerViewed)
-						.with({ kind: "Sealed", value: NF.Patterns.Struct }, function* ({ value }) {
+						.with(NF.View.Sealed(NF.Patterns.Struct), function* ({ value }) {
 							const schema = yield* NF.apply(type.binder, type.closure, NF.Constructors.Row(value.arg.row));
-							return yield* match(NF.rowOf(schema))
+							return yield* match(yield* NF.rowOf(schema))
 								.with(P.nonNullable, () => check(term, schema))
 								.otherwise(function* () {
 									throw new Error("SigmaV2 closure expected a Schema body");
@@ -171,7 +171,7 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					const evaluated = yield* NF.evaluate(term);
 					const innerViewed = yield* NF.view(evaluated);
 					return yield* match(innerViewed)
-						.with({ kind: "Sealed", value: NF.Patterns.Struct }, function* ({ value: struct }) {
+						.with(NF.View.Sealed(NF.Patterns.Struct), function* ({ value: struct }) {
 							const bindings = yield* collectSigmaBindings(struct.arg.row, type.arg.row);
 							return yield* reader.local(
 								c => ({

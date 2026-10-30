@@ -34,24 +34,14 @@ export const unify = (r1: NF.Row, r2: NF.Row): U.Unification<void> =>
 				[{ type: "variable", variable: { type: "Meta" } }, P._],
 				([{ variable }]) => !!s[variable.val],
 				function* ([v, r]) {
-					const nf = NF.unglue(s[v.variable.val]);
-
-					if (nf.type !== "Row") {
-						throw new Error("Expected row");
-					}
-					yield* unify(nf.row, r);
+					yield* unify(yield* solved(s[v.variable.val]), r);
 				},
 			)
 			.with(
 				[P._, { type: "variable", variable: { type: "Meta" } }],
 				([_l, { variable }]) => !!s[variable.val],
 				function* ([r, v]) {
-					const nf = NF.unglue(s[v.variable.val]);
-
-					if (nf.type !== "Row") {
-						throw new Error("Expected row");
-					}
-					yield* unify(r, nf.row);
+					yield* unify(r, yield* solved(s[v.variable.val]));
 				},
 			)
 			.with([{ type: "variable", variable: { type: "Meta" } }, P._], function* ([{ variable }, r]) {
@@ -92,6 +82,14 @@ export const unify = (r1: NF.Row, r2: NF.Row): U.Unification<void> =>
 			});
 	});
 
+const solved = function* (solution: NF.Value): U.Unification<NF.Row> {
+	return match(yield* NF.view(solution))
+		.with(NF.View.Sealed(NF.Patterns.Row), ({ value }) => value.row)
+		.otherwise(() => {
+			throw new Error("Expected row");
+		});
+};
+
 // TODO: Use `rewrite` from `rows.ts`
 const rewrite = function* (r: NF.Row, label: string): U.Unification<NF.Row> {
 	const ctx = yield* M.reader.ask();
@@ -124,13 +122,9 @@ const rewrite = function* (r: NF.Row, label: string): U.Unification<NF.Row> {
 
 			// If this meta variable is already bound in the accumulator, chase it first
 			const s = yield* Sub.subst.get();
-			const solved = s[variable.val];
 
-			if (solved) {
-				if (solved.type !== "Row") {
-					throw new Error("Expected row");
-				}
-				return yield* rewrite(solved.row, label);
+			if (s[variable.val]) {
+				return yield* rewrite(yield* solved(s[variable.val]), label);
 			}
 
 			const kvar = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));

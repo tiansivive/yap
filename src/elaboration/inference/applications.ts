@@ -53,11 +53,11 @@ const checkArg = ({ arg }: Application, ann: NF.Value) =>
 type Pi = [NF.Value, NF.Closure, string];
 const mkPi = function* (fnType: NF.Value, icit: Implicitness): M.Elaboration<Pi> {
 	return yield* match(yield* NF.view(fnType))
-		.with({ kind: "Sealed", value: NF.Patterns.Modal }, ({ value }) => {
+		.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => {
 			console.warn("Inferred fn as a modal type. Still unsure what to do here. Simply unwrapping the modality for now");
 			return mkPi(value.value, icit);
 		})
-		.with({ kind: "Sealed", value: NF.Patterns.Pi }, ({ value: pi }) => {
+		.with(NF.View.Sealed(NF.Patterns.Pi), ({ value: pi }) => {
 			if (pi.binder.icit !== icit) {
 				throw new Error("Implicitness mismatch");
 			}

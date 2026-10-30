@@ -1114,10 +1114,22 @@ export function* apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value):
 
 export type View = { kind: NF.Neutral; value: NF.Value };
 
-export const ViewPatterns = {
-	Sealed: { kind: "Sealed" } as const,
-	Symbolic: { kind: "Symbolic" } as const,
-	Blocked: { kind: "Blocked" } as const,
+/** Patterns over a view: a kind, optionally refined by a pattern over the structure it classifies. */
+const classified = <const K extends NF.Neutral>(kind: K) => {
+	function pattern(): { kind: K };
+	function pattern<const V>(value: V): { kind: K; value: V };
+	function pattern(...value: [] | [unknown]) {
+		return match(value)
+			.with([], () => ({ kind }))
+			.otherwise(([structure]) => ({ kind, value: structure }));
+	}
+	return pattern;
+};
+
+export const View = {
+	Sealed: classified("Sealed"),
+	Symbolic: classified("Symbolic"),
+	Blocked: classified("Blocked"),
 	Flex: { kind: "Symbolic", value: NF.Patterns.Flex } as const,
 	Rigid: { kind: "Symbolic", value: NF.Patterns.Rigid } as const,
 };
@@ -1165,8 +1177,9 @@ export const unwrapNeutral = (value: NF.Value): NF.Value => {
 };
 
 /**
- * The unfolded face, for consumers that dispatch on a raw value without forcing it. Pure, so it
- * sees through glue without also resolving metas or resuming eliminations, which forcing would.
+ * The unfolded face, for the machine's own reads of a raw value. Pure, so it sees through glue
+ * without also resolving metas or resuming eliminations: mid-evaluation, forcing is a scheduling
+ * decision, not an observation. Consumers outside the machine observe through `view`.
  */
 export const unglue = (value: NF.Value): NF.Value =>
 	match(value)
@@ -1175,7 +1188,7 @@ export const unglue = (value: NF.Value): NF.Value =>
 
 /** Whether a value is an unsolved meta once the informationless wrappers are off. Recursive peeling, so no finite pattern expresses it. */
 export const isFlex = (value: NF.Value): boolean =>
-	match(unwrapNeutral(unglue(value)))
+	match(unwrapNeutral(value))
 		.with(NF.Patterns.Flex, () => true)
 		.otherwise(() => false);
 

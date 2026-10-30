@@ -29,10 +29,10 @@ const tail = function* (row: Src.Row): M.Elaboration<EB.AST> {
 		throw new Error("Closed struct row should have used dependent Nu inference");
 	}
 
-	const [tm, ty] = yield* match(tail.ty)
-		.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => openSchema(fields, tail.variable))
-		.with(NF.Patterns.Schema, s => mergeSchema(fields, tail.variable, s.arg.row))
-		.with(NF.Patterns.Flex, meta => ambiguousTail(fields, tail.variable, meta))
+	const [tm, ty] = yield* match(yield* NF.view(tail.ty))
+		.with(NF.View.Sealed({ type: "Lit", value: { type: "Atom", value: "Row" } }), () => openSchema(fields, tail.variable))
+		.with(NF.View.Sealed(NF.Patterns.Schema), ({ value: s }) => mergeSchema(fields, tail.variable, s.arg.row))
+		.with(NF.View.Flex, ({ value: meta }) => ambiguousTail(fields, tail.variable, meta))
 		.otherwise(() => {
 			throw new Error("Elaborating Struct: Tail type is neither Schema, Row nor Flex");
 		});
