@@ -22,10 +22,8 @@ export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Va
 	const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
 	const nf = yield* NF.evaluate(tm);
 
-	const forced = yield* NF.force(ty);
-
-	return yield* match(forced)
-		.with({ type: "Modal" }, function* (modal) {
+	return yield* match(yield* NF.view(ty))
+		.with({ kind: "Sealed", value: NF.Patterns.Modal }, function* ({ value: modal }) {
 			const { liquid } = modal.modalities;
 			assert(liquid.type === "Abs" && liquid.binder.type === "Lambda", "Liquid refinement must be an abstraction");
 
@@ -41,7 +39,8 @@ export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Va
 				},
 			});
 		})
-		.otherwise(function* (value) {
+		.otherwise(function* () {
+			const value = yield* NF.force(ty);
 			const quoted = yield* NF.quote(ctx.env.length + 1, nf);
 			const liquid = NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, EB.DSL.eq(bound, quoted)), value);
 			return NF.Constructors.Modal(value, {
@@ -53,8 +52,8 @@ export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Va
 
 export const meet = function* (scrutineeTy: NF.Value, patternTy: NF.Value): Verification<NF.Value> {
 	const ctx = yield* reader.ask();
-	const s = NF.unwrapNeutral(scrutineeTy);
-	const p = NF.unwrapNeutral(patternTy);
+	const s = NF.unwrapNeutral(NF.unglue(scrutineeTy));
+	const p = NF.unwrapNeutral(NF.unglue(patternTy));
 
 	return yield* match([s, p])
 		.with([{ type: "Existential" }, P._], function* ([ex]) {
@@ -151,7 +150,7 @@ export const meetRow = function* (sRow: NF.Row, pRow: NF.Row): Verification<NF.R
 };
 
 export const extractModalities: ExtractModalitiesFn = (nf, ctx) =>
-	match(nf)
+	match(NF.unglue(nf))
 		.with({ type: "Modal" }, m => m.modalities)
 		.otherwise(() => ({
 			quantity: Q.Many,
@@ -159,7 +158,7 @@ export const extractModalities: ExtractModalitiesFn = (nf, ctx) =>
 		}));
 
 export const isFirstOrder = (ty: NF.Value): boolean =>
-	match(NF.unwrapNeutral(ty))
+	match(NF.unwrapNeutral(NF.unglue(ty)))
 		.with({ type: "Modal" }, ({ value }) => isFirstOrder(value))
 		.with(NF.Patterns.Pi, NF.Patterns.Lambda, NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, () => false)
 		.otherwise(() => true);

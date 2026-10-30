@@ -19,8 +19,15 @@ const identityRow = { term: (d: PP.Doc) => d, var: (v: PP.Doc) => v };
 
 export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false }): Display<PP.Doc> {
 	const go = (v: NF.Value) => doc(v, opts);
+	const face = (v: NF.Value): NF.Value =>
+		match(v)
+			.with(NF.Patterns.Glued, ({ folded, unfolded }) => face(opts.unfold ? unfolded : folded))
+			.otherwise(() => v);
 
 	return yield* match(value)
+		.with(NF.Patterns.Glued, function* (glued) {
+			return yield* go(face(glued));
+		})
 		.with({ type: "Lit" }, function* ({ value: lit }) {
 			return Lit.display(lit);
 		})
@@ -105,8 +112,9 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 			return PP.group([b, " ", arrow, PP.nest(2, [PP.line, PP.closure(body, EB.Display.Env(scope.env))])]);
 		})
 		.with({ type: "App" }, function* ({ func, arg, icit }) {
-			const needsFnParens = func.type !== "Var" && func.type !== "Lit" && func.type !== "App";
-			const needsArgParens = arg.type === "Abs" || arg.type === "App";
+			const [fn, operand] = [face(func), face(arg)];
+			const needsFnParens = fn.type !== "Var" && fn.type !== "Lit" && fn.type !== "App";
+			const needsArgParens = operand.type === "Abs" || operand.type === "App";
 			return PP.app(PP.parensIf(needsFnParens, yield* go(func)), Icit.display(icit), PP.parensIf(needsArgParens, yield* go(arg)));
 		})
 		.with({ type: "Row" }, function* ({ row }) {

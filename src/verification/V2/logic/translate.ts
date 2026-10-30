@@ -36,6 +36,9 @@ export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 		.with({ type: "Neutral" }, function* (n) {
 			return yield* mkSort(n.value);
 		})
+		.with(NF.Patterns.Glued, function* ({ unfolded }) {
+			return yield* mkSort(unfolded);
+		})
 		.with({ type: "Modal" }, function* (m) {
 			return yield* mkSort(m.value);
 		})
@@ -184,8 +187,9 @@ const collectArgs = function* (value: NF.Value, rigids: Record<number, IVL.Term>
 
 export const term = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = {}): Verification<IVL.Term> {
 	const ctx = yield* reader.ask();
-	const forced = yield* NF.force(nf);
-	return yield* match(forced)
+	/* The kind is set aside on purpose: it says why a value is stuck, and a term encodes only its structure. */
+	const { value: structure } = yield* NF.view(nf);
+	return yield* match(structure)
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* term(value, rigids);
 		})
@@ -277,8 +281,9 @@ export const term = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = 
 };
 
 export const formula = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = {}): Verification<IVL.Formula> {
-	const forced = yield* NF.force(nf);
-	return yield* match(forced)
+	/* As in `term`, the kind is set aside: a formula encodes only the structure. */
+	const { value: structure } = yield* NF.view(nf);
+	return yield* match(structure)
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* formula(value, rigids);
 		})
@@ -331,7 +336,7 @@ export const formula = function* (nf: NF.Value, rigids: Record<number, IVL.Term>
 
 export const quantify = function* (variable: string, annotation: NF.Value, vc: IVL.Formula): Verification<IVL.Formula> {
 	const ctx = yield* reader.ask();
-	return yield* match(annotation)
+	return yield* match(NF.unglue(annotation))
 		.with({ type: "Existential" }, function* (ex) {
 			const inner = yield* reader.local(
 				() => EB.bind(ex.body.ctx, { type: "Pi", variable: ex.variable }, ex.annotation),
@@ -342,17 +347,17 @@ export const quantify = function* (variable: string, annotation: NF.Value, vc: I
 		.with(NF.Patterns.Pi, function* () {
 			return vc;
 		})
-		.otherwise(function* () {
-			const sort = yield* mkSort(annotation);
+		.otherwise(function* (unglued) {
+			const sort = yield* mkSort(unglued);
 			const x = Build.var_(variable, sort);
 
-			if (annotation.type !== "Modal") {
+			if (unglued.type !== "Modal") {
 				return yield* obligations.record(`quantify:${variable}`, Build.forall([{ name: variable, sort }], vc), {
 					description: `Quantifying over ${variable}`,
 				});
 			}
 
-			const modalities = extractModalities(annotation, ctx);
+			const modalities = extractModalities(unglued, ctx);
 			assert(modalities.liquid.type === "Abs", "Liquid refinements must be unary functions");
 			const lvl = ctx.env.length;
 			const applied = yield* NF.apply(modalities.liquid.binder, modalities.liquid.closure, NF.Constructors.Rigid(lvl));

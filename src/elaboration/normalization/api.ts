@@ -49,8 +49,12 @@ export function* whnf(term: EB.Term, opts?: Machine.EvalOptions) {
 	return yield* fresh(() => Machine.evaluate(term), { noInlineBindings: true, noReduceEliminations: true }, opts?.maxSteps);
 }
 
-export function* quote(lvl: number, val: Value, opts?: Machine.EvalOptions) {
-	return yield* fresh(() => Machine.drive(Quoting.quote(lvl, val), steps => `Quotation exceeded maximum steps (${steps}).`), defaultMode, opts?.maxSteps);
+export function* quote(lvl: number, val: Value, opts?: Machine.EvalOptions & { unfold?: boolean }) {
+	return yield* fresh(
+		() => Machine.drive(Quoting.quote(lvl, val, opts?.unfold), steps => `Quotation exceeded maximum steps (${steps}).`),
+		defaultMode,
+		opts?.maxSteps,
+	);
 }
 
 export function* closeVal(value: Value, opts?: Machine.EvalOptions) {
@@ -106,10 +110,10 @@ export const probe =
 
 /** The row a sealed `Schema`, `Variant` or `Struct` wraps. */
 export const rowOf = (value: Value): Row | undefined =>
-	match(Machine.unwrapNeutral(value))
+	match(Machine.unwrapNeutral(Machine.unglue(value)))
 		.with(Patterns.Schema, Patterns.Variant, Patterns.Struct, ({ arg }) => arg.row)
 		.otherwise(() => undefined);
 
-export { unwrapNeutral, ignoreModal, isFlex, builtinsOps, ViewPatterns } from "./evaluation.v2";
+export { unwrapNeutral, unglue, ignoreModal, isFlex, builtinsOps, ViewPatterns } from "./evaluation.v2";
 export type { View, Meet, MeetResult, EvalOptions } from "./evaluation.v2";
 export { inert } from "./arity";

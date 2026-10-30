@@ -25,7 +25,7 @@ export const infer = (injection: Injection): M.Elaboration<EB.AST> =>
 
 const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaboration<NF.Value> {
 	const ctx = yield* M.reader.ask();
-	const val = match(tm[1])
+	const val = match(NF.unglue(tm[1]))
 		.with({ type: "Neutral" }, ({ value: v }) => inject(label, value, [tm[0], v, tm[2]]))
 		.with({ type: "Var" }, function* (_) {
 			const r: NF.Row = { type: "variable", variable: yield* EB.freshMeta(ctx.env.length, NF.Row) };

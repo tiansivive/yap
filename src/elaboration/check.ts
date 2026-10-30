@@ -33,7 +33,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 	M.tracer.track({ tag: "src", type: "term", term, metadata: { action: "checking", against: type } }, function* () {
 		const ctx = yield* M.reader.ask();
 
-		const result = match<[Src.Term, NF.Value], M.Elaboration<[EB.Term, Q.Usages]>>([term, type])
+		const result = match<[Src.Term, NF.Value], M.Elaboration<[EB.Term, Q.Usages]>>([term, NF.unglue(type)])
 			.with([{ type: "hole" }, P._], function* () {
 				const k = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 				return [EB.Constructors.Var(yield* freshMeta(ctx.env.length, k)), []] satisfies Result;
@@ -299,7 +299,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					(function* () {
 						const ast: EB.AST = yield* EB.infer(src);
 						const [tm, inferred, us]: EB.AST = yield* EB.Icit.insert(ast);
-						yield* M.constrain({ type: "assign", left: inferred, right: ty, lvl: ctx.env.length });
+						yield* M.constrain({ type: "assign", left: inferred, right: type, lvl: ctx.env.length });
 						return [tm, us] satisfies Result;
 					})(),
 				),

@@ -44,12 +44,15 @@ describe("Implicit resolution", () => {
 		expect((inner.binding as { icit: string }).icit).toBe("Implicit");
 
 		const disp = shown(ctx, registry);
-		const type = disp(function* () {
-			return yield* EB.Display.Term(yield* NF.quote(ctx.env.length, ty), { deBruijn: false });
-		});
+		const readback = (unfold: boolean) =>
+			disp(function* () {
+				return yield* EB.Display.Term(yield* NF.quote(ctx.env.length, ty, { unfold }), { deBruijn: false });
+			});
+		const [type, unfolded] = [readback(false), readback(true)];
 
-		/* The dictionary's own field survives in the principal type; committing @NumTag erases the binder entirely. */
-		expect(type).toContain("tag");
-		expect({ type }).toMatchSnapshot();
+		/* The dictionary binder survives in the principal type; committing @NumTag erases it entirely. */
+		expect(type).toContain("Tag a");
+		expect(unfolded).toContain("tag");
+		expect({ type, unfolded }).toMatchSnapshot();
 	});
 });

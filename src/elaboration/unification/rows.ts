@@ -34,7 +34,7 @@ export const unify = (r1: NF.Row, r2: NF.Row): U.Unification<void> =>
 				[{ type: "variable", variable: { type: "Meta" } }, P._],
 				([{ variable }]) => !!s[variable.val],
 				function* ([v, r]) {
-					const nf = s[v.variable.val];
+					const nf = NF.unglue(s[v.variable.val]);
 
 					if (nf.type !== "Row") {
 						throw new Error("Expected row");
@@ -46,7 +46,7 @@ export const unify = (r1: NF.Row, r2: NF.Row): U.Unification<void> =>
 				[P._, { type: "variable", variable: { type: "Meta" } }],
 				([_l, { variable }]) => !!s[variable.val],
 				function* ([r, v]) {
-					const nf = s[v.variable.val];
+					const nf = NF.unglue(s[v.variable.val]);
 
 					if (nf.type !== "Row") {
 						throw new Error("Expected row");

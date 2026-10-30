@@ -62,7 +62,7 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 							const artefacts = yield* check(term.body, tyBody);
 
 							const modalities = extractModalities(type.binder.annotation, extended);
-							if (type.binder.annotation.type === "Abs") {
+							if (NF.unglue(type.binder.annotation).type === "Abs") {
 								return artefacts;
 							}
 

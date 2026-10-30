@@ -35,6 +35,7 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 			),
 		)
 		.with({ type: "Neutral" }, ({ kind, value }) => Constructors.Neutral(kind, traverse(value, onVar, onTerm)))
+		.with(Patterns.Glued, ({ folded, unfolded }) => Constructors.Glued(traverse(folded, onVar, onTerm), traverse(unfolded, onVar, onTerm)))
 		.with(Patterns.Modal, ({ value, modalities }) =>
 			Constructors.Modal(traverse(value, onVar, onTerm), {
 				quantity: modalities.quantity,

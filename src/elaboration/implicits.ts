@@ -14,10 +14,10 @@ import assert from "assert";
 export type Zonking<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Actions<typeof Metas.registry>, A>;
 
 export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
-	const [term, _ty, us] = node;
+	const [term, ty, us] = node;
 	const ctx = yield* M.reader.ask();
 
-	const r = match(node)
+	const r = match<EB.AST>([term, NF.unglue(ty), us])
 		.with([P._, { type: "Abs", binder: { type: "Pi", icit: "Implicit" } }, P._], ([, pi]) =>
 			(function* () {
 				const meta = yield* EB.freshMeta(ctx.env.length, pi.binder.annotation);
@@ -40,7 +40,7 @@ export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 export const wrapLambda = function* (term: EB.Term, ty: NF.Value): NF.Abstraction<EB.Term> {
 	const ctx = yield* M.reader.ask();
 
-	return yield* match(ty)
+	return yield* match(NF.unglue(ty))
 		.with(
 			{ type: "Abs", binder: { type: "Pi", icit: "Implicit" } },
 			_ => term.type === "Abs" && (term.binding.type === "Lambda" || term.binding.type === "Pi") && term.binding.icit === "Implicit",

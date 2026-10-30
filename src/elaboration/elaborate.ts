@@ -18,7 +18,7 @@ export const infer = (ast: Src.Term): M.Elaboration<AST> => {
 			 * the Sigma binder it resolved to, which constrains it once its row is elaborated. */
 			.with({ type: "var", variable: Src.Patterns.Vars.DepLabel }, function* ({ variable }) {
 				const ast = yield* EB.lookup(variable, ctx);
-				yield* match([ast[0], NF.unwrapNeutral(ast[1])] as const)
+				yield* match([ast[0], NF.unwrapNeutral(NF.unglue(ast[1]))] as const)
 					.with([EB.CtorPatterns.Vars.DepLabel, NF.Patterns.Flex], function* ([term, ref]) {
 						yield* M.windows.record({ scope: "env", lvl: ctx.env.length - 1 - term.variable.index }, { label: term.variable.name, meta: ref.variable });
 					})

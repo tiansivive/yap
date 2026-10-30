@@ -17,7 +17,7 @@ export const infer = ({ label, term }: Projection): M.Elaboration<EB.AST> =>
 
 export const project = function* (label: string, tm: EB.Term, ty: NF.Value, us: Q.Usages): M.Elaboration<NF.Value> {
 	const ctx = yield* M.reader.ask();
-	const nf = match(ty)
+	const nf = match(NF.unglue(ty))
 		.with({ type: "Neutral" }, ({ value }) => project(label, tm, value, us))
 		.with(NF.Patterns.Flex, function* (_) {
 			// const rowTypeCtor = EB.Constructors.Pi("rx", "Explicit", EB.Constructors.Lit(Lit.Row()), EB.Constructors.Lit(Lit.Type()));

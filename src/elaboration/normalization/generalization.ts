@@ -49,7 +49,7 @@ const getNameFactory = (counters: ReturnType<typeof mkCounters>) => {
 	const inc = nextCode(counters);
 
 	return (ann: NF.Value): string =>
-		match(ann)
+		match(NF.unglue(ann))
 			.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => inc("type"))
 			.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => inc("row"))
 			.with({ type: "Lit", value: { type: "Num" } }, () => inc("num"))
@@ -351,6 +351,9 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 		.with({ type: "Neutral" }, function* ({ kind, value }) {
 			return NF.Constructors.Neutral(kind, yield* instantiate(value));
 		})
+		.with(NF.Patterns.Glued, function* ({ folded, unfolded }) {
+			return NF.Constructors.Glued(yield* instantiate(folded), yield* instantiate(unfolded));
+		})
 		.with(NF.Patterns.Modal, function* ({ value, modalities }) {
 			return NF.Constructors.Modal(yield* instantiate(value), {
 				quantity: modalities.quantity,
@@ -401,6 +404,7 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 			),
 		)
 		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(kind, trimClosureEnvs(value)))
+		.with(NF.Patterns.Glued, ({ folded, unfolded }) => NF.Constructors.Glued(trimClosureEnvs(folded), trimClosureEnvs(unfolded)))
 		.with(NF.Patterns.Modal, ({ value, modalities }) =>
 			NF.Constructors.Modal(trimClosureEnvs(value), {
 				quantity: modalities.quantity,

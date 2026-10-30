@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as R from "@yap/shared/rows";
+import * as Lit from "@yap/shared/literals";
 
 import { elaborateFrom, mkCtx, runNF, shown } from "../../inference/__tests__/util";
 import * as Metas from "@yap/elaboration/shared/metas";
@@ -249,5 +250,96 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 				evaluation: show(nf, ctx, structure.metas),
 			}).toMatchSnapshot();
 		});
+	});
+});
+
+describe("Normalization v2: glued references", () => {
+	const Free = (name: string) => EB.Constructors.Var({ type: "Free", name });
+	const unit = EB.Constructors.Lit(Lit.Atom("Unit"));
+	const option = EB.Constructors.Lambda(
+		"a",
+		"Explicit",
+		EB.Constructors.Variant(
+			EB.Constructors.Extension("some", EB.Constructors.Var({ type: "Bound", index: 0 }), EB.Constructors.Extension("none", unit, R.Constructors.Empty())),
+		),
+		EB.Constructors.Lit(Lit.Type()),
+	);
+
+	const ctx = (() => {
+		const base = mkCtx();
+		const kind = NF.Constructors.Pi("a", "Explicit", NF.Type, NF.Constructors.Closure(base, EB.Constructors.Lit(Lit.Type())));
+		const imports: EB.Context["imports"] = {
+			...base.imports,
+			Option: [option, kind, []],
+			flag: [EB.Constructors.Lit(Lit.Bool(true)), NF.Constructors.Lit(Lit.Atom("Bool")), []],
+			one: [EB.Constructors.Lit(Lit.Num(1)), NF.Constructors.Lit(Lit.Atom("Num")), []],
+			point: [EB.Constructors.Struct(EB.Constructors.Extension("x", EB.Constructors.Lit(Lit.Num(1)), R.Constructors.Empty())), NF.Type, []],
+		};
+		return { ...base, imports };
+	})();
+
+	const optionNum = EB.Constructors.App("Explicit", Free("Option"), Free("Num"));
+
+	it("evaluates a top-level reference to glue over its definition", () => {
+		expect(runNF(ctx, () => NF.normalize(Free("Option")))).toMatchObject({
+			type: "Glued",
+			folded: { type: "Var", variable: { type: "Free", name: "Option" } },
+			unfolded: NF.Patterns.Lambda,
+		});
+	});
+
+	it("does not glue a primitive, which is defined as the atom of its own name", () => {
+		expect(runNF(ctx, () => NF.normalize(Free("Num")))).toMatchObject({ type: "Lit", value: Lit.Atom("Num") });
+	});
+
+	it("lifts application over both faces, with the glue itself at the head of the folded face", () => {
+		const nf = runNF(ctx, () => NF.normalize(optionNum));
+
+		expect(nf).toMatchObject({
+			type: "Glued",
+			folded: {
+				type: "App",
+				func: { type: "Glued", folded: { type: "Var", variable: { name: "Option" } }, unfolded: NF.Patterns.Lambda },
+				arg: { type: "Lit", value: Lit.Atom("Num") },
+			},
+		});
+		expect(runNF(ctx, () => NF.view(nf))).toMatchObject({ kind: "Sealed", value: NF.Patterns.Variant });
+	});
+
+	it("reads back the reference, or with unfold what it computes", () => {
+		const nf = runNF(ctx, () => NF.normalize(optionNum));
+		const readback = (unfold: boolean) =>
+			shown(
+				ctx,
+				{},
+			)(function* () {
+				return yield* EB.Display.Term(yield* NF.quote(ctx.env.length, nf, { unfold }), { deBruijn: false });
+			});
+
+		expect(readback(false)).toBe("Option Num");
+		expect(readback(true)).toContain("some: Num");
+		expect(show(nf, ctx)).toBe("Option Num");
+	});
+
+	it("eliminates through glue", () => {
+		const projected = runNF(ctx, () => NF.normalize(EB.Constructors.Proj("x", Free("point"))));
+		const matched = runNF(ctx, () =>
+			NF.normalize(
+				EB.Constructors.Match(Free("flag"), [
+					EB.Constructors.Alternative(EB.Constructors.Patterns.Lit(Lit.Bool(false)), EB.Constructors.Lit(Lit.Num(1)), []),
+					EB.Constructors.Alternative(EB.Constructors.Patterns.Lit(Lit.Bool(true)), EB.Constructors.Lit(Lit.Num(2)), []),
+				]),
+			),
+		);
+
+		expect(projected).toMatchObject({ type: "Lit", value: Lit.Num(1) });
+		expect(matched).toMatchObject({ type: "Lit", value: Lit.Num(2) });
+	});
+
+	it("computes primitives on the unfolded face", () => {
+		const add = EB.Constructors.Var({ type: "Foreign", name: "$add" });
+		const sum = EB.Constructors.App("Explicit", EB.Constructors.App("Explicit", add, Free("one")), EB.Constructors.Lit(Lit.Num(1)));
+
+		expect(runNF(ctx, () => NF.normalize(sum))).toMatchObject({ type: "Lit", value: Lit.Num(2) });
 	});
 });

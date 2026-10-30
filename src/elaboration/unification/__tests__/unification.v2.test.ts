@@ -12,14 +12,13 @@ import * as Sub from "@yap/elaboration/unification/substitution";
 import * as Lit from "@yap/shared/literals";
 import * as R from "@yap/shared/rows";
 import * as Lib from "@yap/shared/lib/primitives";
-import { shown } from "../../inference/__tests__/util";
+import { runNF, shown } from "../../inference/__tests__/util";
 
 /* Metas these values mention: elaboration would have minted them, so the registry knows them. */
 const declared = (ids: readonly number[]): Metas.Registry =>
 	ids.reduce((registry, val) => Metas.register(registry, { meta: { type: "Meta", val, lvl: 0 }, annotation: NF.Any }), Metas.empty);
 
-const runUnify = (left: NF.Value, right: NF.Value, metas: readonly number[] = []) => {
-	const ctx = Lib.defaultContext();
+const runUnify = (left: NF.Value, right: NF.Value, metas: readonly number[] = [], ctx: EB.Context = Lib.defaultContext()) => {
 	const [answer, subst, registry] = Eff.run(
 		() => U.unify(left, right, ctx.env.length),
 		[Sub.subst.handlers(), Metas.registry.handlers(declared(metas)), M.reader.handlers(ctx), M.except.handlers(), M.tracer.handlers(), M.supply.handlers()],
@@ -307,6 +306,104 @@ describe("Unification (V2)", () => {
 			const err = expectLeft(out);
 			expect(err.type).toBe("TypeMismatch");
 			expect({ message: showErr(out, err) }).toMatchSnapshot();
+		});
+	});
+
+	describe("Glued references", () => {
+		const Free = (name: string) => EB.Constructors.Var({ type: "Free", name });
+		const Bound = (index: number) => EB.Constructors.Var({ type: "Bound", index });
+		const Type = EB.Constructors.Lit(Lit.Type());
+		const Unit = EB.Constructors.Lit(Lit.Atom("Unit"));
+		const lambda = (variable: string, body: EB.Term) => EB.Constructors.Lambda(variable, "Explicit", body, Type);
+		const app = (func: EB.Term, ...args: EB.Term[]) => args.reduce((f, a) => EB.Constructors.App("Explicit", f, a), func);
+		const kind = (arity: number): EB.Term => Array.from({ length: arity }).reduce<EB.Term>(body => EB.Constructors.Pi("t", "Explicit", Type, body), Type);
+
+		const ctx = (() => {
+			const base = Lib.defaultContext();
+			const definitions: Array<[string, EB.Term, number]> = [
+				[
+					"Option",
+					lambda("a", EB.Constructors.Variant(EB.Constructors.Extension("some", Bound(0), EB.Constructors.Extension("none", Unit, R.Constructors.Empty())))),
+					1,
+				],
+				["Maybe", Free("Option"), 1],
+				[
+					"Pair",
+					lambda("a", EB.Constructors.Schema(EB.Constructors.Extension("fst", Bound(0), EB.Constructors.Extension("snd", Bound(0), R.Constructors.Empty())))),
+					1,
+				],
+				["Const", lambda("x", lambda("y", Bound(1))), 2],
+				["Id", lambda("a", Bound(0)), 1],
+			];
+			const imports = definitions.reduce<EB.Context["imports"]>(
+				(acc, [name, term, arity]) => ({ ...acc, [name]: [term, runNF(base, () => NF.normalize(kind(arity))), []] }),
+				base.imports,
+			);
+			return { ...base, imports };
+		})();
+
+		const value = (term: EB.Term) => runNF(ctx, () => NF.normalize(term));
+		const applied = (func: NF.Value, arg: NF.Value) => runNF(ctx, () => NF.reduce(func, arg, "Explicit"));
+		const meta = (val: number) => NF.Constructors.Flex({ type: "Meta", val, lvl: 0 });
+		const unifyIn = (l: NF.Value, r: NF.Value, metas: readonly number[] = []) => runUnify(l, r, metas, ctx);
+
+		const Num = value(Free("Num"));
+		const optionNum = value(app(Free("Option"), Free("Num")));
+
+		it("solves a meta-headed application against an alias with the alias, not its encoding", () => {
+			const out = unifyIn(applied(meta(1), meta(2)), optionNum, [1, 2]);
+			const subst = expectRight(out);
+
+			expect(showSub(out)).toBe("?1 |=> Option\n?2 |=> Num");
+			expect(subst[1]).toMatchObject({ type: "Glued", folded: { type: "Var", variable: { type: "Free", name: "Option" } } });
+		});
+
+		it("accepts the same definition on the same arguments without unfolding", () => {
+			const folded = NF.Constructors.App(value(Free("Option")), Num, "Explicit");
+			/* Unfolded faces that disagree: success means the folded comparison decided. */
+			const left = NF.Constructors.Glued(folded, NF.Constructors.Lit(Lit.Atom("Left")));
+			const right = NF.Constructors.Glued(folded, NF.Constructors.Lit(Lit.Atom("Right")));
+			const out = unifyIn(left, right);
+
+			expectRight(out);
+			expect(showSub(out)).toBe("empty");
+		});
+
+		it("solves an argument of the same definition through the unfolded faces", () => {
+			const out = unifyIn(applied(value(Free("Option")), meta(1)), optionNum, [1]);
+
+			expectRight(out);
+			expect(showSub(out)).toBe("?1 |=> Num");
+		});
+
+		it("does not solve an argument the definition ignores", () => {
+			const constUnit = applied(value(Free("Const")), value(Unit));
+			const out = unifyIn(applied(constUnit, meta(1)), applied(constUnit, Num), [1]);
+
+			expectRight(out);
+			expect(showSub(out)).toBe("empty");
+		});
+
+		it("unfolds an alias compared against the structure it computes", () => {
+			const out = unifyIn(value(app(Free("Id"), Free("Num"))), Num);
+
+			expectRight(out);
+			expect(showSub(out)).toBe("empty");
+		});
+
+		it("unfolds different definitions that compute the same value", () => {
+			const out = unifyIn(optionNum, value(app(Free("Maybe"), Free("Num"))));
+
+			expectRight(out);
+			expect(showSub(out)).toBe("empty");
+		});
+
+		it("equates references to one definition by name, and rejects different definitions without crashing", () => {
+			expectRight(unifyIn(value(Free("Option")), value(Free("Option"))));
+
+			const out = unifyIn(value(Free("Option")), value(Free("Pair")));
+			const err = expectLeft(out);
+			expect({ type: err.type, message: showErr(out, err) }).toMatchSnapshot();
 		});
 	});
 });

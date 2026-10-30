@@ -159,7 +159,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 				const localCtx = yield* reader.ask();
 				const localRegistry = yield* Metas.registry.get();
 				const localRun = NF.probe(localCtx, localRegistry);
-				const forced = yield* NF.force(fnTy);
+				const viewed = yield* NF.view(fnTy);
 				yield* logger.log(
 					"Incorporating argument type",
 					localRun(() => EB.Display.Term(arg)),
@@ -167,22 +167,22 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 					localRun(() => NF.display(fnTy)),
 				);
 
-				return yield* match<NF.Value, Verification<SynthResult>>(forced)
-					.with(NF.Patterns.Modal, function* ({ value }) {
-						return yield* incorporate(arg, value);
+				return yield* match<NF.View, Verification<SynthResult>>(viewed)
+					.with({ kind: "Sealed", value: NF.Patterns.Modal }, function* ({ value }) {
+						return yield* incorporate(arg, value.value);
 					})
-					.with({ type: "Existential" }, function* (ex) {
+					.with({ kind: "Sealed", value: { type: "Existential" } }, function* ({ value: ex }) {
 						const [out, artefacts] = yield* reader.local(
 							inner => EB.bind(inner, { type: "Pi", variable: ex.variable }, ex.annotation),
 							incorporate(arg, ex.body.value),
 						);
 						return [NF.Constructors.Exists(ex.variable, ex.annotation, { ctx, value: out }), artefacts] satisfies SynthResult;
 					})
-					.with(NF.Patterns.Pi, function* (pi) {
+					.with({ kind: "Sealed", value: NF.Patterns.Pi }, function* ({ value: pi }) {
 						const { vc, nf } = yield* reader.local(_ => ctx, check(arg, pi.binder.annotation));
 
 						const evaluatedArg = yield* reader.local(_ => ctx, NF.evaluate(arg));
-						const appliedArg = match(evaluatedArg)
+						const appliedArg = match(NF.unglue(evaluatedArg))
 							.with(
 								{ type: "Neutral" },
 								neutral => neutral.value.type !== "Var",

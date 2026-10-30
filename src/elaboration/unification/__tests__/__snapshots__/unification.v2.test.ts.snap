@@ -18,6 +18,49 @@ with:
 }
 `;
 
+exports[`Unification (V2) > Glued references > equates references to one definition by name, and rejects different definitions without crashing 1`] = `
+{
+  "message": "Unification Failure: Cannot unify Variant with Schema
+
+Trace:
+
+While unifying:
+	
+	Variant
+with:
+	Schema
+
+--------------------------------------------------------------------------------------------
+
+
+While unifying:
+	
+	Variant [ some: L0, none: Unit ]
+with:
+	Schema [ fst: L0, snd: L0 ]
+
+--------------------------------------------------------------------------------------------
+
+
+While unifying:
+	
+	λ(a: Type) -> (closure: Variant [ some: a, none: Unit ] -| Γ: a; Option)
+with:
+	λ(a: Type) -> (closure: Schema [ fst: a, snd: a ] -| Γ: a; Pair)
+
+--------------------------------------------------------------------------------------------
+
+
+While unifying:
+	
+	Option
+with:
+	Pair
+",
+  "type": "UnificationFailure",
+}
+`;
+
 exports[`Unification (V2) > Mu Types > fails when unfolding Mu without application hits mismatch (non-function body) 1`] = `
 {
   "message": "Unification Failure: Cannot unify 1 with 0

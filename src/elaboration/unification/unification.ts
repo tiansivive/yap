@@ -1,4 +1,4 @@
-import { match, P } from "ts-pattern";
+import { isMatching, match, P } from "ts-pattern";
 import _ from "lodash";
 
 import * as O from "fp-ts/Option";
@@ -94,6 +94,8 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 			.with([P._, NF.Patterns.Flex], function* ([, meta]) {
 				yield* Sub.subst.bind(yield* bind(meta.variable, l));
 			})
+			/* Glue never reaches the structural clauses below: `faces` picks which faces to compare and hands them back. */
+			.with([NF.Patterns.Glued, P._], [P._, NF.Patterns.Glued], ([a, b]) => faces(a, b, lvl))
 			.with([NF.Patterns.Lit, NF.Patterns.Lit], function* ([lit1, lit2]) {
 				if (!_.isEqual(lit1.value, lit2.value)) {
 					return yield* M.fail(Err.UnificationFailure(lit1, lit2));
@@ -305,6 +307,86 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 			});
 	});
 
+type Glued = NF.Value & { type: "Glued" };
+
+/*
+ * Conversion through glue consults the folded face before the unfolded one, and only for the
+ * moves the folded face licenses. Nothing here decomposes a value: each case chooses a pair
+ * of faces and the structural clauses compare them. The cases are disjoint, so their order
+ * carries no meaning.
+ */
+const faces = (l: NF.Value, r: NF.Value, lvl: number): Unification<void> =>
+	match([l, r])
+		.with([NF.Patterns.Glued, NF.Patterns.Glued], ([a, b]) => same(a, b, lvl))
+		.with(
+			[NF.Patterns.Glued, P._],
+			([, v]) => !isMatching(NF.Patterns.Glued, v),
+			([g, v]) => unify(approximable(g, v) ? g.folded : g.unfolded, v, lvl),
+		)
+		.with(
+			[P._, NF.Patterns.Glued],
+			([v]) => !isMatching(NF.Patterns.Glued, v),
+			([v, g]) => unify(v, approximable(g, v) ? g.folded : g.unfolded, lvl),
+		)
+		.otherwise(() => {
+			throw new Error("Impossible: conversion through glue reached with no glued side");
+		});
+
+/*
+ * Two references to one definition. Unapplied, they are equal by name. Applied, their
+ * arguments are compared first, but that comparison may not bind anything: `Const Unit ?a`
+ * and `Const Unit Num` agree without `?a = Num`, since a definition need not use every
+ * argument. Where it does, the unfolded faces solve the meta anyway.
+ */
+const same = (a: Glued, b: Glued, lvl: number): Unification<void> =>
+	match([a.folded, b.folded])
+		.with(
+			[NF.Patterns.Free, NF.Patterns.Free],
+			([x, y]) => x.variable.name === y.variable.name,
+			function* () {},
+		)
+		.with(
+			[NF.Patterns.App, NF.Patterns.App],
+			() => reference(a) !== undefined && reference(a) === reference(b),
+			function* () {
+				const accepted = yield* speculate(a.folded, b.folded, lvl);
+				if (!accepted) {
+					yield* unify(a.unfolded, b.unfolded, lvl);
+				}
+			},
+		)
+		.otherwise(() => unify(a.unfolded, b.unfolded, lvl));
+
+/** The definition a glued value refers to: the name at the head of its folded face. */
+const reference = (glued: Glued): string | undefined =>
+	match(glued.folded)
+		.with(NF.Patterns.Free, ({ variable }) => variable.name)
+		.with({ type: "App", func: NF.Patterns.Glued }, ({ func }) => reference(func))
+		.otherwise(() => undefined);
+
+/*
+ * A stuck application headed by an unsolved meta, against an applied definition. The meta
+ * side has no unfolding to offer, so first-order approximation is made against the folded
+ * face, and the meta is solved with the definition rather than its encoding.
+ */
+const approximable = (glued: Glued, v: NF.Value): boolean =>
+	match([glued.folded, v])
+		.with([NF.Patterns.App, NF.Patterns.StuckApp], ([, stuck]) => NF.isFlex(head(stuck.value)))
+		.otherwise(() => false);
+
+const head = (v: NF.Value): NF.Value =>
+	match(v)
+		.with(NF.Patterns.App, ({ func }) => head(func))
+		.otherwise(() => v);
+
+/** Compares under a delimited accumulator seeded with the ambient one; true only if it succeeded and bound nothing new. */
+const speculate = function* (left: NF.Value, right: NF.Value, lvl: number): Unification<boolean> {
+	const ambient = yield* Sub.subst.get();
+	const [outcome, , after] = yield* Eff.with([M.except.handlers(), Sub.subst.handlers(ambient)], () => unify(left, right, lvl));
+
+	return !Eff.failed(outcome) && Object.keys(after).every(key => key in ambient);
+};
+
 type Meta = Extract<EB.Variable, { type: "Meta" }>;
 
 /** A single binding for v, occurs-checked; the caller composes it into the accumulator. */
@@ -334,6 +416,8 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 		match(value)
 			.with(NF.Patterns.Var, ({ variable }) => _.isEqual(variable, v))
 			.with({ type: "Neutral" }, ({ value: inner }) => check(inner))
+			/* Both faces: a meta can occur in the folded face alone (`Const Unit ?a` unfolds to `Unit`), and that is the face a solution reads back as. */
+			.with(NF.Patterns.Glued, ({ folded, unfolded }) => check(folded) || check(unfolded))
 			.with(NF.Patterns.Proj, ({ base }) => check(base))
 			.with(NF.Patterns.Match, ({ closure, scrutinee }) => check(scrutinee) || inTerm(closure.term))
 			.with(NF.Patterns.Inj, ({ base, injected }) => check(base) || check(injected))

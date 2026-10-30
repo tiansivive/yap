@@ -4,15 +4,18 @@ import * as M from "@yap/elaboration/shared/effects";
 import { match, P } from "ts-pattern";
 
 import type { Evaluation } from "./effects";
-import { apply, unwrapNeutral } from "./evaluation.v2";
+import { apply, unglue, unwrapNeutral } from "./evaluation.v2";
 
 const { Patterns } = NF;
+
+/** The structure under a type: the wrappers carry none, and neither does the name it was reached through. */
+const peel = (v: NF.Value): NF.Value => unwrapNeutral(unglue(v));
 
 /**
  * Walk an App spine to its head (peeling Neutral along the way).
  */
 const head = (v: NF.Value): NF.Value =>
-	match(unwrapNeutral(v))
+	match(peel(v))
 		.with(Patterns.App, ({ func }) => head(func))
 		.otherwise(x => x);
 
@@ -23,7 +26,7 @@ const head = (v: NF.Value): NF.Value =>
  * matches are NOT inert — they could potentially hide more Pi binders.
  */
 export const inert = (ty: NF.Value): boolean => {
-	const val = unwrapNeutral(ty);
+	const val = peel(ty);
 	return match(val)
 		.with(Patterns.Flex, () => false)
 		.with(Patterns.Pi, () => false)
@@ -49,7 +52,7 @@ export const inert = (ty: NF.Value): boolean => {
  * Throws if the return type has a non-inert head (value-dependent arity).
  */
 export function* arity(ty: NF.Value): Evaluation<number> {
-	const val = unwrapNeutral(ty);
+	const val = peel(ty);
 
 	return yield* match(val)
 		.with(Patterns.Pi, function* ({ binder, closure }) {

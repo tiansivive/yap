@@ -23,6 +23,7 @@ export function encode(val: NF.Value): {} {
 			return { tag: "Struct", payload: obj };
 		})
 		.with(NF.Patterns.Modal, modal => encode(modal.value))
+		.with(NF.Patterns.Glued, glued => encode(glued.unfolded))
 		.with({ type: "Abs" }, abs => ({ tag: "Function", param: abs.binder.variable, body: "<function>" }))
 		.otherwise(nf => {
 			return { tag: "Unsupported", nf };
