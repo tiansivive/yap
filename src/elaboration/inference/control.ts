@@ -24,7 +24,7 @@ export function* infer(node: Extract<Src.Term, { type: "with" }>): M.Elaboration
 
 	return yield* M.reader.local(() => extended, (function* (): M.Elaboration<EB.AST> {
 		const resolved = yield* identity(clause.identity);
-		const [payload, result] = yield* signature(resolved.carrier);
+		const [payload, result] = yield* signature(resolved.carrier, true);
 		const answer = yield* fresh();
 		const handlerType = yield* arrow(payload, yield* arrow(yield* arrow(result, answer), answer));
 		const [[handler, body, usages], { constraints }] = yield* M.writer.listen((function* () {
@@ -125,14 +125,16 @@ export function* declaration(atom: NF.Value): M.Elaboration<NF.Value | undefined
 		.otherwise(() => M.of(undefined));
 }
 
-export function* signature(type: NF.Value): M.Elaboration<[NF.Value, NF.Value]> {
+export function* signature(type: NF.Value, rigid = false): M.Elaboration<[NF.Value, NF.Value]> {
 	const ctx = yield* M.reader.ask();
 	const { value } = yield* NF.view(type);
 	return yield* match(value)
 		.with(Effect, ({ func, arg }) => M.of<[NF.Value, NF.Value]>([func.arg, arg]))
 		.with(NF.Patterns.Pi, function* (pi): M.Elaboration<[NF.Value, NF.Value]> {
-			const argument = NF.Constructors.Flex(yield* EB.freshMeta(ctx.env.length, pi.binder.annotation));
-			return yield* signature(yield* NF.apply(pi.binder, pi.closure, argument));
+			const argument = rigid
+				? NF.Constructors.Atom(`$handlerType${yield* M.supply.fresh("skolem")}`)
+				: NF.Constructors.Flex(yield* EB.freshMeta(ctx.env.length, pi.binder.annotation));
+			return yield* signature(yield* NF.apply(pi.binder, pi.closure, argument), rigid);
 		})
 		.otherwise(function* () {
 			const payload = yield* fresh();
@@ -207,6 +209,43 @@ export function* hasEvidence(type: NF.Value): M.Elaboration<boolean> {
 	if (value.type !== "Abs" || value.binder.type !== "Pi" || value.binder.icit !== "Implicit") return false;
 	if (name(value.binder.annotation) === "$anonymous" || (yield* declaration(value.binder.annotation))) return true;
 	return yield* hasEvidence(yield* NF.apply(value.binder, value.closure, NF.Constructors.Atom("$parameter")));
+}
+
+/** Each branch starts at the same answer type and agrees on its outgoing answer. */
+export function* branches<A, B>(items: A[], action: (item: A, index: number) => M.Elaboration<B>): M.Elaboration<B[]> {
+	const { delimitations } = yield* M.st.get();
+	const outcomes = yield* M.traverse(items, function* (item, index) {
+		yield* M.st.modify(s => ({ ...s, delimitations }));
+		const value = yield* action(item, index);
+		return { value, delimitations: (yield* M.st.get()).delimitations };
+	});
+	const merged = [...(outcomes[0]?.delimitations ?? delimitations)];
+	const ctx = yield* M.reader.ask();
+	for (let i = 0; i < delimitations.length; i++) {
+		if (outcomes.some(o => o.delimitations[i]?.next)) {
+			const common = merged[i].next ?? merged[i].answer.final;
+			for (const outcome of outcomes) {
+				const other = outcome.delimitations[i];
+				yield* M.constrain({ type: "assign", left: common, right: other.next ?? other.answer.final, lvl: ctx.env.length });
+			}
+			merged[i] = { ...merged[i], shifted: true, next: common };
+		}
+	}
+	yield* M.st.modify(s => ({ ...s, delimitations: merged }));
+	return outcomes.map(o => o.value);
+}
+
+/** Ordinary record fields participate in the same candidate list as their record. */
+export function* candidates(term: EB.Term, type: NF.Value): M.Elaboration<EB.Context["implicits"]> {
+	const value = yield* NF.normalize(term);
+	const viewed = (yield* NF.view(type)).value;
+	const schema = viewed.type === "Abs" && (viewed.binder.type === "SigmaV2" || viewed.binder.type === "Sigma")
+		? yield* NF.apply(viewed.binder, viewed.closure, value) : type;
+	const row = yield* NF.rowOf(schema);
+	const fields = row ? yield* M.traverse(row.entries, function* ({ label, value: annotation }) {
+		return [yield* NF.normalize(C.Proj(label, term)), annotation] as EB.Context["implicits"][number];
+	}) : [];
+	return [[value, type], ...fields];
 }
 
 export const name = (atom: NF.Value): string | undefined => match(atom)

@@ -1,5 +1,3 @@
-import * as A from "fp-ts/lib/Array";
-
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Q from "@yap/shared/modalities/multiplicity";
@@ -51,10 +49,8 @@ export const infer = (block: Block): M.Elaboration<EB.AST> =>
 			);
 
 			if (stmt.type === "Using") {
-				type Implicit = EB.Context["implicits"][0];
-				const nfValue = yield* NF.whnf(stmt.value);
-
-				return yield* M.reader.local(ctx => update(ctx, "implicits", A.append<Implicit>([nfValue, stmt.annotation])), recurse(rest, [...results, stmt]));
+				const candidates = yield* EB.Control.candidates(stmt.value, stmt.annotation);
+				return yield* M.reader.local(ctx => ({ ...ctx, implicits: [...ctx.implicits, ...candidates] }), recurse(rest, [...results, stmt]));
 			}
 
 			if (!declared) {

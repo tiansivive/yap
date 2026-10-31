@@ -31,6 +31,9 @@ describe("effect expression spike", () => {
 		["{ foreign E: Effect Num Num; let op = \\x -> capture [E] x; return with E: (\\p k -> k p) in (op 1) + (op 2); }", 3],
 		["{ let later = reset ((capture (\\k -> \\u -> resume u)) + (capture (\\k -> 999))); return reset (100 + (later 5)); }", 1099],
 		["{ foreign E: Effect Num Num; let op = \\(r: { E: E }) -> \\x -> capture [r.E] x; return with E: (\\p k -> k p) in op { E: E } 7; }", 7],
+		["{ foreign E: Effect Num Num; let op = \\x -> capture [E] x; let run = \\(r: { E: E }) -> \\x -> { using r; return op x; }; return with E: (\\p k -> k p) in run { E: E } 7; }", 7],
+		["{ foreign Exn: (a: Type) => Effect String a; return with Exn: (\\p k -> 0) in 1 + (capture [Exn] \"oops\"); }", 0],
+		["{ foreign E: (a: Type) => Effect a a; return with E: (\\p k -> k p) in capture [E] 41; }", 41],
 	] as const)("evaluates %s", (source, value) => {
 		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value } });
 	});
@@ -41,5 +44,14 @@ describe("effect expression spike", () => {
 
 	it("rejects a function that returns a requirement on its local identity", () => {
 		expect(() => evaluate("with E: (\\p k -> k p) in (\\x -> capture [E] x)")).toThrow(/Local effect identity E escapes/);
+	});
+
+	it("checks result-polymorphic handlers for every result type", () => {
+		expect(() => evaluate('{ foreign Exn: (a: Type) => Effect String a; return with Exn: (\\p k -> k 42) in 1 + (capture [Exn] "oops"); }')).toThrow(/Cannot unify/);
+	});
+
+	it("allows lexical answer-type modification and checks branch agreement", () => {
+		expect(evaluate('reset (1 + (capture (\\k -> "hello")))').value).toMatchObject({ type: "Lit", value: { type: "String", value: "hello" } });
+		expect(() => evaluate('reset (match false | true -> 1 + (capture (\\k -> "hello")) | false -> 2)')).toThrow(/Cannot unify/);
 	});
 });

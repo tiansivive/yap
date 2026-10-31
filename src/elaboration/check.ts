@@ -208,7 +208,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				.with([{ type: "match" }, NF.Patterns.Type], function* ([match, ty]) {
 					const ast = yield* EB.infer(match.scrutinee);
 
-					const alternatives = yield* M.traverse(
+					const alternatives = yield* EB.Control.branches(
 						match.alternatives,
 						EB.Inference.Match.elaborate(ast, function* (src) {
 							const [tm, us] = yield* EB.check(src, ty);
@@ -288,7 +288,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 						return next;
 					};
 
-					const alternatives = yield* M.traverse(
+					const alternatives = yield* EB.Control.branches(
 						m.alternatives,
 						EB.Inference.Match.elaborate(ast, function* (src, [pat, _patty, , binders]) {
 							const ctx = yield* M.reader.ask();

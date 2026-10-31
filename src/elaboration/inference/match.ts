@@ -17,7 +17,7 @@ export const infer = (tm: Match): M.Elaboration<EB.AST> =>
 		const ctx = yield* M.reader.ask();
 		const ast = yield* EB.infer(tm.scrutinee);
 
-		const alternatives = yield* M.traverse(tm.alternatives, elaborate(ast, EB.infer));
+		const alternatives = yield* EB.Control.branches(tm.alternatives, elaborate(ast, EB.infer));
 
 		// Ensure all alternatives have the same type - we pick the type of the first alternative as the common type
 		const common = alternatives[0][1];
