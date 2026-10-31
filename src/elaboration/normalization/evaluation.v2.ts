@@ -16,7 +16,7 @@ import { display } from "./syntax/pretty";
 
 import * as Stack from "./machine/actions";
 import type { Blame, Mark } from "./machine/frames";
-import { Do, Mode, group, result, scope, step, type Evaluation, type Machine, type Scope } from "./effects";
+import { Do, Mode, defaultMode, group, result, scope, step, type Evaluation, type Machine, type Scope } from "./effects";
 import * as Quoting from "./quoting";
 
 import _ from "lodash";
@@ -113,6 +113,13 @@ function* trampoline(mark: Mark): Evaluation<void> {
 			.exhaustive();
 	}
 }
+
+const controlIdentity = (value: NF.Value): string => match(value)
+	.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => value.value)
+	.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => variable.name)
+	.with({ type: "Neutral" }, ({ value }) => controlIdentity(value))
+	.with({ type: "Glued" }, ({ unfolded }) => controlIdentity(unfolded))
+	.otherwise(() => { throw new Error("Capture identity must evaluate to an effect atom"); });
 
 function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 	const ctx = yield* M.reader.ask();
@@ -390,10 +397,39 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			// Process statements to extend context, then evaluate return
 			return yield* processStatementsAndPush(statements, ret);
 		})
-		.with({ type: "Reset" }, function* ({ term }) {
-			// Reset establishes a delimiter for continuation capture.
-			yield* Stack.delimit(yield* scope());
-			return yield* schedule.eval(term);
+		.with({ type: "Reset" }, function* ({ term, identity, handler }) {
+			return yield* group([identity ? schedule.eval(identity) : result(NF.Any), handler ? schedule.eval(handler) : result(NF.Any)], function* ([e, h]) {
+				yield* Stack.delimit(yield* scope(), identity ? controlIdentity(e) : undefined, handler ? h : undefined);
+				return yield* schedule.eval(term);
+			});
+		})
+		.with({ type: "Capture" }, function* ({ identity, payload }) {
+			return yield* group([schedule.eval(identity), schedule.eval(payload)], function* ([e, p]) {
+				const tag = controlIdentity(e);
+				const captured = yield* Stack.capture<Scope, EB.Term>(tag);
+				if (!captured) {
+					throw new Error(`Capture requires a live delimiter for ${tag}`);
+				}
+				const closure: NF.Closure = {
+					type: "Continuation", ctx: captured.scope.env, term: EB.Any,
+					frames: captured.frames, delimiter: captured.delimiter,
+				};
+				const k = NF.Constructors.Lambda("k", "Explicit", closure, NF.Any);
+				const handler = captured.delimiter?.handler as NF.Value | undefined;
+				if (!handler) {
+					return yield* schedule.reduce(p, k, "Explicit");
+				}
+				return yield* Do.let("h", schedule.reduce(handler, p, "Explicit")).in(({ h }) => schedule.reduce(h, k, "Explicit"));
+			});
+		})
+		.with({ type: "Resume" }, function* ({ continuation, value }) {
+			return yield* group([schedule.eval(continuation), schedule.eval(value)], function* ([k, v]) {
+				const viewed = yield* force(k);
+				return yield* match(viewed)
+					.with({ type: "Abs", closure: { type: "Continuation" } }, ({ closure }) =>
+						Stack.resume<NF.Value, Scope, EB.Term>({ frames: closure.frames, scope: { env: closure.ctx, mode: closure.delimiter?.scope.mode ?? { ...defaultMode } }, delimiter: closure.delimiter }, v, true))
+					.otherwise(() => { throw new Error("Deep resumption requires a captured continuation"); });
+			});
 		})
 		.with({ type: "Shift" }, function* ({ body }) {
 			// At this point the typing phase has already desugared
@@ -416,6 +452,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				const continuation: NF.Closure = {
 					type: "Continuation",
 					frames: captured.frames,
+					delimiter: captured.delimiter,
 					ctx: captured.scope.env,
 					term: EB.Constructors.Lit(Lit.unit()), // dummy term
 				};
@@ -774,7 +811,7 @@ export const schedule = {
 			})
 			.with({ type: "Continuation" }, function* (cont) {
 				// Replay the captured continuation with the argument at the shift point.
-				return yield* Stack.resume<NF.Value, Scope, EB.Term>({ frames: cont.frames, scope: { env: cont.ctx, mode: yield* Mode.ask() } }, value);
+				return yield* Stack.resume<NF.Value, Scope, EB.Term>({ frames: cont.frames, scope: { env: cont.ctx, mode: yield* Mode.ask() }, delimiter: cont.delimiter }, value, cont.deep);
 			})
 			.exhaustive();
 	},

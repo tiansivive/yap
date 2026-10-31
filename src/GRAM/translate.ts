@@ -129,6 +129,18 @@ const walk = (term: EB.Term, st: State): [NodeId, State] =>
 		.with({ type: "Modal" }, t => modal(t, st))
 		.with({ type: "Reset" }, t => reset(t, st))
 		.with({ type: "Shift" }, t => shift(t, st))
+		.with({ type: "Capture" }, t => {
+			const [id, s1] = emit(st, Tags.CAPTURE, {}, prov(t.id, st));
+			const [identity, s2] = walk(t.identity, s1);
+			const [payload, s3] = walk(t.payload, s2);
+			return [id, link(link(s3, id, Labels.IDENTITY, identity), id, Labels.PAYLOAD, payload)];
+		})
+		.with({ type: "Resume" }, t => {
+			const [id, s1] = emit(st, Tags.DEEP_RESUME, {}, prov(t.id, st));
+			const [continuation, s2] = walk(t.continuation, s1);
+			const [value, s3] = walk(t.value, s2);
+			return [id, link(link(s3, id, Labels.FUNC, continuation), id, Labels.ARG, value)];
+		})
 		.with({ type: "Bubble" }, t => walk(t.shift, st))
 		.with({ type: "Ann" }, t => walk(t.term, st))
 		.exhaustive();
@@ -444,8 +456,13 @@ const modal = (t: EB.Term & { type: "Modal" }, st: State): [NodeId, State] => {
 const reset = (t: EB.Term & { type: "Reset" }, st: State): [NodeId, State] => {
 	const [id, s1] = emit(st, Tags.RESET, {}, prov(t.id, st));
 	const [body, s2] = walk(t.term, s1);
-	return [id, link(s2, id, Labels.BODY, body)];
+	const s3 = link(s2, id, Labels.BODY, body);
+	const [identity, s4] = t.identity ? walk(t.identity, s3) : [undefined, s3];
+	const [handler, s5] = t.handler ? walk(t.handler, s4) : [undefined, s4];
+	return [id, linkOptional(linkOptional(s5, id, Labels.IDENTITY, identity), id, Labels.HANDLER, handler)];
 };
+
+const linkOptional = (st: State, source: NodeId, label: string, target: NodeId | undefined): State => target === undefined ? st : link(st, source, label, target);
 
 const shift = (t: EB.Term & { type: "Shift" }, st: State): [NodeId, State] => {
 	const [id, s1] = emit(st, Tags.SHIFT, {}, prov(t.id, st));

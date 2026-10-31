@@ -175,6 +175,17 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 		.with({ type: "Modal" }, function* ({ term, modalities }) {
 			return EB.Constructors.Modal(yield* instantiate(term, resolutions), modalities);
 		})
+		.with({ type: "Reset" }, function* ({ term, identity, handler }) {
+			return EB.Constructors.Reset(yield* instantiate(term, resolutions), identity && (yield* instantiate(identity, resolutions)), handler && (yield* instantiate(handler, resolutions)));
+		})
+		.with({ type: "Capture" }, function* ({ identity, payload }) {
+			return EB.Constructors.Capture(yield* instantiate(identity, resolutions), yield* instantiate(payload, resolutions));
+		})
+		.with({ type: "Resume" }, function* ({ continuation, value }) {
+			return EB.Constructors.Resume(yield* instantiate(continuation, resolutions), yield* instantiate(value, resolutions));
+		})
+		.with({ type: "Shift" }, function* ({ body }) { return EB.Constructors.Shift(yield* instantiate(body, resolutions)); })
+		.with({ type: "Bubble" }, function* (t) { return { ...t, shift: yield* instantiate(t.shift, resolutions) }; })
 		.otherwise(function* (t) {
 			return t;
 		});

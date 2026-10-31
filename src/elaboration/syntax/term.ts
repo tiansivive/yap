@@ -25,8 +25,10 @@ type Constructor =
 	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> }
 	| { type: "Block"; statements: Array<Statement>; return: Term }
 	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
-	| { type: "Reset"; term: Term }
+	| { type: "Reset"; term: Term; identity?: Term; handler?: Term }
 	| { type: "Shift"; body: Term }
+	| { type: "Capture"; identity: Term; payload: Term }
+	| { type: "Resume"; continuation: Term; value: Term }
 	| { type: "Bubble"; meta: number; ann: NF.Value; values: NF.Value[]; shift: Term }
 	| { type: "Ann"; term: Term; ann: Term };
 
@@ -196,8 +198,10 @@ export const Constructors = {
 
 	Modal: (term: Term, modalities: Modal.Annotations<Term>): Term => mk({ type: "Modal", term, modalities }),
 
-	Reset: (term: Term): Term => mk({ type: "Reset", term }),
+	Reset: (term: Term, identity?: Term, handler?: Term): Term => mk({ type: "Reset", term, identity, handler }),
 	Shift: (body: Term): Term => mk({ type: "Shift", body }),
+	Capture: (identity: Term, payload: Term): Term => mk({ type: "Capture", identity, payload }),
+	Resume: (continuation: Term, value: Term): Term => mk({ type: "Resume", continuation, value }),
 	Bubble: (meta: number, ann: NF.Value, values: NF.Value[], shift: Term): Term => mk({ type: "Bubble", meta, ann, values, shift }),
 
 	Patterns: {

@@ -44,6 +44,8 @@ export const Tags = {
 	MODAL: "modal",
 	RESET: "reset",
 	SHIFT: "shift",
+	CAPTURE: "capture",
+	DEEP_RESUME: "resume:deep",
 	BUBBLE: "bubble",
 	CONTINUATION: "continuation",
 	RESUMPTION: "resumption",
@@ -119,6 +121,7 @@ export const Labels = {
 	BIND: ":bind",
 
 	DELIMITER: ":delimiter",
+	IDENTITY: ":identity",
 	CAPTURED_AT: ":captured_at",
 	HANDLER: ":handler",
 	PARAM: ":param",
