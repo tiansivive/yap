@@ -43,6 +43,15 @@ alwaysApply: false
 - **Output**: `lowerToMir(term)` returns `Module`; use `Pretty.display.module(mod)` for snapshots (full module with main + lifted functions)
 - **DSL**: `EB.DSL.app(func, arg)` for generic application; `EB.DSL.lambda` for lambdas
 
+## Integration tests (`src/__tests__/integration`)
+
+- **Setup**: `runScript(src)` from `helpers/pipeline.ts` elaborates a module and runs every downstream stage per declaration. Each declaration carries `stages` (one string per stage) and `errors` (keyed by the stage that raised each error).
+- **Snapshots**: `await snap(result)` writes one file per stage to `__snapshots__/stages/<test file>/<test name>/`: `type.core`, `elaborated.core`, `normalized.nf`, `formula.ivl`, `validity.txt`, `trace.solver.log`, `graph.gram`, `bridge.mir`, `codegen.js`, `codegen.c`, `codegen.erl`. Tests that call it are `async`. Each stage is a soft assertion, so a run reports every stage that changed.
+- **One pass at a time**: downstream stage files may stay mismatched while an upstream pass is in progress. `vitest -u` rewrites every stage of the selected tests; to accept one pass only, restore the other stages' files afterwards.
+- **Stale files**: Vitest never prunes file snapshots. `pnpm snapshots:regen` deletes and regenerates the folder, so files of renamed or removed tests show up as deletions in `git status`. It accepts all current output, so run it only when that output is what you want.
+- **Known bugs**: since regeneration accepts current output, a test guarding a known bug states the expected behaviour as an explicit assertion after `snap` (e.g. `expect(decl.errors).toEqual({})`).
+- The stage files are generated: ESLint, Prettier and `tsc` ignore them.
+
 ## General
 
 - **Tests are type-checked** — one tsconfig covers src and tests; `pnpm typecheck` must stay green including test files

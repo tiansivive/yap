@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Communication
 
-Optimized for information density, variation, and forward progress. Governs prose; see `agent-behavior.mdc` for interaction and posture.
+Optimized for information density, variation, and forward progress. Governs all prose: replies, commit messages, PR descriptions, code comments and z-yap notes. See `agent-behavior.mdc` for interaction and posture.
 
 - Prioritize answering over conversational maintenance. Lead with conclusions.
 - Don't repeat or paraphrase the user's statement unless clarifying. Don't restate rejected ideas before proposing new ones. Don't remind the user of what they just provided.
@@ -14,12 +14,29 @@ Optimized for information density, variation, and forward progress. Governs pros
 - Don't summarize the previous turn unless asked. Don't repeat facts already established. Move forward with new information.
 - Present uncertainty explicitly and briefly. Concrete over generic. Compress obvious observations; expand only where detail creates value. Lists only when they improve clarity.
 - Before sending: cut sentences that merely restate input or earlier output; cut introductory and conclusion filler; delete any paragraph that loses no information when removed.
-- No em dashes.
 - Don't open a paragraph with a sentence that announces the paragraph. Start with the substance itself.
-- No sentence fragments used as standalone beats ("X done.", "N things happened.") — these read as broken speech.
 - No ceremonial language or narration of the event in place of the event. Write the thing, don't describe what you're about to write or frame what just happened.
-- Prose should build — each sentence motivating or contextualising the next. A paragraph that could be reordered without loss has no flow.
 - When writing PR descriptions: no references to z-yap zettels, ADR IDs, or internal design docs. The description must stand alone.
+
+## Audience, rhythm and tone
+
+Write for a technical reader who was not there. They know the language, the field and its standard vocabulary. They do not know this session, the conversation that led to the change, or the names and examples that came up along the way.
+
+- **Self-contained.** Explain from what the reader can see. No shorthand, codenames or examples carried over from the development cycle. If an example needs setup that the text doesn't give, pick a simpler one or leave it out.
+- **Jargon in proportion.** A term of art is fine where it is the precise word; define it on first use if it isn't standard. Don't stack several terms into one sentence.
+- **Connected sentences, not beats.** Write complete sentences that lead into each other, the way you would explain something to a colleague. Don't chop an explanation into short punchy declaratives, sentence fragments ("X done.", "N things happened."), or clauses strung together with colons, semicolons and dashes. A run of those is a list pretending to be prose, and it reads as broken speech.
+- **Prose should build.** Each sentence motivates or contextualises the next. A paragraph that could be reordered without loss has no flow.
+- **No sweeping conclusions.** State each point at its actual size. Don't end a sentence or paragraph on a grand consequence ("so it can never…", "which is the whole point", "by construction", "and that's exactly why", "nothing else is needed"). If something matters, the reader will see it from the facts.
+- **Plain register.** No dramatic framing, no rhetorical setups, no punchlines.
+- **No em dashes.**
+
+Instead of:
+
+> The name is gone before anything downstream sees it. Types display as expansions; solutions carry the encoding; unification can never solve a metavariable with an alias.
+
+write:
+
+> When the evaluator reaches a reference to a top-level definition, it replaces the reference with the definition's value, so later stages only see the expanded value. Types are displayed in their expanded form, and unification can only build a metavariable's solution out of that expansion.
 
 ## Carve-outs
 

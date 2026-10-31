@@ -48,6 +48,7 @@ node z-yap/scripts/neighborhood.js <thread-slug>   # fuzzy slug match
 - **zettel-quality-rework** (`z-yap/.cursor/skills/zettel-quality-rework/SKILL.md`) — phased campaign for reworking low-quality (IMPL-MAP / MIXED) zettels into durable design knowledge.
 - **create-plan** (`.cursor/skills/create-plan/SKILL.md`) — authoring and executing implementation plans under `z-yap/resources/plans/`.
 - **yap-reviewer** (`.cursor/skills/yap-reviewer/SKILL.md`) — code review for the yap implementation.
+- **audit-code**, **audit-comments**, **audit-architecture** (`.cursor/skills/audit-*/SKILL.md`): independent audits of a change against the coding guidelines, the comment and prose rules, and the architecture and z-yap decisions. Run only when asked or when a plan step calls for one.
 
 ## Confirm
 

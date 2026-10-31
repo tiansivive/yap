@@ -38,16 +38,19 @@ Applies to every working session, whether or not `/load` was invoked.
 
 The detailed source is `.cursor/rules/*.mdc`. Consult by task:
 
-| When you are…                             | Load                                                          |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| writing or editing TypeScript             | `coding-style.mdc`, `pattern-matching.mdc`, `conventions.mdc` |
-| writing or changing tests                 | `testing.mdc`                                                 |
-| in a design / exploration discussion      | `agent-behavior.mdc` (design posture)                         |
-| unsure how to interact or behave          | `agent-behavior.mdc`                                          |
-| writing to z-yap or closing out a session | zettelkasten skill (`z-yap/.cursor/skills/zettelkasten/`)     |
-| authoring a phased implementation plan    | create-plan skill (`.cursor/skills/create-plan/`)             |
-| reviewing Yap code                        | yap-reviewer skill (`.cursor/skills/yap-reviewer/`)           |
-| debugging a failure / tracking down a bug | `debugging.mdc`                                               |
+| When you are…                             | Load                                                            |
+| ----------------------------------------- | --------------------------------------------------------------- |
+| writing or editing TypeScript             | `coding-style.mdc`, `pattern-matching.mdc`, `conventions.mdc`   |
+| writing or changing tests                 | `testing.mdc`                                                   |
+| in a design / exploration discussion      | `agent-behavior.mdc` (design posture)                           |
+| unsure how to interact or behave          | `agent-behavior.mdc`                                            |
+| writing to z-yap or closing out a session | zettelkasten skill (`z-yap/.cursor/skills/zettelkasten/`)       |
+| authoring a phased implementation plan    | create-plan skill (`.cursor/skills/create-plan/`)               |
+| reviewing Yap code                        | yap-reviewer skill (`.cursor/skills/yap-reviewer/`)             |
+| auditing code against the guidelines      | audit-code skill (`.cursor/skills/audit-code/`)                 |
+| auditing comments                         | audit-comments skill (`.cursor/skills/audit-comments/`)         |
+| reviewing a change's architecture         | audit-architecture skill (`.cursor/skills/audit-architecture/`) |
+| debugging a failure / tracking down a bug | `debugging.mdc`                                                 |
 
 ## Key references
 

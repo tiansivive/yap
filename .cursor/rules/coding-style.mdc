@@ -58,9 +58,32 @@ alwaysApply: true
 
 ## Comments
 
+When to write one:
+
 - **A comment is the exception, not the rule** — the default is none; code and types carry the meaning
 - **A comment earns its place** by explaining a *why* that can't be recovered from the code, or by flagging where the code is knowingly not ideal
 - **Never restate the signature** — a doc line that names the parameters again is noise
 - **Rationale for a change belongs in the commit message**, not above the function forever
 - **Use types to document intent**
 - Brief and to the point
+
+How it reads. The prose rules in `communication.mdc` apply in full; these are the ones comments break most often.
+
+- **The reader is the next maintainer.** They know the codebase's vocabulary but have never seen the plan, conversation or review that produced the code, so the comment has to make sense from the code around it.
+- **State the constraint plainly, at its actual size.** One or two connected sentences saying what must hold and why. No closing flourish ("by construction", "so nothing else ever…", "which is the point").
+- **No beat rhythm.** Don't compress the explanation into clipped declaratives or clauses chained with colons and semicolons. If it needs more than a few sentences, it belongs in the commit message or a design note.
+- **No development residue.** No references to plan steps, milestones, review requests, or examples that only make sense to whoever wrote the change.
+- **Jargon only where it is the precise word**, and never several terms stacked in one sentence.
+- **No em dashes.**
+
+Instead of:
+
+```ts
+/* Glue never reaches the structural clauses below: `faces` picks which faces to compare and hands them back. Nothing decomposes here; the cases are disjoint, so order carries no meaning. */
+```
+
+write:
+
+```ts
+/* Pairs with a glued side are handled here, before the structural clauses, so those clauses never need to consider glue. */
+```
