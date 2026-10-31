@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { evaluate } from "./util";
+import { readFileSync } from "node:fs";
 
 describe("effect expression spike", () => {
 	it.each([
@@ -57,8 +58,13 @@ describe("effect expression spike", () => {
 		expect(() => evaluate('reset (match false | true -> 1 + (capture (\\k -> "hello")) | false -> 2)')).toThrow(/Cannot unify/);
 	});
 
-	it.fails("preserves anonymous evidence through a Control record", () => {
+	it("preserves anonymous evidence through a Control record", () => {
 		const source = "{ let Control = { shift0: \\f -> capture (\\k -> f (\\v -> reset (k v))) }; return reset (10 + (Control.shift0 (\\k -> k 1))); }";
+		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value: 11 } });
+	});
+
+	it("evaluates the four operators packaged together", () => {
+		const source = readFileSync("examples/effects/control.yap", "utf8").trim();
 		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value: 11 } });
 	});
 });

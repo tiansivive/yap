@@ -78,24 +78,30 @@ export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M
 
 	/* Nondeterministic candidates seed the forked registry inside replay; the ctx is registry-free. */
 	const _letdec = (_z: Record<number, NF.Value>) =>
-		(function* (): M.Elaboration<[NF.Value, EB.Context, EB.Resolutions, boolean]> {
+		(function* (): M.Elaboration<[NF.Value, EB.Context, EB.Resolutions, boolean, EB.Term]> {
 			const { resolutions } = yield* EB.solve(constraints);
 			const next = ctx;
 
+			const stable = yield* M.reader.local(
+				_ => EB.bind(next, { type: "Let", variable: dec.variable }, dec.annotation),
+				EB.Icit.instantiate(dec.value, resolutions, false),
+			);
 			const forced = yield* NF.force(dec.annotation);
 			const [generalized, introduced] = yield* M.reader.local(
 				_ => EB.bind(next, { type: "Let", variable: dec.variable }, dec.annotation),
-				NF.generalize(forced, dec.value, resolutions),
+				NF.generalize(forced, stable, resolutions),
 			);
 			const instantiated = yield* M.reader.local(_ => EB.bind(next, { type: "Let", variable: dec.variable }, generalized), NF.instantiate(generalized));
-			return [instantiated, next, resolutions, introduced];
+			return [instantiated, next, resolutions, introduced, stable];
 		})();
 
 	// Extend again now that we have the generalized type
 	// Use the zonked context to avoid issues with the already generalized metas
 
 	const st = yield* M.st.get();
-	const [[instantiated, next, resolutions, introduced], ...rest] = R.isEmpty(st.nondeterminism.solution) ? [yield* _letdec({})] : yield* replay(_letdec);
+	const [[instantiated, next, resolutions, introduced, stable], ...rest] = R.isEmpty(st.nondeterminism.solution)
+		? [yield* _letdec({})]
+		: yield* replay(_letdec);
 
 	yield* Eff.traverse(rest, function* ([type]) {
 		const [, solution] = yield* Eff.with([Sub.subst.handlers()], () => unify(instantiated, type, next.env.length));
@@ -106,7 +112,7 @@ export const letdec = function* (dec: Extract<EB.Statement, { type: "Let" }>): M
 	const wrapped = yield* M.reader.local(
 		_ => xtended,
 		(function* (): M.Elaboration<EB.Term> {
-			const tm = introduced ? yield* EB.Icit.wrapLambda(dec.value, instantiated) : dec.value;
+			const tm = introduced ? yield* EB.Icit.wrapLambda(stable, instantiated) : stable;
 			return yield* EB.Icit.instantiate(tm, resolutions);
 		})(),
 	);

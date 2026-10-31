@@ -11,7 +11,7 @@ type Projection = Extract<Src.Term, { type: "projection" }>;
 
 export const infer = ({ label, term }: Projection): M.Elaboration<EB.AST> =>
 	M.tracer.track({ tag: "src", type: "term", term, metadata: { action: "infer", description: "Projection of label: " + label } }, function* () {
-		const [tm, ty, us] = yield* EB.infer(term);
+		const [tm, ty, us] = yield* EB.Icit.insert(yield* EB.infer(term));
 		const inferred = yield* project(label, tm, ty, us);
 		return [EB.Constructors.Proj(label, tm), inferred, us] satisfies EB.AST; // TODO: Subtract usages?
 	});

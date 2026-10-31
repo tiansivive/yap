@@ -249,10 +249,6 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		)
 		.with({ type: "Var", variable: { type: "Bound" } }, function* ({ variable }) {
 			const entry = ctx.env[variable.index];
-			assert(
-				entry,
-				`Bound index ${variable.index} outside scope [${ctx.env.map(e => e.name.variable).join(", ")}]\n${JSON.stringify(ctx.trace.map(t => (t.tag === "src" ? t : { tag: t.tag })))}`,
-			);
 
 			return yield* match(entry.type[0])
 				.with({ type: "Mu" }, function* () {

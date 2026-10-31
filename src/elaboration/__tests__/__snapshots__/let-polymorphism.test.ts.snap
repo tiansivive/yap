@@ -6,7 +6,7 @@ exports[`Let-polymorphism > basic polymorphic let bindings > higher-order polymo
     "constraints": [
       "?2 ~~ Π(x: ?4) -> (closure: (?5 :: Type) -| Γ: x; x; f; apply)",
       "?3 ~~ ?4",
-      "Π(f: ?2) -> (closure: Π(x: (?3 :: Type)) -> (?5 :: Type) -| Γ: f; apply) ~~ ?1",
+      "Π(f: ?2) -> (closure: Π(x: (?4 :: Type)) -> (?5 :: Type) -| Γ: f; apply) ~~ ?1",
       "Π(y: ?8) -> (closure: (?8 :: Type) -| Γ: y; id; apply) ~~ ?7",
       "?11 @ Type",
       "?12 @ Type",
@@ -46,7 +46,8 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic S combi
       "?4 ~~ ?9",
       "?10 ~~ ?7",
       "Π(f: ?2) ->
-  (closure: Π(g: (?3 :: Type)) -> Π(x: (?4 :: Type)) -> (?8 :: Type) -| Γ: f; s) ~~ ?1",
+  (closure: Π(g: Π(x: (?9 :: Type)) -> (?7 :: Type)) ->
+    Π(x: (?9 :: Type)) -> (?8 :: Type) -| Γ: f; s) ~~ ?1",
       "Π(a: ?13) -> (closure: Π(b: (?14 :: Type)) -> (?13 :: Type) -| Γ: a; const; s) ~~ ?12",
       "Π(n: ?17) -> (closure: (?17 :: Type) -| Γ: n; id; const; s) ~~ ?16",
       "?20 @ Type",
@@ -101,8 +102,8 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic composi
       "?4 ~~ ?7",
       "?8 ~~ ?5",
       "Π(f: ?2) ->
-  (closure: Π(g: (?3 :: Type)) ->
-    Π(x: (?4 :: Type)) -> (?6 :: Type) -| Γ: f; compose) ~~ ?1",
+  (closure: Π(g: Π(x: (?7 :: Type)) -> (?5 :: Type)) ->
+    Π(x: (?7 :: Type)) -> (?6 :: Type) -| Γ: f; compose) ~~ ?1",
       "Π(n: ?11) -> (closure: (?11 :: Type) -| Γ: n; id; compose) ~~ ?10",
       "?14 @ Type",
       "?15 @ Type",
@@ -133,7 +134,7 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic composi
     = λ(a: Type) => (λ(n: a) -> n : Π(n: a) -> a);
   let result
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; result; id; compose)
-    = λ(a: Type) => id @a @a @a (result @a) (result @a);
+    = λ(a: Type) => compose @a @a @a (id @a) (id @a);
   return unit;
 }",
     "type": "Unit",
@@ -182,8 +183,8 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic flip (C
       "?6 ~~ Π(x: ?7) -> (closure: (?8 :: Type) -| Γ: x; y; x; f; flip)",
       "?3 ~~ ?7",
       "Π(f: ?2) ->
-  (closure: Π(x: (?3 :: Type)) ->
-    Π(y: (?4 :: Type)) -> (?8 :: Type) -| Γ: f; flip) ~~ ?1",
+  (closure: Π(x: (?7 :: Type)) ->
+    Π(y: (?5 :: Type)) -> (?8 :: Type) -| Γ: f; flip) ~~ ?1",
       "Π(a: ?11) ->
   (closure: Π(b: (?12 :: Type)) -> (?11 :: Type) -| Γ: a; const; flip) ~~ ?10",
       "?15 @ Type",
@@ -232,7 +233,7 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic hof app
     "constraints": [
       "?2 ~~ Π(x: ?4) -> (closure: (?5 :: Type) -| Γ: x; x; f; apply)",
       "?3 ~~ ?4",
-      "Π(f: ?2) -> (closure: Π(x: (?3 :: Type)) -> (?5 :: Type) -| Γ: f; apply) ~~ ?1",
+      "Π(f: ?2) -> (closure: Π(x: (?4 :: Type)) -> (?5 :: Type) -| Γ: f; apply) ~~ ?1",
       "Π(y: ?8) -> (closure: (?8 :: Type) -| Γ: y; id; apply) ~~ ?7",
       "?11 @ Type",
       "?12 @ Type",
@@ -293,7 +294,9 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic thrush 
     "constraints": [
       "?3 ~~ Π(x: ?4) -> (closure: (?5 :: Type) -| Γ: x; f; x; thrush)",
       "?2 ~~ ?4",
-      "Π(x: ?2) -> (closure: Π(f: (?3 :: Type)) -> (?5 :: Type) -| Γ: x; thrush) ~~ ?1",
+      "Π(x: ?2) ->
+  (closure: Π(f: Π(x: (?4 :: Type)) -> (?5 :: Type)) ->
+    (?5 :: Type) -| Γ: x; thrush) ~~ ?1",
       "Π(n: ?8) -> (closure: (?8 :: Type) -| Γ: n; id; thrush) ~~ ?7",
       "?11 @ Type",
       "?12 @ Type",
@@ -331,7 +334,7 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic warbler
       "?3 ~~ ?4",
       "?5 ~~ Π(x: ?6) -> (closure: (?7 :: Type) -| Γ: x; x; f; warbler)",
       "?3 ~~ ?6",
-      "Π(f: ?2) -> (closure: Π(x: (?3 :: Type)) -> (?7 :: Type) -| Γ: f; warbler) ~~ ?1",
+      "Π(f: ?2) -> (closure: Π(x: (?6 :: Type)) -> (?7 :: Type) -| Γ: f; warbler) ~~ ?1",
       "Π(a: ?10) ->
   (closure: Π(b: (?11 :: Type)) -> (?10 :: Type) -| Γ: a; const; warbler) ~~ ?9",
       "?14 @ Type",
@@ -451,10 +454,10 @@ exports[`Let-polymorphism > edge cases > polymorphic let returning polymorphic f
         (λ(u: a) -> (λ(x: b) -> x : Π(x: b) -> b) : Π(u: a) -> Π(x: b) -> b);
   let id1
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; id1; makeId)
-    = λ(a: Type) => id1 @Num @a 1;
+    = λ(a: Type) => makeId @Num @a 1;
   let id2
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; id2; id1; makeId)
-    = λ(a: Type) => id1 @Bool @a true;
+    = λ(a: Type) => makeId @Bool @a true;
   let a : String = id1 @String "hello";
   let b : String = id2 @String "world";
   return unit;
@@ -485,7 +488,7 @@ exports[`Let-polymorphism > let-polymorphism scope and capture > let-bound closu
     = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> a);
   let makeApply
     : Π(a: Type) => (closure: Π(y: a) -> a -| Γ: a; makeApply; id)
-    = λ(a: Type) => (λ(y: a) -> makeApply @a y : Π(y: a) -> a);
+    = λ(a: Type) => (λ(y: a) -> id @a y : Π(y: a) -> a);
   let a : Num = makeApply @Num 5;
   let b : String = makeApply @String "hello";
   return unit;
@@ -519,7 +522,7 @@ exports[`Let-polymorphism > let-polymorphism scope and capture > polymorphic let
         let poly
           : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; poly; inner; outer)
           = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> a);
-        let a : Num = poly @Num inner;
+        let a : Num = poly @Num outer;
         let b : String = poly @String "test";
         return poly;
       })
@@ -712,7 +715,7 @@ exports[`Let-polymorphism > recursive bindings > recursive function with polymor
       "?2 ~~ ?4",
       "?5 ~~ Π(x: ?6) -> (closure: (?7 :: Type) -| Γ: x; y; x; rec)",
       "?3 ~~ ?6",
-      "Π(x: ?2) -> (closure: Π(y: (?3 :: Type)) -> (?7 :: Type) -| Γ: x; rec) ~~ ?1",
+      "Π(x: ?2) -> (closure: Π(y: (?6 :: Type)) -> (?7 :: Type) -| Γ: x; rec) ~~ ?1",
       "?10 @ Type",
       "?11 @ Type",
       "?12 @ Type",
@@ -727,11 +730,11 @@ exports[`Let-polymorphism > recursive bindings > recursive function with polymor
     = λ(a: Type) =>
       λ(b: Type) =>
         λ(c: Type) =>
-          (λ(x: a) -> (λ(y: b) -> c x y : Π(y: b) -> c) : Π(x: a) ->
+          (λ(x: a) -> (λ(y: b) -> rec x y : Π(y: b) -> c) : Π(x: a) ->
             Π(y: b) -> c);
   let r
     : Π(a: Type) => (closure: Π(b: Type) => Π(x: a) -> b -| Γ: a; r; rec)
-    = λ(a: Type) => λ(b: Type) => a @Num @a @b 5;
+    = λ(a: Type) => λ(b: Type) => rec @Num @a @b 5;
   return unit;
 }",
     "type": "Unit",
@@ -750,7 +753,7 @@ exports[`Let-polymorphism > recursive bindings > simple recursive function 1`] =
     "term": "{
   let rec
     : Π(a: Type) => (closure: Π(b: Type) => Π(x: a) -> b -| Γ: a; rec)
-    = λ(a: Type) => λ(b: Type) => (λ(x: a) -> b x : Π(x: a) -> b);
+    = λ(a: Type) => λ(b: Type) => (λ(x: a) -> rec x : Π(x: a) -> b);
   return unit;
 }",
     "type": "Unit",
