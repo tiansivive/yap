@@ -11,10 +11,10 @@ end
 
 
 ## length (let)
-module 'yap_main' ['main'/0, 'closure_66'/2, 'closure_65'/2]
+module 'yap_main' ['main'/0, 'closure_46'/2, 'closure_45'/2]
 attributes []
 
-'closure_66'/2 = fun (Env0, List1) ->
+'closure_46'/2 = fun (Env0, List1) ->
   letrec
     'entry'/0 = fun () ->
       let <Cap_0> = call 'maps':'get'('v0', Env0)
@@ -61,16 +61,17 @@ end of
       Match1
   in apply 'entry'/0()
 
-'closure_65'/2 = fun (Env0, A1) ->
+'closure_45'/2 = fun (Env0, A1) ->
   let <Cap_0> = call 'maps':'get'('v0', Env0)
-  in let <Env_cls2> = call 'maps':'from_list'([{'v0', Cap_0}, {'v1', A1}])
-  in let <Fnref_cls2> = fun 'yap_main':'closure_66'/2
+  in let <Cap_1> = call 'maps':'get'('v1', Env0)
+  in let <Env_cls2> = call 'maps':'from_list'([{'v0', Cap_1}, {'v1', A1}])
+  in let <Fnref_cls2> = fun 'yap_main':'closure_46'/2
   in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
   in Closure_cls2
 
 'main'/0 = fun () ->
-  let <_MainResult> = let <Env_cls2> = call 'maps':'from_list'([{'v0', Length}])
-in let <Fnref_cls2> = fun 'yap_main':'closure_65'/2
+  let <_MainResult> = let <Env_cls2> = call 'maps':'from_list'([{'v0', List}, {'v1', Length}])
+in let <Fnref_cls2> = fun 'yap_main':'closure_45'/2
 in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
 in Closure_cls2
   in let <_Print> = call 'io':'format'("~p~n", [_MainResult])

@@ -2,7 +2,7 @@
 Π(t: Type) -> Π(p: Π(t1: t) -> Π(t2: t) -> Bool) -> Type
 
 ## ascending (let)
-(OrderedList) Num (λ(x: Num) -> λ(y: Num) -> FFI.$lt x y)
+OrderedList Num (λ(x: Num) -> λ(y: Num) -> FFI.$lt x y)
 
 ## descending (let)
-(OrderedList) Num (λ(x: Num) -> λ(y: Num) -> FFI.$gt x y)
+OrderedList Num (λ(x: Num) -> λ(y: Num) -> FFI.$gt x y)

@@ -81,8 +81,11 @@ return main();
 
 ## displayIfEqual (let)
 function main() {
-  const env_cls2 = {};
-  const fnref_cls2 = closure_65;
+  const env_cls2 = {
+    v0: Show,
+    v1: Eq
+  };
+  const fnref_cls2 = closure_49;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -90,7 +93,7 @@ function main() {
   return closure_cls2;
 }
 
-function closure_69(env0, y1) {
+function closure_53(env0, y1) {
   let __block = "entry";
   let match7;
   while (true) {
@@ -145,7 +148,7 @@ function closure_69(env0, y1) {
   }
 }
 
-function closure_68(env0, x1) {
+function closure_52(env0, x1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const cap_2 = env0.v2;
@@ -154,7 +157,7 @@ function closure_68(env0, x1) {
     v1: x1,
     v2: cap_2
   };
-  const fnref_cls2 = closure_69;
+  const fnref_cls2 = closure_53;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -162,7 +165,7 @@ function closure_68(env0, x1) {
   return closure_cls2;
 }
 
-function closure_67(env0, eq1) {
+function closure_51(env0, eq1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const env_cls2 = {
@@ -170,7 +173,7 @@ function closure_67(env0, eq1) {
     v1: eq1,
     v2: cap_1
   };
-  const fnref_cls2 = closure_68;
+  const fnref_cls2 = closure_52;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -178,13 +181,14 @@ function closure_67(env0, eq1) {
   return closure_cls2;
 }
 
-function closure_66(env0, show1) {
+function closure_50(env0, show1) {
   const cap_0 = env0.v0;
+  const cap_1 = env0.v1;
   const env_cls2 = {
-    v0: cap_0,
+    v0: cap_1,
     v1: show1
   };
-  const fnref_cls2 = closure_67;
+  const fnref_cls2 = closure_51;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -192,11 +196,14 @@ function closure_66(env0, show1) {
   return closure_cls2;
 }
 
-function closure_65(env0, t1) {
+function closure_49(env0, t1) {
+  const cap_0 = env0.v0;
+  const cap_1 = env0.v1;
   const env_cls2 = {
-    v0: t1
+    v0: cap_1,
+    v1: t1
   };
-  const fnref_cls2 = closure_66;
+  const fnref_cls2 = closure_50;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2

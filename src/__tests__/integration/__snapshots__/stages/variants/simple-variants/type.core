@@ -2,4 +2,4 @@
 Type
 
 ## light (let)
-Variant [ green: Unit, yellow: Unit, red: Unit ]
+TrafficLight

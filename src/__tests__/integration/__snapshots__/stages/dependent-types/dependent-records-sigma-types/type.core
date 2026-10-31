@@ -2,9 +2,7 @@
 Type
 
 ## numPair (let)
-Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
-  Schema [ fst: Type, snd: ($sig).fst ]
+DependentPair
 
 ## strPair (let)
-Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
-  Schema [ fst: Type, snd: ($sig).fst ]
+DependentPair

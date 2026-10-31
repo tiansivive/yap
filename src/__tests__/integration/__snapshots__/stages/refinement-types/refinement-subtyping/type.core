@@ -5,10 +5,10 @@ Type
 Type
 
 ## useNat (let)
-Π(t1: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) -> Num
+Π(t1: Nat) -> Num
 
 ## p (let)
-<ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]
+Pos
 
 ## result (let)
 Num

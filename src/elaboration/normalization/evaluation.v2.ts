@@ -208,7 +208,14 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			).in(function* ({ nf }) {
 				entry.nf = nf;
 
-				return yield* result(nf);
+				return yield* match(val[0])
+					/* A primitive is defined as the atom of its own name: both faces would be the same symbol. */
+					.with(
+						{ type: "Lit", value: { type: "Atom" } },
+						({ value }) => value.value === variable.name,
+						() => result(nf),
+					)
+					.otherwise(() => result(NF.Constructors.Glued(NF.Constructors.Var(variable), nf)));
 			});
 		})
 		.with({ type: "Var", variable: { type: "Meta" } }, function* ({ variable }) {
@@ -386,14 +393,14 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			return yield* Do.let("nf", schedule.eval(term))
 				.let("liquid", schedule.eval(modalities.liquid))
 				.in(function* ({ nf, liquid }) {
-					return yield* match(nf)
+					return yield* match(unglue(nf))
 						.with(NF.Patterns.Modal, function* ({ modalities: innerModalities, value }) {
 							return yield* Do.let("combined", schedule.combine(innerModalities, { quantity: modalities.quantity, liquid })).in(({ combined }) =>
 								result(NF.Constructors.Modal(value, combined)),
 							);
 						})
-						.otherwise(function* (v) {
-							return yield* result(NF.Constructors.Modal(v, { quantity: modalities.quantity, liquid }));
+						.otherwise(function* () {
+							return yield* result(NF.Constructors.Modal(nf, { quantity: modalities.quantity, liquid }));
 						});
 				});
 		})
@@ -538,7 +545,7 @@ function* evalRowPush(row: EB.Row): Evaluation<Machine<NF.Value>> {
 
 					const ctx = yield* M.reader.ask();
 
-					return yield* match(solved)
+					return yield* match(unglue(solved))
 						.with({ type: "Row" }, deferred)
 						/*
 						 * A solution naming a variable is a reference, not a result: the slot it
@@ -559,7 +566,7 @@ function* evalRowPush(row: EB.Row): Evaluation<Machine<NF.Value>> {
 				.with({ type: "Bound" }, function* (v) {
 					const ctx = yield* M.reader.ask();
 
-					return yield* match(unwrapNeutral(ctx.env[v.index].nf))
+					return yield* match(unwrapNeutral(unglue(ctx.env[v.index].nf)))
 						.with({ type: "Row" }, deferred)
 						.with({ type: "Var" }, val => deferred(NF.Constructors.Row({ type: "variable", variable: val.variable })))
 						.otherwise(val => {
@@ -743,6 +750,12 @@ export const schedule = {
 				console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
 				return yield* schedule.reduce(value, nfa, icit);
 			})
+			/* The folded face grows with the glue itself at its head, so taking the application apart yields glued values, never a bare reference. */
+			.with(NF.Patterns.Glued, glued =>
+				Do.let("applied", schedule.reduce(glued.unfolded, nfa, icit)).in(({ applied }) =>
+					result(NF.Constructors.Glued(NF.Constructors.App(glued, nfa, icit), applied)),
+				),
+			)
 			.with({ type: "Abs", binder: { type: "Mu" } }, NF.Patterns.Nu, function* () {
 				// Do not unfold mu during normalization - defer to unification
 				return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
@@ -783,7 +796,7 @@ export const schedule = {
 					return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.External(name, arity, compute, accumulated)));
 				}
 
-				return yield* result(compute(...accumulated.map(ignoreModal)));
+				return yield* result(compute(...accumulated.map(operand)));
 			})
 			.otherwise(function* () {
 				throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
@@ -796,8 +809,9 @@ export const schedule = {
 			if (binder.type !== "Sigma") {
 				return EB.extend(cls.ctx, binder, value);
 			}
-			assert(value.type === "Row", "Sigma binder should be applied to a Row");
-			return EB.extendSigma(cls.ctx, value.row);
+			const row = unglue(value);
+			assert(row.type === "Row", "Sigma binder should be applied to a Row");
+			return EB.extendSigma(cls.ctx, row.row);
 		};
 
 		return yield* match(closure)
@@ -955,7 +969,7 @@ export const schedule = {
 			Do.let("next", schedule.resume(subject)).in(({ next }) => (next === subject ? result(value) : schedule.force(next)));
 
 		return yield* match(value)
-			.with({ type: "Neutral", kind: "Sealed" }, () => result(value))
+			.with({ type: "Neutral", kind: "Sealed" }, NF.Patterns.Glued, () => result(value))
 			.with({ type: "Neutral", kind: "Symbolic", value: NF.Patterns.Label }, function* ({ value: label }) {
 				const ctx = yield* M.reader.ask();
 
@@ -981,11 +995,9 @@ export const schedule = {
 	 * than to verification — it is only ever reached from the Modal arm, mid-drive.
 	 */
 	*combine(a: Modal.Annotations<NF.Value>, b: Modal.Annotations<NF.Value>): Evaluation<Machine<Modal.Annotations<NF.Value>>> {
-		assert(a.liquid.type === "Abs" && a.liquid.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
-		assert(b.liquid.type === "Abs" && b.liquid.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
-
-		const left = a.liquid;
-		const right = b.liquid;
+		const [left, right] = [unglue(a.liquid), unglue(b.liquid)];
+		assert(left.type === "Abs" && left.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
+		assert(right.type === "Abs" && right.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
 		const ctx = yield* M.reader.ask();
 		const name = `${left.binder.variable}_and_${right.binder.variable}`;
 		const lvl = ctx.env.length;
@@ -1005,16 +1017,21 @@ export const schedule = {
 	/**
 	 * Forces, then reports which neutral kind the result presents. `force`, `view` and `resume`
 	 * are the three requests a consumer makes of a value's neutral status, and this is the one
-	 * that results in a classification rather than a value.
+	 * that results in a classification rather than a value. Glue is not a status, so a glued
+	 * value is classified by its unfolded face.
 	 */
 	*view(value: NF.Value): Evaluation<Machine<View>> {
 		return yield* Do.let("forced", schedule.force(value)).in(({ forced }) =>
-			result(
-				match<NF.Value, View>(forced)
-					.with({ type: "Neutral" }, ({ kind, value }) => ({ kind, value }))
-					.with(NF.Patterns.Rigid, NF.Patterns.Flex, value => ({ kind: "Symbolic", value }))
-					.otherwise(value => ({ kind: "Sealed", value })),
-			),
+			match(forced)
+				.with(NF.Patterns.Glued, ({ unfolded }) => schedule.view(unfolded))
+				.otherwise(() =>
+					result(
+						match<NF.Value, View>(forced)
+							.with({ type: "Neutral" }, ({ kind, value }) => ({ kind, value }))
+							.with(NF.Patterns.Rigid, NF.Patterns.Flex, value => ({ kind: "Symbolic", value }))
+							.otherwise(value => ({ kind: "Sealed", value })),
+					),
+				),
 		);
 	},
 
@@ -1063,7 +1080,7 @@ export const schedule = {
 							return yield* result(changed ? NF.Constructors.Neutral("Blocked", NF.Constructors.External(ext.name, ext.arity, ext.compute, forced)) : value);
 						}
 
-						return yield* result(ext.compute(...forced.map(ignoreModal)));
+						return yield* result(ext.compute(...forced.map(operand)));
 					},
 				);
 			})
@@ -1097,10 +1114,22 @@ export function* apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value):
 
 export type View = { kind: NF.Neutral; value: NF.Value };
 
-export const ViewPatterns = {
-	Sealed: { kind: "Sealed" } as const,
-	Symbolic: { kind: "Symbolic" } as const,
-	Blocked: { kind: "Blocked" } as const,
+/** Patterns over a view: a kind, optionally refined by a pattern over the structure it classifies. */
+const classified = <const K extends NF.Neutral>(kind: K) => {
+	function pattern(): { kind: K };
+	function pattern<const V>(value: V): { kind: K; value: V };
+	function pattern(...value: [] | [unknown]) {
+		return match(value)
+			.with([], () => ({ kind }))
+			.otherwise(([structure]) => ({ kind, value: structure }));
+	}
+	return pattern;
+};
+
+export const View = {
+	Sealed: classified("Sealed"),
+	Symbolic: classified("Symbolic"),
+	Blocked: classified("Blocked"),
 	Flex: { kind: "Symbolic", value: NF.Patterns.Flex } as const,
 	Rigid: { kind: "Symbolic", value: NF.Patterns.Rigid } as const,
 };
@@ -1147,6 +1176,16 @@ export const unwrapNeutral = (value: NF.Value): NF.Value => {
 		.otherwise(() => value);
 };
 
+/**
+ * The unfolded face, for the machine's own reads of a raw value. Pure, so it sees through glue
+ * without also resolving metas or resuming eliminations: mid-evaluation, forcing is a scheduling
+ * decision, not an observation. Consumers outside the machine observe through `view`.
+ */
+export const unglue = (value: NF.Value): NF.Value =>
+	match(value)
+		.with(NF.Patterns.Glued, ({ unfolded }) => unglue(unfolded))
+		.otherwise(() => value);
+
 /** Whether a value is an unsolved meta once the informationless wrappers are off. Recursive peeling, so no finite pattern expresses it. */
 export const isFlex = (value: NF.Value): boolean =>
 	match(unwrapNeutral(value))
@@ -1159,8 +1198,15 @@ export const ignoreModal = (value: NF.Value): NF.Value => {
 		.otherwise(() => value);
 };
 
+/** What a primitive computes on: the value under its refinements and under the reference it was reached through. */
+const operand = (value: NF.Value): NF.Value =>
+	match(value)
+		.with(NF.Patterns.Modal, ({ value }) => operand(value))
+		.with(NF.Patterns.Glued, ({ unfolded }) => operand(unfolded))
+		.otherwise(() => value);
+
 const blocksExternal = (value: NF.Value): boolean =>
-	match(ignoreModal(value))
+	match(operand(value))
 		.with(NF.Patterns.Unresolved, () => true)
 		.otherwise(() => false);
 

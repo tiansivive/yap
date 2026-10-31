@@ -2,4 +2,4 @@
 Π(t: Type) -> Type
 
 ## xs (let)
-(List) Num
+List Num

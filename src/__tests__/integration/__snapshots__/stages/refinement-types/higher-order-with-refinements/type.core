@@ -5,10 +5,7 @@ Type
 Type
 
 ## hof (let)
-Π(f: Π(t1: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) ->
-  <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) ->
-  <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]
+Π(f: Π(t1: Nat) -> Nat) -> Nat
 
 ## hof2 (let)
-Π(t2: Π(t3: Num) -> <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) ->
-  <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]
+Π(t2: Π(t3: Num) -> Nat) -> Pos

@@ -37,7 +37,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			}
 			const [, , ty] = entry.type;
 			const selfified = yield* selfify(tm, ty);
-			const { liquid } = extractModalities(selfified, ctx);
+			const { liquid } = yield* extractModalities(selfified, ctx);
 			assert(liquid.type === "Abs", "Liquid modality must be a Lambda");
 
 			const evaluated = yield* NF.evaluate(tm);
@@ -51,7 +51,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 				throw new Error(`Unbound free variable: ${tm.variable.name}`);
 			}
 			const [, ty] = entry;
-			const modalities = extractModalities(ty, ctx);
+			const modalities = yield* extractModalities(ty, ctx);
 			const evaluated = yield* NF.evaluate(tm);
 			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
 			return [ty, { vc: yield* formula(predicate) }] satisfies SynthResult;
@@ -62,7 +62,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 				throw new Error(`Unbound label variable: ${variable.name}`);
 			}
 
-			const modalities = extractModalities(type, ctx);
+			const modalities = yield* extractModalities(type, ctx);
 			const evaluated = yield* NF.evaluate(term);
 			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
 			return [type, { vc: yield* formula(predicate) }] satisfies SynthResult;
@@ -78,7 +78,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 				return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
 			}
 			const [, ty] = entry;
-			const modalities = extractModalities(ty, ctx);
+			const modalities = yield* extractModalities(ty, ctx);
 			const evaluated = yield* NF.evaluate(tm);
 			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
 			return [ty, { vc: yield* formula(predicate) }] satisfies SynthResult;
@@ -159,7 +159,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 				const localCtx = yield* reader.ask();
 				const localRegistry = yield* Metas.registry.get();
 				const localRun = NF.probe(localCtx, localRegistry);
-				const forced = yield* NF.force(fnTy);
+				const viewed = yield* NF.view(fnTy);
 				yield* logger.log(
 					"Incorporating argument type",
 					localRun(() => EB.Display.Term(arg)),
@@ -167,22 +167,24 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 					localRun(() => NF.display(fnTy)),
 				);
 
-				return yield* match<NF.Value, Verification<SynthResult>>(forced)
-					.with(NF.Patterns.Modal, function* ({ value }) {
-						return yield* incorporate(arg, value);
+				return yield* match<NF.View, Verification<SynthResult>>(viewed)
+					.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value }) {
+						return yield* incorporate(arg, value.value);
 					})
-					.with({ type: "Existential" }, function* (ex) {
+					.with(NF.View.Sealed({ type: "Existential" }), function* ({ value: ex }) {
 						const [out, artefacts] = yield* reader.local(
 							inner => EB.bind(inner, { type: "Pi", variable: ex.variable }, ex.annotation),
 							incorporate(arg, ex.body.value),
 						);
 						return [NF.Constructors.Exists(ex.variable, ex.annotation, { ctx, value: out }), artefacts] satisfies SynthResult;
 					})
-					.with(NF.Patterns.Pi, function* (pi) {
+					.with(NF.View.Sealed(NF.Patterns.Pi), function* ({ value: pi }) {
 						const { vc, nf } = yield* reader.local(_ => ctx, check(arg, pi.binder.annotation));
 
 						const evaluatedArg = yield* reader.local(_ => ctx, NF.evaluate(arg));
-						const appliedArg = match(evaluatedArg)
+						// TODO: investigate observing through `view`. This tests for an opaque argument, which needs a sealed neutral
+						// told apart from a plain value; `view` classifies both as Sealed.
+						const appliedArg = match(NF.unglue(evaluatedArg))
 							.with(
 								{ type: "Neutral" },
 								neutral => neutral.value.type !== "Var",
@@ -242,7 +244,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const projected = function* (label: string, ty: NF.Value): Verification<NF.Value> {
 				const viewed = yield* NF.view(ty);
 				return yield* match(viewed)
-					.with({ kind: "Sealed" }, function* ({ value }) {
+					.with(NF.View.Sealed(), function* ({ value }) {
 						return yield* match(value)
 							.with(NF.Patterns.Modal, function* (modal) {
 								return yield* projected(label, modal.value);
@@ -275,7 +277,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 							.with(NF.Patterns.SigmaV2, function* ({ binder, closure }) {
 								const witness = yield* NF.evaluate(proj.term);
 								const schema = yield* NF.apply(binder, closure, witness);
-								const row = NF.rowOf(schema);
+								const row = yield* NF.rowOf(schema);
 
 								return yield* match(row)
 									.with(P.nonNullable, function* (row) {
@@ -315,7 +317,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const injected = function* (label: string, ty: NF.Value): Verification<NF.Value> {
 				const viewed = yield* NF.view(ty);
 				return yield* match(viewed)
-					.with({ kind: "Sealed" }, function* ({ value }) {
+					.with(NF.View.Sealed(), function* ({ value }) {
 						return yield* match(value)
 							.with(NF.Patterns.Modal, function* ({ value, modalities }) {
 								const inner = yield* injected(label, value);

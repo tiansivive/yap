@@ -19,9 +19,7 @@ Struct [ eq: λ(x: Num) -> (closure: λ(y: Num) -> FFI.$eq x y -| Γ: x) ]
 
 ## areEqual (let)
 λ(t: Type) =>
-  (closure: λ(eq: Σ($sig: [ eq: Irrelevant ]) .
-    Schema [ eq: Π(t5: t) -> Π(t6: t) -> Bool ]) =>
-    λ(x: t) -> λ(y: t) -> ((eq).eq) x y -| Γ: t)
+  (closure: λ(eq: Eq t) => λ(x: t) -> λ(y: t) -> ((eq).eq) x y -| Γ: t)
 
 ## result (let)
 true

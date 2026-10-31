@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
+import * as Lit from "@yap/shared/literals";
 import { mkCtx, runNF } from "../../inference/__tests__/util";
 
 const Num = NF.Constructors.Lit({ type: "Atom", value: "Num" });
@@ -60,44 +61,48 @@ describe("NF.arity", () => {
 
 describe("NF.inert", () => {
 	it("Lit is inert", () => {
-		expect(NF.inert(Num)).toBe(true);
+		expect(runNF(mkCtx(), () => NF.inert(Num))).toBe(true);
 	});
 
 	it("Schema is inert", () => {
-		expect(NF.inert(NF.Constructors.Schema({ type: "empty" }))).toBe(true);
+		expect(runNF(mkCtx(), () => NF.inert(NF.Constructors.Schema({ type: "empty" })))).toBe(true);
 	});
 
 	it("Variant is inert", () => {
-		expect(NF.inert(NF.Constructors.Variant({ type: "empty" }))).toBe(true);
+		expect(runNF(mkCtx(), () => NF.inert(NF.Constructors.Variant({ type: "empty" })))).toBe(true);
 	});
 
 	it("Pi is NOT inert", () => {
 		const ty = NF.Constructors.Pi("x", "Explicit", Num, NF.Constructors.Closure(mkCtx(), EB.Constructors.Lit({ type: "Atom", value: "Num" })));
-		expect(NF.inert(ty)).toBe(false);
+		expect(runNF(mkCtx(), () => NF.inert(ty))).toBe(false);
 	});
 
 	it("unsolved Meta is NOT inert", () => {
 		const meta = NF.Constructors.Flex({ type: "Meta", val: 99, lvl: 0 });
-		expect(NF.inert(meta)).toBe(false);
+		expect(runNF(mkCtx(), () => NF.inert(meta))).toBe(false);
 	});
 
 	it("rigid variable without apps is inert", () => {
 		const rigid = NF.Constructors.Rigid(0);
-		expect(NF.inert(rigid)).toBe(true);
+		expect(runNF(mkCtx(), () => NF.inert(rigid))).toBe(true);
 	});
 
 	it("rigid applied to args (stuck app) is NOT inert", () => {
 		const stuck = NF.Constructors.Neutral("Symbolic", NF.Constructors.App(NF.Constructors.Var({ type: "Bound", lvl: 0 }), Num, "Explicit"));
-		expect(NF.inert(stuck)).toBe(false);
+		expect(runNF(mkCtx(), () => NF.inert(stuck))).toBe(false);
 	});
 
 	it("StuckMatch is NOT inert", () => {
-		const stuckMatch = NF.Constructors.StuckMatch(NF.Constructors.Closure(mkCtx(), EB.Constructors.Lit({ type: "Atom", value: "Num" })), Num);
-		expect(NF.inert(stuckMatch)).toBe(false);
+		const meta = { type: "Meta", val: 9, lvl: 0 } as const;
+		const term = EB.Constructors.Match(EB.Constructors.Var(meta), [
+			EB.Constructors.Alternative(EB.Constructors.Patterns.Lit(Lit.Num(0)), EB.Constructors.Lit(Lit.Atom("Num")), []),
+		]);
+		const stuckMatch = runNF(mkCtx(), () => NF.normalize(term));
+		expect(runNF(mkCtx(), () => NF.inert(stuckMatch))).toBe(false);
 	});
 
 	it("Foreign var is inert", () => {
 		const foreign = NF.Constructors.Neutral("Sealed", NF.Constructors.Var({ type: "Foreign", name: "Indexed" }));
-		expect(NF.inert(foreign)).toBe(true);
+		expect(runNF(mkCtx(), () => NF.inert(foreign))).toBe(true);
 	});
 });

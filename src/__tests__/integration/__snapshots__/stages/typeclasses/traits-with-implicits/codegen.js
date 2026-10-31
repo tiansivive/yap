@@ -81,8 +81,10 @@ return main();
 
 ## display (let)
 function main() {
-  const env_cls2 = {};
-  const fnref_cls2 = closure_25;
+  const env_cls2 = {
+    v0: Show
+  };
+  const fnref_cls2 = closure_18;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -90,17 +92,18 @@ function main() {
   return closure_cls2;
 }
 
-function closure_26(env0, show1) {
+function closure_19(env0, show1) {
   const cap_0 = env0.v0;
   const v0 = show1.show;
   return v0;
 }
 
-function closure_25(env0, t1) {
+function closure_18(env0, t1) {
+  const cap_0 = env0.v0;
   const env_cls2 = {
     v0: t1
   };
-  const fnref_cls2 = closure_26;
+  const fnref_cls2 = closure_19;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -112,8 +115,10 @@ return main();
 
 ## areEqual (let)
 function main() {
-  const env_cls2 = {};
-  const fnref_cls2 = closure_31;
+  const env_cls2 = {
+    v0: Eq
+  };
+  const fnref_cls2 = closure_22;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -121,17 +126,18 @@ function main() {
   return closure_cls2;
 }
 
-function closure_32(env0, eq1) {
+function closure_23(env0, eq1) {
   const cap_0 = env0.v0;
   const v0 = eq1.eq;
   return v0;
 }
 
-function closure_31(env0, t1) {
+function closure_22(env0, t1) {
+  const cap_0 = env0.v0;
   const env_cls2 = {
     v0: t1
   };
-  const fnref_cls2 = closure_32;
+  const fnref_cls2 = closure_23;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2

@@ -2,13 +2,13 @@
 Π(t1: Num) -> Π(t2: Type) -> Type
 
 ## vec0 (let)
-(Vec) 0 Num
+Vec 0 Num
 
 ## vec1 (let)
-(Vec) 1 Num
+Vec 1 Num
 
 ## vec2 (let)
-(Vec) 2 Num
+Vec 2 Num
 
 ## vec3 (let)
-(Vec) 3 Num
+Vec 3 Num

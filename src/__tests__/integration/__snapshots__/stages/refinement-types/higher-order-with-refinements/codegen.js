@@ -15,7 +15,7 @@ return main();
 ## hof (let)
 function main() {
   const env_cls2 = {};
-  const fnref_cls2 = closure_13;
+  const fnref_cls2 = closure_12;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -23,7 +23,7 @@ function main() {
   return closure_cls2;
 }
 
-function closure_13(env0, f1) {
+function closure_12(env0, f1) {
   const v0 = 1;
   const fnref1 = f1.__fn;
   const env2 = f1.__env;

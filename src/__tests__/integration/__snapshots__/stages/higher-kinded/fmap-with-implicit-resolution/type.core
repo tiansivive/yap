@@ -8,20 +8,14 @@
 Π(t3: Π(t4: Type) -> Type) -> Type
 
 ## mapList (let)
-Π(a: Type) => Π(b: Type) => Π(t8: Π(t9: a) -> b) -> Π(t10: (List) a) -> (List) b
+Π(a: Type) => Π(b: Type) => Π(t8: Π(t9: a) -> b) -> Π(t10: List a) -> List b
 
 ## ListFunctor (let)
-Σ($sig: [ map: Irrelevant ]) .
-  Schema
-    [ map: Π(a: Type) =>
-        Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: (List) a) -> (List) b ]
+Functor List
 
 ## fmap (let)
 Π(f: Π(t11: Type) -> Type) =>
-  Π(functor: Σ($sig: [ map: Irrelevant ]) .
-    Schema
-      [ map: Π(a: Type) =>
-          Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: f a) -> f b ]) =>
+  Π(functor: Functor f) =>
     Π(a: Type) => Π(b: Type) => Π(t12: Π(t13: a) -> b) -> Π(t14: f a) -> f b
 
 ## (using) (using)
@@ -29,15 +23,10 @@
 
 ## strmap (let)
 Π(F: Π(t11: Type) -> Type) =>
-  Π(a: Type) =>
-    Π(A: Σ($sig: [ map: Irrelevant ]) .
-      Schema
-        [ map: Π(a: Type) =>
-            Π(b: Type) => Π(t5: Π(t6: a) -> b) -> Π(t7: F a) -> F b ]) =>
-      Π(t14: F a) -> F String
+  Π(a: Type) => Π(A: Functor F) => Π(t14: F a) -> F String
 
 ## listOf1 (let)
-(List) Num
+List Num
 
 ## strList (let)
-(List) String
+List String

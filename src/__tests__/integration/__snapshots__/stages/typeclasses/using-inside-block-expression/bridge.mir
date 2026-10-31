@@ -57,19 +57,20 @@ module
 module
   fn main entry=entry
     entry:
-      let env_cls2 = alloc {  }
-      let fnref_cls2 = &closure_31
+      let env_cls2 = alloc { v0: Eq }
+      let fnref_cls2 = &closure_22
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_32(env0, eq1) entry=entry
+  fn closure_23(env0, eq1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let v0 = read eq1.eq
       return v0
-  fn closure_31(env0, t1) entry=entry
+  fn closure_22(env0, t1) entry=entry
     entry:
+      let cap_0 = read env0.v0
       let env_cls2 = alloc { v0: t1 }
-      let fnref_cls2 = &closure_32
+      let fnref_cls2 = &closure_23
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
 

@@ -54,25 +54,26 @@ int main(void) {
 
 static YapValue yap_main(void);
 
-static YapValue closure_83(YapValue* __args, int __argc);
+static YapValue closure_63(YapValue* __args, int __argc);
 
-static YapValue closure_82(YapValue* __args, int __argc);
+static YapValue closure_62(YapValue* __args, int __argc);
 
-static YapValue closure_81(YapValue* __args, int __argc);
+static YapValue closure_61(YapValue* __args, int __argc);
 
-static YapValue closure_80(YapValue* __args, int __argc);
+static YapValue closure_60(YapValue* __args, int __argc);
 
 static YapValue yap_main(void) {
-  YapValue env_cls2 = yap_alloc_record(1);
-  yap_record_set(&env_cls2, "v0", mapList);
-  YapValue fnref_cls2 = yap_mk_closure(&closure_80, yap_null());
+  YapValue env_cls2 = yap_alloc_record(2);
+  yap_record_set(&env_cls2, "v0", List);
+  yap_record_set(&env_cls2, "v1", mapList);
+  YapValue fnref_cls2 = yap_mk_closure(&closure_60, yap_null());
   YapValue closure_cls2 = yap_alloc_record(2);
   yap_record_set(&closure_cls2, "__fn", fnref_cls2);
   yap_record_set(&closure_cls2, "__env", env_cls2);
   return closure_cls2;
 }
 
-static YapValue closure_83(YapValue* __args, int __argc) {
+static YapValue closure_63(YapValue* __args, int __argc) {
   YapValue env0 = __args[0];
   YapValue list1 = __args[1];
   int yap_pc = 0;
@@ -149,48 +150,53 @@ static YapValue closure_83(YapValue* __args, int __argc) {
 }
 }
 
-static YapValue closure_82(YapValue* __args, int __argc) {
+static YapValue closure_62(YapValue* __args, int __argc) {
   YapValue env0 = __args[0];
   YapValue f1 = __args[1];
   YapValue cap_0 = yap_record_get(env0, "v0");
   YapValue cap_1 = yap_record_get(env0, "v1");
   YapValue cap_2 = yap_record_get(env0, "v2");
+  YapValue cap_3 = yap_record_get(env0, "v3");
   YapValue env_cls2 = yap_alloc_record(4);
   yap_record_set(&env_cls2, "v0", f1);
-  yap_record_set(&env_cls2, "v1", cap_1);
-  yap_record_set(&env_cls2, "v2", cap_0);
-  yap_record_set(&env_cls2, "v3", cap_2);
-  YapValue fnref_cls2 = yap_mk_closure(&closure_83, yap_null());
+  yap_record_set(&env_cls2, "v1", cap_2);
+  yap_record_set(&env_cls2, "v2", cap_1);
+  yap_record_set(&env_cls2, "v3", cap_3);
+  YapValue fnref_cls2 = yap_mk_closure(&closure_63, yap_null());
   YapValue closure_cls2 = yap_alloc_record(2);
   yap_record_set(&closure_cls2, "__fn", fnref_cls2);
   yap_record_set(&closure_cls2, "__env", env_cls2);
   return closure_cls2;
 }
 
-static YapValue closure_81(YapValue* __args, int __argc) {
+static YapValue closure_61(YapValue* __args, int __argc) {
   YapValue env0 = __args[0];
   YapValue b1 = __args[1];
   YapValue cap_0 = yap_record_get(env0, "v0");
   YapValue cap_1 = yap_record_get(env0, "v1");
-  YapValue env_cls2 = yap_alloc_record(3);
-  yap_record_set(&env_cls2, "v0", cap_0);
-  yap_record_set(&env_cls2, "v1", cap_1);
-  yap_record_set(&env_cls2, "v2", b1);
-  YapValue fnref_cls2 = yap_mk_closure(&closure_82, yap_null());
+  YapValue cap_2 = yap_record_get(env0, "v2");
+  YapValue env_cls2 = yap_alloc_record(4);
+  yap_record_set(&env_cls2, "v0", cap_1);
+  yap_record_set(&env_cls2, "v1", cap_0);
+  yap_record_set(&env_cls2, "v2", cap_2);
+  yap_record_set(&env_cls2, "v3", b1);
+  YapValue fnref_cls2 = yap_mk_closure(&closure_62, yap_null());
   YapValue closure_cls2 = yap_alloc_record(2);
   yap_record_set(&closure_cls2, "__fn", fnref_cls2);
   yap_record_set(&closure_cls2, "__env", env_cls2);
   return closure_cls2;
 }
 
-static YapValue closure_80(YapValue* __args, int __argc) {
+static YapValue closure_60(YapValue* __args, int __argc) {
   YapValue env0 = __args[0];
   YapValue a1 = __args[1];
   YapValue cap_0 = yap_record_get(env0, "v0");
-  YapValue env_cls2 = yap_alloc_record(2);
+  YapValue cap_1 = yap_record_get(env0, "v1");
+  YapValue env_cls2 = yap_alloc_record(3);
   yap_record_set(&env_cls2, "v0", a1);
   yap_record_set(&env_cls2, "v1", cap_0);
-  YapValue fnref_cls2 = yap_mk_closure(&closure_81, yap_null());
+  yap_record_set(&env_cls2, "v2", cap_1);
+  YapValue fnref_cls2 = yap_mk_closure(&closure_61, yap_null());
   YapValue closure_cls2 = yap_alloc_record(2);
   yap_record_set(&closure_cls2, "__fn", fnref_cls2);
   yap_record_set(&closure_cls2, "__env", env_cls2);

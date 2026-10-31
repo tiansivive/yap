@@ -1,0 +1,174 @@
+## stringify (foreign)
+
+
+## Functor (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_31
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_31(env0, f1) entry=entry
+    entry:
+      let v0 = alloc {  }  // {"erasure":{"tag":"sigma:v2","source":"$sig"}}
+      return v0
+
+## fmap (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc { v0: Functor, v1: cap1 }
+      let fnref_cls2 = &closure_37
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_39(env0, a1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let cap_2 = read env0.v2
+      return cap_0
+  fn closure_38(env0, functor1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let env_cls2 = alloc { v0: cap_0, v1: cap_1, v2: functor1 }
+      let fnref_cls2 = &closure_39
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_37(env0, f1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let env_cls2 = alloc { v0: cap_1, v1: f1 }
+      let fnref_cls2 = &closure_38
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+
+## Option (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_13
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_13(env0, a1) entry=entry
+    entry:
+      let v0 = Unit
+      let v1 = alloc { none: v0, some: a1 }
+      return v1
+
+## mapOption (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc { v0: Option }
+      let fnref_cls2 = &closure_43
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_46(env0, o1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      jump sw2
+    sw2:
+      let tag0 = read o1.__tag
+      branch tag0 { some -> case4 | none -> case5 }
+    case4:
+      let v5 = read o1.payload
+      let x = v5
+      let v6 = some
+      let fnref7 = read cap_0.__fn
+      let env8 = read cap_0.__env
+      let v9 = call *fnref7(env8, x)
+      let v10 = alloc { __tag: v6, payload: v9 }
+      jump join3(v10)
+    case5:
+      let v6 = none
+      let v7 = unit
+      let v8 = alloc { __tag: v6, payload: v7 }
+      jump join3(v8)
+    join3(match1):
+      return match1
+  fn closure_45(env0, f1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let env_cls2 = alloc { v0: f1 }
+      let fnref_cls2 = &closure_46
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_44(env0, b1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let cap_1 = read env0.v1
+      let env_cls2 = alloc { v0: cap_1, v1: cap_0 }
+      let fnref_cls2 = &closure_45
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_43(env0, a1) entry=entry
+    entry:
+      let cap_0 = read env0.v0
+      let env_cls2 = alloc { v0: a1, v1: cap_0 }
+      let fnref_cls2 = &closure_44
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+
+## OptionFunctor (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = mapOption
+      let v1 = alloc { map: v0 }
+      return v1
+
+## (using) (using)
+
+
+## x (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = some
+      let v1 = 1
+      let v2 = alloc { __tag: v0, payload: v1 }
+      return v2
+
+## y (let)
+module
+  fn main entry=entry
+    entry:
+      let v0 = fmap
+      let v1 = Option
+      let fnref2 = read v0.__fn
+      let env3 = read v0.__env
+      let v4 = call *fnref2(env3, v1)
+      let v5 = OptionFunctor
+      let fnref6 = read v4.__fn
+      let env7 = read v4.__env
+      let v8 = call *fnref6(env7, v5)
+      let v9 = Num
+      let fnref10 = read v8.__fn
+      let env11 = read v8.__env
+      let v12 = call *fnref10(env11, v9)
+      let v13 = String
+      let fnref14 = read v12.__fn
+      let env15 = read v12.__env
+      let v16 = call *fnref14(env15, v13)
+      let v17 = Num
+      let env_cls18 = alloc { v0: v17 }
+      let fnref_cls18 = &pap_fn18
+      let closure_cls18 = alloc { __fn: fnref_cls18, __env: env_cls18 }
+      let fnref19 = read v16.__fn
+      let env20 = read v16.__env
+      let v21 = call *fnref19(env20, closure_cls18)
+      let v22 = x
+      let fnref23 = read v21.__fn
+      let env24 = read v21.__env
+      let v25 = call *fnref23(env24, v22)
+      return v25
+  fn pap_fn18(env19, arg20) entry=pap_fn18_entry
+    pap_fn18_entry:
+      let cap_0 = read env19.v0
+      let result_pap_fn18 = call stringify(cap_0, arg20)
+      return result_pap_fn18

@@ -8,7 +8,7 @@ Variant
 ## describeShape (let)
 λ(s: Variant
   [ point: Σ($sig: [ x: Irrelevant, y: Irrelevant ]) .
-      (closure: Schema [ x: Num, y: Num ] -| Γ: $sig),
+      (closure: Schema [ x: Num, y: Num ] -| Γ: $sig; Shape),
     rectangle: Schema [ 1: Num, 0: Num ],
     circle: Num ]) ->
   (closure: match s

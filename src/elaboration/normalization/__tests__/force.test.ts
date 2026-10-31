@@ -210,6 +210,28 @@ describe("Normalization: force() and apply()", () => {
 		expect(runNF(ctx, () => NF.force(sealed))).toBe(sealed);
 	});
 
+	it("stops at glue, which view classifies by its unfolded face", () => {
+		const ctx = mkCtx();
+		const unfolded = NF.Constructors.Lit(Lit.Num(1));
+		const glued = NF.Constructors.Glued(NF.Constructors.Var({ type: "Free", name: "one" }), unfolded);
+
+		expect(runNF(ctx, () => NF.force(glued))).toBe(glued);
+		expect(runNF(ctx, () => NF.view(glued))).toEqual({ kind: "Sealed", value: unfolded });
+	});
+
+	it("chases a meta to the glue it is solved with, and views by forcing the unfolded face", () => {
+		const ctx = mkCtx();
+		const [outer, inner] = [{ type: "Meta", val: 10, lvl: 0 } as const, { type: "Meta", val: 11, lvl: 0 } as const];
+		const glued = NF.Constructors.Glued(NF.Constructors.Var({ type: "Free", name: "alias" }), NF.Constructors.Flex(inner));
+		const registered = [outer, inner].reduce((registry, meta) => Metas.register(registry, { meta, annotation: NF.Type }), Metas.empty);
+		const registry = Metas.solve(Metas.solve(registered, outer.val, glued), inner.val, NF.Constructors.Lit(Lit.Num(3)));
+
+		expect(runNF(ctx, () => NF.force(NF.Constructors.Flex(outer)), registry)).toBe(glued);
+		expect(runNF(ctx, () => NF.view(NF.Constructors.Flex(outer)), registry)).toMatchObject({ kind: "Sealed", value: { type: "Lit", value: Lit.Num(3) } });
+		/* The pure form only removes the glue; the meta under it stays unresolved. */
+		expect(NF.unglue(glued)).toMatchObject({ type: "Neutral", kind: "Symbolic", value: { variable: inner } });
+	});
+
 	it("lets meet own the view required by inspecting patterns", () => {
 		const ctx = mkCtx();
 		const value = NF.Constructors.Struct(NF.Constructors.Extension("x", NF.Constructors.Lit(Lit.Num(1)), R.Constructors.Empty()));

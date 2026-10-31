@@ -1,0 +1,29 @@
+## stringify (foreign)
+
+
+## Functor (let)
+true
+
+## fmap (let)
+(forall ((a Type))
+  (forall ((b Type))
+    (forall ((container App_Fn_Type_Type_Type))
+      (and (= a a) (= b b) (= container container)))))
+
+## Option (let)
+true
+
+## mapOption (let)
+error: Rigid variables do not match in subtype
+
+## OptionFunctor (let)
+(forall ((a Type)) (forall ((b Type)) (and (= a a) (= b b))))
+
+## (using) (using)
+
+
+## x (let)
+true
+
+## y (let)
+true

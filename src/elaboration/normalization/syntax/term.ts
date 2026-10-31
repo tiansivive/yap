@@ -24,6 +24,21 @@ type Constructor =
 	| { type: "Neutral"; kind: Neutral; value: Value }
 	| { type: "Modal"; value: Value; modalities: Modalities }
 	| { type: "External"; name: string; arity: number; compute: (...args: Value[]) => Value; args: Value[] }
+	/**
+	 * A value kept together with the reference it came from. `folded` is the reference as
+	 * written — a top-level definition name, or an application tree rooted at one — and
+	 * `unfolded` is what that reference evaluates to. Both denote the same value; they differ
+	 * only in how much δ-reduction has happened.
+	 *
+	 * Made when a definition is referenced, so that unification can see `Option Num` rather
+	 * than the variant row it unfolds to, and so that solutions, displays and errors read back
+	 * with the user's names. Forcing stops at it, as at a seal; viewing sees through it, and
+	 * quotation emits `folded`.
+	 *
+	 * Not a neutral: a neutral kind says why a value cannot step, and this one can — unfolding
+	 * is the step. Its reduction status is that of `unfolded`.
+	 */
+	| { type: "Glued"; folded: Value; unfolded: Value }
 	| {
 			type: "Existential";
 			variable: string;
@@ -37,6 +52,8 @@ type Constructor =
 export type Row = R.Row<Value, Variable>;
 export type TaggedParts = { label: string; payload: Value };
 export type Neutral = "Symbolic" | "Sealed" | "Blocked";
+/** Which face readback emits for glue: the reference as written, or what definitions compute. */
+export type Unfolding = "none" | "definitions";
 
 export type Binder =
 	| { type: "Pi"; variable: string; annotation: Value; icit: Implicitness }
@@ -179,6 +196,7 @@ export const Constructors = {
 			modalities,
 		}),
 	External: (name: string, arity: number, compute: (...args: Value[]) => Value, args: Value[]): Value => mk({ type: "External", name, arity, compute, args }),
+	Glued: (folded: Value, unfolded: Value): Value => mk({ type: "Glued", folded, unfolded }),
 };
 
 export const Type: Value = mk({
@@ -295,25 +313,23 @@ export const Patterns = {
 	} as const,
 
 	HashMap: {
-		type: "Neutral",
-		value: {
+		type: "App",
+		icit: "Implicit",
+		func: {
 			type: "App",
-			icit: "Implicit",
 			func: {
 				type: "App",
 				func: {
-					type: "App",
-					func: {
-						type: "Var",
-						variable: { type: "Foreign", name: "Indexed" },
-					},
-					arg: { type: "Lit", value: { type: "Atom", value: "String" } },
+					type: "Var",
+					variable: { type: "Foreign", name: "Indexed" },
 				},
+				arg: { type: "Lit", value: { type: "Atom", value: "String" } },
 			},
 		},
 	} as const,
 
 	External: { type: "External" } as const,
+	Glued: { type: "Glued" } as const,
 };
 
 export const TaggedValue = {

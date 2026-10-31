@@ -30,9 +30,13 @@ const symbolicRow = (annotation: NF.Value): NF.Row => {
  * Quotes a value at the given level, under the ambient context.
  * We explicitly pass the level to avoid extending the context when quoting under binders.
  * Closure bodies quote under their own stored context — closure consumption, via reader.local.
+ *
+ * Glue reads back as the reference it came from. Unfolding definitions reads back what references
+ * compute instead, at every depth, which is what showing a normal form means.
  */
-export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>> {
+export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"): Evaluation<Machine<EB.Term>> {
 	return yield* match(val)
+		.with(NF.Patterns.Glued, ({ folded, unfolded }) => quote(lvl, unfold === "definitions" ? unfolded : folded, unfold))
 		.with({ type: "Lit" }, function* ({ value }) {
 			return yield* result(EB.Constructors.Lit(value));
 		})
@@ -51,7 +55,7 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 				.with({ type: "Meta" }, function* (v) {
 					const solved = Metas.solution(yield* Metas.registry.get(), v.val);
 
-					return yield* solved ? quote(lvl, solved) : result(EB.Constructors.Var(v));
+					return yield* solved ? quote(lvl, solved, unfold) : result(EB.Constructors.Var(v));
 				})
 				.otherwise(function* (v) {
 					return yield* result(EB.Constructors.Var(v));
@@ -64,22 +68,22 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 
 			const alternatives = closure.term.alternatives;
 
-			return yield* Do.let("quoted", quote(lvl, scrutinee)).in(({ quoted }) => result(EB.Constructors.Match(quoted, alternatives)));
+			return yield* Do.let("quoted", quote(lvl, scrutinee, unfold)).in(({ quoted }) => result(EB.Constructors.Match(quoted, alternatives)));
 		})
 		.with(NF.Patterns.StuckProj, ({ value: { label, base } }) =>
-			Do.let("quoted", quote(lvl, base)).in(({ quoted }) => result(EB.Constructors.Proj(label, quoted))),
+			Do.let("quoted", quote(lvl, base, unfold)).in(({ quoted }) => result(EB.Constructors.Proj(label, quoted))),
 		)
 		.with(NF.Patterns.StuckInj, ({ value: { label, base, injected } }) =>
-			Do.let("value", quote(lvl, injected))
-				.let("target", quote(lvl, base))
+			Do.let("value", quote(lvl, injected, unfold))
+				.let("target", quote(lvl, base, unfold))
 				.in(({ value, target }) => result(EB.Constructors.Inj(label, value, target))),
 		)
 		.with({ type: "Neutral" }, function* ({ value }) {
-			return yield* quote(lvl, value);
+			return yield* quote(lvl, value, unfold);
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) =>
-			Do.let("f", quote(lvl, func))
-				.let("a", quote(lvl, arg))
+			Do.let("f", quote(lvl, func, unfold))
+				.let("a", quote(lvl, arg, unfold))
 				.in(({ f, a }) => result(EB.Constructors.App(icit, f, a))),
 		)
 		.with({ type: "Abs", binder: { type: "Lambda" } }, function* ({ binder, closure }) {
@@ -88,9 +92,9 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 			return yield* Do.let("applied", schedule.apply(binder, closure, NF.Constructors.Rigid(lvl))).in(({ applied }) =>
 				Do.let(
 					"body",
-					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
+					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)),
 				)
-					.let("ann", quote(lvl, annotation))
+					.let("ann", quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.Lambda(variable, icit, body, ann))),
 			);
 		})
@@ -100,9 +104,9 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 			return yield* Do.let("applied", schedule.apply(binder, closure, NF.Constructors.Rigid(lvl))).in(({ applied }) =>
 				Do.let(
 					"body",
-					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
+					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)),
 				)
-					.let("ann", quote(lvl, annotation))
+					.let("ann", quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.Pi(variable, icit, ann, body))),
 			);
 		})
@@ -112,9 +116,9 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 			return yield* Do.let("applied", schedule.apply(binder, closure, NF.Constructors.Rigid(lvl))).in(({ applied }) =>
 				Do.let(
 					"body",
-					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
+					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)),
 				)
-					.let("ann", quote(lvl, annotation))
+					.let("ann", quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.Mu(variable, source, ann, body))),
 			);
 		})
@@ -126,9 +130,9 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 			return yield* Do.let("applied", schedule.apply(binder, closure, NF.Constructors.Row(symbolicRow(annotation)))).in(({ applied }) =>
 				Do.let(
 					"body",
-					M.reader.local(_ => closure.ctx, quote(lvl, applied)),
+					M.reader.local(_ => closure.ctx, quote(lvl, applied, unfold)),
 				)
-					.let("ann", quote(lvl, annotation))
+					.let("ann", quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.Sigma(variable, ann, body))),
 			);
 		})
@@ -138,9 +142,9 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 			return yield* Do.let("applied", schedule.apply(binder, closure, NF.Constructors.Rigid(lvl))).in(({ applied }) =>
 				Do.let(
 					"body",
-					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied)),
+					M.reader.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)),
 				)
-					.let("ann", quote(lvl, annotation))
+					.let("ann", quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.SigmaV2(variable, ann, body))),
 			);
 		})
@@ -150,32 +154,32 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 			const back = (term: EB.Term) =>
 				M.reader.local(
 					_ => held,
-					Do.let("value", schedule.eval(term)).in(({ value }) => quote(lvl, value)),
+					Do.let("value", schedule.eval(term)).in(({ value }) => quote(lvl, value, unfold)),
 				);
 
 			return yield* Do.let("body", back(closure.term))
 				.let("scoped", back(EB.Constructors.Row(binder.scoped)))
 				.let(
 					"annotation",
-					M.reader.local(_ => held, quote(lvl, binder.annotation)),
+					M.reader.local(_ => held, quote(lvl, binder.annotation, unfold)),
 				)
 				.in(function* ({ body, scoped, annotation }) {
 					assert(scoped.type === "Row", "A row reads back as a row");
 					return yield* result(EB.Constructors.Nu({ mode: binder.mode, labels: binder.labels, scoped: scoped.row, annotation }, body));
 				});
 		})
-		.with({ type: "Row" }, ({ row }) => Do.let("quoted", quoteRow(lvl, row)).in(({ quoted }) => result(EB.Constructors.Row(quoted))))
+		.with({ type: "Row" }, ({ row }) => Do.let("quoted", quoteRow(lvl, row, unfold)).in(({ quoted }) => result(EB.Constructors.Row(quoted))))
 		.with({ type: "External" }, function* ({ name, args }) {
 			return yield* group(
-				args.map(arg => quote(lvl, arg)),
+				args.map(arg => quote(lvl, arg, unfold)),
 				function* (quoted) {
 					return yield* result(quoted.reduce<EB.Term>((acc, arg) => EB.Constructors.App("Explicit", acc, arg), EB.Constructors.Var({ type: "Foreign", name })));
 				},
 			);
 		})
 		.with({ type: "Modal" }, ({ value, modalities }) =>
-			Do.let("quoted", quote(lvl, value))
-				.let("liquid", quote(lvl, modalities.liquid))
+			Do.let("quoted", quote(lvl, value, unfold))
+				.let("liquid", quote(lvl, modalities.liquid, unfold))
 				.in(({ quoted, liquid }) => result(EB.Constructors.Modal(quoted, { quantity: modalities.quantity, liquid }))),
 		)
 		.otherwise(function* (nf) {
@@ -183,14 +187,14 @@ export function* quote(lvl: number, val: NF.Value): Evaluation<Machine<EB.Term>>
 		});
 }
 
-const quoteRow = function* (lvl: number, row: NF.Row): Evaluation<Machine<EB.Row>> {
+const quoteRow = function* (lvl: number, row: NF.Row, unfold: NF.Unfolding): Evaluation<Machine<EB.Row>> {
 	return yield* match(row)
 		.with({ type: "empty" }, function* () {
 			return yield* result<EB.Row>({ type: "empty" });
 		})
 		.with({ type: "extension" }, ({ label, value, row: rest }) =>
-			Do.let("quoted", quote(lvl, value))
-				.let("tail", quoteRow(lvl, rest))
+			Do.let("quoted", quote(lvl, value, unfold))
+				.let("tail", quoteRow(lvl, rest, unfold))
 				.in(({ quoted, tail }) => result(EB.Constructors.Extension(label, quoted, tail))),
 		)
 		.with({ type: "variable" }, function* ({ variable }) {

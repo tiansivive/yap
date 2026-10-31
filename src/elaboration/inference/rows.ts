@@ -71,10 +71,8 @@ export const collect = function* (row: Src.Row): M.Elaboration<Collected> {
 					throw new Error("Elaborating Row Var: Not a variable");
 				}
 
-				const unwrapped = NF.unwrapNeutral(ty);
-
 				const accumulated: Collected = yield* acc;
-				return { fields: accumulated.fields, tail: { variable: tm.variable, ty: unwrapped } };
+				return { fields: accumulated.fields, tail: { variable: tm.variable, ty } };
 			})(),
 		M.of(initial),
 	);

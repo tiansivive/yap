@@ -252,14 +252,14 @@ export const run = (source: string, opts: Options): Result => {
 
 	if (opts.evaluate) {
 		const nf = attempt("Normalization", () => disp(() => EB.NF.evaluate(tm)), errors);
-		result.normalized = nf ? (attempt("Normalization / display", () => disp(() => EB.NF.display(nf, db)), errors) ?? "") : "";
+		result.normalized = nf ? (attempt("Normalization / display", () => disp(() => EB.NF.display(nf, { ...db, unfold: "definitions" })), errors) ?? "") : "";
 
 		if (opts.deBruijn === "both" && nf) {
 			const quotedNF = attempt(
 				"Normalization / quote",
 				() =>
 					disp(function* () {
-						return yield* EB.NF.quote(ctx.env.length, nf);
+						return yield* EB.NF.quote(ctx.env.length, nf, { unfold: "definitions" });
 					}),
 				errors,
 			);

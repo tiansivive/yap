@@ -11,10 +11,10 @@ import { Liquid } from "../../modalities";
 
 import { reader, type Verification } from "../effects";
 
-export type ExtractModalitiesFn = (nf: NF.Value, ctx: EB.Context) => NF.Modalities;
+export type ExtractModalitiesFn = (nf: NF.Value, ctx: EB.Context) => Verification<NF.Modalities>;
 
 export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Value> {
-	if (!isFirstOrder(ty)) {
+	if (!(yield* isFirstOrder(ty))) {
 		return ty;
 	}
 
@@ -22,10 +22,8 @@ export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Va
 	const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
 	const nf = yield* NF.evaluate(tm);
 
-	const forced = yield* NF.force(ty);
-
-	return yield* match(forced)
-		.with({ type: "Modal" }, function* (modal) {
+	return yield* match(yield* NF.view(ty))
+		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: modal }) {
 			const { liquid } = modal.modalities;
 			assert(liquid.type === "Abs" && liquid.binder.type === "Lambda", "Liquid refinement must be an abstraction");
 
@@ -41,7 +39,8 @@ export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Va
 				},
 			});
 		})
-		.otherwise(function* (value) {
+		.otherwise(function* () {
+			const value = yield* NF.force(ty);
 			const quoted = yield* NF.quote(ctx.env.length + 1, nf);
 			const liquid = NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, EB.DSL.eq(bound, quoted)), value);
 			return NF.Constructors.Modal(value, {
@@ -53,15 +52,12 @@ export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Va
 
 export const meet = function* (scrutineeTy: NF.Value, patternTy: NF.Value): Verification<NF.Value> {
 	const ctx = yield* reader.ask();
-	const s = NF.unwrapNeutral(scrutineeTy);
-	const p = NF.unwrapNeutral(patternTy);
-
-	return yield* match([s, p])
-		.with([{ type: "Existential" }, P._], function* ([ex]) {
+	return yield* match([yield* NF.view(scrutineeTy), yield* NF.view(patternTy)])
+		.with([NF.View.Sealed({ type: "Existential" }), P._], function* ([{ value: ex }]) {
 			const met = yield* reader.local(c => EB.bind(ex.body.ctx, { type: "Pi", variable: ex.variable }, ex.annotation), meet(ex.body.value, patternTy));
 			return NF.Constructors.Exists(ex.variable, ex.annotation, { ctx: ex.body.ctx, value: met });
 		})
-		.with([{ type: "Modal" }, { type: "Modal" }], function* ([sm, pm]) {
+		.with([NF.View.Sealed(NF.Patterns.Modal), NF.View.Sealed(NF.Patterns.Modal)], function* ([{ value: sm }, { value: pm }]) {
 			const sl = sm.modalities.liquid;
 			const pl = pm.modalities.liquid;
 
@@ -81,36 +77,27 @@ export const meet = function* (scrutineeTy: NF.Value, patternTy: NF.Value): Veri
 				liquid: conjoined,
 			});
 		})
-		.with([{ type: "Modal" }, P._], function* ([sm]) {
+		.with([NF.View.Sealed(NF.Patterns.Modal), P._], function* ([{ value: sm }]) {
 			const metBase = yield* meet(sm.value, patternTy);
 			return NF.Constructors.Modal(metBase, sm.modalities);
 		})
-		.with([P._, { type: "Modal" }], function* ([, pm]) {
+		.with([P._, NF.View.Sealed(NF.Patterns.Modal)], function* ([, { value: pm }]) {
 			const metBase = yield* meet(scrutineeTy, pm.value);
 			return NF.Constructors.Modal(metBase, pm.modalities);
 		})
-		.with(
-			[
-				{ type: "Abs", binder: { type: "Pi" } },
-				{ type: "Abs", binder: { type: "Pi" } },
-			],
-			function* ([st, pt]) {
-				const metDomain = yield* meet(st.binder.annotation, pt.binder.annotation);
-				const stBody = yield* NF.apply(st.binder, st.closure, NF.Constructors.Rigid(ctx.env.length));
-				const ptBody = yield* NF.apply(pt.binder, pt.closure, NF.Constructors.Rigid(ctx.env.length));
-				const metCodomain = yield* reader.local(c => EB.bind(c, st.binder, st.binder.annotation), meet(stBody, ptBody));
+		.with([NF.View.Sealed(NF.Patterns.Pi), NF.View.Sealed(NF.Patterns.Pi)], function* ([{ value: st }, { value: pt }]) {
+			const metDomain = yield* meet(st.binder.annotation, pt.binder.annotation);
+			const stBody = yield* NF.apply(st.binder, st.closure, NF.Constructors.Rigid(ctx.env.length));
+			const ptBody = yield* NF.apply(pt.binder, pt.closure, NF.Constructors.Rigid(ctx.env.length));
+			const metCodomain = yield* reader.local(c => EB.bind(c, st.binder, st.binder.annotation), meet(stBody, ptBody));
 
-				const xtended = EB.bind(ctx, st.binder, st.binder.annotation);
-				const quoted = yield* NF.quote(xtended.env.length, metCodomain);
-				return NF.Constructors.Pi(st.binder.variable, st.binder.icit, metDomain, NF.Constructors.Closure(xtended, quoted));
-			},
-		)
+			const xtended = EB.bind(ctx, st.binder, st.binder.annotation);
+			const quoted = yield* NF.quote(xtended.env.length, metCodomain);
+			return NF.Constructors.Pi(st.binder.variable, st.binder.icit, metDomain, NF.Constructors.Closure(xtended, quoted));
+		})
 		.with(
-			[
-				{ type: "App", arg: { type: "Row" } },
-				{ type: "App", arg: { type: "Row" } },
-			],
-			function* ([sApp, pApp]) {
+			[NF.View.Sealed({ type: "App", arg: { type: "Row" } }), NF.View.Sealed({ type: "App", arg: { type: "Row" } })],
+			function* ([{ value: sApp }, { value: pApp }]) {
 				const metRow = yield* meetRow(sApp.arg.row, pApp.arg.row);
 				return NF.Constructors.App(sApp.func, NF.Constructors.Row(metRow), sApp.icit);
 			},
@@ -150,16 +137,22 @@ export const meetRow = function* (sRow: NF.Row, pRow: NF.Row): Verification<NF.R
 		.exhaustive();
 };
 
-export const extractModalities: ExtractModalitiesFn = (nf, ctx) =>
-	match(nf)
-		.with({ type: "Modal" }, m => m.modalities)
+export const extractModalities: ExtractModalitiesFn = function* (nf, ctx) {
+	return match(yield* NF.view(nf))
+		.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => value.modalities)
 		.otherwise(() => ({
 			quantity: Q.Many,
 			liquid: Liquid.Predicate.NeutralNF(NF.Constructors.Lit({ type: "Atom", value: "Unit" }), ctx),
 		}));
+};
 
-export const isFirstOrder = (ty: NF.Value): boolean =>
-	match(NF.unwrapNeutral(ty))
-		.with({ type: "Modal" }, ({ value }) => isFirstOrder(value))
-		.with(NF.Patterns.Pi, NF.Patterns.Lambda, NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, () => false)
-		.otherwise(() => true);
+export const isFirstOrder = function* (ty: NF.Value): Verification<boolean> {
+	return yield* match(yield* NF.view(ty))
+		.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => isFirstOrder(value.value))
+		.with(NF.View.Sealed(P.union(NF.Patterns.Pi, NF.Patterns.Lambda, NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu)), function* () {
+			return false;
+		})
+		.otherwise(function* () {
+			return true;
+		});
+};

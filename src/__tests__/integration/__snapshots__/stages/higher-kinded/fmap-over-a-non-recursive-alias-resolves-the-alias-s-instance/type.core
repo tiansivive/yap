@@ -1,0 +1,29 @@
+## stringify (foreign)
+
+
+## Functor (let)
+Π(t2: Π(t3: Type) -> Type) -> Type
+
+## fmap (let)
+Π(f: Π(t7: Type) -> Type) =>
+  Π(functor: Functor f) =>
+    Π(a: Type) => Π(b: Type) => Π(t8: Π(t9: a) -> b) -> Π(t10: f a) -> f b
+
+## Option (let)
+Π(t11: Type) -> Type
+
+## mapOption (let)
+Π(a: Type) =>
+  Π(b: Type) => Π(t12: Π(t13: a) -> b) -> Π(t14: Option a) -> Option b
+
+## OptionFunctor (let)
+Functor Option
+
+## (using) (using)
+
+
+## x (let)
+Option Num
+
+## y (let)
+Option String

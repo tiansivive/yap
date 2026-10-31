@@ -19,10 +19,8 @@ Struct [ eq: λ(x: Num) -> (closure: λ(y: Num) -> FFI.$eq x y -| Γ: x) ]
 
 ## displayIfEqual (let)
 λ(t: Type) =>
-  (closure: λ(show: Σ($sig: [ show: Irrelevant ]) .
-    Schema [ show: Π(t3: t) -> String ]) =>
-    λ(eq: Σ($sig: [ eq: Irrelevant ]) .
-      Schema [ eq: Π(t5: t) -> Π(t6: t) -> Bool ]) =>
+  (closure: λ(show: Show t) =>
+    λ(eq: Eq t) =>
       λ(x: t) ->
         λ(y: t) ->
           match ((eq).eq) x y

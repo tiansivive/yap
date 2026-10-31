@@ -5,13 +5,13 @@
 <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]
 
 ## takePosFunction (let)
-λ(f: Π(t2: <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]) -> Num) -> f 10
+λ(f: Π(t2: Pos) -> Num) -> f 10
 
 ## natToNum (let)
-λ(x: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) -> x
+λ(x: Nat) -> x
 
 ## posToNum (let)
-λ(x: <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]) -> x
+λ(x: Pos) -> x
 
 ## result1 (let)
 takePosFunction natToNum

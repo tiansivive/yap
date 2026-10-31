@@ -64,23 +64,24 @@ end
 error: emit_erl: unknown function arity for "unknown"
 
 ## areEqual (let)
-module 'yap_main' ['main'/0, 'closure_32'/2, 'closure_31'/2]
+module 'yap_main' ['main'/0, 'closure_23'/2, 'closure_22'/2]
 attributes []
 
-'closure_32'/2 = fun (Env0, Eq1) ->
+'closure_23'/2 = fun (Env0, Eq1) ->
   let <Cap_0> = call 'maps':'get'('v0', Env0)
   in let <V0> = call 'maps':'get'('eq', Eq1)
   in V0
 
-'closure_31'/2 = fun (Env0, T1) ->
-  let <Env_cls2> = call 'maps':'from_list'([{'v0', T1}])
-  in let <Fnref_cls2> = fun 'yap_main':'closure_32'/2
+'closure_22'/2 = fun (Env0, T1) ->
+  let <Cap_0> = call 'maps':'get'('v0', Env0)
+  in let <Env_cls2> = call 'maps':'from_list'([{'v0', T1}])
+  in let <Fnref_cls2> = fun 'yap_main':'closure_23'/2
   in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
   in Closure_cls2
 
 'main'/0 = fun () ->
-  let <_MainResult> = let <Env_cls2> = call 'maps':'from_list'([])
-in let <Fnref_cls2> = fun 'yap_main':'closure_31'/2
+  let <_MainResult> = let <Env_cls2> = call 'maps':'from_list'([{'v0', Eq}])
+in let <Fnref_cls2> = fun 'yap_main':'closure_22'/2
 in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
 in Closure_cls2
   in let <_Print> = call 'io':'format'("~p~n", [_MainResult])

@@ -16,16 +16,10 @@
 νstrict [] . Struct [ eq: λ(x: Num) -> λ(y: Num) -> FFI.$eq x y ]
 
 ## display (let)
-λ(t: Type) =>
-  λ(show: Σ($sig: [ show: Irrelevant ]) .
-    Schema [ show: Π(t3: t) -> String ]) =>
-    λ(x: t) -> ((show).show) x
+λ(t: Type) => λ(show: Show t) => λ(x: t) -> ((show).show) x
 
 ## areEqual (let)
-λ(t: Type) =>
-  λ(eq: Σ($sig: [ eq: Irrelevant ]) .
-    Schema [ eq: Π(t5: t) -> Π(t6: t) -> Bool ]) =>
-    λ(x: t) -> λ(y: t) -> ((eq).eq) x y
+λ(t: Type) => λ(eq: Eq t) => λ(x: t) -> λ(y: t) -> ((eq).eq) x y
 
 ## (using) (using)
 

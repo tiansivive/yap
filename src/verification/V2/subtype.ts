@@ -42,38 +42,38 @@ const dispatch = function* (left: NF.Value, right: NF.Value): Verification<IVL.F
 	const [a, b] = [yield* NF.view(left), yield* NF.view(right)];
 
 	return yield* match([a, b])
-		.with([NF.ViewPatterns.Blocked, P._], ([left, right]) => subtype(left.value, right.value))
-		.with([P._, NF.ViewPatterns.Blocked], ([left, right]) => subtype(left.value, right.value))
-		.with([NF.ViewPatterns.Sealed, P._], ([left, right]) => structural(left.value, right.value))
-		.with([P._, NF.ViewPatterns.Sealed], ([left, right]) => structural(left.value, right.value))
-		.with([NF.ViewPatterns.Flex, P._], function* ([flex]) {
+		.with([NF.View.Blocked(), P._], ([left, right]) => subtype(left.value, right.value))
+		.with([P._, NF.View.Blocked()], ([left, right]) => subtype(left.value, right.value))
+		.with([NF.View.Sealed(), P._], ([left, right]) => structural(left.value, right.value))
+		.with([P._, NF.View.Sealed()], ([left, right]) => structural(left.value, right.value))
+		.with([NF.View.Flex, P._], function* ([flex]) {
 			const solution = Metas.solution(registry, flex.value.variable.val);
 			if (!solution) {
 				throw new Error("Unbound meta variable in subtype");
 			}
 			return yield* subtype(solution, right);
 		})
-		.with([P._, NF.ViewPatterns.Flex], function* ([, flex]) {
+		.with([P._, NF.View.Flex], function* ([, flex]) {
 			const solution = Metas.solution(registry, flex.value.variable.val);
 			if (!solution) {
 				throw new Error("Unbound meta variable in subtype");
 			}
 			return yield* subtype(left, solution);
 		})
-		.with([NF.ViewPatterns.Rigid, NF.ViewPatterns.Rigid], function* ([rigid1, rigid2]) {
+		.with([NF.View.Rigid, NF.View.Rigid], function* ([rigid1, rigid2]) {
 			if (rigid1.value.variable.lvl === rigid2.value.variable.lvl) {
 				return Build.true_();
 			}
 			throw new Error("Rigid variables do not match in subtype");
 		})
-		.with([NF.ViewPatterns.Rigid, P._], function* ([rigid]) {
+		.with([NF.View.Rigid, P._], function* ([rigid]) {
 			const entry = ctx.env[EB.lvl2idx(ctx, rigid.value.variable.lvl)];
 			if (!entry) {
 				throw new Error("Unbound variable in subtype");
 			}
 			return yield* subtype(entry.nf, right);
 		})
-		.with([P._, NF.ViewPatterns.Rigid], function* ([, rigid]) {
+		.with([P._, NF.View.Rigid], function* ([, rigid]) {
 			const entry = ctx.env[EB.lvl2idx(ctx, rigid.value.variable.lvl)];
 			if (!entry) {
 				throw new Error("Unbound variable in subtype");
@@ -141,7 +141,7 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const vcCod = yield* subtype(codomainA, codomainB);
 			return Build.and(vcDom, vcCod);
 		})
-		.with([NF.Patterns.Schema, NF.Patterns.HashMap.value], function* ([schema, hashmap]) {
+		.with([NF.Patterns.Schema, NF.Patterns.HashMap], function* ([schema, hashmap]) {
 			const codomain = hashmap.func.arg;
 			return yield* Row.fold(
 				schema.arg.row,
@@ -212,7 +212,7 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const bnf = yield* NF.apply(bt.binder, bt.closure, NF.Constructors.Rigid(lvl));
 			const vcBody = yield* reader.local(c => EB.bind(c, bt.binder, bt.binder.annotation), subtype(anf, bnf));
 
-			if (!isFirstOrder(bt.binder.annotation)) {
+			if (!(yield* isFirstOrder(bt.binder.annotation))) {
 				yield* obligations.record("subtype.pi.nonrefinable", vcBody, {
 					type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
 					description: `Function result must be subtype (non-refinable parameter ${bt.binder.variable})`,
@@ -223,7 +223,7 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const sort = yield* mkSort(bt.binder.annotation);
 			const x = Build.var_(bt.binder.variable, sort);
 
-			const modalities = extractModalities(bt.binder.annotation, ctx);
+			const modalities = yield* extractModalities(bt.binder.annotation, ctx);
 			if (modalities.liquid.type !== "Abs") {
 				throw new Error("Liquid refinement must be a unary function");
 			}

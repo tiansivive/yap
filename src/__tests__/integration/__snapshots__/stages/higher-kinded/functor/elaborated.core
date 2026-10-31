@@ -12,7 +12,7 @@ List
 λ(a: Type) =>
   λ(b: Type) =>
     λ(f: Π(t8: a) -> b) ->
-      λ(list: (List) a) ->
+      λ(list: List a) ->
         match list
           | Variant [ nil: _ | $row_7 ] -> Struct [ __tag: nil, payload: unit ]
           | Variant [ cons: Struct [ 0: x, 1: xs | $row_13 ] | $row_14 ] ->

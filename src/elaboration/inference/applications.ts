@@ -13,7 +13,7 @@ type Application = Extract<Src.Term, { type: "application" }>;
 export const infer = (node: Application) =>
 	M.tracer.track({ tag: "src", type: "term", term: node, metadata: { action: "infer", description: "Application node" } }, function* () {
 		const [ft, fty, fus] = yield* inferFn(node);
-		const pi = yield* mkPi(yield* NF.force(fty), node.icit);
+		const pi = yield* mkPi(fty, node.icit);
 		const [at, _aus] = yield* checkArg(node, pi[0]);
 
 		const [_nf, cls, x] = pi;
@@ -51,13 +51,13 @@ const checkArg = ({ arg }: Application, ann: NF.Value) =>
 	);
 
 type Pi = [NF.Value, NF.Closure, string];
-const mkPi = (fnType: NF.Value, icit: Implicitness): M.Elaboration<Pi> =>
-	match(fnType)
-		.with({ type: "Modal" }, ({ value }) => {
+const mkPi = function* (fnType: NF.Value, icit: Implicitness): M.Elaboration<Pi> {
+	return yield* match(yield* NF.view(fnType))
+		.with(NF.View.Sealed(NF.Patterns.Modal), ({ value }) => {
 			console.warn("Inferred fn as a modal type. Still unsure what to do here. Simply unwrapping the modality for now");
-			return mkPi(value, icit);
+			return mkPi(value.value, icit);
 		})
-		.with({ type: "Abs", binder: { type: "Pi" } }, pi => {
+		.with(NF.View.Sealed(NF.Patterns.Pi), ({ value: pi }) => {
 			if (pi.binder.icit !== icit) {
 				throw new Error("Implicitness mismatch");
 			}
@@ -77,3 +77,4 @@ const mkPi = (fnType: NF.Value, icit: Implicitness): M.Elaboration<Pi> =>
 			yield* M.constrain({ type: "assign", left: fnType, right: pi, lvl: ctx.env.length });
 			return [nf, closure, pi.binder.variable] satisfies Pi;
 		});
+};

@@ -32,10 +32,10 @@ end
 
 
 ## mapList (let)
-module 'yap_main' ['main'/0, 'closure_83'/2, 'closure_82'/2, 'closure_81'/2, 'closure_80'/2]
+module 'yap_main' ['main'/0, 'closure_63'/2, 'closure_62'/2, 'closure_61'/2, 'closure_60'/2]
 attributes []
 
-'closure_83'/2 = fun (Env0, List1) ->
+'closure_63'/2 = fun (Env0, List1) ->
   letrec
     'entry'/0 = fun () ->
       let <Cap_0> = call 'maps':'get'('v0', Env0)
@@ -96,33 +96,36 @@ end of
       Match1
   in apply 'entry'/0()
 
-'closure_82'/2 = fun (Env0, F1) ->
+'closure_62'/2 = fun (Env0, F1) ->
   let <Cap_0> = call 'maps':'get'('v0', Env0)
   in let <Cap_1> = call 'maps':'get'('v1', Env0)
   in let <Cap_2> = call 'maps':'get'('v2', Env0)
-  in let <Env_cls2> = call 'maps':'from_list'([{'v0', F1}, {'v1', Cap_1}, {'v2', Cap_0}, {'v3', Cap_2}])
-  in let <Fnref_cls2> = fun 'yap_main':'closure_83'/2
+  in let <Cap_3> = call 'maps':'get'('v3', Env0)
+  in let <Env_cls2> = call 'maps':'from_list'([{'v0', F1}, {'v1', Cap_2}, {'v2', Cap_1}, {'v3', Cap_3}])
+  in let <Fnref_cls2> = fun 'yap_main':'closure_63'/2
   in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
   in Closure_cls2
 
-'closure_81'/2 = fun (Env0, B1) ->
+'closure_61'/2 = fun (Env0, B1) ->
   let <Cap_0> = call 'maps':'get'('v0', Env0)
   in let <Cap_1> = call 'maps':'get'('v1', Env0)
-  in let <Env_cls2> = call 'maps':'from_list'([{'v0', Cap_0}, {'v1', Cap_1}, {'v2', B1}])
-  in let <Fnref_cls2> = fun 'yap_main':'closure_82'/2
+  in let <Cap_2> = call 'maps':'get'('v2', Env0)
+  in let <Env_cls2> = call 'maps':'from_list'([{'v0', Cap_1}, {'v1', Cap_0}, {'v2', Cap_2}, {'v3', B1}])
+  in let <Fnref_cls2> = fun 'yap_main':'closure_62'/2
   in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
   in Closure_cls2
 
-'closure_80'/2 = fun (Env0, A1) ->
+'closure_60'/2 = fun (Env0, A1) ->
   let <Cap_0> = call 'maps':'get'('v0', Env0)
-  in let <Env_cls2> = call 'maps':'from_list'([{'v0', A1}, {'v1', Cap_0}])
-  in let <Fnref_cls2> = fun 'yap_main':'closure_81'/2
+  in let <Cap_1> = call 'maps':'get'('v1', Env0)
+  in let <Env_cls2> = call 'maps':'from_list'([{'v0', A1}, {'v1', Cap_0}, {'v2', Cap_1}])
+  in let <Fnref_cls2> = fun 'yap_main':'closure_61'/2
   in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
   in Closure_cls2
 
 'main'/0 = fun () ->
-  let <_MainResult> = let <Env_cls2> = call 'maps':'from_list'([{'v0', MapList}])
-in let <Fnref_cls2> = fun 'yap_main':'closure_80'/2
+  let <_MainResult> = let <Env_cls2> = call 'maps':'from_list'([{'v0', List}, {'v1', MapList}])
+in let <Fnref_cls2> = fun 'yap_main':'closure_60'/2
 in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
 in Closure_cls2
   in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
@@ -144,33 +147,34 @@ end
 
 
 ## fmap (let)
-module 'yap_main' ['main'/0, 'closure_58'/2, 'closure_57'/2, 'closure_56'/2]
+module 'yap_main' ['main'/0, 'closure_39'/2, 'closure_38'/2, 'closure_37'/2]
 attributes []
 
-'closure_58'/2 = fun (Env0, A1) ->
+'closure_39'/2 = fun (Env0, A1) ->
   let <Cap_0> = call 'maps':'get'('v0', Env0)
   in let <Cap_1> = call 'maps':'get'('v1', Env0)
   in let <Cap_2> = call 'maps':'get'('v2', Env0)
   in Cap_0
 
-'closure_57'/2 = fun (Env0, Functor1) ->
+'closure_38'/2 = fun (Env0, Functor1) ->
   let <Cap_0> = call 'maps':'get'('v0', Env0)
   in let <Cap_1> = call 'maps':'get'('v1', Env0)
   in let <Env_cls2> = call 'maps':'from_list'([{'v0', Cap_0}, {'v1', Cap_1}, {'v2', Functor1}])
-  in let <Fnref_cls2> = fun 'yap_main':'closure_58'/2
+  in let <Fnref_cls2> = fun 'yap_main':'closure_39'/2
   in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
   in Closure_cls2
 
-'closure_56'/2 = fun (Env0, F1) ->
+'closure_37'/2 = fun (Env0, F1) ->
   let <Cap_0> = call 'maps':'get'('v0', Env0)
-  in let <Env_cls2> = call 'maps':'from_list'([{'v0', Cap_0}, {'v1', F1}])
-  in let <Fnref_cls2> = fun 'yap_main':'closure_57'/2
+  in let <Cap_1> = call 'maps':'get'('v1', Env0)
+  in let <Env_cls2> = call 'maps':'from_list'([{'v0', Cap_1}, {'v1', F1}])
+  in let <Fnref_cls2> = fun 'yap_main':'closure_38'/2
   in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
   in Closure_cls2
 
 'main'/0 = fun () ->
-  let <_MainResult> = let <Env_cls2> = call 'maps':'from_list'([{'v0', Cap0}])
-in let <Fnref_cls2> = fun 'yap_main':'closure_56'/2
+  let <_MainResult> = let <Env_cls2> = call 'maps':'from_list'([{'v0', Functor}, {'v1', Cap1}])
+in let <Fnref_cls2> = fun 'yap_main':'closure_37'/2
 in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
 in Closure_cls2
   in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
@@ -182,7 +186,7 @@ end
 
 
 ## strmap (let)
-module 'yap_main' ['main'/0, 'pap_fn13'/2, 'closure_55'/2, 'closure_54'/2, 'closure_53'/2]
+module 'yap_main' ['main'/0, 'pap_fn13'/2, 'closure_36'/2, 'closure_35'/2, 'closure_34'/2]
 attributes []
 
 'pap_fn13'/2 = fun (Env14, Arg15) ->
@@ -190,7 +194,7 @@ attributes []
   in let <Result_pap_fn13> = apply Stringify(Cap_0, Arg15)
   in Result_pap_fn13
 
-'closure_55'/2 = fun (Env0, A1) ->
+'closure_36'/2 = fun (Env0, A1) ->
   let <Cap_0> = call 'maps':'get'('v0', Env0)
   in let <Cap_1> = call 'maps':'get'('v1', Env0)
   in let <Cap_2> = call 'maps':'get'('v2', Env0)
@@ -215,24 +219,26 @@ attributes []
   in let <V16> = apply Fnref14(Env15, Closure_cls13)
   in V16
 
-'closure_54'/2 = fun (Env0, A1) ->
+'closure_35'/2 = fun (Env0, A1) ->
   let <Cap_0> = call 'maps':'get'('v0', Env0)
   in let <Cap_1> = call 'maps':'get'('v1', Env0)
-  in let <Env_cls2> = call 'maps':'from_list'([{'v0', Cap_1}, {'v1', Cap_0}, {'v2', A1}])
-  in let <Fnref_cls2> = fun 'yap_main':'closure_55'/2
+  in let <Cap_2> = call 'maps':'get'('v2', Env0)
+  in let <Env_cls2> = call 'maps':'from_list'([{'v0', Cap_2}, {'v1', Cap_1}, {'v2', A1}])
+  in let <Fnref_cls2> = fun 'yap_main':'closure_36'/2
   in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
   in Closure_cls2
 
-'closure_53'/2 = fun (Env0, F1) ->
+'closure_34'/2 = fun (Env0, F1) ->
   let <Cap_0> = call 'maps':'get'('v0', Env0)
-  in let <Env_cls2> = call 'maps':'from_list'([{'v0', F1}, {'v1', Cap_0}])
-  in let <Fnref_cls2> = fun 'yap_main':'closure_54'/2
+  in let <Cap_1> = call 'maps':'get'('v1', Env0)
+  in let <Env_cls2> = call 'maps':'from_list'([{'v0', Cap_0}, {'v1', F1}, {'v2', Cap_1}])
+  in let <Fnref_cls2> = fun 'yap_main':'closure_35'/2
   in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
   in Closure_cls2
 
 'main'/0 = fun () ->
-  let <_MainResult> = let <Env_cls2> = call 'maps':'from_list'([{'v0', Fmap}])
-in let <Fnref_cls2> = fun 'yap_main':'closure_53'/2
+  let <_MainResult> = let <Env_cls2> = call 'maps':'from_list'([{'v0', Functor}, {'v1', Fmap}])
+in let <Fnref_cls2> = fun 'yap_main':'closure_34'/2
 in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
 in Closure_cls2
   in let <_Print> = call 'io':'format'("~p~n", [_MainResult])
@@ -264,7 +270,7 @@ attributes []
 
 'main'/0 = fun () ->
   let <_MainResult> = let <V0> = Strmap
-in let <V1> = call 'maps':'from_list'([])
+in let <V1> = List
 in let <Fnref2> = call 'maps':'get'('__fn', V0)
 in let <Env3> = call 'maps':'get'('__env', V0)
 in let <V4> = apply Fnref2(Env3, V1)

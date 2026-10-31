@@ -26,29 +26,31 @@
 [2] stmt:let {"variable":"hof"}
 [3] lambda {"variable":"f","icit":"Explicit","level":1}
   :annotation -> [4]
-  :body -> [9]
-  :env -> [12]
+  :body -> [8]
+  :env -> [11]
 [4] pi {"variable":"t1","icit":"Explicit","level":1}
-  :annotation -> [5]
+  :annotation -> [6]
   :body -> [7]
-[5] modal {"quantity":"Many"}
-  :term -> [6]
-[6] lit {"value":{"type":"Atom","value":"Num"}}
-[7] modal {"quantity":"Many"}
-  :term -> [8]
-[8] lit {"value":{"type":"Atom","value":"Num"}}
-[9] app {"icit":"Explicit"}
-  :arg -> [11]
-  :func -> [10]
-[10] var:bound {"index":0}
+[5] var:free {"name":"Nat"}
+[6] var:ref {"name":"Nat"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+[7] var:ref {"name":"Nat"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[8] app {"icit":"Explicit"}
+  :arg -> [10]
+  :func -> [9]
+[9] var:bound {"index":0}
   :refers_to -> [3]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-[11] lit {"value":{"type":"Num","value":1}}
-[12] env
-[13] closure
+[10] lit {"value":{"type":"Num","value":1}}
+[11] env
+[12] closure
   :body -> [3]
-  :env -> [12]
+  :env -> [11]
 
 ## hof2 (let)
 [1] root
@@ -60,11 +62,13 @@
   :env -> [17]
 [4] pi {"variable":"t3","icit":"Explicit","level":1}
   :annotation -> [5]
-  :body -> [6]
+  :body -> [7]
 [5] lit {"value":{"type":"Atom","value":"Num"}}
-[6] modal {"quantity":"Many"}
-  :term -> [7]
-[7] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:free {"name":"Nat"}
+[7] var:ref {"name":"Nat"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
 [10] var:foreign {"name":"$add","arity":2}
 [12] app {"icit":"Explicit"}
   :arg -> [14]

@@ -195,6 +195,8 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 				),
 			)
 			.with({ type: "Neutral" }, ({ value }) => nf(value))
+			/* Both faces: quotation emits the folded one, so a meta only it mentions still has to be found. */
+			.with(NF.Patterns.Glued, ({ folded, unfolded }) => [...nf(folded), ...nf(unfolded)])
 			.with(NF.Patterns.Lambda, ({ closure }) => eb(closure.term))
 			.with(NF.Patterns.Pi, NF.Patterns.Mu, NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure, binder }) => [
 				...nf(binder.annotation),

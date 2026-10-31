@@ -2,8 +2,7 @@
 Π(a: Type) -> Π(p: Π(t1: a) -> Type) -> Type
 
 ## exampleP1 (let)
-Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) . Schema [ fst: Num, snd: String ]
+Pair Num (λ(n: Num) -> String)
 
 ## exampleP2 (let)
-Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
-  Schema [ fst: Bool, snd: match ($sig).fst | true -> Num | false -> String ]
+Pair Bool (λ(b: Bool) -> match b | true -> Num | false -> String)

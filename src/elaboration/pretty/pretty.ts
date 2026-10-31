@@ -24,8 +24,10 @@ export type Display<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Only<typeof 
  * printer, which annotates, while semantic values went through NbE's, which
  * does not.  Annotations are semantic now, so the two printers share one flag
  * and it descends with the annotation being rendered.
+ *
+ * `unfold: "definitions"` renders a glued value by what its reference computes rather than by the reference.
  */
-export type Opts = { deBruijn: boolean; printEnv?: boolean; annotated?: boolean };
+export type Opts = { deBruijn: boolean; printEnv?: boolean; annotated?: boolean; unfold?: NF.Unfolding };
 
 /*
  * Display's binder descent: v2's name-only entry, through the reader. The

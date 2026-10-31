@@ -1,0 +1,464 @@
+## stringify (foreign)
+
+
+## Functor (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Functor"}
+[3] lambda {"variable":"f","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [7]
+  :env -> [30]
+[4] pi {"variable":"t3","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] sigma:v2 {"variable":"$sig","level":2}
+  :annotation -> [8]
+  :body -> [11]
+[8] row:ext {"label":"map"}
+  :rest -> [10]
+  :value -> [9]
+[9] lit {"value":{"type":"Atom","value":"Irrelevant"}}
+[10] row:empty
+[11] app {"icit":"Explicit"}
+  :arg -> [13]
+  :func -> [12]
+[12] lit {"value":{"type":"Atom","value":"Schema"}}
+[13] row:ext {"label":"map"}
+  :rest -> [29]
+  :value -> [14]
+[14] pi {"variable":"a","icit":"Implicit","level":3}
+  :annotation -> [15]
+  :body -> [16]
+[15] lit {"value":{"type":"Atom","value":"Type"}}
+[16] pi {"variable":"b","icit":"Implicit","level":4}
+  :annotation -> [17]
+  :body -> [18]
+[17] lit {"value":{"type":"Atom","value":"Type"}}
+[18] pi {"variable":"t4","icit":"Explicit","level":5}
+  :annotation -> [19]
+  :body -> [22]
+[19] pi {"variable":"t5","icit":"Explicit","level":5}
+  :annotation -> [20]
+  :body -> [21]
+[20] var:bound {"index":1}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [14] {"level":3}
+  :scope -> [16] {"level":4}
+[21] var:bound {"index":1}
+  :refers_to -> [16]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [14] {"level":3}
+  :scope -> [16] {"level":4}
+  :scope -> [19] {"level":5}
+[22] pi {"variable":"t6","icit":"Explicit","level":6}
+  :annotation -> [23]
+  :body -> [26]
+[23] app {"icit":"Explicit"}
+  :arg -> [25]
+  :func -> [24]
+[24] var:bound {"index":4}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [14] {"level":3}
+  :scope -> [16] {"level":4}
+  :scope -> [18] {"level":5}
+[25] var:bound {"index":2}
+  :refers_to -> [14]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [14] {"level":3}
+  :scope -> [16] {"level":4}
+  :scope -> [18] {"level":5}
+[26] app {"icit":"Explicit"}
+  :arg -> [28]
+  :func -> [27]
+[27] var:bound {"index":5}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [14] {"level":3}
+  :scope -> [16] {"level":4}
+  :scope -> [18] {"level":5}
+  :scope -> [22] {"level":6}
+[28] var:bound {"index":2}
+  :refers_to -> [16]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [14] {"level":3}
+  :scope -> [16] {"level":4}
+  :scope -> [18] {"level":5}
+  :scope -> [22] {"level":6}
+[29] row:empty
+[30] env
+[31] closure
+  :body -> [3]
+  :env -> [30]
+
+## fmap (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"fmap"}
+[3] lambda {"variable":"f","icit":"Implicit","level":1}
+  :annotation -> [4]
+  :body -> [7]
+  :env -> [34]
+[4] pi {"variable":"t7","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [6]
+[5] lit {"value":{"type":"Atom","value":"Type"}}
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] lambda {"variable":"functor","icit":"Implicit","level":2}
+  :annotation -> [8]
+  :body -> [12]
+  :env -> [35]
+[8] app {"icit":"Explicit"}
+  :arg -> [11]
+  :func -> [10]
+[9] var:free {"name":"Functor"}
+[10] var:ref {"name":"Functor"}
+  :refers_to -> [9]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[11] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[12] lambda {"variable":"a","icit":"Implicit","level":3}
+  :annotation -> [13]
+  :body -> [27]
+  :env -> [36]
+[13] lit {"value":{"type":"Atom","value":"Type"}}
+[15] lit {"value":{"type":"Atom","value":"Type"}}
+[17] pi {"variable":"t9","icit":"Explicit","level":5}
+  :annotation -> [18]
+  :body -> [19]
+[18] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[19] var:bound {"index":0}
+  :refers_to -> [27]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+  :scope -> [17] {"level":5}
+[21] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [22]
+[22] var:bound {"index":2}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[23] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[27] app {"icit":"Implicit"}
+  :arg -> [30]
+  :func -> [28]
+[28] proj {"label":"map"}
+  :target -> [29]
+[29] var:bound {"index":1}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[30] var:bound {"index":0}
+  :refers_to -> [12]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [7] {"level":2}
+  :scope -> [12] {"level":3}
+[34] env
+  :capture -> [9] {"index":0}
+  :capture -> [27] {"index":1}
+[35] env
+  :capture -> [27] {"index":0}
+  :capture -> [3] {"index":1}
+[36] env
+  :capture -> [27] {"index":0}
+  :capture -> [3] {"index":1}
+  :capture -> [7] {"index":2}
+[37] closure
+  :body -> [3]
+  :env -> [34]
+[38] closure
+  :body -> [7]
+  :env -> [35]
+[39] closure
+  :body -> [12]
+  :env -> [36]
+
+## Option (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Option"}
+[3] lambda {"variable":"a","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [12]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] app {"icit":"Explicit"}
+  :arg -> [7]
+  :func -> [6]
+[6] lit {"value":{"type":"Atom","value":"Variant"}}
+[7] row:ext {"label":"none"}
+  :rest -> [9]
+  :value -> [8]
+[8] lit {"value":{"type":"Atom","value":"Unit"}}
+[9] row:ext {"label":"some"}
+  :rest -> [11]
+  :value -> [10]
+[10] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[11] row:empty
+[12] env
+[13] closure
+  :body -> [3]
+  :env -> [12]
+
+## mapOption (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"mapOption"}
+[3] lambda {"variable":"a","icit":"Implicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [39]
+[4] lit {"value":{"type":"Atom","value":"Type"}}
+[5] lambda {"variable":"b","icit":"Implicit","level":2}
+  :annotation -> [6]
+  :body -> [7]
+  :env -> [40]
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[7] lambda {"variable":"f","icit":"Explicit","level":3}
+  :annotation -> [8]
+  :body -> [11]
+  :env -> [41]
+[8] pi {"variable":"t13","icit":"Explicit","level":3}
+  :annotation -> [9]
+  :body -> [10]
+[9] var:bound {"index":1}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+[10] var:bound {"index":1}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [8] {"level":3}
+[11] lambda {"variable":"o","icit":"Explicit","level":4}
+  :annotation -> [12]
+  :body -> [16]
+  :env -> [42]
+[12] app {"icit":"Explicit"}
+  :arg -> [15]
+  :func -> [14]
+[13] var:free {"name":"Option"}
+[14] var:ref {"name":"Option"}
+  :refers_to -> [13]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+[15] var:bound {"index":2}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+[16] match
+  :alt -> [18] {"index":0}
+  :alt -> [27] {"index":1}
+  :decision_tree -> [34]
+  :scrutinee -> [17]
+[17] var:bound {"index":0}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+[18] case
+  :body -> [22]
+  :next -> [27]
+  :pattern -> [19]
+[19] pat:variant {"label":"some"}
+  :payload -> [20]
+[20] pat:binder {"name":"x","level":5}
+[21] pat:wildcard
+[22] struct
+  :field -> [23] {"label":"__tag"}
+  :field -> [24] {"label":"payload"}
+[23] lit {"value":{"type":"Atom","value":"some"}}
+[24] app {"icit":"Explicit"}
+  :arg -> [26]
+  :func -> [25]
+[25] var:bound {"index":3}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [20] {"level":5}
+  :scope -> [21] {"level":6}
+[26] var:bound {"index":1}
+  :refers_to -> [20]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+  :scope -> [5] {"level":2}
+  :scope -> [7] {"level":3}
+  :scope -> [11] {"level":4}
+  :scope -> [20] {"level":5}
+  :scope -> [21] {"level":6}
+[27] case
+  :body -> [31]
+  :pattern -> [28]
+[28] pat:variant {"label":"none"}
+  :payload -> [29]
+[29] pat:wildcard
+[30] pat:wildcard
+[31] struct
+  :field -> [32] {"label":"__tag"}
+  :field -> [33] {"label":"payload"}
+[32] lit {"value":{"type":"Atom","value":"none"}}
+[33] lit {"value":{"type":"unit"}}
+[34] switch {"kind":"tag"}
+  :branch -> [36] {"label":"some"}
+  :branch -> [38] {"label":"none"}
+  :inspect -> [17]
+[35] proj {"label":"payload"}
+  :target -> [17]
+[36] leaf
+  :bind -> [35] {"name":"x","binder":20}
+  :body -> [22]
+[37] proj {"label":"payload"}
+  :target -> [17]
+[38] leaf
+  :body -> [31]
+[39] env
+  :capture -> [13] {"index":0}
+[40] env
+  :capture -> [3] {"index":0}
+  :capture -> [13] {"index":1}
+[41] env
+  :capture -> [13] {"index":0}
+  :capture -> [3] {"index":1}
+[42] env
+  :capture -> [7] {"index":0}
+[43] closure
+  :body -> [3]
+  :env -> [39]
+[44] closure
+  :body -> [5]
+  :env -> [40]
+[45] closure
+  :body -> [7]
+  :env -> [41]
+[46] closure
+  :body -> [11]
+  :env -> [42]
+
+## OptionFunctor (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"OptionFunctor"}
+[3] nu {"variable":"$nu","level":1}
+  :body -> [4]
+[4] struct
+  :field -> [12] {"label":"map"}
+[6] lit {"value":{"type":"Atom","value":"Type"}}
+[8] lit {"value":{"type":"Atom","value":"Type"}}
+[11] var:free {"name":"mapOption"}
+[12] var:ref {"name":"mapOption"}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+  :scope -> [12] {"level":1}
+
+## (using) (using)
+
+
+## x (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"x"}
+[3] struct
+  :field -> [4] {"label":"__tag"}
+  :field -> [5] {"label":"payload"}
+[4] lit {"value":{"type":"Atom","value":"some"}}
+[5] lit {"value":{"type":"Num","value":1}}
+
+## y (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"y"}
+[3] app {"icit":"Explicit"}
+  :arg -> [22]
+  :func -> [4]
+[4] app {"icit":"Explicit"}
+  :arg -> [23]
+  :func -> [5]
+[5] app {"icit":"Implicit"}
+  :arg -> [16]
+  :func -> [6]
+[6] app {"icit":"Implicit"}
+  :arg -> [15]
+  :func -> [7]
+[7] app {"icit":"Implicit"}
+  :arg -> [14]
+  :func -> [8]
+[8] app {"icit":"Implicit"}
+  :arg -> [12]
+  :func -> [10]
+[9] var:free {"name":"fmap"}
+[10] var:ref {"name":"fmap"}
+  :refers_to -> [9]
+  :scope -> [2] {"level":0}
+[11] var:free {"name":"Option"}
+[12] var:ref {"name":"Option"}
+  :refers_to -> [11]
+  :scope -> [2] {"level":0}
+[13] var:free {"name":"OptionFunctor"}
+[14] var:ref {"name":"OptionFunctor"}
+  :refers_to -> [13]
+  :scope -> [2] {"level":0}
+[15] lit {"value":{"type":"Atom","value":"Num"}}
+[16] lit {"value":{"type":"Atom","value":"String"}}
+[18] var:foreign {"name":"stringify","arity":2}
+[20] lit {"value":{"type":"Atom","value":"Num"}}
+[21] var:free {"name":"x"}
+[22] var:ref {"name":"x"}
+  :refers_to -> [21]
+  :scope -> [2] {"level":0}
+[23] external {"name":"stringify","arity":2,"args":1,"saturated":false}
+  :arg -> [20] {"index":0}
+  :callee -> [18]
+[24] pap {"remaining":1}
+  :captured -> [20] {"index":0}
+  :materializes -> [23]
