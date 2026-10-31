@@ -8,7 +8,8 @@ describe("effect expressions", () => {
 		"with Exn: (\\e k -> 0), Ask: (\\p k -> k 1) in capture [Ask] !",
 		"with Exn: h in { let x = 1; return capture [Exn] x; }",
 		"capture [r.Exn] 1",
-		"reset (capture (\\k -> resume 1))",
+		"reset [E] (capture [E] (\\k -> k 1))",
+		"reset (capture (\\k -> reset (k 1)))",
 	])("parses one expression: %s", source => {
 		const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled({ ...Grammar, ParserStart: "Ann" }));
 		parser.feed(source);

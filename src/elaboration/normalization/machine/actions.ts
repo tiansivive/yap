@@ -63,9 +63,9 @@ export function* capture<S, C>(identity?: string) {
 	return yield* Eff.ctl.action<Capture<S, C>>("Machine.capture", identity);
 }
 
-type Resume<S, C> = Eff.Action<"Machine.resume", { captured: Captured<S, C>; value: unknown; deep: boolean }, undefined>;
-export function* resume<V, S, C>(captured: Captured<S, C>, value: unknown, deep = false): Eff.Eff<Resume<S, C>, Machine<V>> {
-	yield* Eff.ctl.action<Resume<S, C>>("Machine.resume", { captured, value, deep });
+type Resume<S, C> = Eff.Action<"Machine.resume", { captured: Captured<S, C>; value: unknown }, undefined>;
+export function* resume<V, S, C>(captured: Captured<S, C>, value: unknown): Eff.Eff<Resume<S, C>, Machine<V>> {
+	yield* Eff.ctl.action<Resume<S, C>>("Machine.resume", { captured, value });
 
 	return scheduled;
 }

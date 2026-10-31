@@ -249,6 +249,10 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		)
 		.with({ type: "Var", variable: { type: "Bound" } }, function* ({ variable }) {
 			const entry = ctx.env[variable.index];
+			assert(
+				entry,
+				`Bound index ${variable.index} outside scope [${ctx.env.map(e => e.name.variable).join(", ")}]\n${JSON.stringify(ctx.trace.map(t => (t.tag === "src" ? t : { tag: t.tag })))}`,
+			);
 
 			return yield* match(entry.type[0])
 				.with({ type: "Mu" }, function* () {
@@ -426,20 +430,6 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 					return yield* schedule.reduce(p, k, "Explicit");
 				}
 				return yield* Do.let("h", schedule.reduce(handler, p, "Explicit")).in(({ h }) => schedule.reduce(h, k, "Explicit"));
-			});
-		})
-		.with({ type: "Resume" }, function* ({ continuation, value }) {
-			return yield* group([schedule.eval(continuation), schedule.eval(value)], function* ([k, v]) {
-				const viewed = yield* force(k);
-				return yield* match(viewed)
-					.with({ type: "Abs", closure: { type: "Continuation" } }, ({ closure }) =>
-						Stack.resume<NF.Value, Scope, EB.Term>(
-							{ frames: closure.frames, scope: { env: closure.ctx, mode: closure.delimiter?.scope.mode ?? { ...defaultMode } }, delimiter: closure.delimiter },
-							v,
-							true,
-						),
-					)
-					.otherwise(() => result(NF.Constructors.Neutral("Blocked", NF.Constructors.Resume(k, v))));
 			});
 		})
 		.with({ type: "Shift" }, function* ({ body }) {
@@ -825,7 +815,6 @@ export const schedule = {
 				return yield* Stack.resume<NF.Value, Scope, EB.Term>(
 					{ frames: cont.frames, scope: { env: cont.ctx, mode: yield* Mode.ask() }, delimiter: cont.delimiter },
 					value,
-					cont.deep,
 				);
 			})
 			.exhaustive();
@@ -1043,19 +1032,6 @@ export const schedule = {
 	 */
 	*resume(value: NF.Value): Evaluation<Machine<NF.Value>> {
 		return yield* match(value)
-			.with({ type: "Resume" }, function* ({ continuation, value: argument }) {
-				return yield* Do.let("k", schedule.view(continuation)).in(function* ({ k }) {
-					return yield* match(k.value)
-						.with({ type: "Abs", closure: { type: "Continuation" } }, function* ({ closure }) {
-							return yield* Stack.resume<NF.Value, Scope, EB.Term>(
-								{ frames: closure.frames, scope: yield* scope(), delimiter: closure.delimiter },
-								argument,
-								true,
-							);
-						})
-						.otherwise(() => result(value));
-				});
-			})
 			.with(NF.Patterns.Proj, function* ({ base, label }) {
 				return yield* Do.let("found", project(base, label)).in(({ found }) =>
 					result(

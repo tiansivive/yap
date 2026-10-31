@@ -46,7 +46,8 @@ const doc = (term: Src.Term): PP.Doc =>
 			PP.group(["with ", handlers.flatMap(({ identity, handler }, i) => [i ? ", " : "", doc(identity), ": ", doc(handler)]), " in ", doc(term)]),
 		)
 		.with({ type: "capture" }, ({ identity, term }) => PP.group(["capture ", identity ? ["[", doc(identity), "] "] : "", doc(term)]))
-		.with({ type: "reset" }, { type: "shift" }, { type: "resume" }, tm => [tm.type, " (", doc(tm.term), ")"])
+		.with({ type: "reset" }, tm => ["reset ", ...(tm.identity ? ["[", doc(tm.identity), "] "] : []), "(", doc(tm.term), ")"])
+		.with({ type: "shift" }, { type: "resume" }, tm => [tm.type, " (", doc(tm.term), ")"])
 		.with({ type: "modal" }, ({ term: tm, modalities }) => {
 			const q = modalities.quantity ? [Q.display(modalities.quantity), " "] : "";
 			const l = modalities.liquid ? [" [| ", doc(modalities.liquid), " |]"] : "";

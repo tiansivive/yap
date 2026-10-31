@@ -49,7 +49,6 @@ export function freeVars(term: EB.Term, depth: number): Set<number> {
 			({ term, identity, handler }) => new Set([term, ...(identity ? [identity] : []), ...(handler ? [handler] : [])].flatMap(t => [...freeVars(t, depth)])),
 		)
 		.with({ type: "Capture" }, ({ identity, payload }) => new Set([...freeVars(identity, depth), ...freeVars(payload, depth)]))
-		.with({ type: "Resume" }, ({ continuation, value }) => new Set([...freeVars(continuation, depth), ...freeVars(value, depth)]))
 		.with({ type: "Shift" }, ({ body }) => freeVars(body, depth))
 		.with({ type: "Bubble" }, ({ shift }) => freeVars(shift, depth))
 		.with({ type: "Ann" }, ({ term }) => freeVars(term, depth))

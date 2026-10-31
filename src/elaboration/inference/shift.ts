@@ -73,6 +73,6 @@ export const resume = (resume: Resume): M.Elaboration<EB.AST> =>
 		yield* M.st.modify(update(`nondeterminism.solution.${binder.resumption.meta.val}`, (vals = []) => [va, ...vals]));
 
 		const k = EB.Constructors.Var({ type: "Bound", index: idx });
-		const rtm = binder.deep ? EB.Constructors.Resume(k, atm) : EB.Constructors.App("Explicit", k, atm);
+		const rtm = EB.Constructors.App("Explicit", k, atm);
 		return [rtm, codomain, aus] satisfies EB.AST;
 	});

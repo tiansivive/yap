@@ -96,7 +96,7 @@ export const localEffects = (term: EB.Term): EB.Term =>
 				}
 				references++;
 			}
-			const call = node.type === "Resume" ? C.App("Explicit", node.continuation, node.value) : node;
+			const call = node;
 
 			if (call.type === "App" && call.func.type === "Var" && call.func.variable.type === "Bound" && call.func.variable.index === depth) {
 				calls++;

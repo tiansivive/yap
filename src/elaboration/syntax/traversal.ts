@@ -62,7 +62,6 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 		)
 		.with({ type: "Shift" }, ({ body }) => Constructors.Shift(traverse(body, onVar)))
 		.with({ type: "Capture" }, ({ identity, payload }) => Constructors.Capture(traverse(identity, onVar), traverse(payload, onVar)))
-		.with({ type: "Resume" }, ({ continuation, value }) => Constructors.Resume(traverse(continuation, onVar), traverse(value, onVar)))
 		.with({ type: "Bubble" }, t => ({ ...t, shift: traverse(t.shift, onVar) }))
 		.otherwise(() => {
 			throw new Error("Traverse: Not implemented yet");
@@ -91,7 +90,6 @@ export const rewrite = (term: Term, at: (term: Term, depth: number) => Term, dep
 		.with({ type: "Ann" }, t => ({ ...t, term: go(t.term), ann: go(t.ann) }))
 		.with({ type: "Reset" }, t => ({ ...t, term: go(t.term), identity: t.identity && go(t.identity), handler: t.handler && go(t.handler) }))
 		.with({ type: "Capture" }, t => ({ ...t, identity: go(t.identity), payload: go(t.payload) }))
-		.with({ type: "Resume" }, t => ({ ...t, continuation: go(t.continuation), value: go(t.value) }))
 		.with({ type: "Shift" }, t => ({ ...t, body: go(t.body) }))
 		.with({ type: "Bubble" }, t => ({ ...t, shift: go(t.shift) }))
 		.with({ type: "Match" }, t => ({ ...t, scrutinee: go(t.scrutinee), alternatives: t.alternatives.map(a => ({ ...a, term: go(a.term, a.binders.length) })) }))

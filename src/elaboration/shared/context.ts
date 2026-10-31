@@ -53,7 +53,7 @@ export const open = ({ labels, scoped }: { labels: readonly string[]; scoped: EB
 export type Binder =
 	| Pick<EB.Binding, "type" | "variable">
 	| { type: "Pattern"; variable: string }
-	| { type: "Continuation"; variable: string; resumption: { meta: EB.Meta }; deep?: boolean };
+	| { type: "Continuation"; variable: string; resumption: { meta: EB.Meta } };
 
 export const lookup = function* (variable: Src.Variable, ctx: Context): M.Elaboration<EB.AST> {
 	const zeros = replicate<Q.Multiplicity>(ctx.env.length, Q.Zero);

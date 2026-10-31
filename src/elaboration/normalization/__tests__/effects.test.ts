@@ -14,6 +14,8 @@ const add = (a: EB.Term, b: EB.Term) => app(app(C.Var(EB.Constructors.Vars.Forei
 const A = atom("A");
 const B = atom("B");
 const evaluate = (term: EB.Term) => runNF(mkCtx(), () => NF.normalize(term));
+const installed = (body: EB.Term, handler: EB.Term) => C.Block([C.Stmt.Let("h", handler, NF.Any)], C.Reset(body, A, v(0)));
+const deep = (value: EB.Term) => C.Reset(app(v(0), value), A, v(2));
 
 describe("identity-bearing delimiters", () => {
 	it("passes the payload to its delimiter's handler", () => {
@@ -29,8 +31,8 @@ describe("identity-bearing delimiters", () => {
 
 	it("restores its handler for another operation in the resumed body", () => {
 		const body = add(C.Capture(A, num(1)), C.Capture(A, num(2)));
-		const handler = lambda("p", lambda("k", C.Resume(v(0), v(1))));
-		expect(evaluate(C.Reset(body, A, handler))).toMatchObject({ type: "Lit", value: Lit.Num(3) });
+		const handler = lambda("p", lambda("k", deep(v(1))));
+		expect(evaluate(installed(body, handler))).toMatchObject({ type: "Lit", value: Lit.Num(3) });
 	});
 
 	it("runs a handler under the enclosing delimiter", () => {
@@ -41,7 +43,7 @@ describe("identity-bearing delimiters", () => {
 
 	it("replays a captured continuation for each resumption", () => {
 		const body = add(num(10), C.Capture(A, num(0)));
-		const handler = lambda("p", lambda("k", add(C.Resume(v(0), num(1)), C.Resume(v(0), num(2)))));
-		expect(evaluate(C.Reset(body, A, handler))).toMatchObject({ type: "Lit", value: Lit.Num(23) });
+		const handler = lambda("p", lambda("k", add(deep(num(1)), deep(num(2)))));
+		expect(evaluate(installed(body, handler))).toMatchObject({ type: "Lit", value: Lit.Num(23) });
 	});
 });

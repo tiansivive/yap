@@ -114,10 +114,7 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 				return Eff.ctl.resume(captured);
 			},
 
-			"Machine.resume": ({ captured, value, deep }) => {
-				if (deep && captured.delimiter) {
-					workStack.push(captured.delimiter);
-				}
+			"Machine.resume": ({ captured, value }) => {
 				// Copying the captured frames to the work stack preserves the original continuation structure in each resumption.
 				workStack.push(...captured.frames.map(frame => ("operands" in frame ? { ...frame, operands: [...frame.operands] } : frame)));
 				fill(value);

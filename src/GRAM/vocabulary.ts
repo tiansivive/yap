@@ -45,7 +45,6 @@ export const Tags = {
 	RESET: "reset",
 	SHIFT: "shift",
 	CAPTURE: "capture",
-	DEEP_RESUME: "resume:deep",
 	BUBBLE: "bubble",
 	CONTINUATION: "continuation",
 	RESUMPTION: "resumption",

@@ -10,6 +10,7 @@
 	import * as P from "./processors";
 
 	const lexer = moo.compile({
+		resetNamed: /reset(?=[ \n\t]+\[)/,
 	  	digit: { match: /[0-9]+/, value: s => parseInt(s) },
 	  	string: { match: /"(?:\\["bfnrt\/\\]|\\u[a-fA-F0-9]{4}|[^"\\])*"/, value: s => s.slice(1, -1) },
 	  	variable: { 
@@ -260,7 +261,8 @@ Alt -> %space:? %bar %space:? Pattern %space:? %arrow %space:? TypeExpr 	{% P.Al
 # Syntax: reset \k v -> handler_body enclosed_term
 #         shift value
 # ------------------------------------
-Reset -> "reset" %space:+ TypeExpr 		{% P.Reset %}
+Reset -> %reset %space:+ TypeExpr 		{% P.Reset %}
+       | %resetNamed %space %lbracket %space:? TypeExpr %space:? %rbracket %space TypeExpr {% P.Reset %}
 With -> "with" %space Many[Handler, %comma] %space "in" %space TypeExpr {% P.With %}
 Handler -> Atom %space:? %colon %space:? TypeExpr {% P.Handler %}
 Capture -> "capture" %space %lbracket %space:? TypeExpr %space:? %rbracket %space TypeExpr {% P.Capture %}

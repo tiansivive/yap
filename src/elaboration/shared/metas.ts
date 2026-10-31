@@ -172,7 +172,6 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 			})
 			.with(NF.Patterns.Var, () => [])
 			.with(NF.Patterns.App, ({ func, arg }) => [...nf(func), ...nf(arg)])
-			.with({ type: "Resume" }, ({ continuation, value }) => [...nf(continuation), ...nf(value)])
 			.with(NF.Patterns.Proj, ({ base }) => nf(base))
 			.with(NF.Patterns.Match, ({ closure, scrutinee }) => [...nf(scrutinee), ...eb(closure.term)])
 			.with(NF.Patterns.Inj, ({ base, injected }) => [...nf(base), ...nf(injected)])
@@ -263,7 +262,6 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 			.with({ type: "Modal" }, ({ term }) => eb(term))
 			.with({ type: "Shift" }, ({ body }) => eb(body))
 			.with({ type: "Capture" }, ({ identity, payload }) => [...eb(identity), ...eb(payload)])
-			.with({ type: "Resume" }, ({ continuation, value }) => [...eb(continuation), ...eb(value)])
 			.with({ type: "Bubble" }, ({ shift }) => eb(shift))
 			.with({ type: "Reset" }, ({ term, identity, handler }) => [...eb(term), ...(identity ? eb(identity) : []), ...(handler ? eb(handler) : [])])
 			.otherwise(() => {

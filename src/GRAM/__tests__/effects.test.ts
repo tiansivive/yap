@@ -20,7 +20,7 @@ describe("local effects lowering spike", () => {
 		["with E: (\\p k -> 42) in capture [E] 1", 42],
 		["with E: (\\p k -> k p) in 10 + (capture [E] 2)", 12],
 		["with E: (\\p k -> (k 1) + (k 2)) in 10 + (capture [E] 0)", 23],
-		["reset (10 + (capture (\\k -> resume 2)))", 12],
+		["reset (10 + (capture (\\k -> reset (k 2))))", 12],
 	] as const)("compiles %s", (source, result) => {
 		expect(compiled(source)).toBe(result);
 	});

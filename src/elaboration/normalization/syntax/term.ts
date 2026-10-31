@@ -19,7 +19,6 @@ type Constructor =
 	| { type: "Proj"; base: Value; label: string }
 	| { type: "Match"; closure: Closure; scrutinee: Value }
 	| { type: "Inj"; base: Value; label: string; injected: Value }
-	| { type: "Resume"; continuation: Value; value: Value }
 	| { type: "Row"; row: Row }
 	| { type: "Abs"; binder: Binder; closure: Closure }
 	| { type: "Neutral"; kind: Neutral; value: Value }
@@ -80,7 +79,7 @@ export type Variable =
 export type Closure =
 	| { type: "Closure"; ctx: EB.Context; term: EB.Term }
 	| { type: "PrimOp"; ctx: EB.Context; term: EB.Term; arity: number; compute: (...args: Value[]) => Value }
-	| { type: "Continuation"; ctx: EB.Context; term: EB.Term; frames: EB.NF.StackFrame[]; delimiter?: EB.NF.Captured["delimiter"]; deep?: boolean };
+	| { type: "Continuation"; ctx: EB.Context; term: EB.Term; frames: EB.NF.StackFrame[]; delimiter?: EB.NF.Captured["delimiter"] };
 
 export type Modalities = Modal.Annotations<Value>;
 
@@ -94,7 +93,6 @@ export const mk = (val: Constructor): Value => {
 };
 
 export const Constructors = {
-	Resume: (continuation: Value, value: Value): Value => mk({ type: "Resume", continuation, value }),
 	Var: (variable: Variable): Value => mk({ type: "Var", variable }),
 	Pi: (variable: string, icit: Implicitness, annotation: Value, closure: Closure) =>
 		mk({

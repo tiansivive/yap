@@ -1,1 +1,1 @@
-reset ((capture (\k -> 100 + (resume 1))) + (capture (\k -> 999)))
+reset ((capture (\k -> 100 + (reset (k 1)))) + (capture (\k -> 999)))

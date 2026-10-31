@@ -11,6 +11,16 @@ type Reset = Extract<Src.Term, { type: "reset" }>;
 export const infer = (reset: Reset): M.Elaboration<EB.AST> =>
 	M.tracer.track({ tag: "src", type: "term", term: reset, metadata: { action: "infer", description: "Reset" } }, function* () {
 		const ctx = yield* M.reader.ask();
+		if (reset.identity) {
+			const resolved = yield* EB.Control.identity(reset.identity);
+			const [payload, result] = yield* EB.Control.signature(resolved.carrier, true);
+			const answer = NF.Constructors.Flex(yield* EB.freshMeta(ctx.env.length, NF.Type));
+			const continuation = NF.Constructors.Pi("v", "Explicit", result, yield* NF.closeVal(answer));
+			const expected = NF.Constructors.Pi("k", "Explicit", continuation, yield* NF.closeVal(answer));
+			yield* M.constrain({ type: "assign", left: payload, right: expected, lvl: ctx.env.length });
+			const [body, usages] = yield* M.reader.local(c => ({ ...c, implicits: [[resolved.atom, resolved.atom], ...c.implicits] }), EB.check(reset.term, answer));
+			return [EB.Constructors.Reset(body, resolved.term, application()), answer, usages];
+		}
 
 		/****************************************************
 		 * //TODO: ANSWER-TYPE POLYMORPHISM LOGIC
@@ -52,5 +62,13 @@ export const infer = (reset: Reset): M.Elaboration<EB.AST> =>
 		}
 
 		yield* M.st.modify(update("delimitations", ([_d, ...ds]) => ds));
-		return [EB.Constructors.Reset(tm), d.answer.final, us] satisfies EB.AST;
+		return [EB.Constructors.Reset(tm, undefined, application()), d.answer.final, us] satisfies EB.AST;
 	});
+
+export const application = (): EB.Term =>
+	EB.Constructors.Lambda(
+		"$payload",
+		"Explicit",
+		EB.Constructors.Lambda("$k", "Explicit", EB.Constructors.App("Explicit", EB.Constructors.Var(EB.Bound(1)), EB.Constructors.Var(EB.Bound(0))), EB.Any),
+		EB.Any,
+	);

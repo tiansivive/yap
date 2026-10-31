@@ -78,9 +78,6 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 		.with(NF.Patterns.Inj, function* ({ base, label, injected }) {
 			return ["inj ", label, " ", yield* go(injected), " into ", yield* go(base)] satisfies PP.Doc;
 		})
-		.with({ type: "Resume" }, function* ({ continuation, value }) {
-			return ["resume (", yield* go(continuation), ") ", yield* go(value)] satisfies PP.Doc;
-		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, function* ({ binder }) {
 			return binder.source;
 		})

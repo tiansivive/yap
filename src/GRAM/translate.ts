@@ -135,12 +135,6 @@ const walk = (term: EB.Term, st: State): [NodeId, State] =>
 			const [payload, s3] = walk(t.payload, s2);
 			return [id, link(link(s3, id, Labels.IDENTITY, identity), id, Labels.PAYLOAD, payload)] as [NodeId, State];
 		})
-		.with({ type: "Resume" }, t => {
-			const [id, s1] = emit(st, Tags.DEEP_RESUME, {}, prov(t.id, st));
-			const [continuation, s2] = walk(t.continuation, s1);
-			const [value, s3] = walk(t.value, s2);
-			return [id, link(link(s3, id, Labels.FUNC, continuation), id, Labels.ARG, value)] as [NodeId, State];
-		})
 		.with({ type: "Bubble" }, t => walk(t.shift, st))
 		.with({ type: "Ann" }, t => walk(t.term, st))
 		.exhaustive();

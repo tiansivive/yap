@@ -192,9 +192,6 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 		.with({ type: "Capture" }, function* ({ identity, payload }) {
 			return EB.Constructors.Capture(yield* instantiate(identity, resolutions), yield* instantiate(payload, resolutions));
 		})
-		.with({ type: "Resume" }, function* ({ continuation, value }) {
-			return EB.Constructors.Resume(yield* instantiate(continuation, resolutions), yield* instantiate(value, resolutions));
-		})
 		.with({ type: "Shift" }, function* ({ body }) {
 			return EB.Constructors.Shift(yield* instantiate(body, resolutions));
 		})

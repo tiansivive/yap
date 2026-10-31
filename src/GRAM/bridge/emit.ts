@@ -63,7 +63,7 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.PAP, () => Paps.pap(id, walk, ctx))
 		.with(Tags.MATCH, () => Decisions.decision(id, walk, ctx))
 		.with(Tags.RESET, () => Continuations.reset(id, walk, ctx))
-		.with(Tags.CAPTURE, Tags.DEEP_RESUME, () => {
+		.with(Tags.CAPTURE, () => {
 			throw new Error("Effects spike lowering: this capture requires continuation reification");
 		})
 		.with(Tags.RESUMPTION, () => Continuations.resume(id, walk, ctx))

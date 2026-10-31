@@ -59,7 +59,7 @@ export function* infer(node: Extract<Src.Term, { type: "with" }>): M.Elaboration
 					throw new Error(`Local effect identity ${local} escapes in the result type`);
 				}
 			}
-			const tm = C.Reset(yield* EB.Icit.instantiate(body, resolutions), resolved.term, deep(yield* EB.Icit.instantiate(handler, resolutions)));
+			const tm = install(resolved.term, yield* EB.Icit.instantiate(handler, resolutions), yield* EB.Icit.instantiate(body, resolutions));
 			return [tm, yield* NF.force(answer), usages];
 		})(),
 	);
@@ -103,10 +103,7 @@ function* raw(node: Extract<Src.Term, { type: "capture" }>): M.Elaboration<EB.AS
 	yield* M.st.modify(s => ({ ...s, delimitations: s.delimitations.slice(1) }));
 	const [payload, usages] =
 		node.term.type === "lambda"
-			? yield* M.reader.local(
-					c => EB.bind(c, { type: "Continuation", variable, resumption: { meta }, deep: true }, kType),
-					EB.check(node.term.body, handlerAnswer),
-				)
+			? yield* M.reader.local(c => EB.bind(c, { type: "Continuation", variable, resumption: { meta } }, kType), EB.check(node.term.body, handlerAnswer))
 			: yield* EB.check(node.term, yield* arrow(kType, handlerAnswer));
 
 	if (!answer) {
@@ -333,16 +330,46 @@ const arrow = function* (from: NF.Value, to: NF.Value): M.Elaboration<NF.Value> 
 	return NF.Constructors.Pi("x", "Explicit", from, yield* NF.closeVal(to));
 };
 
-const deep = (handler: EB.Term): EB.Term => {
+const lift = (term: EB.Term, amount: number): EB.Term =>
+	EB.rewrite(term, (t, depth) =>
+		t.type === "Var" && t.variable.type === "Bound" && t.variable.index >= depth ? C.Var(EB.Bound(t.variable.index + amount)) : t,
+	);
+
+const apply = (func: EB.Term, arg: EB.Term): EB.Term =>
+	match(func)
+		.with(
+			{ type: "Abs", binding: { type: "Lambda" } },
+			() => arg.type === "Var" || arg.type === "Lit" || (arg.type === "Abs" && arg.binding.type === "Lambda"),
+			({ body }) =>
+				EB.rewrite(body, (t, depth) => {
+					if (t.type !== "Var" || t.variable.type !== "Bound") {
+						return t;
+					}
+
+					if (t.variable.index === depth) {
+						return lift(arg, depth);
+					}
+					return t.variable.index > depth ? C.Var(EB.Bound(t.variable.index - 1)) : t;
+				}),
+		)
+		.otherwise(() => C.App("Explicit", func, arg));
+
+const install = (identity: EB.Term, handler: EB.Term, body: EB.Term): EB.Term => {
 	const v = (index: number) => C.Var(EB.Bound(index));
 	const lam = (variable: string, body: EB.Term) => C.Lambda(variable, "Explicit", body, EB.Any);
-	const body = C.App("Explicit", C.App("Explicit", v(2), v(1)), lam("$value", C.Resume(v(1), v(0))));
-	return C.App("Explicit", lam("$handler", lam("$payload", lam("$continuation", body))), handler);
+	const inline = handler.type === "Abs" && handler.binding.type === "Lambda";
+	const bound = inline ? 0 : 1;
+	const deep = lam("$value", C.Reset(C.App("Explicit", v(1), v(0)), lift(identity, bound + 4), v(3)));
+	const invocation = apply(apply(inline ? lift(handler, 3) : v(3), v(1)), deep);
+	const simplified = EB.rewrite(invocation, t => (t.type === "App" ? apply(t.func, t.arg) : t));
+	const installed = lam("$payload", lam("$continuation", simplified));
+	const bindings = inline ? [] : [C.Stmt.Let("$userHandler", lift(handler, 1), NF.Any)];
+	return C.Block([...bindings, C.Stmt.Let("$handler", installed, NF.Any)], C.Reset(lift(body, bound + 1), lift(identity, bound + 1), v(0)));
 };
 
 export const contains = (term: EB.Term): boolean =>
 	match(term)
-		.with({ type: "Capture" }, { type: "Resume" }, () => true)
+		.with({ type: "Capture" }, () => true)
 		.with({ type: "Reset" }, () => true)
 		.with({ type: "Abs" }, ({ body }) => contains(body))
 		.with({ type: "App" }, ({ func, arg }) => contains(func) || contains(arg))

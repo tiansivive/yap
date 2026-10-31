@@ -381,7 +381,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 		.with({ type: "Reset" }, function* (tm) {
 			return yield* synth(tm.term);
 		})
-		.with({ type: "Shift" }, { type: "Capture" }, { type: "Resume" }, function* () {
+		.with({ type: "Shift" }, { type: "Capture" }, function* () {
 			yield* logger.log("synth: shift expression treated as opaque (stub)");
 			return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
 		})

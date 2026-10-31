@@ -65,7 +65,6 @@ export const Initial: Vocabulary = {
 		Tags.RESET,
 		Tags.SHIFT,
 		Tags.CAPTURE,
-		Tags.DEEP_RESUME,
 	),
 	labels: labels(
 		Labels.BODY,
