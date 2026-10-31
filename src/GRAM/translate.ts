@@ -436,7 +436,7 @@ const block = (t: EB.Term & { type: "Block" }, st: State): [NodeId, State] => {
 	}, s1);
 
 	const [ret, s3] = walk(t.return, s2);
-	return [id, link(s3, id, Labels.RETURN, ret)];
+	return [id, { ...link(s3, id, Labels.RETURN, ret), binders: st.binders }];
 };
 
 // ── Control ──

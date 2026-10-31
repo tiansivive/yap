@@ -15,11 +15,17 @@ import * as Primops from "./primops";
 import * as Paps from "./pap";
 import * as Decisions from "./decisions";
 import * as Continuations from "./continuations";
+import * as Effects from "./effects";
 
 const { Terminator, Block, Function: Fn, Module } = Constructors;
 const strOf = (v: unknown): string => (typeof v === "string" ? v : "");
 
 export const emit = (graph: Graph): MIR.Module => {
+	const machine = Edges.one(graph.root, Labels.MACHINE)(graph)?.target;
+
+	if (machine !== undefined) {
+		return Effects.emit(graph, machine);
+	}
 	const root = entry(graph);
 	const ctx = C.fresh(graph);
 	const [result, final] = root !== undefined ? walk(root, ctx) : C.name(ctx);
