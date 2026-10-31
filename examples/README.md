@@ -2,6 +2,8 @@
 
 Welcome to Yap! This guide walks through all the language features currently implemented, starting from the basics and gradually introducing more advanced concepts.
 
+The [runnable example index](INDEX.md) links small programs in this folder, with expected results, execution instructions and the supported compilation paths.
+
 ## Table of Contents
 
 - [Primitives & Literals](#primitives--literals)
