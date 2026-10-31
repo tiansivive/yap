@@ -48,7 +48,7 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 		return yield* match(structure)
 			.with(NF.Patterns.Sigma, function* (sig) {
 				assert(sig.binder.annotation.type === "Row", "Injection: Expected Row type in Sigma binder annotation");
-				if (R.lookup(sig.binder.annotation.row, label) === undefined) {
+				if (!R.lookup(sig.binder.annotation.row, label)) {
 					const ann = NF.Constructors.Row(NF.Constructors.Extension(label, NF.Type, sig.binder.annotation.row));
 					const quoted = yield* NF.quote(ctx.env.length, value[1]);
 
@@ -65,7 +65,7 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 			})
 			.with(NF.Patterns.SigmaV2, function* (sig) {
 				assert(sig.binder.annotation.type === "Row", "Injection: Expected Row type in SigmaV2 binder annotation");
-				if (R.lookup(sig.binder.annotation.row, label) === undefined) {
+				if (!R.lookup(sig.binder.annotation.row, label)) {
 					const ann = NF.Constructors.Row(NF.Constructors.Extension(label, NF.Type, sig.binder.annotation.row));
 					const quoted = yield* NF.quote(ctx.env.length, value[1]);
 
@@ -81,7 +81,7 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 				return sig;
 			})
 			.with(NF.Patterns.Schema, NF.Patterns.Variant, ({ func, arg }) => {
-				if (R.lookup(arg.row, label) === undefined) {
+				if (!R.lookup(arg.row, label)) {
 					const extended = NF.Constructors.App(func, NF.Constructors.Row(NF.Constructors.Extension(label, value[1], arg.row)), "Explicit");
 					return M.of(extended);
 				}

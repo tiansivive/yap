@@ -16,7 +16,8 @@ export type VariantBranch = EB.Alternative & { pattern: { type: "Variant"; row: 
 
 export const filter = (branches: EB.Alternative[]): VariantBranch[] => branches.filter((b): b is VariantBranch => b.pattern.type === "Variant");
 
-/** A variant pattern's row holds one entry: the tag it matches and the pattern for its payload. */
+/* Multi-tag variant patterns require expansion into separate decision-matrix rows.
+ * This path currently dispatches on the first entry. */
 const arm = (row: R.Row<EB.Pattern, string>): R.Entry<EB.Pattern> => {
 	assert(row.entries.length > 0, "Variant pattern must have extension row");
 	return row.entries[0];

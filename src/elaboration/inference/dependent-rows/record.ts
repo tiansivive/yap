@@ -23,17 +23,18 @@ export type Inferred = {
 export const check = function* (source: Source, expected: NF.Row): M.Elaboration<Inferred> {
 	const ctx = yield* M.reader.ask();
 
-	return yield* match(expected)
-		.with(R.Patterns.NonEmpty, ({ entries: [{ label, value: type }, ...remaining] }) =>
-			E.match(
-				(): M.Elaboration<Inferred> => M.fail(Err.MissingLabel(label, source)),
+	return yield* match([expected, source] as const)
+		.with([R.Patterns.NonEmpty, R.Patterns.NonEmpty], ([exp, src]) => {
+			const [{ label, value: type }, ...remaining] = exp.entries;
+			return E.match(
+				(): M.Elaboration<Inferred> => M.fail(Err.MissingLabel(label, src)),
 				function* (field: { value: Src.Term; rest: Source }): M.Elaboration<Inferred> {
 					const [[term, usages], references, rest] = yield* scoped(
 						label,
 						function* () {
 							return [yield* EB.check(field.value, type), type] as const;
 						},
-						() => check(field.rest, R.Constructors.Row(remaining, expected.tail)),
+						() => check(field.rest, R.Constructors.Row(remaining, exp.tail)),
 					);
 
 					return {
@@ -43,20 +44,19 @@ export const check = function* (source: Source, expected: NF.Row): M.Elaboration
 						references: { [label]: references, ...rest.references },
 					};
 				},
-			)(R.rewrite(source, label)),
-		)
-		.with({ tail: P.nonNullable }, function* () {
+			)(R.rewrite(src, label));
+		})
+		.with([R.Patterns.Tail, P._], function* () {
 			const inferred = yield* infer(source);
 			yield* M.constrain({ type: "assign", left: NF.Constructors.Row(inferred.type), right: NF.Constructors.Row(expected), lvl: ctx.env.length });
 
 			return inferred;
 		})
-		.otherwise(() =>
-			match(source)
-				.with(R.Patterns.NonEmpty, ({ entries: [{ label }] }) => M.fail(Err.MissingLabel(label, expected)))
-				.with({ tail: P.nonNullable }, () => M.fail(Err.Impossible("Dependent value row cannot have a tail variable")))
-				.otherwise(() => M.of(empty(ctx.env.length))),
-		);
+		.with([R.Patterns.NonEmpty, P._], ([exp, src]) => M.fail(Err.MissingLabel(exp.entries[0].label, src)))
+		.with([R.Patterns.Empty, R.Patterns.NonEmpty], ([exp, src]) => M.fail(Err.MissingLabel(src.entries[0].label, exp)))
+		.with([R.Patterns.Empty, R.Patterns.Tail], () => M.fail(Err.Impossible("Dependent value row cannot have a tail variable")))
+		.with([R.Patterns.Empty, R.Patterns.Empty], () => M.of(empty(ctx.env.length)))
+		.otherwise(() => M.fail(Err.Impossible("Dependent checking row reached incompatible shapes")));
 };
 
 export const infer = function* (source: Source): M.Elaboration<Inferred> {
