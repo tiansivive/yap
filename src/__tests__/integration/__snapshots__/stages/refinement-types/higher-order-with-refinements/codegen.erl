@@ -21,10 +21,10 @@ end
 
 
 ## hof (let)
-module 'yap_main' ['main'/0, 'closure_13'/2]
+module 'yap_main' ['main'/0, 'closure_12'/2]
 attributes []
 
-'closure_13'/2 = fun (Env0, F1) ->
+'closure_12'/2 = fun (Env0, F1) ->
   let <V0> = 1
   in let <Fnref1> = call 'maps':'get'('__fn', F1)
   in let <Env2> = call 'maps':'get'('__env', F1)
@@ -33,7 +33,7 @@ attributes []
 
 'main'/0 = fun () ->
   let <_MainResult> = let <Env_cls2> = call 'maps':'from_list'([])
-in let <Fnref_cls2> = fun 'yap_main':'closure_13'/2
+in let <Fnref_cls2> = fun 'yap_main':'closure_12'/2
 in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
 in Closure_cls2
   in let <_Print> = call 'io':'format'("~p~n", [_MainResult])

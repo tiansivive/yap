@@ -9,11 +9,11 @@ module
 module
   fn main entry=entry
     entry:
-      let env_cls2 = alloc { v0: length }
-      let fnref_cls2 = &closure_65
+      let env_cls2 = alloc { v0: List, v1: length }
+      let fnref_cls2 = &closure_45
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_66(env0, list1) entry=entry
+  fn closure_46(env0, list1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
@@ -41,10 +41,11 @@ module
       jump join3(v16)
     join3(match1):
       return match1
-  fn closure_65(env0, a1) entry=entry
+  fn closure_45(env0, a1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let env_cls2 = alloc { v0: cap_0, v1: a1 }
-      let fnref_cls2 = &closure_66
+      let cap_1 = read env0.v1
+      let env_cls2 = alloc { v0: cap_1, v1: a1 }
+      let fnref_cls2 = &closure_46
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2

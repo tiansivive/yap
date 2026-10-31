@@ -1,0 +1,42 @@
+## stringify (foreign)
+
+
+## Functor (let)
+λ(f: Π(t3: Type) -> Type) ->
+  Σ($sig: [ map: Irrelevant ]) .
+    Schema
+      [ map: Π(a: Type) =>
+          Π(b: Type) => Π(t4: Π(t5: a) -> b) -> Π(t6: f a) -> f b ]
+
+## fmap (let)
+λ(f: Π(t7: Type) -> Type) =>
+  λ(functor: Functor f) =>
+    λ(a: Type) =>
+      λ(b: Type) =>
+        λ(fn: Π(t9: a) -> b) ->
+          λ(container: f a) -> ((functor).map) @a @b fn container
+
+## Option (let)
+λ(a: Type) -> Variant [ none: Unit, some: a ]
+
+## mapOption (let)
+λ(a: Type) =>
+  λ(b: Type) =>
+    λ(f: Π(t13: a) -> b) ->
+      λ(o: Option a) ->
+        match o
+          | Variant [ some: x | $row_7 ] -> Struct [ __tag: some, payload: f x ]
+          | Variant [ none: _ | $row_11 ] ->
+              Struct [ __tag: none, payload: unit ]
+
+## OptionFunctor (let)
+νstrict [] . Struct [ map: λ(a: Type) => λ(b: Type) => mapOption @a @b ]
+
+## (using) (using)
+
+
+## x (let)
+Struct [ __tag: some, payload: 1 ]
+
+## y (let)
+fmap @Option @OptionFunctor @Num @String (FFI.stringify @Num) x

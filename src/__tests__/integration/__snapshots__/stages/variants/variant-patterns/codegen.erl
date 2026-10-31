@@ -14,10 +14,10 @@ end
 
 
 ## describeShape (let)
-module 'yap_main' ['main'/0, 'closure_68'/2]
+module 'yap_main' ['main'/0, 'closure_43'/2]
 attributes []
 
-'closure_68'/2 = fun (Env0, S1) ->
+'closure_43'/2 = fun (Env0, S1) ->
   letrec
     'entry'/0 = fun () ->
       apply 'sw2'/0()
@@ -66,7 +66,7 @@ end of
 
 'main'/0 = fun () ->
   let <_MainResult> = let <Env_cls2> = call 'maps':'from_list'([])
-in let <Fnref_cls2> = fun 'yap_main':'closure_68'/2
+in let <Fnref_cls2> = fun 'yap_main':'closure_43'/2
 in let <Closure_cls2> = call 'maps':'from_list'([{'__fn', Fnref_cls2}, {'__env', Env_cls2}])
 in Closure_cls2
   in let <_Print> = call 'io':'format'("~p~n", [_MainResult])

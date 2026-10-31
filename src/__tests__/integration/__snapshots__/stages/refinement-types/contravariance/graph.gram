@@ -29,11 +29,12 @@
   :body -> [8]
   :env -> [11]
 [4] pi {"variable":"t2","icit":"Explicit","level":1}
-  :annotation -> [5]
+  :annotation -> [6]
   :body -> [7]
-[5] modal {"quantity":"Many"}
-  :term -> [6]
-[6] lit {"value":{"type":"Atom","value":"Num"}}
+[5] var:free {"name":"Pos"}
+[6] var:ref {"name":"Pos"}
+  :refers_to -> [5]
+  :scope -> [2] {"level":0}
 [7] lit {"value":{"type":"Atom","value":"Num"}}
 [8] app {"icit":"Explicit"}
   :arg -> [10]
@@ -53,12 +54,13 @@
   :entry -> [3]
 [2] stmt:let {"variable":"natToNum"}
 [3] lambda {"variable":"x","icit":"Explicit","level":1}
-  :annotation -> [4]
+  :annotation -> [5]
   :body -> [6]
   :env -> [7]
-[4] modal {"quantity":"Many"}
-  :term -> [5]
-[5] lit {"value":{"type":"Atom","value":"Num"}}
+[4] var:free {"name":"Nat"}
+[5] var:ref {"name":"Nat"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
 [6] var:bound {"index":0}
   :refers_to -> [3]
   :scope -> [2] {"level":0}
@@ -73,12 +75,13 @@
   :entry -> [3]
 [2] stmt:let {"variable":"posToNum"}
 [3] lambda {"variable":"x","icit":"Explicit","level":1}
-  :annotation -> [4]
+  :annotation -> [5]
   :body -> [6]
   :env -> [7]
-[4] modal {"quantity":"Many"}
-  :term -> [5]
-[5] lit {"value":{"type":"Atom","value":"Num"}}
+[4] var:free {"name":"Pos"}
+[5] var:ref {"name":"Pos"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
 [6] var:bound {"index":0}
   :refers_to -> [3]
   :scope -> [2] {"level":0}

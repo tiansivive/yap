@@ -2,5 +2,4 @@
 Type
 
 ## valid (let)
-Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
-  Schema [ fst: Num, snd: <ω> Num [| λ(v: Num) -> FFI.$gt v ($sig).fst |] ]
+OrderedPair

@@ -1,0 +1,26 @@
+## stringify (foreign)
+
+
+## Functor (let)
+valid
+
+## fmap (let)
+valid
+
+## Option (let)
+valid
+
+## mapOption (let)
+error: Rigid variables do not match in subtype
+
+## OptionFunctor (let)
+valid
+
+## (using) (using)
+
+
+## x (let)
+valid
+
+## y (let)
+valid

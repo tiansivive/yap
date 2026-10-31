@@ -25,11 +25,11 @@ module
 module
   fn main entry=entry
     entry:
-      let env_cls2 = alloc { v0: mapList }
-      let fnref_cls2 = &closure_80
+      let env_cls2 = alloc { v0: List, v1: mapList }
+      let fnref_cls2 = &closure_60
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_83(env0, list1) entry=entry
+  fn closure_63(env0, list1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
@@ -71,28 +71,31 @@ module
       jump join3(v26)
     join3(match1):
       return match1
-  fn closure_82(env0, f1) entry=entry
+  fn closure_62(env0, f1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
       let cap_2 = read env0.v2
-      let env_cls2 = alloc { v0: f1, v1: cap_1, v2: cap_0, v3: cap_2 }
-      let fnref_cls2 = &closure_83
+      let cap_3 = read env0.v3
+      let env_cls2 = alloc { v0: f1, v1: cap_2, v2: cap_1, v3: cap_3 }
+      let fnref_cls2 = &closure_63
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_81(env0, b1) entry=entry
+  fn closure_61(env0, b1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
-      let env_cls2 = alloc { v0: cap_0, v1: cap_1, v2: b1 }
-      let fnref_cls2 = &closure_82
+      let cap_2 = read env0.v2
+      let env_cls2 = alloc { v0: cap_1, v1: cap_0, v2: cap_2, v3: b1 }
+      let fnref_cls2 = &closure_62
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_80(env0, a1) entry=entry
+  fn closure_60(env0, a1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let env_cls2 = alloc { v0: a1, v1: cap_0 }
-      let fnref_cls2 = &closure_81
+      let cap_1 = read env0.v1
+      let env_cls2 = alloc { v0: a1, v1: cap_0, v2: cap_1 }
+      let fnref_cls2 = &closure_61
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
 
@@ -108,29 +111,30 @@ module
 module
   fn main entry=entry
     entry:
-      let env_cls2 = alloc { v0: cap0 }
-      let fnref_cls2 = &closure_56
+      let env_cls2 = alloc { v0: Functor, v1: cap1 }
+      let fnref_cls2 = &closure_37
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_58(env0, a1) entry=entry
+  fn closure_39(env0, a1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
       let cap_2 = read env0.v2
       return cap_0
-  fn closure_57(env0, functor1) entry=entry
+  fn closure_38(env0, functor1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
       let env_cls2 = alloc { v0: cap_0, v1: cap_1, v2: functor1 }
-      let fnref_cls2 = &closure_58
+      let fnref_cls2 = &closure_39
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_56(env0, f1) entry=entry
+  fn closure_37(env0, f1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let env_cls2 = alloc { v0: cap_0, v1: f1 }
-      let fnref_cls2 = &closure_57
+      let cap_1 = read env0.v1
+      let env_cls2 = alloc { v0: cap_1, v1: f1 }
+      let fnref_cls2 = &closure_38
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
 
@@ -141,8 +145,8 @@ module
 module
   fn main entry=entry
     entry:
-      let env_cls2 = alloc { v0: fmap }
-      let fnref_cls2 = &closure_53
+      let env_cls2 = alloc { v0: Functor, v1: fmap }
+      let fnref_cls2 = &closure_34
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
   fn pap_fn13(env14, arg15) entry=pap_fn13_entry
@@ -150,7 +154,7 @@ module
       let cap_0 = read env14.v0
       let result_pap_fn13 = call stringify(cap_0, arg15)
       return result_pap_fn13
-  fn closure_55(env0, A1) entry=entry
+  fn closure_36(env0, A1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
@@ -175,19 +179,21 @@ module
       let env15 = read v12.__env
       let v16 = call *fnref14(env15, closure_cls13)
       return v16
-  fn closure_54(env0, a1) entry=entry
+  fn closure_35(env0, a1) entry=entry
     entry:
       let cap_0 = read env0.v0
       let cap_1 = read env0.v1
-      let env_cls2 = alloc { v0: cap_1, v1: cap_0, v2: a1 }
-      let fnref_cls2 = &closure_55
+      let cap_2 = read env0.v2
+      let env_cls2 = alloc { v0: cap_2, v1: cap_1, v2: a1 }
+      let fnref_cls2 = &closure_36
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
-  fn closure_53(env0, F1) entry=entry
+  fn closure_34(env0, F1) entry=entry
     entry:
       let cap_0 = read env0.v0
-      let env_cls2 = alloc { v0: F1, v1: cap_0 }
-      let fnref_cls2 = &closure_54
+      let cap_1 = read env0.v1
+      let env_cls2 = alloc { v0: cap_0, v1: F1, v2: cap_1 }
+      let fnref_cls2 = &closure_35
       let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
       return closure_cls2
 
@@ -209,7 +215,7 @@ module
   fn main entry=entry
     entry:
       let v0 = strmap
-      let v1 = alloc {  }  // {"erasure":{"tag":"mu","source":"List"}}
+      let v1 = List
       let fnref2 = read v0.__fn
       let env3 = read v0.__env
       let v4 = call *fnref2(env3, v1)

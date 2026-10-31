@@ -1,4 +1,4 @@
-import { describe, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import { runScript, snap } from "./helpers/pipeline";
 
 describe("Language Tour — Higher-Kinded Polymorphism", () => {
@@ -36,7 +36,7 @@ let strList = strmap listOf1;
 	});
 
 	/* `Option` is not recursive, so nothing but the reference keeps `Option Num` from unfolding to its variant row before unification meets it. */
-	test("fmap over a non-recursive alias resolves the alias's instance", () => {
+	test("fmap over a non-recursive alias resolves the alias's instance", async () => {
 		const result = runScript(`
 foreign stringify: (a: Type) => a -> String;
 let Functor: (Type -> Type) -> Type = \\f -> { map: (a: Type) => (b: Type) => (a -> b) -> f a -> f b };
@@ -50,11 +50,10 @@ using OptionFunctor;
 let x: Option Num = #some 1;
 let y = fmap stringify x;
 		`);
+		await snap(result);
 		const y = result.declarations.find(d => d.name === "y");
-
-		expect(y?.error).toBeUndefined();
+		expect(y?.errors).toEqual({});
 		expect(y?.stages?.type).toBe("Option String");
 		expect(y?.stages?.elaborated).toContain("fmap @Option @OptionFunctor @Num @String");
-		expect(snap(result)).toMatchSnapshot();
 	});
 });

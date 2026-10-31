@@ -2,4 +2,4 @@
 Type
 
 ## origin (let)
-Σ($sig: [ x: Irrelevant, y: Irrelevant ]) . Schema [ x: Num, y: Num ]
+Point

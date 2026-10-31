@@ -2,7 +2,7 @@
 Type
 
 ## fact (let)
-Σ($sig: [ compute: Irrelevant ]) . Schema [ compute: Π(t1: Num) -> Num ]
+Factorial
 
 ## result (let)
 Num

@@ -14,12 +14,13 @@
   :entry -> [3]
 [2] stmt:let {"variable":"safe"}
 [3] lambda {"variable":"x","icit":"Explicit","level":1}
-  :annotation -> [4]
+  :annotation -> [5]
   :body -> [6]
   :env -> [7]
-[4] modal {"quantity":"Many"}
-  :term -> [5]
-[5] lit {"value":{"type":"Atom","value":"Num"}}
+[4] var:free {"name":"Nat"}
+[5] var:ref {"name":"Nat"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
 [6] var:bound {"index":0}
   :refers_to -> [3]
   :scope -> [2] {"level":0}

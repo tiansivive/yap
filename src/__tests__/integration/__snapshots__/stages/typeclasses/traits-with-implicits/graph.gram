@@ -144,57 +144,46 @@
 [3] lambda {"variable":"t","icit":"Implicit","level":1}
   :annotation -> [4]
   :body -> [5]
-  :env -> [23]
+  :env -> [16]
 [4] lit {"value":{"type":"Atom","value":"Type"}}
 [5] lambda {"variable":"show","icit":"Implicit","level":2}
   :annotation -> [6]
-  :body -> [20]
-  :env -> [24]
-[6] sigma:v2 {"variable":"$sig","level":2}
-  :annotation -> [7]
-  :body -> [10]
-[7] row:ext {"label":"show"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[9] row:empty
-[10] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [11]
-[11] lit {"value":{"type":"Atom","value":"Schema"}}
-[12] row:ext {"label":"show"}
-  :rest -> [16]
-  :value -> [13]
-[13] pi {"variable":"t3","icit":"Explicit","level":3}
-  :annotation -> [14]
-  :body -> [15]
-[14] var:bound {"index":0}
+  :body -> [13]
+  :env -> [17]
+[6] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [8]
+[7] var:free {"name":"Show"}
+[8] var:ref {"name":"Show"}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[9] var:bound {"index":0}
   :refers_to -> [3]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-[15] lit {"value":{"type":"Atom","value":"String"}}
-[16] row:empty
-[18] var:bound {"index":1}
+[11] var:bound {"index":1}
   :refers_to -> [3]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
-[20] proj {"label":"show"}
-  :target -> [21]
-[21] var:bound {"index":0}
+[13] proj {"label":"show"}
+  :target -> [14]
+[14] var:bound {"index":0}
   :refers_to -> [5]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
-[23] env
-[24] env
+[16] env
+  :capture -> [7] {"index":0}
+[17] env
   :capture -> [3] {"index":0}
-[25] closure
+[18] closure
   :body -> [3]
-  :env -> [23]
-[26] closure
+  :env -> [16]
+[19] closure
   :body -> [5]
-  :env -> [24]
+  :env -> [17]
 
 ## areEqual (let)
 [1] root
@@ -203,70 +192,51 @@
 [3] lambda {"variable":"t","icit":"Implicit","level":1}
   :annotation -> [4]
   :body -> [5]
-  :env -> [29]
+  :env -> [20]
 [4] lit {"value":{"type":"Atom","value":"Type"}}
 [5] lambda {"variable":"eq","icit":"Implicit","level":2}
   :annotation -> [6]
-  :body -> [25]
-  :env -> [30]
-[6] sigma:v2 {"variable":"$sig","level":2}
-  :annotation -> [7]
-  :body -> [10]
-[7] row:ext {"label":"eq"}
-  :rest -> [9]
-  :value -> [8]
-[8] lit {"value":{"type":"Atom","value":"Irrelevant"}}
-[9] row:empty
-[10] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [11]
-[11] lit {"value":{"type":"Atom","value":"Schema"}}
-[12] row:ext {"label":"eq"}
-  :rest -> [18]
-  :value -> [13]
-[13] pi {"variable":"t5","icit":"Explicit","level":3}
-  :annotation -> [14]
-  :body -> [15]
-[14] var:bound {"index":0}
+  :body -> [16]
+  :env -> [21]
+[6] app {"icit":"Explicit"}
+  :arg -> [9]
+  :func -> [8]
+[7] var:free {"name":"Eq"}
+[8] var:ref {"name":"Eq"}
+  :refers_to -> [7]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[9] var:bound {"index":0}
   :refers_to -> [3]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
-[15] pi {"variable":"t6","icit":"Explicit","level":4}
-  :annotation -> [16]
-  :body -> [17]
-[16] var:bound {"index":1}
-  :refers_to -> [3]
-  :scope -> [2] {"level":0}
-  :scope -> [3] {"level":1}
-  :scope -> [13] {"level":3}
-[17] lit {"value":{"type":"Atom","value":"Bool"}}
-[18] row:empty
-[20] var:bound {"index":1}
+[11] var:bound {"index":1}
   :refers_to -> [3]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
-[22] var:bound {"index":1}
+[13] var:bound {"index":1}
   :refers_to -> [3]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
-[25] proj {"label":"eq"}
-  :target -> [26]
-[26] var:bound {"index":0}
+[16] proj {"label":"eq"}
+  :target -> [17]
+[17] var:bound {"index":0}
   :refers_to -> [5]
   :scope -> [2] {"level":0}
   :scope -> [3] {"level":1}
   :scope -> [5] {"level":2}
-[29] env
-[30] env
+[20] env
+  :capture -> [7] {"index":0}
+[21] env
   :capture -> [3] {"index":0}
-[31] closure
+[22] closure
   :body -> [3]
-  :env -> [29]
-[32] closure
+  :env -> [20]
+[23] closure
   :body -> [5]
-  :env -> [30]
+  :env -> [21]
 
 ## (using) (using)
 

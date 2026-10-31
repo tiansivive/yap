@@ -8,10 +8,10 @@
 Π(t4: Type) -> Type
 
 ## ShowNum (let)
-Σ($sig: [ show: Irrelevant ]) . Schema [ show: Π(t3: Num) -> String ]
+Show Num
 
 ## ShowBool (let)
-Σ($sig: [ show: Irrelevant ]) . Schema [ show: Π(t3: Bool) -> String ]
+Show Bool
 
 ## EqNum (let)
-Σ($sig: [ eq: Irrelevant ]) . Schema [ eq: Π(t5: Num) -> Π(t6: Num) -> Bool ]
+Eq Num

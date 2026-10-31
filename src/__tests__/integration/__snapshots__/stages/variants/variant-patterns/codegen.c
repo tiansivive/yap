@@ -30,18 +30,18 @@ int main(void) {
 
 static YapValue yap_main(void);
 
-static YapValue closure_68(YapValue* __args, int __argc);
+static YapValue closure_43(YapValue* __args, int __argc);
 
 static YapValue yap_main(void) {
   YapValue env_cls2 = yap_alloc_record(0);
-  YapValue fnref_cls2 = yap_mk_closure(&closure_68, yap_null());
+  YapValue fnref_cls2 = yap_mk_closure(&closure_43, yap_null());
   YapValue closure_cls2 = yap_alloc_record(2);
   yap_record_set(&closure_cls2, "__fn", fnref_cls2);
   yap_record_set(&closure_cls2, "__env", env_cls2);
   return closure_cls2;
 }
 
-static YapValue closure_68(YapValue* __args, int __argc) {
+static YapValue closure_43(YapValue* __args, int __argc) {
   YapValue env0 = __args[0];
   YapValue s1 = __args[1];
   int yap_pc = 0;

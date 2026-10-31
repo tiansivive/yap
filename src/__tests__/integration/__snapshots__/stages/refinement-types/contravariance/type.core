@@ -5,13 +5,13 @@ Type
 Type
 
 ## takePosFunction (let)
-Π(t1: Π(t2: <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]) -> Num) -> Num
+Π(t1: Π(t2: Pos) -> Num) -> Num
 
 ## natToNum (let)
-Π(t3: <ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]) -> Num
+Π(t3: Nat) -> Num
 
 ## posToNum (let)
-Π(t4: <ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]) -> Num
+Π(t4: Pos) -> Num
 
 ## result1 (let)
 Num

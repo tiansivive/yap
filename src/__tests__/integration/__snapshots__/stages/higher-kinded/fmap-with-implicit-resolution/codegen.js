@@ -30,9 +30,10 @@ return main();
 ## mapList (let)
 function main() {
   const env_cls2 = {
-    v0: mapList
+    v0: List,
+    v1: mapList
   };
-  const fnref_cls2 = closure_80;
+  const fnref_cls2 = closure_60;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -40,7 +41,7 @@ function main() {
   return closure_cls2;
 }
 
-function closure_83(env0, list1) {
+function closure_63(env0, list1) {
   let __block = "entry";
   let match1;
   while (true) {
@@ -118,17 +119,36 @@ function closure_83(env0, list1) {
   }
 }
 
-function closure_82(env0, f1) {
+function closure_62(env0, f1) {
+  const cap_0 = env0.v0;
+  const cap_1 = env0.v1;
+  const cap_2 = env0.v2;
+  const cap_3 = env0.v3;
+  const env_cls2 = {
+    v0: f1,
+    v1: cap_2,
+    v2: cap_1,
+    v3: cap_3
+  };
+  const fnref_cls2 = closure_63;
+  const closure_cls2 = {
+    __fn: fnref_cls2,
+    __env: env_cls2
+  };
+  return closure_cls2;
+}
+
+function closure_61(env0, b1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const cap_2 = env0.v2;
   const env_cls2 = {
-    v0: f1,
-    v1: cap_1,
-    v2: cap_0,
-    v3: cap_2
+    v0: cap_1,
+    v1: cap_0,
+    v2: cap_2,
+    v3: b1
   };
-  const fnref_cls2 = closure_83;
+  const fnref_cls2 = closure_62;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -136,29 +156,15 @@ function closure_82(env0, f1) {
   return closure_cls2;
 }
 
-function closure_81(env0, b1) {
+function closure_60(env0, a1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const env_cls2 = {
-    v0: cap_0,
-    v1: cap_1,
-    v2: b1
-  };
-  const fnref_cls2 = closure_82;
-  const closure_cls2 = {
-    __fn: fnref_cls2,
-    __env: env_cls2
-  };
-  return closure_cls2;
-}
-
-function closure_80(env0, a1) {
-  const cap_0 = env0.v0;
-  const env_cls2 = {
     v0: a1,
-    v1: cap_0
+    v1: cap_0,
+    v2: cap_1
   };
-  const fnref_cls2 = closure_81;
+  const fnref_cls2 = closure_61;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -182,9 +188,10 @@ return main();
 ## fmap (let)
 function main() {
   const env_cls2 = {
-    v0: cap0
+    v0: Functor,
+    v1: cap1
   };
-  const fnref_cls2 = closure_56;
+  const fnref_cls2 = closure_37;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -192,14 +199,14 @@ function main() {
   return closure_cls2;
 }
 
-function closure_58(env0, a1) {
+function closure_39(env0, a1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const cap_2 = env0.v2;
   return cap_0;
 }
 
-function closure_57(env0, functor1) {
+function closure_38(env0, functor1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const env_cls2 = {
@@ -207,7 +214,7 @@ function closure_57(env0, functor1) {
     v1: cap_1,
     v2: functor1
   };
-  const fnref_cls2 = closure_58;
+  const fnref_cls2 = closure_39;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -215,13 +222,14 @@ function closure_57(env0, functor1) {
   return closure_cls2;
 }
 
-function closure_56(env0, f1) {
+function closure_37(env0, f1) {
   const cap_0 = env0.v0;
+  const cap_1 = env0.v1;
   const env_cls2 = {
-    v0: cap_0,
+    v0: cap_1,
     v1: f1
   };
-  const fnref_cls2 = closure_57;
+  const fnref_cls2 = closure_38;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -237,9 +245,10 @@ return main();
 ## strmap (let)
 function main() {
   const env_cls2 = {
-    v0: fmap
+    v0: Functor,
+    v1: fmap
   };
-  const fnref_cls2 = closure_53;
+  const fnref_cls2 = closure_34;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -253,7 +262,7 @@ function pap_fn13(env14, arg15) {
   return result_pap_fn13;
 }
 
-function closure_55(env0, A1) {
+function closure_36(env0, A1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
   const cap_2 = env0.v2;
@@ -284,15 +293,16 @@ function closure_55(env0, A1) {
   return v16;
 }
 
-function closure_54(env0, a1) {
+function closure_35(env0, a1) {
   const cap_0 = env0.v0;
   const cap_1 = env0.v1;
+  const cap_2 = env0.v2;
   const env_cls2 = {
-    v0: cap_1,
-    v1: cap_0,
+    v0: cap_2,
+    v1: cap_1,
     v2: a1
   };
-  const fnref_cls2 = closure_55;
+  const fnref_cls2 = closure_36;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -300,13 +310,15 @@ function closure_54(env0, a1) {
   return closure_cls2;
 }
 
-function closure_53(env0, F1) {
+function closure_34(env0, F1) {
   const cap_0 = env0.v0;
+  const cap_1 = env0.v1;
   const env_cls2 = {
-    v0: F1,
-    v1: cap_0
+    v0: cap_0,
+    v1: F1,
+    v2: cap_1
   };
-  const fnref_cls2 = closure_54;
+  const fnref_cls2 = closure_35;
   const closure_cls2 = {
     __fn: fnref_cls2,
     __env: env_cls2
@@ -342,7 +354,7 @@ return main();
 ## strList (let)
 function main() {
   const v0 = strmap;
-  const v1 = {};
+  const v1 = List;
   const fnref2 = v0.__fn;
   const env3 = v0.__env;
   const v4 = fnref2(env3, v1);

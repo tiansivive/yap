@@ -5,10 +5,10 @@ Type
 Type
 
 ## n (let)
-<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]
+Nat
 
 ## p (let)
-<ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]
+Pos
 
 ## zero (let)
-<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]
+Nat
