@@ -1,3 +1,5 @@
+import assert from "node:assert";
+
 import { match } from "ts-pattern";
 
 import * as E from "fp-ts/lib/Either";
@@ -11,7 +13,10 @@ export type Row<T, V> = { type: "empty" } | { type: "extension"; label: string; 
 export type Extension<T, V> = Extract<Row<T, V>, { type: "extension" }>;
 
 export const Constructors = {
-	Extension: <T, V>(label: string, value: T, row: Row<T, V>): Extension<T, V> => ({ type: "extension", label, value, row }),
+	Extension: <T, V>(label: string, value: T, row: Row<T, V>): Extension<T, V> => {
+		assert(lookup(row, label) === undefined, `Row labels are unique, but "${label}" is already present`);
+		return { type: "extension", label, value, row };
+	},
 	Variable: <T, V>(variable: V): Row<T, V> => ({ type: "variable", variable }),
 	Empty: <T, V>(): Row<T, V> => ({ type: "empty" }),
 };
