@@ -114,12 +114,15 @@ function* trampoline(mark: Mark): Evaluation<void> {
 	}
 }
 
-const controlIdentity = (value: NF.Value): string => match(value)
-	.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => value.value)
-	.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => variable.name)
-	.with({ type: "Neutral" }, ({ value }) => controlIdentity(value))
-	.with({ type: "Glued" }, ({ unfolded }) => controlIdentity(unfolded))
-	.otherwise(() => { throw new Error("Capture identity must evaluate to an effect atom"); });
+const controlIdentity = (value: NF.Value): string =>
+	match(value)
+		.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => value.value)
+		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => variable.name)
+		.with({ type: "Neutral" }, ({ value }) => controlIdentity(value))
+		.with({ type: "Glued" }, ({ unfolded }) => controlIdentity(unfolded))
+		.otherwise(() => {
+			throw new Error("Capture identity must evaluate to an effect atom");
+		});
 
 function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 	const ctx = yield* M.reader.ask();
@@ -411,8 +414,11 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 					throw new Error(`Capture requires a live delimiter for ${tag}`);
 				}
 				const closure: NF.Closure = {
-					type: "Continuation", ctx: captured.scope.env, term: EB.Any,
-					frames: captured.frames, delimiter: captured.delimiter,
+					type: "Continuation",
+					ctx: captured.scope.env,
+					term: EB.Any,
+					frames: captured.frames,
+					delimiter: captured.delimiter,
 				};
 				const k = NF.Constructors.Lambda("k", "Explicit", closure, NF.Any);
 				const handler = captured.delimiter?.handler as NF.Value | undefined;
@@ -427,7 +433,12 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				const viewed = yield* force(k);
 				return yield* match(viewed)
 					.with({ type: "Abs", closure: { type: "Continuation" } }, ({ closure }) =>
-						Stack.resume<NF.Value, Scope, EB.Term>({ frames: closure.frames, scope: { env: closure.ctx, mode: closure.delimiter?.scope.mode ?? { ...defaultMode } }, delimiter: closure.delimiter }, v, true))
+						Stack.resume<NF.Value, Scope, EB.Term>(
+							{ frames: closure.frames, scope: { env: closure.ctx, mode: closure.delimiter?.scope.mode ?? { ...defaultMode } }, delimiter: closure.delimiter },
+							v,
+							true,
+						),
+					)
 					.otherwise(() => result(NF.Constructors.Neutral("Blocked", NF.Constructors.Resume(k, v))));
 			});
 		})
@@ -811,7 +822,11 @@ export const schedule = {
 			})
 			.with({ type: "Continuation" }, function* (cont) {
 				// Replay the captured continuation with the argument at the shift point.
-				return yield* Stack.resume<NF.Value, Scope, EB.Term>({ frames: cont.frames, scope: { env: cont.ctx, mode: yield* Mode.ask() }, delimiter: cont.delimiter }, value, cont.deep);
+				return yield* Stack.resume<NF.Value, Scope, EB.Term>(
+					{ frames: cont.frames, scope: { env: cont.ctx, mode: yield* Mode.ask() }, delimiter: cont.delimiter },
+					value,
+					cont.deep,
+				);
 			})
 			.exhaustive();
 	},
@@ -1032,7 +1047,11 @@ export const schedule = {
 				return yield* Do.let("k", schedule.view(continuation)).in(function* ({ k }) {
 					return yield* match(k.value)
 						.with({ type: "Abs", closure: { type: "Continuation" } }, function* ({ closure }) {
-							return yield* Stack.resume<NF.Value, Scope, EB.Term>({ frames: closure.frames, scope: yield* scope(), delimiter: closure.delimiter }, argument, true);
+							return yield* Stack.resume<NF.Value, Scope, EB.Term>(
+								{ frames: closure.frames, scope: yield* scope(), delimiter: closure.delimiter },
+								argument,
+								true,
+							);
 						})
 						.otherwise(() => result(value));
 				});

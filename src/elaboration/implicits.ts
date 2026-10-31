@@ -13,14 +13,14 @@ import assert from "assert";
 /** Zonking resolves metas through the registry under the current scope, nothing else. */
 export type Zonking<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Actions<typeof Metas.registry>, A>;
 
-const ImplicitPi = NF.View.Sealed({ type: "Abs", binder: { type: "Pi", icit: "Implicit" } });
+const ImplicitPi = () => NF.View.Sealed({ type: "Abs", binder: { type: "Pi", icit: "Implicit" } });
 
 export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 	const [term, ty, us] = node;
 	const ctx = yield* M.reader.ask();
 
 	const r = match(yield* NF.view(ty))
-		.with(ImplicitPi, ({ value: pi }) =>
+		.with(ImplicitPi(), ({ value: pi }) =>
 			(function* () {
 				const meta = yield* EB.freshMeta(ctx.env.length, pi.binder.annotation);
 				const mvar = EB.Constructors.Var(meta);
@@ -44,19 +44,26 @@ export const wrapLambda = function* (term: EB.Term, ty: NF.Value): NF.Abstractio
 
 	return yield* match(yield* NF.view(ty))
 		.with(
-			ImplicitPi,
-			_ => term.type === "Abs" && (term.binding.type === "Lambda" || term.binding.type === "Pi") && term.binding.icit === "Implicit",
+			ImplicitPi(),
+			({ value: pi }) =>
+				term.type === "Abs" &&
+				(term.binding.type === "Lambda" || term.binding.type === "Pi") &&
+				term.binding.icit === "Implicit" &&
+				term.binding.variable === pi.binder.variable,
 			function* () {
 				return term;
 			},
 		)
-		.with(ImplicitPi, function* ({ value: pi }) {
+		.with(ImplicitPi(), function* ({ value: pi }) {
 			const lvl = ctx.env.length;
 			const ann = yield* NF.quote(lvl, pi.binder.annotation);
 			const binding: EB.Binding = { type: "Lambda", variable: pi.binder.variable, icit: pi.binder.icit, annotation: ann };
 			const xtended = EB.bind(ctx, binding, pi.binder.annotation);
 			const applied = yield* NF.apply(pi.binder, pi.closure, NF.Constructors.Rigid(lvl));
-			const body = yield* M.reader.local(_ => xtended, wrapLambda(term, applied));
+			const lifted = EB.rewrite(term, (t, depth) =>
+				t.type === "Var" && t.variable.type === "Bound" && t.variable.index >= depth ? EB.Constructors.Var(EB.Bound(t.variable.index + 1)) : t,
+			);
+			const body = yield* M.reader.local(_ => xtended, wrapLambda(lifted, applied));
 			return EB.Constructors.Abs(binding, body);
 		})
 		.otherwise(function* () {
@@ -176,7 +183,11 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			return EB.Constructors.Modal(yield* instantiate(term, resolutions), modalities);
 		})
 		.with({ type: "Reset" }, function* ({ term, identity, handler }) {
-			return EB.Constructors.Reset(yield* instantiate(term, resolutions), identity && (yield* instantiate(identity, resolutions)), handler && (yield* instantiate(handler, resolutions)));
+			return EB.Constructors.Reset(
+				yield* instantiate(term, resolutions),
+				identity && (yield* instantiate(identity, resolutions)),
+				handler && (yield* instantiate(handler, resolutions)),
+			);
 		})
 		.with({ type: "Capture" }, function* ({ identity, payload }) {
 			return EB.Constructors.Capture(yield* instantiate(identity, resolutions), yield* instantiate(payload, resolutions));
@@ -184,8 +195,12 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 		.with({ type: "Resume" }, function* ({ continuation, value }) {
 			return EB.Constructors.Resume(yield* instantiate(continuation, resolutions), yield* instantiate(value, resolutions));
 		})
-		.with({ type: "Shift" }, function* ({ body }) { return EB.Constructors.Shift(yield* instantiate(body, resolutions)); })
-		.with({ type: "Bubble" }, function* (t) { return { ...t, shift: yield* instantiate(t.shift, resolutions) }; })
+		.with({ type: "Shift" }, function* ({ body }) {
+			return EB.Constructors.Shift(yield* instantiate(body, resolutions));
+		})
+		.with({ type: "Bubble" }, function* (t) {
+			return { ...t, shift: yield* instantiate(t.shift, resolutions) };
+		})
 		.otherwise(function* (t) {
 			return t;
 		});

@@ -1114,13 +1114,33 @@ import "lib.yap";
 
 ---
 
+## Effect identities spike
+
+`effects/` exercises expression handlers: `with E: handler in expression` and `capture [E] payload`. Operations acquire ordinary implicit evidence parameters. Anonymous `capture (\k -> body)` receives a bare continuation; `resume value` reinstalls its delimiter.
+
+Run an expression directly through the elaborator and CEK interpreter:
+
+```sh
+pnpm exec ts-node --transpile-only scripts/effects-spike.ts examples/effects/handlers.yap
+```
+
+`handlers.yap` and `await.yap` return `42`, `yield.yap` returns `3`, `control-functions.yap` returns `11`, and `probe1.yap`, `probe2.yap`, `probe3.yap` return `1099`, `100`, `1099`. The await example uses synchronous thunks to exercise parametric payloads. `--core` also displays the elaborated term. `control.yap` retains a failing record-packaging experiment for follow-up.
+
+The compiler spike supports one visible capture in a direct expression, including multiple calls to its local continuation:
+
+```sh
+pnpm yap examples/effects/local-compiled.yap --srcDir . -o /tmp/yap-effects-output
+```
+
+Its generated JavaScript returns `12`. Multiple captures, dynamic identities and escaping continuations currently use the CEK interpreter; compilation reports the unsupported fragment. The working notes and remaining typing issues are in `z-yap/resources/plans/effect-identities-spike.plan.md`.
+
 ## What's Next?
 
 This guide covers the currently implemented features of Yap. The language is under active development, so expect:
 
 - More syntactic sugar (infix operators, where clauses, destructuring, shorthand match, etc.)
 - Resource usage semantics (multiplicities) for handling mutation.
-- Possibly an effect system on top
+- Stabilizing the effect identity spike
 - Reflection for runtime type information
 - Better tooling (LSP, debugger, syntax highlighting)
 

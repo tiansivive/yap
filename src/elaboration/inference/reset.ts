@@ -37,7 +37,10 @@ export const infer = (reset: Reset): M.Elaboration<EB.AST> =>
 		};
 		yield* M.st.modify(update("delimitations", ds => [d, ...ds]));
 
-		const [tm, us] = yield* M.reader.local(c => ({ ...c, implicits: [[EB.Control.anonymous, EB.Control.anonymous], ...c.implicits] }), EB.check(reset.term, d.answer.initial));
+		const [tm, us] = yield* M.reader.local(
+			c => ({ ...c, implicits: [[EB.Control.anonymous, EB.Control.anonymous], ...c.implicits] }),
+			EB.check(reset.term, d.answer.initial),
+		);
 		const {
 			delimitations: [{ shifted, next }],
 		} = yield* M.st.get();

@@ -198,10 +198,12 @@ Dict -> Curly[ %space:? Square[ %space:? TypeExpr ] %space:? %colon %space:? Typ
 KeyVal -> Key %space:? %colon %space:? TypeExpr 				{% P.keyval %}
 
 Key -> %variable 	{% P.Name %}
+	 | "shift" 	{% P.Name %}
 	 | %digit:+ 	{% d => P.Name(d[0]) %}
 
 
 Projection -> Atom %dot Identifier 									{% P.Projection %}
+			| Atom %dot "shift" {% d => P.Projection([d[0], d[1], P.Name([d[2]])]) %}
 			| %dot Identifier 										{% P.Projection %}
 
 Injection -> Curly[ %space:? Type %space:? %bar Many[Assignment, %comma] ] 	{% P.Injection %}

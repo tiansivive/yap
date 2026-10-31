@@ -199,7 +199,7 @@ const Shift = {
 		const state: State = {
 			rLabel,
 			exitLabel,
-			envVar,
+			envVar: envRead,
 			sLabels: [sInit, ...sLabels],
 			captures,
 			kResults: [],

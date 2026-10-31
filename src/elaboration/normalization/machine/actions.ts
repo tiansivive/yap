@@ -45,7 +45,12 @@ export function* cont<A, T, R extends Eff.AnyAction, S>(scope: S, arity: number,
 type Delimit<S> = Eff.Action<"Machine.delimit", Delimiter<S>, undefined>;
 /** Marks a boundary a capture slices back to. */
 export function* delimit<S>(scope: S, identity?: string, handler?: unknown) {
-	return yield* Eff.ctl.action<Delimit<S>>("Machine.delimit", { type: "Delimiter", scope, ...(identity === undefined ? {} : { identity }), ...(handler === undefined ? {} : { handler }) });
+	return yield* Eff.ctl.action<Delimit<S>>("Machine.delimit", {
+		type: "Delimiter",
+		scope,
+		...(identity === undefined ? {} : { identity }),
+		...(handler === undefined ? {} : { handler }),
+	});
 }
 
 type Find<S, C> = Eff.Action<"Machine.find", (frame: StackFrame<S, C>) => boolean, StackFrame<S, C> | undefined>;

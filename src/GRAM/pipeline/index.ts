@@ -6,6 +6,7 @@ import type * as NF from "@yap/elaboration/normalization";
 
 import type { Graph } from "../graph";
 import { translate } from "../translate";
+import { localEffects } from "../effects";
 import type { Location } from "../provenance";
 import { descriptor as resolveLabels } from "../passes/resolve-labels";
 import { descriptor as hoist } from "../passes/hoist";
@@ -59,7 +60,7 @@ export const compile = (term: EB.Term, opts?: CompileOpts): E.Either<CompileErro
 		defaultPipeline,
 		E.mapLeft((errors): CompileError => ({ type: "PipelineConfig", errors })),
 		E.map(p => {
-			const g = translate(term, opts);
+			const g = translate(localEffects(term), opts);
 			return { graph: p.run(g), vocabulary: p.finalVocabulary };
 		}),
 		E.chain(({ graph, vocabulary }) =>

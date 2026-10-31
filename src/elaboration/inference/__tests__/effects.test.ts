@@ -1,22 +1,5 @@
 import { describe, expect, it } from "vitest";
-import * as EB from "@yap/elaboration";
-import * as NF from "@yap/elaboration/normalization";
-import * as M from "@yap/elaboration/shared/effects";
-import * as Errors from "@yap/elaboration/shared/errors";
-import * as Eff from "@yap/utils/effects";
-import { mkCtx, parseExpr, runEB, shown } from "./util";
-
-export const evaluate = (source: string) => {
-	const ctx = mkCtx();
-	const { answer, registry } = runEB(ctx, function* () {
-		const [term, type] = yield* EB.infer(parseExpr(source));
-		const { resolutions } = yield* EB.solve((yield* M.writer.peek()).constraints);
-		const core = yield* EB.Icit.instantiate(term, resolutions);
-		return { core, type, value: yield* NF.normalize(core) };
-	});
-	if (Eff.failed(answer)) throw new Error(shown(ctx, registry)(() => Errors.report(answer[Eff.ABORT])));
-	return answer;
-};
+import { evaluate } from "./util";
 
 describe("effect expression spike", () => {
 	it.each([
@@ -31,9 +14,21 @@ describe("effect expression spike", () => {
 		["{ foreign E: Effect Num Num; let op = \\x -> capture [E] x; return with E: (\\p k -> k p) in (op 1) + (op 2); }", 3],
 		["{ let later = reset ((capture (\\k -> \\u -> resume u)) + (capture (\\k -> 999))); return reset (100 + (later 5)); }", 1099],
 		["{ foreign E: Effect Num Num; let op = \\(r: { E: E }) -> \\x -> capture [r.E] x; return with E: (\\p k -> k p) in op { E: E } 7; }", 7],
-		["{ foreign E: Effect Num Num; let op = \\x -> capture [E] x; let run = \\(r: { E: E }) -> \\x -> { using r; return op x; }; return with E: (\\p k -> k p) in run { E: E } 7; }", 7],
-		["{ foreign Exn: (a: Type) => Effect String a; return with Exn: (\\p k -> 0) in 1 + (capture [Exn] \"oops\"); }", 0],
+		[
+			"{ foreign E: Effect Num Num; let op = \\x -> capture [E] x; let run = \\(r: { E: E }) -> \\x -> { using r; return op x; }; return with E: (\\p k -> k p) in run { E: E } 7; }",
+			7,
+		],
+		['{ foreign Exn: (a: Type) => Effect String a; return with Exn: (\\p k -> 0) in 1 + (capture [Exn] "oops"); }', 0],
 		["{ foreign E: (a: Type) => Effect a a; return with E: (\\p k -> k p) in capture [E] 41; }", 41],
+		[
+			"{ foreign Await: (a: Type) => Effect (Unit -> a) a; let await = \\p -> capture [Await] p; return with Await: (\\p k -> k (p !)) in (await (\\u -> 20)) + (await (\\u -> 22)); }",
+			42,
+		],
+		[
+			"{ foreign Yield: Effect Num Unit; let yield = \\x -> capture [Yield] x; return with Yield: (\\p k -> p + (k !)) in { yield 1; yield 2; return 0; }; }",
+			3,
+		],
+		["{ let shift0 = \\f -> capture (\\k -> f (\\v -> resume v)); return reset (10 + (shift0 (\\k -> k 1))); }", 11],
 	] as const)("evaluates %s", (source, value) => {
 		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value } });
 	});
@@ -47,11 +42,18 @@ describe("effect expression spike", () => {
 	});
 
 	it("checks result-polymorphic handlers for every result type", () => {
-		expect(() => evaluate('{ foreign Exn: (a: Type) => Effect String a; return with Exn: (\\p k -> k 42) in 1 + (capture [Exn] "oops"); }')).toThrow(/Cannot unify/);
+		expect(() => evaluate('{ foreign Exn: (a: Type) => Effect String a; return with Exn: (\\p k -> k 42) in 1 + (capture [Exn] "oops"); }')).toThrow(
+			/Cannot unify/,
+		);
 	});
 
 	it("allows lexical answer-type modification and checks branch agreement", () => {
 		expect(evaluate('reset (1 + (capture (\\k -> "hello")))').value).toMatchObject({ type: "Lit", value: { type: "String", value: "hello" } });
 		expect(() => evaluate('reset (match false | true -> 1 + (capture (\\k -> "hello")) | false -> 2)')).toThrow(/Cannot unify/);
+	});
+
+	it.fails("preserves anonymous evidence through a Control record", () => {
+		const source = "{ let Control = { shift0: \\f -> capture (\\k -> f (\\v -> resume v)) }; return reset (10 + (Control.shift0 (\\k -> k 1))); }";
+		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value: 11 } });
 	});
 });

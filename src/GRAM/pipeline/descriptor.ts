@@ -64,6 +64,8 @@ export const Initial: Vocabulary = {
 		Tags.MODAL,
 		Tags.RESET,
 		Tags.SHIFT,
+		Tags.CAPTURE,
+		Tags.DEEP_RESUME,
 	),
 	labels: labels(
 		Labels.BODY,
@@ -86,6 +88,8 @@ export const Initial: Vocabulary = {
 		Labels.PATTERN,
 		Labels.PAYLOAD,
 		Labels.FIELD,
+		Labels.IDENTITY,
+		Labels.HANDLER,
 	),
 };
 

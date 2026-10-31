@@ -37,8 +37,14 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 			const [tm, ty, us] = yield* EB.infer(term);
 			if (yield* EB.Control.carrier(ty)) {
 				const atom = yield* NF.normalize(tm);
-				if (viewed.value.type === "Lit" && viewed.value.value.type === "Atom" && viewed.value.value.value === "Type") return [tm, us];
-				if (EB.Control.name(atom) && EB.Control.name(atom) === EB.Control.name(type)) return [tm, us];
+
+				if (viewed.value.type === "Lit" && viewed.value.value.type === "Atom" && viewed.value.value.value === "Type") {
+					return [tm, us];
+				}
+
+				if (EB.Control.name(atom) && EB.Control.name(atom) === EB.Control.name(type)) {
+					return [tm, us];
+				}
 			}
 		}
 
@@ -50,12 +56,18 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 			.with([P._, NF.View.Sealed()], ([tm, { value }]) => structural(tm, value))
 			.otherwise(([tm]) => general(tm));
 
-		const plain = term.type === "lambda" && viewed.value.type === "Abs" && viewed.value.binder.type === "Pi" && viewed.value.binder.icit === "Explicit" && !ctx.controlHandler;
+		const plain =
+			term.type === "lambda" &&
+			viewed.value.type === "Abs" &&
+			viewed.value.binder.type === "Pi" &&
+			viewed.value.binder.icit === "Explicit" &&
+			!ctx.controlHandler;
 		const lexical = plain ? yield* EB.Control.lexical(ctx) : ctx;
-		const [checked, collected] = plain
-			? yield* M.reader.local(() => lexical, M.writer.listen(result))
-			: [yield* result, undefined] as const;
-		if (collected) yield* EB.Control.pure(collected.constraints);
+		const [checked, collected] = plain ? yield* M.reader.local(() => lexical, M.writer.listen(result)) : ([yield* result, undefined] as const);
+
+		if (collected) {
+			yield* EB.Control.pure(collected.constraints);
+		}
 		const [tm, us] = checked;
 		//yield* M.writer.tell({ types: [{ term: tm, nf: type, modalities: {} as any }] });
 

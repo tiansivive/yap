@@ -102,7 +102,7 @@ exports[`GRAM Bridge: Phase 4 — shift/reset > reset(1 + shift k -> k 10) — r
       let env8 = read k_param.__env
       let v9 = 10
       let idx10 = 0
-      jump r1(v9, env5, idx10)
+      jump r1(v9, env8, idx10)
     s4(kr11, env12):
       let env13 = update-immutable env12 { r0: kr11 }
       jump reset_exit2(kr11)
@@ -146,7 +146,7 @@ exports[`GRAM Bridge: Phase 4 — shift/reset > reset(shift k -> k 1 + k 2) — 
       let env9 = read k_param.__env
       let v10 = 1
       let idx11 = 0
-      jump r1(v10, env6, idx11)
+      jump r1(v10, env9, idx11)
     s4(kr12, env13):
       let env14 = update-immutable env13 { r0: kr12 }
       let v15 = 2
@@ -176,7 +176,7 @@ exports[`GRAM Bridge: Phase 4 — shift/reset > reset(shift k -> k 42) — singl
       let env8 = read k_param.__env
       let v9 = 42
       let idx10 = 0
-      jump r1(v9, env5, idx10)
+      jump r1(v9, env8, idx10)
     s4(kr11, env12):
       let env13 = update-immutable env12 { r0: kr11 }
       jump reset_exit2(kr11)

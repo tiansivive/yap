@@ -134,6 +134,8 @@ export const Labels = {
 export type Label = string;
 
 const STRUCTURAL: ReadonlySet<string> = new Set([
+	Labels.IDENTITY,
+	Labels.HANDLER,
 	Labels.BODY,
 	Labels.FUNC,
 	Labels.ARG,

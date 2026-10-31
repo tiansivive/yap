@@ -462,7 +462,8 @@ const reset = (t: EB.Term & { type: "Reset" }, st: State): [NodeId, State] => {
 	return [id, linkOptional(linkOptional(s5, id, Labels.IDENTITY, identity), id, Labels.HANDLER, handler)];
 };
 
-const linkOptional = (st: State, source: NodeId, label: string, target: NodeId | undefined): State => target === undefined ? st : link(st, source, label, target);
+const linkOptional = (st: State, source: NodeId, label: string, target: NodeId | undefined): State =>
+	target === undefined ? st : link(st, source, label, target);
 
 const shift = (t: EB.Term & { type: "Shift" }, st: State): [NodeId, State] => {
 	const [id, s1] = emit(st, Tags.SHIFT, {}, prov(t.id, st));

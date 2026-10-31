@@ -28,6 +28,21 @@ export const parseExpr = (src: string) => {
 	return data.results[0];
 };
 
+export const evaluate = (source: string) => {
+	const ctx = mkCtx();
+	const { answer, registry } = runEB(ctx, function* () {
+		const [term, type] = yield* EB.infer(parseExpr(source));
+		const { resolutions } = yield* EB.solve((yield* M.writer.peek()).constraints);
+		const core = yield* EB.Icit.instantiate(term, resolutions);
+		return { core, type, value: yield* NF.normalize(core) };
+	});
+
+	if (Eff.failed(answer)) {
+		throw new Error(shown(ctx, registry)(() => Errors.report(answer[Eff.ABORT])));
+	}
+	return answer;
+};
+
 export const mkCtx = (): EB.Context => Lib.defaultContext();
 
 const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
