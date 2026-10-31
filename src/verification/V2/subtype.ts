@@ -358,7 +358,7 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 const contains = function* (a: NF.Row, b: NF.Row): Verification<IVL.Formula> {
 	const onVal = function* (v: NF.Value, lbl: string, conj: Verification<IVL.Formula>): Verification<IVL.Formula> {
 		const field = Row.lookup(a, lbl);
-		if (field === undefined) {
+		if (!field) {
 			return yield* fail({ type: "MissingLabel", label: lbl, row: a });
 		}
 		const accumulated = yield* conj;

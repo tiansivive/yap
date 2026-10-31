@@ -622,7 +622,9 @@ const projectValue = function* (base: NF.Value, label: string): Evaluation<Machi
 
 const overwrite = <T, V>(row: R.Row<T, V>, label: string, value: T): R.Row<T, V> =>
 	R.Constructors.Row(
-		R.lookup(row, label) === undefined ? [...row.entries, { label, value }] : row.entries.map(entry => (entry.label === label ? { label, value } : entry)),
+		row.entries.some(entry => entry.label === label)
+			? row.entries.map(entry => (entry.label === label ? { label, value } : entry))
+			: [...row.entries, { label, value }],
 		row.tail,
 	);
 

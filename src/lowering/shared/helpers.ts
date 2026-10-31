@@ -15,6 +15,6 @@ export const notImplemented = (what: string): M.Lowering<void> =>
 	});
 
 export function extractFields(row: EB.Row): Array<{ label: string; term: EB.Term }> {
-	assert(row.tail === undefined, "Row variable in value position — type-level only");
+	assert(!row.tail, "Row variable in value position — type-level only");
 	return row.entries.map(({ label, value }) => ({ label, term: value }));
 }

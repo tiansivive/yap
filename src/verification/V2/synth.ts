@@ -310,7 +310,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 								return NF.Constructors.Modal(inner, modalities);
 							})
 							.with(NF.Patterns.Schema, function* ({ func, arg }) {
-								if (Row.lookup(arg.row, label) === undefined) {
+								if (!Row.lookup(arg.row, label)) {
 									const extended = Row.Constructors.Extension(label, payloadTy, arg.row);
 									return NF.Constructors.App(func, NF.Constructors.Row(extended), "Explicit");
 								}
@@ -322,7 +322,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 									throw new Error("Sigma binder annotation must be a Row");
 								}
 
-								if (Row.lookup(binder.annotation.row, label) === undefined) {
+								if (!Row.lookup(binder.annotation.row, label)) {
 									const extended = Row.Constructors.Extension(label, payloadTy, binder.annotation.row);
 									const ann = NF.Constructors.Row(extended);
 									const quotedPayload = yield* NF.quote(ctx.env.length, payloadTy);
@@ -344,7 +344,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 								}
 
 								const slots = binder.annotation.row;
-								if (Row.lookup(slots, label) !== undefined) {
+								if (Row.lookup(slots, label)) {
 									return value;
 								}
 

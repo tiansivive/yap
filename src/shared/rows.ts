@@ -21,7 +21,7 @@ export const Constructors = {
 	Empty: <T, V, X = unknown>(): Row<T, V, X> => ({ entries: [] }),
 	Variable: <T, V, X = unknown>(tail: V): Row<T, V, X> => ({ entries: [], tail }),
 	Extension: <T, V>(label: string, value: T, row: Row<T, V>): Row<T, V> => {
-		assert(lookup(row, label) === undefined, `Row labels are unique, but "${label}" is already present`);
+		assert(!row.entries.some(entry => entry.label === label), `Row labels are unique, but "${label}" is already present`);
 		return make([{ label, value }, ...row.entries], row.tail);
 	},
 	Row: <T, V, X = unknown>(entries: ReadonlyArray<Entry<T> & X>, tail?: V): Row<T, V, X> => {
