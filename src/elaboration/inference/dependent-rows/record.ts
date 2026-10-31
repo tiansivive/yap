@@ -1,4 +1,4 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
@@ -8,10 +8,6 @@ import * as Src from "@yap/src/index";
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as R from "@yap/shared/rows";
 import * as E from "fp-ts/lib/Either";
-
-import assert from "node:assert";
-
-import { Patterns } from "./patterns";
 
 export type Source = R.Row<Src.Term, Src.Variable>;
 
@@ -28,81 +24,73 @@ export const check = function* (source: Source, expected: NF.Row): M.Elaboration
 	const ctx = yield* M.reader.ask();
 
 	return yield* match([expected, source] as const)
-		.with([Patterns.Rows.Empty, Patterns.Rows.Empty], () =>
-			M.of<Inferred>({
-				term: R.Constructors.Empty<EB.Term, EB.Variable>(),
-				type: R.Constructors.Empty<NF.Value, NF.Variable>(),
-				usages: Q.noUsage(ctx.env.length),
-				references: {},
-			}),
-		)
-		.with([Patterns.Rows.Extension, Patterns.Rows.Extension], ([exp, src]) =>
-			E.match(
-				(): M.Elaboration<Inferred> => M.fail(Err.MissingLabel(exp.label, src)),
-				function* (field: Source): M.Elaboration<Inferred> {
-					assert(field.type === "extension", "A rewritten row begins with the requested label");
-
+		.with([R.Patterns.NonEmpty, R.Patterns.NonEmpty], ([exp, src]) => {
+			const [{ label, value: type }, ...remaining] = exp.entries;
+			return E.match(
+				(): M.Elaboration<Inferred> => M.fail(Err.MissingLabel(label, src)),
+				function* (field: { value: Src.Term; rest: Source }): M.Elaboration<Inferred> {
 					const [[term, usages], references, rest] = yield* scoped(
-						exp.label,
+						label,
 						function* () {
-							return [yield* EB.check(field.value, exp.value), exp.value] as const;
+							return [yield* EB.check(field.value, type), type] as const;
 						},
-						() => check(field.row, exp.row),
+						() => check(field.rest, R.Constructors.Row(remaining, exp.tail)),
 					);
 
 					return {
-						term: R.Constructors.Extension(exp.label, term, rest.term),
-						type: R.Constructors.Extension(exp.label, exp.value, rest.type),
+						term: R.Constructors.Extension(label, term, rest.term),
+						type: R.Constructors.Extension(label, type, rest.type),
 						usages: Q.add(usages, rest.usages),
-						references: { [exp.label]: references, ...rest.references },
+						references: { [label]: references, ...rest.references },
 					};
 				},
-			)(R.rewrite(src, exp.label)),
-		)
-		.with([Patterns.Rows.Variable, Patterns.Rows.Empty], [Patterns.Rows.Variable, Patterns.Rows.Extension], function* ([, src]) {
-			const inferred = yield* infer(src);
+			)(R.rewrite(src, label));
+		})
+		.with([R.Patterns.Tail, P._], function* () {
+			const inferred = yield* infer(source);
 			yield* M.constrain({ type: "assign", left: NF.Constructors.Row(inferred.type), right: NF.Constructors.Row(expected), lvl: ctx.env.length });
 
 			return inferred;
 		})
-		.with([Patterns.Rows.Empty, Patterns.Rows.Variable], () => M.fail(Err.Impossible("Dependent value row cannot have a tail variable")))
-		.with([Patterns.Rows.Extension, Patterns.Rows.Variable], ([exp, src]) => M.fail(Err.MissingLabel(exp.label, src)))
-		.with([Patterns.Rows.Empty, Patterns.Rows.Extension], ([, src]) => M.fail(Err.MissingLabel(src.label, expected)))
+		.with([R.Patterns.NonEmpty, P._], ([exp, src]) => M.fail(Err.MissingLabel(exp.entries[0].label, src)))
+		.with([R.Patterns.Empty, R.Patterns.NonEmpty], ([exp, src]) => M.fail(Err.MissingLabel(src.entries[0].label, exp)))
+		.with([R.Patterns.Empty, R.Patterns.Tail], () => M.fail(Err.Impossible("Dependent value row cannot have a tail variable")))
+		.with([R.Patterns.Empty, R.Patterns.Empty], () => M.of(empty(ctx.env.length)))
 		.otherwise(() => M.fail(Err.Impossible("Dependent checking row reached incompatible shapes")));
 };
 
 export const infer = function* (source: Source): M.Elaboration<Inferred> {
 	return yield* match(source)
-		.with(Patterns.Rows.Extension, function* (src) {
+		.with(R.Patterns.NonEmpty, function* ({ entries: [{ label, value }, ...remaining] }) {
 			const [[term, type, usages], references, rest] = yield* scoped(
-				src.label,
+				label,
 				function* () {
-					const ast = yield* EB.infer(src.value);
+					const ast = yield* EB.infer(value);
 					return [ast, ast[1]] as const;
 				},
-				() => infer(src.row),
+				() => infer(R.Constructors.Row(remaining, source.tail)),
 			);
 
 			return {
-				term: R.Constructors.Extension(src.label, term, rest.term),
-				type: R.Constructors.Extension(src.label, type, rest.type),
+				term: R.Constructors.Extension(label, term, rest.term),
+				type: R.Constructors.Extension(label, type, rest.type),
 				usages: Q.add(usages, rest.usages),
-				references: { [src.label]: references, ...rest.references },
+				references: { [label]: references, ...rest.references },
 			} satisfies Inferred;
 		})
-		.with(Patterns.Rows.Variable, () => M.fail(Err.Impossible("Dependent value row cannot have a tail variable")))
-		.with(Patterns.Rows.Empty, function* () {
+		.with({ tail: P.nonNullable }, () => M.fail(Err.Impossible("Dependent value row cannot have a tail variable")))
+		.otherwise(function* () {
 			const ctx = yield* M.reader.ask();
-
-			return {
-				term: R.Constructors.Empty<EB.Term, EB.Variable>(),
-				type: R.Constructors.Empty<NF.Value, NF.Variable>(),
-				usages: Q.noUsage(ctx.env.length),
-				references: {},
-			} satisfies Inferred;
-		})
-		.exhaustive();
+			return empty(ctx.env.length);
+		});
 };
+
+const empty = (lvl: number): Inferred => ({
+	term: R.Constructors.Empty<EB.Term, EB.Variable>(),
+	type: R.Constructors.Empty<NF.Value, NF.Variable>(),
+	usages: Q.noUsage(lvl),
+	references: {},
+});
 
 const scoped = function* <A extends readonly [EB.Term, ...unknown[]], B>(
 	label: string,

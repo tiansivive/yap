@@ -46,13 +46,12 @@ export const rowDocs = function* <T, V>(
 	term: (value: T) => Display<PP.Doc>,
 	variable: (v: V) => Display<PP.Doc>,
 ): Display<R.Row<PP.Doc, PP.Doc>> {
-	if (row.type === "empty") {
-		return row;
-	}
-	if (row.type === "variable") {
-		return R.Constructors.Variable(yield* variable(row.variable));
-	}
-	return R.Constructors.Extension(row.label, yield* term(row.value), yield* rowDocs(row.row, term, variable));
+	const entries = yield* Eff.traverse(row.entries, function* ({ label, value }) {
+		return { label, value: yield* term(value) };
+	});
+	const tail = row.tail === undefined ? undefined : yield* variable(row.tail);
+
+	return R.Constructors.Row(entries, tail);
 };
 
 const identityRow = { term: (d: PP.Doc) => d, var: (v: PP.Doc) => v };

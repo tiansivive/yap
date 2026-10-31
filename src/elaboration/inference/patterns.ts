@@ -133,35 +133,28 @@ type RowResult = [Row, NF.Row, Q.Usages, Binder[]];
 const elaborate = function* (r: R.Row<Src.Pattern, Src.Variable>): M.Elaboration<RowResult> {
 	const ctx = yield* M.reader.ask();
 
-	const rr: RowResult = yield* match(r)
-		.with({ type: "empty" }, function* (_r) {
-			const meta = yield* EB.freshMeta(ctx.env.length, NF.Row);
-			const fresh = `$row_${meta.val}`;
-			const binder: Binder = [fresh, NF.Constructors.Var(meta)];
-			const zeros = Q.noUsage(ctx.env.length);
-			// If the pattern row is empty, we create a fresh row variable so we can match against wider rows
-			// The user never sees this variable, but it allows unification to work properly
-			return [R.Constructors.Variable(fresh), R.Constructors.Variable(meta), zeros, [binder]] satisfies RowResult;
-		})
-		.with({ type: "variable" }, function* ({ variable }) {
-			const meta = yield* EB.freshMeta(ctx.env.length, NF.Row);
-			const zero = Q.noUsage(ctx.env.length);
-			const binder: Binder = [variable.value, NF.Constructors.Var(meta) /*zero*/];
-			return [R.Constructors.Variable(variable.value), R.Constructors.Variable(meta), zero, [binder]] satisfies RowResult;
-		})
-		.with({ type: "extension" }, function* ({ label, value, row }) {
-			const key = capitalize(value.type) as Capitalize<typeof value.type>;
-			const val = yield* infer[key](value as any);
-			const r = yield* elaborate(row);
-			const q = Q.add(val[2], r[2]);
-			const ty = NF.Constructors.Extension(label, val[1], r[1]);
-			const tm = EB.Constructors.Patterns.Extension(label, val[0], r[0]);
-			const binders = [val[3], r[3]].flat();
-			return [tm, ty, q, binders] satisfies RowResult;
-		})
-		.otherwise(_ => {
-			throw new Error("Expected Row Type");
-		});
+	const fields = yield* M.traverse(r.entries, function* ({ label, value }) {
+		const key = capitalize(value.type) as Capitalize<typeof value.type>;
+		const [pattern, type, usages, binders] = yield* infer[key](value as any);
+		return { label, pattern, type, usages, binders };
+	});
 
-	return rr;
+	// A pattern row without a tail gets a fresh one so it can match against wider rows.
+	// The user never sees this variable, but it allows unification to work properly
+	const meta = yield* EB.freshMeta(ctx.env.length, NF.Row);
+	const tail = r.tail?.value ?? `$row_${meta.val}`;
+	const binder: Binder = [tail, NF.Constructors.Var(meta)];
+
+	return [
+		R.Constructors.Row(
+			fields.map(({ label, pattern }) => ({ label, value: pattern })),
+			tail,
+		),
+		R.Constructors.Row(
+			fields.map(({ label, type }) => ({ label, value: type })),
+			meta,
+		),
+		fields.reduce((acc, { usages }) => Q.add(usages, acc), Q.noUsage(ctx.env.length)),
+		[...fields.flatMap(({ binders }) => binders), binder],
+	] satisfies RowResult;
 };

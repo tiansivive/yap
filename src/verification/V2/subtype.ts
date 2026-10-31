@@ -4,8 +4,6 @@ import * as NF from "@yap/elaboration/normalization";
 import * as EB from "@yap/elaboration";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as Row from "@yap/shared/rows";
-import * as E from "fp-ts/Either";
-import * as F from "fp-ts/function";
 import * as Q from "@yap/shared/modalities/multiplicity";
 
 import type { IVL } from "../solver/ivl/types";
@@ -359,21 +357,13 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 
 const contains = function* (a: NF.Row, b: NF.Row): Verification<IVL.Formula> {
 	const onVal = function* (v: NF.Value, lbl: string, conj: Verification<IVL.Formula>): Verification<IVL.Formula> {
-		const rewritten = Row.rewrite(a, lbl, () => E.left({ tag: "Other", message: `Label ${lbl} not found` }));
-		return yield* F.pipe(
-			rewritten,
-			E.fold(
-				() => fail({ type: "MissingLabel", label: lbl, row: a }),
-				function* (rewriteResult) {
-					if (rewriteResult.type !== "extension") {
-						throw new Error("Row rewrite should yield extension");
-					}
-					const accumulated = yield* conj;
-					const vc = yield* subtype(v, rewriteResult.value);
-					return Build.and(accumulated, vc);
-				},
-			),
-		);
+		const field = Row.lookup(a, lbl);
+		if (!field) {
+			return yield* fail({ type: "MissingLabel", label: lbl, row: a });
+		}
+		const accumulated = yield* conj;
+		const vc = yield* subtype(v, field);
+		return Build.and(accumulated, vc);
 	};
 	return yield* withRowLabels(
 		a,

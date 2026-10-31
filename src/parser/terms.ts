@@ -1,7 +1,7 @@
 import { Implicitness } from "@yap/shared/implicitness";
 import { Literal } from "@yap/shared/literals";
 import * as Q from "@yap/shared/modalities/multiplicity";
-import { WithLocation } from "@yap/shared/provenance";
+import { Location, WithLocation } from "@yap/shared/provenance";
 import * as R from "@yap/shared/rows";
 
 export type Term = WithLocation<Bare>;
@@ -80,7 +80,7 @@ export const Patterns = {
 		NuLabel: { type: "nu-label" },
 	},
 } as const;
-export type Row = WithLocation<R.Row<Term, Variable>>;
+export type Row = WithLocation<R.Row<Term, Variable, { location: Location }>>;
 
 export type Module = { type: "module"; imports: Import[]; exports: Export; content: Script };
 export type Script = { type: "script"; script: Statement[] };

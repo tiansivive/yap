@@ -13,36 +13,34 @@ export const noCapture = (ctx: EB.Context): EB.Context => ({ ...ctx, env: [] });
 type LabelBindings = { labels: EB.Context["labels"]; sigma: EB.Context["sigma"] };
 
 export const collectSigmaBindings = function* (r1: NF.Row, r2: NF.Row): Verification<LabelBindings> {
-	return yield* match<[NF.Row, NF.Row], Verification<LabelBindings>>([r1, r2])
-		.with([{ type: "empty" }, { type: "empty" }], function* () {
+	return yield* match<readonly [NF.Row, NF.Row], Verification<LabelBindings>>([r1, r2])
+		.with([R.Patterns.Empty, R.Patterns.Empty], [R.Patterns.Empty, R.Patterns.Tail], function* () {
 			return { labels: {}, sigma: {} };
 		})
-		.with([{ type: "empty" }, { type: "variable" }], function* () {
-			return { labels: {}, sigma: {} };
-		})
-		.with([{ type: "extension" }, { type: "extension" }], function* ([{ label, value, row }, r]) {
-			const rewritten = R.rewrite(r, label);
-			if (E.isLeft(rewritten)) {
-				return yield* fail(Err.MissingLabel(label, r));
-			}
-			if (rewritten.right.type !== "extension") {
-				return yield* fail({ type: "Impossible", message: "Row rewrite must yield extension" });
-			}
-			const acc = yield* collectSigmaBindings(row, rewritten.right.row);
-			return {
-				labels: { ...acc.labels, [label]: rewritten.right.value },
-				sigma: { ...acc.sigma, [label]: { value } },
-			};
-		})
+		.with(
+			[R.Patterns.NonEmpty, R.Patterns.NonEmpty],
+			function* ([
+				{
+					entries: [{ label, value }, ...remaining],
+				},
+			]) {
+				const rewritten = R.rewrite(r2, label);
+				if (E.isLeft(rewritten)) {
+					return yield* fail(Err.MissingLabel(label, r2));
+				}
+				const acc = yield* collectSigmaBindings(R.Constructors.Row(remaining, r1.tail), rewritten.right.rest);
+				return {
+					labels: { ...acc.labels, [label]: rewritten.right.value },
+					sigma: { ...acc.sigma, [label]: { value } },
+				};
+			},
+		)
 		.otherwise(function* () {
 			return yield* fail({ type: "Impossible", message: "Schema verification: incompatible rows" });
 		});
 };
 
-const rowFieldTypes = (row: NF.Row): EB.Context["labels"] =>
-	match(row)
-		.with({ type: "extension" }, ({ label, value, row }) => ({ [label]: value, ...rowFieldTypes(row) }))
-		.otherwise(() => ({}));
+const rowFieldTypes = (row: NF.Row): EB.Context["labels"] => Object.fromEntries(row.entries.map(({ label, value }) => [label, value]));
 
 /**
  * Establish the sibling-label scope for a record/sigma row before descending into its subterms.

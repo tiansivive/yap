@@ -143,26 +143,26 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 				})
 				.with([EB.CtorPatterns.Struct, NF.Patterns.Schema], function* ([term, type]) {
 					const traverse = function* (r1: EB.Row, r2: NF.Row): Verification<VerificationArtefacts> {
-						return yield* match<[EB.Row, NF.Row], Verification<VerificationArtefacts>>([r1, r2])
-							.with([{ type: "empty" }, { type: "empty" }], function* () {
+						return yield* match<readonly [EB.Row, NF.Row], Verification<VerificationArtefacts>>([r1, r2])
+							.with([Row.Patterns.Empty, Row.Patterns.Empty], [Row.Patterns.Empty, Row.Patterns.Tail], function* () {
 								return { vc: Build.true_() } satisfies VerificationArtefacts;
 							})
-							.with([{ type: "empty" }, { type: "variable" }], function* () {
-								return { vc: Build.true_() } satisfies VerificationArtefacts;
-							})
-							.with([{ type: "extension" }, { type: "extension" }], function* ([{ label, value, row }, r]) {
-								const rewritten = Row.rewrite(r, label);
-								if (E.isLeft(rewritten)) {
-									return yield* fail({ type: "MissingLabel", label, row: r });
-								}
-								if (rewritten.right.type !== "extension") {
-									return yield* fail({ type: "Impossible", message: "Row rewrite should yield extension" });
-								}
-								const { value: rv, row: rr } = rewritten.right;
-								const artefacts = yield* check(value, rv);
-								const rest = yield* traverse(row, rr);
-								return { vc: Build.and(artefacts.vc, rest.vc) } satisfies VerificationArtefacts;
-							})
+							.with(
+								[Row.Patterns.NonEmpty, Row.Patterns.NonEmpty],
+								function* ([
+									{
+										entries: [{ label, value }, ...remaining],
+									},
+								]) {
+									const rewritten = Row.rewrite(r2, label);
+									if (E.isLeft(rewritten)) {
+										return yield* fail({ type: "MissingLabel", label, row: r2 });
+									}
+									const artefacts = yield* check(value, rewritten.right.value);
+									const rest = yield* traverse(Row.Constructors.Row(remaining, r1.tail), rewritten.right.rest);
+									return { vc: Build.and(artefacts.vc, rest.vc) } satisfies VerificationArtefacts;
+								},
+							)
 							.otherwise(function* () {
 								return yield* fail({ type: "Impossible", message: "Schema verification: incompatible rows" });
 							});

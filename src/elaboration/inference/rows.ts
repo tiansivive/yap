@@ -7,7 +7,7 @@ import * as Src from "@yap/src/index";
 
 import * as R from "@yap/shared/rows";
 
-import { entries, setProp } from "@yap/utils";
+import { entries } from "@yap/utils";
 
 type TRow = Extract<Src.Term, { type: "row" }>;
 
@@ -81,16 +81,9 @@ export const collect = function* (row: Src.Row): M.Elaboration<Collected> {
 };
 
 export const extract = function* (row: Src.Row, lvl: number): M.Elaboration<Record<string, NF.Value>> {
-	if (row.type === "empty") {
-		return {};
-	}
+	const types = yield* M.traverse(row.entries, function* ({ label }) {
+		return [label, NF.Constructors.Flex(yield* EB.freshMeta(lvl, NF.Type))] as const;
+	});
 
-	if (row.type === "variable") {
-		return {};
-	}
-
-	const type = NF.Constructors.Flex(yield* EB.freshMeta(lvl, NF.Type));
-
-	const rest = yield* extract({ ...row.row, location: row.location }, lvl);
-	return setProp(rest, row.label, type);
+	return Object.fromEntries(types);
 };

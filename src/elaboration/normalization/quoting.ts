@@ -7,23 +7,15 @@ import * as R from "@yap/shared/rows";
 import { display } from "./syntax/pretty";
 import { Do, group, result, type Evaluation, type Machine } from "./effects";
 import { schedule } from "./evaluation.v2";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import assert from "node:assert";
 
 const symbolicRow = (annotation: NF.Value): NF.Row => {
-	const go = (r: NF.Row): NF.Row =>
-		match(r)
-			.with({ type: "empty" }, (): NF.Row => ({ type: "empty" }))
-			.with(
-				{ type: "extension" },
-				({ label, row }): NF.Row =>
-					NF.Constructors.Extension(label, NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Label", name: label })), go(row)),
-			)
-			.with({ type: "variable" }, (v): NF.Row => v)
-			.exhaustive();
-
 	assert(annotation.type === "Row", "Sigma annotation should be a Row");
-	return go(annotation.row);
+	return R.Constructors.Row(
+		annotation.row.entries.map(({ label }) => ({ label, value: NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Label", name: label })) })),
+		annotation.row.tail,
+	);
 };
 
 /**
@@ -188,26 +180,24 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 }
 
 const quoteRow = function* (lvl: number, row: NF.Row, unfold: NF.Unfolding): Evaluation<Machine<EB.Row>> {
-	return yield* match(row)
-		.with({ type: "empty" }, function* () {
-			return yield* result<EB.Row>({ type: "empty" });
-		})
-		.with({ type: "extension" }, ({ label, value, row: rest }) =>
-			Do.let("quoted", quote(lvl, value, unfold))
-				.let("tail", quoteRow(lvl, rest, unfold))
-				.in(({ quoted, tail }) => result(EB.Constructors.Extension(label, quoted, tail))),
-		)
-		.with({ type: "variable" }, function* ({ variable }) {
-			const { local } = yield* M.reader.ask();
-			const v = match(variable)
-				.with({ type: "Bound" }, (b): EB.Variable => ({ type: "Bound", index: lvl - b.lvl - 1 }))
-				.with({ type: "DepLabel" }, (b): EB.Variable => ({ type: "DepLabel", name: b.name, index: lvl - b.lvl - 1, annotation: b.annotation }))
-				.with({ type: "NuLabel" }, (b): EB.Variable => ({ type: "NuLabel", name: b.name, index: local.length - b.lvl - 1, annotation: b.annotation }))
-				.otherwise(b => b);
+	const { local } = yield* M.reader.ask();
+	const tail = match(row.tail)
+		.with(P.nullish, () => undefined)
+		.with({ type: "Bound" }, (b): EB.Variable => ({ type: "Bound", index: lvl - b.lvl - 1 }))
+		.with({ type: "DepLabel" }, (b): EB.Variable => ({ type: "DepLabel", name: b.name, index: lvl - b.lvl - 1, annotation: b.annotation }))
+		.with({ type: "NuLabel" }, (b): EB.Variable => ({ type: "NuLabel", name: b.name, index: local.length - b.lvl - 1, annotation: b.annotation }))
+		.otherwise(b => b);
 
-			return yield* result<EB.Row>({ type: "variable", variable: v });
-		})
-		.exhaustive();
+	return yield* group(
+		row.entries.map(({ value }) => quote(lvl, value, unfold)),
+		(quoted: EB.Term[]) =>
+			result(
+				R.Constructors.Row<EB.Term, EB.Variable>(
+					row.entries.map(({ label }, i) => ({ label, value: quoted[i] })),
+					tail,
+				),
+			),
+	);
 };
 
 export function* closeVal(value: NF.Value): Evaluation<Machine<NF.Closure>> {

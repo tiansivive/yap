@@ -109,6 +109,135 @@ with:
 }
 `;
 
+exports[`Unification (V2) > Row Unification > Label decomposition > a closed left row against an open row missing one of its labels 1`] = `
+{
+  "minted": [
+    "?1 : Type",
+    "?2 : ?1",
+    "?3 : Row",
+  ],
+  "substitution": "?2 |=> Num
+?3 |=> []
+?100 |=> [ a: Num | [] ]",
+}
+`;
+
+exports[`Unification (V2) > Row Unification > Label decomposition > a label the closed left row lacks 1`] = `
+{
+  "message": "Missing Label: b
+
+Trace:
+
+While unifying:
+	
+	[]
+with:
+	[ b: String ]
+
+--------------------------------------------------------------------------------------------
+
+
+While unifying:
+	
+	[ a: Num ]
+with:
+	[ a: Num, b: String ]
+
+--------------------------------------------------------------------------------------------
+
+
+While unifying:
+	
+	[ a: Num ]
+with:
+	[ a: Num, b: String ]
+",
+  "type": "MissingLabel",
+}
+`;
+
+exports[`Unification (V2) > Row Unification > Label decomposition > a label the closed right row lacks 1`] = `
+{
+  "message": "Missing Label: b
+
+Trace:
+
+While unifying:
+	
+	[ b: String ]
+with:
+	[]
+
+--------------------------------------------------------------------------------------------
+
+
+While unifying:
+	
+	[ a: Num, b: String ]
+with:
+	[ a: Num ]
+
+--------------------------------------------------------------------------------------------
+
+
+While unifying:
+	
+	[ a: Num, b: String ]
+with:
+	[ a: Num ]
+",
+  "type": "MissingLabel",
+}
+`;
+
+exports[`Unification (V2) > Row Unification > Label decomposition > a right tail already solved earlier in the same unification 1`] = `
+{
+  "minted": [],
+  "substitution": "?100 |=> [ c: Bool ]",
+}
+`;
+
+exports[`Unification (V2) > Row Unification > Label decomposition > an open left row against a closed row with an extra label 1`] = `
+{
+  "minted": [],
+  "substitution": "?100 |=> [ b: String ]",
+}
+`;
+
+exports[`Unification (V2) > Row Unification > Label decomposition > closed rows with the same labels in a different order 1`] = `
+{
+  "minted": [],
+  "substitution": "empty",
+}
+`;
+
+exports[`Unification (V2) > Row Unification > Label decomposition > closed rows with the same labels in the same order 1`] = `
+{
+  "minted": [],
+  "substitution": "empty",
+}
+`;
+
+exports[`Unification (V2) > Row Unification > Label decomposition > two open rows with a shared label and disjoint leftovers 1`] = `
+{
+  "minted": [
+    "?1 : Type",
+    "?2 : ?1",
+    "?3 : Row",
+  ],
+  "substitution": "?2 |=> Num
+?100 |=> [ c: Bool | ?3 ]
+?101 |=> [ a: Num | ?3 ]",
+}
+`;
+
+exports[`Unification (V2) > Row Unification > Label decomposition > two open rows with the same tail 1`] = `
+{
+  "minted": [],
+  "substitution": "empty",
+}
+`;
+
 exports[`Unification (V2) > Row Unification > Sigma types unification > fails on Sigma row annotation mismatch 1`] = `
 {
   "message": "Missing Label: x

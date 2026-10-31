@@ -159,6 +159,180 @@ describe("Unification (V2)", () => {
 			expect(printed).toContain("?101 |=> [ x: 42 | ?");
 		});
 
+		/*
+		 * These snapshots pin the substitution Leijen's label decomposition produces, minted metas
+		 * included. Changing how rows are stored must leave them as they are.
+		 */
+		describe("Label decomposition", () => {
+			const Num = NF.Constructors.Lit(Lit.Atom("Num"));
+			const Str = NF.Constructors.Lit(Lit.Atom("String"));
+			const Bool = NF.Constructors.Lit(Lit.Atom("Bool"));
+
+			const row = (fields: ReadonlyArray<readonly [string, NF.Value]>, tail?: number): NF.Value =>
+				NF.Constructors.Row(
+					fields.reduceRight<NF.Row>(
+						(rest, [label, value]) => R.Constructors.Extension(label, value, rest),
+						tail === undefined ? R.Constructors.Empty() : R.Constructors.Variable({ type: "Meta", val: tail, lvl: 0 }),
+					),
+				);
+
+			/* The substitution display resolves nested metas, so the minted list keeps field and kind metas visible. */
+			const solved = (out: ReturnType<typeof runUnify>, declared: readonly number[] = []) => {
+				expectRight(out);
+				const minted = Object.values(out.registry).filter(entry => !declared.includes(entry.meta.val));
+				return {
+					substitution: showSub(out),
+					minted: minted.map(entry => `?${entry.meta.val} : ${shown(out.ctx, out.registry)(() => NF.display(entry.annotation))}`),
+				};
+			};
+
+			const refused = (out: ReturnType<typeof runUnify>) => {
+				const err = expectLeft(out);
+				return { type: err.type, message: showErr(out, err) };
+			};
+
+			it("closed rows with the same labels in the same order", () => {
+				const out = runUnify(
+					row([
+						["a", Num],
+						["b", Str],
+					]),
+					row([
+						["a", Num],
+						["b", Str],
+					]),
+				);
+				expect(solved(out)).toMatchSnapshot();
+			});
+
+			it("closed rows with the same labels in a different order", () => {
+				const out = runUnify(
+					row([
+						["a", Num],
+						["b", Str],
+					]),
+					row([
+						["b", Str],
+						["a", Num],
+					]),
+				);
+				expect(solved(out)).toMatchSnapshot();
+			});
+
+			it("a label the closed right row lacks", () => {
+				const out = runUnify(
+					row([
+						["a", Num],
+						["b", Str],
+					]),
+					row([["a", Num]]),
+				);
+				expect(refused(out)).toMatchSnapshot();
+			});
+
+			it("a label the closed left row lacks", () => {
+				const out = runUnify(
+					row([["a", Num]]),
+					row([
+						["a", Num],
+						["b", Str],
+					]),
+				);
+				expect(refused(out)).toMatchSnapshot();
+			});
+
+			it("an open left row against a closed row with an extra label", () => {
+				const out = runUnify(
+					row([["a", Num]], 100),
+					row([
+						["a", Num],
+						["b", Str],
+					]),
+					[100],
+				);
+				expect(solved(out, [100])).toMatchSnapshot();
+			});
+
+			it("a closed left row against an open row missing one of its labels", () => {
+				const out = runUnify(
+					row([
+						["a", Num],
+						["b", Str],
+					]),
+					row([["b", Str]], 100),
+					[100],
+				);
+				expect(solved(out, [100])).toMatchSnapshot();
+			});
+
+			it("two open rows with a shared label and disjoint leftovers", () => {
+				const out = runUnify(
+					row(
+						[
+							["a", Num],
+							["b", Str],
+						],
+						100,
+					),
+					row(
+						[
+							["b", Str],
+							["c", Bool],
+						],
+						101,
+					),
+					[100, 101],
+				);
+				expect(solved(out, [100, 101])).toMatchSnapshot();
+			});
+
+			it("two open rows with the same tail", () => {
+				const out = runUnify(
+					row(
+						[
+							["a", Num],
+							["b", Str],
+						],
+						100,
+					),
+					row(
+						[
+							["b", Str],
+							["a", Num],
+						],
+						100,
+					),
+					[100],
+				);
+				expect(solved(out, [100])).toMatchSnapshot();
+			});
+
+			it("a right tail already solved earlier in the same unification", () => {
+				const out = runUnify(
+					row([
+						["first", row([], 100)],
+						[
+							"second",
+							row([
+								["c", Bool],
+								["d", Num],
+							]),
+						],
+					]),
+					row([
+						["first", row([["c", Bool]])],
+						["second", row([["d", Num]], 100)],
+					]),
+					[100],
+				);
+				expect(solved(out, [100])).toMatchSnapshot();
+			});
+
+			it("a tail that occurs in the row it would solve to", () => {
+				expect(() => runUnify(row([], 100), row([["a", Num]], 100), [100])).toThrow("Occurs check failed");
+			});
+		});
+
 		describe("Sigma types unification", () => {
 			it("unifies identical Sigmas with empty row", () => {
 				const ctx = Lib.defaultContext();

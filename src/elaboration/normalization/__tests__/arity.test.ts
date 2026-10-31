@@ -3,6 +3,7 @@ import { describe, it, expect } from "vitest";
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as Lit from "@yap/shared/literals";
+import * as R from "@yap/shared/rows";
 import { mkCtx, runNF } from "../../inference/__tests__/util";
 
 const Num = NF.Constructors.Lit({ type: "Atom", value: "Num" });
@@ -25,7 +26,7 @@ describe("NF.arity", () => {
 	});
 
 	it("returns 0 for Schema type", () => {
-		const schema = NF.Constructors.Schema({ type: "empty" });
+		const schema = NF.Constructors.Schema(R.Constructors.Empty());
 		expect(runNF(mkCtx(), () => NF.arity(schema))).toBe(0);
 	});
 
@@ -54,7 +55,7 @@ describe("NF.arity", () => {
 	});
 
 	it("returns 0 for Variant type", () => {
-		const variant = NF.Constructors.Variant({ type: "extension", label: "Some", value: Num, row: { type: "empty" } });
+		const variant = NF.Constructors.Variant(R.Constructors.Row([{ label: "Some", value: Num }]));
 		expect(runNF(mkCtx(), () => NF.arity(variant))).toBe(0);
 	});
 });
@@ -65,11 +66,11 @@ describe("NF.inert", () => {
 	});
 
 	it("Schema is inert", () => {
-		expect(runNF(mkCtx(), () => NF.inert(NF.Constructors.Schema({ type: "empty" })))).toBe(true);
+		expect(runNF(mkCtx(), () => NF.inert(NF.Constructors.Schema(R.Constructors.Empty())))).toBe(true);
 	});
 
 	it("Variant is inert", () => {
-		expect(runNF(mkCtx(), () => NF.inert(NF.Constructors.Variant({ type: "empty" })))).toBe(true);
+		expect(runNF(mkCtx(), () => NF.inert(NF.Constructors.Variant(R.Constructors.Empty())))).toBe(true);
 	});
 
 	it("Pi is NOT inert", () => {

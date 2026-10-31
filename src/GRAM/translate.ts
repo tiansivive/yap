@@ -3,8 +3,9 @@ import * as Eff from "@yap/utils/effects";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "@yap/elaboration/normalization";
+import * as R from "@yap/shared/rows";
 import type { Row } from "@yap/shared/rows";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import type { Subst } from "@yap/elaboration/unification/substitution";
 
 import type { Graph, NodeId, Payload } from "./graph";
@@ -269,32 +270,32 @@ const structValue = (r: Row<EB.Term, EB.Variable>, tid: number, st: State): [Nod
 	return fields(r, id, tid, s1);
 };
 
-const fields = (r: Row<EB.Term, EB.Variable>, parent: NodeId, tid: number, st: State): [NodeId, State] =>
-	match(r)
-		.with({ type: "extension" }, r => {
-			const [child, s1] = walk(r.value, st);
-			return fields(r.row, parent, tid, link(s1, parent, Labels.FIELD, child, { label: r.label }));
-		})
-		.with({ type: "empty" }, (): [NodeId, State] => [parent, st])
-		.with({ type: "variable" }, (r): [NodeId, State] => {
-			const [tail, s1] = variable(r.variable, tid, st);
+const fields = (r: Row<EB.Term, EB.Variable>, parent: NodeId, tid: number, st: State): [NodeId, State] => {
+	const linked = r.entries.reduce((s, { label, value }) => {
+		const [child, s1] = walk(value, s);
+		return link(s1, parent, Labels.FIELD, child, { label });
+	}, st);
+
+	return match(r.tail)
+		.with(P.nonNullable, (v): [NodeId, State] => {
+			const [tail, s1] = variable(v, tid, linked);
 			return [parent, link(s1, parent, Labels.TAIL, tail)];
 		})
-		.exhaustive();
+		.otherwise((): [NodeId, State] => [parent, linked]);
+};
 
 // ── Rows ──
 
 const row = (r: Row<EB.Term, EB.Variable>, tid: number, st: State): [NodeId, State] =>
 	match(r)
-		.with({ type: "empty" }, () => emit(st, Tags.ROW_EMPTY, {}, prov(tid, st)))
-		.with({ type: "extension" }, r => {
-			const [id, s1] = emit(st, Tags.ROW_EXT, { label: r.label }, prov(tid, st));
-			const [val, s2] = walk(r.value, s1);
-			const [rest, s3] = row(r.row, tid, link(s2, id, Labels.VALUE, val));
+		.with(R.Patterns.NonEmpty, ({ entries: [{ label, value }, ...remaining] }) => {
+			const [id, s1] = emit(st, Tags.ROW_EXT, { label }, prov(tid, st));
+			const [val, s2] = walk(value, s1);
+			const [rest, s3] = row(R.Constructors.Row(remaining, r.tail), tid, link(s2, id, Labels.VALUE, val));
 			return [id, link(s3, id, Labels.REST, rest)] as [NodeId, State];
 		})
-		.with({ type: "variable" }, r => variable(r.variable, tid, st))
-		.exhaustive();
+		.with(R.Patterns.Tail, ({ tail }) => variable(tail, tid, st))
+		.otherwise(() => emit(st, Tags.ROW_EMPTY, {}, prov(tid, st)));
 
 // ── Structural ──
 
@@ -316,10 +317,10 @@ const inj = (t: EB.Term & { type: "Inj" }, st: State): [NodeId, State] => {
 const walkPattern = (pat: EB.Pattern, tid: number, st: State): [NodeId, State] =>
 	match(pat)
 		.with({ type: "Variant" }, p => {
-			const ext = p.row as Row<EB.Pattern, string> & { type: "extension" };
-			const [id, s1] = emit(st, Tags.PAT_VARIANT, { label: ext.label }, prov(tid, st));
-			const [payload, s2] = walkPattern(ext.value, tid, s1);
-			const [, s3] = walkPatternRow(ext.row, id, tid, link(s2, id, Labels.PAYLOAD, payload));
+			const [{ label, value }, ...remaining] = p.row.entries;
+			const [id, s1] = emit(st, Tags.PAT_VARIANT, { label }, prov(tid, st));
+			const [payload, s2] = walkPattern(value, tid, s1);
+			const [, s3] = walkPatternRow(R.Constructors.Row(remaining, p.row.tail), id, tid, link(s2, id, Labels.PAYLOAD, payload));
 			return [id, s3] as [NodeId, State];
 		})
 		.with({ type: "Struct" }, p => {
@@ -352,19 +353,19 @@ const walkPattern = (pat: EB.Pattern, tid: number, st: State): [NodeId, State] =
 		})
 		.exhaustive();
 
-const walkPatternRow = (r: Row<EB.Pattern, string>, parentId: NodeId, tid: number, st: State): [NodeId, State] =>
-	match(r)
-		.with({ type: "extension" }, r => {
-			const [child, s1] = walkPattern(r.value, tid, st);
-			const s2 = link(s1, parentId, Labels.FIELD, child, { label: r.label });
-			return walkPatternRow(r.row, parentId, tid, s2);
+const walkPatternRow = (r: Row<EB.Pattern, string>, parentId: NodeId, tid: number, st: State): [NodeId, State] => {
+	const linked = r.entries.reduce((s, { label, value }) => {
+		const [child, s1] = walkPattern(value, tid, s);
+		return link(s1, parentId, Labels.FIELD, child, { label });
+	}, st);
+
+	return match(r.tail)
+		.with(P.nonNullable, (): [NodeId, State] => {
+			const [id, s1] = emit(linked, Tags.PAT_WILDCARD, {}, prov(tid, linked));
+			return [parentId, push(s1, id)];
 		})
-		.with({ type: "empty" }, () => [parentId, st] as [NodeId, State])
-		.with({ type: "variable" }, () => {
-			const [id, s1] = emit(st, Tags.PAT_WILDCARD, {}, prov(tid, st));
-			return [parentId, push(s1, id)] as [NodeId, State];
-		})
-		.exhaustive();
+		.otherwise((): [NodeId, State] => [parentId, linked]);
+};
 
 const matchExpr = (t: EB.Term & { type: "Match" }, st: State): [NodeId, State] => {
 	const [id, s1] = emit(st, Tags.MATCH, {}, prov(t.id, st));

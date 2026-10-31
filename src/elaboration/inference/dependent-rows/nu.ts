@@ -9,7 +9,6 @@ import * as R from "@yap/shared/rows";
 import assert from "node:assert";
 
 import { acyclic } from "./acyclic";
-import { Patterns } from "./patterns";
 import type { Inferred, Source } from "./record";
 
 export const nu = function* <A extends Inferred>(row: Source, elaborate: () => M.Elaboration<A>) {
@@ -42,10 +41,7 @@ export const nu = function* <A extends Inferred>(row: Source, elaborate: () => M
 	return [binder, elaborated] as const;
 };
 
-const labels = (row: Source): string[] =>
-	match(row)
-		.with(Patterns.Rows.Extension, ({ label, row }) => [label, ...labels(row)])
-		.otherwise(() => []);
+const labels = (row: Source): string[] => row.entries.map(({ label }) => label);
 
 /**
  * Assigns a placeholder meta the value it stands for. The field it refers to is fully elaborated,
@@ -62,9 +58,4 @@ const fill = function* (meta: EB.Meta, value: NF.Value): M.Elaboration<void> {
 		.otherwise(() => Metas.registry.modify(r => Metas.solve(r, meta.val, value)));
 };
 
-const requested = (row: EB.Row, names: ReadonlySet<string>): EB.Row =>
-	match(row)
-		.with(Patterns.Rows.Extension, ({ label, value, row }) =>
-			names.has(label) ? R.Constructors.Extension(label, value, requested(row, names)) : requested(row, names),
-		)
-		.otherwise(() => R.Constructors.Empty<EB.Term, EB.Variable>());
+const requested = (row: EB.Row, names: ReadonlySet<string>): EB.Row => R.Constructors.Row(row.entries.filter(({ label }) => names.has(label)));

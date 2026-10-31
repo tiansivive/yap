@@ -8,7 +8,6 @@ import * as Lit from "@yap/shared/literals";
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as R from "@yap/shared/rows";
 
-import { isLeft } from "fp-ts/lib/Either";
 import assert from "node:assert";
 import * as Src from "@yap/src/index";
 
@@ -27,7 +26,7 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 	const ctx = yield* M.reader.ask();
 	const val = match(yield* NF.view(tm[1]))
 		.with(NF.View.Symbolic({ type: "Var" }), function* () {
-			const r: NF.Row = { type: "variable", variable: yield* EB.freshMeta(ctx.env.length, NF.Row) };
+			const r: NF.Row = R.Constructors.Variable(yield* EB.freshMeta(ctx.env.length, NF.Row));
 			const rowTypeCtor = EB.Constructors.Pi("rx", "Explicit", EB.Constructors.Lit(Lit.Row()), EB.Constructors.Lit(Lit.Type()));
 			const ann = yield* NF.normalize(rowTypeCtor);
 			const ctor = yield* NF.normalize(EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, ann)));
@@ -49,8 +48,7 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 		return yield* match(structure)
 			.with(NF.Patterns.Sigma, function* (sig) {
 				assert(sig.binder.annotation.type === "Row", "Injection: Expected Row type in Sigma binder annotation");
-				const rewritten = R.rewrite(sig.binder.annotation.row, label);
-				if (isLeft(rewritten)) {
+				if (!R.lookup(sig.binder.annotation.row, label)) {
 					const ann = NF.Constructors.Row(NF.Constructors.Extension(label, NF.Type, sig.binder.annotation.row));
 					const quoted = yield* NF.quote(ctx.env.length, value[1]);
 
@@ -63,12 +61,11 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 					return NF.Constructors.Sigma(sig.binder.variable, ann, NF.Constructors.Closure(sig.closure.ctx, schema));
 				}
 
-				return NF.Constructors.Sigma(sig.binder.variable, NF.Constructors.Row(rewritten.right), sig.closure);
+				return sig;
 			})
 			.with(NF.Patterns.SigmaV2, function* (sig) {
 				assert(sig.binder.annotation.type === "Row", "Injection: Expected Row type in SigmaV2 binder annotation");
-				const rewritten = R.rewrite(sig.binder.annotation.row, label);
-				if (isLeft(rewritten)) {
+				if (!R.lookup(sig.binder.annotation.row, label)) {
 					const ann = NF.Constructors.Row(NF.Constructors.Extension(label, NF.Type, sig.binder.annotation.row));
 					const quoted = yield* NF.quote(ctx.env.length, value[1]);
 
@@ -81,16 +78,15 @@ const inject = function* (label: string, value: EB.AST, tm: EB.AST): M.Elaborati
 					return NF.Constructors.SigmaV2(sig.binder.variable, ann, NF.Constructors.Closure(sig.closure.ctx, schema));
 				}
 
-				return NF.Constructors.SigmaV2(sig.binder.variable, NF.Constructors.Row(rewritten.right), sig.closure);
+				return sig;
 			})
 			.with(NF.Patterns.Schema, NF.Patterns.Variant, ({ func, arg }) => {
-				const rewritten = R.rewrite(arg.row, label);
-				if (isLeft(rewritten)) {
+				if (!R.lookup(arg.row, label)) {
 					const extended = NF.Constructors.App(func, NF.Constructors.Row(NF.Constructors.Extension(label, value[1], arg.row)), "Explicit");
 					return M.of(extended);
 				}
 
-				return M.of(NF.Constructors.App(func, NF.Constructors.Row(rewritten.right), "Explicit"));
+				return M.of(structure);
 			})
 			.otherwise(_ => {
 				throw new Error("Injection: Expected Row type");

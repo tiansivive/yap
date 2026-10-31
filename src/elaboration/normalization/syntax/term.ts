@@ -170,7 +170,7 @@ export const Constructors = {
 	Primop: (ctx: EB.Context, term: EB.Term, arity: number, compute: (...args: Value[]) => Value): Closure => ({ type: "PrimOp", ctx, term, arity, compute }),
 
 	Row: (row: Row): Value => mk({ type: "Row", row }),
-	Extension: (label: string, value: Value, row: Row): Row => ({ type: "extension", label, value, row }),
+	Extension: (label: string, value: Value, row: Row): Row => R.Constructors.Extension(label, value, row),
 
 	Schema: (row: Row): Value => Constructors.Neutral("Sealed", Constructors.App(Constructors.Lit(Lit.Atom("Schema")), Constructors.Row(row), "Explicit")),
 	Variant: (row: Row): Value => Constructors.Neutral("Sealed", Constructors.App(Constructors.Lit(Lit.Atom("Variant")), Constructors.Row(row), "Explicit")),

@@ -3,7 +3,7 @@
  * and values as results. The driver loop below is the intentional CEK core, and it restores the row
  * the machine erased when it stored a continuation.
  */
-import { match, P } from "ts-pattern";
+import { isMatching, match, P } from "ts-pattern";
 
 import * as Eff from "@yap/utils/effects";
 
@@ -275,16 +275,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			assert(binding.annotation.type === "Row", "Sigma binder annotation must be a Row");
 			const annotation = binding.annotation.row;
 
-			const extractLabels = (r: EB.Row): { [key: string]: EB.Term } => {
-				if (r.type === "empty" || r.type === "variable") {
-					return {};
-				}
-				const { label, value, row } = r;
-				return { [label]: value, ...extractLabels(row) };
-			};
-			const bindings = extractLabels(binding.annotation.row);
-
-			const sigma = Object.entries(bindings).reduce<EB.Context["sigma"]>((sig, [label]) => {
+			const sigma = annotation.entries.reduce<EB.Context["sigma"]>((sig, { label }) => {
 				if (sig[label]) {
 					return sig;
 				}
@@ -329,16 +320,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				.in(({ funcVal, argVal }) => schedule.reduce(funcVal, argVal, icit));
 		})
 		.with({ type: "Row" }, function* ({ row }) {
-			const extractLabels = (r: EB.Row): { [key: string]: EB.Term } => {
-				if (r.type === "empty" || r.type === "variable") {
-					return {};
-				}
-				const { label, value, row } = r;
-				return { [label]: value, ...extractLabels(row) };
-			};
-			const bindings = extractLabels(row);
-
-			const record = Object.entries(bindings).reduce<EB.Context["record"]>((rec, [label, term]) => {
+			const record = row.entries.reduce<EB.Context["record"]>((rec, { label, value: term }) => {
 				if (rec[label]) {
 					return rec;
 				}
@@ -510,75 +492,58 @@ function* processStatementsAndPush(stmts: EB.Statement[], returnTerm: EB.Term): 
 		.exhaustive();
 }
 
-/**
- * Schedule the evaluation of a row, built up from right to left.
- */
-/** Rows complete right-to-left, so a leaf goes through an arity-0 continuation to keep result order. */
-function* deferred(value: NF.Value): Evaluation<Machine<NF.Value>> {
-	return yield* step(result(value));
+/** A row evaluates its entries in order, then its tail, and is assembled from the results. */
+function* evalRowPush(row: EB.Row): Evaluation<Machine<NF.Value>> {
+	return yield* group([...row.entries.map(({ value }) => schedule.eval(value)), evalTail(row.tail)], (results: NF.Value[]) => {
+		const tail = results[row.entries.length];
+		assert(tail.type === "Row", "A row tail evaluates to a row");
+
+		const fields = R.Constructors.Row<NF.Value, NF.Variable>(row.entries.map(({ label }, i) => ({ label, value: results[i] })));
+		return result(NF.Constructors.Row(R.append(fields, tail.row)));
+	});
 }
 
-function* evalRowPush(row: EB.Row): Evaluation<Machine<NF.Value>> {
-	return yield* match(row)
-		.with({ type: "empty" }, r => deferred(NF.Constructors.Row(r)))
-		.with({ type: "extension" }, function* ({ label, value: term, row: restRow }) {
-			// Evaluate value and rest, then construct extension
-			return yield* Do.let("value", schedule.eval(term))
-				.let("rest", evalRowPush(restRow))
-				.in(function* ({ value, rest }) {
-					if (rest.type !== "Row") {
-						throw new Error("Expected Row value in row evaluation");
-					}
+/** A tail evaluates to the row it stands for: the empty row, an unsolved tail, or the row its variable is solved or bound to. */
+function* evalTail(tail: EB.Variable | undefined): Evaluation<Machine<NF.Value>> {
+	return yield* match(tail)
+		.with(P.nullish, () => result(NF.Constructors.Row(R.Constructors.Empty())))
+		.with({ type: "Meta" }, function* (v) {
+			const registry = yield* Metas.registry.get();
+			const solved = Metas.solution(registry, v.val);
 
-					return yield* result(NF.Constructors.Row(NF.Constructors.Extension(label, value, rest.row)));
+			if (!solved) {
+				return yield* result(NF.Constructors.Row(R.Constructors.Variable(v)));
+			}
+
+			const ctx = yield* M.reader.ask();
+
+			return yield* match(unglue(solved))
+				.with({ type: "Row" }, value => result<NF.Value>(value))
+				/*
+				 * A solution naming a variable is a reference, not a result: the slot it
+				 * names is where instantiation installs the use site's fresh meta. Quoting
+				 * back to syntax and re-evaluating resolves it against the current scope,
+				 * exactly as the value path does for a solved meta.
+				 */
+				.with({ type: "Var" }, ({ variable }) =>
+					Do.let("quoted", Quoting.quote(ctx.env.length, NF.Constructors.Row(R.Constructors.Variable(variable)))).in(({ quoted }) => schedule.eval(quoted)),
+				)
+				.otherwise(nf => {
+					throw new Error("Solved meta in row position is not a row or variable: " + shown(ctx, () => display(nf)));
 				});
 		})
-		.with({ type: "variable" }, function* (r) {
-			return yield* match(r.variable)
-				.with({ type: "Meta" }, function* (v) {
-					const registry = yield* Metas.registry.get();
-					const solved = Metas.solution(registry, v.val);
+		.with({ type: "Bound" }, function* (v) {
+			const ctx = yield* M.reader.ask();
 
-					if (!solved) {
-						return yield* deferred(NF.Constructors.Row({ type: "variable", variable: v }));
-					}
-
-					const ctx = yield* M.reader.ask();
-
-					return yield* match(unglue(solved))
-						.with({ type: "Row" }, deferred)
-						/*
-						 * A solution naming a variable is a reference, not a result: the slot it
-						 * names is where instantiation installs the use site's fresh meta. Quoting
-						 * back to syntax and re-evaluating resolves it against the current scope,
-						 * exactly as the value path does for a solved meta.
-						 */
-						.with({ type: "Var" }, function* ({ variable }) {
-							/* Deferred like every other leaf here: a row completes right to left, so nothing may produce its result inline. */
-							return yield* step(
-								Do.let("quoted", Quoting.quote(ctx.env.length, NF.Constructors.Row({ type: "variable", variable }))).in(({ quoted }) => schedule.eval(quoted)),
-							);
-						})
-						.otherwise(nf => {
-							throw new Error("Solved meta in row position is not a row or variable: " + shown(ctx, () => display(nf)));
-						});
-				})
-				.with({ type: "Bound" }, function* (v) {
-					const ctx = yield* M.reader.ask();
-
-					return yield* match(unwrapNeutral(unglue(ctx.env[v.index].nf)))
-						.with({ type: "Row" }, deferred)
-						.with({ type: "Var" }, val => deferred(NF.Constructors.Row({ type: "variable", variable: val.variable })))
-						.otherwise(val => {
-							throw new Error("Evaluating a row variable that is not a row or a variable: " + shown(ctx, () => display(val)));
-						});
-				})
-				.otherwise(v => {
-					throw new Error(`Eval Row Variable: Not implemented yet: ${JSON.stringify(v)}`);
+			return yield* match(unwrapNeutral(unglue(ctx.env[v.index].nf)))
+				.with({ type: "Row" }, value => result<NF.Value>(value))
+				.with({ type: "Var" }, val => result(NF.Constructors.Row(R.Constructors.Variable(val.variable))))
+				.otherwise(val => {
+					throw new Error("Evaluating a row variable that is not a row or a variable: " + shown(ctx, () => display(val)));
 				});
 		})
-		.otherwise(function* () {
-			throw new Error("Not implemented");
+		.otherwise(v => {
+			throw new Error(`Eval Row Variable: Not implemented yet: ${JSON.stringify(v)}`);
 		});
 }
 
@@ -601,25 +566,15 @@ const observe = function* (base: NF.Value & { type: "Abs"; binder: { type: "Nu" 
 		return yield* result<Project>({ tag: "not-applicable" });
 	}
 
-	const select = function* (r: EB.Row): Evaluation<Machine<Project>> {
-		return yield* match(r)
-			.with({ type: "empty" }, () => result<Project>({ tag: "missing" }))
-			.with({ type: "variable" }, () => result<Project>({ tag: "blocked" }))
-			.with(
-				{ type: "extension" },
-				({ label: current }) => current === label,
-				function* ({ value }) {
-					return yield* Do.let(
-						"value",
-						M.reader.local(_ => EB.open(binder, closure.ctx), schedule.eval(value)),
-					).in(({ value }) => result<Project>({ tag: "found", value }));
-				},
-			)
-			.with({ type: "extension" }, ({ row: rest }) => select(rest))
-			.exhaustive();
-	};
-
-	return yield* select(row);
+	return yield* match([R.lookup(row, label), row.tail] as const)
+		.with([P.nonNullable, P._], function* ([field]) {
+			return yield* Do.let(
+				"value",
+				M.reader.local(_ => EB.open(binder, closure.ctx), schedule.eval(field)),
+			).in(({ value }) => result<Project>({ tag: "found", value }));
+		})
+		.with([P._, P.nonNullable], () => result<Project>({ tag: "blocked" }))
+		.otherwise(() => result<Project>({ tag: "missing" }));
 };
 
 const project = function* (base: NF.Value, label: string): Evaluation<Machine<Project>> {
@@ -630,11 +585,10 @@ const project = function* (base: NF.Value, label: string): Evaluation<Machine<Pr
 		.otherwise(() => base);
 
 	const lookup = (row: NF.Row): Project =>
-		match(row)
-			.with({ type: "empty" }, (): Project => ({ tag: "missing" }))
-			.with({ type: "variable" }, (): Project => ({ tag: "blocked" }))
-			.with({ type: "extension" }, ({ label: current, value, row }) => (current === label ? ({ tag: "found", value } satisfies Project) : lookup(row)))
-			.exhaustive();
+		match([R.lookup(row, label), row.tail] as const)
+			.with([P.nonNullable, P._], ([value]): Project => ({ tag: "found", value }))
+			.with([P._, P.nonNullable], (): Project => ({ tag: "blocked" }))
+			.otherwise((): Project => ({ tag: "missing" }));
 
 	return yield* Do.let("known", schedule.view(current)).in(function* ({ known }) {
 		return yield* match(known)
@@ -667,16 +621,12 @@ const projectValue = function* (base: NF.Value, label: string): Evaluation<Machi
 };
 
 const overwrite = <T, V>(row: R.Row<T, V>, label: string, value: T): R.Row<T, V> =>
-	match(row)
-		.with({ type: "empty" }, () => R.Constructors.Extension(label, value, row))
-		.with({ type: "variable" }, () => R.Constructors.Extension(label, value, row))
-		.with(
-			{ type: "extension" },
-			({ label: current }) => current === label,
-			({ row: rest }) => R.Constructors.Extension(label, value, rest),
-		)
-		.with({ type: "extension" }, ({ label: current, value: existing, row: rest }) => R.Constructors.Extension(current, existing, overwrite(rest, label, value)))
-		.exhaustive();
+	R.Constructors.Row(
+		row.entries.some(entry => entry.label === label)
+			? row.entries.map(entry => (entry.label === label ? { label, value } : entry))
+			: [...row.entries, { label, value }],
+		row.tail,
+	);
 
 const inject = function* (base: NF.Value, label: string, injected: NF.Value): Evaluation<Machine<NF.Value | undefined>> {
 	return yield* Do.let("known", schedule.view(base)).in(({ known }) =>
@@ -884,7 +834,7 @@ export const schedule = {
 				.with([{ type: "Lit" }, { type: "Lit" }], ([value, p]) => result(_.isEqual(value.value, p.value) ? matched([]) : mismatch()))
 				.with(
 					[NF.Patterns.Array, { type: "List" }],
-					([value, p]) => value.arg.row.type === "empty" && p.patterns.length === 0 && !p.rest,
+					([value, p]) => isMatching(R.Patterns.Empty, value.arg.row) && p.patterns.length === 0 && !p.rest,
 					() => result(matched([])),
 				)
 				.with(
@@ -903,16 +853,15 @@ export const schedule = {
 							return yield* result(matched([{ binder, nf: NF.Constructors.Array(row) }]));
 						}
 
-						if (row.type !== "extension") {
-							return yield* result(mismatch());
-						}
-
 						const [head, ...tail] = patterns;
-						const remaining = row;
 
-						return yield* Do.let("current", schedule.meet(head, remaining.value))
-							.let("rest", zip(tail, remaining.row))
-							.in(({ current, rest }) => result(combineMeet(current, rest)));
+						return yield* match(row)
+							.with(R.Patterns.NonEmpty, ({ entries: [{ value: element }, ...remaining] }) =>
+								Do.let("current", schedule.meet(head, element))
+									.let("rest", zip(tail, R.Constructors.Row(remaining, row.tail)))
+									.in(({ current, rest }) => result(combineMeet(current, rest))),
+							)
+							.otherwise(() => result(mismatch()));
 					};
 
 					return zip(p.patterns, value.arg.row);
@@ -920,25 +869,25 @@ export const schedule = {
 				.with([NF.Patterns.Schema, { type: "Struct" }], [NF.Patterns.Struct, { type: "Struct" }], ([{ arg }, p]) => meetAll(p.row, arg.row))
 				.with([NF.Patterns.Nu, { type: "Struct" }], function* ([value, p]) {
 					/* A lazy record is matched by observing only the fields the pattern names, as copatterns would. */
-					const shape = value.binder.labels.reduceRight<NF.Row>((row, label) => R.Constructors.Extension(label, NF.Irrelevant, row), R.Constructors.Empty());
+					const shape = R.Constructors.Row<NF.Value, NF.Variable>(value.binder.labels.map(label => ({ label, value: NF.Irrelevant })));
 					return yield* meetAll(p.row, shape, label => observe(value, label));
 				})
 				.with([NF.Patterns.Row, { type: "Row" }], ([value, p]) => meetAll(p.row, value.row))
-				.with([NF.Patterns.Tagged, { type: "Variant", row: { type: "extension" } }], function* ([{ arg }, p]) {
+				.with([NF.Patterns.Tagged, { type: "Variant", row: R.Patterns.NonEmpty }], function* ([{ arg }, p]) {
 					const value = NF.TaggedValue.extract(arg.row);
 					if (!value) {
 						return yield* result(mismatch());
 					}
 
 					const rewritten = R.rewrite(p.row, value.label);
-					if (E.isLeft(rewritten) || rewritten.right.type !== "extension") {
+					if (E.isLeft(rewritten)) {
 						return yield* result(mismatch());
 					}
 
 					const arm = rewritten.right;
 
 					return yield* Do.let("payload", schedule.meet(arm.value, value.payload))
-						.let("rest", meetAll(arm.row, R.Constructors.Empty()))
+						.let("rest", meetAll(arm.rest, R.Constructors.Empty()))
 						.in(({ payload, rest }) => result(combineMeet(payload, rest)));
 				})
 				.with([NF.Patterns.Variant, { type: "Variant" }], ([{ arg }, p]) => meetAll(p.row, arg.row))
@@ -1232,39 +1181,41 @@ const meetAll = function* (
 	vals: NF.Row,
 	observe?: (label: string) => Evaluation<Machine<Project>>,
 ): Evaluation<Machine<Meet>> {
-	return yield* match([pats, vals])
-		.with([{ type: "empty" }, P._], () => result(matched([])))
-		.with([{ type: "variable" }, P._], ([r, tail]) => {
-			const binder: EB.Binder = { type: "Pattern", variable: r.variable };
-			return result(matched([{ binder, nf: NF.Constructors.Row(tail) }]));
+	return yield* match([pats, vals] as const)
+		.with([R.Patterns.Empty, P._], () => result(matched([])))
+		.with([R.Patterns.Tail, P._], ([{ tail }]) => {
+			const binder: EB.Binder = { type: "Pattern", variable: tail };
+			return result(matched([{ binder, nf: NF.Constructors.Row(vals) }]));
 		})
-		.with([{ type: "extension" }, { type: "empty" }], [{ type: "extension" }, { type: "variable" }], () => result(mismatch()))
-		.with([{ type: "extension" }, { type: "extension" }], function* ([r1, r2]) {
-			const rewritten = R.rewrite(r2, r1.label);
-			if (E.isLeft(rewritten)) {
-				return yield* result(mismatch());
-			}
+		.with(
+			[R.Patterns.NonEmpty, R.Patterns.NonEmpty],
+			function* ([
+				{
+					entries: [{ label, value: pattern }, ...remaining],
+				},
+			]) {
+				const rewritten = R.rewrite(vals, label);
+				if (E.isLeft(rewritten)) {
+					return yield* result(mismatch());
+				}
 
-			if (rewritten.right.type !== "extension") {
-				throw new Error("Rewriting a row extension should result in another row extension");
-			}
+				const field = rewritten.right;
 
-			const tail = rewritten.right;
+				const current = observe
+					? Do.let("projected", observe(label)).in(({ projected }) =>
+							match(projected)
+								.with({ tag: "found" }, ({ value }) => schedule.meet(pattern, value))
+								.with({ tag: "blocked" }, () => result(blocked()))
+								.otherwise(() => result(mismatch())),
+						)
+					: schedule.meet(pattern, field.value);
 
-			const current = observe
-				? Do.let("projected", observe(r1.label)).in(({ projected }) =>
-						match(projected)
-							.with({ tag: "found" }, ({ value }) => schedule.meet(r1.value, value))
-							.with({ tag: "blocked" }, () => result(blocked()))
-							.otherwise(() => result(mismatch())),
-					)
-				: schedule.meet(r1.value, tail.value);
-
-			return yield* Do.let("current", current)
-				.let("rest", meetAll(r1.row, tail.row, observe))
-				.in(({ current, rest }) => result(combineMeet(current, rest)));
-		})
-		.exhaustive();
+				return yield* Do.let("current", current)
+					.let("rest", meetAll(R.Constructors.Row(remaining, pats.tail), field.rest, observe))
+					.in(({ current, rest }) => result(combineMeet(current, rest)));
+			},
+		)
+		.otherwise(() => result(mismatch()));
 };
 
 /**

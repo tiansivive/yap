@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import * as EB from "@yap/elaboration";
+import * as R from "@yap/shared/rows";
 
 import { translate } from "../translate";
 import { display } from "../display";
@@ -145,17 +146,12 @@ describe("pattern compilation pass", () => {
 
 	describe("struct patterns", () => {
 		it("struct with field patterns — expands to nested switch", () => {
-			const pat = EB.Constructors.Patterns.Struct({
-				type: "extension",
-				label: "x",
-				value: EB.Constructors.Patterns.Lit({ type: "Num", value: 1 }),
-				row: {
-					type: "extension",
-					label: "y",
-					value: EB.Constructors.Patterns.Binder("b"),
-					row: { type: "empty" },
-				},
-			});
+			const pat = EB.Constructors.Patterns.Struct(
+				R.Constructors.Row([
+					{ label: "x", value: EB.Constructors.Patterns.Lit({ type: "Num", value: 1 }) },
+					{ label: "y", value: EB.Constructors.Patterns.Binder("b") },
+				]),
+			);
 			const term = EB.DSL.match(EB.DSL.num(1), [{ pattern: pat, term: EB.DSL.bound(0) }]);
 			const g = run(term);
 

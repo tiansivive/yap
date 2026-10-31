@@ -171,7 +171,7 @@ export const Constructors = {
 	Ann: (term: Term, ann: Term): Term => mk({ type: "Ann", term, ann }),
 
 	Row: (row: Row): Term => mk({ type: "Row", row }),
-	Extension: (label: string, value: Term, row: Row): Row => ({ type: "extension", label, value, row }),
+	Extension: (label: string, value: Term, row: Row): Row => R.Constructors.Extension(label, value, row),
 
 	Array: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Array")), Constructors.Row(row)),
 	Struct: (row: Row): Term => Constructors.App("Explicit", Constructors.Lit(Lit.Atom("Struct")), Constructors.Row(row)),

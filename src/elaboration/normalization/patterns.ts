@@ -10,22 +10,22 @@ import * as O from "fp-ts/lib/Option";
 import * as R from "@yap/shared/rows";
 
 export const evaluate = (pat: EB.Pattern, ctx: EB.Context, binders: EB.Patterns.Binder[]): O.Option<NF.Value> => {
-	const toRow = (r: R.Row<EB.Pattern, string>): O.Option<NF.Row> => {
-		if (r.type === "empty") {
-			return O.some(R.Constructors.Empty());
-		}
-		if (r.type === "variable") {
-			const idx = binders.findIndex(([name, _]) => name === r.variable);
-			return O.some({ type: "variable", variable: { type: "Bound", lvl: ctx.env.length + idx } });
-		}
-		const { label, value, row: tail } = r;
-		return F.pipe(
-			O.Do,
-			O.bind("value", () => evaluate(value, ctx, binders)),
-			O.bind("row", () => toRow(tail)),
-			O.map(({ value, row }) => NF.Constructors.Extension(label, value, row)),
+	const toRow = (r: R.Row<EB.Pattern, string>): O.Option<NF.Row> =>
+		F.pipe(
+			[...r.entries],
+			A.traverse(O.Applicative)(({ label, value }) =>
+				F.pipe(
+					evaluate(value, ctx, binders),
+					O.map(evaluated => ({ label, value: evaluated })),
+				),
+			),
+			O.map(entries =>
+				R.Constructors.Row<NF.Value, NF.Variable>(
+					entries,
+					r.tail === undefined ? undefined : { type: "Bound", lvl: ctx.env.length + binders.findIndex(([name]) => name === r.tail) },
+				),
+			),
 		);
-	};
 	return match<EB.Pattern, O.Option<NF.Value>>(pat)
 		.with({ type: "Lit" }, ({ value }) => O.some(NF.Constructors.Lit(value)))
 
@@ -45,11 +45,17 @@ export const evaluate = (pat: EB.Pattern, ctx: EB.Context, binders: EB.Patterns.
 			return F.pipe(toRow(row), O.map(NF.Constructors.Struct));
 		})
 
-		.with({ type: "Variant", row: { type: "extension" } }, ({ row }) =>
-			F.pipe(
-				evaluate(row.value, ctx, binders),
-				O.map(value => NF.Constructors.Tagged(row.label, value)),
-			),
+		.with(
+			{ type: "Variant", row: R.Patterns.NonEmpty },
+			({
+				row: {
+					entries: [{ label, value }],
+				},
+			}) =>
+				F.pipe(
+					evaluate(value, ctx, binders),
+					O.map(evaluated => NF.Constructors.Tagged(label, evaluated)),
+				),
 		)
 		.with({ type: "Variant" }, ({ row }) => F.pipe(toRow(row), O.map(NF.Constructors.Variant)))
 

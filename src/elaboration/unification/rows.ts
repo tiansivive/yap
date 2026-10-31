@@ -1,5 +1,6 @@
 import { match, P } from "ts-pattern";
 import _ from "lodash";
+import * as E from "fp-ts/lib/Either";
 
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
@@ -19,63 +20,71 @@ export const unify = (r1: NF.Row, r2: NF.Row): U.Unification<void> =>
 		const lvl = ctx.env.length;
 		const s = yield* Sub.subst.get();
 
-		yield* match([r1, r2])
-			.with([{ type: "empty" }, { type: "empty" }], function* () {
+		yield* match([r1, r2] as const)
+			.with([R.Patterns.Empty, R.Patterns.Empty], function* () {
 				/* Nothing to bind. */
 			})
 			.with(
-				[{ type: "variable" }, { type: "variable" }],
-				([{ variable: v1 }, { variable: v2 }]) => _.isEqual(v1, v2),
+				[R.Patterns.Tail, R.Patterns.Tail],
+				([{ tail: v1 }, { tail: v2 }]) => _.isEqual(v1, v2),
 				function* () {
 					/* Same tail; nothing to bind. */
 				},
 			)
 			.with(
-				[{ type: "variable", variable: { type: "Meta" } }, P._],
-				([{ variable }]) => !!s[variable.val],
-				function* ([v, r]) {
-					yield* unify(yield* solved(s[v.variable.val]), r);
+				[Tails.Meta, P._],
+				([{ tail }]) => !!s[tail.val],
+				function* ([{ tail }]) {
+					yield* unify(yield* solved(s[tail.val]), r2);
 				},
 			)
 			.with(
-				[P._, { type: "variable", variable: { type: "Meta" } }],
-				([_l, { variable }]) => !!s[variable.val],
-				function* ([r, v]) {
-					yield* unify(r, yield* solved(s[v.variable.val]));
+				[P._, Tails.Meta],
+				([, { tail }]) => !!s[tail.val],
+				function* ([, { tail }]) {
+					yield* unify(r1, yield* solved(s[tail.val]));
 				},
 			)
-			.with([{ type: "variable", variable: { type: "Meta" } }, P._], function* ([{ variable }, r]) {
-				yield* Sub.subst.bind(yield* bind(variable, NF.Constructors.Row(r)));
+			.with([Tails.Meta, P._], function* ([{ tail }]) {
+				yield* Sub.subst.bind(yield* bind(tail, NF.Constructors.Row(r2)));
 			})
-			.with([P._, { type: "variable", variable: { type: "Meta" } }], function* ([r, { variable }]) {
-				yield* Sub.subst.bind(yield* bind(variable, NF.Constructors.Row(r)));
-			})
-
-			.with([{ type: "extension" }, P._], function* ([{ label, value, row }, r]) {
-				const rewritten = yield* rewrite(r, label);
-
-				if (rewritten.type !== "extension") {
-					return yield* M.fail(Err.Impossible("Expected extension"));
-				}
-
-				/*
-				 * Order is composition order: rewrite's row-tail bindings are already
-				 * in the accumulator, the value unification reads them there, and the
-				 * tail unification reads both. The nested unifications also see metas
-				 * rewrite just minted — minting registers in the metacontext as it
-				 * happens, so the interim writer-to-reader splice this case used to
-				 * carry is gone.
-				 */
-				yield* U.unify(value, rewritten.value, lvl);
-				yield* unify(row, rewritten.row);
+			.with([P._, Tails.Meta], function* ([, { tail }]) {
+				yield* Sub.subst.bind(yield* bind(tail, NF.Constructors.Row(r1)));
 			})
 
-			.with([{ type: "empty" }, { type: "extension" }], function* ([r, { label }]) {
-				return yield* M.fail(Err.MissingLabel(label, r));
-			})
-			.with([{ type: "extension" }, { type: "empty" }], function* ([{ label }, r]) {
-				return yield* M.fail(Err.MissingLabel(label, r));
-			})
+			.with(
+				[R.Patterns.NonEmpty, P._],
+				function* ([
+					{
+						entries: [{ label, value }, ...remaining],
+					},
+				]) {
+					const rewritten = yield* rewrite(r2, label);
+
+					/*
+					 * Order is composition order: rewrite's row-tail bindings are already
+					 * in the accumulator, the value unification reads them there, and the
+					 * tail unification reads both. The nested unifications also see metas
+					 * rewrite just minted — minting registers in the metacontext as it
+					 * happens, so the interim writer-to-reader splice this case used to
+					 * carry is gone.
+					 */
+					yield* U.unify(value, rewritten.value, lvl);
+					yield* unify(R.Constructors.Row(remaining, r1.tail), rewritten.rest);
+				},
+			)
+
+			.with(
+				[R.Patterns.Empty, R.Patterns.NonEmpty],
+				function* ([
+					,
+					{
+						entries: [{ label }],
+					},
+				]) {
+					return yield* M.fail(Err.MissingLabel(label, r1));
+				},
+			)
 
 			.otherwise(r => {
 				throw new Error("Unification: Row unification is described in Daan Leijen's paper 'Extensible records with scoped labels'." + JSON.stringify(r));
@@ -90,50 +99,47 @@ const solved = function* (solution: NF.Value): U.Unification<NF.Row> {
 		});
 };
 
-// TODO: Use `rewrite` from `rows.ts`
-const rewrite = function* (r: NF.Row, label: string): U.Unification<NF.Row> {
-	const ctx = yield* M.reader.ask();
-	const lvl = ctx.env.length;
+const Tails = {
+	Meta: { entries: [], tail: { type: "Meta" } },
+} as const;
 
-	return yield* match(r)
-		.with({ type: "empty" }, function* () {
-			return yield* M.fail(Err.MissingLabel(label, r));
-		})
-		.with(
-			{ type: "extension" },
-			({ label: l }) => label === l,
-			function* ({ label: l, value, row }) {
-				return R.Constructors.Extension(l, value, row);
-			},
-		)
-		.with({ type: "extension" }, function* ({ label: lbl, value: val, row }) {
-			const rewritten = yield* rewrite(row, label);
-
-			if (rewritten.type !== "extension") {
-				return yield* M.fail(Err.Impossible("Expected extension: " + (yield* NF.display(NF.Constructors.Row(rewritten)))));
-			}
-
-			return R.Constructors.Extension(rewritten.label, rewritten.value, R.Constructors.Extension(lbl, val, rewritten.row));
-		})
-		.with({ type: "variable" }, function* ({ variable }) {
-			if (variable.type !== "Meta") {
-				return yield* M.fail(Err.Impossible("Expected meta variable"));
-			}
-
-			// If this meta variable is already bound in the accumulator, chase it first
+/*
+ * Rewrites `r` around `label`. When the label is absent the tail decides: a tail solved in the
+ * accumulator is chased, an unsolved one is solved to a row holding a fresh field over a fresh
+ * tail, and a closed row is missing the label.
+ */
+const rewrite = (r: NF.Row, label: string): U.Unification<{ value: NF.Value; rest: NF.Row }> =>
+	E.match(
+		function* (): U.Unification<{ value: NF.Value; rest: NF.Row }> {
+			const ctx = yield* M.reader.ask();
+			const lvl = ctx.env.length;
 			const s = yield* Sub.subst.get();
 
-			if (s[variable.val]) {
-				return yield* rewrite(yield* solved(s[variable.val]), label);
-			}
+			return yield* match(r.tail)
+				.with(P.nullish, function* () {
+					return yield* M.fail(Err.MissingLabel(label, r));
+				})
+				.with(
+					{ type: "Meta" },
+					({ val }) => !!s[val],
+					function* ({ val }) {
+						const chased = yield* rewrite(yield* solved(s[val]), label);
+						return { value: chased.value, rest: R.Constructors.Row([...r.entries, ...chased.rest.entries], chased.rest.tail) };
+					},
+				)
+				.with({ type: "Meta" }, function* ({ val }) {
+					const kvar = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
+					const tvar = NF.Constructors.Var(yield* EB.freshMeta(lvl, kvar));
+					const fresh = yield* EB.freshMeta(lvl, NF.Row);
+					yield* Sub.subst.bind(Sub.of(val, NF.Constructors.Row(R.Constructors.Extension(label, tvar, R.Constructors.Variable(fresh)))));
 
-			const kvar = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
-			const tvar = NF.Constructors.Var(yield* EB.freshMeta(lvl, kvar));
-			const rvar: NF.Row = R.Constructors.Variable(yield* EB.freshMeta(lvl, NF.Row));
-			const rf = R.Constructors.Extension(label, tvar, rvar);
-			yield* Sub.subst.bind(Sub.of(variable.val, NF.Constructors.Row(rf)));
-
-			return rf;
-		})
-		.exhaustive();
-};
+					return { value: tvar, rest: R.Constructors.Row(r.entries, fresh) };
+				})
+				.otherwise(function* () {
+					return yield* M.fail(Err.Impossible("Expected meta variable"));
+				});
+		},
+		function* (found: { value: NF.Value; rest: NF.Row }): U.Unification<{ value: NF.Value; rest: NF.Row }> {
+			return found;
+		},
+	)(R.rewrite(r, label));
