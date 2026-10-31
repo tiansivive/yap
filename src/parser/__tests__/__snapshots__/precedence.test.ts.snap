@@ -236,29 +236,28 @@ exports[`parser: precedence > pi with row terms: (a:Type) -> (b:Type) -> { x: a,
     },
     "body": {
       "row": {
-        "label": "x",
-        "row": {
-          "label": "y",
-          "row": {
-            "type": "empty",
-          },
-          "type": "extension",
-          "value": {
-            "type": "var",
-            "variable": {
-              "type": "name",
-              "value": "b",
+        "entries": [
+          {
+            "label": "x",
+            "value": {
+              "type": "var",
+              "variable": {
+                "type": "name",
+                "value": "a",
+              },
             },
           },
-        },
-        "type": "extension",
-        "value": {
-          "type": "var",
-          "variable": {
-            "type": "name",
-            "value": "a",
+          {
+            "label": "y",
+            "value": {
+              "type": "var",
+              "variable": {
+                "type": "name",
+                "value": "b",
+              },
+            },
           },
-        },
+        ],
       },
       "type": "struct",
     },

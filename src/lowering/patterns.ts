@@ -1,5 +1,7 @@
 import { P } from "ts-pattern";
 
+import * as R from "@yap/shared/rows";
+
 const TypeLevelSchema = {
 	type: "App" as const,
 	func: { type: "Lit" as const, value: { type: "Atom" as const, value: "Schema" } },
@@ -48,17 +50,10 @@ export const Patterns = {
 	Shift: { type: "Shift" as const } as const,
 	Bubble: { type: "Bubble" as const } as const,
 
-	// R.Row (row structure)
-	Rows: {
-		Extension: { type: "extension" as const } as const,
-		Variable: { type: "variable" as const } as const,
-		Empty: { type: "empty" as const } as const,
-	},
-
 	// EB.Pattern
 	Pats: {
-		Variant: { type: "Variant" as const, row: { type: "extension" as const } } as const,
-		Struct: { type: "Struct" as const, row: { type: "extension" as const } } as const,
+		Variant: { type: "Variant" as const, row: R.Patterns.NonEmpty } as const,
+		Struct: { type: "Struct" as const, row: R.Patterns.NonEmpty } as const,
 		List: { type: "List" as const } as const,
 		Lit: { type: "Lit" as const } as const,
 		Binder: { type: "Binder" as const } as const,

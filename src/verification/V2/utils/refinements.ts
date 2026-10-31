@@ -108,33 +108,30 @@ export const meet = function* (scrutineeTy: NF.Value, patternTy: NF.Value): Veri
 };
 
 export const meetRow = function* (sRow: NF.Row, pRow: NF.Row): Verification<NF.Row> {
-	return yield* match([sRow, pRow])
-		.with([{ type: "empty" }, P._], function* () {
+	return yield* match([sRow, pRow] as const)
+		.with([R.Patterns.Empty, P._], function* () {
 			return pRow;
 		})
-		.with([P._, { type: "empty" }], function* () {
+		.with([P._, R.Patterns.Empty], function* () {
 			return sRow;
 		})
-		.with([{ type: "variable" }, P._], function* () {
+		.with([R.Patterns.Tail, P._], function* () {
 			return pRow;
 		})
-		.with([P._, { type: "variable" }], function* () {
+		.with([P._, R.Patterns.Tail], function* () {
 			return sRow;
 		})
-		.with([{ type: "extension" }, { type: "extension" }], function* ([sr, _pr]): Verification<NF.Row> {
-			const rewritten = R.rewrite(pRow, sr.label);
+		.otherwise(function* (): Verification<NF.Row> {
+			const [{ label, value }, ...remaining] = sRow.entries;
+			const rest = R.Constructors.Row(remaining, sRow.tail);
+
+			const rewritten = R.rewrite(pRow, label);
 			if (E.isLeft(rewritten)) {
-				const rest = yield* meetRow(sr.row, pRow);
-				return { type: "extension", label: sr.label, value: sr.value, row: rest };
+				return R.Constructors.Extension(label, value, yield* meetRow(rest, pRow));
 			}
-			if (rewritten.right.type !== "extension") {
-				throw new Error("Rewriting row extension should yield extension");
-			}
-			const metValue = yield* meet(sr.value, rewritten.right.value);
-			const metRest = yield* meetRow(sr.row, rewritten.right.row);
-			return { type: "extension", label: sr.label, value: metValue, row: metRest };
-		})
-		.exhaustive();
+			const metValue = yield* meet(value, rewritten.right.value);
+			return R.Constructors.Extension(label, metValue, yield* meetRow(rest, rewritten.right.rest));
+		});
 };
 
 export const extractModalities: ExtractModalitiesFn = function* (nf, ctx) {

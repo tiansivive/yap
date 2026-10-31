@@ -249,7 +249,8 @@ describe("Grammar", () => {
 
 				expect(data.results.length).toBe(1);
 				expect(expr.type).toBe("struct");
-				expect(expr.row).toMatchObject({ type: "empty" });
+				expect(expr.row).toMatchObject({ entries: [] });
+				expect(expr.row.tail).toBeUndefined();
 			});
 
 			it("should parse structs:\t\t{ x: 1, y: 2 }", () => {
@@ -263,15 +264,11 @@ describe("Grammar", () => {
 
 				expect(data.results.length).toBe(1);
 				expect(expr.type).toBe("struct");
-				expect(expr.row.type).toBe("extension");
-				expect(expr.row.label).toBe("x");
-				expect(expr.row.value).toMatchObject({ type: "lit", value: xVal });
-
-				const extension = expr.row.row;
-				expect(extension.type).toBe("extension");
-				expect(extension.label).toBe("y");
-				expect(extension.value).toMatchObject({ type: "lit", value: yVal });
-				expect(extension.row.type).toBe("empty");
+				expect(expr.row.entries).toMatchObject([
+					{ label: "x", value: { type: "lit", value: xVal } },
+					{ label: "y", value: { type: "lit", value: yVal } },
+				]);
+				expect(expr.row.tail).toBeUndefined();
 			});
 
 			it("should parse variants:\t\t| #x 1 | #y 2", () => {
@@ -284,15 +281,11 @@ describe("Grammar", () => {
 
 				expect(data.results.length).toBe(1);
 				expect(expr.type).toBe("variant");
-				expect(expr.row.type).toBe("extension");
-				expect(expr.row.label).toBe("x");
-				expect(expr.row.value).toMatchObject({ type: "lit", value: xVal });
-
-				const extension = expr.row.row;
-				expect(extension.type).toBe("extension");
-				expect(extension.label).toBe("y");
-				expect(extension.value).toMatchObject({ type: "lit", value: yVal });
-				expect(extension.row.type).toBe("empty");
+				expect(expr.row.entries).toMatchObject([
+					{ label: "x", value: { type: "lit", value: xVal } },
+					{ label: "y", value: { type: "lit", value: yVal } },
+				]);
+				expect(expr.row.tail).toBeUndefined();
 			});
 			it("should parse tagged:\t\t\t#x 1", () => {
 				const src = `#x 1`;
@@ -320,15 +313,11 @@ describe("Grammar", () => {
 
 				expect(data.results.length).toBe(1);
 				expect(expr.type).toBe("tuple");
-				expect(expr.row.type).toBe("extension");
-				expect(expr.row.label).toBe("0");
-				expect(expr.row.value).toMatchObject({ type: "lit", value: one });
-
-				const extension = expr.row.row;
-				expect(extension.type).toBe("extension");
-				expect(extension.label).toBe("1");
-				expect(extension.value).toMatchObject({ type: "lit", value: two });
-				expect(extension.row.type).toBe("empty");
+				expect(expr.row.entries).toMatchObject([
+					{ label: "0", value: { type: "lit", value: one } },
+					{ label: "1", value: { type: "lit", value: two } },
+				]);
+				expect(expr.row.tail).toBeUndefined();
 			});
 
 			it("should parse projections:\t\tx.y", () => {
@@ -532,10 +521,10 @@ describe("Grammar", () => {
 				const struct1 = {
 					type: "struct",
 					row: {
-						type: "extension",
-						label: "x",
-						value: { type: "lit", value: one },
-						row: { type: "extension", label: "y", value: { type: "lit", value: two }, row: { type: "empty" } },
+						entries: [
+							{ label: "x", value: { type: "lit", value: one } },
+							{ label: "y", value: { type: "lit", value: two } },
+						],
 					},
 				};
 				const ten = { type: "Num", value: 10 };
@@ -543,10 +532,10 @@ describe("Grammar", () => {
 				const struct2 = {
 					type: "struct",
 					row: {
-						type: "extension",
-						label: "x",
-						value: { type: "lit", value: two },
-						row: { type: "extension", label: "y", value: { type: "lit", value: one }, row: { type: "empty" } },
+						entries: [
+							{ label: "x", value: { type: "lit", value: two } },
+							{ label: "y", value: { type: "lit", value: one } },
+						],
 					},
 				};
 				const twenty = { type: "Num", value: 20 };
@@ -577,23 +566,13 @@ describe("Grammar", () => {
 
 			const variant1 = {
 				type: "variant",
-				row: {
-					type: "extension",
-					label: "x",
-					value: { type: "lit", value: one },
-					row: { type: "empty" },
-				},
+				row: { entries: [{ label: "x", value: { type: "lit", value: one } }] },
 			};
 			const ten = { type: "Num", value: 10 };
 
 			const variant2 = {
 				type: "variant",
-				row: {
-					type: "extension",
-					label: "y",
-					value: { type: "lit", value: two },
-					row: { type: "empty" },
-				},
+				row: { entries: [{ label: "y", value: { type: "lit", value: two } }] },
 			};
 			const twenty = { type: "Num", value: 20 };
 
@@ -793,13 +772,11 @@ describe("Grammar", () => {
 				expect(expr.body.variable).toBe("b");
 				expect(expr.body.annotation).toMatchObject({ type: "lit", value: type });
 				expect(expr.body.body.type).toBe("struct");
-				expect(expr.body.body.row.type).toBe("extension");
-				expect(expr.body.body.row.label).toBe("x");
-				expect(expr.body.body.row.value).toMatchObject({ type: "var", variable: a });
-				expect(expr.body.body.row.row.type).toBe("extension");
-				expect(expr.body.body.row.row.label).toBe("y");
-				expect(expr.body.body.row.row.value).toMatchObject({ type: "var", variable: b });
-				expect(expr.body.body.row.row.row.type).toBe("empty");
+				expect(expr.body.body.row.entries).toMatchObject([
+					{ label: "x", value: { type: "var", variable: a } },
+					{ label: "y", value: { type: "var", variable: b } },
+				]);
+				expect(expr.body.body.row.tail).toBeUndefined();
 			});
 		});
 	});

@@ -1,4 +1,4 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
@@ -19,12 +19,7 @@ import type { Source } from "./record";
  * `Irrelevant`.
  */
 export const placeholders = (source: Source): EB.Row =>
-	match(source)
-		.with(Patterns.Rows.Extension, ({ label, row }) =>
-			R.Constructors.Extension<EB.Term, EB.Variable>(label, EB.Constructors.Lit({ type: "Atom", value: "Irrelevant" }), placeholders(row)),
-		)
-		.with(Patterns.Rows.Empty, Patterns.Rows.Variable, () => R.Constructors.Empty<EB.Term, EB.Variable>())
-		.exhaustive();
+	R.Constructors.Row(source.entries.map(({ label }) => ({ label, value: EB.Constructors.Lit({ type: "Atom", value: "Irrelevant" }) })));
 
 export const witness = function* (row: EB.Row): M.Elaboration<NF.Row> {
 	const value = yield* NF.normalize(EB.Constructors.Row(row));
@@ -34,32 +29,37 @@ export const witness = function* (row: EB.Row): M.Elaboration<NF.Row> {
 };
 
 export const fields = function* (source: Source): M.Elaboration<[EB.Row, Q.Usages]> {
-	return yield* match(source)
-		.with(Patterns.Rows.Empty, function* () {
-			const ctx = yield* M.reader.ask();
+	const ctx = yield* M.reader.ask();
 
-			return [R.Constructors.Empty<EB.Term, EB.Variable>(), Q.noUsage(ctx.env.length)] satisfies [EB.Row, Q.Usages];
-		})
-		.with(Patterns.Rows.Extension, function* ({ label, value, row }) {
-			/* A field may be a type or a value used as a singleton type, so it is inferred. A nested
-			 * struct is read as a record type, so it is checked against `Type`. */
-			const [term, usages] = yield* match(value)
-				.with(Patterns.Terms.Struct, () => EB.check(value, NF.Type))
-				.otherwise(function* () {
-					const [term, , usages] = yield* EB.infer(value);
-					return [term, usages] as const;
-				});
-			const [rest, restUsages] = yield* fields(row);
+	const elaborated = yield* M.traverse(source.entries, function* ({ label, value }) {
+		/* A field may be a type or a value used as a singleton type, so it is inferred. A nested
+		 * struct is read as a record type, so it is checked against `Type`. */
+		const [term, usages] = yield* match(value)
+			.with(Patterns.Terms.Struct, () => EB.check(value, NF.Type))
+			.otherwise(function* () {
+				const [term, , usages] = yield* EB.infer(value);
+				return [term, usages] as const;
+			});
+		return { label, value: term, usages };
+	});
 
-			return [R.Constructors.Extension(label, term, rest), Q.add(usages, restUsages)] satisfies [EB.Row, Q.Usages];
-		})
-		.with(Patterns.Rows.Variable, function* ({ variable }) {
-			const ctx = yield* M.reader.ask();
+	const [tail, tailUsages] = yield* match(source.tail)
+		.with(P.nonNullable, function* (variable) {
 			const [term, type, usages] = yield* EB.lookup(variable, ctx);
 			assert(term.type === "Var", "Dependent row tails must elaborate to variables");
 			yield* M.constrain({ type: "assign", left: type, right: NF.Row, lvl: ctx.env.length });
 
-			return [R.Constructors.Variable(term.variable), usages] satisfies [EB.Row, Q.Usages];
+			return [term.variable, usages] as const;
 		})
-		.exhaustive();
+		.otherwise(function* () {
+			return [undefined, Q.noUsage(ctx.env.length)] as const;
+		});
+
+	return [
+		R.Constructors.Row(
+			elaborated.map(({ label, value }) => ({ label, value })),
+			tail,
+		),
+		elaborated.reduce((acc, { usages }) => Q.add(usages, acc), tailUsages),
+	];
 };

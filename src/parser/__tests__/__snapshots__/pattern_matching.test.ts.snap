@@ -53,29 +53,28 @@ exports[`parser: pattern matching > match with structs 1`] = `
     {
       "pattern": {
         "row": {
-          "label": "x",
-          "row": {
-            "label": "y",
-            "row": {
-              "type": "empty",
-            },
-            "type": "extension",
-            "value": {
-              "type": "lit",
+          "entries": [
+            {
+              "label": "x",
               "value": {
-                "type": "Num",
-                "value": 2,
+                "type": "lit",
+                "value": {
+                  "type": "Num",
+                  "value": 1,
+                },
               },
             },
-          },
-          "type": "extension",
-          "value": {
-            "type": "lit",
-            "value": {
-              "type": "Num",
-              "value": 1,
+            {
+              "label": "y",
+              "value": {
+                "type": "lit",
+                "value": {
+                  "type": "Num",
+                  "value": 2,
+                },
+              },
             },
-          },
+          ],
         },
         "type": "struct",
       },
@@ -90,29 +89,28 @@ exports[`parser: pattern matching > match with structs 1`] = `
     {
       "pattern": {
         "row": {
-          "label": "x",
-          "row": {
-            "label": "y",
-            "row": {
-              "type": "empty",
-            },
-            "type": "extension",
-            "value": {
-              "type": "lit",
+          "entries": [
+            {
+              "label": "x",
               "value": {
-                "type": "Num",
-                "value": 1,
+                "type": "lit",
+                "value": {
+                  "type": "Num",
+                  "value": 2,
+                },
               },
             },
-          },
-          "type": "extension",
-          "value": {
-            "type": "lit",
-            "value": {
-              "type": "Num",
-              "value": 2,
+            {
+              "label": "y",
+              "value": {
+                "type": "lit",
+                "value": {
+                  "type": "Num",
+                  "value": 1,
+                },
+              },
             },
-          },
+          ],
         },
         "type": "struct",
       },
@@ -142,18 +140,18 @@ exports[`parser: pattern matching > match with variants 1`] = `
     {
       "pattern": {
         "row": {
-          "label": "x",
-          "row": {
-            "type": "empty",
-          },
-          "type": "extension",
-          "value": {
-            "type": "lit",
-            "value": {
-              "type": "Num",
-              "value": 1,
+          "entries": [
+            {
+              "label": "x",
+              "value": {
+                "type": "lit",
+                "value": {
+                  "type": "Num",
+                  "value": 1,
+                },
+              },
             },
-          },
+          ],
         },
         "type": "variant",
       },
@@ -168,18 +166,18 @@ exports[`parser: pattern matching > match with variants 1`] = `
     {
       "pattern": {
         "row": {
-          "label": "y",
-          "row": {
-            "type": "empty",
-          },
-          "type": "extension",
-          "value": {
-            "type": "lit",
-            "value": {
-              "type": "Num",
-              "value": 2,
+          "entries": [
+            {
+              "label": "y",
+              "value": {
+                "type": "lit",
+                "value": {
+                  "type": "Num",
+                  "value": 2,
+                },
+              },
             },
-          },
+          ],
         },
         "type": "variant",
       },

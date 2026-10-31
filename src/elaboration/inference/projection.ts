@@ -4,7 +4,8 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 
 import * as Src from "@yap/src/index";
 import * as NF from "@yap/elaboration/normalization";
-import { match } from "ts-pattern";
+import * as R from "@yap/shared/rows";
+import { match, P } from "ts-pattern";
 
 type Projection = Extract<Src.Term, { type: "projection" }>;
 
@@ -29,7 +30,7 @@ export const project = function* (label: string, tm: EB.Term, ty: NF.Value, us: 
 			const kind = NF.Type;
 			const val = yield* NF.normalize(EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind)));
 
-			const r: NF.Row = { type: "variable", variable: yield* EB.freshMeta(ctx.env.length, NF.Row) };
+			const r: NF.Row = R.Constructors.Variable(yield* EB.freshMeta(ctx.env.length, NF.Row));
 			const xtension = NF.Constructors.Extension(label, val, r);
 			const inferred = NF.Constructors.App(ctor, NF.Constructors.Row(xtension), "Explicit");
 
@@ -47,28 +48,15 @@ export const project = function* (label: string, tm: EB.Term, ty: NF.Value, us: 
 	function* structural(structure: NF.Value): M.Elaboration<NF.Value> {
 		return yield* match(structure)
 			.with(NF.Patterns.Schema, function* ({ func, arg }) {
-				const from = (l: string, row: NF.Row): M.Elaboration<[NF.Row, NF.Value]> => {
-					return match(row)
-						.with({ type: "empty" }, _ => {
-							return M.fail({ type: "MissingLabel", label: l, row });
-							//throw new Error("Label not found: " + l);
-						})
-						.with(
-							{ type: "extension" },
-							({ label: l_ }) => l === l_,
-							({ label, value, row }) => M.of<[NF.Row, NF.Value]>([NF.Constructors.Extension(label, value, row), value]),
-						)
-						.with({ type: "extension" }, function* (r) {
-							const [rr, vv]: [NF.Row, NF.Value] = yield* from(l, r.row);
-							return [NF.Constructors.Extension(r.label, r.value, rr), vv] satisfies [NF.Row, NF.Value];
-						})
-						.with({ type: "variable" }, function* (r) {
+				const from = (l: string, row: NF.Row): M.Elaboration<[NF.Row, NF.Value]> =>
+					match([R.lookup(row, l), row.tail] as const)
+						.with([P.nonNullable, P._], ([value]) => M.of<[NF.Row, NF.Value]>([row, value]))
+						.with([P._, P.nonNullable], function* ([, tail]) {
 							const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 							const val = yield* NF.normalize(EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind)));
-							return [NF.Constructors.Extension(l, val, r), val] satisfies [NF.Row, NF.Value];
+							return [R.Constructors.Row([...row.entries, { label: l, value: val }], tail), val] satisfies [NF.Row, NF.Value];
 						})
-						.exhaustive();
-				};
+						.otherwise(() => M.fail({ type: "MissingLabel", label: l, row }));
 
 				const [r, v]: [NF.Row, NF.Value] = yield* from(label, arg.row);
 				const inferred = NF.Constructors.App(func, NF.Constructors.Row(r), "Explicit");
@@ -86,27 +74,21 @@ export const project = function* (label: string, tm: EB.Term, ty: NF.Value, us: 
 
 				// Look up the label in the binder's row annotation
 				const from = (l: string, row: NF.Row): M.Elaboration<NF.Value> =>
-					match(row)
-						.with({ type: "empty" }, _ => M.fail({ type: "MissingLabel", label: l, row }))
-						.with(
-							{ type: "extension" },
-							({ label: l_ }) => l === l_,
-							({ value }) => M.of<NF.Value>(value),
-						)
-						.with({ type: "extension" }, r => from(l, r.row))
-						.with({ type: "variable" }, function* (r) {
+					match([R.lookup(row, l), row.tail] as const)
+						.with([P.nonNullable, P._], ([value]) => M.of<NF.Value>(value))
+						.with([P._, P.nonNullable], function* ([, tail]) {
 							const kind = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 							const val = yield* NF.normalize(EB.Constructors.Var(yield* EB.freshMeta(ctx.env.length, kind)));
-							const newRow = NF.Constructors.Extension(l, val, r);
+							const open = R.Constructors.Variable<NF.Value, NF.Variable>(tail);
 							yield* M.constrain({
 								type: "assign",
-								left: NF.Constructors.Row(newRow),
-								right: NF.Constructors.Row(row),
+								left: NF.Constructors.Row(NF.Constructors.Extension(l, val, open)),
+								right: NF.Constructors.Row(open),
 								lvl: ctx.env.length,
 							});
 							return val;
 						})
-						.exhaustive();
+						.otherwise(() => M.fail({ type: "MissingLabel", label: l, row }));
 
 				return yield* from(label, binder.annotation.row);
 			})

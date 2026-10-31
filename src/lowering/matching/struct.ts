@@ -15,7 +15,7 @@ export type StructBranch = EB.Alternative & { pattern: { type: "Struct"; row: R.
 export const filter = (branches: EB.Alternative[]): StructBranch[] => branches.filter((b): b is StructBranch => b.pattern.type === "Struct");
 
 export const fields = (row: R.Row<EB.Pattern, string>): Array<{ label: string; pattern: EB.Pattern }> =>
-	row.type === "extension" ? [{ label: row.label, pattern: row.value }, ...fields(row.row)] : [];
+	row.entries.map(({ label, value }) => ({ label, pattern: value }));
 
 export const project = (label: string, branches: StructBranch[]): EB.Alternative[] =>
 	branches.map(b => {

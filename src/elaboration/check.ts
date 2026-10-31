@@ -335,7 +335,7 @@ const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): M.Elaboration<[EB.Ro
 					const [tm, us] = yield* Check.val(val, ty);
 					const [r, usages]: [EB.Row, Q.Usages] = yield* acc;
 
-					return [{ type: "extension", label: lbl, value: tm, row: r }, Q.add(us, usages)] satisfies [EB.Row, Q.Usages];
+					return [EB.Constructors.Extension(lbl, tm, r), Q.add(us, usages)] satisfies [EB.Row, Q.Usages];
 				})(),
 			(v, acc) =>
 				(function* () {
@@ -346,59 +346,52 @@ const checkRow = (row: Src.Row, ty: NF.Value, lvl: number): M.Elaboration<[EB.Ro
 
 					const [r, usages]: [EB.Row, Q.Usages] = yield* acc;
 
-					const rvar: EB.Row = { type: "variable", variable: tm.variable };
-
-					return [R.append(r, rvar), Q.add(us, usages)] satisfies [EB.Row, Q.Usages];
+					return [R.append(r, R.Constructors.Variable(tm.variable)), Q.add(us, usages)] satisfies [EB.Row, Q.Usages];
 				})(),
-			M.of<[EB.Row, Q.Usages]>([{ type: "empty" }, Q.noUsage(lvl)]),
+			M.of<[EB.Row, Q.Usages]>([R.Constructors.Empty(), Q.noUsage(lvl)]),
 		),
 	);
 
 const traverseRow = function* (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: Record<string, NF.Value>): M.Elaboration<[EB.Row, Q.Usages]> {
-	const result = match([r2, r1])
-		.with([{ type: "empty" }, { type: "empty" }], () => M.of([{ type: "empty" }, us] satisfies [EB.Row, Q.Usages]))
-		.with([{ type: "extension" }, { type: "empty" }], ([{ label }, r]) => M.fail(Err.MissingLabel(label, r)))
+	const result = match([r2, r1] as const)
+		.with([P._, R.Patterns.Tail], () => M.fail({ type: "Impossible", message: "Cannot have row var in a struct value" }))
+		.with(
+			[R.Patterns.NonEmpty, P._],
+			([
+				{
+					entries: [{ label, value }, ...remaining],
+				},
+			]) => {
+				const rewritten = R.rewrite(r1, label);
+				if (E.isLeft(rewritten)) {
+					return M.fail(Err.MissingLabel(label, r1));
+				}
 
-		.with([{ type: "extension" }, { type: "extension" }], ([{ label, value, row }, r]) => {
-			const rewritten = R.rewrite(r, label);
-			if (E.isLeft(rewritten)) {
-				return M.fail(Err.MissingLabel(label, r));
-			}
+				const { value: rv, rest: rr } = rewritten.right;
+				const row = R.Constructors.Row(remaining, r2.tail);
 
-			if (rewritten.right.type !== "extension") {
-				return M.fail({ type: "Impossible", message: "Rewriting a row extension should result in another row extension" });
-			}
+				return M.reader.local(
+					ctx => EB.extendLabel(ctx, label, value),
+					(function* () {
+						const [tm, tus] = yield* Check.val(rv, value);
+						const type = bindings[label];
+						if (!type) {
+							throw new Error("Elaborating Row Extension: Label not found");
+						}
+						const ctx = yield* M.reader.ask();
+						//const nf = NF.evaluate(ctx, tm);
+						yield* M.constrain([{ type: "assign", left: value, right: type, lvl: ctx.env.length }]);
 
-			const { value: rv, row: rr } = rewritten.right;
-
-			return M.reader.local(
-				ctx => EB.extendLabel(ctx, label, value),
-				(function* () {
-					const [tm, tus] = yield* Check.val(rv, value);
-					const type = bindings[label];
-					if (!type) {
-						throw new Error("Elaborating Row Extension: Label not found");
-					}
-					const ctx = yield* M.reader.ask();
-					//const nf = NF.evaluate(ctx, tm);
-					yield* M.constrain([{ type: "assign", left: value, right: type, lvl: ctx.env.length }]);
-
-					const [rt, rus] = yield* Check.row.traverse(rr as Src.Row, row, us, bindings);
-					const q = Q.add(tus, rus);
-					const xtension = EB.Constructors.Extension(label, tm, rt);
-					return [xtension, q] satisfies [EB.Row, Q.Usages];
-				})(),
-			);
-		})
-		.with([P._, { type: "variable" }], () => M.fail({ type: "Impossible", message: "Cannot have row var in a struct value" }))
-		.with([{ type: "variable" }, { type: "empty" }], function* ([v, _e]) {
-			const ctx = yield* M.reader.ask();
-			yield* M.constrain({ type: "assign", left: NF.Constructors.Row({ type: "empty" }), right: NF.Constructors.Row(v), lvl: ctx.env.length });
-			return [{ type: "empty" }, us] satisfies [EB.Row, Q.Usages];
-		})
-
-		.with([{ type: "variable" }, { type: "extension" }], function* ([v, r]) {
-			const collected = yield* EB.Rows.collect(r);
+						const [rt, rus] = yield* Check.row.traverse(rr as Src.Row, row, us, bindings);
+						const q = Q.add(tus, rus);
+						const xtension = EB.Constructors.Extension(label, tm, rt);
+						return [xtension, q] satisfies [EB.Row, Q.Usages];
+					})(),
+				);
+			},
+		)
+		.with([{ tail: P.nonNullable }, R.Patterns.NonEmpty], function* () {
+			const collected = yield* EB.Rows.collect(r1);
 			if (collected.tail) {
 				throw new Error("Cannot have row variables in struct values");
 			}
@@ -407,16 +400,27 @@ const traverseRow = function* (r1: Src.Row, r2: NF.Row, us: Q.Usages, bindings: 
 					tm: EB.Constructors.Extension(label, term, acc.tm),
 					ty: NF.Constructors.Extension(label, value, acc.ty),
 				}),
-				{ tm: { type: "empty" }, ty: { type: "empty" } },
+				{ tm: R.Constructors.Empty(), ty: R.Constructors.Empty() },
 			);
 			const ctx = yield* M.reader.ask();
-			yield* M.constrain({ type: "assign", left: NF.Constructors.Row(inferred.ty), right: NF.Constructors.Row(v), lvl: ctx.env.length });
+			yield* M.constrain({ type: "assign", left: NF.Constructors.Row(inferred.ty), right: NF.Constructors.Row(r2), lvl: ctx.env.length });
 			return [inferred.tm, us] satisfies [EB.Row, Q.Usages];
 		})
-		.with([P._, { type: "extension" }], ([r, { label }]) => M.fail(Err.MissingLabel(label, r)))
-		.otherwise(_ => {
-			throw new Error("Unknown row action");
-		});
+		.with([{ tail: P.nonNullable }, P._], function* () {
+			const ctx = yield* M.reader.ask();
+			yield* M.constrain({ type: "assign", left: NF.Constructors.Row(R.Constructors.Empty()), right: NF.Constructors.Row(r2), lvl: ctx.env.length });
+			return [R.Constructors.Empty(), us] satisfies [EB.Row, Q.Usages];
+		})
+		.with(
+			[P._, R.Patterns.NonEmpty],
+			([
+				,
+				{
+					entries: [{ label }],
+				},
+			]) => M.fail(Err.MissingLabel(label, r2)),
+		)
+		.otherwise(() => M.of([R.Constructors.Empty(), us] satisfies [EB.Row, Q.Usages]));
 
 	return yield* result;
 };

@@ -6,8 +6,6 @@ import * as NF from "@yap/elaboration/normalization";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as Row from "@yap/shared/rows";
 import * as Q from "@yap/shared/modalities/multiplicity";
-import * as E from "fp-ts/lib/Either";
-
 import { primopMapping } from "@yap/shared/lib/primitives";
 
 import type { IVL } from "../solver/ivl/types";
@@ -249,30 +247,24 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 							.with(NF.Patterns.Modal, function* (modal) {
 								return yield* projected(label, modal.value);
 							})
-							.with(NF.Patterns.Schema, function* ({ func, arg }) {
-								const rewritten = Row.rewrite(arg.row, label);
-								if (E.isLeft(rewritten)) {
+							.with(NF.Patterns.Schema, function* ({ arg }) {
+								const field = Row.lookup(arg.row, label);
+								if (!field) {
 									throw new Error("Projection label not found: " + label);
 								}
-								if (rewritten.right.type !== "extension") {
-									throw new Error("Projected label is not an extension: " + label);
-								}
 
-								return rewritten.right.value;
+								return field;
 							})
 							.with(NF.Patterns.Sigma, function* ({ binder }) {
 								if (binder.annotation.type !== "Row") {
 									throw new Error("Sigma binder annotation must be a Row");
 								}
 
-								const rewritten = Row.rewrite(binder.annotation.row, label);
-								if (E.isLeft(rewritten)) {
+								const field = Row.lookup(binder.annotation.row, label);
+								if (!field) {
 									throw new Error("Projection label not found in Sigma: " + label);
 								}
-								if (rewritten.right.type !== "extension") {
-									throw new Error("Projected label is not an extension in Sigma: " + label);
-								}
-								return rewritten.right.value;
+								return field;
 							})
 							.with(NF.Patterns.SigmaV2, function* ({ binder, closure }) {
 								const witness = yield* NF.evaluate(proj.term);
@@ -281,17 +273,11 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 
 								return yield* match(row)
 									.with(P.nonNullable, function* (row) {
-										return E.match(
-											(): NF.Value => {
-												throw new Error("Projection label not found in SigmaV2: " + label);
-											},
-											(rewritten: NF.Row) =>
-												match(rewritten)
-													.with({ type: "extension" }, ({ value }) => value)
-													.otherwise(() => {
-														throw new Error("Projected label is not an extension in SigmaV2: " + label);
-													}),
-										)(Row.rewrite(row, label));
+										const field = Row.lookup(row, label);
+										if (!field) {
+											throw new Error("Projection label not found in SigmaV2: " + label);
+										}
+										return field;
 									})
 									.otherwise(function* () {
 										throw new Error("SigmaV2 projection expected a Schema body");
@@ -324,21 +310,19 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 								return NF.Constructors.Modal(inner, modalities);
 							})
 							.with(NF.Patterns.Schema, function* ({ func, arg }) {
-								const rewritten = Row.rewrite(arg.row, label);
-								if (E.isLeft(rewritten)) {
+								if (Row.lookup(arg.row, label) === undefined) {
 									const extended = Row.Constructors.Extension(label, payloadTy, arg.row);
 									return NF.Constructors.App(func, NF.Constructors.Row(extended), "Explicit");
 								}
 
-								return NF.Constructors.App(func, NF.Constructors.Row(rewritten.right), "Explicit");
+								return value;
 							})
 							.with(NF.Patterns.Sigma, function* ({ binder, closure }) {
 								if (binder.annotation.type !== "Row") {
 									throw new Error("Sigma binder annotation must be a Row");
 								}
 
-								const rewritten = Row.rewrite(binder.annotation.row, label);
-								if (E.isLeft(rewritten)) {
+								if (Row.lookup(binder.annotation.row, label) === undefined) {
 									const extended = Row.Constructors.Extension(label, payloadTy, binder.annotation.row);
 									const ann = NF.Constructors.Row(extended);
 									const quotedPayload = yield* NF.quote(ctx.env.length, payloadTy);
@@ -352,7 +336,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 									return NF.Constructors.Sigma(binder.variable, ann, NF.Constructors.Closure(closure.ctx, schema));
 								}
 
-								return NF.Constructors.Sigma(binder.variable, NF.Constructors.Row(rewritten.right), closure);
+								return value;
 							})
 							.with(NF.Patterns.SigmaV2, function* ({ binder, closure }) {
 								if (binder.annotation.type !== "Row") {
@@ -360,24 +344,20 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 								}
 
 								const slots = binder.annotation.row;
+								if (Row.lookup(slots, label) !== undefined) {
+									return value;
+								}
 
-								return yield* E.match(
-									function* (): Verification<NF.Value> {
-										const ann = NF.Constructors.Row(Row.Constructors.Extension(label, NF.Irrelevant, slots));
-										const quotedPayload = yield* NF.quote(ctx.env.length, payloadTy);
+								const ann = NF.Constructors.Row(Row.Constructors.Extension(label, NF.Irrelevant, slots));
+								const quotedPayload = yield* NF.quote(ctx.env.length, payloadTy);
 
-										const schema = match(closure.term)
-											.with(EB.CtorPatterns.Schema, ({ arg }) => EB.Constructors.Schema(EB.Constructors.Extension(label, quotedPayload, arg.row)))
-											.otherwise(_ => {
-												throw new Error("Injection expected a Schema type in SigmaV2 injection");
-											});
+								const schema = match(closure.term)
+									.with(EB.CtorPatterns.Schema, ({ arg }) => EB.Constructors.Schema(EB.Constructors.Extension(label, quotedPayload, arg.row)))
+									.otherwise(_ => {
+										throw new Error("Injection expected a Schema type in SigmaV2 injection");
+									});
 
-										return NF.Constructors.SigmaV2(binder.variable, ann, NF.Constructors.Closure(closure.ctx, schema));
-									},
-									function* (rewritten: NF.Row): Verification<NF.Value> {
-										return NF.Constructors.SigmaV2(binder.variable, NF.Constructors.Row(rewritten), closure);
-									},
-								)(Row.rewrite(slots, label));
+								return NF.Constructors.SigmaV2(binder.variable, ann, NF.Constructors.Closure(closure.ctx, schema));
 							})
 							.otherwise(() => {
 								throw new Error("Injection expected a Schema or Variant type");
@@ -425,27 +405,26 @@ type StructRow = { row: NF.Row; vc: IVL.Formula };
 
 const synthStructRow = function* (row: EB.Row): Verification<StructRow> {
 	return yield* match(row)
-		.with({ type: "empty" }, function* () {
-			return { row: Row.Constructors.Empty(), vc: Build.true_() } satisfies StructRow;
-		})
-		.with({ type: "extension" }, function* ({ label, value, row: rest }) {
+		.with(Row.Patterns.NonEmpty, function* ({ entries: [{ label, value }, ...remaining] }) {
 			const [ty, artefacts] = yield* synth(value);
 			const fieldCtx = yield* reader.ask();
 			const fieldValue = yield* NF.evaluate(value);
 			const restResult = yield* reader.local(
 				c => EB.extendSigma(EB.extendLabel(c, label, ty), Row.Constructors.Extension(label, fieldValue, Row.Constructors.Empty())),
-				synthStructRow(rest),
+				synthStructRow(Row.Constructors.Row(remaining, row.tail)),
 			);
 			return {
 				row: Row.Constructors.Extension(label, ty, restResult.row),
 				vc: Build.and(artefacts.vc, restResult.vc),
 			} satisfies StructRow;
 		})
-		.with({ type: "variable" }, function* ({ variable }) {
+		.with(Row.Patterns.Tail, function* ({ tail }) {
 			const currentCtx = yield* reader.ask();
-			return { row: Row.Constructors.Variable(toNFVariable(currentCtx, variable)), vc: Build.true_() } satisfies StructRow;
+			return { row: Row.Constructors.Variable(toNFVariable(currentCtx, tail)), vc: Build.true_() } satisfies StructRow;
 		})
-		.exhaustive();
+		.otherwise(function* () {
+			return { row: Row.Constructors.Empty(), vc: Build.true_() } satisfies StructRow;
+		});
 };
 
 function toNFVariable(context: EB.Context, variable: EB.Variable): NF.Variable {

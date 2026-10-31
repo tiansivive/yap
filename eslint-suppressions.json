@@ -160,7 +160,7 @@
 	},
 	"src/GRAM/translate.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
-			"count": 7
+			"count": 4
 		},
 		"no-restricted-syntax": {
 			"count": 9
@@ -454,11 +454,6 @@
 			"count": 1
 		}
 	},
-	"src/shared/rows.ts": {
-		"no-restricted-syntax": {
-			"count": 2
-		}
-	},
 	"src/utils/functions.ts": {
 		"@typescript-eslint/consistent-type-assertions": {
 			"count": 1
@@ -507,10 +502,7 @@
 	},
 	"src/verification/V2/synth.ts": {
 		"@typescript-eslint/no-unused-vars": {
-			"count": 2
-		},
-		"no-restricted-properties": {
-			"count": 4
+			"count": 1
 		}
 	},
 	"src/verification/V2/utils/context.ts": {

@@ -135,29 +135,28 @@ exports[`parser: usage annotations (multiplicities) > usage with struct: <*> { x
   },
   "term": {
     "row": {
-      "label": "x",
-      "row": {
-        "label": "y",
-        "row": {
-          "type": "empty",
-        },
-        "type": "extension",
-        "value": {
-          "type": "var",
-          "variable": {
-            "type": "name",
-            "value": "String",
+      "entries": [
+        {
+          "label": "x",
+          "value": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "Num",
+            },
           },
         },
-      },
-      "type": "extension",
-      "value": {
-        "type": "var",
-        "variable": {
-          "type": "name",
-          "value": "Num",
+        {
+          "label": "y",
+          "value": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "String",
+            },
+          },
         },
-      },
+      ],
     },
     "type": "struct",
   },

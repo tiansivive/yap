@@ -76,10 +76,10 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 	const registry = yield* Metas.registry.get();
 
 	const instantiateRow = function* (row: EB.Row): Zonking<EB.Row> {
-		if (row.type === "empty" || row.type === "variable") {
-			return row;
-		}
-		return R.Constructors.Extension(row.label, yield* instantiate(row.value, resolutions), yield* instantiateRow(row.row));
+		const entries = yield* M.traverse(row.entries, function* ({ label, value }) {
+			return { label, value: yield* instantiate(value, resolutions) };
+		});
+		return R.Constructors.Row(entries, row.tail);
 	};
 
 	return yield* match(term)
@@ -103,7 +103,7 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			const { annotation } = Metas.entry(registry, v.variable.val);
 
 			return match(annotation)
-				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.Constructors.Row({ type: "empty" }))
+				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => EB.Constructors.Row(R.Constructors.Empty()))
 				.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Any" }))
 				.with({ type: "Lit", value: { type: "Atom", value: "Any" } }, () => EB.Constructors.Lit({ type: "Atom", value: "Void" }))
 				.otherwise(() => EB.Constructors.Var(v.variable));

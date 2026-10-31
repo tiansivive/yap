@@ -52,15 +52,7 @@ export function freeVars(term: EB.Term, depth: number): Set<number> {
 }
 
 function freeVarsRow(row: EB.Row, depth: number): Set<number> {
-	return match(row)
-		.with(Patterns.Rows.Extension, ({ value, row: rest }) => {
-			const a = freeVars(value, depth);
-			const b = freeVarsRow(rest, depth);
-			return new Set<number>([...a, ...b]);
-		})
-		.with(Patterns.Rows.Variable, () => new Set<number>())
-		.with(Patterns.Rows.Empty, () => new Set<number>())
-		.exhaustive();
+	return new Set(row.entries.flatMap(({ value }) => [...freeVars(value, depth)]));
 }
 
 /** Deterministic sorted array from set of numbers. */

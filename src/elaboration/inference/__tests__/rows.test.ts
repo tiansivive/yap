@@ -5,7 +5,10 @@ describe("Inference: type-level rows", () => {
 	it("Row extension: [x: Num, y: String]", () => {
 		const { structure, displays } = elaborateFrom("[ x: Num, y: String ]");
 		expect(displays.type).toBe("Row");
-		expect(structure.term).toMatchObject({ type: "Row", row: { type: "extension" } });
+		expect(structure.term).toMatchObject({
+			type: "Row",
+			row: { entries: expect.arrayContaining([expect.objectContaining({ label: "x" }), expect.objectContaining({ label: "y" })]) },
+		});
 
 		expect({ displays }).toMatchSnapshot();
 	});

@@ -255,37 +255,40 @@ export const keyval = (pair: [Variable, Whitespace, Colon, Whitespace, Term]): K
 	return Sourced.of([v.value, value], locSpan(v.location, value.location));
 };
 
-export const emptyRow = ([location]: [P.Location]): Term => ({ type: "row", location, row: { ...R.Constructors.Empty(), location } });
+type Located = { location: P.Location };
 
-const extend = (label: string, value: Term, row: R.Row<Term, Variable>, location: P.Location): Row => ({
-	...R.Constructors.Extension(label, value, row),
+/* Nearley answers an absent optional tail with null. */
+const located = (entries: ReadonlyArray<R.Entry<Term> & Located>, tail: Variable | null | undefined, location: P.Location): Row => ({
+	...R.Constructors.Row(entries, tail ?? undefined),
 	location,
 });
+
+const fields = (pairs: KeyVal[]) => pairs.map(([[label, value], location]) => ({ label, value, location }));
+
+export const emptyRow = ([location]: [P.Location]): Term => ({ type: "row", location, row: { ...R.Constructors.Empty<Term, Variable, Located>(), location } });
 
 export const row: PostProcessor<[[KeyVal[], Variable?]], Term> = ([[pairs, v]]): Term => {
 	if (pairs.length === 0) {
 		throw new Error("Expected at least one key-value pair in row");
 	}
 
-	const last = pairs[pairs.length - 1];
-	const tail: Row = !v ? { type: "empty", location: last[1] } : { type: "variable", variable: v, location: v.location };
-	const row = pairs.reduceRight<Row>((r, [[label, value], loc]) => extend(label, value, r, loc), tail);
-
-	return { type: "row", row, location: locSpan(pairs[0][1], tail.location) };
+	const location = locSpan(pairs[0][1], v ? v.location : pairs[pairs.length - 1][1]);
+	return { type: "row", row: located(fields(pairs), v, location), location };
 };
 
-export const emptyStruct = ([location]: [P.Location]): Term => ({ type: "struct", location, row: { ...R.Constructors.Empty(), location } });
+export const emptyStruct = ([location]: [P.Location]): Term => ({
+	type: "struct",
+	location,
+	row: { ...R.Constructors.Empty<Term, Variable, Located>(), location },
+});
 
 export const struct: PostProcessor<[[KeyVal[], Variable?]], Term> = ([[pairs, v]]) => {
 	if (pairs.length === 0) {
 		throw new Error("Expected at least one key-value pair in struct");
 	}
 
-	const last = pairs[pairs.length - 1];
-	const tail: Row = v ? { type: "variable", variable: v, location: v.location } : { type: "empty", location: last[1] };
-
-	const row = pairs.reduceRight<Row>((acc, [[label, value], location]) => extend(label, value, acc, location), tail);
-	return { type: "struct", row, location: locSpan(pairs[0][1], tail.location) };
+	const location = locSpan(pairs[0][1], v ? v.location : pairs[pairs.length - 1][1]);
+	return { type: "struct", row: located(fields(pairs), v, location), location };
 };
 
 export const dict: PostProcessor<[[Space, [Space, Term], Space, Colon, Space, Term]], Term> = ([data]) => {
@@ -305,10 +308,9 @@ export const tagged: PostProcessor<[Colon, Variable, Whitespace, Term], Term> = 
 type Tagged = Extract<Term, { type: "tagged" }>;
 export const variant = (data: [Bar, Tagged[]] | [Tagged[]]): Term => {
 	const mkVariant = (terms: Tagged[]): Term => {
-		const last = terms[terms.length - 1];
-		const tail: Row = { type: "empty", location: last.location };
-		const row = terms.reduceRight<Row>((acc, tm) => extend(tm.tag, tm.term, acc, tm.location), tail);
-		return { type: "variant", row, location: locSpan(terms[0].location, tail.location) };
+		const location = locSpan(terms[0].location, terms[terms.length - 1].location);
+		const entries = terms.map(tm => ({ label: tm.tag, value: tm.term, location: tm.location }));
+		return { type: "variant", row: located(entries, undefined, location), location };
 	};
 	if (data.length === 1) {
 		return mkVariant(data[0]);
@@ -320,13 +322,9 @@ export const tuple: PostProcessor<[[Term[], Variable?]], Term> = ([[terms, v]]) 
 	if (terms.length === 0) {
 		throw new Error("Expected at least one term in tuple");
 	}
-	const last = terms[terms.length - 1];
-	const tail: Row = v ? { type: "variable", variable: v, location: v.location } : { type: "empty", location: last.location };
-	return {
-		type: "tuple",
-		row: terms.reduceRight<Row>((row, value, i) => extend(i.toString(), value, row, value.location), tail),
-		location: locSpan(terms[0].location, last.location),
-	};
+	const location = locSpan(terms[0].location, terms[terms.length - 1].location);
+	const entries = terms.map((value, i) => ({ label: i.toString(), value, location: value.location }));
+	return { type: "tuple", row: located(entries, v, location), location };
 };
 
 export const emptyList = ([location]: [P.Location]): Term => ({ type: "list", elements: [], location });
@@ -452,39 +450,37 @@ export const taggedPat = ([_tok, v, , pat]: [Hash, Variable, Space, Src.Pattern]
 	return [v.value, pat];
 };
 
-type RowPat = R.Row<Src.Pattern, Variable>;
+const patterns = (pairs: ReadonlyArray<readonly [string, Src.Pattern]>, tail?: Variable | null): R.Row<Src.Pattern, Variable> =>
+	R.Constructors.Row(
+		pairs.map(([label, value]) => ({ label, value })),
+		tail ?? undefined,
+	);
+
 export const Pattern = {
 	Var: ([value]: [Variable]): Src.Pattern => ({ type: "var", value }),
 	Lit: ([[value]]: [Sourced<Literal>]): Src.Pattern => ({ type: "lit", value }),
-	Tuple: ([[terms, v]]: [[Src.Pattern[], Variable?]]): Src.Pattern => {
-		const tail: RowPat = !v ? { type: "empty" } : { type: "variable", variable: v };
-		const row = terms.reduceRight<RowPat>((row, value, i) => R.Constructors.Extension(i.toString(), value, row), tail);
-		return { type: "tuple", row };
-	},
-	Struct: ([[pairs, v]]: [[PatKeyVal[], Variable?]]): Src.Pattern => {
-		const tail: RowPat = !v ? { type: "empty" } : { type: "variable", variable: v };
-		const row = pairs.reduceRight<RowPat>((acc, [label, value]) => R.Constructors.Extension(label, value, acc), tail);
-		return { type: "struct", row };
-	},
+	Tuple: ([[terms, v]]: [[Src.Pattern[], Variable?]]): Src.Pattern => ({
+		type: "tuple",
+		row: patterns(
+			terms.map((value, i) => [i.toString(), value] as const),
+			v,
+		),
+	}),
+	Struct: ([[pairs, v]]: [[PatKeyVal[], Variable?]]): Src.Pattern => ({ type: "struct", row: patterns(pairs, v) }),
 	List: ([[elements, v]]: [[Src.Pattern[], Variable?]]): Src.Pattern => {
 		return { type: "list", elements, rest: v };
 	},
-	Row: ([[pairs, v]]: [[PatKeyVal[], Variable?]]): Src.Pattern => {
-		const tail: RowPat = !v ? { type: "empty" } : { type: "variable", variable: v };
-		const row = pairs.reduceRight<RowPat>((acc, [label, value]) => R.Constructors.Extension(label, value, acc), tail);
-		return { type: "row", row };
-	},
+	Row: ([[pairs, v]]: [[PatKeyVal[], Variable?]]): Src.Pattern => ({ type: "row", row: patterns(pairs, v) }),
 
-	Variant: ([pats, last]: [[PatTagged, Space, Bar, Space][], PatTagged]): Src.Pattern => {
-		const tail: RowPat = R.Constructors.Extension(last[0], last[1], R.Constructors.Empty());
-		const row = pats.reduceRight<RowPat>((acc, [[label, value]]) => R.Constructors.Extension(label, value, acc), tail);
-		return { type: "variant", row };
-	},
+	Variant: ([pats, last]: [[PatTagged, Space, Bar, Space][], PatTagged]): Src.Pattern => ({
+		type: "variant",
+		row: patterns([...pats.map(([pair]) => pair), last]),
+	}),
 	Wildcard: ([_tok]: [Token]): Src.Pattern => ({ type: "wildcard" }),
 
 	Empty: {
 		List: (): Src.Pattern => ({ type: "list", elements: [] }),
-		Struct: (): Src.Pattern => ({ type: "struct", row: { type: "empty" } }),
+		Struct: (): Src.Pattern => ({ type: "struct", row: R.Constructors.Empty() }),
 	},
 };
 

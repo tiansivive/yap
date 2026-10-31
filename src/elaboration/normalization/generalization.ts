@@ -268,10 +268,10 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 	const registry = yield* Metas.registry.get();
 
 	const instantiateRow = function* (row: NF.Row): EB.Icit.Zonking<NF.Row> {
-		if (row.type === "empty" || row.type === "variable") {
-			return row;
-		}
-		return R.Constructors.Extension(row.label, yield* instantiate(row.value), yield* instantiateRow(row.row));
+		const entries = yield* M.traverse(row.entries, function* ({ label, value }) {
+			return { label, value: yield* instantiate(value) };
+		});
+		return R.Constructors.Row(entries, row.tail);
 	};
 
 	return yield* match(nf)
@@ -293,7 +293,7 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 
 			const { annotation } = Metas.entry(registry, v.variable.val);
 			return match(annotation)
-				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => NF.Constructors.Row({ type: "empty" }))
+				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => NF.Constructors.Row(R.Constructors.Empty()))
 				.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => NF.Constructors.Lit({ type: "Atom", value: "Any" }))
 				.otherwise(() => NF.Constructors.Var(v.variable));
 		})

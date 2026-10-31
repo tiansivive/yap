@@ -186,17 +186,9 @@ export const extend = (context: Context, binder: Binder, value: NF.Value, origin
 };
 
 export const extendSigma = (ctx: Context, row: NF.Row): Context => {
-	const collect = (r: NF.Row): Context["sigma"] =>
-		match(r)
-			.with({ type: "empty" }, (): Context["sigma"] => ({}))
-			.with({ type: "variable" }, (): Context["sigma"] => ({}))
-			.with({ type: "extension" }, ({ label, value, row }): Context["sigma"] => ({
-				[label]: { value },
-				...collect(row),
-			}))
-			.exhaustive();
+	const collected: Context["sigma"] = Object.fromEntries(row.entries.map(({ label, value }) => [label, { value }]));
 
-	return update(ctx, "sigma", s => ({ ...s, ...collect(row) }));
+	return update(ctx, "sigma", s => ({ ...s, ...collected }));
 };
 
 export const augment = (context: Context, binder: Binder, annotation: NF.Value, origin: Origin = "inserted") => {

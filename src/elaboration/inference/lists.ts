@@ -6,6 +6,7 @@ import * as Src from "@yap/src/index";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
 import * as Lit from "@yap/shared/literals";
+import * as R from "@yap/shared/rows";
 
 type List = Extract<Src.Term, { type: "list" }>;
 
@@ -27,12 +28,6 @@ export const infer = (list: List): M.Elaboration<EB.AST> =>
 
 		const ty = NF.Constructors.Indexed(NF.Constructors.Lit(Lit.Atom("Num")), v, NF.Constructors.Var({ type: "Foreign", name: "defaultArray" }));
 
-		const row = es.reduceRight(
-			(r: EB.Row, [tm], i) => {
-				const label = i.toString();
-				return { type: "extension", label, value: tm, row: r } satisfies EB.Row;
-			},
-			{ type: "empty" },
-		);
+		const row: EB.Row = R.Constructors.Row(es.map(([tm], i) => ({ label: i.toString(), value: tm })));
 		return [EB.Constructors.Array(row), ty, usages] satisfies EB.AST;
 	});

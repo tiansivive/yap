@@ -38,18 +38,18 @@ exports[`parser: rows > projection: x.y 1`] = `
 exports[`parser: rows > row extension: [ x: 2 ] 1`] = `
 {
   "row": {
-    "label": "x",
-    "row": {
-      "type": "empty",
-    },
-    "type": "extension",
-    "value": {
-      "type": "lit",
-      "value": {
-        "type": "Num",
-        "value": 2,
+    "entries": [
+      {
+        "label": "x",
+        "value": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 2,
+          },
+        },
       },
-    },
+    ],
   },
   "type": "row",
 }
@@ -58,21 +58,21 @@ exports[`parser: rows > row extension: [ x: 2 ] 1`] = `
 exports[`parser: rows > row polymorphic: [ x: 1 | r ] 1`] = `
 {
   "row": {
-    "label": "x",
-    "row": {
-      "type": "variable",
-      "variable": {
-        "type": "name",
-        "value": "r",
+    "entries": [
+      {
+        "label": "x",
+        "value": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
       },
-    },
-    "type": "extension",
-    "value": {
-      "type": "lit",
-      "value": {
-        "type": "Num",
-        "value": 1,
-      },
+    ],
+    "tail": {
+      "type": "name",
+      "value": "r",
     },
   },
   "type": "row",
@@ -129,21 +129,21 @@ exports[`parser: rows > shorthand projection: .x 1`] = `
 exports[`parser: rows > struct polymorphic: { x: 1 | r } 1`] = `
 {
   "row": {
-    "label": "x",
-    "row": {
-      "type": "variable",
-      "variable": {
-        "type": "name",
-        "value": "r",
+    "entries": [
+      {
+        "label": "x",
+        "value": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
+        },
       },
-    },
-    "type": "extension",
-    "value": {
-      "type": "lit",
-      "value": {
-        "type": "Num",
-        "value": 1,
-      },
+    ],
+    "tail": {
+      "type": "name",
+      "value": "r",
     },
   },
   "type": "struct",
@@ -153,29 +153,28 @@ exports[`parser: rows > struct polymorphic: { x: 1 | r } 1`] = `
 exports[`parser: rows > struct: { x: 1, y: 2 } 1`] = `
 {
   "row": {
-    "label": "x",
-    "row": {
-      "label": "y",
-      "row": {
-        "type": "empty",
-      },
-      "type": "extension",
-      "value": {
-        "type": "lit",
+    "entries": [
+      {
+        "label": "x",
         "value": {
-          "type": "Num",
-          "value": 2,
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
         },
       },
-    },
-    "type": "extension",
-    "value": {
-      "type": "lit",
-      "value": {
-        "type": "Num",
-        "value": 1,
+      {
+        "label": "y",
+        "value": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 2,
+          },
+        },
       },
-    },
+    ],
   },
   "type": "struct",
 }
@@ -198,32 +197,31 @@ exports[`parser: rows > tagged: #x 1 1`] = `
 exports[`parser: rows > tuple with tail: {1, 2 | r} 1`] = `
 {
   "row": {
-    "label": "0",
-    "row": {
-      "label": "1",
-      "row": {
-        "type": "variable",
-        "variable": {
-          "type": "name",
-          "value": "r",
-        },
-      },
-      "type": "extension",
-      "value": {
-        "type": "lit",
+    "entries": [
+      {
+        "label": "0",
         "value": {
-          "type": "Num",
-          "value": 2,
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
         },
       },
-    },
-    "type": "extension",
-    "value": {
-      "type": "lit",
-      "value": {
-        "type": "Num",
-        "value": 1,
+      {
+        "label": "1",
+        "value": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 2,
+          },
+        },
       },
+    ],
+    "tail": {
+      "type": "name",
+      "value": "r",
     },
   },
   "type": "tuple",
@@ -233,29 +231,28 @@ exports[`parser: rows > tuple with tail: {1, 2 | r} 1`] = `
 exports[`parser: rows > tuple: {1, 2} 1`] = `
 {
   "row": {
-    "label": "0",
-    "row": {
-      "label": "1",
-      "row": {
-        "type": "empty",
-      },
-      "type": "extension",
-      "value": {
-        "type": "lit",
+    "entries": [
+      {
+        "label": "0",
         "value": {
-          "type": "Num",
-          "value": 2,
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
         },
       },
-    },
-    "type": "extension",
-    "value": {
-      "type": "lit",
-      "value": {
-        "type": "Num",
-        "value": 1,
+      {
+        "label": "1",
+        "value": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 2,
+          },
+        },
       },
-    },
+    ],
   },
   "type": "tuple",
 }
@@ -264,29 +261,28 @@ exports[`parser: rows > tuple: {1, 2} 1`] = `
 exports[`parser: rows > variant: | #x 1 | #y 2 1`] = `
 {
   "row": {
-    "label": "x",
-    "row": {
-      "label": "y",
-      "row": {
-        "type": "empty",
-      },
-      "type": "extension",
-      "value": {
-        "type": "lit",
+    "entries": [
+      {
+        "label": "x",
         "value": {
-          "type": "Num",
-          "value": 2,
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 1,
+          },
         },
       },
-    },
-    "type": "extension",
-    "value": {
-      "type": "lit",
-      "value": {
-        "type": "Num",
-        "value": 1,
+      {
+        "label": "y",
+        "value": {
+          "type": "lit",
+          "value": {
+            "type": "Num",
+            "value": 2,
+          },
+        },
       },
-    },
+    ],
   },
   "type": "variant",
 }

@@ -1,3 +1,4 @@
+import assert from "node:assert";
 import type * as EB from "@yap/elaboration";
 import * as R from "@yap/shared/rows";
 import * as MIR from "../mir";
@@ -11,22 +12,23 @@ const { Instr, Terminator: T } = MIR.Constructors;
 
 const TAG_FIELD = "__tag";
 
-export type VariantBranch = EB.Alternative & { pattern: { type: "Variant"; row: R.Extension<EB.Pattern, string> } };
+export type VariantBranch = EB.Alternative & { pattern: { type: "Variant"; row: R.Row<EB.Pattern, string> } };
 
 export const filter = (branches: EB.Alternative[]): VariantBranch[] => branches.filter((b): b is VariantBranch => b.pattern.type === "Variant");
 
+/** A variant pattern's row holds one entry: the tag it matches and the pattern for its payload. */
+const arm = (row: R.Row<EB.Pattern, string>): R.Entry<EB.Pattern> => {
+	assert(row.entries.length > 0, "Variant pattern must have extension row");
+	return row.entries[0];
+};
+
 export const tags = (branches: VariantBranch[]): string[] =>
 	branches.reduce((acc, b) => {
-		const tag = b.pattern.row.label;
+		const tag = arm(b.pattern.row).label;
 		return acc.includes(tag) ? acc : [...acc, tag];
 	}, [] as string[]);
 
-export const payload = (row: R.Row<EB.Pattern, string>): EB.Pattern => {
-	if (row.type !== "extension") {
-		throw new Error("Variant pattern must have extension row");
-	}
-	return row.value;
-};
+export const payload = (row: R.Row<EB.Pattern, string>): EB.Pattern => arm(row).value;
 
 export function* lower(
 	branches: VariantBranch[],
@@ -65,7 +67,7 @@ export function* lower(
 
 	yield* M.traverse(tagAllocs.toReversed(), function* ({ tag, caseLabel, scrutParam, payloadVar }) {
 		const payloadBranches: EB.Alternative[] = branches
-			.filter(b => b.pattern.row.label === tag)
+			.filter(b => arm(b.pattern.row).label === tag)
 			.map(b => ({ pattern: payload(b.pattern.row), term: b.term, binders: b.binders }));
 
 		yield* M.Worklist.push({

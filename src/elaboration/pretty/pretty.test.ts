@@ -3,6 +3,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import * as EB from "@yap/elaboration";
 import * as Metas from "@yap/elaboration/shared/metas";
 import * as Lit from "@yap/shared/literals";
+import * as R from "@yap/shared/rows";
 import * as Lib from "@yap/shared/lib/primitives";
 import { shown } from "../inference/__tests__/util";
 
@@ -109,89 +110,59 @@ describe("Displaying elaborated terms", () => {
 	describe("Row terms", () => {
 		describe("Literal rows", () => {
 			it("should display an empty row", () => {
-				const term = EB.Constructors.Row({ type: "empty" });
+				const term = EB.Constructors.Row(R.Constructors.Empty());
 				expect(display(term)).toMatchSnapshot();
 			});
 
 			it("should display a row with a single field", () => {
-				const term = EB.Constructors.Row({
-					type: "extension",
-					label: "x",
-					value: EB.Constructors.Var(EB.Bound(0)),
-					row: { type: "empty" },
-				});
+				const term = EB.Constructors.Row(R.Constructors.Row([{ label: "x", value: EB.Constructors.Var(EB.Bound(0)) }]));
 				expect(display(term)).toMatchSnapshot();
 			});
 
 			it("should display a row with multiple fields", () => {
-				const term = EB.Constructors.Row({
-					type: "extension",
-					label: "x",
-					value: EB.Constructors.Var(EB.Bound(0)),
-					row: {
-						type: "extension",
-						label: "y",
-						value: EB.Constructors.Var(EB.Bound(1)),
-						row: { type: "empty" },
-					},
-				});
+				const term = EB.Constructors.Row(
+					R.Constructors.Row([
+						{ label: "x", value: EB.Constructors.Var(EB.Bound(0)) },
+						{ label: "y", value: EB.Constructors.Var(EB.Bound(1)) },
+					]),
+				);
 				expect(display(term)).toMatchSnapshot();
 			});
 
 			it("should display a row with a variable", () => {
-				const term = EB.Constructors.Row({ type: "variable", variable: EB.Free("r") });
+				const term = EB.Constructors.Row(R.Constructors.Variable(EB.Free("r")));
 				expect(display(term)).toMatchSnapshot();
 			});
 
 			it("should display a row with a variable and an extension", () => {
-				const term = EB.Constructors.Row({
-					type: "extension",
-					label: "x",
-					value: EB.Constructors.Var(EB.Bound(0)),
-					row: { type: "variable", variable: EB.Free("r") },
-				});
+				const term = EB.Constructors.Row(R.Constructors.Row([{ label: "x", value: EB.Constructors.Var(EB.Bound(0)) }], EB.Free("r")));
 				expect(display(term)).toMatchSnapshot();
 			});
 		});
 
 		describe("Structs", () => {
 			it("should display an empty struct", () => {
-				const term = EB.Constructors.Struct({ type: "empty" });
+				const term = EB.Constructors.Struct(R.Constructors.Empty());
 				expect(display(term)).toMatchSnapshot();
 			});
 
 			it("should display a struct with a single field", () => {
-				const term = EB.Constructors.Struct({
-					type: "extension",
-					label: "x",
-					value: EB.Constructors.Var(EB.Bound(0)),
-					row: { type: "empty" },
-				});
+				const term = EB.Constructors.Struct(R.Constructors.Row([{ label: "x", value: EB.Constructors.Var(EB.Bound(0)) }]));
 				expect(display(term)).toMatchSnapshot();
 			});
 
 			it("should display a struct with multiple fields", () => {
-				const term = EB.Constructors.Struct({
-					type: "extension",
-					label: "x",
-					value: EB.Constructors.Var(EB.Bound(0)),
-					row: {
-						type: "extension",
-						label: "y",
-						value: EB.Constructors.Var(EB.Bound(1)),
-						row: { type: "empty" },
-					},
-				});
+				const term = EB.Constructors.Struct(
+					R.Constructors.Row([
+						{ label: "x", value: EB.Constructors.Var(EB.Bound(0)) },
+						{ label: "y", value: EB.Constructors.Var(EB.Bound(1)) },
+					]),
+				);
 				expect(display(term)).toMatchSnapshot();
 			});
 
 			it("should display a struct with a variable and an extension", () => {
-				const term = EB.Constructors.Struct({
-					type: "extension",
-					label: "x",
-					value: EB.Constructors.Var(EB.Bound(0)),
-					row: { type: "variable", variable: EB.Free("r") },
-				});
+				const term = EB.Constructors.Struct(R.Constructors.Row([{ label: "x", value: EB.Constructors.Var(EB.Bound(0)) }], EB.Free("r")));
 				expect(display(term)).toMatchSnapshot();
 			});
 		});

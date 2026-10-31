@@ -64,58 +64,58 @@ exports[`parser: refinement types (liquid types) > function returning refinement
 exports[`parser: refinement types (liquid types) > nested type with refinement: { x: Num [|\\n -> n > 0|] } 1`] = `
 {
   "row": {
-    "label": "x",
-    "row": {
-      "type": "empty",
-    },
-    "type": "extension",
-    "value": {
-      "modalities": {
-        "liquid": {
-          "annotation": undefined,
-          "body": {
-            "arg": {
-              "type": "lit",
-              "value": {
-                "type": "Num",
-                "value": 0,
-              },
-            },
-            "fn": {
-              "arg": {
-                "type": "var",
-                "variable": {
-                  "type": "name",
-                  "value": "n",
+    "entries": [
+      {
+        "label": "x",
+        "value": {
+          "modalities": {
+            "liquid": {
+              "annotation": undefined,
+              "body": {
+                "arg": {
+                  "type": "lit",
+                  "value": {
+                    "type": "Num",
+                    "value": 0,
+                  },
                 },
-              },
-              "fn": {
-                "type": "var",
-                "variable": {
-                  "type": "name",
-                  "value": ">",
+                "fn": {
+                  "arg": {
+                    "type": "var",
+                    "variable": {
+                      "type": "name",
+                      "value": "n",
+                    },
+                  },
+                  "fn": {
+                    "type": "var",
+                    "variable": {
+                      "type": "name",
+                      "value": ">",
+                    },
+                  },
+                  "icit": "Explicit",
+                  "type": "application",
                 },
+                "icit": "Explicit",
+                "type": "application",
               },
               "icit": "Explicit",
-              "type": "application",
+              "type": "lambda",
+              "variable": "n",
             },
-            "icit": "Explicit",
-            "type": "application",
           },
-          "icit": "Explicit",
-          "type": "lambda",
-          "variable": "n",
+          "term": {
+            "type": "var",
+            "variable": {
+              "type": "name",
+              "value": "Num",
+            },
+          },
+          "type": "modal",
         },
       },
-      "term": {
-        "type": "var",
-        "variable": {
-          "type": "name",
-          "value": "Num",
-        },
-      },
-      "type": "modal",
-    },
+    ],
   },
   "type": "struct",
 }
