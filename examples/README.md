@@ -1116,7 +1116,9 @@ import "lib.yap";
 
 ## Effect identities spike
 
-`effects/` exercises expression handlers: `with E: handler in expression` and `capture [E] payload`. Operations acquire ordinary implicit evidence parameters. Anonymous `capture (\k -> body)` receives a bare continuation; `resume value` reinstalls its delimiter.
+`effects/` exercises expression handlers: `with E: handler in expression` and `capture [E] payload`. Operations acquire ordinary implicit evidence parameters. A `with` handler receives `payload` and a deep continuation. Its elaboration uses an ordinary recursive handler and `reset` around each resumption.
+
+Raw `reset body` and `reset [E] body` install the application handler `\payload k -> payload k`. Their capture payload is a function such as `\k -> k 2`, and `k` is bare. Wrapping `k v` in a matching `reset` gives deep resumption. A named raw reset checks that the declared effect payload accepts this continuation.
 
 Run an expression directly through the elaborator and CEK interpreter:
 
@@ -1124,15 +1126,17 @@ Run an expression directly through the elaborator and CEK interpreter:
 pnpm exec ts-node --transpile-only scripts/effects-spike.ts examples/effects/handlers.yap
 ```
 
-`handlers.yap` and `await.yap` return `42`, `yield.yap` returns `3`, `control-functions.yap` returns `11`, and `probe1.yap`, `probe2.yap`, `probe3.yap` return `1099`, `100`, `1099`. The await example uses synchronous thunks to exercise parametric payloads. `--core` also displays the elaborated term. `control.yap` retains a failing record-packaging experiment for follow-up.
+`handlers.yap` and `await.yap` return `42`, `yield.yap` returns `3`, `control.yap` and `control-functions.yap` return `11`, and `probe1.yap`, `probe2.yap`, `probe3.yap` return `1099`, `100`, `1099`. The await example uses synchronous thunks to exercise parametric payloads. `--core` also displays the elaborated term. `control.yap` packages the four classical operators in a record using `capture` and `reset`.
 
-The compiler spike supports one visible capture in a direct expression, including multiple calls to its local continuation:
+The GRAM compiler follows locally known functions, ordinary recursive bindings and record projections. It emits MIR blocks and jumps for repeated operations and multiple calls to a captured continuation:
 
 ```sh
 pnpm yap examples/effects/local-compiled.yap --srcDir . -o /tmp/yap-effects-output
 ```
 
-Its generated JavaScript returns `12`. Multiple captures, dynamic identities and escaping continuations currently use the CEK interpreter; compilation reports the unsupported fragment. The working notes and remaining typing issues are in `z-yap/resources/plans/effect-identities-spike.plan.md`.
+Its generated JavaScript returns `12`. The `Control` record, repeated named operations and the three probes also run through GRAM, MIR and JavaScript. Explorer displays this pipeline alongside CEK results. Its verification pane still reports control-term diagnostics.
+
+Dynamic dispatch, escaping continuation results and runtime recursive control flow require further lowering work. The spike reports unsupported graph forms and caps local control analysis. `z-yap/resources/plans/effect-identities-spike.plan.md` records the typing, verification and lowering boundaries. Resumption sugar and access to bare continuations inside `with` remain future surface work; legacy `shift`/`resume` syntax retains its existing compatibility path.
 
 ## What's Next?
 
