@@ -27,7 +27,19 @@ describe("effect expression spike", () => {
 		["{ foreign E: Effect Num Num; return with E: (\\p k -> k p) in capture [E] 7; }", 7],
 		["reset ((capture (\\k -> 100 + (resume 1))) + (capture (\\k -> 999)))", 1099],
 		["reset (1000 + (reset (10 + (capture (\\k -> capture (\\k2 -> 100))))))", 100],
+		["{ foreign E: Effect Num Num; let op = \\x -> capture [E] x; return with E: (\\p k -> k (p + 1)) in op 7; }", 8],
+		["{ foreign E: Effect Num Num; let op = \\x -> capture [E] x; return with E: (\\p k -> k p) in (op 1) + (op 2); }", 3],
+		["{ let later = reset ((capture (\\k -> \\u -> resume u)) + (capture (\\k -> 999))); return reset (100 + (later 5)); }", 1099],
+		["{ foreign E: Effect Num Num; let op = \\(r: { E: E }) -> \\x -> capture [r.E] x; return with E: (\\p k -> k p) in op { E: E } 7; }", 7],
 	] as const)("evaluates %s", (source, value) => {
 		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value } });
+	});
+
+	it("rejects an effectful function at a pure function type", () => {
+		expect(() => evaluate("{ foreign E: Effect Num Num; let f: Num -> Num = \\x -> capture [E] x; return 1; }")).toThrow(/effect evidence/);
+	});
+
+	it("rejects a function that returns a requirement on its local identity", () => {
+		expect(() => evaluate("with E: (\\p k -> k p) in (\\x -> capture [E] x)")).toThrow(/Local effect identity E escapes/);
 	});
 });

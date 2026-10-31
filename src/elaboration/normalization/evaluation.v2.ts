@@ -1202,7 +1202,7 @@ const operand = (value: NF.Value): NF.Value =>
 
 const blocksExternal = (value: NF.Value): boolean =>
 	match(operand(value))
-		.with(NF.Patterns.Unresolved, () => true)
+		.with({ type: "Neutral" }, () => true)
 		.otherwise(() => false);
 
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];

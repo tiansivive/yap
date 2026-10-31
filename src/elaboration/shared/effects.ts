@@ -71,6 +71,9 @@ export type MutState = {
 };
 
 export type Delimitation = {
+	level?: number;
+	/** Answer expected from the remaining lexical captures and the pure tail. */
+	next?: EB.NF.Value;
 	answer: { initial: EB.NF.Value; final: EB.NF.Value };
 	//handlerQ: Array<{ meta: EB.Meta, handler: Src.Term, ann: EB.NF.Value }>;
 	//solution: Record<number, { values: EB.NF.Value[], term: EB.Term }>;

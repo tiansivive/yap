@@ -3,6 +3,7 @@ import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Src from "@yap/src/index";
+import * as Metas from "@yap/elaboration/shared/metas";
 
 const C = EB.Constructors;
 const Effect = { type: "App", func: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Effect" } } } } as const;
@@ -27,12 +28,21 @@ export function* infer(node: Extract<Src.Term, { type: "with" }>): M.Elaboration
 		const answer = yield* fresh();
 		const handlerType = yield* arrow(payload, yield* arrow(yield* arrow(result, answer), answer));
 		const [[handler, body, usages], { constraints }] = yield* M.writer.listen((function* () {
-			const [handler] = yield* EB.check(clause.handler, handlerType);
+			const [handler] = yield* M.reader.local(c => ({ ...c, controlHandler: true }), EB.check(clause.handler, handlerType));
 			const [body, usages] = yield* M.reader.local(c => ({ ...c, implicits: [[resolved.atom, resolved.atom], ...c.implicits] }),
 				EB.check(rest.length ? { ...node, handlers: rest } : node.term, answer));
 			return [handler, body, usages] as const;
 		})());
 		const { resolutions } = yield* EB.solve(constraints);
+		if (atom) {
+			const type = yield* NF.quote(ctx.env.length, yield* NF.force(answer));
+			const escaped: string[] = [];
+			EB.rewrite(type, t => {
+				if (t.type === "Lit" && t.value.type === "Atom" && t.value.value === name(atom)) escaped.push(local!);
+				return t;
+			});
+			if (escaped.length) throw new Error(`Local effect identity ${local} escapes in the result type`);
+		}
 		const tm = C.Reset(yield* EB.Icit.instantiate(body, resolutions), resolved.term, deep(yield* EB.Icit.instantiate(handler, resolutions)));
 		return [tm, yield* NF.force(answer), usages];
 	})());
@@ -52,20 +62,27 @@ export function* capture(node: Extract<Src.Term, { type: "capture" }>): M.Elabor
 function* raw(node: Extract<Src.Term, { type: "capture" }>): M.Elaboration<EB.AST> {
 	const ctx = yield* M.reader.ask();
 	const { delimitations } = yield* M.st.get();
-	const delimitation = delimitations[0];
-	if (!delimitation) throw new Error("Anonymous capture requires an enclosing reset");
+	const outer = delimitations[0];
+	const inFunction = ctx.env.slice(0, ctx.env.length - (outer?.level ?? 0)).some(e => e.name.type === "Lambda");
+	if (!outer && !inFunction) throw new Error("Anonymous capture requires an enclosing reset");
+	const answer = inFunction ? yield* fresh() : undefined;
+	const delimitation = answer ? { answer: { initial: answer, final: answer }, shifted: false, level: ctx.env.length } : outer;
+	if (answer) yield* M.st.modify(s => ({ ...s, delimitations: [delimitation, ...s.delimitations] }));
 	const result = yield* fresh();
 	const meta = yield* EB.freshMeta(ctx.env.length, result);
-	const kType = yield* arrow(result, delimitation.answer.initial);
+	const next = answer ?? (yield* fresh());
+	const kType = yield* arrow(result, next);
+	const handlerAnswer = delimitation.next ?? delimitation.answer.final;
 	const variable = node.term.type === "lambda" ? node.term.variable : "$k";
-	yield* M.st.modify(s => ({ ...s, delimitations: [{ ...delimitation, shifted: true, answer: { ...delimitation.answer, initial: delimitation.answer.final } }, ...s.delimitations.slice(1)] }));
+	// The handler runs outside this delimiter; its captures see the enclosing reset.
+	yield* M.st.modify(s => ({ ...s, delimitations: s.delimitations.slice(1) }));
 	const [payload, usages] = node.term.type === "lambda"
-		? yield* M.reader.local(c => EB.bind(c, { type: "Continuation", variable, resumption: { meta }, deep: true }, kType), EB.check(node.term.body, delimitation.answer.final))
-		: yield* EB.check(node.term, yield* arrow(kType, delimitation.answer.final));
-	yield* M.st.modify(s => ({ ...s, delimitations: [{ ...s.delimitations[0], answer: delimitation.answer }, ...s.delimitations.slice(1)] }));
+		? yield* M.reader.local(c => EB.bind(c, { type: "Continuation", variable, resumption: { meta }, deep: true }, kType), EB.check(node.term.body, handlerAnswer))
+		: yield* EB.check(node.term, yield* arrow(kType, handlerAnswer));
+	if (!answer) yield* M.st.modify(s => ({ ...s, delimitations: [{ ...delimitation, shifted: true, next }, ...s.delimitations] }));
 	const body = node.term.type === "lambda" ? C.Lambda(variable, "Explicit", payload, yield* NF.quote(ctx.env.length, kType)) : payload;
 	const values = (yield* M.st.get()).nondeterminism.solution[meta.val] ?? [];
-	return [C.Bubble(meta.val, result, values, C.Capture(yield* NF.quote(ctx.env.length, anonymous), body)), result, usages];
+	return [C.Bubble(meta.val, result, values, C.Capture(yield* evidence(anonymous), body)), result, usages];
 }
 
 export function* identity(source: Src.Term): M.Elaboration<{ term: EB.Term; atom: NF.Value; carrier: NF.Value; evidence: boolean }> {
@@ -79,8 +96,8 @@ export function* identity(source: Src.Term): M.Elaboration<{ term: EB.Term; atom
 		const result = yield* fresh();
 		yield* M.constrain({ type: "assign", left: type, right: effect(payload, result), lvl: ctx.env.length });
 	}
-	const { value: atom } = yield* NF.view(yield* NF.normalize(term));
-	return { term: yield* NF.quote(ctx.env.length, atom), atom, carrier: annotation ?? type, evidence: !!singleton };
+	const atom = singleton ? type : (yield* NF.view(yield* NF.normalize(term))).value;
+	return { term: singleton ? term : yield* NF.quote(ctx.env.length, atom), atom, carrier: annotation ?? type, evidence: !!singleton };
 }
 
 export function* carrier(type: NF.Value): M.Elaboration<NF.Value | undefined> {
@@ -133,6 +150,63 @@ export function* evidence(atom: NF.Value): M.Elaboration<EB.Term> {
 	const meta = yield* EB.freshMeta(ctx.env.length, atom);
 	yield* M.constrain({ type: "resolve", meta, value: atom, implicits: ctx.implicits });
 	return C.Var(meta);
+}
+
+export function* lexical(ctx: EB.Context): M.Elaboration<EB.Context> {
+	if (ctx.controlHandler) return ctx;
+	const implicits = yield* M.traverse(ctx.implicits, function* (candidate) {
+		const [value, type] = candidate;
+		const installed = name(value) !== undefined && name(value) === name(type);
+		return installed && (name(type) === "$anonymous" || (yield* declaration(type))) ? undefined : candidate;
+	});
+	return { ...ctx, implicits: implicits.filter((entry): entry is EB.Context["implicits"][number] => !!entry) };
+}
+
+export function* requirements(constraints: M.Told[], resolutions: EB.Resolutions): M.Elaboration<Array<Extract<M.Told, { type: "resolve" }>>> {
+	const registry = yield* Metas.registry.get();
+	const found = yield* M.traverse(constraints, function* (constraint) {
+		if (constraint.type !== "resolve" || resolutions[constraint.meta.val] || Metas.solution(registry, constraint.meta.val)) return undefined;
+		return name(constraint.value) === "$anonymous" || (yield* declaration(constraint.value)) ? constraint : undefined;
+	});
+	return found.filter((entry): entry is Extract<M.Told, { type: "resolve" }> => !!entry);
+}
+
+export function* abstract([term, type, usages]: EB.AST, constraints: M.Told[]): M.Elaboration<EB.AST> {
+	const { resolutions } = yield* EB.solve(constraints);
+	const needed = yield* requirements(constraints, resolutions);
+	if (!needed.length) return [term, type, usages];
+	const ctx = yield* M.reader.ask();
+	const count = needed.length;
+	const lift = (term: EB.Term, count: number) => EB.rewrite(term, (t, depth) => {
+		if (t.type !== "Var") return t;
+		if (t.variable.type === "Bound" && t.variable.index >= depth) return C.Var(EB.Bound(t.variable.index + count));
+		if (t.variable.type === "Meta") {
+			const { val } = t.variable;
+			const position = needed.findIndex(c => c.meta.val === val);
+			if (position >= 0) return C.Var(EB.Bound(depth + count - 1 - position));
+		}
+		return t;
+	});
+	const annotations = yield* M.traverse(needed, (c, i) => (function* () {
+		return { variable: `e${i}`, annotation: lift(yield* NF.quote(ctx.env.length, c.value), i) };
+	})());
+	const wrapped = annotations.reduceRight((body, b) => C.Lambda(b.variable, "Implicit", body, b.annotation), lift(term, count));
+	const pi = annotations.reduceRight((body, b) => C.Pi(b.variable, "Implicit", b.annotation, body), lift(yield* NF.quote(ctx.env.length, type), count));
+	yield* M.st.modify(s => ({ ...s, discharged: new Set([...s.discharged, ...needed.map(c => c.id)]) }));
+	return [wrapped, yield* NF.normalize(pi), usages];
+}
+
+export function* pure(constraints: M.Told[]): M.Elaboration<void> {
+	const { resolutions } = yield* EB.solve(constraints);
+	const needed = yield* requirements(constraints, resolutions);
+	if (needed.length) throw new Error(`Function requires effect evidence for ${name(needed[0].value) ?? "an identity"}; its expected type is pure`);
+}
+
+export function* hasEvidence(type: NF.Value): M.Elaboration<boolean> {
+	const { value } = yield* NF.view(type);
+	if (value.type !== "Abs" || value.binder.type !== "Pi" || value.binder.icit !== "Implicit") return false;
+	if (name(value.binder.annotation) === "$anonymous" || (yield* declaration(value.binder.annotation))) return true;
+	return yield* hasEvidence(yield* NF.apply(value.binder, value.closure, NF.Constructors.Atom("$parameter")));
 }
 
 export const name = (atom: NF.Value): string | undefined => match(atom)

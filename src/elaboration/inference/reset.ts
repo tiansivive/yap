@@ -28,6 +28,7 @@ export const infer = (reset: Reset): M.Elaboration<EB.AST> =>
 		const metaR = yield* EB.freshMeta(ctx.env.length, NF.Type);
 
 		const d: M.Delimitation = {
+			level: ctx.env.length,
 			answer: {
 				initial: NF.Constructors.Var(metaA),
 				final: NF.Constructors.Var(metaR),
@@ -36,11 +37,13 @@ export const infer = (reset: Reset): M.Elaboration<EB.AST> =>
 		};
 		yield* M.st.modify(update("delimitations", ds => [d, ...ds]));
 
-		const [tm, us] = yield* EB.check(reset.term, d.answer.initial);
+		const [tm, us] = yield* M.reader.local(c => ({ ...c, implicits: [[EB.Control.anonymous, EB.Control.anonymous], ...c.implicits] }), EB.check(reset.term, d.answer.initial));
 		const {
-			delimitations: [{ shifted }],
+			delimitations: [{ shifted, next }],
 		} = yield* M.st.get();
-		if (!shifted) {
+		if (next) {
+			yield* M.constrain({ type: "assign", left: d.answer.initial, right: next, lvl: ctx.env.length });
+		} else if (!shifted) {
 			// No shifts were used, so initial and final answer types must be the same
 			yield* M.constrain({ type: "assign", left: d.answer.initial, right: d.answer.final, lvl: ctx.env.length });
 		}

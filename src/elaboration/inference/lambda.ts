@@ -10,6 +10,13 @@ type Lambda = Extract<Src.Term, { type: "lambda" }>;
 export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
 	M.tracer.track({ tag: "src", type: "term", term: lam, metadata: { action: "infer", description: "Lambda" } }, function* () {
 		const ctx = yield* M.reader.ask();
+		const lexical = yield* EB.Control.lexical(ctx);
+		const [ast, { constraints }] = yield* M.reader.local(() => lexical, M.writer.listen(body(lam)));
+		return yield* EB.Control.abstract(ast, constraints);
+	});
+
+const body = function* (lam: Lambda): M.Elaboration<EB.AST> {
+		const ctx = yield* M.reader.ask();
 
 		const [ann, _us] = lam.annotation
 			? yield* EB.check(lam.annotation, NF.Type)
@@ -36,4 +43,4 @@ export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
 		const piTerm = yield* NF.quote(ctx.env.length, pi);
 
 		return [EB.Constructors.Ann(tm, piTerm), pi, bus] satisfies EB.AST; // Remove the usage of the bound variable
-	});
+	};
