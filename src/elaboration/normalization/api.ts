@@ -49,12 +49,8 @@ export function* whnf(term: EB.Term, opts?: Machine.EvalOptions) {
 	return yield* fresh(() => Machine.evaluate(term), { noInlineBindings: true, noReduceEliminations: true }, opts?.maxSteps);
 }
 
-export function* quote(lvl: number, val: Value, opts?: Machine.EvalOptions & { unfold?: Unfolding }) {
-	return yield* fresh(
-		() => Machine.drive(Quoting.quote(lvl, val, opts?.unfold), steps => `Quotation exceeded maximum steps (${steps}).`),
-		defaultMode,
-		opts?.maxSteps,
-	);
+export function* quote(lvl: number, val: Value, opts?: { unfold?: Unfolding }) {
+	return yield* fresh(() => Machine.drive(Quoting.quote(lvl, val, opts?.unfold), steps => `Quotation exceeded maximum steps (${steps}).`));
 }
 
 export function* closeVal(value: Value, opts?: Machine.EvalOptions) {
