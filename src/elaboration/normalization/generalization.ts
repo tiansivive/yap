@@ -341,6 +341,9 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 		.with({ type: "App" }, function* ({ icit, func, arg }) {
 			return NF.Constructors.App(yield* instantiate(func), yield* instantiate(arg), icit);
 		})
+		.with({ type: "Resume" }, function* ({ continuation, value }) {
+			return NF.Constructors.Resume(yield* instantiate(continuation), yield* instantiate(value));
+		})
 		.with(NF.Patterns.Proj, function* ({ base, label }) {
 			return NF.Constructors.Proj(yield* instantiate(base), label);
 		})
@@ -396,6 +399,7 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 		})
 
 		.with({ type: "App" }, ({ icit, func, arg }) => NF.Constructors.App(trimClosureEnvs(func), trimClosureEnvs(arg), icit))
+		.with({ type: "Resume" }, ({ continuation, value }) => NF.Constructors.Resume(trimClosureEnvs(continuation), trimClosureEnvs(value)))
 		.with(NF.Patterns.Proj, ({ base, label }) => NF.Constructors.Proj(trimClosureEnvs(base), label))
 		.with(NF.Patterns.Match, ({ closure, scrutinee }) => NF.Constructors.Match(closure, trimClosureEnvs(scrutinee)))
 		.with(NF.Patterns.Inj, ({ base, label, injected }) => NF.Constructors.Inj(trimClosureEnvs(base), label, trimClosureEnvs(injected)))

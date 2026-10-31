@@ -399,7 +399,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		})
 		.with({ type: "Reset" }, function* ({ term, identity, handler }) {
 			return yield* group([identity ? schedule.eval(identity) : result(NF.Any), handler ? schedule.eval(handler) : result(NF.Any)], function* ([e, h]) {
-				yield* Stack.delimit(yield* scope(), identity ? controlIdentity(e) : undefined, handler ? h : undefined);
+				yield* Stack.delimit(yield* scope(), identity ? controlIdentity(e) : "$anonymous", handler ? h : undefined);
 				return yield* schedule.eval(term);
 			});
 		})
@@ -428,7 +428,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				return yield* match(viewed)
 					.with({ type: "Abs", closure: { type: "Continuation" } }, ({ closure }) =>
 						Stack.resume<NF.Value, Scope, EB.Term>({ frames: closure.frames, scope: { env: closure.ctx, mode: closure.delimiter?.scope.mode ?? { ...defaultMode } }, delimiter: closure.delimiter }, v, true))
-					.otherwise(() => { throw new Error("Deep resumption requires a captured continuation"); });
+					.otherwise(() => result(NF.Constructors.Neutral("Blocked", NF.Constructors.Resume(k, v))));
 			});
 		})
 		.with({ type: "Shift" }, function* ({ body }) {
@@ -442,7 +442,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			// Reset-delimiter, package it as a function value, and apply the
 			// body-lambda to that continuation.
 			return yield* Do.let("h", schedule.eval(body)).in(function* ({ h }) {
-				const captured = yield* Stack.capture<Scope, EB.Term>();
+				const captured = yield* Stack.capture<Scope, EB.Term>("$anonymous");
 				if (!captured) {
 					throw new Error("Shift without enclosing reset");
 				}
@@ -1028,6 +1028,15 @@ export const schedule = {
 	 */
 	*resume(value: NF.Value): Evaluation<Machine<NF.Value>> {
 		return yield* match(value)
+			.with({ type: "Resume" }, function* ({ continuation, value: argument }) {
+				return yield* Do.let("k", schedule.view(continuation)).in(function* ({ k }) {
+					return yield* match(k.value)
+						.with({ type: "Abs", closure: { type: "Continuation" } }, function* ({ closure }) {
+							return yield* Stack.resume<NF.Value, Scope, EB.Term>({ frames: closure.frames, scope: yield* scope(), delimiter: closure.delimiter }, argument, true);
+						})
+						.otherwise(() => result(value));
+				});
+			})
 			.with(NF.Patterns.Proj, function* ({ base, label }) {
 				return yield* Do.let("found", project(base, label)).in(({ found }) =>
 					result(

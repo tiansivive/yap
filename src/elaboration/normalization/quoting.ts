@@ -78,6 +78,7 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 				.let("a", quote(lvl, arg, unfold))
 				.in(({ f, a }) => result(EB.Constructors.App(icit, f, a))),
 		)
+		.with({ type: "Resume" }, ({ continuation, value }) => group([quote(lvl, continuation, unfold), quote(lvl, value, unfold)], ([k, v]) => result(EB.Constructors.Resume(k, v))))
 		.with({ type: "Abs", binder: { type: "Lambda" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
 

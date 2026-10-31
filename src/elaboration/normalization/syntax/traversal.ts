@@ -22,6 +22,7 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 			return Constructors.Mu(binder.variable, binder.source, traverse(annotation, onVar, onTerm), update(closure, "term", onTerm));
 		})
 		.with({ type: "App" }, ({ icit, func, arg }) => Constructors.App(traverse(func, onVar, onTerm), traverse(arg, onVar, onTerm), icit))
+		.with({ type: "Resume" }, ({ continuation, value }) => Constructors.Resume(traverse(continuation, onVar, onTerm), traverse(value, onVar, onTerm)))
 		.with(Patterns.Proj, ({ base, label }) => Constructors.Proj(traverse(base, onVar, onTerm), label))
 		.with(Patterns.Match, ({ closure, scrutinee }) => Constructors.Match(update(closure, "term", onTerm), traverse(scrutinee, onVar, onTerm)))
 		.with(Patterns.Inj, ({ base, label, injected }) => Constructors.Inj(traverse(base, onVar, onTerm), label, traverse(injected, onVar, onTerm)))
