@@ -114,10 +114,10 @@ const display = (value: unknown): string => {
 const executeJS = (code: string): unknown => vm.runInNewContext(`(function () {\n${code}\n})()`);
 
 const parse = (source: string, rule: ParserRule): Src.Term | Src.Statement => {
-	Grammar.ParserStart = rule;
-	const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled(Grammar));
+	const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled({ ...Grammar, ParserStart: rule }));
 
-	const sanitized = rule === "Script" ? (source.trim().endsWith(";") ? source : `${source};`) : source;
+	const trimmed = source.trim();
+	const sanitized = rule === "Script" && !trimmed.endsWith(";") ? `${trimmed};` : trimmed;
 	const data = parser.feed(sanitized);
 
 	if (data.results.length !== 1) {
@@ -127,7 +127,11 @@ const parse = (source: string, rule: ParserRule): Src.Term | Src.Statement => {
 			fs.mkdirSync(logsDir, { recursive: true });
 		}
 		fs.writeFileSync(resolve(logsDir, "error.json"), JSON.stringify(data.results, undefined, 2));
-		throw new Error(`Ambiguous parse: ${data.results.length} results. Check .logs/error.json`);
+		throw new Error(
+			data.results.length === 0
+				? "Incomplete input: no complete parse. Check .logs/error.json"
+				: `Ambiguous parse: ${data.results.length} results. Check .logs/error.json`,
+		);
 	}
 
 	if (rule === "Script") {
