@@ -17,4 +17,17 @@ describe("Explorer input boundary", () => {
 		const result = run("with E: h in", options);
 		expect(result.errors).toEqual([expect.stringContaining("[Parse] Incomplete input:")]);
 	});
+
+	it.each([
+		["cross-call", "38"],
+		["match", "40"],
+	])("compiles the %s effects example through the Explorer pipeline", (name, expected) => {
+		const source = readFileSync(resolve(__dirname, `../../../../examples/effects/${name}.yap`), "utf8");
+		const result = run(source, { ...options, interpret: true });
+		expect(result.normalized).toBe(expected);
+		expect(result.interpreted).toBe(expected);
+		expect(result.output).toBe(expected);
+		expect(result.gram).toContain(":hole");
+		expect(result.codegenC).toBeTruthy();
+	});
 });

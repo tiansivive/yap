@@ -116,6 +116,10 @@ describe("local effects lowering spike", () => {
 		expect(mir.functions[0].blocks.some(b => b.terminator.type === "Branch" && b.terminator.cases.some(c => c.value === "0"))).toBe(true);
 	});
 
+	it("branches inside one shared continuation using each resumption's argument", () => {
+		expect(compiled("with E: (\\p k -> (k 0) + (k 1)) in match (capture [E] 0) | 0 -> 11 | _ -> 22")).toBe(33);
+	});
+
 	it("saves a runtime value computed before capture once for both resumptions", () => {
 		const source = `{ foreign E: Effect Num Num; foreign read: Unit -> Num;
 			let f = \\x -> { let saved = read !; return saved + (capture [E] x); };
