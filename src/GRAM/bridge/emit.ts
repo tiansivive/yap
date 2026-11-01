@@ -15,32 +15,26 @@ import * as Primops from "./primops";
 import * as Paps from "./pap";
 import * as Decisions from "./decisions";
 import * as Continuations from "./continuations";
-import * as Regions from "./regions";
 
-const { Terminator, Block, Function: Fn, Module } = Constructors;
+const { Terminator, Function: Fn, Module } = Constructors;
 const strOf = (v: unknown): string => (typeof v === "string" ? v : "");
 
 export const emit = (graph: Graph): MIR.Module => {
-	const residual = Edges.one(graph.root, Labels.MATERIALIZES)(graph)?.target;
-
-	if (residual !== undefined) {
-		return Regions.emit(graph, residual);
-	}
 	const root = entry(graph);
 	const ctx = C.fresh(graph);
 	const [result, final] = root !== undefined ? walk(root, ctx) : C.name(ctx);
-	const [instrs, flushed] = C.flush(final);
-	const entryBlock =
-		flushed.blocks.length > 0
-			? Block("entry", [], [...instrs], Terminator.Jump(flushed.blocks[0].label, []))
-			: Block("entry", [], [...instrs], Terminator.Return(result));
-	const main = Fn("main", [], "entry", [entryBlock, ...flushed.blocks]);
-	return Module([main, ...flushed.functions]);
+	const completed = Continuations.complete(walk, C.close(final, Terminator.Return(result)));
+	const main = Fn("main", [], "entry", [...completed.blocks]);
+	return Module([main, ...completed.functions]);
 };
 
 const walk = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const existing = C.resolve(ctx, id);
-	return existing !== undefined ? [existing, ctx] : dispatch(id, ctx);
+	if (existing !== undefined) {
+		return [existing, ctx];
+	}
+	const [value, next] = dispatch(id, ctx);
+	return [value, C.bind(next, id, value)];
 };
 
 const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
@@ -57,6 +51,7 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.SIGMA_V2, () => erase(id, ctx))
 		.with(Tags.MU, () => erase(id, ctx))
 		.with(Tags.NU, () => nu(id, ctx))
+		.with(Tags.MODAL, () => walk(C.target(ctx, id, Labels.TERM), ctx))
 		.with(Tags.PROJ, () => Structural.read(id, walk, ctx))
 		.with(Tags.INJ, () => Structural.update(id, walk, ctx))
 		.with(Tags.APP, () => app(id, ctx))
@@ -68,11 +63,15 @@ const dispatch = (id: NodeId, ctx: Ctx): [string, Ctx] =>
 		.with(Tags.EXTERNAL, () => Primops.external(id, walk, ctx))
 		.with(Tags.PAP, () => Paps.pap(id, walk, ctx))
 		.with(Tags.MATCH, () => Decisions.decision(id, walk, ctx))
+		.with(Tags.SWITCH, Tags.LEAF, Tags.FAIL, () => Decisions.tree(id, walk, ctx))
 		.with(Tags.RESET, () => Continuations.reset(id, walk, ctx))
 		.with(Tags.CAPTURE, () => {
 			throw new Error("Effects spike lowering: this capture requires continuation reification");
 		})
 		.with(Tags.RESUMPTION, () => Continuations.resume(id, walk, ctx))
+		.with(Tags.CONTINUATION, () => {
+			throw new Error("GRAM bridge: escaping functions or continuations require reification");
+		})
 		.with(Tags.BUBBLE, () => Leaves.passthrough(id, ctx))
 		.with(Tags.STRUCT, () => struct(id, ctx))
 		.with(Tags.ROW_EXT, () => structFromRow(id, ctx))
@@ -141,8 +140,9 @@ const application = (id: NodeId, ctx: Ctx): [string, Ctx] => {
 	const [fnRef, c3] = C.name(c2, "fnref");
 	const [envRef, c4] = C.name(c3, "env");
 	const [result, c5] = C.name(c4);
-	const c6 = C.instr(c5, Constructors.Instr.Read("__fn", fn, fnRef));
-	const c7 = C.instr(c6, Constructors.Instr.Read("__env", fn, envRef));
+	const currentFn = funcEdge === undefined ? fn : (C.resolve(c5, funcEdge.target) ?? fn);
+	const c6 = C.instr(c5, Constructors.Instr.Read("__fn", currentFn, fnRef));
+	const c7 = C.instr(c6, Constructors.Instr.Read("__env", currentFn, envRef));
 	const c8 = C.instr(c7, Constructors.Instr.Call({ type: "indirect", callee: fnRef }, [envRef, arg], result));
 	return [result, C.bind(c8, id, result)];
 };

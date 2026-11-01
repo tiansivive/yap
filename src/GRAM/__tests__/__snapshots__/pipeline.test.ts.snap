@@ -224,25 +224,27 @@ exports[`shift/reset > reset(shift k -> k(1) + k(2)) — multishot 1`] = `
 "[1] root
   :entry -> [2]
 [2] reset
-  :body -> [17]
+  :body -> [3]
+  :entry -> [19]
 [3] shift
+  :body -> [4]
 [4] lambda {"variable":"k","icit":"Explicit","level":0}
   :annotation -> [5]
   :body -> [16]
-  :env -> [19]
+  :env -> [17]
 [5] lit {"value":{"type":"Atom","value":"Num"}}
 [8] var:foreign {"name":"$add","arity":2}
-[10] resumption {"icit":"Explicit"}
+[10] app {"icit":"Explicit"}
   :arg -> [12]
-  :invokes -> [18]
+  :func -> [11]
   :next -> [13]
 [11] var:bound {"index":0}
   :refers_to -> [4]
   :scope -> [4] {"level":0}
 [12] lit {"value":{"type":"Num","value":1}}
-[13] resumption {"icit":"Explicit"}
+[13] app {"icit":"Explicit"}
   :arg -> [15]
-  :invokes -> [18]
+  :func -> [14]
 [14] var:bound {"index":0}
   :refers_to -> [4]
   :scope -> [4] {"level":0}
@@ -251,46 +253,78 @@ exports[`shift/reset > reset(shift k -> k(1) + k(2)) — multishot 1`] = `
   :arg -> [10] {"index":0}
   :arg -> [13] {"index":1}
   :callee -> [8]
-[17] bubble {"binder":"$bubble_0"}
-[18] continuation {"binder":"$bubble_0"}
-  :body -> [17]
+[17] env
+[18] closure
+  :body -> [4]
+  :env -> [17]
+[19] let
+  :body -> [24]
+  :value -> [20]
+[20] resumption {"icit":"Explicit"}
+  :arg -> [12]
+  :derived_from -> [10]
+  :invokes -> [21]
+[21] continuation
+  :body -> [22]
   :captured_at -> [3]
   :delimiter -> [2]
+  :env -> [23]
   :handler -> [4]
-  :hole -> [17]
-[19] env
-[20] closure
-  :body -> [4]
-  :env -> [19]"
+  :hole -> [22]
+[22] bubble {"binder":"$capture_3"}
+[23] env
+[24] let
+  :body -> [28]
+  :value -> [25]
+[25] resumption {"icit":"Explicit"}
+  :arg -> [15]
+  :derived_from -> [13]
+  :invokes -> [21]
+[26] var:bound
+  :refers_to -> [19]
+[27] var:bound
+  :refers_to -> [24]
+[28] primop {"op":"$add"}
+  :arg -> [26] {"index":0}
+  :arg -> [27] {"index":1}
+  :derived_from -> [16]"
 `;
 
 exports[`shift/reset > reset(shift k -> k(42)) 1`] = `
 "[1] root
   :entry -> [2]
 [2] reset
-  :body -> [9]
+  :body -> [3]
+  :entry -> [11]
 [3] shift
+  :body -> [4]
 [4] lambda {"variable":"k","icit":"Explicit","level":0}
   :annotation -> [5]
   :body -> [6]
-  :env -> [11]
+  :env -> [9]
 [5] lit {"value":{"type":"Atom","value":"Num"}}
-[6] resumption {"icit":"Explicit"}
+[6] app {"icit":"Explicit"}
   :arg -> [8]
-  :invokes -> [10]
+  :func -> [7]
 [7] var:bound {"index":0}
   :refers_to -> [4]
   :scope -> [4] {"level":0}
 [8] lit {"value":{"type":"Num","value":42}}
-[9] bubble {"binder":"$bubble_0"}
-[10] continuation {"binder":"$bubble_0"}
-  :body -> [9]
+[9] env
+[10] closure
+  :body -> [4]
+  :env -> [9]
+[11] resumption {"icit":"Explicit"}
+  :arg -> [8]
+  :derived_from -> [6]
+  :invokes -> [12]
+[12] continuation
+  :body -> [13]
   :captured_at -> [3]
   :delimiter -> [2]
+  :env -> [14]
   :handler -> [4]
-  :hole -> [9]
-[11] env
-[12] closure
-  :body -> [4]
-  :env -> [11]"
+  :hole -> [13]
+[13] bubble {"binder":"$capture_3"}
+[14] env"
 `;

@@ -35,6 +35,7 @@ describe("local effects lowering spike", () => {
 		["with E: (\\p k -> k p) in 10 + (capture [E] 2)", 12],
 		["with E: (\\p k -> (k 1) + (k 2)) in 10 + (capture [E] 0)", 23],
 		["reset (10 + (capture (\\k -> reset (k 2))))", 12],
+		["{ let run = \\base -> reset (base + (capture (\\k -> k 2))); return run 40; }", 42],
 		["with E: (\\p k -> k p) in (capture [E] 1) + (capture [E] 2)", 3],
 		["with Tick: (\\p k -> p + (k !)) in with E: ({ capture [Tick] 1; return \\p k -> k p; }) in (capture [E] 20) + (capture [E] 21)", 42],
 		["{ foreign E: Effect ((Num -> Num) -> Num) Num; return reset [E] (10 + (capture [E] (\\k -> k 2))); }", 12],

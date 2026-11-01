@@ -72,7 +72,8 @@ describe("shift-reset enrichment pass", () => {
 		expect(Query.byTag(Tags.RESUMPTION)(g).size).toBe(1);
 
 		const bubbleId = [...Query.byTag(Tags.BUBBLE)(g)][0];
-		expect(Nodes.get(bubbleId)(g)?.payload.binder).toBe("$bubble_0");
+		const captureId = Edges.one([...Query.byTag(Tags.CONTINUATION)(g)][0], Labels.CAPTURED_AT)(g)!.target;
+		expect(Nodes.get(bubbleId)(g)?.payload.binder).toBe(`$capture_${captureId}`);
 
 		expect(display(g)).toMatchSnapshot();
 	});
@@ -80,7 +81,14 @@ describe("shift-reset enrichment pass", () => {
 	it("reset(shift k -> k(k(10))) — nested resumption", () => {
 		const inner = EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(10));
 		const body = EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), inner), EB.DSL.type("Num"));
-		const g = shiftReset(translate(EB.Constructors.Reset(EB.Constructors.Shift(body))));
+		const before = translate(EB.Constructors.Reset(EB.Constructors.Shift(body)));
+		const g = shiftReset(before);
+		before.nodes.forEach((node, id) => {
+			expect(Nodes.get(id)(g)).toEqual(node);
+			Edges.outgoing(id)(before).forEach(edge => {
+				expect(Edges.outgoing(id)(g)).toContainEqual(edge);
+			});
+		});
 
 		expect(Query.byTag(Tags.RESUMPTION)(g).size).toBe(2);
 

@@ -14,7 +14,6 @@ import { descriptor as labelCycles } from "../passes/label-cycles";
 import { descriptor as eta } from "../passes/eta";
 import { descriptor as saturate } from "../passes/saturate";
 import { descriptor as pap } from "../passes/pap";
-import { descriptor as shiftReset } from "../passes/shift-reset";
 import { descriptor as pattern } from "../passes/pattern";
 import { descriptor as closure } from "../passes/closure";
 import { descriptor as knot } from "../passes/knot";
@@ -48,7 +47,6 @@ export const defaultPipeline: E.Either<ReadonlyArray<Inconsistency>, Pipeline> =
 	eta,
 	saturate,
 	pap,
-	shiftReset,
 	pattern,
 	labelCycles,
 	closure,
