@@ -79,7 +79,7 @@ export type Variable =
 export type Closure =
 	| { type: "Closure"; ctx: EB.Context; term: EB.Term }
 	| { type: "PrimOp"; ctx: EB.Context; term: EB.Term; arity: number; compute: (...args: Value[]) => Value }
-	| { type: "Continuation"; ctx: EB.Context; term: EB.Term; frames: EB.NF.StackFrame[] };
+	| { type: "Continuation"; ctx: EB.Context; term: EB.Term; frames: EB.NF.StackFrame[]; delimiter?: EB.NF.Captured["delimiter"] };
 
 export type Modalities = Modal.Annotations<Value>;
 

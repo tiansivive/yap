@@ -33,6 +33,20 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 		const ctx = yield* M.reader.ask();
 
 		const viewed = yield* NF.view(type);
+		if (term.type === "var") {
+			const [tm, ty, us] = yield* EB.infer(term);
+			if (yield* EB.Control.carrier(ty)) {
+				const atom = yield* NF.normalize(tm);
+
+				if (viewed.value.type === "Lit" && viewed.value.value.type === "Atom" && viewed.value.value.value === "Type") {
+					return [tm, us];
+				}
+
+				if (EB.Control.name(atom) && EB.Control.name(atom) === EB.Control.name(type)) {
+					return [tm, us];
+				}
+			}
+		}
 
 		const result = match<[Src.Term, NF.View], M.Elaboration<Result>>([term, viewed])
 			.with([{ type: "hole" }, P._], function* () {
@@ -42,7 +56,20 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 			.with([P._, NF.View.Sealed()], ([tm, { value }]) => structural(tm, value))
 			.otherwise(([tm]) => general(tm));
 
-		const [tm, us] = yield* result;
+		const plain =
+			term.type === "lambda" &&
+			viewed.value.type === "Abs" &&
+			viewed.value.binder.type === "Pi" &&
+			viewed.value.binder.icit === "Explicit" &&
+			!ctx.controlHandler;
+		const lexical = plain ? yield* EB.Control.lexical(ctx) : ctx;
+		const [checked, collected] = plain ? yield* M.reader.local(() => lexical, M.writer.listen(result)) : ([yield* result, undefined] as const);
+
+		if (collected) {
+			const resolutions = yield* EB.Control.pure(collected.constraints);
+			return [yield* EB.Icit.instantiate(checked[0], resolutions, false), checked[1]];
+		}
+		const [tm, us] = checked;
 		//yield* M.writer.tell({ types: [{ term: tm, nf: type, modalities: {} as any }] });
 
 		return [tm, us];
@@ -58,7 +85,10 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 						const ann = tm.annotation ? (yield* EB.check(tm.annotation, ty.binder.annotation))[0] : yield* NF.quote(ctx.env.length, ty.binder.annotation);
 
 						return yield* M.reader.local(
-							ctx => EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation),
+							ctx => {
+								const bound = EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation);
+								return ty.binder.icit === "Implicit" ? { ...bound, implicits: [[bound.env[0].nf, ty.binder.annotation], ...ctx.implicits] } : bound;
+							},
 							(function* () {
 								const [body, us] = yield* Check.val(tm.body, bType);
 								// const [vu] = us;
@@ -75,7 +105,10 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 						const ann = yield* NF.quote(ctx.env.length, ty.binder.annotation);
 
 						return yield* M.reader.local(
-							ctx => EB.bind(ctx, { type: "Lambda", variable: ty.binder.variable }, ty.binder.annotation, "inserted"),
+							ctx => {
+								const bound = EB.bind(ctx, { type: "Lambda", variable: ty.binder.variable }, ty.binder.annotation, "inserted");
+								return { ...bound, implicits: [[bound.env[0].nf, ty.binder.annotation], ...ctx.implicits] };
+							},
 							(function* () {
 								const bType = yield* NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
 								const [_tm, us] = yield* Check.val(tm, bType);
@@ -188,7 +221,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				.with([{ type: "match" }, NF.Patterns.Type], function* ([match, ty]) {
 					const ast = yield* EB.infer(match.scrutinee);
 
-					const alternatives = yield* M.traverse(
+					const alternatives = yield* EB.Control.branches(
 						match.alternatives,
 						EB.Inference.Match.elaborate(ast, function* (src) {
 							const [tm, us] = yield* EB.check(src, ty);
@@ -268,7 +301,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 						return next;
 					};
 
-					const alternatives = yield* M.traverse(
+					const alternatives = yield* EB.Control.branches(
 						m.alternatives,
 						EB.Inference.Match.elaborate(ast, function* (src, [pat, _patty, , binders]) {
 							const ctx = yield* M.reader.ask();
@@ -313,7 +346,11 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 						ctx => (isMatching(NF.View.Sealed(NF.Patterns.Type), viewed) ? EB.muContext(ctx) : ctx),
 						(function* () {
 							const ast: EB.AST = yield* EB.infer(src);
-							const [tm, inferred, us]: EB.AST = yield* EB.Icit.insert(ast);
+							const effectful = yield* EB.Control.hasEvidence(ast[1]);
+							if (effectful && viewed.value.type === "Abs" && viewed.value.binder.type === "Pi" && viewed.value.binder.icit === "Explicit") {
+								throw new Error("Function requires effect evidence; its expected type is pure");
+							}
+							const [tm, inferred, us]: EB.AST = effectful ? ast : yield* EB.Icit.insert(ast);
 							yield* M.constrain({ type: "assign", left: inferred, right: type, lvl: ctx.env.length });
 							return [tm, us] satisfies Result;
 						})(),

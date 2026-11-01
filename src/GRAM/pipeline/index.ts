@@ -6,6 +6,7 @@ import type * as NF from "@yap/elaboration/normalization";
 
 import type { Graph } from "../graph";
 import { translate } from "../translate";
+import { descriptor as effects } from "../passes/effects";
 import type { Location } from "../provenance";
 import { descriptor as resolveLabels } from "../passes/resolve-labels";
 import { descriptor as hoist } from "../passes/hoist";
@@ -13,7 +14,6 @@ import { descriptor as labelCycles } from "../passes/label-cycles";
 import { descriptor as eta } from "../passes/eta";
 import { descriptor as saturate } from "../passes/saturate";
 import { descriptor as pap } from "../passes/pap";
-import { descriptor as shiftReset } from "../passes/shift-reset";
 import { descriptor as pattern } from "../passes/pattern";
 import { descriptor as closure } from "../passes/closure";
 import { descriptor as knot } from "../passes/knot";
@@ -47,11 +47,11 @@ export const defaultPipeline: E.Either<ReadonlyArray<Inconsistency>, Pipeline> =
 	eta,
 	saturate,
 	pap,
-	shiftReset,
 	pattern,
 	labelCycles,
 	closure,
 	knot,
+	effects,
 );
 
 export const compile = (term: EB.Term, opts?: CompileOpts): E.Either<CompileError, Graph> =>

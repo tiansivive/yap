@@ -18,8 +18,9 @@ exports[`inference: projection > \\obj -> obj.x 1`] = `
     "constraints": [
       "Schema [ x: ?2 | ?3 ] ~~ ?1",
     ],
-    "term": "(λ(obj: (?1 :: Type)) -> (obj).x : Π(obj: (?1 :: Type)) -> (?2 :: Type))",
-    "type": "Π(obj: ?1) -> (closure: (?2 :: Type) -| Γ: obj)",
+    "term": "(λ(obj: Schema [ x: ?2 | ?3 ]) -> (obj).x : Π(obj: Schema [ x: ?2 | ?3 ]) ->
+  (?2 :: Type))",
+    "type": "Π(obj: Schema [ x: ?2 | ?3 ]) -> (closure: (?2 :: Type) -| Γ: obj)",
   },
 }
 `;
@@ -57,8 +58,9 @@ exports[`inference: projection > Projection from Sigma types > projects from a s
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",
-      "?1 ~~ L1",
+      "?2 ~~ L1",
       "L1 ~~ ?1",
+      "L1 ~~ ?2",
       "Type ~~ Type",
       "Type ~~ Type",
       "Type ~~ Type",

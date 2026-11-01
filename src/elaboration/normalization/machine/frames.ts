@@ -7,7 +7,7 @@
 export type StackFrame<S, C> =
 	| { type: "Control"; scope: S; control: C }
 	| { type: "Cont"; scope: S; arity: number; operands: unknown[]; k: Stored }
-	| { type: "Delimiter"; scope: S }
+	| Delimiter<S>
 	| { type: "Result"; operands: unknown[]; blame: Blame };
 
 /*
@@ -22,5 +22,6 @@ export const scheduled: Machine<never> = {};
 export type Mark = { work: number };
 export type Stored = (operands: unknown[]) => unknown;
 export type Blame = (steps: number) => string;
-export type Captured<S, C> = { frames: StackFrame<S, C>[]; scope: S };
+export type Delimiter<S> = { type: "Delimiter"; scope: S; identity?: string; handler?: unknown };
+export type Captured<S, C> = { frames: StackFrame<S, C>[]; scope: S; delimiter?: Delimiter<S> };
 export type Runnable<S, C> = Extract<StackFrame<S, C>, { type: "Control" | "Cont" }>;

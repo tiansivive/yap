@@ -10,6 +10,7 @@
 	import * as P from "./processors";
 
 	const lexer = moo.compile({
+		resetNamed: /reset(?=[ \n\t]+\[)/,
 	  	digit: { match: /[0-9]+/, value: s => parseInt(s) },
 	  	string: { match: /"(?:\\["bfnrt\/\\]|\\u[a-fA-F0-9]{4}|[^"\\])*"/, value: s => s.slice(1, -1) },
 	  	variable: { 
@@ -21,7 +22,8 @@
 				foreign: "foreign", loop: "loop", repeat: "repeat",
 				if: "if", else: "else", then: "then",
 				true: "true", false: "false",
-				shift: "shift", reset: "reset", resume: "resume"
+				shift: "shift", reset: "reset", resume: "resume",
+				with: "with", in: "in", capture: "capture"
 			}) 
 		},
 	  	dot: /\./,
@@ -117,6 +119,8 @@ Expr -> Lambda		{% id %}
   	  | Match 		{% id %}
   	  | Block 		{% id %}
 	  | Reset 		{% id %}
+	  | With 		{% id %}
+	  | Capture 		{% id %}
 	  | Shift 		{% id %}
 	  | Resume 		{% id %}
 	  | Op 			{% id %}
@@ -195,10 +199,12 @@ Dict -> Curly[ %space:? Square[ %space:? TypeExpr ] %space:? %colon %space:? Typ
 KeyVal -> Key %space:? %colon %space:? TypeExpr 				{% P.keyval %}
 
 Key -> %variable 	{% P.Name %}
+	 | "shift" 	{% P.Name %}
 	 | %digit:+ 	{% d => P.Name(d[0]) %}
 
 
 Projection -> Atom %dot Identifier 									{% P.Projection %}
+			| Atom %dot "shift" {% d => P.Projection([d[0], d[1], P.Name([d[2]])]) %}
 			| %dot Identifier 										{% P.Projection %}
 
 Injection -> Curly[ %space:? Type %space:? %bar Many[Assignment, %comma] ] 	{% P.Injection %}
@@ -255,7 +261,16 @@ Alt -> %space:? %bar %space:? Pattern %space:? %arrow %space:? TypeExpr 	{% P.Al
 # Syntax: reset \k v -> handler_body enclosed_term
 #         shift value
 # ------------------------------------
-Reset -> "reset" %space:+ TypeExpr 		{% P.Reset %}
+Reset -> %reset %space:+ TypeExpr 		{% P.Reset %}
+       | %resetNamed %space %lbracket %space:? TypeExpr %space:? %rbracket %space TypeExpr {% P.Reset %}
+With -> "with" %space Many[Handler, %comma] %space "in" %space TypeExpr {% P.With %}
+Handler -> Atom %space:? %colon %space:? TypeExpr {% P.Handler %}
+Capture -> "capture" %space %lbracket %space:? TypeExpr %space:? %rbracket %space TypeExpr {% P.Capture %}
+         | "capture" %space CaptureBody {% P.Capture %}
+CaptureBody -> Lambda {% id %}
+             | Block {% id %}
+             | Identifier {% P.Var %}
+             | Parens[Ann] {% P.extract %}
 Shift -> "shift" %space:+ TypeExpr    	{% P.Shift %}
 Resume -> "resume" %space:+ TypeExpr    {% P.Resume %}
 

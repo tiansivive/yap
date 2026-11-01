@@ -31,14 +31,17 @@ export const external = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ct
 	return [result, C.bind(c3, id, result)];
 };
 
-const walkArgs = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], ctx: Ctx): [ReadonlyArray<string>, Ctx] =>
-	sortedArgs(id, ctx).reduce<[ReadonlyArray<string>, Ctx]>(
+const walkArgs = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], ctx: Ctx): [ReadonlyArray<string>, Ctx] => {
+	const args = sortedArgs(id, ctx);
+	const [values, final] = args.reduce<[ReadonlyArray<string>, Ctx]>(
 		([acc, c], argId) => {
 			const [n, c2] = walk(argId, c);
 			return [[...acc, n], c2];
 		},
 		[[], ctx],
 	);
+	return [args.map((id, i) => C.resolve(final, id) ?? values[i]), final];
+};
 
 const sortedArgs = (id: NodeId, ctx: Ctx): ReadonlyArray<NodeId> =>
 	Edges.byLabel(

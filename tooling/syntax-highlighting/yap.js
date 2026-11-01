@@ -125,6 +125,9 @@ export const yap = {
 				"shift",
 				"reset",
 				"resume",
+				"with",
+				"capture",
+				"in",
 			];
 			const types = ["Type", "Unit", "Row", "Num", "Bool", "String"];
 			const builtins = ["struct", "variant", "tuple", "tagged", "true", "false"];

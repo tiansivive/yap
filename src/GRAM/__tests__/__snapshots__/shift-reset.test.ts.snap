@@ -5,8 +5,9 @@ exports[`shift-reset enrichment pass > reset(1 + shift(k -> k(42))) — shift em
   :entry -> [2]
 [2] reset
   :body -> [3]
+  :entry -> [14]
 [3] app {"icit":"Explicit"}
-  :arg -> [14]
+  :arg -> [8]
   :func -> [4]
 [4] app {"icit":"Explicit"}
   :arg -> [7]
@@ -16,50 +17,79 @@ exports[`shift-reset enrichment pass > reset(1 + shift(k -> k(42))) — shift em
   :refers_to -> [5]
 [7] lit {"value":{"type":"Num","value":1}}
 [8] shift
+  :body -> [9]
 [9] lambda {"variable":"k","icit":"Explicit","level":0}
   :annotation -> [10]
   :body -> [11]
 [10] lit {"value":{"type":"Atom","value":"Num"}}
-[11] resumption {"icit":"Explicit"}
+[11] app {"icit":"Explicit"}
   :arg -> [13]
-  :invokes -> [15]
+  :func -> [12]
 [12] var:bound {"index":0}
   :refers_to -> [9]
   :scope -> [9] {"level":0}
 [13] lit {"value":{"type":"Num","value":42}}
-[14] bubble {"binder":"$bubble_0"}
-[15] continuation {"binder":"$bubble_0"}
+[14] let
+  :body -> [16]
+  :value -> [15]
+[15] app {"icit":"Explicit"}
+  :arg -> [7]
+  :derived_from -> [4]
+  :func -> [5]
+[16] resumption {"icit":"Explicit"}
+  :arg -> [13]
+  :derived_from -> [11]
+  :invokes -> [17]
+[17] continuation
+  :body -> [20]
   :captured_at -> [8]
   :delimiter -> [2]
+  :env -> [21]
   :handler -> [9]
-  :param -> [14]"
+  :hole -> [18]
+[18] bubble {"binder":"$capture_8"}
+[19] var:bound
+  :refers_to -> [14]
+[20] app {"icit":"Explicit"}
+  :arg -> [18]
+  :derived_from -> [3]
+  :func -> [19]
+[21] env
+  :capture -> [14] {"index":0}"
 `;
 
 exports[`shift-reset enrichment pass > reset(shift k -> 'hello') — discarded continuation 1`] = `
 "[1] root
   :entry -> [2]
 [2] reset
-  :body -> [7]
+  :body -> [3]
+  :entry -> [6]
 [3] shift
+  :body -> [4]
 [4] lambda {"variable":"k","icit":"Explicit","level":0}
   :annotation -> [5]
   :body -> [6]
 [5] lit {"value":{"type":"Atom","value":"Str"}}
 [6] lit {"value":{"type":"String","value":"hello"}}
-[7] bubble {"binder":"$bubble_0"}
-[8] continuation {"binder":"$bubble_0"}
+[7] continuation
+  :body -> [8]
   :captured_at -> [3]
   :delimiter -> [2]
+  :env -> [9]
   :handler -> [4]
-  :param -> [7]"
+  :hole -> [8]
+[8] bubble {"binder":"$capture_3"}
+[9] env"
 `;
 
 exports[`shift-reset enrichment pass > reset(shift k -> k(1) + k(2)) — multishot 1`] = `
 "[1] root
   :entry -> [2]
 [2] reset
-  :body -> [16]
+  :body -> [3]
+  :entry -> [16]
 [3] shift
+  :body -> [4]
 [4] lambda {"variable":"k","icit":"Explicit","level":0}
   :annotation -> [5]
   :body -> [6]
@@ -74,80 +104,141 @@ exports[`shift-reset enrichment pass > reset(shift k -> k(1) + k(2)) — multish
 [9] var:ref {"name":"$add"}
   :refers_to -> [8]
   :scope -> [4] {"level":0}
-[10] resumption {"icit":"Explicit"}
+[10] app {"icit":"Explicit"}
   :arg -> [12]
-  :invokes -> [17]
+  :func -> [11]
 [11] var:bound {"index":0}
   :refers_to -> [4]
   :scope -> [4] {"level":0}
 [12] lit {"value":{"type":"Num","value":1}}
-[13] resumption {"icit":"Explicit"}
+[13] app {"icit":"Explicit"}
   :arg -> [15]
-  :invokes -> [17]
+  :func -> [14]
 [14] var:bound {"index":0}
   :refers_to -> [4]
   :scope -> [4] {"level":0}
 [15] lit {"value":{"type":"Num","value":2}}
-[16] bubble {"binder":"$bubble_0"}
-[17] continuation {"binder":"$bubble_0"}
+[16] let
+  :body -> [21]
+  :value -> [17]
+[17] resumption {"icit":"Explicit"}
+  :arg -> [12]
+  :derived_from -> [10]
+  :invokes -> [18]
+[18] continuation
+  :body -> [19]
   :captured_at -> [3]
   :delimiter -> [2]
+  :env -> [20]
   :handler -> [4]
-  :param -> [16]"
+  :hole -> [19]
+[19] bubble {"binder":"$capture_3"}
+[20] env
+[21] let
+  :body -> [24]
+  :value -> [23]
+[22] var:bound
+  :refers_to -> [16]
+[23] app {"icit":"Explicit"}
+  :arg -> [22]
+  :derived_from -> [7]
+  :func -> [8]
+[24] let
+  :body -> [28]
+  :value -> [25]
+[25] resumption {"icit":"Explicit"}
+  :arg -> [15]
+  :derived_from -> [13]
+  :invokes -> [18]
+[26] var:bound
+  :refers_to -> [21]
+[27] var:bound
+  :refers_to -> [24]
+[28] app {"icit":"Explicit"}
+  :arg -> [27]
+  :derived_from -> [6]
+  :func -> [26]"
 `;
 
 exports[`shift-reset enrichment pass > reset(shift k -> k(42)) — single resumption 1`] = `
 "[1] root
   :entry -> [2]
 [2] reset
-  :body -> [9]
+  :body -> [3]
+  :entry -> [9]
 [3] shift
+  :body -> [4]
 [4] lambda {"variable":"k","icit":"Explicit","level":0}
   :annotation -> [5]
   :body -> [6]
 [5] lit {"value":{"type":"Atom","value":"Num"}}
-[6] resumption {"icit":"Explicit"}
+[6] app {"icit":"Explicit"}
   :arg -> [8]
-  :invokes -> [10]
+  :func -> [7]
 [7] var:bound {"index":0}
   :refers_to -> [4]
   :scope -> [4] {"level":0}
 [8] lit {"value":{"type":"Num","value":42}}
-[9] bubble {"binder":"$bubble_0"}
-[10] continuation {"binder":"$bubble_0"}
+[9] resumption {"icit":"Explicit"}
+  :arg -> [8]
+  :derived_from -> [6]
+  :invokes -> [10]
+[10] continuation
+  :body -> [11]
   :captured_at -> [3]
   :delimiter -> [2]
+  :env -> [12]
   :handler -> [4]
-  :param -> [9]"
+  :hole -> [11]
+[11] bubble {"binder":"$capture_3"}
+[12] env"
 `;
 
 exports[`shift-reset enrichment pass > reset(shift k -> k(k(10))) — nested resumption 1`] = `
 "[1] root
   :entry -> [2]
 [2] reset
-  :body -> [11]
+  :body -> [3]
+  :entry -> [11]
 [3] shift
+  :body -> [4]
 [4] lambda {"variable":"k","icit":"Explicit","level":0}
   :annotation -> [5]
   :body -> [6]
 [5] lit {"value":{"type":"Atom","value":"Num"}}
-[6] resumption {"icit":"Explicit"}
+[6] app {"icit":"Explicit"}
   :arg -> [8]
-  :invokes -> [12]
+  :func -> [7]
 [7] var:bound {"index":0}
   :refers_to -> [4]
   :scope -> [4] {"level":0}
-[8] resumption {"icit":"Explicit"}
+[8] app {"icit":"Explicit"}
   :arg -> [10]
-  :invokes -> [12]
+  :func -> [9]
 [9] var:bound {"index":0}
   :refers_to -> [4]
   :scope -> [4] {"level":0}
 [10] lit {"value":{"type":"Num","value":10}}
-[11] bubble {"binder":"$bubble_0"}
-[12] continuation {"binder":"$bubble_0"}
+[11] let
+  :body -> [16]
+  :value -> [12]
+[12] resumption {"icit":"Explicit"}
+  :arg -> [10]
+  :derived_from -> [8]
+  :invokes -> [13]
+[13] continuation
+  :body -> [14]
   :captured_at -> [3]
   :delimiter -> [2]
+  :env -> [15]
   :handler -> [4]
-  :param -> [11]"
+  :hole -> [14]
+[14] bubble {"binder":"$capture_3"}
+[15] env
+[16] resumption {"icit":"Explicit"}
+  :arg -> [17]
+  :derived_from -> [6]
+  :invokes -> [13]
+[17] var:bound
+  :refers_to -> [11]"
 `;

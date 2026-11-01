@@ -1,5 +1,3 @@
-import * as A from "fp-ts/lib/Array";
-
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Q from "@yap/shared/modalities/multiplicity";
@@ -24,6 +22,12 @@ export const infer = (block: Block): M.Elaboration<EB.AST> =>
 			}
 
 			const [current, ...rest] = stmts;
+			if (current.type === "foreign") {
+				const [annotation] = yield* EB.check(current.annotation, NF.Type);
+				const type = yield* NF.normalize(annotation);
+				const term = EB.Constructors.Var({ type: "Foreign", name: current.variable });
+				return yield* M.reader.local(c => ({ ...c, imports: { ...c.imports, [current.variable]: [term, type, []] } }), recurse(rest, results));
+			}
 
 			/*
 			 * A statement's constraints are its own. letdec solves what this statement told,
@@ -45,10 +49,8 @@ export const infer = (block: Block): M.Elaboration<EB.AST> =>
 			);
 
 			if (stmt.type === "Using") {
-				type Implicit = EB.Context["implicits"][0];
-				const nfValue = yield* NF.whnf(stmt.value);
-
-				return yield* M.reader.local(ctx => update(ctx, "implicits", A.append<Implicit>([nfValue, stmt.annotation])), recurse(rest, [...results, stmt]));
+				const candidates = yield* EB.Control.candidates(stmt.value, stmt.annotation);
+				return yield* M.reader.local(ctx => ({ ...ctx, implicits: [...ctx.implicits, ...candidates] }), recurse(rest, [...results, stmt]));
 			}
 
 			if (!declared) {
@@ -98,7 +100,10 @@ const inferReturn = function* ({ return: ret }: Block, results: EB.Statement[]):
 	const [[t, ty, rus], { constraints }] = yield* M.writer.listen(EB.infer(ret));
 
 	const { resolutions } = yield* EB.solve(constraints);
-	const value = yield* NF.whnf(t);
+	if (EB.Control.contains(t)) {
+		return [EB.Constructors.Block(results, yield* EB.Icit.instantiate(t, resolutions)), yield* NF.force(ty), rus];
+	}
+	const value = yield* NF.whnf(yield* EB.Icit.instantiate(t, resolutions));
 	const forced = yield* NF.force(ty);
 
 	const generalized = yield* NF.abstract(forced, value, resolutions);

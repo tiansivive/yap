@@ -7,6 +7,7 @@ import type { Ctx } from "./context";
 import * as C from "./context";
 import * as Nullable from "../../utils/Nullable";
 import { match } from "ts-pattern";
+import { passive } from "./demand";
 
 const { Instr, Expr } = Constructors;
 const erasable = new Set<string>([Tags.MU, Tags.PI, Tags.SIGMA, Tags.SIGMA_V2, Tags.VAR_META]);
@@ -33,6 +34,9 @@ const statement = (sid: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], c
 
 const letStmt = (sid: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], ctx: Ctx): Ctx => {
 	const valueEdge = Edges.one(sid, Labels.VALUE)(ctx.graph);
+	if (!ctx.demand.has(sid) && valueEdge !== undefined && passive(valueEdge.target, ctx.graph)) {
+		return ctx;
+	}
 	const [val, c1] = valueEdge !== undefined ? walk(valueEdge.target, ctx) : C.name(ctx);
 	const variable = strOf(Nodes.get(sid)(ctx.graph)?.payload.variable);
 	const [n, c2] = C.name(c1, variable);
@@ -59,5 +63,5 @@ const erasure = (id: NodeId, ctx: Ctx): MIR.Debug | undefined => {
 
 const exprStmt = (sid: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], ctx: Ctx): Ctx => {
 	const valueEdge = Edges.one(sid, Labels.VALUE)(ctx.graph);
-	return valueEdge !== undefined ? walk(valueEdge.target, ctx)[1] : ctx;
+	return valueEdge !== undefined && !passive(valueEdge.target, ctx.graph) ? walk(valueEdge.target, ctx)[1] : ctx;
 };

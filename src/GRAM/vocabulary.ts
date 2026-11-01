@@ -44,6 +44,7 @@ export const Tags = {
 	MODAL: "modal",
 	RESET: "reset",
 	SHIFT: "shift",
+	CAPTURE: "capture",
 	BUBBLE: "bubble",
 	CONTINUATION: "continuation",
 	RESUMPTION: "resumption",
@@ -119,9 +120,10 @@ export const Labels = {
 	BIND: ":bind",
 
 	DELIMITER: ":delimiter",
+	IDENTITY: ":identity",
 	CAPTURED_AT: ":captured_at",
 	HANDLER: ":handler",
-	PARAM: ":param",
+	HOLE: ":hole",
 	INVOKES: ":invokes",
 
 	MATERIALIZES: ":materializes",
@@ -131,6 +133,8 @@ export const Labels = {
 export type Label = string;
 
 const STRUCTURAL: ReadonlySet<string> = new Set([
+	Labels.IDENTITY,
+	Labels.HANDLER,
 	Labels.BODY,
 	Labels.FUNC,
 	Labels.ARG,

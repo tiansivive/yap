@@ -124,6 +124,7 @@ export const Elaborated: () => EB.Context['imports'] = () => {
 
     return {
         ...PrimTypes,
+        Effect: [EB.Constructors.Lit(Lit.Atom("Effect")), Type_Type_Type, []],
         //"->": [Terms()["->"], Type_Type_Type, []],
         "+": [Terms()["+"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.add)]), []],
         "-": [Terms()["-"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.sub)]), []],

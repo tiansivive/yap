@@ -91,23 +91,23 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Machine.delimit": scope => {
-				workStack.push({ type: "Delimiter", scope });
+			"Machine.delimit": delimiter => {
+				workStack.push(delimiter);
 
 				return Eff.ctl.resume(undefined);
 			},
 
 			"Machine.find": match => Eff.ctl.resume(workStack.findLast(match)),
 
-			"Machine.capture": () => {
-				const index = workStack.findLastIndex(frame => frame.type === "Delimiter");
+			"Machine.capture": identity => {
+				const index = workStack.findLastIndex(frame => frame.type === "Delimiter" && frame.identity === identity);
 
 				const captured = match<StackFrame<S, C> | undefined, Captured<S, C> | undefined>(workStack[index])
-					.with({ type: "Delimiter" }, ({ scope }) => {
+					.with({ type: "Delimiter" }, delimiter => {
 						const frames = workStack.slice(index + 1);
 						workStack.splice(index);
 
-						return { frames, scope };
+						return { frames, scope: delimiter.scope, delimiter };
 					})
 					.otherwise(() => undefined);
 

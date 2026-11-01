@@ -5,8 +5,9 @@ import { Constructors } from "../../lowering/mir";
 import type { Ctx } from "./context";
 import * as C from "./context";
 import * as Closure from "./bundle";
+import * as Continuations from "./continuations";
 
-const { Terminator, Block, Function: Fn } = Constructors;
+const { Terminator, Function: Fn } = Constructors;
 
 // Closure → MIR.Function(env, formal) + { __fn, __env } bundle at the use site.
 export const closure = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx], ctx: Ctx): [string, Ctx] => {
@@ -28,21 +29,14 @@ export const closure = (id: NodeId, walk: (id: NodeId, ctx: Ctx) => [string, Ctx
 			const v = capVars[i];
 			return v !== undefined ? C.bind(c, cap.target, v) : c;
 		},
-		C.bind(C.fork(ctx), lamId ?? -1, formalParam),
+		C.bind({ ...C.fork(c1), names: new Map(), labels: new Map(), instrs: envReads }, lamId ?? -1, formalParam),
 	);
 
 	const lamBody = lamId !== undefined ? Edges.one(lamId, Labels.BODY)(ctx.graph) : undefined;
 	const [bodyResult, final] = lamBody !== undefined ? walk(lamBody.target, bodyCtx) : C.name(bodyCtx);
-	const [bodyInstrs, flushed] = C.flush(final);
-
-	const entryBlock =
-		flushed.blocks.length > 0
-			? Block("entry", [], [...envReads, ...bodyInstrs], Terminator.Jump(flushed.blocks[0].label, []))
-			: Block("entry", [], [...envReads, ...bodyInstrs], Terminator.Return(bodyResult));
-
-	const fn = Fn(funcName, [envParam, formalParam], "entry", [entryBlock, ...flushed.blocks]);
-
-	const withNested = flushed.functions.reduce<Ctx>((c, f) => C.func(c, f), c1);
+	const completed = Continuations.complete(walk, C.close(final, Terminator.Return(bodyResult)));
+	const fn = Fn(funcName, [envParam, formalParam], "entry", [...completed.blocks]);
+	const withNested = completed.functions.reduce<Ctx>((c, f) => C.func(c, f), { ...c1, supply: completed.supply });
 	const withFn = C.func(withNested, fn);
 
 	const capturedValues = captures.map(cap => C.resolve(ctx, cap.target) ?? cap.name);

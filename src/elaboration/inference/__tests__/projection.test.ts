@@ -13,7 +13,7 @@ describe("inference: projection", () => {
 		const res = elaborateFrom("\\obj -> obj.x");
 		// The function should have type { x: a | r } -> a
 
-		expect(res.displays.type).toContain("(obj: ?1) -> (closure: (?2 :: Type)");
+		expect(res.displays.type).toContain("(obj: Schema [ x: ?2 | ?3 ]) -> (closure: (?2 :: Type)");
 		expect(res.displays.constraints).toContain("Schema [ x: ?2 | ?3 ] ~~ ?1");
 		expect(res.structure.metas[3].annotation).toMatchObject({ type: "Lit", value: { value: "Row" } });
 		expect({ displays: res.displays }).toMatchSnapshot();

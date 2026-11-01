@@ -411,12 +411,31 @@ export const Alternative: PostProcessor<[Space, Bar, Space, Src.Pattern, Space, 
  * Delimited Continuations processors
  ***********************************************************/
 
-export const Reset: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , term]) => {
-	return {
-		type: "reset",
-		term,
-		location: locSpan({ from: loc(tok) }, term.location),
-	};
+export const Reset = (data: [Keyword, Whitespace, Term] | [Keyword, Whitespace, Token, Whitespace, Term, Whitespace, Token, Whitespace, Term]): Term => {
+	const term = data.length === 3 ? data[2] : data[8];
+	const identity = data.length === 3 ? undefined : data[4];
+	return { type: "reset", identity, term, location: locSpan({ from: loc(data[0]) }, term.location) };
+};
+
+export const Handler: PostProcessor<[Term, Whitespace, Colon, Whitespace, Term], { identity: Term; handler: Term }> = ([identity, , , , handler]) => ({
+	identity,
+	handler,
+});
+
+export const With: PostProcessor<[Keyword, Whitespace, { identity: Term; handler: Term }[], Whitespace, Keyword, Whitespace, Term], Term> = ([
+	tok,
+	,
+	handlers,
+	,
+	,
+	,
+	term,
+]) => ({ type: "with", handlers, term, location: locSpan({ from: loc(tok) }, term.location) });
+
+export const Capture = (data: [Keyword, Whitespace, Term] | [Keyword, Whitespace, Token, Whitespace, Term, Whitespace, Token, Whitespace, Term]): Term => {
+	const term = data.length === 3 ? data[2] : data[8];
+	const identity = data.length === 3 ? undefined : data[4];
+	return { type: "capture", identity, term, location: locSpan({ from: loc(data[0]) }, term.location) };
 };
 
 export const Shift: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , term]) => {

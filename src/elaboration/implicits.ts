@@ -13,14 +13,14 @@ import assert from "assert";
 /** Zonking resolves metas through the registry under the current scope, nothing else. */
 export type Zonking<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Actions<typeof Metas.registry>, A>;
 
-const ImplicitPi = NF.View.Sealed({ type: "Abs", binder: { type: "Pi", icit: "Implicit" } });
+const ImplicitPi = () => NF.View.Sealed({ type: "Abs", binder: { type: "Pi", icit: "Implicit" } });
 
 export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 	const [term, ty, us] = node;
 	const ctx = yield* M.reader.ask();
 
 	const r = match(yield* NF.view(ty))
-		.with(ImplicitPi, ({ value: pi }) =>
+		.with(ImplicitPi(), ({ value: pi }) =>
 			(function* () {
 				const meta = yield* EB.freshMeta(ctx.env.length, pi.binder.annotation);
 				const mvar = EB.Constructors.Var(meta);
@@ -41,22 +41,32 @@ export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 
 export const wrapLambda = function* (term: EB.Term, ty: NF.Value): NF.Abstraction<EB.Term> {
 	const ctx = yield* M.reader.ask();
+	if (term.type === "Ann" && term.term.type === "Abs" && term.term.binding.type === "Lambda" && term.term.binding.icit === "Implicit") {
+		return yield* wrapLambda(term.term, ty);
+	}
 
 	return yield* match(yield* NF.view(ty))
 		.with(
-			ImplicitPi,
-			_ => term.type === "Abs" && (term.binding.type === "Lambda" || term.binding.type === "Pi") && term.binding.icit === "Implicit",
+			ImplicitPi(),
+			({ value: pi }) =>
+				term.type === "Abs" &&
+				(term.binding.type === "Lambda" || term.binding.type === "Pi") &&
+				term.binding.icit === "Implicit" &&
+				term.binding.variable === pi.binder.variable,
 			function* () {
 				return term;
 			},
 		)
-		.with(ImplicitPi, function* ({ value: pi }) {
+		.with(ImplicitPi(), function* ({ value: pi }) {
 			const lvl = ctx.env.length;
 			const ann = yield* NF.quote(lvl, pi.binder.annotation);
 			const binding: EB.Binding = { type: "Lambda", variable: pi.binder.variable, icit: pi.binder.icit, annotation: ann };
 			const xtended = EB.bind(ctx, binding, pi.binder.annotation);
 			const applied = yield* NF.apply(pi.binder, pi.closure, NF.Constructors.Rigid(lvl));
-			const body = yield* M.reader.local(_ => xtended, wrapLambda(term, applied));
+			const lifted = EB.rewrite(term, (t, depth) =>
+				t.type === "Var" && t.variable.type === "Bound" && t.variable.index >= depth ? EB.Constructors.Var(EB.Bound(t.variable.index + 1)) : t,
+			);
+			const body = yield* M.reader.local(_ => xtended, wrapLambda(lifted, applied));
 			return EB.Constructors.Abs(binding, body);
 		})
 		.otherwise(function* () {
@@ -71,13 +81,13 @@ export const wrapLambda = function* (term: EB.Term, ty: NF.Value): NF.Abstractio
  * Resolved metas (those from implicit resolution) are replaced by their resolved terms.
  * NOTE: this is more zonking than instantiation, but the name is kept for legacy reasons.
  */
-export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions): Zonking<EB.Term> {
+export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions, defaults = true): Zonking<EB.Term> {
 	const ctx = yield* M.reader.ask();
 	const registry = yield* Metas.registry.get();
 
 	const instantiateRow = function* (row: EB.Row): Zonking<EB.Row> {
 		const entries = yield* M.traverse(row.entries, function* ({ label, value }) {
-			return { label, value: yield* instantiate(value, resolutions) };
+			return { label, value: yield* instantiate(value, resolutions, defaults) };
 		});
 		return R.Constructors.Row(entries, row.tail);
 	};
@@ -92,8 +102,15 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			if (solved) {
 				const quoted = yield* NF.quote(ctx.env.length, solved);
 				// we still need to instantiate in case the quoted term has metas itself
-				return yield* instantiate(quoted, resolutions);
+				return yield* instantiate(quoted, resolutions, defaults);
 			}
+
+			if (!defaults) {
+				return v;
+			}
+
+			// Don't instantiate metas from outer scopes - they should remain unsolved
+			// and will be handled at their original scope level
 
 			// Don't instantiate metas from outer scopes - they should remain unsolved
 			// and will be handled at their original scope level
@@ -109,45 +126,45 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 				.otherwise(() => EB.Constructors.Var(v.variable));
 		})
 		.with({ type: "Abs", binding: { type: "Sigma" } }, function* (sig) {
-			const annotation = yield* instantiate(sig.binding.annotation, resolutions);
+			const annotation = yield* instantiate(sig.binding.annotation, resolutions, defaults);
 			const nf = yield* NF.normalize(annotation);
 			assert(nf.type === "Row", "Sigma binder annotation must be a Row");
 			const xtended = EB.extendSigma(ctx, nf.row);
-			const body = yield* M.reader.local(_ => xtended, instantiate(sig.body, resolutions));
+			const body = yield* M.reader.local(_ => xtended, instantiate(sig.body, resolutions, defaults));
 			return EB.Constructors.Abs({ ...sig.binding, annotation }, body);
 		})
 		.with(EB.CtorPatterns.Nu, function* ({ binding, body }) {
 			const within = EB.open(binding, ctx);
 			const scoped = yield* M.reader.local(_ => within, instantiateRow(binding.scoped));
-			const annotation = yield* M.reader.local(_ => within, instantiate(binding.annotation, resolutions));
-			return EB.Constructors.Nu({ ...binding, scoped, annotation }, yield* M.reader.local(_ => within, instantiate(body, resolutions)));
+			const annotation = yield* M.reader.local(_ => within, instantiate(binding.annotation, resolutions, defaults));
+			return EB.Constructors.Nu({ ...binding, scoped, annotation }, yield* M.reader.local(_ => within, instantiate(body, resolutions, defaults)));
 		})
 		.with({ type: "Abs" }, function* (abs) {
-			const annotation = yield* instantiate(abs.binding.annotation, resolutions);
+			const annotation = yield* instantiate(abs.binding.annotation, resolutions, defaults);
 			const extended = EB.bind(ctx, abs.binding, yield* NF.normalize(annotation));
-			const body = yield* M.reader.local(_ => extended, instantiate(abs.body, resolutions));
+			const body = yield* M.reader.local(_ => extended, instantiate(abs.body, resolutions, defaults));
 			return EB.Constructors.Abs({ ...abs.binding, annotation }, body);
 		})
 		.with({ type: "App" }, function* (app) {
-			return EB.Constructors.App(app.icit, yield* instantiate(app.func, resolutions), yield* instantiate(app.arg, resolutions));
+			return EB.Constructors.App(app.icit, yield* instantiate(app.func, resolutions, defaults), yield* instantiate(app.arg, resolutions, defaults));
 		})
 		.with({ type: "Row" }, function* ({ row }) {
 			return EB.Constructors.Row(yield* instantiateRow(row));
 		})
 		.with({ type: "Proj" }, function* ({ label, term }) {
-			return EB.Constructors.Proj(label, yield* instantiate(term, resolutions));
+			return EB.Constructors.Proj(label, yield* instantiate(term, resolutions, defaults));
 		})
 		.with({ type: "Inj" }, function* ({ label, value, term }) {
-			return EB.Constructors.Inj(label, yield* instantiate(value, resolutions), yield* instantiate(term, resolutions));
+			return EB.Constructors.Inj(label, yield* instantiate(value, resolutions, defaults), yield* instantiate(term, resolutions, defaults));
 		})
 		.with({ type: "Ann" }, function* ({ term, ann }) {
-			return EB.Constructors.Ann(yield* instantiate(term, resolutions), yield* instantiate(ann, resolutions));
+			return EB.Constructors.Ann(yield* instantiate(term, resolutions, defaults), yield* instantiate(ann, resolutions, defaults));
 		})
 		.with({ type: "Match" }, function* ({ scrutinee, alternatives }) {
-			const scrut = yield* instantiate(scrutinee, resolutions);
+			const scrut = yield* instantiate(scrutinee, resolutions, defaults);
 			const alts = yield* Eff.traverse(alternatives, function* (alt) {
 				const xtended = alt.binders.reduce((acc, [bv, bty]) => EB.bind(acc, { type: "Pattern", variable: bv }, bty), ctx);
-				const tm = yield* M.reader.local(_ => xtended, instantiate(alt.term, resolutions));
+				const tm = yield* M.reader.local(_ => xtended, instantiate(alt.term, resolutions, defaults));
 				return { pattern: alt.pattern, term: tm, binders: alt.binders };
 			});
 			return EB.Constructors.Match(scrut, alts);
@@ -161,19 +178,35 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 				const [s, ...tail] = rest;
 				if (s.type === "Let") {
 					const extended = EB.bind(acc.ctx, { type: "Let", variable: s.variable }, s.annotation);
-					const value = yield* M.reader.local(_ => extended, instantiate(s.value, resolutions));
+					const value = yield* M.reader.local(_ => extended, instantiate(s.value, resolutions, defaults));
 					return yield* go({ stmts: [...acc.stmts, { ...s, value }], ctx: extended }, tail);
 				}
-				const value = yield* M.reader.local(_ => acc.ctx, instantiate(s.value, resolutions));
+				const value = yield* M.reader.local(_ => acc.ctx, instantiate(s.value, resolutions, defaults));
 				return yield* go({ stmts: [...acc.stmts, { ...s, value }], ctx: acc.ctx }, tail);
 			};
 			const { stmts, ctx: xtended } = yield* go({ stmts: [], ctx }, statements);
 
-			const r = yield* M.reader.local(_ => xtended, instantiate(ret, resolutions));
+			const r = yield* M.reader.local(_ => xtended, instantiate(ret, resolutions, defaults));
 			return EB.Constructors.Block(stmts, r);
 		})
 		.with({ type: "Modal" }, function* ({ term, modalities }) {
-			return EB.Constructors.Modal(yield* instantiate(term, resolutions), modalities);
+			return EB.Constructors.Modal(yield* instantiate(term, resolutions, defaults), modalities);
+		})
+		.with({ type: "Reset" }, function* ({ term, identity, handler }) {
+			return EB.Constructors.Reset(
+				yield* instantiate(term, resolutions, defaults),
+				identity && (yield* instantiate(identity, resolutions, defaults)),
+				handler && (yield* instantiate(handler, resolutions, defaults)),
+			);
+		})
+		.with({ type: "Capture" }, function* ({ identity, payload }) {
+			return EB.Constructors.Capture(yield* instantiate(identity, resolutions, defaults), yield* instantiate(payload, resolutions, defaults));
+		})
+		.with({ type: "Shift" }, function* ({ body }) {
+			return EB.Constructors.Shift(yield* instantiate(body, resolutions, defaults));
+		})
+		.with({ type: "Bubble" }, function* (t) {
+			return { ...t, shift: yield* instantiate(t.shift, resolutions, defaults) };
 		})
 		.otherwise(function* (t) {
 			return t;

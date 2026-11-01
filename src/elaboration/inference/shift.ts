@@ -17,7 +17,7 @@ export const infer = (shift: Shift): M.Elaboration<EB.AST> =>
 		if (delimitations.length === 0) {
 			throw new Error("shift without enclosing reset");
 		}
-		const [{ answer }] = delimitations;
+		const [{ answer, identity }] = delimitations;
 
 		/**
 		 * Γ, k: A → α; β ⊢ e : β; β
@@ -43,7 +43,7 @@ export const infer = (shift: Shift): M.Elaboration<EB.AST> =>
 		yield* M.st.modify(set("delimitations.0.answer.initial", answer.initial));
 
 		const body = EB.Constructors.Lambda(kBinder, "Explicit", ktm, yield* NF.quote(ctx.env.length, kTy));
-		const tm = EB.Constructors.Shift(body);
+		const tm = identity ? EB.Constructors.Capture(yield* EB.Control.evidence(identity), body) : EB.Constructors.Shift(body);
 		const { nondeterminism } = yield* M.st.get();
 		const values = nondeterminism.solution[skolem.val] ?? [];
 		const out = EB.Constructors.Bubble(skolem.val, A, values, tm);

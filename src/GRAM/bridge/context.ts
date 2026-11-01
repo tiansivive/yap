@@ -1,5 +1,8 @@
 import type { Graph, NodeId } from "../graph";
+import { Query } from "../graph";
 import type * as MIR from "../../lowering/mir";
+import { Constructors } from "../../lowering/mir";
+import { demand } from "./demand";
 
 export type Ctx = {
 	readonly graph: Graph;
@@ -9,6 +12,10 @@ export type Ctx = {
 	readonly supply: number;
 	readonly names: ReadonlyMap<NodeId, string>;
 	readonly labels: ReadonlyMap<string, string>;
+	readonly label: string;
+	readonly params: ReadonlyArray<string>;
+	readonly returns: ReadonlyMap<NodeId, ReadonlyArray<MIR.Case>>;
+	readonly demand: ReadonlySet<NodeId>;
 };
 
 export const fresh = (graph: Graph): Ctx => ({
@@ -19,6 +26,10 @@ export const fresh = (graph: Graph): Ctx => ({
 	supply: 0,
 	names: new Map(),
 	labels: new Map(),
+	label: "entry",
+	params: [],
+	returns: new Map(),
+	demand: demand(graph),
 });
 
 export const name = (ctx: Ctx, prefix = "v"): [string, Ctx] => {
@@ -32,6 +43,22 @@ export const bind = (ctx: Ctx, id: NodeId, n: string): Ctx => ({
 });
 
 export const resolve = (ctx: Ctx, id: NodeId): string | undefined => ctx.names.get(id);
+
+export const bound = (ctx: Ctx, id: NodeId): string => {
+	const value = resolve(ctx, id);
+	if (value === undefined) {
+		throw new Error(`GRAM bridge: unavailable binding ${id}`);
+	}
+	return value;
+};
+
+export const target = (ctx: Ctx, id: NodeId, label: string): NodeId => {
+	const value = Query.follow(id, label)(ctx.graph);
+	if (value === undefined) {
+		throw new Error(`GRAM bridge: ${id} requires ${label}`);
+	}
+	return value;
+};
 
 export const bindLabel = (ctx: Ctx, label: string, n: string): Ctx => ({
 	...ctx,
@@ -56,13 +83,21 @@ export const func = (ctx: Ctx, f: MIR.Function): Ctx => ({
 });
 
 export const fork = (ctx: Ctx): Ctx => ({
-	graph: ctx.graph,
+	...ctx,
 	blocks: [],
 	functions: [],
 	instrs: [],
 	supply: ctx.supply,
 	names: ctx.names,
 	labels: ctx.labels,
+	label: "entry",
+	params: [],
+	returns: new Map(),
 });
+
+export const open = (ctx: Ctx, label: string, params: ReadonlyArray<string> = []): Ctx => ({ ...ctx, label, params, instrs: [] });
+
+export const close = (ctx: Ctx, terminator: MIR.Terminator): Ctx =>
+	block({ ...ctx, instrs: [] }, Constructors.Block(ctx.label, [...ctx.params], [...ctx.instrs], terminator));
 
 export const flush = (ctx: Ctx): [ReadonlyArray<MIR.Instr>, Ctx] => [ctx.instrs, { ...ctx, instrs: [] }];

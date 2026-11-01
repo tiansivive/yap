@@ -18,6 +18,7 @@ import { freshMeta } from "./supply";
 type Origin = "inserted" | "source";
 
 export type Context = {
+	controlHandler?: boolean;
 	env: Array<{
 		type: [Binder, Origin, NF.Value];
 		nf: NF.Value;
