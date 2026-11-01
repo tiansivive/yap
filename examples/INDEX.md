@@ -41,6 +41,8 @@ All examples in this table have been checked through CEK, GRAM, MIR and JavaScri
 | [nested-handlers.yap](effects/nested-handlers.yap) | The nearest handler answers; the outer handler becomes active again afterward | `40` |
 | [rethrow.yap](effects/rethrow.yap) | An inner handler transforms a payload and captures the same identity outward | `111` |
 | [multishot.yap](effects/multishot.yap) | The handler runs its continuation twice and adds the results | `23` |
+| [cross-call.yap](effects/cross-call.yap) | A continuation includes arithmetic in two helpers and their caller; both resumptions share its MIR block | `38` |
+| [match.yap](effects/match.yap) | Each runtime match branch captures through the caller's handler | `40` |
 | [handler-function.yap](effects/handler-function.yap) | A separately defined handler factory supplies the handler | `42` |
 | [handler-evaluated-once.yap](effects/handler-evaluated-once.yap) | An effectful handler expression runs once while its handler processes two operations | `42` |
 | [evidence-record.yap](effects/evidence-record.yap) | A function captures through an explicitly passed record of evidence | `42` |

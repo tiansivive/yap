@@ -48,7 +48,6 @@ export const Tags = {
 	BUBBLE: "bubble",
 	CONTINUATION: "continuation",
 	RESUMPTION: "resumption",
-	EFFECT_STATE: "effect:state",
 
 	SWITCH: "switch",
 	LEAF: "leaf",
@@ -124,11 +123,10 @@ export const Labels = {
 	IDENTITY: ":identity",
 	CAPTURED_AT: ":captured_at",
 	HANDLER: ":handler",
-	PARAM: ":param",
+	HOLE: ":hole",
 	INVOKES: ":invokes",
 
 	MATERIALIZES: ":materializes",
-	MACHINE: ":machine",
 	CAPTURED: ":captured",
 } as const;
 

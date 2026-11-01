@@ -253,10 +253,11 @@ exports[`shift/reset > reset(shift k -> k(1) + k(2)) — multishot 1`] = `
   :callee -> [8]
 [17] bubble {"binder":"$bubble_0"}
 [18] continuation {"binder":"$bubble_0"}
+  :body -> [17]
   :captured_at -> [3]
   :delimiter -> [2]
   :handler -> [4]
-  :param -> [17]
+  :hole -> [17]
 [19] env
 [20] closure
   :body -> [4]
@@ -283,10 +284,11 @@ exports[`shift/reset > reset(shift k -> k(42)) 1`] = `
 [8] lit {"value":{"type":"Num","value":42}}
 [9] bubble {"binder":"$bubble_0"}
 [10] continuation {"binder":"$bubble_0"}
+  :body -> [9]
   :captured_at -> [3]
   :delimiter -> [2]
   :handler -> [4]
-  :param -> [9]
+  :hole -> [9]
 [11] env
 [12] closure
   :body -> [4]

@@ -27,7 +27,7 @@ describe("shift-reset enrichment pass", () => {
 		expect(Edges.one(contId, Labels.DELIMITER)(g)).toBeDefined();
 		expect(Edges.one(contId, Labels.CAPTURED_AT)(g)).toBeDefined();
 		expect(Edges.one(contId, Labels.HANDLER)(g)).toBeDefined();
-		expect(Edges.one(contId, Labels.PARAM)(g)).toBeDefined();
+		expect(Edges.one(contId, Labels.HOLE)(g)).toBeDefined();
 
 		const resId = [...Query.byTag(Tags.RESUMPTION)(g)][0];
 		expect(Edges.one(resId, Labels.INVOKES)(g)?.target).toBe(contId);

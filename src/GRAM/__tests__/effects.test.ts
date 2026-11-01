@@ -7,6 +7,8 @@ import { ARITIES } from "../../lowering/shared/primops";
 import { evaluate, mkCtx, runNF } from "../../elaboration/inference/__tests__/util";
 import { readFileSync } from "node:fs";
 import * as JS from "../../Codegen/v2/js";
+import { Edges, Nodes, Query } from "../graph";
+import { Labels, Tags } from "../vocabulary";
 
 const lower = (core: EB.Term) => {
 	const graph = GRAM.Pipeline.compile(core, { arities: ARITIES });
@@ -65,7 +67,90 @@ describe("local effects lowering spike", () => {
 		["probe1", 1099],
 		["probe2", 100],
 		["probe3", 1099],
+		["abort", 0],
+		["evidence-record", 42],
+		["handler-evaluated-once", 42],
+		["handler-function", 42],
+		["multiple-handlers", 42],
+		["multishot", 23],
+		["nested-handlers", 40],
+		["raw-control0", 999],
+		["raw-named", 12],
+		["raw-shift0", 2099],
+		["rethrow", 111],
+		["using-evidence", 42],
 	] as const)("compiles the %s example", (name, expected) => {
 		expect(compiled(readFileSync(`examples/effects/${name}.yap`, "utf8").trim())).toBe(expected);
+	});
+
+	it("extracts the residual body through two calls and shares it across resumptions", () => {
+		const source = `{ foreign E: Effect Num Num;
+			let f = \\x -> 1 + (capture [E] x);
+			let g = \\y -> 2 * (f y);
+			return with E: (\\p k -> (k p) + (k (p + 1))) in 10 + (g 3); }`;
+		expect(compiled(source)).toBe(38);
+		const graph = GRAM.Pipeline.compile(evaluate(source).core, { arities: ARITIES });
+		if (graph._tag === "Left") {
+			throw new Error(JSON.stringify(graph.left));
+		}
+		const g = graph.right;
+		const ks = [...Query.byTag(Tags.CONTINUATION)(g)];
+		expect(ks).toHaveLength(1);
+		const k = ks[0];
+		const hole = Query.follow(k, Labels.HOLE)(g)!;
+		expect(Nodes.get(hole)(g)?.tag).toBe(Tags.BUBBLE);
+		expect(Nodes.get(Query.follow(k, Labels.CAPTURED_AT)(g)!)(g)?.tag).toBe(Tags.CAPTURE);
+		expect(Query.follow(k, Labels.BODY)(g)).toBeDefined();
+		expect(Edges.to(k)(g).filter(e => e.label === Labels.INVOKES)).toHaveLength(2);
+		const mir = GRAM.Bridge.emit(g);
+		expect(mir.functions[0].blocks.filter(b => b.label === `k${k}`)).toHaveLength(1);
+		expect(mir.functions[0].blocks.filter(b => b.terminator.type === "Jump" && b.terminator.target === `k${k}`)).toHaveLength(2);
+	});
+
+	it.each([0, 1])("keeps both match branches in a capturing helper (%s)", value => {
+		const source = `{ foreign E: Effect Num Num;
+			let f = \\x -> match x | 0 -> capture [E] 20 | _ -> capture [E] 30;
+			return with E: (\\p k -> k p) in 10 + (f ${value}); }`;
+		expect(compiled(source)).toBe(value === 0 ? 30 : 40);
+		const mir = lower(evaluate(source).core);
+		expect(mir.functions[0].blocks.some(b => b.terminator.type === "Branch" && b.terminator.cases.some(c => c.value === "0"))).toBe(true);
+	});
+
+	it("saves a runtime value computed before capture once for both resumptions", () => {
+		const source = `{ foreign E: Effect Num Num; foreign read: Unit -> Num;
+			let f = \\x -> { let saved = read !; return saved + (capture [E] x); };
+			return with E: (\\p k -> (k p) + (k (p + 1))) in 10 + (f 3); }`;
+		const graph = GRAM.Pipeline.compile(evaluate(source).core, { arities: { ...ARITIES, read: 1 } });
+		if (graph._tag === "Left") {
+			throw new Error(JSON.stringify(graph.left));
+		}
+		const mir = GRAM.Bridge.emit(graph.right);
+		[20, 40].forEach(input => {
+			let calls = 0;
+			const read = () => {
+				calls++;
+				return input;
+			};
+			expect(interpret(mir, { read })).toBe(2 * input + 27);
+			expect(calls).toBe(1);
+		});
+	});
+
+	it("associates one source capture with distinct call-site delimiters", () => {
+		const source = `{ foreign E: Effect Num Num;
+			let f = \\x -> 1 + (capture [E] x);
+			return (with E: (\\p k -> (k p) + (k (p + 1))) in 10 + (f 3))
+			     + (with E: (\\p k -> (k p) + (k (p + 1))) in 100 + (f 3)); }`;
+		expect(compiled(source)).toBe(238);
+		const graph = GRAM.Pipeline.compile(evaluate(source).core, { arities: ARITIES });
+		if (graph._tag === "Left") {
+			throw new Error(JSON.stringify(graph.left));
+		}
+		const g = graph.right;
+		const ks = [...Query.byTag(Tags.CONTINUATION)(g)];
+		expect(ks).toHaveLength(2);
+		expect(new Set(ks.map(k => Query.follow(k, Labels.CAPTURED_AT)(g))).size).toBe(1);
+		expect(new Set(ks.map(k => Query.follow(k, Labels.DELIMITER)(g))).size).toBe(2);
+		expect(new Set(ks.map(k => Query.follow(k, Labels.BODY)(g))).size).toBe(2);
 	});
 });

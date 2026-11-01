@@ -38,7 +38,7 @@ export const reset = (id: NodeId, walk: Walk, ctx: Ctx): [string, Ctx] => {
 		return walk(bodyTarget, ctx);
 	}
 
-	const bubbleId = Query.follow(contId, Labels.PARAM)(ctx.graph);
+	const bubbleId = Query.follow(contId, Labels.HOLE)(ctx.graph);
 
 	if (bubbleId === undefined) {
 		return walk(bodyTarget, ctx);
@@ -68,7 +68,7 @@ export const resume = (id: NodeId, walk: Walk, ctx: Ctx): [string, Ctx] => {
 const machine = (
 	resetId: NodeId,
 	bubbleId: NodeId,
-	_contId: NodeId,
+	contId: NodeId,
 	handlerId: NodeId,
 	resumes: ReadonlyArray<NodeId>,
 	captures: ReadonlyArray<Capture>,
@@ -96,7 +96,7 @@ const machine = (
 	const [preLabel, c11] = C.name(c10, "pre");
 	const preBlock = Block(preLabel, [], [...entryInstrs], Terminator.Jump(sInit, [kVar]));
 
-	const [rBlock, c12] = Rest.emit(rLabel, bubbleId, resetId, resumes, sLabels, exitLabel, captures, walk, c11);
+	const [rBlock, c12] = Rest.emit(rLabel, bubbleId, contId, resumes, sLabels, exitLabel, captures, walk, c11);
 	const [sBlocks, c13] = Shift.emit(sInit, handlerId, resumes, captures, rLabel, exitLabel, sLabels, envVar, walk, c12);
 	const exitBlock = Block(exitLabel, [exitParam], [], Terminator.Return(exitParam));
 
@@ -143,7 +143,7 @@ const Rest = {
 	emit: (
 		label: string,
 		bubbleId: NodeId,
-		resetId: NodeId,
+		contId: NodeId,
 		resumes: ReadonlyArray<NodeId>,
 		sLabels: ReadonlyArray<string>,
 		exitLabel: string,
@@ -164,7 +164,7 @@ const Rest = {
 			return C.bind(c3, cap.target, n);
 		}, bound);
 
-		const bodyTarget = Query.follow(resetId, Labels.BODY)(ctx.graph);
+		const bodyTarget = Query.follow(contId, Labels.BODY)(ctx.graph);
 		const [restResult, inner2] = bodyTarget !== undefined ? walk(bodyTarget, withReads) : [vParam, withReads];
 
 		const term =

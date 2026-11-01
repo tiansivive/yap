@@ -15,16 +15,16 @@ import * as Primops from "./primops";
 import * as Paps from "./pap";
 import * as Decisions from "./decisions";
 import * as Continuations from "./continuations";
-import * as Effects from "./effects";
+import * as Regions from "./regions";
 
 const { Terminator, Block, Function: Fn, Module } = Constructors;
 const strOf = (v: unknown): string => (typeof v === "string" ? v : "");
 
 export const emit = (graph: Graph): MIR.Module => {
-	const machine = Edges.one(graph.root, Labels.MACHINE)(graph)?.target;
+	const residual = Edges.one(graph.root, Labels.MATERIALIZES)(graph)?.target;
 
-	if (machine !== undefined) {
-		return Effects.emit(graph, machine);
+	if (residual !== undefined) {
+		return Regions.emit(graph, residual);
 	}
 	const root = entry(graph);
 	const ctx = C.fresh(graph);

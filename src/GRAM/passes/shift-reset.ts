@@ -86,7 +86,8 @@ const continuation = (resetId: NodeId, shiftId: NodeId, lambdaId: NodeId, bubble
 		Edges.add(contId, Labels.DELIMITER, resetId),
 		Edges.add(contId, Labels.CAPTURED_AT, shiftId),
 		Edges.add(contId, Labels.HANDLER, lambdaId),
-		Edges.add(contId, Labels.PARAM, bubbleId),
+		Edges.add(contId, Labels.HOLE, bubbleId),
+		Edges.add(contId, Labels.BODY, Query.follow(resetId, Labels.BODY)(g)!),
 	].reduce((acc, op) => op(acc), g1);
 	return [contId, g2];
 };
@@ -133,7 +134,7 @@ export const descriptor: Descriptor = {
 	delta: {
 		tags: { added: new Set([Tags.BUBBLE, Tags.CONTINUATION, Tags.RESUMPTION]), removed: new Set() },
 		labels: {
-			added: new Set([Labels.DELIMITER, Labels.CAPTURED_AT, Labels.HANDLER, Labels.PARAM, Labels.INVOKES]),
+			added: new Set([Labels.DELIMITER, Labels.CAPTURED_AT, Labels.HANDLER, Labels.HOLE, Labels.INVOKES]),
 			removed: new Set(),
 		},
 	},

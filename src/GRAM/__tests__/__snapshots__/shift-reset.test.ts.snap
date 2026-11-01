@@ -29,10 +29,11 @@ exports[`shift-reset enrichment pass > reset(1 + shift(k -> k(42))) — shift em
 [13] lit {"value":{"type":"Num","value":42}}
 [14] bubble {"binder":"$bubble_0"}
 [15] continuation {"binder":"$bubble_0"}
+  :body -> [3]
   :captured_at -> [8]
   :delimiter -> [2]
   :handler -> [9]
-  :param -> [14]"
+  :hole -> [14]"
 `;
 
 exports[`shift-reset enrichment pass > reset(shift k -> 'hello') — discarded continuation 1`] = `
@@ -48,10 +49,11 @@ exports[`shift-reset enrichment pass > reset(shift k -> 'hello') — discarded c
 [6] lit {"value":{"type":"String","value":"hello"}}
 [7] bubble {"binder":"$bubble_0"}
 [8] continuation {"binder":"$bubble_0"}
+  :body -> [7]
   :captured_at -> [3]
   :delimiter -> [2]
   :handler -> [4]
-  :param -> [7]"
+  :hole -> [7]"
 `;
 
 exports[`shift-reset enrichment pass > reset(shift k -> k(1) + k(2)) — multishot 1`] = `
@@ -90,10 +92,11 @@ exports[`shift-reset enrichment pass > reset(shift k -> k(1) + k(2)) — multish
 [15] lit {"value":{"type":"Num","value":2}}
 [16] bubble {"binder":"$bubble_0"}
 [17] continuation {"binder":"$bubble_0"}
+  :body -> [16]
   :captured_at -> [3]
   :delimiter -> [2]
   :handler -> [4]
-  :param -> [16]"
+  :hole -> [16]"
 `;
 
 exports[`shift-reset enrichment pass > reset(shift k -> k(42)) — single resumption 1`] = `
@@ -115,10 +118,11 @@ exports[`shift-reset enrichment pass > reset(shift k -> k(42)) — single resump
 [8] lit {"value":{"type":"Num","value":42}}
 [9] bubble {"binder":"$bubble_0"}
 [10] continuation {"binder":"$bubble_0"}
+  :body -> [9]
   :captured_at -> [3]
   :delimiter -> [2]
   :handler -> [4]
-  :param -> [9]"
+  :hole -> [9]"
 `;
 
 exports[`shift-reset enrichment pass > reset(shift k -> k(k(10))) — nested resumption 1`] = `
@@ -146,8 +150,9 @@ exports[`shift-reset enrichment pass > reset(shift k -> k(k(10))) — nested res
 [10] lit {"value":{"type":"Num","value":10}}
 [11] bubble {"binder":"$bubble_0"}
 [12] continuation {"binder":"$bubble_0"}
+  :body -> [11]
   :captured_at -> [3]
   :delimiter -> [2]
   :handler -> [4]
-  :param -> [11]"
+  :hole -> [11]"
 `;

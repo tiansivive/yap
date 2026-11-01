@@ -1,353 +1,317 @@
 import { match } from "ts-pattern";
-import { Nodes, Edges, Query, entry, type Graph, type NodeId } from "../graph";
+import { entry, Nodes, type Graph, type NodeId } from "../graph";
 import { Tags, Labels } from "../vocabulary";
 import type { Descriptor } from "../pipeline/descriptor";
-import { ARITIES } from "../../lowering/shared/primops";
-import type { Literal } from "../../shared/literals";
+import { Syntax } from "./effects/graph";
 
-export type Operation =
-	| { type: "literal"; result: number; value: Literal }
-	| { type: "primitive"; result: number; op: string; args: number[] }
-	| { type: "record"; result: number; fields: { label: string; value: number }[] };
-
-export type State = { name: string; params: number[]; operations: Operation[]; args: number[]; result?: number };
-
-type Cell = { value?: Value };
-type Env = ReadonlyMap<NodeId | `field:${NodeId}`, Cell>;
-type Value =
-	| { type: "literal"; value: Literal }
-	| { type: "register"; slot: number }
-	| { type: "closure"; node: NodeId; env: Env }
-	| { type: "continuation"; frames: Frame[] }
-	| { type: "primitive"; name: string; args: Value[] }
-	| { type: "record"; fields: ReadonlyMap<string, Value> };
-type Task = { node: NodeId; env: Env; field?: Cell };
-type Finish =
-	| { type: "app" }
-	| { type: "primitive"; name: string }
-	| { type: "reset"; body: Task; named: boolean; handled: boolean }
-	| { type: "capture" }
-	| { type: "projection"; label: string }
-	| { type: "record"; labels: string[] };
-type Frame =
-	| { type: "collect"; rest: Task[]; values: Value[]; finish: Finish }
-	| { type: "delimiter"; identity: string; handler?: Value }
-	| { type: "argument"; value: Value }
-	| { type: "binding"; binder: NodeId; cell: Cell; env: Env; rest: NodeId[]; body: NodeId }
-	| { type: "sequence"; env: Env; rest: NodeId[]; body: NodeId }
-	| { type: "field"; cell: Cell }
-	| { type: "return" };
-
-const unsupported = (message: string): never => {
-	throw new Error(`Effects lowering: ${message}`);
-};
-
-/** Resolve local control flow while leaving value computations as graph operations. */
 export const effects = (graph: Graph): Graph => {
-	if (![...Query.byTag(Tags.CAPTURE)(graph)].length) {
-		return graph;
-	}
 	const root = entry(graph);
-
-	if (root === undefined) {
+	if (root === undefined || !graph.byTag.get(Tags.CAPTURE)?.size) {
 		return graph;
 	}
-	return new Flow(graph).build(root);
+	const rewrite = new Residual(graph);
+	const body = rewrite.normalize(rewrite.copy(root));
+	rewrite.link(graph.root, Labels.MATERIALIZES, rewrite.prune(body));
+	rewrite.environments();
+	return rewrite.graph;
 };
 
-class Flow {
-	private task?: Task;
-	private value?: Value;
-	private stack: Frame[] = [];
-	private states: State[] = [];
-	private slots: number[] = [];
-	private state: State = { name: "entry", params: [], operations: [], args: [] };
-	private fuel = 10000;
+class Residual extends Syntax {
+	private children(id: NodeId): NodeId[] {
+		return match(this.node(id).tag)
+			.with(Tags.LET, () => [this.get(id, Labels.VALUE), this.get(id, Labels.BODY)])
+			.with(Tags.LEAF, () => [this.get(id, Labels.BODY), ...this.edges(id, Labels.BIND).map(e => e.target)])
+			.with(Tags.SWITCH, () => [this.get(id, Labels.INSPECT), ...[...this.edges(id, Labels.BRANCH), ...this.edges(id, Labels.DEFAULT)].map(e => e.target)])
+			.with(Tags.RESUMPTION, () => [this.get(id, Labels.ARG), this.get(this.get(id, Labels.INVOKES), Labels.BODY)])
+			.with(Tags.PRIMOP, Tags.EXTERNAL, () => this.edges(id, Labels.ARG).map(e => e.target))
+			.with(Tags.STRUCT, () => this.edges(id, Labels.FIELD).map(e => e.target))
+			.with(Tags.APP, () => [this.get(id, Labels.FUNC), this.get(id, Labels.ARG)])
+			.with(Tags.PROJ, () => [this.get(id, Labels.TARGET)])
+			.with(Tags.INJ, () => [this.get(id, Labels.TARGET), this.get(id, Labels.VALUE)])
+			.with(Tags.CAPTURE, () => [this.get(id, Labels.IDENTITY), this.get(id, Labels.PAYLOAD)])
+			.otherwise(() => []);
+	}
 
-	constructor(private readonly graph: Graph) {}
-
-	build(root: NodeId): Graph {
-		this.task = { node: root, env: new Map() };
-		while (this.task || this.stack.length) {
-			if (--this.fuel === 0) {
-				unsupported("local control analysis exceeded its limit; recursive control flow needs a shared runtime state");
+	private nodes(root: NodeId): NodeId[] {
+		const seen = new Set<NodeId>();
+		const visit = (id: NodeId): void => {
+			if (seen.has(id)) {
+				return;
 			}
-			if (this.task) {
-				const task = this.task;
-				this.task = undefined;
-				this.evaluate(task);
-			} else {
-				const frame = this.stack.shift()!;
-				this.deliver(frame, this.value!);
-			}
-		}
-		this.state.result = this.register(this.value!);
-		this.states.push(this.state);
-		let g = this.graph;
-		let previous: NodeId | undefined;
-		for (const state of this.states) {
-			const [id, next] = Nodes.add(Tags.EFFECT_STATE, { ...state }, { created_by: "effects" })(g);
-			g = previous === undefined ? Edges.add(g.root, Labels.MACHINE, id)(next) : Edges.add(previous, Labels.NEXT, id)(next);
-			previous = id;
-		}
-		return g;
+			seen.add(id);
+			this.children(id).forEach(visit);
+		};
+		visit(root);
+		return [...seen];
 	}
 
-	private follow(node: NodeId, label: string): NodeId {
-		return Query.follow(node, label)(this.graph) ?? unsupported(`missing ${label} edge on ${node}`);
+	prune(id: NodeId): NodeId {
+		return match(this.node(id).tag)
+			.with(Tags.LET, () => {
+				const body = this.prune(this.get(id, Labels.BODY));
+				this.set(id, Labels.BODY, body);
+				const used = this.nodes(body).some(n => this.optional(n, Labels.REFERS_TO) === id);
+				const value = this.get(id, Labels.VALUE);
+				return !used && [Tags.LAMBDA, Tags.STRUCT, Tags.LIT, Tags.VAR_BOUND].includes(this.node(value).tag as never) ? body : id;
+			})
+			.with(Tags.SWITCH, Tags.LEAF, () => this.tree(id, body => this.prune(body)))
+			.otherwise(() => id);
 	}
 
-	private sorted(node: NodeId, label: string): NodeId[] {
-		return [...Edges.byLabel(node, label)(this.graph)].sort((a, b) => Number(a.payload.index ?? 0) - Number(b.payload.index ?? 0)).map(e => e.target);
+	environments(): void {
+		[...(this.graph.byTag.get(Tags.CONTINUATION) ?? [])]
+			.filter(id => this.optional(id, Labels.BODY) !== undefined)
+			.forEach(id => {
+				const body = this.prune(this.get(id, Labels.BODY));
+				this.set(id, Labels.BODY, body);
+				const nodes = this.nodes(body);
+				const local = new Set([
+					this.get(id, Labels.HOLE),
+					...nodes.filter(n => this.node(n).tag === Tags.RESUMPTION).map(n => this.get(this.get(n, Labels.INVOKES), Labels.HOLE)),
+					...nodes.filter(n => this.node(n).tag === Tags.LET),
+					...nodes.flatMap(n => this.edges(n, Labels.BIND).map(e => Number(e.payload.binder))),
+				]);
+				const free = [
+					...new Set(
+						nodes.flatMap(n => {
+							const target = this.optional(n, Labels.REFERS_TO);
+							return this.node(n).tag === Tags.BUBBLE ? [n] : target === undefined ? [] : [target];
+						}),
+					),
+				].filter(n => !local.has(n));
+				const env = this.add(Tags.ENV);
+				free.forEach((target, index) => this.link(env, Labels.CAPTURE, target, { index }));
+				this.link(id, Labels.ENV, env);
+			});
 	}
-
-	private evaluate(task: Task): void {
-		const { node: id, env } = task;
-
-		if (task.field) {
-			this.stack.unshift({ type: "field", cell: task.field });
-		}
-		const node = Nodes.get(id)(this.graph)!;
-		const at = (node: NodeId): Task => ({ node, env });
-		match(node.tag)
-			.with(Tags.LIT, () => {
-				this.value = { type: "literal", value: node.payload.value as Literal };
-			})
-			.with(Tags.LAMBDA, () => {
-				this.value = { type: "closure", node: id, env };
-			})
-			.with(Tags.CLOSURE, Tags.NU, () => {
-				this.task = at(this.follow(id, Labels.BODY));
-			})
-			.with(Tags.MODAL, () => {
-				this.task = at(this.follow(id, Labels.TERM));
-			})
-			.with(Tags.VAR_BOUND, () => {
-				const target = this.follow(id, Labels.REFERS_TO);
-				this.value = env.get(target)?.value ?? unsupported(`unavailable binding ${target}`);
-			})
-			.with(Tags.VAR_REF, () => {
-				this.task = at(this.follow(id, Labels.REFERS_TO));
-			})
-			.with(Tags.VAR_LABEL, Tags.VAR_NU_LABEL, () => {
-				const target = this.follow(id, Labels.REFERS_TO);
-				this.value = env.get(`field:${target}`)?.value ?? unsupported(`unavailable field ${target}`);
-			})
-			.with(Tags.VAR_FOREIGN, Tags.VAR_FREE, () => {
-				const name = String(node.payload.name);
-				this.value = ARITIES[name] === undefined ? { type: "literal", value: { type: "Atom", value: name } } : { type: "primitive", name, args: [] };
-			})
-			.with(Tags.APP, () => this.collect([at(this.follow(id, Labels.FUNC)), at(this.follow(id, Labels.ARG))], { type: "app" }))
-			.with(Tags.PRIMOP, () => this.collect(this.sorted(id, Labels.ARG).map(at), { type: "primitive", name: String(node.payload.op) }))
-			.with(Tags.EXTERNAL, () => {
-				const name = String(node.payload.name);
-				const args = this.sorted(id, Labels.ARG);
-
-				if (args.length === Number(node.payload.arity)) {
-					this.collect(args.map(at), { type: "primitive", name });
-				} else {
-					unsupported("partially applied external functions require closure materialization");
-				}
-			})
-			.with(Tags.BLOCK, () => this.sequence(this.sorted(id, Labels.STMT), this.follow(id, Labels.RETURN), env))
-			.with(Tags.LET, () => this.bind(id, [], this.follow(id, Labels.BODY), env))
-			.with(Tags.RESET, () => {
-				const identity = Query.follow(id, Labels.IDENTITY)(this.graph);
-				const handler = Query.follow(id, Labels.HANDLER)(this.graph);
-				this.collect([...(identity === undefined ? [] : [at(identity)]), ...(handler === undefined ? [] : [at(handler)])], {
-					type: "reset",
-					body: at(this.follow(id, Labels.BODY)),
-					named: identity !== undefined,
-					handled: handler !== undefined,
-				});
-			})
-			.with(Tags.CAPTURE, () => this.collect([at(this.follow(id, Labels.IDENTITY)), at(this.follow(id, Labels.PAYLOAD))], { type: "capture" }))
-			.with(Tags.PROJ, () => this.collect([at(this.follow(id, Labels.TARGET))], { type: "projection", label: String(node.payload.label) }))
-			.with(Tags.STRUCT, () => {
-				const fields = Edges.byLabel(id, Labels.FIELD)(this.graph);
-				const cells = fields.map((): Cell => ({}));
-				const within = new Map(env);
-				fields.forEach((field, i) => within.set(`field:${field.target}`, cells[i]));
-				this.collect(
-					fields.map((field, i) => ({ node: field.target, env: within, field: cells[i] })),
-					{ type: "record", labels: fields.map(f => String(f.payload.label)) },
+	normalize(id: NodeId, calls: ReadonlySet<NodeId> = new Set()): NodeId {
+		const node = this.node(id);
+		const norm = (id: NodeId) => this.normalize(id, calls);
+		return match(node.tag)
+			.with(Tags.MODAL, () => norm(this.get(id, Labels.TERM)))
+			.with(Tags.CLOSURE, Tags.NU, () => norm(this.get(id, Labels.BODY)))
+			.with(Tags.VAR_REF, Tags.VAR_LABEL, Tags.VAR_NU_LABEL, () => norm(this.resolve(id)))
+			.with(Tags.BLOCK, () => this.block(id, calls))
+			.with(Tags.LET, () =>
+				this.sequence(norm(this.get(id, Labels.VALUE)), value => {
+					this.set(id, Labels.VALUE, value);
+					this.set(id, Labels.BODY, norm(this.get(id, Labels.BODY)));
+					return id;
+				}),
+			)
+			.with(Tags.APP, () =>
+				this.sequence(norm(this.get(id, Labels.FUNC)), fn => this.sequence(norm(this.get(id, Labels.ARG)), arg => this.apply(fn, arg, calls))),
+			)
+			.with(Tags.PROJ, () =>
+				this.sequence(norm(this.get(id, Labels.TARGET)), target => {
+					const record = this.resolve(target);
+					const field = this.edges(record, Labels.FIELD).find(e => e.payload.label === node.payload.label);
+					return field === undefined ? this.add(Tags.PROJ, node.payload, [[Labels.TARGET, target]]) : field.target;
+				}),
+			)
+			.with(Tags.PRIMOP, Tags.EXTERNAL, Tags.STRUCT, Tags.INJ, () => {
+				const label = node.tag === Tags.STRUCT ? Labels.FIELD : Labels.ARG;
+				const edges = node.tag === Tags.INJ ? [this.edges(id, Labels.VALUE)[0], this.edges(id, Labels.TARGET)[0]] : this.edges(id, label);
+				return this.operands(
+					edges.map(e => e.target),
+					norm,
+					values =>
+						this.add(
+							node.tag,
+							node.payload,
+							edges.map((e, i) => [e.label, values[i], e.payload]),
+						),
 				);
 			})
-			.with(Tags.PI, Tags.SIGMA, Tags.SIGMA_V2, Tags.MU, Tags.VAR_META, Tags.ROW_EMPTY, () => {
-				this.value = { type: "literal", value: { type: "Atom", value: "Unit" } };
+			.with(Tags.RESET, () => {
+				const identity = this.optional(id, Labels.IDENTITY);
+				const handler = this.optional(id, Labels.HANDLER);
+				const operands = [identity, handler].filter((x): x is number => x !== undefined);
+				return this.operands(operands, norm, values => {
+					if (identity !== undefined) {
+						this.set(id, Labels.IDENTITY, values[0]);
+					}
+					if (handler !== undefined) {
+						this.set(id, Labels.HANDLER, values[identity === undefined ? 0 : 1]);
+					}
+					const body = norm(this.get(id, Labels.BODY));
+					this.set(id, Labels.BODY, body);
+					const result = this.delimit(body, id);
+					this.link(id, Labels.MATERIALIZES, result);
+					return result;
+				});
 			})
-			.otherwise(() => unsupported(`local control analysis does not yet cover ${node.tag}`));
+			.with(Tags.CAPTURE, () =>
+				this.operands([this.get(id, Labels.IDENTITY), this.get(id, Labels.PAYLOAD)], norm, ([identity, payload]) => {
+					this.set(id, Labels.IDENTITY, identity);
+					this.set(id, Labels.PAYLOAD, payload);
+					return id;
+				}),
+			)
+			.with(Tags.MATCH, () =>
+				this.sequence(norm(this.get(id, Labels.SCRUTINEE)), scrutinee => {
+					const tree = this.get(id, Labels.DECISION_TREE);
+					const copied = this.copy(tree, new Map([[this.get(id, Labels.SCRUTINEE), scrutinee]]));
+					return this.tree(copied, norm);
+				}),
+			)
+			.with(Tags.SWITCH, Tags.LEAF, () => this.tree(id, norm))
+			.with(Tags.PI, Tags.SIGMA, Tags.SIGMA_V2, Tags.MU, Tags.VAR_META, Tags.ROW_EMPTY, () => this.add(Tags.LIT, { value: { type: "Atom", value: "Unit" } }))
+			.otherwise(() => id);
 	}
 
-	private collect(tasks: Task[], finish: Finish): void {
-		if (!tasks.length) {
-			this.finish(finish, []);
-			return;
-		}
-		const [first, ...rest] = tasks;
-		this.stack.unshift({ type: "collect", rest, values: [], finish });
-		this.task = first;
+	private block(id: NodeId, calls: ReadonlySet<NodeId>): NodeId {
+		const statements = this.edges(id, Labels.STMT);
+		const build = (index: number): NodeId => {
+			if (index === statements.length) {
+				return this.normalize(this.get(id, Labels.RETURN), calls);
+			}
+			const binder = statements[index].target;
+			return this.sequence(this.normalize(this.get(binder, Labels.VALUE), calls), value => {
+				this.set(binder, Labels.VALUE, value);
+				// Statement identities are binders throughout the copied block.
+				this.graph = Nodes.retag(binder, Tags.LET, this.node(binder).payload, this.node(binder).provenance)(this.graph);
+				this.set(binder, Labels.BODY, build(index + 1));
+				return binder;
+			});
+		};
+		return build(0);
 	}
 
-	private deliver(frame: Frame, value: Value): void {
-		match(frame)
-			.with({ type: "collect" }, ({ rest, values, finish }) => {
-				const collected = [...values, value];
-
-				if (rest.length) {
-					this.stack.unshift({ type: "collect", rest: rest.slice(1), values: collected, finish });
-					this.task = rest[0];
-				} else {
-					this.finish(finish, collected);
+	private apply(fn: NodeId, arg: NodeId, calls: ReadonlySet<NodeId>): NodeId {
+		const target = this.resolve(fn);
+		return match(this.node(target).tag)
+			.with(Tags.LAMBDA, () => {
+				const origin = this.origin(target);
+				if (calls.has(origin)) {
+					throw new Error("Effects enrichment: recursive effect regions require runtime activation templates");
 				}
+				const body = this.copy(this.get(target, Labels.BODY), new Map([[target, arg]]));
+				return this.normalize(body, new Set([...calls, origin]));
 			})
-			.with({ type: "argument" }, frame => this.apply(value, frame.value))
-			.with({ type: "delimiter" }, () => {
-				this.boundary("reset_exit");
-				this.value = value;
-			})
-			.with({ type: "return" }, () => {
-				this.boundary("resume_return");
-				this.value = value;
-			})
-			.with({ type: "binding" }, ({ binder, cell, env, rest, body }) => {
-				cell.value = value;
-				this.sequence(rest, body, new Map(env).set(binder, { value }));
-			})
-			.with({ type: "sequence" }, ({ env, rest, body }) => this.sequence(rest, body, env))
-			.with({ type: "field" }, ({ cell }) => {
-				cell.value = value;
-				this.value = value;
-			})
-			.exhaustive();
-	}
-
-	private finish(finish: Finish, values: Value[]): void {
-		match(finish)
-			.with({ type: "app" }, () => this.apply(values[0], values[1]))
-			.with({ type: "primitive" }, ({ name }) => {
-				this.value = this.primitive(name, values);
-			})
-			.with({ type: "reset" }, ({ body, named, handled }) => {
-				const identity = named ? this.identity(values[0]) : "$anonymous";
-				const handler = handled ? values[named ? 1 : 0] : undefined;
-				this.stack.unshift({ type: "delimiter", identity, handler });
-				this.boundary("reset");
-				this.task = body;
-			})
-			.with({ type: "capture" }, () => {
-				const identity = this.identity(values[0]);
-				const index = this.stack.findIndex(f => f.type === "delimiter" && f.identity === identity);
-
-				if (index < 0) {
-					unsupported(`capture requires a live delimiter for ${identity}`);
+			.with(Tags.CONTINUATION, () => {
+				const resume = this.add(Tags.RESUMPTION, {}, [
+					[Labels.INVOKES, target],
+					[Labels.ARG, arg],
+				]);
+				const body = this.get(target, Labels.BODY);
+				if (this.control(body)) {
+					const residual = this.copy(body, new Map([[this.get(target, Labels.HOLE), arg]]));
+					const expanded = this.normalize(residual);
+					this.link(resume, Labels.MATERIALIZES, expanded);
+					return expanded;
 				}
-				const delimiter = this.stack[index] as Extract<Frame, { type: "delimiter" }>;
-				const k: Value = { type: "continuation", frames: this.stack.slice(0, index) };
-				this.stack = this.stack.slice(index + 1);
-				this.boundary("capture");
+				return resume;
+			})
+			.otherwise(() =>
+				this.add(Tags.APP, {}, [
+					[Labels.FUNC, fn],
+					[Labels.ARG, arg],
+				]),
+			);
+	}
 
-				if (delimiter.handler) {
-					this.stack.unshift({ type: "argument", value: k });
-					this.apply(delimiter.handler, values[1]);
-				} else {
-					this.apply(values[1], k);
+	private sequence(expr: NodeId, use: (value: NodeId) => NodeId): NodeId {
+		return match(this.node(expr).tag)
+			.with(Tags.LET, () => {
+				this.set(expr, Labels.BODY, this.sequence(this.get(expr, Labels.BODY), use));
+				return expr;
+			})
+			.with(Tags.SWITCH, Tags.LEAF, () => this.tree(expr, body => this.sequence(body, use)))
+			.with(Tags.LIT, Tags.LAMBDA, Tags.CONTINUATION, Tags.VAR_BOUND, Tags.VAR_FREE, Tags.VAR_FOREIGN, Tags.BUBBLE, () => use(expr))
+			.otherwise(() => {
+				const binder = this.add(Tags.LET, {}, [[Labels.VALUE, expr]]);
+				this.link(binder, Labels.BODY, use(this.ref(binder)));
+				return binder;
+			});
+	}
+
+	private operands(ids: readonly NodeId[], norm: (id: NodeId) => NodeId, use: (values: NodeId[]) => NodeId, values: NodeId[] = []): NodeId {
+		return ids.length === 0 ? use(values) : this.sequence(norm(ids[0]), value => this.operands(ids.slice(1), norm, use, [...values, value]));
+	}
+
+	private tree(id: NodeId, transform: (id: NodeId) => NodeId): NodeId {
+		return match(this.node(id).tag)
+			.with(Tags.LEAF, () => {
+				this.set(id, Labels.BODY, transform(this.get(id, Labels.BODY)));
+				return id;
+			})
+			.with(Tags.SWITCH, () => {
+				[...this.edges(id, Labels.BRANCH), ...this.edges(id, Labels.DEFAULT)].forEach(e => this.tree(e.target, transform));
+				return id;
+			})
+			.otherwise(() => id);
+	}
+
+	private identity(id: NodeId | undefined): string {
+		if (id === undefined) {
+			return JSON.stringify({ type: "Atom", value: "$anonymous" });
+		}
+		const target = this.resolve(id);
+		const node = this.node(target);
+		return match(node.tag)
+			.with(Tags.LIT, () => JSON.stringify(node.payload.value))
+			.with(Tags.VAR_FOREIGN, Tags.VAR_FREE, () => String(node.payload.name))
+			.otherwise(() => {
+				throw new Error(`Effects enrichment: dynamic delimiter identity at ${target}`);
+			});
+	}
+
+	private delimit(body: NodeId, reset: NodeId): NodeId {
+		return match(this.node(body).tag)
+			.with(Tags.LET, () => {
+				const value = this.get(body, Labels.VALUE);
+				if (this.node(value).tag === Tags.CAPTURE && this.matches(value, reset)) {
+					return this.capture(value, reset, hole => this.copy(this.get(body, Labels.BODY), new Map([[body, hole]])));
 				}
+				this.set(body, Labels.BODY, this.delimit(this.get(body, Labels.BODY), reset));
+				return body;
 			})
-			.with({ type: "projection" }, ({ label }) => {
-				const record = values[0];
-				this.value =
-					record.type === "record"
-						? (record.fields.get(label) ?? unsupported(`missing field ${label}`))
-						: unsupported("dynamic projection requires value-flow analysis");
-			})
-			.with({ type: "record" }, ({ labels }) => {
-				this.value = { type: "record", fields: new Map(labels.map((l, i) => [l, values[i]])) };
-			})
-			.exhaustive();
+			.with(Tags.SWITCH, Tags.LEAF, () => this.tree(body, branch => this.delimit(branch, reset)))
+			.with(Tags.CAPTURE, () => (this.matches(body, reset) ? this.capture(body, reset, hole => hole) : body))
+			.otherwise(() => body);
 	}
 
-	private apply(func: Value, arg: Value): void {
-		match(func)
-			.with({ type: "closure" }, ({ node, env }) => {
-				this.task = { node: this.follow(node, Labels.BODY), env: new Map(env).set(node, { value: arg }) };
-			})
-			.with({ type: "continuation" }, ({ frames }) => {
-				this.stack = [...frames, { type: "return" }, ...this.stack];
-				this.boundary("resume");
-				this.value = arg;
-			})
-			.with({ type: "primitive" }, ({ name, args }) => {
-				const supplied = [...args, arg];
-				this.value = supplied.length === ARITIES[name] ? this.primitive(name, supplied) : { type: "primitive", name, args: supplied };
-			})
-			.otherwise(() => unsupported("calling a dynamic function requires continuation reification"));
+	private matches(capture: NodeId, reset: NodeId): boolean {
+		return this.identity(this.optional(capture, Labels.IDENTITY)) === this.identity(this.optional(reset, Labels.IDENTITY));
 	}
 
-	private sequence(statements: NodeId[], body: NodeId, env: Env): void {
-		if (!statements.length) {
-			this.task = { node: body, env };
-			return;
-		}
-		const [first, ...rest] = statements;
-
-		if (Nodes.get(first)(this.graph)!.tag === Tags.STMT_LET) {
-			this.bind(first, rest, body, env);
-		} else {
-			this.stack.unshift({ type: "sequence", env, rest, body });
-			this.task = { node: this.follow(first, Labels.VALUE), env };
-		}
+	private capture(capture: NodeId, reset: NodeId, rest: (hole: NodeId) => NodeId): NodeId {
+		const hole = this.add(Tags.BUBBLE, { binder: `$capture_${capture}` });
+		const handler = this.optional(reset, Labels.HANDLER);
+		const body = rest(hole);
+		const continuation = this.add(Tags.CONTINUATION, {}, [
+			[Labels.CAPTURED_AT, this.origin(capture)],
+			[Labels.HOLE, hole],
+			[Labels.BODY, body],
+			[Labels.DELIMITER, reset],
+			...(handler === undefined ? [] : [[Labels.HANDLER, handler] as const]),
+		]);
+		const payload = this.get(capture, Labels.PAYLOAD);
+		return handler === undefined
+			? this.apply(payload, continuation, new Set())
+			: this.sequence(this.apply(handler, payload, new Set()), fn => this.apply(fn, continuation, new Set()));
 	}
 
-	private bind(binder: NodeId, rest: NodeId[], body: NodeId, env: Env): void {
-		const cell: Cell = {};
-		const within = new Map(env).set(binder, cell);
-		this.stack.unshift({ type: "binding", binder, cell, env: within, rest, body });
-		this.task = { node: this.follow(binder, Labels.VALUE), env: within };
-	}
-
-	private identity(value: Value): string {
-		return value.type === "literal" && value.value.type === "Atom" ? value.value.value : unsupported("dynamic identities require continuation reification");
-	}
-
-	private primitive(op: string, values: Value[]): Value {
-		const args = values.map(v => this.register(v));
-		const result = this.slots.length;
-		this.slots.push(result);
-		this.state.operations.push({ type: "primitive", result, op, args });
-		return { type: "register", slot: result };
-	}
-
-	private register(value: Value): number {
-		if (value.type === "register") {
-			return value.slot;
-		}
-		if (value.type === "literal") {
-			const result = this.slots.length;
-			this.slots.push(result);
-			this.state.operations.push({ type: "literal", result, value: value.value });
-			return result;
-		}
-		if (value.type === "record") {
-			const fields = [...value.fields].map(([label, value]) => ({ label, value: this.register(value) }));
-			const result = this.slots.length;
-			this.slots.push(result);
-			this.state.operations.push({ type: "record", result, fields });
-			return result;
-		}
-		return unsupported("escaping functions or continuations require reification");
-	}
-
-	private boundary(name: string): void {
-		this.state.args = [...this.slots];
-		this.states.push(this.state);
-		this.state = { name: `${name}_${this.states.length}`, params: [...this.slots], operations: [], args: [] };
+	private control(id: NodeId): boolean {
+		return match(this.node(id).tag)
+			.with(Tags.CAPTURE, Tags.RESET, () => true)
+			.with(Tags.LET, () => this.control(this.get(id, Labels.VALUE)) || this.control(this.get(id, Labels.BODY)))
+			.with(Tags.SWITCH, () => [...this.edges(id, Labels.BRANCH), ...this.edges(id, Labels.DEFAULT)].some(e => this.control(e.target)))
+			.with(Tags.LEAF, () => this.control(this.get(id, Labels.BODY)))
+			.otherwise(() => false);
 	}
 }
 
 export const descriptor: Descriptor = {
 	name: "effects",
-	requires: { tags: new Set([Tags.RESET, Tags.CAPTURE]), labels: new Set([Labels.HANDLER, Labels.IDENTITY, Labels.PAYLOAD]) },
-	delta: { tags: { added: new Set([Tags.EFFECT_STATE]), removed: new Set() }, labels: { added: new Set([Labels.MACHINE]), removed: new Set() } },
+	requires: { tags: new Set([Tags.CAPTURE, Tags.RESET]), labels: new Set([Labels.IDENTITY, Labels.HANDLER, Labels.BODY]) },
+	delta: {
+		tags: { added: new Set([Tags.BUBBLE, Tags.CONTINUATION, Tags.RESUMPTION]), removed: new Set() },
+		labels: {
+			added: new Set([Labels.HOLE, Labels.CAPTURED_AT, Labels.DELIMITER, Labels.INVOKES, Labels.DERIVED_FROM, Labels.MATERIALIZES]),
+			removed: new Set(),
+		},
+	},
 	run: effects,
 };
