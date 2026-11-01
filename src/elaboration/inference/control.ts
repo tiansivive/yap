@@ -50,18 +50,7 @@ export function* infer(node: Extract<Src.Term, { type: "with" }>): M.Elaboration
 			);
 			const { resolutions } = yield* EB.solve(constraints);
 			if (atom) {
-				const type = yield* NF.quote(ctx.env.length, yield* NF.force(answer));
-				const escaped: string[] = [];
-				EB.rewrite(type, t => {
-					if (t.type === "Lit" && t.value.type === "Atom" && t.value.value === name(atom)) {
-						escaped.push(local!);
-					}
-					return t;
-				});
-
-				if (escaped.length) {
-					throw new Error(`Local effect identity ${local} escapes in the result type`);
-				}
+				yield* scoped(atom, answer, local!);
 			}
 			const tm = yield* install(
 				resolved.term,
@@ -74,6 +63,21 @@ export function* infer(node: Extract<Src.Term, { type: "with" }>): M.Elaboration
 			return [tm, yield* NF.force(answer), usages];
 		})(),
 	);
+}
+
+export function* scoped(atom: NF.Value, type: NF.Value, label: string): M.Elaboration<void> {
+	const ctx = yield* M.reader.ask();
+	const term = yield* NF.quote(ctx.env.length, yield* NF.force(type));
+	const escaped: string[] = [];
+	EB.rewrite(term, t => {
+		if (t.type === "Lit" && t.value.type === "Atom" && t.value.value === name(atom)) {
+			escaped.push(label);
+		}
+		return t;
+	});
+	if (escaped.length) {
+		throw new Error(`Local effect identity ${label} escapes in the result type`);
+	}
 }
 
 export function* capture(node: Extract<Src.Term, { type: "capture" }>): M.Elaboration<EB.AST> {

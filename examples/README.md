@@ -1128,7 +1128,7 @@ Run an expression directly through the elaborator and CEK interpreter:
 pnpm exec ts-node --transpile-only scripts/effects-spike.ts examples/effects/handlers.yap
 ```
 
-`handlers.yap` and `await.yap` return `42`, `yield.yap` returns `3`, `control.yap` and `control-functions.yap` return `11`, and `probe1.yap`, `probe2.yap`, `probe3.yap` return `1099`, `100`, `1099`. The await example uses synchronous thunks to exercise parametric payloads. `--core` also displays the elaborated term. `control.yap` packages the four classical operators in a record using `capture` and `reset`.
+`handlers.yap` and `await.yap` return `42`, `yield.yap` returns `3`, `control.yap` and `control-functions.yap` return `11`, and `probe1.yap`, `probe2.yap`, `probe3.yap` return `1099`, `100`, `1099`. The await example uses synchronous thunks to exercise parametric payloads. `--core` also displays the elaborated term. `control.yap` packages the four classical operators in a record using `capture [e]` and `reset [e]`. `control-functions.yap` infers the type parameters for the same helpers from `\e =>`. A call such as `shift0 @Num @Num @E` supplies the capture result type, answer type and identity. Anonymous reset introduces a fresh identity at each source site; explicit `[e]` shares an identity across capture and reinstallation.
 
 The GRAM compiler follows locally known functions, ordinary recursive bindings and record projections. It emits MIR blocks and jumps for repeated operations and multiple calls to a captured continuation:
 

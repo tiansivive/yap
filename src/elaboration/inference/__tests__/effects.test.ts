@@ -18,6 +18,17 @@ describe("effect expression spike", () => {
 		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value: 11 } });
 	});
 
+	it("reinstalls the helper's explicit identity for subsequent captures", () => {
+		const source = String.raw`{ foreign E: Effect ((Num -> Num) -> Num) Num; let shift0 = \e => \f -> capture [e] (\k -> f (\v -> reset [e] (k v))); return reset [E] ((shift0 @Num @Num @E (\k -> 100 + (k 1))) + (capture [E] (\k -> 999))); }`;
+		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value: 1099 } });
+	});
+
+	it("retains the effect requirement on a returned function", () => {
+		const source = String.raw`{ foreign E: Effect Num Num; let make = \x -> \y -> capture [E] (x + y); let f = make 1; return with E: (\p k -> k p) in f 2; }`;
+		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value: 3 } });
+		expect(elaborateFrom(source).displays.term).toMatch(/Π\(x: Num\) ->[\s\S]*Π\(e0: FFI.E\) =>/);
+	});
+
 	it.each([
 		["with E: (\\p k -> 42) in capture [E] 1", 42],
 		["{ foreign E: Effect ((Num -> Num) -> Num) Num; return reset [E] (10 + (capture [E] (\\k -> k 2))); }", 12],
@@ -25,11 +36,9 @@ describe("effect expression spike", () => {
 		["with E: (\\p k -> k p), F: (\\p k -> k (p + 10)) in (capture [E] 1) + (capture [F] 2)", 13],
 		["with E: (\\p k -> p) in with E: (\\p k -> capture [E] (p + 10)) in capture [E] 1", 11],
 		["{ foreign E: Effect Num Num; return with E: (\\p k -> k p) in capture [E] 7; }", 7],
-		["reset ((capture (\\k -> 100 + (reset (k 1)))) + (capture (\\k -> 999)))", 1099],
 		["reset (1000 + (reset (10 + (capture (\\k -> capture (\\k2 -> 100))))))", 100],
 		["{ foreign E: Effect Num Num; let op = \\x -> capture [E] x; return with E: (\\p k -> k (p + 1)) in op 7; }", 8],
 		["{ foreign E: Effect Num Num; let op = \\x -> capture [E] x; return with E: (\\p k -> k p) in (op 1) + (op 2); }", 3],
-		["{ let later = reset ((capture (\\k -> \\u -> reset (k u))) + (capture (\\k -> 999))); return reset (100 + (later 5)); }", 1099],
 		["{ foreign E: Effect Num Num; let op = \\(r: { E: E }) -> \\x -> capture [r.E] x; return with E: (\\p k -> k p) in op { E: E } 7; }", 7],
 		[
 			"{ foreign E: Effect Num Num; let op = \\x -> capture [E] x; let run = \\(r: { E: E }) -> \\x -> { using r; return op x; }; return with E: (\\p k -> k p) in run { E: E } 7; }",
@@ -45,7 +54,6 @@ describe("effect expression spike", () => {
 			"{ foreign Yield: Effect Num Unit; let yield = \\x -> capture [Yield] x; return with Yield: (\\p k -> p + (k !)) in { yield 1; yield 2; return 0; }; }",
 			3,
 		],
-		["{ let shift0 = \\f -> capture (\\k -> f (\\v -> reset (k v))); return reset (10 + (shift0 (\\k -> k 1))); }", 11],
 	] as const)("evaluates %s", (source, value) => {
 		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value } });
 	});
@@ -73,9 +81,36 @@ describe("effect expression spike", () => {
 		expect(() => evaluate('reset (match false | true -> 1 + (capture (\\k -> "hello")) | false -> 2)')).toThrow(/Cannot unify/);
 	});
 
-	it("preserves anonymous evidence through a Control record", () => {
-		const source = "{ let Control = { shift0: \\f -> capture (\\k -> f (\\v -> reset (k v))) }; return reset (10 + (Control.shift0 (\\k -> k 1))); }";
-		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value: 11 } });
+	it.each([
+		["probe1", 1099],
+		["probe2", 100],
+		["probe3", 1099],
+	] as const)("evaluates %s with explicit sharing", (name, value) => {
+		const source = readFileSync(`examples/effects/${name}.yap`, "utf8").trim();
+		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value } });
+	});
+
+	it("gives nested anonymous resets distinct identities", () => {
+		const { core, value } = evaluate(String.raw`reset (reset (capture (\k -> k 2)))`);
+		expect(core).toMatchObject({ type: "Reset", term: { type: "Reset" } });
+
+		if (core.type !== "Reset" || core.term.type !== "Reset") {
+			throw new Error("Expected nested resets");
+		}
+		expect(core.identity).not.toEqual(core.term.identity);
+		expect(value).toMatchObject({ type: "Lit", value: { type: "Num", value: 2 } });
+	});
+
+	it("keeps an anonymous requirement scoped to its reset", () => {
+		expect(() => elaborateFrom(String.raw`reset (\x -> capture (\k -> k x))`)).toThrow(/Local effect identity anonymous escapes/);
+		expect(evaluate(String.raw`reset { let f = \x -> capture (\k -> k x); return f 2; }`).value).toMatchObject({
+			type: "Lit",
+			value: { type: "Num", value: 2 },
+		});
+	});
+
+	it("keeps a fresh reset independent of the resumed identity", () => {
+		expect(() => evaluate(String.raw`reset ((capture (\k -> reset (k 1))) + (capture (\k -> 2)))`)).toThrow(/live delimiter for \$anonymous/);
 	});
 
 	it("evaluates the four operators packaged together", () => {

@@ -19,7 +19,7 @@ export const infer = (reset: Reset): M.Elaboration<EB.AST> =>
 			const expected = NF.Constructors.Pi("k", "Explicit", continuation, yield* NF.closeVal(answer));
 			yield* M.constrain({ type: "assign", left: payload, right: expected, lvl: ctx.env.length });
 			const [body, usages] = yield* M.reader.local(c => ({ ...c, implicits: [[resolved.atom, resolved.atom], ...c.implicits] }), EB.check(reset.term, answer));
-			return [EB.Constructors.Reset(body, resolved.term, application()), answer, usages];
+			return [EB.Constructors.Reset(body, resolved.term, yield* application(payload, continuation)), answer, usages];
 		}
 
 		/****************************************************
@@ -36,8 +36,10 @@ export const infer = (reset: Reset): M.Elaboration<EB.AST> =>
 
 		const metaA = yield* EB.freshMeta(ctx.env.length, NF.Type);
 		const metaR = yield* EB.freshMeta(ctx.env.length, NF.Type);
+		const identity = yield* EB.Control.anonymous();
 
 		const d: M.Delimitation = {
+			identity,
 			level: ctx.env.length,
 			answer: {
 				initial: NF.Constructors.Var(metaA),
@@ -47,28 +49,42 @@ export const infer = (reset: Reset): M.Elaboration<EB.AST> =>
 		};
 		yield* M.st.modify(update("delimitations", ds => [d, ...ds]));
 
-		const [tm, us] = yield* M.reader.local(
-			c => ({ ...c, implicits: [[EB.Control.anonymous, EB.Control.anonymous], ...c.implicits] }),
-			EB.check(reset.term, d.answer.initial),
+		const [[tm, us], { constraints }] = yield* M.writer.listen(
+			M.reader.local(c => ({ ...c, implicits: [[identity, identity], ...c.implicits] }), EB.check(reset.term, d.answer.initial)),
 		);
 		const {
 			delimitations: [{ shifted, next }],
 		} = yield* M.st.get();
-		if (next) {
-			yield* M.constrain({ type: "assign", left: d.answer.initial, right: next, lvl: ctx.env.length });
-		} else if (!shifted) {
-			// No shifts were used, so initial and final answer types must be the same
-			yield* M.constrain({ type: "assign", left: d.answer.initial, right: d.answer.final, lvl: ctx.env.length });
-		}
+		const [, tail] = yield* M.writer.listen(
+			(function* () {
+				if (next) {
+					yield* M.constrain({ type: "assign", left: d.answer.initial, right: next, lvl: ctx.env.length });
+				} else if (!shifted) {
+					yield* M.constrain({ type: "assign", left: d.answer.initial, right: d.answer.final, lvl: ctx.env.length });
+				}
+			})(),
+		);
 
 		yield* M.st.modify(update("delimitations", ([_d, ...ds]) => ds));
-		return [EB.Constructors.Reset(tm, undefined, application()), d.answer.final, us] satisfies EB.AST;
+		const { resolutions } = yield* EB.solve([...constraints, ...tail.constraints]);
+		yield* EB.Control.scoped(identity, d.answer.final, "anonymous");
+		return [
+			EB.Constructors.Reset(yield* EB.Icit.instantiate(tm, resolutions, false), yield* NF.quote(ctx.env.length, identity), yield* application()),
+			d.answer.final,
+			us,
+		] satisfies EB.AST;
 	});
 
-export const application = (): EB.Term =>
-	EB.Constructors.Lambda(
+export const application = function* (payload = NF.Any, continuation = NF.Any): M.Elaboration<EB.Term> {
+	const ctx = yield* M.reader.ask();
+	const annotation = yield* NF.quote(ctx.env.length, continuation);
+	const lifted = EB.rewrite(annotation, (t, depth) =>
+		t.type === "Var" && t.variable.type === "Bound" && t.variable.index >= depth ? EB.Constructors.Var(EB.Bound(t.variable.index + 1)) : t,
+	);
+	return EB.Constructors.Lambda(
 		"$payload",
 		"Explicit",
-		EB.Constructors.Lambda("$k", "Explicit", EB.Constructors.App("Explicit", EB.Constructors.Var(EB.Bound(1)), EB.Constructors.Var(EB.Bound(0))), EB.Any),
-		EB.Any,
+		EB.Constructors.Lambda("$k", "Explicit", EB.Constructors.App("Explicit", EB.Constructors.Var(EB.Bound(1)), EB.Constructors.Var(EB.Bound(0))), lifted),
+		yield* NF.quote(ctx.env.length, payload),
 	);
+};

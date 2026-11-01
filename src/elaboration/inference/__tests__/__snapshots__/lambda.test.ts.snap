@@ -29,8 +29,10 @@ exports[`Inference: lambdas > higher order functions > higher order function wit
       "?1 ~~ Π(x: ?2) -> (closure: (?3 :: Type) -| Γ: x; f)",
       "Num ~~ ?2",
     ],
-    "term": "(λ(f: (?1 :: Type)) => f 1 : Π(f: (?1 :: Type)) => (?3 :: Type))",
-    "type": "Π(f: ?1) => (closure: (?3 :: Type) -| Γ: f)",
+    "term": "(λ(f: Π(x: Num) -> (?3 :: Type)) => f 1 : Π(f: Π(x: Num) -> (?3 :: Type)) =>
+  (?3 :: Type))",
+    "type": "Π(f: Π(x: Num) -> (closure: (?3 :: Type) -| Γ: x; f)) =>
+  (closure: (?3 :: Type) -| Γ: f)",
   },
 }
 `;
@@ -42,8 +44,10 @@ exports[`Inference: lambdas > higher order functions > simple higher order funct
       "?1 ~~ Π(x: ?2) -> (closure: (?3 :: Type) -| Γ: x; f)",
       "Num ~~ ?2",
     ],
-    "term": "(λ(f: (?1 :: Type)) -> f 1 : Π(f: (?1 :: Type)) -> (?3 :: Type))",
-    "type": "Π(f: ?1) -> (closure: (?3 :: Type) -| Γ: f)",
+    "term": "(λ(f: Π(x: Num) -> (?3 :: Type)) -> f 1 : Π(f: Π(x: Num) -> (?3 :: Type)) ->
+  (?3 :: Type))",
+    "type": "Π(f: Π(x: Num) -> (closure: (?3 :: Type) -| Γ: x; f)) ->
+  (closure: (?3 :: Type) -| Γ: f)",
   },
 }
 `;

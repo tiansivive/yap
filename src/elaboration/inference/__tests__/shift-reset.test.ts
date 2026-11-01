@@ -8,7 +8,7 @@ describe("Inference: Shift/Reset", () => {
 			const { displays, structure } = elaborateFrom(src);
 
 			expect(structure.term.type).toBe("Reset");
-			expect(displays.term).toContain("reset |10|");
+			expect(displays.term).toMatch(/reset \[\$anonymous\d+\][\s\S]*\|10\|/);
 			expect(displays.term).not.toContain("bubble#");
 			expect(displays.constraints).toContain("Num ~~ ?1");
 		});
@@ -19,7 +19,7 @@ describe("Inference: Shift/Reset", () => {
 
 			expect(structure.term.type).toBe("Reset");
 			expect(displays.term).toContain("bubble#");
-			expect(displays.term).toContain("shift");
+			expect(displays.term).toContain("capture [$anonymous");
 			expect(displays.term).toContain('"world"');
 			expect(displays.term).not.toContain('$k "world"');
 			expect(displays.constraints).toContain("String ~~ ?2");
@@ -39,7 +39,7 @@ describe("Inference: Shift/Reset", () => {
 
 			expect(structure.term.type).toBe("Reset");
 			expect(displays.term).toContain("bubble#");
-			expect(displays.term).toContain("shift");
+			expect(displays.term).toContain("capture [$anonymous");
 			expect(displays.term).toContain('$k "hello"');
 			expect(displays.constraints).toContain("String ~~ ?3");
 		});
@@ -82,15 +82,8 @@ describe("Inference: Shift/Reset", () => {
 			expect(displays.term).toContain("$k 20");
 		});
 
-		it("should surface incompatible raw constraints for wrong continuation calls", () => {
-			const src = "reset (1 + (shift resume true))";
-			const { displays, structure } = elaborateFrom(src);
-
-			expect(structure.term.type).toBe("Reset");
-			expect(displays.term).toContain("bubble#");
-			expect(displays.term).toContain("$k true");
-			expect(displays.constraints).toContain("Bool ~~ ?3");
-			expect(displays.constraints).toContain("?3 ~~ Num");
+		it("rejects incompatible continuation calls at the reset boundary", () => {
+			expect(() => elaborateFrom("reset (1 + (shift resume true))")).toThrow(/Cannot unify Bool with Num/);
 		});
 	});
 });

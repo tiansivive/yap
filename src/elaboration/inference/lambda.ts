@@ -37,7 +37,7 @@ const body = function* (lam: Lambda): M.Elaboration<EB.AST> {
 		},
 		(function* () {
 			const inferred = yield* EB.infer(lam.body);
-			return lam.icit === "Implicit" ? inferred : yield* EB.Icit.insert(inferred);
+			return lam.icit === "Implicit" || (yield* EB.Control.hasEvidence(inferred[1])) ? inferred : yield* EB.Icit.insert(inferred);
 		})(),
 	);
 	//yield* M.constrain({ type: "usage", expected: mty[1], computed: vu });

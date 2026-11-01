@@ -6,6 +6,10 @@ export const passive = (id: NodeId, graph: Graph): boolean =>
 	match(Nodes.get(id)(graph)?.tag)
 		.with(Tags.LAMBDA, Tags.CLOSURE, Tags.LIT, Tags.VAR_FOREIGN, Tags.VAR_BOUND, Tags.VAR_REF, Tags.VAR_LABEL, Tags.VAR_NU_LABEL, () => true)
 		.with(Tags.STRUCT, () => Edges.byLabel(id, Labels.FIELD)(graph).every(e => passive(e.target, graph)))
+		.with(Tags.NU, () => {
+			const body = Edges.one(id, Labels.BODY)(graph)?.target;
+			return body !== undefined && passive(body, graph);
+		})
 		.with(Tags.RESET, () => {
 			const body = Edges.one(id, Labels.ENTRY)(graph)?.target;
 			return body !== undefined && passive(body, graph);

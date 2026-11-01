@@ -41,7 +41,7 @@ export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 
 export const wrapLambda = function* (term: EB.Term, ty: NF.Value): NF.Abstraction<EB.Term> {
 	const ctx = yield* M.reader.ask();
-	if (term.type === "Ann") {
+	if (term.type === "Ann" && term.term.type === "Abs" && term.term.binding.type === "Lambda" && term.term.binding.icit === "Implicit") {
 		return yield* wrapLambda(term.term, ty);
 	}
 
