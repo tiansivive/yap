@@ -66,7 +66,8 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 		const [checked, collected] = plain ? yield* M.reader.local(() => lexical, M.writer.listen(result)) : ([yield* result, undefined] as const);
 
 		if (collected) {
-			yield* EB.Control.pure(collected.constraints);
+			const resolutions = yield* EB.Control.pure(collected.constraints);
+			return [yield* EB.Icit.instantiate(checked[0], resolutions, false), checked[1]];
 		}
 		const [tm, us] = checked;
 		//yield* M.writer.tell({ types: [{ term: tm, nf: type, modalities: {} as any }] });

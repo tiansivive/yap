@@ -31,9 +31,13 @@ const body = function* (lam: Lambda): M.Elaboration<EB.AST> {
 	 * scope that does not yet have it.
 	 */
 	const [bTerm, bType, [_vu, ...bus]] = yield* M.reader.local(
-		_ctx => EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, ty),
+		_ctx => {
+			const bound = EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, ty);
+			return lam.icit === "Implicit" ? { ...bound, implicits: [[bound.env[0].nf, ty], ...bound.implicits] } : bound;
+		},
 		(function* () {
-			return yield* EB.Icit.insert(yield* EB.infer(lam.body));
+			const inferred = yield* EB.infer(lam.body);
+			return lam.icit === "Implicit" ? inferred : yield* EB.Icit.insert(inferred);
 		})(),
 	);
 	//yield* M.constrain({ type: "usage", expected: mty[1], computed: vu });

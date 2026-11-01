@@ -1,8 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { evaluate } from "./util";
+import { elaborateFrom, evaluate } from "./util";
 import { readFileSync } from "node:fs";
 
 describe("effect expression spike", () => {
+	it("discharges the effects handled inside a pure function", () => {
+		const source = String.raw`{ foreign E: Effect Num Num; let f = \x -> capture [E] x; let run: Num -> Num = \base -> with E: (\p k -> (k p) + (k (p + 1))) in base + (f 3); return run 10; }`;
+		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value: 27 } });
+	});
+
+	it("shares one evidence parameter across repeated captures", () => {
+		const { displays } = elaborateFrom(String.raw`{ foreign E: Effect Num Num; return \x -> (capture [E] x) + (capture [E] x); }`);
+		expect(displays.type.match(/: FFI.E/g)).toHaveLength(1);
+	});
+
+	it("preserves the identity and its evidence in a polymorphic control helper", () => {
+		const source = String.raw`{ foreign E: Effect ((Num -> Num) -> Num) Num; let shift0 = \e => \f -> capture [e] (\k -> f (\v -> reset [e] (k v))); return reset [E] (10 + (shift0 @Num @Num @E (\k -> k 1))); }`;
+		expect(evaluate(source).value).toMatchObject({ type: "Lit", value: { type: "Num", value: 11 } });
+	});
+
 	it.each([
 		["with E: (\\p k -> 42) in capture [E] 1", 42],
 		["{ foreign E: Effect ((Num -> Num) -> Num) Num; return reset [E] (10 + (capture [E] (\\k -> k 2))); }", 12],
