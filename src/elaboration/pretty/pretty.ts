@@ -27,7 +27,16 @@ export type Display<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Only<typeof 
  *
  * `unfold: "definitions"` renders a glued value by what its reference computes rather than by the reference.
  */
-export type Opts = { deBruijn: boolean; printEnv?: boolean; annotated?: boolean; unfold?: NF.Unfolding };
+export type Opts = {
+	deBruijn: boolean;
+	printEnv?: boolean;
+	annotated?: boolean;
+	/** Show the whole-function type attached to a lambda. Defaults to false. */
+	lambdaTypes?: boolean;
+	unfold?: NF.Unfolding;
+};
+
+const LambdaAnnotation = { type: "Ann", term: { type: "Abs", binding: { type: "Lambda" } } } as const;
 
 /*
  * Display's binder descent: v2's name-only entry, through the reader. The
@@ -148,7 +157,10 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		})
 		.with({ type: "App" }, function* ({ icit, func, arg }) {
 			const needsFnParens = func.type !== "Var" && func.type !== "Lit" && func.type !== "App";
-			const needsArgParens = arg.type === "Abs" || arg.type === "App";
+			const needsArgParens = match(arg)
+				.with({ type: "Abs" }, { type: "App" }, () => true)
+				.with(LambdaAnnotation, () => !opts.lambdaTypes)
+				.otherwise(() => false);
 			return PP.app(PP.parensIf(needsFnParens, yield* go(func)), Icit.display(icit), PP.parensIf(needsArgParens, yield* go(arg)));
 		})
 		.with({ type: "Row" }, function* ({ row }) {
@@ -199,6 +211,11 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		.with({ type: "Bubble" }, function* ({ meta, shift }) {
 			return ["bubble#", `${meta}`, " (", yield* go(shift), ")"] satisfies PP.Doc;
 		})
+		.with(
+			LambdaAnnotation,
+			() => !opts.lambdaTypes,
+			({ term: tm }) => go(tm),
+		)
 		.with({ type: "Ann" }, function* ({ term: tm, ann }) {
 			return ["(", yield* go(tm), " : ", yield* go(ann), ")"] satisfies PP.Doc;
 		})
