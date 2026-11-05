@@ -1,6 +1,6 @@
 # Example index
 
-The files in `effects/`, `errors/` and `gaps/` are modules of top-level declarations that exercise effect handling through refinements over the verifier's state. Captures are not lowered, so they typecheck and verify but do not run: the GRAM and codegen stages report an error. `pnpm vitest run src/__tests__/integration/effect-examples.test.ts` checks the verdicts listed for `effects/` and `errors/`.
+The files in `effects/`, `errors/` and `gaps/` are modules of top-level declarations that exercise effect handling through refinements over the verifier's state. Normalization runs handlers, so `answer` in `handled.yap` normalizes to `42`. Captures are not lowered, so the GRAM and codegen stages report an error. `pnpm vitest run src/__tests__/integration/effect-examples.test.ts` checks the verdicts listed for `effects/` and `errors/`.
 
 ## Syntax
 
@@ -12,9 +12,10 @@ foreign Ask: Effect Unit Num;
 
 ```yap
 let answer = with Ask: (\p k -> k 42) in capture [Ask] !;
+let anonymous = reset (1 + (capture (\k -> k 41)));
 ```
 
-`with E: h in body` installs the handler `h : P -> (R -> A) -> A` for `body : A`, and `k` resumes the body with the capture's result. Clauses separated by commas nest with the first outermost. `capture [E] p` requires `E` to be live where it runs: the verifier proves `live st E` at that state, which holds inside a `with` for `E` and fails outside one.
+`with E: h in body` installs the handler `h : P -> (R -> A) -> A` for `body : A`, and `k` resumes the body with the capture's result. Clauses separated by commas nest with the first outermost. `capture f` without an identity sends a function of the continuation to the enclosing `reset`, which applies it. `capture [E] p` requires `E` to be live where it runs: the verifier proves `live st E` at that state, which holds inside a `with` for `E` and fails outside one.
 
 ```yap
 let ask: (u: Unit [| \st u -> live st Ask |]) -> Num = \u -> capture [Ask] u;
@@ -24,17 +25,18 @@ A function body runs at its caller's state, so a function that captures states t
 
 ## Verified
 
-| File                                                   | What it demonstrates                                                                            | Verdicts                     |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ---------------------------- |
-| [handled.yap](effects/handled.yap)                     | A capture directly under its handler                                                            | `answer` valid               |
-| [operation.yap](effects/operation.yap)                 | An operation used twice under one handler                                                       | `twice` valid                |
-| [nested-handlers.yap](effects/nested-handlers.yap)     | An inner handler for the same identity, with the outer captures still covered                   | `nearest` valid              |
-| [multiple-handlers.yap](effects/multiple-handlers.yap) | One `with` installs two identities; `scale (ask !)` needs both                                  | `scaled` valid               |
-| [handler-function.yap](effects/handler-function.yap)   | A separately defined function supplies the handler                                              | `doubled` valid              |
-| [yield.yap](effects/yield.yap)                         | Captures as statements of a block under the handler                                             | `total` valid                |
-| [escaping-closure.yap](effects/escaping-closure.yap)   | A closure built under one handler keeps the requirement in its type and is called under another | `later`, `reinstalled` valid |
-| [higher-order.yap](effects/higher-order.yap)           | A function takes an effectful callback and installs its handler                                 | `handled`, `result` valid    |
-| [value-predicate.yap](effects/value-predicate.yap)     | State-first refinements, including a predicate over values reused through `\st -> positive`     | `x`, `y` valid               |
+| File                                                   | What it demonstrates                                                                                                               | Verdicts                     |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| [handled.yap](effects/handled.yap)                     | A capture directly under its handler                                                                                               | `answer` valid               |
+| [operation.yap](effects/operation.yap)                 | An operation used twice under one handler                                                                                          | `twice` valid                |
+| [nested-handlers.yap](effects/nested-handlers.yap)     | An inner handler for the same identity, with the outer captures still covered                                                      | `nearest` valid              |
+| [multiple-handlers.yap](effects/multiple-handlers.yap) | One `with` installs two identities; `scale (ask !)` needs both                                                                     | `scaled` valid               |
+| [handler-function.yap](effects/handler-function.yap)   | A separately defined function supplies the handler                                                                                 | `doubled` valid              |
+| [yield.yap](effects/yield.yap)                         | Captures as statements of a block under the handler                                                                                | `total` valid                |
+| [escaping-closure.yap](effects/escaping-closure.yap)   | A closure built under one handler keeps the requirement in its type and is called under another                                    | `later`, `reinstalled` valid |
+| [higher-order.yap](effects/higher-order.yap)           | A function takes an effectful callback and installs its handler                                                                    | `handled`, `result` valid    |
+| [abort.yap](effects/abort.yap)                         | A result-polymorphic identity, `(a: Type) => Effect String a`: the handler is checked for every `a` and each capture picks its own | `aborted` valid              |
+| [value-predicate.yap](effects/value-predicate.yap)     | State-first refinements, including a predicate over values reused through `\st -> positive`                                        | `x`, `y` valid               |
 
 ## Expected failures
 
@@ -49,11 +51,10 @@ A function body runs at its caller's state, so a function that captures states t
 
 ## Known gaps
 
-| File                                                      | Outcome                      | Cause                                                                                                                                        |
-| --------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| [block-let.yap](gaps/block-let.yap)                       | `unchecked` valid            | A `let` value's obligation sits in guard position, where validity discharge assumes it instead of proving it.                                |
-| [rethrow.yap](gaps/rethrow.yap)                           | `rethrown` invalid           | The inner handler captures outward. A handler is a lambda verified at an unknown state, and its elaborated type carries no requirement.      |
-| [inferred-arithmetic.yap](gaps/inferred-arithmetic.yap)   | `twice` fails in translation | Without a result annotation the inferred refinement of `+` mentions the captures themselves. `operation.yap` annotates `twice: Num` instead. |
-| [polymorphic-identity.yap](gaps/polymorphic-identity.yap) | elaboration error            | `with` does not instantiate a result-polymorphic carrier such as `(a: Type) => Effect String a`.                                             |
+| File                                | Outcome            | Cause                                                                                                                                                                                                                                        |
+| ----------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [block-let.yap](gaps/block-let.yap) | `unchecked` valid  | A `let` value's obligation sits in guard position, where validity discharge assumes it instead of proving it.                                                                                                                                |
+| [rethrow.yap](gaps/rethrow.yap)     | `rethrown` invalid | The inner handler captures outward. A handler is a lambda verified at an unknown state, and its elaborated type carries no requirement.                                                                                                      |
+| [multishot.yap](gaps/multishot.yap) | verification error | The capture resumes twice and normalizes to `32`, but the reset's answer type is the refined type of `(k 10) + (k 20)`, which mentions the payload's own `k` out of its scope. Main infers the same escaped type for the equivalent program. |
 
 The handler, nesting, multiple-handler, handler-function, yield, rethrow, abort and pure-function examples are ported from the effect-identities spike. Its control-operator, evidence and multishot examples have no counterpart here.
