@@ -4,7 +4,7 @@ import { match } from "ts-pattern";
 import * as Eff from "@yap/utils/effects";
 
 import type { Actions } from "./actions";
-import type { Captured, Mark, Runnable, StackFrame } from "./frames";
+import type { Mark, Runnable, Sliced, StackFrame } from "./frames";
 
 export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, undefined> => {
 	const workStack: StackFrame<S, C>[] = [];
@@ -91,23 +91,24 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Machine.delimit": scope => {
-				workStack.push({ type: "Delimiter", scope });
+			"Machine.delimit": delimiter => {
+				workStack.push(delimiter);
 
 				return Eff.ctl.resume(undefined);
 			},
 
 			"Machine.find": match => Eff.ctl.resume(workStack.findLast(match)),
 
-			"Machine.capture": () => {
-				const index = workStack.findLastIndex(frame => frame.type === "Delimiter");
+			/* The nearest delimiter for the identity; delimiters for other identities in between stay in the captured frames. */
+			"Machine.capture": identity => {
+				const index = workStack.findLastIndex(frame => frame.type === "Delimiter" && frame.identity === identity);
 
-				const captured = match<StackFrame<S, C> | undefined, Captured<S, C> | undefined>(workStack[index])
-					.with({ type: "Delimiter" }, ({ scope }) => {
+				const captured = match<StackFrame<S, C> | undefined, Sliced<S, C> | undefined>(workStack[index])
+					.with({ type: "Delimiter" }, delimiter => {
 						const frames = workStack.slice(index + 1);
 						workStack.splice(index);
 
-						return { frames, scope };
+						return { frames, scope: delimiter.scope, delimiter };
 					})
 					.otherwise(() => undefined);
 

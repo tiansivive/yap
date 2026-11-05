@@ -114,6 +114,19 @@ function* trampoline(mark: Mark): Evaluation<void> {
 	}
 }
 
+/*
+ * Effect identities are nominal: an identity value is named by its atom or by the foreign declaration it refers to.
+ * An identity that is not yet known, such as a parameter, has no name, so no delimiter can be for it.
+ */
+const identify = (value: NF.Value): string | undefined =>
+	match(value)
+		.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => value.value)
+		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => variable.name)
+		.with({ type: "External", args: [] }, ({ name }) => name)
+		.with({ type: "Neutral" }, ({ value }) => identify(value))
+		.with({ type: "Glued" }, ({ unfolded }) => identify(unfolded))
+		.otherwise(() => undefined);
+
 function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 	const ctx = yield* M.reader.ask();
 	const { noInlineBindings, noReduceEliminations } = yield* Mode.ask();
@@ -390,66 +403,43 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			// Process statements to extend context, then evaluate return
 			return yield* processStatementsAndPush(statements, ret);
 		})
-		.with({ type: "Reset" }, function* ({ term }) {
-			// Reset establishes a delimiter for continuation capture.
-			yield* Stack.delimit(yield* scope());
-			return yield* schedule.eval(term);
-		})
-		.with({ type: "Shift" }, function* ({ body }) {
-			// At this point the typing phase has already desugared
-			//   shift e
-			// into
-			//   shift (\k -> e[k])
-			// where each `resume v` in `e` became `k v`.
-			//
-			// Dynamic semantics: capture the continuation up to the nearest
-			// Reset-delimiter, package it as a function value, and apply the
-			// body-lambda to that continuation.
-			return yield* Do.let("h", schedule.eval(body)).in(function* ({ h }) {
-				const captured = yield* Stack.capture<Scope, EB.Term>();
-				if (!captured) {
-					throw new Error("Shift without enclosing reset");
+		.with({ type: "Reset" }, function* ({ term, identity, handler }) {
+			return yield* group([schedule.eval(identity), schedule.eval(handler)], function* ([e, h]) {
+				const tag = identify(e);
+				if (tag === undefined) {
+					throw new Error("A delimiter's effect identity must evaluate to an atom or a foreign declaration");
 				}
-
-				// A continuation closure that, when applied to a value v, replays
-				// the captured continuation as if resumed at the shift point.
-				const continuation: NF.Closure = {
-					type: "Continuation",
-					frames: captured.frames,
-					ctx: captured.scope.env,
-					term: EB.Constructors.Lit(Lit.unit()), // dummy term
-				};
-
-				const kVal = NF.Constructors.Lambda("kArg", "Explicit", continuation, NF.Any);
-
-				// Apply the desugared handler `h : (A -> R) -> R` to `kVal`.
-				return yield* schedule.reduce(h, kVal, "Explicit");
+				yield* Stack.delimit(yield* scope(), tag, h);
+				return yield* schedule.eval(term);
 			});
 		})
-		.with({ type: "Bubble" }, function* ({ meta, shift }) {
-			if (yield* Stack.find<Scope, EB.Term>(frame => frame.type === "Delimiter")) {
-				return yield* schedule.eval(shift);
-			}
-
-			return yield* result(NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 })));
-		})
 		/*
-		 * Normalization does not run effect operations. A capture's value is unknown until a handler resumes it, so it
-		 * stays a symbolic application of its identity and payload, and primitives applied to it block.
+		 * Slices the continuation back to the nearest delimiter for the identity and applies that delimiter's handler to
+		 * the payload and the continuation. The continuation resumes without the delimiter, as in control0.
 		 */
 		.with({ type: "Capture" }, function* ({ identity, payload }) {
-			const operation = EB.Constructors.Var({ type: "Foreign", name: "$capture" });
-			return yield* Do.let("stuck", schedule.eval(EB.Constructors.App("Explicit", EB.Constructors.App("Explicit", operation, identity), payload))).in(
-				({ stuck }) =>
-					result(
-						NF.Constructors.Neutral(
-							"Symbolic",
-							match(stuck)
-								.with({ type: "Neutral" }, ({ value }) => value)
-								.otherwise(() => stuck),
-						),
-					),
-			);
+			return yield* group([schedule.eval(identity), schedule.eval(payload)], function* ([e, p]) {
+				const tag = identify(e);
+				const captured = tag === undefined ? undefined : yield* Stack.capture<Scope, EB.Term>(tag);
+				if (!captured) {
+					throw new Error(`Capture without a delimiter for ${tag}`);
+				}
+				const continuation: NF.Closure = { type: "Continuation", frames: captured.frames, ctx: captured.scope.env, term: EB.Constructors.Lit(Lit.unit()) };
+				const k = NF.Constructors.Lambda("k", "Explicit", continuation, NF.Any);
+				/* The machine stores handlers untyped; the Reset rule above puts an NF value there. */
+				const handler = captured.delimiter.handler as NF.Value;
+				return yield* Do.let("h", schedule.reduce(handler, p, "Explicit")).in(({ h }) => schedule.reduce(h, k, "Explicit"));
+			});
+		})
+		/* A capture runs only under a delimiter for its identity; anywhere else it stands for its result symbol. */
+		.with({ type: "Bubble" }, function* ({ meta, capture }) {
+			return yield* Do.let("e", schedule.eval(capture.identity)).in(function* ({ e }) {
+				const tag = identify(e);
+				if (tag !== undefined && (yield* Stack.find<Scope, EB.Term>(frame => frame.type === "Delimiter" && frame.identity === tag))) {
+					return yield* schedule.eval(capture);
+				}
+				return yield* result(NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 })));
+			});
 		})
 		.with({ type: "Ann" }, function* ({ term }) {
 			return yield* schedule.eval(term);

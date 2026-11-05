@@ -43,7 +43,7 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					return yield* check(term.term, type);
 				})
 				/* The handler runs outside the delimiter, at the current state; the body runs with the identity live. */
-				.with([{ type: "Reset", identity: P.nonNullable, handler: P.nonNullable }, P._], function* ([term]) {
+				.with([{ type: "Reset" }, P._], function* ([term]) {
 					const [, handled] = yield* synth(term.handler);
 					const body = yield* State.delimit(term.identity, check(term.term, ty));
 					return { vc: Build.and(handled.vc, body.vc) } satisfies VerificationArtefacts;

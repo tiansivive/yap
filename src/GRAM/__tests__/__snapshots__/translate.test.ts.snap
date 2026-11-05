@@ -270,63 +270,6 @@ exports[`GRAM translate > projection 1`] = `
   :refers_to -> [3]"
 `;
 
-exports[`GRAM translate > reset(shift k -> (k 1) + (k 2)) — multishot 1`] = `
-"[1] root
-  :entry -> [2]
-[2] reset
-  :body -> [3]
-[3] shift
-  :body -> [4]
-[4] lambda {"variable":"k","icit":"Explicit","level":0}
-  :annotation -> [5]
-  :body -> [6]
-[5] lit {"value":{"type":"Atom","value":"Num"}}
-[6] app {"icit":"Explicit"}
-  :arg -> [13]
-  :func -> [7]
-[7] app {"icit":"Explicit"}
-  :arg -> [10]
-  :func -> [9]
-[8] var:foreign {"name":"$add"}
-[9] var:ref {"name":"$add"}
-  :refers_to -> [8]
-  :scope -> [4] {"level":0}
-[10] app {"icit":"Explicit"}
-  :arg -> [12]
-  :func -> [11]
-[11] var:bound {"index":0}
-  :refers_to -> [4]
-  :scope -> [4] {"level":0}
-[12] lit {"value":{"type":"Num","value":1}}
-[13] app {"icit":"Explicit"}
-  :arg -> [15]
-  :func -> [14]
-[14] var:bound {"index":0}
-  :refers_to -> [4]
-  :scope -> [4] {"level":0}
-[15] lit {"value":{"type":"Num","value":2}}"
-`;
-
-exports[`GRAM translate > reset(shift k -> k 42) — single resume 1`] = `
-"[1] root
-  :entry -> [2]
-[2] reset
-  :body -> [3]
-[3] shift
-  :body -> [4]
-[4] lambda {"variable":"k","icit":"Explicit","level":0}
-  :annotation -> [5]
-  :body -> [6]
-[5] lit {"value":{"type":"Atom","value":"Num"}}
-[6] app {"icit":"Explicit"}
-  :arg -> [8]
-  :func -> [7]
-[7] var:bound {"index":0}
-  :refers_to -> [4]
-  :scope -> [4] {"level":0}
-[8] lit {"value":{"type":"Num","value":42}}"
-`;
-
 exports[`GRAM translate > struct — row extension chain 1`] = `
 "[1] root
   :entry -> [2]

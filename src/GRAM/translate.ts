@@ -128,11 +128,9 @@ const walk = (term: EB.Term, st: State): [NodeId, State] =>
 		.with({ type: "Block" }, t => block(t, st))
 		.with({ type: "Modal" }, t => modal(t, st))
 		.with({ type: "Reset" }, t => reset(t, st))
-		.with({ type: "Shift" }, t => shift(t, st))
-		.with({ type: "Capture" }, () => {
-			throw new Error("GRAM translation does not lower identity captures");
+		.with({ type: "Capture" }, { type: "Bubble" }, () => {
+			throw new Error("GRAM translation does not lower captures");
 		})
-		.with({ type: "Bubble" }, t => walk(t.shift, st))
 		.with({ type: "Ann" }, t => walk(t.term, st))
 		.exhaustive();
 
@@ -447,11 +445,5 @@ const modal = (t: EB.Term & { type: "Modal" }, st: State): [NodeId, State] => {
 const reset = (t: EB.Term & { type: "Reset" }, st: State): [NodeId, State] => {
 	const [id, s1] = emit(st, Tags.RESET, {}, prov(t.id, st));
 	const [body, s2] = walk(t.term, s1);
-	return [id, link(s2, id, Labels.BODY, body)];
-};
-
-const shift = (t: EB.Term & { type: "Shift" }, st: State): [NodeId, State] => {
-	const [id, s1] = emit(st, Tags.SHIFT, {}, prov(t.id, st));
-	const [body, s2] = walk(t.body, s1);
 	return [id, link(s2, id, Labels.BODY, body)];
 };

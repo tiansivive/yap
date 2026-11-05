@@ -378,29 +378,16 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			return [ann, artefacts] satisfies SynthResult;
 		})
 		/* The handler runs outside the delimiter, at the current state; the body runs with the identity live. */
-		.with({ type: "Reset", identity: P.nonNullable, handler: P.nonNullable }, function* (tm) {
+		.with({ type: "Reset" }, function* (tm) {
 			const [, handled] = yield* synth(tm.handler);
 			const [type, body] = yield* State.delimit(tm.identity, synth(tm.term));
 			return [type, { vc: Build.and(handled.vc, body.vc) }] satisfies SynthResult;
 		})
-		.with({ type: "Reset" }, function* (tm) {
-			return yield* synth(tm.term);
-		})
-		.with({ type: "Capture" }, function* (tm) {
-			const [carrier, identified] = yield* synth(tm.identity);
-			const [, sent] = yield* synth(tm.payload);
-			const result = match(NF.unwrapNeutral(carrier))
-				.with({ type: "App", func: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Effect" } } } }, ({ arg }) => arg)
-				.otherwise(() => NF.Any);
-			return [result, { vc: Build.and(identified.vc, sent.vc) }] satisfies SynthResult;
-		})
-		.with({ type: "Shift" }, function* () {
-			yield* logger.log("synth: shift expression treated as opaque (stub)");
-			return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
-		})
+		/* The payload is checked against the type the capture requests, and the result has the bubble's type. */
 		.with({ type: "Bubble" }, function* (tm) {
-			yield* logger.log("synth: bubble treated as opaque (neutral true)");
-			return [tm.ann, { vc: Build.true_() }] satisfies SynthResult;
+			const [, identified] = yield* synth(tm.capture.identity);
+			const sent = yield* check(tm.capture.payload, tm.request);
+			return [tm.ann, { vc: Build.and(identified.vc, sent.vc) }] satisfies SynthResult;
 		})
 		.otherwise(function* () {
 			throw new Error("synth: case not implemented for term " + run(() => EB.Display.Term(term)));

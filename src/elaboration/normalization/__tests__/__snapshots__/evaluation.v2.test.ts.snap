@@ -1,81 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimited continuations (shift/reset) > models looping continuation 1`] = `
-{
-  "displays": {
-    "constraints": [
-      "Type ~~ Type",
-      "Type ~~ Type",
-      "Type ~~ Type",
-      "Type ~~ Type",
-      "Type ~~ Type",
-      "Type ~~ Type",
-      "Type ~~ Type",
-      "Type ~~ Type",
-      "Type ~~ Type",
-      "Unit ~~ Unit",
-      "Bool ~~ Bool",
-      "Unit ~~ Unit",
-      "?3 ~~ Π(x: ?7) -> (closure: (?8 :: Type) -| Γ: x; $k; u; go; body; cond; while)",
-      "Unit ~~ ?7",
-      "?8 ~~ ?5",
-      "Unit ~~ ?2",
-      "Bool ~~ Bool",
-      "Unit ~~ ?2",
-      "Π(u: ?4) -> (closure: (?5 :: Type) -| Γ: u; go; body; cond; while) ~~ ?3",
-      "?10 @ Type",
-      "Unit ~~ Unit",
-      "?11 @ Type",
-      "?11 ~~ ?1",
-      "?2 ~~ Unit",
-    ],
-    "term": "{
-  let while
-    : Π(a: Type) =>
-      (closure: Π(t1: Π(t2: Unit) -> Bool) ->
-        Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)
-    = λ(a: Type) =>
-      λ(cond: Π(t2: Unit) -> Bool) ->
-        λ(body: Π(t4: Unit) -> Unit) ->
-          reset |({
-            let go
-              : Π(a: Type) =>
-                (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
-              = λ(a: Type) =>
-                (λ(u: Unit) ->
-                  bubble#6 (shift (λ($k: Π($k: go) -> a) ->
-                    match body unit
-                      | true -> { go unit; $k (a unit); return unit; }
-                      | false -> unit)) : Π(u: Unit) -> a);
-            return λ(a: Type) => go @a unit;
-          })
-            @a|;
-  return while;
-}",
-    "type": "Π(a: Type) =>
-  (closure: Π(t1: Π(t2: Unit) -> Bool) ->
-    Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)",
-  },
-  "evaluation": "λ(a: Type) =>
-  (closure: λ(cond: Π(t2: Unit) -> Bool) ->
-    λ(body: Π(t4: Unit) -> Unit) ->
-      reset |({
-        let go
-          : Π(a: Type) =>
-            (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
-          = λ(a: Type) =>
-            (λ(u: Unit) ->
-              bubble#6 (shift (λ($k: Π($k: go) -> a) ->
-                match body unit
-                  | true -> { go unit; $k (a unit); return unit; }
-                  | false -> unit)) : Π(u: Unit) -> a);
-        return λ(a: Type) => go @a unit;
-      })
-        @a| -| Γ: a; while)",
-}
-`;
-
-exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimited continuations (shift/reset) > shifts under a lambda (Bubble produces neutral without delimiter) 1`] = `
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimited continuations (capture/reset) > captures under a lambda (Bubble produces neutral without delimiter) 1`] = `
 {
   "nfType": "Neutral",
   "pretty": {
@@ -97,23 +22,217 @@ exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimi
   let test
     : Π(x: Num) ->
       (closure: <ω> Num [| λ(st: State) ->
-        λ(r: Num) -> FFI.$eq r (FFI.$add 1 ($add: (x) (10))) |] -| Γ: x; test)
-    = reset |(λ(x: Num) ->
+        λ(r: Num) ->
+          FFI.$eq r
+            (FFI.$add 1
+              (?6 :: <ω> Num [| λ(st: State) ->
+                (closure: λ(r: Num) ->
+                  FFI.$eq r
+                    (FFI.$add x y) -| Γ: st; y; x) |])) |] -| Γ: x; test)
+    = reset [$anonymous1] {
+      let $handler
+        : Π($payload: Π(k: Π(x: $parameter2) ->
+          (closure: Π(x: Num) ->
+            (closure: <ω> Num [| λ(st: State) ->
+              λ(r: Num) ->
+                FFI.$eq r
+                  (FFI.$add 1
+                    (?6 :: <ω> Num [| λ(st: State) ->
+                      (closure: λ(r: Num) ->
+                        FFI.$eq r
+                          (FFI.$add x
+                            y) -| Γ: st; y; x) |])) |] -| Γ: x; test) -| Γ: x; r; test)) ->
+          (closure: Π(x: Num) ->
+            (closure: <ω> Num [| λ(st: State) ->
+              λ(r: Num) ->
+                FFI.$eq r
+                  (FFI.$add 1
+                    (?6 :: <ω> Num [| λ(st: State) ->
+                      (closure: λ(r: Num) ->
+                        FFI.$eq r
+                          (FFI.$add x
+                            y) -| Γ: st; y; x) |])) |] -| Γ: x; test) -| Γ: k; r; test)) ->
+          (closure: Π($k: Π(x: $parameter2) ->
+            Π(x: Num) ->
+              (closure: <ω> Num [| λ(st: State) ->
+                λ(r: Num) ->
+                  FFI.$eq r
+                    (FFI.$add 1
+                      (?6 :: <ω> Num [| λ(st: State) ->
+                        (closure: λ(r: Num) ->
+                          FFI.$eq r
+                            (FFI.$add x
+                              y) -| Γ: st; y; x) |])) |] -| Γ: x; test)) ->
+            Π(x: Num) ->
+              (closure: <ω> Num [| λ(st: State) ->
+                λ(r: Num) ->
+                  FFI.$eq r
+                    (FFI.$add 1
+                      (?6 :: <ω> Num [| λ(st: State) ->
+                        (closure: λ(r: Num) ->
+                          FFI.$eq r
+                            (FFI.$add x
+                              y) -| Γ: st; y; x) |])) |] -| Γ: x; test) -| Γ: $payload; test)
+        = λ($payload: Π(k: Π(x: $parameter2) ->
+          Π(x: Num) ->
+            (closure: <ω> Num [| λ(st: State) ->
+              λ(r: Num) ->
+                FFI.$eq r
+                  (FFI.$add 1
+                    (?6 :: <ω> Num [| λ(st: State) ->
+                      (closure: λ(r: Num) ->
+                        FFI.$eq r
+                          (FFI.$add x
+                            y) -| Γ: st; y; x) |])) |] -| Γ: x; test)) ->
+          Π(x: Num) ->
+            (closure: <ω> Num [| λ(st: State) ->
+              λ(r: Num) ->
+                FFI.$eq r
+                  (FFI.$add 1
+                    (?6 :: <ω> Num [| λ(st: State) ->
+                      (closure: λ(r: Num) ->
+                        FFI.$eq r
+                          (FFI.$add x
+                            y) -| Γ: st; y; x) |])) |] -| Γ: x; test)) ->
+          λ($k: Π(x: $parameter2) ->
+            Π(x: Num) ->
+              (closure: <ω> Num [| λ(st: State) ->
+                λ(r: Num) ->
+                  FFI.$eq r
+                    (FFI.$add 1
+                      (?6 :: <ω> Num [| λ(st: State) ->
+                        (closure: λ(r: Num) ->
+                          FFI.$eq r
+                            (FFI.$add x
+                              y) -| Γ: st; y; x) |])) |] -| Γ: x; test)) ->
+            $payload $k;
+      return $handler;
+    } in |(λ(x: Num) ->
       FFI.$add 1
-        bubble#6 (shift (λ($k: Π($k: <ω> Num [| λ(st: State) ->
+        bubble#6 (capture [$anonymous1] (λ(k: Π(x: <ω> Num [| λ(st: State) ->
           (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
           Π(x: Num) ->
             (closure: <ω> Num [| λ(st: State) ->
               λ(r: Num) ->
-                FFI.$eq r (FFI.$add 1 ($add: (x) (10))) |] -| Γ: x; test)) ->
-          $k (FFI.$add x 10))) : Π(x: Num) ->
+                FFI.$eq r
+                  (FFI.$add 1
+                    (?6 :: <ω> Num [| λ(st: State) ->
+                      (closure: λ(r: Num) ->
+                        FFI.$eq r
+                          (FFI.$add x
+                            y) -| Γ: st; y; x) |])) |] -| Γ: x; test)) ->
+          k (FFI.$add x 10))) : Π(x: Num) ->
       <ω> Num [| λ(st: State) ->
-        λ(r: Num) -> FFI.$eq r (FFI.$add 1 ($add: (x) (10))) |])|;
+        λ(r: Num) ->
+          FFI.$eq r
+            (FFI.$add 1
+              (?6 :: <ω> Num [| λ(st: State) ->
+                (closure: λ(r: Num) ->
+                  FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |])) |])|;
   return test 5;
 }",
     "type": "<ω> Num [| λ(st: State) ->
   (closure: λ(r: Num) ->
-    FFI.$eq r (FFI.$add 1 ($add: (x) (10))) -| Γ: st; x; test) |]",
+    FFI.$eq r
+      (FFI.$add 1
+        (?6 :: <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) ->
+            FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |])) -| Γ: st; x; test) |]",
   },
+}
+`;
+
+exports[`Normalization v2 (stack-based): evaluation / reduce / matching > delimited continuations (capture/reset) > models looping continuation 1`] = `
+{
+  "displays": {
+    "constraints": [
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Type ~~ Type",
+      "Unit ~~ Unit",
+      "Bool ~~ Bool",
+      "Unit ~~ Unit",
+      "?3 ~~ Π(x: ?6) -> (closure: (?7 :: Type) -| Γ: x; k; u; go; body; cond; while)",
+      "Unit ~~ ?6",
+      "?7 ~~ ?5",
+      "Unit ~~ ?2",
+      "Bool ~~ Bool",
+      "Unit ~~ ?2",
+      "Π(u: ?4) -> (closure: (?5 :: Type) -| Γ: u; go; body; cond; while) ~~ ?3",
+      "?10 @ Type",
+      "Unit ~~ Unit",
+      "?11 @ Type",
+      "?11 ~~ ?1",
+      "?2 ~~ Unit",
+    ],
+    "term": "{
+  let while
+    : Π(a: Type) =>
+      (closure: Π(t1: Π(t2: Unit) -> Bool) ->
+        Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)
+    = λ(a: Type) =>
+      λ(cond: Π(t2: Unit) -> Bool) ->
+        λ(body: Π(t4: Unit) -> Unit) ->
+          reset [$anonymous1] {
+            let $handler
+              : Π($payload: Π(k: Π(x: $parameter2) ->
+                (closure: cond -| Γ: x; r; body; cond; while)) ->
+                (closure: Unit -| Γ: k; r; body; cond; while)) ->
+                (closure: Π($k: Π(x: $parameter2) -> cond) ->
+                  Unit -| Γ: $payload; body; cond; while)
+              = λ($payload: Π(k: Π(x: $parameter2) -> a) -> Unit) ->
+                λ($k: Π(x: $parameter2) -> a) -> $payload $k;
+            return $handler;
+          } in |({
+            let go
+              : Π(a: Type) =>
+                (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
+              = λ(a: Type) =>
+                (λ(u: Unit) ->
+                  bubble#8 (capture [$anonymous1] (λ(k: Π(x: go) -> a) ->
+                    match body unit
+                      | true -> { go unit; k (a unit); return unit; }
+                      | false -> unit)) : Π(u: Unit) -> a);
+            return λ(a: Type) => go @a unit;
+          })
+            @a|;
+  return while;
+}",
+    "type": "Π(a: Type) =>
+  (closure: Π(t1: Π(t2: Unit) -> Bool) ->
+    Π(t3: Π(t4: Unit) -> Unit) -> Unit -| Γ: a; while)",
+  },
+  "evaluation": "λ(a: Type) =>
+  (closure: λ(cond: Π(t2: Unit) -> Bool) ->
+    λ(body: Π(t4: Unit) -> Unit) ->
+      reset [$anonymous1] {
+        let $handler
+          : Π($payload: Π(k: Π(x: $parameter2) ->
+            (closure: cond -| Γ: x; r; body; cond; while)) ->
+            (closure: Unit -| Γ: k; r; body; cond; while)) ->
+            (closure: Π($k: Π(x: $parameter2) -> cond) ->
+              Unit -| Γ: $payload; body; cond; while)
+          = λ($payload: Π(k: Π(x: $parameter2) -> a) -> Unit) ->
+            λ($k: Π(x: $parameter2) -> a) -> $payload $k;
+        return $handler;
+      } in |({
+        let go
+          : Π(a: Type) =>
+            (closure: Π(x: Unit) -> a -| Γ: a; go; body; cond; while)
+          = λ(a: Type) =>
+            (λ(u: Unit) ->
+              bubble#8 (capture [$anonymous1] (λ(k: Π(x: go) -> a) ->
+                match body unit
+                  | true -> { go unit; k (a unit); return unit; }
+                  | false -> unit)) : Π(u: Unit) -> a);
+        return λ(a: Type) => go @a unit;
+      })
+        @a| -| Γ: a; while)",
 }
 `;

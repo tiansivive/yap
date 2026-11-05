@@ -57,11 +57,47 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 			return Constructors.Block(stmts, traverse(ret, onVar));
 		})
 		.with({ type: "Modal" }, ({ term, modalities }) => Constructors.Modal(traverse(term, onVar), modalities))
-		.with({ type: "Reset" }, ({ term, identity, handler }) =>
-			Constructors.Reset(traverse(term, onVar), identity && traverse(identity, onVar), handler && traverse(handler, onVar)),
-		)
+		.with({ type: "Reset" }, ({ term, identity, handler }) => Constructors.Reset(traverse(term, onVar), traverse(identity, onVar), traverse(handler, onVar)))
 		.with({ type: "Capture" }, ({ identity, payload }) => Constructors.Capture(traverse(identity, onVar), traverse(payload, onVar)))
 		.otherwise(() => {
 			throw new Error("Traverse: Not implemented yet");
 		});
+};
+
+/** Carries binder depth while rewriting syntax, including annotations and recursive lets. */
+export const rewrite = (term: Term, at: (term: Term, depth: number) => Term, depth = 0): Term => {
+	const go = (term: Term, offset = 0) => rewrite(term, at, depth + offset);
+	const mapped = match(term)
+		.with({ type: "Abs" }, t => {
+			const increment = t.binding.type === "Nu" || t.binding.type === "Sigma" ? 0 : 1;
+			return { ...t, binding: { ...t.binding, annotation: go(t.binding.annotation) }, body: go(t.body, increment) };
+		})
+		.with({ type: "App" }, t => ({ ...t, func: go(t.func), arg: go(t.arg) }))
+		.with({ type: "Row" }, t => ({
+			...t,
+			row: R.traverse(
+				t.row,
+				value => go(value),
+				v => R.Constructors.Variable(v),
+			),
+		}))
+		.with({ type: "Proj" }, { type: "Modal" }, t => ({ ...t, term: go(t.term) }))
+		.with({ type: "Inj" }, t => ({ ...t, value: go(t.value), term: go(t.term) }))
+		.with({ type: "Ann" }, t => ({ ...t, term: go(t.term), ann: go(t.ann) }))
+		.with({ type: "Reset" }, t => ({ ...t, term: go(t.term), identity: go(t.identity), handler: go(t.handler) }))
+		.with({ type: "Capture" }, t => ({ ...t, identity: go(t.identity), payload: go(t.payload) }))
+		.with({ type: "Bubble" }, t => ({ ...t, capture: { ...t.capture, identity: go(t.capture.identity), payload: go(t.capture.payload) } }))
+		.with({ type: "Match" }, t => ({ ...t, scrutinee: go(t.scrutinee), alternatives: t.alternatives.map(a => ({ ...a, term: go(a.term, a.binders.length) })) }))
+		.with({ type: "Block" }, t => {
+			const mapped = t.statements.reduce<{ offset: number; statements: typeof t.statements }>(
+				(acc, statement) => {
+					const offset = acc.offset + (statement.type === "Let" ? 1 : 0);
+					return { offset, statements: [...acc.statements, { ...statement, value: go(statement.value, offset) }] };
+				},
+				{ offset: 0, statements: [] },
+			);
+			return { ...t, statements: mapped.statements, return: go(t.return, mapped.offset) };
+		})
+		.otherwise(t => t);
+	return at(mapped, depth);
 };

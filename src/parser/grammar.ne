@@ -262,6 +262,11 @@ Reset -> "reset" %space:+ TypeExpr 		{% P.Reset %}
 With -> "with" %space Many[Handler, %comma] %space "in" %space TypeExpr {% P.With %}
 Handler -> Atom %space:? %colon %space:? TypeExpr {% P.Handler %}
 Capture -> "capture" %space %lbracket %space:? TypeExpr %space:? %rbracket %space TypeExpr {% P.Capture %}
+         | "capture" %space CaptureBody {% P.Capture %}
+CaptureBody -> Lambda {% id %}
+             | Block {% id %}
+             | Identifier {% P.Var %}
+             | Parens[Ann] {% P.extract %}
 Shift -> "shift" %space:+ TypeExpr    	{% P.Shift %}
 Resume -> "resume" %space:+ TypeExpr    {% P.Resume %}
 

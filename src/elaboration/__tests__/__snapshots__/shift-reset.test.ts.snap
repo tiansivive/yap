@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Shift-reset > multiple shifts within reset > invoking continuations 1`] = `
+exports[`Shift-reset > multiple captures within reset > invoking continuations 1`] = `
 {
   "constraints": [
     "Num ~~ ?4",
@@ -22,33 +22,53 @@ exports[`Shift-reset > multiple shifts within reset > invoking continuations 1`]
 ?4 |=> Num
 ?6 |=> Num",
   "state": {
-    "nondeterminism": {
-      "5": [
-        "10",
-      ],
-      "7": [
-        "20",
-      ],
-    },
+    "nondeterminism": {},
   },
   "term": "let test
   : <ω> Num [| λ(st: State) ->
     (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]
-  = reset |FFI.$add
-    bubble#5 (shift (λ($k: Π($k: Num) ->
+  = reset [$anonymous1] {
+    let $handler
+      : Π($payload: Π(k: Π(x: $parameter2) ->
+        (closure: <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) ->
+            FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |] -| Γ: x; r; test)) ->
+        (closure: <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) ->
+            FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |] -| Γ: k; r; test)) ->
+        (closure: Π($k: Π(x: $parameter2) ->
+          <ω> Num [| λ(st: State) ->
+            (closure: λ(r: Num) ->
+              FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
+          <ω> Num [| λ(st: State) ->
+            (closure: λ(r: Num) ->
+              FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |] -| Γ: $payload; test)
+      = λ($payload: Π(k: Π(x: $parameter2) ->
+        <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
+        <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
+        λ($k: Π(x: $parameter2) ->
+          <ω> Num [| λ(st: State) ->
+            (closure: λ(r: Num) ->
+              FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
+          $payload $k;
+    return $handler;
+  } in |FFI.$add
+    bubble#5 (capture [$anonymous1] (λ(k: Π(x: Num) ->
       <ω> Num [| λ(st: State) ->
         (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
-      $k 10))
-    bubble#7 (shift (λ($k: Π($k: Num) ->
+      k 10))
+    bubble#7 (capture [$anonymous1] (λ(k: Π(x: Num) ->
       <ω> Num [| λ(st: State) ->
         (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
-      $k 20))|",
+      k 20))|",
   "type": "<ω> Num [| λ(st: State) ->
   (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]",
 }
 `;
 
-exports[`Shift-reset > multiple shifts within reset > multiple shifts and multiple resumptions 1`] = `
+exports[`Shift-reset > multiple captures within reset > multiple captures and multiple resumptions 1`] = `
 {
   "constraints": [
     "Num ~~ Num",
@@ -77,30 +97,30 @@ exports[`Shift-reset > multiple shifts within reset > multiple shifts and multip
 ?6 |=> Num
 ?8 |=> Num",
   "state": {
-    "nondeterminism": {
-      "5": [
-        "3",
-      ],
-      "7": [
-        "2",
-      ],
-      "9": [
-        "(L1) 1",
-        "1",
-      ],
-    },
+    "nondeterminism": {},
   },
   "term": "let test
   : Num
-  = reset |FFI.$add
-    (FFI.$add (FFI.$add 4 bubble#5 (shift (λ($k: Π($k: Num) -> Num) -> $k 3)))
-      bubble#7 (shift (λ($k: Π($k: Num) -> Num) -> $k 2)))
-    bubble#9 (shift (λ($k: Π($k: Num) -> Num) -> $k ($k 1)))|",
+  = reset [$anonymous1] {
+    let $handler
+      : Π($payload: Π(k: Π(x: $parameter2) ->
+        (closure: Num -| Γ: x; r; test)) ->
+        (closure: Num -| Γ: k; r; test)) ->
+        (closure: Π($k: Π(x: $parameter2) -> Num) -> Num -| Γ: $payload; test)
+      = λ($payload: Π(k: Π(x: $parameter2) -> Num) -> Num) ->
+        λ($k: Π(x: $parameter2) -> Num) -> $payload $k;
+    return $handler;
+  } in |FFI.$add
+    (FFI.$add
+      (FFI.$add 4
+        bubble#5 (capture [$anonymous1] (λ(k: Π(x: Num) -> Num) -> k 3)))
+      bubble#7 (capture [$anonymous1] (λ(k: Π(x: Num) -> Num) -> k 2)))
+    bubble#9 (capture [$anonymous1] (λ(k: Π(x: Num) -> Num) -> k (k 1)))|",
   "type": "Num",
 }
 `;
 
-exports[`Shift-reset > only one shift within reset > invoking id continuation 1`] = `
+exports[`Shift-reset > only one capture within reset > invoking id continuation 1`] = `
 {
   "constraints": [
     "String ~~ ?4",
@@ -113,20 +133,27 @@ exports[`Shift-reset > only one shift within reset > invoking id continuation 1`
 ?3 |=> String
 ?4 |=> String",
   "state": {
-    "nondeterminism": {
-      "5": [
-        ""hello"",
-      ],
-    },
+    "nondeterminism": {},
   },
   "term": "let test
   : String
-  = reset |bubble#5 (shift (λ($k: Π($k: String) -> String) -> $k "hello"))|",
+  = reset [$anonymous1] {
+    let $handler
+      : Π($payload: Π(k: Π(x: $parameter2) ->
+        (closure: String -| Γ: x; r; test)) ->
+        (closure: String -| Γ: k; r; test)) ->
+        (closure: Π($k: Π(x: $parameter2) -> String) ->
+          String -| Γ: $payload; test)
+      = λ($payload: Π(k: Π(x: $parameter2) -> String) -> String) ->
+        λ($k: Π(x: $parameter2) -> String) -> $payload $k;
+    return $handler;
+  } in |bubble#5 (capture [$anonymous1] (λ(k: Π(x: String) -> String) ->
+    k "hello"))|",
   "type": "String",
 }
 `;
 
-exports[`Shift-reset > only one shift within reset > invoking simple continuation with proper value 1`] = `
+exports[`Shift-reset > only one capture within reset > invoking simple continuation with proper value 1`] = `
 {
   "constraints": [
     "Num ~~ Num",
@@ -145,26 +172,49 @@ exports[`Shift-reset > only one shift within reset > invoking simple continuatio
   (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]
 ?4 |=> Num",
   "state": {
-    "nondeterminism": {
-      "5": [
-        "1",
-      ],
-    },
+    "nondeterminism": {},
   },
   "term": "let test
   : <ω> Num [| λ(st: State) ->
     (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]
-  = reset |FFI.$add 1
-    bubble#5 (shift (λ($k: Π($k: Num) ->
+  = reset [$anonymous1] {
+    let $handler
+      : Π($payload: Π(k: Π(x: $parameter2) ->
+        (closure: <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) ->
+            FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |] -| Γ: x; r; test)) ->
+        (closure: <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) ->
+            FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |] -| Γ: k; r; test)) ->
+        (closure: Π($k: Π(x: $parameter2) ->
+          <ω> Num [| λ(st: State) ->
+            (closure: λ(r: Num) ->
+              FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
+          <ω> Num [| λ(st: State) ->
+            (closure: λ(r: Num) ->
+              FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |] -| Γ: $payload; test)
+      = λ($payload: Π(k: Π(x: $parameter2) ->
+        <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
+        <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
+        λ($k: Π(x: $parameter2) ->
+          <ω> Num [| λ(st: State) ->
+            (closure: λ(r: Num) ->
+              FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
+          $payload $k;
+    return $handler;
+  } in |FFI.$add 1
+    bubble#5 (capture [$anonymous1] (λ(k: Π(x: Num) ->
       <ω> Num [| λ(st: State) ->
         (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
-      $k 1))|",
+      k 1))|",
   "type": "<ω> Num [| λ(st: State) ->
   (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]",
 }
 `;
 
-exports[`Shift-reset > only one shift within reset > multiple resumptions 1`] = `
+exports[`Shift-reset > only one capture within reset > multiple resumptions 1`] = `
 {
   "constraints": [
     "Num ~~ ?4",
@@ -183,24 +233,35 @@ exports[`Shift-reset > only one shift within reset > multiple resumptions 1`] = 
   (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]
 ?4 |=> Num",
   "state": {
-    "nondeterminism": {
-      "5": [
-        "2",
-        "1",
-      ],
-    },
+    "nondeterminism": {},
   },
   "term": "let test
   : <ω> Num [| λ(st: State) ->
     (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]
-  = reset |bubble#5 (shift (λ($k: Π($k: Num) -> Num) ->
-    FFI.$add ($k 1) ($k 2)))|",
+  = reset [$anonymous1] {
+    let $handler
+      : Π($payload: Π(k: Π(x: $parameter2) ->
+        (closure: Num -| Γ: x; r; test)) ->
+        (closure: <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) ->
+            FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |] -| Γ: k; r; test)) ->
+        (closure: Π($k: Π(x: $parameter2) -> Num) ->
+          <ω> Num [| λ(st: State) ->
+            (closure: λ(r: Num) ->
+              FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |] -| Γ: $payload; test)
+      = λ($payload: Π(k: Π(x: $parameter2) -> Num) ->
+        <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
+        λ($k: Π(x: $parameter2) -> Num) -> $payload $k;
+    return $handler;
+  } in |bubble#5 (capture [$anonymous1] (λ(k: Π(x: Num) -> Num) ->
+    FFI.$add (k 1) (k 2)))|",
   "type": "<ω> Num [| λ(st: State) ->
   (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]",
 }
 `;
 
-exports[`Shift-reset > only one shift within reset > nested resumption 1`] = `
+exports[`Shift-reset > only one capture within reset > nested resumption 1`] = `
 {
   "constraints": [
     "Num ~~ ?4",
@@ -214,21 +275,25 @@ exports[`Shift-reset > only one shift within reset > nested resumption 1`] = `
 ?3 |=> Num
 ?4 |=> Num",
   "state": {
-    "nondeterminism": {
-      "5": [
-        "(L1) 10",
-        "10",
-      ],
-    },
+    "nondeterminism": {},
   },
   "term": "let test
   : Num
-  = reset |bubble#5 (shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10)))|",
+  = reset [$anonymous1] {
+    let $handler
+      : Π($payload: Π(k: Π(x: $parameter2) ->
+        (closure: Num -| Γ: x; r; test)) ->
+        (closure: Num -| Γ: k; r; test)) ->
+        (closure: Π($k: Π(x: $parameter2) -> Num) -> Num -| Γ: $payload; test)
+      = λ($payload: Π(k: Π(x: $parameter2) -> Num) -> Num) ->
+        λ($k: Π(x: $parameter2) -> Num) -> $payload $k;
+    return $handler;
+  } in |bubble#5 (capture [$anonymous1] (λ(k: Π(x: Num) -> Num) -> k (k 10)))|",
   "type": "Num",
 }
 `;
 
-exports[`Shift-reset > only one shift within reset > nested resumption with non-id continuation 1`] = `
+exports[`Shift-reset > only one capture within reset > nested resumption with non-id continuation 1`] = `
 {
   "constraints": [
     "Num ~~ Num",
@@ -245,21 +310,26 @@ exports[`Shift-reset > only one shift within reset > nested resumption with non-
 ?3 |=> Num
 ?4 |=> Num",
   "state": {
-    "nondeterminism": {
-      "5": [
-        "(L1) 10",
-        "10",
-      ],
-    },
+    "nondeterminism": {},
   },
   "term": "let test
   : Num
-  = reset |FFI.$add 1 bubble#5 (shift (λ($k: Π($k: Num) -> Num) -> $k ($k 10)))|",
+  = reset [$anonymous1] {
+    let $handler
+      : Π($payload: Π(k: Π(x: $parameter2) ->
+        (closure: Num -| Γ: x; r; test)) ->
+        (closure: Num -| Γ: k; r; test)) ->
+        (closure: Π($k: Π(x: $parameter2) -> Num) -> Num -| Γ: $payload; test)
+      = λ($payload: Π(k: Π(x: $parameter2) -> Num) -> Num) ->
+        λ($k: Π(x: $parameter2) -> Num) -> $payload $k;
+    return $handler;
+  } in |FFI.$add 1
+    bubble#5 (capture [$anonymous1] (λ(k: Π(x: Num) -> Num) -> k (k 10)))|",
   "type": "Num",
 }
 `;
 
-exports[`Shift-reset > only one shift within reset > not invoking continuation 1`] = `
+exports[`Shift-reset > only one capture within reset > not invoking continuation 1`] = `
 {
   "constraints": [
     "String ~~ ?3",
@@ -272,12 +342,22 @@ exports[`Shift-reset > only one shift within reset > not invoking continuation 1
   "state": {
     "nondeterminism": {},
   },
-  "term": "let test : String = reset |bubble#5 (shift (λ($k: Π($k: ?2) -> ?2) -> "world"))|",
+  "term": "let test
+  : String
+  = reset [$anonymous1] {
+    let $handler
+      : Π($payload: Π(k: Π(x: $parameter2) -> (closure: ?2 -| Γ: x; r; test)) ->
+        (closure: String -| Γ: k; r; test)) ->
+        (closure: Π($k: Π(x: $parameter2) -> ?2) -> String -| Γ: $payload; test)
+      = λ($payload: Π(k: Π(x: $parameter2) -> ?2) -> String) ->
+        λ($k: Π(x: $parameter2) -> ?2) -> $payload $k;
+    return $handler;
+  } in |bubble#5 (capture [$anonymous1] (λ(k: Π(x: ?2) -> ?2) -> "world"))|",
   "type": "String",
 }
 `;
 
-exports[`Shift-reset > only one shift within reset > overriding continuation return type 1`] = `
+exports[`Shift-reset > only one capture within reset > overriding continuation return type 1`] = `
 {
   "constraints": [
     "Num ~~ Num",
@@ -297,8 +377,30 @@ exports[`Shift-reset > only one shift within reset > overriding continuation ret
   },
   "term": "let test
   : String
-  = reset |FFI.$add 1
-    bubble#5 (shift (λ($k: Π($k: Num) ->
+  = reset [$anonymous1] {
+    let $handler
+      : Π($payload: Π(k: Π(x: $parameter2) ->
+        (closure: <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) ->
+            FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |] -| Γ: x; r; test)) ->
+        (closure: String -| Γ: k; r; test)) ->
+        (closure: Π($k: Π(x: $parameter2) ->
+          <ω> Num [| λ(st: State) ->
+            (closure: λ(r: Num) ->
+              FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
+          String -| Γ: $payload; test)
+      = λ($payload: Π(k: Π(x: $parameter2) ->
+        <ω> Num [| λ(st: State) ->
+          (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
+        String) ->
+        λ($k: Π(x: $parameter2) ->
+          <ω> Num [| λ(st: State) ->
+            (closure: λ(r: Num) ->
+              FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
+          $payload $k;
+    return $handler;
+  } in |FFI.$add 1
+    bubble#5 (capture [$anonymous1] (λ(k: Π(x: Num) ->
       <ω> Num [| λ(st: State) ->
         (closure: λ(r: Num) -> FFI.$eq r (FFI.$add x y) -| Γ: st; y; x) |]) ->
       "hello"))|",
@@ -306,7 +408,7 @@ exports[`Shift-reset > only one shift within reset > overriding continuation ret
 }
 `;
 
-exports[`Shift-reset > resets without shifts > literal value 1`] = `
+exports[`Shift-reset > resets without captures > literal value 1`] = `
 {
   "constraints": [
     "Num ~~ ?2",
@@ -319,7 +421,18 @@ exports[`Shift-reset > resets without shifts > literal value 1`] = `
   "state": {
     "nondeterminism": {},
   },
-  "term": "let test : Num = reset |10|",
+  "term": "let test
+  : Num
+  = reset [$anonymous1] {
+    let $handler
+      : Π($payload: Π(k: Π(x: $parameter2) ->
+        (closure: Num -| Γ: x; r; test)) ->
+        (closure: Num -| Γ: k; r; test)) ->
+        (closure: Π($k: Π(x: $parameter2) -> Num) -> Num -| Γ: $payload; test)
+      = λ($payload: Π(k: Π(x: $parameter2) -> Num) -> Num) ->
+        λ($k: Π(x: $parameter2) -> Num) -> $payload $k;
+    return $handler;
+  } in |10|",
   "type": "Num",
 }
 `;

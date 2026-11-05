@@ -176,18 +176,30 @@ describe("the machine, on its own", () => {
 			};
 
 			const delimited = function* (): Program<Machine<unknown>> {
-				yield* Stack.delimit(builtins);
+				yield* Stack.delimit(builtins, "E", "handler");
 
 				return yield* nearest();
 			};
 
 			expect(machine(nearest())).toBeUndefined();
-			expect(machine(delimited())).toEqual({ type: "Delimiter", scope: builtins });
+			expect(machine(delimited())).toEqual({ type: "Delimiter", scope: builtins, identity: "E", handler: "handler" });
+		});
+
+		it("slices back to the nearest delimiter for the identity, past delimiters for others", () => {
+			const program = function* (): Program<Machine<unknown>> {
+				yield* Stack.delimit(builtins, "E", "outer");
+				yield* Stack.delimit(builtins, "F", "inner");
+
+				const captured = yield* Stack.capture<Env, Value>("E");
+				return yield* Stack.fill({ handler: captured?.delimiter.handler, frames: captured?.frames.map(frame => frame.type) });
+			};
+
+			expect(machine(program())).toEqual({ handler: "outer", frames: ["Delimiter"] });
 		});
 
 		it("gives every replay of a captured continuation its own operands", () => {
 			const shift = function* (): Program<Machine<string>> {
-				const captured = yield* Stack.capture<Env, Value>();
+				const captured = yield* Stack.capture<Env, Value>("E");
 
 				if (!captured) {
 					throw new Error("shift without a delimiter");
@@ -199,7 +211,7 @@ describe("the machine, on its own", () => {
 			};
 
 			const program = function* (): Program<Machine<string>> {
-				yield* Stack.delimit(builtins);
+				yield* Stack.delimit(builtins, "E", "handler");
 
 				return yield* group<number | string, string>([Stack.fill(1), shift()], ([a, b]) => Stack.fill(`${a}+${b}`));
 			};

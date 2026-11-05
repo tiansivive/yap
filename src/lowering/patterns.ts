@@ -47,7 +47,6 @@ export const Patterns = {
 
 	Block: { type: "Block" as const } as const,
 	Reset: { type: "Reset" as const } as const,
-	Shift: { type: "Shift" as const } as const,
 	Bubble: { type: "Bubble" as const } as const,
 
 	// EB.Pattern

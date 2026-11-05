@@ -18,6 +18,7 @@ describe("Effect examples verify as examples/INDEX.md lists", () => {
 		["effects/escaping-closure.yap", { later: "valid", reinstalled: "valid" }],
 		["effects/higher-order.yap", { handled: "valid", result: "valid" }],
 		["effects/value-predicate.yap", { x: "valid", y: "valid" }],
+		["effects/abort.yap", { aborted: "valid" }],
 		["errors/unhandled.yap", { unhandled: "invalid" }],
 		["errors/other-handler.yap", { other: "invalid" }],
 		["errors/pure-function.yap", { declared: "invalid", inferred: "invalid" }],

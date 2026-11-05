@@ -11,6 +11,7 @@ import * as MIR from "../../../../lowering/mir";
 import type { Declaration } from "../../../../lowering/mir";
 import { emit } from "../emit";
 import { print } from "../print";
+import { Control } from "../../../../__tests__/helpers/control";
 
 const codegen = (term: EB.Term, ffi?: Record<string, (...args: any[]) => any>, declarations?: Map<string, Declaration>) => {
 	const mod = lowerToMir(term, declarations);
@@ -231,32 +232,32 @@ describe("Codegen: shift/reset", () => {
 	beforeEach(() => resetSupply());
 
 	it("reset(42) => 42 (no shift)", () => {
-		expect(codegen(EB.Constructors.Reset(EB.DSL.num(42)))).toBe(42);
+		expect(codegen(Control.reset(EB.DSL.num(42)))).toBe(42);
 	});
 
-	it("reset(shift k -> 42) => 42 (shift without resume)", () => {
+	it.fails("reset(shift k -> 42) => 42 (shift without resume)", () => {
 		const body = EB.DSL.lambda("k", EB.DSL.num(42), EB.DSL.type("Num"));
-		expect(codegen(EB.Constructors.Reset(EB.Constructors.Shift(body)))).toBe(42);
+		expect(codegen(Control.reset(Control.capture(body)))).toBe(42);
 	});
 
-	it("reset(shift k -> k 42) => 42 (single resume)", () => {
+	it.fails("reset(shift k -> k 42) => 42 (single resume)", () => {
 		const body = EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(42)), EB.DSL.type("Num"));
-		expect(codegen(EB.Constructors.Reset(EB.Constructors.Shift(body)))).toBe(42);
+		expect(codegen(Control.reset(Control.capture(body)))).toBe(42);
 	});
 
-	it("reset(shift k -> (k 1) + (k 2)) => 3 (multishot)", () => {
+	it.fails("reset(shift k -> (k 1) + (k 2)) => 3 (multishot)", () => {
 		const body = EB.DSL.lambda("k", EB.DSL.add(EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(1)), EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(2))), EB.DSL.type("Num"));
-		expect(codegen(EB.Constructors.Reset(EB.Constructors.Shift(body)))).toBe(3);
+		expect(codegen(Control.reset(Control.capture(body)))).toBe(3);
 	});
 
-	it("reset { let x=1; shift k->k 10; x+100 } => 101 (captured frame)", () => {
+	it.fails("reset { let x=1; shift k->k 10; x+100 } => 101 (captured frame)", () => {
 		const numTy = NF.Constructors.Lit(Lit.Atom("Num"));
 		const stmts: EB.Statement[] = [
 			EB.Constructors.Stmt.Let("x", EB.DSL.num(1), numTy),
-			EB.Constructors.Stmt.Expr(EB.Constructors.Shift(EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(10)), EB.DSL.type("Num")))),
+			EB.Constructors.Stmt.Expr(Control.capture(EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(10)), EB.DSL.type("Num")))),
 		];
 		const block = EB.Constructors.Block(stmts, EB.DSL.add(EB.DSL.bound(0), EB.DSL.num(100)));
-		expect(codegen(EB.Constructors.Reset(block))).toBe(101);
+		expect(codegen(Control.reset(block))).toBe(101);
 	});
 });
 

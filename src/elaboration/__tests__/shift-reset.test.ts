@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { elaborate } from "./utils";
 
 describe("Shift-reset", () => {
-	describe("resets without shifts", () => {
+	describe("resets without captures", () => {
 		it("literal value", () => {
 			const src = `let test = reset 10`;
 
@@ -14,9 +14,9 @@ describe("Shift-reset", () => {
 		});
 	});
 
-	describe("only one shift within reset", () => {
+	describe("only one capture within reset", () => {
 		it("invoking id continuation", () => {
-			const src = `let test = reset (shift (resume "hello"))`;
+			const src = `let test = reset (capture (\\k -> k "hello"))`;
 
 			const { pretty, structure } = elaborate(src);
 
@@ -25,7 +25,7 @@ describe("Shift-reset", () => {
 		});
 
 		it("not invoking continuation", () => {
-			const src = `let test = reset (shift "world")`;
+			const src = `let test = reset (capture (\\k -> "world"))`;
 
 			const { pretty, structure } = elaborate(src);
 
@@ -34,7 +34,7 @@ describe("Shift-reset", () => {
 		});
 
 		it("invoking simple continuation with proper value", () => {
-			const src = `let test = reset (1 + (shift resume 1))`;
+			const src = `let test = reset (1 + (capture (\\k -> k 1)))`;
 
 			const { pretty, structure } = elaborate(src);
 			expect(pretty).toMatchSnapshot();
@@ -42,7 +42,7 @@ describe("Shift-reset", () => {
 		});
 
 		it("overriding continuation return type", () => {
-			const src = `let test = reset (1 + (shift "hello"))`;
+			const src = `let test = reset (1 + (capture (\\k -> "hello")))`;
 
 			const { pretty, structure } = elaborate(src);
 			expect(pretty).toMatchSnapshot();
@@ -50,13 +50,13 @@ describe("Shift-reset", () => {
 		});
 
 		it("calling continuation with incorrect type", () => {
-			const src = `let test = reset (1 + (shift resume true))`;
+			const src = `let test = reset (1 + (capture (\\k -> k true)))`;
 
 			expect(() => elaborate(src)).toThrow("Unification Failure: Cannot unify Bool with Num");
 		});
 
 		it("multiple resumptions", () => {
-			const src = `let test = reset (shift ((resume 1) + (resume 2)))`;
+			const src = `let test = reset (capture (\\k -> (k 1) + (k 2)))`;
 
 			const { pretty, structure } = elaborate(src);
 
@@ -65,7 +65,7 @@ describe("Shift-reset", () => {
 		});
 
 		it("nested resumption", () => {
-			const src = `let test = reset (shift (resume (resume 10)))`;
+			const src = `let test = reset (capture (\\k -> k (k 10)))`;
 
 			const { pretty, structure } = elaborate(src);
 
@@ -74,7 +74,7 @@ describe("Shift-reset", () => {
 		});
 
 		it("nested resumption with non-id continuation", () => {
-			const src = `let test = reset (1 + (shift (resume (resume 10))))`;
+			const src = `let test = reset (1 + (capture (\\k -> k (k 10))))`;
 
 			const { pretty, structure } = elaborate(src);
 
@@ -83,9 +83,9 @@ describe("Shift-reset", () => {
 		});
 	});
 
-	describe("multiple shifts within reset", () => {
+	describe("multiple captures within reset", () => {
 		it("invoking continuations", () => {
-			const src = `let test = reset ((shift resume 10) + (shift resume 20))`;
+			const src = `let test = reset ((capture (\\k -> k 10)) + (capture (\\k -> k 20)))`;
 
 			const { pretty, structure } = elaborate(src);
 
@@ -93,8 +93,8 @@ describe("Shift-reset", () => {
 			//expect(structure).toMatchSnapshot();
 		});
 
-		it("multiple shifts and multiple resumptions", () => {
-			const src = `let test = reset (4 + (shift resume 3) + (shift resume 2) + (shift resume (resume 1)))`;
+		it("multiple captures and multiple resumptions", () => {
+			const src = `let test = reset (4 + (capture (\\k -> k 3)) + (capture (\\k -> k 2)) + (capture (\\k -> k (k 1))))`;
 			const { pretty, structure } = elaborate(src);
 
 			expect(pretty).toMatchSnapshot();
@@ -110,7 +110,7 @@ describe("Shift-reset", () => {
 				let f: (x: Num) -> (match x | 0 -> Num | _ -> String)
 					 = \\x -> match x | 0 -> 0 | _ -> "hello"; 
 				
-				let foo = reset (f (shift (resume 10)));
+				let foo = reset (f (capture (\\k -> k 10)));
 			}`;
 
 			expect(() => elaborate(src)).not.toThrow();
@@ -121,7 +121,7 @@ describe("Shift-reset", () => {
 				let f: (x: Num) -> (match x | 0 -> Num | _ -> String)
 					 = \\x -> match x | 0 -> 0 | _ -> "hello"; 
 				
-				let foo = reset (f (shift ((resume 0) + (resume 10))));
+				let foo = reset (f (capture (\\k -> (k 0) + (k 10))));
 			}`;
 
 			expect(() => elaborate(src)).toThrow("Cannot unify String with Num");
