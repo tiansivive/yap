@@ -30,6 +30,8 @@ export const Terms = () => ({
     String: EB.Constructors.Lit(Lit.Atom("String")),
     Unit: EB.Constructors.Lit(Lit.Atom("Unit")),
     State: EB.Constructors.Lit(Lit.Atom("State")),
+    Effect: EB.Constructors.Lit(Lit.Atom("Effect")),
+    live: EB.Constructors.Var({ type: "Foreign", name: OP_LIVE }),
     "+": EB.Constructors.Var({ type: "Foreign", name: "$add" }),
     "-": EB.Constructors.Var({ type: "Foreign", name: "$sub" }),
     "*": EB.Constructors.Var({ type: "Foreign", name: "$mul" }),
@@ -124,8 +126,21 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         term: EB.Constructors.Pi("y", "Explicit", Terms().Type, Terms().Type)
     })
 
+    /* live : State -> (p: Type) => (r: Type) => Effect p r -> Bool */
+    const Live = NF.Constructors.Pi("st", "Explicit", NF.Constructors.Lit(Lit.Atom("State")), {
+        type: "Closure",
+        ctx: dummyContext,
+        term: EB.Constructors.Pi("p", "Implicit", Terms().Type,
+            EB.Constructors.Pi("r", "Implicit", Terms().Type,
+                EB.Constructors.Pi("e", "Explicit",
+                    EB.Constructors.App("Explicit", EB.Constructors.App("Explicit", Terms().Effect, EB.Constructors.Var({ type: "Bound", index: 1 })), EB.Constructors.Var({ type: "Bound", index: 0 })),
+                    Terms().Bool)))
+    })
+
     return {
         ...PrimTypes,
+        Effect: [Terms().Effect, Type_Type_Type, []],
+        live: [Terms().live, Live, []],
         //"->": [Terms()["->"], Type_Type_Type, []],
         "+": [Terms()["+"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.add)]), []],
         "-": [Terms()["-"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.sub)]), []],
@@ -235,6 +250,9 @@ export const OP_MUL = "$mul";
 export const OP_DIV = "$div";
 
 export const OP_CONCAT = "$concat";
+
+/* Membership of an effect identity in the live field of the verifier's state. It has no computation; verification interprets it. */
+export const OP_LIVE = "$live";
 
 
 

@@ -433,6 +433,11 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 
 			return yield* result(NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 })));
 		})
+		/* Normalization does not run effect operations, so a capture stays a stuck application of its identity and payload. */
+		.with({ type: "Capture" }, function* ({ identity, payload }) {
+			const operation = EB.Constructors.Var({ type: "Foreign", name: "$capture" });
+			return yield* schedule.eval(EB.Constructors.App("Explicit", EB.Constructors.App("Explicit", operation, identity), payload));
+		})
 		.with({ type: "Ann" }, function* ({ term }) {
 			return yield* schedule.eval(term);
 		})

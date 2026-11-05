@@ -129,6 +129,9 @@ const walk = (term: EB.Term, st: State): [NodeId, State] =>
 		.with({ type: "Modal" }, t => modal(t, st))
 		.with({ type: "Reset" }, t => reset(t, st))
 		.with({ type: "Shift" }, t => shift(t, st))
+		.with({ type: "Capture" }, () => {
+			throw new Error("GRAM translation does not lower identity captures");
+		})
 		.with({ type: "Bubble" }, t => walk(t.shift, st))
 		.with({ type: "Ann" }, t => walk(t.term, st))
 		.exhaustive();

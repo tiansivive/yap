@@ -49,6 +49,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 
 		function* structural(term: Src.Term, structure: NF.Value): M.Elaboration<Result> {
 			return yield* match<[Src.Term, NF.Value], M.Elaboration<Result>>([term, structure])
+				.with([{ type: "with" }, P._], ([tm]) => EB.Control.check(tm, type))
 				.with(
 					[{ type: "lambda" }, NF.Patterns.Pi],
 					([tm, ty]) => tm.icit === ty.binder.icit,
