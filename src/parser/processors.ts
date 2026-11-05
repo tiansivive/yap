@@ -419,6 +419,38 @@ export const Reset: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , 
 	};
 };
 
+export const Handler: PostProcessor<[Term, Whitespace, Colon, Whitespace, Term], { identity: Term; handler: Term }> = ([identity, , , , handler]) => ({
+	identity,
+	handler,
+});
+
+export const With: PostProcessor<[Keyword, Whitespace, { identity: Term; handler: Term }[], Whitespace, Keyword, Whitespace, Term], Term> = ([
+	tok,
+	,
+	handlers,
+	,
+	,
+	,
+	term,
+]) => ({ type: "with", handlers, term, location: locSpan({ from: loc(tok) }, term.location) });
+
+export const Capture: PostProcessor<[Keyword, Whitespace, Token, Whitespace, Term, Whitespace, Token, Whitespace, Term], Term> = ([
+	tok,
+	,
+	,
+	,
+	identity,
+	,
+	,
+	,
+	term,
+]) => ({
+	type: "capture",
+	identity,
+	term,
+	location: locSpan({ from: loc(tok) }, term.location),
+});
+
 export const Shift: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , term]) => {
 	return {
 		type: "shift",

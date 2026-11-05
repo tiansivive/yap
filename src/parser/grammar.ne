@@ -21,7 +21,8 @@
 				foreign: "foreign", loop: "loop", repeat: "repeat",
 				if: "if", else: "else", then: "then",
 				true: "true", false: "false",
-				shift: "shift", reset: "reset", resume: "resume"
+				shift: "shift", reset: "reset", resume: "resume",
+				with: "with", in: "in", capture: "capture"
 			}) 
 		},
 	  	dot: /\./,
@@ -117,6 +118,8 @@ Expr -> Lambda		{% id %}
   	  | Match 		{% id %}
   	  | Block 		{% id %}
 	  | Reset 		{% id %}
+	  | With 		{% id %}
+	  | Capture 		{% id %}
 	  | Shift 		{% id %}
 	  | Resume 		{% id %}
 	  | Op 			{% id %}
@@ -256,6 +259,9 @@ Alt -> %space:? %bar %space:? Pattern %space:? %arrow %space:? TypeExpr 	{% P.Al
 #         shift value
 # ------------------------------------
 Reset -> "reset" %space:+ TypeExpr 		{% P.Reset %}
+With -> "with" %space Many[Handler, %comma] %space "in" %space TypeExpr {% P.With %}
+Handler -> Atom %space:? %colon %space:? TypeExpr {% P.Handler %}
+Capture -> "capture" %space %lbracket %space:? TypeExpr %space:? %rbracket %space TypeExpr {% P.Capture %}
 Shift -> "shift" %space:+ TypeExpr    	{% P.Shift %}
 Resume -> "resume" %space:+ TypeExpr    {% P.Resume %}
 
