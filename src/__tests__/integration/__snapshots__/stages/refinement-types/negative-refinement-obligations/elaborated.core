@@ -5,4 +5,4 @@
 FFI.$add 1 2
 
 ## negTestCheckLambdaPreAndPostCondition (let)
-λ(x: <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]) -> 0
+λ(x: <ω> Num [| λ(st: State) -> λ(n: Num) -> FFI.$gt n 0 |]) -> 0

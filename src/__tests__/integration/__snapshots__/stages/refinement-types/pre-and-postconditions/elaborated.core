@@ -1,5 +1,5 @@
 ## Nat (let)
-<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]
+<ω> Num [| λ(st: State) -> λ(n: Num) -> FFI.$gte n 0 |]
 
 ## safe (let)
 λ(x: Nat) -> x

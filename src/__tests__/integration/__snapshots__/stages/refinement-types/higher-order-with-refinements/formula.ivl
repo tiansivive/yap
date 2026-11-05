@@ -6,7 +6,7 @@ true
 
 ## hof (let)
 (and
-  (forall (($a Real)) (=> (= $a 1) (>= $a 0)))
+  (forall (($r129 Real)) (=> (= $r129 1) (>= $r129 0)))
   (forall ((t1 Real)) (=> (= t1 1) (forall ((n Real)) (=> (>= n 0) (>= n 0))))))
 
 ## hof2 (let)

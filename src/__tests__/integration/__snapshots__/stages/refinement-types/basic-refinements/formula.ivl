@@ -5,10 +5,10 @@ true
 true
 
 ## n (let)
-(forall (($a Real)) (=> (= $a 42) (>= $a 0)))
+(forall (($r9 Real)) (=> (= $r9 42) (>= $r9 0)))
 
 ## p (let)
-(forall (($a Real)) (=> (= $a 42) (> $a 0)))
+(forall (($r11 Real)) (=> (= $r11 42) (> $r11 0)))
 
 ## zero (let)
-(forall (($a Real)) (=> (= $a 0) (>= $a 0)))
+(forall (($r13 Real)) (=> (= $r13 0) (>= $r13 0)))

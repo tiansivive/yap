@@ -27,7 +27,7 @@
 
 ## posTestCheckLambdaPostCondition (let)
 === Formula ===
-  (forall ((x Real)) (forall (($a Real)) (=> (= $a 1) (= $a 1))))
+  (forall ((x Real)) (forall (($r65 Real)) (=> (= $r65 1) (= $r65 1))))
 
 === Variables ===
   proxy p1: true
@@ -59,7 +59,7 @@
 
 [mbqi] round 0: 0 lemmas
   x=1 -> residual
-  $a=1 -> tautology
+  $r65=1 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
@@ -111,7 +111,7 @@
       (and
         (> x 0)
         (= x x)
-        (forall ((n Real)) (=> (and (> n 0) (= n n)) (> n 0))))))
+        (forall (($r73 Real)) (=> (and (> $r73 0) (= $r73 x)) (> $r73 0))))))
 
 === Variables ===
   proxy p1: true
@@ -144,8 +144,8 @@
 [mbqi] round 0: 0 lemmas
   x=0 -> tautology
   x=x -> residual
-  n=0 -> tautology
-  n=x -> residual
+  $r73=0 -> tautology
+  $r73=x -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

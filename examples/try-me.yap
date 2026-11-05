@@ -318,19 +318,19 @@ let computedFac = fact.compute 5;
 
 
 let Nat: Type
-    = Num [|\n -> n >= 0 |];
+    = Num [|\st n -> n >= 0 |];
 
 let Pos: Type
-    = Num [|\p -> p > 0 |];
+    = Num [|\st p -> p > 0 |];
 
 let n: Nat = 42; 
 let p: Pos = 42; 
 let zero: Nat = 0; 
 
 
-let exactOne: Num [|\v -> v == 1 |] = 1; 
+let exactOne: Num [|\st v -> v == 1 |] = 1; 
 
-let inc: (x: Num) -> Num [|\v -> v == (x + 1) |]
+let inc: (x: Num) -> Num [|\st v -> v == (x + 1) |]
     = \x -> x + 1;
 
 
@@ -349,18 +349,18 @@ let posToNum: Pos -> Num = \x -> x;
 let result1 = takePosFunction natToNum;
 let result2 = takePosFunction posToNum;
 
-let checkNum: (p: Num -> Bool) -> Num[| \v -> p v |] -> Num
+let checkNum: (p: Num -> Bool) -> Num[| \st v -> p v |] -> Num
     = \p x -> x;
 
 let nat5 = checkNum (\n -> n >= 0) 5; 
 
-let safeInc: (p: Num -> Bool) -> (x: Num[|\v -> p (v + 1) |]) -> Num[|\v -> p v |]
+let safeInc: (p: Num -> Bool) -> (x: Num[|\st v -> p (v + 1) |]) -> Num[|\st v -> p v |]
     = \p x -> x + 1;
 let natInc = safeInc (\n -> n >= 0); 
 let posInc = safeInc (\n -> n > 0); 
 
 let OrderedPair: Type
-    = { fst: Num, snd: Num[|\v -> v > :fst |] };
+    = { fst: Num, snd: Num[|\st v -> v > :fst |] };
 
 let valid: OrderedPair = { fst: 3, snd: 5 }; 
 let invalid: OrderedPair = { fst: 5, snd: 3 }; 
@@ -368,7 +368,7 @@ let invalid: OrderedPair = { fst: 5, snd: 3 };
 let OrderedList: (t: Type) -> (p: t -> t -> Bool) -> Type
     = \t p -> 
         | #nil Unit
-        | #cons { head: t, tail: OrderedList (t[| \v -> p :head v |]) p };
+        | #cons { head: t, tail: OrderedList (t[| \st v -> p :head v |]) p };
 
 
 let ascending: OrderedList Num (\x y -> x < y)

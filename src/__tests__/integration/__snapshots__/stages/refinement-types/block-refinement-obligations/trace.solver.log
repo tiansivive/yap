@@ -9,10 +9,10 @@
           (= o o)
           (forall ((x Real))
             (=>
-              (and (> x 0) (= x x))
+              (and (> x 0) (= x o))
               (forall ((y Real))
                 (=> (= y 1) (forall ((r Real)) (=> (= r (+ o 1)) (> r 1))))))))))
-    (forall (($b Real)) (=> (= $b 1) (> $b 0)))
+    (forall (($r255 Real)) (=> (= $r255 1) (> $r255 0)))
     (forall ((t1 Real)) (=> (= t1 1) (forall ((p Real)) (=> (> p 1) (> p 0))))))
 
 === Variables ===
@@ -56,9 +56,9 @@
   r=0 -> residual
   r=o -> residual
   r=1 -> residual
-  $b=0 -> tautology
-  $b=o -> residual
-  $b=1 -> tautology
+  $r255=0 -> tautology
+  $r255=o -> residual
+  $r255=1 -> tautology
   t1=0 -> tautology
   t1=o -> residual
   t1=1 -> residual

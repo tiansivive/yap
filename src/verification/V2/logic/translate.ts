@@ -1,5 +1,4 @@
 import { match } from "ts-pattern";
-import assert from "assert";
 
 import * as Eff from "@yap/utils/effects";
 
@@ -28,6 +27,7 @@ import {
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
 import { reader, obligations, type Verification } from "../effects";
+import { instantiate } from "../utils/refinements";
 
 export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 	const ctx = yield* reader.ask();
@@ -345,9 +345,8 @@ export const quantify = function* (variable: string, annotation: NF.Value, vc: I
 			const sort = yield* mkSort(annotation);
 			const x = Build.var_(variable, sort);
 
-			assert(modalities.liquid.type === "Abs", "Liquid refinements must be unary functions");
 			const lvl = ctx.env.length;
-			const applied = yield* NF.apply(modalities.liquid.binder, modalities.liquid.closure, NF.Constructors.Rigid(lvl));
+			const applied = yield* instantiate(modalities.liquid, NF.Constructors.Rigid(lvl));
 			const rigids: Record<number, IVL.Term> = { [lvl]: x };
 			const phi = yield* formula(applied, rigids);
 			return yield* obligations.record(`quantify:${variable}`, Build.forall([{ name: variable, sort }], Build.implies(phi, vc)), {

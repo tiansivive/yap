@@ -13,8 +13,9 @@ import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import type { VerificationArtefacts } from "./types";
 import { reader, fail, logger, obligations, supply, type Verification } from "./effects";
-import { collectSigmaBindings, noCapture } from "./utils/context";
-import { extractModalities, meet } from "./utils/refinements";
+import { collectSigmaBindings } from "./utils/context";
+import { extractModalities, instantiate, meet } from "./utils/refinements";
+import { Liquid } from "../modalities";
 import { synth } from "./synth";
 import { subtype } from "./subtype";
 import { mkSort, formula, quantify } from "./logic/translate";
@@ -66,14 +67,11 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 								return artefacts;
 							}
 
-							const liq = modalities.liquid;
-							assert(liq.type === "Abs", "Liquid refinement must be unary");
-
 							const sort = yield* mkSort(type.binder.annotation);
 							const x = Build.var_(term.binding.variable, sort);
 
 							const lvl = extended.env.length;
-							const applied = yield* NF.apply(liq.binder, liq.closure, NF.Constructors.Rigid(lvl));
+							const applied = yield* instantiate(modalities.liquid, NF.Constructors.Rigid(lvl));
 							const phi = yield* formula(applied, { [lvl]: x });
 							const imp = yield* obligations.record(
 								"check.abs.quantification",
@@ -277,7 +275,6 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 };
 
 const synthPattern = function* (pattern: EB.Pattern, scrutineeTy: NF.Value): Verification<[NF.Value, VerificationArtefacts]> {
-	const ctx = yield* reader.ask();
 	return yield* match(pattern)
 		.with({ type: "Binder" }, function* () {
 			return [scrutineeTy, { vc: Build.true_() }] as [NF.Value, VerificationArtefacts];
@@ -295,12 +292,9 @@ const synthPattern = function* (pattern: EB.Pattern, scrutineeTy: NF.Value): Ver
 				.exhaustive();
 			const nf = yield* NF.evaluate(ann);
 			const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
-			const litTerm = EB.Constructors.Lit(pat.value);
-			const closure = NF.Constructors.Closure(noCapture(ctx), EB.DSL.eq(bound, litTerm));
-			const freshName = yield* supply.fresh();
 			const modalities = {
 				quantity: Q.Many,
-				liquid: NF.Constructors.Lambda(freshName, "Explicit", closure, nf),
+				liquid: yield* Liquid.Predicate.Lambda(nf, EB.DSL.eq(bound, EB.Constructors.Lit(pat.value))),
 			};
 			return [NF.Constructors.Modal(nf, modalities), { vc: Build.true_() }] as [NF.Value, VerificationArtefacts];
 		})

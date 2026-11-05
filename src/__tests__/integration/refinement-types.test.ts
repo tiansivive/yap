@@ -11,8 +11,8 @@ const Verdict = {
 describe("Language Tour — Refinement Types", () => {
 	test("basic refinements", async () => {
 		const result = runScript(`
-let Nat: Type = Num [| \\n -> n >= 0 |];
-let Pos: Type = Num [| \\p -> p > 0 |];
+let Nat: Type = Num [| \\st n -> n >= 0 |];
+let Pos: Type = Num [| \\st p -> p > 0 |];
 let n: Nat = 42;
 let p: Pos = 42;
 let zero: Nat = 0;
@@ -22,16 +22,16 @@ let zero: Nat = 0;
 
 	test("exact value refinements", async () => {
 		const result = runScript(`
-let exactOne: Num [| \\v -> v == 1 |] = 1;
+let exactOne: Num [| \\st v -> v == 1 |] = 1;
 		`);
 		await snap(result);
 	});
 
 	test("negative refinement obligations", async () => {
 		const result = runScript(`
-let negTestCheckLiteral: Num [| \\v -> v == 1 |] = 2;
-let negFnApp: Num [| \\v -> v == 0 |] = 1 + 2;
-let negTestCheckLambdaPreAndPostCondition: (n: Num [| \\n -> n > 0 |]) -> Num [| \\n -> n > 0 |] = \\x -> 0;
+let negTestCheckLiteral: Num [| \\st v -> v == 1 |] = 2;
+let negFnApp: Num [| \\st v -> v == 0 |] = 1 + 2;
+let negTestCheckLambdaPreAndPostCondition: (n: Num [| \\st n -> n > 0 |]) -> Num [| \\st n -> n > 0 |] = \\x -> 0;
 		`);
 		Verdict.expect(result, "negTestCheckLiteral", "invalid");
 		Verdict.expect(result, "negFnApp", "invalid");
@@ -41,7 +41,7 @@ let negTestCheckLambdaPreAndPostCondition: (n: Num [| \\n -> n > 0 |]) -> Num [|
 
 	test("unconstrained identity fails positive postcondition", async () => {
 		const result = runScript(`
-let negTestCheckLambdaPostCondition: Num -> Num [| \\n -> n > 0|] = \\x -> x;
+let negTestCheckLambdaPostCondition: Num -> Num [| \\st n -> n > 0|] = \\x -> x;
 		`);
 		await snap(result);
 		Verdict.expect(result, "negTestCheckLambdaPostCondition", "invalid");
@@ -50,11 +50,11 @@ let negTestCheckLambdaPostCondition: Num -> Num [| \\n -> n > 0|] = \\x -> x;
 	test("function refinement obligations", async () => {
 		const result = runScript(`
 let fn: Num -> Num = \\x -> 2;
-let posTestCheckLambdaPostCondition: Num -> Num [| \\v -> v == 1 |] = \\x -> 1;
-let posTestCheckLambdaPreCondition: (n: Num [| \\n -> n > 0|]) -> Num = \\x -> x;
-let posTestCheckLambdaPreAndPostCondition: (n: Num [| \\n -> n > 0|]) -> Num [| \\n -> n > 0|] = \\x -> x;
-let posTestCheckRefinedResultLambda: (n: Num) -> Num [| \\o -> o == (n + 1) |] = \\x -> x + 1;
-let inc: (x: Num) -> Num [| \\v -> v == (x + 1) |] = \\x -> x + 1;
+let posTestCheckLambdaPostCondition: Num -> Num [| \\st v -> v == 1 |] = \\x -> 1;
+let posTestCheckLambdaPreCondition: (n: Num [| \\st n -> n > 0|]) -> Num = \\x -> x;
+let posTestCheckLambdaPreAndPostCondition: (n: Num [| \\st n -> n > 0|]) -> Num [| \\st n -> n > 0|] = \\x -> x;
+let posTestCheckRefinedResultLambda: (n: Num) -> Num [| \\st o -> o == (n + 1) |] = \\x -> x + 1;
+let inc: (x: Num) -> Num [| \\st v -> v == (x + 1) |] = \\x -> x + 1;
 		`);
 		Verdict.expect(result, "fn", "valid");
 		Verdict.expect(result, "posTestCheckLambdaPostCondition", "valid");
@@ -67,7 +67,7 @@ let inc: (x: Num) -> Num [| \\v -> v == (x + 1) |] = \\x -> x + 1;
 
 	test("pre and postconditions", async () => {
 		const result = runScript(`
-let Nat: Type = Num [| \\n -> n >= 0 |];
+let Nat: Type = Num [| \\st n -> n >= 0 |];
 let safe: (n: Nat) -> Nat = \\x -> x;
 		`);
 		await snap(result);
@@ -75,15 +75,15 @@ let safe: (n: Nat) -> Nat = \\x -> x;
 
 	test("input-output relationship", async () => {
 		const result = runScript(`
-let inc: (x: Num) -> Num [| \\v -> v == (x + 1) |] = \\x -> x + 1;
+let inc: (x: Num) -> Num [| \\st v -> v == (x + 1) |] = \\x -> x + 1;
 		`);
 		await snap(result);
 	});
 
 	test("higher-order with refinements", async () => {
 		const result = runScript(`
-let Nat: Type = Num [| \\n -> n >= 0 |];
-let Pos: Type = Num [| \\p -> p > 0 |];
+let Nat: Type = Num [| \\st n -> n >= 0 |];
+let Pos: Type = Num [| \\st p -> p > 0 |];
 let hof: (f: Nat -> Nat) -> Nat = \\f -> f 1;
 let hof2: (Num -> Nat) -> Pos = \\f -> (f 1) + 1;
 		`);
@@ -92,8 +92,8 @@ let hof2: (Num -> Nat) -> Pos = \\f -> (f 1) + 1;
 
 	test("refinement subtyping", async () => {
 		const result = runScript(`
-let Nat: Type = Num [| \\n -> n >= 0 |];
-let Pos: Type = Num [| \\p -> p > 0 |];
+let Nat: Type = Num [| \\st n -> n >= 0 |];
+let Pos: Type = Num [| \\st p -> p > 0 |];
 let useNat: Nat -> Num = \\n -> n;
 let p: Pos = 42;
 let result = useNat p;
@@ -103,8 +103,8 @@ let result = useNat p;
 
 	test("contravariance", async () => {
 		const result = runScript(`
-let Nat: Type = Num [| \\n -> n >= 0 |];
-let Pos: Type = Num [| \\p -> p > 0 |];
+let Nat: Type = Num [| \\st n -> n >= 0 |];
+let Pos: Type = Num [| \\st p -> p > 0 |];
 let takePosFunction: (Pos -> Num) -> Num = \\f -> f 10;
 let natToNum: Nat -> Num = \\x -> x;
 let posToNum: Pos -> Num = \\x -> x;
@@ -116,7 +116,7 @@ let result2 = takePosFunction posToNum;
 
 	test("refinement polymorphism", async () => {
 		const result = runScript(`
-let checkNum: (p: Num -> Bool) -> Num[| \\v -> p v |] -> Num = \\p x -> x;
+let checkNum: (p: Num -> Bool) -> Num[| \\st v -> p v |] -> Num = \\p x -> x;
 let nat5 = checkNum (\\n -> n >= 0) 5;
 		`);
 		await snap(result);
@@ -124,7 +124,7 @@ let nat5 = checkNum (\\n -> n >= 0) 5;
 
 	test("ordered pair", async () => {
 		const result = runScript(`
-let OrderedPair: Type = { fst: Num, snd: Num[| \\v -> v > &fst |] };
+let OrderedPair: Type = { fst: Num, snd: Num[| \\st v -> v > &fst |] };
 let valid: OrderedPair = { fst: 3, snd: 5 };
 		`);
 		await snap(result);
@@ -132,7 +132,7 @@ let valid: OrderedPair = { fst: 3, snd: 5 };
 
 	test("arithmetic refinement contradiction requiring MBQI", async () => {
 		const result = runScript(`
-let badOne: Num [| \\v -> v > 10 |] = 1;
+let badOne: Num [| \\st v -> v > 10 |] = 1;
 		`);
 		const [decl] = result.declarations;
 		expect(decl.stages?.solverTrace).toContain("[mbqi]");
@@ -143,7 +143,7 @@ let badOne: Num [| \\v -> v > 10 |] = 1;
 
 	test("arithmetic refinement validated via MBQI", async () => {
 		const result = runScript(`
-let goodOne: Num [| \\v -> v < 10 |] = 1;
+let goodOne: Num [| \\st v -> v < 10 |] = 1;
 		`);
 		const [decl] = result.declarations;
 		expect(decl.stages?.solverTrace).toContain("[mbqi]");
@@ -154,8 +154,8 @@ let goodOne: Num [| \\v -> v < 10 |] = 1;
 
 	test("block refinement obligations", async () => {
 		const result = runScript(`
-let block: Num [| \\n -> n > 0 |] = {
-	let f: Num [| \\n -> n > 0 |] -> Num [| \\p -> p > 1 |] = \\o -> o + 1;
+let block: Num [| \\st n -> n > 0 |] = {
+	let f: Num [| \\st n -> n > 0 |] -> Num [| \\st p -> p > 1 |] = \\o -> o + 1;
 	return (f 1);
 };
 		`);
@@ -180,7 +180,7 @@ let compute: Num -> Num
 let test = {
 	let Pair
 	: (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
-	= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p &fst v |] };
+	= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\st v -> p &fst v |] };
 
 	let p
 	: Pair Num Num (\\x -> \\y -> x < y )
@@ -196,7 +196,7 @@ let test = {
 let testFail = {
 	let Pair
 	: (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
-	= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p &fst v |] };
+	= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\st v -> p &fst v |] };
 
 	let p
 	: Pair Num Num (\\x -> \\y -> x < y )
@@ -211,7 +211,7 @@ let testFail = {
 
 	test("ordered lists with refinement polymorphism", async () => {
 		const result = runScript(`
-let OrderedList: (t: Type) -> (p: t -> t -> Bool) -> Type = \\t -> \\p -> | #nil Unit | #cons { head: t, tail: OrderedList (t[| \\v -> p &head v |]) p };
+let OrderedList: (t: Type) -> (p: t -> t -> Bool) -> Type = \\t -> \\p -> | #nil Unit | #cons { head: t, tail: OrderedList (t[| \\st v -> p &head v |]) p };
 let ascending: OrderedList Num (\\x -> \\y -> x < y) = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
 let descending: OrderedList Num (\\x -> \\y -> x > y) = #cons { head: 3, tail: #cons { head: 2, tail: #cons { head: 1, tail: #nil ! } } };
 		`);
@@ -224,7 +224,7 @@ let orderedListTestFail = {
 	let List
 	: (a: Type) -> (p: a -> a -> Bool) -> Type
 	= \\t -> \\p -> | #nil Unit
-	| #cons { head: t, tail: List (t[| \\v -> p &head v |]) p };
+	| #cons { head: t, tail: List (t[| \\st v -> p &head v |]) p };
 
 	let ol
 	: List Num (\\x -> \\y -> x < y )
@@ -241,7 +241,7 @@ let orderedListTestFail = {
 		const result = runScript(`
 let test = {
 	let a = 1;
-	let b: Num[| \\n -> n > 0 |] = match (a > 0)
+	let b: Num[| \\st n -> n > 0 |] = match (a > 0)
 		| true  -> a
 		| false -> 42;
 	return 1;

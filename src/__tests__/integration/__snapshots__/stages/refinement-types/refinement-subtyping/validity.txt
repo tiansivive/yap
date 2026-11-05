@@ -5,7 +5,7 @@ valid
 valid
 
 ## useNat (let)
-invalid
+valid
 
 ## p (let)
 valid

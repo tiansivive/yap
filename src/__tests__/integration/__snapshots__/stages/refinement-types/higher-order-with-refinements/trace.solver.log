@@ -55,7 +55,7 @@
 ## hof (let)
 === Formula ===
   (and
-    (forall (($a Real)) (=> (= $a 1) (>= $a 0)))
+    (forall (($r129 Real)) (=> (= $r129 1) (>= $r129 0)))
     (forall ((t1 Real)) (=> (= t1 1) (forall ((n Real)) (=> (>= n 0) (>= n 0))))))
 
 === Variables ===
@@ -87,8 +87,8 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  $a=1 -> tautology
-  $a=0 -> tautology
+  $r129=1 -> tautology
+  $r129=0 -> tautology
   t1=1 -> residual
   t1=0 -> tautology
   n=1 -> tautology

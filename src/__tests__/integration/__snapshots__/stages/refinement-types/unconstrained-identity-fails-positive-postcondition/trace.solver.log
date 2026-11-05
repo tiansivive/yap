@@ -1,6 +1,7 @@
 ## negTestCheckLambdaPostCondition (let)
 === Formula ===
-  (forall ((x Real)) (and (= x x) (forall ((v Real)) (=> (= v x) (> v 0)))))
+  (forall ((x Real))
+    (and (= x x) (forall (($r43 Real)) (=> (= $r43 x) (> $r43 0)))))
 
 === Variables ===
   proxy p1: true
@@ -33,8 +34,8 @@
 [mbqi] round 0: 0 lemmas
   x=x -> residual
   x=0 -> residual
-  v=x -> residual
-  v=0 -> residual
+  $r43=x -> residual
+  $r43=0 -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

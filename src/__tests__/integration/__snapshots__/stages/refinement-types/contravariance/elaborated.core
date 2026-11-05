@@ -1,8 +1,8 @@
 ## Nat (let)
-<ω> Num [| λ(n: Num) -> FFI.$gte n 0 |]
+<ω> Num [| λ(st: State) -> λ(n: Num) -> FFI.$gte n 0 |]
 
 ## Pos (let)
-<ω> Num [| λ(p: Num) -> FFI.$gt p 0 |]
+<ω> Num [| λ(st: State) -> λ(p: Num) -> FFI.$gt p 0 |]
 
 ## takePosFunction (let)
 λ(f: Π(t2: Pos) -> Num) -> f 10

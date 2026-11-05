@@ -39,7 +39,9 @@
 
 ## nat5 (let)
 === Formula ===
-  (and (forall ((n Real)) (= n n)) (forall (($b Real)) (=> (= $b 5) (>= $b 0))))
+  (and
+    (forall ((n Real)) (= n n))
+    (forall (($r219 Real)) (=> (= $r219 5) (>= $r219 0))))
 
 === Variables ===
   proxy p1: true
@@ -73,9 +75,9 @@
   n=n -> residual
   n=5 -> residual
   n=0 -> residual
-  $b=n -> residual
-  $b=5 -> tautology
-  $b=0 -> tautology
+  $r219=n -> residual
+  $r219=5 -> tautology
+  $r219=0 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

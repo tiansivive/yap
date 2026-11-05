@@ -29,6 +29,7 @@ export const Terms = () => ({
     Bool: EB.Constructors.Lit(Lit.Atom("Bool")),
     String: EB.Constructors.Lit(Lit.Atom("String")),
     Unit: EB.Constructors.Lit(Lit.Atom("Unit")),
+    State: EB.Constructors.Lit(Lit.Atom("State")),
     "+": EB.Constructors.Var({ type: "Foreign", name: "$add" }),
     "-": EB.Constructors.Var({ type: "Foreign", name: "$sub" }),
     "*": EB.Constructors.Var({ type: "Foreign", name: "$mul" }),
@@ -69,6 +70,7 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         String: [Terms().String, NF.Type, []],
         Unit: [Terms().Unit, NF.Type, []],
         Type: [Terms().Type, NF.Type, []],
+        State: [Terms().State, NF.Type, []],
     }
 
     const dummyContext: EB.Context = {
@@ -85,9 +87,9 @@ export const Elaborated: () => EB.Context['imports'] = () => {
 
     const reflectLiquid = (returnType: EB.Term) => (f: (p: EB.Term, q: EB.Term) => EB.Term) => {
         const i0 = EB.Constructors.Var({ type: "Bound", index: 0 });
-        const i1 = EB.Constructors.Var({ type: "Bound", index: 1 });
         const i2 = EB.Constructors.Var({ type: "Bound", index: 2 });
-        return EB.Constructors.Lambda("r", "Explicit", EB.DSL.eq(i0, f(i2, i1)), returnType)
+        const i3 = EB.Constructors.Var({ type: "Bound", index: 3 });
+        return EB.Constructors.Lambda("st", "Explicit", EB.Constructors.Lambda("r", "Explicit", EB.DSL.eq(i0, f(i3, i2)), returnType), Terms().State)
     }
 
     const mkModal = (base: EB.Term, liquid?: EB.Term) => liquid ? EB.Constructors.Modal(base, { quantity: Q.Many, liquid }) : base;

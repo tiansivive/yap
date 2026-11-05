@@ -1,2 +1,2 @@
 ## exactOne (let)
-(forall (($a Real)) (=> (= $a 1) (= $a 1)))
+(forall (($r17 Real)) (=> (= $r17 1) (= $r17 1)))

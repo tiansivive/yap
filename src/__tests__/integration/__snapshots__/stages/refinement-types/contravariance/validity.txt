@@ -8,10 +8,10 @@ valid
 valid
 
 ## natToNum (let)
-invalid
+valid
 
 ## posToNum (let)
-invalid
+valid
 
 ## result1 (let)
 valid

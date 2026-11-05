@@ -4,6 +4,7 @@ import * as Metas from "@yap/elaboration/shared/metas";
 import * as M from "@yap/elaboration/shared/effects";
 
 import type * as EB from "@yap/elaboration";
+import * as NF from "@yap/elaboration/normalization";
 import type { IVL } from "../solver/ivl/types";
 import type { Obligation } from "./types";
 
@@ -154,10 +155,25 @@ const supplyHandlers = (): Eff.Handler<SupplyActions, undefined> => {
 
 export const supply = { fresh, freshNum, handlers: supplyHandlers };
 
+// ─── State ───────────────────────────────────────────────────────────────────
+//
+// The state that refinements are predicates over, at the program point being
+// verified. Every refinement receives it as its first argument.
+
+export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
+
+const initial = (): NF.Value => NF.Constructors.Neutral("Sealed", NF.Constructors.Var({ type: "Foreign", name: "$empty" }));
+
 // ─── Row ─────────────────────────────────────────────────────────────────────
 
 export type Verification<A> = Eff.Eff<
-	Eff.Actions<typeof reader> | Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof except> | LoggerActions | RecordAction | SupplyActions,
+	| Eff.Actions<typeof reader>
+	| Eff.Actions<typeof state>
+	| Eff.Only<typeof Metas.registry, "Registry.get">
+	| Eff.Actions<typeof except>
+	| LoggerActions
+	| RecordAction
+	| SupplyActions,
 	A
 >;
 
@@ -175,8 +191,9 @@ export const fail = function* (cause: import("@yap/elaboration/shared/errors").C
 export type VerificationOptions = { logging?: boolean };
 
 export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () => Verification<A>, options: VerificationOptions = {}) => {
-	const [answer, , registrySnapshot, , , collected] = Eff.run(program, [
+	const [answer, , , registrySnapshot, , , collected] = Eff.run(program, [
 		reader.handlers(ctx),
+		state.handlers(initial()),
 		Metas.registry.handlers(registry),
 		except.handlers(),
 		logger.handlers(options.logging ?? false),

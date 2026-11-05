@@ -11,9 +11,9 @@ import { primopMapping } from "@yap/shared/lib/primitives";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import type { SynthResult } from "./types";
-import { reader, logger, supply, type Verification } from "./effects";
-import { noCapture } from "./utils/context";
-import { extractModalities, selfify } from "./utils/refinements";
+import { reader, logger, type Verification } from "./effects";
+import { extractModalities, instantiate, selfify } from "./utils/refinements";
+import { Liquid } from "../modalities";
 import { check } from "./check";
 import { formula, quantify } from "./logic/translate";
 
@@ -36,10 +36,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const [, , ty] = entry.type;
 			const selfified = yield* selfify(tm, ty);
 			const { liquid } = yield* extractModalities(selfified, ctx);
-			assert(liquid.type === "Abs", "Liquid modality must be a Lambda");
 
 			const evaluated = yield* NF.evaluate(tm);
-			const predicate = yield* NF.reduce(liquid, evaluated, "Explicit");
+			const predicate = yield* instantiate(liquid, evaluated);
 
 			return [selfified, { vc: yield* formula(predicate) }] satisfies SynthResult;
 		})
@@ -51,7 +50,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const [, ty] = entry;
 			const modalities = yield* extractModalities(ty, ctx);
 			const evaluated = yield* NF.evaluate(tm);
-			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
+			const predicate = yield* instantiate(modalities.liquid, evaluated);
 			return [ty, { vc: yield* formula(predicate) }] satisfies SynthResult;
 		})
 		.with({ type: "Var", variable: { type: "Label" } }, function* ({ variable }) {
@@ -62,7 +61,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 
 			const modalities = yield* extractModalities(type, ctx);
 			const evaluated = yield* NF.evaluate(term);
-			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
+			const predicate = yield* instantiate(modalities.liquid, evaluated);
 			return [type, { vc: yield* formula(predicate) }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Vars.DepLabel, EB.CtorPatterns.Vars.NuLabel, function* ({ variable }) {
@@ -78,7 +77,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const [, ty] = entry;
 			const modalities = yield* extractModalities(ty, ctx);
 			const evaluated = yield* NF.evaluate(tm);
-			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
+			const predicate = yield* instantiate(modalities.liquid, evaluated);
 			return [ty, { vc: yield* formula(predicate) }] satisfies SynthResult;
 		})
 		.with({ type: "Var" }, function* () {
@@ -97,11 +96,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 				});
 			const nf = yield* NF.evaluate(ann);
 			const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
-			const closure = NF.Constructors.Closure(noCapture(ctx), EB.DSL.eq(bound, tm));
-			const freshName = yield* supply.fresh();
 			const modalities = {
 				quantity: Q.Many,
-				liquid: NF.Constructors.Lambda(freshName, "Explicit", closure, nf),
+				liquid: yield* Liquid.Predicate.Lambda(nf, EB.DSL.eq(bound, tm)),
 			};
 			return [NF.Constructors.Modal(nf, modalities), { vc: Build.true_() }] satisfies SynthResult;
 		})

@@ -9,9 +9,9 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import { Liquid } from "../modalities";
-import { extractModalities, isFirstOrder } from "./utils/refinements";
-import { noCapture, withRowLabels } from "./utils/context";
-import { reader, fail, logger, obligations, type Verification } from "./effects";
+import { extractModalities, instantiate, isFirstOrder } from "./utils/refinements";
+import { withRowLabels } from "./utils/context";
+import { reader, fail, logger, obligations, state, supply, type Verification } from "./effects";
 import { mkSort, formula, quantify } from "./logic/translate";
 
 export const subtype = function* (left: NF.Value, right: NF.Value): Verification<IVL.Formula> {
@@ -222,10 +222,7 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const x = Build.var_(bt.binder.variable, sort);
 
 			const modalities = yield* extractModalities(bt.binder.annotation, ctx);
-			if (modalities.liquid.type !== "Abs") {
-				throw new Error("Liquid refinement must be a unary function");
-			}
-			const applied = yield* NF.apply(modalities.liquid.binder, modalities.liquid.closure, NF.Constructors.Rigid(lvl));
+			const applied = yield* instantiate(modalities.liquid, NF.Constructors.Rigid(lvl));
 			const phiX = yield* formula(applied, { [lvl]: x });
 
 			const guarded = yield* obligations.record("subtype.pi.body", Build.forall([{ name: bt.binder.variable, sort }], Build.implies(phiX, vcBody)), {
@@ -255,30 +252,25 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 		.with([{ type: "Modal" }, { type: "Modal" }], function* ([at, bt]) {
 			const baseVc = yield* subtype(at.value, bt.value);
 
-			const pAt = at.modalities.liquid;
-			const pBt = bt.modalities.liquid;
-			if (pAt.type !== "Abs" || pBt.type !== "Abs") {
-				throw new Error("Liquid refinements must be unary functions");
-			}
-
 			const lvl = ctx.env.length;
-			const appliedAt = yield* NF.apply(pAt.binder, pAt.closure, NF.Constructors.Rigid(lvl));
-			const appliedBt = yield* NF.apply(pBt.binder, pBt.closure, NF.Constructors.Rigid(lvl));
+			const appliedAt = yield* instantiate(at.modalities.liquid, NF.Constructors.Rigid(lvl));
+			const appliedBt = yield* instantiate(bt.modalities.liquid, NF.Constructors.Rigid(lvl));
 
 			const sort = yield* mkSort(at.value);
-			const x = Build.var_(pAt.binder.variable, sort);
+			const name = yield* variable(at.modalities.liquid);
+			const x = Build.var_(name, sort);
 
 			const rigids = { [lvl]: x } as Record<number, IVL.Term>;
 			const phiAt = yield* formula(appliedAt, rigids);
 			const phiBt = yield* formula(appliedBt, rigids);
-			const forall = Build.forall([{ name: pAt.binder.variable, sort }], Build.implies(phiAt, phiBt));
+			const forall = Build.forall([{ name, sort }], Build.implies(phiAt, phiBt));
 			return Build.and(baseVc, forall);
 		})
 		.with([{ type: "Modal" }, P._], function* ([at, bt]) {
-			return yield* subtype(at, NF.Constructors.Modal(bt, { quantity: Q.Zero, liquid: Liquid.Predicate.NeutralNF(bt, noCapture(ctx)) }));
+			return yield* subtype(at, NF.Constructors.Modal(bt, { quantity: Q.Zero, liquid: yield* Liquid.Predicate.NeutralNF(bt) }));
 		})
 		.with([P._, { type: "Modal" }], function* ([at, bt]) {
-			return yield* subtype(NF.Constructors.Modal(at, { quantity: Q.Many, liquid: Liquid.Predicate.NeutralNF(at, noCapture(ctx)) }), bt);
+			return yield* subtype(NF.Constructors.Modal(at, { quantity: Q.Many, liquid: yield* Liquid.Predicate.NeutralNF(at) }), bt);
 		})
 
 		.with([NF.Patterns.Mu, P._], function* ([mu, ty]) {
@@ -379,4 +371,14 @@ const contains = function* (a: NF.Row, b: NF.Row): Verification<IVL.Formula> {
 			),
 		),
 	);
+};
+
+/* The name of a refinement's value binder, so that quantified formulas keep the name the source used. */
+const variable = function* (liquid: NF.Value): Verification<string> {
+	const predicate = yield* NF.reduce(liquid, yield* state.ask(), "Explicit");
+	return yield* match(predicate)
+		.with({ type: "Abs" }, function* ({ binder }) {
+			return binder.variable;
+		})
+		.otherwise(() => supply.fresh());
 };

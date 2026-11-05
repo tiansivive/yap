@@ -74,7 +74,7 @@ describe("Dependent Records", () => {
 			const src = `{
 				let Pair
 					: (a: Type) -> (b: Type) -> (p: a -> b -> Bool ) -> Type
-					= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\v -> p &fst v |] };
+					= \\a -> \\b -> \\p -> { fst: a, snd: b[| \\st v -> p &fst v |] };
 			}`;
 
 			const res = elaborateFrom(src);
@@ -145,7 +145,7 @@ describe("Dependent Records", () => {
 			expect(abstract.structure.term.type).toBe("Block");
 
 			const refinements = elaborateFrom(`{
-				let P: Type = { a: Num, b: Num[| \\v -> v == &a |], c: Num[| \\v -> v > &b |] };
+				let P: Type = { a: Num, b: Num[| \\st v -> v == &a |], c: Num[| \\st v -> v > &b |] };
 				return P;
 			}`);
 			expect(refinements.structure.term.type).toBe("Block");

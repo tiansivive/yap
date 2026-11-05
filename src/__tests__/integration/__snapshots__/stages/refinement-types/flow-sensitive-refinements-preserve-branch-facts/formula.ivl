@@ -14,7 +14,10 @@
                 (forall (($fresh0 Bool))
                   (=>
                     (and (= $fresh0 __external_$gt) (= $fresh0 true))
-                    (and (= a a) (forall ((v Real)) (=> (= v a) (> v 0))))))))))
+                    (and
+                      (= a a)
+                      (forall (($r389 Real))
+                        (=> (= $r389 a) (> $r389 0))))))))))
         (= a a)
         (forall ((x Real))
           (=>
@@ -25,4 +28,5 @@
                 (forall (($fresh1 Bool))
                   (=>
                     (and (= $fresh1 __external_$gt) (= $fresh1 false))
-                    (forall (($e Real)) (=> (= $e 42) (> $e 0)))))))))))))
+                    (forall (($r395 Real))
+                      (=> (= $r395 42) (> $r395 0)))))))))))))

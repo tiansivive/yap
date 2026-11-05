@@ -2,7 +2,7 @@
 true
 
 ## posTestCheckLambdaPostCondition (let)
-(forall ((x Real)) (forall (($a Real)) (=> (= $a 1) (= $a 1))))
+(forall ((x Real)) (forall (($r65 Real)) (=> (= $r65 1) (= $r65 1))))
 
 ## posTestCheckLambdaPreCondition (let)
 (forall ((x Real)) (=> (> x 0) (and (> x 0) (= x x))))
@@ -14,7 +14,7 @@ true
     (and
       (> x 0)
       (= x x)
-      (forall ((n Real)) (=> (and (> n 0) (= n n)) (> n 0))))))
+      (forall (($r73 Real)) (=> (and (> $r73 0) (= $r73 x)) (> $r73 0))))))
 
 ## posTestCheckRefinedResultLambda (let)
 (forall ((x Real))

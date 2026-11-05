@@ -377,7 +377,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				.in(function* ({ nf, liquid }) {
 					return yield* match(unglue(nf))
 						.with(NF.Patterns.Modal, function* ({ modalities: innerModalities, value }) {
-							return yield* Do.let("combined", schedule.combine(innerModalities, { quantity: modalities.quantity, liquid })).in(({ combined }) =>
+							return yield* Do.let("combined", schedule.combine(innerModalities, { quantity: modalities.quantity, liquid }, value)).in(({ combined }) =>
 								result(NF.Constructors.Modal(value, combined)),
 							);
 						})
@@ -939,25 +939,31 @@ export const schedule = {
 	},
 
 	/**
-	 * Merges two modal annotations. Re-runs both liquid predicates against a shared rigid and
-	 * conjoins them, which needs application and quotation, so it belongs to the machine rather
-	 * than to verification — it is only ever reached from the Modal arm, mid-drive.
+	 * Merges two modal annotations. Re-runs both liquid predicates against a shared rigid state and
+	 * value and conjoins them, which needs application and quotation, so it belongs to the machine
+	 * rather than to verification. It is only ever reached from the Modal arm, mid-drive.
 	 */
-	*combine(a: Modal.Annotations<NF.Value>, b: Modal.Annotations<NF.Value>): Evaluation<Machine<Modal.Annotations<NF.Value>>> {
-		const [left, right] = [unglue(a.liquid), unglue(b.liquid)];
-		assert(left.type === "Abs" && left.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
-		assert(right.type === "Abs" && right.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
+	*combine(a: Modal.Annotations<NF.Value>, b: Modal.Annotations<NF.Value>, type: NF.Value): Evaluation<Machine<Modal.Annotations<NF.Value>>> {
 		const ctx = yield* M.reader.ask();
-		const name = `${left.binder.variable}_and_${right.binder.variable}`;
 		const lvl = ctx.env.length;
+		const applied = (liquid: NF.Value) =>
+			Do.let("partial", schedule.reduce(unglue(liquid), NF.Constructors.Rigid(lvl), "Explicit")).in(({ partial }) =>
+				schedule.reduce(partial, NF.Constructors.Rigid(lvl + 1), "Explicit"),
+			);
 
-		return yield* Do.let("anf", schedule.apply(left.binder, left.closure, NF.Constructors.Rigid(lvl)))
-			.let("bnf", schedule.apply(right.binder, right.closure, NF.Constructors.Rigid(lvl)))
-			.in(({ anf, bnf }) =>
-				Do.let("term", Quoting.quote(lvl + 1, DSL.Binop.and(anf, bnf))).in(({ term }) =>
+		return yield* Do.let("anf", applied(a.liquid))
+			.let("bnf", applied(b.liquid))
+			.let("annotation", Quoting.quote(lvl + 1, type))
+			.in(({ anf, bnf, annotation }) =>
+				Do.let("term", Quoting.quote(lvl + 2, DSL.Binop.and(anf, bnf))).in(({ term }) =>
 					result({
 						quantity: Q.SR.mul(a.quantity, b.quantity),
-						liquid: NF.Constructors.Lambda(name, "Explicit", NF.Constructors.Closure(ctx, term), left.binder.annotation),
+						liquid: NF.Constructors.Lambda(
+							"st",
+							"Explicit",
+							NF.Constructors.Closure(ctx, EB.Constructors.Lambda("v", "Explicit", term, annotation)),
+							NF.Constructors.Lit(Lit.Atom("State")),
+						),
 					}),
 				),
 			);

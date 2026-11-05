@@ -303,7 +303,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 
 					const liquid = tm.modalities.liquid
 						? yield* EB.Liquid.typecheck(tm.modalities.liquid, yield* NF.normalize(checked))
-						: Liquid.Predicate.Neutral(checked);
+						: yield* Liquid.Predicate.Neutral(yield* NF.evaluate(checked));
 					const quantity = tm.modalities.quantity ?? Q.Many;
 
 					return [EB.Constructors.Modal(checked, { liquid, quantity }), us] satisfies Result;

@@ -1,7 +1,7 @@
 ## orderedListTestFail (let)
 === Formula ===
   (forall ((ol App_App_Mu_List_Real_Function))
-    (forall (($b Real)) (=> (= $b 1) (< 2 $b))))
+    (forall (($r359 Real)) (=> (= $r359 1) (< 2 $r359))))
 
 === Variables ===
   proxy p1: true
@@ -32,8 +32,8 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 1 lemmas
-  $b=1 -> contradiction
-  $b=2 -> tautology
+  $r359=1 -> contradiction
+  $r359=2 -> tautology
   lemma mbqi:forall: #2:  (mbqi:forall:gen0)
 [clauses]
   #0: p1 -> unit: p1

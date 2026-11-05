@@ -1,2 +1,2 @@
 ## goodOne (let)
-(forall (($a Real)) (=> (= $a 1) (< $a 10)))
+(forall (($r235 Real)) (=> (= $r235 1) (< $r235 10)))

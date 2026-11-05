@@ -17,10 +17,10 @@
             (= added (+ (* doubled 2) 10))
             (and
               (= doubled (* doubled 2))
-              (= doubled 2)
+              (= doubled doubled)
               (forall ((x Real))
                 (=>
-                  (and (= x (* doubled 2)) (= x 2))
+                  (and (= x (* doubled 2)) (= x doubled))
                   (forall ((y Real))
                     (=>
                       (= y 10)

@@ -3,4 +3,6 @@
   (=> (= (select p x) true) (and (= (select p x) true) (= x x))))
 
 ## nat5 (let)
-(and (forall ((n Real)) (= n n)) (forall (($b Real)) (=> (= $b 5) (>= $b 0))))
+(and
+  (forall ((n Real)) (= n n))
+  (forall (($r219 Real)) (=> (= $r219 5) (>= $r219 0))))

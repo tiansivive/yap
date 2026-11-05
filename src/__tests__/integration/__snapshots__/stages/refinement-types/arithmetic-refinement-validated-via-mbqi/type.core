@@ -1,2 +1,2 @@
 ## goodOne (let)
-<ω> Num [| λ(v: Num) -> FFI.$lt v 10 |]
+<ω> Num [| λ(st: State) -> λ(v: Num) -> FFI.$lt v 10 |]

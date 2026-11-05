@@ -1,6 +1,6 @@
 ## negTestCheckLiteral (let)
 === Formula ===
-  (forall (($a Real)) (=> (= $a 2) (= $a 1)))
+  (forall (($r27 Real)) (=> (= $r27 2) (= $r27 1)))
 
 === Variables ===
   proxy p1: true
@@ -31,8 +31,8 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 1 lemmas
-  $a=2 -> contradiction
-  $a=1 -> tautology
+  $r27=2 -> contradiction
+  $r27=1 -> tautology
   lemma mbqi:forall: #2:  (mbqi:forall:gen0)
 [clauses]
   #0: p1 -> unit: p1
@@ -121,7 +121,8 @@
 
 ## negTestCheckLambdaPreAndPostCondition (let)
 === Formula ===
-  (forall ((x Real)) (=> (> x 0) (forall (($a Real)) (=> (= $a 0) (> $a 0)))))
+  (forall ((x Real))
+    (=> (> x 0) (forall (($r39 Real)) (=> (= $r39 0) (> $r39 0)))))
 
 === Variables ===
   proxy p1: true
@@ -153,7 +154,7 @@
 
 [mbqi] round 0: 1 lemmas
   x=0 -> tautology
-  $a=0 -> contradiction
+  $r39=0 -> contradiction
   lemma mbqi:forall: #2:  (mbqi:forall:gen0)
 [clauses]
   #0: p1 -> unit: p1
