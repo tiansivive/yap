@@ -1,4 +1,4 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import * as Eff from "@yap/utils/effects";
 
@@ -20,13 +20,14 @@ import {
 	OP_NOT,
 	OP_OR,
 	OP_SUB,
+	OP_LIVE,
 	primopMapping,
 	PrimOps,
 } from "@yap/shared/lib/primitives";
 
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
-import { reader, obligations, type Verification } from "../effects";
+import { reader, obligations, State, type Verification } from "../effects";
 import { instantiate } from "../utils/refinements";
 
 export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
@@ -290,6 +291,14 @@ export const formula = function* (nf: NF.Value, rigids: Record<number, IVL.Term>
 			}
 			return Build.atom("=", yield* term(nf, rigids), Build.bool(true));
 		})
+		.with(
+			NF.Patterns.App,
+			app => head(app) === OP_LIVE,
+			function* (app) {
+				const [, args] = spine(app);
+				return yield* live(args[0], yield* identity(args[args.length - 1]));
+			},
+		)
 		.with({ type: "External" }, function* ({ name, args }) {
 			return yield* match(name)
 				.with(OP_AND, function* () {
@@ -372,3 +381,54 @@ const sortName = (s: IVL.Sort): string =>
 		.with({ tag: "Fn" }, ({ args, ret }) => `Fn_${args.map(sortName).join("_")}_${sortName(ret)}`)
 		.with({ tag: "Uninterpreted" }, ({ name }) => name)
 		.exhaustive();
+
+/*
+ * Membership in the live field of a state. A state built from the empty one by insertions unfolds into a
+ * disjunction of identity equalities; an unknown state leaves an uninterpreted `live` atom for the rest.
+ */
+const live = function* (state: NF.Value, effect: IVL.Term): Verification<IVL.Formula> {
+	const [, args] = spine(state);
+	return yield* match(head(state))
+		.with(State.heads.empty, function* () {
+			return Build.false_();
+		})
+		.with(State.heads.insert, function* () {
+			return Build.or(Build.atom("=", effect, yield* identity(args[1])), yield* live(args[0], effect));
+		})
+		.with(P.string, function* (unknown) {
+			return Build.atom("=", Build.app("live", [Build.const_(unknown, Build.uninterpreted("State")), effect], Build.Bool), Build.bool(true));
+		})
+		.otherwise(function* () {
+			throw new Error("Unsupported state in live membership");
+		});
+};
+
+/* Identities are compared by name, so all of them share one sort whatever their carrier. */
+const identity = function* (effect: NF.Value): Verification<IVL.Term> {
+	return yield* match(NF.unwrapNeutral(effect))
+		.with({ type: "Var", variable: { type: "Foreign" } }, function* ({ variable }) {
+			return Build.const_(variable.name, Build.uninterpreted("Effect"));
+		})
+		.with({ type: "External", args: [] }, function* ({ name }) {
+			return Build.const_(name, Build.uninterpreted("Effect"));
+		})
+		.with({ type: "Lit", value: { type: "Atom" } }, function* ({ value }) {
+			return Build.const_(value.value, Build.uninterpreted("Effect"));
+		})
+		.otherwise(function* () {
+			throw new Error("Unsupported effect identity in live membership");
+		});
+};
+
+const spine = (nf: NF.Value): [NF.Value, NF.Value[]] =>
+	match(NF.unwrapNeutral(nf))
+		.with(NF.Patterns.App, ({ func, arg }): [NF.Value, NF.Value[]] => {
+			const [first, args] = spine(func);
+			return [first, [...args, arg]];
+		})
+		.otherwise(value => [value, []]);
+
+const head = (nf: NF.Value): string | undefined =>
+	match(spine(nf)[0])
+		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => variable.name)
+		.otherwise(() => undefined);

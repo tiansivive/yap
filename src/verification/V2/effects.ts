@@ -158,11 +158,36 @@ export const supply = { fresh, freshNum, handlers: supplyHandlers };
 // ─── State ───────────────────────────────────────────────────────────────────
 //
 // The state that refinements are predicates over, at the program point being
-// verified. Every refinement receives it as its first argument.
+// verified. Every refinement receives it as its first argument. Its one field,
+// `live`, is the set of effect identities with an installed handler: empty at
+// the top level, extended by each delimiter for its body, and unknown at the
+// start of a function body, which runs at whatever state its caller has.
 
 export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
 
-const initial = (): NF.Value => NF.Constructors.Neutral("Sealed", NF.Constructors.Var({ type: "Foreign", name: "$empty" }));
+const sealed = (name: string): NF.Value => NF.Constructors.Neutral("Sealed", NF.Constructors.Var({ type: "Foreign", name }));
+
+export const State = {
+	heads: { empty: "$empty", insert: "$insert" },
+
+	empty: () => sealed(State.heads.empty),
+
+	insert: function* (current: NF.Value, identity: NF.Value): Verification<NF.Value> {
+		return yield* NF.reduce(yield* NF.reduce(sealed(State.heads.insert), current, "Explicit"), identity, "Explicit");
+	},
+
+	/* Runs `program` with `identity` live, as the body of a delimiter for it is verified. */
+	delimit: function* <A>(identity: EB.Term, program: Verification<A>): Verification<A> {
+		const delimited = yield* State.insert(yield* state.ask(), yield* NF.evaluate(identity));
+		return yield* state.local(() => delimited, program);
+	},
+
+	/* Runs `program` at a fresh unknown state, as a function body is verified. */
+	enter: function* <A>(program: Verification<A>): Verification<A> {
+		const unknown = sealed(`$state${(yield* fresh()).slice(1)}`);
+		return yield* state.local(() => unknown, program);
+	},
+};
 
 // ─── Row ─────────────────────────────────────────────────────────────────────
 
@@ -193,7 +218,7 @@ export type VerificationOptions = { logging?: boolean };
 export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () => Verification<A>, options: VerificationOptions = {}) => {
 	const [answer, , , registrySnapshot, , , collected] = Eff.run(program, [
 		reader.handlers(ctx),
-		state.handlers(initial()),
+		state.handlers(State.empty()),
 		Metas.registry.handlers(registry),
 		except.handlers(),
 		logger.handlers(options.logging ?? false),

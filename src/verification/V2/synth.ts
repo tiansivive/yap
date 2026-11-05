@@ -11,7 +11,7 @@ import { primopMapping } from "@yap/shared/lib/primitives";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import type { SynthResult } from "./types";
-import { reader, logger, type Verification } from "./effects";
+import { reader, logger, State, type Verification } from "./effects";
 import { extractModalities, instantiate, selfify } from "./utils/refinements";
 import { Liquid } from "../modalities";
 import { check } from "./check";
@@ -121,7 +121,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 		})
 		.with(EB.CtorPatterns.Lambda, function* (tm) {
 			const annotation = yield* NF.evaluate(tm.binding.annotation);
-			const [bodyType, bodyArtefacts] = yield* reader.local(inner => EB.bind(inner, { type: "Pi", variable: tm.binding.variable }, annotation), synth(tm.body));
+			const [bodyType, bodyArtefacts] = yield* State.enter(
+				reader.local(inner => EB.bind(inner, { type: "Pi", variable: tm.binding.variable }, annotation), synth(tm.body)),
+			);
 			const icit = tm.binding.type === "Lambda" || tm.binding.type === "Pi" ? tm.binding.icit : "Explicit";
 			const bodyTypeQuoted = yield* NF.quote(ctx.env.length + 1, bodyType);
 			const type = NF.Constructors.Pi(tm.binding.variable, icit, annotation, NF.Constructors.Closure(ctx, bodyTypeQuoted));
@@ -375,8 +377,22 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const artefacts = yield* check(tm.term, ann);
 			return [ann, artefacts] satisfies SynthResult;
 		})
+		/* The handler runs outside the delimiter, at the current state; the body runs with the identity live. */
+		.with({ type: "Reset", identity: P.nonNullable, handler: P.nonNullable }, function* (tm) {
+			const [, handled] = yield* synth(tm.handler);
+			const [type, body] = yield* State.delimit(tm.identity, synth(tm.term));
+			return [type, { vc: Build.and(handled.vc, body.vc) }] satisfies SynthResult;
+		})
 		.with({ type: "Reset" }, function* (tm) {
 			return yield* synth(tm.term);
+		})
+		.with({ type: "Capture" }, function* (tm) {
+			const [carrier, identified] = yield* synth(tm.identity);
+			const [, sent] = yield* synth(tm.payload);
+			const result = match(NF.unwrapNeutral(carrier))
+				.with({ type: "App", func: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Effect" } } } }, ({ arg }) => arg)
+				.otherwise(() => NF.Any);
+			return [result, { vc: Build.and(identified.vc, sent.vc) }] satisfies SynthResult;
 		})
 		.with({ type: "Shift" }, function* () {
 			yield* logger.log("synth: shift expression treated as opaque (stub)");

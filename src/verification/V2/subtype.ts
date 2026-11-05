@@ -11,7 +11,7 @@ import { Build } from "../solver/ivl/build";
 import { Liquid } from "../modalities";
 import { extractModalities, instantiate, isFirstOrder } from "./utils/refinements";
 import { withRowLabels } from "./utils/context";
-import { reader, fail, logger, obligations, state, supply, type Verification } from "./effects";
+import { reader, fail, logger, obligations, state, State, supply, type Verification } from "./effects";
 import { mkSort, formula, quantify } from "./logic/translate";
 
 export const subtype = function* (left: NF.Value, right: NF.Value): Verification<IVL.Formula> {
@@ -203,38 +203,43 @@ const structural = function* (a: NF.Value, b: NF.Value): Verification<IVL.Formul
 			const vc2 = yield* subtype(left.arg, right.arg);
 			return Build.and(vc1, vc2);
 		})
-		.with([NF.Patterns.Pi, NF.Patterns.Pi], [NF.Patterns.Lambda, NF.Patterns.Lambda], function* ([at, bt]) {
-			const vcArg = yield* subtype(bt.binder.annotation, at.binder.annotation);
-			const lvl = ctx.env.length;
-			const anf = yield* NF.apply(at.binder, at.closure, NF.Constructors.Rigid(lvl));
-			const bnf = yield* NF.apply(bt.binder, bt.closure, NF.Constructors.Rigid(lvl));
-			const vcBody = yield* reader.local(c => EB.bind(c, bt.binder, bt.binder.annotation), subtype(anf, bnf));
+		/* Both functions are called at the same unknown state, so their refinements are compared there. */
+		.with([NF.Patterns.Pi, NF.Patterns.Pi], [NF.Patterns.Lambda, NF.Patterns.Lambda], ([at, bt]) =>
+			State.enter(
+				(function* () {
+					const vcArg = yield* subtype(bt.binder.annotation, at.binder.annotation);
+					const lvl = ctx.env.length;
+					const anf = yield* NF.apply(at.binder, at.closure, NF.Constructors.Rigid(lvl));
+					const bnf = yield* NF.apply(bt.binder, bt.closure, NF.Constructors.Rigid(lvl));
+					const vcBody = yield* reader.local(c => EB.bind(c, bt.binder, bt.binder.annotation), subtype(anf, bnf));
 
-			if (!(yield* isFirstOrder(bt.binder.annotation))) {
-				yield* obligations.record("subtype.pi.nonrefinable", vcBody, {
-					type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
-					description: `Function result must be subtype (non-refinable parameter ${bt.binder.variable})`,
-				});
-				return Build.and(vcArg, vcBody);
-			}
+					if (!(yield* isFirstOrder(bt.binder.annotation))) {
+						yield* obligations.record("subtype.pi.nonrefinable", vcBody, {
+							type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
+							description: `Function result must be subtype (non-refinable parameter ${bt.binder.variable})`,
+						});
+						return Build.and(vcArg, vcBody);
+					}
 
-			const sort = yield* mkSort(bt.binder.annotation);
-			const x = Build.var_(bt.binder.variable, sort);
+					const sort = yield* mkSort(bt.binder.annotation);
+					const x = Build.var_(bt.binder.variable, sort);
 
-			const modalities = yield* extractModalities(bt.binder.annotation, ctx);
-			const applied = yield* instantiate(modalities.liquid, NF.Constructors.Rigid(lvl));
-			const phiX = yield* formula(applied, { [lvl]: x });
+					const modalities = yield* extractModalities(bt.binder.annotation, ctx);
+					const applied = yield* instantiate(modalities.liquid, NF.Constructors.Rigid(lvl));
+					const phiX = yield* formula(applied, { [lvl]: x });
 
-			const guarded = yield* obligations.record("subtype.pi.body", Build.forall([{ name: bt.binder.variable, sort }], Build.implies(phiX, vcBody)), {
-				type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
-				description: `Function result must be subtype under parameter ${bt.binder.variable} assumption`,
-			});
-			yield* obligations.record("subtype.pi.param", vcArg, {
-				type: `${display(() => NF.display(bt.binder.annotation))} <: ${display(() => NF.display(at.binder.annotation))}`,
-				description: "Function parameter types (contravariant)",
-			});
-			return Build.and(vcArg, guarded);
-		})
+					const guarded = yield* obligations.record("subtype.pi.body", Build.forall([{ name: bt.binder.variable, sort }], Build.implies(phiX, vcBody)), {
+						type: `${display(() => NF.display(at))} <: ${display(() => NF.display(bt))}`,
+						description: `Function result must be subtype under parameter ${bt.binder.variable} assumption`,
+					});
+					yield* obligations.record("subtype.pi.param", vcArg, {
+						type: `${display(() => NF.display(bt.binder.annotation))} <: ${display(() => NF.display(at.binder.annotation))}`,
+						description: "Function parameter types (contravariant)",
+					});
+					return Build.and(vcArg, guarded);
+				})(),
+			),
+		)
 
 		.with([{ type: "Existential" }, P._], function* ([sig, ty]) {
 			return yield* reader.local(

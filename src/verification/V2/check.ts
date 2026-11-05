@@ -12,7 +12,7 @@ import * as E from "fp-ts/Either";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import type { VerificationArtefacts } from "./types";
-import { reader, fail, logger, obligations, supply, type Verification } from "./effects";
+import { reader, fail, logger, obligations, supply, State, type Verification } from "./effects";
 import { collectSigmaBindings } from "./utils/context";
 import { extractModalities, instantiate, meet } from "./utils/refinements";
 import { Liquid } from "../modalities";
@@ -42,6 +42,12 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 				.with([{ type: "Modal" }, NF.Patterns.Type], function* ([term, type]) {
 					return yield* check(term.term, type);
 				})
+				/* The handler runs outside the delimiter, at the current state; the body runs with the identity live. */
+				.with([{ type: "Reset", identity: P.nonNullable, handler: P.nonNullable }, P._], function* ([term]) {
+					const [, handled] = yield* synth(term.handler);
+					const body = yield* State.delimit(term.identity, check(term.term, ty));
+					return { vc: Build.and(handled.vc, body.vc) } satisfies VerificationArtefacts;
+				})
 				.with([EB.CtorPatterns.Mu, P._], function* ([term, type]) {
 					return yield* reader.local(c => EB.bind(c, { type: "Mu", variable: term.binding.variable }, type), check(term.body, type));
 				})
@@ -55,35 +61,37 @@ export const check = function* (tm: EB.Term, ty: NF.Value): Verification<Verific
 					},
 				)
 				.with([{ type: "Abs" }, { type: "Abs", binder: { type: "Pi" } }], function* ([term, type]) {
-					return yield* reader.local(
-						c => EB.bind(c, { type: "Lambda", variable: term.binding.variable }, type.binder.annotation),
-						(function* () {
-							const extended = yield* reader.ask();
-							const tyBody = yield* NF.apply(type.binder, type.closure, NF.Constructors.Rigid(ctx.env.length));
-							const artefacts = yield* check(term.body, tyBody);
+					return yield* State.enter(
+						reader.local(
+							c => EB.bind(c, { type: "Lambda", variable: term.binding.variable }, type.binder.annotation),
+							(function* () {
+								const extended = yield* reader.ask();
+								const tyBody = yield* NF.apply(type.binder, type.closure, NF.Constructors.Rigid(ctx.env.length));
+								const artefacts = yield* check(term.body, tyBody);
 
-							const modalities = yield* extractModalities(type.binder.annotation, extended);
-							if (isMatching(NF.View.Sealed({ type: "Abs" }), yield* NF.view(type.binder.annotation))) {
-								return artefacts;
-							}
+								const modalities = yield* extractModalities(type.binder.annotation, extended);
+								if (isMatching(NF.View.Sealed({ type: "Abs" }), yield* NF.view(type.binder.annotation))) {
+									return artefacts;
+								}
 
-							const sort = yield* mkSort(type.binder.annotation);
-							const x = Build.var_(term.binding.variable, sort);
+								const sort = yield* mkSort(type.binder.annotation);
+								const x = Build.var_(term.binding.variable, sort);
 
-							const lvl = extended.env.length;
-							const applied = yield* instantiate(modalities.liquid, NF.Constructors.Rigid(lvl));
-							const phi = yield* formula(applied, { [lvl]: x });
-							const imp = yield* obligations.record(
-								"check.abs.quantification",
-								Build.forall([{ name: term.binding.variable, sort }], Build.implies(phi, artefacts.vc)),
-								{
-									type: p(() => NF.display(type)),
-									description: `Function term must satisfy body's postcondition under the precondition on ${term.binding.variable}`,
-								},
-							);
+								const lvl = extended.env.length;
+								const applied = yield* instantiate(modalities.liquid, NF.Constructors.Rigid(lvl));
+								const phi = yield* formula(applied, { [lvl]: x });
+								const imp = yield* obligations.record(
+									"check.abs.quantification",
+									Build.forall([{ name: term.binding.variable, sort }], Build.implies(phi, artefacts.vc)),
+									{
+										type: p(() => NF.display(type)),
+										description: `Function term must satisfy body's postcondition under the precondition on ${term.binding.variable}`,
+									},
+								);
 
-							return { vc: imp } satisfies VerificationArtefacts;
-						})(),
+								return { vc: imp } satisfies VerificationArtefacts;
+							})(),
+						),
 					);
 				})
 				.with([EB.CtorPatterns.Array, NF.Patterns.Indexed], function* ([_term, type]) {
