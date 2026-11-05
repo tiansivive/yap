@@ -2,6 +2,8 @@
 
 Welcome to Yap! This guide walks through all the language features currently implemented, starting from the basics and gradually introducing more advanced concepts.
 
+The [example index](INDEX.md) lists small programs for effect handling through refinements over the verifier's state, with their expected verdicts.
+
 ## Table of Contents
 
 - [Primitives & Literals](#primitives--literals)
