@@ -1,7 +1,8 @@
 ## (expr) (expression)
 (and
-  (forall ((x Real))
-    (forall ((y Real))
-      (=> (= y 2) (forall ((r Real)) (=> (= r 0.5) (= r 0.5))))))
-  (forall ((x Real))
-    (forall ((y Real)) (=> (= y 2) (forall ((r Real)) (=> (= r 1) (= r 1)))))))
+  (forall ((x!4 Real))
+    (forall ((y!5 Real))
+      (=> (= y!5 2) (forall ((r!6 Real)) (=> (= r!6 0.5) (= r!6 0.5))))))
+  (forall ((x!9 Real))
+    (forall ((y!10 Real))
+      (=> (= y!10 2) (forall ((r!11 Real)) (=> (= r!11 1) (= r!11 1)))))))

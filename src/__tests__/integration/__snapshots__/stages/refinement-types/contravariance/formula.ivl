@@ -5,16 +5,16 @@ true
 true
 
 ## takePosFunction (let)
-(forall (($a Real)) (=> (= $a 10) (> $a 0)))
+(forall (($r175!1 Real)) (=> (= $r175!1 10) (> $r175!1 0)))
 
 ## natToNum (let)
-(forall ((x Real)) (=> (>= x 0) (and (>= x 0) (= x Num))))
+(forall ((x!0 Real)) (=> (>= x!0 0) (and (>= x!0 0) (= x!0 x!0))))
 
 ## posToNum (let)
-(forall ((x Real)) (=> (> x 0) (and (> x 0) (= x Num))))
+(forall ((x!0 Real)) (=> (> x!0 0) (and (> x!0 0) (= x!0 x!0))))
 
 ## result1 (let)
-(forall ((p Real)) (=> (> p 0) (>= p 0)))
+(forall ((p!0 Real)) (=> (> p!0 0) (>= p!0 0)))
 
 ## result2 (let)
-(forall ((p Real)) (=> (> p 0) (> p 0)))
+(forall ((p!0 Real)) (=> (> p!0 0) (> p!0 0)))

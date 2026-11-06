@@ -1,15 +1,15 @@
 ## (expr) (expression)
 === Formula ===
-  (forall ((r Row))
-    (forall ((a Type))
-      (forall ((A Type))
-        (forall ((x Schema))
+  (forall ((r!0 Row))
+    (forall ((a!1 Type))
+      (forall ((A!2 Type))
+        (forall ((x!3 Schema))
           (and
-            (= x x)
+            (= x!3 x!3)
             (forall (($fresh0 Schema))
               (=>
-                (and (= $fresh0 x) (= $fresh0 x))
-                (forall ((v Type)) (forall (($row_4 Row)) (= v v))))))))))
+                (and (= $fresh0 x!3) (= $fresh0 x!3))
+                (forall ((v!4 Type)) (forall (($row_4!5 Row)) (= v!4 v!4))))))))))
 
 === Variables ===
   proxy p1: true
@@ -40,11 +40,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  a=v -> residual
-  A=v -> residual
-  x=x -> residual
-  $fresh0=x -> residual
-  v=v -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

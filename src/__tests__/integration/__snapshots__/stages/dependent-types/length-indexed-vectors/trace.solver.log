@@ -1,6 +1,6 @@
 ## Vec (let)
 === Formula ===
-  (forall ((n Real)) (forall ((t Type)) (and (= n n) (= n n))))
+  (forall ((n!1 Real)) (forall ((t!2 Type)) (and (= n!1 n!1) (= n!1 n!1))))
 
 === Variables ===
   proxy p1: true
@@ -31,7 +31,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  n=n -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

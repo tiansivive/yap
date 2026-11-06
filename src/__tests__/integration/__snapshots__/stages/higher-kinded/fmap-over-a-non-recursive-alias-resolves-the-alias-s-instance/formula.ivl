@@ -5,19 +5,28 @@
 true
 
 ## fmap (let)
-(forall ((a Type))
-  (forall ((b Type))
-    (forall ((container App_Fn_Type_Type_Type))
-      (and (= a a) (= b b) (= container container)))))
+(forall ((a!2 Type))
+  (forall ((b!3 Type))
+    (forall ((container!5 App_Fn_Type_Type_Type))
+      (and (= a!2 a!2) (= b!3 b!3) (= container!5 container!5)))))
 
 ## Option (let)
 true
 
 ## mapOption (let)
-error: Rigid variables do not match in subtype
+(forall ((a!0 Type))
+  (forall ((b!1 Type))
+    (forall ((o!3 Schema))
+      (and
+        (= o!3 o!3)
+        (forall (($fresh0 Schema))
+          (=>
+            (and (= $fresh0 o!3) (= $fresh0 o!3))
+            (forall ((x!4 Type)) (forall (($row_7!5 Row)) (= x!4 x!4)))))
+        (= o!3 o!3)))))
 
 ## OptionFunctor (let)
-(forall ((a Type)) (forall ((b Type)) (and (= a a) (= b b))))
+(forall ((a!0 Type)) (forall ((b!1 Type)) (and (= a!0 a!0) (= b!1 b!1))))
 
 ## (using) (using)
 

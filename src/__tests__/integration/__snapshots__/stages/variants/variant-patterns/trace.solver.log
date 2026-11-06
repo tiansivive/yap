@@ -27,7 +27,7 @@
 
 ## describeShape (let)
 === Formula ===
-  (forall ((s Schema)) (and (= s s) (= s s) (= s s)))
+  (forall ((s!0 Schema)) (and (= s!0 s!0) (= s!0 s!0) (= s!0 s!0)))
 
 === Variables ===
   proxy p1: true
@@ -58,7 +58,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  s=s -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

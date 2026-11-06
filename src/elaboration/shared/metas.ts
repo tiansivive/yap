@@ -260,9 +260,9 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => [...eb(scrutinee), ...alternatives.flatMap(alt => eb(alt.term))])
 			.with({ type: "Block" }, ({ return: ret, statements }) => [...eb(ret), ...statements.flatMap(s => eb(s.value))])
 			.with({ type: "Modal" }, ({ term }) => eb(term))
-			.with({ type: "Shift" }, ({ body }) => eb(body))
-			.with({ type: "Bubble" }, ({ shift }) => eb(shift))
-			.with({ type: "Reset" }, ({ term }) => eb(term))
+			.with({ type: "Bubble" }, ({ capture }) => eb(capture))
+			.with({ type: "Reset" }, ({ term, identity, handler }) => [...eb(term), ...eb(identity), ...eb(handler)])
+			.with({ type: "Capture" }, ({ identity, payload }) => [...eb(identity), ...eb(payload)])
 			.otherwise(() => {
 				throw new Error("metas: Not implemented yet");
 			});

@@ -5,4 +5,4 @@
 
 
 ## greet (let)
-(forall ((name String)) (= name name))
+(forall ((name!0 String)) (= name!0 name!0))

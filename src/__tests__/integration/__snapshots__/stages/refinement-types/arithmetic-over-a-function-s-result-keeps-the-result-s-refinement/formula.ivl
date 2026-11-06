@@ -1,0 +1,29 @@
+## Nat (let)
+true
+
+## Pos (let)
+true
+
+## addOne (let)
+(forall ((t2!9 Real))
+  (=>
+    (= t2!9 1)
+    (forall ((x!6 Real))
+      (=>
+        (>= x!6 0)
+        (forall ((y!7 Real))
+          (=>
+            (= y!7 1)
+            (forall ((r!8 Real)) (=> (= r!8 (+ x!6 1)) (> r!8 0)))))))))
+
+## addZero (let)
+(forall ((t4!9 Real))
+  (=>
+    (= t4!9 1)
+    (forall ((x!6 Real))
+      (=>
+        (>= x!6 0)
+        (forall ((y!7 Real))
+          (=>
+            (= y!7 0)
+            (forall ((r!8 Real)) (=> (= r!8 (+ x!6 0)) (> r!8 0)))))))))

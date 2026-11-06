@@ -1,8 +1,8 @@
 ## identity (let)
-(forall ((x Real)) (= x x))
+(forall ((x!0 Real)) (= x!0 x!0))
 
 ## add (let)
-(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
+(forall ((x!0 Real)) (forall ((y!1 Real)) (and (= x!0 x!0) (= y!1 y!1))))
 
 ## forty2 (let)
 true

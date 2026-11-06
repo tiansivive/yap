@@ -26,4 +26,50 @@
 [sat]
 
 ## length (let)
-error: Unbound bound variable in synth
+=== Formula ===
+  (forall ((a!0 Type))
+    (forall ((list!1 App_Mu_List_Type))
+      (and
+        (= list!1 list!1)
+        (= list!1 list!1)
+        (forall (($fresh1 App_Mu_List_Type))
+          (=>
+            (and (= $fresh1 list!1) (= $fresh1 list!1))
+            (forall ((x!4 Type))
+              (forall ((xs!5 App_Mu_List_Type))
+                (forall (($row_12!6 Row))
+                  (forall (($row_13!7 Row))
+                    (and (= a!0 a!0) (= xs!5 xs!5)))))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1

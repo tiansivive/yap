@@ -4,7 +4,7 @@ import { runScript, snap } from "./helpers/pipeline";
 describe("Integration — Nested dependent structs", () => {
 	test("Nu self-observation verifies against a dependent schema", () => {
 		const result = runScript(`
-let pair: { a: Num, b: Num[| \\v -> v == (&a + 1) |] } = { a: 2, b: $a + 1 };
+let pair: { a: Num, b: Num[| \\st v -> v == (&a + 1) |] } = { a: 2, b: $a + 1 };
 		`);
 		const decl = result.declarations.find(d => d.name === "pair");
 

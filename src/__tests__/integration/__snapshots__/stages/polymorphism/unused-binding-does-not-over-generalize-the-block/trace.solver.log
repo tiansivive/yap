@@ -1,6 +1,7 @@
 ## (expr) (expression)
 === Formula ===
-  (forall ((r Row)) (forall ((a Type)) (forall ((obj Schema)) (= obj obj))))
+  (forall ((r!1 Row))
+    (forall ((a!2 Type)) (forall ((obj!3 Schema)) (= obj!3 obj!3))))
 
 === Variables ===
   proxy p1: true
@@ -31,7 +32,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  obj=obj -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

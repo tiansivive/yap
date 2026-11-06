@@ -1,6 +1,6 @@
 ## badOne (let)
 === Formula ===
-  (forall (($a Real)) (=> (= $a 1) (> $a 10)))
+  (forall (($r231!0 Real)) (=> (= $r231!0 1) (> $r231!0 10)))
 
 === Variables ===
   proxy p1: true
@@ -31,8 +31,8 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 1 lemmas
-  $a=1 -> contradiction
-  $a=10 -> tautology
+  $r231!0=1 -> contradiction
+  $r231!0=10 -> tautology
   lemma mbqi:forall: #2:  (mbqi:forall:gen0)
 [clauses]
   #0: p1 -> unit: p1

@@ -1,5 +1,6 @@
 import { basename } from "node:path";
 import { expect } from "vitest";
+import { match, P } from "ts-pattern";
 
 import * as Eff from "@yap/utils/effects";
 import * as EB from "@yap/elaboration";
@@ -70,7 +71,9 @@ const pipeline = (
 	Build.simplify = true; // global state required by the verification library
 	const verified = safe(() => {
 		const svc = VerificationServiceV2();
-		const { answer } = svc.check(tm, ty, ctx, registry);
+		const { answer } = match(parentBinders)
+			.with([P.string], ([name]) => svc.letdec(name, tm, ty, ctx, registry))
+			.otherwise(() => svc.check(tm, ty, ctx, registry));
 		return answer;
 	});
 	const artefacts = E.map((a: VerificationArtefacts | Eff.Aborted<M.Err>) => (Eff.failed(a) ? O.none : O.some(a)))(verified);

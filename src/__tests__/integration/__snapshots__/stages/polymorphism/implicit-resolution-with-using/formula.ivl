@@ -1,5 +1,5 @@
 ## addImplicit (let)
-(forall ((n Real)) (forall ((x Real)) (and (= x x) (= n n))))
+(forall ((n!0 Real)) (forall ((x!1 Real)) (and (= x!1 x!1) (= n!0 n!0))))
 
 ## (using) (using)
 

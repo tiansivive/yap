@@ -1,0 +1,184 @@
+## abs (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"abs"}
+[3] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [28]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] match
+  :alt -> [12] {"index":0}
+  :alt -> [15] {"index":1}
+  :decision_tree -> [25]
+  :scrutinee -> [23]
+[8] var:foreign {"name":"$lte","arity":2}
+[10] lit {"value":{"type":"Num","value":0}}
+  :next -> [11]
+[11] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[12] case
+  :body -> [14]
+  :next -> [15]
+  :pattern -> [13]
+[13] pat:lit {"value":{"type":"Bool","value":true}}
+[14] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[15] case
+  :body -> [24]
+  :pattern -> [16]
+[16] pat:lit {"value":{"type":"Bool","value":false}}
+[19] var:foreign {"name":"$sub","arity":2}
+[21] lit {"value":{"type":"Num","value":0}}
+  :next -> [22]
+[22] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[23] primop {"op":"$lte"}
+  :arg -> [10] {"index":0}
+  :arg -> [11] {"index":1}
+  :callee -> [8]
+[24] primop {"op":"$sub"}
+  :arg -> [21] {"index":0}
+  :arg -> [22] {"index":1}
+  :callee -> [19]
+[25] switch {"kind":"lit"}
+  :branch -> [26] {"value":{"type":"Bool","value":true}}
+  :branch -> [27] {"value":{"type":"Bool","value":false}}
+  :inspect -> [23]
+[26] leaf
+  :body -> [14]
+[27] leaf
+  :body -> [24]
+[28] env
+[29] closure
+  :body -> [3]
+  :env -> [28]
+
+## absNegatesBoth (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"absNegatesBoth"}
+[3] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [33]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] match
+  :alt -> [12] {"index":0}
+  :alt -> [20] {"index":1}
+  :decision_tree -> [30]
+  :scrutinee -> [27]
+[8] var:foreign {"name":"$lte","arity":2}
+[10] lit {"value":{"type":"Num","value":0}}
+  :next -> [11]
+[11] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[12] case
+  :body -> [28]
+  :next -> [20]
+  :pattern -> [13]
+[13] pat:lit {"value":{"type":"Bool","value":true}}
+[16] var:foreign {"name":"$sub","arity":2}
+[18] lit {"value":{"type":"Num","value":0}}
+  :next -> [19]
+[19] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[20] case
+  :body -> [29]
+  :pattern -> [21]
+[21] pat:lit {"value":{"type":"Bool","value":false}}
+[25] lit {"value":{"type":"Num","value":0}}
+  :next -> [26]
+[26] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[27] primop {"op":"$lte"}
+  :arg -> [10] {"index":0}
+  :arg -> [11] {"index":1}
+  :callee -> [8]
+[28] primop {"op":"$sub"}
+  :arg -> [18] {"index":0}
+  :arg -> [19] {"index":1}
+  :callee -> [16]
+[29] primop {"op":"$sub"}
+  :arg -> [25] {"index":0}
+  :arg -> [26] {"index":1}
+  :callee -> [16]
+[30] switch {"kind":"lit"}
+  :branch -> [31] {"value":{"type":"Bool","value":true}}
+  :branch -> [32] {"value":{"type":"Bool","value":false}}
+  :inspect -> [27]
+[31] leaf
+  :body -> [28]
+[32] leaf
+  :body -> [29]
+[33] env
+[34] closure
+  :body -> [3]
+  :env -> [33]
+
+## absKeepsBoth (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"absKeepsBoth"}
+[3] lambda {"variable":"n","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [5]
+  :env -> [22]
+[4] lit {"value":{"type":"Atom","value":"Num"}}
+[5] match
+  :alt -> [12] {"index":0}
+  :alt -> [15] {"index":1}
+  :decision_tree -> [19]
+  :scrutinee -> [18]
+[8] var:foreign {"name":"$lte","arity":2}
+[10] lit {"value":{"type":"Num","value":0}}
+  :next -> [11]
+[11] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[12] case
+  :body -> [14]
+  :next -> [15]
+  :pattern -> [13]
+[13] pat:lit {"value":{"type":"Bool","value":true}}
+[14] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[15] case
+  :body -> [17]
+  :pattern -> [16]
+[16] pat:lit {"value":{"type":"Bool","value":false}}
+[17] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[18] primop {"op":"$lte"}
+  :arg -> [10] {"index":0}
+  :arg -> [11] {"index":1}
+  :callee -> [8]
+[19] switch {"kind":"lit"}
+  :branch -> [20] {"value":{"type":"Bool","value":true}}
+  :branch -> [21] {"value":{"type":"Bool","value":false}}
+  :inspect -> [18]
+[20] leaf
+  :body -> [14]
+[21] leaf
+  :body -> [17]
+[22] env
+[23] closure
+  :body -> [3]
+  :env -> [22]

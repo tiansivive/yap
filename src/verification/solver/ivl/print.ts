@@ -33,6 +33,7 @@ export namespace Print {
 			.with({ tag: "App" }, ({ head, args }) => (args.length === 0 ? head : `(${head} ${args.map(term).join(" ")})`))
 			.with({ tag: "Select" }, ({ array, index }) => `(select ${term(array)} ${term(index)})`)
 			.with({ tag: "Row" }, ({ row }) => rowTerm(row))
+			.with({ tag: "Prop" }, ({ value }) => formula(value))
 			.exhaustive();
 
 	const binder = (b: IVL.Binder): string => `(${b.name} ${sort(b.sort)})`;

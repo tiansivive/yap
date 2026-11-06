@@ -4,6 +4,7 @@ import * as Metas from "@yap/elaboration/shared/metas";
 import * as M from "@yap/elaboration/shared/effects";
 
 import type * as EB from "@yap/elaboration";
+import * as NF from "@yap/elaboration/normalization";
 import type { IVL } from "../solver/ivl/types";
 import type { Obligation } from "./types";
 
@@ -95,14 +96,16 @@ export const obligations = { record, handlers: obligationsHandlers };
 
 // ─── Supply ──────────────────────────────────────────────────────────────────
 //
-// Fresh names for verification. Two actions:
+// Fresh names for verification. Three actions:
 // - fresh: alpha-bumped names ($a, $b, ..., $z, $aa, ...)
 // - freshNum: numeric names ($fresh0, $fresh1, ...)
+// - freshFrom: a source name made unique (x!0, x!1, ...)
 
 type FreshAction = Eff.Action<"VC.fresh", undefined, string>;
 type FreshNumAction = Eff.Action<"VC.freshNum", undefined, string>;
+type FreshFromAction = Eff.Action<"VC.freshFrom", string, string>;
 
-type SupplyActions = FreshAction | FreshNumAction;
+type SupplyActions = FreshAction | FreshNumAction | FreshFromAction;
 
 const fresh = function* () {
 	return yield* Eff.ctl.action<FreshAction>("VC.fresh", undefined);
@@ -110,6 +113,10 @@ const fresh = function* () {
 
 const freshNum = function* () {
 	return yield* Eff.ctl.action<FreshNumAction>("VC.freshNum", undefined);
+};
+
+const freshFrom = function* (variable: string) {
+	return yield* Eff.ctl.action<FreshFromAction>("VC.freshFrom", variable);
 };
 
 const bumpAlpha = (s: string): string => {
@@ -134,6 +141,7 @@ const bumpAlpha = (s: string): string => {
 const supplyHandlers = (): Eff.Handler<SupplyActions, undefined> => {
 	let alphaSeq = "a";
 	let numSeq = 0;
+	let fromSeq = 0;
 
 	return {
 		clauses: {
@@ -147,17 +155,75 @@ const supplyHandlers = (): Eff.Handler<SupplyActions, undefined> => {
 				numSeq++;
 				return Eff.ctl.resume(name);
 			},
+			"VC.freshFrom": variable => {
+				const name = `${variable}!${fromSeq}`;
+				fromSeq++;
+				return Eff.ctl.resume(name);
+			},
 		},
 		output: () => undefined,
 	};
 };
 
-export const supply = { fresh, freshNum, handlers: supplyHandlers };
+export const supply = { fresh, freshNum, freshFrom, handlers: supplyHandlers };
+
+// ─── Names ───────────────────────────────────────────────────────────────────
+//
+// The IVL name of each variable in scope, by level. A variable gets a fresh
+// name where it is bound. A VC is assembled from pieces built in different
+// contexts, so two binders on one path can sit at the same level, and the
+// level alone cannot name them. The outermost entries, bound before
+// verification starts, keep their source names.
+
+export const names = Eff.reader<ReadonlyMap<number, string>, "VC.Names">("VC.Names");
+
+const outermost = (ctx: EB.Context): ReadonlyMap<number, string> => new Map(ctx.env.map((entry, i) => [ctx.env.length - 1 - i, entry.name.variable]));
+
+// ─── State ───────────────────────────────────────────────────────────────────
+//
+// The state that refinements are predicates over, at the program point being
+// verified. Every refinement receives it as its first argument. Its one field,
+// `live`, is the set of effect identities with an installed handler: empty at
+// the top level, extended by each delimiter for its body, and unknown at the
+// start of a function body, which runs at whatever state its caller has.
+
+export const state = Eff.reader<NF.Value, "VC.State">("VC.State");
+
+const sealed = (name: string): NF.Value => NF.Constructors.Neutral("Sealed", NF.Constructors.Var({ type: "Foreign", name }));
+
+export const State = {
+	heads: { empty: "$empty", insert: "$insert" },
+
+	empty: () => sealed(State.heads.empty),
+
+	insert: function* (current: NF.Value, identity: NF.Value): Verification<NF.Value> {
+		return yield* NF.reduce(yield* NF.reduce(sealed(State.heads.insert), current, "Explicit"), identity, "Explicit");
+	},
+
+	/* Runs `program` with `identity` live, as the body of a delimiter for it is verified. */
+	delimit: function* <A>(identity: EB.Term, program: Verification<A>): Verification<A> {
+		const delimited = yield* State.insert(yield* state.ask(), yield* NF.evaluate(identity));
+		return yield* state.local(() => delimited, program);
+	},
+
+	/* Runs `program` at a fresh unknown state, as a function body is verified. */
+	enter: function* <A>(program: Verification<A>): Verification<A> {
+		const unknown = sealed(`$state${(yield* fresh()).slice(1)}`);
+		return yield* state.local(() => unknown, program);
+	},
+};
 
 // ─── Row ─────────────────────────────────────────────────────────────────────
 
 export type Verification<A> = Eff.Eff<
-	Eff.Actions<typeof reader> | Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof except> | LoggerActions | RecordAction | SupplyActions,
+	| Eff.Actions<typeof reader>
+	| Eff.Actions<typeof state>
+	| Eff.Actions<typeof names>
+	| Eff.Only<typeof Metas.registry, "Registry.get">
+	| Eff.Actions<typeof except>
+	| LoggerActions
+	| RecordAction
+	| SupplyActions,
 	A
 >;
 
@@ -175,13 +241,15 @@ export const fail = function* (cause: import("@yap/elaboration/shared/errors").C
 export type VerificationOptions = { logging?: boolean };
 
 export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () => Verification<A>, options: VerificationOptions = {}) => {
-	const [answer, , registrySnapshot, , , collected] = Eff.run(program, [
+	const [answer, , , registrySnapshot, , , collected] = Eff.run(program, [
 		reader.handlers(ctx),
+		state.handlers(State.empty()),
 		Metas.registry.handlers(registry),
 		except.handlers(),
 		logger.handlers(options.logging ?? false),
 		obligations.handlers(),
 		supply.handlers(),
+		names.handlers(outermost(ctx)),
 	]);
 
 	return { answer, obligations: collected, registry: registrySnapshot } as const;

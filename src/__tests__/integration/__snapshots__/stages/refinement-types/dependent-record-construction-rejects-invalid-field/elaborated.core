@@ -8,13 +8,14 @@
       λ(b: Type) ->
         λ(p: Π(t1: a) -> Π(t2: b) -> Bool) ->
           Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
-            Schema [ fst: a, snd: <ω> b [| λ(v: b) -> p &fst v |] ];
+            Schema
+              [ fst: a, snd: <ω> b [| λ(st: State) -> λ(v: b) -> p &fst v |] ];
   let p
     : Σ($sig: [ fst: Irrelevant, snd: Irrelevant ]) .
       (closure: Schema
         [ fst: a,
-          snd: <ω> b [| λ(v: b) ->
-            p &fst v |] ] -| Γ: $sig; p; b; a; Pair; testFail)
+          snd: <ω> b [| λ(st: State) ->
+            λ(v: b) -> p &fst v |] ] -| Γ: $sig; p; b; a; Pair; testFail)
     = νstrict [] . Struct [ fst: 2, snd: 1 ];
   return 1;
 }

@@ -1,19 +1,19 @@
 ## firstOrZero (let)
-(forall ((list Schema))
+(forall ((list!0 Schema))
   (and
-    (= list list)
-    (= list list)
+    (= list!0 list!0)
+    (= list!0 list!0)
     (forall (($fresh1 Schema))
       (=>
-        (and (= $fresh1 list) (= $fresh1 list))
-        (forall ((x Real)) (forall ((xs Schema)) (= x x)))))))
+        (and (= $fresh1 list!0) (= $fresh1 list!0))
+        (forall ((x!2 Real)) (forall ((xs!3 Schema)) (= x!2 x!2)))))))
 
 ## tail (let)
-(forall ((list Schema))
+(forall ((list!0 Schema))
   (and
-    (= list list)
-    (= list list)
+    (= list!0 list!0)
+    (= list!0 list!0)
     (forall (($fresh1 Schema))
       (=>
-        (and (= $fresh1 list) (= $fresh1 list))
-        (forall ((x Real)) (forall ((xs Schema)) (= xs xs)))))))
+        (and (= $fresh1 list!0) (= $fresh1 list!0))
+        (forall ((x!1 Real)) (forall ((xs!2 Schema)) (= xs!2 xs!2)))))))

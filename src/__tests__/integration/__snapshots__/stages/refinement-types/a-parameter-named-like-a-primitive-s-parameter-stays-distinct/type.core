@@ -1,0 +1,8 @@
+## abs (let)
+Π(x: Num) -> <ω> Num [| λ(st: State) -> λ(v: Num) -> FFI.$lte 0 v |]
+
+## absNegatesBoth (let)
+Π(x: Num) -> <ω> Num [| λ(st: State) -> λ(v: Num) -> FFI.$lte 0 v |]
+
+## absKeepsBoth (let)
+Π(x: Num) -> <ω> Num [| λ(st: State) -> λ(v: Num) -> FFI.$lte 0 v |]

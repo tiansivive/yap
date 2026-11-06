@@ -11,11 +11,11 @@ import { primopMapping } from "@yap/shared/lib/primitives";
 import type { IVL } from "../solver/ivl/types";
 import { Build } from "../solver/ivl/build";
 import type { SynthResult } from "./types";
-import { reader, logger, supply, type Verification } from "./effects";
-import { noCapture } from "./utils/context";
-import { extractModalities, selfify } from "./utils/refinements";
+import { reader, logger, supply, State, type Verification } from "./effects";
+import { extractModalities, instantiate, selfify } from "./utils/refinements";
+import { Liquid } from "../modalities";
 import { check } from "./check";
-import { formula, quantify } from "./logic/translate";
+import { formula, quantify, scope } from "./logic/translate";
 
 export const synth = function* (term: EB.Term): Verification<SynthResult> {
 	yield* logger.enter();
@@ -36,10 +36,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const [, , ty] = entry.type;
 			const selfified = yield* selfify(tm, ty);
 			const { liquid } = yield* extractModalities(selfified, ctx);
-			assert(liquid.type === "Abs", "Liquid modality must be a Lambda");
 
 			const evaluated = yield* NF.evaluate(tm);
-			const predicate = yield* NF.reduce(liquid, evaluated, "Explicit");
+			const predicate = yield* instantiate(liquid, evaluated);
 
 			return [selfified, { vc: yield* formula(predicate) }] satisfies SynthResult;
 		})
@@ -51,7 +50,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const [, ty] = entry;
 			const modalities = yield* extractModalities(ty, ctx);
 			const evaluated = yield* NF.evaluate(tm);
-			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
+			const predicate = yield* instantiate(modalities.liquid, evaluated);
 			return [ty, { vc: yield* formula(predicate) }] satisfies SynthResult;
 		})
 		.with({ type: "Var", variable: { type: "Label" } }, function* ({ variable }) {
@@ -62,7 +61,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 
 			const modalities = yield* extractModalities(type, ctx);
 			const evaluated = yield* NF.evaluate(term);
-			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
+			const predicate = yield* instantiate(modalities.liquid, evaluated);
 			return [type, { vc: yield* formula(predicate) }] satisfies SynthResult;
 		})
 		.with(EB.CtorPatterns.Vars.DepLabel, EB.CtorPatterns.Vars.NuLabel, function* ({ variable }) {
@@ -78,7 +77,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const [, ty] = entry;
 			const modalities = yield* extractModalities(ty, ctx);
 			const evaluated = yield* NF.evaluate(tm);
-			const predicate = yield* NF.reduce(modalities.liquid, evaluated, "Explicit");
+			const predicate = yield* instantiate(modalities.liquid, evaluated);
 			return [ty, { vc: yield* formula(predicate) }] satisfies SynthResult;
 		})
 		.with({ type: "Var" }, function* () {
@@ -97,11 +96,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 				});
 			const nf = yield* NF.evaluate(ann);
 			const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
-			const closure = NF.Constructors.Closure(noCapture(ctx), EB.DSL.eq(bound, tm));
-			const freshName = yield* supply.fresh();
 			const modalities = {
 				quantity: Q.Many,
-				liquid: NF.Constructors.Lambda(freshName, "Explicit", closure, nf),
+				liquid: yield* Liquid.Predicate.Lambda(nf, EB.DSL.eq(bound, tm)),
 			};
 			return [NF.Constructors.Modal(nf, modalities), { vc: Build.true_() }] satisfies SynthResult;
 		})
@@ -124,7 +121,8 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 		})
 		.with(EB.CtorPatterns.Lambda, function* (tm) {
 			const annotation = yield* NF.evaluate(tm.binding.annotation);
-			const [bodyType, bodyArtefacts] = yield* reader.local(inner => EB.bind(inner, { type: "Pi", variable: tm.binding.variable }, annotation), synth(tm.body));
+			const name = yield* supply.freshFrom(tm.binding.variable);
+			const [bodyType, bodyArtefacts] = yield* State.enter(scope(name, { type: "Pi", variable: tm.binding.variable }, annotation, synth(tm.body)));
 			const icit = tm.binding.type === "Lambda" || tm.binding.type === "Pi" ? tm.binding.icit : "Explicit";
 			const bodyTypeQuoted = yield* NF.quote(ctx.env.length + 1, bodyType);
 			const type = NF.Constructors.Pi(tm.binding.variable, icit, annotation, NF.Constructors.Closure(ctx, bodyTypeQuoted));
@@ -170,10 +168,8 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 						return yield* incorporate(arg, value.value);
 					})
 					.with(NF.View.Sealed({ type: "Existential" }), function* ({ value: ex }) {
-						const [out, artefacts] = yield* reader.local(
-							inner => EB.bind(inner, { type: "Pi", variable: ex.variable }, ex.annotation),
-							incorporate(arg, ex.body.value),
-						);
+						const name = yield* supply.freshFrom(ex.variable);
+						const [out, artefacts] = yield* scope(name, { type: "Pi", variable: ex.variable }, ex.annotation, incorporate(arg, ex.body.value));
 						return [NF.Constructors.Exists(ex.variable, ex.annotation, { ctx, value: out }), artefacts] satisfies SynthResult;
 					})
 					.with(NF.View.Sealed(NF.Patterns.Pi), function* ({ value: pi }) {
@@ -221,18 +217,21 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 					return yield* recurse(rest);
 				}
 
-				return yield* reader.local(
-					inner => EB.bind(inner, { type: "Let", variable: current.variable }, current.annotation),
-					(function* (): Verification<SynthResult> {
+				const outer = yield* reader.ask();
+				const name = yield* supply.freshFrom(current.variable);
+				const [ty, conj] = yield* scope(
+					name,
+					{ type: "Let", variable: current.variable },
+					current.annotation,
+					(function* (): Verification<[NF.Value, IVL.Formula]> {
 						const artefacts = yield* check(current.value, current.annotation);
 						const [ty, restArtefacts] = yield* recurse(rest);
-						const conj = Build.and(artefacts.vc, restArtefacts.vc);
-						const quantified = yield* quantify(current.variable, current.annotation, conj);
-						const letCtx = yield* reader.ask();
-						const existential = NF.Constructors.Exists(current.variable, current.annotation, { ctx: letCtx, value: ty });
-						return [existential, { vc: quantified }] satisfies SynthResult;
+						return [ty, Build.and(artefacts.vc, restArtefacts.vc)];
 					})(),
 				);
+				const quantified = yield* quantify(name, current.annotation, conj);
+				const existential = NF.Constructors.Exists(current.variable, current.annotation, { ctx: outer, value: ty });
+				return [existential, { vc: quantified }] satisfies SynthResult;
 			};
 
 			return yield* recurse(block.statements);
@@ -378,16 +377,17 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const artefacts = yield* check(tm.term, ann);
 			return [ann, artefacts] satisfies SynthResult;
 		})
+		/* The handler runs outside the delimiter, at the current state; the body runs with the identity live. */
 		.with({ type: "Reset" }, function* (tm) {
-			return yield* synth(tm.term);
+			const [, handled] = yield* synth(tm.handler);
+			const [type, body] = yield* State.delimit(tm.identity, synth(tm.term));
+			return [type, { vc: Build.and(handled.vc, body.vc) }] satisfies SynthResult;
 		})
-		.with({ type: "Shift" }, function* () {
-			yield* logger.log("synth: shift expression treated as opaque (stub)");
-			return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
-		})
+		/* The payload is checked against the type the capture requests, and the result has the bubble's type. */
 		.with({ type: "Bubble" }, function* (tm) {
-			yield* logger.log("synth: bubble treated as opaque (neutral true)");
-			return [tm.ann, { vc: Build.true_() }] satisfies SynthResult;
+			const [, identified] = yield* synth(tm.capture.identity);
+			const sent = yield* check(tm.capture.payload, tm.request);
+			return [tm.ann, { vc: Build.and(identified.vc, sent.vc) }] satisfies SynthResult;
 		})
 		.otherwise(function* () {
 			throw new Error("synth: case not implemented for term " + run(() => EB.Display.Term(term)));

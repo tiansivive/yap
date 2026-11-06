@@ -3,15 +3,15 @@
 
 ## add1 (let)
 (λ(x: Num) -> FFI.$add x 1 : Π(x: Num) ->
-  <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add x 1) |])
+  <ω> Num [| λ(st: State) -> λ(r: Num) -> FFI.$eq r (FFI.$add x 1) |])
 
 ## add5 (let)
 (λ(x: Num) -> FFI.$add x 5 : Π(x: Num) ->
-  <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$add x 5) |])
+  <ω> Num [| λ(st: State) -> λ(r: Num) -> FFI.$eq r (FFI.$add x 5) |])
 
 ## double (let)
 (λ(x: Num) -> FFI.$mul x 2 : Π(x: Num) ->
-  <ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$mul x 2) |])
+  <ω> Num [| λ(st: State) -> λ(r: Num) -> FFI.$eq r (FFI.$mul x 2) |])
 
 ## add1ThenDouble (let)
 compose double add1

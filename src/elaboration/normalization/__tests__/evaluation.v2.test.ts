@@ -171,10 +171,10 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 		expect(show(nf, ctx)).toBe("0");
 	});
 
-	describe("delimited continuations (shift/reset)", () => {
-		it("simple shift/reset", () => {
+	describe("delimited continuations (capture/reset)", () => {
+		it("simple capture/reset", () => {
 			const src = `{
-				let test = reset (shift (resume 10));
+				let test = reset (capture (\\k -> k 10));
 				return test;
 			}`;
 
@@ -188,7 +188,7 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 
 		it("resumption with computation", () => {
 			const src = `{
-				let test = reset (1 + (shift ((resume 10) + (resume 20))));
+				let test = reset (1 + (capture (\\k -> (k 10) + (k 20))));
 				return test;
 			}`;
 
@@ -200,9 +200,9 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 			expect(show(nf, ctx)).toBe("32");
 		});
 
-		it("shifts under a lambda (Bubble produces neutral without delimiter)", () => {
+		it("captures under a lambda (Bubble produces neutral without delimiter)", () => {
 			const src = `{
-				let test = reset (\\x -> 1 + (shift (resume (x + 10))));
+				let test = reset (\\x -> 1 + (capture (\\k -> k (x + 10))));
 				return (test 5);
 			}`;
 
@@ -232,8 +232,8 @@ describe("Normalization v2 (stack-based): evaluation / reduce / matching", () =>
 				let while
 					: (Unit -> Bool) -> (Unit -> Unit) -> Unit
 					= \\cond body -> reset ({
-						let go = \\u -> shift (match (cond !)
-							| true -> { body !; resume go !; }
+						let go = \\u -> capture (\\k -> match (cond !)
+							| true -> { body !; k (go !); }
 							| false -> !);
 						return go !;
 					});

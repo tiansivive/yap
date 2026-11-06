@@ -18,6 +18,9 @@ export const term = (value: IVL.Term): string =>
 		.with({ tag: "Arith" }, ({ op, args }) => `(${op} ${term(args[0])} ${term(args[1])})`)
 		.with({ tag: "Select" }, ({ array, index }) => `(select ${term(array)} ${term(index)})`)
 		.with({ tag: "Row" }, ({ row }) => `(row ${rows(row)})`)
+		.with({ tag: "Prop" }, () => {
+			throw new Error("A Prop term is split out of its atom by formula normalization");
+		})
 		.exhaustive();
 
 const rows = (row: IVL.RowTerm): string =>

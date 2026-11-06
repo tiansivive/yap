@@ -8,27 +8,27 @@ true
 true
 
 ## ShowNum (let)
-(forall ((n Real)) (= n n))
+(forall ((n!0 Real)) (= n!0 n!0))
 
 ## EqNum (let)
-(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
+(forall ((x!0 Real)) (forall ((y!1 Real)) (and (= x!0 x!0) (= y!1 y!1))))
 
 ## displayIfEqual (let)
-(forall ((t Type))
-  (forall ((x Type))
-    (forall ((y Type))
+(forall ((t!0 Type))
+  (forall ((x!3 Type))
+    (forall ((y!4 Type))
       (and
-        (= x x)
-        (= y y)
-        (forall ((t5 Type))
+        (= x!3 x!3)
+        (= y!4 y!4)
+        (forall ((t5!15 Type))
           (=>
-            (= t5 x)
-            (forall ((t6 Type))
+            (= t5!15 x!3)
+            (forall ((t6!16 Type))
               (=>
-                (= t6 y)
-                (forall (($fresh0 Bool)) (=> (= $fresh0 true) (= x x)))))))
-        (= x x)
-        (= y y)))))
+                (= t6!16 y!4)
+                (forall (($fresh0 Bool)) (=> (= $fresh0 true) (= x!3 x!3)))))))
+        (= x!3 x!3)
+        (= y!4 y!4)))))
 
 ## (using) (using)
 

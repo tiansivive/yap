@@ -294,13 +294,13 @@ fact.compute 5;
 		id: "refinements",
 		description: "Refinement Types",
 		code: `
-let NatRefined: Type = Num [|\\n -> n >= 0 |];
-let Pos: Type = Num [|\\p -> p > 0 |];
+let NatRefined: Type = Num [|\\st n -> n >= 0 |];
+let Pos: Type = Num [|\\st p -> p > 0 |];
 let nNat: NatRefined = 42;
 let pPos: Pos = 42;
 let zeroNatRef: NatRefined = 0;
-let exactOne: Num [|\\v -> v == 1 |] = 1;
-let inc: (x: Num) -> Num [|\\v -> v == (x + 1) |] = \\x -> x + 1;
+let exactOne: Num [|\\st v -> v == 1 |] = 1;
+let inc: (x: Num) -> Num [|\\st v -> v == (x + 1) |] = \\x -> x + 1;
 let useNat: NatRefined -> Num = \\n -> n;
 let usePos: Pos -> Num = \\p -> p;
 let hof: (f: NatRefined -> NatRefined) -> NatRefined = \\f -> f 1;
@@ -310,7 +310,7 @@ let natToNum: NatRefined -> Num = \\x -> x;
 let posToNum: Pos -> Num = \\x -> x;
 let resultNatFn = takePosFunction natToNum;
 let resultPosFn = takePosFunction posToNum;
-let OrderedPair: Type = { fst: Num, snd: Num [|\\v -> v > &fst |] };
+let OrderedPair: Type = { fst: Num, snd: Num [|\\st v -> v > &fst |] };
 let validPair: OrderedPair = { fst: 3, snd: 5 };
 		`.trim(),
 	},
@@ -318,11 +318,11 @@ let validPair: OrderedPair = { fst: 3, snd: 5 };
 		id: "ordered-lists",
 		description: "Ordered Lists with Refinements",
 		code: `
-let OrderedList: Type -> Type = \\t -> | #nil Unit | #cons { head: t, tail: OrderedList (t[|\\v -> v > &head |]) };
+let OrderedList: Type -> Type = \\t -> | #nil Unit | #cons { head: t, tail: OrderedList (t[|\\st v -> v > &head |]) };
 let orderedList: OrderedList Num = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
 let OrderedListPoly: (t: Type) -> (p: t -> t -> Bool) -> Type =
 		 -> \\p -> | #nil Unit
-				| #cons { head: t, tail: OrderedListPoly (t[|\\v -> p &head v |]) p };
+				| #cons { head: t, tail: OrderedListPoly (t[|\\st v -> p &head v |]) p };
 let ascending: OrderedListPoly Num (\\x y -> x < y) =
     #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
 let descending: OrderedListPoly Num (\\x y -> x > y) =

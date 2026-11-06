@@ -27,10 +27,7 @@ const prove = (assumptions: readonly IVL.Formula[], formula: IVL.Formula): Valid
 const proveGuarded = (assumptions: readonly IVL.Formula[], formula: IVL.Formula): Validity =>
 	match(formula)
 		.with(Patterns.Formula.Implies, ({ left, right }) => proveGuarded([...assumptions, left], right))
-		.with(Patterns.Formula.And, ({ values }) => proveGuarded(andGuards(assumptions, values), values[values.length - 1] ?? Build.true_()))
 		.otherwise(goal => prove(assumptions, goal));
-
-const andGuards = (assumptions: readonly IVL.Formula[], values: readonly IVL.Formula[]): readonly IVL.Formula[] => [...assumptions, ...values.slice(0, -1)];
 
 const combine = (results: readonly Validity[]): Validity =>
 	match(results.find(r => r.tag === "invalid"))

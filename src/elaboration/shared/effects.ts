@@ -71,6 +71,10 @@ export type MutState = {
 };
 
 export type Delimitation = {
+	/** The hidden effect identity this reset delimits, which its anonymous captures target. */
+	identity: EB.NF.Value;
+	/** The identity's carrier, `(r: Type) => Effect ((r -> initial) -> final) r`. */
+	carrier: EB.NF.Value;
 	answer: { initial: EB.NF.Value; final: EB.NF.Value };
 	//handlerQ: Array<{ meta: EB.Meta, handler: Src.Term, ann: EB.NF.Value }>;
 	//solution: Record<number, { values: EB.NF.Value[], term: EB.Term }>;

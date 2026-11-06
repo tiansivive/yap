@@ -2,4 +2,16 @@
 true
 
 ## length (let)
-error: Unbound bound variable in synth
+(forall ((a!0 Type))
+  (forall ((list!1 App_Mu_List_Type))
+    (and
+      (= list!1 list!1)
+      (= list!1 list!1)
+      (forall (($fresh1 App_Mu_List_Type))
+        (=>
+          (and (= $fresh1 list!1) (= $fresh1 list!1))
+          (forall ((x!4 Type))
+            (forall ((xs!5 App_Mu_List_Type))
+              (forall (($row_12!6 Row))
+                (forall (($row_13!7 Row))
+                  (and (= a!0 a!0) (= xs!5 xs!5)))))))))))

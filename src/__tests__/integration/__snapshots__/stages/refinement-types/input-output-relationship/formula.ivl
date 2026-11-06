@@ -1,9 +1,11 @@
 ## inc (let)
-(forall ((x Real))
+(forall ((x!0 Real))
   (and
-    (= x x)
-    (forall ((x Real))
+    (= x!0 x!0)
+    (forall ((x!4 Real))
       (=>
-        (= x x)
-        (forall ((y Real))
-          (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))
+        (= x!4 x!0)
+        (forall ((y!5 Real))
+          (=>
+            (= y!5 1)
+            (forall ((r!6 Real)) (=> (= r!6 (+ x!0 1)) (= r!6 (+ x!0 1))))))))))

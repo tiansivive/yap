@@ -1,5 +1,5 @@
 ## identity (let)
-(forall ((x Real)) (= x x))
+(forall ((x!0 Real)) (= x!0 x!0))
 
 ## const (let)
-(forall ((x Real)) (forall ((y String)) (= x x)))
+(forall ((x!0 Real)) (forall ((y!1 String)) (= x!0 x!0)))

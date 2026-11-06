@@ -1,0 +1,71 @@
+## abs (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_29
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_29(env0, n1) entry=entry
+    entry:
+      jump sw3
+    sw3:
+      let v0 = 0
+      let v1 = <=(v0, n1)
+      branch v1 { true -> case5 | false -> case6 }
+    case5:
+      jump join4(n1)
+    case6:
+      let v7 = 0
+      let v8 = -(v7, n1)
+      jump join4(v8)
+    join4(match2):
+      return match2
+
+## absNegatesBoth (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_34
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_34(env0, n1) entry=entry
+    entry:
+      jump sw3
+    sw3:
+      let v0 = 0
+      let v1 = <=(v0, n1)
+      branch v1 { true -> case5 | false -> case6 }
+    case5:
+      let v6 = 0
+      let v7 = -(v6, n1)
+      jump join4(v7)
+    case6:
+      let v7 = 0
+      let v8 = -(v7, n1)
+      jump join4(v8)
+    join4(match2):
+      return match2
+
+## absKeepsBoth (let)
+module
+  fn main entry=entry
+    entry:
+      let env_cls2 = alloc {  }
+      let fnref_cls2 = &closure_23
+      let closure_cls2 = alloc { __fn: fnref_cls2, __env: env_cls2 }
+      return closure_cls2
+  fn closure_23(env0, n1) entry=entry
+    entry:
+      jump sw3
+    sw3:
+      let v0 = 0
+      let v1 = <=(v0, n1)
+      branch v1 { true -> case5 | false -> case6 }
+    case5:
+      jump join4(n1)
+    case6:
+      jump join4(n1)
+    join4(match2):
+      return match2

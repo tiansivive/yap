@@ -27,13 +27,14 @@
 
 ## safe (let)
 === Formula ===
-  (forall ((x Real))
+  (forall ((x!0 Real))
     (=>
-      (>= x 0)
+      (>= x!0 0)
       (and
-        (>= x 0)
-        (= x Num)
-        (forall ((n Real)) (=> (and (>= n 0) (= n Num)) (>= n 0))))))
+        (>= x!0 0)
+        (= x!0 x!0)
+        (forall (($r103!1 Real))
+          (=> (and (>= $r103!1 0) (= $r103!1 x!0)) (>= $r103!1 0))))))
 
 === Variables ===
   proxy p1: true
@@ -64,10 +65,8 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=0 -> residual
-  x=x -> residual
-  n=0 -> tautology
-  n=x -> residual
+  x!0=0 -> residual
+  $r103!1=0 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

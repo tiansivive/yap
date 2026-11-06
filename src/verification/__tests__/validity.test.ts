@@ -41,9 +41,10 @@ describe("VC validity discharge", () => {
 		expect(Validity.check(formula).tag).toBe("invalid");
 	});
 
-	it("treats conjunction prefixes under binders as generated guards", () => {
+	/* A block let puts its value's obligation before the rest of the block, as `∀x. (obligation ∧ rest)`. */
+	it("checks every conjunct under a binder as an obligation", () => {
 		const formula = forallX(DSL.and(DSL.eq(DSL.x, DSL.int(0)), DSL.eq(DSL.x, DSL.int(0))));
 
-		expect(Validity.check(formula).tag).toBe("valid");
+		expect(Validity.check(formula).tag).toBe("invalid");
 	});
 });

@@ -1,0 +1,95 @@
+## Nat (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Nat"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+
+## Pos (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"Pos"}
+[3] modal {"quantity":"Many"}
+  :term -> [5]
+[4] var:free {"name":"Num"}
+[5] var:ref {"name":"Num"}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+
+## addOne (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"addOne"}
+[3] lambda {"variable":"f","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [16]
+  :env -> [17]
+[4] pi {"variable":"t2","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [7]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:free {"name":"Nat"}
+[7] var:ref {"name":"Nat"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[10] var:foreign {"name":"$add","arity":2}
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+  :next -> [15]
+[13] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[14] lit {"value":{"type":"Num","value":1}}
+[15] lit {"value":{"type":"Num","value":1}}
+[16] primop {"op":"$add"}
+  :arg -> [12] {"index":0}
+  :arg -> [15] {"index":1}
+  :callee -> [10]
+[17] env
+[18] closure
+  :body -> [3]
+  :env -> [17]
+
+## addZero (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"addZero"}
+[3] lambda {"variable":"f","icit":"Explicit","level":1}
+  :annotation -> [4]
+  :body -> [16]
+  :env -> [17]
+[4] pi {"variable":"t4","icit":"Explicit","level":1}
+  :annotation -> [5]
+  :body -> [7]
+[5] lit {"value":{"type":"Atom","value":"Num"}}
+[6] var:free {"name":"Nat"}
+[7] var:ref {"name":"Nat"}
+  :refers_to -> [6]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+[10] var:foreign {"name":"$add","arity":2}
+[12] app {"icit":"Explicit"}
+  :arg -> [14]
+  :func -> [13]
+  :next -> [15]
+[13] var:bound {"index":0}
+  :refers_to -> [3]
+  :scope -> [2] {"level":0}
+  :scope -> [3] {"level":1}
+[14] lit {"value":{"type":"Num","value":1}}
+[15] lit {"value":{"type":"Num","value":0}}
+[16] primop {"op":"$add"}
+  :arg -> [12] {"index":0}
+  :arg -> [15] {"index":1}
+  :callee -> [10]
+[17] env
+[18] closure
+  :body -> [3]
+  :env -> [17]

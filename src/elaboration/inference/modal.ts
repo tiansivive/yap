@@ -12,7 +12,7 @@ export const infer = (modal: Modal): M.Elaboration<EB.AST> =>
 		const [tm, _ty, us] = yield* EB.infer(modal.term);
 
 		const nf = yield* NF.normalize(tm); // Modalities work on the term (in normal form), not on its type
-		const liquid = modal.modalities.liquid ? yield* EB.Liquid.typecheck(modal.modalities.liquid, nf) : Liquid.Predicate.Neutral(tm);
+		const liquid = modal.modalities.liquid ? yield* EB.Liquid.typecheck(modal.modalities.liquid, nf) : yield* Liquid.Predicate.Neutral(nf);
 		const quantity = modal.modalities.quantity ?? Q.Many;
 
 		return [EB.Constructors.Modal(tm, { quantity, liquid }), nf, us] satisfies EB.AST;

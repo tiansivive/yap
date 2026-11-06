@@ -29,6 +29,9 @@ export const Terms = () => ({
     Bool: EB.Constructors.Lit(Lit.Atom("Bool")),
     String: EB.Constructors.Lit(Lit.Atom("String")),
     Unit: EB.Constructors.Lit(Lit.Atom("Unit")),
+    State: EB.Constructors.Lit(Lit.Atom("State")),
+    Effect: EB.Constructors.Lit(Lit.Atom("Effect")),
+    live: EB.Constructors.Var({ type: "Foreign", name: OP_LIVE }),
     "+": EB.Constructors.Var({ type: "Foreign", name: "$add" }),
     "-": EB.Constructors.Var({ type: "Foreign", name: "$sub" }),
     "*": EB.Constructors.Var({ type: "Foreign", name: "$mul" }),
@@ -69,6 +72,7 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         String: [Terms().String, NF.Type, []],
         Unit: [Terms().Unit, NF.Type, []],
         Type: [Terms().Type, NF.Type, []],
+        State: [Terms().State, NF.Type, []],
     }
 
     const dummyContext: EB.Context = {
@@ -85,9 +89,9 @@ export const Elaborated: () => EB.Context['imports'] = () => {
 
     const reflectLiquid = (returnType: EB.Term) => (f: (p: EB.Term, q: EB.Term) => EB.Term) => {
         const i0 = EB.Constructors.Var({ type: "Bound", index: 0 });
-        const i1 = EB.Constructors.Var({ type: "Bound", index: 1 });
         const i2 = EB.Constructors.Var({ type: "Bound", index: 2 });
-        return EB.Constructors.Lambda("r", "Explicit", EB.DSL.eq(i0, f(i2, i1)), returnType)
+        const i3 = EB.Constructors.Var({ type: "Bound", index: 3 });
+        return EB.Constructors.Lambda("st", "Explicit", EB.Constructors.Lambda("r", "Explicit", EB.DSL.eq(i0, f(i3, i2)), returnType), Terms().State)
     }
 
     const mkModal = (base: EB.Term, liquid?: EB.Term) => liquid ? EB.Constructors.Modal(base, { quantity: Q.Many, liquid }) : base;
@@ -122,8 +126,21 @@ export const Elaborated: () => EB.Context['imports'] = () => {
         term: EB.Constructors.Pi("y", "Explicit", Terms().Type, Terms().Type)
     })
 
+    /* live : State -> (p: Type) => (r: Type) => Effect p r -> Bool */
+    const Live = NF.Constructors.Pi("st", "Explicit", NF.Constructors.Lit(Lit.Atom("State")), {
+        type: "Closure",
+        ctx: dummyContext,
+        term: EB.Constructors.Pi("p", "Implicit", Terms().Type,
+            EB.Constructors.Pi("r", "Implicit", Terms().Type,
+                EB.Constructors.Pi("e", "Explicit",
+                    EB.Constructors.App("Explicit", EB.Constructors.App("Explicit", Terms().Effect, EB.Constructors.Var({ type: "Bound", index: 1 })), EB.Constructors.Var({ type: "Bound", index: 0 })),
+                    Terms().Bool)))
+    })
+
     return {
         ...PrimTypes,
+        Effect: [Terms().Effect, Type_Type_Type, []],
+        live: [Terms().live, Live, []],
         //"->": [Terms()["->"], Type_Type_Type, []],
         "+": [Terms()["+"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.add)]), []],
         "-": [Terms()["-"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.sub)]), []],
@@ -233,6 +250,9 @@ export const OP_MUL = "$mul";
 export const OP_DIV = "$div";
 
 export const OP_CONCAT = "$concat";
+
+/* Membership of an effect identity in the live field of the verifier's state. It has no computation; verification interprets it. */
+export const OP_LIVE = "$live";
 
 
 

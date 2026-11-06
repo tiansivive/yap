@@ -2,4 +2,4 @@
 true
 
 ## valid (let)
-(forall (($b Real)) (=> (= $b 5) (> $b 3)))
+(forall (($r227!1 Real)) (=> (= $r227!1 5) (> $r227!1 3)))

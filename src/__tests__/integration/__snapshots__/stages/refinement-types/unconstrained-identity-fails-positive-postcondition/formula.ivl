@@ -1,2 +1,3 @@
 ## negTestCheckLambdaPostCondition (let)
-(forall ((x Real)) (and (= x x) (forall ((v Real)) (=> (= v x) (> v 0)))))
+(forall ((x!0 Real))
+  (and (= x!0 x!0) (forall (($r43!1 Real)) (=> (= $r43!1 x!0) (> $r43!1 0)))))

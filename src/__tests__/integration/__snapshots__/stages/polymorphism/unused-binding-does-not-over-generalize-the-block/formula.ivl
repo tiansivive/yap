@@ -1,2 +1,3 @@
 ## (expr) (expression)
-(forall ((r Row)) (forall ((a Type)) (forall ((obj Schema)) (= obj obj))))
+(forall ((r!1 Row))
+  (forall ((a!2 Type)) (forall ((obj!3 Schema)) (= obj!3 obj!3))))

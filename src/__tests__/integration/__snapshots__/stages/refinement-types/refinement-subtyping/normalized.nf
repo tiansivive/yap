@@ -1,11 +1,12 @@
 ## Nat (let)
-<ω> Num [| λ(n: Num) -> (closure: FFI.$gte n 0 -| Γ: n) |]
+<ω> Num [| λ(st: State) -> (closure: λ(n: Num) -> FFI.$gte n 0 -| Γ: st) |]
 
 ## Pos (let)
-<ω> Num [| λ(p: Num) -> (closure: FFI.$gt p 0 -| Γ: p) |]
+<ω> Num [| λ(st: State) -> (closure: λ(p: Num) -> FFI.$gt p 0 -| Γ: st) |]
 
 ## useNat (let)
-λ(n: <ω> Num [| λ(n: Num) -> (closure: FFI.$gte n 0 -| Γ: n; Nat) |]) ->
+λ(n: <ω> Num [| λ(st: State) ->
+  (closure: λ(n: Num) -> FFI.$gte n 0 -| Γ: st; Nat) |]) ->
   (closure: n -| Γ: n)
 
 ## p (let)

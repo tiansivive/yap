@@ -1,6 +1,6 @@
 ## identity (let)
 === Formula ===
-  (forall ((x Real)) (= x x))
+  (forall ((x!0 Real)) (= x!0 x!0))
 
 === Variables ===
   proxy p1: true
@@ -31,14 +31,13 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=x -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## const (let)
 === Formula ===
-  (forall ((x Real)) (forall ((y String)) (= x x)))
+  (forall ((x!0 Real)) (forall ((y!1 String)) (= x!0 x!0)))
 
 === Variables ===
   proxy p1: true
@@ -69,7 +68,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=x -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

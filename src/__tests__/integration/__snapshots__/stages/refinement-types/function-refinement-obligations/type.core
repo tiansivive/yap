@@ -2,17 +2,17 @@
 Π(t1: Num) -> Num
 
 ## posTestCheckLambdaPostCondition (let)
-Π(t2: Num) -> <ω> Num [| λ(v: Num) -> FFI.$eq v 1 |]
+Π(t2: Num) -> <ω> Num [| λ(st: State) -> λ(v: Num) -> FFI.$eq v 1 |]
 
 ## posTestCheckLambdaPreCondition (let)
-Π(n: <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]) -> Num
+Π(n: <ω> Num [| λ(st: State) -> λ(n: Num) -> FFI.$gt n 0 |]) -> Num
 
 ## posTestCheckLambdaPreAndPostCondition (let)
-Π(n: <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]) ->
-  <ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]
+Π(n: <ω> Num [| λ(st: State) -> λ(n: Num) -> FFI.$gt n 0 |]) ->
+  <ω> Num [| λ(st: State) -> λ(n: Num) -> FFI.$gt n 0 |]
 
 ## posTestCheckRefinedResultLambda (let)
-Π(n: Num) -> <ω> Num [| λ(o: Num) -> FFI.$eq o (FFI.$add n 1) |]
+Π(n: Num) -> <ω> Num [| λ(st: State) -> λ(o: Num) -> FFI.$eq o (FFI.$add n 1) |]
 
 ## inc (let)
-Π(x: Num) -> <ω> Num [| λ(v: Num) -> FFI.$eq v (FFI.$add x 1) |]
+Π(x: Num) -> <ω> Num [| λ(st: State) -> λ(v: Num) -> FFI.$eq v (FFI.$add x 1) |]

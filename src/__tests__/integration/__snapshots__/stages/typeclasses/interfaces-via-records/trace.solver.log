@@ -57,7 +57,7 @@
 
 ## ShowNum (let)
 === Formula ===
-  (forall ((n Real)) (= n n))
+  (forall ((n!0 Real)) (= n!0 n!0))
 
 === Variables ===
   proxy p1: true
@@ -88,14 +88,13 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  n=n -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## ShowBool (let)
 === Formula ===
-  (forall ((b Bool)) (and (= b b) (= b b)))
+  (forall ((b!0 Bool)) (and (= b!0 b!0) (= b!0 b!0)))
 
 === Variables ===
   proxy p1: true
@@ -126,14 +125,13 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  b=b -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## EqNum (let)
 === Formula ===
-  (forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
+  (forall ((x!0 Real)) (forall ((y!1 Real)) (and (= x!0 x!0) (= y!1 y!1))))
 
 === Variables ===
   proxy p1: true
@@ -164,10 +162,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=x -> residual
-  x=y -> residual
-  y=x -> residual
-  y=y -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

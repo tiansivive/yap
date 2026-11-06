@@ -1,7 +1,7 @@
 ## checkNum (let)
 === Formula ===
-  (forall ((x Real))
-    (=> (= (select p x) true) (and (= (select p x) true) (= x x))))
+  (forall ((x!1 Real))
+    (=> (= (select p!0 x!1) true) (and (= (select p!0 x!1) true) (= x!1 x!1))))
 
 === Variables ===
   proxy p1: true
@@ -32,14 +32,15 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=x -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## nat5 (let)
 === Formula ===
-  (and (forall ((n Real)) (= n n)) (forall (($b Real)) (=> (= $b 5) (>= $b 0))))
+  (and
+    (forall ((n!0 Real)) (= n!0 n!0))
+    (forall (($r219!8 Real)) (=> (= $r219!8 5) (>= $r219!8 0))))
 
 === Variables ===
   proxy p1: true
@@ -70,12 +71,10 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  n=n -> residual
-  n=5 -> residual
-  n=0 -> residual
-  $b=n -> residual
-  $b=5 -> tautology
-  $b=0 -> tautology
+  n!0=5 -> tautology
+  n!0=0 -> tautology
+  $r219!8=5 -> tautology
+  $r219!8=0 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

@@ -1,2 +1,2 @@
 ## block (let)
-<ω> Num [| λ(n: Num) -> FFI.$gt n 0 |]
+<ω> Num [| λ(st: State) -> λ(n: Num) -> FFI.$gt n 0 |]

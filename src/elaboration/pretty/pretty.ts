@@ -185,14 +185,14 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		.with({ type: "Modal" }, function* ({ term: tm, modalities }) {
 			return ["<", Q.display(modalities.quantity), "> ", yield* go(tm), " [| ", yield* go(modalities.liquid), " |]"] satisfies PP.Doc;
 		})
-		.with({ type: "Reset" }, function* ({ term: tm }) {
-			return ["reset |", yield* go(tm), "|"] satisfies PP.Doc;
+		.with({ type: "Reset" }, function* ({ term: tm, identity, handler }) {
+			return ["reset [", yield* go(identity), "] ", yield* go(handler), " in |", yield* go(tm), "|"] satisfies PP.Doc;
 		})
-		.with({ type: "Shift" }, function* ({ body }) {
-			return ["shift (", yield* go(body), ")"] satisfies PP.Doc;
+		.with({ type: "Capture" }, function* ({ identity, payload }) {
+			return ["capture [", yield* go(identity), "] (", yield* go(payload), ")"] satisfies PP.Doc;
 		})
-		.with({ type: "Bubble" }, function* ({ meta, shift }) {
-			return ["bubble#", `${meta}`, " (", yield* go(shift), ")"] satisfies PP.Doc;
+		.with({ type: "Bubble" }, function* ({ meta, capture }) {
+			return ["bubble#", `${meta}`, " (", yield* go(capture), ")"] satisfies PP.Doc;
 		})
 		.with({ type: "Ann" }, function* ({ term: tm, ann }) {
 			return ["(", yield* go(tm), " : ", yield* go(ann), ")"] satisfies PP.Doc;

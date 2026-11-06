@@ -2,6 +2,8 @@
 
 Welcome to Yap! This guide walks through all the language features currently implemented, starting from the basics and gradually introducing more advanced concepts.
 
+The [example index](INDEX.md) lists small programs for effect handling through refinements over the verifier's state, with their expected verdicts.
+
 ## Table of Contents
 
 - [Primitives & Literals](#primitives--literals)
@@ -843,17 +845,17 @@ Refine a primitive type with a predicate over its values:
 
 ```ts
 let Nat: Type
-    = Num [| \n -> n >= 0 |];
+    = Num [| \st n -> n >= 0 |];
 
 let Pos: Type
-    = Num [| \p -> p > 0 |];
+    = Num [| \st p -> p > 0 |];
 
 let n: Nat = 42;   // OK: 42 >= 0
 let p: Pos = 42;   // OK: 42 > 0
 let zero: Nat = 0; // OK: 0 >= 0
 ```
 
-The syntax `[| \n -> n >= 0 |]` is a refinement predicate - a lambda that returns a boolean.
+The syntax `[| \st n -> n >= 0 |]` is a refinement predicate - a lambda that returns a boolean.
 
 ### Verification Errors
 
@@ -872,8 +874,8 @@ These errors are caught at compile time via SMT solving!
 You can specify exact values:
 
 ```ts
-let exactOne: Num [| \v -> v == 1 |] = 1;  // OK
-let notOne: Num [| \v -> v == 1 |] = 2;    // ERROR
+let exactOne: Num [| \st v -> v == 1 |] = 1;  // OK
+let notOne: Num [| \st v -> v == 1 |] = 2;    // ERROR
 ```
 
 ### Pre and Postconditions
@@ -891,7 +893,7 @@ let unsafe: (n: Nat) -> Pos
 Refinements track relationships between function inputs and outputs:
 
 ```ts
-let inc: (x: Num) -> Num [| \v -> v == (x + 1) |]
+let inc: (x: Num) -> Num [| \st v -> v == (x + 1) |]
     = \x -> x + 1;
 ```
 
@@ -969,7 +971,7 @@ Refinement polymorphism allows you to write functions that are polymorphic over 
 #### Simple Example: Polymorphic Constrained Identity
 
 ```ts
-let checkNum: (p: Num -> Bool) -> Num[| \v -> p v |] -> Num
+let checkNum: (p: Num -> Bool) -> Num[| \st v -> p v |] -> Num
     = \p x -> x;
 
 let nat5 = checkNum (\n -> n >= 0) 5;
@@ -984,7 +986,7 @@ Now we can combine dependent types (types depending on values) with refinements 
 ```ts
 // The second field's type is refined based on the first field's value
 let OrderedPair: Type
-    = { fst: Num, snd: Num[| \v -> v > :fst |] };
+    = { fst: Num, snd: Num[| \st v -> v > :fst |] };
 
 let valid: OrderedPair = { fst: 3, snd: 5 };    // OK: 5 > 3
 let invalid: OrderedPair = { fst: 5, snd: 3 };  // ERROR: 3 is not > 5
@@ -1000,7 +1002,7 @@ Abstracting refinements over dependent types lets us type very precise data. For
 let OrderedList: (t: Type) -> (p: t -> t -> Bool) -> Type
     = \t p ->
         | #nil Unit
-        | #cons { head: t, tail: OrderedList (t[| \v -> p :head v |]) p };
+        | #cons { head: t, tail: OrderedList (t[| \st v -> p :head v |]) p };
 
 let ascending: OrderedList Num (\x y -> x < y)
     = #cons { head: 1, tail: #cons { head: 2, tail: #cons { head: 3, tail: #nil ! } } };
@@ -1014,7 +1016,7 @@ This combines:
 
 - **Refinement polymorphism**: `p` is a parameter
 - **Dependent types**: `:head` references the field value
-- **Refinements**: `t[| \v -> p :head v |]` constrains tail elements
+- **Refinements**: `t[| \st v -> p :head v |]` constrains tail elements
 
 Powerful!
 

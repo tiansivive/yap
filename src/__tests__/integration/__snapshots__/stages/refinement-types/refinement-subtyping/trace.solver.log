@@ -54,7 +54,7 @@
 
 ## useNat (let)
 === Formula ===
-  (forall ((n Real)) (=> (>= n 0) (and (>= n 0) (= n Num))))
+  (forall ((n!0 Real)) (=> (>= n!0 0) (and (>= n!0 0) (= n!0 n!0))))
 
 === Variables ===
   proxy p1: true
@@ -85,15 +85,14 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  n=0 -> residual
-  n=n -> residual
+  n!0=0 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## p (let)
 === Formula ===
-  (forall (($a Real)) (=> (= $a 42) (> $a 0)))
+  (forall (($r161!0 Real)) (=> (= $r161!0 42) (> $r161!0 0)))
 
 === Variables ===
   proxy p1: true
@@ -124,15 +123,15 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  $a=42 -> tautology
-  $a=0 -> tautology
+  $r161!0=42 -> tautology
+  $r161!0=0 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## result (let)
 === Formula ===
-  (forall ((p Real)) (=> (> p 0) (>= p 0)))
+  (forall ((p!0 Real)) (=> (> p!0 0) (>= p!0 0)))
 
 === Variables ===
   proxy p1: true
@@ -163,7 +162,7 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  p=0 -> tautology
+  p!0=0 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

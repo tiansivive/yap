@@ -1,4 +1,4 @@
 ## letpoly (let)
 (and
-  (forall ((a Type)) (forall ((x Type)) (= x x)))
-  (forall ((n Real)) (forall ((s String)) (= n n))))
+  (forall ((a!1 Type)) (forall ((x!2 Type)) (= x!2 x!2)))
+  (forall ((n!5 Real)) (forall ((s!11 String)) (= n!5 n!5))))

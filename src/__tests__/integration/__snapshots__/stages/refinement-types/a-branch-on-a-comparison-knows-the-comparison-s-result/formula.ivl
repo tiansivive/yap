@@ -1,0 +1,113 @@
+## abs (let)
+(forall ((n!0 Real))
+  (and
+    (= n!0 n!0)
+    (forall ((x!5 Real))
+      (=>
+        (= x!5 0)
+        (forall ((y!6 Real))
+          (=>
+            (= y!6 n!0)
+            (forall (($fresh0 Bool))
+              (=>
+                (and (= $fresh0 (<= 0 n!0)) (= $fresh0 true))
+                (and
+                  (= n!0 n!0)
+                  (forall (($r461!4 Real))
+                    (=> (= $r461!4 n!0) (<= 0 $r461!4))))))))))
+    (= n!0 n!0)
+    (forall ((x!13 Real))
+      (=>
+        (= x!13 0)
+        (forall ((y!14 Real))
+          (=>
+            (= y!14 n!0)
+            (forall (($fresh1 Bool))
+              (=>
+                (and (= $fresh1 (<= 0 n!0)) (= $fresh1 false))
+                (and
+                  (= n!0 n!0)
+                  (forall ((x!10 Real))
+                    (=>
+                      (= x!10 0)
+                      (forall ((y!11 Real))
+                        (=>
+                          (= y!11 n!0)
+                          (forall ((r!12 Real))
+                            (=> (= r!12 (- 0 n!0)) (<= 0 r!12))))))))))))))))
+
+## absNegatesBoth (let)
+(forall ((n!0 Real))
+  (and
+    (= n!0 n!0)
+    (forall ((x!10 Real))
+      (=>
+        (= x!10 0)
+        (forall ((y!11 Real))
+          (=>
+            (= y!11 n!0)
+            (forall (($fresh0 Bool))
+              (=>
+                (and (= $fresh0 (<= 0 n!0)) (= $fresh0 true))
+                (and
+                  (= n!0 n!0)
+                  (forall ((x!7 Real))
+                    (=>
+                      (= x!7 0)
+                      (forall ((y!8 Real))
+                        (=>
+                          (= y!8 n!0)
+                          (forall ((r!9 Real))
+                            (=> (= r!9 (- 0 n!0)) (<= 0 r!9))))))))))))))
+    (= n!0 n!0)
+    (forall ((x!18 Real))
+      (=>
+        (= x!18 0)
+        (forall ((y!19 Real))
+          (=>
+            (= y!19 n!0)
+            (forall (($fresh1 Bool))
+              (=>
+                (and (= $fresh1 (<= 0 n!0)) (= $fresh1 false))
+                (and
+                  (= n!0 n!0)
+                  (forall ((x!15 Real))
+                    (=>
+                      (= x!15 0)
+                      (forall ((y!16 Real))
+                        (=>
+                          (= y!16 n!0)
+                          (forall ((r!17 Real))
+                            (=> (= r!17 (- 0 n!0)) (<= 0 r!17))))))))))))))))
+
+## absKeepsBoth (let)
+(forall ((n!0 Real))
+  (and
+    (= n!0 n!0)
+    (forall ((x!5 Real))
+      (=>
+        (= x!5 0)
+        (forall ((y!6 Real))
+          (=>
+            (= y!6 n!0)
+            (forall (($fresh0 Bool))
+              (=>
+                (and (= $fresh0 (<= 0 n!0)) (= $fresh0 true))
+                (and
+                  (= n!0 n!0)
+                  (forall (($r533!4 Real))
+                    (=> (= $r533!4 n!0) (<= 0 $r533!4))))))))))
+    (= n!0 n!0)
+    (forall ((x!8 Real))
+      (=>
+        (= x!8 0)
+        (forall ((y!9 Real))
+          (=>
+            (= y!9 n!0)
+            (forall (($fresh1 Bool))
+              (=>
+                (and (= $fresh1 (<= 0 n!0)) (= $fresh1 false))
+                (and
+                  (= n!0 n!0)
+                  (forall (($r539!7 Real))
+                    (=> (= $r539!7 n!0) (<= 0 $r539!7))))))))))))

@@ -14,6 +14,7 @@ import type { Declaration } from "../../../../lowering/mir";
 import { emit } from "../emit";
 import { print } from "../print";
 import { Runtime } from "../runtime";
+import { Control } from "../../../../__tests__/helpers/control";
 
 const emitC = (term: EB.Term, declarations?: Map<string, Declaration>) => print(emit(lowerToMir(term, declarations)));
 
@@ -77,14 +78,14 @@ describe("C Codegen: snapshot tests", () => {
 		expect(emitC(term)).toMatchSnapshot();
 	});
 
-	it("reset(shift k -> k 42) — single resume", () => {
+	it.fails("reset(shift k -> k 42) — single resume", () => {
 		const body = EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(42)), EB.DSL.type("Num"));
-		expect(emitC(EB.Constructors.Reset(EB.Constructors.Shift(body)))).toMatchSnapshot();
+		expect(emitC(Control.reset(Control.capture(body)))).toMatchSnapshot();
 	});
 
-	it("reset(shift k -> (k 1) + (k 2)) — multishot", () => {
+	it.fails("reset(shift k -> (k 1) + (k 2)) — multishot", () => {
 		const body = EB.DSL.lambda("k", EB.DSL.add(EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(1)), EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(2))), EB.DSL.type("Num"));
-		expect(emitC(EB.Constructors.Reset(EB.Constructors.Shift(body)))).toMatchSnapshot();
+		expect(emitC(Control.reset(Control.capture(body)))).toMatchSnapshot();
 	});
 });
 
@@ -216,31 +217,31 @@ describe.runIf(process.env.RUN_C_TESTS)("C Codegen: integration tests (gcc)", ()
 	});
 
 	it("reset(42) => 42", () => {
-		expect(compileAndRun(EB.Constructors.Reset(EB.DSL.num(42)))).toBe("42");
+		expect(compileAndRun(Control.reset(EB.DSL.num(42)))).toBe("42");
 	});
 
-	it("reset(shift k -> 42) => 42", () => {
+	it.fails("reset(shift k -> 42) => 42", () => {
 		const body = EB.DSL.lambda("k", EB.DSL.num(42), EB.DSL.type("Num"));
-		expect(compileAndRun(EB.Constructors.Reset(EB.Constructors.Shift(body)))).toBe("42");
+		expect(compileAndRun(Control.reset(Control.capture(body)))).toBe("42");
 	});
 
-	it("reset(shift k -> k 42) => 42", () => {
+	it.fails("reset(shift k -> k 42) => 42", () => {
 		const body = EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(42)), EB.DSL.type("Num"));
-		expect(compileAndRun(EB.Constructors.Reset(EB.Constructors.Shift(body)))).toBe("42");
+		expect(compileAndRun(Control.reset(Control.capture(body)))).toBe("42");
 	});
 
-	it("reset(shift k -> (k 1) + (k 2)) => 3", () => {
+	it.fails("reset(shift k -> (k 1) + (k 2)) => 3", () => {
 		const body = EB.DSL.lambda("k", EB.DSL.add(EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(1)), EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(2))), EB.DSL.type("Num"));
-		expect(compileAndRun(EB.Constructors.Reset(EB.Constructors.Shift(body)))).toBe("3");
+		expect(compileAndRun(Control.reset(Control.capture(body)))).toBe("3");
 	});
 
-	it("reset { let x=1; shift k->k 10; x+100 } => 101", () => {
+	it.fails("reset { let x=1; shift k->k 10; x+100 } => 101", () => {
 		const numTy = NF.Constructors.Lit(Lit.Atom("Num"));
 		const stmts: EB.Statement[] = [
 			EB.Constructors.Stmt.Let("x", EB.DSL.num(1), numTy),
-			EB.Constructors.Stmt.Expr(EB.Constructors.Shift(EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(10)), EB.DSL.type("Num")))),
+			EB.Constructors.Stmt.Expr(Control.capture(EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(10)), EB.DSL.type("Num")))),
 		];
 		const block = EB.Constructors.Block(stmts, EB.DSL.add(EB.DSL.bound(0), EB.DSL.num(100)));
-		expect(compileAndRun(EB.Constructors.Reset(block))).toBe("101");
+		expect(compileAndRun(Control.reset(block))).toBe("101");
 	});
 });

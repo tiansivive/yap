@@ -1,6 +1,6 @@
 ## id (let)
 === Formula ===
-  (forall ((a Type)) (forall ((x Type)) (= x x)))
+  (forall ((a!0 Type)) (forall ((x!1 Type)) (= x!1 x!1)))
 
 === Variables ===
   proxy p1: true
@@ -31,8 +31,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  a=x -> residual
-  x=x -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

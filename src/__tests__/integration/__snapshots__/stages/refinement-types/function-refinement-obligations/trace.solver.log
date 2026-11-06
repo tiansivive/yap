@@ -27,7 +27,7 @@
 
 ## posTestCheckLambdaPostCondition (let)
 === Formula ===
-  (forall ((x Real)) (forall (($a Real)) (=> (= $a 1) (= $a 1))))
+  (forall ((x!0 Real)) (forall (($r65!1 Real)) (=> (= $r65!1 1) (= $r65!1 1))))
 
 === Variables ===
   proxy p1: true
@@ -58,15 +58,15 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=1 -> residual
-  $a=1 -> tautology
+  x!0=1 -> residual
+  $r65!1=1 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## posTestCheckLambdaPreCondition (let)
 === Formula ===
-  (forall ((x Real)) (=> (> x 0) (and (> x 0) (= x x))))
+  (forall ((x!0 Real)) (=> (> x!0 0) (and (> x!0 0) (= x!0 x!0))))
 
 === Variables ===
   proxy p1: true
@@ -97,21 +97,21 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=0 -> tautology
-  x=x -> residual
+  x!0=0 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## posTestCheckLambdaPreAndPostCondition (let)
 === Formula ===
-  (forall ((x Real))
+  (forall ((x!0 Real))
     (=>
-      (> x 0)
+      (> x!0 0)
       (and
-        (> x 0)
-        (= x x)
-        (forall ((n Real)) (=> (and (> n 0) (= n n)) (> n 0))))))
+        (> x!0 0)
+        (= x!0 x!0)
+        (forall (($r73!1 Real))
+          (=> (and (> $r73!1 0) (= $r73!1 x!0)) (> $r73!1 0))))))
 
 === Variables ===
   proxy p1: true
@@ -142,24 +142,24 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=0 -> tautology
-  x=x -> residual
-  n=0 -> tautology
-  n=x -> residual
+  x!0=0 -> tautology
+  $r73!1=0 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## posTestCheckRefinedResultLambda (let)
 === Formula ===
-  (forall ((x Real))
+  (forall ((x!0 Real))
     (and
-      (= x x)
-      (forall ((x Real))
+      (= x!0 x!0)
+      (forall ((x!4 Real))
         (=>
-          (= x x)
-          (forall ((y Real))
-            (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))
+          (= x!4 x!0)
+          (forall ((y!5 Real))
+            (=>
+              (= y!5 1)
+              (forall ((r!6 Real)) (=> (= r!6 (+ x!0 1)) (= r!6 (+ x!0 1))))))))))
 
 === Variables ===
   proxy p1: true
@@ -190,26 +190,26 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=x -> residual
-  x=1 -> residual
-  y=x -> residual
-  y=1 -> residual
-  r=x -> residual
-  r=1 -> residual
+  x!0=1 -> residual
+  x!4=1 -> residual
+  y!5=1 -> residual
+  r!6=1 -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## inc (let)
 === Formula ===
-  (forall ((x Real))
+  (forall ((x!0 Real))
     (and
-      (= x x)
-      (forall ((x Real))
+      (= x!0 x!0)
+      (forall ((x!4 Real))
         (=>
-          (= x x)
-          (forall ((y Real))
-            (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))
+          (= x!4 x!0)
+          (forall ((y!5 Real))
+            (=>
+              (= y!5 1)
+              (forall ((r!6 Real)) (=> (= r!6 (+ x!0 1)) (= r!6 (+ x!0 1))))))))))
 
 === Variables ===
   proxy p1: true
@@ -240,12 +240,10 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=x -> residual
-  x=1 -> residual
-  y=x -> residual
-  y=1 -> residual
-  r=x -> residual
-  r=1 -> residual
+  x!0=1 -> residual
+  x!4=1 -> residual
+  y!5=1 -> residual
+  r!6=1 -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

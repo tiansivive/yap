@@ -27,7 +27,7 @@
 
 ## valid (let)
 === Formula ===
-  (forall (($b Real)) (=> (= $b 5) (> $b 3)))
+  (forall (($r227!1 Real)) (=> (= $r227!1 5) (> $r227!1 3)))
 
 === Variables ===
   proxy p1: true
@@ -58,8 +58,8 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  $b=5 -> tautology
-  $b=3 -> tautology
+  $r227!1=5 -> tautology
+  $r227!1=3 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

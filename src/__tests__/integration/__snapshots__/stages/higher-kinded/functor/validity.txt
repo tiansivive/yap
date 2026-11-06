@@ -5,7 +5,7 @@ valid
 valid
 
 ## mapList (let)
-error: Cannot read properties of undefined (reading 'type')
+valid
 
 ## ListFunctor (let)
 valid

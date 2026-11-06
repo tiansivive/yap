@@ -3,10 +3,12 @@ true
 
 ## ascending (let)
 (and
-  (forall (($b Real)) (=> (= $b 2) (< 1 $b)))
-  (forall (($c Real)) (=> (= $c 3) (and (< 1 $c) (< 2 $c)))))
+  (forall (($r329!1 Real)) (=> (= $r329!1 2) (< 1 $r329!1)))
+  (forall (($r331!2 Real))
+    (=> (= $r331!2 3) (and (< 1 $r331!2) (< 2 $r331!2)))))
 
 ## descending (let)
 (and
-  (forall (($b Real)) (=> (= $b 2) (> 3 $b)))
-  (forall (($c Real)) (=> (= $c 1) (and (> 3 $c) (> 2 $c)))))
+  (forall (($r341!1 Real)) (=> (= $r341!1 2) (> 3 $r341!1)))
+  (forall (($r343!2 Real))
+    (=> (= $r343!2 1) (and (> 3 $r343!2) (> 2 $r343!2)))))

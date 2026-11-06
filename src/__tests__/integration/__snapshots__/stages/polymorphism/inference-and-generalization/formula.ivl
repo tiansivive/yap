@@ -1,17 +1,19 @@
 ## inc (let)
 (and
-  (forall ((x Real))
+  (forall ((x!0 Real))
     (and
-      (= x x)
-      (forall ((x Real))
+      (= x!0 x!0)
+      (forall ((x!4 Real))
         (=>
-          (= x x)
-          (forall ((y Real))
+          (= x!4 x!0)
+          (forall ((y!5 Real))
             (=>
-              (= y 1)
-              (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))
-  (forall ((x Real)) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))
+              (= y!5 1)
+              (forall ((r!6 Real))
+                (=> (= r!6 (+ x!0 1)) (= r!6 (+ x!0 1))))))))))
+  (forall ((x!7 Real))
+    (forall ((r!8 Real)) (=> (= r!8 (+ x!7 1)) (= r!8 (+ x!7 1))))))
 
 ## fst (let)
-(forall ((a Type))
-  (forall ((b Type)) (forall ((x Type)) (forall ((y Type)) (= x x)))))
+(forall ((a!0 Type))
+  (forall ((b!1 Type)) (forall ((x!2 Type)) (forall ((y!3 Type)) (= x!2 x!2)))))

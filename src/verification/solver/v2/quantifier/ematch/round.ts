@@ -188,5 +188,8 @@ namespace Term {
 			)
 			.with(Patterns.Term.Arith, ({ op, args, sort }) => Build.arith(op, substitute(args[0], replacements), substitute(args[1], replacements), sort))
 			.with(Patterns.Term.Select, ({ array, index, sort }) => Build.select(substitute(array, replacements), substitute(index, replacements), sort))
+			.with({ tag: "Prop" }, () => {
+				throw new Error("A Prop term is split out of its atom by formula normalization");
+			})
 			.otherwise(t => t);
 }

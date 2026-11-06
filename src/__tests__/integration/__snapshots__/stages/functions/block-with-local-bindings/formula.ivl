@@ -1,35 +1,36 @@
 ## compute (let)
-(forall ((x Real))
-  (forall ((doubled Real))
+(forall ((x!0 Real))
+  (forall ((doubled!1 Real))
     (=>
-      (= doubled (* doubled 2))
+      (= doubled!1 (* x!0 2))
       (and
-        (= x x)
-        (forall ((x Real))
+        (= x!0 x!0)
+        (forall ((x!5 Real))
           (=>
-            (= x x)
-            (forall ((y Real))
+            (= x!5 x!0)
+            (forall ((y!6 Real))
               (=>
-                (= y 2)
-                (forall ((r Real)) (=> (= r (* x 2)) (= r (* doubled 2))))))))
-        (forall ((added Real))
+                (= y!6 2)
+                (forall ((r!7 Real))
+                  (=> (= r!7 (* x!0 2)) (= r!7 (* x!0 2))))))))
+        (forall ((added!8 Real))
           (=>
-            (= added (+ (* doubled 2) 10))
+            (= added!8 (+ (* x!0 2) 10))
             (and
-              (= doubled (* doubled 2))
-              (= doubled 2)
-              (forall ((x Real))
+              (= doubled!1 (* x!0 2))
+              (= doubled!1 doubled!1)
+              (forall ((x!12 Real))
                 (=>
-                  (and (= x (* doubled 2)) (= x 2))
-                  (forall ((y Real))
+                  (and (= x!12 (* x!0 2)) (= x!12 doubled!1))
+                  (forall ((y!13 Real))
                     (=>
-                      (= y 10)
-                      (forall ((r Real))
+                      (= y!13 10)
+                      (forall ((r!14 Real))
                         (=>
-                          (= r (+ doubled 10))
-                          (= r (+ (* doubled 2) 10))))))))
-              (= added (+ (* doubled 2) 10))
-              (= added added))))))))
+                          (= r!14 (+ doubled!1 10))
+                          (= r!14 (+ (* x!0 2) 10))))))))
+              (= added!8 (+ (* x!0 2) 10))
+              (= added!8 added!8))))))))
 
 ## result (let)
 true

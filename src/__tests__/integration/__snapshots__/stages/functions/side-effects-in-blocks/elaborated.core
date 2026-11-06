@@ -9,11 +9,12 @@
   {
     FFI.print "Computing...";
     let result
-      : <ω> Num [| λ(r: Num) ->
-        (closure: FFI.$eq r (FFI.$mul x y) -| Γ: r; y; x) |]
+      : <ω> Num [| λ(st: State) ->
+        (closure: λ(r: Num) -> FFI.$eq r (FFI.$mul x y) -| Γ: st; y; x) |]
       = FFI.$mul x 2;
     FFI.print
-      (FFI.stringify @<ω> Num [| λ(r: Num) -> FFI.$eq r (FFI.$mul x 2) |]
+      (FFI.stringify
+        @<ω> Num [| λ(st: State) -> λ(r: Num) -> FFI.$eq r (FFI.$mul x 2) |]
         result);
     return result;
   }

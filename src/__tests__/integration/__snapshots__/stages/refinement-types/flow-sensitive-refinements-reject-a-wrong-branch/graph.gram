@@ -1,0 +1,62 @@
+## test (let)
+[1] root
+  :entry -> [3]
+[2] stmt:let {"variable":"test"}
+[3] block
+  :return -> [25]
+  :stmt -> [4] {"index":0}
+  :stmt -> [6] {"index":1}
+[4] stmt:let {"variable":"a"}
+  :next -> [6]
+  :value -> [5]
+[5] lit {"value":{"type":"Num","value":1}}
+[6] stmt:let {"variable":"b"}
+  :value -> [7]
+[7] match
+  :alt -> [14] {"index":0}
+  :alt -> [22] {"index":1}
+  :decision_tree -> [28]
+  :scrutinee -> [26]
+[10] var:foreign {"name":"$gt","arity":2}
+[12] var:bound {"index":1}
+  :next -> [13]
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[13] lit {"value":{"type":"Num","value":0}}
+[14] case
+  :body -> [27]
+  :next -> [22]
+  :pattern -> [15]
+[15] pat:lit {"value":{"type":"Bool","value":true}}
+[18] var:foreign {"name":"$sub","arity":2}
+[20] lit {"value":{"type":"Num","value":0}}
+  :next -> [21]
+[21] var:bound {"index":1}
+  :refers_to -> [4]
+  :scope -> [2] {"level":0}
+  :scope -> [4] {"level":1}
+  :scope -> [6] {"level":2}
+[22] case
+  :body -> [24]
+  :pattern -> [23]
+[23] pat:lit {"value":{"type":"Bool","value":false}}
+[24] lit {"value":{"type":"Num","value":42}}
+[25] lit {"value":{"type":"Num","value":1}}
+[26] primop {"op":"$gt"}
+  :arg -> [12] {"index":0}
+  :arg -> [13] {"index":1}
+  :callee -> [10]
+[27] primop {"op":"$sub"}
+  :arg -> [20] {"index":0}
+  :arg -> [21] {"index":1}
+  :callee -> [18]
+[28] switch {"kind":"lit"}
+  :branch -> [29] {"value":{"type":"Bool","value":true}}
+  :branch -> [30] {"value":{"type":"Bool","value":false}}
+  :inspect -> [26]
+[29] leaf
+  :body -> [27]
+[30] leaf
+  :body -> [24]

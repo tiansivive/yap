@@ -69,8 +69,9 @@ function lower(ctx: C.LowerCtx, term: EB.Term): M.Lowering<void> {
 			.with(Patterns.Lambda, ({ binding, body }) => Functions.Lambda.lower(binding.variable, body))
 
 			.with(Patterns.Reset, ({ term: t }) => Continuation.Reset.lower(t))
-			.with(Patterns.Shift, ({ body }) => Continuation.Shift.lower(body))
-			.with(Patterns.Bubble, ({ shift }) => lower(ctx, shift))
+			.with(Patterns.Bubble, { type: "Capture" }, () => {
+				throw new Error("Lowering does not support captures");
+			})
 
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => Match.lower(scrutinee, alternatives))
 
