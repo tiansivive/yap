@@ -1,0 +1,8 @@
+## abs (let)
+λ(x: Num) -> match FFI.$lte 0 x | true -> x | false -> FFI.$sub 0 x
+
+## absNegatesBoth (let)
+λ(x: Num) -> match FFI.$lte 0 x | true -> FFI.$sub 0 x | false -> FFI.$sub 0 x
+
+## absKeepsBoth (let)
+λ(x: Num) -> match FFI.$lte 0 x | true -> x | false -> x

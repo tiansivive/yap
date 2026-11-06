@@ -1,0 +1,248 @@
+## abs (let)
+=== Formula ===
+  (forall ((x!0 Real))
+    (and
+      (= x!0 x!0)
+      (forall ((x!5 Real))
+        (=>
+          (= x!5 0)
+          (forall ((y!6 Real))
+            (=>
+              (= y!6 x!0)
+              (forall (($fresh0 Bool))
+                (=>
+                  (and (= $fresh0 (<= 0 x!0)) (= $fresh0 true))
+                  (and
+                    (= x!0 x!0)
+                    (forall (($r563!4 Real))
+                      (=> (= $r563!4 x!0) (<= 0 $r563!4))))))))))
+      (= x!0 x!0)
+      (forall ((x!13 Real))
+        (=>
+          (= x!13 0)
+          (forall ((y!14 Real))
+            (=>
+              (= y!14 x!0)
+              (forall (($fresh1 Bool))
+                (=>
+                  (and (= $fresh1 (<= 0 x!0)) (= $fresh1 false))
+                  (and
+                    (= x!0 x!0)
+                    (forall ((x!10 Real))
+                      (=>
+                        (= x!10 0)
+                        (forall ((y!11 Real))
+                          (=>
+                            (= y!11 x!0)
+                            (forall ((r!12 Real))
+                              (=> (= r!12 (- 0 x!0)) (<= 0 r!12))))))))))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x!0=0 -> residual
+  x!5=0 -> residual
+  y!6=0 -> residual
+  $fresh0=true -> residual
+  $r563!4=0 -> tautology
+  x!13=0 -> residual
+  y!14=0 -> residual
+  $fresh1=true -> residual
+  x!10=0 -> residual
+  y!11=0 -> residual
+  r!12=0 -> tautology
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+## absNegatesBoth (let)
+=== Formula ===
+  (forall ((x!0 Real))
+    (and
+      (= x!0 x!0)
+      (forall ((x!10 Real))
+        (=>
+          (= x!10 0)
+          (forall ((y!11 Real))
+            (=>
+              (= y!11 x!0)
+              (forall (($fresh0 Bool))
+                (=>
+                  (and (= $fresh0 (<= 0 x!0)) (= $fresh0 true))
+                  (and
+                    (= x!0 x!0)
+                    (forall ((x!7 Real))
+                      (=>
+                        (= x!7 0)
+                        (forall ((y!8 Real))
+                          (=>
+                            (= y!8 x!0)
+                            (forall ((r!9 Real))
+                              (=> (= r!9 (- 0 x!0)) (<= 0 r!9))))))))))))))
+      (= x!0 x!0)
+      (forall ((x!18 Real))
+        (=>
+          (= x!18 0)
+          (forall ((y!19 Real))
+            (=>
+              (= y!19 x!0)
+              (forall (($fresh1 Bool))
+                (=>
+                  (and (= $fresh1 (<= 0 x!0)) (= $fresh1 false))
+                  (and
+                    (= x!0 x!0)
+                    (forall ((x!15 Real))
+                      (=>
+                        (= x!15 0)
+                        (forall ((y!16 Real))
+                          (=>
+                            (= y!16 x!0)
+                            (forall ((r!17 Real))
+                              (=> (= r!17 (- 0 x!0)) (<= 0 r!17))))))))))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x!0=0 -> residual
+  x!10=0 -> residual
+  y!11=0 -> residual
+  $fresh0=true -> residual
+  x!7=0 -> residual
+  y!8=0 -> residual
+  r!9=0 -> tautology
+  x!18=0 -> residual
+  y!19=0 -> residual
+  $fresh1=true -> residual
+  x!15=0 -> residual
+  y!16=0 -> residual
+  r!17=0 -> tautology
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+## absKeepsBoth (let)
+=== Formula ===
+  (forall ((x!0 Real))
+    (and
+      (= x!0 x!0)
+      (forall ((x!5 Real))
+        (=>
+          (= x!5 0)
+          (forall ((y!6 Real))
+            (=>
+              (= y!6 x!0)
+              (forall (($fresh0 Bool))
+                (=>
+                  (and (= $fresh0 (<= 0 x!0)) (= $fresh0 true))
+                  (and
+                    (= x!0 x!0)
+                    (forall (($r635!4 Real))
+                      (=> (= $r635!4 x!0) (<= 0 $r635!4))))))))))
+      (= x!0 x!0)
+      (forall ((x!8 Real))
+        (=>
+          (= x!8 0)
+          (forall ((y!9 Real))
+            (=>
+              (= y!9 x!0)
+              (forall (($fresh1 Bool))
+                (=>
+                  (and (= $fresh1 (<= 0 x!0)) (= $fresh1 false))
+                  (and
+                    (= x!0 x!0)
+                    (forall (($r641!7 Real))
+                      (=> (= $r641!7 x!0) (<= 0 $r641!7))))))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  x!0=0 -> residual
+  x!5=0 -> residual
+  y!6=0 -> residual
+  $fresh0=true -> residual
+  $r635!4=0 -> tautology
+  x!8=0 -> residual
+  y!9=0 -> residual
+  $fresh1=true -> residual
+  $r641!7=0 -> tautology
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1

@@ -73,8 +73,7 @@ let f: Unit -> Num = \\u -> { capture [Ask] u; return 1; };
 		).toMatchObject({ f: "invalid" });
 	});
 
-	/* A let's value obligation sits in guard position, where validity discharge assumes it (vc-validity-discharge). */
-	test.fails("a capture in a block let is checked", () => {
+	test("a capture in a block let is checked", () => {
 		expect(
 			verdicts(`
 foreign Ask: Effect Unit Num;

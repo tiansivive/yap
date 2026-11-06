@@ -25,6 +25,7 @@ describe("Effect examples verify as examples/INDEX.md lists", () => {
 		["errors/call-without-handler.yap", { outside: "invalid" }],
 		["errors/escaped-closure.yap", { later: "valid", escaped: "invalid" }],
 		["errors/pure-callback.yap", { run: "valid", result: "invalid" }],
+		["errors/block-let.yap", { unchecked: "invalid" }],
 	])("%s", (file, expected) => {
 		expect(verdicts(file)).toMatchObject(expected);
 	});

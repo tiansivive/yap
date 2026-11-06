@@ -1,0 +1,94 @@
+## test (let)
+=== Formula ===
+  (forall ((a!0 Real))
+    (forall ((b!2 Real))
+      (=>
+        (> b!2 0)
+        (and
+          (= a!0 a!0)
+          (forall ((x!12 Real))
+            (=>
+              (= x!12 a!0)
+              (forall ((y!13 Real))
+                (=>
+                  (= y!13 0)
+                  (forall (($fresh0 Bool))
+                    (=>
+                      (and (= $fresh0 (> a!0 0)) (= $fresh0 true))
+                      (and
+                        (= a!0 a!0)
+                        (forall ((x!9 Real))
+                          (=>
+                            (= x!9 0)
+                            (forall ((y!10 Real))
+                              (=>
+                                (= y!10 a!0)
+                                (forall ((r!11 Real))
+                                  (=> (= r!11 (- 0 a!0)) (> r!11 0))))))))))))))
+          (= a!0 a!0)
+          (forall ((x!15 Real))
+            (=>
+              (= x!15 a!0)
+              (forall ((y!16 Real))
+                (=>
+                  (= y!16 0)
+                  (forall (($fresh1 Bool))
+                    (=>
+                      (and (= $fresh1 (> a!0 0)) (= $fresh1 false))
+                      (forall (($r435!14 Real))
+                        (=> (= $r435!14 42) (> $r435!14 0)))))))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  a!0=0 -> residual
+  a!0=42 -> residual
+  b!2=0 -> tautology
+  b!2=42 -> residual
+  x!12=0 -> residual
+  x!12=42 -> residual
+  y!13=0 -> residual
+  y!13=42 -> tautology
+  $fresh0=true -> residual
+  x!9=0 -> residual
+  x!9=42 -> tautology
+  y!10=0 -> residual
+  y!10=42 -> residual
+  r!11=0 -> residual
+  r!11=42 -> tautology
+  x!15=0 -> residual
+  x!15=42 -> residual
+  y!16=0 -> residual
+  y!16=42 -> tautology
+  $fresh1=true -> residual
+  $r435!14=0 -> tautology
+  $r435!14=42 -> tautology
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1

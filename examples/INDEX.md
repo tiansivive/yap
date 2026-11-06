@@ -48,12 +48,12 @@ A function body runs at its caller's state, so a function that captures states t
 | [call-without-handler.yap](errors/call-without-handler.yap) | A function that states the requirement, called with no handler            | `outside` invalid              |
 | [escaped-closure.yap](errors/escaped-closure.yap)           | The closure from `escaping-closure.yap` called after its handler is gone  | `escaped` invalid              |
 | [pure-callback.yap](errors/pure-callback.yap)               | An effectful function passed where `Unit -> Num` is expected              | `result` invalid               |
+| [block-let.yap](errors/block-let.yap)                       | A capture in a block `let`, with no handler                               | `unchecked` invalid            |
 
 ## Known gaps
 
 | File                                | Outcome            | Cause                                                                                                                                                                                                                                        |
 | ----------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [block-let.yap](gaps/block-let.yap) | `unchecked` valid  | A `let` value's obligation sits in guard position, where validity discharge assumes it instead of proving it.                                                                                                                                |
 | [rethrow.yap](gaps/rethrow.yap)     | `rethrown` invalid | The inner handler captures outward. A handler is a lambda verified at an unknown state, and its elaborated type carries no requirement.                                                                                                      |
 | [multishot.yap](gaps/multishot.yap) | verification error | The capture resumes twice and normalizes to `32`, but the reset's answer type is the refined type of `(k 10) + (k 20)`, which mentions the payload's own `k` out of its scope. Main infers the same escaped type for the equivalent program. |
 

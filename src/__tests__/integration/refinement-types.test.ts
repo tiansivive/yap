@@ -251,6 +251,56 @@ let test = {
 		await snap(result);
 	});
 
+	test("flow-sensitive refinements reject a wrong branch", async () => {
+		const result = runScript(`
+let test = {
+	let a = 1;
+	let b: Num[| \\st n -> n > 0 |] = match (a > 0)
+		| true  -> 0 - a
+		| false -> 42;
+	return 1;
+};
+		`);
+		Verdict.expect(result, "test", "invalid");
+		await snap(result);
+	});
+
+	test("a branch on a comparison knows the comparison's result", async () => {
+		const result = runScript(`
+let abs: (n: Num) -> Num [| \\st v -> 0 <= v |] = \\n -> match (0 <= n)
+	| true  -> n
+	| false -> 0 - n;
+let absNegatesBoth: (n: Num) -> Num [| \\st v -> 0 <= v |] = \\n -> match (0 <= n)
+	| true  -> 0 - n
+	| false -> 0 - n;
+let absKeepsBoth: (n: Num) -> Num [| \\st v -> 0 <= v |] = \\n -> match (0 <= n)
+	| true  -> n
+	| false -> n;
+		`);
+		Verdict.expect(result, "abs", "valid");
+		Verdict.expect(result, "absNegatesBoth", "invalid");
+		Verdict.expect(result, "absKeepsBoth", "invalid");
+		await snap(result);
+	});
+
+	test("a parameter named like a primitive's parameter stays distinct", async () => {
+		const result = runScript(`
+let abs: (x: Num) -> Num [| \\st v -> 0 <= v |] = \\x -> match (0 <= x)
+	| true  -> x
+	| false -> 0 - x;
+let absNegatesBoth: (x: Num) -> Num [| \\st v -> 0 <= v |] = \\x -> match (0 <= x)
+	| true  -> 0 - x
+	| false -> 0 - x;
+let absKeepsBoth: (x: Num) -> Num [| \\st v -> 0 <= v |] = \\x -> match (0 <= x)
+	| true  -> x
+	| false -> x;
+		`);
+		Verdict.expect(result, "abs", "valid");
+		Verdict.expect(result, "absNegatesBoth", "invalid");
+		Verdict.expect(result, "absKeepsBoth", "invalid");
+		await snap(result);
+	});
+
 	test("arithmetic over a function's result keeps the result's refinement", async () => {
 		const result = runScript(`
 let Nat: Type = Num [| \\st n -> n >= 0 |];
