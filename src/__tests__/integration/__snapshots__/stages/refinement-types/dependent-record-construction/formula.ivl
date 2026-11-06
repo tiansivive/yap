@@ -1,2 +1,3 @@
 ## test (let)
-(forall ((p Schema)) (forall (($r295 Real)) (=> (= $r295 2) (< 1 $r295))))
+(forall ((p!4 Schema))
+  (forall (($r295!6 Real)) (=> (= $r295!6 2) (< 1 $r295!6))))

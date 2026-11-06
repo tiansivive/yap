@@ -1,3 +1,3 @@
 ## orderedListTestFail (let)
-(forall ((ol App_App_Mu_List_Real_Function))
-  (forall (($r359 Real)) (=> (= $r359 1) (< 2 $r359))))
+(forall ((ol!4 App_App_Mu_List_Real_Function))
+  (forall (($r359!6 Real)) (=> (= $r359!6 1) (< 2 $r359!6))))

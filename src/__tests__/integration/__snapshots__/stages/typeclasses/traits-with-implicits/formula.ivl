@@ -8,17 +8,17 @@ true
 true
 
 ## ShowNum (let)
-(forall ((n Real)) (= n n))
+(forall ((n!0 Real)) (= n!0 n!0))
 
 ## EqNum (let)
-(forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
+(forall ((x!0 Real)) (forall ((y!1 Real)) (and (= x!0 x!0) (= y!1 y!1))))
 
 ## display (let)
-(forall ((t Type)) (forall ((x Type)) (= x x)))
+(forall ((t!0 Type)) (forall ((x!2 Type)) (= x!2 x!2)))
 
 ## areEqual (let)
-(forall ((t Type))
-  (forall ((x Type)) (forall ((y Type)) (and (= x x) (= y y)))))
+(forall ((t!0 Type))
+  (forall ((x!2 Type)) (forall ((y!3 Type)) (and (= x!2 x!2) (= y!3 y!3)))))
 
 ## (using) (using)
 

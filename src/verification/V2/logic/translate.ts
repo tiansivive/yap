@@ -27,7 +27,7 @@ import {
 
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
-import { reader, obligations, State, type Verification } from "../effects";
+import { reader, obligations, names, supply, State, type Verification } from "../effects";
 import { instantiate } from "../utils/refinements";
 
 export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
@@ -106,12 +106,13 @@ export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 
 const getFnSorts = function* (value: NF.Value): Verification<{ name: string; args: IVL.Sort[]; ret: IVL.Sort }> {
 	const ctx = yield* reader.ask();
+	const bound = yield* names.ask();
 
 	const getName = (val: NF.Value): string =>
 		match(NF.unwrapNeutral(val))
 			.with(NF.Patterns.Var, ({ variable }) => {
 				if (variable.type === "Bound") {
-					return ctx.env[EB.lvl2idx(ctx, variable.lvl)].name.variable;
+					return nameAt(bound, variable.lvl);
 				}
 				if (variable.type === "Free") {
 					return variable.name;
@@ -168,11 +169,11 @@ const getFnSorts = function* (value: NF.Value): Verification<{ name: string; arg
 	return { name, args, ret };
 };
 
-const collectArgs = function* (value: NF.Value, rigids: Record<number, IVL.Term>): Verification<IVL.Term[]> {
+const collectArgs = function* (value: NF.Value): Verification<IVL.Term[]> {
 	return yield* match(value)
 		.with(NF.Patterns.App, function* ({ func, arg }) {
-			const head = yield* collectArgs(func, rigids);
-			const translated = yield* term(arg, rigids);
+			const head = yield* collectArgs(func);
+			const translated = yield* term(arg);
 			return [...head, translated];
 		})
 		.otherwise(function* (): Verification<IVL.Term[]> {
@@ -180,16 +181,16 @@ const collectArgs = function* (value: NF.Value, rigids: Record<number, IVL.Term>
 		});
 };
 
-export const term = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = {}): Verification<IVL.Term> {
+export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 	const ctx = yield* reader.ask();
 	/* The kind is set aside on purpose: it says why a value is stuck, and a term encodes only its structure. */
 	const { value: structure } = yield* NF.view(nf);
 	return yield* match(structure)
 		.with({ type: "Neutral" }, function* ({ value }) {
-			return yield* term(value, rigids);
+			return yield* term(value);
 		})
 		.with({ type: "Modal" }, function* ({ value }) {
-			return yield* term(value, rigids);
+			return yield* term(value);
 		})
 		.with(NF.Patterns.Lit, function* (l) {
 			return match(l.value)
@@ -208,7 +209,7 @@ export const term = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = 
 		})
 		.with(NF.Patterns.App, function* (fn) {
 			const { name, args: argSorts, ret } = yield* getFnSorts(fn);
-			const args = yield* collectArgs(fn, rigids);
+			const args = yield* collectArgs(fn);
 
 			if (args.length === 0) {
 				return Build.const_(name, ret);
@@ -224,19 +225,15 @@ export const term = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = 
 			return Build.const_(`$${variable.lvl}.${variable.name}`, yield* mkSort(variable.annotation));
 		})
 		.with(NF.Patterns.Var, function* (v) {
+			/* A `Var`, which is what the solver substitutes when it instantiates the binder. */
 			if (v.variable.type === "Bound") {
-				const mapped = rigids[v.variable.lvl];
-				if (mapped) {
-					return mapped;
-				}
 				const entry = ctx.env[EB.lvl2idx(ctx, v.variable.lvl)];
-				const sort = yield* mkSort(entry.type[2]);
-				return Build.const_(entry.name.variable, sort);
+				return Build.var_(yield* named(v.variable.lvl), yield* mkSort(entry.type[2]));
 			}
 			if (v.variable.type === "Free") {
 				const [t] = ctx.imports[v.variable.name];
 				const evaluated = yield* NF.evaluate(t);
-				return yield* term(evaluated, rigids);
+				return yield* term(evaluated);
 			}
 			if (v.variable.type === "Meta") {
 				return Build.const_(`?${v.variable.val}`, Build.uninterpreted("Any"));
@@ -249,7 +246,7 @@ export const term = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = 
 						.with({ type: "Neutral", kind: "Symbolic", value: { type: "Var", variable: { type: "Label" } } }, () => true)
 						.otherwise(() => false);
 					if (!symbolic) {
-						return yield* term(sig.value, rigids);
+						return yield* term(sig.value);
 					}
 				}
 				const ty = ctx.labels[name];
@@ -262,14 +259,14 @@ export const term = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = 
 			{ type: "External", name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT) },
 			e => e.args.length === e.arity,
 			function* () {
-				return Build.prop(yield* formula(nf, rigids));
+				return Build.prop(yield* formula(nf));
 			},
 		)
 		.with({ type: "External" }, function* (e) {
 			if (e.args.length !== e.arity) {
 				throw new Error("External with wrong arity in logical formulas");
 			}
-			const args = yield* Eff.traverse(e.args, arg => term(arg, rigids));
+			const args = yield* Eff.traverse(e.args, arg => term(arg));
 			return match(e.name)
 				.with(OP_ADD, () => Build.arith("+", args[0], args[1], Build.Real))
 				.with(OP_SUB, () => Build.arith("-", args[0], args[1], Build.Real))
@@ -282,21 +279,21 @@ export const term = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = 
 		});
 };
 
-export const formula = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = {}): Verification<IVL.Formula> {
+export const formula = function* (nf: NF.Value): Verification<IVL.Formula> {
 	/* As in `term`, the kind is set aside: a formula encodes only the structure. */
 	const { value: structure } = yield* NF.view(nf);
 	return yield* match(structure)
 		.with({ type: "Neutral" }, function* ({ value }) {
-			return yield* formula(value, rigids);
+			return yield* formula(value);
 		})
 		.with({ type: "Modal" }, function* ({ value }) {
-			return yield* formula(value, rigids);
+			return yield* formula(value);
 		})
 		.with(NF.Patterns.Lit, function* ({ value }) {
 			if (value.type === "Bool") {
 				return value.value ? Build.true_() : Build.false_();
 			}
-			return Build.atom("=", yield* term(nf, rigids), Build.bool(true));
+			return Build.atom("=", yield* term(nf), Build.bool(true));
 		})
 		.with(
 			NF.Patterns.App,
@@ -309,70 +306,92 @@ export const formula = function* (nf: NF.Value, rigids: Record<number, IVL.Term>
 		.with({ type: "External" }, function* ({ name, args }) {
 			return yield* match(name)
 				.with(OP_AND, function* () {
-					return Build.and(yield* formula(args[0], rigids), yield* formula(args[1], rigids));
+					return Build.and(yield* formula(args[0]), yield* formula(args[1]));
 				})
 				.with(OP_OR, function* () {
-					return Build.or(yield* formula(args[0], rigids), yield* formula(args[1], rigids));
+					return Build.or(yield* formula(args[0]), yield* formula(args[1]));
 				})
 				.with(OP_NOT, function* () {
-					return Build.not(yield* formula(args[0], rigids));
+					return Build.not(yield* formula(args[0]));
 				})
 				.with(OP_EQ, function* () {
-					return Build.atom("=", yield* term(args[0], rigids), yield* term(args[1], rigids));
+					return Build.atom("=", yield* term(args[0]), yield* term(args[1]));
 				})
 				.with(OP_NEQ, function* () {
-					return Build.atom("!=", yield* term(args[0], rigids), yield* term(args[1], rigids));
+					return Build.atom("!=", yield* term(args[0]), yield* term(args[1]));
 				})
 				.with(OP_GT, function* () {
-					return Build.atom(">", yield* term(args[0], rigids), yield* term(args[1], rigids));
+					return Build.atom(">", yield* term(args[0]), yield* term(args[1]));
 				})
 				.with(OP_GTE, function* () {
-					return Build.atom(">=", yield* term(args[0], rigids), yield* term(args[1], rigids));
+					return Build.atom(">=", yield* term(args[0]), yield* term(args[1]));
 				})
 				.with(OP_LT, function* () {
-					return Build.atom("<", yield* term(args[0], rigids), yield* term(args[1], rigids));
+					return Build.atom("<", yield* term(args[0]), yield* term(args[1]));
 				})
 				.with(OP_LTE, function* () {
-					return Build.atom("<=", yield* term(args[0], rigids), yield* term(args[1], rigids));
+					return Build.atom("<=", yield* term(args[0]), yield* term(args[1]));
 				})
 				.otherwise(function* () {
-					return Build.atom("=", yield* term(nf, rigids), Build.bool(true));
+					return Build.atom("=", yield* term(nf), Build.bool(true));
 				});
 		})
 		.otherwise(function* () {
-			return Build.atom("=", yield* term(nf, rigids), Build.bool(true));
+			return Build.atom("=", yield* term(nf), Build.bool(true));
 		});
 };
 
-export const quantify = function* (variable: string, annotation: NF.Value, vc: IVL.Formula): Verification<IVL.Formula> {
+/* The IVL name of the variable bound at `lvl`. */
+const nameAt = (bound: ReadonlyMap<number, string>, lvl: number): string =>
+	match(bound.get(lvl))
+		.with(undefined, () => {
+			throw new Error(`No IVL name for the variable at level ${lvl}`);
+		})
+		.otherwise(name => name);
+
+const named = function* (lvl: number): Verification<string> {
+	return nameAt(yield* names.ask(), lvl);
+};
+
+/* Runs `program` with a variable bound at the next level, named `name` in the IVL. */
+export const scope = function* <A>(name: string, binder: EB.Binder, annotation: NF.Value, program: Verification<A>): Verification<A> {
+	const lvl = (yield* reader.ask()).env.length;
+	return yield* reader.local(
+		c => EB.bind(c, binder, annotation),
+		names.local(bound => new Map([...bound, [lvl, name]]), program),
+	);
+};
+
+/*
+ * Binds the variable named `name` around `vc`, assuming its refinement. Callers quantify from the context the variable
+ * is not yet bound in. An existential is opened in the context it was made in, and its own variable gets a fresh name.
+ */
+export const quantify = function* (name: string, annotation: NF.Value, vc: IVL.Formula): Verification<IVL.Formula> {
 	const ctx = yield* reader.ask();
 	return yield* match(yield* NF.view(annotation))
 		.with(NF.View.Sealed({ type: "Existential" }), function* ({ value: ex }) {
+			const existential = yield* supply.freshFrom(ex.variable);
 			const inner = yield* reader.local(
-				() => EB.bind(ex.body.ctx, { type: "Pi", variable: ex.variable }, ex.annotation),
-				quantify(variable, ex.body.value, vc),
+				() => ex.body.ctx,
+				scope(existential, { type: "Pi", variable: ex.variable }, ex.annotation, quantify(name, ex.body.value, vc)),
 			);
-			return yield* quantify(ex.variable, ex.annotation, inner);
+			return yield* reader.local(() => ex.body.ctx, quantify(existential, ex.annotation, inner));
 		})
 		.with(NF.View.Sealed(NF.Patterns.Pi), function* () {
 			return vc;
 		})
 		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: { modalities } }) {
 			const sort = yield* mkSort(annotation);
-			const x = Build.var_(variable, sort);
-
-			const lvl = ctx.env.length;
-			const applied = yield* instantiate(modalities.liquid, NF.Constructors.Rigid(lvl));
-			const rigids: Record<number, IVL.Term> = { [lvl]: x };
-			const phi = yield* formula(applied, rigids);
-			return yield* obligations.record(`quantify:${variable}`, Build.forall([{ name: variable, sort }], Build.implies(phi, vc)), {
-				description: `Quantifying refined ${variable}`,
+			const applied = yield* instantiate(modalities.liquid, NF.Constructors.Rigid(ctx.env.length));
+			const phi = yield* scope(name, { type: "Pi", variable: name }, annotation, formula(applied));
+			return yield* obligations.record(`quantify:${name}`, Build.forall([{ name, sort }], Build.implies(phi, vc)), {
+				description: `Quantifying refined ${name}`,
 			});
 		})
 		.otherwise(function* () {
 			const sort = yield* mkSort(annotation);
-			return yield* obligations.record(`quantify:${variable}`, Build.forall([{ name: variable, sort }], vc), {
-				description: `Quantifying over ${variable}`,
+			return yield* obligations.record(`quantify:${name}`, Build.forall([{ name, sort }], vc), {
+				description: `Quantifying over ${name}`,
 			});
 		});
 };

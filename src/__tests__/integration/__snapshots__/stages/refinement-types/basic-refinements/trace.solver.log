@@ -54,7 +54,7 @@
 
 ## n (let)
 === Formula ===
-  (forall (($r9 Real)) (=> (= $r9 42) (>= $r9 0)))
+  (forall (($r9!0 Real)) (=> (= $r9!0 42) (>= $r9!0 0)))
 
 === Variables ===
   proxy p1: true
@@ -85,15 +85,15 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  $r9=42 -> tautology
-  $r9=0 -> tautology
+  $r9!0=42 -> tautology
+  $r9!0=0 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## p (let)
 === Formula ===
-  (forall (($r11 Real)) (=> (= $r11 42) (> $r11 0)))
+  (forall (($r11!0 Real)) (=> (= $r11!0 42) (> $r11!0 0)))
 
 === Variables ===
   proxy p1: true
@@ -124,15 +124,15 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  $r11=42 -> tautology
-  $r11=0 -> tautology
+  $r11!0=42 -> tautology
+  $r11!0=0 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## zero (let)
 === Formula ===
-  (forall (($r13 Real)) (=> (= $r13 0) (>= $r13 0)))
+  (forall (($r13!0 Real)) (=> (= $r13!0 0) (>= $r13!0 0)))
 
 === Variables ===
   proxy p1: true
@@ -163,7 +163,7 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  $r13=0 -> tautology
+  $r13!0=0 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

@@ -2,12 +2,14 @@
 true
 
 ## fact (let)
-(forall ((n Real))
+(forall ((n!0 Real))
   (and
-    (= n n)
-    (= n n)
+    (= n!0 n!0)
+    (= n!0 n!0)
     (forall (($fresh1 Real))
-      (=> (and (= $fresh1 n) (= $fresh1 n)) (and (= n n) (= n n))))))
+      (=>
+        (and (= $fresh1 n!0) (= $fresh1 n!0))
+        (and (= n!0 n!0) (= n!0 n!0))))))
 
 ## result (let)
 true

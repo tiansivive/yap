@@ -2,4 +2,4 @@
 true
 
 ## describeShape (let)
-(forall ((s Schema)) (and (= s s) (= s s) (= s s)))
+(forall ((s!0 Schema)) (and (= s!0 s!0) (= s!0 s!0) (= s!0 s!0)))

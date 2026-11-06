@@ -1,7 +1,8 @@
 ## getY (let)
 === Formula ===
   (forall (($fresh0 Schema))
-    (forall ((a Real)) (forall ((b Real)) (forall (($row_5 Row)) (= b b)))))
+    (forall ((a!1 Real))
+      (forall ((b!2 Real)) (forall (($row_5!3 Row)) (= b!2 b!2)))))
 
 === Variables ===
   proxy p1: true
@@ -32,15 +33,14 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  a=b -> residual
-  b=b -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## getY2 (let)
 === Formula ===
-  (forall (($fresh0 Schema)) (forall ((a Real)) (forall (($row_8 Row)) (= a a))))
+  (forall (($fresh0 Schema))
+    (forall ((a!1 Real)) (forall (($row_8!2 Row)) (= a!1 a!1))))
 
 === Variables ===
   proxy p1: true
@@ -71,7 +71,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  a=a -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

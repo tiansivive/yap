@@ -96,14 +96,16 @@ export const obligations = { record, handlers: obligationsHandlers };
 
 // ─── Supply ──────────────────────────────────────────────────────────────────
 //
-// Fresh names for verification. Two actions:
+// Fresh names for verification. Three actions:
 // - fresh: alpha-bumped names ($a, $b, ..., $z, $aa, ...)
 // - freshNum: numeric names ($fresh0, $fresh1, ...)
+// - freshFrom: a source name made unique (x!0, x!1, ...)
 
 type FreshAction = Eff.Action<"VC.fresh", undefined, string>;
 type FreshNumAction = Eff.Action<"VC.freshNum", undefined, string>;
+type FreshFromAction = Eff.Action<"VC.freshFrom", string, string>;
 
-type SupplyActions = FreshAction | FreshNumAction;
+type SupplyActions = FreshAction | FreshNumAction | FreshFromAction;
 
 const fresh = function* () {
 	return yield* Eff.ctl.action<FreshAction>("VC.fresh", undefined);
@@ -111,6 +113,10 @@ const fresh = function* () {
 
 const freshNum = function* () {
 	return yield* Eff.ctl.action<FreshNumAction>("VC.freshNum", undefined);
+};
+
+const freshFrom = function* (variable: string) {
+	return yield* Eff.ctl.action<FreshFromAction>("VC.freshFrom", variable);
 };
 
 const bumpAlpha = (s: string): string => {
@@ -135,6 +141,7 @@ const bumpAlpha = (s: string): string => {
 const supplyHandlers = (): Eff.Handler<SupplyActions, undefined> => {
 	let alphaSeq = "a";
 	let numSeq = 0;
+	let fromSeq = 0;
 
 	return {
 		clauses: {
@@ -148,12 +155,29 @@ const supplyHandlers = (): Eff.Handler<SupplyActions, undefined> => {
 				numSeq++;
 				return Eff.ctl.resume(name);
 			},
+			"VC.freshFrom": variable => {
+				const name = `${variable}!${fromSeq}`;
+				fromSeq++;
+				return Eff.ctl.resume(name);
+			},
 		},
 		output: () => undefined,
 	};
 };
 
-export const supply = { fresh, freshNum, handlers: supplyHandlers };
+export const supply = { fresh, freshNum, freshFrom, handlers: supplyHandlers };
+
+// ─── Names ───────────────────────────────────────────────────────────────────
+//
+// The IVL name of each variable in scope, by level. A variable gets a fresh
+// name where it is bound. A VC is assembled from pieces built in different
+// contexts, so two binders on one path can sit at the same level, and the
+// level alone cannot name them. The outermost entries, bound before
+// verification starts, keep their source names.
+
+export const names = Eff.reader<ReadonlyMap<number, string>, "VC.Names">("VC.Names");
+
+const outermost = (ctx: EB.Context): ReadonlyMap<number, string> => new Map(ctx.env.map((entry, i) => [ctx.env.length - 1 - i, entry.name.variable]));
 
 // ─── State ───────────────────────────────────────────────────────────────────
 //
@@ -194,6 +218,7 @@ export const State = {
 export type Verification<A> = Eff.Eff<
 	| Eff.Actions<typeof reader>
 	| Eff.Actions<typeof state>
+	| Eff.Actions<typeof names>
 	| Eff.Only<typeof Metas.registry, "Registry.get">
 	| Eff.Actions<typeof except>
 	| LoggerActions
@@ -224,6 +249,7 @@ export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () =>
 		logger.handlers(options.logging ?? false),
 		obligations.handlers(),
 		supply.handlers(),
+		names.handlers(outermost(ctx)),
 	]);
 
 	return { answer, obligations: collected, registry: registrySnapshot } as const;

@@ -1,6 +1,6 @@
 ## compose (let)
 === Formula ===
-  (forall ((x Real)) (= x x))
+  (forall ((x!2 Real)) (= x!2 x!2))
 
 === Variables ===
   proxy p1: true
@@ -31,7 +31,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=x -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
@@ -39,17 +38,19 @@
 ## add1 (let)
 === Formula ===
   (and
-    (forall ((x Real))
+    (forall ((x!0 Real))
       (and
-        (= x x)
-        (forall ((x Real))
+        (= x!0 x!0)
+        (forall ((x!4 Real))
           (=>
-            (= x x)
-            (forall ((y Real))
+            (= x!4 x!0)
+            (forall ((y!5 Real))
               (=>
-                (= y 1)
-                (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))
-    (forall ((x Real)) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))
+                (= y!5 1)
+                (forall ((r!6 Real))
+                  (=> (= r!6 (+ x!0 1)) (= r!6 (+ x!0 1))))))))))
+    (forall ((x!7 Real))
+      (forall ((r!8 Real)) (=> (= r!8 (+ x!7 1)) (= r!8 (+ x!7 1))))))
 
 === Variables ===
   proxy p1: true
@@ -80,12 +81,12 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=x -> residual
-  x=1 -> residual
-  y=x -> residual
-  y=1 -> residual
-  r=x -> residual
-  r=1 -> residual
+  x!0=1 -> residual
+  x!4=1 -> residual
+  y!5=1 -> residual
+  r!6=1 -> residual
+  x!7=1 -> residual
+  r!8=1 -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
@@ -93,17 +94,19 @@
 ## add5 (let)
 === Formula ===
   (and
-    (forall ((x Real))
+    (forall ((x!0 Real))
       (and
-        (= x x)
-        (forall ((x Real))
+        (= x!0 x!0)
+        (forall ((x!4 Real))
           (=>
-            (= x x)
-            (forall ((y Real))
+            (= x!4 x!0)
+            (forall ((y!5 Real))
               (=>
-                (= y 5)
-                (forall ((r Real)) (=> (= r (+ x 5)) (= r (+ x 5))))))))))
-    (forall ((x Real)) (forall ((r Real)) (=> (= r (+ x 5)) (= r (+ x 5))))))
+                (= y!5 5)
+                (forall ((r!6 Real))
+                  (=> (= r!6 (+ x!0 5)) (= r!6 (+ x!0 5))))))))))
+    (forall ((x!7 Real))
+      (forall ((r!8 Real)) (=> (= r!8 (+ x!7 5)) (= r!8 (+ x!7 5))))))
 
 === Variables ===
   proxy p1: true
@@ -134,12 +137,12 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=x -> residual
-  x=5 -> residual
-  y=x -> residual
-  y=5 -> residual
-  r=x -> residual
-  r=5 -> residual
+  x!0=5 -> residual
+  x!4=5 -> residual
+  y!5=5 -> residual
+  r!6=5 -> residual
+  x!7=5 -> residual
+  r!8=5 -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
@@ -147,17 +150,19 @@
 ## double (let)
 === Formula ===
   (and
-    (forall ((x Real))
+    (forall ((x!0 Real))
       (and
-        (= x x)
-        (forall ((x Real))
+        (= x!0 x!0)
+        (forall ((x!4 Real))
           (=>
-            (= x x)
-            (forall ((y Real))
+            (= x!4 x!0)
+            (forall ((y!5 Real))
               (=>
-                (= y 2)
-                (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))))))
-    (forall ((x Real)) (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))
+                (= y!5 2)
+                (forall ((r!6 Real))
+                  (=> (= r!6 (* x!0 2)) (= r!6 (* x!0 2))))))))))
+    (forall ((x!7 Real))
+      (forall ((r!8 Real)) (=> (= r!8 (* x!7 2)) (= r!8 (* x!7 2))))))
 
 === Variables ===
   proxy p1: true
@@ -188,12 +193,12 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=x -> residual
-  x=2 -> residual
-  y=x -> residual
-  y=2 -> residual
-  r=x -> residual
-  r=2 -> residual
+  x!0=2 -> residual
+  x!4=2 -> residual
+  y!5=2 -> residual
+  r!6=2 -> residual
+  x!7=2 -> residual
+  r!8=2 -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

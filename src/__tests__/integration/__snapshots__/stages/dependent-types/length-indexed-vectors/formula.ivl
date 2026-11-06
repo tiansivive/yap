@@ -1,5 +1,5 @@
 ## Vec (let)
-(forall ((n Real)) (forall ((t Type)) (and (= n n) (= n n))))
+(forall ((n!1 Real)) (forall ((t!2 Type)) (and (= n!1 n!1) (= n!1 n!1))))
 
 ## vec0 (let)
 true

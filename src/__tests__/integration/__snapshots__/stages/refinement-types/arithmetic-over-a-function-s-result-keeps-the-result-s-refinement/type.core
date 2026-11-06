@@ -1,0 +1,11 @@
+## Nat (let)
+Type
+
+## Pos (let)
+Type
+
+## addOne (let)
+Π(t1: Π(t2: Num) -> Nat) -> Pos
+
+## addZero (let)
+Π(t3: Π(t4: Num) -> Nat) -> Pos

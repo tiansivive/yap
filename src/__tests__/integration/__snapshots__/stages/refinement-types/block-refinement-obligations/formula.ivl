@@ -1,15 +1,18 @@
 ## block (let)
 (and
-  (forall ((o Real))
+  (forall ((o!1 Real))
     (=>
-      (> o 0)
+      (> o!1 0)
       (and
-        (> o 0)
-        (= o o)
-        (forall ((x Real))
+        (> o!1 0)
+        (= o!1 o!1)
+        (forall ((x!5 Real))
           (=>
-            (and (> x 0) (= x o))
-            (forall ((y Real))
-              (=> (= y 1) (forall ((r Real)) (=> (= r (+ o 1)) (> r 1))))))))))
-  (forall (($r255 Real)) (=> (= $r255 1) (> $r255 0)))
-  (forall ((t1 Real)) (=> (= t1 1) (forall ((p Real)) (=> (> p 1) (> p 0))))))
+            (and (> x!5 0) (= x!5 o!1))
+            (forall ((y!6 Real))
+              (=>
+                (= y!6 1)
+                (forall ((r!7 Real)) (=> (= r!7 (+ o!1 1)) (> r!7 1))))))))))
+  (forall (($r255!8 Real)) (=> (= $r255!8 1) (> $r255!8 0)))
+  (forall ((t1!10 Real))
+    (=> (= t1!10 1) (forall ((p!11 Real)) (=> (> p!11 1) (> p!11 0))))))

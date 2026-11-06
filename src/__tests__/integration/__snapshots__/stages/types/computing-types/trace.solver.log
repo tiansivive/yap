@@ -1,6 +1,6 @@
 ## chooseType (let)
 === Formula ===
-  (forall ((b Bool)) (and (= b b) (= b b)))
+  (forall ((b!0 Bool)) (and (= b!0 b!0) (= b!0 b!0)))
 
 === Variables ===
   proxy p1: true
@@ -31,7 +31,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  b=b -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

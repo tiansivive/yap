@@ -1,11 +1,12 @@
 ## (expr) (expression)
 === Formula ===
   (and
-    (forall ((x Real))
-      (forall ((y Real))
-        (=> (= y 2) (forall ((r Real)) (=> (= r 0.5) (= r 0.5))))))
-    (forall ((x Real))
-      (forall ((y Real)) (=> (= y 2) (forall ((r Real)) (=> (= r 1) (= r 1)))))))
+    (forall ((x!4 Real))
+      (forall ((y!5 Real))
+        (=> (= y!5 2) (forall ((r!6 Real)) (=> (= r!6 0.5) (= r!6 0.5))))))
+    (forall ((x!9 Real))
+      (forall ((y!10 Real))
+        (=> (= y!10 2) (forall ((r!11 Real)) (=> (= r!11 1) (= r!11 1)))))))
 
 === Variables ===
   proxy p1: true
@@ -36,15 +37,24 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=2 -> residual
-  x=0.5 -> residual
-  x=1 -> residual
-  y=2 -> residual
-  y=0.5 -> tautology
-  y=1 -> tautology
-  r=2 -> tautology
-  r=0.5 -> tautology
-  r=1 -> tautology
+  x!4=2 -> residual
+  x!4=0.5 -> residual
+  x!4=1 -> residual
+  y!5=2 -> residual
+  y!5=0.5 -> tautology
+  y!5=1 -> tautology
+  r!6=2 -> tautology
+  r!6=0.5 -> tautology
+  r!6=1 -> tautology
+  x!9=2 -> residual
+  x!9=0.5 -> residual
+  x!9=1 -> residual
+  y!10=2 -> residual
+  y!10=0.5 -> tautology
+  y!10=1 -> tautology
+  r!11=2 -> tautology
+  r!11=0.5 -> tautology
+  r!11=1 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

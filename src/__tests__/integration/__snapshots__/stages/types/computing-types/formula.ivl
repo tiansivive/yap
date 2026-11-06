@@ -1,5 +1,5 @@
 ## chooseType (let)
-(forall ((b Bool)) (and (= b b) (= b b)))
+(forall ((b!0 Bool)) (and (= b!0 b!0) (= b!0 b!0)))
 
 ## T1 (let)
 true

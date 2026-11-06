@@ -1,13 +1,13 @@
 ## firstOrZero (let)
 === Formula ===
-  (forall ((list Schema))
+  (forall ((list!0 Schema))
     (and
-      (= list list)
-      (= list list)
+      (= list!0 list!0)
+      (= list!0 list!0)
       (forall (($fresh1 Schema))
         (=>
-          (and (= $fresh1 list) (= $fresh1 list))
-          (forall ((x Real)) (forall ((xs Schema)) (= x x)))))))
+          (and (= $fresh1 list!0) (= $fresh1 list!0))
+          (forall ((x!2 Real)) (forall ((xs!3 Schema)) (= x!2 x!2)))))))
 
 === Variables ===
   proxy p1: true
@@ -38,24 +38,20 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  list=list -> residual
-  $fresh1=list -> residual
-  x=x -> residual
-  xs=list -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## tail (let)
 === Formula ===
-  (forall ((list Schema))
+  (forall ((list!0 Schema))
     (and
-      (= list list)
-      (= list list)
+      (= list!0 list!0)
+      (= list!0 list!0)
       (forall (($fresh1 Schema))
         (=>
-          (and (= $fresh1 list) (= $fresh1 list))
-          (forall ((x Real)) (forall ((xs Schema)) (= xs xs)))))))
+          (and (= $fresh1 list!0) (= $fresh1 list!0))
+          (forall ((x!1 Real)) (forall ((xs!2 Schema)) (= xs!2 xs!2)))))))
 
 === Variables ===
   proxy p1: true
@@ -86,12 +82,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  list=list -> residual
-  list=xs -> residual
-  $fresh1=list -> residual
-  $fresh1=xs -> residual
-  xs=list -> residual
-  xs=xs -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

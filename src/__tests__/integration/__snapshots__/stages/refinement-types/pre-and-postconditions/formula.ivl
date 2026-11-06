@@ -2,11 +2,11 @@
 true
 
 ## safe (let)
-(forall ((x Real))
+(forall ((x!0 Real))
   (=>
-    (>= x 0)
+    (>= x!0 0)
     (and
-      (>= x 0)
-      (= x x)
-      (forall (($r103 Real))
-        (=> (and (>= $r103 0) (= $r103 x)) (>= $r103 0))))))
+      (>= x!0 0)
+      (= x!0 x!0)
+      (forall (($r103!1 Real))
+        (=> (and (>= $r103!1 0) (= $r103!1 x!0)) (>= $r103!1 0))))))

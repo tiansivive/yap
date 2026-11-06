@@ -6,15 +6,18 @@ true
 
 ## hof (let)
 (and
-  (forall (($r129 Real)) (=> (= $r129 1) (>= $r129 0)))
-  (forall ((t1 Real)) (=> (= t1 1) (forall ((n Real)) (=> (>= n 0) (>= n 0))))))
+  (forall (($r129!1 Real)) (=> (= $r129!1 1) (>= $r129!1 0)))
+  (forall ((t1!2 Real))
+    (=> (= t1!2 1) (forall ((n!3 Real)) (=> (>= n!3 0) (>= n!3 0))))))
 
 ## hof2 (let)
-(forall ((t3 Real))
+(forall ((t3!9 Real))
   (=>
-    (= t3 1)
-    (forall ((x Real))
+    (= t3!9 1)
+    (forall ((x!6 Real))
       (=>
-        (>= x 0)
-        (forall ((y Real))
-          (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (> r 0)))))))))
+        (>= x!6 0)
+        (forall ((y!7 Real))
+          (=>
+            (= y!7 1)
+            (forall ((r!8 Real)) (=> (= r!8 (+ x!6 1)) (> r!8 0)))))))))

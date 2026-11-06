@@ -8,35 +8,39 @@ true
 true
 
 ## mapList (let)
-(forall ((a Type))
-  (forall ((b Type))
-    (forall ((list App_Mu_List_Type))
+(forall ((a!0 Type))
+  (forall ((b!1 Type))
+    (forall ((list!3 App_Mu_List_Type))
       (and
-        (= list list)
-        (= list list)
+        (= list!3 list!3)
+        (= list!3 list!3)
         (forall (($fresh1 App_Mu_List_Type))
           (=>
-            (and (= $fresh1 list) (= $fresh1 list))
-            (forall ((x Type))
-              (forall ((xs App_Mu_List_Type))
-                (forall (($row_13 Row))
-                  (forall (($row_14 Row))
-                    (and (= x x) (= a a) (= b b) (= xs xs))))))))))))
+            (and (= $fresh1 list!3) (= $fresh1 list!3))
+            (forall ((x!6 Type))
+              (forall ((xs!7 App_Mu_List_Type))
+                (forall (($row_13!8 Row))
+                  (forall (($row_14!9 Row))
+                    (and
+                      (= x!6 x!6)
+                      (= a!0 a!0)
+                      (= b!1 b!1)
+                      (= xs!7 xs!7))))))))))))
 
 ## ListFunctor (let)
-(forall ((a Type)) (forall ((b Type)) (and (= a a) (= b b))))
+(forall ((a!0 Type)) (forall ((b!1 Type)) (and (= a!0 a!0) (= b!1 b!1))))
 
 ## fmap (let)
-(forall ((a Type))
-  (forall ((b Type))
-    (forall ((container App_Fn_Type_Type_Type))
-      (and (= a a) (= b b) (= container container)))))
+(forall ((a!2 Type))
+  (forall ((b!3 Type))
+    (forall ((container!5 App_Fn_Type_Type_Type))
+      (and (= a!2 a!2) (= b!3 b!3) (= container!5 container!5)))))
 
 ## (using) (using)
 
 
 ## strmap (let)
-(forall ((a Type)) (and (= a a) (= a a)))
+(forall ((a!1 Type)) (and (= a!1 a!1) (= a!1 a!1)))
 
 ## listOf1 (let)
 true

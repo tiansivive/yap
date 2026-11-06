@@ -1,47 +1,53 @@
 ## compose (let)
-(forall ((x Real)) (= x x))
+(forall ((x!2 Real)) (= x!2 x!2))
 
 ## add1 (let)
 (and
-  (forall ((x Real))
+  (forall ((x!0 Real))
     (and
-      (= x x)
-      (forall ((x Real))
+      (= x!0 x!0)
+      (forall ((x!4 Real))
         (=>
-          (= x x)
-          (forall ((y Real))
+          (= x!4 x!0)
+          (forall ((y!5 Real))
             (=>
-              (= y 1)
-              (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))))))
-  (forall ((x Real)) (forall ((r Real)) (=> (= r (+ x 1)) (= r (+ x 1))))))
+              (= y!5 1)
+              (forall ((r!6 Real))
+                (=> (= r!6 (+ x!0 1)) (= r!6 (+ x!0 1))))))))))
+  (forall ((x!7 Real))
+    (forall ((r!8 Real)) (=> (= r!8 (+ x!7 1)) (= r!8 (+ x!7 1))))))
 
 ## add5 (let)
 (and
-  (forall ((x Real))
+  (forall ((x!0 Real))
     (and
-      (= x x)
-      (forall ((x Real))
+      (= x!0 x!0)
+      (forall ((x!4 Real))
         (=>
-          (= x x)
-          (forall ((y Real))
+          (= x!4 x!0)
+          (forall ((y!5 Real))
             (=>
-              (= y 5)
-              (forall ((r Real)) (=> (= r (+ x 5)) (= r (+ x 5))))))))))
-  (forall ((x Real)) (forall ((r Real)) (=> (= r (+ x 5)) (= r (+ x 5))))))
+              (= y!5 5)
+              (forall ((r!6 Real))
+                (=> (= r!6 (+ x!0 5)) (= r!6 (+ x!0 5))))))))))
+  (forall ((x!7 Real))
+    (forall ((r!8 Real)) (=> (= r!8 (+ x!7 5)) (= r!8 (+ x!7 5))))))
 
 ## double (let)
 (and
-  (forall ((x Real))
+  (forall ((x!0 Real))
     (and
-      (= x x)
-      (forall ((x Real))
+      (= x!0 x!0)
+      (forall ((x!4 Real))
         (=>
-          (= x x)
-          (forall ((y Real))
+          (= x!4 x!0)
+          (forall ((y!5 Real))
             (=>
-              (= y 2)
-              (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))))))
-  (forall ((x Real)) (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))
+              (= y!5 2)
+              (forall ((r!6 Real))
+                (=> (= r!6 (* x!0 2)) (= r!6 (* x!0 2))))))))))
+  (forall ((x!7 Real))
+    (forall ((r!8 Real)) (=> (= r!8 (* x!7 2)) (= r!8 (* x!7 2))))))
 
 ## add1ThenDouble (let)
 true

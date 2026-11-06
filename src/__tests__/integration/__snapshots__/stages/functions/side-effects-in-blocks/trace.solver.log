@@ -6,25 +6,28 @@
 
 ## debug (let)
 === Formula ===
-  (forall ((x Real))
-    (forall ((result Real))
+  (forall ((x!0 Real))
+    (forall ((result!2 Real))
       (=>
-        (= result (* x 2))
+        (= result!2 (* x!0 2))
         (and
-          (= x x)
-          (forall ((x Real))
+          (= x!0 x!0)
+          (forall ((x!6 Real))
             (=>
-              (= x x)
-              (forall ((y Real))
+              (= x!6 x!0)
+              (forall ((y!7 Real))
                 (=>
-                  (= y 2)
-                  (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))))
-          (= result (* x 2))
-          (= result result)
-          (forall (($r181 Real))
-            (=> (and (= $r181 (* x 2)) (= $r181 result)) (= $r181 (* x 2))))
-          (= result (* x 2))
-          (= result result)))))
+                  (= y!7 2)
+                  (forall ((r!8 Real))
+                    (=> (= r!8 (* x!0 2)) (= r!8 (* x!0 2))))))))
+          (= result!2 (* x!0 2))
+          (= result!2 result!2)
+          (forall (($r181!11 Real))
+            (=>
+              (and (= $r181!11 (* x!0 2)) (= $r181!11 result!2))
+              (= $r181!11 (* x!0 2))))
+          (= result!2 (* x!0 2))
+          (= result!2 result!2)))))
 
 === Variables ===
   proxy p1: true
@@ -55,21 +58,12 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=x -> residual
-  x=2 -> residual
-  x=result -> residual
-  result=x -> residual
-  result=2 -> residual
-  result=result -> residual
-  y=x -> residual
-  y=2 -> residual
-  y=result -> residual
-  r=x -> residual
-  r=2 -> residual
-  r=result -> residual
-  $r181=x -> residual
-  $r181=2 -> residual
-  $r181=result -> residual
+  x!0=2 -> residual
+  result!2=2 -> residual
+  x!6=2 -> residual
+  y!7=2 -> residual
+  r!8=2 -> residual
+  $r181!11=2 -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

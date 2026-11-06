@@ -250,4 +250,16 @@ let test = {
 		Verdict.expect(result, "test", "valid");
 		await snap(result);
 	});
+
+	test("arithmetic over a function's result keeps the result's refinement", async () => {
+		const result = runScript(`
+let Nat: Type = Num [| \\st n -> n >= 0 |];
+let Pos: Type = Num [| \\st p -> p > 0 |];
+let addOne: (Num -> Nat) -> Pos = \\f -> (f 1) + 1;
+let addZero: (Num -> Nat) -> Pos = \\f -> (f 1) + 0;
+		`);
+		Verdict.expect(result, "addOne", "valid");
+		Verdict.expect(result, "addZero", "invalid");
+		await snap(result);
+	});
 });

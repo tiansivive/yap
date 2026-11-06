@@ -27,12 +27,14 @@
 
 ## fact (let)
 === Formula ===
-  (forall ((n Real))
+  (forall ((n!0 Real))
     (and
-      (= n n)
-      (= n n)
+      (= n!0 n!0)
+      (= n!0 n!0)
       (forall (($fresh1 Real))
-        (=> (and (= $fresh1 n) (= $fresh1 n)) (and (= n n) (= n n))))))
+        (=>
+          (and (= $fresh1 n!0) (= $fresh1 n!0))
+          (and (= n!0 n!0) (= n!0 n!0))))))
 
 === Variables ===
   proxy p1: true
@@ -63,8 +65,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  n=n -> residual
-  $fresh1=n -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

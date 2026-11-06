@@ -1,32 +1,32 @@
 ## test (let)
-(forall ((a Real))
-  (forall ((b Real))
+(forall ((a!0 Real))
+  (forall ((b!2 Real))
     (=>
-      (> b 0)
+      (> b!2 0)
       (and
-        (= a a)
-        (forall ((x Real))
+        (= a!0 a!0)
+        (forall ((x!7 Real))
           (=>
-            (= x a)
-            (forall ((y Real))
+            (= x!7 a!0)
+            (forall ((y!8 Real))
               (=>
-                (= y 0)
+                (= y!8 0)
                 (forall (($fresh0 Bool))
                   (=>
-                    (and (= $fresh0 (> a 0)) (= $fresh0 true))
+                    (and (= $fresh0 (> a!0 0)) (= $fresh0 true))
                     (and
-                      (= a a)
-                      (forall (($r389 Real))
-                        (=> (= $r389 a) (> $r389 0))))))))))
-        (= a a)
-        (forall ((x Real))
+                      (= a!0 a!0)
+                      (forall (($r389!6 Real))
+                        (=> (= $r389!6 a!0) (> $r389!6 0))))))))))
+        (= a!0 a!0)
+        (forall ((x!10 Real))
           (=>
-            (= x a)
-            (forall ((y Real))
+            (= x!10 a!0)
+            (forall ((y!11 Real))
               (=>
-                (= y 0)
+                (= y!11 0)
                 (forall (($fresh1 Bool))
                   (=>
-                    (and (= $fresh1 (> a 0)) (= $fresh1 false))
-                    (forall (($r395 Real))
-                      (=> (= $r395 42) (> $r395 0)))))))))))))
+                    (and (= $fresh1 (> a!0 0)) (= $fresh1 false))
+                    (forall (($r395!9 Real))
+                      (=> (= $r395!9 42) (> $r395!9 0)))))))))))))

@@ -1,8 +1,8 @@
 ## letpoly (let)
 === Formula ===
   (and
-    (forall ((a Type)) (forall ((x Type)) (= x x)))
-    (forall ((n Real)) (forall ((s String)) (= n n))))
+    (forall ((a!1 Type)) (forall ((x!2 Type)) (= x!2 x!2)))
+    (forall ((n!5 Real)) (forall ((s!11 String)) (= n!5 n!5))))
 
 === Variables ===
   proxy p1: true
@@ -33,9 +33,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  a=x -> residual
-  x=x -> residual
-  n=n -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

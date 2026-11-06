@@ -6,7 +6,7 @@
 
 ## greet (let)
 === Formula ===
-  (forall ((name String)) (= name name))
+  (forall ((name!0 String)) (= name!0 name!0))
 
 === Variables ===
   proxy p1: true
@@ -37,7 +37,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  name=name -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

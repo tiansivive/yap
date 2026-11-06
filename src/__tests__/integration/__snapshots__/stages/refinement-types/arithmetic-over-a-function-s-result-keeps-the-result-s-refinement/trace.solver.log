@@ -1,0 +1,161 @@
+## Nat (let)
+=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+## Pos (let)
+=== Formula ===
+  true
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+## addOne (let)
+=== Formula ===
+  (forall ((t2!9 Real))
+    (=>
+      (= t2!9 1)
+      (forall ((x!6 Real))
+        (=>
+          (>= x!6 0)
+          (forall ((y!7 Real))
+            (=>
+              (= y!7 1)
+              (forall ((r!8 Real)) (=> (= r!8 (+ x!6 1)) (> r!8 0)))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  t2!9=1 -> residual
+  t2!9=0 -> tautology
+  x!6=1 -> residual
+  x!6=0 -> residual
+  y!7=1 -> residual
+  y!7=0 -> tautology
+  r!8=1 -> tautology
+  r!8=0 -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+## addZero (let)
+=== Formula ===
+  (forall ((t4!9 Real))
+    (=>
+      (= t4!9 1)
+      (forall ((x!6 Real))
+        (=>
+          (>= x!6 0)
+          (forall ((y!7 Real))
+            (=>
+              (= y!7 0)
+              (forall ((r!8 Real)) (=> (= r!8 (+ x!6 0)) (> r!8 0)))))))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  t4!9=1 -> residual
+  t4!9=0 -> tautology
+  x!6=1 -> residual
+  x!6=0 -> residual
+  y!7=1 -> tautology
+  y!7=0 -> residual
+  r!8=1 -> tautology
+  r!8=0 -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1

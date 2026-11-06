@@ -1,0 +1,11 @@
+## Nat (let)
+<ω> Num [| λ(st: State) -> λ(n: Num) -> FFI.$gte n 0 |]
+
+## Pos (let)
+<ω> Num [| λ(st: State) -> λ(p: Num) -> FFI.$gt p 0 |]
+
+## addOne (let)
+λ(f: Π(t2: Num) -> Nat) -> FFI.$add (f 1) 1
+
+## addZero (let)
+λ(f: Π(t4: Num) -> Nat) -> FFI.$add (f 1) 0

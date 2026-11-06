@@ -57,7 +57,7 @@
 
 ## ShowNum (let)
 === Formula ===
-  (forall ((n Real)) (= n n))
+  (forall ((n!0 Real)) (= n!0 n!0))
 
 === Variables ===
   proxy p1: true
@@ -88,14 +88,13 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  n=n -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## EqNum (let)
 === Formula ===
-  (forall ((x Real)) (forall ((y Real)) (and (= x x) (= y y))))
+  (forall ((x!0 Real)) (forall ((y!1 Real)) (and (= x!0 x!0) (= y!1 y!1))))
 
 === Variables ===
   proxy p1: true
@@ -126,31 +125,27 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=x -> residual
-  x=y -> residual
-  y=x -> residual
-  y=y -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## displayIfEqual (let)
 === Formula ===
-  (forall ((t Type))
-    (forall ((x Type))
-      (forall ((y Type))
+  (forall ((t!0 Type))
+    (forall ((x!3 Type))
+      (forall ((y!4 Type))
         (and
-          (= x x)
-          (= y y)
-          (forall ((t5 Type))
+          (= x!3 x!3)
+          (= y!4 y!4)
+          (forall ((t5!15 Type))
             (=>
-              (= t5 x)
-              (forall ((t6 Type))
+              (= t5!15 x!3)
+              (forall ((t6!16 Type))
                 (=>
-                  (= t6 y)
-                  (forall (($fresh0 Bool)) (=> (= $fresh0 true) (= x x)))))))
-          (= x x)
-          (= y y)))))
+                  (= t6!16 y!4)
+                  (forall (($fresh0 Bool)) (=> (= $fresh0 true) (= x!3 x!3)))))))
+          (= x!3 x!3)
+          (= y!4 y!4)))))
 
 === Variables ===
   proxy p1: true
@@ -181,16 +176,6 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  t=x -> residual
-  t=y -> residual
-  x=x -> residual
-  x=y -> residual
-  y=x -> residual
-  y=y -> residual
-  t5=x -> residual
-  t5=y -> residual
-  t6=x -> residual
-  t6=y -> residual
   $fresh0=true -> residual
 [clauses]
   #0: p1 -> unit: p1

@@ -55,8 +55,9 @@
 ## hof (let)
 === Formula ===
   (and
-    (forall (($r129 Real)) (=> (= $r129 1) (>= $r129 0)))
-    (forall ((t1 Real)) (=> (= t1 1) (forall ((n Real)) (=> (>= n 0) (>= n 0))))))
+    (forall (($r129!1 Real)) (=> (= $r129!1 1) (>= $r129!1 0)))
+    (forall ((t1!2 Real))
+      (=> (= t1!2 1) (forall ((n!3 Real)) (=> (>= n!3 0) (>= n!3 0))))))
 
 === Variables ===
   proxy p1: true
@@ -87,26 +88,28 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  $r129=1 -> tautology
-  $r129=0 -> tautology
-  t1=1 -> residual
-  t1=0 -> tautology
-  n=1 -> tautology
-  n=0 -> tautology
+  $r129!1=1 -> tautology
+  $r129!1=0 -> tautology
+  t1!2=1 -> residual
+  t1!2=0 -> tautology
+  n!3=1 -> tautology
+  n!3=0 -> tautology
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1
 
 ## hof2 (let)
 === Formula ===
-  (forall ((t3 Real))
+  (forall ((t3!9 Real))
     (=>
-      (= t3 1)
-      (forall ((x Real))
+      (= t3!9 1)
+      (forall ((x!6 Real))
         (=>
-          (>= x 0)
-          (forall ((y Real))
-            (=> (= y 1) (forall ((r Real)) (=> (= r (+ x 1)) (> r 0)))))))))
+          (>= x!6 0)
+          (forall ((y!7 Real))
+            (=>
+              (= y!7 1)
+              (forall ((r!8 Real)) (=> (= r!8 (+ x!6 1)) (> r!8 0)))))))))
 
 === Variables ===
   proxy p1: true
@@ -137,18 +140,14 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  t3=1 -> residual
-  t3=0 -> tautology
-  t3=x -> residual
-  x=1 -> residual
-  x=0 -> residual
-  x=x -> residual
-  y=1 -> residual
-  y=0 -> tautology
-  y=x -> residual
-  r=1 -> tautology
-  r=0 -> residual
-  r=x -> residual
+  t3!9=1 -> residual
+  t3!9=0 -> tautology
+  x!6=1 -> residual
+  x!6=0 -> residual
+  y!7=1 -> residual
+  y!7=0 -> tautology
+  r!8=1 -> tautology
+  r!8=0 -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

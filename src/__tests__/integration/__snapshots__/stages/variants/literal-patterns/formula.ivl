@@ -1,2 +1,2 @@
 ## isZero (let)
-(forall ((n Real)) (and (= n n) (= n n)))
+(forall ((n!0 Real)) (and (= n!0 n!0) (= n!0 n!0)))
