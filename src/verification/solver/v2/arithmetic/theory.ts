@@ -113,13 +113,14 @@ const Registration = {
 	apply: (state: State, literal: Literal, constraint: Constraint, sort: IVL.NumSort): State => {
 		const variables = Variables.collect(state, constraint, sort);
 		const negated = Normalize.negate(constraint, sort);
+		const row = constraint.expr.coefficients;
 		const tableau = Slack.register(variables.tableau, literal, constraint);
 		return {
 			...state,
 			tableau,
 			integerVars: variables.integerVars,
 			constraints: new Map([...state.constraints, [literal, { constraint, sort }], [-literal, { constraint: negated, sort }]]),
-			bounds: Bounds.register(Bounds.register(state.bounds, literal, constraint), -literal, negated),
+			bounds: Bounds.register(Bounds.register(state.bounds, literal, constraint, row), -literal, negated, row),
 		};
 	},
 };
@@ -138,13 +139,10 @@ const Variables = {
 		),
 };
 
+/* A disequality bounds nothing itself, but its negation is an equality that bounds the row. */
 const Slack = {
 	register: (tableau: Tableau, literal: Literal, constraint: Constraint): Tableau =>
-		match(constraint)
-			.with({ tag: "neq" }, () => tableau)
-			.otherwise(({ expr }) =>
-				match(expr.coefficients.size)
-					.with(1, () => tableau)
-					.otherwise(() => Simplex.row(tableau, `$slack_${literal}`, expr.coefficients)),
-			),
+		match(constraint.expr.coefficients.size)
+			.with(1, () => tableau)
+			.otherwise(() => Simplex.row(tableau, Bounds.slack(literal), constraint.expr.coefficients)),
 };

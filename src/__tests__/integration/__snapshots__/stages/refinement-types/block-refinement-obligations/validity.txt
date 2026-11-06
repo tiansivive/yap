@@ -1,2 +1,2 @@
 ## block (let)
-invalid
+valid
