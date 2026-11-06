@@ -9,7 +9,7 @@
   (forall ((x Real))
     (forall ((result Real))
       (=>
-        (= result (* result 2))
+        (= result (* x 2))
         (and
           (= x x)
           (forall ((x Real))
@@ -18,12 +18,12 @@
               (forall ((y Real))
                 (=>
                   (= y 2)
-                  (forall ((r Real)) (=> (= r (* x 2)) (= r (* result 2))))))))
-          (= result (* result 2))
+                  (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))))
+          (= result (* x 2))
           (= result result)
           (forall (($r181 Real))
-            (=> (and (= $r181 (* result 2)) (= $r181 result)) (= $r181 (* x 2))))
-          (= result (* result 2))
+            (=> (and (= $r181 (* x 2)) (= $r181 result)) (= $r181 (* x 2))))
+          (= result (* x 2))
           (= result result)))))
 
 === Variables ===
@@ -55,21 +55,21 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=result -> residual
-  x=2 -> residual
   x=x -> residual
-  result=result -> residual
-  result=2 -> residual
+  x=2 -> residual
+  x=result -> residual
   result=x -> residual
-  y=result -> residual
-  y=2 -> residual
+  result=2 -> residual
+  result=result -> residual
   y=x -> residual
-  r=result -> residual
-  r=2 -> residual
+  y=2 -> residual
+  y=result -> residual
   r=x -> residual
-  $r181=result -> residual
-  $r181=2 -> residual
+  r=2 -> residual
+  r=result -> residual
   $r181=x -> residual
+  $r181=2 -> residual
+  $r181=result -> residual
 [clauses]
   #0: p1 -> unit: p1
   #1: p1 -> unit: p1

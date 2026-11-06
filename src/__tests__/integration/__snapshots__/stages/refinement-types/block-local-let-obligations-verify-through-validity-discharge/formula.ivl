@@ -2,7 +2,7 @@
 (forall ((x Real))
   (forall ((doubled Real))
     (=>
-      (= doubled (* doubled 2))
+      (= doubled (* x 2))
       (and
         (= x x)
         (forall ((x Real))
@@ -11,22 +11,20 @@
             (forall ((y Real))
               (=>
                 (= y 2)
-                (forall ((r Real)) (=> (= r (* x 2)) (= r (* doubled 2))))))))
+                (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))))
         (forall ((added Real))
           (=>
-            (= added (+ (* doubled 2) 10))
+            (= added (+ (* x 2) 10))
             (and
-              (= doubled (* doubled 2))
+              (= doubled (* x 2))
               (= doubled doubled)
               (forall ((x Real))
                 (=>
-                  (and (= x (* doubled 2)) (= x doubled))
+                  (and (= x (* x 2)) (= x doubled))
                   (forall ((y Real))
                     (=>
                       (= y 10)
                       (forall ((r Real))
-                        (=>
-                          (= r (+ doubled 10))
-                          (= r (+ (* doubled 2) 10))))))))
-              (= added (+ (* doubled 2) 10))
+                        (=> (= r (+ doubled 10)) (= r (+ (* x 2) 10))))))))
+              (= added (+ (* x 2) 10))
               (= added added))))))))

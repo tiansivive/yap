@@ -101,7 +101,55 @@
 [sat]
 
 ## mapOption (let)
-error: Rigid variables do not match in subtype
+=== Formula ===
+  (forall ((a Type))
+    (forall ((b Type))
+      (forall ((o Schema))
+        (and
+          (= o o)
+          (forall (($fresh0 Schema))
+            (=>
+              (and (= $fresh0 o) (= $fresh0 o))
+              (forall ((x Type)) (forall (($row_7 Row)) (= x x)))))
+          (= o o)))))
+
+=== Variables ===
+  proxy p1: true
+
+=== Registry ===
+
+=== Trace ===
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[propagate] p1 = true (forced by #0: p1 (true))
+  trail: { p1@0 }
+[clauses]
+  #0: true -> satisfied
+  #1: true -> satisfied
+
+[theory] all assert p1: ok
+
+[theory] all check: ok
+  feasible
+
+[sat]
+
+[quantifier] round 0: 0 lemmas
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
+
+[mbqi] round 0: 0 lemmas
+  a=x -> residual
+  b=x -> residual
+  o=o -> residual
+  $fresh0=o -> residual
+  x=x -> residual
+[clauses]
+  #0: p1 -> unit: p1
+  #1: p1 -> unit: p1
 
 ## OptionFunctor (let)
 === Formula ===

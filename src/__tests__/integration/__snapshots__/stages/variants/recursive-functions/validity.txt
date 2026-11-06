@@ -2,4 +2,4 @@
 valid
 
 ## length (let)
-error: Unbound bound variable in synth
+valid

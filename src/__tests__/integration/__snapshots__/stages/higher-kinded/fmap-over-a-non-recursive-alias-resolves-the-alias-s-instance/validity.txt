@@ -11,7 +11,7 @@ valid
 valid
 
 ## mapOption (let)
-error: Rigid variables do not match in subtype
+valid
 
 ## OptionFunctor (let)
 valid

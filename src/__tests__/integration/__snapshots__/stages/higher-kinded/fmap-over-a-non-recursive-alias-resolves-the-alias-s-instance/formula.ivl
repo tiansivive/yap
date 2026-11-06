@@ -14,7 +14,16 @@ true
 true
 
 ## mapOption (let)
-error: Rigid variables do not match in subtype
+(forall ((a Type))
+  (forall ((b Type))
+    (forall ((o Schema))
+      (and
+        (= o o)
+        (forall (($fresh0 Schema))
+          (=>
+            (and (= $fresh0 o) (= $fresh0 o))
+            (forall ((x Type)) (forall (($row_7 Row)) (= x x)))))
+        (= o o)))))
 
 ## OptionFunctor (let)
 (forall ((a Type)) (forall ((b Type)) (and (= a a) (= b b))))

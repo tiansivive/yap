@@ -8,7 +8,20 @@ true
 true
 
 ## mapList (let)
-error: Cannot read properties of undefined (reading 'type')
+(forall ((a Type))
+  (forall ((b Type))
+    (forall ((list App_Mu_List_Type))
+      (and
+        (= list list)
+        (= list list)
+        (forall (($fresh1 App_Mu_List_Type))
+          (=>
+            (and (= $fresh1 list) (= $fresh1 list))
+            (forall ((x Type))
+              (forall ((xs App_Mu_List_Type))
+                (forall (($row_13 Row))
+                  (forall (($row_14 Row))
+                    (and (= x x) (= a a) (= b b) (= xs xs))))))))))))
 
 ## ListFunctor (let)
 (forall ((a Type)) (forall ((b Type)) (and (= a a) (= b b))))

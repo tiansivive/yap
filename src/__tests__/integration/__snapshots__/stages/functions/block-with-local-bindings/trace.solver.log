@@ -3,7 +3,7 @@
   (forall ((x Real))
     (forall ((doubled Real))
       (=>
-        (= doubled (* doubled 2))
+        (= doubled (* x 2))
         (and
           (= x x)
           (forall ((x Real))
@@ -12,24 +12,22 @@
               (forall ((y Real))
                 (=>
                   (= y 2)
-                  (forall ((r Real)) (=> (= r (* x 2)) (= r (* doubled 2))))))))
+                  (forall ((r Real)) (=> (= r (* x 2)) (= r (* x 2))))))))
           (forall ((added Real))
             (=>
-              (= added (+ (* doubled 2) 10))
+              (= added (+ (* x 2) 10))
               (and
-                (= doubled (* doubled 2))
+                (= doubled (* x 2))
                 (= doubled doubled)
                 (forall ((x Real))
                   (=>
-                    (and (= x (* doubled 2)) (= x doubled))
+                    (and (= x (* x 2)) (= x doubled))
                     (forall ((y Real))
                       (=>
                         (= y 10)
                         (forall ((r Real))
-                          (=>
-                            (= r (+ doubled 10))
-                            (= r (+ (* doubled 2) 10))))))))
-                (= added (+ (* doubled 2) 10))
+                          (=> (= r (+ doubled 10)) (= r (+ (* x 2) 10))))))))
+                (= added (+ (* x 2) 10))
                 (= added added))))))))
 
 === Variables ===
@@ -61,30 +59,30 @@
   #1: p1 -> unit: p1
 
 [mbqi] round 0: 0 lemmas
-  x=doubled -> residual
-  x=2 -> residual
   x=x -> residual
+  x=2 -> residual
   x=10 -> residual
+  x=doubled -> residual
   x=added -> residual
-  doubled=doubled -> residual
-  doubled=2 -> residual
   doubled=x -> residual
+  doubled=2 -> residual
   doubled=10 -> residual
+  doubled=doubled -> residual
   doubled=added -> residual
-  y=doubled -> residual
-  y=2 -> residual
   y=x -> residual
+  y=2 -> residual
   y=10 -> tautology
+  y=doubled -> residual
   y=added -> residual
-  r=doubled -> residual
-  r=2 -> residual
   r=x -> residual
+  r=2 -> residual
   r=10 -> residual
+  r=doubled -> residual
   r=added -> residual
-  added=doubled -> residual
-  added=2 -> residual
   added=x -> residual
+  added=2 -> residual
   added=10 -> residual
+  added=doubled -> residual
   added=added -> residual
 [clauses]
   #0: p1 -> unit: p1
