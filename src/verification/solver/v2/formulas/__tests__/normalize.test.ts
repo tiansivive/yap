@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { match } from "ts-pattern";
+import { Build } from "../../../ivl/build";
 import * as DSL from "../../../ivl/dsl";
+import { Print } from "../../../ivl/print";
 import { normalize } from "../normalize";
 
 describe("normalize", () => {
@@ -75,6 +77,25 @@ describe("normalize", () => {
 					expect(values.every(v => v.tag === "Atom")).toBe(true);
 				})
 				.otherwise(() => {});
+		});
+	});
+
+	describe("formulas as values", () => {
+		const v = Build.const_("v", Build.Bool);
+
+		it("splits an atom on the formula it contains", () => {
+			const result = normalize(DSL.eq(v, Build.prop(DSL.gt(DSL.a, DSL.int(0)))));
+			expect(Print.formula(result)).toBe("(or (and (> a 0) (= v true)) (and (not (> a 0)) (not (= v true))))");
+		});
+
+		it("states a boolean equal to false as the negation of it being true", () => {
+			expect(Print.formula(normalize(DSL.eq(v, Build.bool(false))))).toBe("(not (= v true))");
+			expect(Print.formula(normalize(DSL.neq(Build.bool(false), v)))).toBe("(= v true)");
+		});
+
+		it("folds a comparison between boolean literals", () => {
+			expect(normalize(DSL.eq(Build.bool(true), Build.bool(false))).tag).toBe("False");
+			expect(normalize(DSL.neq(Build.bool(true), Build.bool(false))).tag).toBe("True");
 		});
 	});
 });

@@ -13,7 +13,7 @@
                 (= y 0)
                 (forall (($fresh0 Bool))
                   (=>
-                    (and (= $fresh0 __external_$gt) (= $fresh0 true))
+                    (and (= $fresh0 (> a 0)) (= $fresh0 true))
                     (and
                       (= a a)
                       (forall (($r389 Real))
@@ -27,6 +27,6 @@
                 (= y 0)
                 (forall (($fresh1 Bool))
                   (=>
-                    (and (= $fresh1 __external_$gt) (= $fresh1 false))
+                    (and (= $fresh1 (> a 0)) (= $fresh1 false))
                     (forall (($r395 Real))
                       (=> (= $r395 42) (> $r395 0)))))))))))))

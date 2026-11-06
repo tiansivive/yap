@@ -72,6 +72,9 @@ export const Intern = {
 				return Intern.raw(selected.state, "select", [source.id, selected.id], sort);
 			})
 			.with(Patterns.Term.Row, ({ sort }) => Intern.raw(state, "row", [], sort))
+			.with({ tag: "Prop" }, () => {
+				throw new Error("A Prop term is split out of its atom by formula normalization");
+			})
 			.exhaustive(),
 
 	pair: (state: Intern.State, left: IVL.Term, right: IVL.Term): Intern.Pair => {

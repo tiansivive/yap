@@ -25,6 +25,34 @@ describe("v2 solver API", () => {
 		expect(Solver.check(formula).tag).toBe(expected);
 	});
 
+	describe("formulas as values", () => {
+		const v = Build.const_("v", Build.Bool);
+		const w = Build.const_("w", Build.Bool);
+		const isTrue = (t: typeof v) => DSL.eq(t, Build.bool(true));
+
+		it.each([
+			{ name: "true = false", formula: DSL.eq(Build.bool(true), Build.bool(false)), expected: "unsat" },
+			{ name: "v = true and v = false", formula: DSL.and(isTrue(v), DSL.eq(v, Build.bool(false))), expected: "unsat" },
+			{
+				name: "v = (a > 0), v, a <= 0",
+				formula: DSL.and(DSL.eq(v, Build.prop(DSL.gt(DSL.a, DSL.int(0)))), isTrue(v), DSL.lte(DSL.a, DSL.int(0))),
+				expected: "unsat",
+			},
+			{
+				name: "v = (a > 0), w = (b > 5), v, not w",
+				formula: DSL.and(
+					DSL.eq(v, Build.prop(DSL.gt(DSL.a, DSL.int(0)))),
+					DSL.eq(w, Build.prop(DSL.gt(DSL.b, DSL.int(5)))),
+					isTrue(v),
+					DSL.not(isTrue(w)),
+				),
+				expected: "sat",
+			},
+		] as const)("returns $expected for $name", ({ formula, expected }) => {
+			expect(Solver.check(formula).tag).toBe(expected);
+		});
+	});
+
 	it("detects an EUF congruence contradiction v1 misses", () => {
 		const f_x = Build.app("f", [DSL.x], Build.Int);
 		const f_y = Build.app("f", [DSL.y], Build.Int);

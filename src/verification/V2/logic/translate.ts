@@ -258,6 +258,13 @@ export const term = function* (nf: NF.Value, rigids: Record<number, IVL.Term> = 
 			}
 			throw new Error(`Unsupported variable in formula translation: ${v.variable.type} (${JSON.stringify(v.variable)})`);
 		})
+		.with(
+			{ type: "External", name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT) },
+			e => e.args.length === e.arity,
+			function* () {
+				return Build.prop(yield* formula(nf, rigids));
+			},
+		)
 		.with({ type: "External" }, function* (e) {
 			if (e.args.length !== e.arity) {
 				throw new Error("External with wrong arity in logical formulas");
