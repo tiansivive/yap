@@ -1,7 +1,7 @@
 import * as Eff from "@yap/utils/effects";
 import * as Metas from "@yap/elaboration/shared/metas";
 
-import type * as EB from "@yap/elaboration";
+import * as EB from "@yap/elaboration";
 import type * as NF from "@yap/elaboration/normalization";
 import type { IVL } from "../solver/ivl/types";
 import type { VerificationArtefacts, SynthResult, Obligation } from "./types";
@@ -19,6 +19,11 @@ type Outcome<A> = {
 export const VerificationServiceV2 = (options: VerificationOptions = {}) => ({
 	check: (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<VerificationArtefacts> => {
 		const { answer, obligations } = run(ctx, registry, () => check(tm, ty), options);
+		return { answer, obligations };
+	},
+	/* Let bodies retain the self-binder introduced during elaboration. */
+	letdec: (variable: string, tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry): Outcome<VerificationArtefacts> => {
+		const { answer, obligations } = run(EB.bind(ctx, { type: "Let", variable }, ty), registry, () => check(tm, ty), options);
 		return { answer, obligations };
 	},
 	synth: (tm: EB.Term, ctx: EB.Context, registry: Metas.Registry): Outcome<SynthResult> => {
