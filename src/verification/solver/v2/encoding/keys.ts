@@ -4,6 +4,7 @@
 
 import { match } from "ts-pattern";
 import type { IVL } from "../../ivl/types";
+import { Patterns } from "../../ivl/patterns";
 
 export const atom = (op: IVL.AtomOp, args: [IVL.Term, IVL.Term]): string => `(${op} ${term(args[0])} ${term(args[1])})`;
 
@@ -18,6 +19,9 @@ export const term = (value: IVL.Term): string =>
 		.with({ tag: "Arith" }, ({ op, args }) => `(${op} ${term(args[0])} ${term(args[1])})`)
 		.with({ tag: "Select" }, ({ array, index }) => `(select ${term(array)} ${term(index)})`)
 		.with({ tag: "Row" }, ({ row }) => `(row ${rows(row)})`)
+		.with(Patterns.Term.Prop, () => {
+			throw new Error("Formula normalization must eliminate Prop before term encoding");
+		})
 		.exhaustive();
 
 const rows = (row: IVL.RowTerm): string =>

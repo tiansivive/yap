@@ -1,6 +1,7 @@
 import { match } from "ts-pattern";
 import * as PP from "@yap/shared/pretty";
 import type { IVL } from "./types";
+import { Patterns } from "./patterns";
 
 export namespace Print {
 	export const sort = (s: IVL.Sort): string =>
@@ -33,6 +34,7 @@ export namespace Print {
 			.with({ tag: "App" }, ({ head, args }) => (args.length === 0 ? head : `(${head} ${args.map(term).join(" ")})`))
 			.with({ tag: "Select" }, ({ array, index }) => `(select ${term(array)} ${term(index)})`)
 			.with({ tag: "Row" }, ({ row }) => rowTerm(row))
+			.with(Patterns.Term.Prop, ({ value }) => formula(value))
 			.exhaustive();
 
 	const binder = (b: IVL.Binder): string => `(${b.name} ${sort(b.sort)})`;

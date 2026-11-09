@@ -20,7 +20,8 @@ export namespace IVL {
 		| { tag: "Arith"; op: ArithOp; args: [Term, Term]; sort: NumSort }
 		| { tag: "App"; head: string; args: Term[]; sort: Sort }
 		| { tag: "Select"; array: Term; index: Term; sort: Sort }
-		| { tag: "Row"; row: RowTerm; sort: Sort };
+		| { tag: "Row"; row: RowTerm; sort: Sort }
+		| { tag: "Prop"; value: Formula };
 
 	export type Formula =
 		| { tag: "True"; origin?: string }

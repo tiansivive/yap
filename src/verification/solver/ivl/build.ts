@@ -45,6 +45,7 @@ export namespace Build {
 	export const app = (head: string, args: IVL.Term[], sort: IVL.Sort): IVL.Term => ({ tag: "App", head, args, sort });
 	export const select = (array: IVL.Term, index: IVL.Term, sort: IVL.Sort): IVL.Term => ({ tag: "Select", array, index, sort });
 	export const row = (r: IVL.RowTerm, sort: IVL.Sort): IVL.Term => ({ tag: "Row", row: r, sort });
+	export const prop = (value: IVL.Formula): IVL.Term => ({ tag: "Prop", value });
 
 	// --- Formulas ---
 	export const true_ = (origin?: string): IVL.Formula => ({ tag: "True", origin });

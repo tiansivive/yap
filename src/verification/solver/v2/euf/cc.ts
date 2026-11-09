@@ -30,6 +30,8 @@ export const CC = {
 		registry: new Map([...state.registry, [literal, equality]]),
 	}),
 
+	merge: (state: CC.State, arena: Arena.State, a: Enode.Id, b: Enode.Id, reason: Literal): CC.Check => merge(state, arena, a, b, reason),
+
 	assert: (state: CC.State, arena: Arena.State, literal: Literal): CC.Check =>
 		match(state.registry.get(literal))
 			.with(undefined, () => E.right({ state, propagations: [] }))

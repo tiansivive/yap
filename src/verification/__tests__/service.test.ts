@@ -9,6 +9,16 @@ import { Build } from "../solver/ivl/build";
 import { Validity } from "../validity";
 
 describe("Verification scope", () => {
+	it.each([
+		["x == x", "valid"],
+		["{ let flag = x == x; return flag; }", "valid"],
+		["x == 0", "invalid"],
+	] as const)("verifies the Boolean result contract for %s", (body, expected) => {
+		const vc = checked(String.raw`let f: Num -> Bool [| \r -> r |] = \x -> ${body};`);
+
+		expect(Validity.check(vc).tag).toBe(expected);
+	});
+
 	it("retains the parameter in a local binding's refinement", () => {
 		const vc = checked(String.raw`let compute: Num -> Num = \input -> { let doubled = input * 2; return doubled; };`);
 		assert(vc.tag === "Forall" && vc.body.tag === "Forall");

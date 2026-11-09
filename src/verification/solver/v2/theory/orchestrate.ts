@@ -4,13 +4,19 @@
 
 import * as E from "fp-ts/Either";
 import type { Either } from "fp-ts/lib/Either";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
+import { Build } from "../../ivl/build";
+import { Patterns } from "../../ivl/patterns";
 import * as Arithmetic from "../arithmetic";
 import type { Conflict, Literal } from "../cdcl/model";
 import * as Core from "../core";
 import type * as Encoding from "../encoding";
 import * as EUF from "../euf";
 import * as Trace from "../trace";
+
+const BooleanNode = { sort: Patterns.Sort.Bool } as const;
+const BooleanLiteral = { ...BooleanNode, args: [], head: P.union("true", "false") } as const;
+const Disequality = { positive: false } as const;
 
 export const setup = (encoding: Encoding.State): Setup => {
 	const registered = Registration.from(encoding);
@@ -50,7 +56,7 @@ const asserted = (state: State, arena: EUF.Arena.State, literal: Literal): Check
 				conflict,
 				detail: [...EUF.Events.assert(state.euf, state.euf, literal).map(Event.euf), Event.euf(EUF.Events.conflict(conflict.clause))],
 			}),
-		)(EUF.CC.assert(state.euf, arena, literal)),
+		)(E.Monad.chain(EUF.CC.assert(state.euf, arena, literal), update => Truth.merge(update, arena, literal))),
 		euf =>
 			E.Functor.map(
 				E.mapLeft(
@@ -191,13 +197,42 @@ const Registration = {
 			(acc, [literal, atom]) => {
 				const pair = EUF.Intern.pair(acc.arena, atom.args[0], atom.args[1]);
 				return {
-					arena: pair.state,
+					arena: Truth.intern(pair.state, atom),
 					equalities: [...acc.equalities, ...Entries.equality(literal, atom.op, pair.left, pair.right)],
 					arithmetics: [...acc.arithmetics, ...Entries.arithmetic(literal, atom)],
 				};
 			},
 			{ arena: EUF.Intern.empty, equalities: [], arithmetics: [] },
 		),
+};
+
+const Truth = {
+	intern: (arena: EUF.Arena.State, atom: Encoding.Atom.T): EUF.Arena.State =>
+		match(atom.args)
+			.with(
+				[Patterns.Term.Bool, P._],
+				[P._, Patterns.Term.Bool],
+				() => EUF.Intern.term(EUF.Intern.term(arena, Build.bool(true)).state, Build.bool(false)).state,
+			)
+			.otherwise(() => arena),
+
+	/* The original disequality stays active while its deciding literal also justifies the Boolean equality. */
+	merge: (update: EUF.CC.Update, arena: EUF.Arena.State, literal: Literal): EUF.CC.Check =>
+		match(update.state.registry.get(literal))
+			.with(Disequality, ({ a, b }) =>
+				match([arena.nodes.get(a), arena.nodes.get(b)])
+					.with([BooleanNode, BooleanLiteral], ([value, truth]) => Truth.opposite(update.state, arena, value.id, truth.head, literal))
+					.with([BooleanLiteral, BooleanNode], ([truth, value]) => Truth.opposite(update.state, arena, value.id, truth.head, literal))
+					.otherwise(() => E.right(update)),
+			)
+			.otherwise(() => E.right(update)),
+
+	opposite: (state: EUF.CC.State, arena: EUF.Arena.State, value: EUF.Enode.Id, truth: "true" | "false", literal: Literal): EUF.CC.Check =>
+		match(arena.hashIndex.get(String(truth === "false")))
+			.with(undefined, () => {
+				throw new Error("Boolean literals must be interned during theory registration");
+			})
+			.otherwise(opposite => EUF.CC.merge(state, arena, value, opposite, literal)),
 };
 
 namespace Registration {

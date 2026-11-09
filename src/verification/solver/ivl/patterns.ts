@@ -22,6 +22,12 @@ export const Patterns = {
 		App: { tag: "App" } as const,
 		Select: { tag: "Select" } as const,
 		Row: { tag: "Row" } as const,
+		Prop: { tag: "Prop" } as const,
+	},
+	Row: {
+		Empty: { tag: "Empty" } as const,
+		Extend: { tag: "Extend" } as const,
+		Var: { tag: "Var" } as const,
 	},
 	Sort: {
 		Bool: { tag: "Bool" } as const,

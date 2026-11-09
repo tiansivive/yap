@@ -5,26 +5,7 @@
 import { match, P } from "ts-pattern";
 import { Build } from "../../ivl/build";
 import type { IVL } from "../../ivl/types";
-
-const Patterns = {
-	Term: {
-		Var: { tag: "Var" } as const,
-		App: { tag: "App" } as const,
-		Arith: { tag: "Arith" } as const,
-		Select: { tag: "Select" } as const,
-	},
-	Formula: {
-		Atom: { tag: "Atom" } as const,
-		Not: { tag: "Not" } as const,
-		And: { tag: "And" } as const,
-		Or: { tag: "Or" } as const,
-		Implies: { tag: "Implies" } as const,
-		Forall: { tag: "Forall" } as const,
-		Exists: { tag: "Exists" } as const,
-		True: { tag: "True" } as const,
-		False: { tag: "False" } as const,
-	},
-} as const;
+import { Patterns } from "../../ivl/patterns";
 
 export const skolemize = (formula: IVL.Formula): IVL.Formula => go(formula, [], 0).formula;
 
@@ -150,5 +131,8 @@ namespace Term {
 			)
 			.with(Patterns.Term.Arith, ({ op, args, sort }) => Build.arith(op, substitute(args[0], sub), substitute(args[1], sub), sort))
 			.with(Patterns.Term.Select, ({ array, index, sort }) => Build.select(substitute(array, sub), substitute(index, sub), sort))
+			.with(Patterns.Term.Prop, () => {
+				throw new Error("Formula normalization must eliminate Prop before substitution");
+			})
 			.otherwise(t => t);
 }
