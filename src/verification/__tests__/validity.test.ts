@@ -41,8 +41,24 @@ describe("VC validity discharge", () => {
 		expect(Validity.check(formula).tag).toBe("invalid");
 	});
 
-	it("treats conjunction prefixes under binders as generated guards", () => {
+	it.each([
+		["first", 0],
+		["middle", 1],
+		["last", 2],
+	] as const)("checks the %s conjunct under a binder", (_name, position) => {
+		const conjuncts = [0, 1, 2].map(i => DSL.eq(DSL.x, i === position ? DSL.int(0) : DSL.x));
+
+		expect(Validity.check(forallX(DSL.and(...conjuncts))).tag).toBe("invalid");
+	});
+
+	it("checks repeated conjuncts under a binder", () => {
 		const formula = forallX(DSL.and(DSL.eq(DSL.x, DSL.int(0)), DSL.eq(DSL.x, DSL.int(0))));
+
+		expect(Validity.check(formula).tag).toBe("invalid");
+	});
+
+	it("uses an implication guard to prove every conjunct", () => {
+		const formula = forallX(DSL.implies(DSL.eq(DSL.x, DSL.int(1)), DSL.and(DSL.eq(DSL.x, DSL.int(1)), DSL.gt(DSL.x, DSL.int(0)))));
 
 		expect(Validity.check(formula).tag).toBe("valid");
 	});
