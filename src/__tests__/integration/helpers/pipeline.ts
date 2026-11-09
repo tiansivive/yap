@@ -1,5 +1,6 @@
 import { basename } from "node:path";
 import { expect } from "vitest";
+import { match, P } from "ts-pattern";
 
 import * as Eff from "@yap/utils/effects";
 import * as EB from "@yap/elaboration";
@@ -50,7 +51,7 @@ const pipeline = (
 	ty: NF.Value,
 	ctx: EB.Context,
 	registry: Metas.Registry,
-	parentBinders?: ReadonlyArray<string>,
+	binder?: string,
 ): Pick<Required<DeclarationResult>, "stages" | "errors"> => {
 	const db = { deBruijn: false };
 	const disp = shown(ctx, registry);
@@ -70,7 +71,9 @@ const pipeline = (
 	Build.simplify = true; // global state required by the verification library
 	const verified = safe(() => {
 		const svc = VerificationServiceV2();
-		const { answer } = svc.check(tm, ty, ctx, registry);
+		const { answer } = match(binder)
+			.with(P.string, name => svc.letdec(name, tm, ty, ctx, registry))
+			.otherwise(() => svc.check(tm, ty, ctx, registry));
 		return answer;
 	});
 	const artefacts = E.map((a: VerificationArtefacts | Eff.Aborted<M.Err>) => (Eff.failed(a) ? O.none : O.some(a)))(verified);
@@ -109,7 +112,7 @@ const pipeline = (
 			(e: GRAM.Pipeline.CompileError) => E.left<string, GRAM.Graph>(`GRAM: ${JSON.stringify(e)}`),
 			(g: GRAM.Graph) => E.right<string, GRAM.Graph>(g),
 		),
-	)(safe(() => GRAM.Pipeline.compile(tm, { zonker: Metas.solutions(registry), arities, parentBinders })));
+	)(safe(() => GRAM.Pipeline.compile(tm, { zonker: Metas.solutions(registry), arities, parentBinders: binder === undefined ? undefined : [binder] })));
 	const gram = E.chain((g: GRAM.Graph) => safe(() => GRAM.display(g)))(gramGraph);
 	const mod = E.chain((g: GRAM.Graph) => safe(() => GRAM.Bridge.emit(g)))(gramGraph);
 	const mir = E.chain((m: Module) => safe(() => MIR.display.module(m)))(mod);
@@ -132,7 +135,7 @@ const staged = (decl: Mod.Declaration): DeclarationResult => {
 
 	const { tm, ty, ctx, registry } = elaborated;
 
-	return { name, kind, ...pipeline(tm, ty, ctx, registry, kind === "let" ? [name] : undefined) };
+	return { name, kind, ...pipeline(tm, ty, ctx, registry, kind === "let" ? name : undefined) };
 };
 
 export const runScript = (source: string): ScriptResult => ({ declarations: Mod.elaborateModule(source).declarations.map(staged) });

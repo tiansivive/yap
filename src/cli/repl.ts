@@ -19,7 +19,7 @@ import vm from "vm";
 
 import { resolve } from "path";
 
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { createInterface } from "readline";
 import { defaultContext } from "@yap/shared/lib/constants";
 
@@ -342,10 +342,12 @@ const displayValue = (v: Pipeline.Value): string => {
 	return String(v);
 };
 
-const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry, display: DisplayOpts): void => {
+const runVerification = (tm: EB.Term, ty: NF.Value, ctx: EB.Context, registry: Metas.Registry, display: DisplayOpts, binder?: string): void => {
 	try {
 		const svc = VerificationServiceV2();
-		const { answer } = svc.check(tm, ty, ctx, registry);
+		const { answer } = match(binder)
+			.with(P.string, name => svc.letdec(name, tm, ty, ctx, registry))
+			.otherwise(() => svc.check(tm, ty, ctx, registry));
 
 		if (!Eff.failed(answer)) {
 			const vc = answer.vc;
@@ -502,7 +504,7 @@ const interpret = (stmt: Src.Statement, state: ReplState, opts: ReplOpts): ReplS
 			}
 
 			if (opts.verify) {
-				runVerification(tm, ty, next, nextBoundary.registry, state.display);
+				runVerification(tm, ty, next, nextBoundary.registry, state.display, name);
 			}
 
 			const compiled = Pipeline.lowerTermWithContext(tm, next, Metas.solutions(nextBoundary.registry), { parentBinders: [name] });

@@ -175,6 +175,13 @@ let compute: Num -> Num
 		Verdict.expect(result, "compute", "valid");
 	});
 
+	test("top-level let verification preserves the body scope", () => {
+		const result = runScript(String.raw`let compute: Num -> Num = \input -> { let doubled = input * 2; return doubled; };`);
+
+		expect(result.declarations[0].errors).toEqual({});
+		Verdict.expect(result, "compute", "valid");
+	});
+
 	test("dependent record construction", async () => {
 		const result = runScript(`
 let test = {
