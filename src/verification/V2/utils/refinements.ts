@@ -9,7 +9,8 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 
 import { Liquid } from "../../modalities";
 
-import { reader, type Verification } from "../effects";
+import { reader, supply, type Verification } from "../effects";
+import { scope } from "../logic/translate";
 
 export type ExtractModalitiesFn = (nf: NF.Value, ctx: EB.Context) => Verification<NF.Modalities>;
 
@@ -54,7 +55,10 @@ export const meet = function* (scrutineeTy: NF.Value, patternTy: NF.Value): Veri
 	const ctx = yield* reader.ask();
 	return yield* match([yield* NF.view(scrutineeTy), yield* NF.view(patternTy)])
 		.with([NF.View.Sealed({ type: "Existential" }), P._], function* ([{ value: ex }]) {
-			const met = yield* reader.local(c => EB.bind(ex.body.ctx, { type: "Pi", variable: ex.variable }, ex.annotation), meet(ex.body.value, patternTy));
+			const met = yield* reader.local(
+				() => ex.body.ctx,
+				scope(yield* supply.freshFrom(ex.variable), { type: "Pi", variable: ex.variable }, ex.annotation, meet(ex.body.value, patternTy)),
+			);
 			return NF.Constructors.Exists(ex.variable, ex.annotation, { ctx: ex.body.ctx, value: met });
 		})
 		.with([NF.View.Sealed(NF.Patterns.Modal), NF.View.Sealed(NF.Patterns.Modal)], function* ([{ value: sm }, { value: pm }]) {
@@ -89,7 +93,7 @@ export const meet = function* (scrutineeTy: NF.Value, patternTy: NF.Value): Veri
 			const metDomain = yield* meet(st.binder.annotation, pt.binder.annotation);
 			const stBody = yield* NF.apply(st.binder, st.closure, NF.Constructors.Rigid(ctx.env.length));
 			const ptBody = yield* NF.apply(pt.binder, pt.closure, NF.Constructors.Rigid(ctx.env.length));
-			const metCodomain = yield* reader.local(c => EB.bind(c, st.binder, st.binder.annotation), meet(stBody, ptBody));
+			const metCodomain = yield* scope(yield* supply.freshFrom(st.binder.variable), st.binder, st.binder.annotation, meet(stBody, ptBody));
 
 			const xtended = EB.bind(ctx, st.binder, st.binder.annotation);
 			const quoted = yield* NF.quote(xtended.env.length, metCodomain);
