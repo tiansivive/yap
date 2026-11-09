@@ -245,6 +245,7 @@ export const Patterns = {
 	Rigid: { type: "Var", variable: { type: "Bound" } } as const,
 	Flex: { type: "Var", variable: { type: "Meta" } } as const,
 	Free: { type: "Var", variable: { type: "Free" } } as const,
+	Foreign: { type: "Var", variable: { type: "Foreign" } } as const,
 	Label: { type: "Var", variable: { type: "Label" } } as const,
 	DepLabel: { type: "Var", variable: { type: "DepLabel" } } as const,
 	NuLabel: { type: "Var", variable: { type: "NuLabel" } } as const,

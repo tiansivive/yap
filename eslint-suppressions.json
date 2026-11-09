@@ -495,11 +495,6 @@
 			"count": 1
 		}
 	},
-	"src/verification/V2/subtype.ts": {
-		"@typescript-eslint/consistent-type-assertions": {
-			"count": 1
-		}
-	},
 	"src/verification/V2/synth.ts": {
 		"@typescript-eslint/no-unused-vars": {
 			"count": 1
@@ -511,9 +506,6 @@
 		}
 	},
 	"src/verification/V2/utils/refinements.ts": {
-		"@typescript-eslint/no-unused-vars": {
-			"count": 1
-		},
 		"no-restricted-properties": {
 			"count": 1
 		}

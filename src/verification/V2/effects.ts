@@ -94,15 +94,12 @@ const obligationsHandlers = (): Eff.Handler<RecordAction, Obligation[]> => {
 export const obligations = { record, handlers: obligationsHandlers };
 
 // ─── Supply ──────────────────────────────────────────────────────────────────
-//
-// Fresh names for verification. Two actions:
-// - fresh: alpha-bumped names ($a, $b, ..., $z, $aa, ...)
-// - freshNum: numeric names ($fresh0, $fresh1, ...)
 
 type FreshAction = Eff.Action<"VC.fresh", undefined, string>;
 type FreshNumAction = Eff.Action<"VC.freshNum", undefined, string>;
+type FreshFromAction = Eff.Action<"VC.freshFrom", string, string>;
 
-type SupplyActions = FreshAction | FreshNumAction;
+type SupplyActions = FreshAction | FreshNumAction | FreshFromAction;
 
 const fresh = function* () {
 	return yield* Eff.ctl.action<FreshAction>("VC.fresh", undefined);
@@ -110,6 +107,10 @@ const fresh = function* () {
 
 const freshNum = function* () {
 	return yield* Eff.ctl.action<FreshNumAction>("VC.freshNum", undefined);
+};
+
+const freshFrom = function* (variable: string) {
+	return yield* Eff.ctl.action<FreshFromAction>("VC.freshFrom", variable);
 };
 
 const bumpAlpha = (s: string): string => {
@@ -134,6 +135,7 @@ const bumpAlpha = (s: string): string => {
 const supplyHandlers = (): Eff.Handler<SupplyActions, undefined> => {
 	let alphaSeq = "a";
 	let numSeq = 0;
+	let fromSeq = 0;
 
 	return {
 		clauses: {
@@ -147,17 +149,30 @@ const supplyHandlers = (): Eff.Handler<SupplyActions, undefined> => {
 				numSeq++;
 				return Eff.ctl.resume(name);
 			},
+			"VC.freshFrom": variable => {
+				const name = `${variable}!${fromSeq}`;
+				fromSeq++;
+				return Eff.ctl.resume(name);
+			},
 		},
 		output: () => undefined,
 	};
 };
 
-export const supply = { fresh, freshNum, handlers: supplyHandlers };
+export const supply = { fresh, freshNum, freshFrom, handlers: supplyHandlers };
+
+export const names = Eff.reader<ReadonlyMap<number, string>, "VC.Names">("VC.Names");
 
 // ─── Row ─────────────────────────────────────────────────────────────────────
 
 export type Verification<A> = Eff.Eff<
-	Eff.Actions<typeof reader> | Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof except> | LoggerActions | RecordAction | SupplyActions,
+	| Eff.Actions<typeof reader>
+	| Eff.Actions<typeof names>
+	| Eff.Only<typeof Metas.registry, "Registry.get">
+	| Eff.Actions<typeof except>
+	| LoggerActions
+	| RecordAction
+	| SupplyActions,
 	A
 >;
 
@@ -175,13 +190,18 @@ export const fail = function* (cause: import("@yap/elaboration/shared/errors").C
 export type VerificationOptions = { logging?: boolean };
 
 export const run = <A>(ctx: EB.Context, registry: Metas.Registry, program: () => Verification<A>, options: VerificationOptions = {}) => {
-	const [answer, , registrySnapshot, , , collected] = Eff.run(program, [
+	const initialized = function* () {
+		const outer = yield* Eff.traverse([...ctx.env].reverse(), entry => supply.freshFrom(entry.name.variable));
+		return yield* names.local(() => new Map(outer.map((name, lvl) => [lvl, name])), program());
+	};
+	const [answer, , registrySnapshot, , , collected] = Eff.run(initialized, [
 		reader.handlers(ctx),
 		Metas.registry.handlers(registry),
 		except.handlers(),
 		logger.handlers(options.logging ?? false),
 		obligations.handlers(),
 		supply.handlers(),
+		names.handlers(new Map()),
 	]);
 
 	return { answer, obligations: collected, registry: registrySnapshot } as const;

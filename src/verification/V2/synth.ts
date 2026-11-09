@@ -15,7 +15,7 @@ import { reader, logger, supply, type Verification } from "./effects";
 import { noCapture } from "./utils/context";
 import { extractModalities, selfify } from "./utils/refinements";
 import { check } from "./check";
-import { formula, quantify } from "./logic/translate";
+import { formula, quantify, scope } from "./logic/translate";
 
 export const synth = function* (term: EB.Term): Verification<SynthResult> {
 	yield* logger.enter();
@@ -124,7 +124,8 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 		})
 		.with(EB.CtorPatterns.Lambda, function* (tm) {
 			const annotation = yield* NF.evaluate(tm.binding.annotation);
-			const [bodyType, bodyArtefacts] = yield* reader.local(inner => EB.bind(inner, { type: "Pi", variable: tm.binding.variable }, annotation), synth(tm.body));
+			const name = yield* supply.freshFrom(tm.binding.variable);
+			const [bodyType, bodyArtefacts] = yield* scope(name, { type: "Pi", variable: tm.binding.variable }, annotation, synth(tm.body));
 			const icit = tm.binding.type === "Lambda" || tm.binding.type === "Pi" ? tm.binding.icit : "Explicit";
 			const bodyTypeQuoted = yield* NF.quote(ctx.env.length + 1, bodyType);
 			const type = NF.Constructors.Pi(tm.binding.variable, icit, annotation, NF.Constructors.Closure(ctx, bodyTypeQuoted));
@@ -170,10 +171,8 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 						return yield* incorporate(arg, value.value);
 					})
 					.with(NF.View.Sealed({ type: "Existential" }), function* ({ value: ex }) {
-						const [out, artefacts] = yield* reader.local(
-							inner => EB.bind(inner, { type: "Pi", variable: ex.variable }, ex.annotation),
-							incorporate(arg, ex.body.value),
-						);
+						const name = yield* supply.freshFrom(ex.variable);
+						const [out, artefacts] = yield* scope(name, { type: "Pi", variable: ex.variable }, ex.annotation, incorporate(arg, ex.body.value));
 						return [NF.Constructors.Exists(ex.variable, ex.annotation, { ctx, value: out }), artefacts] satisfies SynthResult;
 					})
 					.with(NF.View.Sealed(NF.Patterns.Pi), function* ({ value: pi }) {
@@ -221,18 +220,21 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 					return yield* recurse(rest);
 				}
 
-				return yield* reader.local(
-					inner => EB.bind(inner, { type: "Let", variable: current.variable }, current.annotation),
-					(function* (): Verification<SynthResult> {
+				const outer = yield* reader.ask();
+				const name = yield* supply.freshFrom(current.variable);
+				const [ty, conj] = yield* scope(
+					name,
+					{ type: "Let", variable: current.variable },
+					current.annotation,
+					(function* (): Verification<[NF.Value, IVL.Formula]> {
 						const artefacts = yield* check(current.value, current.annotation);
 						const [ty, restArtefacts] = yield* recurse(rest);
-						const conj = Build.and(artefacts.vc, restArtefacts.vc);
-						const quantified = yield* quantify(current.variable, current.annotation, conj);
-						const letCtx = yield* reader.ask();
-						const existential = NF.Constructors.Exists(current.variable, current.annotation, { ctx: letCtx, value: ty });
-						return [existential, { vc: quantified }] satisfies SynthResult;
+						return [ty, Build.and(artefacts.vc, restArtefacts.vc)];
 					})(),
 				);
+				const quantified = yield* quantify(name, current.annotation, conj);
+				const existential = NF.Constructors.Exists(current.variable, current.annotation, { ctx: outer, value: ty });
+				return [existential, { vc: quantified }] satisfies SynthResult;
 			};
 
 			return yield* recurse(block.statements);
