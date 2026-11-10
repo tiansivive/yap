@@ -10,6 +10,15 @@ import { Validity } from "../validity";
 
 describe("Verification scope", () => {
 	it.each([
+		[1, "valid"],
+		[0, "invalid"],
+	] as const)("checks numeric branch guards with fallback %s", (fallback, expected) => {
+		const vc = checked(String.raw`let f: Num -> Num [| \r -> r > 0 |] = \x -> match (x > 0) | true -> x | false -> ${fallback};`);
+
+		expect(Validity.check(vc).tag).toBe(expected);
+	});
+
+	it.each([
 		["x == x", "valid"],
 		["{ let flag = x == x; return flag; }", "valid"],
 		["x == 0", "invalid"],

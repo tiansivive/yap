@@ -4,8 +4,8 @@ export type { Rational as RationalNumber } from "./rational";
 export { Normalize, Linear, Constraint } from "./normalize";
 export type { Constraint as LinearConstraint } from "./normalize";
 
-export { Simplex, Event } from "./simplex";
-export type { Bound, Event as ArithmeticEvent, Row, Tableau } from "./simplex";
+export { Bound, Simplex, Event } from "./simplex";
+export type { Event as ArithmeticEvent, Row, Tableau } from "./simplex";
 
 export { Bounds } from "./bounds";
 

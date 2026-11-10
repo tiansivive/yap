@@ -5,7 +5,7 @@ import * as Encoding from "../encoding";
 import type * as ArithmeticDomain from "../arithmetic";
 import type * as EUFDomain from "../euf";
 import type * as TheoryDomain from "../theory";
-import { Rational } from "../arithmetic";
+import { Bound, Rational } from "../arithmetic";
 import type { Event } from "./index";
 
 export const replay = (opts: Options): string => {
@@ -260,7 +260,7 @@ namespace ReplayArithmetic {
 				return {
 					state: next,
 					lines: [
-						`  assert ${resolve(variable, opts.encoding)} ${direction === "lower" ? ">=" : "<="} ${Rational.toString(bound.value)} -> ${bounds(next.bounds, opts.encoding)}`,
+						`  assert ${resolve(variable, opts.encoding)} ${direction === Bound.Orientation.Lower ? ">=" : "<="} ${Rational.toString(bound.value)} -> ${bounds(next.bounds, opts.encoding)}`,
 					],
 				};
 			})
@@ -274,7 +274,7 @@ namespace ReplayArithmetic {
 			.with({ tag: "feasible" }, () => ({ state, lines: ["  feasible"] }))
 			.exhaustive();
 
-	const set = (bounds: Bounds, variable: string, direction: "lower" | "upper", value: string): Bounds => {
+	const set = (bounds: Bounds, variable: string, direction: Bound.Orientation, value: string): Bounds => {
 		const current = bounds.get(variable) ?? {};
 		return new Map([...bounds, [variable, { ...current, [direction]: value }]]);
 	};

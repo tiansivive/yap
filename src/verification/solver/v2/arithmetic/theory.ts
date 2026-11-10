@@ -13,6 +13,8 @@ import { type Constraint, Normalize } from "./normalize";
 import type { Event as ArithmeticEvent } from "./simplex";
 import { Simplex, type Tableau } from "./simplex";
 
+const Inequality = { tag: P.union("leq", "lt") } as const;
+
 export const State = {
 	empty: {
 		tableau: Simplex.empty,
@@ -113,13 +115,16 @@ const Registration = {
 	apply: (state: State, literal: Literal, constraint: Constraint, sort: IVL.NumSort): State => {
 		const variables = Variables.collect(state, constraint, sort);
 		const negated = Normalize.negate(constraint, sort);
+		const sign = match(constraint)
+			.with(Inequality, () => Bounds.Sign.Negative)
+			.otherwise(() => Bounds.Sign.Positive);
 		const tableau = Slack.register(variables.tableau, literal, constraint);
 		return {
 			...state,
 			tableau,
 			integerVars: variables.integerVars,
 			constraints: new Map([...state.constraints, [literal, { constraint, sort }], [-literal, { constraint: negated, sort }]]),
-			bounds: Bounds.register(Bounds.register(state.bounds, literal, constraint), -literal, negated),
+			bounds: Bounds.register(Bounds.register(state.bounds, literal, constraint), -literal, negated, sign),
 		};
 	},
 };
@@ -138,13 +143,8 @@ const Variables = {
 		),
 };
 
+/* A disequality’s negation supplies the equality bound for its row. */
 const Slack = {
 	register: (tableau: Tableau, literal: Literal, constraint: Constraint): Tableau =>
-		match(constraint)
-			.with({ tag: "neq" }, () => tableau)
-			.otherwise(({ expr }) =>
-				match(expr.coefficients.size)
-					.with(1, () => tableau)
-					.otherwise(() => Simplex.row(tableau, `$slack_${literal}`, expr.coefficients)),
-			),
+		constraint.expr.coefficients.size === 1 ? tableau : Simplex.row(tableau, Bounds.slack(literal), constraint.expr.coefficients),
 };
