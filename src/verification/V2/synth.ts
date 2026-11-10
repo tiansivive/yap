@@ -222,19 +222,13 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 
 				const outer = yield* reader.ask();
 				const name = yield* supply.freshFrom(current.variable);
-				const [ty, conj] = yield* scope(
-					name,
-					{ type: "Let", variable: current.variable },
-					current.annotation,
-					(function* (): Verification<[NF.Value, IVL.Formula]> {
-						const artefacts = yield* check(current.value, current.annotation);
-						const [ty, restArtefacts] = yield* recurse(rest);
-						return [ty, Build.and(artefacts.vc, restArtefacts.vc)];
-					})(),
-				);
-				const quantified = yield* quantify(name, current.annotation, conj);
-				const existential = NF.Constructors.Exists(current.variable, current.annotation, { ctx: outer, value: ty });
-				return [existential, { vc: quantified }] satisfies SynthResult;
+				const binder = { type: "Let", variable: current.variable } as const;
+				const artefacts = yield* scope(name, binder, current.annotation, check(current.value, current.annotation));
+				const retained = artefacts.nf ?? current.annotation;
+				const [ty, restArtefacts] = yield* scope(name, binder, retained, recurse(rest));
+				const quantified = yield* quantify(name, retained, restArtefacts.vc);
+				const existential = NF.Constructors.Exists(current.variable, retained, { ctx: outer, value: ty });
+				return [existential, { vc: Build.and(artefacts.vc, quantified) }] satisfies SynthResult;
 			};
 
 			return yield* recurse(block.statements);

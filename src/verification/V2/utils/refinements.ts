@@ -21,29 +21,16 @@ export const selfify = function* (tm: EB.Term, ty: NF.Value): Verification<NF.Va
 
 	const ctx = yield* reader.ask();
 	const bound = EB.Constructors.Var({ type: "Bound", index: 0 });
-	const nf = yield* NF.evaluate(tm);
+	const self = EB.DSL.eq(bound, yield* NF.quote(ctx.env.length + 1, yield* NF.evaluate(tm)));
 
 	return yield* match(yield* NF.view(ty))
 		.with(NF.View.Sealed(NF.Patterns.Modal), function* ({ value: modal }) {
-			const { liquid } = modal.modalities;
-			assert(liquid.type === "Abs" && liquid.binder.type === "Lambda", "Liquid refinement must be an abstraction");
-
-			const quoted = yield* NF.quote(liquid.closure.ctx.env.length + 1, nf);
-			return NF.Constructors.Modal(modal.value, {
-				quantity: modal.modalities.quantity,
-				liquid: {
-					...liquid,
-					closure: {
-						...liquid.closure,
-						term: EB.DSL.and(liquid.closure.term, EB.DSL.eq(bound, quoted)),
-					},
-				},
-			});
+			const liquid = NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, EB.DSL.and(yield* body(modal.modalities.liquid), self)), modal.value);
+			return NF.Constructors.Modal(modal.value, { quantity: modal.modalities.quantity, liquid });
 		})
 		.otherwise(function* () {
 			const value = yield* NF.force(ty);
-			const quoted = yield* NF.quote(ctx.env.length + 1, nf);
-			const liquid = NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, EB.DSL.eq(bound, quoted)), value);
+			const liquid = NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, self), value);
 			return NF.Constructors.Modal(value, {
 				quantity: Q.One,
 				liquid,
@@ -62,18 +49,11 @@ export const meet = function* (scrutineeTy: NF.Value, patternTy: NF.Value): Veri
 			return NF.Constructors.Exists(ex.variable, ex.annotation, { ctx: ex.body.ctx, value: met });
 		})
 		.with([NF.View.Sealed(NF.Patterns.Modal), NF.View.Sealed(NF.Patterns.Modal)], function* ([{ value: sm }, { value: pm }]) {
-			const sl = sm.modalities.liquid;
-			const pl = pm.modalities.liquid;
-
-			assert(sl.type === "Abs" && sl.binder.type === "Lambda", "Scrutinee liquid must be lambda");
-			assert(pl.type === "Abs" && pl.binder.type === "Lambda", "Pattern liquid must be lambda");
-			assert(sl.closure.type === "Closure" && pl.closure.type === "Closure", "Liquid closures must be closures");
-
 			const conjoined = NF.Constructors.Lambda(
-				sl.binder.variable,
+				"v",
 				"Explicit",
-				NF.Constructors.Closure(sl.closure.ctx, EB.DSL.and(sl.closure.term, pl.closure.term)),
-				sl.binder.annotation,
+				NF.Constructors.Closure(ctx, EB.DSL.and(yield* body(sm.modalities.liquid), yield* body(pm.modalities.liquid))),
+				sm.value,
 			);
 
 			return NF.Constructors.Modal(sm.value, {
@@ -156,4 +136,10 @@ export const isFirstOrder = function* (ty: NF.Value): Verification<boolean> {
 		.otherwise(function* () {
 			return true;
 		});
+};
+
+const body = function* (liquid: NF.Value): Verification<EB.Term> {
+	assert(liquid.type === "Abs" && liquid.binder.type === "Lambda", "Liquid refinement must be a lambda");
+	const lvl = (yield* reader.ask()).env.length;
+	return yield* NF.quote(lvl + 1, yield* NF.apply(liquid.binder, liquid.closure, NF.Constructors.Rigid(lvl)));
 };
