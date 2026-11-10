@@ -282,6 +282,7 @@ export const Patterns = {
 
 	App: { type: "App" } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,
+	ImplicitPi: { type: "Abs", binder: { type: "Pi", icit: "Implicit" } } as const,
 	Sigma: { type: "Abs", binder: { type: "Sigma" } } as const,
 	SigmaV2: { type: "Abs", binder: { type: "SigmaV2" } } as const,
 	Lambda: { type: "Abs", binder: { type: "Lambda" } } as const,
