@@ -9,10 +9,20 @@ import type { Constraint, Linear } from "./normalize";
 import { Rational } from "./rational";
 import { Simplex, type Bound as SimplexBound, type Tableau } from "./simplex";
 
+const Patterns = {
+	Leq: { tag: "leq" } as const,
+	Lt: { tag: "lt" } as const,
+	Eq: { tag: "eq" } as const,
+	Neq: { tag: "neq" } as const,
+};
+
 export const Bounds = {
 	empty: new Map() satisfies Bounds.Map,
 
-	register: (map: Bounds.Map, literal: Literal, constraint: Constraint): Bounds.Map => new Map([...map, [literal, Bounds.from(literal, constraint)]]),
+	slack: (literal: Literal): string => `$slack_${Math.abs(literal)}`,
+
+	register: (map: Bounds.Map, literal: Literal, constraint: Constraint, row: ReadonlyMap<string, Rational>): Bounds.Map =>
+		new Map([...map, [literal, Bounds.from(literal, constraint, row)]]),
 
 	assert: (tableau: Tableau, map: Bounds.Map, literal: Literal): E.Either<Conflict, Tableau> =>
 		(map.get(literal) ?? []).reduce<E.Either<Conflict, Tableau>>(
@@ -26,12 +36,15 @@ export const Bounds = {
 			E.right(tableau),
 		),
 
-	from: (literal: Literal, constraint: Constraint): Bounds.Registration[] =>
+	from: (literal: Literal, constraint: Constraint, row: ReadonlyMap<string, Rational>): Bounds.Registration[] =>
 		match(constraint)
-			.with({ tag: "leq" }, ({ expr }) => BoundExpression.from(literal, expr, "upper", false))
-			.with({ tag: "lt" }, ({ expr }) => BoundExpression.from(literal, expr, "upper", true))
-			.with({ tag: "eq" }, ({ expr }) => [...BoundExpression.from(literal, expr, "lower", false), ...BoundExpression.from(literal, expr, "upper", false)])
-			.with({ tag: "neq" }, () => [])
+			.with(Patterns.Leq, ({ expr }) => BoundExpression.from(literal, expr, "upper", false, row))
+			.with(Patterns.Lt, ({ expr }) => BoundExpression.from(literal, expr, "upper", true, row))
+			.with(Patterns.Eq, ({ expr }) => [
+				...BoundExpression.from(literal, expr, "lower", false, row),
+				...BoundExpression.from(literal, expr, "upper", false, row),
+			])
+			.with(Patterns.Neq, () => [])
 			.exhaustive(),
 };
 
@@ -47,21 +60,40 @@ export namespace Bounds {
 }
 
 const BoundExpression = {
-	from: (literal: Literal, expr: Linear.Expr, kind: "lower" | "upper", strict: boolean): Bounds.Registration[] =>
+	from: (literal: Literal, expr: Linear.Expr, kind: "lower" | "upper", strict: boolean, row: ReadonlyMap<string, Rational>): Bounds.Registration[] =>
 		match(expr.coefficients.size)
 			.with(1, () => BoundExpression.single(expr, kind, strict))
-			.otherwise(() => BoundExpression.slack(literal, expr, kind, strict)),
+			.otherwise(() => BoundExpression.slack(literal, expr, kind, strict, row)),
 
 	single: (expr: Linear.Expr, kind: "lower" | "upper", strict: boolean): Bounds.Registration[] => {
 		const [name, coeff] = [...expr.coefficients.entries()][0];
-		const rhs = Rational.neg(expr.constant);
-		const value = Rational.div(rhs, coeff);
-		const effective = Rational.isNegative(coeff) ? BoundExpression.flip(kind) : kind;
-		return [{ variable: name, kind: effective, value, strict }];
+		return BoundExpression.scaled(name, coeff, expr.constant, kind, strict);
 	},
 
-	slack: (literal: Literal, expr: Linear.Expr, kind: "lower" | "upper", strict: boolean): Bounds.Registration[] => [
-		{ variable: `$slack_${literal}`, kind, value: Rational.neg(expr.constant), strict },
+	/*
+	 * A literal and its negation bound the same slack row, the one built from the atom. The negation's expression is a
+	 * multiple of that row, so `¬(x - y <= 0)`, normalized to `y - x < 0`, bounds the row `x - y` from below.
+	 */
+	slack: (literal: Literal, expr: Linear.Expr, kind: "lower" | "upper", strict: boolean, row: ReadonlyMap<string, Rational>): Bounds.Registration[] => {
+		const scale = match([...expr.coefficients.entries()].at(0))
+			.with(undefined, () => Rational.one)
+			.otherwise(([name, coeff]) =>
+				match(row.get(name))
+					.with(undefined, () => {
+						throw new Error(`Slack row for literal ${literal} has no coefficient for ${name}`);
+					})
+					.otherwise(base => Rational.div(coeff, base)),
+			);
+		return BoundExpression.scaled(Bounds.slack(literal), scale, expr.constant, kind, strict);
+	},
+
+	scaled: (variable: string, coeff: Rational, constant: Rational, kind: "lower" | "upper", strict: boolean): Bounds.Registration[] => [
+		{
+			variable,
+			kind: Rational.isNegative(coeff) ? BoundExpression.flip(kind) : kind,
+			value: Rational.div(Rational.neg(constant), coeff),
+			strict,
+		},
 	],
 
 	flip: (kind: "lower" | "upper"): "lower" | "upper" =>
