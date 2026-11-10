@@ -263,7 +263,7 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 			.with({ type: "Capture" }, ({ identity, payload, annotation }) => [...eb(identity), ...eb(payload), ...eb(annotation)])
 			.with({ type: "Shift" }, ({ body }) => eb(body))
 			.with({ type: "Bubble" }, ({ shift }) => eb(shift))
-			.with({ type: "Reset" }, ({ term }) => eb(term))
+			.with({ type: "Reset" }, ({ term, handling }) => [...eb(term), ...(handling ? [...eb(handling.identity), ...eb(handling.handler)] : [])])
 			.otherwise(() => {
 				throw new Error("metas: Not implemented yet");
 			});

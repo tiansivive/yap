@@ -13,14 +13,12 @@ import assert from "assert";
 /** Zonking resolves metas through the registry under the current scope, nothing else. */
 export type Zonking<A> = Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Actions<typeof Metas.registry>, A>;
 
-const ImplicitPi = NF.View.Sealed({ type: "Abs", binder: { type: "Pi", icit: "Implicit" } });
-
 export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 	const [term, ty, us] = node;
 	const ctx = yield* M.reader.ask();
 
 	const r = match(yield* NF.view(ty))
-		.with(ImplicitPi, ({ value: pi }) =>
+		.with(NF.View.Sealed(NF.Patterns.ImplicitPi), ({ value: pi }) =>
 			(function* () {
 				const meta = yield* EB.freshMeta(ctx.env.length, pi.binder.annotation);
 				const mvar = EB.Constructors.Var(meta);
@@ -44,13 +42,13 @@ export const wrapLambda = function* (term: EB.Term, ty: NF.Value): NF.Abstractio
 
 	return yield* match(yield* NF.view(ty))
 		.with(
-			ImplicitPi,
+			NF.View.Sealed(NF.Patterns.ImplicitPi),
 			_ => term.type === "Abs" && (term.binding.type === "Lambda" || term.binding.type === "Pi") && term.binding.icit === "Implicit",
 			function* () {
 				return term;
 			},
 		)
-		.with(ImplicitPi, function* ({ value: pi }) {
+		.with(NF.View.Sealed(NF.Patterns.ImplicitPi), function* ({ value: pi }) {
 			const lvl = ctx.env.length;
 			const ann = yield* NF.quote(lvl, pi.binder.annotation);
 			const binding: EB.Binding = { type: "Lambda", variable: pi.binder.variable, icit: pi.binder.icit, annotation: ann };
@@ -171,6 +169,15 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 
 			const r = yield* M.reader.local(_ => xtended, instantiate(ret, resolutions));
 			return EB.Constructors.Block(stmts, r);
+		})
+		.with({ type: "Reset" }, function* ({ term, handling }) {
+			return EB.Constructors.Reset(
+				yield* instantiate(term, resolutions),
+				handling && {
+					identity: yield* instantiate(handling.identity, resolutions),
+					handler: yield* instantiate(handling.handler, resolutions),
+				},
+			);
 		})
 		.with({ type: "Capture" }, function* ({ identity, payload, annotation }) {
 			return EB.Constructors.Capture(

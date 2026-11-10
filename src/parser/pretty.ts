@@ -29,7 +29,8 @@ const doc = (term: Src.Term): PP.Doc =>
 				arg.type === "annotation" ||
 				arg.type === "application" ||
 				arg.type === "match" ||
-				arg.type === "capture";
+				arg.type === "capture" ||
+				arg.type === "with";
 			return PP.app(PP.parensIf(needsFnParens, doc(fn)), Icit.display(icit), PP.parensIf(needsArgParens, doc(arg)));
 		})
 		.with({ type: "annotation" }, ({ term: tm, ann }) => PP.enclose(PP.parens, PP.group([doc(tm), " :", PP.nest(2, [PP.line, doc(ann)])])))
@@ -48,6 +49,19 @@ const doc = (term: Src.Term): PP.Doc =>
 			),
 		)
 		.with({ type: "block" }, ({ statements, return: ret }) => PP.block(statements.map(Stmt.doc), ret ? doc(ret) : ""))
+		.with({ type: "with" }, ({ handlers, term }) =>
+			PP.group([
+				"with ",
+				handlers.flatMap(({ identity, handler }, i) => [
+					i ? ", " : "",
+					PP.parensIf(identity.type !== "var" && identity.type !== "lit" && identity.type !== "projection", doc(identity)),
+					": ",
+					doc(handler),
+				]),
+				" in ",
+				doc(term),
+			]),
+		)
 		.with({ type: "capture" }, ({ identity, term }) => PP.group(["capture [", doc(identity), "] ", doc(term)]))
 		.with({ type: "modal" }, ({ term: tm, modalities }) => {
 			const q = modalities.quantity ? [Q.display(modalities.quantity), " "] : "";

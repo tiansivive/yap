@@ -35,6 +35,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 		const viewed = yield* NF.view(type);
 
 		const result = match<[Src.Term, NF.View], M.Elaboration<Result>>([term, viewed])
+			.with([{ type: "with" }, P._], ([tm]) => EB.Control.check(tm, type))
 			.with([{ type: "hole" }, P._], function* () {
 				const k = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 				return [EB.Constructors.Var(yield* freshMeta(ctx.env.length, k)), []] satisfies Result;

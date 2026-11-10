@@ -39,6 +39,7 @@ export type Bare =
 	| { type: "match"; scrutinee: Term; alternatives: Array<Alternative> }
 	| { type: "block"; statements: Statement[]; return?: Term }
 	| { type: "modal"; term: Term; modalities: { quantity?: Q.Multiplicity; liquid?: Term } }
+	| { type: "with"; handlers: [{ identity: Term; handler: Term }, ...{ identity: Term; handler: Term }[]]; term: Term }
 	| { type: "capture"; identity: Term; term: Term }
 	| { type: "reset"; term: Term }
 	| { type: "shift"; term: Term }

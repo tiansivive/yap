@@ -390,6 +390,9 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			// Process statements to extend context, then evaluate return
 			return yield* processStatementsAndPush(statements, ret);
 		})
+		.with({ type: "Reset", handling: P.nonNullable }, function* () {
+			throw new Error("Handler-bearing reset evaluation is pending");
+		})
 		.with({ type: "Reset" }, function* ({ term }) {
 			// Reset establishes a delimiter for continuation capture.
 			yield* Stack.delimit(yield* scope());
