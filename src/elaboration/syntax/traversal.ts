@@ -56,6 +56,15 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 			);
 			return Constructors.Block(stmts, traverse(ret, onVar));
 		})
+		.with({ type: "Reset" }, ({ term, handling }) =>
+			Constructors.Reset(
+				traverse(term, onVar),
+				handling && {
+					identity: traverse(handling.identity, onVar),
+					handler: traverse(handling.handler, onVar),
+				},
+			),
+		)
 		.with({ type: "Capture" }, ({ identity, payload, annotation }) =>
 			Constructors.Capture(traverse(identity, onVar), traverse(payload, onVar), traverse(annotation, onVar)),
 		)

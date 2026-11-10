@@ -1,0 +1,40 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Inference: with > binds the identity and handler once and installs a recursive deep wrapper 1`] = `
+"{
+  let $identity : Effect Unit Num = FFI.Ask;
+  let $user
+    : Π(x: Unit) ->
+      (closure: Π(x: Π(x: Num) -> Num) -> Num -| Γ: x; $identity; result)
+    = λ(p: Unit) -> λ(k: Π(x: Num) -> Num) -> k 42;
+  let $installed
+    : Π(x: Unit) ->
+      (closure: Π(x: Π(x: Num) -> Num) -> Num -| Γ: x; $identity; result)
+    = λ($payload: Unit) ->
+      λ($k: Π(x: Num) -> Num) ->
+        $user $payload
+          (λ($value: Num) -> reset [$identity] $installed |$k $value|);
+  return reset [$identity] $installed |capture [FFI.Ask] unit|;
+}"
+`;
+
+exports[`Inference: with > forwards the implicit carrier argument through the polymorphic wrapper 1`] = `
+"{
+  let $identity : Π(a: Type) => (closure: Effect a a -| Γ: a) = FFI.Echo;
+  let $user
+    : Π(a: Type) =>
+      (closure: Π(x: a) ->
+        Π(x: Π(x: a) -> Num) -> Num -| Γ: a; $identity; result)
+    = λ(a: Type) => λ(p: a) -> λ(k: Π(x: a) -> Num) -> k p;
+  let $installed
+    : Π(a: Type) =>
+      (closure: Π(x: a) ->
+        Π(x: Π(x: a) -> Num) -> Num -| Γ: a; $identity; result)
+    = λ(a: Type) =>
+      λ($payload: a) ->
+        λ($k: Π(x: a) -> Num) ->
+          $user @a $payload
+            (λ($value: a) -> reset [$identity] $installed |$k $value|);
+  return reset [$identity] $installed |capture [FFI.Echo @Num] 42|;
+}"
+`;

@@ -172,6 +172,15 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			const r = yield* M.reader.local(_ => xtended, instantiate(ret, resolutions));
 			return EB.Constructors.Block(stmts, r);
 		})
+		.with({ type: "Reset" }, function* ({ term, handling }) {
+			return EB.Constructors.Reset(
+				yield* instantiate(term, resolutions),
+				handling && {
+					identity: yield* instantiate(handling.identity, resolutions),
+					handler: yield* instantiate(handling.handler, resolutions),
+				},
+			);
+		})
 		.with({ type: "Capture" }, function* ({ identity, payload, annotation }) {
 			return EB.Constructors.Capture(
 				yield* instantiate(identity, resolutions),

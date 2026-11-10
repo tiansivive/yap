@@ -130,6 +130,9 @@ const walk = (term: EB.Term, st: State): [NodeId, State] =>
 		.with({ type: "Capture" }, () => {
 			throw new Error("GRAM translation for Capture is pending");
 		})
+		.with({ type: "Reset", handling: P.nonNullable }, () => {
+			throw new Error("GRAM translation: handler-bearing reset is unsupported");
+		})
 		.with({ type: "Reset" }, t => reset(t, st))
 		.with({ type: "Shift" }, t => shift(t, st))
 		.with({ type: "Bubble" }, t => walk(t.shift, st))

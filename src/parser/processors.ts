@@ -411,6 +411,15 @@ export const Alternative: PostProcessor<[Space, Bar, Space, Src.Pattern, Space, 
  * Delimited Continuations processors
  ***********************************************************/
 
+type HandlerClause = { identity: Term; handler: Term };
+export const Handler: PostProcessor<[Term, Whitespace, Colon, Whitespace, Term], HandlerClause> = ([identity, , , , handler]) => ({ identity, handler });
+export const With: PostProcessor<[Keyword, Whitespace, [HandlerClause, ...HandlerClause[]], Whitespace, Keyword, Whitespace, Term], Term> = data => ({
+	type: "with",
+	handlers: data[2],
+	term: data[6],
+	location: locSpan({ from: loc(data[0]) }, data[6].location),
+});
+
 export const Capture: PostProcessor<[Keyword, Whitespace, unknown, unknown, Term, unknown, unknown, Whitespace, Term], Term> = data => ({
 	type: "capture",
 	identity: data[4],
