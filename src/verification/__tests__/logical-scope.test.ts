@@ -10,7 +10,8 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 import * as Row from "@yap/shared/rows";
 import { elaborateModule } from "../../elaboration/__tests__/module";
 import { run } from "../V2/effects";
-import { term } from "../V2/logic/translate";
+import { formula, scope, term } from "../V2/logic/translate";
+import { meet } from "../V2/utils/refinements";
 import { subtype } from "../V2/subtype";
 import { VerificationServiceV2 } from "../V2/service";
 import { Build } from "../solver/ivl/build";
@@ -74,6 +75,32 @@ describe("Logical binder identities", () => {
 		assert(outer.tag === "Select" && inner.tag === "Select" && outer.array.tag === "Var" && inner.array.tag === "Var");
 
 		expect(outer.array.name).not.toBe(inner.array.name);
+	});
+
+	it.each([false, true])("combines captured predicates with an outer binding: %s", captured => {
+		const num = NF.Constructors.Lit({ type: "Atom", value: "Num" });
+		const outer = captured ? EB.bind(defaultContext, { type: "Pi", variable: "x" }, num) : defaultContext;
+		const ctx = EB.bind(outer, { type: "Pi", variable: "x" }, num);
+		const refined = (ctx: EB.Context, rhs: EB.Term) =>
+			NF.Constructors.Modal(num, {
+				quantity: Q.Many,
+				liquid: NF.Constructors.Lambda("v", "Explicit", NF.Constructors.Closure(ctx, EB.DSL.gt(EB.DSL.bound(0), rhs)), num),
+			});
+		const left = refined(outer, captured ? EB.DSL.bound(1) : EB.DSL.num(0));
+		const right = refined(ctx, EB.DSL.bound(1));
+		const { answer } = run(ctx, {}, function* () {
+			const combined = yield* meet(left, right);
+			assert(combined.type === "Modal");
+			const predicate = yield* NF.reduce(combined.modalities.liquid, NF.Constructors.Rigid(ctx.env.length), "Explicit");
+			const actual = yield* scope("v", { type: "Pi", variable: "v" }, num, formula(predicate));
+			const earlier = captured ? yield* term(NF.Constructors.Rigid(0)) : Build.num(0, Build.Real);
+			const later = yield* term(NF.Constructors.Rigid(ctx.env.length - 1));
+			return { actual, earlier, later };
+		});
+		assert(!Eff.failed(answer));
+		const value = Build.var_("v", Build.Real);
+
+		expect(answer.actual).toEqual(Build.and(Build.atom(">", value, answer.earlier), Build.atom(">", value, answer.later)));
 	});
 
 	it("opens a dependent pattern binder in the scope of its predecessor", () => {

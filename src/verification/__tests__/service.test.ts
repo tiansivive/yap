@@ -5,7 +5,6 @@ import { match } from "ts-pattern";
 import * as Eff from "@yap/utils/effects";
 import { elaborateModule } from "../../elaboration/__tests__/module";
 import { VerificationServiceV2 } from "../V2/service";
-import { Build } from "../solver/ivl/build";
 import { Validity } from "../validity";
 
 describe("Verification scope", () => {
@@ -29,23 +28,11 @@ describe("Verification scope", () => {
 	});
 
 	it("retains the parameter in a local binding's refinement", () => {
-		const vc = checked(String.raw`let compute: Num -> Num = \input -> { let doubled = input * 2; return doubled; };`);
-		assert(vc.tag === "Forall" && vc.body.tag === "Forall");
-		const input = vc.binders[0].name;
-		const doubled = vc.body.binders[0].name;
+		const vc = checked(String.raw`let compute: (input: Num) -> Num [| \r -> r == (input * 2) |] = \input -> {
+			let doubled = input * 2;
+			return doubled;
+		};`);
 
-		expect(vc).toMatchObject({
-			tag: "Forall",
-			binders: [{ name: input }],
-			body: {
-				tag: "Forall",
-				binders: [{ name: doubled }],
-				body: {
-					tag: "Implies",
-					left: Build.atom("=", Build.var_(doubled, Build.Real), Build.arith("*", Build.var_(input, Build.Real), Build.num(2, Build.Real), Build.Real)),
-				},
-			},
-		});
 		expect(Validity.check(vc).tag).toBe("valid");
 	});
 
@@ -74,6 +61,85 @@ describe("Verification scope", () => {
 		["0", "invalid"],
 	] as const)("checks a dependent result contract for %s", (body, expected) => {
 		const vc = checked(String.raw`let same: (input: Num) -> Num [| \result -> result == input |] = \input -> ${body};`);
+
+		expect(Validity.check(vc).tag).toBe(expected);
+	});
+
+	it.each([
+		["1", "valid"],
+		["0", "invalid"],
+	] as const)("retains the value of a literal local initialized with %s", (value, expected) => {
+		const vc = checked(String.raw`let f: Num -> Num [| \r -> r > 0 |] = \x -> { let a = ${value}; return a; };`);
+
+		expect(Validity.check(vc).tag).toBe(expected);
+	});
+
+	it.each([
+		["input", "valid"],
+		["0", "invalid"],
+	] as const)("retains the equality of a local alias initialized with %s", (value, expected) => {
+		const vc = checked(String.raw`let copy: (input: Num) -> Num [| \r -> r == input |] = \input -> { let alias = ${value}; return alias; };`);
+
+		expect(Validity.check(vc).tag).toBe(expected);
+	});
+
+	it.each([
+		["x + 1", "valid"],
+		["x - 1", "invalid"],
+	] as const)("opens a refined parameter while checking %s", (body, expected) => {
+		const vc = checked(String.raw`let f: Num [| \n -> n > 0 |] -> Num [| \r -> r > 1 |] = \x -> ${body};`);
+
+		expect(Validity.check(vc).tag).toBe(expected);
+	});
+
+	it.each([
+		["Num [| \\n -> n > 0 |]", "valid"],
+		["Num", "invalid"],
+	] as const)("checks an explicitly refined local initialized from %s", (input, expected) => {
+		const vc = checked(String.raw`let f: ${input} -> Num [| \r -> r > 0 |] = \x -> { let a: Num [| \v -> v > 0 |] = x; return a; };`);
+
+		expect(Validity.check(vc).tag).toBe(expected);
+	});
+
+	it("checks an impossible initializer independently of the continuation's assumptions", () => {
+		const vc = checked(String.raw`let f: Num -> Num = \x -> { let a: Num [| \n -> false |] = 0; return 1; };`);
+
+		expect(Validity.check(vc).tag).toBe("invalid");
+	});
+
+	it("preserves facts through two inferred arithmetic locals", () => {
+		const vc = checked(String.raw`let f: (x: Num) -> Num [| \r -> r == ((x * 2) + 10) |] = \x -> {
+			let doubled = x * 2;
+			let added = doubled + 10;
+			return added;
+		};`);
+
+		expect(Validity.check(vc).tag).toBe("valid");
+	});
+
+	it.each([
+		["x + 1", "valid"],
+		["x + 2", "invalid"],
+	] as const)("retains %s through a nested block and shadowing", (value, expected) => {
+		const vc = checked(String.raw`let f: (x: Num) -> Num [| \r -> r == (x + 1) |] = \x -> {
+			let a = { let b = ${value}; return b; };
+			let x = 0;
+			return a;
+		};`);
+
+		expect(Validity.check(vc).tag).toBe(expected);
+	});
+
+	it.each([
+		["y", "valid"],
+		["x", "invalid"],
+	] as const)("preserves a later parameter through local shadowing when retaining %s", (value, expected) => {
+		const vc = checked(String.raw`let f: (x: Num) -> (y: Num) -> Num [| \r -> r == y |] = \x -> \y -> {
+			let a = x + 1;
+			let saved = ${value};
+			let y = 0;
+			return saved;
+		};`);
 
 		expect(Validity.check(vc).tag).toBe(expected);
 	});
