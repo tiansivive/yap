@@ -127,6 +127,9 @@ const walk = (term: EB.Term, st: State): [NodeId, State] =>
 		.with({ type: "Match" }, t => matchExpr(t, st))
 		.with({ type: "Block" }, t => block(t, st))
 		.with({ type: "Modal" }, t => modal(t, st))
+		.with({ type: "Capture" }, () => {
+			throw new Error("GRAM translation for Capture is pending");
+		})
 		.with({ type: "Reset" }, t => reset(t, st))
 		.with({ type: "Shift" }, t => shift(t, st))
 		.with({ type: "Bubble" }, t => walk(t.shift, st))

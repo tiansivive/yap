@@ -56,6 +56,9 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 			);
 			return Constructors.Block(stmts, traverse(ret, onVar));
 		})
+		.with({ type: "Capture" }, ({ identity, payload, annotation }) =>
+			Constructors.Capture(traverse(identity, onVar), traverse(payload, onVar), traverse(annotation, onVar)),
+		)
 		.with({ type: "Modal" }, ({ term, modalities }) => Constructors.Modal(traverse(term, onVar), modalities))
 		.otherwise(() => {
 			throw new Error("Traverse: Not implemented yet");

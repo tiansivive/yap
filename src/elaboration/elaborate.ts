@@ -52,6 +52,7 @@ export const infer = (ast: Src.Term): M.Elaboration<AST> => {
 			.with({ type: "modal" }, EB.Modal.infer)
 			.with({ type: "annotation" }, EB.Annotation.infer)
 
+			.with({ type: "capture" }, EB.Control.capture)
 			.with({ type: "reset" }, EB.Reset.infer)
 			.with({ type: "shift" }, EB.Shift.infer)
 			.with({ type: "resume" }, EB.Shift.resume)

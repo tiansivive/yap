@@ -411,6 +411,13 @@ export const Alternative: PostProcessor<[Space, Bar, Space, Src.Pattern, Space, 
  * Delimited Continuations processors
  ***********************************************************/
 
+export const Capture: PostProcessor<[Keyword, Whitespace, unknown, unknown, Term, unknown, unknown, Whitespace, Term], Term> = data => ({
+	type: "capture",
+	identity: data[4],
+	term: data[8],
+	location: locSpan({ from: loc(data[0]) }, data[8].location),
+});
+
 export const Reset: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , term]) => {
 	return {
 		type: "reset",
