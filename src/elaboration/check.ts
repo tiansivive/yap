@@ -35,6 +35,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 		const viewed = yield* NF.view(type);
 
 		const result = match<[Src.Term, NF.View], M.Elaboration<Result>>([term, viewed])
+			.with([{ type: "reset" }, P._], ([tm]) => EB.Reset.check(tm, type))
 			.with([{ type: "with" }, P._], ([tm]) => EB.Control.check(tm, type))
 			.with([{ type: "hole" }, P._], function* () {
 				const k = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
@@ -58,14 +59,16 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 
 						const ann = tm.annotation ? (yield* EB.check(tm.annotation, ty.binder.annotation))[0] : yield* NF.quote(ctx.env.length, ty.binder.annotation);
 
-						return yield* M.reader.local(
-							ctx => EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation),
-							(function* () {
-								const [body, us] = yield* Check.val(tm.body, bType);
-								// const [vu] = us;
-								//yield* M.constrain({ type: "usage", expected: ty.binder.annotation.nf, computed: vu });
-								return [EB.Constructors.Lambda(tm.variable, tm.icit, body, ann), us] satisfies Result;
-							})(),
+						return yield* EB.Inference.Lambda.body(
+							M.reader.local(
+								ctx => EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation),
+								(function* () {
+									const [body, us] = yield* Check.val(tm.body, bType);
+									// const [vu] = us;
+									//yield* M.constrain({ type: "usage", expected: ty.binder.annotation.nf, computed: vu });
+									return [EB.Constructors.Lambda(tm.variable, tm.icit, body, ann), us] satisfies Result;
+								})(),
+							),
 						);
 					},
 				)
@@ -75,15 +78,17 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					function* ([tm, ty]) {
 						const ann = yield* NF.quote(ctx.env.length, ty.binder.annotation);
 
-						return yield* M.reader.local(
-							ctx => EB.bind(ctx, { type: "Lambda", variable: ty.binder.variable }, ty.binder.annotation, "inserted"),
-							(function* () {
-								const bType = yield* NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
-								const [_tm, us] = yield* Check.val(tm, bType);
-								const [vu] = us;
-								//	yield* M.constrain({ type: "usage", expected: ty.binder.annotation[1], computed: vu });
-								return [EB.Constructors.Lambda(ty.binder.variable, "Implicit", _tm, ann), us] satisfies Result;
-							})(),
+						return yield* EB.Inference.Lambda.body(
+							M.reader.local(
+								ctx => EB.bind(ctx, { type: "Lambda", variable: ty.binder.variable }, ty.binder.annotation, "inserted"),
+								(function* () {
+									const bType = yield* NF.apply(ty.binder, ty.closure, NF.Constructors.Rigid(ctx.env.length));
+									const [_tm, us] = yield* Check.val(tm, bType);
+									const [vu] = us;
+									//	yield* M.constrain({ type: "usage", expected: ty.binder.annotation[1], computed: vu });
+									return [EB.Constructors.Lambda(ty.binder.variable, "Implicit", _tm, ann), us] satisfies Result;
+								})(),
+							),
 						);
 					},
 				)
@@ -189,7 +194,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 				.with([{ type: "match" }, NF.Patterns.Type], function* ([match, ty]) {
 					const ast = yield* EB.infer(match.scrutinee);
 
-					const alternatives = yield* M.traverse(
+					const alternatives = yield* EB.Inference.Match.branches(
 						match.alternatives,
 						EB.Inference.Match.elaborate(ast, function* (src) {
 							const [tm, us] = yield* EB.check(src, ty);
@@ -269,7 +274,7 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 						return next;
 					};
 
-					const alternatives = yield* M.traverse(
+					const alternatives = yield* EB.Inference.Match.branches(
 						m.alternatives,
 						EB.Inference.Match.elaborate(ast, function* (src, [pat, _patty, , binders]) {
 							const ctx = yield* M.reader.ask();

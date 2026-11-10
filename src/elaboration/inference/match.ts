@@ -17,7 +17,7 @@ export const infer = (tm: Match): M.Elaboration<EB.AST> =>
 		const ctx = yield* M.reader.ask();
 		const ast = yield* EB.infer(tm.scrutinee);
 
-		const alternatives = yield* M.traverse(tm.alternatives, elaborate(ast, EB.infer));
+		const alternatives = yield* branches(tm.alternatives, elaborate(ast, EB.infer));
 
 		// Ensure all alternatives have the same type - we pick the type of the first alternative as the common type
 		const common = alternatives[0][1];
@@ -101,3 +101,22 @@ export const elaborate =
 
 			return yield* r;
 		});
+
+/* Each alternative starts from the scrutinee's control state; a capture is guaranteed when every arm captures. */
+export function* branches(alternatives: Src.Alternative[], action: (alt: Src.Alternative) => M.Elaboration<AltNode>): M.Elaboration<AltNode[]> {
+	const { delimitations: incoming } = yield* M.st.get();
+	const results = yield* M.traverse(alternatives, function* (alt) {
+		yield* M.st.modify(s => ({ ...s, delimitations: incoming }));
+		const result = yield* action(alt);
+		const { delimitations } = yield* M.st.get();
+		return { result, delimitations };
+	});
+	yield* M.st.modify(s => ({
+		...s,
+		delimitations: incoming.map((delimiter, i) => ({
+			...delimiter,
+			shifted: results.every(({ delimitations }) => delimitations[i].shifted),
+		})),
+	}));
+	return results.map(({ result }) => result);
+}

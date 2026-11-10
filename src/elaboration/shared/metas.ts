@@ -260,6 +260,7 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => [...eb(scrutinee), ...alternatives.flatMap(alt => eb(alt.term))])
 			.with({ type: "Block" }, ({ return: ret, statements }) => [...eb(ret), ...statements.flatMap(s => eb(s.value))])
 			.with({ type: "Modal" }, ({ term }) => eb(term))
+			.with({ type: "Identity" }, ({ annotation }) => eb(annotation))
 			.with({ type: "Capture" }, ({ identity, payload, annotation }) => [...eb(identity), ...eb(payload), ...eb(annotation)])
 			.with({ type: "Shift" }, ({ body }) => eb(body))
 			.with({ type: "Bubble" }, ({ shift }) => eb(shift))

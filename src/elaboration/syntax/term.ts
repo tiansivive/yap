@@ -25,6 +25,8 @@ type Constructor =
 	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> }
 	| { type: "Block"; statements: Array<Statement>; return: Term }
 	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
+	/** Allocates a fresh identity each time the term is evaluated. */
+	| { type: "Identity"; annotation: Term }
 	| { type: "Capture"; identity: Term; payload: Term; annotation: Term }
 	| { type: "Reset"; term: Term; handling?: { identity: Term; handler: Term } }
 	| { type: "Shift"; body: Term }
@@ -197,6 +199,7 @@ export const Constructors = {
 
 	Modal: (term: Term, modalities: Modal.Annotations<Term>): Term => mk({ type: "Modal", term, modalities }),
 
+	Identity: (annotation: Term): Term => mk({ type: "Identity", annotation }),
 	Capture: (identity: Term, payload: Term, annotation: Term): Term => mk({ type: "Capture", identity, payload, annotation }),
 	Reset: (term: Term, handling?: { identity: Term; handler: Term }): Term => mk({ type: "Reset", term, ...(handling ? { handling } : {}) }),
 	Shift: (body: Term): Term => mk({ type: "Shift", body }),

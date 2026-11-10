@@ -185,6 +185,9 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		.with({ type: "Modal" }, function* ({ term: tm, modalities }) {
 			return ["<", Q.display(modalities.quantity), "> ", yield* go(tm), " [| ", yield* go(modalities.liquid), " |]"] satisfies PP.Doc;
 		})
+		.with({ type: "Identity" }, function* ({ annotation }) {
+			return ["identity [", yield* go(annotation), "]"] satisfies PP.Doc;
+		})
 		.with({ type: "Capture" }, function* ({ identity, payload }) {
 			return ["capture [", yield* go(identity), "] ", yield* go(payload)] satisfies PP.Doc;
 		})

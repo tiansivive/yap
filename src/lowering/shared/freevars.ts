@@ -44,6 +44,7 @@ export function freeVars(term: EB.Term, depth: number): Set<number> {
 			return s;
 		})
 		.with({ type: "Modal" }, ({ term: t }) => freeVars(t, depth))
+		.with({ type: "Identity" }, () => new Set<number>())
 		.with({ type: "Capture" }, ({ identity, payload }) => new Set([...freeVars(identity, depth), ...freeVars(payload, depth)]))
 		.with(
 			{ type: "Reset" },

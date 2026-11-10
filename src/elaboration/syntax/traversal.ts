@@ -65,6 +65,7 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 				},
 			),
 		)
+		.with({ type: "Identity" }, ({ annotation }) => Constructors.Identity(traverse(annotation, onVar)))
 		.with({ type: "Capture" }, ({ identity, payload, annotation }) =>
 			Constructors.Capture(traverse(identity, onVar), traverse(payload, onVar), traverse(annotation, onVar)),
 		)

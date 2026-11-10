@@ -71,14 +71,9 @@ export type MutState = {
 };
 
 export type Delimitation = {
+	identity: EB.NF.Value;
+	carrier: EB.NF.Value;
 	answer: { initial: EB.NF.Value; final: EB.NF.Value };
-	//handlerQ: Array<{ meta: EB.Meta, handler: Src.Term, ann: EB.NF.Value }>;
-	//solution: Record<number, { values: EB.NF.Value[], term: EB.Term }>;
-
-	/** `
-	 * Needed to know if any shift has occurred within the reset.
-	 * If `false`, we can enforce that the initial and final answer types are the same.
-	 * Dumb but effective.
-	 **/
+	/** Every normal evaluation path includes a capture of this delimiter. */
 	shifted: boolean;
 };

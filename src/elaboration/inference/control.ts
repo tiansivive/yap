@@ -138,7 +138,7 @@ function* arrow(from: NF.Value, to: NF.Value): M.Elaboration<NF.Value> {
 
 export const capture = (node: Extract<Src.Term, { type: "capture" }>): M.Elaboration<EB.AST> =>
 	M.tracer.track({ tag: "src", type: "term", term: node, metadata: { action: "infer", description: "Capture" } }, function* () {
-		const [identity, carrier, identityUsages] = yield* EB.Icit.insert(yield* EB.infer(node.identity));
+		const [identity, carrier, identityUsages] = yield* EB.Icit.insert(node.identity ? yield* EB.infer(node.identity) : yield* anonymous());
 		const [payload, result] = yield* signature(carrier);
 		const [value, usages] = yield* EB.check(node.term, payload);
 		const annotation = yield* NF.quote((yield* M.reader.ask()).env.length, result);
@@ -146,7 +146,19 @@ export const capture = (node: Extract<Src.Term, { type: "capture" }>): M.Elabora
 		return [EB.Constructors.Capture(identity, value, annotation), result, Q.add(identityUsages, usages)] satisfies EB.AST;
 	});
 
-function* signature(carrier: NF.Value): M.Elaboration<[NF.Value, NF.Value]> {
+function* anonymous(): M.Elaboration<EB.AST> {
+	const {
+		delimitations: [delimiter, ...outer],
+	} = yield* M.st.get();
+	if (!delimiter) {
+		throw new Error("capture without an enclosing reset");
+	}
+	yield* M.st.modify(s => ({ ...s, delimitations: [{ ...delimiter, shifted: true }, ...outer] }));
+	const ctx = yield* M.reader.ask();
+	return [yield* NF.quote(ctx.env.length, delimiter.identity), delimiter.carrier, []];
+}
+
+export function* signature(carrier: NF.Value): M.Elaboration<[NF.Value, NF.Value]> {
 	const { value } = yield* NF.view(carrier);
 	return yield* match(value)
 		.with(NF.Patterns.Effect, function* ({ func, arg }) {

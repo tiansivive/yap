@@ -374,6 +374,9 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			const artefacts = yield* check(tm.term, ann);
 			return [ann, artefacts] satisfies SynthResult;
 		})
+		.with({ type: "Identity" }, function* () {
+			throw new Error("Fresh identity verification is pending");
+		})
 		.with({ type: "Reset", handling: P.nonNullable }, function* () {
 			throw new Error("Handler-bearing reset verification is pending");
 		})
