@@ -37,9 +37,9 @@ export const Simplex = {
 		};
 	},
 
-	lower: (tab: Tableau, variable: string, bound: Bound.Input): Check => tighten(tab, variable, bound, "lower"),
+	lower: (tab: Tableau, variable: string, bound: Bound.Input): Check => tighten(tab, variable, bound, Bound.Orientation.Lower),
 
-	upper: (tab: Tableau, variable: string, bound: Bound.Input): Check => tighten(tab, variable, bound, "upper"),
+	upper: (tab: Tableau, variable: string, bound: Bound.Input): Check => tighten(tab, variable, bound, Bound.Orientation.Upper),
 
 	check: (tab: Tableau): Check => Repair.step(tab, 0),
 
@@ -54,6 +54,13 @@ export type Bound = {
 };
 
 export namespace Bound {
+	export const Orientation = {
+		Lower: "lower",
+		Upper: "upper",
+	} as const;
+
+	export type Orientation = (typeof Orientation)[keyof typeof Orientation];
+
 	export type Input = {
 		readonly value: Rational;
 		readonly strict: boolean;
@@ -84,7 +91,7 @@ export type Tableau = {
 
 export namespace Event {
 	export type T =
-		| { readonly tag: "bound"; readonly variable: string; readonly direction: "lower" | "upper"; readonly bound: Bound.Input }
+		| { readonly tag: "bound"; readonly variable: string; readonly direction: Bound.Orientation; readonly bound: Bound.Input }
 		| { readonly tag: "conflict"; readonly variable: string; readonly lower: Rational; readonly upper: Rational }
 		| { readonly tag: "violation"; readonly variable: string; readonly direction: "below" | "above" }
 		| { readonly tag: "pivot"; readonly leaving: string; readonly entering: string }
@@ -94,21 +101,21 @@ export namespace Event {
 
 export type Event = Event.T;
 
-const tighten = (tab: Tableau, variable: string, input: Bound.Input, direction: "lower" | "upper"): Check => {
-	const delta = direction === "lower" ? Rational.one : Rational.minusOne;
+const tighten = (tab: Tableau, variable: string, input: Bound.Input, direction: Bound.Orientation): Check => {
+	const delta = direction === Bound.Orientation.Lower ? Rational.one : Rational.minusOne;
 	const bound: Bound = { value: Delta.of(input.value, input.strict ? delta : Rational.zero), reason: input.reason };
 	const current = tab.bounds.get(variable) ?? Bound.Pair.empty;
-	const opposite = direction === "lower" ? current.upper : current.lower;
-	if (opposite && (direction === "lower" ? Delta.gt(bound.value, opposite.value) : Delta.lt(bound.value, opposite.value))) {
+	const opposite = direction === Bound.Orientation.Lower ? current.upper : current.lower;
+	if (opposite && (direction === Bound.Orientation.Lower ? Delta.gt(bound.value, opposite.value) : Delta.lt(bound.value, opposite.value))) {
 		return E.left(Conflicts.bound(bound.reason, opposite.reason, variable));
 	}
 	const previous = current[direction];
-	if (previous && (direction === "lower" ? Delta.leq(bound.value, previous.value) : Delta.geq(bound.value, previous.value))) {
+	if (previous && (direction === Bound.Orientation.Lower ? Delta.leq(bound.value, previous.value) : Delta.geq(bound.value, previous.value))) {
 		return E.right(tab);
 	}
 	const updated = { ...tab, bounds: new Map([...tab.bounds, [variable, { ...current, [direction]: bound }]]) };
 	const value = Simplex.value(tab, variable);
-	const violated = direction === "lower" ? Delta.lt(value, bound.value) : Delta.gt(value, bound.value);
+	const violated = direction === Bound.Orientation.Lower ? Delta.lt(value, bound.value) : Delta.gt(value, bound.value);
 	return E.right(violated && !tab.basic.has(variable) ? Assignment.propagate(updated, variable, bound.value) : updated);
 };
 

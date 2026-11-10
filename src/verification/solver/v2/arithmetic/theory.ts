@@ -115,16 +115,16 @@ const Registration = {
 	apply: (state: State, literal: Literal, constraint: Constraint, sort: IVL.NumSort): State => {
 		const variables = Variables.collect(state, constraint, sort);
 		const negated = Normalize.negate(constraint, sort);
-		const orientation = match(constraint)
-			.with(Inequality, () => -1 as const)
-			.otherwise(() => 1 as const);
+		const sign = match(constraint)
+			.with(Inequality, () => Bounds.Sign.Negative)
+			.otherwise(() => Bounds.Sign.Positive);
 		const tableau = Slack.register(variables.tableau, literal, constraint);
 		return {
 			...state,
 			tableau,
 			integerVars: variables.integerVars,
 			constraints: new Map([...state.constraints, [literal, { constraint, sort }], [-literal, { constraint: negated, sort }]]),
-			bounds: Bounds.register(Bounds.register(state.bounds, literal, constraint), -literal, negated, orientation),
+			bounds: Bounds.register(Bounds.register(state.bounds, literal, constraint), -literal, negated, sign),
 		};
 	},
 };

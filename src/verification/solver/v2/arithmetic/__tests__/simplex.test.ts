@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Delta } from "../delta";
 import type { Row, Tableau } from "../simplex";
 import { conflictValue, tag } from "../../__tests__/either";
-import { Rational, Simplex } from "../index";
+import { Bound, Rational, Simplex } from "../index";
 
 describe("Simplex", () => {
 	it.each([1n, -2n])("preserves all row equations when the entering coefficient is %s", coefficient => {
@@ -79,7 +79,7 @@ describe("Simplex", () => {
 		expect(Simplex.value(repaired, "s")).toEqual(Delta.of(Rational.one, Rational.zero));
 	});
 
-	it.each(["lower", "upper"] as const)("retains the stricter %s bound at an equal endpoint", direction => {
+	it.each([Bound.Orientation.Lower, Bound.Orientation.Upper] as const)("retains the stricter %s bound at an equal endpoint", direction => {
 		const initial = Simplex.variable(Simplex.empty, "x");
 		const closed = conflictValue(Simplex[direction](initial, "x", { value: Rational.zero, strict: false, reason: 1 }));
 		const strict = conflictValue(Simplex[direction](closed, "x", { value: Rational.zero, strict: true, reason: 2 }));
@@ -88,7 +88,7 @@ describe("Simplex", () => {
 
 		expect(closed.bounds.get("x")?.[direction]).toEqual({ value: Delta.zero, reason: 1 });
 		expect(repaired.bounds.get("x")?.[direction]).toEqual({
-			value: Delta.of(Rational.zero, direction === "lower" ? Rational.one : Rational.minusOne),
+			value: Delta.of(Rational.zero, direction === Bound.Orientation.Lower ? Rational.one : Rational.minusOne),
 			reason: 2,
 		});
 	});
@@ -159,14 +159,14 @@ const feasible = (original: Tableau, bounded: Tableau): Tableau => {
 		expect(Simplex.value(repaired, variable)).toEqual(expected);
 	});
 	[...repaired.bounds].forEach(([variable, bounds]) => {
-		(["lower", "upper"] as const).forEach(direction => {
+		([Bound.Orientation.Lower, Bound.Orientation.Upper] as const).forEach(direction => {
 			const bound = bounds[direction];
 
 			if (!bound) {
 				return;
 			}
 			const value = Simplex.value(repaired, variable);
-			const satisfies = direction === "lower" ? Delta.geq(value, bound.value) : Delta.leq(value, bound.value);
+			const satisfies = direction === Bound.Orientation.Lower ? Delta.geq(value, bound.value) : Delta.leq(value, bound.value);
 			expect(satisfies, `${variable} ${direction} bound`).toBe(true);
 		});
 	});
