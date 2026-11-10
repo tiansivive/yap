@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { match, P } from "ts-pattern";
 import { Delta } from "../delta";
 import type { Row, Tableau } from "../simplex";
 import { conflictValue, tag } from "../../__tests__/either";
@@ -87,7 +86,11 @@ describe("Simplex", () => {
 		const weakened = conflictValue(Simplex[direction](strict, "x", { value: Rational.zero, strict: false, reason: 3 }));
 		const repaired = feasible(initial, weakened);
 
-		expect(repaired.bounds.get("x")?.[direction]).toEqual({ value: Rational.zero, strict: true, reason: 2 });
+		expect(closed.bounds.get("x")?.[direction]).toEqual({ value: Delta.zero, reason: 1 });
+		expect(repaired.bounds.get("x")?.[direction]).toEqual({
+			value: Delta.of(Rational.zero, direction === "lower" ? Rational.one : Rational.minusOne),
+			reason: 2,
+		});
 	});
 
 	it("preserves a strict rational interval through a pivot", () => {
@@ -157,19 +160,14 @@ const feasible = (original: Tableau, bounded: Tableau): Tableau => {
 	});
 	[...repaired.bounds].forEach(([variable, bounds]) => {
 		(["lower", "upper"] as const).forEach(direction => {
-			match(bounds[direction])
-				.with(P.nonNullable, bound => {
-					const value = Simplex.value(repaired, variable);
-					const endpoint = Delta.of(bound.value, Rational.zero);
-					const satisfies = match([direction, bound.strict])
-						.with(["lower", true], () => Delta.gt(value, endpoint))
-						.with(["lower", false], () => Delta.geq(value, endpoint))
-						.with(["upper", true], () => Delta.lt(value, endpoint))
-						.with(["upper", false], () => Delta.leq(value, endpoint))
-						.exhaustive();
-					expect(satisfies, `${variable} ${direction} bound`).toBe(true);
-				})
-				.otherwise(() => {});
+			const bound = bounds[direction];
+
+			if (!bound) {
+				return;
+			}
+			const value = Simplex.value(repaired, variable);
+			const satisfies = direction === "lower" ? Delta.geq(value, bound.value) : Delta.leq(value, bound.value);
+			expect(satisfies, `${variable} ${direction} bound`).toBe(true);
 		});
 	});
 	return repaired;

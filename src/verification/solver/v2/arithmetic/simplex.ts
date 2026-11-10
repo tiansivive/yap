@@ -5,7 +5,7 @@
 
 import * as E from "fp-ts/Either";
 import type { Either } from "fp-ts/lib/Either";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 import type { Conflict, Literal } from "../cdcl";
 import { Delta } from "./delta";
 import { Rational } from "./rational";
@@ -37,11 +37,11 @@ export const Simplex = {
 		};
 	},
 
-	lower: (tab: Tableau, variable: string, bound: Bound): Check => tighten(tab, variable, bound, "lower"),
+	lower: (tab: Tableau, variable: string, bound: Bound.Input): Check => tighten(tab, variable, bound, "lower"),
 
-	upper: (tab: Tableau, variable: string, bound: Bound): Check => tighten(tab, variable, bound, "upper"),
+	upper: (tab: Tableau, variable: string, bound: Bound.Input): Check => tighten(tab, variable, bound, "upper"),
 
-	check: (tab: Tableau): Check => repair(tab),
+	check: (tab: Tableau): Check => Repair.step(tab, 0),
 
 	value: (tab: Tableau, variable: string): Delta => tab.assignment.get(variable) ?? Delta.zero,
 };
@@ -49,12 +49,17 @@ export const Simplex = {
 export type Check = Either<Conflict, Tableau>;
 
 export type Bound = {
-	readonly value: Rational;
-	readonly strict: boolean;
+	readonly value: Delta;
 	readonly reason: Literal;
 };
 
 export namespace Bound {
+	export type Input = {
+		readonly value: Rational;
+		readonly strict: boolean;
+		readonly reason: Literal;
+	};
+
 	export type Pair = {
 		readonly lower: Bound | undefined;
 		readonly upper: Bound | undefined;
@@ -66,35 +71,6 @@ export namespace Bound {
 			upper: undefined,
 		} satisfies Pair,
 	};
-
-	export const opposite = (pair: Pair, direction: "lower" | "upper"): Bound | undefined => (direction === "lower" ? pair.upper : pair.lower);
-
-	export const existing = (pair: Pair, direction: "lower" | "upper"): Bound | undefined => (direction === "lower" ? pair.lower : pair.upper);
-
-	export const limit = (bound: Bound, direction: "lower" | "upper"): Delta =>
-		Delta.of(
-			bound.value,
-			match([bound.strict, direction])
-				.with([false, P._], () => Rational.zero)
-				.with([true, "lower"], () => Rational.one)
-				.with([true, "upper"], () => Rational.minusOne)
-				.exhaustive(),
-		);
-
-	export const conflict = (bound: Bound, opposite: Bound, direction: "lower" | "upper"): boolean => {
-		const [lower, upper] = direction === "lower" ? [bound, opposite] : [opposite, bound];
-		return Delta.gt(limit(lower, "lower"), limit(upper, "upper"));
-	};
-
-	export const dominated = (bound: Bound, existing: Bound | undefined, direction: "lower" | "upper"): boolean =>
-		match(existing)
-			.with(undefined, () => false)
-			.otherwise(b =>
-				match(direction)
-					.with("lower", () => Delta.leq(limit(bound, direction), limit(b, direction)))
-					.with("upper", () => Delta.geq(limit(bound, direction), limit(b, direction)))
-					.exhaustive(),
-			);
 }
 
 export type Row = ReadonlyMap<string, Rational>;
@@ -108,7 +84,7 @@ export type Tableau = {
 
 export namespace Event {
 	export type T =
-		| { readonly tag: "bound"; readonly variable: string; readonly direction: "lower" | "upper"; readonly bound: Bound }
+		| { readonly tag: "bound"; readonly variable: string; readonly direction: "lower" | "upper"; readonly bound: Bound.Input }
 		| { readonly tag: "conflict"; readonly variable: string; readonly lower: Rational; readonly upper: Rational }
 		| { readonly tag: "violation"; readonly variable: string; readonly direction: "below" | "above" }
 		| { readonly tag: "pivot"; readonly leaving: string; readonly entering: string }
@@ -118,72 +94,55 @@ export namespace Event {
 
 export type Event = Event.T;
 
-const tighten = (tab: Tableau, variable: string, bound: Bound, direction: "lower" | "upper"): Check => {
+const tighten = (tab: Tableau, variable: string, input: Bound.Input, direction: "lower" | "upper"): Check => {
+	const delta = direction === "lower" ? Rational.one : Rational.minusOne;
+	const bound: Bound = { value: Delta.of(input.value, input.strict ? delta : Rational.zero), reason: input.reason };
 	const current = tab.bounds.get(variable) ?? Bound.Pair.empty;
-	const opposite = Bound.opposite(current, direction);
-	return match(opposite)
-		.with(P.nonNullable, other =>
-			match(Bound.conflict(bound, other, direction))
-				.with(true, () => E.left(Conflicts.bound(bound.reason, other.reason, variable)))
-				.with(false, () => Tighten.apply(tab, variable, bound, direction, current))
-				.exhaustive(),
-		)
-		.with(undefined, () => Tighten.apply(tab, variable, bound, direction, current))
-		.exhaustive();
-};
-
-const repair = (tab: Tableau): Check => Repair.step(tab, 0);
-
-const Tighten = {
-	apply: (tab: Tableau, variable: string, bound: Bound, direction: "lower" | "upper", current: Bound.Pair): Check =>
-		match(Bound.dominated(bound, Bound.existing(current, direction), direction))
-			.with(true, () => E.right(tab))
-			.with(false, () => {
-				const updated = {
-					...tab,
-					bounds: new Map([...tab.bounds, [variable, { ...current, [direction]: bound }]]),
-				};
-				const value = tab.assignment.get(variable) ?? Delta.zero;
-				const limit = Bound.limit(bound, direction);
-				const violated = match(direction)
-					.with("lower", () => Delta.lt(value, limit))
-					.with("upper", () => Delta.gt(value, limit))
-					.exhaustive();
-				return E.right(violated && !tab.basic.has(variable) ? Assignment.propagate(updated, variable, limit) : updated);
-			})
-			.exhaustive(),
+	const opposite = direction === "lower" ? current.upper : current.lower;
+	if (opposite && (direction === "lower" ? Delta.gt(bound.value, opposite.value) : Delta.lt(bound.value, opposite.value))) {
+		return E.left(Conflicts.bound(bound.reason, opposite.reason, variable));
+	}
+	const previous = current[direction];
+	if (previous && (direction === "lower" ? Delta.leq(bound.value, previous.value) : Delta.geq(bound.value, previous.value))) {
+		return E.right(tab);
+	}
+	const updated = { ...tab, bounds: new Map([...tab.bounds, [variable, { ...current, [direction]: bound }]]) };
+	const value = Simplex.value(tab, variable);
+	const violated = direction === "lower" ? Delta.lt(value, bound.value) : Delta.gt(value, bound.value);
+	return E.right(violated && !tab.basic.has(variable) ? Assignment.propagate(updated, variable, bound.value) : updated);
 };
 
 const Repair = {
-	step: (tab: Tableau, n: number): Check =>
-		match(n >= MAX_PIVOTS)
-			.with(true, () => E.right(tab))
-			.with(false, () =>
-				match(Violation.find(tab))
-					.with(undefined, () => E.right(tab))
-					.otherwise(v =>
-						match(Candidate.find(tab, v))
-							.with(undefined, () => E.left(Conflicts.infeasible(tab, v)))
-							.otherwise(entering => Repair.step(Pivot.run(tab, v, entering), n + 1)),
-					),
-			)
-			.exhaustive(),
+	step: (tab: Tableau, n: number): Check => {
+		if (n >= MAX_PIVOTS) {
+			return E.right(tab);
+		}
+		const violation = Violation.find(tab);
+
+		if (!violation) {
+			return E.right(tab);
+		}
+		const entering = Candidate.find(tab, violation);
+
+		if (entering === undefined) {
+			return E.left(Conflicts.infeasible(tab, violation));
+		}
+		return Repair.step(Pivot.run(tab, violation, entering), n + 1);
+	},
 };
 
 const Assignment = {
 	propagate: (tab: Tableau, variable: string, value: Delta): Tableau => {
 		const shift = Delta.sub(value, tab.assignment.get(variable) ?? Delta.zero);
 		const assignment = [...tab.rows.entries()].reduce<ReadonlyMap<string, Delta>>(
-			(acc, [bv, row]) =>
-				match(row.get(variable))
-					.with(P.nonNullable, c =>
-						match(Rational.isZero(c))
-							.with(true, () => acc)
-							.with(false, () => new Map([...acc, [bv, Delta.add(acc.get(bv) ?? Delta.zero, Delta.scale(shift, c))]]))
-							.exhaustive(),
-					)
-					.with(undefined, () => acc)
-					.exhaustive(),
+			(acc, [bv, row]) => {
+				const coeff = row.get(variable);
+
+				if (!coeff || Rational.isZero(coeff)) {
+					return acc;
+				}
+				return new Map([...acc, [bv, Delta.add(acc.get(bv) ?? Delta.zero, Delta.scale(shift, coeff))]]);
+			},
 			new Map([...tab.assignment, [variable, value]]),
 		);
 		return { ...tab, assignment };
@@ -203,54 +162,44 @@ const Violation = {
 	variable: (tab: Tableau, variable: string): Violation | undefined => {
 		const value = Simplex.value(tab, variable);
 		const { lower, upper } = tab.bounds.get(variable) ?? Bound.Pair.empty;
-		return match([lower, upper])
-			.with(
-				[P.nonNullable, P._],
-				([bound]) => Delta.lt(value, Bound.limit(bound, "lower")),
-				([bound]) => ({ variable, direction: "below" as const, target: Bound.limit(bound, "lower") }),
-			)
-			.with(
-				[P._, P.nonNullable],
-				([, bound]) => Delta.gt(value, Bound.limit(bound, "upper")),
-				([, bound]) => ({ variable, direction: "above" as const, target: Bound.limit(bound, "upper") }),
-			)
-			.otherwise(() => undefined);
+
+		if (lower && Delta.lt(value, lower.value)) {
+			return { variable, direction: "below", target: lower.value };
+		}
+
+		if (upper && Delta.gt(value, upper.value)) {
+			return { variable, direction: "above", target: upper.value };
+		}
+		return undefined;
 	},
 };
 
 const Candidate = {
-	find: (tab: Tableau, v: Violation): string | undefined =>
-		match(tab.rows.get(v.variable))
-			.with(undefined, () => undefined)
-			.otherwise(row =>
-				[...row.entries()].reduce<string | undefined>((found, [nbv, coeff]) => found ?? (Candidate.viable(tab, v, nbv, coeff) ? nbv : undefined), undefined),
-			),
+	find: (tab: Tableau, v: Violation): string | undefined => {
+		const row = tab.rows.get(v.variable);
+		return row && [...row].find(([nbv, coeff]) => Candidate.viable(tab, v, nbv, coeff))?.[0];
+	},
 
-	viable: (tab: Tableau, v: Violation, nbv: string, coeff: Rational): boolean =>
-		match([tab.basic.has(nbv), Rational.isZero(coeff)])
-			.with([true, P._], () => false)
-			.with([P._, true], () => false)
-			.otherwise(() => {
-				const value = tab.assignment.get(nbv) ?? Delta.zero;
-				const { lower, upper } = tab.bounds.get(nbv) ?? Bound.Pair.empty;
-				const increase = match(upper)
-					.with(undefined, () => true)
-					.otherwise(b => Delta.lt(value, Bound.limit(b, "upper")));
-				const decrease = match(lower)
-					.with(undefined, () => true)
-					.otherwise(b => Delta.gt(value, Bound.limit(b, "lower")));
-				return match(v.direction)
-					.with("below", () => (Rational.isPositive(coeff) && increase) || (Rational.isNegative(coeff) && decrease))
-					.with("above", () => (Rational.isNegative(coeff) && increase) || (Rational.isPositive(coeff) && decrease))
-					.exhaustive();
-			}),
+	viable: (tab: Tableau, v: Violation, nbv: string, coeff: Rational): boolean => {
+		if (tab.basic.has(nbv) || Rational.isZero(coeff)) {
+			return false;
+		}
+		const value = Simplex.value(tab, nbv);
+		const { lower, upper } = tab.bounds.get(nbv) ?? Bound.Pair.empty;
+		const increase = !upper || Delta.lt(value, upper.value);
+		const decrease = !lower || Delta.gt(value, lower.value);
+		return match(v.direction)
+			.with("below", () => (Rational.isPositive(coeff) && increase) || (Rational.isNegative(coeff) && decrease))
+			.with("above", () => (Rational.isNegative(coeff) && increase) || (Rational.isPositive(coeff) && decrease))
+			.exhaustive();
+	},
 };
 
 const Pivot = {
-	run: (tab: Tableau, violation: Violation, entering: string): Tableau =>
-		match(tab.rows.get(violation.variable))
-			.with(undefined, () => tab)
-			.otherwise(row => Pivot.apply(tab, violation, entering, row)),
+	run: (tab: Tableau, violation: Violation, entering: string): Tableau => {
+		const row = tab.rows.get(violation.variable);
+		return row ? Pivot.apply(tab, violation, entering, row) : tab;
+	},
 
 	/*
 	 * The row `leaving = coeff * entering + rest` is solved as `entering = (leaving - rest) / coeff` and substituted into
@@ -270,11 +219,7 @@ const Pivot = {
 
 	solve: (row: Row, entering: string, leaving: string, inv: Rational): Row =>
 		[...row.entries()].reduce<Row>(
-			(acc, [v, c]) =>
-				match(v === entering)
-					.with(true, () => acc)
-					.with(false, () => new Map([...acc, [v, Rational.mul(Rational.neg(c), inv)]]))
-					.exhaustive(),
+			(acc, [v, c]) => (v === entering ? acc : new Map([...acc, [v, Rational.mul(Rational.neg(c), inv)]])),
 			new Map([[leaving, inv]]),
 		),
 
@@ -282,11 +227,10 @@ const Pivot = {
 		[...tab.rows.entries()]
 			.filter(([bv]) => bv !== leaving)
 			.reduce<ReadonlyMap<string, Row>>(
-				(acc, [bv, row]) =>
-					match(row.get(entering))
-						.with(P.nonNullable, ec => new Map([...acc, [bv, Rational.isZero(ec) ? row : Pivot.substitute(row, entering, solved, ec)]]))
-						.with(undefined, () => new Map([...acc, [bv, row]]))
-						.exhaustive(),
+				(acc, [bv, row]) => {
+					const coeff = row.get(entering);
+					return new Map([...acc, [bv, coeff && !Rational.isZero(coeff) ? Pivot.substitute(row, entering, solved, coeff) : row]]);
+				},
 				new Map<string, Row>([[entering, solved]]),
 			),
 
@@ -305,10 +249,7 @@ const Pivot = {
 
 const Row = {
 	set: (row: Row, variable: string, value: Rational): Row =>
-		match(Rational.isZero(value))
-			.with(true, () => new Map([...row.entries()].filter(([v]) => v !== variable)))
-			.with(false, () => new Map([...row, [variable, value]]))
-			.exhaustive(),
+		Rational.isZero(value) ? new Map([...row.entries()].filter(([v]) => v !== variable)) : new Map([...row, [variable, value]]),
 };
 
 const Conflicts = {
