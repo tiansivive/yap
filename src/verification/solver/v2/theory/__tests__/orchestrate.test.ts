@@ -1,3 +1,4 @@
+import assert from "node:assert";
 import { match, P } from "ts-pattern";
 import { describe, expect, it } from "vitest";
 import { Build } from "../../../ivl/build";
@@ -6,6 +7,7 @@ import type { Literal } from "../../cdcl";
 import * as Core from "../../core";
 import type * as Encoding from "../../encoding";
 import { CNF } from "../../encoding";
+import { CC } from "../../euf";
 import { conflictValue, tag } from "../../__tests__/either";
 import * as Theory from "../index";
 
@@ -24,6 +26,45 @@ const run = <A>(prepared: Theory.Setup, gen: () => Core.G<A>): [Core.Collector<A
 	Core.run(Core.Do(gen), Core.Env.default, { ...Core.State.initial, arena: prepared.arena, theories: prepared.state });
 
 describe("Theory orchestration", () => {
+	it.each([
+		["=", true, false],
+		["=", true, true],
+		["=", false, false],
+		["=", false, true],
+		["!=", true, false],
+		["!=", true, true],
+		["!=", false, false],
+		["!=", false, true],
+	] as const)("backtracks Boolean equality from %s %s (reversed: %s)", (op, value, reversed) => {
+		const b = Build.const_("b", Build.Bool);
+		const truth = Build.bool(value);
+		const encoding = CNF.encode(reversed ? Build.atom(op, truth, b) : Build.atom(op, b, truth));
+		const prepared = Theory.setup(encoding);
+		const deciding = op === "=" ? -literal(encoding, op) : literal(encoding, op);
+		const bId = prepared.arena.hashIndex.get("b");
+		const opposite = prepared.arena.hashIndex.get(String(!value));
+		const original = prepared.arena.hashIndex.get(String(value));
+		assert(bId !== undefined && opposite !== undefined && original !== undefined);
+		const [collector] = run(prepared, function* () {
+			yield* Theory.enter(CHILD_LEVEL);
+			yield* Theory.assert(deciding);
+			const merged = (yield* Core.State.get()).theories.euf;
+			yield* Theory.backtrack(CHILD_LEVEL, BASE_LEVEL);
+			const restored = (yield* Core.State.get()).theories.euf;
+			yield* Theory.assert(-deciding);
+			return { merged, restored, reassigned: (yield* Core.State.get()).theories.euf };
+		});
+		const { merged, restored, reassigned } = conflictValue(collector.result);
+
+		expect(CC.find(merged, bId)).toBe(CC.find(merged, opposite));
+		expect(CC.explain(merged, bId, opposite)).toEqual([deciding]);
+		expect(merged.active.has(deciding)).toBe(true);
+		expect(merged.registry.get(deciding)?.positive).toBe(false);
+		expect(CC.find(restored, bId)).not.toBe(CC.find(restored, opposite));
+		expect(restored.active.has(deciding)).toBe(false);
+		expect(CC.find(reassigned, bId)).toBe(CC.find(reassigned, original));
+	});
+
 	it("registers equality atoms with both literal polarities", () => {
 		const encoding = CNF.encode(DSL.eq(DSL.x, DSL.y));
 		const prepared = Theory.setup(encoding);

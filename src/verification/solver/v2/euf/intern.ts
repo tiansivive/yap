@@ -5,20 +5,7 @@
 import { match, P } from "ts-pattern";
 import { Build } from "../../ivl/build";
 import type { IVL } from "../../ivl/types";
-
-const Patterns = {
-	Term: {
-		App: { tag: "App" } as const,
-		Var: { tag: "Var" } as const,
-		Const: { tag: "Const" } as const,
-		Num: { tag: "Num" } as const,
-		Bool: { tag: "Bool" } as const,
-		Str: { tag: "Str" } as const,
-		Arith: { tag: "Arith" } as const,
-		Select: { tag: "Select" } as const,
-		Row: { tag: "Row" } as const,
-	},
-} as const;
+import { Patterns } from "../../ivl/patterns";
 
 export const Intern = {
 	empty: {
@@ -72,6 +59,9 @@ export const Intern = {
 				return Intern.raw(selected.state, "select", [source.id, selected.id], sort);
 			})
 			.with(Patterns.Term.Row, ({ sort }) => Intern.raw(state, "row", [], sort))
+			.with(Patterns.Term.Prop, () => {
+				throw new Error("Formula normalization must eliminate Prop before term interning");
+			})
 			.exhaustive(),
 
 	pair: (state: Intern.State, left: IVL.Term, right: IVL.Term): Intern.Pair => {

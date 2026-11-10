@@ -1,4 +1,4 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import assert from "assert";
 
 import * as Eff from "@yap/utils/effects";
@@ -28,6 +28,8 @@ import {
 import type { IVL } from "../../solver/ivl/types";
 import { Build } from "../../solver/ivl/build";
 import { reader, obligations, names, supply, type Verification } from "../effects";
+
+const BooleanExternal = { ...NF.Patterns.External, name: P.union(OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LTE, OP_GTE, OP_AND, OP_OR, OP_NOT) } as const;
 
 export const mkSort = function* (nf: NF.Value): Verification<IVL.Sort> {
 	const ctx = yield* reader.ask();
@@ -244,6 +246,13 @@ export const term = function* (nf: NF.Value): Verification<IVL.Term> {
 			}
 			throw new Error(`Unsupported variable in formula translation: ${v.variable.type} (${JSON.stringify(v.variable)})`);
 		})
+		.with(
+			BooleanExternal,
+			e => e.args.length === e.arity,
+			function* () {
+				return Build.prop(yield* formula(nf));
+			},
+		)
 		.with({ type: "External" }, function* (e) {
 			if (e.args.length !== e.arity) {
 				throw new Error("External with wrong arity in logical formulas");

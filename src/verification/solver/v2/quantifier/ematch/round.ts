@@ -188,5 +188,8 @@ namespace Term {
 			)
 			.with(Patterns.Term.Arith, ({ op, args, sort }) => Build.arith(op, substitute(args[0], replacements), substitute(args[1], replacements), sort))
 			.with(Patterns.Term.Select, ({ array, index, sort }) => Build.select(substitute(array, replacements), substitute(index, replacements), sort))
+			.with(Patterns.Term.Prop, () => {
+				throw new Error("Formula normalization must eliminate Prop before substitution");
+			})
 			.otherwise(t => t);
 }
