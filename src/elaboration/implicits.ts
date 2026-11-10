@@ -172,6 +172,13 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			const r = yield* M.reader.local(_ => xtended, instantiate(ret, resolutions));
 			return EB.Constructors.Block(stmts, r);
 		})
+		.with({ type: "Capture" }, function* ({ identity, payload, annotation }) {
+			return EB.Constructors.Capture(
+				yield* instantiate(identity, resolutions),
+				yield* instantiate(payload, resolutions),
+				yield* instantiate(annotation, resolutions),
+			);
+		})
 		.with({ type: "Modal" }, function* ({ term, modalities }) {
 			return EB.Constructors.Modal(yield* instantiate(term, resolutions), modalities);
 		})

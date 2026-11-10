@@ -25,6 +25,7 @@ type Constructor =
 	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> }
 	| { type: "Block"; statements: Array<Statement>; return: Term }
 	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
+	| { type: "Capture"; identity: Term; payload: Term; annotation: Term }
 	| { type: "Reset"; term: Term }
 	| { type: "Shift"; body: Term }
 	| { type: "Bubble"; meta: number; ann: NF.Value; values: NF.Value[]; shift: Term }
@@ -196,6 +197,7 @@ export const Constructors = {
 
 	Modal: (term: Term, modalities: Modal.Annotations<Term>): Term => mk({ type: "Modal", term, modalities }),
 
+	Capture: (identity: Term, payload: Term, annotation: Term): Term => mk({ type: "Capture", identity, payload, annotation }),
 	Reset: (term: Term): Term => mk({ type: "Reset", term }),
 	Shift: (body: Term): Term => mk({ type: "Shift", body }),
 	Bubble: (meta: number, ann: NF.Value, values: NF.Value[], shift: Term): Term => mk({ type: "Bubble", meta, ann, values, shift }),

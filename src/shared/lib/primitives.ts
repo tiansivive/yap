@@ -29,6 +29,7 @@ export const Terms = () => ({
     Bool: EB.Constructors.Lit(Lit.Atom("Bool")),
     String: EB.Constructors.Lit(Lit.Atom("String")),
     Unit: EB.Constructors.Lit(Lit.Atom("Unit")),
+    Effect: EB.Constructors.Lit(Lit.Atom("Effect")),
     "+": EB.Constructors.Var({ type: "Foreign", name: "$add" }),
     "-": EB.Constructors.Var({ type: "Foreign", name: "$sub" }),
     "*": EB.Constructors.Var({ type: "Foreign", name: "$mul" }),
@@ -124,6 +125,7 @@ export const Elaborated: () => EB.Context['imports'] = () => {
 
     return {
         ...PrimTypes,
+        Effect: [Terms().Effect, Type_Type_Type, []],
         //"->": [Terms()["->"], Type_Type_Type, []],
         "+": [Terms()["+"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.add)]), []],
         "-": [Terms()["-"], Num_Num_Num([, , reflectLiquid(Terms().Num)(EB.DSL.sub)]), []],

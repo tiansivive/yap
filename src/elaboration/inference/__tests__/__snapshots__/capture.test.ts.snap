@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Inference: capture > generalizes result-polymorphic carriers into operation functions 1`] = `
+"λ(a: Type) =>
+  λ(b: Type) => (λ(u: a) -> capture [FFI.Abort @b] "stop" : Π(u: a) -> b)"
+`;
+
+exports[`Inference: capture > groups a capture used as an application argument 1`] = `"f (capture [FFI.Ask] unit)"`;
+
+exports[`Inference: capture > infers an unknown carrier from the capture payload 1`] = `
+"λ(a: Type) =>
+  (λ(e: Effect Unit a) -> capture [e] unit : Π(e: Effect Unit a) -> a)"
+`;

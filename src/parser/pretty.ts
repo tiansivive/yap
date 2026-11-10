@@ -23,7 +23,13 @@ const doc = (term: Src.Term): PP.Doc =>
 		.with({ type: "application" }, ({ icit, fn, arg }) => {
 			const needsFnParens = fn.type !== "var" && fn.type !== "lit" && fn.type !== "application";
 			const needsArgParens =
-				arg.type === "lambda" || arg.type === "pi" || arg.type === "arrow" || arg.type === "annotation" || arg.type === "application" || arg.type === "match";
+				arg.type === "lambda" ||
+				arg.type === "pi" ||
+				arg.type === "arrow" ||
+				arg.type === "annotation" ||
+				arg.type === "application" ||
+				arg.type === "match" ||
+				arg.type === "capture";
 			return PP.app(PP.parensIf(needsFnParens, doc(fn)), Icit.display(icit), PP.parensIf(needsArgParens, doc(arg)));
 		})
 		.with({ type: "annotation" }, ({ term: tm, ann }) => PP.enclose(PP.parens, PP.group([doc(tm), " :", PP.nest(2, [PP.line, doc(ann)])])))
@@ -42,6 +48,7 @@ const doc = (term: Src.Term): PP.Doc =>
 			),
 		)
 		.with({ type: "block" }, ({ statements, return: ret }) => PP.block(statements.map(Stmt.doc), ret ? doc(ret) : ""))
+		.with({ type: "capture" }, ({ identity, term }) => PP.group(["capture [", doc(identity), "] ", doc(term)]))
 		.with({ type: "modal" }, ({ term: tm, modalities }) => {
 			const q = modalities.quantity ? [Q.display(modalities.quantity), " "] : "";
 			const l = modalities.liquid ? [" [| ", doc(modalities.liquid), " |]"] : "";
