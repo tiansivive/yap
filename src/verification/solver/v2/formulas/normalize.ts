@@ -2,7 +2,6 @@
 // IVL = Intermediate Verification Language.
 // https://github.com/tiansivive/z-yap/blob/main/zettels/cdcl-t-solver.md
 
-import * as O from "fp-ts/Option";
 import { match, P } from "ts-pattern";
 import { Build } from "../../ivl/build";
 import { Patterns } from "../../ivl/patterns";
@@ -17,73 +16,66 @@ export const normalize = (formula: IVL.Formula): IVL.Formula =>
 		.with(Patterns.Formula.Implies, ({ left, right, origin }) => Build.implies(normalize(left), normalize(right), origin))
 		.with(Patterns.Formula.Forall, ({ binders, body, triggers: hints, origin }) => Build.forall(binders, normalize(body), origin, triggers(hints)))
 		.with(Patterns.Formula.Exists, ({ binders, body, origin }) => Build.exists(binders, normalize(body), origin))
-		.with(Patterns.Formula.Atom, ({ op, args, origin }) => atom(op, [normalizeTerm(args[0]), normalizeTerm(args[1])], origin))
+		.with(Patterns.Formula.Atom, ({ op, args, origin }) => Lift.args(args.map(normalizeTerm), ([left, right]) => Bool.atom(op, [left, right], origin), origin))
 		.exhaustive();
 
 /* Splitting at the containing atom keeps each formula value inside its original binders. */
-const atom = (op: IVL.AtomOp, args: [IVL.Term, IVL.Term], origin?: string): IVL.Formula =>
-	O.match(
-		() => Bool.atom(op, args, origin),
-		({ formula, fill }: Hole<IVL.Term[]>) => {
-			const condition = normalize(formula);
-			const at = (value: boolean): IVL.Formula => {
-				const [left, right] = fill(Build.bool(value));
-				return atom(op, [left, right], origin);
-			};
-			return Build.orWithOrigin([Build.and(condition, at(true)), Build.and(Build.not(condition), at(false))], origin);
-		},
-	)(Hole.list(args));
-
-type Hole<T> = { readonly formula: IVL.Formula; readonly fill: (value: IVL.Term) => T };
-
-const Hole = {
-	term: (term: IVL.Term): O.Option<Hole<IVL.Term>> =>
+const Lift = {
+	term: (term: IVL.Term, body: (term: IVL.Term) => IVL.Formula, origin?: string): IVL.Formula =>
 		match(term)
-			.with(Patterns.Term.Prop, ({ value }) => O.some({ formula: value, fill: (t: IVL.Term) => t }))
-			.with(Patterns.Term.App, ({ head, args, sort }) => Hole.map(Hole.list(args), filled => Build.app(head, filled, sort)))
-			.with(Patterns.Term.Arith, ({ op, args, sort }) => Hole.map(Hole.list(args), ([l, r]) => Build.arith(op, l, r, sort)))
-			.with(Patterns.Term.Select, ({ array, index, sort }) => Hole.map(Hole.list([array, index]), ([a, i]) => Build.select(a, i, sort)))
-			.with(Patterns.Term.Row, ({ row, sort }) => Hole.map(Hole.row(row), filled => Build.row(filled, sort)))
-			.with(Patterns.Term.Var, Patterns.Term.Const, Patterns.Term.Num, Patterns.Term.Bool, Patterns.Term.Str, () => O.none)
+			.with(Patterns.Term.Prop, ({ value }) => {
+				const condition = normalize(value);
+				return Build.orWithOrigin([Build.and(condition, body(Build.bool(true))), Build.and(Build.not(condition), body(Build.bool(false)))], origin);
+			})
+			.with(Patterns.Term.App, ({ head, args, sort }) => Lift.args(args, terms => body(Build.app(head, terms, sort)), origin))
+			.with(Patterns.Term.Arith, ({ op, args, sort }) => Lift.args(args, ([left, right]) => body(Build.arith(op, left, right, sort)), origin))
+			.with(Patterns.Term.Select, ({ array, index, sort }) => Lift.args([array, index], ([a, i]) => body(Build.select(a, i, sort)), origin))
+			.with(Patterns.Term.Row, ({ row, sort }) => Lift.row(row, fields => body(Build.row(fields, sort)), origin))
+			.with(Patterns.Term.Var, Patterns.Term.Const, Patterns.Term.Num, Patterns.Term.Bool, Patterns.Term.Str, body)
 			.exhaustive(),
 
-	row: (row: IVL.RowTerm): O.Option<Hole<IVL.RowTerm>> =>
+	args: (terms: IVL.Term[], body: (terms: IVL.Term[]) => IVL.Formula, origin?: string): IVL.Formula =>
+		match(terms.findIndex(Prop.contains))
+			.with(-1, () => body(terms))
+			.otherwise(index =>
+				Lift.term(terms[index], value => Lift.args(terms.slice(index + 1), tail => body([...terms.slice(0, index), value, ...tail]), origin), origin),
+			),
+
+	row: (row: IVL.RowTerm, body: (row: IVL.RowTerm) => IVL.Formula, origin?: string): IVL.Formula =>
 		match(row)
 			.with(Patterns.Row.Extend, ({ label, value, rest }) =>
-				O.alt(() => Hole.map(Hole.row(rest), filled => Build.rowExtend(label, value, filled)))(
-					Hole.map(Hole.term(value), filled => Build.rowExtend(label, filled, rest)),
-				),
+				Lift.term(value, field => Lift.row(rest, tail => body(Build.rowExtend(label, field, tail)), origin), origin),
 			)
-			.with(Patterns.Row.Empty, Patterns.Row.Var, () => O.none)
+			.with(Patterns.Row.Empty, Patterns.Row.Var, body)
 			.exhaustive(),
-
-	list: (terms: IVL.Term[]): O.Option<Hole<IVL.Term[]>> =>
-		terms.reduce<O.Option<Hole<IVL.Term[]>>>(
-			(found, term, i) => O.alt(() => Hole.map(Hole.term(term), filled => terms.map((t, j) => (j === i ? filled : t))))(found),
-			O.none,
-		),
-
-	map: <A, B>(hole: O.Option<Hole<A>>, f: (a: A) => B): O.Option<Hole<B>> =>
-		O.map(({ formula, fill }: Hole<A>) => ({ formula, fill: (value: IVL.Term) => f(fill(value)) }))(hole),
 };
 
-/* Inference resumes when every supplied trigger group contains a formula value. */
 const triggers = (hints: IVL.Trigger[] | undefined): IVL.Trigger[] | undefined =>
 	match(hints)
 		.with(undefined, () => undefined)
 		.with([], () => [])
 		.otherwise(hints =>
-			match(
-				hints.filter(({ terms }) =>
-					O.match(
-						() => true,
-						() => false,
-					)(Hole.list(terms)),
-				),
-			)
+			match(hints.filter(({ terms }) => !terms.some(Prop.contains)))
 				.with([], () => undefined)
 				.otherwise(safe => safe),
 		);
+
+const Prop = {
+	contains: (term: IVL.Term): boolean =>
+		match(term)
+			.with(Patterns.Term.Prop, () => true)
+			.with(Patterns.Term.App, Patterns.Term.Arith, ({ args }) => args.some(Prop.contains))
+			.with(Patterns.Term.Select, ({ array, index }) => Prop.contains(array) || Prop.contains(index))
+			.with(Patterns.Term.Row, ({ row }) => Prop.row(row))
+			.with(Patterns.Term.Var, Patterns.Term.Const, Patterns.Term.Num, Patterns.Term.Bool, Patterns.Term.Str, () => false)
+			.exhaustive(),
+
+	row: (row: IVL.RowTerm): boolean =>
+		match(row)
+			.with(Patterns.Row.Extend, ({ value, rest }) => Prop.contains(value) || Prop.row(rest))
+			.with(Patterns.Row.Empty, Patterns.Row.Var, () => false)
+			.exhaustive(),
+};
 
 /* Expressing both Boolean literals through equality to true makes their distinction visible to the solver. */
 const Bool = {

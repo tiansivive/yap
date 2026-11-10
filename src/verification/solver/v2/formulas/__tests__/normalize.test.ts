@@ -8,6 +8,12 @@ import { extract } from "../../quantifier/triggers";
 import { normalize } from "../normalize";
 
 describe("normalize", () => {
+	it("preserves applications with many ordinary arguments", () => {
+		const args = Array.from({ length: 3000 }, (_, i) => DSL.int(i));
+		const formula = DSL.eq(Build.app("f", args, Build.Int), DSL.int(0));
+		expect(normalize(formula)).toEqual(formula);
+	});
+
 	describe("Boolean values", () => {
 		const v = Build.const_("v", Build.Bool);
 		const condition = DSL.gt(DSL.a, DSL.int(0));
