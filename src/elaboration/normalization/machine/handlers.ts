@@ -6,8 +6,8 @@ import * as Eff from "@yap/utils/effects";
 import type { Actions } from "./actions";
 import type { Captured, Mark, Runnable, StackFrame } from "./frames";
 
-export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, undefined> => {
-	const workStack: StackFrame<S, C>[] = [];
+export const handlers = <S, C, D = undefined>(maxSteps: number): Eff.Handler<Actions<S, C, D>, undefined> => {
+	const workStack: StackFrame<S, C, D>[] = [];
 	let spent = 0;
 
 	const slot = (mark: Mark) => {
@@ -40,12 +40,12 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 
 			"Machine.next": mark => {
 				const index = workStack.findLastIndex(runnable);
-				const frame = index >= mark.work ? (workStack[index] as Runnable<S, C>) : undefined;
+				const frame = index >= mark.work ? (workStack[index] as Runnable<S, C, D>) : undefined;
 
 				workStack.length = Math.max(index, mark.work);
 
 				if (!frame) {
-					return Eff.ctl.resume<Runnable<S, C> | undefined>(undefined);
+					return Eff.ctl.resume<Runnable<S, C, D> | undefined>(undefined);
 				}
 
 				if (frame.type === "Cont" && frame.operands.length !== frame.arity) {
@@ -58,7 +58,7 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 					throw new Error(slot(mark).blame(maxSteps));
 				}
 
-				return Eff.ctl.resume<Runnable<S, C> | undefined>(frame);
+				return Eff.ctl.resume<Runnable<S, C, D> | undefined>(frame);
 			},
 
 			"Machine.finish": mark => {
@@ -91,23 +91,23 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Machine.delimit": scope => {
-				workStack.push({ type: "Delimiter", scope });
+			"Machine.delimit": ({ scope, data }) => {
+				workStack.push({ type: "Delimiter", scope, data });
 
 				return Eff.ctl.resume(undefined);
 			},
 
 			"Machine.find": match => Eff.ctl.resume(workStack.findLast(match)),
 
-			"Machine.capture": () => {
-				const index = workStack.findLastIndex(frame => frame.type === "Delimiter");
+			"Machine.capture": matches => {
+				const index = workStack.findLastIndex(frame => frame.type === "Delimiter" && matches(frame.data));
 
-				const captured = match<StackFrame<S, C> | undefined, Captured<S, C> | undefined>(workStack[index])
-					.with({ type: "Delimiter" }, ({ scope }) => {
+				const captured = match<StackFrame<S, C, D> | undefined, Captured<S, C, D> | undefined>(workStack[index])
+					.with({ type: "Delimiter" }, ({ scope, data }) => {
 						const frames = workStack.slice(index + 1);
 						workStack.splice(index);
 
-						return { frames, scope };
+						return { frames, scope, data };
 					})
 					.otherwise(() => undefined);
 
@@ -127,4 +127,4 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 	};
 };
 
-const runnable = <S, C>(frame: StackFrame<S, C>): frame is Runnable<S, C> => frame.type === "Control" || frame.type === "Cont";
+const runnable = <S, C, D>(frame: StackFrame<S, C, D>): frame is Runnable<S, C, D> => frame.type === "Control" || frame.type === "Cont";

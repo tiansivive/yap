@@ -25,6 +25,9 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 			.otherwise(() => v);
 
 	return yield* match(value)
+		.with(NF.Patterns.Computation, NF.Patterns.Suspend, NF.Patterns.Deferred, function* (value) {
+			return yield* EB.Display.Term(yield* NF.quote((yield* M.reader.ask()).env.length, value));
+		})
 		.with(NF.Patterns.Glued, function* (glued) {
 			return yield* go(face(glued));
 		})

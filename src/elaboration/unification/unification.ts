@@ -13,7 +13,6 @@ import * as Sub from "./substitution";
 import { Subst } from "./substitution";
 
 import * as Err from "@yap/elaboration/shared/errors";
-import * as R from "@yap/shared/rows";
 
 import * as Row from "@yap/elaboration/unification/rows";
 
@@ -66,7 +65,11 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 		const [l, r] = [yield* zonk(left), yield* zonk(right)];
 
 		// Force wraps unsolved metas in a Neutral, so we need to unwrap them again.
-		yield* match([NF.unwrapNeutral(l), NF.unwrapNeutral(r)])
+		yield* match([NF.unwrapNeutral(NF.observeComputation(l)), NF.unwrapNeutral(NF.observeComputation(r))])
+			.when(
+				([a, b]) => a === b,
+				function* () {},
+			)
 			.with([NF.Patterns.Flex, NF.Patterns.Flex], function* ([meta1, meta2]) {
 				yield* Sub.subst.bind(yield* bind(meta1.variable, meta2));
 				const registry = yield* Metas.registry.get();
@@ -400,70 +403,6 @@ export const bind = function* (v: Meta, ty: NF.Value): Unification<Subst> {
 
 /** The occurs check: get() once, both walkers close over the snapshot and the needle. */
 const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
-	const registry = yield* Metas.registry.get();
-
-	const check = (value: NF.Value): boolean =>
-		match(value)
-			.with(NF.Patterns.Var, ({ variable }) => _.isEqual(variable, v))
-			.with({ type: "Neutral" }, ({ value: inner }) => check(inner))
-			/* Both faces: a meta can occur in the folded face alone (`Const Unit ?a` unfolds to `Unit`), and that is the face a solution reads back as. */
-			.with(NF.Patterns.Glued, ({ folded, unfolded }) => check(folded) || check(unfolded))
-			.with(NF.Patterns.Proj, ({ base }) => check(base))
-			.with(NF.Patterns.Match, ({ closure, scrutinee }) => check(scrutinee) || inTerm(closure.term))
-			.with(NF.Patterns.Inj, ({ base, injected }) => check(base) || check(injected))
-			.with(NF.Patterns.Lambda, ({ closure }) => inTerm(closure.term))
-			.with(NF.Patterns.Pi, ({ closure }) => inTerm(closure.term))
-			.with(NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure }) => inTerm(closure.term))
-			.with(NF.Patterns.App, ({ func, arg }) => check(func) || check(arg))
-			.with(NF.Patterns.Modal, ({ value: inner, modalities }) => check(inner) || check(modalities.liquid))
-
-			.with(NF.Patterns.Row, ({ row }) =>
-				R.fold(
-					row,
-					(nf, _l, acc) => acc || check(nf),
-					rv => rv.type === "Meta" && _.isEqual(rv, v),
-					false,
-				),
-			)
-			.otherwise(() => false);
-
-	const inTerm = (tm: EB.Term): boolean =>
-		match(tm)
-			.with({ type: "Var", variable: { type: "Meta" } }, ({ variable }) => {
-				const solved = Metas.solution(registry, variable.val);
-
-				if (solved) {
-					return check(solved);
-				}
-
-				return _.isEqual(variable, v);
-			})
-			.with({ type: "Abs" }, ({ binding, body }) => inTerm(binding.annotation) || inTerm(body))
-			.with({ type: "App" }, ({ func, arg }) => inTerm(func) || inTerm(arg))
-			.with({ type: "Ann" }, ({ term }) => inTerm(term))
-			.with({ type: "Match" }, ({ scrutinee, alternatives }) => inTerm(scrutinee) || alternatives.some(({ term }) => inTerm(term)))
-			.with({ type: "Block" }, ({ return: ret, statements }) => inTerm(ret) || statements.some(stmt => inTerm(stmt.value)))
-			.with({ type: "Row" }, ({ row }) =>
-				R.fold(
-					row,
-					(nf, _l, acc) => acc || inTerm(nf),
-					rv => {
-						const solved = rv.type === "Meta" ? Metas.solution(registry, rv.val) : undefined;
-
-						if (solved) {
-							return check(solved);
-						}
-
-						return _.isEqual(rv, v);
-					},
-					false,
-				),
-			)
-			.with({ type: "Proj" }, ({ term }) => inTerm(term))
-			.with({ type: "Inj" }, ({ value, term }) => inTerm(value) || inTerm(term))
-			.with({ type: "Lit" }, () => false)
-			.with({ type: "Modal" }, ({ term }) => inTerm(term))
-			.otherwise(() => false);
-
-	return check(ty);
+	const { nf } = yield* Metas.collectors();
+	return nf(ty).some(meta => meta.val === v.val);
 };

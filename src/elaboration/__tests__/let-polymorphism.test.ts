@@ -1,7 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { elaborateFrom } from "../inference/__tests__/util";
+import { elaborateFrom, runNF } from "../inference/__tests__/util";
+import * as NF from "@yap/elaboration/normalization";
+import { declaration, elaborateModule } from "./module";
 
 describe("Let-polymorphism", () => {
+	it("preserves captured values under inserted implicit binders", () => {
+		const module = elaborateModule("let op = \\(e: Num) -> { let inner = \\u -> e; return inner !; }; let result = op 42;");
+		expect(module.declarations.map(d => d.error)).toEqual(module.declarations.map(() => undefined));
+		const result = declaration(module, "result")!.elaborated!;
+		expect(NF.unglue(runNF(result.ctx, () => NF.evaluate(result.tm), result.registry))).toMatchObject({ type: "Lit", value: { type: "Num", value: 42 } });
+	});
 	describe("basic polymorphic let bindings", () => {
 		it("polymorphic identity function used at different types", () => {
 			const src = `{

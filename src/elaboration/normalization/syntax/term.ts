@@ -14,6 +14,9 @@ export const nf_tag: unique symbol = Symbol("NF");
 export type Value = Types.Brand<typeof nf_tag, Constructor> & { id: number };
 type Constructor =
 	| { type: "Var"; variable: Variable }
+	| { type: "Suspend"; identity: Value; signature?: Value; payload: Value; annotation: Value }
+	| { type: "Computation"; request: Value; contexts: readonly Context[]; ctx: EB.Context }
+	| { type: "Deferred"; source: Source }
 	| { type: "Lit"; value: Literal }
 	| { type: "App"; func: Value; arg: Value; icit: Implicitness }
 	| { type: "Proj"; base: Value; label: string }
@@ -49,6 +52,30 @@ type Constructor =
 			};
 	  }; // Used during verification only
 
+export type Source = { ctx: EB.Context; term: EB.Term; observed?: Value; observedRegistry?: object };
+
+export type Context = ContextData & { ctx: EB.Context };
+
+export type ContextData =
+	| { type: "Function"; icit: Implicitness; argument: Source }
+	| { type: "Argument"; icit: Implicitness; func: Value }
+	| { type: "Applied"; icit: Implicitness; arg: Value }
+	| { type: "SuspensionIdentity"; payload: Source; annotation: Value; signature?: Value }
+	| { type: "SuspensionPayload"; identity: Value; annotation: Value; signature?: Value }
+	| { type: "HandlingIdentity"; handler: Source; body: Source; signature?: Value }
+	| { type: "HandlingHandler"; identity: Value; body: Source; signature?: Value }
+	| { type: "RowTail"; preceding: readonly { label: string; value: Value }[] }
+	| { type: "ModalLiquid"; value: Value; quantity: Modal.Annotations<Value>["quantity"] }
+	| { type: "Let"; variable: string; annotation: Value; self: Value; following: Source }
+	| { type: "Sequence"; following: Source }
+	| { type: "Reset"; identity: Value; signature?: Value; handler: Value }
+	| { type: "Project"; label: string }
+	| { type: "InjectionBase"; label: string; injected: Source }
+	| { type: "InjectionValue"; label: string; base: Value }
+	| { type: "Row"; preceding: readonly { label: string; value: Value }[]; label: string; following: Source }
+	| { type: "Match"; alternatives: Source }
+	| { type: "Modal"; quantity: Modal.Annotations<Value>["quantity"]; liquid: Source };
+
 export type Row = R.Row<Value, Variable>;
 export type TaggedParts = { label: string; payload: Value };
 export type Neutral = "Symbolic" | "Sealed" | "Blocked";
@@ -61,13 +88,21 @@ export type Binder =
 	| { type: "Mu"; variable: string; annotation: Value; source: string }
 	| { type: "Sigma"; variable: string; annotation: Value }
 	| { type: "SigmaV2"; variable: string; annotation: Value }
-	| { type: "Nu"; variable: string; annotation: Value; mode: "strict" | "lazy"; labels: readonly string[]; scoped: EB.Row };
+	| {
+			type: "Nu";
+			variable: string;
+			annotation: Value;
+			mode: "strict" | "lazy";
+			labels: readonly string[];
+			scoped: EB.Row;
+			source?: Extract<EB.Binding, { type: "Nu" }>;
+	  };
 
 export type Variable =
 	| { type: "Bound"; lvl: number }
 	| { type: "Free"; name: string }
 	| { type: "Label"; name: string }
-	| { type: "Foreign"; name: string }
+	| { type: "Foreign"; name: string; identity?: boolean }
 	| { type: "DepLabel"; name: string; lvl: number; annotation: Value }
 	/** `lvl` is a level on the label stack (`ctx.local`), which is separate from the env. */
 	| { type: "NuLabel"; name: string; lvl: number; annotation: Value }
@@ -93,6 +128,9 @@ export const mk = (val: Constructor): Value => {
 };
 
 export const Constructors = {
+	Suspend: (identity: Value, payload: Value, annotation: Value, signature?: Value): Value => mk({ type: "Suspend", identity, payload, annotation, signature }),
+	Computation: (request: Value, contexts: readonly Context[], ctx: EB.Context): Value => mk({ type: "Computation", request, contexts, ctx }),
+	Deferred: (source: Source): Value => mk({ type: "Deferred", source }),
 	Var: (variable: Variable): Value => mk({ type: "Var", variable }),
 	Pi: (variable: string, icit: Implicitness, annotation: Value, closure: Closure) =>
 		mk({
@@ -103,12 +141,19 @@ export const Constructors = {
 	Sigma: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Sigma", variable, annotation }, closure }),
 	SigmaV2: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "SigmaV2", variable, annotation }, closure }),
 	Nu: (
-		{ variable, mode, labels, scoped, annotation }: Pick<Extract<Binder, { type: "Nu" }>, "variable" | "mode" | "labels" | "scoped" | "annotation">,
+		{
+			variable,
+			mode,
+			labels,
+			scoped,
+			annotation,
+			source,
+		}: Pick<Extract<Binder, { type: "Nu" }>, "variable" | "mode" | "labels" | "scoped" | "annotation" | "source">,
 		closure: Closure,
 	) =>
 		mk({
 			type: "Abs" as const,
-			binder: { type: "Nu", variable, mode, labels, scoped, annotation },
+			binder: { type: "Nu", variable, mode, labels, scoped, annotation, ...(source && { source: { ...source, labels, scoped } }) },
 			closure,
 		}),
 	Mu: (variable: string, source: string, annotation: Value, closure: Closure): Value =>
@@ -241,6 +286,9 @@ const tagged = (row: Row): TaggedParts | undefined => {
 const TaggedRow = (row: Row): row is Row => !!tagged(row);
 
 export const Patterns = {
+	Suspend: { type: "Suspend" } as const,
+	Computation: { type: "Computation" } as const,
+	Deferred: { type: "Deferred" } as const,
 	Var: { type: "Var" } as const,
 	Rigid: { type: "Var", variable: { type: "Bound" } } as const,
 	Flex: { type: "Var", variable: { type: "Meta" } } as const,

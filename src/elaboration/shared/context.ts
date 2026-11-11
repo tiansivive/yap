@@ -43,11 +43,12 @@ export type Context = {
  * `types` holds the evaluated type of each completed field, as an env entry holds its evaluated annotation. Only
  * elaboration reads it, so a frame entered from a binder leaves it unset.
  */
-export type Frame = { labels: readonly string[]; ctx: Context; types?: NF.Row; terms: EB.Row };
+export type Frame = { labels: readonly string[]; ctx: Context; types?: NF.Row; terms: EB.Row; source?: Extract<EB.Binding, { type: "Nu" }> };
 
 export const enter = (frame: Frame): Context => ({ ...frame.ctx, local: [frame, ...frame.ctx.local] });
 
-export const open = ({ labels, scoped }: { labels: readonly string[]; scoped: EB.Row }, ctx: Context): Context => enter({ labels, ctx, terms: scoped });
+export const open = ({ labels, scoped }: { labels: readonly string[]; scoped: EB.Row }, ctx: Context, source?: Extract<EB.Binding, { type: "Nu" }>): Context =>
+	enter({ labels, ctx, terms: scoped, source });
 
 export type Binder =
 	| Pick<EB.Binding, "type" | "variable">
