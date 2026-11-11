@@ -119,7 +119,7 @@ export function* branches(alternatives: Src.Alternative[], action: (alt: Src.Alt
 	);
 	yield* M.st.modify(s => ({
 		...s,
-		delimiter: O.map((d: M.Delimitation) => ({ ...d, capturesOnEveryPath: results.every(result => result.capturesOnEveryPath) }))(delimiter),
+		delimiter: O.Functor.map(delimiter, d => ({ ...d, capturesOnEveryPath: results.every(result => result.capturesOnEveryPath) })),
 	}));
 	return results.map(({ result }) => result);
 }

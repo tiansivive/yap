@@ -8,6 +8,7 @@ import { isMatching, match } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
+import * as Types from "@yap/elaboration/shared/types";
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 import * as Q from "@yap/shared/modalities/multiplicity";
@@ -92,7 +93,7 @@ function* handler(effectType: NF.Value, answer: NF.Value): M.Elaboration<NF.Valu
 		return NF.Constructors.Pi(pi.binder.variable, "Implicit", pi.binder.annotation, yield* NF.closeVal(body));
 	}
 	const [payload, result] = yield* signature(effectType);
-	return yield* NF.arrow(payload, yield* NF.arrow(yield* NF.arrow(result, answer), answer));
+	return yield* Types.arrow(payload, yield* Types.arrow(yield* Types.arrow(result, answer), answer));
 }
 
 function* deep(
@@ -117,7 +118,7 @@ function* deep(
 	}
 
 	const [payload, result] = yield* signature(effectType);
-	const continuation = yield* NF.arrow(result, answer);
+	const continuation = yield* Types.arrow(result, answer);
 	const payloadScope = EB.bind(ctx, { type: "Lambda", variable: "$payload" }, payload, "inserted");
 	const continuationScope = EB.bind(payloadScope, { type: "Lambda", variable: "$k" }, continuation, "inserted");
 	const valueScope = EB.bind(continuationScope, { type: "Lambda", variable: "$value" }, result, "inserted");
@@ -147,20 +148,20 @@ export const capture = (node: Extract<Src.Term, { type: "capture" }>): M.Elabora
 export function* anonymous(): M.Elaboration<[EB.AST, M.Delimitation["answer"]]> {
 	const ctx = yield* M.reader.ask();
 	const { delimiter } = yield* M.st.get();
-	const answer = yield* match(delimiter)
-		.with({ _tag: "Some" }, function* ({ value }) {
-			yield* M.st.modify(s => ({ ...s, delimiter: O.some({ ...value, capturesOnEveryPath: true }) }));
-			return value.answer;
-		})
-		.with({ _tag: "None" }, function* () {
+	const answer = yield* O.match<M.Delimitation, M.Elaboration<M.Delimitation["answer"]>>(
+		function* () {
 			return {
 				initial: NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)),
 				final: NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)),
 			};
-		})
-		.exhaustive();
+		},
+		function* (value) {
+			yield* M.st.modify(s => ({ ...s, delimiter: O.some({ ...value, capturesOnEveryPath: true }) }));
+			return value.answer;
+		},
+	)(delimiter);
 	const result = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
-	const payload = yield* NF.arrow(yield* NF.arrow(result, answer.initial), answer.final);
+	const payload = yield* Types.arrow(yield* Types.arrow(result, answer.initial), answer.final);
 	const effectType = NF.Constructors.App(NF.Constructors.App(NF.Constructors.Atom("Effect"), payload, "Explicit"), result, "Explicit");
 	const identity = EB.Constructors.Ann(EB.Anonymous, yield* NF.quote(ctx.env.length, effectType));
 	return [[identity, effectType, []], answer];

@@ -7,6 +7,7 @@ import * as O from "fp-ts/lib/Option";
 import { isMatching } from "ts-pattern";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
+import * as Types from "@yap/elaboration/shared/types";
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 import * as Q from "@yap/shared/modalities/multiplicity";
@@ -75,7 +76,7 @@ function* effectType(initial: NF.Value, final: NF.Value): M.Elaboration<NF.Value
 		() => scope,
 		(function* () {
 			const result = scope.env[0].nf;
-			const payload = yield* NF.arrow(yield* NF.arrow(result, initial), final);
+			const payload = yield* Types.arrow(yield* Types.arrow(result, initial), final);
 			return NF.Constructors.App(NF.Constructors.App(NF.Constructors.Atom("Effect"), payload, "Explicit"), result, "Explicit");
 		})(),
 	);
@@ -97,8 +98,8 @@ function* application(effectType: NF.Value, initial: NF.Value, final: NF.Value):
 		return EB.Constructors.Lambda(pi.binder.variable, "Implicit", body, yield* NF.quote(ctx.env.length, pi.binder.annotation));
 	}
 	const [payload, result] = yield* EB.Control.signature(effectType);
-	const continuation = yield* NF.arrow(result, initial);
-	yield* M.constrain({ type: "assign", left: payload, right: yield* NF.arrow(continuation, final), lvl: ctx.env.length });
+	const continuation = yield* Types.arrow(result, initial);
+	yield* M.constrain({ type: "assign", left: payload, right: yield* Types.arrow(continuation, final), lvl: ctx.env.length });
 	const payloadScope = EB.bind(ctx, { type: "Lambda", variable: "$payload" }, payload, "inserted");
 	const continuationScope = EB.bind(payloadScope, { type: "Lambda", variable: "$k" }, continuation, "inserted");
 	const applied = EB.DSL.app(
