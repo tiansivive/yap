@@ -1,4 +1,4 @@
-import { match } from "ts-pattern";
+import { isMatching, match, P } from "ts-pattern";
 
 import * as Lit from "@yap/shared/literals";
 import * as Icit from "@yap/shared/implicitness";
@@ -11,6 +11,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 
 const doc = (term: Src.Term): PP.Doc =>
 	match(term)
+		.with({ type: "lit", value: { type: "unit" } }, () => "!")
 		.with({ type: "lit" }, ({ value }) => Lit.display(value))
 		.with({ type: "var" }, ({ variable }) => variable.value)
 		.with({ type: "hole" }, () => "?")
@@ -22,15 +23,7 @@ const doc = (term: Src.Term): PP.Doc =>
 		.with({ type: "pi" }, ({ icit, variable, annotation, body }) => PP.binder(["Π(", variable, ": ", doc(annotation), ")"], arr(icit), doc(body)))
 		.with({ type: "application" }, ({ icit, fn, arg }) => {
 			const needsFnParens = fn.type !== "var" && fn.type !== "lit" && fn.type !== "application";
-			const needsArgParens =
-				arg.type === "lambda" ||
-				arg.type === "pi" ||
-				arg.type === "arrow" ||
-				arg.type === "annotation" ||
-				arg.type === "application" ||
-				arg.type === "match" ||
-				arg.type === "capture" ||
-				arg.type === "with";
+			const needsArgParens = isMatching({ type: P.union("lambda", "pi", "arrow", "annotation", "application", "match", "capture", "reset", "with") }, arg);
 			return PP.app(PP.parensIf(needsFnParens, doc(fn)), Icit.display(icit), PP.parensIf(needsArgParens, doc(arg)));
 		})
 		.with({ type: "annotation" }, ({ term: tm, ann }) => PP.enclose(PP.parens, PP.group([doc(tm), " :", PP.nest(2, [PP.line, doc(ann)])])))
@@ -62,7 +55,14 @@ const doc = (term: Src.Term): PP.Doc =>
 				doc(term),
 			]),
 		)
-		.with({ type: "capture" }, ({ identity, term }) => PP.group(["capture [", doc(identity), "] ", doc(term)]))
+		.with({ type: "capture" }, { type: "reset" }, ({ type, identity, term }) =>
+			PP.group([
+				type,
+				identity ? [" @", PP.parensIf(!isMatching({ type: P.union("var", "lit", "projection") }, identity), doc(identity))] : "",
+				" ",
+				doc(term),
+			]),
+		)
 		.with({ type: "modal" }, ({ term: tm, modalities }) => {
 			const q = modalities.quantity ? [Q.display(modalities.quantity), " "] : "";
 			const l = modalities.liquid ? [" [| ", doc(modalities.liquid), " |]"] : "";

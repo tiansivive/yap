@@ -1,3 +1,7 @@
+/*
+ * Replay merges solutions and discharged proofs shared by every successful candidate.
+ * https://github.com/tiansivive/z-yap/blob/main/zettels/nondeterminism.md
+ */
 import * as Eff from "@yap/utils/effects";
 
 import * as M from "@yap/elaboration/shared/effects";
@@ -10,10 +14,6 @@ import * as A from "fp-ts/lib/Array";
 import * as R from "fp-ts/lib/Record";
 import { mapKeys } from "lodash";
 
-/**
- * Runs action once per nondeterministic candidate solution, each under its own
- * forked registry seeded with the candidate; agreed-on solutions merge back.
- */
 export const replay = function* <T>(action: (zonker: Record<number, NF.Value>) => M.Elaboration<T>): M.Elaboration<T[]> {
 	const state = yield* M.st.get();
 
@@ -30,11 +30,14 @@ export const replay = function* <T>(action: (zonker: Record<number, NF.Value>) =
 		}),
 	);
 
-	const attempt = function* (z: Record<number, NF.Value>): M.Elaboration<readonly [T, Metas.Registry]> {
+	const attempt = function* (z: Record<number, NF.Value>): M.Elaboration<readonly [T, Metas.Registry, ReadonlySet<number>]> {
 		const current = yield* Metas.registry.get();
-		const [answer, forked] = yield* Eff.with([Metas.registry.handlers(Metas.withSolutions(current, Sub.from(z)))], () => action(z));
+		/* Discharged proofs depend on a candidate's meta solutions, so each candidate starts with the incoming proof set. */
+		const [answer, forked, local] = yield* Eff.with([Metas.registry.handlers(Metas.withSolutions(current, Sub.from(z))), M.st.handlers(state)], () =>
+			action(z),
+		);
 
-		return [answer, forked] as const;
+		return [answer, forked, local.discharged] as const;
 	};
 
 	const outcomes = yield* Eff.traverse(zonkers, attempt);
@@ -45,6 +48,10 @@ export const replay = function* <T>(action: (zonker: Record<number, NF.Value>) =
 			outcomes.map(([, forked]) => forked),
 		),
 	);
+
+	const [, , firstDischarged = state.discharged] = outcomes[0] ?? [];
+	const discharged = new Set([...firstDischarged].filter(id => outcomes.every(([, , solved]) => solved.has(id))));
+	yield* M.st.modify(s => ({ ...s, discharged }));
 
 	return outcomes.map(([answer]) => answer);
 };

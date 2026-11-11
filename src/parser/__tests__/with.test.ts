@@ -5,7 +5,7 @@ import { display } from "../pretty";
 
 describe("Parser: with", () => {
 	it.each([
-		"with Ask: handler in capture [Ask] payload",
+		"with Ask: handler in capture @Ask payload",
 		"with Ask: first, Tell: second in body",
 		"with Ask: first in with Tell: second in body",
 		"with (make x): handler in body",
@@ -26,7 +26,7 @@ describe("Parser: with", () => {
 	});
 	it("parses and displays a handler and identity lambda", () => {
 		const parser = new Nearley.Parser(Nearley.Grammar.fromCompiled({ ...Grammar, ParserStart: "Ann" }));
-		const { results } = parser.feed("with (\\(a: Type) => Ask): (\\p k -> k 42) in capture [Ask] !");
+		const { results } = parser.feed("with (\\(a: Type) => Ask): (\\p k -> k 42) in capture @Ask !");
 		expect(results).toHaveLength(1);
 		expect({ term: results[0], display: display(results[0]) }).toMatchSnapshot();
 	});

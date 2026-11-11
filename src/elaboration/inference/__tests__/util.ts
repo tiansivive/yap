@@ -1,3 +1,4 @@
+import * as O from "fp-ts/lib/Option";
 import Nearley from "nearley";
 import Grammar from "@yap/src/grammar";
 
@@ -53,7 +54,7 @@ export const Liquid = {
 	mentions: (symbol: string): RegExp => new RegExp(escapeRegExp(symbol)),
 } as const;
 
-const initialState = (): M.MutState => ({ delimitations: [], nondeterminism: { solution: {} }, discharged: new Set() });
+const initialState = (): M.MutState => ({ delimiter: O.none, nondeterminism: { solution: {} }, discharged: new Set() });
 
 /** Runs an elaboration program with a fresh handler set; answers with every handler's output. */
 export const runEB = <A>(ctx: EB.Context, program: () => M.Elaboration<A>, registry: Metas.Registry = Metas.empty) => {

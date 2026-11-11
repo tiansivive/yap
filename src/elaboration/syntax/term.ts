@@ -274,3 +274,4 @@ export const TaggedTerm = {
 export const Type: Term = Constructors.Lit(Lit.Atom("Type"));
 export const Row: Term = Constructors.Lit(Lit.Atom("Row"));
 export const Any: Term = Constructors.Lit(Lit.Atom("Any"));
+export const Anonymous: Term = Constructors.Lit(Lit.Atom("$anonymous"));

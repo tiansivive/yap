@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import Nearley from "nearley";
 import Grammar from "../grammar";
+import { display } from "../pretty";
 
 const mkParser = (start: string = "Ann") => {
 	const g = { ...Grammar, ParserStart: start };
@@ -38,6 +39,9 @@ describe("parser: literals", () => {
 		const data = parser.feed("!");
 		expect(data.results.length).toBe(1);
 		expect(data.results[0]).toMatchSnapshot();
+		const printed = mkParser().feed(display(data.results[0]));
+		expect(printed.results).toHaveLength(1);
+		expect(printed.results[0]).toEqual(data.results[0]);
 	});
 
 	it("Row", () => {

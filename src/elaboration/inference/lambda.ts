@@ -1,3 +1,4 @@
+import * as O from "fp-ts/lib/Option";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Q from "@yap/shared/modalities/multiplicity";
@@ -23,11 +24,15 @@ export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
 		 * here: its closure abstracts *over* the binder, so it must close at the
 		 * scope that does not yet have it.
 		 */
-		const [bTerm, bType, [_vu, ...bus]] = yield* M.reader.local(
-			_ctx => EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, ty),
-			(function* () {
-				return yield* EB.Icit.insert(yield* EB.infer(lam.body));
-			})(),
+		const [bTerm, bType, [_vu, ...bus]] = yield* M.st.local(
+			"delimiter",
+			O.none,
+			M.reader.local(
+				_ctx => EB.bind(_ctx, { type: "Lambda", variable: lam.variable }, ty),
+				(function* () {
+					return yield* EB.Icit.insert(yield* EB.infer(lam.body));
+				})(),
+			),
 		);
 		//yield* M.constrain({ type: "usage", expected: mty[1], computed: vu });
 

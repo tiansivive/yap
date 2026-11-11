@@ -1,3 +1,4 @@
+import * as O from "fp-ts/lib/Option";
 import * as Eff from "@yap/utils/effects";
 
 import * as EB from "@yap/elaboration";
@@ -39,7 +40,7 @@ const run = <A>(ctx: EB.Context, state: Boundary, program: () => M.Elaboration<A
 		M.writer.handlers(),
 		M.reader.handlers(ctx),
 		M.except.handlers(),
-		M.st.handlers({ delimitations: [], nondeterminism: { solution: {} }, discharged: new Set() }),
+		M.st.handlers({ delimiter: O.none, nondeterminism: { solution: {} }, discharged: new Set() }),
 		M.supply.handlers(state.counts),
 		Metas.registry.handlers(state.registry),
 		M.tracer.handlers(),

@@ -121,7 +121,7 @@ Expr -> Lambda		{% id %}
 	  | With 		{% id %}
 	  | Shift 		{% id %}
 	  | Resume 		{% id %}
-	  | Op 			{% id %}
+	  | Op 		{% id %}
 
 Op -> Op %space:? (%op | %concat | %concat2 | %rangle | %langle | %star ) %space:? Atom 	{% P.Operation %}
 	| App 																		{% id %}
@@ -130,16 +130,16 @@ App -> App %space Atom 															{% P.Application("Explicit") %}
 	 | App %space %at Atom 														{% P.Application("Implicit") %}
      | Atom 																	{% id %}
 
-Atom -> Identifier 		{% P.Var %} 
+Atom -> Identifier 		{% P.Var %}
 	  | %hole 			{% P.Hole %}
 	  | Literal 		{% P.Lit %}
 	  | Struct 			{% id %}
       | Tuple 			{% id %}
 	  | Projection 		{% id %}
 	  | Injection 		{% id %}
-	  | List 			{% id %}
 	  | Tagged 			{% id %}
 	  | Parens[Ann]  	{% P.extract %}
+	  | List 		{% id %}
 
 # ------------------------------------
 # RECURSIVE TYPES
@@ -254,15 +254,16 @@ Alt -> %space:? %bar %space:? Pattern %space:? %arrow %space:? TypeExpr 	{% P.Al
 
 # ------------------------------------
 # Delimited Continuations
-# Syntax: reset \k v -> handler_body enclosed_term
-#         shift value
 # ------------------------------------
-Capture -> "capture" %space %lbracket %space:? TypeExpr %space:? %rbracket %space TypeExpr {% P.Capture %}
+Capture -> "capture" %space %at Atom %space TypeExpr {% P.Capture %}
+         | "capture" %space TypeExpr {% P.AnonymousCapture %}
 
 With -> "with" %space Many[Handler, %comma] %space "in" %space TypeExpr {% P.With %}
 Handler -> Atom %space:? %colon %space:? TypeExpr {% P.Handler %}
 
-Reset -> "reset" %space:+ TypeExpr 		{% P.Reset %}
+Reset -> "reset" %space TypeExpr {% P.Reset %}
+       | "reset" %space %at Atom %space TypeExpr {% P.NamedReset %}
+
 Shift -> "shift" %space:+ TypeExpr    	{% P.Shift %}
 Resume -> "resume" %space:+ TypeExpr    {% P.Resume %}
 

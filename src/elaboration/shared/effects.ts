@@ -1,3 +1,4 @@
+import * as O from "fp-ts/lib/Option";
 import * as Eff from "@yap/utils/effects";
 
 import * as P from "@yap/elaboration/shared/provenance";
@@ -62,7 +63,7 @@ export const fail = function* (cause: Cause) {
 };
 
 export type MutState = {
-	delimitations: Array<Delimitation>;
+	delimiter: O.Option<Delimitation>;
 	nondeterminism: {
 		solution: Record<number, EB.NF.Value[]>;
 	};
@@ -72,13 +73,6 @@ export type MutState = {
 
 export type Delimitation = {
 	answer: { initial: EB.NF.Value; final: EB.NF.Value };
-	//handlerQ: Array<{ meta: EB.Meta, handler: Src.Term, ann: EB.NF.Value }>;
-	//solution: Record<number, { values: EB.NF.Value[], term: EB.Term }>;
-
-	/** `
-	 * Needed to know if any shift has occurred within the reset.
-	 * If `false`, we can enforce that the initial and final answer types are the same.
-	 * Dumb but effective.
-	 **/
-	shifted: boolean;
+	/** Every normal evaluation path includes a capture of this delimiter. */
+	capturesOnEveryPath: boolean;
 };

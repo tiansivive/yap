@@ -1,25 +1,37 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Parser: capture > parses capture [Ask] ! 1`] = `
+exports[`Parser: capture > parses capture @(E @Num) x 1`] = `
 {
   "identity": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "Num",
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "E",
+      },
+    },
+    "icit": "Implicit",
+    "type": "application",
+  },
+  "term": {
     "type": "var",
     "variable": {
       "type": "name",
-      "value": "Ask",
-    },
-  },
-  "term": {
-    "type": "lit",
-    "value": {
-      "type": "unit",
+      "value": "x",
     },
   },
   "type": "capture",
 }
 `;
 
-exports[`Parser: capture > parses capture [choose !] (f 1) 1`] = `
+exports[`Parser: capture > parses capture @(choose !) (f 1) 1`] = `
 {
   "identity": {
     "arg": {
@@ -60,7 +72,26 @@ exports[`Parser: capture > parses capture [choose !] (f 1) 1`] = `
 }
 `;
 
-exports[`Parser: capture > parses capture [r.Ask] 1 1`] = `
+exports[`Parser: capture > parses capture @Ask ! 1`] = `
+{
+  "identity": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Ask",
+    },
+  },
+  "term": {
+    "type": "lit",
+    "value": {
+      "type": "unit",
+    },
+  },
+  "type": "capture",
+}
+`;
+
+exports[`Parser: capture > parses capture @r.Ask 1 1`] = `
 {
   "identity": {
     "label": "Ask",

@@ -2,7 +2,7 @@
 
 exports[`Parser: with > parses and displays a handler and identity lambda 1`] = `
 {
-  "display": "with (λ(a: Type) => Ask): λ(p) -> λ(k) -> k 42 in capture [Ask] unit",
+  "display": "with (λ(a: Type) => Ask): λ(p) -> λ(k) -> k 42 in capture @Ask !",
   "term": {
     "handlers": [
       {
@@ -345,7 +345,7 @@ exports[`Parser: with > parses and preserves grouping in with Ask: first, Tell: 
 }
 `;
 
-exports[`Parser: with > parses and preserves grouping in with Ask: handler in capture [Ask] payload 1`] = `
+exports[`Parser: with > parses and preserves grouping in with Ask: handler in capture @Ask payload 1`] = `
 {
   "handlers": [
     {
