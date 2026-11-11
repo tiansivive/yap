@@ -11,6 +11,7 @@ import * as Q from "@yap/shared/modalities/multiplicity";
 
 const doc = (term: Src.Term): PP.Doc =>
 	match(term)
+		.with({ type: "lit", value: { type: "unit" } }, () => "!")
 		.with({ type: "lit" }, ({ value }) => Lit.display(value))
 		.with({ type: "var" }, ({ variable }) => variable.value)
 		.with({ type: "hole" }, () => "?")
@@ -54,7 +55,14 @@ const doc = (term: Src.Term): PP.Doc =>
 				doc(term),
 			]),
 		)
-		.with({ type: "capture" }, { type: "reset" }, ({ type, identity, term }) => PP.group([type, identity ? [" [", doc(identity), "]"] : "", " ", doc(term)]))
+		.with({ type: "capture" }, { type: "reset" }, ({ type, identity, term }) =>
+			PP.group([
+				type,
+				identity ? [" @", PP.parensIf(!isMatching({ type: P.union("var", "lit", "projection") }, identity), doc(identity))] : "",
+				" ",
+				doc(term),
+			]),
+		)
 		.with({ type: "modal" }, ({ term: tm, modalities }) => {
 			const q = modalities.quantity ? [Q.display(modalities.quantity), " "] : "";
 			const l = modalities.liquid ? [" [| ", doc(modalities.liquid), " |]"] : "";

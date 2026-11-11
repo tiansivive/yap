@@ -118,7 +118,7 @@ describe("Inference: raw reset", () => {
 	});
 
 	it("preserves anonymous capture through a named delimiter", () => {
-		const result = elaborated("foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset (reset [E] (capture (\\k -> k 1)));");
+		const result = elaborated("foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset (reset @E (capture (\\k -> k 1)));");
 		const outer = reset(result.tm);
 		expect(block(outer.term).return).toMatchObject({
 			type: "Reset",
@@ -211,8 +211,8 @@ describe("Inference: raw reset", () => {
 	});
 
 	it.each([
-		"foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset [E] (capture [E] (\\k -> k 2));",
-		"foreign E: (r: Type) => Effect ((r -> Num) -> Num) r; let result: Num = reset [E] 1;",
+		"foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset @E (capture @E (\\k -> k 2));",
+		"foreign E: (r: Type) => Effect ((r -> Num) -> Num) r; let result: Num = reset @E 1;",
 	])("checks the application handler against an explicit effect type: %s", source => {
 		const result = elaborated(source);
 		expect(block(result.tm).statements[0].value).toMatchObject({ type: "Var", variable: { type: "Foreign", name: "E" } });
@@ -220,8 +220,8 @@ describe("Inference: raw reset", () => {
 	});
 
 	it.each([
-		"foreign E: Effect Unit Num; let result: Num = reset [E] 1;",
-		"foreign E: Effect ((Num -> Num) -> Bool) Num; let result: Num = reset [E] 1;",
+		"foreign E: Effect Unit Num; let result: Num = reset @E 1;",
+		"foreign E: Effect ((Num -> Num) -> Bool) Num; let result: Num = reset @E 1;",
 		"let result: Bool = reset (capture (\\k -> k 1));",
 	])("rejects incompatible control types: %s", source => {
 		expect(declaration(elaborateModule(source), "result")?.error).toBeDefined();
@@ -299,7 +299,7 @@ describe("Inference: raw reset", () => {
 	});
 
 	it("preserves named captures across an anonymous delimiter", () => {
-		const result = elaborated("foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset [E] (reset (capture [E] (\\k -> k 1)));");
+		const result = elaborated("foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset @E (reset (capture @E (\\k -> k 1)));");
 		const outer = reset(block(result.tm).return);
 		expect(outer.handling?.identity).toMatchObject({ type: "Var", variable: { type: "Bound", index: 0 } });
 		expect(reset(outer.term).term).toMatchObject({ type: "Capture", identity: { type: "Var", variable: { type: "Foreign", name: "E" } } });

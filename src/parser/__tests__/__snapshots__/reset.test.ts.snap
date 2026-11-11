@@ -1,5 +1,35 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Parser: raw control > parses anonymous capture [E] x 1`] = `
+{
+  "term": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "fn": {
+      "elements": [
+        {
+          "type": "var",
+          "variable": {
+            "type": "name",
+            "value": "E",
+          },
+        },
+      ],
+      "rest": null,
+      "type": "list",
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "type": "capture",
+}
+`;
+
 exports[`Parser: raw control > parses anonymous capture makeHandler ! 1`] = `
 {
   "term": {
@@ -201,6 +231,36 @@ exports[`Parser: raw control > parses anonymous reset [1] 1`] = `
 }
 `;
 
+exports[`Parser: raw control > parses anonymous reset [E] x 1`] = `
+{
+  "term": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "x",
+      },
+    },
+    "fn": {
+      "elements": [
+        {
+          "type": "var",
+          "variable": {
+            "type": "name",
+            "value": "E",
+          },
+        },
+      ],
+      "rest": null,
+      "type": "list",
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "type": "reset",
+}
+`;
+
 exports[`Parser: raw control > parses anonymous reset 1 + 2 1`] = `
 {
   "term": {
@@ -236,7 +296,7 @@ exports[`Parser: raw control > parses anonymous reset 1 + 2 1`] = `
 }
 `;
 
-exports[`Parser: raw control > selects the bracketed identity in capture [eff] f x + 1 1`] = `
+exports[`Parser: raw control > selects the identity in capture @eff f x + 1 1`] = `
 {
   "identity": {
     "type": "var",
@@ -289,7 +349,7 @@ exports[`Parser: raw control > selects the bracketed identity in capture [eff] f
 }
 `;
 
-exports[`Parser: raw control > selects the bracketed identity in capture [eff] value 1`] = `
+exports[`Parser: raw control > selects the identity in capture @eff value 1`] = `
 {
   "identity": {
     "type": "var",
@@ -309,7 +369,7 @@ exports[`Parser: raw control > selects the bracketed identity in capture [eff] v
 }
 `;
 
-exports[`Parser: raw control > selects the bracketed identity in reset [eff] f x + 1 1`] = `
+exports[`Parser: raw control > selects the identity in reset @eff f x + 1 1`] = `
 {
   "identity": {
     "type": "var",
@@ -362,7 +422,7 @@ exports[`Parser: raw control > selects the bracketed identity in reset [eff] f x
 }
 `;
 
-exports[`Parser: raw control > selects the bracketed identity in reset [eff] value 1`] = `
+exports[`Parser: raw control > selects the identity in reset @eff value 1`] = `
 {
   "identity": {
     "type": "var",

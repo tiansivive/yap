@@ -113,10 +113,7 @@ Type -> Mu 				{% id %}
 	  | Row 			{% id %}	
 	  | Expr 			{% id %}
 
-Expr -> Control {% id %}
-      | Op {% id %}
-
-Control -> Lambda		{% id %}
+Expr -> Lambda		{% id %}
   	  | Match 		{% id %}
   	  | Block 		{% id %}
 	  | Reset 		{% id %}
@@ -124,6 +121,7 @@ Control -> Lambda		{% id %}
 	  | With 		{% id %}
 	  | Shift 		{% id %}
 	  | Resume 		{% id %}
+	  | Op 		{% id %}
 
 Op -> Op %space:? (%op | %concat | %concat2 | %rangle | %langle | %star ) %space:? Atom 	{% P.Operation %}
 	| App 																		{% id %}
@@ -132,10 +130,7 @@ App -> App %space Atom 															{% P.Application("Explicit") %}
 	 | App %space %at Atom 														{% P.Application("Implicit") %}
      | Atom 																	{% id %}
 
-Atom -> SimpleAtom {% id %}
-      | List {% id %}
-
-SimpleAtom -> Identifier 		{% P.Var %}
+Atom -> Identifier 		{% P.Var %}
 	  | %hole 			{% P.Hole %}
 	  | Literal 		{% P.Lit %}
 	  | Struct 			{% id %}
@@ -144,6 +139,7 @@ SimpleAtom -> Identifier 		{% P.Var %}
 	  | Injection 		{% id %}
 	  | Tagged 			{% id %}
 	  | Parens[Ann]  	{% P.extract %}
+	  | List 		{% id %}
 
 # ------------------------------------
 # RECURSIVE TYPES
@@ -258,38 +254,16 @@ Alt -> %space:? %bar %space:? Pattern %space:? %arrow %space:? TypeExpr 	{% P.Al
 
 # ------------------------------------
 # Delimited Continuations
-# Syntax: reset \k v -> handler_body enclosed_term
-#         shift value
 # ------------------------------------
-Capture -> "capture" %space %lbracket %space:? TypeExpr %space:? %rbracket %space TypeExpr {% P.Capture %}
-         | "capture" %space ControlBody {% P.AnonymousCapture %}
+Capture -> "capture" %space %at Atom %space TypeExpr {% P.Capture %}
+         | "capture" %space TypeExpr {% P.AnonymousCapture %}
 
 With -> "with" %space Many[Handler, %comma] %space "in" %space TypeExpr {% P.With %}
 Handler -> Atom %space:? %colon %space:? TypeExpr {% P.Handler %}
 
-Reset -> "reset" %space:+ ControlBody {% P.Reset %}
-       | "reset" %space %lbracket %space:? TypeExpr %space:? %rbracket %space TypeExpr {% P.NamedReset %}
+Reset -> "reset" %space TypeExpr {% P.Reset %}
+       | "reset" %space %at Atom %space TypeExpr {% P.NamedReset %}
 
-# A bare list remains a body; a bracket-prefixed application selects the named identity form.
-ControlBody -> ControlModal %space:? %arrow %space:? PiTail {% P.Pi("Explicit") %}
-           | ControlModal %space:? %fatArrow %space:? PiTail {% P.Pi("Implicit") %}
-           | ControlModal {% id %}
-ControlModal -> Angle[Quantity] %space:? Type {% P.Modal %}
-            | Angle[Quantity] %space:? Type %space:? DoubleBracket[%space:? Lambda] {% P.Modal %}
-            | ControlType %space:? DoubleBracket[%space:? Lambda] {% P.Modal %}
-            | ControlType {% id %}
-ControlType -> Mu {% id %}
-           | Variant {% id %}
-           | Dict {% id %}
-           | Row {% id %}
-           | Control {% id %}
-           | ControlOp {% id %}
-ControlOp -> ControlOp %space:? (%op | %concat | %concat2 | %rangle | %langle | %star) %space:? Atom {% P.Operation %}
-         | ControlApp {% id %}
-         | List {% id %}
-ControlApp -> ControlApp %space Atom {% P.Application("Explicit") %}
-          | ControlApp %space %at Atom {% P.Application("Implicit") %}
-          | SimpleAtom {% id %}
 Shift -> "shift" %space:+ TypeExpr    	{% P.Shift %}
 Resume -> "resume" %space:+ TypeExpr    {% P.Resume %}
 

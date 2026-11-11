@@ -2,7 +2,7 @@ import * as NF from "../normalization";
 
 import * as Q from "@yap/shared/modalities/multiplicity";
 
-import { match } from "ts-pattern";
+import { isMatching, match, P } from "ts-pattern";
 import * as Icit from "@yap/shared/implicitness";
 import * as Lit from "@yap/shared/literals";
 import * as R from "@yap/shared/rows";
@@ -186,10 +186,29 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 			return ["<", Q.display(modalities.quantity), "> ", yield* go(tm), " [| ", yield* go(modalities.liquid), " |]"] satisfies PP.Doc;
 		})
 		.with({ type: "Capture" }, function* ({ identity, payload }) {
-			return ["capture [", yield* go(identity), "] ", yield* go(payload)] satisfies PP.Doc;
+			return [
+				"capture @",
+				PP.parensIf(!isMatching({ type: P.union("Var", "Lit", "Proj", "Ann") }, identity), yield* go(identity)),
+				" ",
+				yield* go(payload),
+			] satisfies PP.Doc;
 		})
 		.with({ type: "Reset" }, function* ({ term: tm, handling }) {
-			return ["reset ", handling ? ["[", yield* go(handling.identity), "] ", yield* go(handling.handler), " "] : "", "|", yield* go(tm), "|"] satisfies PP.Doc;
+			return [
+				"reset ",
+				handling
+					? [
+							"@",
+							PP.parensIf(!isMatching({ type: P.union("Var", "Lit", "Proj", "Ann") }, handling.identity), yield* go(handling.identity)),
+							" ",
+							yield* go(handling.handler),
+							" ",
+						]
+					: "",
+				"|",
+				yield* go(tm),
+				"|",
+			] satisfies PP.Doc;
 		})
 		.with({ type: "Shift" }, function* ({ body }) {
 			return ["shift (", yield* go(body), ")"] satisfies PP.Doc;

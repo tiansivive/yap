@@ -420,11 +420,11 @@ export const With: PostProcessor<[Keyword, Whitespace, [HandlerClause, ...Handle
 	location: locSpan({ from: loc(data[0]) }, data[6].location),
 });
 
-export const Capture: PostProcessor<[Keyword, Whitespace, unknown, unknown, Term, unknown, unknown, Whitespace, Term], Term> = data => ({
+export const Capture: PostProcessor<[Keyword, Whitespace, Token, Term, Whitespace, Term], Term> = ([tok, , , identity, , term]) => ({
 	type: "capture",
-	identity: data[4],
-	term: data[8],
-	location: locSpan({ from: loc(data[0]) }, data[8].location),
+	identity,
+	term,
+	location: locSpan({ from: loc(tok) }, term.location),
 });
 
 export const AnonymousCapture: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , term]) => ({
@@ -433,17 +433,7 @@ export const AnonymousCapture: PostProcessor<[Keyword, Whitespace, Term], Term> 
 	location: locSpan({ from: loc(tok) }, term.location),
 });
 
-export const NamedReset: PostProcessor<[Keyword, Whitespace, unknown, unknown, Term, unknown, unknown, Whitespace, Term], Term> = ([
-	tok,
-	,
-	,
-	,
-	identity,
-	,
-	,
-	,
-	term,
-]) => ({
+export const NamedReset: PostProcessor<[Keyword, Whitespace, Token, Term, Whitespace, Term], Term> = ([tok, , , identity, , term]) => ({
 	type: "reset",
 	identity,
 	term,
