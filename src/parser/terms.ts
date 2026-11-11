@@ -40,7 +40,7 @@ export type Bare =
 	| { type: "block"; statements: Statement[]; return?: Term }
 	| { type: "modal"; term: Term; modalities: { quantity?: Q.Multiplicity; liquid?: Term } }
 	| { type: "with"; handlers: [{ identity: Term; handler: Term }, ...{ identity: Term; handler: Term }[]]; term: Term }
-	| { type: "capture"; identity?: Term; term: Term }
+	| { type: "suspend"; identity?: Term; term: Term }
 	| { type: "reset"; identity?: Term; term: Term }
 	| { type: "shift"; term: Term }
 	| { type: "resume"; term: Term };

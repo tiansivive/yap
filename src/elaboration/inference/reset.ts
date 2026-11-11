@@ -1,6 +1,6 @@
 /*
  * Anonymous resets handle the shared unnamed effect with their own answer types.
- * The application handler passes the bare continuation to each capture's payload.
+ * The application handler passes the bare continuation to each suspension's payload.
  * https://github.com/tiansivive/z-yap/blob/main/zettels/effect-identities.design.md#raw-delimiters
  */
 import * as O from "fp-ts/lib/Option";
@@ -29,13 +29,13 @@ export function* check(node: Reset, final: NF.Value): M.Elaboration<[EB.Term, Q.
 	}
 	const initial = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
 	const type = yield* effectType(initial, final);
-	const delimiter: M.Delimitation = { answer: { initial, final }, capturesOnEveryPath: false };
+	const delimiter: M.Delimitation = { answer: { initial, final }, suspendsOnEveryPath: false };
 	const [body, usages] = yield* M.st.local(
 		"delimiter",
 		O.some(delimiter),
 		(function* () {
 			const result = yield* EB.check(node.term, initial);
-			if (!O.exists((d: M.Delimitation) => d.capturesOnEveryPath)((yield* M.st.get()).delimiter)) {
+			if (!O.exists((d: M.Delimitation) => d.suspendsOnEveryPath)((yield* M.st.get()).delimiter)) {
 				yield* M.constrain({ type: "assign", left: initial, right: final, lvl: ctx.env.length });
 			}
 			return result;

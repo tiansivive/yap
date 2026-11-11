@@ -73,6 +73,6 @@ export type MutState = {
 
 export type Delimitation = {
 	answer: { initial: EB.NF.Value; final: EB.NF.Value };
-	/** Every normal evaluation path includes a capture of this delimiter. */
-	capturesOnEveryPath: boolean;
+	/** Every normal evaluation path includes a suspension to this delimiter. */
+	suspendsOnEveryPath: boolean;
 };

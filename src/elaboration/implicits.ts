@@ -182,8 +182,8 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 		.with(EB.CtorPatterns.Bubble, function* ({ meta, ann, values, shift }) {
 			return EB.Constructors.Bubble(meta, ann, values, yield* instantiate(shift, resolutions));
 		})
-		.with({ type: "Capture" }, function* ({ identity, payload, annotation }) {
-			return EB.Constructors.Capture(
+		.with({ type: "Suspend" }, function* ({ identity, payload, annotation }) {
+			return EB.Constructors.Suspend(
 				yield* instantiate(identity, resolutions),
 				yield* instantiate(payload, resolutions),
 				yield* instantiate(annotation, resolutions),

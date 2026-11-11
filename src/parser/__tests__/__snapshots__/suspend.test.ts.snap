@@ -1,0 +1,116 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Parser: suspend > parses suspend @(E @Num) x 1`] = `
+{
+  "identity": {
+    "arg": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "Num",
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "E",
+      },
+    },
+    "icit": "Implicit",
+    "type": "application",
+  },
+  "term": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "x",
+    },
+  },
+  "type": "suspend",
+}
+`;
+
+exports[`Parser: suspend > parses suspend @(choose !) (f 1) 1`] = `
+{
+  "identity": {
+    "arg": {
+      "type": "lit",
+      "value": {
+        "type": "unit",
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "choose",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "term": {
+    "arg": {
+      "type": "lit",
+      "value": {
+        "type": "Num",
+        "value": 1,
+      },
+    },
+    "fn": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "f",
+      },
+    },
+    "icit": "Explicit",
+    "type": "application",
+  },
+  "type": "suspend",
+}
+`;
+
+exports[`Parser: suspend > parses suspend @Ask ! 1`] = `
+{
+  "identity": {
+    "type": "var",
+    "variable": {
+      "type": "name",
+      "value": "Ask",
+    },
+  },
+  "term": {
+    "type": "lit",
+    "value": {
+      "type": "unit",
+    },
+  },
+  "type": "suspend",
+}
+`;
+
+exports[`Parser: suspend > parses suspend @r.Ask 1 1`] = `
+{
+  "identity": {
+    "label": "Ask",
+    "term": {
+      "type": "var",
+      "variable": {
+        "type": "name",
+        "value": "r",
+      },
+    },
+    "type": "projection",
+  },
+  "term": {
+    "type": "lit",
+    "value": {
+      "type": "Num",
+      "value": 1,
+    },
+  },
+  "type": "suspend",
+}
+`;

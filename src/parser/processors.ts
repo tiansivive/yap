@@ -420,15 +420,15 @@ export const With: PostProcessor<[Keyword, Whitespace, [HandlerClause, ...Handle
 	location: locSpan({ from: loc(data[0]) }, data[6].location),
 });
 
-export const Capture: PostProcessor<[Keyword, Whitespace, Token, Term, Whitespace, Term], Term> = ([tok, , , identity, , term]) => ({
-	type: "capture",
+export const Suspend: PostProcessor<[Keyword, Whitespace, Token, Term, Whitespace, Term], Term> = ([tok, , , identity, , term]) => ({
+	type: "suspend",
 	identity,
 	term,
 	location: locSpan({ from: loc(tok) }, term.location),
 });
 
-export const AnonymousCapture: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , term]) => ({
-	type: "capture",
+export const AnonymousSuspend: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , term]) => ({
+	type: "suspend",
 	term,
 	location: locSpan({ from: loc(tok) }, term.location),
 });

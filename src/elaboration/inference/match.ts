@@ -103,7 +103,7 @@ export const elaborate =
 			return yield* r;
 		});
 
-/* Each alternative starts from the scrutinee's control state; a capture is guaranteed when every arm captures. */
+/* Each alternative starts from the scrutinee's control state; suspension is guaranteed when every arm suspends. */
 export function* branches(alternatives: Src.Alternative[], action: (alt: Src.Alternative) => M.Elaboration<AltNode>): M.Elaboration<AltNode[]> {
 	const { delimiter } = yield* M.st.get();
 	const results = yield* M.traverse(alternatives, alt =>
@@ -113,13 +113,13 @@ export function* branches(alternatives: Src.Alternative[], action: (alt: Src.Alt
 			(function* () {
 				const result = yield* action(alt);
 				const { delimiter: outgoing } = yield* M.st.get();
-				return { result, capturesOnEveryPath: O.exists((d: M.Delimitation) => d.capturesOnEveryPath)(outgoing) };
+				return { result, suspendsOnEveryPath: O.exists((d: M.Delimitation) => d.suspendsOnEveryPath)(outgoing) };
 			})(),
 		),
 	);
 	yield* M.st.modify(s => ({
 		...s,
-		delimiter: O.Functor.map(delimiter, d => ({ ...d, capturesOnEveryPath: results.every(result => result.capturesOnEveryPath) })),
+		delimiter: O.Functor.map(delimiter, d => ({ ...d, suspendsOnEveryPath: results.every(result => result.suspendsOnEveryPath) })),
 	}));
 	return results.map(({ result }) => result);
 }

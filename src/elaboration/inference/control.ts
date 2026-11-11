@@ -134,15 +134,15 @@ function* deep(
 	return EB.Constructors.Lambda("$payload", "Explicit", body, yield* NF.quote(ctx.env.length, payload));
 }
 
-export const capture = (node: Extract<Src.Term, { type: "capture" }>): M.Elaboration<EB.AST> =>
-	M.tracer.track({ tag: "src", type: "term", term: node, metadata: { action: "infer", description: "Capture" } }, function* () {
+export const suspend = (node: Extract<Src.Term, { type: "suspend" }>): M.Elaboration<EB.AST> =>
+	M.tracer.track({ tag: "src", type: "term", term: node, metadata: { action: "infer", description: "Suspend" } }, function* () {
 		const [ast] = node.identity ? [yield* EB.infer(node.identity)] : yield* anonymous();
 		const [identity, effectType, identityUsages] = yield* EB.Icit.insert(ast);
 		const [payload, result] = yield* signature(effectType);
 		const [value, usages] = yield* EB.check(node.term, payload);
 		const annotation = yield* NF.quote((yield* M.reader.ask()).env.length, result);
 
-		return [EB.Constructors.Capture(identity, value, annotation), result, Q.add(identityUsages, usages)] satisfies EB.AST;
+		return [EB.Constructors.Suspend(identity, value, annotation), result, Q.add(identityUsages, usages)] satisfies EB.AST;
 	});
 
 export function* anonymous(): M.Elaboration<[EB.AST, M.Delimitation["answer"]]> {
@@ -156,7 +156,7 @@ export function* anonymous(): M.Elaboration<[EB.AST, M.Delimitation["answer"]]> 
 			};
 		},
 		function* (value) {
-			yield* M.st.modify(s => ({ ...s, delimiter: O.some({ ...value, capturesOnEveryPath: true }) }));
+			yield* M.st.modify(s => ({ ...s, delimiter: O.some({ ...value, suspendsOnEveryPath: true }) }));
 			return value.answer;
 		},
 	)(delimiter);

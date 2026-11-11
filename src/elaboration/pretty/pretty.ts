@@ -148,7 +148,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		})
 		.with({ type: "App" }, function* ({ icit, func, arg }) {
 			const needsFnParens = func.type !== "Var" && func.type !== "Lit" && func.type !== "App";
-			const needsArgParens = arg.type === "Abs" || arg.type === "App" || arg.type === "Capture" || arg.type === "Reset";
+			const needsArgParens = arg.type === "Abs" || arg.type === "App" || arg.type === "Suspend" || arg.type === "Reset";
 			return PP.app(PP.parensIf(needsFnParens, yield* go(func)), Icit.display(icit), PP.parensIf(needsArgParens, yield* go(arg)));
 		})
 		.with({ type: "Row" }, function* ({ row }) {
@@ -185,9 +185,9 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		.with({ type: "Modal" }, function* ({ term: tm, modalities }) {
 			return ["<", Q.display(modalities.quantity), "> ", yield* go(tm), " [| ", yield* go(modalities.liquid), " |]"] satisfies PP.Doc;
 		})
-		.with({ type: "Capture" }, function* ({ identity, payload }) {
+		.with({ type: "Suspend" }, function* ({ identity, payload }) {
 			return [
-				"capture @",
+				"suspend @",
 				PP.parensIf(!isMatching({ type: P.union("Var", "Lit", "Proj", "Ann") }, identity), yield* go(identity)),
 				" ",
 				yield* go(payload),

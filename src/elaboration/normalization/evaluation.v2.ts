@@ -390,8 +390,8 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			// Process statements to extend context, then evaluate return
 			return yield* processStatementsAndPush(statements, ret);
 		})
-		.with({ type: "Capture" }, function* () {
-			throw new Error("Capture evaluation is pending");
+		.with({ type: "Suspend" }, function* () {
+			throw new Error("Suspend evaluation is pending");
 		})
 		.with({ type: "Reset", handling: P.nonNullable }, function* () {
 			throw new Error("Handler-bearing reset evaluation is pending");
