@@ -337,16 +337,8 @@ describe("Inference: raw reset", () => {
 		expect(Eff.failed(answer) || Validity.check(answer.vc).tag === "invalid").toBe(true);
 	});
 
-	it("retains operation calls used as arithmetic arguments for suspended evaluation", () => {
-		expect(() => elaborateModule("let f = \\x -> suspend (\\k -> k (x + 1)); let result: Num = reset (10 + (f 1));")).toThrow("Suspend evaluation is pending");
-	});
-
 	it("retains the installed handler for evaluation", () => {
 		const result = elaborated("let result = reset 10;");
-		expect(() => runNF(result.ctx, () => NF.evaluate(result.tm), result.registry)).toThrow("Handler-bearing reset evaluation is pending");
-	});
-
-	it("retains captured application arguments for suspended evaluation", () => {
-		expect(() => elaborateModule('let result: String = reset (1 + (suspend (\\k -> "hello")));')).toThrow("Suspend evaluation is pending");
+		expect(NF.unglue(runNF(result.ctx, () => NF.evaluate(result.tm), result.registry))).toMatchObject({ type: "Lit", value: { type: "Num", value: 10 } });
 	});
 });

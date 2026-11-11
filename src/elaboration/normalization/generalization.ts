@@ -9,10 +9,10 @@ import * as R from "@yap/shared/rows";
 import * as Eff from "@yap/utils/effects";
 
 import fp from "lodash/fp";
-import assert from "node:assert";
 import * as A from "fp-ts/Array";
 import { update } from "@yap/utils";
 import * as Sub from "../unification/substitution";
+import * as Computation from "./computation-traversal";
 
 type Meta = Extract<NF.Variable, { type: "Meta" }>;
 
@@ -266,108 +266,96 @@ export const abstract = function* (ty: NF.Value, value: NF.Value, resolutions: E
 export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 	const ctx = yield* M.reader.ask();
 	const registry = yield* Metas.registry.get();
-
-	const instantiateRow = function* (row: NF.Row): EB.Icit.Zonking<NF.Row> {
-		const entries = yield* M.traverse(row.entries, function* ({ label, value }) {
-			return { label, value: yield* instantiate(value) };
-		});
-		return R.Constructors.Row(entries, row.tail);
+	const defaulted = (meta: Meta, lvl: number): NF.Value | undefined => {
+		if (meta.lvl < lvl || Metas.solution(registry, meta.val)) {
+			return undefined;
+		}
+		return match(Metas.entry(registry, meta.val).annotation)
+			.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => NF.Constructors.Row(R.Constructors.Empty()))
+			.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => NF.Any)
+			.otherwise(() => undefined);
 	};
-
-	return yield* match(nf)
-		.with({ type: "Var" }, function* (v) {
-			if (v.variable.type !== "Meta") {
-				return v;
-			}
-
-			if (Metas.solution(registry, v.variable.val)) {
-				// Solved meta means it's not unconstrained, so no need to instantiate it
-				return v;
-			}
-
-			// Don't instantiate metas from outer scopes - they should remain unsolved
-			// and will be handled at their original scope level
-			if (v.variable.lvl < ctx.env.length) {
-				return v;
-			}
-
-			const { annotation } = Metas.entry(registry, v.variable.val);
-			return match(annotation)
-				.with({ type: "Lit", value: { type: "Atom", value: "Row" } }, () => NF.Constructors.Row(R.Constructors.Empty()))
-				.with({ type: "Lit", value: { type: "Atom", value: "Type" } }, () => NF.Constructors.Lit({ type: "Atom", value: "Any" }))
-				.otherwise(() => NF.Constructors.Var(v.variable));
-		})
-		.with({ type: "Lit" }, function* (lit) {
-			return lit;
-		})
-		.with(NF.Patterns.Lambda, function* ({ binder, closure }) {
-			const ann = yield* instantiate(binder.annotation);
-			const xtended = EB.bind(closure.ctx, binder, ann);
-			const term = yield* M.reader.local(_ => xtended, EB.Icit.instantiate(closure.term, {}));
-			return NF.Constructors.Lambda(binder.variable, binder.icit, { ...closure, term }, ann);
-		})
-		.with(NF.Patterns.Pi, function* ({ binder, closure }) {
-			const ann = yield* instantiate(binder.annotation);
-			const xtended = EB.bind(closure.ctx, binder, ann);
-			const term = yield* M.reader.local(_ => xtended, EB.Icit.instantiate(closure.term, {}));
-			return NF.Constructors.Pi(binder.variable, binder.icit, ann, { ...closure, term });
-		})
-		.with(NF.Patterns.Mu, function* ({ binder, closure }) {
-			const ann = yield* instantiate(binder.annotation);
-			const xtended = EB.bind(closure.ctx, binder, ann);
-			const term = yield* M.reader.local(_ => xtended, EB.Icit.instantiate(closure.term, {}));
-			return NF.Constructors.Mu(binder.variable, binder.source, ann, { ...closure, term });
-		})
-		.with(NF.Patterns.Sigma, function* ({ binder, closure }) {
-			const ann = yield* instantiate(binder.annotation);
-			const xtended = EB.bind(closure.ctx, binder, ann);
-			const term = yield* M.reader.local(_ => xtended, EB.Icit.instantiate(closure.term, {}));
-			return NF.Constructors.Sigma(binder.variable, ann, { ...closure, term });
-		})
-		.with(NF.Patterns.SigmaV2, function* ({ binder, closure }) {
-			const ann = yield* instantiate(binder.annotation);
-			const xtended = EB.bind(closure.ctx, binder, ann);
-			const term = yield* M.reader.local(_ => xtended, EB.Icit.instantiate(closure.term, {}));
-			return NF.Constructors.SigmaV2(binder.variable, ann, { ...closure, term });
-		})
-		.with(NF.Patterns.Nu, function* ({ binder, closure }) {
-			const within = EB.open(binder, closure.ctx);
-			const term = yield* M.reader.local(_ => within, EB.Icit.instantiate(closure.term, {}));
-			const scoped = yield* M.reader.local(_ => within, EB.Icit.instantiate(EB.Constructors.Row(binder.scoped), {}));
-			assert(scoped.type === "Row", "A row instantiates to a row");
-			const annotation = yield* M.reader.local(_ => within, instantiate(binder.annotation));
-			return NF.Constructors.Nu({ ...binder, scoped: scoped.row, annotation }, { ...closure, term });
-		})
-		.with({ type: "App" }, function* ({ icit, func, arg }) {
-			return NF.Constructors.App(yield* instantiate(func), yield* instantiate(arg), icit);
-		})
-		.with(NF.Patterns.Proj, function* ({ base, label }) {
-			return NF.Constructors.Proj(yield* instantiate(base), label);
-		})
-		.with(NF.Patterns.Match, function* ({ closure, scrutinee }) {
-			return NF.Constructors.Match(closure, yield* instantiate(scrutinee));
-		})
-		.with(NF.Patterns.Inj, function* ({ base, label, injected }) {
-			return NF.Constructors.Inj(yield* instantiate(base), label, yield* instantiate(injected));
-		})
-		.with({ type: "Row" }, function* ({ row }) {
-			return NF.Constructors.Row(yield* instantiateRow(row));
-		})
-		.with({ type: "Neutral" }, function* ({ kind, value }) {
-			return NF.Constructors.Neutral(kind, yield* instantiate(value));
-		})
-		.with(NF.Patterns.Glued, function* ({ folded, unfolded }) {
-			return NF.Constructors.Glued(yield* instantiate(folded), yield* instantiate(unfolded));
-		})
-		.with(NF.Patterns.Modal, function* ({ value, modalities }) {
-			return NF.Constructors.Modal(yield* instantiate(value), {
-				quantity: modalities.quantity,
-				liquid: yield* instantiate(modalities.liquid),
-			});
-		})
-		.otherwise(() => {
-			throw new Error("Traverse: Not implemented yet");
-		});
+	const term = (term: EB.Term, lvl: number): EB.Term =>
+		EB.traverse(term, (term, depth) =>
+			match(term)
+				.with(EB.CtorPatterns.Vars.Meta, ({ variable }) =>
+					match(defaulted(variable, lvl + depth))
+						.with(NF.Patterns.Row, () => EB.Constructors.Row(R.Constructors.Empty()))
+						.with(NF.Patterns.Lit, ({ value }) => EB.Constructors.Lit(value))
+						.otherwise(() => term),
+				)
+				.otherwise(() => term),
+		);
+	const source = (saved: NF.Source, seen: ReadonlySet<NF.Value>, depth = 0): NF.Source =>
+		Computation.mapSourceValues(
+			saved,
+			(value, ctx) => visit(value, ctx.env.length, seen),
+			(value, ctx, depth) => term(value, ctx.env.length + depth),
+			depth,
+		);
+	const visit = (value: NF.Value, lvl: number, seen: ReadonlySet<NF.Value>): NF.Value => {
+		if (seen.has(value)) {
+			return value;
+		}
+		const within = new Set([...seen, value]);
+		const recur = (value: NF.Value) => visit(value, lvl, within);
+		const saved = (value: NF.Source, depth = 0) => source(value, within, depth);
+		return match(value)
+			.with(NF.Patterns.Flex, value => defaulted(value.variable, lvl) ?? value)
+			.with(NF.Patterns.Var, NF.Patterns.Lit, value => value)
+			.with(NF.Patterns.Nu, value => {
+				const { binder, closure } = value;
+				const body = saved({ ctx: closure.ctx, term: EB.Constructors.Nu({ ...binder, annotation: binder.source?.annotation ?? EB.Type }, closure.term) });
+				return match(body.term)
+					.with(EB.CtorPatterns.Nu, ({ binding, body: term }) =>
+						NF.Constructors.Nu(
+							{ ...binder, annotation: recur(binder.annotation), scoped: binding.scoped, source: binder.source ? binding : undefined },
+							{ ...closure, ctx: body.ctx, term },
+						),
+					)
+					.otherwise(() => {
+						throw new Error("A saved field scope retains its binder");
+					});
+			})
+			.with({ type: "Abs" }, value => {
+				const closure = saved(value.closure, value.binder.type === "Sigma" ? 0 : 1);
+				return {
+					...value,
+					binder: { ...value.binder, annotation: recur(value.binder.annotation) },
+					closure: { ...value.closure, ctx: closure.ctx, term: closure.term },
+				};
+			})
+			.with(NF.Patterns.App, value => NF.Constructors.App(recur(value.func), recur(value.arg), value.icit))
+			.with(NF.Patterns.Proj, value => NF.Constructors.Proj(recur(value.base), value.label))
+			.with(NF.Patterns.Match, value => {
+				const closure = saved(value.closure);
+				return NF.Constructors.Match({ ...value.closure, ctx: closure.ctx, term: closure.term }, recur(value.scrutinee));
+			})
+			.with(NF.Patterns.Inj, value => NF.Constructors.Inj(recur(value.base), value.label, recur(value.injected)))
+			.with(NF.Patterns.Row, value => NF.Constructors.Row(R.traverse(value.row, recur, variable => R.Constructors.Variable(variable))))
+			.with(NF.Patterns.Neutral, value => NF.Constructors.Neutral(value.kind, recur(value.value)))
+			.with(NF.Patterns.Glued, value => NF.Constructors.Glued(recur(value.folded), recur(value.unfolded)))
+			.with(NF.Patterns.Modal, value => NF.Constructors.Modal(recur(value.value), { ...value.modalities, liquid: recur(value.modalities.liquid) }))
+			.with(NF.Patterns.External, value => NF.Constructors.External(value.name, value.arity, value.compute, value.args.map(recur)))
+			.with(NF.Patterns.Suspend, value =>
+				NF.Constructors.Suspend(recur(value.identity), recur(value.payload), recur(value.annotation), value.signature ? recur(value.signature) : undefined),
+			)
+			.with(NF.Patterns.Deferred, value => NF.Constructors.Deferred(saved(value.source)))
+			.with(NF.Patterns.Computation, value =>
+				NF.Constructors.Computation(
+					visit(value.request, value.ctx.env.length, within),
+					value.contexts.map(context => Computation.mapContext(context, (value, ctx) => visit(value, ctx.env.length, within), saved)),
+					value.ctx,
+				),
+			)
+			.with({ type: "Existential" }, value => ({
+				...value,
+				annotation: recur(value.annotation),
+				body: { ...value.body, value: visit(value.body.value, value.body.ctx.env.length, within) },
+			}))
+			.exhaustive();
+	};
+	return visit(nf, ctx.env.length, new Set());
 };
 
 /**
@@ -379,12 +367,21 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
  * After elaboration, we move the variable to imports, so we need to trim it from the captured envs
  * to avoid env length mismatches. Lookups will then correctly fall through to imports.
  */
-export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
+export const trimClosureEnvs = (nf: NF.Value, seen: ReadonlySet<NF.Value> = new Set()): NF.Value => {
+	if (seen.has(nf)) {
+		return nf;
+	}
+	const within = new Set([...seen, nf]);
+	const recur = (value: NF.Value) => trimClosureEnvs(value, within);
+	const source = (saved: NF.Source): NF.Source => {
+		const mapped = Computation.mapSourceValues(saved, recur, term => term);
+		return { ctx: { ...mapped.ctx, env: mapped.ctx.env.slice(0, -1) }, term: mapped.term };
+	};
 	return match(nf)
 		.with({ type: "Var" }, v => v)
 		.with({ type: "Lit" }, lit => lit)
 		.with({ type: "Abs" }, abs => {
-			const ann = trimClosureEnvs(abs.binder.annotation);
+			const ann = recur(abs.binder.annotation);
 			const trimmedClosure = {
 				...abs.closure,
 				ctx: {
@@ -392,31 +389,42 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 					env: abs.closure.ctx.env.slice(0, abs.closure.ctx.env.length - 1), // Remove first entry (the recursive variable at level 0)
 				},
 			};
-			return { ...abs, annotation: ann, closure: trimmedClosure };
+			return { ...abs, binder: { ...abs.binder, annotation: ann }, closure: trimmedClosure };
 		})
 
-		.with({ type: "App" }, ({ icit, func, arg }) => NF.Constructors.App(trimClosureEnvs(func), trimClosureEnvs(arg), icit))
-		.with(NF.Patterns.Proj, ({ base, label }) => NF.Constructors.Proj(trimClosureEnvs(base), label))
-		.with(NF.Patterns.Match, ({ closure, scrutinee }) => NF.Constructors.Match(closure, trimClosureEnvs(scrutinee)))
-		.with(NF.Patterns.Inj, ({ base, label, injected }) => NF.Constructors.Inj(trimClosureEnvs(base), label, trimClosureEnvs(injected)))
+		.with({ type: "App" }, ({ icit, func, arg }) => NF.Constructors.App(recur(func), recur(arg), icit))
+		.with(NF.Patterns.Proj, ({ base, label }) => NF.Constructors.Proj(recur(base), label))
+		.with(NF.Patterns.Match, ({ closure, scrutinee }) => NF.Constructors.Match(closure, recur(scrutinee)))
+		.with(NF.Patterns.Inj, ({ base, label, injected }) => NF.Constructors.Inj(recur(base), label, recur(injected)))
 		.with({ type: "Row" }, ({ row }) =>
 			NF.Constructors.Row(
 				R.traverse(
 					row,
-					v => trimClosureEnvs(v),
+					v => recur(v),
 					v => R.Constructors.Variable(v),
 				),
 			),
 		)
-		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(kind, trimClosureEnvs(value)))
-		.with(NF.Patterns.Glued, ({ folded, unfolded }) => NF.Constructors.Glued(trimClosureEnvs(folded), trimClosureEnvs(unfolded)))
+		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(kind, recur(value)))
+		.with(NF.Patterns.Glued, ({ folded, unfolded }) => NF.Constructors.Glued(recur(folded), recur(unfolded)))
 		.with(NF.Patterns.Modal, ({ value, modalities }) =>
-			NF.Constructors.Modal(trimClosureEnvs(value), {
+			NF.Constructors.Modal(recur(value), {
 				quantity: modalities.quantity,
-				liquid: trimClosureEnvs(modalities.liquid),
+				liquid: recur(modalities.liquid),
 			}),
 		)
-		.with({ type: "External" }, ext => ext) // External values don't have closures to trim
+		.with(NF.Patterns.Suspend, value =>
+			NF.Constructors.Suspend(recur(value.identity), recur(value.payload), recur(value.annotation), value.signature ? recur(value.signature) : undefined),
+		)
+		.with(NF.Patterns.Deferred, value => NF.Constructors.Deferred(source(value.source)))
+		.with(NF.Patterns.Computation, value =>
+			NF.Constructors.Computation(
+				recur(value.request),
+				value.contexts.map(context => ({ ...Computation.mapContext(context, recur, source), ctx: { ...context.ctx, env: context.ctx.env.slice(0, -1) } })),
+				{ ...value.ctx, env: value.ctx.env.slice(0, -1) },
+			),
+		)
+		.with(NF.Patterns.External, value => NF.Constructors.External(value.name, value.arity, value.compute, value.args.map(recur)))
 		.otherwise(() => {
 			throw new Error("trimClosureEnvs: Not implemented yet");
 		});

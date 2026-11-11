@@ -8,6 +8,9 @@ import { isMatching, match } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
+import * as Metas from "@yap/elaboration/shared/metas";
+import * as Sub from "@yap/elaboration/unification/substitution";
+import * as Eff from "@yap/utils/effects";
 import * as Types from "@yap/elaboration/shared/types";
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
@@ -42,29 +45,13 @@ function* install(node: With, answer: NF.Value, [identity, type, identityUsages]
 	const lvl = ctx.env.length;
 	const identityScope = EB.bind(ctx, { type: "Let", variable: "$identity" }, type, "inserted");
 	const expected = yield* M.reader.local(() => identityScope, handler(type, answer));
-	const userScope = EB.bind(identityScope, { type: "Let", variable: "$user" }, expected, "inserted");
-	const [user, userUsages] = yield* M.reader.local(
-		() => userScope,
-		match(clause.handler)
-			.with({ type: "lambda" }, { type: "hole" }, source => EB.check(source, expected))
-			.otherwise(function* (source) {
-				const ast = yield* EB.infer(source);
-				const [term, inferred, usages] = isMatching(NF.View.Sealed(NF.Patterns.ImplicitPi), yield* NF.view(expected)) ? ast : yield* EB.Icit.insert(ast);
-				yield* M.constrain({ type: "assign", left: inferred, right: expected, lvl: userScope.env.length });
-				return [term, usages] satisfies [EB.Term, Q.Usages];
-			}),
-	);
-
-	const installedScope = EB.bind(userScope, { type: "Let", variable: "$installed" }, expected, "inserted");
-	const references = { identity: identityScope.env[0].nf, user: userScope.env[0].nf, installed: installedScope.env[0].nf };
+	const user = yield* M.reader.local(() => identityScope, initialize(clause.handler, expected));
+	const installedScope = EB.bind(user.ctx, { type: "Let", variable: "$installed" }, expected, "inserted");
+	const references = { identity: identityScope.env[0].nf, user: user.value, installed: installedScope.env[0].nf };
 	const installed = yield* M.reader.local(() => installedScope, deep(type, answer, references, []));
 	const [first, ...remaining] = rest;
 	const [body, bodyUsages] = yield* M.reader.local(() => installedScope, EB.check(first ? { ...node, handlers: [first, ...remaining] } : node.term, answer));
-	const bindings = [
-		EB.Constructors.Stmt.Let("$identity", identity, type),
-		EB.Constructors.Stmt.Let("$user", user, expected),
-		EB.Constructors.Stmt.Let("$installed", installed, expected),
-	];
+	const bindings = [EB.Constructors.Stmt.Let("$identity", identity, type), ...user.bindings, EB.Constructors.Stmt.Let("$installed", installed, expected)];
 	const term = EB.Constructors.Reset(body, {
 		identity: yield* NF.quote(installedScope.env.length, references.identity),
 		handler: yield* NF.quote(installedScope.env.length, references.installed),
@@ -73,9 +60,61 @@ function* install(node: With, answer: NF.Value, [identity, type, identityUsages]
 		EB.Constructors.Block(bindings, term),
 		Q.add(
 			identityUsages.slice(identityScope.env.length - lvl),
-			Q.add(userUsages.slice(userScope.env.length - lvl), bodyUsages.slice(installedScope.env.length - lvl)),
+			Q.add(user.usages.slice(identityScope.env.length - lvl), bodyUsages.slice(installedScope.env.length - lvl)),
 		),
 	];
+}
+
+function* initialize(
+	source: Src.Term,
+	expected: NF.Value,
+): M.Elaboration<{
+	bindings: EB.Statement[];
+	ctx: EB.Context;
+	value: NF.Value;
+	usages: Q.Usages;
+}> {
+	const ctx = yield* M.reader.ask();
+	const scope = EB.bind(ctx, { type: "Let", variable: "$user" }, expected, "inserted");
+	const polymorphic = isMatching(NF.View.Sealed(NF.Patterns.ImplicitPi), yield* NF.view(expected));
+	const [term, inferred, usages] = yield* M.reader.local(
+		() => scope,
+		match(source)
+			.with({ type: "lambda" }, { type: "hole" }, function* (source) {
+				const [term, usages] = yield* EB.check(source, expected);
+				return [term, expected, usages] satisfies EB.AST;
+			})
+			.otherwise(function* (source) {
+				const ast = yield* EB.infer(source);
+				return polymorphic ? ast : yield* EB.Icit.insert(ast);
+			}),
+	);
+	/* Matching schemes retain implicit parameters that also carry runtime values. */
+	const compatible = function* (): M.Elaboration<boolean> {
+		const registry = yield* Metas.registry.get();
+		const [outcome] = yield* Eff.with(
+			[M.except.handlers(), Sub.subst.handlers(), Metas.registry.handlers(registry), M.reader.handlers(scope), M.tracer.handlers()],
+			() => EB.U.unify(inferred, expected, scope.env.length),
+		);
+		return !Eff.failed(outcome);
+	};
+
+	if (!polymorphic || inferred === expected || (yield* compatible())) {
+		yield* M.constrain({ type: "assign", left: inferred, right: expected, lvl: scope.env.length });
+		return { bindings: [EB.Constructors.Stmt.Let("$user", term, expected)], ctx: scope, value: scope.env[0].nf, usages: usages.slice(1) };
+	}
+
+	const stored = EB.bind(ctx, { type: "Let", variable: "$user" }, inferred, "inserted");
+	const adapted = EB.bind(stored, { type: "Let", variable: "$handler" }, expected, "inserted");
+	const reference: Src.Term = { type: "var", variable: { type: "name", value: "$user", location: source.location }, location: source.location };
+	const [handler] = yield* M.reader.local(() => adapted, EB.check(reference, expected));
+
+	return {
+		bindings: [EB.Constructors.Stmt.Let("$user", term, inferred), EB.Constructors.Stmt.Let("$handler", handler, expected)],
+		ctx: adapted,
+		value: adapted.env[0].nf,
+		usages: usages.slice(1),
+	};
 }
 
 function* handler(effectType: NF.Value, answer: NF.Value): M.Elaboration<NF.Value> {

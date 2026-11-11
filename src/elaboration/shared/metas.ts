@@ -157,10 +157,16 @@ type MetaNF = Extract<NF.Variable, { type: "Meta" }>;
 type MetaEB = Extract<EB.Variable, { type: "Meta" }>;
 
 /** The collectors: get() once, both walkers close over the snapshot and recurse freely. */
-export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]; eb: (tm: EB.Term) => MetaEB[] }> {
+export const collectors = function* (): Eff.Eff<Eff.Only<typeof registry, "Registry.get">, { nf: (val: NF.Value) => MetaNF[]; eb: (tm: EB.Term) => MetaEB[] }> {
 	const metas = yield* registry.get();
 
-	const nf = (val: NF.Value): MetaNF[] => {
+	const nf = (val: NF.Value, seen: Set<NF.Value> = new Set()): MetaNF[] => {
+		if (seen.has(val)) {
+			return [];
+		}
+		seen.add(val);
+		const recur = (value: NF.Value) => nf(value, seen);
+		const source = (source: NF.Source, depth = 0) => NF.Computation.referenced(source, depth).flatMap(recur);
 		const ms = match(val)
 			.with(NF.Patterns.Lit, () => [])
 			.with(NF.Patterns.Flex, ({ variable }) => {
@@ -168,17 +174,17 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 				if (!solved) {
 					return [variable];
 				}
-				return nf(solved);
+				return recur(solved);
 			})
 			.with(NF.Patterns.Var, () => [])
-			.with(NF.Patterns.App, ({ func, arg }) => [...nf(func), ...nf(arg)])
-			.with(NF.Patterns.Proj, ({ base }) => nf(base))
-			.with(NF.Patterns.Match, ({ closure, scrutinee }) => [...nf(scrutinee), ...eb(closure.term)])
-			.with(NF.Patterns.Inj, ({ base, injected }) => [...nf(base), ...nf(injected)])
+			.with(NF.Patterns.App, ({ func, arg }) => [...recur(func), ...recur(arg)])
+			.with(NF.Patterns.Proj, ({ base }) => recur(base))
+			.with(NF.Patterns.Match, ({ closure, scrutinee }) => [...recur(scrutinee), ...source(closure)])
+			.with(NF.Patterns.Inj, ({ base, injected }) => [...recur(base), ...recur(injected)])
 			.with(NF.Patterns.Row, ({ row }) =>
 				R.fold(
 					row,
-					(val, l, ms) => ms.concat(nf(val)),
+					(val, l, ms) => ms.concat(recur(val)),
 					(v, ms) => {
 						if (v.type !== "Meta") {
 							return ms;
@@ -189,23 +195,51 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 							return [v, ...ms];
 						}
 
-						return ms.concat(nf(solved));
+						return ms.concat(recur(solved));
 					},
 					[] as MetaNF[],
 				),
 			)
-			.with({ type: "Neutral" }, ({ value }) => nf(value))
+			.with({ type: "Neutral" }, ({ value }) => recur(value))
 			/* Both faces: quotation emits the folded one, so a meta only it mentions still has to be found. */
-			.with(NF.Patterns.Glued, ({ folded, unfolded }) => [...nf(folded), ...nf(unfolded)])
-			.with(NF.Patterns.Lambda, ({ closure }) => eb(closure.term))
-			.with(NF.Patterns.Pi, NF.Patterns.Mu, NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure, binder }) => [
-				...nf(binder.annotation),
-				...eb(closure.term),
+			.with(NF.Patterns.Glued, ({ folded, unfolded }) => [...recur(folded), ...recur(unfolded)])
+			.with(NF.Patterns.Nu, ({ closure, binder }) => [
+				...recur(binder.annotation),
+				...source({ ctx: closure.ctx, term: EB.Constructors.Nu({ ...binder, annotation: binder.source?.annotation ?? EB.Type }, closure.term) }),
 			])
-			.with(NF.Patterns.Modal, ({ value }) => nf(value))
-			.with(NF.Patterns.External, ({ args }) => args.flatMap(arg => nf(arg)))
+			.with(NF.Patterns.Lambda, NF.Patterns.Pi, NF.Patterns.Mu, NF.Patterns.Sigma, NF.Patterns.SigmaV2, ({ closure, binder }) => [
+				...recur(binder.annotation),
+				...source(closure, binder.type === "Sigma" ? 0 : 1),
+			])
+			.with(NF.Patterns.Modal, ({ value, modalities }) => [...recur(value), ...recur(modalities.liquid)])
+			.with(NF.Patterns.Suspend, ({ identity, signature, payload, annotation }) => [
+				...recur(identity),
+				...(signature ? recur(signature) : []),
+				...recur(payload),
+				...recur(annotation),
+			])
+			.with(NF.Patterns.Deferred, ({ source: saved }) => source(saved))
+			.with(NF.Patterns.Computation, ({ request, contexts }) => [
+				...recur(request),
+				...contexts.flatMap(context => {
+					const values = new Set<MetaNF>();
+					NF.Computation.mapContext(
+						context,
+						value => {
+							recur(value).forEach(meta => values.add(meta));
+							return value;
+						},
+						saved => {
+							source(saved).forEach(meta => values.add(meta));
+							return saved;
+						},
+					);
+					return [...values];
+				}),
+			])
+			.with(NF.Patterns.External, ({ args }) => args.flatMap(arg => recur(arg)))
 			.otherwise(() => {
-				throw new Error("metas: Not implemented yet");
+				throw new Error("Unsupported semantic meta dependency");
 			});
 
 		return F.pipe(

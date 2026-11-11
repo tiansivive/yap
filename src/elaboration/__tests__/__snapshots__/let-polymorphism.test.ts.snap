@@ -133,7 +133,7 @@ exports[`Let-polymorphism > basic polymorphic let bindings > polymorphic composi
     = λ(a: Type) => (λ(n: a) -> n : Π(n: a) -> a);
   let result
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; result; id; compose)
-    = λ(a: Type) => id @a @a @a (result @a) (result @a);
+    = λ(a: Type) => compose @a @a @a (id @a) (id @a);
   return unit;
 }",
     "type": "Unit",
@@ -451,10 +451,10 @@ exports[`Let-polymorphism > edge cases > polymorphic let returning polymorphic f
         (λ(u: a) -> (λ(x: b) -> x : Π(x: b) -> b) : Π(u: a) -> Π(x: b) -> b);
   let id1
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; id1; makeId)
-    = λ(a: Type) => id1 @Num @a 1;
+    = λ(a: Type) => makeId @Num @a 1;
   let id2
     : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; id2; id1; makeId)
-    = λ(a: Type) => id1 @Bool @a true;
+    = λ(a: Type) => makeId @Bool @a true;
   let a : String = id1 @String "hello";
   let b : String = id2 @String "world";
   return unit;
@@ -485,7 +485,7 @@ exports[`Let-polymorphism > let-polymorphism scope and capture > let-bound closu
     = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> a);
   let makeApply
     : Π(a: Type) => (closure: Π(y: a) -> a -| Γ: a; makeApply; id)
-    = λ(a: Type) => (λ(y: a) -> makeApply @a y : Π(y: a) -> a);
+    = λ(a: Type) => (λ(y: a) -> id @a y : Π(y: a) -> a);
   let a : Num = makeApply @Num 5;
   let b : String = makeApply @String "hello";
   return unit;
@@ -519,7 +519,7 @@ exports[`Let-polymorphism > let-polymorphism scope and capture > polymorphic let
         let poly
           : Π(a: Type) => (closure: Π(x: a) -> a -| Γ: a; poly; inner; outer)
           = λ(a: Type) => (λ(x: a) -> x : Π(x: a) -> a);
-        let a : Num = poly @Num inner;
+        let a : Num = poly @Num outer;
         let b : String = poly @String "test";
         return poly;
       })
@@ -727,11 +727,11 @@ exports[`Let-polymorphism > recursive bindings > recursive function with polymor
     = λ(a: Type) =>
       λ(b: Type) =>
         λ(c: Type) =>
-          (λ(x: a) -> (λ(y: b) -> c x y : Π(y: b) -> c) : Π(x: a) ->
+          (λ(x: a) -> (λ(y: b) -> rec x y : Π(y: b) -> c) : Π(x: a) ->
             Π(y: b) -> c);
   let r
     : Π(a: Type) => (closure: Π(b: Type) => Π(x: a) -> b -| Γ: a; r; rec)
-    = λ(a: Type) => λ(b: Type) => a @Num @a @b 5;
+    = λ(a: Type) => λ(b: Type) => rec @Num @a @b 5;
   return unit;
 }",
     "type": "Unit",
@@ -750,7 +750,7 @@ exports[`Let-polymorphism > recursive bindings > simple recursive function 1`] =
     "term": "{
   let rec
     : Π(a: Type) => (closure: Π(b: Type) => Π(x: a) -> b -| Γ: a; rec)
-    = λ(a: Type) => λ(b: Type) => (λ(x: a) -> b x : Π(x: a) -> b);
+    = λ(a: Type) => λ(b: Type) => (λ(x: a) -> rec x : Π(x: a) -> b);
   return unit;
 }",
     "type": "Unit",

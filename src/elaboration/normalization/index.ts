@@ -10,3 +10,6 @@ export type { Mark } from "./machine/frames";
 export type { Captured, Evaluation, EvalMode, Scope, StackFrame } from "./effects";
 
 export * as Pats from "./patterns";
+
+export * as Computation from "./computation-traversal";
+export { observe as observeComputation } from "./computation";

@@ -54,7 +54,7 @@ export const wrapLambda = function* (term: EB.Term, ty: NF.Value): NF.Abstractio
 			const binding: EB.Binding = { type: "Lambda", variable: pi.binder.variable, icit: pi.binder.icit, annotation: ann };
 			const xtended = EB.bind(ctx, binding, pi.binder.annotation);
 			const applied = yield* NF.apply(pi.binder, pi.closure, NF.Constructors.Rigid(lvl));
-			const body = yield* M.reader.local(_ => xtended, wrapLambda(term, applied));
+			const body = yield* M.reader.local(_ => xtended, wrapLambda(EB.weaken(term, 1), applied));
 			return EB.Constructors.Abs(binding, body);
 		})
 		.otherwise(function* () {

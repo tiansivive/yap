@@ -10,8 +10,8 @@ type Bindings = Record<string, unknown>;
  * A sort of embedded domain-specific language for scheduling machine actions.
  * Inspired by do-notation and trying to preserve linear sequencing of evaluation.
  */
-export const notation = <S, C, R extends Eff.AnyAction>(scope: () => Eff.Eff<R, S>) => {
-	type Program<T> = Eff.Eff<R | Actions<S, C>, T>;
+export const notation = <S, C, R extends Eff.AnyAction, D = undefined>(scope: () => Eff.Eff<R, S>) => {
+	type Program<T> = Eff.Eff<R | Actions<S, C, D>, T>;
 
 	type Chain<B extends Bindings> = {
 		let: <N extends string, T>(name: N, work: Program<Machine<T>>) => Chain<B & { readonly [P in N]: T }>;

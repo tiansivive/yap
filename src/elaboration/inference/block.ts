@@ -65,7 +65,7 @@ export const infer = (block: Block): M.Elaboration<EB.AST> =>
 			return yield* M.reader.local(
 				_ => {
 					const entry: EB.Context["env"][number] = {
-						nf,
+						nf: nf.type === "Computation" ? NF.Constructors.Rigid(next.env.length) : nf,
 						type: [{ type: "Let", variable: r.variable }, "source", r.annotation],
 						name: { type: "Let", variable: r.variable },
 					};
