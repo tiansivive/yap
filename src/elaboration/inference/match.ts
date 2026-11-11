@@ -115,7 +115,7 @@ export function* branches(alternatives: Src.Alternative[], action: (alt: Src.Alt
 		...s,
 		delimitations: incoming.map((delimiter, i) => ({
 			...delimiter,
-			shifted: results.every(({ delimitations }) => delimitations[i].shifted),
+			capturesOnEveryPath: results.every(({ delimitations }) => delimitations[i].capturesOnEveryPath),
 		})),
 	}));
 	return results.map(({ result }) => result);

@@ -40,9 +40,10 @@ export const infer = (lam: Lambda): M.Elaboration<EB.AST> =>
 		return [EB.Constructors.Ann(tm, piTerm), pi, bus] satisfies EB.AST; // Remove the usage of the bound variable
 	});
 
-/* A closure's body constrains the enclosing answer types while its captures run when the closure is called. */
+/* Anonymous captures in a closure acquire their delimiter at the call site. */
 export function* body<A>(action: M.Elaboration<A>): M.Elaboration<A> {
 	const { delimitations } = yield* M.st.get();
+	yield* M.st.modify(s => ({ ...s, delimitations: [] }));
 	const result = yield* action;
 	yield* M.st.modify(s => ({ ...s, delimitations }));
 	return result;

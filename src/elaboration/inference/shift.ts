@@ -1,11 +1,9 @@
-import * as F from "fp-ts/lib/function";
-
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as NF from "@yap/elaboration/normalization";
 import * as Src from "@yap/src/index";
 import assert from "node:assert";
-import { set, update } from "@yap/utils";
+import { update } from "@yap/utils";
 
 type Shift = Extract<Src.Term, { type: "shift" }>;
 
@@ -13,11 +11,8 @@ export const infer = (shift: Shift): M.Elaboration<EB.AST> =>
 	M.tracer.track({ tag: "src", type: "term", term: shift, metadata: { action: "infer", description: "Shift" } }, function* () {
 		const ctx = yield* M.reader.ask();
 
-		const { delimitations } = yield* M.st.get();
-		if (delimitations.length === 0) {
-			throw new Error("shift without enclosing reset");
-		}
-		const [{ answer, identity }] = delimitations;
+		const [[identity, effectType], answer] = yield* EB.Control.anonymous();
+		const [, A] = yield* EB.Control.signature(effectType);
 
 		/**
 		 * Γ, k: A → α; β ⊢ e : β; β
@@ -25,29 +20,17 @@ export const infer = (shift: Shift): M.Elaboration<EB.AST> =>
 		 * Γ; α ⊢ Sk : A → α.e : A; β
 		 */
 
-		const ma = yield* EB.freshMeta(ctx.env.length, NF.Type);
-		// const mb = yield* EB.freshMeta(ctx.env.length, NF.Type)
-		const A = NF.Constructors.Flex(ma);
-
 		const skolem = yield* EB.freshMeta(ctx.env.length, A);
 
 		const kBinder = "$k";
 		const kTy = NF.Constructors.Pi(kBinder, "Explicit", A, yield* NF.closeVal(answer.initial));
 
-		yield* M.st.modify(F.flow(set("delimitations.0.shifted", true), set("delimitations.0.answer.initial", answer.final)));
-
-		const [ktm, us] = yield* M.reader.local(
-			ctx => EB.bind(ctx, { type: "Continuation", variable: kBinder, resumption: { meta: skolem } }, kTy),
-			EB.check(shift.term, answer.final),
+		const [ktm, us] = yield* EB.Inference.Lambda.body(
+			M.reader.local(ctx => EB.bind(ctx, { type: "Continuation", variable: kBinder, resumption: { meta: skolem } }, kTy), EB.check(shift.term, answer.final)),
 		);
-		yield* M.st.modify(set("delimitations.0.answer.initial", answer.initial));
 
 		const body = EB.Constructors.Lambda(kBinder, "Explicit", ktm, yield* NF.quote(ctx.env.length, kTy));
-		const tm = EB.Constructors.Capture(
-			EB.Constructors.App("Implicit", yield* NF.quote(ctx.env.length, identity), yield* NF.quote(ctx.env.length, A)),
-			body,
-			yield* NF.quote(ctx.env.length, A),
-		);
+		const tm = EB.Constructors.Capture(identity, body, yield* NF.quote(ctx.env.length, A));
 		const { nondeterminism } = yield* M.st.get();
 		const values = nondeterminism.solution[skolem.val] ?? [];
 		const out = EB.Constructors.Bubble(skolem.val, A, values, tm);

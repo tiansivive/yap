@@ -5,23 +5,36 @@ import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
 import * as M from "@yap/elaboration/shared/effects";
 import * as Eff from "@yap/utils/effects";
+import { VerificationServiceV2 } from "@yap/verification/V2/service";
+import { Validity } from "@yap/verification/validity";
 import { declaration, elaborateModule, type Elaborated } from "../../__tests__/module";
 import { mkCtx, parseExpr, runEB, runNF, shown } from "./util";
 
-const elaborated = (source: string): Elaborated => {
+const elaborated = (source: string, name = "result"): Elaborated => {
 	const module = elaborateModule(source);
 	expect(module.declarations.map(d => d.error)).toEqual(module.declarations.map(() => undefined));
-	const result = declaration(module, "result");
+	const result = declaration(module, name);
 	if (!result?.elaborated) {
-		throw new Error("Expected result declaration");
+		throw new Error("Expected elaborated declaration");
 	}
 	return result.elaborated;
 };
 const bare = (term: EB.Term): EB.Term => (isMatching({ type: "Ann" }, term) ? bare(term.term) : term);
+const explicit = (term: EB.Term): EB.Term => {
+	const tm = bare(term);
+	return isMatching({ type: "Abs", binding: { icit: "Implicit" } }, tm) ? explicit(tm.body) : tm;
+};
 const block = (term: EB.Term) => {
 	const tm = bare(term);
 	if (!isMatching({ type: "Block" }, tm)) {
-		throw new Error("Expected hidden identity binding");
+		throw new Error("Expected named identity binding");
+	}
+	return tm;
+};
+const reset = (term: EB.Term) => {
+	const tm = explicit(term);
+	if (!isMatching({ type: "Reset" }, tm)) {
+		throw new Error("Expected reset");
 	}
 	return tm;
 };
@@ -29,23 +42,14 @@ const atom = (value: string) => ({ type: "Lit", value: { type: "Atom", value } }
 const quoted = ({ ty, ctx, registry }: Elaborated) => runNF(ctx, () => NF.quote(0, ty), registry);
 
 describe("Inference: raw reset", () => {
-	it("allocates a hidden identity and installs a polymorphic application handler", () => {
+	it("installs a polymorphic application handler for the shared unnamed effect", () => {
 		const result = elaborated("let result = reset 10;");
-		const tm = block(result.tm);
+		const tm = reset(result.tm);
 		expect(quoted(result)).toMatchObject(atom("Num"));
-		expect(tm.statements).toHaveLength(1);
-		expect(tm.statements[0]).toMatchObject({
-			type: "Let",
-			variable: "$identity",
-			value: {
-				type: "Identity",
-				annotation: { type: "Abs", binding: { type: "Pi", icit: "Implicit", annotation: atom("Type") } },
-			},
-		});
-		expect(tm.return).toMatchObject({
+		expect(tm).toMatchObject({
 			type: "Reset",
 			handling: {
-				identity: { type: "Var", variable: { type: "Bound", index: 0 } },
+				identity: { type: "Ann", term: atom("$anonymous"), ann: { type: "Abs", binding: { type: "Pi", icit: "Implicit", annotation: atom("Type") } } },
 				handler: {
 					type: "Abs",
 					binding: { icit: "Implicit" },
@@ -69,8 +73,8 @@ describe("Inference: raw reset", () => {
 	it("keeps the body answer distinct from the handled answer", () => {
 		const result = elaborated('let result: String = reset ((capture (\\k -> "hello")) : Num);');
 		expect(quoted(result)).toMatchObject(atom("String"));
-		const tm = block(result.tm);
-		expect(tm.return).toMatchObject({
+		const tm = reset(result.tm);
+		expect(tm).toMatchObject({
 			type: "Reset",
 			term: {
 				type: "Capture",
@@ -91,7 +95,7 @@ describe("Inference: raw reset", () => {
 
 	it("chooses the result type separately at each capture", () => {
 		const result = elaborated("let result: Num = reset (match (capture (\\k -> k true)) | true -> (capture (\\k -> k 1)) | false -> 2);");
-		expect(block(result.tm).return).toMatchObject({
+		expect(reset(result.tm)).toMatchObject({
 			type: "Reset",
 			term: {
 				type: "Match",
@@ -101,32 +105,26 @@ describe("Inference: raw reset", () => {
 		});
 	});
 
-	it("binds nested anonymous captures to the nearest reset", () => {
+	it("preserves the shared marker through nested anonymous resets", () => {
 		const result = elaborated("let result: Num = reset (reset (capture (\\k -> k 1)));");
-		const outer = block(result.tm);
-		if (!isMatching({ type: "Reset" }, outer.return)) {
-			throw new Error("Expected outer reset");
-		}
-		expect(block(outer.return.term).return).toMatchObject({
+		const outer = reset(result.tm);
+		expect(reset(outer.term)).toMatchObject({
 			type: "Reset",
 			term: {
 				type: "Capture",
-				identity: { type: "App", func: { type: "Var", variable: { type: "Bound", index: 0 } }, arg: atom("Num") },
+				identity: { type: "Ann", term: atom("$anonymous"), ann: { type: "App", arg: atom("Num") } },
 			},
 		});
 	});
 
-	it("keeps anonymous capture attached to its reset across an explicit delimiter", () => {
+	it("preserves anonymous capture through a named delimiter", () => {
 		const result = elaborated("foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset (reset [E] (capture (\\k -> k 1)));");
-		const outer = block(result.tm);
-		if (!isMatching({ type: "Reset" }, outer.return)) {
-			throw new Error("Expected outer reset");
-		}
-		expect(block(outer.return.term).return).toMatchObject({
+		const outer = reset(result.tm);
+		expect(block(outer.term).return).toMatchObject({
 			type: "Reset",
 			term: {
 				type: "Capture",
-				identity: { type: "App", func: { type: "Var", variable: { type: "Bound", index: 1 } } },
+				identity: { type: "Ann", term: atom("$anonymous") },
 			},
 		});
 	});
@@ -149,15 +147,14 @@ describe("Inference: raw reset", () => {
 		);
 	});
 
-	it.each([
-		'let result = reset (\\(u: Unit) -> capture (\\k -> "hello"));',
-		'let result: Unit -> Num = reset (\\u -> capture (\\k -> "hello"));',
-		'let result: (a: Type) => Unit -> Num = reset (\\u -> capture (\\k -> "hello"));',
-	])("keeps closure creation on the ordinary return path: %s", source => {
-		expect(declaration(elaborateModule(source), "result")?.error).toBeDefined();
-	});
+	it.each(['let result = reset (\\(u: Unit) -> capture (\\k -> "hello"));', 'let result: Unit -> Num = reset (\\u -> capture (\\k -> "hello"));'])(
+		"keeps closure creation on the ordinary return path: %s",
+		source => {
+			expect(elaborated(source).tm).toBeDefined();
+		},
+	);
 
-	it("preserves outer dependent references through the hidden binding", () => {
+	it("preserves outer dependent references in anonymous operations", () => {
 		const result = elaborated("let result = \\(a: Type) (x: a) -> reset (capture (\\k -> k x));");
 		const first = bare(result.tm);
 		if (!isMatching({ type: "Abs" }, first)) {
@@ -167,15 +164,15 @@ describe("Inference: raw reset", () => {
 		if (!isMatching({ type: "Abs" }, second)) {
 			throw new Error("Expected value parameter");
 		}
-		expect(block(second.body).return).toMatchObject({
+		expect(reset(second.body)).toMatchObject({
 			type: "Reset",
 			term: {
 				type: "Capture",
 				annotation: {
 					type: "Var",
-					variable: { type: "Bound", index: 2 },
+					variable: { type: "Bound", index: 1 },
 				},
-				payload: { type: "Abs", body: { type: "App", arg: { type: "Var", variable: { type: "Bound", index: 2 } } } },
+				payload: { type: "Abs", body: { type: "App", arg: { type: "Var", variable: { type: "Bound", index: 1 } } } },
 			},
 		});
 	});
@@ -193,19 +190,19 @@ describe("Inference: raw reset", () => {
 				throw new Error("Expected compatible continuation calls");
 			}
 			expect(answer[1]).toMatchObject(atom("Num"));
-			expect(block(answer[0]).return.type).toBe("Reset");
+			expect(reset(answer[0]).type).toBe("Reset");
 		},
 	);
 
-	it("translates legacy shift through the hidden identity", () => {
+	it("translates legacy shift through the shared unnamed effect", () => {
 		const result = elaborated("let result: Num = reset (shift resume 1);");
-		expect(block(result.tm).return).toMatchObject({
+		expect(reset(result.tm)).toMatchObject({
 			type: "Reset",
 			term: {
 				type: "Bubble",
 				shift: {
 					type: "Capture",
-					identity: { type: "App", icit: "Implicit" },
+					identity: { type: "Ann", term: atom("$anonymous") },
 					annotation: atom("Num"),
 					payload: { type: "Abs" },
 				},
@@ -216,7 +213,7 @@ describe("Inference: raw reset", () => {
 	it.each([
 		"foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset [E] (capture [E] (\\k -> k 2));",
 		"foreign E: (r: Type) => Effect ((r -> Num) -> Num) r; let result: Num = reset [E] 1;",
-	])("checks the application handler against an explicit carrier: %s", source => {
+	])("checks the application handler against an explicit effect type: %s", source => {
 		const result = elaborated(source);
 		expect(block(result.tm).statements[0].value).toMatchObject({ type: "Var", variable: { type: "Foreign", name: "E" } });
 		expect(quoted(result)).toMatchObject(atom("Num"));
@@ -239,14 +236,16 @@ describe("Inference: raw reset", () => {
 	it.fails("keeps inferred repeated-resumption refinements closed", () => {
 		const result = elaborated("let result = reset (capture (\\k -> (k 10) + (k 20)));");
 		const type = quoted(result);
-		if (isMatching({ type: "Modal" }, type)) {
-			EB.traverse(type.modalities.liquid, term => {
-				if (isMatching({ type: "Bound" }, term.variable)) {
-					expect(term.variable.index).toBeGreaterThanOrEqual(0);
-				}
-				return term;
-			});
+		if (!isMatching({ type: "Modal" }, type)) {
+			return;
 		}
+		EB.traverse(type.modalities.liquid, term => {
+			if (!isMatching({ type: "Bound" }, term.variable)) {
+				return term;
+			}
+			expect(term.variable.index).toBeGreaterThanOrEqual(0);
+			return term;
+		});
 	});
 
 	it("preserves a fixed answer through public legacy multishot replay", () => {
@@ -254,13 +253,95 @@ describe("Inference: raw reset", () => {
 		expect(quoted(result)).toMatchObject(atom("Num"));
 	});
 
-	it("requires a lexical anonymous reset", () => {
-		expect(() => elaborateModule("let result = capture (\\k -> k 1);")).toThrow("capture without an enclosing reset");
+	it("elaborates standalone anonymous operations", () => {
+		const result = elaborated("let result: Num = capture (\\k -> (k 1 : Num));");
+		expect(bare(result.tm)).toMatchObject({ type: "Capture", identity: { type: "Ann", term: atom("$anonymous") }, annotation: atom("Num") });
 	});
 
-	it("retains fresh allocation for evaluation", () => {
+	it("keeps anonymous operations in separately defined functions", () => {
+		const source = "let f = \\x -> capture (\\k -> k (x + 1)); let result: Num = reset (f 1);";
+		const fn = explicit(elaborated(source, "f").tm);
+		expect(fn).toMatchObject({
+			type: "Abs",
+			binding: { type: "Lambda", icit: "Explicit", annotation: atom("Num") },
+			body: { type: "Capture", identity: { type: "Ann", term: atom("$anonymous") } },
+		});
+		const result = elaborated(source);
+		expect(explicit(quoted(result))).toMatchObject(atom("Num"));
+		expect(reset(result.tm).term).toMatchObject({ type: "App", func: { type: "App", func: { type: "Var", variable: { type: "Free", name: "f" } } } });
+	});
+
+	it("returns closures whose anonymous captures remain available at their call sites", () => {
+		const source = "let g = reset (\\u -> capture (\\k -> k 1)); let result: Num = reset (g !);";
+		const closure = elaborated(source, "g");
+		expect(explicit(quoted(closure))).toMatchObject({ type: "Abs", binding: { type: "Pi", icit: "Explicit" }, body: atom("Num") });
+		expect(reset(closure.tm).term).toMatchObject({
+			type: "Ann",
+			term: { type: "Abs", body: { type: "Capture", identity: { type: "Ann", term: atom("$anonymous") } } },
+		});
+		expect(explicit(quoted(elaborated(source)))).toMatchObject(atom("Num"));
+	});
+
+	it("keeps independent type instances on nested anonymous delimiters", () => {
+		const result = elaborated('let result: Bool = reset { (reset ((capture (\\k -> "inner")) : Num) : String); return true; };');
+		const outer = reset(result.tm);
+		expect(outer.handling?.identity).toMatchObject({
+			type: "Ann",
+			term: atom("$anonymous"),
+			ann: { type: "Abs", body: { func: { arg: { body: atom("Bool") } } } },
+		});
+		const inner = block(outer.term).statements[0].value;
+		expect(reset(inner).handling?.identity).toMatchObject({
+			type: "Ann",
+			term: atom("$anonymous"),
+			ann: { type: "Abs", body: { func: { arg: { binding: { annotation: { body: atom("Num") } }, body: atom("String") } } } },
+		});
+	});
+
+	it("preserves named captures across an anonymous delimiter", () => {
+		const result = elaborated("foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset [E] (reset (capture [E] (\\k -> k 1)));");
+		const outer = reset(block(result.tm).return);
+		expect(outer.handling?.identity).toMatchObject({ type: "Var", variable: { type: "Bound", index: 0 } });
+		expect(reset(outer.term).term).toMatchObject({ type: "Capture", identity: { type: "Var", variable: { type: "Foreign", name: "E" } } });
+	});
+
+	it("preserves anonymous captures inside a capture payload", () => {
+		const result = elaborated('let result: String = reset (reset (capture (\\k -> capture (\\outer -> "hello"))));');
+		expect(reset(reset(result.tm).term).term).toMatchObject({
+			type: "Capture",
+			identity: { type: "Ann", term: atom("$anonymous") },
+			payload: { type: "Abs", body: { type: "Capture", identity: { type: "Ann", term: atom("$anonymous") } } },
+		});
+	});
+
+	it("retains incompatible call and handler answers for verification", () => {
+		const source = 'let abort = \\u -> capture (\\k -> "hello"); let result: Num = reset (abort !);';
+		expect(explicit(elaborated(source, "abort").tm)).toMatchObject({
+			type: "Abs",
+			body: { type: "Capture", identity: { type: "Ann", term: atom("$anonymous"), ann: { func: { arg: { body: atom("String") } } } } },
+		});
+		const { tm, ty, ctx, registry } = elaborated(source);
+		expect(reset(tm).handling?.identity).toMatchObject({ type: "Ann", term: atom("$anonymous"), ann: { body: { func: { arg: { body: atom("Num") } } } } });
+		expect(() => VerificationServiceV2().letdec("result", tm, ty, ctx, registry)).toThrow("Handler-bearing reset verification is pending");
+	});
+
+	// The verifier must check each anonymous operation against the delimiter selected at its call.
+	it.fails.each([
+		'let abort = \\u -> capture (\\k -> "hello"); let result: Num = reset (abort !);',
+		'let f: Unit -> Num = \\u -> capture (\\k -> 1 + (k 0)); let result: String = reset { f !; return "ok"; };',
+	])("rejects incompatible anonymous answer types during verification: %s", source => {
+		const { tm, ty, ctx, registry } = elaborated(source);
+		const { answer } = VerificationServiceV2().letdec("result", tm, ty, ctx, registry);
+		expect(Eff.failed(answer) || Validity.check(answer.vc).tag === "invalid").toBe(true);
+	});
+
+	it("retains operation calls used as arithmetic arguments for suspended evaluation", () => {
+		expect(() => elaborateModule("let f = \\x -> capture (\\k -> k (x + 1)); let result: Num = reset (10 + (f 1));")).toThrow("Capture evaluation is pending");
+	});
+
+	it("retains the installed handler for evaluation", () => {
 		const result = elaborated("let result = reset 10;");
-		expect(() => runNF(result.ctx, () => NF.evaluate(result.tm), result.registry)).toThrow("Fresh identity evaluation is pending");
+		expect(() => runNF(result.ctx, () => NF.evaluate(result.tm), result.registry)).toThrow("Handler-bearing reset evaluation is pending");
 	});
 
 	it("retains captured application arguments for suspended evaluation", () => {

@@ -25,12 +25,12 @@ export function* check(node: With, answer: NF.Value): M.Elaboration<[EB.Term, Q.
 	const [clause] = node.handlers;
 	const ctx = yield* M.reader.ask();
 	const lvl = ctx.env.length;
-	const carrier = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
+	const effectType = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
 	const [identity, type, identityUsages] = yield* M.reader.local(
-		c => EB.bind(c, { type: "Let", variable: "$identity" }, carrier, "inserted"),
+		c => EB.bind(c, { type: "Let", variable: "$identity" }, effectType, "inserted"),
 		EB.infer(clause.identity),
 	);
-	yield* M.constrain({ type: "assign", left: carrier, right: type, lvl });
+	yield* M.constrain({ type: "assign", left: effectType, right: type, lvl });
 	return yield* install(node, answer, [identity, type, identityUsages]);
 }
 
@@ -76,8 +76,8 @@ function* install(node: With, answer: NF.Value, [identity, type, identityUsages]
 	];
 }
 
-function* handler(carrier: NF.Value, answer: NF.Value): M.Elaboration<NF.Value> {
-	const viewed = yield* NF.view(carrier);
+function* handler(effectType: NF.Value, answer: NF.Value): M.Elaboration<NF.Value> {
+	const viewed = yield* NF.view(effectType);
 	if (isMatching(NF.View.Sealed(NF.Patterns.ImplicitPi), viewed)) {
 		const { value: pi } = viewed;
 		const ctx = yield* M.reader.ask();
@@ -90,18 +90,18 @@ function* handler(carrier: NF.Value, answer: NF.Value): M.Elaboration<NF.Value> 
 		);
 		return NF.Constructors.Pi(pi.binder.variable, "Implicit", pi.binder.annotation, yield* NF.closeVal(body));
 	}
-	const [payload, result] = yield* signature(carrier);
+	const [payload, result] = yield* signature(effectType);
 	return yield* arrow(payload, yield* arrow(yield* arrow(result, answer), answer));
 }
 
 function* deep(
-	carrier: NF.Value,
+	effectType: NF.Value,
 	answer: NF.Value,
 	references: { identity: NF.Value; user: NF.Value; installed: NF.Value },
 	parameters: NF.Value[],
 ): M.Elaboration<EB.Term> {
 	const ctx = yield* M.reader.ask();
-	const viewed = yield* NF.view(carrier);
+	const viewed = yield* NF.view(effectType);
 	if (isMatching(NF.View.Sealed(NF.Patterns.ImplicitPi), viewed)) {
 		const { value: pi } = viewed;
 		const scope = EB.bind(ctx, { type: "Lambda", variable: pi.binder.variable }, pi.binder.annotation, "inserted");
@@ -115,7 +115,7 @@ function* deep(
 		return EB.Constructors.Lambda(pi.binder.variable, "Implicit", body, yield* NF.quote(ctx.env.length, pi.binder.annotation));
 	}
 
-	const [payload, result] = yield* signature(carrier);
+	const [payload, result] = yield* signature(effectType);
 	const continuation = yield* arrow(result, answer);
 	const payloadScope = EB.bind(ctx, { type: "Lambda", variable: "$payload" }, payload, "inserted");
 	const continuationScope = EB.bind(payloadScope, { type: "Lambda", variable: "$k" }, continuation, "inserted");
@@ -138,28 +138,36 @@ function* arrow(from: NF.Value, to: NF.Value): M.Elaboration<NF.Value> {
 
 export const capture = (node: Extract<Src.Term, { type: "capture" }>): M.Elaboration<EB.AST> =>
 	M.tracer.track({ tag: "src", type: "term", term: node, metadata: { action: "infer", description: "Capture" } }, function* () {
-		const [identity, carrier, identityUsages] = yield* EB.Icit.insert(node.identity ? yield* EB.infer(node.identity) : yield* anonymous());
-		const [payload, result] = yield* signature(carrier);
+		const [ast] = node.identity ? [yield* EB.infer(node.identity)] : yield* anonymous();
+		const [identity, effectType, identityUsages] = yield* EB.Icit.insert(ast);
+		const [payload, result] = yield* signature(effectType);
 		const [value, usages] = yield* EB.check(node.term, payload);
 		const annotation = yield* NF.quote((yield* M.reader.ask()).env.length, result);
 
 		return [EB.Constructors.Capture(identity, value, annotation), result, Q.add(identityUsages, usages)] satisfies EB.AST;
 	});
 
-function* anonymous(): M.Elaboration<EB.AST> {
+export function* anonymous(): M.Elaboration<[EB.AST, M.Delimitation["answer"]]> {
+	const ctx = yield* M.reader.ask();
 	const {
 		delimitations: [delimiter, ...outer],
 	} = yield* M.st.get();
-	if (!delimiter) {
-		throw new Error("capture without an enclosing reset");
+	const answer = delimiter?.answer ?? {
+		initial: NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)),
+		final: NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)),
+	};
+	if (delimiter) {
+		yield* M.st.modify(s => ({ ...s, delimitations: [{ ...delimiter, capturesOnEveryPath: true }, ...outer] }));
 	}
-	yield* M.st.modify(s => ({ ...s, delimitations: [{ ...delimiter, shifted: true }, ...outer] }));
-	const ctx = yield* M.reader.ask();
-	return [yield* NF.quote(ctx.env.length, delimiter.identity), delimiter.carrier, []];
+	const result = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
+	const payload = yield* arrow(yield* arrow(result, answer.initial), answer.final);
+	const effectType = NF.Constructors.App(NF.Constructors.App(NF.Constructors.Atom("Effect"), payload, "Explicit"), result, "Explicit");
+	const identity = EB.Constructors.Ann(EB.Anonymous, yield* NF.quote(ctx.env.length, effectType));
+	return [[identity, effectType, []], answer];
 }
 
-export function* signature(carrier: NF.Value): M.Elaboration<[NF.Value, NF.Value]> {
-	const { value } = yield* NF.view(carrier);
+export function* signature(effectType: NF.Value): M.Elaboration<[NF.Value, NF.Value]> {
+	const { value } = yield* NF.view(effectType);
 	return yield* match(value)
 		.with(NF.Patterns.Effect, function* ({ func, arg }) {
 			return [func.arg, arg] satisfies [NF.Value, NF.Value];
@@ -169,7 +177,7 @@ export function* signature(carrier: NF.Value): M.Elaboration<[NF.Value, NF.Value
 			const payload = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
 			const result = NF.Constructors.Var(yield* EB.freshMeta(lvl, NF.Type));
 			const effect = NF.Constructors.App(NF.Constructors.App(NF.Constructors.Atom("Effect"), payload, "Explicit"), result, "Explicit");
-			yield* M.constrain({ type: "assign", left: carrier, right: effect, lvl });
+			yield* M.constrain({ type: "assign", left: effectType, right: effect, lvl });
 			return [payload, result] satisfies [NF.Value, NF.Value];
 		});
 }

@@ -71,9 +71,7 @@ export type MutState = {
 };
 
 export type Delimitation = {
-	identity: EB.NF.Value;
-	carrier: EB.NF.Value;
 	answer: { initial: EB.NF.Value; final: EB.NF.Value };
 	/** Every normal evaluation path includes a capture of this delimiter. */
-	shifted: boolean;
+	capturesOnEveryPath: boolean;
 };

@@ -179,11 +179,8 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 				},
 			);
 		})
-		.with({ type: "Bubble" }, function* ({ meta, ann, values, shift }) {
+		.with(EB.CtorPatterns.Bubble, function* ({ meta, ann, values, shift }) {
 			return EB.Constructors.Bubble(meta, ann, values, yield* instantiate(shift, resolutions));
-		})
-		.with({ type: "Identity" }, function* ({ annotation }) {
-			return EB.Constructors.Identity(yield* instantiate(annotation, resolutions));
 		})
 		.with({ type: "Capture" }, function* ({ identity, payload, annotation }) {
 			return EB.Constructors.Capture(

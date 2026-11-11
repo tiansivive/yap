@@ -1,5 +1,5 @@
 /*
- * Anonymous resets bind a fresh identity whose captures may change the answer type.
+ * Anonymous resets handle the shared unnamed effect with their own answer types.
  * The application handler passes the bare continuation to each capture's payload.
  * https://github.com/tiansivive/z-yap/blob/main/zettels/effect-identities.design.md#raw-delimiters
  */
@@ -25,17 +25,17 @@ export function* check(node: Reset, final: NF.Value): M.Elaboration<[EB.Term, Q.
 	const ctx = yield* M.reader.ask();
 	if (node.identity) {
 		const expected = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
-		const [identity, carrier, identityUsages] = yield* M.reader.local(
+		const [identity, effectType, identityUsages] = yield* M.reader.local(
 			c => EB.bind(c, { type: "Let", variable: "$identity" }, expected, "inserted"),
 			EB.infer(node.identity),
 		);
-		yield* M.constrain({ type: "assign", left: expected, right: carrier, lvl: ctx.env.length });
-		const scope = EB.bind(ctx, { type: "Let", variable: "$identity" }, carrier, "inserted");
-		const handler = yield* M.reader.local(() => scope, application(carrier, final, final));
+		yield* M.constrain({ type: "assign", left: expected, right: effectType, lvl: ctx.env.length });
+		const scope = EB.bind(ctx, { type: "Let", variable: "$identity" }, effectType, "inserted");
+		const handler = yield* M.reader.local(() => scope, application(effectType, final, final));
 		const [body, usages] = yield* M.reader.local(() => scope, EB.check(node.term, final));
 		return [
 			EB.Constructors.Block(
-				[EB.Constructors.Stmt.Let("$identity", identity, carrier)],
+				[EB.Constructors.Stmt.Let("$identity", identity, effectType)],
 				EB.Constructors.Reset(body, {
 					identity: yield* NF.quote(scope.env.length, scope.env[0].nf),
 					handler,
@@ -45,33 +45,23 @@ export function* check(node: Reset, final: NF.Value): M.Elaboration<[EB.Term, Q.
 		];
 	}
 	const initial = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
-	const type = yield* carrier(initial, final);
-	const scope = EB.bind(ctx, { type: "Let", variable: "$identity" }, type, "inserted");
-	const delimiter: M.Delimitation = { identity: scope.env[0].nf, carrier: type, answer: { initial, final }, shifted: false };
+	const type = yield* effectType(initial, final);
+	const delimiter: M.Delimitation = { answer: { initial, final }, capturesOnEveryPath: false };
 	yield* M.st.modify(update("delimitations", ds => [delimiter, ...ds]));
-	const [body, usages] = yield* M.reader.local(() => scope, EB.check(node.term, initial));
+	const [body, usages] = yield* EB.check(node.term, initial);
 	const {
-		delimitations: [{ shifted }],
+		delimitations: [{ capturesOnEveryPath }],
 	} = yield* M.st.get();
-	if (!shifted) {
+	if (!capturesOnEveryPath) {
 		yield* M.constrain({ type: "assign", left: initial, right: final, lvl: ctx.env.length });
 	}
 	yield* M.st.modify(update("delimitations", ([_d, ...ds]) => ds));
-	const handler = yield* M.reader.local(() => scope, application(type, initial, final));
-	const identity = EB.Constructors.Identity(yield* NF.quote(scope.env.length, type));
-	return [
-		EB.Constructors.Block(
-			[EB.Constructors.Stmt.Let("$identity", identity, type)],
-			EB.Constructors.Reset(body, {
-				identity: yield* NF.quote(scope.env.length, delimiter.identity),
-				handler,
-			}),
-		),
-		usages.slice(scope.env.length - ctx.env.length),
-	];
+	const handler = yield* application(type, initial, final);
+	const identity = EB.Constructors.Ann(EB.Anonymous, yield* NF.quote(ctx.env.length, type));
+	return [EB.Constructors.Reset(body, { identity, handler }), usages];
 }
 
-function* carrier(initial: NF.Value, final: NF.Value): M.Elaboration<NF.Value> {
+function* effectType(initial: NF.Value, final: NF.Value): M.Elaboration<NF.Value> {
 	const ctx = yield* M.reader.ask();
 	const scope = EB.bind(ctx, { type: "Pi", variable: "r" }, NF.Type, "inserted");
 	const body = yield* M.reader.local(
@@ -85,9 +75,9 @@ function* carrier(initial: NF.Value, final: NF.Value): M.Elaboration<NF.Value> {
 	return NF.Constructors.Pi("r", "Implicit", NF.Type, yield* NF.closeVal(body));
 }
 
-function* application(carrier: NF.Value, initial: NF.Value, final: NF.Value): M.Elaboration<EB.Term> {
+function* application(effectType: NF.Value, initial: NF.Value, final: NF.Value): M.Elaboration<EB.Term> {
 	const ctx = yield* M.reader.ask();
-	const viewed = yield* NF.view(carrier);
+	const viewed = yield* NF.view(effectType);
 	if (isMatching(NF.View.Sealed(NF.Patterns.ImplicitPi), viewed)) {
 		const { value: pi } = viewed;
 		const scope = EB.bind(ctx, { type: "Lambda", variable: pi.binder.variable }, pi.binder.annotation, "inserted");
@@ -99,7 +89,7 @@ function* application(carrier: NF.Value, initial: NF.Value, final: NF.Value): M.
 		);
 		return EB.Constructors.Lambda(pi.binder.variable, "Implicit", body, yield* NF.quote(ctx.env.length, pi.binder.annotation));
 	}
-	const [payload, result] = yield* EB.Control.signature(carrier);
+	const [payload, result] = yield* EB.Control.signature(effectType);
 	const continuation = yield* arrow(result, initial);
 	yield* M.constrain({ type: "assign", left: payload, right: yield* arrow(continuation, final), lvl: ctx.env.length });
 	const payloadScope = EB.bind(ctx, { type: "Lambda", variable: "$payload" }, payload, "inserted");

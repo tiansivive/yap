@@ -7,7 +7,7 @@ describe("Inference: Shift/Reset", () => {
 			const src = "reset 10";
 			const { displays, structure } = elaborateFrom(src);
 
-			expect(structure.term).toMatchObject({ type: "Block", return: { type: "Reset" } });
+			expect(structure.term).toMatchObject({ type: "Reset" });
 			expect(displays.term).toContain("|10|");
 			expect(displays.term).not.toContain("bubble#");
 			expect(displays.constraints).toEqual(expect.arrayContaining([expect.stringMatching(/^Num ~~ \?\d+$/)]));
@@ -17,7 +17,7 @@ describe("Inference: Shift/Reset", () => {
 			const src = 'reset (shift "world")';
 			const { displays, structure } = elaborateFrom(src);
 
-			expect(structure.term).toMatchObject({ type: "Block", return: { type: "Reset" } });
+			expect(structure.term).toMatchObject({ type: "Reset" });
 			expect(displays.term).toContain("bubble#");
 			expect(displays.term).toContain("capture");
 			expect(displays.term).toContain('"world"');
@@ -27,17 +27,19 @@ describe("Inference: Shift/Reset", () => {
 	});
 
 	describe("Shift", () => {
-		it("should error without enclosing reset", () => {
-			const src = "shift 5";
-
-			expect(() => elaborateFrom(src)).toThrow("shift without enclosing reset");
+		it("should elaborate standalone shift through the shared unnamed effect", () => {
+			const { structure } = elaborateFrom("shift 5");
+			expect(structure.term).toMatchObject({
+				type: "Bubble",
+				shift: { type: "Capture", identity: { type: "Ann", term: { type: "Lit", value: { type: "Atom", value: "$anonymous" } } } },
+			});
 		});
 
 		it("should infer type within reset", () => {
 			const src = 'reset (shift (resume "hello"))';
 			const { displays, structure } = elaborateFrom(src);
 
-			expect(structure.term).toMatchObject({ type: "Block", return: { type: "Reset" } });
+			expect(structure.term).toMatchObject({ type: "Reset" });
 			expect(displays.term).toContain("bubble#");
 			expect(displays.term).toContain("capture");
 			expect(displays.term).toContain('$k "hello"');
@@ -50,7 +52,7 @@ describe("Inference: Shift/Reset", () => {
 			const src = 'reset (1 + (shift "hello"))';
 			const { displays, structure } = elaborateFrom(src);
 
-			expect(structure.term).toMatchObject({ type: "Block", return: { type: "Reset" } });
+			expect(structure.term).toMatchObject({ type: "Reset" });
 			expect(displays.term).toContain("FFI.$add");
 			expect(displays.term).toContain("bubble#");
 			expect(displays.term).toContain('"hello"');
@@ -63,7 +65,7 @@ describe("Inference: Shift/Reset", () => {
 			const src = "reset (shift ((resume 1) + (resume 2)))";
 			const { displays, structure } = elaborateFrom(src);
 
-			expect(structure.term).toMatchObject({ type: "Block", return: { type: "Reset" } });
+			expect(structure.term).toMatchObject({ type: "Reset" });
 			expect(displays.term.match(/bubble#/g)).toHaveLength(1);
 			expect(displays.term).toContain("FFI.$add");
 			expect(displays.term).toContain("$k 1");
@@ -75,7 +77,7 @@ describe("Inference: Shift/Reset", () => {
 			const src = "reset ((shift resume 10) + (shift resume 20))";
 			const { displays, structure } = elaborateFrom(src);
 
-			expect(structure.term).toMatchObject({ type: "Block", return: { type: "Reset" } });
+			expect(structure.term).toMatchObject({ type: "Reset" });
 			expect(displays.term.match(/bubble#/g)).toHaveLength(2);
 			expect(displays.term).toContain("FFI.$add");
 			expect(displays.term).toContain("$k 10");
@@ -86,7 +88,7 @@ describe("Inference: Shift/Reset", () => {
 			const src = "reset (1 + (shift resume true))";
 			const { displays, structure } = elaborateFrom(src);
 
-			expect(structure.term).toMatchObject({ type: "Block", return: { type: "Reset" } });
+			expect(structure.term).toMatchObject({ type: "Reset" });
 			expect(displays.term).toContain("bubble#");
 			expect(displays.term).toContain("$k true");
 			expect(displays.constraints).toEqual(expect.arrayContaining([expect.stringMatching(/^Bool ~~ \?\d+$/)]));

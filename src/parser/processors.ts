@@ -433,11 +433,21 @@ export const AnonymousCapture: PostProcessor<[Keyword, Whitespace, Term], Term> 
 	location: locSpan({ from: loc(tok) }, term.location),
 });
 
-export const NamedReset: PostProcessor<[Keyword, Whitespace, unknown, unknown, Term, unknown, unknown, Whitespace, Term], Term> = data => ({
+export const NamedReset: PostProcessor<[Keyword, Whitespace, unknown, unknown, Term, unknown, unknown, Whitespace, Term], Term> = ([
+	tok,
+	,
+	,
+	,
+	identity,
+	,
+	,
+	,
+	term,
+]) => ({
 	type: "reset",
-	identity: data[4],
-	term: data[8],
-	location: locSpan({ from: loc(data[0]) }, data[8].location),
+	identity,
+	term,
+	location: locSpan({ from: loc(tok) }, term.location),
 });
 
 export const Reset: PostProcessor<[Keyword, Whitespace, Term], Term> = ([tok, , term]) => {

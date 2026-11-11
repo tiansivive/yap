@@ -1,26 +1,17 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Inference: raw reset > allocates a hidden identity and installs a polymorphic application handler 1`] = `
-"{
-  let $identity
-    : Π(r: Type) =>
-      (closure: Effect (Π(x: Π(x: r) -> Num) -> Num) r -| Γ: r; result)
-    = identity [Π(r: Type) => Effect (Π(x: Π(x: r) -> Num) -> Num) r];
-  return reset [$identity] λ(r: Type) =>
-    λ($payload: Π(x: Π(x: r) -> Num) -> Num) ->
-      λ($k: Π(x: r) -> Num) -> $payload $k |10|;
-}"
+exports[`Inference: raw reset > installs a polymorphic application handler for the shared unnamed effect 1`] = `
+"reset [($anonymous : Π(r: Type) =>
+  Effect (Π(x: Π(x: r) -> Num) -> Num) r)] λ(r: Type) =>
+  λ($payload: Π(x: Π(x: r) -> Num) -> Num) ->
+    λ($k: Π(x: r) -> Num) -> $payload $k |10|"
 `;
 
 exports[`Inference: raw reset > keeps the body answer distinct from the handled answer 1`] = `
-"{
-  let $identity
-    : Π(r: Type) =>
-      (closure: Effect (Π(x: Π(x: r) -> Num) -> String) r -| Γ: r; result)
-    = identity [Π(r: Type) => Effect (Π(x: Π(x: r) -> Num) -> String) r];
-  return reset [$identity] λ(r: Type) =>
-    λ($payload: Π(x: Π(x: r) -> Num) -> String) ->
-      λ($k: Π(x: r) -> Num) -> $payload $k |capture [$identity
-    @Num] λ(k: Π(x: Num) -> Num) -> "hello"|;
-}"
+"reset [($anonymous : Π(r: Type) =>
+  Effect (Π(x: Π(x: r) -> Num) -> String) r)] λ(r: Type) =>
+  λ($payload: Π(x: Π(x: r) -> Num) -> String) ->
+    λ($k: Π(x: r) -> Num) -> $payload $k |capture [($anonymous : Effect
+  (Π(x: Π(x: Num) -> Num) -> String)
+  Num)] λ(k: Π(x: Num) -> Num) -> "hello"|"
 `;

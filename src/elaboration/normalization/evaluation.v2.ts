@@ -393,9 +393,6 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		.with({ type: "Capture" }, function* () {
 			throw new Error("Capture evaluation is pending");
 		})
-		.with({ type: "Identity" }, function* () {
-			throw new Error("Fresh identity evaluation is pending");
-		})
 		.with({ type: "Reset", handling: P.nonNullable }, function* () {
 			throw new Error("Handler-bearing reset evaluation is pending");
 		})
