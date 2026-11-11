@@ -1,3 +1,4 @@
+import * as O from "fp-ts/lib/Option";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import * as NF from "@yap/elaboration/normalization";
@@ -25,7 +26,9 @@ export const infer = (shift: Shift): M.Elaboration<EB.AST> =>
 		const kBinder = "$k";
 		const kTy = NF.Constructors.Pi(kBinder, "Explicit", A, yield* NF.closeVal(answer.initial));
 
-		const [ktm, us] = yield* EB.Inference.Lambda.body(
+		const [ktm, us] = yield* M.st.local(
+			"delimiter",
+			O.none,
 			M.reader.local(ctx => EB.bind(ctx, { type: "Continuation", variable: kBinder, resumption: { meta: skolem } }, kTy), EB.check(shift.term, answer.final)),
 		);
 

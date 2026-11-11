@@ -15,7 +15,7 @@ import * as Recursion from "./recursion";
 import { handlers } from "./machine/handlers";
 import { Mode, defaultMode, type EvalMode, type Evaluation } from "./effects";
 import type { Closure, Unfolding, Value } from "./syntax/term";
-import { Patterns } from "./syntax/term";
+import { Constructors, Patterns } from "./syntax/term";
 
 /*
  * The consumer-facing surface. Each entry installs a fresh machine via
@@ -55,6 +55,10 @@ export function* quote(lvl: number, val: Value, opts?: { unfold?: Unfolding }) {
 
 export function* closeVal(value: Value, opts?: Machine.EvalOptions) {
 	return yield* fresh(() => Machine.drive(Quoting.closeVal(value), steps => `Quotation exceeded maximum steps (${steps}).`), defaultMode, opts?.maxSteps);
+}
+
+export function* arrow(from: Value, to: Value): Eff.Eff<Eff.Actions<typeof M.reader> | Eff.Only<typeof Metas.registry, "Registry.get">, Value> {
+	return Constructors.Pi("x", "Explicit", from, yield* closeVal(to));
 }
 
 export function* force(value: Value) {

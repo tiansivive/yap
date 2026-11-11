@@ -1,3 +1,4 @@
+import * as O from "fp-ts/lib/Option";
 import * as Eff from "@yap/utils/effects";
 
 import * as P from "@yap/elaboration/shared/provenance";
@@ -62,7 +63,7 @@ export const fail = function* (cause: Cause) {
 };
 
 export type MutState = {
-	delimitations: Array<Delimitation>;
+	delimiter: O.Option<Delimitation>;
 	nondeterminism: {
 		solution: Record<number, EB.NF.Value[]>;
 	};

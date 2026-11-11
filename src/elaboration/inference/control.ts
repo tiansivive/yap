@@ -3,6 +3,7 @@
  * Elaborating source expressions in their final generated scopes preserves outer references.
  * https://github.com/tiansivive/z-yap/blob/main/zettels/effect-identities.design.md
  */
+import * as O from "fp-ts/lib/Option";
 import { isMatching, match } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
@@ -91,7 +92,7 @@ function* handler(effectType: NF.Value, answer: NF.Value): M.Elaboration<NF.Valu
 		return NF.Constructors.Pi(pi.binder.variable, "Implicit", pi.binder.annotation, yield* NF.closeVal(body));
 	}
 	const [payload, result] = yield* signature(effectType);
-	return yield* arrow(payload, yield* arrow(yield* arrow(result, answer), answer));
+	return yield* NF.arrow(payload, yield* NF.arrow(yield* NF.arrow(result, answer), answer));
 }
 
 function* deep(
@@ -116,7 +117,7 @@ function* deep(
 	}
 
 	const [payload, result] = yield* signature(effectType);
-	const continuation = yield* arrow(result, answer);
+	const continuation = yield* NF.arrow(result, answer);
 	const payloadScope = EB.bind(ctx, { type: "Lambda", variable: "$payload" }, payload, "inserted");
 	const continuationScope = EB.bind(payloadScope, { type: "Lambda", variable: "$k" }, continuation, "inserted");
 	const valueScope = EB.bind(continuationScope, { type: "Lambda", variable: "$value" }, result, "inserted");
@@ -132,10 +133,6 @@ function* deep(
 	return EB.Constructors.Lambda("$payload", "Explicit", body, yield* NF.quote(ctx.env.length, payload));
 }
 
-function* arrow(from: NF.Value, to: NF.Value): M.Elaboration<NF.Value> {
-	return NF.Constructors.Pi("x", "Explicit", from, yield* NF.closeVal(to));
-}
-
 export const capture = (node: Extract<Src.Term, { type: "capture" }>): M.Elaboration<EB.AST> =>
 	M.tracer.track({ tag: "src", type: "term", term: node, metadata: { action: "infer", description: "Capture" } }, function* () {
 		const [ast] = node.identity ? [yield* EB.infer(node.identity)] : yield* anonymous();
@@ -149,18 +146,21 @@ export const capture = (node: Extract<Src.Term, { type: "capture" }>): M.Elabora
 
 export function* anonymous(): M.Elaboration<[EB.AST, M.Delimitation["answer"]]> {
 	const ctx = yield* M.reader.ask();
-	const {
-		delimitations: [delimiter, ...outer],
-	} = yield* M.st.get();
-	const answer = delimiter?.answer ?? {
-		initial: NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)),
-		final: NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)),
-	};
-	if (delimiter) {
-		yield* M.st.modify(s => ({ ...s, delimitations: [{ ...delimiter, capturesOnEveryPath: true }, ...outer] }));
-	}
+	const { delimiter } = yield* M.st.get();
+	const answer = yield* match(delimiter)
+		.with({ _tag: "Some" }, function* ({ value }) {
+			yield* M.st.modify(s => ({ ...s, delimiter: O.some({ ...value, capturesOnEveryPath: true }) }));
+			return value.answer;
+		})
+		.with({ _tag: "None" }, function* () {
+			return {
+				initial: NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)),
+				final: NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type)),
+			};
+		})
+		.exhaustive();
 	const result = NF.Constructors.Var(yield* EB.freshMeta(ctx.env.length, NF.Type));
-	const payload = yield* arrow(yield* arrow(result, answer.initial), answer.final);
+	const payload = yield* NF.arrow(yield* NF.arrow(result, answer.initial), answer.final);
 	const effectType = NF.Constructors.App(NF.Constructors.App(NF.Constructors.Atom("Effect"), payload, "Explicit"), result, "Explicit");
 	const identity = EB.Constructors.Ann(EB.Anonymous, yield* NF.quote(ctx.env.length, effectType));
 	return [[identity, effectType, []], answer];

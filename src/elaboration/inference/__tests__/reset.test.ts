@@ -141,6 +141,8 @@ describe("Inference: raw reset", () => {
 		'match b | true -> (capture (\\k -> "hello")) | false -> 1',
 		'match b | true -> 1 | false -> (capture (\\k -> "hello"))',
 		'match b | true -> (capture (\\k -> "hello")) | false -> (capture (\\k -> true))',
+		'match b | true -> (reset (capture (\\k -> k 1))) | false -> (capture (\\k -> "hello"))',
+		'match b | true -> (capture (\\k -> "hello")) | false -> (reset (capture (\\k -> k 1)))',
 	])("rejects conflicting branch answers in %s", source => {
 		expect(declaration(elaborateModule(`let result = \\(b: Bool) -> reset (${source});`), "result")?.error).toMatch(
 			/Cannot unify (Num with String|String with Num|String with Bool|Bool with String)/,

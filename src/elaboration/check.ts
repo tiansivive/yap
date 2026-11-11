@@ -59,7 +59,9 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 
 						const ann = tm.annotation ? (yield* EB.check(tm.annotation, ty.binder.annotation))[0] : yield* NF.quote(ctx.env.length, ty.binder.annotation);
 
-						return yield* EB.Inference.Lambda.body(
+						return yield* M.st.local(
+							"delimiter",
+							O.none,
 							M.reader.local(
 								ctx => EB.bind(ctx, { type: "Lambda", variable: tm.variable }, ty.binder.annotation),
 								(function* () {
@@ -78,7 +80,9 @@ export const check = (term: Src.Term, type: NF.Value): M.Elaboration<[EB.Term, Q
 					function* ([tm, ty]) {
 						const ann = yield* NF.quote(ctx.env.length, ty.binder.annotation);
 
-						return yield* EB.Inference.Lambda.body(
+						return yield* M.st.local(
+							"delimiter",
+							O.none,
 							M.reader.local(
 								ctx => EB.bind(ctx, { type: "Lambda", variable: ty.binder.variable }, ty.binder.annotation, "inserted"),
 								(function* () {

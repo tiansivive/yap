@@ -1,3 +1,4 @@
+import * as O from "fp-ts/lib/Option";
 import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import { Patterns } from "@yap/elaboration";
@@ -104,19 +105,21 @@ export const elaborate =
 
 /* Each alternative starts from the scrutinee's control state; a capture is guaranteed when every arm captures. */
 export function* branches(alternatives: Src.Alternative[], action: (alt: Src.Alternative) => M.Elaboration<AltNode>): M.Elaboration<AltNode[]> {
-	const { delimitations: incoming } = yield* M.st.get();
-	const results = yield* M.traverse(alternatives, function* (alt) {
-		yield* M.st.modify(s => ({ ...s, delimitations: incoming }));
-		const result = yield* action(alt);
-		const { delimitations } = yield* M.st.get();
-		return { result, delimitations };
-	});
+	const { delimiter } = yield* M.st.get();
+	const results = yield* M.traverse(alternatives, alt =>
+		M.st.local(
+			"delimiter",
+			delimiter,
+			(function* () {
+				const result = yield* action(alt);
+				const { delimiter: outgoing } = yield* M.st.get();
+				return { result, capturesOnEveryPath: O.exists((d: M.Delimitation) => d.capturesOnEveryPath)(outgoing) };
+			})(),
+		),
+	);
 	yield* M.st.modify(s => ({
 		...s,
-		delimitations: incoming.map((delimiter, i) => ({
-			...delimiter,
-			capturesOnEveryPath: results.every(({ delimitations }) => delimitations[i].capturesOnEveryPath),
-		})),
+		delimiter: O.map((d: M.Delimitation) => ({ ...d, capturesOnEveryPath: results.every(result => result.capturesOnEveryPath) }))(delimiter),
 	}));
 	return results.map(({ result }) => result);
 }
