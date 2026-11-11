@@ -19,7 +19,7 @@ describe("Inference: Shift/Reset", () => {
 
 			expect(structure.term).toMatchObject({ type: "Reset" });
 			expect(displays.term).toContain("bubble#");
-			expect(displays.term).toContain("capture");
+			expect(displays.term).toContain("suspend");
 			expect(displays.term).toContain('"world"');
 			expect(displays.term).not.toContain('$k "world"');
 			expect(displays.constraints).toEqual(expect.arrayContaining([expect.stringMatching(/^String ~~ \?\d+$/)]));
@@ -31,7 +31,7 @@ describe("Inference: Shift/Reset", () => {
 			const { structure } = elaborateFrom("shift 5");
 			expect(structure.term).toMatchObject({
 				type: "Bubble",
-				shift: { type: "Capture", identity: { type: "Ann", term: { type: "Lit", value: { type: "Atom", value: "$anonymous" } } } },
+				shift: { type: "Suspend", identity: { type: "Ann", term: { type: "Lit", value: { type: "Atom", value: "$anonymous" } } } },
 			});
 		});
 
@@ -41,7 +41,7 @@ describe("Inference: Shift/Reset", () => {
 
 			expect(structure.term).toMatchObject({ type: "Reset" });
 			expect(displays.term).toContain("bubble#");
-			expect(displays.term).toContain("capture");
+			expect(displays.term).toContain("suspend");
 			expect(displays.term).toContain('$k "hello"');
 			expect(displays.constraints).toEqual(expect.arrayContaining([expect.stringMatching(/^String ~~ \?\d+$/)]));
 		});

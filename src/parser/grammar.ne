@@ -21,7 +21,7 @@
 				foreign: "foreign", loop: "loop", repeat: "repeat",
 				if: "if", else: "else", then: "then",
 				true: "true", false: "false",
-				shift: "shift", reset: "reset", resume: "resume", capture: "capture", with: "with", in: "in"
+				shift: "shift", reset: "reset", resume: "resume", suspend: "suspend", with: "with", in: "in"
 			}) 
 		},
 	  	dot: /\./,
@@ -117,7 +117,7 @@ Expr -> Lambda		{% id %}
   	  | Match 		{% id %}
   	  | Block 		{% id %}
 	  | Reset 		{% id %}
-	  | Capture 	{% id %}
+	  | Suspend 	{% id %}
 	  | With 		{% id %}
 	  | Shift 		{% id %}
 	  | Resume 		{% id %}
@@ -255,8 +255,8 @@ Alt -> %space:? %bar %space:? Pattern %space:? %arrow %space:? TypeExpr 	{% P.Al
 # ------------------------------------
 # Delimited Continuations
 # ------------------------------------
-Capture -> "capture" %space %at Atom %space TypeExpr {% P.Capture %}
-         | "capture" %space TypeExpr {% P.AnonymousCapture %}
+Suspend -> "suspend" %space %at Atom %space TypeExpr {% P.Suspend %}
+         | "suspend" %space TypeExpr {% P.AnonymousSuspend %}
 
 With -> "with" %space Many[Handler, %comma] %space "in" %space TypeExpr {% P.With %}
 Handler -> Atom %space:? %colon %space:? TypeExpr {% P.Handler %}

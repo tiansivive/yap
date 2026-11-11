@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Inference: suspend > generalizes result-polymorphic carriers into operation functions 1`] = `
+"λ(a: Type) =>
+  λ(b: Type) => (λ(u: a) -> suspend @(FFI.Abort @b) "stop" : Π(u: a) -> b)"
+`;
+
+exports[`Inference: suspend > groups a suspend expression used as an application argument 1`] = `"f (suspend @FFI.Ask unit)"`;
+
+exports[`Inference: suspend > infers an unknown carrier from the suspension payload 1`] = `
+"λ(a: Type) =>
+  (λ(e: Effect Unit a) -> suspend @e unit : Π(e: Effect Unit a) -> a)"
+`;

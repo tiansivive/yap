@@ -19,17 +19,17 @@ describe("Parser: raw control", () => {
 		"reset [1] ++ [2]",
 		"reset ([f] x)",
 		"reset [E] x",
-		"capture [E] x",
-		"reset (capture (\\k -> k 1))",
-		"capture makeHandler !",
-		"capture match flag | true -> h | false -> h",
+		"suspend [E] x",
+		"reset (suspend (\\k -> k 1))",
+		"suspend makeHandler !",
+		"suspend match flag | true -> h | false -> h",
 	])("parses anonymous %s", source => {
 		const term = parse(source);
 		expect(semantic(term)).toMatchSnapshot();
-		expect(term).toMatchObject({ type: expect.stringMatching(/^(reset|capture)$/), term: expect.any(Object) });
+		expect(term).toMatchObject({ type: expect.stringMatching(/^(reset|suspend)$/), term: expect.any(Object) });
 		expect(term.identity).toBeUndefined();
 	});
-	it.each(["capture", "reset"])("separates the identity from the implicit application in %s", keyword => {
+	it.each(["suspend", "reset"])("separates the identity from the implicit application in %s", keyword => {
 		const named = parse(`${keyword} @E f @a`);
 		const anonymous = parse(`${keyword} f @a`);
 		expect(named).toMatchObject({
@@ -39,13 +39,13 @@ describe("Parser: raw control", () => {
 		expect(semantic(anonymous.term)).toEqual(semantic(named.term));
 		expect(anonymous.identity).toBeUndefined();
 	});
-	it.each(["capture", "reset"])("keeps explicit identity arguments inside parentheses in %s", keyword => {
+	it.each(["suspend", "reset"])("keeps explicit identity arguments inside parentheses in %s", keyword => {
 		expect(parse(`${keyword} @(E @Num) x`)).toMatchObject({
 			identity: { type: "application", icit: "Implicit", fn: { variable: { value: "E" } }, arg: { variable: { value: "Num" } } },
 			term: { type: "var", variable: { value: "x" } },
 		});
 	});
-	it.each(["reset @eff value", "capture @eff value", "reset @eff f x + 1", "capture @eff f x + 1"])("selects the identity in %s", source => {
+	it.each(["reset @eff value", "suspend @eff value", "reset @eff f x + 1", "suspend @eff f x + 1"])("selects the identity in %s", source => {
 		const term = parse(source);
 		expect(semantic(term)).toMatchSnapshot();
 		expect(term).toMatchObject({ identity: { type: "var", variable: { value: "eff" } }, term: expect.any(Object) });
@@ -55,16 +55,16 @@ describe("Parser: raw control", () => {
 		"(reset x) y",
 		"f @(reset @E x)",
 		"reset @E (f x)",
-		"capture (f x)",
-		"f (capture x)",
+		"suspend (f x)",
+		"f (suspend x)",
 		"reset @r.E x",
 		"reset @(choose !) x",
 		"reset @(E @Num) x",
 		"reset @E f @a",
 		"reset f @a",
-		"reset @E capture @F x",
-		"reset capture @E x",
-		"reset @E capture x",
+		"reset @E suspend @F x",
+		"reset suspend @E x",
+		"reset @E suspend x",
 		"reset [1]",
 		"reset [E] x",
 	])("preserves grouping in %s", source => {

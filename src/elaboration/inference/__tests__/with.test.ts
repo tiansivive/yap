@@ -23,14 +23,14 @@ const block = (term: EB.Term) => {
 
 describe("Inference: with", () => {
 	it("binds the identity and handler once and installs a recursive deep wrapper", () => {
-		const result = elaborated("foreign Ask: Effect Unit Num; let result: Num = with Ask: (\\p k -> k 42) in capture @Ask !;");
+		const result = elaborated("foreign Ask: Effect Unit Num; let result: Num = with Ask: (\\p k -> k 42) in suspend @Ask !;");
 		const tm = block(result.tm);
 		expect(tm.statements).toHaveLength(3);
 		expect(tm.statements[0]).toMatchObject({ type: "Let", variable: "$identity", value: { type: "Var", variable: { type: "Foreign", name: "Ask" } } });
 		expect(tm.return).toMatchObject({
 			type: "Reset",
 			handling: { identity: { type: "Var", variable: { type: "Bound", index: 2 } }, handler: { type: "Var", variable: { type: "Bound", index: 0 } } },
-			term: { type: "Capture" },
+			term: { type: "Suspend" },
 		});
 		expect(tm.statements[2].value).toMatchObject({
 			type: "Abs",
@@ -54,7 +54,7 @@ describe("Inference: with", () => {
 	});
 
 	it("infers the answer from a handler and body", () => {
-		const result = elaborated("foreign Ask: Effect Unit Num; let result = with Ask: (\\p k -> k 42) in capture @Ask !;");
+		const result = elaborated("foreign Ask: Effect Unit Num; let result = with Ask: (\\p k -> k 42) in suspend @Ask !;");
 		expect(runNF(result.ctx, () => NF.quote(0, result.ty), result.registry)).toMatchObject(atom("Num"));
 	});
 
@@ -90,7 +90,7 @@ describe("Inference: with", () => {
 	});
 
 	it("forwards the implicit carrier argument through the polymorphic wrapper", () => {
-		const result = elaborated("foreign Echo: (a: Type) => Effect a a; let result: Num = with Echo: (\\p k -> k p) in capture @Echo 42;");
+		const result = elaborated("foreign Echo: (a: Type) => Effect a a; let result: Num = with Echo: (\\p k -> k p) in suspend @Echo 42;");
 		const tm = block(result.tm);
 		expect(tm.statements[1].value).toMatchObject({ type: "Abs", binding: { type: "Lambda", icit: "Implicit", annotation: atom("Type") } });
 		expect(tm.statements[2].value).toMatchObject({

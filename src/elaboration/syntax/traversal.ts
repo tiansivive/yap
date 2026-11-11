@@ -65,8 +65,8 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 				},
 			),
 		)
-		.with({ type: "Capture" }, ({ identity, payload, annotation }) =>
-			Constructors.Capture(traverse(identity, onVar), traverse(payload, onVar), traverse(annotation, onVar)),
+		.with({ type: "Suspend" }, ({ identity, payload, annotation }) =>
+			Constructors.Suspend(traverse(identity, onVar), traverse(payload, onVar), traverse(annotation, onVar)),
 		)
 		.with({ type: "Modal" }, ({ term, modalities }) => Constructors.Modal(traverse(term, onVar), modalities))
 		.otherwise(() => {

@@ -14,7 +14,7 @@ exports[`Inference: with > binds the identity and handler once and installs a re
       λ($k: Π(x: Num) -> Num) ->
         $user $payload
           (λ($value: Num) -> reset @$identity $installed |$k $value|);
-  return reset @$identity $installed |capture @FFI.Ask unit|;
+  return reset @$identity $installed |suspend @FFI.Ask unit|;
 }"
 `;
 
@@ -35,6 +35,6 @@ exports[`Inference: with > forwards the implicit carrier argument through the po
         λ($k: Π(x: a) -> Num) ->
           $user @a $payload
             (λ($value: a) -> reset @$identity $installed |$k $value|);
-  return reset @$identity $installed |capture @(FFI.Echo @Num) 42|;
+  return reset @$identity $installed |suspend @(FFI.Echo @Num) 42|;
 }"
 `;

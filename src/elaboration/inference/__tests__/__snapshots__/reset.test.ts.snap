@@ -11,7 +11,7 @@ exports[`Inference: raw reset > keeps the body answer distinct from the handled 
 "reset @($anonymous : Π(r: Type) =>
   Effect (Π(x: Π(x: r) -> Num) -> String) r) λ(r: Type) =>
   λ($payload: Π(x: Π(x: r) -> Num) -> String) ->
-    λ($k: Π(x: r) -> Num) -> $payload $k |capture @($anonymous : Effect
+    λ($k: Π(x: r) -> Num) -> $payload $k |suspend @($anonymous : Effect
   (Π(x: Π(x: Num) -> Num) -> String)
   Num) λ(k: Π(x: Num) -> Num) -> "hello"|"
 `;

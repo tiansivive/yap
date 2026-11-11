@@ -71,13 +71,13 @@ describe("Inference: raw reset", () => {
 	});
 
 	it("keeps the body answer distinct from the handled answer", () => {
-		const result = elaborated('let result: String = reset ((capture (\\k -> "hello")) : Num);');
+		const result = elaborated('let result: String = reset ((suspend (\\k -> "hello")) : Num);');
 		expect(quoted(result)).toMatchObject(atom("String"));
 		const tm = reset(result.tm);
 		expect(tm).toMatchObject({
 			type: "Reset",
 			term: {
-				type: "Capture",
+				type: "Suspend",
 				annotation: atom("Num"),
 				payload: {
 					type: "Abs",
@@ -88,68 +88,68 @@ describe("Inference: raw reset", () => {
 		expect(shown(result.ctx, result.registry)(() => EB.Display.Term(result.tm))).toMatchSnapshot();
 	});
 
-	it.each(["reset (capture (\\k -> (k 10) + (k 20)))", "reset (capture (\\k -> k (k 10)))"])("checks repeated resumption in %s", source => {
+	it.each(["reset (suspend (\\k -> (k 10) + (k 20)))", "reset (suspend (\\k -> k (k 10)))"])("checks repeated resumption in %s", source => {
 		const result = elaborated(`let result: Num = ${source};`);
 		expect(quoted(result)).toMatchObject(atom("Num"));
 	});
 
-	it("chooses the result type separately at each capture", () => {
-		const result = elaborated("let result: Num = reset (match (capture (\\k -> k true)) | true -> (capture (\\k -> k 1)) | false -> 2);");
+	it("chooses the result type separately at each suspension", () => {
+		const result = elaborated("let result: Num = reset (match (suspend (\\k -> k true)) | true -> (suspend (\\k -> k 1)) | false -> 2);");
 		expect(reset(result.tm)).toMatchObject({
 			type: "Reset",
 			term: {
 				type: "Match",
-				scrutinee: { type: "Capture", annotation: atom("Bool") },
-				alternatives: [{ term: { type: "Capture", annotation: atom("Num") } }, { term: expect.any(Object) }],
+				scrutinee: { type: "Suspend", annotation: atom("Bool") },
+				alternatives: [{ term: { type: "Suspend", annotation: atom("Num") } }, { term: expect.any(Object) }],
 			},
 		});
 	});
 
 	it("preserves the shared marker through nested anonymous resets", () => {
-		const result = elaborated("let result: Num = reset (reset (capture (\\k -> k 1)));");
+		const result = elaborated("let result: Num = reset (reset (suspend (\\k -> k 1)));");
 		const outer = reset(result.tm);
 		expect(reset(outer.term)).toMatchObject({
 			type: "Reset",
 			term: {
-				type: "Capture",
+				type: "Suspend",
 				identity: { type: "Ann", term: atom("$anonymous"), ann: { type: "App", arg: atom("Num") } },
 			},
 		});
 	});
 
-	it("preserves anonymous capture through a named delimiter", () => {
-		const result = elaborated("foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset (reset @E (capture (\\k -> k 1)));");
+	it("preserves anonymous suspension through a named delimiter", () => {
+		const result = elaborated("foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset (reset @E (suspend (\\k -> k 1)));");
 		const outer = reset(result.tm);
 		expect(block(outer.term).return).toMatchObject({
 			type: "Reset",
 			term: {
-				type: "Capture",
+				type: "Suspend",
 				identity: { type: "Ann", term: atom("$anonymous") },
 			},
 		});
 	});
 
 	it.each([
-		"match b | true -> (capture (\\k -> k 1)) | false -> 2",
-		"match b | true -> 2 | false -> (capture (\\k -> k 1))",
-		'match b | true -> ((capture (\\k -> "one")) : Num) | false -> ((capture (\\k -> "two")) : Num)',
+		"match b | true -> (suspend (\\k -> k 1)) | false -> 2",
+		"match b | true -> 2 | false -> (suspend (\\k -> k 1))",
+		'match b | true -> ((suspend (\\k -> "one")) : Num) | false -> ((suspend (\\k -> "two")) : Num)',
 	])("checks compatible branch answers in %s", source => {
 		expect(elaborated(`let result = \\(b: Bool) -> reset (${source});`).tm).toBeDefined();
 	});
 
 	it.each([
-		'match b | true -> (capture (\\k -> "hello")) | false -> 1',
-		'match b | true -> 1 | false -> (capture (\\k -> "hello"))',
-		'match b | true -> (capture (\\k -> "hello")) | false -> (capture (\\k -> true))',
-		'match b | true -> (reset (capture (\\k -> k 1))) | false -> (capture (\\k -> "hello"))',
-		'match b | true -> (capture (\\k -> "hello")) | false -> (reset (capture (\\k -> k 1)))',
+		'match b | true -> (suspend (\\k -> "hello")) | false -> 1',
+		'match b | true -> 1 | false -> (suspend (\\k -> "hello"))',
+		'match b | true -> (suspend (\\k -> "hello")) | false -> (suspend (\\k -> true))',
+		'match b | true -> (reset (suspend (\\k -> k 1))) | false -> (suspend (\\k -> "hello"))',
+		'match b | true -> (suspend (\\k -> "hello")) | false -> (reset (suspend (\\k -> k 1)))',
 	])("rejects conflicting branch answers in %s", source => {
 		expect(declaration(elaborateModule(`let result = \\(b: Bool) -> reset (${source});`), "result")?.error).toMatch(
 			/Cannot unify (Num with String|String with Num|String with Bool|Bool with String)/,
 		);
 	});
 
-	it.each(['let result = reset (\\(u: Unit) -> capture (\\k -> "hello"));', 'let result: Unit -> Num = reset (\\u -> capture (\\k -> "hello"));'])(
+	it.each(['let result = reset (\\(u: Unit) -> suspend (\\k -> "hello"));', 'let result: Unit -> Num = reset (\\u -> suspend (\\k -> "hello"));'])(
 		"keeps closure creation on the ordinary return path: %s",
 		source => {
 			expect(elaborated(source).tm).toBeDefined();
@@ -157,7 +157,7 @@ describe("Inference: raw reset", () => {
 	);
 
 	it("preserves outer dependent references in anonymous operations", () => {
-		const result = elaborated("let result = \\(a: Type) (x: a) -> reset (capture (\\k -> k x));");
+		const result = elaborated("let result = \\(a: Type) (x: a) -> reset (suspend (\\k -> k x));");
 		const first = bare(result.tm);
 		if (!isMatching({ type: "Abs" }, first)) {
 			throw new Error("Expected type parameter");
@@ -169,7 +169,7 @@ describe("Inference: raw reset", () => {
 		expect(reset(second.body)).toMatchObject({
 			type: "Reset",
 			term: {
-				type: "Capture",
+				type: "Suspend",
 				annotation: {
 					type: "Var",
 					variable: { type: "Bound", index: 1 },
@@ -203,7 +203,7 @@ describe("Inference: raw reset", () => {
 			term: {
 				type: "Bubble",
 				shift: {
-					type: "Capture",
+					type: "Suspend",
 					identity: { type: "Ann", term: atom("$anonymous") },
 					annotation: atom("Num"),
 					payload: { type: "Abs" },
@@ -213,7 +213,7 @@ describe("Inference: raw reset", () => {
 	});
 
 	it.each([
-		"foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset @E (capture @E (\\k -> k 2));",
+		"foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset @E (suspend @E (\\k -> k 2));",
 		"foreign E: (r: Type) => Effect ((r -> Num) -> Num) r; let result: Num = reset @E 1;",
 	])("checks the application handler against an explicit effect type: %s", source => {
 		const result = elaborated(source);
@@ -224,19 +224,19 @@ describe("Inference: raw reset", () => {
 	it.each([
 		"foreign E: Effect Unit Num; let result: Num = reset @E 1;",
 		"foreign E: Effect ((Num -> Num) -> Bool) Num; let result: Num = reset @E 1;",
-		"let result: Bool = reset (capture (\\k -> k 1));",
+		"let result: Bool = reset (suspend (\\k -> k 1));",
 	])("rejects incompatible control types: %s", source => {
 		expect(declaration(elaborateModule(source), "result")?.error).toBeDefined();
 	});
 
-	it("preserves a guaranteed capture through a later ordinary match", () => {
-		const result = elaborated('let result: Bool -> String = \\b -> reset { (capture (\\k -> "hello") : Unit); return match b | true -> 1 | false -> 2; };');
+	it("preserves a guaranteed suspension through a later ordinary match", () => {
+		const result = elaborated('let result: Bool -> String = \\b -> reset { (suspend (\\k -> "hello") : Unit); return match b | true -> 1 | false -> 2; };');
 		expect(quoted(result)).toMatchObject({ type: "Abs", body: atom("String") });
 	});
 
 	// TODO: Keep inferred answer refinements scoped outside the captured continuation's binder.
 	it.fails("keeps inferred repeated-resumption refinements closed", () => {
-		const result = elaborated("let result = reset (capture (\\k -> (k 10) + (k 20)));");
+		const result = elaborated("let result = reset (suspend (\\k -> (k 10) + (k 20)));");
 		const type = quoted(result);
 		if (!isMatching({ type: "Modal" }, type)) {
 			return;
@@ -256,36 +256,36 @@ describe("Inference: raw reset", () => {
 	});
 
 	it("elaborates standalone anonymous operations", () => {
-		const result = elaborated("let result: Num = capture (\\k -> (k 1 : Num));");
-		expect(bare(result.tm)).toMatchObject({ type: "Capture", identity: { type: "Ann", term: atom("$anonymous") }, annotation: atom("Num") });
+		const result = elaborated("let result: Num = suspend (\\k -> (k 1 : Num));");
+		expect(bare(result.tm)).toMatchObject({ type: "Suspend", identity: { type: "Ann", term: atom("$anonymous") }, annotation: atom("Num") });
 	});
 
 	it("keeps anonymous operations in separately defined functions", () => {
-		const source = "let f = \\x -> capture (\\k -> k (x + 1)); let result: Num = reset (f 1);";
+		const source = "let f = \\x -> suspend (\\k -> k (x + 1)); let result: Num = reset (f 1);";
 		const fn = explicit(elaborated(source, "f").tm);
 		expect(fn).toMatchObject({
 			type: "Abs",
 			binding: { type: "Lambda", icit: "Explicit", annotation: atom("Num") },
-			body: { type: "Capture", identity: { type: "Ann", term: atom("$anonymous") } },
+			body: { type: "Suspend", identity: { type: "Ann", term: atom("$anonymous") } },
 		});
 		const result = elaborated(source);
 		expect(explicit(quoted(result))).toMatchObject(atom("Num"));
 		expect(reset(result.tm).term).toMatchObject({ type: "App", func: { type: "App", func: { type: "Var", variable: { type: "Free", name: "f" } } } });
 	});
 
-	it("returns closures whose anonymous captures remain available at their call sites", () => {
-		const source = "let g = reset (\\u -> capture (\\k -> k 1)); let result: Num = reset (g !);";
+	it("returns closures whose anonymous suspensions remain available at their call sites", () => {
+		const source = "let g = reset (\\u -> suspend (\\k -> k 1)); let result: Num = reset (g !);";
 		const closure = elaborated(source, "g");
 		expect(explicit(quoted(closure))).toMatchObject({ type: "Abs", binding: { type: "Pi", icit: "Explicit" }, body: atom("Num") });
 		expect(reset(closure.tm).term).toMatchObject({
 			type: "Ann",
-			term: { type: "Abs", body: { type: "Capture", identity: { type: "Ann", term: atom("$anonymous") } } },
+			term: { type: "Abs", body: { type: "Suspend", identity: { type: "Ann", term: atom("$anonymous") } } },
 		});
 		expect(explicit(quoted(elaborated(source)))).toMatchObject(atom("Num"));
 	});
 
 	it("keeps independent type instances on nested anonymous delimiters", () => {
-		const result = elaborated('let result: Bool = reset { (reset ((capture (\\k -> "inner")) : Num) : String); return true; };');
+		const result = elaborated('let result: Bool = reset { (reset ((suspend (\\k -> "inner")) : Num) : String); return true; };');
 		const outer = reset(result.tm);
 		expect(outer.handling?.identity).toMatchObject({
 			type: "Ann",
@@ -300,27 +300,27 @@ describe("Inference: raw reset", () => {
 		});
 	});
 
-	it("preserves named captures across an anonymous delimiter", () => {
-		const result = elaborated("foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset @E (reset (capture @E (\\k -> k 1)));");
+	it("preserves named suspensions across an anonymous delimiter", () => {
+		const result = elaborated("foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset @E (reset (suspend @E (\\k -> k 1)));");
 		const outer = reset(block(result.tm).return);
 		expect(outer.handling?.identity).toMatchObject({ type: "Var", variable: { type: "Bound", index: 0 } });
-		expect(reset(outer.term).term).toMatchObject({ type: "Capture", identity: { type: "Var", variable: { type: "Foreign", name: "E" } } });
+		expect(reset(outer.term).term).toMatchObject({ type: "Suspend", identity: { type: "Var", variable: { type: "Foreign", name: "E" } } });
 	});
 
-	it("preserves anonymous captures inside a capture payload", () => {
-		const result = elaborated('let result: String = reset (reset (capture (\\k -> capture (\\outer -> "hello"))));');
+	it("preserves anonymous suspensions inside a suspension payload", () => {
+		const result = elaborated('let result: String = reset (reset (suspend (\\k -> suspend (\\outer -> "hello"))));');
 		expect(reset(reset(result.tm).term).term).toMatchObject({
-			type: "Capture",
+			type: "Suspend",
 			identity: { type: "Ann", term: atom("$anonymous") },
-			payload: { type: "Abs", body: { type: "Capture", identity: { type: "Ann", term: atom("$anonymous") } } },
+			payload: { type: "Abs", body: { type: "Suspend", identity: { type: "Ann", term: atom("$anonymous") } } },
 		});
 	});
 
 	it("retains incompatible call and handler answers for verification", () => {
-		const source = 'let abort = \\u -> capture (\\k -> "hello"); let result: Num = reset (abort !);';
+		const source = 'let abort = \\u -> suspend (\\k -> "hello"); let result: Num = reset (abort !);';
 		expect(explicit(elaborated(source, "abort").tm)).toMatchObject({
 			type: "Abs",
-			body: { type: "Capture", identity: { type: "Ann", term: atom("$anonymous"), ann: { func: { arg: { body: atom("String") } } } } },
+			body: { type: "Suspend", identity: { type: "Ann", term: atom("$anonymous"), ann: { func: { arg: { body: atom("String") } } } } },
 		});
 		const { tm, ty, ctx, registry } = elaborated(source);
 		expect(reset(tm).handling?.identity).toMatchObject({ type: "Ann", term: atom("$anonymous"), ann: { body: { func: { arg: { body: atom("Num") } } } } });
@@ -329,8 +329,8 @@ describe("Inference: raw reset", () => {
 
 	// The verifier must check each anonymous operation against the delimiter selected at its call.
 	it.fails.each([
-		'let abort = \\u -> capture (\\k -> "hello"); let result: Num = reset (abort !);',
-		'let f: Unit -> Num = \\u -> capture (\\k -> 1 + (k 0)); let result: String = reset { f !; return "ok"; };',
+		'let abort = \\u -> suspend (\\k -> "hello"); let result: Num = reset (abort !);',
+		'let f: Unit -> Num = \\u -> suspend (\\k -> 1 + (k 0)); let result: String = reset { f !; return "ok"; };',
 	])("rejects incompatible anonymous answer types during verification: %s", source => {
 		const { tm, ty, ctx, registry } = elaborated(source);
 		const { answer } = VerificationServiceV2().letdec("result", tm, ty, ctx, registry);
@@ -338,7 +338,7 @@ describe("Inference: raw reset", () => {
 	});
 
 	it("retains operation calls used as arithmetic arguments for suspended evaluation", () => {
-		expect(() => elaborateModule("let f = \\x -> capture (\\k -> k (x + 1)); let result: Num = reset (10 + (f 1));")).toThrow("Capture evaluation is pending");
+		expect(() => elaborateModule("let f = \\x -> suspend (\\k -> k (x + 1)); let result: Num = reset (10 + (f 1));")).toThrow("Suspend evaluation is pending");
 	});
 
 	it("retains the installed handler for evaluation", () => {
@@ -347,6 +347,6 @@ describe("Inference: raw reset", () => {
 	});
 
 	it("retains captured application arguments for suspended evaluation", () => {
-		expect(() => elaborateModule('let result: String = reset (1 + (capture (\\k -> "hello")));')).toThrow("Capture evaluation is pending");
+		expect(() => elaborateModule('let result: String = reset (1 + (suspend (\\k -> "hello")));')).toThrow("Suspend evaluation is pending");
 	});
 });
