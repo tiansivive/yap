@@ -3,19 +3,7 @@ import * as Eff from "@yap/utils/effects";
 
 import { scheduled, type Blame, type Captured, type Machine, type Mark, type Runnable, type StackFrame, type Stored } from "./frames";
 
-export type Actions<S, C> =
-	| Begin
-	| Next<S, C>
-	| Finish
-	| Push<S, C>
-	| Fill
-	| Cont<S>
-	| Delimit<S>
-	| Boundary<S>
-	| Suspend<S, C>
-	| Find<S, C>
-	| Capture<S, C>
-	| Resume<S, C>;
+export type Actions<S, C> = Begin | Next<S, C> | Finish | Push<S, C> | Fill | Cont<S> | Delimit<S> | Enter<S> | Find<S, C> | Capture<S, C> | Resume<S, C>;
 
 type Begin = Eff.Action<"Machine.begin", Blame, Mark>;
 export function* begin(blame: Blame) {
@@ -60,24 +48,19 @@ export function* delimit<S>(scope: S) {
 	return yield* Eff.ctl.action<Delimit<S>>("Machine.delimit", scope);
 }
 
-type Boundary<S> = Eff.Action<"Machine.boundary", S, undefined>;
-export function* boundary<S>(scope: S) {
-	return yield* Eff.ctl.action<Boundary<S>>("Machine.boundary", scope);
+type Enter<S> = Eff.Action<"Machine.enter", S, undefined>;
+export function* enter<S>(scope: S) {
+	return yield* Eff.ctl.action<Enter<S>>("Machine.enter", scope);
 }
 
-type Suspend<S, C> = Eff.Action<"Machine.suspend", undefined, Captured<S, C> | undefined>;
-export function* suspend<S, C>() {
-	return yield* Eff.ctl.action<Suspend<S, C>>("Machine.suspend", undefined);
+type Find<S, C> = Eff.Action<"Machine.find", { match: (frame: StackFrame<S, C>) => boolean; extent?: "entry" }, StackFrame<S, C> | undefined>;
+export function* find<S, C>(match: (frame: StackFrame<S, C>) => boolean, extent?: "entry") {
+	return yield* Eff.ctl.action<Find<S, C>>("Machine.find", { match, extent });
 }
 
-type Find<S, C> = Eff.Action<"Machine.find", (frame: StackFrame<S, C>) => boolean, StackFrame<S, C> | undefined>;
-export function* find<S, C>(match: (frame: StackFrame<S, C>) => boolean) {
-	return yield* Eff.ctl.action<Find<S, C>>("Machine.find", match);
-}
-
-type Capture<S, C> = Eff.Action<"Machine.capture", undefined, Captured<S, C> | undefined>;
-export function* capture<S, C>() {
-	return yield* Eff.ctl.action<Capture<S, C>>("Machine.capture", undefined);
+type Capture<S, C> = Eff.Action<"Machine.capture", "entry" | "delimiter", Captured<S, C> | undefined>;
+export function* capture<S, C>(extent: "entry" | "delimiter") {
+	return yield* Eff.ctl.action<Capture<S, C>>("Machine.capture", extent);
 }
 
 type Resume<S, C> = Eff.Action<"Machine.resume", { captured: Captured<S, C>; value: unknown }, undefined>;

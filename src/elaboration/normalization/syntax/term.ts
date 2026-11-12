@@ -11,7 +11,7 @@ import * as Modal from "@yap/verification/modalities/shared";
 
 export const nf_tag: unique symbol = Symbol("NF");
 
-export type Value = Types.Brand<typeof nf_tag, Constructor> & { id: number };
+export type Value<T extends Constructor = Constructor> = Types.Brand<typeof nf_tag, T> & { id: number };
 type Constructor =
 	| { type: "Var"; variable: Variable }
 	| { type: "Lit"; value: Literal }
@@ -54,7 +54,7 @@ export type Row = R.Row<Value, Variable>;
 export type TaggedParts = { label: string; payload: Value };
 export type Neutral = "Symbolic" | "Sealed" | "Blocked";
 
-type Operation = { type: "Suspend"; identity: Value; payload: Value } | { type: "Shift"; body: Value };
+type Operation = { type: "Suspend"; identity: Value; payload: Value };
 /** Which face readback emits for glue: the reference as written, or what definitions compute. */
 export type Unfolding = "none" | "definitions";
 
@@ -82,7 +82,7 @@ export type Variable =
 export type Closure =
 	| { type: "Closure"; ctx: EB.Context; term: EB.Term }
 	| { type: "PrimOp"; ctx: EB.Context; term: EB.Term; arity: number; compute: (...args: Value[]) => Value }
-	| { type: "Continuation"; ctx: EB.Context; term: EB.Term; frames: EB.NF.StackFrame[] };
+	| { type: "Continuation"; ctx: EB.Context; term: EB.Term; captured: EB.NF.Captured };
 
 export type Modalities = Modal.Annotations<Value>;
 
@@ -91,9 +91,10 @@ const nextId = () => ++currentId;
 export const resetId = () => {
 	currentId = 0;
 };
-export const mk = (val: Constructor): Value => {
+export function mk<T extends Constructor>(val: T): Value<T>;
+export function mk(val: Constructor): Value {
 	return { ...Types.make(nf_tag, val), id: nextId() };
-};
+}
 
 export const Constructors = {
 	Var: (variable: Variable): Value => mk({ type: "Var", variable }),
@@ -102,7 +103,7 @@ export const Constructors = {
 			type: "Abs" as const,
 			binder: { type: "Pi" as const, variable, icit, annotation },
 			closure,
-		}) as Value & { type: "Abs"; binder: { type: "Pi" } },
+		}),
 	Sigma: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "Sigma", variable, annotation }, closure }),
 	SigmaV2: (variable: string, annotation: Value, closure: Closure) => mk({ type: "Abs" as const, binder: { type: "SigmaV2", variable, annotation }, closure }),
 	Nu: (
@@ -157,7 +158,7 @@ export const Constructors = {
 			kind,
 			value,
 		}),
-	Bubble: (meta: number, ann: Value, values: Value[], operation: Operation, pending?: EB.NF.Captured): Value =>
+	Bubble: (meta: number, ann: Value, values: Value[], operation: Operation, pending?: EB.NF.Captured): Extract<Value, { type: "Bubble" }> =>
 		mk({ type: "Bubble", meta, ann, values, operation, pending }),
 	App: (func: Value, arg: Value, icit: Implicitness) =>
 		mk({

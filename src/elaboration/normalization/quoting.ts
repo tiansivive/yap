@@ -92,20 +92,11 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 				);
 			},
 		)
-		.with(NF.Patterns.Bubble, ({ meta, ann, values, operation }) =>
-			match(operation)
-				.with({ type: "Suspend" }, ({ identity, payload }) =>
-					Do.let("identity", () => quote(lvl, identity, unfold))
-						.let("payload", () => quote(lvl, payload, unfold))
-						.let("annotation", () => quote(lvl, ann, unfold))
-						.in(({ identity, payload, annotation }) =>
-							result(EB.Constructors.Bubble(meta, ann, values, EB.Constructors.Suspend(identity, payload, annotation))),
-						),
-				)
-				.with({ type: "Shift" }, ({ body }) =>
-					Do.let("body", () => quote(lvl, body, unfold)).in(({ body }) => result(EB.Constructors.Bubble(meta, ann, values, EB.Constructors.Shift(body)))),
-				)
-				.exhaustive(),
+		.with(NF.Patterns.Bubble, ({ meta, ann, values, operation: { identity, payload } }) =>
+			Do.let("identity", () => quote(lvl, identity, unfold))
+				.let("payload", () => quote(lvl, payload, unfold))
+				.let("annotation", () => quote(lvl, ann, unfold))
+				.in(({ identity, payload, annotation }) => result(EB.Constructors.Bubble(meta, ann, values, EB.Constructors.Suspend(identity, payload, annotation)))),
 		)
 		.with({ type: "App" }, ({ func, arg, icit }) =>
 			Do.let("f", () => quote(lvl, func, unfold))

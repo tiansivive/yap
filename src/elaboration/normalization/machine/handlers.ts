@@ -8,7 +8,14 @@ import type { Captured, Mark, Runnable, StackFrame } from "./frames";
 
 export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, undefined> => {
 	const workStack: StackFrame<S, C>[] = [];
+	/* Scheduled work keeps its entry until the driver unwinds below its saved depth. */
+	const entries: (Mark & { scope: S })[] = [];
 	let spent = 0;
+
+	const rewind = (work: number) => {
+		workStack.length = work;
+		entries.length = entries.findLastIndex(entry => entry.work <= work) + 1;
+	};
 
 	const slot = (mark: Mark) => {
 		const frame = workStack[mark.work - 1];
@@ -42,7 +49,7 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 				const index = workStack.findLastIndex(runnable);
 				const frame = index >= mark.work ? (workStack[index] as Runnable<S, C>) : undefined;
 
-				workStack.length = Math.max(index, mark.work);
+				rewind(Math.max(index, mark.work));
 
 				if (!frame) {
 					return Eff.ctl.resume<Runnable<S, C> | undefined>(undefined);
@@ -68,7 +75,7 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 					throw new Error(`Expected exactly 1 result, got ${drive.operands.length}`);
 				}
 
-				workStack.length = mark.work - 1;
+				rewind(mark.work - 1);
 
 				return Eff.ctl.resume(drive.operands[0]);
 			},
@@ -97,42 +104,45 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Machine.boundary": scope => {
-				workStack.push({ type: "Boundary", scope });
+			"Machine.enter": scope => {
+				entries.push({ work: workStack.length, scope });
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Machine.suspend": () => {
-				const index = workStack.findLastIndex(frame => frame.type === "Boundary");
-				const captured = match<StackFrame<S, C> | undefined, Captured<S, C> | undefined>(workStack[index])
-					.with({ type: "Boundary" }, ({ scope }) => {
-						const frames = workStack.slice(index + 1);
-						workStack.splice(index);
-						return { frames, scope };
-					})
-					.otherwise(() => undefined);
-				return Eff.ctl.resume(captured);
+			"Machine.find": ({ match, extent }) => {
+				const start = extent === "entry" ? (entries.at(-1)?.work ?? 0) : 0;
+				return Eff.ctl.resume(workStack.findLast((frame, index) => index >= start && match(frame)));
 			},
 
-			"Machine.find": match => Eff.ctl.resume(workStack.findLast(match)),
-
-			"Machine.capture": () => {
-				const index = workStack.findLastIndex(frame => frame.type === "Delimiter" || frame.type === "Boundary");
-
-				const captured = match<StackFrame<S, C> | undefined, Captured<S, C> | undefined>(workStack[index])
-					.with({ type: "Delimiter" }, ({ scope }) => {
-						const frames = workStack.slice(index + 1);
-						workStack.splice(index);
-
-						return { frames, scope };
+			"Machine.capture": extent => {
+				const entry = match(extent)
+					.with("entry", () => entries.pop())
+					.with("delimiter", () => {
+						const work = workStack.findLastIndex(frame => frame.type === "Delimiter");
+						return match(workStack[work])
+							.with({ type: "Delimiter" }, ({ scope }) => ({ work, scope }))
+							.otherwise(() => undefined);
 					})
-					.otherwise(() => undefined);
+					.exhaustive();
 
-				return Eff.ctl.resume(captured);
+				if (!entry) {
+					return Eff.ctl.resume<Captured<S, C> | undefined>(undefined);
+				}
+
+				const start = entry.work + (extent === "delimiter" ? 1 : 0);
+				const captured = {
+					frames: workStack.slice(start),
+					scope: entry.scope,
+					entries: extent === "delimiter" ? entries.filter(entry => entry.work >= start).map(({ work, scope }) => ({ work: work - start, scope })) : [],
+				};
+				rewind(entry.work);
+				return Eff.ctl.resume<Captured<S, C> | undefined>(captured);
 			},
 
 			"Machine.resume": ({ captured, value }) => {
 				// Copying the captured frames to the work stack preserves the original continuation structure in each resumption.
+				const start = workStack.length;
+				entries.push(...captured.entries.map(({ work, scope }) => ({ work: start + work, scope })));
 				workStack.push(...captured.frames.map(frame => ("operands" in frame ? { ...frame, operands: [...frame.operands] } : frame)));
 				fill(value);
 

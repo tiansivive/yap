@@ -40,14 +40,7 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 				meta,
 				traverse(ann, onVar, onTerm),
 				values.map(value => traverse(value, onVar, onTerm)),
-				match(operation)
-					.with({ type: "Suspend" }, ({ identity, payload }) => ({
-						type: "Suspend" as const,
-						identity: traverse(identity, onVar, onTerm),
-						payload: traverse(payload, onVar, onTerm),
-					}))
-					.with({ type: "Shift" }, ({ body }) => ({ type: "Shift" as const, body: traverse(body, onVar, onTerm) }))
-					.exhaustive(),
+				{ type: "Suspend", identity: traverse(operation.identity, onVar, onTerm), payload: traverse(operation.payload, onVar, onTerm) },
 				pending,
 			),
 		)

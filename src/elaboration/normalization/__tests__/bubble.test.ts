@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
@@ -8,10 +9,9 @@ import * as Sub from "@yap/elaboration/unification/substitution";
 import * as R from "@yap/shared/rows";
 import * as Eff from "@yap/utils/effects";
 import * as Evaluation from "../evaluation.v2";
-import * as Quoting from "../quoting";
 import * as Stack from "../machine/actions";
 import { handlers } from "../machine/handlers";
-import { Mode, scope } from "../effects";
+import { Mode } from "../effects";
 import { mkCtx, runEB, runNF } from "../../inference/__tests__/util";
 
 const ctx = mkCtx();
@@ -23,6 +23,23 @@ const lambda = (body: EB.Term) => C.Lambda("x", "Explicit", body, atom("Type"));
 const evaluate = (term: EB.Term) => runNF(ctx, () => NF.evaluate(term));
 const quote = (value: NF.Value, lvl = 0) => runNF(ctx, () => NF.quote(lvl, value));
 const bubble = (identity: EB.Term, payload: EB.Term) => C.Bubble(7, NF.Type, [NF.Type], C.Suspend(identity, payload, atom("Type")));
+
+const resume = (value: NF.Value, argument: NF.Value) => {
+	const pending = match(value)
+		.with({ type: "Neutral", value: { type: "Bubble", pending: P.nonNullable } }, ({ value: { pending } }) => pending)
+		.otherwise(() => {
+			throw new Error("Expected a Bubble with saved work");
+		});
+	return runNF(ctx, function* () {
+		const [resumed] = yield* Eff.with([handlers<NF.Scope, EB.Term>(2000), Mode.handlers(NF.defaultMode)], () =>
+			Evaluation.drive(
+				Evaluation.schedule.source(() => Stack.resume<NF.Value, NF.Scope, EB.Term>(pending, argument)),
+				steps => `Evaluation exceeded ${steps} steps`,
+			),
+		);
+		return resumed;
+	});
+};
 
 describe("Bubble quotation", () => {
 	it("retains the operation, result symbol, signature and resume candidates", () => {
@@ -135,22 +152,13 @@ describe("Bubble quotation", () => {
 		});
 	});
 
-	it("keeps a quoted lambda's Bubble separate from an outer delimiter", () => {
-		const value = evaluate(lambda(C.Bubble(7, NF.Type, [], C.Shift(lambda(bound(0))))));
-		const quoted = runNF(ctx, function* () {
-			const [term] = yield* Eff.with([handlers<NF.Scope, EB.Term>(2000), Mode.handlers(NF.defaultMode)], () =>
-				Evaluation.drive(
-					(function* () {
-						yield* Stack.delimit(yield* scope());
-						return yield* Quoting.quote(0, value);
-					})(),
-					steps => `Quotation exceeded ${steps} steps`,
-				),
-			);
-			return term;
-		});
+	it("retains a solved lambda's suspension while quoting inside a reset", () => {
+		const meta = { type: "Meta", val: 100, lvl: 0 } as const;
+		const solution = evaluate(lambda(bubble(atom("E"), atom("Unit"))));
+		const registry = Metas.register(Metas.empty, { meta, annotation: NF.Type, solution });
+		const value = runNF(ctx, () => NF.evaluate(C.Reset(C.Var(meta))), registry);
 
-		expect(quoted).toMatchObject({ type: "Abs", body: { type: "Bubble", meta: 7, shift: { type: "Shift" } } });
+		expect(quote(value)).toMatchObject({ type: "Abs", body: { type: "Bubble", shift: { type: "Suspend" } } });
 	});
 
 	it("weakens an outer rigid used only after the suspension", () => {
@@ -158,26 +166,6 @@ describe("Bubble quotation", () => {
 		const value = runNF(scope, () => NF.evaluate(C.App("Explicit", lambda(bound(1)), bubble(atom("E"), atom("Unit")))));
 
 		expect(quote(value, 2)).toMatchObject({ type: "Block", return: { type: "Var", variable: { type: "Bound", index: 2 } } });
-	});
-
-	it("retains legacy shift bodies", () => {
-		const value = evaluate(C.Bubble(7, NF.Type, [], C.Shift(lambda(bound(0)))));
-
-		expect(quote(value)).toMatchObject({ type: "Bubble", meta: 7, shift: { type: "Shift", body: { type: "Abs", body: { variable: { index: 0 } } } } });
-	});
-
-	it("replays pending argument evaluation for every continuation invocation", () => {
-		const continuation = evaluate(C.Reset(C.App("Explicit", C.Shift(lambda(bound(0))), atom("Num"))));
-		const identity = evaluate(lambda(bound(0)));
-		const first = runNF(ctx, () => NF.reduce(continuation, identity, "Explicit"));
-		const second = runNF(ctx, () => NF.reduce(continuation, identity, "Explicit"));
-
-		expect(first).toMatchObject({ type: "Lit", value: { value: "Num" } });
-		expect(second).toMatchObject({ type: "Lit", value: { value: "Num" } });
-	});
-
-	it("reports a Bubble containing an unsupported core operation", () => {
-		expect(() => evaluate(C.Bubble(7, NF.Type, [], atom("Num")))).toThrow("A Bubble must retain a suspension or a shift");
 	});
 
 	it.fails("collects a meta used only after the suspension", () => {
@@ -242,10 +230,10 @@ describe("Bubble quotation", () => {
 	});
 
 	it.fails("keeps each replay's recursive binding in its returned closure", () => {
-		const continuation = evaluate(C.Reset(C.Block([C.Stmt.Let("A", C.Shift(lambda(bound(0))), NF.Type)], lambda(bound(1)))));
-		const first = runNF(ctx, () => NF.reduce(continuation, V.Atom("Num"), "Explicit"));
+		const continuation = evaluate(C.Block([C.Stmt.Let("A", bubble(atom("E"), atom("Unit")), NF.Type)], lambda(bound(1))));
+		const first = resume(continuation, V.Atom("Num"));
 		expect(quote(first)).toMatchObject({ type: "Abs", body: { value: { value: "Num" } } });
-		const second = runNF(ctx, () => NF.reduce(continuation, V.Atom("String"), "Explicit"));
+		const second = resume(continuation, V.Atom("String"));
 		expect(quote(second)).toMatchObject({ type: "Abs", body: { value: { value: "String" } } });
 		expect(quote(first)).toMatchObject({ type: "Abs", body: { value: { value: "Num" } } });
 	});

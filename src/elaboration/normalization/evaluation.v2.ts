@@ -407,7 +407,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			// Reset-delimiter, package it as a function value, and apply the
 			// body-lambda to that continuation.
 			return yield* Do.let("h", () => schedule.eval(body)).in(function* ({ h }) {
-				const captured = yield* Stack.capture<Scope, EB.Term>();
+				const captured = yield* Stack.capture<Scope, EB.Term>("delimiter");
 				if (!captured) {
 					throw new Error("Shift without enclosing reset");
 				}
@@ -416,7 +416,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				// the captured continuation as if resumed at the shift point.
 				const continuation: NF.Closure = {
 					type: "Continuation",
-					frames: captured.frames,
+					captured,
 					ctx: captured.scope.env,
 					term: EB.Constructors.Lit(Lit.unit()), // dummy term
 				};
@@ -427,24 +427,21 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				return yield* schedule.reduce(h, kVal, "Explicit");
 			});
 		})
-		.with({ type: "Bubble" }, function* ({ meta, ann, values, shift }) {
-			const boundary = yield* Stack.find<Scope, EB.Term>(frame => frame.type === "Delimiter" || frame.type === "Boundary");
-			return yield* match(boundary)
-				.with({ type: "Delimiter" }, () => schedule.eval(shift))
-				.otherwise(() =>
-					match(shift)
-						.with({ type: "Suspend" }, ({ identity, payload }) =>
-							Do.let("identity", () => schedule.eval(identity))
-								.let("payload", () => schedule.eval(payload))
-								.in(({ identity, payload }) => block(NF.Constructors.Bubble(meta, ann, values, { type: "Suspend", identity, payload }))),
-						)
-						.with({ type: "Shift" }, ({ body }) =>
-							Do.let("body", () => schedule.eval(body)).in(({ body }) => block(NF.Constructors.Bubble(meta, ann, values, { type: "Shift", body }))),
-						)
-						.otherwise(() => {
-							throw new Error("A Bubble must retain a suspension or a shift");
-						}),
-				);
+		.with({ type: "Bubble", shift: { type: "Suspend" } }, function* ({ meta, ann, values, shift }) {
+			if (yield* Stack.find<Scope, EB.Term>(frame => frame.type === "Delimiter", "entry")) {
+				return yield* schedule.eval(shift);
+			}
+
+			return yield* Do.let("identity", () => schedule.eval(shift.identity))
+				.let("payload", () => schedule.eval(shift.payload))
+				.in(({ identity, payload }) => block(NF.Constructors.Bubble(meta, ann, values, { type: "Suspend", identity, payload })));
+		})
+		.with({ type: "Bubble" }, function* ({ meta, shift }) {
+			if (yield* Stack.find<Scope, EB.Term>(frame => frame.type === "Delimiter")) {
+				return yield* schedule.eval(shift);
+			}
+
+			return yield* result(NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 })));
 		})
 		.with({ type: "Ann" }, function* ({ term }) {
 			return yield* schedule.eval(term);
@@ -458,9 +455,8 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		});
 }
 
-function* block(value: NF.Value): Evaluation<Machine<NF.Value>> {
-	assert(value.type === "Bubble", "Suspended source work belongs to a Bubble");
-	const pending = yield* Stack.suspend<Scope, EB.Term>();
+function* block(value: Extract<NF.Value, { type: "Bubble" }>): Evaluation<Machine<NF.Value>> {
+	const pending = yield* Stack.capture<Scope, EB.Term>("entry");
 	return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.Bubble(value.meta, value.ann, value.values, value.operation, pending)));
 }
 
@@ -710,7 +706,7 @@ const injectValue = function* (base: NF.Value, label: string, injected: NF.Value
 export const schedule = {
 	/* Capturing source work stops before the callbacks that construct quoted syntax. */
 	*source(work: () => Evaluation<Machine<NF.Value>>): Evaluation<Machine<NF.Value>> {
-		yield* Stack.boundary(yield* scope());
+		yield* Stack.enter(yield* scope());
 		return yield* work();
 	},
 	/** Schedules a term: the driver reads it, and its result is the term's value. */
@@ -808,7 +804,7 @@ export const schedule = {
 			})
 			.with({ type: "Continuation" }, function* (cont) {
 				// Replay the captured continuation with the argument at the shift point.
-				return yield* Stack.resume<NF.Value, Scope, EB.Term>({ frames: cont.frames, scope: { env: cont.ctx, mode: yield* Mode.ask() } }, value);
+				return yield* Stack.resume<NF.Value, Scope, EB.Term>(cont.captured, value);
 			})
 			.exhaustive();
 	},

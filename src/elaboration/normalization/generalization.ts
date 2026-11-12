@@ -356,16 +356,14 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 		.with({ type: "Neutral" }, function* ({ kind, value }) {
 			return NF.Constructors.Neutral(kind, yield* instantiate(value));
 		})
-		.with({ type: "Bubble" }, function* ({ meta, ann, values, operation, pending }) {
-			const op = yield* match(operation)
-				.with({ type: "Suspend" }, function* ({ identity, payload }) {
-					return { type: "Suspend" as const, identity: yield* instantiate(identity), payload: yield* instantiate(payload) };
-				})
-				.with({ type: "Shift" }, function* ({ body }) {
-					return { type: "Shift" as const, body: yield* instantiate(body) };
-				})
-				.exhaustive();
-			return NF.Constructors.Bubble(meta, yield* instantiate(ann), yield* M.traverse(values, instantiate), op, pending);
+		.with({ type: "Bubble" }, function* ({ meta, ann, values, operation: { identity, payload }, pending }) {
+			return NF.Constructors.Bubble(
+				meta,
+				yield* instantiate(ann),
+				yield* M.traverse(values, instantiate),
+				{ type: "Suspend", identity: yield* instantiate(identity), payload: yield* instantiate(payload) },
+				pending,
+			);
 		})
 		.with(NF.Patterns.Glued, function* ({ folded, unfolded }) {
 			return NF.Constructors.Glued(yield* instantiate(folded), yield* instantiate(unfolded));
@@ -425,14 +423,7 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 				meta,
 				trimClosureEnvs(ann),
 				values.map(trimClosureEnvs),
-				match(operation)
-					.with({ type: "Suspend" }, ({ identity, payload }) => ({
-						type: "Suspend" as const,
-						identity: trimClosureEnvs(identity),
-						payload: trimClosureEnvs(payload),
-					}))
-					.with({ type: "Shift" }, ({ body }) => ({ type: "Shift" as const, body: trimClosureEnvs(body) }))
-					.exhaustive(),
+				{ type: "Suspend", identity: trimClosureEnvs(operation.identity), payload: trimClosureEnvs(operation.payload) },
 				pending,
 			),
 		)
