@@ -68,7 +68,7 @@ export function* evaluate(term: EB.Term): Evaluation<NF.Value> {
 	const ctx = yield* M.reader.ask();
 
 	return yield* drive(
-		schedule.eval(term),
+		schedule.source(() => schedule.eval(term)),
 		steps => `Evaluation exceeded maximum steps (${steps}). Possible infinite loop in: ${shown(ctx, () => EB.Display.Term(term))}`,
 	);
 }
@@ -141,7 +141,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				return yield* result(symbolic);
 			}
 
-			return yield* Do.let("known", schedule.view(base)).in(function* ({ known }) {
+			return yield* Do.let("known", () => schedule.view(base)).in(function* ({ known }) {
 				const uninstantiated = match(known)
 					.with({ kind: "Symbolic", value: NF.Patterns.Rigid }, ({ value }) => value.variable.lvl === lvl)
 					.otherwise(() => false);
@@ -150,7 +150,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 					return yield* result(symbolic);
 				}
 
-				return yield* Do.let("projected", project(base, variable.name)).in(({ projected }) =>
+				return yield* Do.let("projected", () => project(base, variable.name)).in(({ projected }) =>
 					result(
 						match(projected)
 							.with({ tag: "found" }, ({ value }) => value)
@@ -202,10 +202,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			const xtended = { ...ctx, env: [entry, ...ctx.env] };
 
 			// Tie the knot: the entry sees the value it evaluates to
-			return yield* Do.let(
-				"nf",
-				M.reader.local(_ => xtended, schedule.eval(val[0])),
-			).in(function* ({ nf }) {
+			return yield* Do.let("nf", () => M.reader.local(_ => xtended, schedule.eval(val[0]))).in(function* ({ nf }) {
 				entry.nf = nf;
 
 				return yield* match(val[0])
@@ -227,7 +224,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			}
 
 			// Force re-evaluation of the solution
-			return yield* Do.let("quoted", Quoting.quote(ctx.env.length, solution)).in(({ quoted }) => schedule.eval(quoted));
+			return yield* Do.let("quoted", () => Quoting.quote(ctx.env.length, solution)).in(({ quoted }) => schedule.eval(quoted));
 		})
 		.with(
 			{ type: "Var", variable: { type: "Bound" } },
@@ -261,13 +258,13 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		})
 		.with({ type: "Abs", binding: { type: "Lambda" } }, function* ({ body, binding }) {
 			// Evaluate annotation, then construct Lambda
-			return yield* Do.let("ann", schedule.eval(binding.annotation)).in(({ ann }) =>
+			return yield* Do.let("ann", () => schedule.eval(binding.annotation)).in(({ ann }) =>
 				result(NF.Constructors.Lambda(binding.variable, binding.icit, NF.Constructors.Closure(ctx, body), ann)),
 			);
 		})
 		.with({ type: "Abs", binding: { type: "Pi" } }, function* ({ body, binding }) {
 			// Evaluate annotation, then construct Pi
-			return yield* Do.let("ann", schedule.eval(binding.annotation)).in(({ ann }) =>
+			return yield* Do.let("ann", () => schedule.eval(binding.annotation)).in(({ ann }) =>
 				result(NF.Constructors.Pi(binding.variable, binding.icit, ann, NF.Constructors.Closure(ctx, body))),
 			);
 		})
@@ -286,13 +283,12 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			const xtended = { ...ctx, sigma };
 
 			// Evaluate row then construct Sigma
-			return yield* Do.let(
-				"ann",
-				M.reader.local(_ => xtended, evalRowPush(annotation)),
-			).in(({ ann }) => result(NF.Constructors.Sigma(binding.variable, ann, NF.Constructors.Closure(ctx, body))));
+			return yield* Do.let("ann", () => M.reader.local(_ => xtended, evalRowPush(annotation))).in(({ ann }) =>
+				result(NF.Constructors.Sigma(binding.variable, ann, NF.Constructors.Closure(ctx, body))),
+			);
 		})
 		.with(EB.CtorPatterns.SigmaV2, function* ({ body, binding }) {
-			return yield* Do.let("ann", schedule.eval(binding.annotation)).in(({ ann }) =>
+			return yield* Do.let("ann", () => schedule.eval(binding.annotation)).in(({ ann }) =>
 				result(NF.Constructors.SigmaV2(binding.variable, ann, NF.Constructors.Closure(ctx, body))),
 			);
 		})
@@ -300,23 +296,22 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			match(binding.mode)
 				.with("strict", () => M.reader.local(_ => EB.open(binding, ctx), schedule.eval(body)))
 				.with("lazy", () =>
-					Do.let(
-						"annotation",
-						M.reader.local(_ => EB.open(binding, ctx), schedule.eval(binding.annotation)),
-					).in(({ annotation }) => result(NF.Constructors.Nu({ ...binding, annotation }, NF.Constructors.Closure(ctx, body)))),
+					Do.let("annotation", () => M.reader.local(_ => EB.open(binding, ctx), schedule.eval(binding.annotation))).in(({ annotation }) =>
+						result(NF.Constructors.Nu({ ...binding, annotation }, NF.Constructors.Closure(ctx, body))),
+					),
 				)
 				.exhaustive(),
 		)
 		.with({ type: "Abs", binding: { type: "Mu" } }, function* (mu) {
 			// Evaluate annotation, then construct Mu
-			return yield* Do.let("ann", schedule.eval(mu.binding.annotation)).in(({ ann }) =>
+			return yield* Do.let("ann", () => schedule.eval(mu.binding.annotation)).in(({ ann }) =>
 				result(NF.Constructors.Mu(mu.binding.variable, mu.binding.source, ann, NF.Constructors.Closure(ctx, mu.body))),
 			);
 		})
 		.with({ type: "App" }, function* ({ func, arg, icit }) {
 			// Evaluate func and arg, then reduce
-			return yield* Do.let("funcVal", schedule.eval(func))
-				.let("argVal", schedule.eval(arg))
+			return yield* Do.let("funcVal", () => schedule.eval(func))
+				.let("argVal", () => schedule.eval(arg))
 				.in(({ funcVal, argVal }) => schedule.reduce(funcVal, argVal, icit));
 		})
 		.with({ type: "Row" }, function* ({ row }) {
@@ -336,13 +331,13 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			{ type: "Match" },
 			() => noReduceEliminations,
 			function* (v: EB.Term & { type: "Match" }) {
-				return yield* Do.let("scrutinee", schedule.eval(v.scrutinee)).in(({ scrutinee }) =>
+				return yield* Do.let("scrutinee", () => schedule.eval(v.scrutinee)).in(({ scrutinee }) =>
 					result(NF.Constructors.StuckMatch(NF.Constructors.Closure(ctx, v), scrutinee)),
 				);
 			},
 		)
 		.with({ type: "Match" }, function* (v) {
-			return yield* Do.let("scrutinee", schedule.eval(v.scrutinee)).in(({ scrutinee }) =>
+			return yield* Do.let("scrutinee", () => schedule.eval(v.scrutinee)).in(({ scrutinee }) =>
 				schedule.matching(scrutinee, v.alternatives, NF.Constructors.StuckMatch(NF.Constructors.Closure(ctx, v), scrutinee)),
 			);
 		})
@@ -350,34 +345,34 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			{ type: "Proj" },
 			() => noReduceEliminations,
 			function* ({ term, label }: EB.Term & { type: "Proj" }) {
-				return yield* Do.let("base", schedule.eval(term)).in(({ base }) => result(NF.Constructors.StuckProj(base, label)));
+				return yield* Do.let("base", () => schedule.eval(term)).in(({ base }) => result(NF.Constructors.StuckProj(base, label)));
 			},
 		)
 		.with({ type: "Proj" }, function* ({ term, label }) {
-			return yield* Do.let("base", schedule.eval(term)).in(({ base }) => projectValue(base, label));
+			return yield* Do.let("base", () => schedule.eval(term)).in(({ base }) => projectValue(base, label));
 		})
 		.with(
 			{ type: "Inj" },
 			() => noReduceEliminations,
 			function* ({ term, label, value: valueTerm }: EB.Term & { type: "Inj" }) {
-				return yield* Do.let("base", schedule.eval(term))
-					.let("injected", schedule.eval(valueTerm))
+				return yield* Do.let("base", () => schedule.eval(term))
+					.let("injected", () => schedule.eval(valueTerm))
 					.in(({ base, injected }) => result(NF.Constructors.StuckInj(base, label, injected)));
 			},
 		)
 		.with({ type: "Inj" }, function* ({ term, label, value: valueTerm }) {
-			return yield* Do.let("base", schedule.eval(term))
-				.let("injected", schedule.eval(valueTerm))
+			return yield* Do.let("base", () => schedule.eval(term))
+				.let("injected", () => schedule.eval(valueTerm))
 				.in(({ base, injected }) => injectValue(base, label, injected));
 		})
 		.with({ type: "Modal" }, function* ({ term, modalities }) {
 			// Evaluate term and liquid, then wrap in Modal
-			return yield* Do.let("nf", schedule.eval(term))
-				.let("liquid", schedule.eval(modalities.liquid))
+			return yield* Do.let("nf", () => schedule.eval(term))
+				.let("liquid", () => schedule.eval(modalities.liquid))
 				.in(function* ({ nf, liquid }) {
 					return yield* match(unglue(nf))
 						.with(NF.Patterns.Modal, function* ({ modalities: innerModalities, value }) {
-							return yield* Do.let("combined", schedule.combine(innerModalities, { quantity: modalities.quantity, liquid })).in(({ combined }) =>
+							return yield* Do.let("combined", () => schedule.combine(innerModalities, { quantity: modalities.quantity, liquid })).in(({ combined }) =>
 								result(NF.Constructors.Modal(value, combined)),
 							);
 						})
@@ -411,7 +406,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			// Dynamic semantics: capture the continuation up to the nearest
 			// Reset-delimiter, package it as a function value, and apply the
 			// body-lambda to that continuation.
-			return yield* Do.let("h", schedule.eval(body)).in(function* ({ h }) {
+			return yield* Do.let("h", () => schedule.eval(body)).in(function* ({ h }) {
 				const captured = yield* Stack.capture<Scope, EB.Term>();
 				if (!captured) {
 					throw new Error("Shift without enclosing reset");
@@ -432,12 +427,24 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				return yield* schedule.reduce(h, kVal, "Explicit");
 			});
 		})
-		.with({ type: "Bubble" }, function* ({ meta, shift }) {
-			if (yield* Stack.find<Scope, EB.Term>(frame => frame.type === "Delimiter")) {
-				return yield* schedule.eval(shift);
-			}
-
-			return yield* result(NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 })));
+		.with({ type: "Bubble" }, function* ({ meta, ann, values, shift }) {
+			const boundary = yield* Stack.find<Scope, EB.Term>(frame => frame.type === "Delimiter" || frame.type === "Boundary");
+			return yield* match(boundary)
+				.with({ type: "Delimiter" }, () => schedule.eval(shift))
+				.otherwise(() =>
+					match(shift)
+						.with({ type: "Suspend" }, ({ identity, payload }) =>
+							Do.let("identity", () => schedule.eval(identity))
+								.let("payload", () => schedule.eval(payload))
+								.in(({ identity, payload }) => block(NF.Constructors.Bubble(meta, ann, values, { type: "Suspend", identity, payload }))),
+						)
+						.with({ type: "Shift" }, ({ body }) =>
+							Do.let("body", () => schedule.eval(body)).in(({ body }) => block(NF.Constructors.Bubble(meta, ann, values, { type: "Shift", body }))),
+						)
+						.otherwise(() => {
+							throw new Error("A Bubble must retain a suspension or a shift");
+						}),
+				);
 		})
 		.with({ type: "Ann" }, function* ({ term }) {
 			return yield* schedule.eval(term);
@@ -449,6 +456,12 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			);
 			throw new Error("Not implemented");
 		});
+}
+
+function* block(value: NF.Value): Evaluation<Machine<NF.Value>> {
+	assert(value.type === "Bubble", "Suspended source work belongs to a Bubble");
+	const pending = yield* Stack.suspend<Scope, EB.Term>();
+	return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.Bubble(value.meta, value.ann, value.values, value.operation, pending)));
 }
 
 /**
@@ -474,7 +487,7 @@ function* processStatementsAndPush(stmts: EB.Statement[], returnTerm: EB.Term): 
 
 			return yield* M.reader.local(
 				_ => extended,
-				Do.let("val", schedule.eval(value)).in(function* ({ val }) {
+				Do.let("val", () => schedule.eval(value)).in(function* ({ val }) {
 					entry.nf = val;
 					return yield* processStatementsAndPush(rest, returnTerm);
 				}),
@@ -482,14 +495,11 @@ function* processStatementsAndPush(stmts: EB.Statement[], returnTerm: EB.Term): 
 		})
 		.with({ type: "Expression" }, function* ({ value }) {
 			/* The value is discarded; only its effect on the machine matters. */
-			return yield* Do.let("discarded", schedule.eval(value)).in(() => processStatementsAndPush(rest, returnTerm));
+			return yield* Do.let("discarded", () => schedule.eval(value)).in(() => processStatementsAndPush(rest, returnTerm));
 		})
 		.with({ type: "Using" }, function* ({ value, annotation }) {
 			// no δ-reduction: we don't want to inline the value, just evaluate it and add it to implicits
-			return yield* Do.let(
-				"nfValue",
-				Mode.local(m => ({ ...m, noInlineBindings: true }), schedule.eval(value)),
-			).in(({ nfValue }) => {
+			return yield* Do.let("nfValue", () => Mode.local(m => ({ ...m, noInlineBindings: true }), schedule.eval(value))).in(({ nfValue }) => {
 				const updated = update(ctx, "implicits", A.append<EB.Context["implicits"][0]>([nfValue, annotation]));
 
 				return M.reader.local(_ => updated, processStatementsAndPush(rest, returnTerm));
@@ -500,13 +510,23 @@ function* processStatementsAndPush(stmts: EB.Statement[], returnTerm: EB.Term): 
 
 /** A row evaluates its entries in order, then its tail, and is assembled from the results. */
 function* evalRowPush(row: EB.Row): Evaluation<Machine<NF.Value>> {
-	return yield* group([...row.entries.map(({ value }) => schedule.eval(value)), evalTail(row.tail)], (results: NF.Value[]) => {
-		const tail = results[row.entries.length];
-		assert(tail.type === "Row", "A row tail evaluates to a row");
+	return yield* group(
+		[
+			...row.entries.map(
+				({ value }) =>
+					() =>
+						schedule.eval(value),
+			),
+			() => evalTail(row.tail),
+		],
+		(results: NF.Value[]) => {
+			const tail = results[row.entries.length];
+			assert(tail.type === "Row", "A row tail evaluates to a row");
 
-		const fields = R.Constructors.Row<NF.Value, NF.Variable>(row.entries.map(({ label }, i) => ({ label, value: results[i] })));
-		return result(NF.Constructors.Row(R.append(fields, tail.row)));
-	});
+			const fields = R.Constructors.Row<NF.Value, NF.Variable>(row.entries.map(({ label }, i) => ({ label, value: results[i] })));
+			return result(NF.Constructors.Row(R.append(fields, tail.row)));
+		},
+	);
 }
 
 /** A tail evaluates to the row it stands for: the empty row, an unsolved tail, or the row its variable is solved or bound to. */
@@ -532,7 +552,9 @@ function* evalTail(tail: EB.Variable | undefined): Evaluation<Machine<NF.Value>>
 				 * exactly as the value path does for a solved meta.
 				 */
 				.with({ type: "Var" }, ({ variable }) =>
-					Do.let("quoted", Quoting.quote(ctx.env.length, NF.Constructors.Row(R.Constructors.Variable(variable)))).in(({ quoted }) => schedule.eval(quoted)),
+					Do.let("quoted", () => Quoting.quote(ctx.env.length, NF.Constructors.Row(R.Constructors.Variable(variable)))).in(({ quoted }) =>
+						schedule.eval(quoted),
+					),
 				)
 				.otherwise(nf => {
 					throw new Error("Solved meta in row position is not a row or variable: " + shown(ctx, () => display(nf)));
@@ -574,10 +596,9 @@ const observe = function* (base: NF.Value & { type: "Abs"; binder: { type: "Nu" 
 
 	return yield* match([R.lookup(row, label), row.tail] as const)
 		.with([P.nonNullable, P._], function* ([field]) {
-			return yield* Do.let(
-				"value",
-				M.reader.local(_ => EB.open(binder, closure.ctx), schedule.eval(field)),
-			).in(({ value }) => result<Project>({ tag: "found", value }));
+			return yield* Do.let("value", () => M.reader.local(_ => EB.open(binder, closure.ctx), schedule.eval(field))).in(({ value }) =>
+				result<Project>({ tag: "found", value }),
+			);
 		})
 		.with([P._, P.nonNullable], () => result<Project>({ tag: "blocked" }))
 		.otherwise(() => result<Project>({ tag: "missing" }));
@@ -596,7 +617,7 @@ const project = function* (base: NF.Value, label: string): Evaluation<Machine<Pr
 			.with([P._, P.nonNullable], (): Project => ({ tag: "blocked" }))
 			.otherwise((): Project => ({ tag: "missing" }));
 
-	return yield* Do.let("known", schedule.view(current)).in(function* ({ known }) {
+	return yield* Do.let("known", () => schedule.view(current)).in(function* ({ known }) {
 		return yield* match(known)
 			.with({ kind: "Sealed", value: NF.Patterns.Nu }, ({ value }) => observe(value, label))
 			.otherwise(visible =>
@@ -614,7 +635,7 @@ const project = function* (base: NF.Value, label: string): Evaluation<Machine<Pr
 };
 
 const projectValue = function* (base: NF.Value, label: string): Evaluation<Machine<NF.Value>> {
-	return yield* Do.let("found", project(base, label)).in(({ found }) =>
+	return yield* Do.let("found", () => project(base, label)).in(({ found }) =>
 		result(
 			match(found)
 				.with({ tag: "found" }, ({ value }) => value)
@@ -635,7 +656,7 @@ const overwrite = <T, V>(row: R.Row<T, V>, label: string, value: T): R.Row<T, V>
 	);
 
 const inject = function* (base: NF.Value, label: string, injected: NF.Value): Evaluation<Machine<NF.Value | undefined>> {
-	return yield* Do.let("known", schedule.view(base)).in(({ known }) =>
+	return yield* Do.let("known", () => schedule.view(base)).in(({ known }) =>
 		match(known)
 			/*
 			 * TODO: injection into a lazy Nu. Strict records are plain structs by the time they are injected into,
@@ -675,7 +696,9 @@ const inject = function* (base: NF.Value, label: string, injected: NF.Value): Ev
 };
 
 const injectValue = function* (base: NF.Value, label: string, injected: NF.Value): Evaluation<Machine<NF.Value>> {
-	return yield* Do.let("replaced", inject(base, label, injected)).in(({ replaced }) => result(replaced ?? NF.Constructors.StuckInj(base, label, injected)));
+	return yield* Do.let("replaced", () => inject(base, label, injected)).in(({ replaced }) =>
+		result(replaced ?? NF.Constructors.StuckInj(base, label, injected)),
+	);
 };
 
 /**
@@ -685,6 +708,11 @@ const injectValue = function* (base: NF.Value, label: string, injected: NF.Value
  * the machine's frame count — the trampoline only bounds work that is scheduled.
  */
 export const schedule = {
+	/* Capturing source work stops before the callbacks that construct quoted syntax. */
+	*source(work: () => Evaluation<Machine<NF.Value>>): Evaluation<Machine<NF.Value>> {
+		yield* Stack.boundary(yield* scope());
+		return yield* work();
+	},
 	/** Schedules a term: the driver reads it, and its result is the term's value. */
 	*eval(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		return yield* Stack.push<NF.Value, Scope, EB.Term>(yield* scope(), term);
@@ -708,7 +736,7 @@ export const schedule = {
 			})
 			/* The folded face grows with the glue itself at its head, so taking the application apart yields glued values, never a bare reference. */
 			.with(NF.Patterns.Glued, glued =>
-				Do.let("applied", schedule.reduce(glued.unfolded, nfa, icit)).in(({ applied }) =>
+				Do.let("applied", () => schedule.reduce(glued.unfolded, nfa, icit)).in(({ applied }) =>
 					result(NF.Constructors.Glued(NF.Constructors.App(glued, nfa, icit), applied)),
 				),
 			)
@@ -733,7 +761,7 @@ export const schedule = {
 			 * head reduces to the very node it came from.
 			 */
 			.with({ type: "App" }, function* ({ func, arg, icit: argIcit }) {
-				return yield* Do.let("intermediate", schedule.reduce(func, arg, argIcit)).in(({ intermediate }) =>
+				return yield* Do.let("intermediate", () => schedule.reduce(func, arg, argIcit)).in(({ intermediate }) =>
 					result(NF.Constructors.App(intermediate, nfa, icit)),
 				);
 			})
@@ -796,7 +824,7 @@ export const schedule = {
 
 		const [alt, ...rest] = alts;
 
-		return yield* Do.let("verdict", schedule.meet(alt.pattern, nf)).in(({ verdict }) =>
+		return yield* Do.let("verdict", () => schedule.meet(alt.pattern, nf)).in(({ verdict }) =>
 			match(verdict)
 				.with({ tag: "matched" }, function* ({ bindings }) {
 					const extendedCtx = bindings.reduce((_ctx, { binder, nf: bound }) => EB.extend(_ctx, binder, bound), ctx);
@@ -830,7 +858,7 @@ export const schedule = {
 			return yield* result(immediate);
 		}
 
-		return yield* Do.let("known", schedule.view(nf)).in(function* ({ known }) {
+		return yield* Do.let("known", () => schedule.view(nf)).in(function* ({ known }) {
 			if (known.kind !== "Sealed") {
 				return yield* result(blocked());
 			}
@@ -863,8 +891,8 @@ export const schedule = {
 
 						return yield* match(row)
 							.with(R.Patterns.NonEmpty, ({ entries: [{ value: element }, ...remaining] }) =>
-								Do.let("current", schedule.meet(head, element))
-									.let("rest", zip(tail, R.Constructors.Row(remaining, row.tail)))
+								Do.let("current", () => schedule.meet(head, element))
+									.let("rest", () => zip(tail, R.Constructors.Row(remaining, row.tail)))
 									.in(({ current, rest }) => result(combineMeet(current, rest))),
 							)
 							.otherwise(() => result(mismatch()));
@@ -892,8 +920,8 @@ export const schedule = {
 
 					const arm = rewritten.right;
 
-					return yield* Do.let("payload", schedule.meet(arm.value, value.payload))
-						.let("rest", meetAll(arm.rest, R.Constructors.Empty()))
+					return yield* Do.let("payload", () => schedule.meet(arm.value, value.payload))
+						.let("rest", () => meetAll(arm.rest, R.Constructors.Empty()))
 						.in(({ payload, rest }) => result(combineMeet(payload, rest)));
 				})
 				.with([NF.Patterns.Variant, { type: "Variant" }], ([{ arg }, p]) => meetAll(p.row, arg.row))
@@ -916,12 +944,12 @@ export const schedule = {
 		const solved = function* (meta: Extract<NF.Variable, { type: "Meta" }>): Evaluation<Machine<NF.Value>> {
 			const solution = Metas.solution(yield* Metas.registry.get(), meta.val);
 
-			return yield* solution ? step(schedule.force(solution)) : result(value);
+			return yield* solution ? step(() => schedule.force(solution)) : result(value);
 		};
 
 		/* Likewise a blocked elimination, wrapped or bare: retry it, and keep forcing while it progresses. */
 		const retry = (subject: NF.Value): Evaluation<Machine<NF.Value>> =>
-			Do.let("next", schedule.resume(subject)).in(({ next }) => (next === subject ? result(value) : schedule.force(next)));
+			Do.let("next", () => schedule.resume(subject)).in(({ next }) => (next === subject ? result(value) : schedule.force(next)));
 
 		return yield* match(value)
 			.with({ type: "Neutral", kind: "Sealed" }, NF.Patterns.Glued, () => result(value))
@@ -935,7 +963,7 @@ export const schedule = {
 					.with({ value: P.select() }, resolved => resolved)
 					.otherwise(() => value);
 
-				return yield* next === value ? result(value) : step(schedule.force(next));
+				return yield* next === value ? result(value) : step(() => schedule.force(next));
 			})
 			.with({ type: "Neutral", kind: "Symbolic", value: NF.Patterns.Flex }, ({ value: flex }) => solved(flex.variable))
 			.with({ type: "Neutral", kind: "Symbolic" }, () => result(value))
@@ -957,10 +985,10 @@ export const schedule = {
 		const name = `${left.binder.variable}_and_${right.binder.variable}`;
 		const lvl = ctx.env.length;
 
-		return yield* Do.let("anf", schedule.apply(left.binder, left.closure, NF.Constructors.Rigid(lvl)))
-			.let("bnf", schedule.apply(right.binder, right.closure, NF.Constructors.Rigid(lvl)))
+		return yield* Do.let("anf", () => schedule.apply(left.binder, left.closure, NF.Constructors.Rigid(lvl)))
+			.let("bnf", () => schedule.apply(right.binder, right.closure, NF.Constructors.Rigid(lvl)))
 			.in(({ anf, bnf }) =>
-				Do.let("term", Quoting.quote(lvl + 1, DSL.Binop.and(anf, bnf))).in(({ term }) =>
+				Do.let("term", () => Quoting.quote(lvl + 1, DSL.Binop.and(anf, bnf))).in(({ term }) =>
 					result({
 						quantity: Q.SR.mul(a.quantity, b.quantity),
 						liquid: NF.Constructors.Lambda(name, "Explicit", NF.Constructors.Closure(ctx, term), left.binder.annotation),
@@ -976,7 +1004,7 @@ export const schedule = {
 	 * value is classified by its unfolded face.
 	 */
 	*view(value: NF.Value): Evaluation<Machine<View>> {
-		return yield* Do.let("forced", schedule.force(value)).in(({ forced }) =>
+		return yield* Do.let("forced", () => schedule.force(value)).in(({ forced }) =>
 			match(forced)
 				.with(NF.Patterns.Glued, ({ unfolded }) => schedule.view(unfolded))
 				.otherwise(() =>
@@ -998,7 +1026,7 @@ export const schedule = {
 	*resume(value: NF.Value): Evaluation<Machine<NF.Value>> {
 		return yield* match(value)
 			.with(NF.Patterns.Proj, function* ({ base, label }) {
-				return yield* Do.let("found", project(base, label)).in(({ found }) =>
+				return yield* Do.let("found", () => project(base, label)).in(({ found }) =>
 					result(
 						match(found)
 							.with({ tag: "found" }, ({ value: projected }) => projected)
@@ -1016,10 +1044,10 @@ export const schedule = {
 				return yield* M.reader.local(_ => closure.ctx, schedule.matching(scrutinee, closure.term.alternatives, value));
 			})
 			.with(NF.Patterns.Inj, function* ({ base, label, injected }) {
-				return yield* Do.let("replaced", inject(base, label, injected)).in(({ replaced }) => result(replaced ?? value));
+				return yield* Do.let("replaced", () => inject(base, label, injected)).in(({ replaced }) => result(replaced ?? value));
 			})
 			.with(NF.Patterns.App, ({ func, arg, icit: appIcit }) =>
-				Do.let("forced", schedule.force(func)).in(({ forced }) => (forced === func ? result(value) : schedule.reduce(forced, arg, appIcit))),
+				Do.let("forced", () => schedule.force(func)).in(({ forced }) => (forced === func ? result(value) : schedule.reduce(forced, arg, appIcit))),
 			)
 			.with({ type: "External" }, function* (ext) {
 				if (ext.args.length < ext.arity) {
@@ -1027,7 +1055,7 @@ export const schedule = {
 				}
 
 				return yield* group(
-					ext.args.map(arg => schedule.force(arg)),
+					ext.args.map(arg => () => schedule.force(arg)),
 					function* (forced) {
 						const changed = forced.some((arg, index) => arg !== ext.args[index]);
 
@@ -1048,7 +1076,7 @@ export function* reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evalu
 	const ctx = yield* M.reader.ask();
 
 	return yield* drive(
-		schedule.reduce(nff, nfa, icit),
+		schedule.source(() => schedule.reduce(nff, nfa, icit)),
 		steps => `Reduction exceeded maximum steps (${steps}). Possible infinite loop applying: ${shown(ctx, () => display(nff))}`,
 	);
 }
@@ -1062,7 +1090,7 @@ export function* apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value):
 	const ctx = yield* M.reader.ask();
 
 	return yield* drive(
-		schedule.apply(binder, closure, value),
+		schedule.source(() => schedule.apply(binder, closure, value)),
 		steps => `Application exceeded maximum steps (${steps}). Possible infinite loop applying ${binder.variable} to: ${shown(ctx, () => display(value))}`,
 	);
 }
@@ -1207,17 +1235,18 @@ const meetAll = function* (
 
 				const field = rewritten.right;
 
-				const current = observe
-					? Do.let("projected", observe(label)).in(({ projected }) =>
-							match(projected)
-								.with({ tag: "found" }, ({ value }) => schedule.meet(pattern, value))
-								.with({ tag: "blocked" }, () => result(blocked()))
-								.otherwise(() => result(mismatch())),
-						)
-					: schedule.meet(pattern, field.value);
+				const current = () =>
+					observe
+						? Do.let("projected", () => observe(label)).in(({ projected }) =>
+								match(projected)
+									.with({ tag: "found" }, ({ value }) => schedule.meet(pattern, value))
+									.with({ tag: "blocked" }, () => result(blocked()))
+									.otherwise(() => result(mismatch())),
+							)
+						: schedule.meet(pattern, field.value);
 
 				return yield* Do.let("current", current)
-					.let("rest", meetAll(R.Constructors.Row(remaining, pats.tail), field.rest, observe))
+					.let("rest", () => meetAll(R.Constructors.Row(remaining, pats.tail), field.rest, observe))
 					.in(({ current, rest }) => result(combineMeet(current, rest)));
 			},
 		)

@@ -101,35 +101,35 @@ describe("the machine, on its own", () => {
 
 	describe("groups", () => {
 		it("hands the results over in the order the group was written", () => {
-			const program = group([evaluate("one"), evaluate(2), evaluate(3)], parts => Stack.fill(parts.join("")));
+			const program = group([() => evaluate("one"), () => evaluate(2), () => evaluate(3)], parts => Stack.fill(parts.join("")));
 			expect(machine(program)).toBe("123");
 		});
 
 		it("keeps that order when some works have a result at once and others take a step", () => {
-			const later = (value: number) => step(Stack.fill(value));
+			const later = (value: number) => step(() => Stack.fill(value));
 
-			expect(machine(group([Stack.fill(1), later(2), evaluate(3)], parts => Stack.fill(parts.join(""))))).toBe("123");
+			expect(machine(group([() => Stack.fill(1), () => later(2), () => evaluate(3)], parts => Stack.fill(parts.join(""))))).toBe("123");
 		});
 
 		it("names them, through the notation", () => {
 			expect(
 				machine(
-					Do.let("a", evaluate("magic"))
-						.let("b", evaluate(8))
+					Do.let("a", () => evaluate("magic"))
+						.let("b", () => evaluate(8))
 						.in(({ a, b }) => Stack.fill(a + b)),
 				),
 			).toBe(50);
 		});
 
 		it("nests", () => {
-			const inner = group([Stack.fill(1), Stack.fill(2)], ([a, b]) => Stack.fill(a + b));
+			const inner = () => group([() => Stack.fill(1), () => Stack.fill(2)], ([a, b]) => Stack.fill(a + b));
 
-			expect(machine(group([inner, Stack.fill(10)], ([sum, ten]) => Stack.fill(sum * ten)))).toBe(30);
+			expect(machine(group([inner, () => Stack.fill(10)], ([sum, ten]) => Stack.fill(sum * ten)))).toBe(30);
 		});
 	});
 
 	const countdown = function* (n: number): Program<Machine<number>> {
-		return n === 0 ? yield* Stack.fill(0) : yield* step(countdown(n - 1));
+		return n === 0 ? yield* Stack.fill(0) : yield* step(() => countdown(n - 1));
 	};
 	describe("steps instead of calls", () => {
 		it("runs a recursion far deeper than the host stack allows", () => {
@@ -160,7 +160,7 @@ describe("the machine, on its own", () => {
 
 		it("keeps a nested drive's result out of the drive around it", () => {
 			const nested = function* (): Program<Machine<string>> {
-				const inner = yield* drive(group([Stack.fill(1), Stack.fill(2)], ([a, b]) => Stack.fill(a + b)));
+				const inner = yield* drive(group([() => Stack.fill(1), () => Stack.fill(2)], ([a, b]) => Stack.fill(a + b)));
 
 				return yield* Stack.fill(`inner produced ${inner}`);
 			};
@@ -193,7 +193,7 @@ describe("the machine, on its own", () => {
 					throw new Error("shift without a delimiter");
 				}
 
-				return yield* group([Stack.resume<string, Env, Value>(captured, 10), Stack.resume<string, Env, Value>(captured, 20)], ([first, second]) =>
+				return yield* group([() => Stack.resume<string, Env, Value>(captured, 10), () => Stack.resume<string, Env, Value>(captured, 20)], ([first, second]) =>
 					Stack.fill(`${first} & ${second}`),
 				);
 			};
@@ -201,7 +201,7 @@ describe("the machine, on its own", () => {
 			const program = function* (): Program<Machine<string>> {
 				yield* Stack.delimit(builtins);
 
-				return yield* group<number | string, string>([Stack.fill(1), shift()], ([a, b]) => Stack.fill(`${a}+${b}`));
+				return yield* group<number | string, string>([() => Stack.fill(1), () => shift()], ([a, b]) => Stack.fill(`${a}+${b}`));
 			};
 
 			expect(machine(program())).toBe("1+10 & 1+20");

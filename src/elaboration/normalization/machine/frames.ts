@@ -8,6 +8,7 @@ export type StackFrame<S, C> =
 	| { type: "Control"; scope: S; control: C }
 	| { type: "Cont"; scope: S; arity: number; operands: unknown[]; k: Stored }
 	| { type: "Delimiter"; scope: S }
+	| { type: "Boundary"; scope: S }
 	| { type: "Result"; operands: unknown[]; blame: Blame };
 
 /*

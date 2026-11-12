@@ -69,6 +69,17 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 		.with({ type: "Neutral" }, function* ({ value: v }) {
 			return yield* go(v);
 		})
+		.with({ type: "Bubble" }, function* ({ meta, operation }) {
+			const body = yield* match(operation)
+				.with({ type: "Suspend" }, function* ({ identity, payload }) {
+					return ["suspend @", yield* go(identity), " ", yield* go(payload)] satisfies PP.Doc;
+				})
+				.with({ type: "Shift" }, function* ({ body }) {
+					return ["shift ", yield* go(body)] satisfies PP.Doc;
+				})
+				.exhaustive();
+			return ["bubble#", `${meta}`, " (", body, ")"] satisfies PP.Doc;
+		})
 		.with(NF.Patterns.Proj, function* ({ base, label }) {
 			return [yield* go(base), ".", label] satisfies PP.Doc;
 		})

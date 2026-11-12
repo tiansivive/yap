@@ -3,7 +3,19 @@ import * as Eff from "@yap/utils/effects";
 
 import { scheduled, type Blame, type Captured, type Machine, type Mark, type Runnable, type StackFrame, type Stored } from "./frames";
 
-export type Actions<S, C> = Begin | Next<S, C> | Finish | Push<S, C> | Fill | Cont<S> | Delimit<S> | Find<S, C> | Capture<S, C> | Resume<S, C>;
+export type Actions<S, C> =
+	| Begin
+	| Next<S, C>
+	| Finish
+	| Push<S, C>
+	| Fill
+	| Cont<S>
+	| Delimit<S>
+	| Boundary<S>
+	| Suspend<S, C>
+	| Find<S, C>
+	| Capture<S, C>
+	| Resume<S, C>;
 
 type Begin = Eff.Action<"Machine.begin", Blame, Mark>;
 export function* begin(blame: Blame) {
@@ -46,6 +58,16 @@ type Delimit<S> = Eff.Action<"Machine.delimit", S, undefined>;
 /** Marks a boundary a capture slices back to. */
 export function* delimit<S>(scope: S) {
 	return yield* Eff.ctl.action<Delimit<S>>("Machine.delimit", scope);
+}
+
+type Boundary<S> = Eff.Action<"Machine.boundary", S, undefined>;
+export function* boundary<S>(scope: S) {
+	return yield* Eff.ctl.action<Boundary<S>>("Machine.boundary", scope);
+}
+
+type Suspend<S, C> = Eff.Action<"Machine.suspend", undefined, Captured<S, C> | undefined>;
+export function* suspend<S, C>() {
+	return yield* Eff.ctl.action<Suspend<S, C>>("Machine.suspend", undefined);
 }
 
 type Find<S, C> = Eff.Action<"Machine.find", (frame: StackFrame<S, C>) => boolean, StackFrame<S, C> | undefined>;

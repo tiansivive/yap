@@ -12,24 +12,25 @@ type Bindings = Record<string, unknown>;
  */
 export const notation = <S, C, R extends Eff.AnyAction>(scope: () => Eff.Eff<R, S>) => {
 	type Program<T> = Eff.Eff<R | Actions<S, C>, T>;
+	type Work<T> = () => Program<Machine<T>>;
 
 	type Chain<B extends Bindings> = {
-		let: <N extends string, T>(name: N, work: Program<Machine<T>>) => Chain<B & { readonly [P in N]: T }>;
+		let: <N extends string, T>(name: N, work: Work<T>) => Chain<B & { readonly [P in N]: T }>;
 		in: <T>(body: (bindings: B) => Program<Machine<T>>) => Program<Machine<T>>;
 	};
 
-	const step = function* <T>(work: Program<Machine<T>>): Program<Machine<T>> {
-		return yield* cont(yield* scope(), 0, () => work);
+	const step = function* <T>(work: Work<T>): Program<Machine<T>> {
+		return yield* cont(yield* scope(), 0, work);
 	};
 
-	const group = function* <A, T>(works: readonly Program<Machine<A>>[], k: (results: A[]) => Program<Machine<T>>): Program<Machine<T>> {
+	const group = function* <A, T>(works: readonly Work<A>[], k: (results: A[]) => Program<Machine<T>>): Program<Machine<T>> {
 		const result = yield* cont(yield* scope(), works.length, k);
 		yield* Eff.traverse(works.toReversed(), step);
 
 		return result;
 	};
 
-	const from = <B extends Bindings>(steps: readonly { name: string; work: Program<Machine<unknown>> }[]): Chain<B> => ({
+	const from = <B extends Bindings>(steps: readonly { name: string; work: Work<unknown> }[]): Chain<B> => ({
 		let: (name, work) => from([...steps, { name, work }]),
 		in: body =>
 			group(
