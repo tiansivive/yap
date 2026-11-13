@@ -11,7 +11,7 @@ import * as Eff from "@yap/utils/effects";
 import * as Evaluation from "../evaluation.v2";
 import * as Stack from "../machine/actions";
 import { handlers } from "../machine/handlers";
-import { Mode, scope } from "../effects";
+import { Mode, scope, type Handling } from "../effects";
 import { mkCtx, runEB, runNF } from "../../inference/__tests__/util";
 
 const ctx = mkCtx();
@@ -35,7 +35,7 @@ const resume = (value: NF.Value, argument: NF.Value) => {
 			Evaluation.drive(
 				(function* () {
 					yield* Stack.enter(yield* scope());
-					return yield* Stack.resume<NF.Value, NF.Scope, EB.Term>(pending, argument);
+					return yield* Stack.resume<NF.Value, NF.Scope, EB.Term, Handling>(pending, argument);
 				})(),
 				steps => `Evaluation exceeded ${steps} steps`,
 			),
@@ -255,5 +255,22 @@ describe("Bubble quotation", () => {
 		const value = runNF(scope, () => NF.evaluate(term));
 
 		expect(quote(value, 1)).toMatchObject({ type: "Reset", handling: { identity: { value: { value: "E" } } } });
+	});
+
+	describe("handled callback quotation", () => {
+		const number = atom("Num");
+		const arrow = C.Pi("x", "Explicit", number, number);
+		const handler = C.Lambda("p", "Explicit", C.Lambda("k", "Explicit", C.Lit({ type: "Num", value: 99 }), arrow), number);
+		const callback = C.Lambda("x", "Explicit", C.Suspend(atom("E"), bound(0), number), number);
+		const program = C.Lambda("f", "Explicit", C.Reset(C.App("Explicit", bound(0), C.Lit({ type: "Num", value: 5 })), { identity: atom("E"), handler }), arrow);
+		const expected = { type: "Lit", value: { type: "Num", value: 99 } };
+		it("executes the concrete callback under its handler", () => {
+			expect(evaluate(C.App("Explicit", program, callback))).toMatchObject(expected);
+		});
+
+		it.fails("preserves execution after quoting the open function", () => {
+			const residual = quote(evaluate(program));
+			expect(evaluate(C.App("Explicit", residual, callback))).toMatchObject(expected);
+		});
 	});
 });

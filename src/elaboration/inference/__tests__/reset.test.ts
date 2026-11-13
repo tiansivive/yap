@@ -341,9 +341,9 @@ describe("Inference: raw reset", () => {
 		expect(() => elaborateModule("let f = \\x -> suspend (\\k -> k (x + 1)); let result: Num = reset (10 + (f 1));")).toThrow("Suspend evaluation is pending");
 	});
 
-	it("retains the installed handler for evaluation", () => {
+	it("evaluates a normal return through the installed handler", () => {
 		const result = elaborated("let result = reset 10;");
-		expect(() => runNF(result.ctx, () => NF.evaluate(result.tm), result.registry)).toThrow("Handler-bearing reset evaluation is pending");
+		expect(runNF(result.ctx, () => NF.evaluate(result.tm), result.registry)).toMatchObject({ type: "Lit", value: { type: "Num", value: 10 } });
 	});
 
 	it("retains captured application arguments for suspended evaluation", () => {

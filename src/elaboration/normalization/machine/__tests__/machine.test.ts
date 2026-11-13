@@ -235,6 +235,37 @@ describe("the machine, on its own", () => {
 			expect(machine(program())).toEqual({ type: "Entry", captured: { frames: [], scope: { inner: 1 } } });
 		});
 
+		it("retains unrelated delimiters while selecting a matching one", () => {
+			const program = source(function* () {
+				yield* Stack.delimit(builtins, "A");
+				yield* Stack.delimit({ inner: 1 }, "B");
+				return yield* step(function* () {
+					return yield* Stack.fill(yield* Stack.capture<Env, Value>(handling => handling === "A"));
+				});
+			});
+			expect(machine(program)).toEqual({
+				type: "Delimiter",
+				handling: "A",
+				captured: { scope: builtins, frames: [{ type: "Delimiter", scope: { inner: 1 }, handling: "B" }] },
+			});
+		});
+
+		it("keeps a matching delimiter outside the active entry", () => {
+			const program = function* () {
+				yield* Stack.delimit(builtins, "A");
+				return yield* source(function* () {
+					yield* Stack.delimit({ inner: 1 }, "B");
+					return yield* step(function* () {
+						return yield* Stack.fill(yield* Stack.capture<Env, Value>(handling => handling === "A"));
+					});
+				});
+			};
+			expect(machine(program())).toEqual({
+				type: "Entry",
+				captured: { scope: builtins, frames: [{ type: "Delimiter", scope: { inner: 1 }, handling: "B" }] },
+			});
+		});
+
 		it("captures the nearest delimiter inside the active entry", () => {
 			const program = source(function* () {
 				yield* Stack.delimit(builtins);

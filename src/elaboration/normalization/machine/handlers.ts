@@ -6,8 +6,8 @@ import * as Eff from "@yap/utils/effects";
 import type { Actions } from "./actions";
 import type { Mark, Runnable, StackFrame } from "./frames";
 
-export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, undefined> => {
-	const workStack: StackFrame<S, C>[] = [];
+export const handlers = <S, C, D = unknown>(maxSteps: number): Eff.Handler<Actions<S, C, D>, undefined> => {
+	const workStack: StackFrame<S, C, D>[] = [];
 	/* Scheduled work keeps its entry until the driver unwinds below its saved depth. */
 	const entries: (Mark & { scope: S })[] = [];
 	let spent = 0;
@@ -98,8 +98,8 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Machine.delimit": scope => {
-				workStack.push({ type: "Delimiter", scope });
+			"Machine.delimit": ({ scope, handling }) => {
+				workStack.push({ type: "Delimiter", scope, handling });
 
 				return Eff.ctl.resume(undefined);
 			},
@@ -111,11 +111,13 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 
 			"Machine.find": match => Eff.ctl.resume(workStack.findLast(match)),
 
-			"Machine.capture": () => {
+			"Machine.capture": accepts => {
 				const entry = entries.at(-1);
-				const work = workStack.findLastIndex((frame, index) => index >= (entry?.work ?? 0) && frame.type === "Delimiter");
+				const work = workStack.findLastIndex(
+					(frame, index) => index >= (entry?.work ?? 0) && frame.type === "Delimiter" && (!accepts || accepts(frame.handling)),
+				);
 				const stop = match(workStack[work])
-					.with({ type: "Delimiter" }, ({ scope }) => ({ type: "Delimiter" as const, work, start: work + 1, scope }))
+					.with({ type: "Delimiter" }, ({ scope, handling }) => ({ type: "Delimiter" as const, work, start: work + 1, scope, handling }))
 					.otherwise(() => {
 						const fallback = entries.pop();
 						return fallback && { type: "Entry" as const, ...fallback, start: fallback.work };
@@ -127,7 +129,10 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 
 				const captured = { frames: workStack.slice(stop.start), scope: stop.scope };
 				rewind(stop.work);
-				return Eff.ctl.resume({ type: stop.type, captured });
+				return match(stop)
+					.with({ type: "Delimiter" }, ({ type, handling }) => Eff.ctl.resume({ type, captured, handling }))
+					.with({ type: "Entry" }, ({ type }) => Eff.ctl.resume({ type, captured }))
+					.exhaustive();
 			},
 
 			"Machine.resume": ({ captured, value }) => {
