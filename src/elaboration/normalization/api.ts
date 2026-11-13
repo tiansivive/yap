@@ -11,6 +11,7 @@ import { options } from "@yap/shared/config/options";
 import * as Arity from "./arity";
 import * as Machine from "./evaluation.v2";
 import * as Quoting from "./quoting";
+import * as NbE from "./nbe";
 import * as Recursion from "./recursion";
 import { handlers } from "./machine/handlers";
 import { Mode, defaultMode, type EvalMode, type Evaluation } from "./effects";
@@ -37,20 +38,40 @@ function* fresh<A>(program: () => Evaluation<A>, mode: EvalMode = defaultMode, m
 
 /** The elaboration-facing entry, and the NbE-mode toggle point. */
 export function* normalize(term: EB.Term, opts?: Machine.EvalOptions) {
-	return yield* fresh(() => Machine.evaluate(term), defaultMode, opts?.maxSteps);
+	return yield* evaluate(term, opts);
 }
 
 export function* evaluate(term: EB.Term, opts?: Machine.EvalOptions) {
-	return yield* fresh(() => Machine.evaluate(term), defaultMode, opts?.maxSteps);
+	const ctx = yield* M.reader.ask();
+
+	return yield* fresh(
+		() =>
+			Machine.drive(
+				NbE.eval(term),
+				steps => `Evaluation exceeded maximum steps (${steps}). Possible infinite loop in: ${probe(ctx, {})(() => EB.Display.Term(term))}`,
+			),
+		defaultMode,
+		opts?.maxSteps,
+	);
 }
 
 /** WHNF: seals bindings and does not reduce eliminations (projections, matches on known values). */
 export function* whnf(term: EB.Term, opts?: Machine.EvalOptions) {
-	return yield* fresh(() => Machine.evaluate(term), { noInlineBindings: true, noReduceEliminations: true }, opts?.maxSteps);
+	const ctx = yield* M.reader.ask();
+
+	return yield* fresh(
+		() =>
+			Machine.drive(
+				NbE.eval(term),
+				steps => `Evaluation exceeded maximum steps (${steps}). Possible infinite loop in: ${probe(ctx, {})(() => EB.Display.Term(term))}`,
+			),
+		{ noInlineBindings: true, noReduceEliminations: true },
+		opts?.maxSteps,
+	);
 }
 
 export function* quote(lvl: number, val: Value, opts?: { unfold?: Unfolding }) {
-	return yield* fresh(() => Machine.drive(Quoting.quote(lvl, val, opts?.unfold), steps => `Quotation exceeded maximum steps (${steps}).`));
+	return yield* fresh(() => Machine.drive(NbE.quote(lvl, val, opts?.unfold), steps => `Quotation exceeded maximum steps (${steps}).`));
 }
 
 export function* closeVal(value: Value, opts?: Machine.EvalOptions) {

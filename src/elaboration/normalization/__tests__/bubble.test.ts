@@ -11,7 +11,7 @@ import * as Eff from "@yap/utils/effects";
 import * as Evaluation from "../evaluation.v2";
 import * as Stack from "../machine/actions";
 import { handlers } from "../machine/handlers";
-import { Mode } from "../effects";
+import { Mode, scope } from "../effects";
 import { mkCtx, runEB, runNF } from "../../inference/__tests__/util";
 
 const ctx = mkCtx();
@@ -33,7 +33,10 @@ const resume = (value: NF.Value, argument: NF.Value) => {
 	return runNF(ctx, function* () {
 		const [resumed] = yield* Eff.with([handlers<NF.Scope, EB.Term>(2000), Mode.handlers(NF.defaultMode)], () =>
 			Evaluation.drive(
-				Evaluation.schedule.source(() => Stack.resume<NF.Value, NF.Scope, EB.Term>(pending, argument)),
+				(function* () {
+					yield* Stack.enter(yield* scope());
+					return yield* Stack.resume<NF.Value, NF.Scope, EB.Term>(pending, argument);
+				})(),
 				steps => `Evaluation exceeded ${steps} steps`,
 			),
 		);

@@ -5,8 +5,9 @@ import * as Metas from "@yap/elaboration/shared/metas";
 import * as NF from "./syntax/term";
 import * as R from "@yap/shared/rows";
 import { display } from "./syntax/pretty";
-import { Do, group, result, type Evaluation, type Machine } from "./effects";
+import { Do, group, result, scope, type Evaluation, type Machine } from "./effects";
 import { schedule } from "./evaluation.v2";
+import * as NbE from "./nbe";
 import * as Stack from "./machine/actions";
 import type { Scope } from "./effects";
 import { match, P } from "ts-pattern";
@@ -84,11 +85,13 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 				if (pending.frames.some(frame => frame.type === "Delimiter")) {
 					throw new Error("Quoting a handled continuation requires the delimiter's answer type");
 				}
-				return yield* Do.let("continued", () => schedule.source(() => Stack.resume<NF.Value, Scope, EB.Term>(pending, NF.Constructors.Rigid(lvl)))).in(
-					({ continued }) =>
-						Do.let("body", () => quote(lvl + 1, continued, unfold))
-							.let("head", () => quote(lvl + 1, NF.Constructors.Bubble(bubble.meta, bubble.ann, bubble.values, bubble.operation), unfold))
-							.in(({ body, head }) => result(EB.Constructors.Block([EB.Constructors.Stmt.Let("$suspended", head, bubble.ann)], body))),
+				return yield* Do.let("continued", function* () {
+					yield* Stack.enter(yield* scope());
+					return yield* Stack.resume<NF.Value, Scope, EB.Term>(pending, NF.Constructors.Rigid(lvl));
+				}).in(({ continued }) =>
+					Do.let("body", () => quote(lvl + 1, continued, unfold))
+						.let("head", () => quote(lvl + 1, NF.Constructors.Bubble(bubble.meta, bubble.ann, bubble.values, bubble.operation), unfold))
+						.in(({ body, head }) => result(EB.Constructors.Block([EB.Constructors.Stmt.Let("$suspended", head, bubble.ann)], body))),
 				);
 			},
 		)
@@ -106,7 +109,10 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.with({ type: "Abs", binder: { type: "Lambda" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
 
-			return yield* Do.let("applied", () => schedule.source(() => schedule.apply(binder, closure, NF.Constructors.Rigid(lvl)))).in(({ applied }) =>
+			return yield* Do.let("applied", function* () {
+				yield* Stack.enter(yield* scope());
+				return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
+			}).in(({ applied }) =>
 				Do.let("body", () => M.reader.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
 					.let("ann", () => quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.Lambda(variable, icit, body, ann))),
@@ -115,7 +121,10 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.with({ type: "Abs", binder: { type: "Pi" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
 
-			return yield* Do.let("applied", () => schedule.source(() => schedule.apply(binder, closure, NF.Constructors.Rigid(lvl)))).in(({ applied }) =>
+			return yield* Do.let("applied", function* () {
+				yield* Stack.enter(yield* scope());
+				return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
+			}).in(({ applied }) =>
 				Do.let("body", () => M.reader.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
 					.let("ann", () => quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.Pi(variable, icit, ann, body))),
@@ -124,7 +133,10 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.with({ type: "Abs", binder: { type: "Mu" } }, function* ({ binder, closure }) {
 			const { variable, source, annotation } = binder;
 
-			return yield* Do.let("applied", () => schedule.source(() => schedule.apply(binder, closure, NF.Constructors.Rigid(lvl)))).in(({ applied }) =>
+			return yield* Do.let("applied", function* () {
+				yield* Stack.enter(yield* scope());
+				return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
+			}).in(({ applied }) =>
 				Do.let("body", () => M.reader.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
 					.let("ann", () => quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.Mu(variable, source, ann, body))),
@@ -135,17 +147,22 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 
 			// Apply with symbolic label neutrals so matches get stuck instead of crashing.
 			// Analogous to Pi quoting applying with Rigid(lvl).
-			return yield* Do.let("applied", () => schedule.source(() => schedule.apply(binder, closure, NF.Constructors.Row(symbolicRow(annotation))))).in(
-				({ applied }) =>
-					Do.let("body", () => M.reader.local(_ => closure.ctx, quote(lvl, applied, unfold)))
-						.let("ann", () => quote(lvl, annotation, unfold))
-						.in(({ body, ann }) => result(EB.Constructors.Sigma(variable, ann, body))),
+			return yield* Do.let("applied", function* () {
+				yield* Stack.enter(yield* scope());
+				return yield* schedule.apply(binder, closure, NF.Constructors.Row(symbolicRow(annotation)));
+			}).in(({ applied }) =>
+				Do.let("body", () => M.reader.local(_ => closure.ctx, quote(lvl, applied, unfold)))
+					.let("ann", () => quote(lvl, annotation, unfold))
+					.in(({ body, ann }) => result(EB.Constructors.Sigma(variable, ann, body))),
 			);
 		})
 		.with({ type: "Abs", binder: { type: "SigmaV2" } }, function* ({ binder, closure }) {
 			const { variable, annotation } = binder;
 
-			return yield* Do.let("applied", () => schedule.source(() => schedule.apply(binder, closure, NF.Constructors.Rigid(lvl)))).in(({ applied }) =>
+			return yield* Do.let("applied", function* () {
+				yield* Stack.enter(yield* scope());
+				return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
+			}).in(({ applied }) =>
 				Do.let("body", () => M.reader.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
 					.let("ann", () => quote(lvl, annotation, unfold))
 					.in(({ body, ann }) => result(EB.Constructors.SigmaV2(variable, ann, body))),
@@ -157,7 +174,7 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 			const back = (term: EB.Term) =>
 				M.reader.local(
 					_ => held,
-					Do.let("value", () => schedule.source(() => schedule.eval(term))).in(({ value }) => quote(lvl, value, unfold)),
+					Do.let("value", () => NbE.eval(term)).in(({ value }) => quote(lvl, value, unfold)),
 				);
 
 			return yield* Do.let("body", () => back(closure.term))

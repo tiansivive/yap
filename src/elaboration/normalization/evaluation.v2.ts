@@ -63,16 +63,6 @@ export type EvalOptions = {
 	maxSteps?: number;
 };
 
-/** The evaluation procedure: one marked drive on the ambient machine, under the ambient env. */
-export function* evaluate(term: EB.Term): Evaluation<NF.Value> {
-	const ctx = yield* M.reader.ask();
-
-	return yield* drive(
-		schedule.source(() => schedule.eval(term)),
-		steps => `Evaluation exceeded maximum steps (${steps}). Possible infinite loop in: ${shown(ctx, () => EB.Display.Term(term))}`,
-	);
-}
-
 /**
  * A marked drive: schedule the work, run it to exhaustion, take its single result.
  * Reading a value out of the machine costs a level of host recursion, so this is a
@@ -224,7 +214,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			}
 
 			// Force re-evaluation of the solution
-			return yield* Do.let("quoted", () => Quoting.quote(ctx.env.length, solution)).in(({ quoted }) => schedule.eval(quoted));
+			return yield* Do.let("quoted", () => schedule.quote(ctx.env.length, solution)).in(({ quoted }) => schedule.eval(quoted));
 		})
 		.with(
 			{ type: "Var", variable: { type: "Bound" } },
@@ -550,7 +540,7 @@ function* evalTail(tail: EB.Variable | undefined): Evaluation<Machine<NF.Value>>
 				 * exactly as the value path does for a solved meta.
 				 */
 				.with({ type: "Var" }, ({ variable }) =>
-					Do.let("quoted", () => Quoting.quote(ctx.env.length, NF.Constructors.Row(R.Constructors.Variable(variable)))).in(({ quoted }) =>
+					Do.let("quoted", () => schedule.quote(ctx.env.length, NF.Constructors.Row(R.Constructors.Variable(variable)))).in(({ quoted }) =>
 						schedule.eval(quoted),
 					),
 				)
@@ -706,11 +696,8 @@ const injectValue = function* (base: NF.Value, label: string, injected: NF.Value
  * the machine's frame count — the trampoline only bounds work that is scheduled.
  */
 export const schedule = {
-	/* Capturing source work stops before the callbacks that construct quoted syntax. */
-	*source(work: () => Evaluation<Machine<NF.Value>>): Evaluation<Machine<NF.Value>> {
-		yield* Stack.enter(yield* scope());
-		return yield* work();
-	},
+	quote: Quoting.quote,
+
 	/** Schedules a term: the driver reads it, and its result is the term's value. */
 	*eval(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		return yield* Stack.push<NF.Value, Scope, EB.Term>(yield* scope(), term);
@@ -986,7 +973,7 @@ export const schedule = {
 		return yield* Do.let("anf", () => schedule.apply(left.binder, left.closure, NF.Constructors.Rigid(lvl)))
 			.let("bnf", () => schedule.apply(right.binder, right.closure, NF.Constructors.Rigid(lvl)))
 			.in(({ anf, bnf }) =>
-				Do.let("term", () => Quoting.quote(lvl + 1, DSL.Binop.and(anf, bnf))).in(({ term }) =>
+				Do.let("term", () => schedule.quote(lvl + 1, DSL.Binop.and(anf, bnf))).in(({ term }) =>
 					result({
 						quantity: Q.SR.mul(a.quantity, b.quantity),
 						liquid: NF.Constructors.Lambda(name, "Explicit", NF.Constructors.Closure(ctx, term), left.binder.annotation),
@@ -1074,7 +1061,10 @@ export function* reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evalu
 	const ctx = yield* M.reader.ask();
 
 	return yield* drive(
-		schedule.source(() => schedule.reduce(nff, nfa, icit)),
+		(function* () {
+			yield* Stack.enter(yield* scope());
+			return yield* schedule.reduce(nff, nfa, icit);
+		})(),
 		steps => `Reduction exceeded maximum steps (${steps}). Possible infinite loop applying: ${shown(ctx, () => display(nff))}`,
 	);
 }
@@ -1088,7 +1078,10 @@ export function* apply(binder: EB.Binder, closure: NF.Closure, value: NF.Value):
 	const ctx = yield* M.reader.ask();
 
 	return yield* drive(
-		schedule.source(() => schedule.apply(binder, closure, value)),
+		(function* () {
+			yield* Stack.enter(yield* scope());
+			return yield* schedule.apply(binder, closure, value);
+		})(),
 		steps => `Application exceeded maximum steps (${steps}). Possible infinite loop applying ${binder.variable} to: ${shown(ctx, () => display(value))}`,
 	);
 }
