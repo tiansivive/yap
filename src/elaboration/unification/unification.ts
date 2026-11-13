@@ -416,6 +416,7 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			.with(NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure }) => inTerm(closure.term))
 			.with(NF.Patterns.App, ({ func, arg }) => check(func) || check(arg))
 			.with(NF.Patterns.Modal, ({ value: inner, modalities }) => check(inner) || check(modalities.liquid))
+			.with(NF.Patterns.Bubble, ({ ann, values, operation: { identity, payload } }) => check(ann) || values.some(check) || check(identity) || check(payload))
 
 			.with(NF.Patterns.Row, ({ row }) =>
 				R.fold(

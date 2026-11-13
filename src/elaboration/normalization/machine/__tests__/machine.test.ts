@@ -101,35 +101,35 @@ describe("the machine, on its own", () => {
 
 	describe("groups", () => {
 		it("hands the results over in the order the group was written", () => {
-			const program = group([evaluate("one"), evaluate(2), evaluate(3)], parts => Stack.fill(parts.join("")));
+			const program = group([() => evaluate("one"), () => evaluate(2), () => evaluate(3)], parts => Stack.fill(parts.join("")));
 			expect(machine(program)).toBe("123");
 		});
 
 		it("keeps that order when some works have a result at once and others take a step", () => {
-			const later = (value: number) => step(Stack.fill(value));
+			const later = (value: number) => step(() => Stack.fill(value));
 
-			expect(machine(group([Stack.fill(1), later(2), evaluate(3)], parts => Stack.fill(parts.join(""))))).toBe("123");
+			expect(machine(group([() => Stack.fill(1), () => later(2), () => evaluate(3)], parts => Stack.fill(parts.join(""))))).toBe("123");
 		});
 
 		it("names them, through the notation", () => {
 			expect(
 				machine(
-					Do.let("a", evaluate("magic"))
-						.let("b", evaluate(8))
+					Do.let("a", () => evaluate("magic"))
+						.let("b", () => evaluate(8))
 						.in(({ a, b }) => Stack.fill(a + b)),
 				),
 			).toBe(50);
 		});
 
 		it("nests", () => {
-			const inner = group([Stack.fill(1), Stack.fill(2)], ([a, b]) => Stack.fill(a + b));
+			const inner = () => group([() => Stack.fill(1), () => Stack.fill(2)], ([a, b]) => Stack.fill(a + b));
 
-			expect(machine(group([inner, Stack.fill(10)], ([sum, ten]) => Stack.fill(sum * ten)))).toBe(30);
+			expect(machine(group([inner, () => Stack.fill(10)], ([sum, ten]) => Stack.fill(sum * ten)))).toBe(30);
 		});
 	});
 
 	const countdown = function* (n: number): Program<Machine<number>> {
-		return n === 0 ? yield* Stack.fill(0) : yield* step(countdown(n - 1));
+		return n === 0 ? yield* Stack.fill(0) : yield* step(() => countdown(n - 1));
 	};
 	describe("steps instead of calls", () => {
 		it("runs a recursion far deeper than the host stack allows", () => {
@@ -160,12 +160,90 @@ describe("the machine, on its own", () => {
 
 		it("keeps a nested drive's result out of the drive around it", () => {
 			const nested = function* (): Program<Machine<string>> {
-				const inner = yield* drive(group([Stack.fill(1), Stack.fill(2)], ([a, b]) => Stack.fill(a + b)));
+				const inner = yield* drive(group([() => Stack.fill(1), () => Stack.fill(2)], ([a, b]) => Stack.fill(a + b)));
 
 				return yield* Stack.fill(`inner produced ${inner}`);
 			};
 
 			expect(machine(nested())).toBe("inner produced 3");
+		});
+	});
+
+	describe("evaluation entries", () => {
+		const source = function* <A>(work: () => Program<Machine<A>>, scope = builtins): Program<Machine<A>> {
+			yield* Stack.enter(scope);
+			return yield* work();
+		};
+		const capture = function* () {
+			return yield* Stack.fill((yield* Stack.capture<Env, Value>())?.captured);
+		};
+
+		it("keeps the entry active while scheduled work executes", () => {
+			const captured = machine(source(() => group<unknown, unknown[]>([() => evaluate(1), capture], ([a, b]) => Stack.fill([a, b]))));
+			expect(captured).toMatchObject({ scope: builtins, frames: [{ type: "Cont", arity: 2, operands: [1] }] });
+		});
+
+		it("restores the outer entry after nested evaluation and a later sibling", () => {
+			const nested = { nested: 1 };
+			const program = source(() =>
+				Do.let("first", () => source(capture, nested))
+					.let("second", capture)
+					.in(({ first, second }) => Stack.fill([first, second])),
+			);
+			const captured = machine(program);
+			expect(captured).toMatchObject({ scope: builtins, frames: [{ type: "Cont", operands: [{ scope: nested, frames: [] }] }] });
+		});
+
+		it("expires equal-depth entries before executing sibling work", () => {
+			const program = group([() => source(() => source(capture, { nested: 1 })), capture], parts => Stack.fill(parts));
+			expect(machine(program)).toEqual([{ frames: [], scope: { nested: 1 } }, undefined]);
+		});
+
+		it("cleans an immediate result's entry at drive completion", () => {
+			const program = function* (): Program<Machine<unknown>> {
+				yield* drive(source(() => Stack.fill(1)));
+				return yield* capture();
+			};
+			expect(machine(program())).toBeUndefined();
+		});
+
+		it.each(["immediate", "scheduled"])("restores the outer entry after a nested drive with %s work", kind => {
+			const program = source(() =>
+				step(function* () {
+					yield* drive(source(() => (kind === "immediate" ? Stack.fill(1) : evaluate(1)), { nested: 1 }));
+					return yield* capture();
+				}),
+			);
+			expect(machine(program)).toEqual({ frames: [], scope: builtins });
+		});
+
+		it("stops at the innermost entry when a delimiter lies outside it", () => {
+			const program = function* () {
+				yield* Stack.delimit(builtins);
+				return yield* source(
+					() =>
+						source(
+							() =>
+								step(function* () {
+									return yield* Stack.fill(yield* Stack.capture<Env, Value>());
+								}),
+							{ inner: 1 },
+						),
+					{ outer: 1 },
+				);
+			};
+			expect(machine(program())).toEqual({ type: "Entry", captured: { frames: [], scope: { inner: 1 } } });
+		});
+
+		it("captures the nearest delimiter inside the active entry", () => {
+			const program = source(function* () {
+				yield* Stack.delimit(builtins);
+				yield* Stack.delimit({ inner: 1 });
+				return yield* step(function* () {
+					return yield* Stack.fill(yield* Stack.capture<Env, Value>());
+				});
+			});
+			expect(machine(program)).toEqual({ type: "Delimiter", captured: { frames: [], scope: { inner: 1 } } });
 		});
 	});
 
@@ -187,13 +265,13 @@ describe("the machine, on its own", () => {
 
 		it("gives every replay of a captured continuation its own operands", () => {
 			const shift = function* (): Program<Machine<string>> {
-				const captured = yield* Stack.capture<Env, Value>();
+				const captured = (yield* Stack.capture<Env, Value>())?.captured;
 
 				if (!captured) {
 					throw new Error("shift without a delimiter");
 				}
 
-				return yield* group([Stack.resume<string, Env, Value>(captured, 10), Stack.resume<string, Env, Value>(captured, 20)], ([first, second]) =>
+				return yield* group([() => Stack.resume<string, Env, Value>(captured, 10), () => Stack.resume<string, Env, Value>(captured, 20)], ([first, second]) =>
 					Stack.fill(`${first} & ${second}`),
 				);
 			};
@@ -201,10 +279,12 @@ describe("the machine, on its own", () => {
 			const program = function* (): Program<Machine<string>> {
 				yield* Stack.delimit(builtins);
 
-				return yield* group<number | string, string>([Stack.fill(1), shift()], ([a, b]) => Stack.fill(`${a}+${b}`));
+				return yield* group<number | string, string>([() => Stack.fill(1), () => shift(), () => evaluate("magic")], ([a, b, c]) =>
+					Stack.fill(`${a}+${b}+${c}`),
+				);
 			};
 
-			expect(machine(program())).toBe("1+10 & 1+20");
+			expect(machine(program())).toBe("1+10+42 & 1+20+42");
 		});
 	});
 });

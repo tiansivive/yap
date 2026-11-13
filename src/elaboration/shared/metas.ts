@@ -195,6 +195,7 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 				),
 			)
 			.with({ type: "Neutral" }, ({ value }) => nf(value))
+			.with({ type: "Bubble" }, ({ ann, values, operation: { identity, payload } }) => [...nf(ann), ...values.flatMap(nf), ...nf(identity), ...nf(payload)])
 			/* Both faces: quotation emits the folded one, so a meta only it mentions still has to be found. */
 			.with(NF.Patterns.Glued, ({ folded, unfolded }) => [...nf(folded), ...nf(unfolded)])
 			.with(NF.Patterns.Lambda, ({ closure }) => eb(closure.term))
@@ -262,7 +263,7 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 			.with({ type: "Modal" }, ({ term }) => eb(term))
 			.with({ type: "Suspend" }, ({ identity, payload, annotation }) => [...eb(identity), ...eb(payload), ...eb(annotation)])
 			.with({ type: "Shift" }, ({ body }) => eb(body))
-			.with({ type: "Bubble" }, ({ shift }) => eb(shift))
+			.with({ type: "Bubble" }, ({ ann, values, shift }) => [...nf(ann), ...values.flatMap(nf), ...eb(shift)])
 			.with({ type: "Reset" }, ({ term, handling }) => [...eb(term), ...(handling ? [...eb(handling.identity), ...eb(handling.handler)] : [])])
 			.otherwise(() => {
 				throw new Error("metas: Not implemented yet");

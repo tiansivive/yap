@@ -4,11 +4,18 @@ import { match } from "ts-pattern";
 import * as Eff from "@yap/utils/effects";
 
 import type { Actions } from "./actions";
-import type { Captured, Mark, Runnable, StackFrame } from "./frames";
+import type { Mark, Runnable, StackFrame } from "./frames";
 
 export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, undefined> => {
 	const workStack: StackFrame<S, C>[] = [];
+	/* Scheduled work keeps its entry until the driver unwinds below its saved depth. */
+	const entries: (Mark & { scope: S })[] = [];
 	let spent = 0;
+
+	const rewind = (work: number) => {
+		workStack.length = work;
+		entries.length = entries.findLastIndex(entry => entry.work <= work) + 1;
+	};
 
 	const slot = (mark: Mark) => {
 		const frame = workStack[mark.work - 1];
@@ -42,7 +49,7 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 				const index = workStack.findLastIndex(runnable);
 				const frame = index >= mark.work ? (workStack[index] as Runnable<S, C>) : undefined;
 
-				workStack.length = Math.max(index, mark.work);
+				rewind(Math.max(index, mark.work));
 
 				if (!frame) {
 					return Eff.ctl.resume<Runnable<S, C> | undefined>(undefined);
@@ -68,7 +75,7 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 					throw new Error(`Expected exactly 1 result, got ${drive.operands.length}`);
 				}
 
-				workStack.length = mark.work - 1;
+				rewind(mark.work - 1);
 
 				return Eff.ctl.resume(drive.operands[0]);
 			},
@@ -97,21 +104,30 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 				return Eff.ctl.resume(undefined);
 			},
 
+			"Machine.enter": scope => {
+				entries.push({ work: workStack.length, scope });
+				return Eff.ctl.resume(undefined);
+			},
+
 			"Machine.find": match => Eff.ctl.resume(workStack.findLast(match)),
 
 			"Machine.capture": () => {
-				const index = workStack.findLastIndex(frame => frame.type === "Delimiter");
+				const entry = entries.at(-1);
+				const work = workStack.findLastIndex((frame, index) => index >= (entry?.work ?? 0) && frame.type === "Delimiter");
+				const stop = match(workStack[work])
+					.with({ type: "Delimiter" }, ({ scope }) => ({ type: "Delimiter" as const, work, start: work + 1, scope }))
+					.otherwise(() => {
+						const fallback = entries.pop();
+						return fallback && { type: "Entry" as const, ...fallback, start: fallback.work };
+					});
 
-				const captured = match<StackFrame<S, C> | undefined, Captured<S, C> | undefined>(workStack[index])
-					.with({ type: "Delimiter" }, ({ scope }) => {
-						const frames = workStack.slice(index + 1);
-						workStack.splice(index);
+				if (!stop) {
+					return Eff.ctl.resume(undefined);
+				}
 
-						return { frames, scope };
-					})
-					.otherwise(() => undefined);
-
-				return Eff.ctl.resume(captured);
+				const captured = { frames: workStack.slice(stop.start), scope: stop.scope };
+				rewind(stop.work);
+				return Eff.ctl.resume({ type: stop.type, captured });
 			},
 
 			"Machine.resume": ({ captured, value }) => {
