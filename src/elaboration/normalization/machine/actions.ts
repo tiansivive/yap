@@ -53,14 +53,14 @@ export function* enter<S>(scope: S) {
 	return yield* Eff.ctl.action<Enter<S>>("Machine.enter", scope);
 }
 
-type Find<S, C> = Eff.Action<"Machine.find", { match: (frame: StackFrame<S, C>) => boolean; extent?: "entry" }, StackFrame<S, C> | undefined>;
-export function* find<S, C>(match: (frame: StackFrame<S, C>) => boolean, extent?: "entry") {
-	return yield* Eff.ctl.action<Find<S, C>>("Machine.find", { match, extent });
+type Find<S, C> = Eff.Action<"Machine.find", (frame: StackFrame<S, C>) => boolean, StackFrame<S, C> | undefined>;
+export function* find<S, C>(match: (frame: StackFrame<S, C>) => boolean) {
+	return yield* Eff.ctl.action<Find<S, C>>("Machine.find", match);
 }
 
-type Capture<S, C> = Eff.Action<"Machine.capture", "entry" | "delimiter", Captured<S, C> | undefined>;
-export function* capture<S, C>(extent: "entry" | "delimiter") {
-	return yield* Eff.ctl.action<Capture<S, C>>("Machine.capture", extent);
+type Capture<S, C> = Eff.Action<"Machine.capture", undefined, { type: "Delimiter" | "Entry"; captured: Captured<S, C> } | undefined>;
+export function* capture<S, C>() {
+	return yield* Eff.ctl.action<Capture<S, C>>("Machine.capture", undefined);
 }
 
 type Resume<S, C> = Eff.Action<"Machine.resume", { captured: Captured<S, C>; value: unknown }, undefined>;

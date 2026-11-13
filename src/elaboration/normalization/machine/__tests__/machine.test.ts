@@ -175,7 +175,7 @@ describe("the machine, on its own", () => {
 			return yield* work();
 		};
 		const capture = function* () {
-			return yield* Stack.fill(yield* Stack.capture<Env, Value>("entry"));
+			return yield* Stack.fill((yield* Stack.capture<Env, Value>())?.captured);
 		};
 
 		it("keeps the entry active while scheduled work executes", () => {
@@ -196,7 +196,7 @@ describe("the machine, on its own", () => {
 
 		it("expires equal-depth entries before executing sibling work", () => {
 			const program = group([() => source(() => source(capture, { nested: 1 })), capture], parts => Stack.fill(parts));
-			expect(machine(program)).toEqual([{ frames: [], scope: { nested: 1 }, entries: [] }, undefined]);
+			expect(machine(program)).toEqual([{ frames: [], scope: { nested: 1 } }, undefined]);
 		});
 
 		it("cleans an immediate result's entry at drive completion", () => {
@@ -214,53 +214,36 @@ describe("the machine, on its own", () => {
 					return yield* capture();
 				}),
 			);
-			expect(machine(program)).toEqual({ frames: [], scope: builtins, entries: [] });
+			expect(machine(program)).toEqual({ frames: [], scope: builtins });
 		});
 
-		it("restores equal-depth source entries when replaying a delimiter capture", () => {
+		it("stops at the innermost entry when a delimiter lies outside it", () => {
 			const program = function* () {
 				yield* Stack.delimit(builtins);
 				return yield* source(
 					() =>
 						source(
 							() =>
-								group(
-									[
-										function* () {
-											return yield* Stack.fill(yield* Stack.capture<Env, Value>("delimiter"));
-										},
-										capture,
-									],
-									([, second]) => Stack.fill(second),
-								),
+								step(function* () {
+									return yield* Stack.fill(yield* Stack.capture<Env, Value>());
+								}),
 							{ inner: 1 },
 						),
 					{ outer: 1 },
 				);
 			};
-			const captured = machine(program())!;
-			expect(captured.entries).toEqual([
-				{ work: 0, scope: { outer: 1 } },
-				{ work: 0, scope: { inner: 1 } },
-			]);
-			const replay = (argument: number) => machine(source(() => Stack.resume(captured, argument), { caller: 1 }));
-			expect(replay(10)).toMatchObject({ scope: { inner: 1 }, frames: [{ type: "Cont", operands: [10] }] });
-			expect(replay(20)).toMatchObject({ scope: { inner: 1 }, frames: [{ type: "Cont", operands: [20] }] });
+			expect(machine(program())).toEqual({ type: "Entry", captured: { frames: [], scope: { inner: 1 } } });
 		});
 
-		it("keeps source delimiters visible through an evaluation entry", () => {
-			const program = function* () {
+		it("captures the nearest delimiter inside the active entry", () => {
+			const program = source(function* () {
 				yield* Stack.delimit(builtins);
-				return yield* source(
-					function* () {
-						return yield* step(function* () {
-							return yield* Stack.fill(yield* Stack.capture<Env, Value>("delimiter"));
-						});
-					},
-					{ nested: 1 },
-				);
-			};
-			expect(machine(program())).toEqual({ frames: [], scope: builtins, entries: [{ work: 0, scope: { nested: 1 } }] });
+				yield* Stack.delimit({ inner: 1 });
+				return yield* step(function* () {
+					return yield* Stack.fill(yield* Stack.capture<Env, Value>());
+				});
+			});
+			expect(machine(program)).toEqual({ type: "Delimiter", captured: { frames: [], scope: { inner: 1 } } });
 		});
 	});
 
@@ -282,7 +265,7 @@ describe("the machine, on its own", () => {
 
 		it("gives every replay of a captured continuation its own operands", () => {
 			const shift = function* (): Program<Machine<string>> {
-				const captured = yield* Stack.capture<Env, Value>("delimiter");
+				const captured = (yield* Stack.capture<Env, Value>())?.captured;
 
 				if (!captured) {
 					throw new Error("shift without a delimiter");

@@ -22,6 +22,5 @@ export const scheduled: Machine<never> = {};
 export type Mark = { work: number };
 export type Stored = (operands: unknown[]) => unknown;
 export type Blame = (steps: number) => string;
-/* Entry depths are relative to the first captured frame so replay can rebase them. */
-export type Captured<S, C> = { frames: StackFrame<S, C>[]; scope: S; entries: (Mark & { scope: S })[] };
+export type Captured<S, C> = { frames: StackFrame<S, C>[]; scope: S };
 export type Runnable<S, C> = Extract<StackFrame<S, C>, { type: "Control" | "Cont" }>;

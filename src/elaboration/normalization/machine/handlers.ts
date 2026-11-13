@@ -4,7 +4,7 @@ import { match } from "ts-pattern";
 import * as Eff from "@yap/utils/effects";
 
 import type { Actions } from "./actions";
-import type { Captured, Mark, Runnable, StackFrame } from "./frames";
+import type { Mark, Runnable, StackFrame } from "./frames";
 
 export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, undefined> => {
 	const workStack: StackFrame<S, C>[] = [];
@@ -109,40 +109,29 @@ export const handlers = <S, C>(maxSteps: number): Eff.Handler<Actions<S, C>, und
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Machine.find": ({ match, extent }) => {
-				const start = extent === "entry" ? (entries.at(-1)?.work ?? 0) : 0;
-				return Eff.ctl.resume(workStack.findLast((frame, index) => index >= start && match(frame)));
-			},
+			"Machine.find": match => Eff.ctl.resume(workStack.findLast(match)),
 
-			"Machine.capture": extent => {
-				const entry = match(extent)
-					.with("entry", () => entries.pop())
-					.with("delimiter", () => {
-						const work = workStack.findLastIndex(frame => frame.type === "Delimiter");
-						return match(workStack[work])
-							.with({ type: "Delimiter" }, ({ scope }) => ({ work, scope }))
-							.otherwise(() => undefined);
-					})
-					.exhaustive();
+			"Machine.capture": () => {
+				const entry = entries.at(-1);
+				const work = workStack.findLastIndex((frame, index) => index >= (entry?.work ?? 0) && frame.type === "Delimiter");
+				const stop = match(workStack[work])
+					.with({ type: "Delimiter" }, ({ scope }) => ({ type: "Delimiter" as const, work, start: work + 1, scope }))
+					.otherwise(() => {
+						const fallback = entries.pop();
+						return fallback && { type: "Entry" as const, ...fallback, start: fallback.work };
+					});
 
-				if (!entry) {
-					return Eff.ctl.resume<Captured<S, C> | undefined>(undefined);
+				if (!stop) {
+					return Eff.ctl.resume(undefined);
 				}
 
-				const start = entry.work + (extent === "delimiter" ? 1 : 0);
-				const captured = {
-					frames: workStack.slice(start),
-					scope: entry.scope,
-					entries: extent === "delimiter" ? entries.filter(entry => entry.work >= start).map(({ work, scope }) => ({ work: work - start, scope })) : [],
-				};
-				rewind(entry.work);
-				return Eff.ctl.resume<Captured<S, C> | undefined>(captured);
+				const captured = { frames: workStack.slice(stop.start), scope: stop.scope };
+				rewind(stop.work);
+				return Eff.ctl.resume({ type: stop.type, captured });
 			},
 
 			"Machine.resume": ({ captured, value }) => {
 				// Copying the captured frames to the work stack preserves the original continuation structure in each resumption.
-				const start = workStack.length;
-				entries.push(...captured.entries.map(({ work, scope }) => ({ work: start + work, scope })));
 				workStack.push(...captured.frames.map(frame => ("operands" in frame ? { ...frame, operands: [...frame.operands] } : frame)));
 				fill(value);
 

@@ -407,10 +407,11 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			// Reset-delimiter, package it as a function value, and apply the
 			// body-lambda to that continuation.
 			return yield* Do.let("h", () => schedule.eval(body)).in(function* ({ h }) {
-				const captured = yield* Stack.capture<Scope, EB.Term>("delimiter");
-				if (!captured) {
-					throw new Error("Shift without enclosing reset");
-				}
+				const captured = match(yield* Stack.capture<Scope, EB.Term>())
+					.with({ type: "Delimiter" }, ({ captured }) => captured)
+					.otherwise(() => {
+						throw new Error("Shift without enclosing reset");
+					});
 
 				// A continuation closure that, when applied to a value v, replays
 				// the captured continuation as if resumed at the shift point.
@@ -428,10 +429,6 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			});
 		})
 		.with({ type: "Bubble", shift: { type: "Suspend" } }, function* ({ meta, ann, values, shift }) {
-			if (yield* Stack.find<Scope, EB.Term>(frame => frame.type === "Delimiter", "entry")) {
-				return yield* schedule.eval(shift);
-			}
-
 			return yield* Do.let("identity", () => schedule.eval(shift.identity))
 				.let("payload", () => schedule.eval(shift.payload))
 				.in(({ identity, payload }) => block(NF.Constructors.Bubble(meta, ann, values, { type: "Suspend", identity, payload })));
@@ -456,8 +453,13 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 }
 
 function* block(value: Extract<NF.Value, { type: "Bubble" }>): Evaluation<Machine<NF.Value>> {
-	const pending = yield* Stack.capture<Scope, EB.Term>("entry");
-	return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.Bubble(value.meta, value.ann, value.values, value.operation, pending)));
+	return yield* match(yield* Stack.capture<Scope, EB.Term>())
+		.with({ type: "Delimiter" }, () => {
+			throw new Error("Suspend evaluation is pending");
+		})
+		.otherwise(stopped =>
+			result(NF.Constructors.Neutral("Blocked", NF.Constructors.Bubble(value.meta, value.ann, value.values, value.operation, stopped?.captured))),
+		);
 }
 
 /**

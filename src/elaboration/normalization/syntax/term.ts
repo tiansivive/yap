@@ -11,7 +11,7 @@ import * as Modal from "@yap/verification/modalities/shared";
 
 export const nf_tag: unique symbol = Symbol("NF");
 
-export type Value<T extends Constructor = Constructor> = Types.Brand<typeof nf_tag, T> & { id: number };
+export type Value = Types.Brand<typeof nf_tag, Constructor> & { id: number };
 type Constructor =
 	| { type: "Var"; variable: Variable }
 	| { type: "Lit"; value: Literal }
@@ -91,7 +91,7 @@ const nextId = () => ++currentId;
 export const resetId = () => {
 	currentId = 0;
 };
-export function mk<T extends Constructor>(val: T): Value<T>;
+export function mk<T extends Constructor>(val: T): T & Pick<Value, typeof nf_tag | "id">;
 export function mk(val: Constructor): Value {
 	return { ...Types.make(nf_tag, val), id: nextId() };
 }
