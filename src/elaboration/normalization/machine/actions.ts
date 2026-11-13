@@ -5,7 +5,7 @@ import { scheduled, type Blame, type Captured, type Machine, type Mark, type Run
 
 export type Actions<S, C, D = unknown> =
 	| Begin
-	| Next<S, C, D>
+	| Next<S, C>
 	| Finish
 	| Push<S, C>
 	| Fill
@@ -21,9 +21,9 @@ export function* begin(blame: Blame) {
 	return yield* Eff.ctl.action<Begin>("Machine.begin", blame);
 }
 
-type Next<S, C, D> = Eff.Action<"Machine.next", Mark, Runnable<S, C, D> | undefined>;
-export function* next<S, C, D = unknown>(mark: Mark) {
-	return yield* Eff.ctl.action<Next<S, C, D>>("Machine.next", mark);
+type Next<S, C> = Eff.Action<"Machine.next", Mark, Runnable<S, C> | undefined>;
+export function* next<S, C>(mark: Mark) {
+	return yield* Eff.ctl.action<Next<S, C>>("Machine.next", mark);
 }
 
 type Finish = Eff.Action<"Machine.finish", Mark, unknown>;

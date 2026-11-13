@@ -24,4 +24,4 @@ export type Mark = { work: number };
 export type Stored = (operands: unknown[]) => unknown;
 export type Blame = (steps: number) => string;
 export type Captured<S, C, D = unknown> = { frames: StackFrame<S, C, D>[]; scope: S };
-export type Runnable<S, C, D = unknown> = Extract<StackFrame<S, C, D>, { type: "Control" | "Cont" }>;
+export type Runnable<S, C> = Extract<StackFrame<S, C>, { type: "Control" | "Cont" }>;

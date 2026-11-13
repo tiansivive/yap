@@ -80,7 +80,7 @@ export function* drive<A>(work: Evaluation<Machine<A>>, blame: Blame): Evaluatio
 /** Runs a drive's frames to exhaustion. Fuel is the machine's, so the cap is enforced where it is counted. */
 function* trampoline(mark: Mark): Evaluation<void> {
 	while (true) {
-		const frame = yield* Stack.next<Scope, EB.Term, Handling>(mark);
+		const frame = yield* Stack.next<Scope, EB.Term>(mark);
 
 		if (!frame) {
 			break;
@@ -457,23 +457,21 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		});
 }
 
-const Anonymous = { kind: "Atom", name: "$anonymous" } as const;
+const Anonymous = { name: "$anonymous" } as const;
 
 const identify = (value: NF.Value, args: NF.Value[] = []): Handling["identity"] | undefined =>
 	match(value)
 		.with(NF.Patterns.Glued, ({ unfolded }) => identify(unfolded, args))
 		.with({ type: "Neutral", kind: "Sealed" }, ({ value }) => identify(value, args))
 		.with({ type: "App" }, ({ func, arg }) => identify(func, [arg, ...args]))
-		.with({ type: "External" }, external => ({ kind: "Foreign" as const, name: external.name, args: [...external.args, ...args] }))
-		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => ({ kind: "Foreign" as const, name: variable.name, args }))
-		.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => ({ kind: "Atom" as const, name: value.value, args }))
+		.with({ type: "External" }, external => ({ name: external.name, args: [...external.args, ...args] }))
+		.with({ type: "Var", variable: { type: "Foreign" } }, ({ variable }) => ({ name: variable.name, args }))
+		.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => ({ name: value.value, args }))
 		.otherwise(() => undefined);
 
 function* suspend(identity: NF.Value, payload: NF.Value, annotation: NF.Value, bubble?: Extract<NF.Value, { type: "Bubble" }>): Evaluation<Machine<NF.Value>> {
 	const tag = identify(identity);
-	const stopped = yield* Stack.capture<Scope, EB.Term, Handling>(
-		handling => !!handling && !!tag && handling.identity.kind === tag.kind && handling.identity.name === tag.name,
-	);
+	const stopped = yield* Stack.capture<Scope, EB.Term, Handling>(handling => !!handling && !!tag && handling.identity.name === tag.name);
 	return yield* match(stopped)
 		.with({ type: "Delimiter", handling: P.nonNullable }, function* ({ captured, handling }) {
 			const continuation = NF.Constructors.Lambda(

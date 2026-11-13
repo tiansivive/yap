@@ -28,7 +28,7 @@ type Ambient = Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typ
 /** NbE is the machine instantiated at a scope of env and mode, terms as control, and values as results. */
 export type Evaluation<A> = Eff.Eff<Stack.Actions<Scope, EB.Term, Handling> | Ambient, A>;
 
-export type Handling = { identity: { kind: "Atom" | "Foreign"; name: string; args: Value[] }; handler: Value };
+export type Handling = { identity: { name: string; args: Value[] }; handler: Value };
 
 export type Machine<A> = Frames.Machine<A>;
 

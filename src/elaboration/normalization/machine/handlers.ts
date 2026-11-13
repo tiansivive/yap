@@ -47,12 +47,12 @@ export const handlers = <S, C, D = unknown>(maxSteps: number): Eff.Handler<Actio
 
 			"Machine.next": mark => {
 				const index = workStack.findLastIndex(runnable);
-				const frame = index >= mark.work ? (workStack[index] as Runnable<S, C, D>) : undefined;
+				const frame = index >= mark.work ? (workStack[index] as Runnable<S, C>) : undefined;
 
 				rewind(Math.max(index, mark.work));
 
 				if (!frame) {
-					return Eff.ctl.resume<Runnable<S, C, D> | undefined>(undefined);
+					return Eff.ctl.resume<Runnable<S, C> | undefined>(undefined);
 				}
 
 				if (frame.type === "Cont" && frame.operands.length !== frame.arity) {
@@ -65,7 +65,7 @@ export const handlers = <S, C, D = unknown>(maxSteps: number): Eff.Handler<Actio
 					throw new Error(slot(mark).blame(maxSteps));
 				}
 
-				return Eff.ctl.resume<Runnable<S, C, D> | undefined>(frame);
+				return Eff.ctl.resume<Runnable<S, C> | undefined>(frame);
 			},
 
 			"Machine.finish": mark => {
@@ -148,4 +148,4 @@ export const handlers = <S, C, D = unknown>(maxSteps: number): Eff.Handler<Actio
 	};
 };
 
-const runnable = <S, C, D>(frame: StackFrame<S, C, D>): frame is Runnable<S, C, D> => frame.type === "Control" || frame.type === "Cont";
+const runnable = <S, C>(frame: StackFrame<S, C>): frame is Runnable<S, C> => frame.type === "Control" || frame.type === "Cont";
