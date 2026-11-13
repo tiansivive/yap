@@ -1,5 +1,6 @@
 import * as Eff from "@yap/utils/effects";
 
+import type { Value } from "./syntax/term";
 import type * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import type * as Metas from "@yap/elaboration/shared/metas";
@@ -25,16 +26,18 @@ export type Scope = { env: EB.Context; mode: EvalMode };
 type Ambient = Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof M.reader> | Eff.Actions<typeof Mode>;
 
 /** NbE is the machine instantiated at a scope of env and mode, terms as control, and values as results. */
-export type Evaluation<A> = Eff.Eff<Stack.Actions<Scope, EB.Term> | Ambient, A>;
+export type Evaluation<A> = Eff.Eff<Stack.Actions<Scope, EB.Term, Handling> | Ambient, A>;
+
+export type Handling = { identity: { kind: "Atom" | "Foreign"; name: string; args: Value[] }; handler: Value };
 
 export type Machine<A> = Frames.Machine<A>;
 
-export type StackFrame = Frames.StackFrame<Scope, EB.Term>;
+export type StackFrame = Frames.StackFrame<Scope, EB.Term, Handling>;
 
-export type Captured = Frames.Captured<Scope, EB.Term>;
+export type Captured = Frames.Captured<Scope, EB.Term, Handling>;
 
 export const scope = function* (): Eff.Eff<Ambient, Scope> {
 	return { env: yield* M.reader.ask(), mode: yield* Mode.ask() };
 };
 
-export const { result, step, group, Do } = notation<Scope, EB.Term, Ambient>(scope);
+export const { result, step, group, Do } = notation<Scope, EB.Term, Ambient, Handling>(scope);

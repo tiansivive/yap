@@ -9,7 +9,7 @@ import { Do, group, result, scope, type Evaluation, type Machine } from "./effec
 import { schedule } from "./evaluation.v2";
 import * as NbE from "./nbe";
 import * as Stack from "./machine/actions";
-import type { Scope } from "./effects";
+import type { Scope, Handling } from "./effects";
 import { match, P } from "ts-pattern";
 import assert from "node:assert";
 
@@ -87,7 +87,7 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 				}
 				return yield* Do.let("continued", function* () {
 					yield* Stack.enter(yield* scope());
-					return yield* Stack.resume<NF.Value, Scope, EB.Term>(pending, NF.Constructors.Rigid(lvl));
+					return yield* Stack.resume<NF.Value, Scope, EB.Term, Handling>(pending, NF.Constructors.Rigid(lvl));
 				}).in(({ continued }) =>
 					Do.let("body", () => quote(lvl + 1, continued, unfold))
 						.let("head", () => quote(lvl + 1, NF.Constructors.Bubble(bubble.meta, bubble.ann, bubble.values, bubble.operation), unfold))

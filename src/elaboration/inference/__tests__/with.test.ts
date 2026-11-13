@@ -137,8 +137,8 @@ describe("Inference: with", () => {
 		expect(declaration(elaborateModule(source), "result")?.error).toBeDefined();
 	});
 
-	it("keeps named evaluation pending", () => {
+	it("evaluates a normal return through a named handler", () => {
 		const result = elaborated("foreign Ask: Effect Unit Num; let result: Num = with Ask: (\\p k -> k 42) in 0;");
-		expect(() => runNF(result.ctx, () => NF.evaluate(result.tm), result.registry)).toThrow("Handler-bearing reset evaluation is pending");
+		expect(runNF(result.ctx, () => NF.evaluate(result.tm), result.registry)).toMatchObject({ type: "Lit", value: { type: "Num", value: 0 } });
 	});
 });
