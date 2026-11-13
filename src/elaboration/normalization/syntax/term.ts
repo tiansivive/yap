@@ -15,7 +15,7 @@ export type Value = Types.Brand<typeof nf_tag, Constructor> & { id: number };
 type Constructor =
 	| { type: "Var"; variable: Variable }
 	| { type: "Lit"; value: Literal }
-	| { type: "App"; func: Value; arg: Value; icit: Implicitness }
+	| { type: "App"; func: Value; arg: Value; icit: Implicitness; retained?: { annotation: Value; pending: EB.NF.Captured } }
 	| { type: "Proj"; base: Value; label: string }
 	| { type: "Match"; closure: Closure; scrutinee: Value }
 	| { type: "Inj"; base: Value; label: string; injected: Value }
@@ -160,12 +160,13 @@ export const Constructors = {
 		}),
 	Bubble: (meta: number, ann: Value, values: Value[], operation: Operation, pending?: EB.NF.Captured): Extract<Value, { type: "Bubble" }> =>
 		mk({ type: "Bubble", meta, ann, values, operation, pending }),
-	App: (func: Value, arg: Value, icit: Implicitness) =>
+	App: (func: Value, arg: Value, icit: Implicitness, retained?: { annotation: Value; pending: EB.NF.Captured }) =>
 		mk({
 			type: "App" as const,
 			func,
 			arg,
 			icit,
+			...(retained ? { retained } : {}),
 		}),
 	Indexed: (index: Value, value: Value, strategy: Value): Value => {
 		const indexed = Constructors.App(Constructors.Var({ type: "Foreign", name: "Indexed" }), index, "Explicit");
@@ -288,6 +289,7 @@ export const Patterns = {
 	StuckInj: { type: "Neutral", kind: "Blocked", value: { type: "Inj" } } as const,
 
 	App: { type: "App" } as const,
+	RetainedApp: { type: "App", retained: P.nonNullable } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,
 	ImplicitPi: { type: "Abs", binder: { type: "Pi", icit: "Implicit" } } as const,
 	Sigma: { type: "Abs", binder: { type: "Sigma" } } as const,

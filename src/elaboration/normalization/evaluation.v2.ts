@@ -18,6 +18,7 @@ import * as Stack from "./machine/actions";
 import type { Blame, Mark } from "./machine/frames";
 import { Do, Mode, group, result, scope, step, type Evaluation, type Machine, type Scope, type Handling } from "./effects";
 import * as Quoting from "./quoting";
+import * as NbE from "./nbe";
 
 import _ from "lodash";
 
@@ -298,12 +299,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				result(NF.Constructors.Mu(mu.binding.variable, mu.binding.source, ann, NF.Constructors.Closure(ctx, mu.body))),
 			);
 		})
-		.with({ type: "App" }, function* ({ func, arg, icit }) {
-			// Evaluate func and arg, then reduce
-			return yield* Do.let("funcVal", () => schedule.eval(func))
-				.let("argVal", () => schedule.eval(arg))
-				.in(({ funcVal, argVal }) => schedule.reduce(funcVal, argVal, icit));
-		})
+		.with({ type: "App" }, term => application(term))
 		.with({ type: "Row" }, function* ({ row }) {
 			const record = row.entries.reduce<EB.Context["record"]>((rec, { label, value: term }) => {
 				if (rec[label]) {
@@ -381,21 +377,7 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				.let("annotation", () => schedule.eval(annotation))
 				.in(({ identity, payload, annotation }) => suspend(identity, payload, annotation));
 		})
-		.with({ type: "Reset", handling: P.nonNullable }, function* ({ term, handling }) {
-			return yield* Do.let("identity", () => schedule.eval(handling.identity))
-				.let("handler", () => schedule.eval(handling.handler))
-				.in(function* ({ identity, handler }) {
-					const tag = identify(identity);
-					if (!tag) {
-						throw new Error("Handler installation requires a concrete effect identity");
-					}
-					if (tag.args.length) {
-						throw new Error("Specialized foreign handler installation is pending");
-					}
-					yield* Stack.delimit(yield* scope(), { identity: tag, handler });
-					return yield* schedule.eval(term);
-				});
-		})
+		.with({ type: "Reset", handling: P.nonNullable }, term => reset(term))
 		.with({ type: "Reset" }, function* ({ term }) {
 			// Reset establishes a delimiter for continuation capture.
 			yield* Stack.delimit<Scope, Handling>(yield* scope());
@@ -445,6 +427,12 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 
 			return yield* result(NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 })));
 		})
+		.with({ type: "Ann", term: { type: "App" } }, ({ term, ann }) =>
+			Do.let("annotation", () => NbE.eval(ann)).in(({ annotation }) => application(term, annotation)),
+		)
+		.with({ type: "Ann", term: { type: "Reset", handling: P.nonNullable } }, ({ term, ann }) =>
+			Do.let("annotation", () => NbE.eval(ann)).in(({ annotation }) => reset(term, annotation)),
+		)
 		.with({ type: "Ann" }, function* ({ term }) {
 			return yield* schedule.eval(term);
 		})
@@ -457,9 +445,51 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		});
 }
 
+function* application({ func, arg, icit }: Extract<EB.Term, { type: "App" }>, annotation?: NF.Value): Evaluation<Machine<NF.Value>> {
+	return yield* Do.let("func", () => schedule.eval(func))
+		.let("arg", () => schedule.eval(arg))
+		.in(({ func, arg }) =>
+			annotation
+				? Do.let("value", () => schedule.reduce(func, arg, icit)).in(function* ({ value }) {
+						return yield* match([annotation, unglue(value)])
+							.with([P.nonNullable, NF.Patterns.StuckApp], function* ([annotation]) {
+								/* The call can select any enclosing handler once its function becomes known. */
+								const stopped = yield* Stack.capture<Scope, EB.Term, Handling>(() => false);
+								return yield* result(
+									stopped ? NF.Constructors.Neutral("Blocked", NF.Constructors.App(func, arg, icit, { annotation, pending: stopped.captured })) : value,
+								);
+							})
+							.otherwise(() => result(value));
+					})
+				: schedule.reduce(func, arg, icit),
+		);
+}
+
+function* reset({ term, handling }: Extract<EB.Term, { type: "Reset" }>, annotation?: NF.Value): Evaluation<Machine<NF.Value>> {
+	assert(handling, "A handler-bearing delimiter retains its identity and handler");
+	return yield* Do.let("signature", () =>
+		match(handling.identity)
+			.with(EB.CtorPatterns.Ann, ({ ann }) => NbE.eval(ann))
+			.otherwise(() => result<NF.Value | undefined>(undefined)),
+	)
+		.let("identity", () => schedule.eval(handling.identity))
+		.let("handler", () => schedule.eval(handling.handler))
+		.in(function* ({ signature, identity, handler }) {
+			const tag = identify(identity);
+			if (!tag) {
+				throw new Error("Handler installation requires a concrete effect identity");
+			}
+			if (tag.args.length) {
+				throw new Error("Specialized foreign handler installation is pending");
+			}
+			yield* Stack.delimit(yield* scope(), { identity, handler, signature, annotation });
+			return yield* schedule.eval(term);
+		});
+}
+
 const Anonymous = { name: "$anonymous" } as const;
 
-const identify = (value: NF.Value, args: NF.Value[] = []): Handling["identity"] | undefined =>
+const identify = (value: NF.Value, args: NF.Value[] = []): { name: string; args: NF.Value[] } | undefined =>
 	match(value)
 		.with(NF.Patterns.Glued, ({ unfolded }) => identify(unfolded, args))
 		.with({ type: "Neutral", kind: "Sealed" }, ({ value }) => identify(value, args))
@@ -471,7 +501,7 @@ const identify = (value: NF.Value, args: NF.Value[] = []): Handling["identity"] 
 
 function* suspend(identity: NF.Value, payload: NF.Value, annotation: NF.Value, bubble?: Extract<NF.Value, { type: "Bubble" }>): Evaluation<Machine<NF.Value>> {
 	const tag = identify(identity);
-	const stopped = yield* Stack.capture<Scope, EB.Term, Handling>(handling => !!handling && !!tag && handling.identity.name === tag.name);
+	const stopped = yield* Stack.capture<Scope, EB.Term, Handling>(handling => !!handling && !!tag && identify(handling.identity)?.name === tag.name);
 	return yield* match(stopped)
 		.with({ type: "Delimiter", handling: P.nonNullable }, function* ({ captured, handling }) {
 			const continuation = NF.Constructors.Lambda(
@@ -1081,6 +1111,8 @@ export const schedule = {
 			.with(NF.Patterns.Inj, function* ({ base, label, injected }) {
 				return yield* Do.let("replaced", () => inject(base, label, injected)).in(({ replaced }) => result(replaced ?? value));
 			})
+			/* Resuming a retained call requires replaying its saved frames. */
+			.with(NF.Patterns.RetainedApp, () => result(value))
 			.with(NF.Patterns.App, ({ func, arg, icit: appIcit }) =>
 				Do.let("forced", () => schedule.force(func)).in(({ forced }) => (forced === func ? result(value) : schedule.reduce(forced, arg, appIcit))),
 			)

@@ -9,7 +9,7 @@ import { Do, group, result, scope, type Evaluation, type Machine } from "./effec
 import { schedule } from "./evaluation.v2";
 import * as NbE from "./nbe";
 import * as Stack from "./machine/actions";
-import type { Scope, Handling } from "./effects";
+import type { Scope, Handling, Captured } from "./effects";
 import { match, P } from "ts-pattern";
 import assert from "node:assert";
 
@@ -76,24 +76,20 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* quote(lvl, value, unfold);
 		})
-		.with(
-			NF.Patterns.Bubble,
-			({ pending }) => !!pending?.frames.length,
-			function* (bubble) {
-				const pending = bubble.pending;
-				assert(pending, "A suspended continuation retains its captured frames");
-				if (pending.frames.some(frame => frame.type === "Delimiter")) {
-					throw new Error("Quoting a handled continuation requires the delimiter's answer type");
-				}
-				return yield* Do.let("continued", function* () {
-					yield* Stack.enter(yield* scope());
-					return yield* Stack.resume<NF.Value, Scope, EB.Term, Handling>(pending, NF.Constructors.Rigid(lvl));
-				}).in(({ continued }) =>
-					Do.let("body", () => quote(lvl + 1, continued, unfold))
-						.let("head", () => quote(lvl + 1, NF.Constructors.Bubble(bubble.meta, bubble.ann, bubble.values, bubble.operation), unfold))
-						.in(({ body, head }) => result(EB.Constructors.Block([EB.Constructors.Stmt.Let("$suspended", head, bubble.ann)], body))),
-				);
-			},
+		.with(NF.Patterns.RetainedApp, ({ func, arg, icit, retained }) =>
+			pending(
+				lvl,
+				level =>
+					Do.let("term", () => quote(level, NF.Constructors.App(func, arg, icit), unfold))
+						.let("ann", () => quote(level, retained.annotation, unfold))
+						.in(({ term, ann }) => result(EB.Constructors.Ann(term, ann))),
+				retained.annotation,
+				retained.pending,
+				unfold,
+			),
+		)
+		.with({ type: "Bubble", pending: P.nonNullable }, ({ meta, ann, values, operation, pending: captured }) =>
+			pending(lvl, level => quote(level, NF.Constructors.Bubble(meta, ann, values, operation), unfold), ann, captured, unfold),
 		)
 		.with(NF.Patterns.Bubble, ({ meta, ann, values, operation: { identity, payload } }) =>
 			Do.let("identity", () => quote(lvl, identity, unfold))
@@ -201,6 +197,53 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		)
 		.otherwise(function* (nf) {
 			throw new Error("Quote: Not implemented yet: " + (yield* display(nf)));
+		});
+}
+
+function* pending(
+	lvl: number,
+	head: (level: number) => Evaluation<Machine<EB.Term>>,
+	annotation: NF.Value,
+	captured: Captured,
+	unfold: NF.Unfolding,
+): Evaluation<Machine<EB.Term>> {
+	const index = captured.frames.findLastIndex(frame => frame.type === "Delimiter");
+	return yield* match(captured.frames[index])
+		.with({ type: "Delimiter" }, function* ({ handling }) {
+			const answer = handling?.annotation;
+			const signature = handling?.signature;
+			assert(handling && answer, "Quoting a handled continuation requires the delimiter's answer type");
+			return yield* pending(
+				lvl,
+				level =>
+					Do.let("body", () => pending(level, head, annotation, { ...captured, frames: captured.frames.slice(index + 1) }, unfold))
+						.let("identity", () =>
+							Do.let("term", () => quote(level, handling.identity, unfold)).in(({ term }) =>
+								signature
+									? Do.let("signature", () => quote(level, signature, unfold)).in(({ signature }) => result(EB.Constructors.Ann(term, signature)))
+									: result(term),
+							),
+						)
+						.let("handler", () => quote(level, handling.handler, unfold))
+						.let("answer", () => quote(level, answer, unfold))
+						.in(({ body, identity, handler, answer }) => result(EB.Constructors.Ann(EB.Constructors.Reset(body, { identity, handler }), answer))),
+				answer,
+				{ ...captured, frames: captured.frames.slice(0, index) },
+				unfold,
+			);
+		})
+		.otherwise(function* () {
+			if (captured.frames.length === 0) {
+				return yield* head(lvl);
+			}
+			return yield* Do.let("continued", function* () {
+				yield* Stack.enter(yield* scope());
+				return yield* Stack.resume<NF.Value, Scope, EB.Term, Handling>(captured, NF.Constructors.Rigid(lvl));
+			}).in(({ continued }) =>
+				Do.let("body", () => quote(lvl + 1, continued, unfold))
+					.let("head", () => head(lvl + 1))
+					.in(({ body, head }) => result(EB.Constructors.Block([EB.Constructors.Stmt.Let("$suspended", head, annotation)], body))),
+			);
 		});
 }
 

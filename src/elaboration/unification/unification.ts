@@ -264,6 +264,11 @@ export const unify = (left: NF.Value, right: NF.Value, lvl: number): Unification
 			.with([NF.Patterns.App, NF.Patterns.StuckApp], function* ([app, stuck]) {
 				yield* unify(app, stuck.value, lvl);
 			})
+			.with([NF.Patterns.RetainedApp, P._], [P._, NF.Patterns.RetainedApp], function* ([left, right]) {
+				if (left !== right) {
+					return yield* M.fail(Err.TypeMismatch(left, right));
+				}
+			})
 			.with([NF.Patterns.App, NF.Patterns.App], function* ([left, right]) {
 				if ([left.func, right.func, left.arg, right.arg].some(NF.isFlex)) {
 					yield* unify(left.func, right.func, lvl);
@@ -414,7 +419,7 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			.with(NF.Patterns.Lambda, ({ closure }) => inTerm(closure.term))
 			.with(NF.Patterns.Pi, ({ closure }) => inTerm(closure.term))
 			.with(NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure }) => inTerm(closure.term))
-			.with(NF.Patterns.App, ({ func, arg }) => check(func) || check(arg))
+			.with(NF.Patterns.App, ({ func, arg, retained }) => check(func) || check(arg) || (retained ? check(retained.annotation) : false))
 			.with(NF.Patterns.Modal, ({ value: inner, modalities }) => check(inner) || check(modalities.liquid))
 			.with(NF.Patterns.Bubble, ({ ann, values, operation: { identity, payload } }) => check(ann) || values.some(check) || check(identity) || check(payload))
 

@@ -24,8 +24,8 @@ export function* insert(node: EB.AST): M.Elaboration<EB.AST> {
 				const mvar = EB.Constructors.Var(meta);
 				const vNF = yield* NF.normalize(mvar);
 
-				const tm = EB.Constructors.App("Implicit", term, mvar);
 				const bodyNF = yield* NF.apply(pi.binder, pi.closure, vNF);
+				const tm = EB.Constructors.Ann(EB.Constructors.App("Implicit", term, mvar), yield* NF.quote(ctx.env.length, bodyNF));
 
 				yield* M.constrain({ type: "resolve", meta, value: pi.binder.annotation, implicits: ctx.implicits });
 

@@ -22,7 +22,8 @@ export const infer = (node: Application) =>
 		//const rus = Q.add(fus, Q.multiply(quantity, aus));
 
 		const val = yield* NF.apply({ type: "Pi", variable: x }, cls, yield* NF.normalize(at));
-		return [EB.Constructors.App(node.icit, ft, at), val, fus] satisfies EB.AST;
+		const annotation = yield* NF.quote((yield* M.reader.ask()).env.length, val);
+		return [EB.Constructors.Ann(EB.Constructors.App(node.icit, ft, at), annotation), val, fus] satisfies EB.AST;
 	});
 
 const inferFn = (node: Application) =>
