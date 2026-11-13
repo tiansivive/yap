@@ -76,17 +76,21 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* quote(lvl, value, unfold);
 		})
-		.with(NF.Patterns.RetainedApp, ({ func, arg, icit, retained }) =>
-			pending(
-				lvl,
-				level =>
-					Do.let("term", () => quote(level, NF.Constructors.App(func, arg, icit), unfold))
-						.let("ann", () => quote(level, retained.annotation, unfold))
-						.in(({ term, ann }) => result(EB.Constructors.Ann(term, ann))),
-				retained.annotation,
-				retained.pending,
-				unfold,
-			),
+		.with(NF.Patterns.Reset, ({ value, handling }) =>
+			Do.let("body", () => quote(lvl, value, unfold))
+				.let("identity", () => quote(lvl, handling.identity, unfold))
+				.let("handler", () => quote(lvl, handling.handler, unfold))
+				.let("signature", () => (handling.signature ? quote(lvl, handling.signature, unfold) : result<EB.Term | undefined>(undefined)))
+				.let("annotation", () => (handling.annotation ? quote(lvl, handling.annotation, unfold) : result<EB.Term | undefined>(undefined)))
+				.in(({ body, identity, handler, signature, annotation }) => {
+					const reset = EB.Constructors.Reset(body, { identity: signature ? EB.Constructors.Ann(identity, signature) : identity, handler });
+					return result(annotation ? EB.Constructors.Ann(reset, annotation) : reset);
+				}),
+		)
+		.with(NF.Patterns.Produced, ({ variable, annotation, body, producer }) =>
+			Do.let("producer", () => quote(lvl + 1, producer, unfold))
+				.let("body", () => M.reader.local(_ => body.ctx, quote(lvl + 1, body.value, unfold)))
+				.in(({ producer, body }) => result(EB.Constructors.Block([EB.Constructors.Stmt.Let(variable, producer, annotation)], body))),
 		)
 		.with({ type: "Bubble", pending: P.nonNullable }, ({ meta, ann, values, operation, pending: captured }) =>
 			pending(lvl, level => quote(level, NF.Constructors.Bubble(meta, ann, values, operation), unfold), ann, captured, unfold),
@@ -95,7 +99,10 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 			Do.let("identity", () => quote(lvl, identity, unfold))
 				.let("payload", () => quote(lvl, payload, unfold))
 				.let("annotation", () => quote(lvl, ann, unfold))
-				.in(({ identity, payload, annotation }) => result(EB.Constructors.Bubble(meta, ann, values, EB.Constructors.Suspend(identity, payload, annotation)))),
+				.in(({ identity, payload, annotation }) => {
+					const suspension = EB.Constructors.Suspend(identity, payload, annotation);
+					return result(meta === undefined ? suspension : EB.Constructors.Bubble(meta, ann, values, suspension));
+				}),
 		)
 		.with({ type: "App" }, ({ func, arg, icit }) =>
 			Do.let("f", () => quote(lvl, func, unfold))
@@ -217,16 +224,18 @@ function* pending(
 				lvl,
 				level =>
 					Do.let("body", () => pending(level, head, annotation, { ...captured, frames: captured.frames.slice(index + 1) }, unfold))
-						.let("identity", () =>
-							Do.let("term", () => quote(level, handling.identity, unfold)).in(({ term }) =>
-								signature
-									? Do.let("signature", () => quote(level, signature, unfold)).in(({ signature }) => result(EB.Constructors.Ann(term, signature)))
-									: result(term),
-							),
-						)
+						.let("identity", () => quote(level, handling.identity, unfold))
+						.let("signature", () => (signature ? quote(level, signature, unfold) : result<EB.Term | undefined>(undefined)))
 						.let("handler", () => quote(level, handling.handler, unfold))
 						.let("answer", () => quote(level, answer, unfold))
-						.in(({ body, identity, handler, answer }) => result(EB.Constructors.Ann(EB.Constructors.Reset(body, { identity, handler }), answer))),
+						.in(({ body, identity, signature, handler, answer }) =>
+							result(
+								EB.Constructors.Ann(
+									EB.Constructors.Reset(body, { identity: signature ? EB.Constructors.Ann(identity, signature) : identity, handler }),
+									answer,
+								),
+							),
+						),
 				answer,
 				{ ...captured, frames: captured.frames.slice(0, index) },
 				unfold,

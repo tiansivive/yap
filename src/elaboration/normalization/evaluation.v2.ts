@@ -427,9 +427,6 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 
 			return yield* result(NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 })));
 		})
-		.with({ type: "Ann", term: { type: "App" } }, ({ term, ann }) =>
-			Do.let("annotation", () => NbE.eval(ann)).in(({ annotation }) => application(term, annotation)),
-		)
 		.with({ type: "Ann", term: { type: "Reset", handling: P.nonNullable } }, ({ term, ann }) =>
 			Do.let("annotation", () => NbE.eval(ann)).in(({ annotation }) => reset(term, annotation)),
 		)
@@ -445,24 +442,14 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		});
 }
 
-function* application({ func, arg, icit }: Extract<EB.Term, { type: "App" }>, annotation?: NF.Value): Evaluation<Machine<NF.Value>> {
-	return yield* Do.let("func", () => schedule.eval(func))
-		.let("arg", () => schedule.eval(arg))
-		.in(({ func, arg }) =>
-			annotation
-				? Do.let("value", () => schedule.reduce(func, arg, icit)).in(function* ({ value }) {
-						return yield* match([annotation, unglue(value)])
-							.with([P.nonNullable, NF.Patterns.StuckApp], function* ([annotation]) {
-								/* The call can select any enclosing handler once its function becomes known. */
-								const stopped = yield* Stack.capture<Scope, EB.Term, Handling>(() => false);
-								return yield* result(
-									stopped ? NF.Constructors.Neutral("Blocked", NF.Constructors.App(func, arg, icit, { annotation, pending: stopped.captured })) : value,
-								);
-							})
-							.otherwise(() => result(value));
-					})
-				: schedule.reduce(func, arg, icit),
-		);
+function* application({ func, arg, icit }: Extract<EB.Term, { type: "App" }>): Evaluation<Machine<NF.Value>> {
+	return yield* Do.let("func", () => schedule.eval(func)).in(({ func }) =>
+		Do.let("arg", () =>
+			match(unglue(func))
+				.with(NF.Patterns.Blocked, NF.Patterns.Produced, () => NbE.eval(arg))
+				.otherwise(() => schedule.eval(arg)),
+		).in(({ arg }) => schedule.reduce(func, arg, icit)),
+	);
 }
 
 function* reset({ term, handling }: Extract<EB.Term, { type: "Reset" }>, annotation?: NF.Value): Evaluation<Machine<NF.Value>> {
@@ -482,8 +469,18 @@ function* reset({ term, handling }: Extract<EB.Term, { type: "Reset" }>, annotat
 			if (tag.args.length) {
 				throw new Error("Specialized foreign handler installation is pending");
 			}
-			yield* Stack.delimit(yield* scope(), { identity, handler, signature, annotation });
-			return yield* schedule.eval(term);
+			const handling = { identity, handler, signature, annotation };
+			yield* Stack.delimit(yield* scope(), handling);
+			return yield* Do.let("value", () => schedule.eval(term)).in(function* ({ value }) {
+				const active = yield* Stack.find<Scope, EB.Term, Handling>(frame => frame.type === "Delimiter" && frame.handling === handling);
+				return yield* result(
+					match(unglue(value))
+						.with(NF.Patterns.Blocked, NF.Patterns.Produced, () =>
+							active ? NF.Constructors.Neutral("Blocked", NF.Constructors.Reset(value, handling)) : value,
+						)
+						.otherwise(() => value),
+				);
+			});
 		});
 }
 
@@ -517,12 +514,14 @@ function* suspend(identity: NF.Value, payload: NF.Value, annotation: NF.Value, b
 				Do.let("applied", () => schedule.reduce(handler, payload, "Explicit")).in(({ applied }) => schedule.reduce(applied, continuation, "Explicit")),
 			);
 		})
-		.otherwise(stopped => {
-			if (!bubble) {
-				throw new Error("Suspend evaluation is pending without a matching delimiter");
-			}
-			return result(NF.Constructors.Neutral("Blocked", NF.Constructors.Bubble(bubble.meta, bubble.ann, bubble.values, bubble.operation, stopped?.captured)));
-		});
+		.otherwise(stopped =>
+			result(
+				NF.Constructors.Neutral(
+					"Blocked",
+					NF.Constructors.Bubble(bubble?.meta, annotation, bubble?.values ?? [], { type: "Suspend", identity, payload }, stopped?.captured),
+				),
+			),
+		);
 }
 
 function* specialize(handler: NF.Value, args: NF.Value[]): Evaluation<Machine<NF.Value>> {
@@ -785,71 +784,95 @@ export const schedule = {
 
 	/** Applies a function value to an argument, deferring the body rather than driving it. */
 	*reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evaluation<Machine<NF.Value>> {
-		return yield* match(nff)
-			.with({ type: "Neutral", kind: "Sealed" }, function* ({ value }) {
-				return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(value, nfa, icit)));
-			})
-			.with({ type: "Neutral", kind: "Symbolic" }, function* () {
-				return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.App(nff, nfa, icit)));
-			})
-			.with({ type: "Neutral", kind: "Blocked" }, function* ({ value }) {
-				return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.App(value, nfa, icit)));
-			})
-			.with({ type: "Modal" }, function* ({ value }) {
-				console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
-				return yield* schedule.reduce(value, nfa, icit);
-			})
-			/* The folded face grows with the glue itself at its head, so taking the application apart yields glued values, never a bare reference. */
-			.with(NF.Patterns.Glued, glued =>
-				Do.let("applied", () => schedule.reduce(glued.unfolded, nfa, icit)).in(({ applied }) =>
-					result(NF.Constructors.Glued(NF.Constructors.App(glued, nfa, icit), applied)),
-				),
-			)
-			.with({ type: "Abs", binder: { type: "Mu" } }, NF.Patterns.Nu, function* () {
-				// Do not unfold mu during normalization - defer to unification
-				return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
-			})
-			.with({ type: "Abs" }, ({ closure, binder }) => schedule.apply(binder, closure, nfa))
-			.with({ type: "Lit", value: { type: "Atom" } }, function* ({ value }) {
-				return yield* result(NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit));
-			})
-			.with({ type: "Var", variable: { type: "Meta" } }, function* () {
-				const symbolic = NF.Constructors.Neutral("Symbolic", nff);
-				return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.App(symbolic, nfa, icit)));
-			})
-			.with({ type: "Var", variable: { type: "Foreign" } }, function* () {
-				return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
-			})
-			/*
-			 * An over-applied constructor spine: reduce the inner application, then grow the
-			 * spine by one. Re-dispatching the result instead would not terminate — an atom
-			 * head reduces to the very node it came from.
-			 */
-			.with({ type: "App" }, function* ({ func, arg, icit: argIcit }) {
-				return yield* Do.let("intermediate", () => schedule.reduce(func, arg, argIcit)).in(({ intermediate }) =>
-					result(NF.Constructors.App(intermediate, nfa, icit)),
-				);
-			})
-			.with({ type: "External" }, function* ({ name, args, arity, compute }) {
-				if (arity === 0) {
-					return yield* result(compute());
-				}
+		const pack = (existential: NF.Value & { type: "Existential" }, next: (value: NF.Value) => Evaluation<Machine<NF.Value>>) => {
+			const { variable, annotation, body, producer } = existential;
+			const ctx = EB.bind(body.ctx, { type: "Let", variable }, annotation);
+			return Do.let("value", function* () {
+				yield* Stack.enter(yield* scope());
+				return yield* M.reader.local(_ => ctx, next(body.value));
+			}).in(({ value }) => result(NF.Constructors.Exists(variable, annotation, { ...body, value }, producer)));
+		};
+		return yield* match([unglue(nff), unglue(nfa)])
+			.with([NF.Patterns.Produced, P._], ([func]) => pack(func, value => schedule.reduce(value, nfa, icit)))
+			.with([P._, NF.Patterns.Produced], ([, arg]) => pack(arg, value => schedule.reduce(nff, value, icit)))
+			.otherwise(() =>
+				match(nff)
+					.with({ type: "Neutral", kind: "Sealed" }, function* ({ value }) {
+						return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(value, nfa, icit)));
+					})
+					.with({ type: "Neutral", kind: "Symbolic" }, function* () {
+						return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.App(nff, nfa, icit)));
+					})
+					.with({ type: "Neutral", kind: "Blocked" }, function* ({ value }) {
+						return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.App(value, nfa, icit)));
+					})
+					.with({ type: "Modal" }, function* ({ value }) {
+						console.warn("Applying a modal function. The modality of the argument will be ignored. What should happen here?");
+						return yield* schedule.reduce(value, nfa, icit);
+					})
+					/* The folded face grows with the glue itself at its head, so taking the application apart yields glued values, never a bare reference. */
+					.with(NF.Patterns.Glued, glued =>
+						Do.let("applied", () => schedule.reduce(glued.unfolded, nfa, icit)).in(({ applied }) =>
+							result(NF.Constructors.Glued(NF.Constructors.App(glued, nfa, icit), applied)),
+						),
+					)
+					.with({ type: "Abs", binder: { type: "Mu" } }, NF.Patterns.Nu, function* () {
+						// Do not unfold mu during normalization - defer to unification
+						return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
+					})
+					.with(NF.Patterns.Lambda, NF.Patterns.Pi, function* ({ closure, binder }) {
+						const ctx = yield* M.reader.ask();
+						return yield* match(unglue(nfa))
+							.with(NF.Patterns.Blocked, () =>
+								Do.let("value", function* () {
+									yield* Stack.enter(yield* scope());
+									return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length));
+								}).in(({ value }) => result(NF.Constructors.Exists(binder.variable, binder.annotation, { ctx, value }, nfa))),
+							)
+							.otherwise(() => schedule.apply(binder, closure, nfa));
+					})
+					.with({ type: "Abs" }, ({ closure, binder }) => schedule.apply(binder, closure, nfa))
+					.with({ type: "Lit", value: { type: "Atom" } }, function* ({ value }) {
+						return yield* result(NF.Constructors.App(NF.Constructors.Lit(value), nfa, icit));
+					})
+					.with({ type: "Var", variable: { type: "Meta" } }, function* () {
+						const symbolic = NF.Constructors.Neutral("Symbolic", nff);
+						return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.App(symbolic, nfa, icit)));
+					})
+					.with({ type: "Var", variable: { type: "Foreign" } }, function* () {
+						return yield* result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit)));
+					})
+					/*
+					 * An over-applied constructor spine: reduce the inner application, then grow the
+					 * spine by one. Re-dispatching the result instead would not terminate — an atom
+					 * head reduces to the very node it came from.
+					 */
+					.with({ type: "App" }, function* ({ func, arg, icit: argIcit }) {
+						return yield* Do.let("intermediate", () => schedule.reduce(func, arg, argIcit)).in(({ intermediate }) =>
+							result(NF.Constructors.App(intermediate, nfa, icit)),
+						);
+					})
+					.with({ type: "External" }, function* ({ name, args, arity, compute }) {
+						if (arity === 0) {
+							return yield* result(compute());
+						}
 
-				const accumulated = [...args, nfa];
+						const accumulated = [...args, nfa];
 
-				if (accumulated.length < arity) {
-					return yield* result(NF.Constructors.External(name, arity, compute, accumulated));
-				}
+						if (accumulated.length < arity) {
+							return yield* result(NF.Constructors.External(name, arity, compute, accumulated));
+						}
 
-				if (accumulated.some(blocksExternal)) {
-					return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.External(name, arity, compute, accumulated)));
-				}
+						if (accumulated.some(blocksExternal)) {
+							return yield* result(NF.Constructors.Neutral("Blocked", NF.Constructors.External(name, arity, compute, accumulated)));
+						}
 
-				return yield* result(compute(...accumulated.map(operand)));
-			})
-			.otherwise(function* () {
-				throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
-			});
+						return yield* result(compute(...accumulated.map(operand)));
+					})
+					.otherwise(function* () {
+						throw new Error("Impossible: Tried to apply a non-function while evaluating: " + JSON.stringify(nff));
+					}),
+			);
 	},
 
 	/** Consumes a closure with an argument: the body's scope, or the primop's result, or the continuation's replay. */
@@ -889,19 +912,25 @@ export const schedule = {
 
 		const [alt, ...rest] = alts;
 
-		return yield* Do.let("verdict", () => schedule.meet(alt.pattern, nf)).in(({ verdict }) =>
-			match(verdict)
-				.with({ tag: "matched" }, function* ({ bindings }) {
-					const extendedCtx = bindings.reduce((_ctx, { binder, nf: bound }) => EB.extend(_ctx, binder, bound), ctx);
-					return yield* M.reader.local(_ => extendedCtx, schedule.eval(alt.term));
-				})
-				.with({ tag: "blocked" }, function* () {
-					return yield* result(suspension);
-				})
-				.with({ tag: "mismatch" }, function* () {
-					return yield* schedule.matching(nf, rest, suspension);
-				})
-				.exhaustive(),
+		return yield* Do.let("known", () => schedule.force(unglue(nf))).in(({ known }) =>
+			match(unglue(known))
+				.with(NF.Patterns.Blocked, NF.Patterns.Produced, () => result(suspension))
+				.otherwise(() =>
+					Do.let("verdict", () => schedule.meet(alt.pattern, known)).in(({ verdict }) =>
+						match(verdict)
+							.with({ tag: "matched" }, function* ({ bindings }) {
+								const extendedCtx = bindings.reduce((_ctx, { binder, nf: bound }) => EB.extend(_ctx, binder, bound), ctx);
+								return yield* M.reader.local(_ => extendedCtx, schedule.eval(alt.term));
+							})
+							.with({ tag: "blocked" }, function* () {
+								return yield* result(suspension);
+							})
+							.with({ tag: "mismatch" }, function* () {
+								return yield* schedule.matching(known, rest, suspension);
+							})
+							.exhaustive(),
+					),
+				),
 		);
 	},
 
@@ -1111,8 +1140,6 @@ export const schedule = {
 			.with(NF.Patterns.Inj, function* ({ base, label, injected }) {
 				return yield* Do.let("replaced", () => inject(base, label, injected)).in(({ replaced }) => result(replaced ?? value));
 			})
-			/* Resuming a retained call requires replaying its saved frames. */
-			.with(NF.Patterns.RetainedApp, () => result(value))
 			.with(NF.Patterns.App, ({ func, arg, icit: appIcit }) =>
 				Do.let("forced", () => schedule.force(func)).in(({ forced }) => (forced === func ? result(value) : schedule.reduce(forced, arg, appIcit))),
 			)
@@ -1263,7 +1290,7 @@ const operand = (value: NF.Value): NF.Value =>
 
 const blocksExternal = (value: NF.Value): boolean =>
 	match(operand(value))
-		.with(NF.Patterns.Unresolved, () => true)
+		.with(NF.Patterns.Unresolved, NF.Patterns.Produced, () => true)
 		.otherwise(() => false);
 
 export const builtinsOps = ["+", "-", "*", "/", "&&", "||", "==", "!=", "<", ">", "<=", ">=", "%"];

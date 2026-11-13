@@ -338,12 +338,23 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 			const annotation = yield* M.reader.local(_ => within, instantiate(binder.annotation));
 			return NF.Constructors.Nu({ ...binder, scoped: scoped.row, annotation }, { ...closure, term });
 		})
-		.with({ type: "App" }, function* ({ icit, func, arg, retained }) {
-			return NF.Constructors.App(
-				yield* instantiate(func),
-				yield* instantiate(arg),
-				icit,
-				retained && { ...retained, annotation: yield* instantiate(retained.annotation) },
+		.with({ type: "App" }, function* ({ icit, func, arg }) {
+			return NF.Constructors.App(yield* instantiate(func), yield* instantiate(arg), icit);
+		})
+		.with(NF.Patterns.Reset, function* ({ value, handling }) {
+			return NF.Constructors.Reset(yield* instantiate(value), {
+				identity: yield* instantiate(handling.identity),
+				handler: yield* instantiate(handling.handler),
+				signature: handling.signature && (yield* instantiate(handling.signature)),
+				annotation: handling.annotation && (yield* instantiate(handling.annotation)),
+			});
+		})
+		.with(NF.Patterns.Existential, function* ({ variable, annotation, body, producer }) {
+			return NF.Constructors.Exists(
+				variable,
+				yield* instantiate(annotation),
+				{ ...body, value: yield* instantiate(body.value) },
+				producer && (yield* instantiate(producer)),
 			);
 		})
 		.with(NF.Patterns.Proj, function* ({ base, label }) {
@@ -409,8 +420,17 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 			return { ...abs, annotation: ann, closure: trimmedClosure };
 		})
 
-		.with({ type: "App" }, ({ icit, func, arg, retained }) =>
-			NF.Constructors.App(trimClosureEnvs(func), trimClosureEnvs(arg), icit, retained && { ...retained, annotation: trimClosureEnvs(retained.annotation) }),
+		.with({ type: "App" }, ({ icit, func, arg }) => NF.Constructors.App(trimClosureEnvs(func), trimClosureEnvs(arg), icit))
+		.with(NF.Patterns.Reset, ({ value, handling }) =>
+			NF.Constructors.Reset(trimClosureEnvs(value), {
+				identity: trimClosureEnvs(handling.identity),
+				handler: trimClosureEnvs(handling.handler),
+				signature: handling.signature && trimClosureEnvs(handling.signature),
+				annotation: handling.annotation && trimClosureEnvs(handling.annotation),
+			}),
+		)
+		.with(NF.Patterns.Existential, ({ variable, annotation, body, producer }) =>
+			NF.Constructors.Exists(variable, trimClosureEnvs(annotation), { ...body, value: trimClosureEnvs(body.value) }, producer && trimClosureEnvs(producer)),
 		)
 		.with(NF.Patterns.Proj, ({ base, label }) => NF.Constructors.Proj(trimClosureEnvs(base), label))
 		.with(NF.Patterns.Match, ({ closure, scrutinee }) => NF.Constructors.Match(closure, trimClosureEnvs(scrutinee)))

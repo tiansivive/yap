@@ -248,7 +248,7 @@ describe("Bubble quotation", () => {
 
 		expect(quote(value, 1)).toMatchObject({
 			type: "Block",
-			statements: [{ type: "Let", value: { type: "Ann", term: { type: "App" } } }],
+			statements: [{ type: "Let", value: { type: "App" } }],
 			return: { value: { value: "Num" } },
 		});
 	});

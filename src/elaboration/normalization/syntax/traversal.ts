@@ -21,12 +21,21 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 			const { annotation } = binder;
 			return Constructors.Mu(binder.variable, binder.source, traverse(annotation, onVar, onTerm), update(closure, "term", onTerm));
 		})
-		.with({ type: "App" }, ({ icit, func, arg, retained }) =>
-			Constructors.App(
-				traverse(func, onVar, onTerm),
-				traverse(arg, onVar, onTerm),
-				icit,
-				retained && { ...retained, annotation: traverse(retained.annotation, onVar, onTerm) },
+		.with({ type: "App" }, ({ icit, func, arg }) => Constructors.App(traverse(func, onVar, onTerm), traverse(arg, onVar, onTerm), icit))
+		.with(Patterns.Reset, ({ value, handling }) =>
+			Constructors.Reset(traverse(value, onVar, onTerm), {
+				identity: traverse(handling.identity, onVar, onTerm),
+				handler: traverse(handling.handler, onVar, onTerm),
+				signature: handling.signature && traverse(handling.signature, onVar, onTerm),
+				annotation: handling.annotation && traverse(handling.annotation, onVar, onTerm),
+			}),
+		)
+		.with(Patterns.Existential, ({ variable, annotation, body, producer }) =>
+			Constructors.Exists(
+				variable,
+				traverse(annotation, onVar, onTerm),
+				{ ...body, value: traverse(body.value, onVar, onTerm) },
+				producer && traverse(producer, onVar, onTerm),
 			),
 		)
 		.with(Patterns.Proj, ({ base, label }) => Constructors.Proj(traverse(base, onVar, onTerm), label))
