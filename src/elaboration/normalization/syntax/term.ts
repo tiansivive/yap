@@ -49,7 +49,7 @@ type Constructor =
 			annotation: Value;
 			body: {
 				ctx: EB.Context;
-				/** The bound result's level can differ from the saved environment depth during quotation. */
+				/** The result binder's semantic level, independent of the saved Core environment slots. */
 				level: number;
 				value: Value;
 			};
@@ -101,6 +101,7 @@ export function mk(val: Constructor): Value {
 }
 
 export const Constructors = {
+	Abs: (binder: Binder, closure: Closure): Value => mk({ type: "Abs", binder, closure }),
 	Var: (variable: Variable): Value => mk({ type: "Var", variable }),
 	Pi: (variable: string, icit: Implicitness, annotation: Value, closure: Closure) =>
 		mk({
@@ -125,7 +126,12 @@ export const Constructors = {
 			binder: { type: "Mu", variable, annotation, source },
 			closure,
 		}),
-	Exists: (variable: string, annotation: Value, body: { ctx: EB.Context; value: Value; level?: number }, producer?: Value): Value =>
+	Exists: (
+		variable: string,
+		annotation: Value,
+		body: { ctx: EB.Context; value: Value; level?: number },
+		producer?: Value,
+	): Extract<Value, { type: "Existential" }> =>
 		mk({
 			type: "Existential",
 			producer,

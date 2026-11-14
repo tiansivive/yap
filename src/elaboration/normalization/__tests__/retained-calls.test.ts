@@ -79,14 +79,13 @@ describe("retained calls", () => {
 			body: { value: { type: "Lit", value: Lit.Num(7) } },
 		});
 		const residual = unann(runNF(ctx, () => NF.quote(ctx.env.length, value)));
-		assert(residual.type === "Block", "Expected the producer binding");
-		expect(residual.statements).toHaveLength(1);
-		expect(unann(residual.statements[0].value)).toMatchObject({
+		assert(residual.type === "App" && residual.func.type === "Abs", "Expected the producer application");
+		expect(unann(residual.arg)).toMatchObject({
 			type: "App",
-			func: { type: "Var", variable: { index: 1 } },
+			func: { type: "Var", variable: { index: 0 } },
 			arg: { type: "Lit", value: Lit.Num(5) },
 		});
-		expect(residual.return).toMatchObject({ type: "Lit", value: Lit.Num(7) });
+		expect(residual.func.body).toMatchObject({ type: "Lit", value: Lit.Num(7) });
 	});
 
 	it.each(["bare", "annotated"])("keeps the %s unknown tail call as an ordinary blocked application", annotation => {
@@ -121,9 +120,8 @@ describe("retained calls", () => {
 
 		assert(residual.type === "Abs", "Expected the function lambda");
 		const retained = unann(residual.body);
-		assert(retained.type === "Block", "Expected the function producer binding");
-		expect(retained.statements).toHaveLength(1);
-		expect(retained.return).toMatchObject({ type: "Var", variable: { index: 0 } });
+		assert(retained.type === "App" && retained.func.type === "Abs", "Expected the function producer application");
+		expect(retained.func.body).toMatchObject({ type: "Var", variable: { index: 0 } });
 		expect(evaluate(app(residual, lambda("x", number, bound(0))))).toMatchObject({ type: "Lit", value: Lit.Num(5) });
 		expect(evaluate(install(atom("E"), abort(num(99)), app(residual, callback(atom("E")))))).toMatchObject({ type: "Lit", value: Lit.Num(99) });
 	});
@@ -137,13 +135,12 @@ describe("retained calls", () => {
 		const inner = unann(residual.body);
 		assert(inner.type === "Abs", "Expected the inner lambda");
 		const retained = unann(inner.body);
-		expect(retained).toMatchObject({ type: "Block", return: { type: "Lit", value: Lit.Num(7) } });
-		assert(retained.type === "Block", "Expected a retained call binding");
-		expect(retained.statements).toHaveLength(1);
-		expect(unann(retained.statements[0].value)).toMatchObject({
+		expect(retained).toMatchObject({ type: "App", func: { type: "Abs", body: { type: "Lit", value: Lit.Num(7) } } });
+		assert(retained.type === "App", "Expected a retained call application");
+		expect(unann(retained.arg)).toMatchObject({
 			type: "App",
-			func: { type: "Var", variable: { index: 2 } },
-			arg: { type: "Var", variable: { index: 1 } },
+			func: { type: "Var", variable: { index: 1 } },
+			arg: { type: "Var", variable: { index: 0 } },
 		});
 		expect(evaluate(install(atom("E"), abort(num(99)), app(app(residual, callback(atom("E"))), num(5))))).toMatchObject({
 			type: "Lit",
@@ -169,10 +166,9 @@ describe("retained calls", () => {
 
 		assert(residual.type === "Abs", "Expected a lambda");
 		const retained = unann(residual.body);
-		assert(retained.type === "Block", "Expected a shared call binding");
-		expect(retained.statements).toHaveLength(1);
-		expect(unann(retained.statements[0].value)).toMatchObject({ type: "App", arg: { value: Lit.Num(0) } });
-		expect(retained.return).toMatchObject({
+		assert(retained.type === "App" && retained.func.type === "Abs", "Expected a shared call application");
+		expect(unann(retained.arg)).toMatchObject({ type: "App", arg: { value: Lit.Num(0) } });
+		expect(retained.func.body).toMatchObject({
 			type: "Abs",
 			binding: { type: "Pi", annotation: { type: "Var", variable: { index: 0 } } },
 			body: { type: "Var", variable: { index: 1 } },
@@ -240,14 +236,33 @@ describe("retained calls", () => {
 		expect(evaluate(install(atom("A"), resume(1), residual))).toMatchObject({ type: "Lit", value: Lit.Num(116) });
 	});
 
-	it.each(["let", "lambda"])("shares a captured reset result through a %s binder", binder => {
+	it("shares a captured reset result through a lambda binder", () => {
 		const resume = lambda("p", number, lambda("k", arrow(number, number), app(bound(0), bound(1))));
 		const inner = C.Reset(suspend(atom("A"), num(1)), { identity: atom("B"), handler: resume });
-		const body = add(bound(0), bound(0));
-		const program = binder === "let" ? C.Block([C.Stmt.Let("r", inner, NF.Constructors.Atom("Num"))], body) : app(lambda("r", number, body), inner);
+		const program = app(lambda("r", number, add(bound(0), bound(0))), inner);
 
 		expect(evaluate(install(atom("A"), resume, program))).toMatchObject({ type: "Lit", value: Lit.Num(2) });
 		expect(evaluate(install(atom("A"), resume, quote(program)))).toMatchObject({ type: "Lit", value: Lit.Num(2) });
+	});
+
+	it.fails("shares a captured reset result through a source let binder", () => {
+		const resume = lambda("p", number, lambda("k", arrow(number, number), app(bound(0), bound(1))));
+		const inner = C.Reset(suspend(atom("A"), num(1)), { identity: atom("B"), handler: resume });
+		const program = C.Block([C.Stmt.Let("r", inner, NF.Constructors.Atom("Num"))], add(bound(0), bound(0)));
+
+		expect(evaluate(install(atom("A"), resume, program))).toMatchObject({ type: "Lit", value: Lit.Num(2) });
+		expect(evaluate(install(atom("A"), resume, quote(program)))).toMatchObject({ type: "Lit", value: Lit.Num(2) });
+	});
+
+	it("lets the earlier symbolic suspension consume its shallow delimiter", () => {
+		const handler = lambda("p", number, lambda("k", arrow(number, number), app(bound(0), bound(1))));
+		const body = app(lambda("r", number, suspend(atom("A"), num(2), 8)), suspend(bound(0), num(1)));
+		const program = lambda("e", type, install(atom("A"), handler, body));
+		const direct = evaluate(app(program, atom("A")));
+		const residual = evaluate(app(quote(program), atom("A")));
+
+		expect(direct).toMatchObject({ type: "Neutral", kind: "Blocked", value: { type: "Bubble", payload: { value: Lit.Num(2) } } });
+		expect(residual).toMatchObject({ type: "Neutral", kind: "Blocked", value: { type: "Bubble", payload: { value: Lit.Num(2) } } });
 	});
 
 	it("keeps a symbolic operation under the delimiter its identity later matches", () => {

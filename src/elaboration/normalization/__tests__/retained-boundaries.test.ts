@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import assert from "node:assert";
+import { isMatching } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
@@ -10,7 +12,7 @@ import * as Eff from "@yap/utils/effects";
 import * as Evaluation from "../evaluation.v2";
 import * as NbE from "../nbe";
 import { handlers } from "../machine/handlers";
-import { Mode, defaultMode, type Handling } from "../effects";
+import { Level, Mode, defaultMode, type Handling } from "../effects";
 import { declaration, elaborateModule } from "../../__tests__/module";
 import { mkCtx, runEB, runNF } from "../../inference/__tests__/util";
 
@@ -136,9 +138,9 @@ describe("retained handler boundaries", () => {
 		);
 
 		expect(residual).toMatchObject({
-			type: "Block",
-			statements: [{ type: "Let", value: { type: "App", func: { type: "Var", variable: { type: "Free", name: "deferred" } } } }],
-			return: { type: "Lit", value: Lit.Num(7) },
+			type: "App",
+			arg: { type: "App", func: { type: "Var", variable: { type: "Free", name: "deferred" } } },
+			func: { type: "Abs", body: { type: "Lit", value: Lit.Num(7) } },
 		});
 	});
 
@@ -156,9 +158,9 @@ describe("retained handler boundaries", () => {
 		const ctx = EB.bind(mkCtx(), { type: "Lambda", variable: "f" }, evaluate(arrow));
 		const held = runNF(ctx, () => NF.evaluate(C.App("Explicit", lambda("x", bound(0)), app(bound(0), num(5)))));
 		expect(runNF(ctx, () => NF.quote(2, held))).toMatchObject({
-			type: "Block",
-			statements: [{ type: "Let", value: { type: "App", func: { type: "Var", variable: { index: 2 } } } }],
-			return: { type: "Var", variable: { index: 0 } },
+			type: "App",
+			arg: { type: "App", func: { type: "Var", variable: { index: 1 } } },
+			func: { type: "Abs", body: { type: "Var", variable: { index: 0 } } },
 		});
 	});
 
@@ -220,7 +222,7 @@ describe("retained handler boundaries", () => {
 		expect(collect.nf(held)).toEqual([meta]);
 	});
 
-	it.fails("keeps independently created producer binders distinct when their bodies combine", () => {
+	it("keeps independently created producer binders distinct when their bodies combine", () => {
 		const add = (left: EB.Term, right: EB.Term) => C.App("Explicit", C.App("Explicit", C.Var(C.Vars.Foreign("$add")), left), right);
 		const first = app(lambda("x", bound(0)), app(bound(1), num(5)));
 		const second = app(lambda("y", bound(0)), app(bound(0), num(6)));
@@ -229,6 +231,48 @@ describe("retained handler boundaries", () => {
 		const identity = lambda("x", bound(0));
 		expect(evaluate(app(app(program, identity), identity))).toMatchObject({ type: "Lit", value: Lit.Num(11) });
 		expect(evaluate(app(app(quote(program), identity), identity))).toMatchObject({ type: "Lit", value: Lit.Num(11) });
+	});
+
+	it.each(["apply", "reduce"])("reserves a caller's fresh rigid during public %s", operation => {
+		const ctx = EB.bind(mkCtx(), { type: "Lambda", variable: "f" }, evaluate(arrow));
+		const body = app(lambda("r", bound(1)), app(bound(1), num(5)));
+		const func = runNF(ctx, () => NF.evaluate(lambda("x", body)));
+		assert(isMatching(NF.Patterns.Lambda, func), "Expected a lambda");
+		const argument = NF.Constructors.Rigid(ctx.env.length);
+		const value = runNF(ctx, () => (operation === "apply" ? NF.apply(func.binder, func.closure, argument) : NF.reduce(func, argument, "Explicit")));
+		const residual = runNF(ctx, () => NF.quote(ctx.env.length + 1, value));
+		const increment = lambda("n", app(app(C.Var(C.Vars.Foreign("$add")), bound(0)), num(10)));
+		const close = (term: EB.Term) => C.Lambda("f", "Explicit", lambda("x", term), arrow);
+
+		expect(evaluate(app(app(close(body), increment), num(99)))).toMatchObject({ type: "Lit", value: Lit.Num(99) });
+		expect(evaluate(app(app(close(residual), increment), num(99)))).toMatchObject({ type: "Lit", value: Lit.Num(99) });
+	});
+
+	it("preserves modalities when an identity function receives a producer binding", () => {
+		const ctx = EB.bind(mkCtx(), { type: "Lambda", variable: "f" }, evaluate(arrow));
+		const producer = runNF(ctx, () => NF.evaluate(app(bound(0), num(5))));
+		const body = { ctx, level: ctx.env.length, value: NF.Constructors.Lit(Lit.Num(7)) };
+		const existential = NF.Constructors.Exists("r", NF.Constructors.Atom("Num"), body, producer);
+		const liquid = evaluate(lambda("x", C.Lit(Lit.Bool(true))));
+		const argument = NF.Constructors.Modal(existential, { quantity: "One", liquid });
+		const identity = evaluate(lambda("x", bound(0)));
+
+		expect(runNF(ctx, () => NF.reduce(identity, argument, "Explicit"))).toBe(argument);
+	});
+
+	it.fails("weakens a producer result held inside an escaped resumption", () => {
+		const ctx = EB.bind(mkCtx(), { type: "Lambda", variable: "f" }, evaluate(arrow));
+		const handler = lambda("p", C.Lambda("k", "Explicit", bound(0), arrow));
+		const continuation = reset(handler, app(lambda("z", bound(1)), suspend(E, num(0))));
+		const source = app(lambda("result", continuation), app(bound(0), num(5)));
+		const held = runNF(ctx, () => NF.evaluate(source));
+		const residual = runNF(ctx, () => NF.quote(2, held));
+		const identity = lambda("x", bound(0));
+		const direct = app(app(C.Lambda("f", "Explicit", source, arrow), identity), num(0));
+		const weakened = app(app(app(C.Lambda("f", "Explicit", lambda("extra", residual), arrow), identity), num(100)), num(0));
+
+		expect(evaluate(direct)).toMatchObject({ type: "Lit", value: Lit.Num(5) });
+		expect(evaluate(weakened)).toMatchObject({ type: "Lit", value: Lit.Num(5) });
 	});
 
 	it.fails("preserves a handler around a blocked record field", () => {
@@ -274,8 +318,9 @@ describe("retained handler boundaries", () => {
 			program.ctx,
 			function* () {
 				const value = yield* NF.evaluate(program.tm);
-				const [quoted] = yield* Eff.with([handlers<NF.Scope, EB.Term, Handling>(fuel), Mode.handlers(defaultMode)], () =>
-					Evaluation.drive(NbE.quote(0, value), steps => `Quotation exceeded ${steps} steps`),
+				const [quoted] = yield* Eff.with(
+					[handlers<NF.Scope, EB.Term, Handling>(fuel), Mode.handlers(defaultMode), Level.handlers(program.ctx.env.length)],
+					() => Evaluation.drive(NbE.quote(0, value), steps => `Quotation exceeded ${steps} steps`),
 				);
 				return quoted;
 			},

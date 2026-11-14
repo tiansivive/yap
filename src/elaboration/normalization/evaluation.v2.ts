@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-syntax, no-restricted-properties, @typescript-eslint/consistent-type-assertions --
- * NbE: the machine (./machine) instantiated at a scope of environment and mode, terms as control,
+ * NbE: the machine (./machine) instantiated at a scope of environment, mode, and semantic level, terms as control,
  * and values as results. The driver loop below is the intentional CEK core, and it restores the row
  * the machine erased when it stored a continuation.
  */
@@ -16,9 +16,10 @@ import { display } from "./syntax/pretty";
 
 import * as Stack from "./machine/actions";
 import type { Blame, Mark } from "./machine/frames";
-import { Do, Mode, group, result, scope, step, type Evaluation, type Machine, type Scope, type Handling } from "./effects";
+import { Do, Level, Mode, group, result, scope, step, type Evaluation, type Machine, type Scope, type Handling } from "./effects";
 import * as Quoting from "./quoting";
 import * as NbE from "./nbe";
+import * as Bindings from "./bindings";
 
 import _ from "lodash";
 
@@ -87,18 +88,24 @@ function* trampoline(mark: Mark): Evaluation<void> {
 			break;
 		}
 
-		/* The driver re-binds both readers per step: the frame's scope is the single authority. */
+		/* Each step restores the scoped readers from its frame. */
 		yield* match(frame)
-			.with({ type: "Control" }, ({ scope: { env, mode }, control }) =>
+			.with({ type: "Control" }, ({ scope: { env, mode, level }, control }) =>
 				M.reader.local(
 					_ => env,
-					Mode.local(_ => mode, evaluateTerm(control)),
+					Mode.local(
+						_ => mode,
+						Level.local(_ => level, evaluateTerm(control)),
+					),
 				),
 			)
-			.with({ type: "Cont" }, ({ scope: { env, mode }, k, operands }) =>
+			.with({ type: "Cont" }, ({ scope: { env, mode, level }, k, operands }) =>
 				M.reader.local(
 					_ => env,
-					Mode.local(_ => mode, k(operands) as Evaluation<unknown>),
+					Mode.local(
+						_ => mode,
+						Level.local(_ => level, k(operands) as Evaluation<unknown>),
+					),
 				),
 			)
 			.exhaustive();
@@ -487,9 +494,11 @@ const identify = (value: NF.Value, args: NF.Value[] = []): { name: string; args:
 function* suspend(bubble: Extract<NF.Value, { type: "Bubble" }>): Evaluation<Machine<NF.Value>> {
 	const { identity, payload, ann: annotation } = bubble;
 	const tag = identify(identity);
-	const selected = tag && (yield* Stack.find<Scope, EB.Term, Handling>(frame =>
-		frame.type === "Delimiter" && !!frame.handling && identify(frame.handling.identity)?.name === tag.name,
-	));
+	const selected =
+		tag &&
+		(yield* Stack.find<Scope, EB.Term, Handling>(
+			frame => frame.type === "Delimiter" && !!frame.handling && identify(frame.handling.identity)?.name === tag.name,
+		));
 	if (!selected) {
 		return yield* result(NF.Constructors.Neutral("Blocked", bubble));
 	}
@@ -542,22 +551,10 @@ function* processStatementsAndPush(stmts: EB.Statement[], returnTerm: EB.Term): 
 
 			return yield* M.reader.local(
 				_ => extended,
-				Do.let("val", () => schedule.eval(value)).in(({ val }) =>
-					Do.let("known", () => schedule.view(val)).in(({ known }) =>
-						match(known)
-							.with(View.Blocked(), function* () {
-								entry.nf = NF.Constructors.Rigid(ctx.env.length);
-								return yield* Do.let("body", function* () {
-									yield* Stack.enter(yield* scope());
-									return yield* processStatementsAndPush(rest, returnTerm);
-								}).in(({ body }) => result(NF.Constructors.Exists(variable, annotation, { ctx, value: body }, val)));
-							})
-							.otherwise(function* () {
-								entry.nf = val;
-								return yield* processStatementsAndPush(rest, returnTerm);
-							}),
-					),
-				),
+				Do.let("val", () => schedule.eval(value)).in(function* ({ val }) {
+					entry.nf = val;
+					return yield* processStatementsAndPush(rest, returnTerm);
+				}),
 			);
 		})
 		.with({ type: "Expression" }, function* ({ value }) {
@@ -782,18 +779,29 @@ export const schedule = {
 		return yield* Stack.push<NF.Value, Scope, EB.Term>(yield* scope(), term);
 	},
 
-	/** Applies a function value to an argument, deferring the body rather than driving it. */
+	/** Applies a function value to an argument by scheduling its body. */
 	*reduce(nff: NF.Value, nfa: NF.Value, icit: Implicitness): Evaluation<Machine<NF.Value>> {
-		const pack = (existential: NF.Value & { type: "Existential" }, next: (value: NF.Value) => Evaluation<Machine<NF.Value>>) => {
-			const { variable, annotation, body, producer } = existential;
-			const ctx = EB.bind(body.ctx, { type: "Let", variable }, annotation);
-			return Do.let("value", function* () {
+		const pack = function* (existential: NF.Value & { type: "Existential" }, next: (value: NF.Value) => Evaluation<Machine<NF.Value>>) {
+			const level = yield* Level.ask();
+			const { variable, annotation, producer } = existential;
+			const body = Bindings.open(existential, level);
+			const ctx = EB.extend(body.ctx, { type: "Let", variable }, NF.Constructors.Rigid(level));
+			return yield* Do.let("value", function* () {
 				yield* Stack.enter(yield* scope());
-				return yield* M.reader.local(_ => ctx, next(body.value));
+				return yield* Level.local(
+					_ => level + 1,
+					M.reader.local(_ => ctx, next(body.value)),
+				);
 			}).in(({ value }) => result(NF.Constructors.Exists(variable, annotation, { ...body, value }, producer)));
 		};
+		const bind = function* (variable: string, annotation: NF.Value) {
+			const ctx = yield* M.reader.ask();
+			const level = yield* Level.ask();
+			const value = NF.Constructors.Rigid(level);
+			return yield* pack(NF.Constructors.Exists(variable, annotation, { ctx, level, value }, nfa), value => schedule.reduce(nff, value, icit));
+		};
 		return yield* Do.let("func", () => schedule.view(nff))
-			.let("arg", () => schedule.view(nfa))
+			.bind("arg", ({ func }) => (isMatching(View.Sealed(NF.Patterns.External), func) ? operand(nfa) : schedule.view(nfa)))
 			.in(({ func, arg }) =>
 				match({ original: nff, func, arg })
 					.with({ func: { value: NF.Patterns.Existential } }, ({ func }) => pack(func.value, body => schedule.reduce(body, nfa, icit)))
@@ -812,20 +820,14 @@ export const schedule = {
 						result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit))),
 					)
 					.with(
-						{ func: { value: NF.Patterns.Lambda }, arg: View.Blocked() },
-						{ func: { value: NF.Patterns.Pi }, arg: View.Blocked() },
-						function* ({
+						{ func: { value: { type: "Abs", binder: { type: P.union("Lambda", "Pi", "SigmaV2") } } }, arg: View.Blocked() },
+						({
 							func: {
-								value: { closure, binder },
+								value: { binder },
 							},
-						}) {
-							const ctx = yield* M.reader.ask();
-							return yield* Do.let("value", function* () {
-								yield* Stack.enter(yield* scope());
-								return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(ctx.env.length));
-							}).in(({ value }) => result(NF.Constructors.Exists(binder.variable, binder.annotation, { ctx, value }, nfa)));
-						},
+						}) => bind(binder.variable, binder.annotation),
 					)
+					.with({ arg: View.Blocked(NF.Patterns.Bubble) }, ({ arg }) => bind("$result", arg.value.ann))
 					.with({ func: { value: { type: "Abs" } } }, ({ func }) => schedule.apply(func.value.binder, func.value.closure, nfa))
 					.with({ func: { value: NF.Patterns.Atom } }, ({ func }) => result(NF.Constructors.App(func.value, nfa, icit)))
 					.with({ func: { value: NF.Patterns.Foreign } }, () => result(NF.Constructors.Neutral("Sealed", NF.Constructors.App(nff, nfa, icit))))
@@ -859,19 +861,9 @@ export const schedule = {
 								accumulated.map(arg => () => operand(arg)),
 								known =>
 									match(known)
-										.when(known => known.some(isMatching({ value: NF.Patterns.Existential })), known =>
-											spine(
-												NF.Constructors.External(name, arity, compute, []),
-												known.map(({ value }, index) =>
-													match(value)
-														.with(NF.Patterns.Existential, value => value)
-														.otherwise(() => accumulated[index]),
-												),
-												"Explicit",
-											),
-										)
-										.when(known => known.some(value => value.kind !== "Sealed"), () =>
-											result(NF.Constructors.Neutral("Blocked", NF.Constructors.External(name, arity, compute, accumulated))),
+										.when(
+											known => known.some(value => value.kind !== "Sealed"),
+											() => result(NF.Constructors.Neutral("Blocked", NF.Constructors.External(name, arity, compute, accumulated))),
 										)
 										.otherwise(known => result(compute(...known.map(({ value }) => value)))),
 							);
@@ -1086,10 +1078,10 @@ export const schedule = {
 		assert(right.type === "Abs" && right.binder.type === "Lambda", "Expected liquid annotation to be a Lambda abstraction");
 		const ctx = yield* M.reader.ask();
 		const name = `${left.binder.variable}_and_${right.binder.variable}`;
-		const lvl = ctx.env.length;
+		const lvl = yield* Level.ask();
 
-		return yield* Do.let("anf", () => schedule.apply(left.binder, left.closure, NF.Constructors.Rigid(lvl)))
-			.let("bnf", () => schedule.apply(right.binder, right.closure, NF.Constructors.Rigid(lvl)))
+		return yield* Do.let("anf", () => Level.local(_ => lvl + 1, schedule.apply(left.binder, left.closure, NF.Constructors.Rigid(lvl))))
+			.let("bnf", () => Level.local(_ => lvl + 1, schedule.apply(right.binder, right.closure, NF.Constructors.Rigid(lvl))))
 			.in(({ anf, bnf }) =>
 				Do.let("term", () => schedule.quote(lvl + 1, DSL.Binop.and(anf, bnf))).in(({ term }) =>
 					result({
@@ -1161,18 +1153,23 @@ export const schedule = {
 					ext.args.map(arg => () => operand(arg)),
 					known =>
 						match(known)
-							.when(known => known.some(isMatching({ value: NF.Patterns.Existential })), known =>
-								spine(
-									NF.Constructors.External(ext.name, ext.arity, ext.compute, []),
-									known.map(({ value }, index) =>
-										match(value)
-											.with(NF.Patterns.Existential, value => value)
-											.otherwise(() => ext.args[index]),
+							.when(
+								known => known.some(isMatching({ value: NF.Patterns.Existential })),
+								known =>
+									spine(
+										NF.Constructors.External(ext.name, ext.arity, ext.compute, []),
+										known.map(({ value }, index) =>
+											match(value)
+												.with(NF.Patterns.Existential, value => value)
+												.otherwise(() => ext.args[index]),
+										),
+										"Explicit",
 									),
-									"Explicit",
-								),
 							)
-							.when(known => known.some(value => value.kind !== "Sealed"), () => result(value))
+							.when(
+								known => known.some(value => value.kind !== "Sealed"),
+								() => result(value),
+							)
 							.otherwise(known => result(ext.compute(...known.map(({ value }) => value)))),
 				);
 			})

@@ -299,8 +299,8 @@ describe("the machine, on its own", () => {
 				yield* Stack.delimit(builtins, "outer");
 				yield* Stack.enter(builtins);
 				yield* Stack.delimit({ inner: 1 }, "inner");
-				const missing = yield* Stack.find<Env, Value, string>(frame => frame.type === "Delimiter" && frame.handling === "outer");
-				const inner = yield* Stack.find<Env, Value, string>(frame => frame.type === "Delimiter");
+				const missing = yield* Stack.find<Env, Value>(frame => frame.type === "Delimiter" && frame.handling === "outer");
+				const inner = yield* Stack.find<Env, Value>(frame => frame.type === "Delimiter");
 				return yield* Stack.fill({ missing, inner });
 			};
 			expect(machine(program())).toEqual({ missing: undefined, inner: { type: "Delimiter", scope: { inner: 1 }, handling: "inner" } });

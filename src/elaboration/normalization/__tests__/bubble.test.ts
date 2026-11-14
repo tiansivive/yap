@@ -24,7 +24,11 @@ describe("Bubble quotation", () => {
 		const term = bubble(atom("E"), atom("Num"));
 		const value = evaluate(term);
 
-		expect(value).toMatchObject({ type: "Neutral", kind: "Blocked", value: { type: "Bubble", meta: 7, ann: { type: "Lit", value: { type: "Atom", value: "Type" } }, values: [NF.Type] } });
+		expect(value).toMatchObject({
+			type: "Neutral",
+			kind: "Blocked",
+			value: { type: "Bubble", meta: 7, ann: { type: "Lit", value: { type: "Atom", value: "Type" } }, values: [NF.Type] },
+		});
 		expect(quote(value)).toMatchObject({
 			type: "Bubble",
 			meta: 7,
@@ -99,20 +103,19 @@ describe("Bubble quotation", () => {
 		const quoted = quote(value);
 
 		expect(quoted).toMatchObject({
-			type: "Block",
-			statements: [{ type: "Let", value: { type: "Bubble", meta: 7 } }],
-			return: { type: "Lit", value: { value: "Num" } },
+			type: "App",
+			arg: { type: "Bubble", meta: 7 },
+			func: { type: "Abs", body: { type: "Lit", value: { value: "Num" } } },
 		});
-		expect(quote(value)).toMatchObject({ type: "Block", statements: [{ value: { type: "Bubble", meta: 7 } }], return: { value: { value: "Num" } } });
 	});
 
 	it("binds one suspension result used in both positions of a dependent Pi", () => {
 		const value = evaluate(C.App("Explicit", lambda(C.Pi("x", "Explicit", bound(0), bound(1))), bubble(atom("E"), atom("Unit"))));
 
 		expect(quote(value)).toMatchObject({
-			type: "Block",
-			statements: [{ type: "Let", value: { type: "Bubble", meta: 7 } }],
-			return: { type: "Abs", binding: { type: "Pi", annotation: { variable: { index: 0 } } }, body: { variable: { index: 1 } } },
+			type: "App",
+			arg: { type: "Bubble", meta: 7 },
+			func: { type: "Abs", body: { type: "Abs", binding: { type: "Pi", annotation: { variable: { index: 0 } } }, body: { variable: { index: 1 } } } },
 		});
 	});
 
@@ -122,9 +125,9 @@ describe("Bubble quotation", () => {
 		expect(quote(value)).toMatchObject({
 			type: "Abs",
 			body: {
-				type: "Block",
-				statements: [{ value: { type: "Bubble", identity: { variable: { index: 1 } } } }],
-				return: { value: { value: "Num" } },
+				type: "App",
+				arg: { type: "Bubble", identity: { variable: { index: 0 } } },
+				func: { type: "Abs", body: { value: { value: "Num" } } },
 			},
 		});
 	});
@@ -142,10 +145,10 @@ describe("Bubble quotation", () => {
 		const scope = EB.bind(ctx, { type: "Lambda", variable: "A" }, NF.Type);
 		const value = runNF(scope, () => NF.evaluate(C.App("Explicit", lambda(bound(1)), bubble(atom("E"), atom("Unit")))));
 
-		expect(quote(value, 2)).toMatchObject({ type: "Block", return: { type: "Var", variable: { type: "Bound", index: 2 } } });
+		expect(quote(value, 2)).toMatchObject({ type: "App", func: { type: "Abs", body: { type: "Var", variable: { type: "Bound", index: 2 } } } });
 	});
 
-	it.fails("collects a meta used only after the suspension", () => {
+	it("collects a meta used only after the suspension", () => {
 		const meta = { type: "Meta", val: 9, lvl: 0 } as const;
 		const value = evaluate(C.App("Explicit", lambda(C.Var(meta)), bubble(atom("E"), atom("Unit"))));
 		const collect = runNF(ctx, Metas.collectors);
@@ -153,16 +156,16 @@ describe("Bubble quotation", () => {
 		expect(collect.nf(value)).toContainEqual(meta);
 	});
 
-	it.fails("instantiates an unconstrained type meta used only after the suspension", () => {
+	it("instantiates an unconstrained type meta used only after the suspension", () => {
 		const meta = { type: "Meta", val: 9, lvl: 0 } as const;
 		const value = evaluate(C.App("Explicit", lambda(C.Var(meta)), bubble(atom("E"), atom("Unit"))));
 		const registry = Metas.register(Metas.empty, { meta, annotation: NF.Type });
 		const [instantiated] = Eff.run(() => NF.instantiate(value), [M.reader.handlers(ctx), Metas.registry.handlers(registry), M.supply.handlers()]);
 
-		expect(quote(instantiated)).toMatchObject({ type: "Block", return: { type: "Lit", value: { value: "Any" } } });
+		expect(quote(instantiated)).toMatchObject({ type: "App", func: { type: "Abs", body: { type: "Lit", value: { value: "Any" } } } });
 	});
 
-	it.fails("transforms a meta used only after the suspension", () => {
+	it("transforms a meta used only after the suspension", () => {
 		const meta = { type: "Meta", val: 9, lvl: 0 } as const;
 		const value = evaluate(C.App("Explicit", lambda(C.Var(meta)), bubble(atom("E"), atom("Unit"))));
 		const transformed = NF.traverse(
@@ -171,7 +174,7 @@ describe("Bubble quotation", () => {
 			() => atom("String"),
 		);
 
-		expect(quote(transformed)).toMatchObject({ type: "Block", return: { type: "Lit", value: { value: "String" } } });
+		expect(quote(transformed)).toMatchObject({ type: "App", func: { type: "Abs", body: { type: "Lit", value: { value: "String" } } } });
 	});
 
 	it.fails("unifies a retained Bubble with itself", () => {
@@ -224,9 +227,9 @@ describe("Bubble quotation", () => {
 		const value = runNF(scope, () => NF.evaluate(C.App("Explicit", lambda(atom("Num")), call)));
 
 		expect(quote(value, 1)).toMatchObject({
-			type: "Block",
-			statements: [{ type: "Let", value: { type: "App" } }],
-			return: { value: { value: "Num" } },
+			type: "App",
+			arg: { type: "App" },
+			func: { type: "Abs", body: { value: { value: "Num" } } },
 		});
 	});
 
