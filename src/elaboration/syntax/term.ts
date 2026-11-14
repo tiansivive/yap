@@ -25,10 +25,12 @@ type Constructor =
 	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> }
 	| { type: "Block"; statements: Array<Statement>; return: Term }
 	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
-	| { type: "Suspend"; identity: Term; payload: Term; annotation: Term }
 	| { type: "Reset"; term: Term; handling?: { identity: Term; handler: Term } }
 	| { type: "Shift"; body: Term }
-	| { type: "Bubble"; meta: number; ann: NF.Value; values: NF.Value[]; shift: Term }
+	| ({ type: "Bubble"; meta: number; ann: NF.Value; values: NF.Value[] } & (
+			| { identity: Term; payload: Term; shift?: never }
+			| { shift: Term; identity?: never; payload?: never }
+	  ))
 	| { type: "Ann"; term: Term; ann: Term };
 
 export type Variable =
@@ -197,10 +199,11 @@ export const Constructors = {
 
 	Modal: (term: Term, modalities: Modal.Annotations<Term>): Term => mk({ type: "Modal", term, modalities }),
 
-	Suspend: (identity: Term, payload: Term, annotation: Term): Term => mk({ type: "Suspend", identity, payload, annotation }),
 	Reset: (term: Term, handling?: { identity: Term; handler: Term }): Term => mk({ type: "Reset", term, ...(handling ? { handling } : {}) }),
 	Shift: (body: Term): Term => mk({ type: "Shift", body }),
-	Bubble: (meta: number, ann: NF.Value, values: NF.Value[], shift: Term): Term => mk({ type: "Bubble", meta, ann, values, shift }),
+	Bubble: (meta: number, ann: NF.Value, values: NF.Value[], identity: Term, payload: Term): Term =>
+		mk({ type: "Bubble", meta, ann, values, identity, payload }),
+	ShiftBubble: (meta: number, ann: NF.Value, values: NF.Value[], shift: Term): Term => mk({ type: "Bubble", meta, ann, values, shift }),
 
 	Patterns: {
 		Binder: (value: string): Pattern => ({ type: "Binder", value }),

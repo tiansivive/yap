@@ -46,7 +46,7 @@ describe("Inference: with", () => {
 		expect(bare(tm.return)).toMatchObject({
 			type: "Reset",
 			handling: { identity: { type: "Var", variable: { type: "Bound", index: 2 } }, handler: { type: "Var", variable: { type: "Bound", index: 0 } } },
-			term: { type: "Bubble", shift: { type: "Suspend" } },
+			term: { type: "Bubble",  },
 		});
 		const invocation = application(body(body(tm.statements[2].value)));
 		expect(application(invocation.func).func).toMatchObject({ type: "Var", variable: { type: "Bound", index: 3 } });

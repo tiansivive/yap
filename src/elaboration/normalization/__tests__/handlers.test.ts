@@ -13,7 +13,7 @@ const bound = (index: number) => C.Var(EB.Bound(index));
 const lambda = (name: string, body: EB.Term) => C.Lambda(name, "Explicit", body, EB.Any);
 const app = (f: EB.Term, x: EB.Term) => C.App("Explicit", f, x);
 const add = (a: EB.Term, b: EB.Term) => app(app(C.Var(EB.Constructors.Vars.Foreign("$add")), a), b);
-const suspend = (identity: EB.Term, payload: EB.Term) => C.Suspend(identity, payload, atom("Num"));
+const suspend = (identity: EB.Term, payload: EB.Term) => C.Bubble(7, NF.Constructors.Atom("Num"), [], identity, payload);
 const A = atom("A");
 const B = atom("B");
 const evaluate = (term: EB.Term) => runNF(mkCtx(), () => NF.normalize(term));
@@ -97,7 +97,7 @@ describe("concrete handlers", () => {
 
 	it("executes an elaboration Bubble under its matching handler", () => {
 		const handler = lambda("p", lambda("k", app(bound(0), bound(1))));
-		const body = C.Bubble(7, NF.Constructors.Atom("Num"), [], suspend(A, num(9)));
+		const body = suspend(A, num(9));
 		expect(evaluate(install(A, handler, add(num(1), body)))).toMatchObject({ type: "Lit", value: Lit.Num(10) });
 	});
 });

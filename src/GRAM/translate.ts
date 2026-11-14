@@ -127,15 +127,15 @@ const walk = (term: EB.Term, st: State): [NodeId, State] =>
 		.with({ type: "Match" }, t => matchExpr(t, st))
 		.with({ type: "Block" }, t => block(t, st))
 		.with({ type: "Modal" }, t => modal(t, st))
-		.with({ type: "Suspend" }, () => {
-			throw new Error("GRAM translation for Suspend is pending");
+		.with({ type: "Bubble", identity: P.nonNullable }, () => {
+			throw new Error("GRAM translation for suspension is pending");
 		})
 		.with({ type: "Reset", handling: P.nonNullable }, () => {
 			throw new Error("GRAM translation: handler-bearing reset is unsupported");
 		})
 		.with({ type: "Reset" }, t => reset(t, st))
 		.with({ type: "Shift" }, t => shift(t, st))
-		.with({ type: "Bubble" }, t => walk(t.shift, st))
+		.with({ type: "Bubble", shift: P.nonNullable }, t => walk(t.shift, st))
 		.with({ type: "Ann" }, t => walk(t.term, st))
 		.exhaustive();
 

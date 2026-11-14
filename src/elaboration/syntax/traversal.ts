@@ -1,4 +1,4 @@
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { update } from "@yap/utils";
 
 import * as F from "fp-ts/lib/function";
@@ -65,9 +65,10 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 				},
 			),
 		)
-		.with({ type: "Suspend" }, ({ identity, payload, annotation }) =>
-			Constructors.Suspend(traverse(identity, onVar), traverse(payload, onVar), traverse(annotation, onVar)),
+		.with({ type: "Bubble", identity: P.nonNullable }, ({ meta, ann, values, identity, payload }) =>
+			Constructors.Bubble(meta, ann, values, traverse(identity, onVar), traverse(payload, onVar)),
 		)
+		.with({ type: "Bubble", shift: P.nonNullable }, ({ meta, ann, values, shift }) => Constructors.ShiftBubble(meta, ann, values, traverse(shift, onVar)))
 		.with({ type: "Modal" }, ({ term, modalities }) => Constructors.Modal(traverse(term, onVar), modalities))
 		.otherwise(() => {
 			throw new Error("Traverse: Not implemented yet");

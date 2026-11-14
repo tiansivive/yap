@@ -22,7 +22,7 @@ const call = (func: EB.Term, arg: EB.Term, annotation = number) => C.Ann(app(fun
 const add = (a: EB.Term, b: EB.Term) => app(app(C.Var(C.Vars.Foreign("$add")), a), b);
 const install = (identity: EB.Term, handler: EB.Term, term: EB.Term, annotation = number) => C.Ann(C.Reset(term, { identity, handler }), annotation);
 const abort = (value: EB.Term, answer = number) => lambda("p", number, lambda("k", arrow(number, answer), value));
-const suspend = (identity: EB.Term, payload: EB.Term, meta = 7) => C.Bubble(meta, NF.Constructors.Atom("Num"), [], C.Suspend(identity, payload, number));
+const suspend = (identity: EB.Term, payload: EB.Term, meta = 7) => C.Bubble(meta, NF.Constructors.Atom("Num"), [], identity, payload);
 const callback = (identity: EB.Term) => lambda("x", number, suspend(identity, bound(0)));
 const evaluate = (term: EB.Term) => runNF(mkCtx(), () => NF.evaluate(term));
 const quote = (term: EB.Term) => runNF(mkCtx(), () => NF.quote(0, evaluate(term)));
@@ -244,8 +244,7 @@ describe("retained calls", () => {
 		const resume = lambda("p", number, lambda("k", arrow(number, number), app(bound(0), bound(1))));
 		const inner = C.Reset(suspend(atom("A"), num(1)), { identity: atom("B"), handler: resume });
 		const body = add(bound(0), bound(0));
-		const program =
-			binder === "let" ? C.Block([C.Stmt.Let("r", inner, NF.Constructors.Atom("Num"))], body) : app(lambda("r", number, body), inner);
+		const program = binder === "let" ? C.Block([C.Stmt.Let("r", inner, NF.Constructors.Atom("Num"))], body) : app(lambda("r", number, body), inner);
 
 		expect(evaluate(install(atom("A"), resume, program))).toMatchObject({ type: "Lit", value: Lit.Num(2) });
 		expect(evaluate(install(atom("A"), resume, quote(program)))).toMatchObject({ type: "Lit", value: Lit.Num(2) });
@@ -346,12 +345,12 @@ describe("elaborated retained calls", () => {
 		const operation = unann(term.body);
 		assert(operation.type === "Bubble", "Expected the suspension's result binding");
 		expect(operation.meta).toEqual(expect.any(Number));
-		expect(operation.shift).toMatchObject({ type: "Suspend" });
+		expect(operation).toHaveProperty("identity");
 		const value = runNF(callback.ctx, () => NF.evaluate(app(callback.tm, num(5))), callback.registry);
 		expect(value).toMatchObject({ type: "Neutral", kind: "Blocked", value: { type: "Bubble", meta: operation.meta } });
 		const residual = runNF(callback.ctx, () => NF.quote(callback.ctx.env.length, value), callback.registry);
 
-		expect(residual).toMatchObject({ type: "Bubble", meta: operation.meta, shift: { type: "Suspend", payload: { value: Lit.Num(5) } } });
+		expect(residual).toMatchObject({ type: "Bubble", meta: operation.meta, payload: { value: Lit.Num(5) } });
 	});
 
 	it("executes a callback under its source handler after quoting the open function", () => {

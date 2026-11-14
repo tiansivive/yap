@@ -76,13 +76,10 @@ describe("Inference: raw reset", () => {
 			type: "Reset",
 			term: {
 				type: "Bubble",
-				shift: {
-					type: "Suspend",
-					annotation: atom("Num"),
-					payload: {
-						type: "Abs",
-						binding: { annotation: { type: "Abs", binding: { annotation: atom("Num") }, body: atom("Num") } },
-					},
+				ann: atom("Num"),
+				payload: {
+					type: "Abs",
+					binding: { annotation: { type: "Abs", binding: { annotation: atom("Num") }, body: atom("Num") } },
 				},
 			},
 		});
@@ -100,8 +97,8 @@ describe("Inference: raw reset", () => {
 			type: "Reset",
 			term: {
 				type: "Match",
-				scrutinee: { type: "Bubble", shift: { type: "Suspend", annotation: atom("Bool") } },
-				alternatives: [{ term: { type: "Bubble", shift: { type: "Suspend", annotation: atom("Num") } } }, { term: expect.any(Object) }],
+				scrutinee: { type: "Bubble", ann: atom("Bool") },
+				alternatives: [{ term: { type: "Bubble", ann: atom("Num") } }, { term: expect.any(Object) }],
 			},
 		});
 	});
@@ -113,7 +110,7 @@ describe("Inference: raw reset", () => {
 			type: "Reset",
 			term: {
 				type: "Bubble",
-				shift: { type: "Suspend", identity: { type: "Ann", term: atom("$anonymous"), ann: { type: "App", arg: atom("Num") } } },
+				identity: { type: "Ann", term: atom("$anonymous"), ann: { type: "App", arg: atom("Num") } },
 			},
 		});
 	});
@@ -125,7 +122,7 @@ describe("Inference: raw reset", () => {
 			type: "Reset",
 			term: {
 				type: "Bubble",
-				shift: { type: "Suspend", identity: { type: "Ann", term: atom("$anonymous") } },
+				identity: { type: "Ann", term: atom("$anonymous") },
 			},
 		});
 	});
@@ -169,9 +166,9 @@ describe("Inference: raw reset", () => {
 		}
 		const bubble = reset(second.body).term;
 		assert(bubble.type === "Bubble", "Expected a suspension result binding");
-		assert(bubble.shift.type === "Suspend", "Expected a suspension");
-		expect(bubble.shift.annotation).toMatchObject({ type: "Var", variable: { type: "Bound", index: 1 } });
-		expect(bare(body(bubble.shift.payload))).toMatchObject({ type: "App", arg: { type: "Var", variable: { type: "Bound", index: 1 } } });
+		assert(bubble.identity, "Expected a suspension");
+		expect(bubble.ann).toMatchObject({ type: "Neutral", value: { type: "Var", variable: { type: "Bound", lvl: 0 } } });
+		expect(bare(body(bubble.payload))).toMatchObject({ type: "App", arg: { type: "Var", variable: { type: "Bound", index: 1 } } });
 	});
 
 	it.each(["reset (shift ((resume 10) + (resume 20)))", "reset (1 + (shift ((resume 10) + (resume 20))))"])(
@@ -197,12 +194,9 @@ describe("Inference: raw reset", () => {
 			type: "Reset",
 			term: {
 				type: "Bubble",
-				shift: {
-					type: "Suspend",
-					identity: { type: "Ann", term: atom("$anonymous") },
-					annotation: atom("Num"),
-					payload: { type: "Abs" },
-				},
+				identity: { type: "Ann", term: atom("$anonymous") },
+				ann: atom("Num"),
+				payload: { type: "Abs" },
 			},
 		});
 	});
@@ -252,7 +246,7 @@ describe("Inference: raw reset", () => {
 
 	it("elaborates standalone anonymous operations", () => {
 		const result = elaborated("let result: Num = suspend (\\k -> (k 1 : Num));");
-		expect(bare(result.tm)).toMatchObject({ type: "Bubble", shift: { type: "Suspend", identity: { type: "Ann", term: atom("$anonymous") }, annotation: atom("Num") } });
+		expect(bare(result.tm)).toMatchObject({ type: "Bubble", identity: { type: "Ann", term: atom("$anonymous") }, ann: atom("Num") });
 	});
 
 	it("keeps anonymous operations in separately defined functions", () => {
@@ -261,7 +255,7 @@ describe("Inference: raw reset", () => {
 		expect(fn).toMatchObject({
 			type: "Abs",
 			binding: { type: "Lambda", icit: "Explicit", annotation: atom("Num") },
-			body: { type: "Bubble", shift: { type: "Suspend", identity: { type: "Ann", term: atom("$anonymous") } } },
+			body: { type: "Bubble", identity: { type: "Ann", term: atom("$anonymous") } },
 		});
 		const result = elaborated(source);
 		expect(explicit(quoted(result))).toMatchObject(atom("Num"));
@@ -276,7 +270,7 @@ describe("Inference: raw reset", () => {
 		expect(explicit(quoted(closure))).toMatchObject({ type: "Abs", binding: { type: "Pi", icit: "Explicit" }, body: atom("Num") });
 		expect(reset(closure.tm).term).toMatchObject({
 			type: "Ann",
-			term: { type: "Abs", body: { type: "Bubble", shift: { type: "Suspend", identity: { type: "Ann", term: atom("$anonymous") } } } },
+			term: { type: "Abs", body: { type: "Bubble", identity: { type: "Ann", term: atom("$anonymous") } } },
 		});
 		expect(explicit(quoted(elaborated(source)))).toMatchObject(atom("Num"));
 	});
@@ -301,18 +295,15 @@ describe("Inference: raw reset", () => {
 		const result = elaborated("foreign E: Effect ((Num -> Num) -> Num) Num; let result: Num = reset @E (reset (suspend @E (\\k -> k 1)));");
 		const outer = reset(block(result.tm).return);
 		expect(outer.handling?.identity).toMatchObject({ type: "Var", variable: { type: "Bound", index: 0 } });
-		expect(reset(outer.term).term).toMatchObject({ type: "Bubble", shift: { type: "Suspend", identity: { type: "Var", variable: { type: "Foreign", name: "E" } } } });
+		expect(reset(outer.term).term).toMatchObject({ type: "Bubble", identity: { type: "Var", variable: { type: "Foreign", name: "E" } } });
 	});
 
 	it("preserves anonymous suspensions inside a suspension payload", () => {
 		const result = elaborated('let result: String = reset (reset (suspend (\\k -> suspend (\\outer -> "hello"))));');
 		expect(reset(reset(result.tm).term).term).toMatchObject({
 			type: "Bubble",
-			shift: {
-				type: "Suspend",
-				identity: { type: "Ann", term: atom("$anonymous") },
-				payload: { type: "Abs", body: { type: "Bubble", shift: { type: "Suspend", identity: { type: "Ann", term: atom("$anonymous") } } } },
-			},
+			identity: { type: "Ann", term: atom("$anonymous") },
+			payload: { type: "Abs", body: { type: "Bubble", identity: { type: "Ann", term: atom("$anonymous") } } },
 		});
 	});
 
@@ -320,7 +311,7 @@ describe("Inference: raw reset", () => {
 		const source = 'let abort = \\u -> suspend (\\k -> "hello"); let result: Num = reset (abort !);';
 		expect(explicit(elaborated(source, "abort").tm)).toMatchObject({
 			type: "Abs",
-			body: { type: "Bubble", shift: { type: "Suspend", identity: { type: "Ann", term: atom("$anonymous"), ann: { func: { arg: { body: atom("String") } } } } } },
+			body: { type: "Bubble", identity: { type: "Ann", term: atom("$anonymous"), ann: { func: { arg: { body: atom("String") } } } } },
 		});
 		const { tm, ty, ctx, registry } = elaborated(source);
 		expect(reset(tm).handling?.identity).toMatchObject({ type: "Ann", term: atom("$anonymous"), ann: { body: { func: { arg: { body: atom("Num") } } } } });

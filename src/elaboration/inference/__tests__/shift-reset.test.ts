@@ -31,7 +31,7 @@ describe("Inference: Shift/Reset", () => {
 			const { structure } = elaborateFrom("shift 5");
 			expect(structure.term).toMatchObject({
 				type: "Bubble",
-				shift: { type: "Suspend", identity: { type: "Ann", term: { type: "Lit", value: { type: "Atom", value: "$anonymous" } } } },
+				identity: { type: "Ann", term: { type: "Lit", value: { type: "Atom", value: "$anonymous" } } },
 			});
 		});
 

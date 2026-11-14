@@ -19,8 +19,8 @@ const bare = (tm: EB.Term): EB.Term => (tm.type === "Ann" ? bare(tm.term) : tm);
 const operation = (term: EB.Term) => {
 	const bubble = bare(term);
 	assert(bubble.type === "Bubble", "Expected a suspension result binding");
-	assert(bubble.shift.type === "Suspend", "Expected a suspension");
-	return bubble.shift;
+	assert(bubble.identity, "Expected a suspension");
+	return bubble;
 };
 const atom = (value: string) => ({ type: "Lit", value: { type: "Atom", value } });
 
@@ -38,10 +38,10 @@ describe("Inference: suspend", () => {
 	it("retains a shared foreign identity, checked payload and result type", () => {
 		const result = elaborated("foreign Ask: Effect Unit Num; let op = suspend @Ask !;");
 		expect(operation(result.tm)).toMatchObject({
-			type: "Suspend",
+			type: "Bubble",
 			identity: { type: "Var", variable: { type: "Foreign", name: "Ask" } },
 			payload: { type: "Lit", value: { type: "unit" } },
-			annotation: atom("Num"),
+			ann: atom("Num"),
 		});
 		expect(quoted(result)).toMatchObject(atom("Num"));
 	});
@@ -56,7 +56,7 @@ describe("Inference: suspend", () => {
 		const result = elaborated("let op = \\(e: Effect Unit Num) -> suspend @e !;");
 		expect(bare(result.tm)).toMatchObject({
 			type: "Abs",
-			body: { type: "Bubble", shift: { type: "Suspend", identity: { type: "Var", variable: { type: "Bound", index: 0 } }, annotation: atom("Num") } },
+			body: { type: "Bubble", identity: { type: "Var", variable: { type: "Bound", index: 0 } }, ann: atom("Num") },
 		});
 		const tm = bare(result.tm);
 		if (tm.type !== "Abs") {
@@ -76,10 +76,10 @@ describe("Inference: suspend", () => {
 			return term.type === "Abs" ? suspension(term.body) : term;
 		};
 		expect(operation(suspension(result.tm))).toMatchObject({
-			type: "Suspend",
+			type: "Bubble",
 			identity: { type: "Var", variable: { type: "Bound", index: 1 } },
 			payload: { type: "Var", variable: { type: "Bound", index: 0 } },
-			annotation: { type: "Var", variable: { type: "Bound", index: 2 } },
+			ann: { type: "Neutral", value: { type: "Var", variable: { type: "Bound", lvl: 0 } } },
 		});
 	});
 
@@ -92,7 +92,7 @@ describe("Inference: suspend", () => {
 		].forEach(([name, type]) => {
 			const result = declaration(module, name)!.elaborated!;
 			const suspend = operation(result.tm);
-			expect(suspend.annotation).toMatchObject(atom(type));
+			expect(suspend.ann).toMatchObject(atom(type));
 			expect(bare(suspend.identity)).toMatchObject({
 				type: "App",
 				icit: "Implicit",

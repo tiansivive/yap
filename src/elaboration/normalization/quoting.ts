@@ -91,8 +91,8 @@ function* quoting(lvl: number, val: NF.Value, unfold: NF.Unfolding, levels: Read
 				.let("body", () => M.reader.local(_ => body.ctx, quoting(lvl + 1, body.value, unfold, new Map([...levels, [body.level, lvl]]))))
 				.in(({ producer, body }) => result(EB.Constructors.Block([EB.Constructors.Stmt.Let(variable, producer, annotation)], body))),
 		)
-		.with({ type: "Bubble", pending: P.nonNullable }, ({ meta, ann, values, operation, pending: captured }) => {
-			const producer = NF.Constructors.Bubble(meta, ann, values, operation);
+		.with({ type: "Bubble", pending: P.nonNullable }, ({ meta, ann, values, identity, payload, pending: captured }) => {
+			const producer = NF.Constructors.Bubble(meta, ann, values, identity, payload);
 			if (captured.frames.length === 0) {
 				return quoting(lvl, producer, unfold, levels);
 			}
@@ -118,11 +118,10 @@ function* quoting(lvl: number, val: NF.Value, unfold: NF.Unfolding, levels: Read
 				}).in(({ value }) => quoting(lvl, value, unfold, levels)),
 			);
 		})
-		.with(NF.Patterns.Bubble, ({ meta, ann, values, operation: { identity, payload } }) =>
+		.with(NF.Patterns.Bubble, ({ meta, ann, values, identity, payload }) =>
 			Do.let("identity", () => quoting(lvl, identity, unfold, levels))
 				.let("payload", () => quoting(lvl, payload, unfold, levels))
-				.let("annotation", () => quoting(lvl, ann, unfold, levels))
-				.in(({ identity, payload, annotation }) => result(EB.Constructors.Bubble(meta, ann, values, EB.Constructors.Suspend(identity, payload, annotation)))),
+				.in(({ identity, payload }) => result(EB.Constructors.Bubble(meta, ann, values, identity, payload))),
 		)
 		.with({ type: "App" }, ({ func, arg, icit }) =>
 			Do.let("f", () => quoting(lvl, func, unfold, levels))

@@ -1,5 +1,5 @@
 import * as EB from "@yap/elaboration";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { Patterns } from "../patterns";
 
 /** Free de Bruijn indices in term (indices >= depth). depth = number of lambda binders we're inside. */
@@ -44,14 +44,14 @@ export function freeVars(term: EB.Term, depth: number): Set<number> {
 			return s;
 		})
 		.with({ type: "Modal" }, ({ term: t }) => freeVars(t, depth))
-		.with({ type: "Suspend" }, ({ identity, payload }) => new Set([...freeVars(identity, depth), ...freeVars(payload, depth)]))
+		.with({ type: "Bubble", identity: P.nonNullable }, ({ identity, payload }) => new Set([...freeVars(identity, depth), ...freeVars(payload, depth)]))
 		.with(
 			{ type: "Reset" },
 			({ term: t, handling }) =>
 				new Set([...freeVars(t, depth), ...(handling ? [...freeVars(handling.identity, depth), ...freeVars(handling.handler, depth)] : [])]),
 		)
 		.with({ type: "Shift" }, ({ body }) => freeVars(body, depth))
-		.with({ type: "Bubble" }, ({ shift }) => freeVars(shift, depth))
+		.with({ type: "Bubble", shift: P.nonNullable }, ({ shift }) => freeVars(shift, depth))
 		.with({ type: "Ann" }, ({ term }) => freeVars(term, depth))
 		.exhaustive();
 }

@@ -22,7 +22,7 @@ const bound = (index: number) => C.Var({ type: "Bound", index });
 const lambda = (body: EB.Term) => C.Lambda("x", "Explicit", body, atom("Type"));
 const evaluate = (term: EB.Term) => runNF(ctx, () => NF.evaluate(term));
 const quote = (value: NF.Value, lvl = 0) => runNF(ctx, () => NF.quote(lvl, value));
-const bubble = (identity: EB.Term, payload: EB.Term) => C.Bubble(7, NF.Type, [NF.Type], C.Suspend(identity, payload, atom("Type")));
+const bubble = (identity: EB.Term, payload: EB.Term) => C.Bubble(7, NF.Type, [NF.Type], identity, payload);
 
 const resume = (value: NF.Value, argument: NF.Value) => {
 	const pending = match(value)
@@ -55,7 +55,8 @@ describe("Bubble quotation", () => {
 			meta: 7,
 			ann: NF.Type,
 			values: [NF.Type],
-			shift: { type: "Suspend", identity: { value: { value: "E" } }, payload: { value: { value: "Num" } }, annotation: { value: { value: "Type" } } },
+			identity: { value: { value: "E" } },
+			payload: { value: { value: "Num" } },
 		});
 		expect(runNF(ctx, () => NF.force(value))).toBe(value);
 	});
@@ -63,7 +64,7 @@ describe("Bubble quotation", () => {
 	it("quotes an identity captured by an applied closure", () => {
 		const value = evaluate(C.App("Explicit", lambda(bubble(bound(0), atom("Num"))), atom("E")));
 
-		expect(quote(value)).toMatchObject({ type: "Bubble", shift: { type: "Suspend", identity: { type: "Lit", value: { value: "E" } } } });
+		expect(quote(value)).toMatchObject({ type: "Bubble", identity: { type: "Lit", value: { value: "E" } } });
 	});
 
 	it("keeps captured identities separate from a payload's own binder", () => {
@@ -78,17 +79,15 @@ describe("Bubble quotation", () => {
 		const value = evaluate(C.App("Explicit", lambda(bubble(bound(0), payload)), atom("E")));
 
 		expect(quote(value)).toMatchObject({
-			shift: {
-				payload: {
-					type: "Abs",
-					body: {
-						type: "Row",
-						row: {
-							entries: [
-								{ label: "identity", value: { type: "Lit", value: { value: "E" } } },
-								{ label: "argument", value: { type: "Var", variable: { type: "Bound", index: 0 } } },
-							],
-						},
+			payload: {
+				type: "Abs",
+				body: {
+					type: "Row",
+					row: {
+						entries: [
+							{ label: "identity", value: { type: "Lit", value: { value: "E" } } },
+							{ label: "argument", value: { type: "Var", variable: { type: "Bound", index: 0 } } },
+						],
 					},
 				},
 			},
@@ -99,13 +98,13 @@ describe("Bubble quotation", () => {
 		const scope = EB.bind(ctx, { type: "Lambda", variable: "E" }, NF.Type);
 		const value = runNF(scope, () => NF.evaluate(bubble(bound(0), atom("Num"))));
 
-		expect(quote(value, 2)).toMatchObject({ shift: { identity: { type: "Var", variable: { type: "Bound", index: 1 } } } });
+		expect(quote(value, 2)).toMatchObject({ identity: { type: "Var", variable: { type: "Bound", index: 1 } } });
 	});
 
 	it("collects dependencies while retaining the result symbol's skolem role", () => {
 		const ann = V.Flex({ type: "Meta", val: 1, lvl: 0 });
 		const candidate = V.Flex({ type: "Meta", val: 2, lvl: 0 });
-		const term = C.Bubble(7, ann, [candidate], C.Suspend(atom("E"), C.Var({ type: "Meta", val: 3, lvl: 0 }), atom("Type")));
+		const term = C.Bubble(7, ann, [candidate], atom("E"), C.Var({ type: "Meta", val: 3, lvl: 0 }));
 		const value = evaluate(term);
 		const collect = runNF(ctx, Metas.collectors);
 
@@ -117,7 +116,7 @@ describe("Bubble quotation", () => {
 		const value = evaluate(bubble(atom("E"), atom("Num")));
 		const [abstracted] = Eff.run(() => NF.abstract(NF.Type, value, {}), [M.reader.handlers(ctx), Metas.registry.handlers({}), M.supply.handlers()]);
 
-		expect(abstracted.term).toMatchObject({ type: "Bubble", meta: 7, shift: { type: "Suspend" } });
+		expect(abstracted.term).toMatchObject({ type: "Bubble", meta: 7 });
 	});
 
 	it("retains a suspension whose result the surrounding function ignores", () => {
@@ -149,7 +148,7 @@ describe("Bubble quotation", () => {
 			type: "Abs",
 			body: {
 				type: "Block",
-				statements: [{ value: { type: "Bubble", shift: { identity: { variable: { index: 1 } } } } }],
+				statements: [{ value: { type: "Bubble", identity: { variable: { index: 1 } } } }],
 				return: { value: { value: "Num" } },
 			},
 		});
@@ -161,7 +160,7 @@ describe("Bubble quotation", () => {
 		const registry = Metas.register(Metas.empty, { meta, annotation: NF.Type, solution });
 		const value = runNF(ctx, () => NF.evaluate(C.Reset(C.Var(meta))), registry);
 
-		expect(quote(value)).toMatchObject({ type: "Abs", body: { type: "Bubble", shift: { type: "Suspend" } } });
+		expect(quote(value)).toMatchObject({ type: "Abs", body: { type: "Bubble" } });
 	});
 
 	it("weakens an outer rigid used only after the suspension", () => {
@@ -268,7 +267,7 @@ describe("Bubble quotation", () => {
 		const number = atom("Num");
 		const arrow = C.Pi("x", "Explicit", number, number);
 		const handler = C.Lambda("p", "Explicit", C.Lambda("k", "Explicit", C.Lit({ type: "Num", value: 99 }), arrow), number);
-		const callback = C.Lambda("x", "Explicit", C.Suspend(atom("E"), bound(0), number), number);
+		const callback = C.Lambda("x", "Explicit", C.Bubble(7, V.Atom("Num"), [], atom("E"), bound(0)), number);
 		const program = C.Lambda(
 			"f",
 			"Explicit",
