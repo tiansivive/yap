@@ -483,9 +483,9 @@ function* suspend(identity: NF.Value, payload: NF.Value, annotation: NF.Value, b
 			const args = match(tag)
 				.with(Anonymous, () => [annotation])
 				.otherwise(identity => identity?.args ?? []);
-			return yield* Do.let("handler", () => specialize(handling.handler, args)).in(({ handler }) =>
-				Do.let("applied", () => schedule.reduce(handler, payload, "Explicit")).in(({ applied }) => schedule.reduce(applied, continuation, "Explicit")),
-			);
+			return yield* Do.let("handler", () => specialize(handling.handler, args))
+				.bind("applied", ({ handler }) => schedule.reduce(handler, payload, "Explicit"))
+				.in(({ applied }) => schedule.reduce(applied, continuation, "Explicit"));
 		})
 		.otherwise(stopped => {
 			if (!bubble) {
@@ -1022,13 +1022,12 @@ export const schedule = {
 
 		return yield* Do.let("anf", () => schedule.apply(left.binder, left.closure, NF.Constructors.Rigid(lvl)))
 			.let("bnf", () => schedule.apply(right.binder, right.closure, NF.Constructors.Rigid(lvl)))
-			.in(({ anf, bnf }) =>
-				Do.let("term", () => schedule.quote(lvl + 1, DSL.Binop.and(anf, bnf))).in(({ term }) =>
-					result({
-						quantity: Q.SR.mul(a.quantity, b.quantity),
-						liquid: NF.Constructors.Lambda(name, "Explicit", NF.Constructors.Closure(ctx, term), left.binder.annotation),
-					}),
-				),
+			.bind("term", ({ anf, bnf }) => schedule.quote(lvl + 1, DSL.Binop.and(anf, bnf)))
+			.in(({ term }) =>
+				result({
+					quantity: Q.SR.mul(a.quantity, b.quantity),
+					liquid: NF.Constructors.Lambda(name, "Explicit", NF.Constructors.Closure(ctx, term), left.binder.annotation),
+				}),
 			);
 	},
 

@@ -14,11 +14,6 @@ export const notation = <S, C, R extends Eff.AnyAction, D = unknown>(scope: () =
 	type Program<T> = Eff.Eff<R | Actions<S, C, D>, T>;
 	type Work<T> = () => Program<Machine<T>>;
 
-	type Chain<B extends Bindings> = {
-		let: <N extends string, T>(name: N, work: Work<T>) => Chain<B & { readonly [P in N]: T }>;
-		in: <T>(body: (bindings: B) => Program<Machine<T>>) => Program<Machine<T>>;
-	};
-
 	const step = function* <T>(work: Work<T>): Program<Machine<T>> {
 		return yield* cont(yield* scope(), 0, work);
 	};
@@ -30,14 +25,29 @@ export const notation = <S, C, R extends Eff.AnyAction, D = unknown>(scope: () =
 		return result;
 	};
 
-	const from = <B extends Bindings>(steps: readonly { name: string; work: Work<unknown> }[]): Chain<B> => ({
-		let: (name, work) => from([...steps, { name, work }]),
-		in: body =>
-			group(
-				steps.map(({ work }) => work),
-				results => body(Object.fromEntries(steps.map(({ name }, index) => [name, results[index]])) as B),
-			),
-	});
+	const from = <B extends Bindings>(
+		steps: readonly { name: string; work: Work<unknown> }[],
+		run: <T>(body: (bindings: Bindings) => Program<Machine<T>>) => Program<Machine<T>> = body => body({}),
+	): Chain<R | Actions<S, C, D>, B> => {
+		const chain: Chain<R | Actions<S, C, D>, B> = {
+			let: (name, work) => from([...steps, { name, work }], run),
+			bind: (name, work) => from([], body => chain.in(bindings => group([() => work(bindings)], ([value]) => body({ ...bindings, [name]: value })))),
+			in: body =>
+				run(bindings =>
+					group(
+						steps.map(({ work }) => work),
+						results => body({ ...bindings, ...Object.fromEntries(steps.map(({ name }, index) => [name, results[index]])) } as B),
+					),
+				),
+		};
+		return chain;
+	};
 
 	return { result: fill, step, group, Do: from<Record<never, never>>([]) };
+};
+
+export type Chain<R extends Eff.AnyAction, B extends Bindings> = {
+	let: <N extends string, T>(name: N, work: () => Eff.Eff<R, Machine<T>>) => Chain<R, B & { readonly [P in N]: T }>;
+	bind: <N extends string, T>(name: N, work: (bindings: B) => Eff.Eff<R, Machine<T>>) => Chain<R, B & { readonly [P in N]: T }>;
+	in: <T>(body: (bindings: B) => Eff.Eff<R, Machine<T>>) => Eff.Eff<R, Machine<T>>;
 };
