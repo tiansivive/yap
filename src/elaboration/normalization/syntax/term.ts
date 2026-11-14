@@ -23,7 +23,7 @@ type Constructor =
 	| { type: "Row"; row: Row }
 	| { type: "Abs"; binder: Binder; closure: Closure }
 	| { type: "Neutral"; kind: Neutral; value: Value }
-	| { type: "Bubble"; meta?: number; ann: Value; values: Value[]; operation: Operation; pending?: EB.NF.Captured }
+	| { type: "Bubble"; meta: number; ann: Value; values: Value[]; operation: Operation; pending?: EB.NF.Captured }
 	| { type: "Reset"; value: Value; handling: Handling }
 	| { type: "Modal"; value: Value; modalities: Modalities }
 	| { type: "External"; name: string; arity: number; compute: (...args: Value[]) => Value; args: Value[] }
@@ -49,6 +49,8 @@ type Constructor =
 			annotation: Value;
 			body: {
 				ctx: EB.Context;
+				/** The bound result's level can differ from the saved environment depth during quotation. */
+				level: number;
 				value: Value;
 			};
 	  };
@@ -124,13 +126,13 @@ export const Constructors = {
 			binder: { type: "Mu", variable, annotation, source },
 			closure,
 		}),
-	Exists: (variable: string, annotation: Value, body: { ctx: EB.Context; value: Value }, producer?: Value): Value =>
+	Exists: (variable: string, annotation: Value, body: { ctx: EB.Context; value: Value; level?: number }, producer?: Value): Value =>
 		mk({
 			type: "Existential",
 			producer,
 			variable,
 			annotation,
-			body,
+			body: { ...body, level: body.level ?? body.ctx.env.length },
 		}),
 	Lambda: (variable: string, icit: Implicitness, closure: Closure, annotation: Value): Value =>
 		mk({
@@ -162,7 +164,7 @@ export const Constructors = {
 			kind,
 			value,
 		}),
-	Bubble: (meta: number | undefined, ann: Value, values: Value[], operation: Operation, pending?: EB.NF.Captured): Extract<Value, { type: "Bubble" }> =>
+	Bubble: (meta: number, ann: Value, values: Value[], operation: Operation, pending?: EB.NF.Captured): Extract<Value, { type: "Bubble" }> =>
 		mk({ type: "Bubble", meta, ann, values, operation, pending }),
 	App: (func: Value, arg: Value, icit: Implicitness) =>
 		mk({

@@ -345,8 +345,6 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 			return NF.Constructors.Reset(yield* instantiate(value), {
 				identity: yield* instantiate(handling.identity),
 				handler: yield* instantiate(handling.handler),
-				signature: handling.signature && (yield* instantiate(handling.signature)),
-				annotation: handling.annotation && (yield* instantiate(handling.annotation)),
 			});
 		})
 		.with(NF.Patterns.Existential, function* ({ variable, annotation, body, producer }) {
@@ -425,8 +423,6 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 			NF.Constructors.Reset(trimClosureEnvs(value), {
 				identity: trimClosureEnvs(handling.identity),
 				handler: trimClosureEnvs(handling.handler),
-				signature: handling.signature && trimClosureEnvs(handling.signature),
-				annotation: handling.annotation && trimClosureEnvs(handling.annotation),
 			}),
 		)
 		.with(NF.Patterns.Existential, ({ variable, annotation, body, producer }) =>

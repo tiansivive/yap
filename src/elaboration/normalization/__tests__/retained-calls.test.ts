@@ -22,7 +22,8 @@ const call = (func: EB.Term, arg: EB.Term, annotation = number) => C.Ann(app(fun
 const add = (a: EB.Term, b: EB.Term) => app(app(C.Var(C.Vars.Foreign("$add")), a), b);
 const install = (identity: EB.Term, handler: EB.Term, term: EB.Term, annotation = number) => C.Ann(C.Reset(term, { identity, handler }), annotation);
 const abort = (value: EB.Term, answer = number) => lambda("p", number, lambda("k", arrow(number, answer), value));
-const callback = (identity: EB.Term) => lambda("x", number, C.Suspend(identity, bound(0), number));
+const suspend = (identity: EB.Term, payload: EB.Term, meta = 7) => C.Bubble(meta, NF.Constructors.Atom("Num"), [], C.Suspend(identity, payload, number));
+const callback = (identity: EB.Term) => lambda("x", number, suspend(identity, bound(0)));
 const evaluate = (term: EB.Term) => runNF(mkCtx(), () => NF.evaluate(term));
 const quote = (term: EB.Term) => runNF(mkCtx(), () => NF.quote(0, evaluate(term)));
 const unann = (term: EB.Term): EB.Term =>
@@ -38,6 +39,33 @@ beforeEach(() => {
 });
 
 describe("retained calls", () => {
+	it.each([
+		["plain", "with a producer"],
+		["plain", "with an abstract binder"],
+		["modal", "with a producer"],
+		["modal", "with an abstract binder"],
+	])("reduces a primitive operation through a %s existential %s", (wrapper, kind) => {
+		const ctx = EB.bind(mkCtx(), { type: "Lambda", variable: "f" }, evaluate(arrow(number, number)));
+		const producer = kind === "with a producer" ? runNF(ctx, () => NF.evaluate(app(bound(0), num(5)))) : undefined;
+		const value = NF.Constructors.Exists("r", NF.Constructors.Atom("Num"), { ctx, value: NF.Constructors.Lit(Lit.Num(7)) }, producer);
+		const argument = wrapper === "modal" ? NF.Constructors.Modal(value, { quantity: "Many", liquid: NF.Constructors.Lit(Lit.Bool(true)) }) : value;
+		const increment = evaluate(app(C.Var(C.Vars.Foreign("$add")), num(1)));
+		const result = runNF(ctx, () => NF.reduce(increment, argument, "Explicit"));
+
+		expect(result).toMatchObject({ type: "Existential", producer, body: { value: { type: "Lit", value: Lit.Num(8) } } });
+	});
+
+	it("applies a function carried by an abstract existential", () => {
+		const ctx = mkCtx();
+		const value = NF.Constructors.Exists("r", NF.Constructors.Atom("Num"), { ctx, value: evaluate(lambda("x", number, add(bound(0), num(1)))) });
+
+		expect(runNF(ctx, () => NF.reduce(value, NF.Constructors.Lit(Lit.Num(7)), "Explicit"))).toMatchObject({
+			type: "Existential",
+			producer: undefined,
+			body: { value: { type: "Lit", value: Lit.Num(8) } },
+		});
+	});
+
 	it.each(["bare", "annotated"])("preserves the %s blocked producer while reducing its body", annotation => {
 		const ctx = EB.bind(mkCtx(), { type: "Lambda", variable: "f" }, evaluate(arrow(number, number)));
 		const producer = app(bound(0), num(5));
@@ -123,6 +151,18 @@ describe("retained calls", () => {
 		});
 	});
 
+	it.each(["argument", "argument and producer"])("preserves the %s in nested lambdas after removing unused let bindings", result => {
+		const value = result === "argument" ? bound(0) : add(bound(0), bound(2));
+		const body = app(lambda("result", number, lambda("x", number, lambda("y", number, value))), call(bound(2), num(5)));
+		const statements = [C.Stmt.Let("a", num(1), NF.Constructors.Atom("Num")), C.Stmt.Let("b", num(2), NF.Constructors.Atom("Num"))];
+		const program = lambda("f", arrow(number, number), C.Block(statements, body));
+		const applied = (term: EB.Term) => app(app(app(term, lambda("n", number, bound(0))), num(10)), num(20));
+		const expected = Lit.Num(result === "argument" ? 20 : 25);
+
+		expect(evaluate(applied(program))).toMatchObject({ type: "Lit", value: expected });
+		expect(evaluate(applied(quote(program)))).toMatchObject({ type: "Lit", value: expected });
+	});
+
 	it("binds one call result shared by the domain and codomain of a Pi", () => {
 		const shared = app(lambda("A", type, C.Pi("x", "Explicit", bound(0), bound(1))), call(bound(0), num(0), type));
 		const residual = unann(quote(lambda("f", arrow(number, type), shared)));
@@ -162,7 +202,7 @@ describe("retained calls", () => {
 		const retained = unann(residual.body);
 		assert(retained.type === "Match", "Expected a match on the handled result");
 
-		expect(retained.scrutinee).toMatchObject({ type: "Ann", term: { type: "Reset" }, ann: { type: "Lit", value: Lit.Atom("String") } });
+		expect(unann(retained.scrutinee)).toMatchObject({ type: "Reset" });
 		expect(evaluate(app(residual, callback(atom("E"))))).toMatchObject({ type: "Lit", value: Lit.Num(100) });
 	});
 
@@ -178,11 +218,52 @@ describe("retained calls", () => {
 		expect(evaluate(app(residual, callback(atom("A"))))).toMatchObject({ type: "Lit", value: Lit.Num(1099) });
 	});
 
+	it.each(["bare", "annotated", "bound"])("preserves a %s reset around a callback through quotation", form => {
+		const handled = (index: number) => C.Reset(call(bound(index), num(5)), { identity: atom("E"), handler: abort(num(99)) });
+		const body = match(form)
+			.with("bare", () => handled(0))
+			.with("annotated", () => C.Ann(handled(0), number))
+			.otherwise(() => C.Block([C.Stmt.Let("handled", handled(1), NF.Constructors.Atom("Num"))], C.Ann(bound(0), number)));
+		const program = lambda("f", arrow(number, number), body);
+
+		expect(evaluate(app(program, callback(atom("E"))))).toMatchObject({ type: "Lit", value: Lit.Num(99) });
+		expect(evaluate(app(quote(program), callback(atom("E"))))).toMatchObject({ type: "Lit", value: Lit.Num(99) });
+	});
+
+	it("quotes a captured delimiter while sharing its suspension result and preserving outside work", () => {
+		const resume = (increment: number) => lambda("p", number, lambda("k", arrow(number, number), app(bound(0), add(bound(1), num(increment)))));
+		const shared = app(lambda("r", number, add(add(bound(0), bound(0)), suspend(atom("B"), num(2), 8))), suspend(atom("A"), num(1)));
+		const program = add(C.Reset(shared, { identity: atom("B"), handler: resume(10) }), num(100));
+		const residual = quote(program);
+
+		expect(evaluate(install(atom("A"), resume(1), program))).toMatchObject({ type: "Lit", value: Lit.Num(116) });
+		expect(evaluate(install(atom("A"), resume(1), residual))).toMatchObject({ type: "Lit", value: Lit.Num(116) });
+	});
+
+	it.each(["let", "lambda"])("shares a captured reset result through a %s binder", binder => {
+		const resume = lambda("p", number, lambda("k", arrow(number, number), app(bound(0), bound(1))));
+		const inner = C.Reset(suspend(atom("A"), num(1)), { identity: atom("B"), handler: resume });
+		const body = add(bound(0), bound(0));
+		const program =
+			binder === "let" ? C.Block([C.Stmt.Let("r", inner, NF.Constructors.Atom("Num"))], body) : app(lambda("r", number, body), inner);
+
+		expect(evaluate(install(atom("A"), resume, program))).toMatchObject({ type: "Lit", value: Lit.Num(2) });
+		expect(evaluate(install(atom("A"), resume, quote(program)))).toMatchObject({ type: "Lit", value: Lit.Num(2) });
+	});
+
+	it("keeps a symbolic operation under the delimiter its identity later matches", () => {
+		const body = app(lambda("r", number, add(bound(0), bound(0))), suspend(bound(0), num(1)));
+		const program = lambda("e", app(app(atom("Effect"), number), number), C.Reset(body, { identity: atom("B"), handler: abort(num(99)) }));
+
+		expect(evaluate(app(program, atom("B")))).toMatchObject({ type: "Lit", value: Lit.Num(99) });
+		expect(evaluate(app(quote(program), atom("B")))).toMatchObject({ type: "Lit", value: Lit.Num(99) });
+	});
+
 	it("keeps the producer before a later suspension under an aborting handler", () => {
 		const handler = lambda("p", number, lambda("k", arrow(number, number), bound(1)));
-		const body = app(lambda("ignored", number, C.Suspend(atom("E"), num(2), number)), call(bound(0), num(5)));
+		const body = app(lambda("ignored", number, suspend(atom("E"), num(2))), call(bound(0), num(5)));
 		const program = lambda("f", arrow(number, number), install(atom("E"), handler, body));
-		const first = lambda("x", number, C.Suspend(atom("E"), num(1), number));
+		const first = lambda("x", number, suspend(atom("E"), num(1), 8));
 		const identity = lambda("x", number, bound(0));
 
 		expect(evaluate(app(program, first))).toMatchObject({ type: "Lit", value: Lit.Num(1) });
@@ -198,8 +279,8 @@ describe("retained calls", () => {
 		const first = app(lambda("a", number, lambda("b", number, num(7))), call(bound(1), num(5)));
 		const body = app(first, call(bound(0), num(6)));
 		const program = lambda("f", arrow(number, number), lambda("g", arrow(number, number), install(atom("E"), handler, body)));
-		const one = lambda("x", number, C.Suspend(atom("E"), num(1), number));
-		const two = lambda("x", number, C.Suspend(atom("E"), num(2), number));
+		const one = lambda("x", number, suspend(atom("E"), num(1)));
+		const two = lambda("x", number, suspend(atom("E"), num(2), 8));
 		const identity = lambda("x", number, bound(0));
 		const residual = quote(program);
 
@@ -211,10 +292,10 @@ describe("retained calls", () => {
 	it("preserves an anonymous reset around the producer and a later suspension", () => {
 		const continuation = arrow(number, number);
 		const handler = C.Lambda("r", "Implicit", lambda("p", arrow(continuation, number), lambda("k", continuation, app(bound(1), bound(0)))), type);
-		const later = C.Suspend(EB.Anonymous, lambda("k", continuation, num(2)), number);
+		const later = suspend(EB.Anonymous, lambda("k", continuation, num(2)));
 		const body = app(lambda("ignored", number, later), call(bound(0), num(5)));
 		const program = lambda("f", arrow(number, number), install(EB.Anonymous, handler, body));
-		const first = lambda("x", number, C.Suspend(EB.Anonymous, lambda("k", continuation, num(1)), number));
+		const first = lambda("x", number, suspend(EB.Anonymous, lambda("k", continuation, num(1)), 8));
 		const identity = lambda("x", number, bound(0));
 
 		expect(evaluate(app(program, first))).toMatchObject({ type: "Lit", value: Lit.Num(1) });
@@ -231,9 +312,9 @@ describe("retained calls", () => {
 			C.Alternative(C.Patterns.Wildcard(), num(77), []),
 		]);
 		const handler = lambda("p", number, lambda("k", arrow(number, number), dispatch));
-		const inner = install(atom("E"), handler, C.Suspend(atom("E"), num(1), number));
+		const inner = install(atom("E"), handler, suspend(atom("E"), num(1)));
 		const program = lambda("f", arrow(number, number), install(atom("E"), abort(num(99)), inner));
-		const later = lambda("x", number, C.Suspend(atom("E"), num(2), number));
+		const later = lambda("x", number, suspend(atom("E"), num(2), 8));
 
 		expect(evaluate(app(program, later))).toMatchObject({ type: "Lit", value: Lit.Num(99) });
 		expect(evaluate(app(quote(program), later))).toMatchObject({ type: "Lit", value: Lit.Num(99) });
@@ -245,9 +326,9 @@ describe("retained calls", () => {
 			C.Alternative(C.Patterns.Wildcard(), num(77), []),
 		]);
 		const handler = lambda("p", number, lambda("k", arrow(number, number), dispatch));
-		const body = app(lambda("ignored", number, call(bound(1), num(5))), C.Suspend(atom("E"), num(1), number));
+		const body = app(lambda("ignored", number, call(bound(1), num(5))), suspend(atom("E"), num(1)));
 		const program = lambda("f", arrow(number, number), install(atom("E"), abort(num(99)), install(atom("E"), handler, body)));
-		const later = lambda("x", number, C.Suspend(atom("E"), num(2), number));
+		const later = lambda("x", number, suspend(atom("E"), num(2), 8));
 
 		expect(evaluate(app(program, later))).toMatchObject({ type: "Lit", value: Lit.Num(99) });
 		expect(evaluate(app(quote(program), later))).toMatchObject({ type: "Lit", value: Lit.Num(99) });
@@ -255,6 +336,24 @@ describe("retained calls", () => {
 });
 
 describe("elaborated retained calls", () => {
+	it("preserves an elaborated suspension's result symbol through evaluation and quotation", () => {
+		const module = elaborateModule("foreign E: Effect Num Num; let callback: Num -> Num = \\x -> suspend @E x;");
+		expect(module.declarations.map(d => d.error)).toEqual(module.declarations.map(() => undefined));
+		const callback = declaration(module, "callback")?.elaborated;
+		assert(callback, "Expected the callback declaration");
+		const term = unann(callback.tm);
+		assert(term.type === "Abs", "Expected the callback lambda");
+		const operation = unann(term.body);
+		assert(operation.type === "Bubble", "Expected the suspension's result binding");
+		expect(operation.meta).toEqual(expect.any(Number));
+		expect(operation.shift).toMatchObject({ type: "Suspend" });
+		const value = runNF(callback.ctx, () => NF.evaluate(app(callback.tm, num(5))), callback.registry);
+		expect(value).toMatchObject({ type: "Neutral", kind: "Blocked", value: { type: "Bubble", meta: operation.meta } });
+		const residual = runNF(callback.ctx, () => NF.quote(callback.ctx.env.length, value), callback.registry);
+
+		expect(residual).toMatchObject({ type: "Bubble", meta: operation.meta, shift: { type: "Suspend", payload: { value: Lit.Num(5) } } });
+	});
+
 	it("executes a callback under its source handler after quoting the open function", () => {
 		const module = elaborateModule(`
 			foreign E: Effect Num Num;

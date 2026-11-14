@@ -70,7 +70,7 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 			return yield* go(v);
 		})
 		.with({ type: "Bubble" }, function* ({ meta, operation: { identity, payload } }) {
-			return [meta === undefined ? "bubble" : `bubble#${meta}`, " (suspend @", yield* go(identity), " ", yield* go(payload), ")"] satisfies PP.Doc;
+			return [`bubble#${meta}`, " (suspend @", yield* go(identity), " ", yield* go(payload), ")"] satisfies PP.Doc;
 		})
 		.with(NF.Patterns.Reset, function* ({ value, handling }) {
 			return ["reset @", yield* go(handling.identity), " ", yield* go(handling.handler), " in ", yield* go(value)] satisfies PP.Doc;

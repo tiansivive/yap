@@ -26,8 +26,6 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 			Constructors.Reset(traverse(value, onVar, onTerm), {
 				identity: traverse(handling.identity, onVar, onTerm),
 				handler: traverse(handling.handler, onVar, onTerm),
-				signature: handling.signature && traverse(handling.signature, onVar, onTerm),
-				annotation: handling.annotation && traverse(handling.annotation, onVar, onTerm),
 			}),
 		)
 		.with(Patterns.Existential, ({ variable, annotation, body, producer }) =>

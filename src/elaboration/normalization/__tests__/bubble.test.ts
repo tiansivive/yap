@@ -261,7 +261,7 @@ describe("Bubble quotation", () => {
 		);
 		const value = runNF(scope, () => NF.evaluate(term));
 
-		expect(quote(value, 1)).toMatchObject({ type: "Ann", term: { type: "Reset", handling: { identity: { value: { value: "E" } } } } });
+		expect(quote(value, 1)).toMatchObject({ type: "Reset", handling: { identity: { value: { value: "E" } } } });
 	});
 
 	describe("handled callback quotation", () => {

@@ -24,7 +24,8 @@ const app = (func: EB.Term, arg: EB.Term) => C.Ann(C.App("Explicit", func, arg),
 const lambda = (name: string, body: EB.Term) => C.Lambda(name, "Explicit", body, number);
 const arrow = C.Pi("x", "Explicit", number, number);
 const reset = (handler: EB.Term, body: EB.Term) => C.Ann(C.Reset(body, { identity: E, handler }), number);
-const callback = lambda("x", C.Suspend(E, bound(0), number));
+const suspend = (identity: EB.Term, payload: EB.Term) => C.Bubble(7, NF.Constructors.Atom("Num"), [], C.Suspend(identity, payload, number));
+const callback = lambda("x", suspend(E, bound(0)));
 const resume = lambda("p", C.Lambda("k", "Explicit", app(bound(0), bound(1)), arrow));
 const evaluate = (term: EB.Term) => runNF(mkCtx(), () => NF.evaluate(term));
 const quote = (term: EB.Term) => runNF(mkCtx(), () => NF.quote(0, evaluate(term)));
@@ -83,6 +84,20 @@ describe("retained handler boundaries", () => {
 		expect(runNF(ctx, () => NF.force(held), solved)).toMatchObject({ type: "Lit", value: Lit.Num(8) });
 	});
 
+	it.each(["plain", "modal"])("retries a primitive whose earlier argument meta acquires a %s existential solution", wrapper => {
+		const ctx = EB.bind(mkCtx(), { type: "Lambda", variable: "f" }, evaluate(arrow));
+		const meta = { type: "Meta", val: 74, lvl: 1 } as const;
+		const initial = Metas.register(Metas.empty, { meta, annotation: NF.Constructors.Atom("Num") });
+		const term = C.App("Explicit", C.App("Explicit", C.Var(C.Vars.Foreign("$add")), C.Var(meta)), num(1));
+		const held = runNF(ctx, () => NF.evaluate(term), initial);
+		const producer = runNF(ctx, () => NF.evaluate(app(bound(0), num(5))));
+		const solution = NF.Constructors.Exists("r", NF.Constructors.Atom("Num"), { ctx, value: NF.Constructors.Lit(Lit.Num(7)) }, producer);
+		const value = wrapper === "modal" ? NF.Constructors.Modal(solution, { quantity: "Many", liquid: NF.Constructors.Lit(Lit.Bool(true)) }) : solution;
+		const solved = Metas.solve(initial, meta.val, value);
+
+		expect(runNF(ctx, () => NF.force(held), solved)).toMatchObject({ type: "Existential", producer, body: { value: { type: "Lit", value: Lit.Num(8) } } });
+	});
+
 	it("distinguishes producer packages with different conditional results", () => {
 		const ctx = EB.bind(mkCtx(), { type: "Lambda", variable: "f" }, evaluate(arrow));
 		const held = (answer: string) => runNF(ctx, () => NF.evaluate(C.App("Explicit", lambda("ignored", C.Lit(Lit.Atom(answer))), app(bound(0), num(5)))));
@@ -106,6 +121,27 @@ describe("retained handler boundaries", () => {
 		expect(result).toMatchObject({ type: "Existential", producer: { type: "Neutral", kind: "Blocked" }, body: { value: { type: "Lit", value: Lit.Num(8) } } });
 	});
 
+	it("quotes an imported producer through its original reference", () => {
+		const base = mkCtx();
+		const meta = { type: "Meta", val: 75, lvl: 0 } as const;
+		const ctx: EB.Context = { ...base, imports: { ...base.imports, deferred: [lambda("x", app(C.Var(meta), bound(0))), evaluate(arrow), []] } };
+		const registry = Metas.register(Metas.empty, { meta, annotation: evaluate(arrow) });
+		const term = C.App("Explicit", lambda("ignored", num(7)), app(C.Var(C.Vars.Free("deferred")), num(5)));
+		const residual = runNF(
+			ctx,
+			function* () {
+				return yield* NF.quote(0, yield* NF.evaluate(term));
+			},
+			registry,
+		);
+
+		expect(residual).toMatchObject({
+			type: "Block",
+			statements: [{ type: "Let", value: { type: "App", func: { type: "Var", variable: { type: "Free", name: "deferred" } } } }],
+			return: { type: "Lit", value: Lit.Num(7) },
+		});
+	});
+
 	it.fails("unifies a producer package with itself", () => {
 		const ctx = EB.bind(mkCtx(), { type: "Lambda", variable: "f" }, evaluate(arrow));
 		const held = runNF(ctx, () => NF.evaluate(C.App("Explicit", lambda("ignored", num(7)), app(bound(0), num(5)))));
@@ -116,10 +152,14 @@ describe("retained handler boundaries", () => {
 		expect(Eff.failed(checked.answer)).toBe(false);
 	});
 
-	it.fails("weakens outer references while keeping the producer's own binder local", () => {
+	it("weakens outer references while keeping the producer's own binder local", () => {
 		const ctx = EB.bind(mkCtx(), { type: "Lambda", variable: "f" }, evaluate(arrow));
 		const held = runNF(ctx, () => NF.evaluate(C.App("Explicit", lambda("x", bound(0)), app(bound(0), num(5)))));
-		expect(runNF(ctx, () => NF.quote(2, held))).toMatchObject({ type: "Block", return: { type: "Var", variable: { index: 0 } } });
+		expect(runNF(ctx, () => NF.quote(2, held))).toMatchObject({
+			type: "Block",
+			statements: [{ type: "Let", value: { type: "App", func: { type: "Var", variable: { index: 2 } } } }],
+			return: { type: "Var", variable: { index: 0 } },
+		});
 	});
 
 	it.each([
@@ -210,7 +250,7 @@ describe("retained handler boundaries", () => {
 		expect(evaluate(app(quote(program), callback))).toMatchObject({ type: "Lit", value: Lit.Num(5) });
 	});
 
-	it("retains the anonymous identity's signature through quotation", () => {
+	it("preserves anonymous handling through quotation", () => {
 		const module = elaborateModule("let result: (Num -> Num) -> Num = \\f -> reset (f 5);");
 		expect(module.declarations.map(d => d.error)).toEqual(module.declarations.map(() => undefined));
 		const program = declaration(module, "result")?.elaborated;
@@ -218,11 +258,8 @@ describe("retained handler boundaries", () => {
 			throw new Error("Expected the result declaration");
 		}
 		const residual = runNF(program.ctx, () => NF.quote(0, evaluate(program.tm)), program.registry);
-		const anonymous = lambda("x", C.Suspend(EB.Anonymous, C.Lambda("k", "Explicit", app(bound(0), num(7)), arrow), number));
-		expect(residual).toMatchObject({
-			type: "Abs",
-			body: { type: "Ann", term: { type: "Reset", handling: { identity: { type: "Ann", term: { value: { value: "$anonymous" } } } } } },
-		});
+		const anonymous = lambda("x", suspend(EB.Anonymous, C.Lambda("k", "Explicit", app(bound(0), num(7)), arrow)));
+		expect(residual).toMatchObject({ type: "Abs", body: { type: "Reset" } });
 		expect(runNF(program.ctx, () => NF.evaluate(app(residual, anonymous)), program.registry)).toMatchObject({ type: "Lit", value: Lit.Num(7) });
 	});
 
@@ -248,13 +285,13 @@ describe("retained handler boundaries", () => {
 	});
 
 	it("executes a concrete suspension following a known call", () => {
-		const body = C.Block([C.Stmt.Expr(app(bound(0), num(5)))], C.Suspend(E, num(8), number));
+		const body = C.Block([C.Stmt.Expr(app(bound(0), num(5)))], suspend(E, num(8)));
 		const program = C.Lambda("f", "Explicit", reset(resume, body), arrow);
 		expect(evaluate(app(program, lambda("x", bound(0))))).toMatchObject({ type: "Lit", value: Lit.Num(8) });
 	});
 
 	it.fails("preserves a discarded statement call before a later suspension", () => {
-		const body = C.Block([C.Stmt.Expr(app(bound(0), num(5)))], C.Suspend(E, num(8), number));
+		const body = C.Block([C.Stmt.Expr(app(bound(0), num(5)))], suspend(E, num(8)));
 		const abort = lambda("p", C.Lambda("k", "Explicit", bound(1), arrow));
 		const program = C.Lambda("f", "Explicit", reset(abort, body), arrow);
 		expect(evaluate(app(program, callback))).toMatchObject({ type: "Lit", value: Lit.Num(5) });
