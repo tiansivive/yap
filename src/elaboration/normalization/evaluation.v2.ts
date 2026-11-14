@@ -433,13 +433,6 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				.let("ann", () => schedule.eval(ann))
 				.in(({ identity, payload, ann }) => suspend(NF.Constructors.Bubble(meta, ann, values, identity, payload)));
 		})
-		.with(EB.CtorPatterns.ShiftBubble, function* ({ meta, shift }) {
-			if (yield* Stack.find<Scope, EB.Term, Handling>(frame => frame.type === "Delimiter")) {
-				return yield* schedule.eval(shift);
-			}
-
-			return yield* result(NF.Constructors.Neutral("Symbolic", NF.Constructors.Var({ type: "Meta", val: meta, lvl: 0 })));
-		})
 		.with({ type: "Ann" }, function* ({ term }) {
 			return yield* schedule.eval(term);
 		})
@@ -1271,11 +1264,11 @@ const meetAll = function* (
 				const current = () =>
 					observe
 						? Do.let("projected", () => observe(label)).in(({ projected }) =>
-								match(projected)
-									.with({ tag: "found" }, ({ value }) => schedule.meet(pattern, value))
-									.with({ tag: "blocked" }, () => result(blocked()))
-									.otherwise(() => result(mismatch())),
-							)
+							match(projected)
+								.with({ tag: "found" }, ({ value }) => schedule.meet(pattern, value))
+								.with({ tag: "blocked" }, () => result(blocked()))
+								.otherwise(() => result(mismatch())),
+						)
 						: schedule.meet(pattern, field.value);
 
 				return yield* Do.let("current", current)

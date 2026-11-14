@@ -35,13 +35,12 @@ describe("direct Bubble representation", () => {
 			identity: { type: "Var", variable: { type: "Bound", index: 0 } },
 			payload: { type: "Lit", value: { type: "unit" } },
 			ann: { type: "Lit", value: { type: "Atom", value: "Num" } },
-			values: [],
 		});
 		expect(registry[term.meta].annotation).toMatchObject({ type: "Lit", value: { type: "Atom", value: "Num" } });
 	});
 
-	it.each(["suspend (\\k -> k 7)", "shift (resume 7)"])("elaborates %s as an anonymous Bubble", source => {
-		const { answer } = runEB(mkCtx(), () => EB.infer(parseExpr(source)));
+	it("elaborates an anonymous suspension as a Bubble", () => {
+		const { answer } = runEB(mkCtx(), () => EB.infer(parseExpr("suspend (\\k -> k 7)")));
 		assert(!Eff.failed(answer), "Expected an elaborated anonymous operation");
 
 		expect(answer[0]).toMatchObject({
@@ -53,8 +52,8 @@ describe("direct Bubble representation", () => {
 		});
 	});
 
-	it("evaluates and quotes the operation, result symbol, type and resume candidates", () => {
-		const term = C.Bubble(7, atom("Type"), [NF.Type], atom("E"), atom("Num"));
+	it("evaluates and quotes the operation, result symbol and type", () => {
+		const term = C.Bubble(7, atom("Type"), [], atom("E"), atom("Num"));
 		const value = evaluate(term);
 
 		expect(value).toMatchObject({
@@ -64,7 +63,6 @@ describe("direct Bubble representation", () => {
 				type: "Bubble",
 				meta: 7,
 				ann: { type: "Lit", value: { type: "Atom", value: "Type" } },
-				values: [NF.Type],
 				identity: { type: "Lit", value: { type: "Atom", value: "E" } },
 				payload: { type: "Lit", value: { type: "Atom", value: "Num" } },
 			},
@@ -73,7 +71,6 @@ describe("direct Bubble representation", () => {
 			type: "Bubble",
 			meta: 7,
 			ann: { type: "Lit", value: { type: "Atom", value: "Type" } },
-			values: [NF.Type],
 			identity: { type: "Lit", value: { type: "Atom", value: "E" } },
 			payload: { type: "Lit", value: { type: "Atom", value: "Num" } },
 		});

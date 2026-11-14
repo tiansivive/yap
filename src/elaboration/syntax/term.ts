@@ -27,10 +27,7 @@ type Constructor =
 	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
 	| { type: "Reset"; term: Term; handling?: { identity: Term; handler: Term } }
 	| { type: "Shift"; body: Term }
-	| ({ type: "Bubble"; meta: number; values: NF.Value[] } & (
-			| { ann: Term; identity: Term; payload: Term; shift?: never }
-			| { ann: NF.Value; shift: Term; identity?: never; payload?: never }
-	  ))
+	| { type: "Bubble"; meta: number; values: NF.Value[], ann: Term; identity: Term; payload: Term; shift?: never }
 	| { type: "Ann"; term: Term; ann: Term };
 
 export type Variable =
@@ -202,7 +199,6 @@ export const Constructors = {
 	Reset: (term: Term, handling?: { identity: Term; handler: Term }): Term => mk({ type: "Reset", term, ...(handling ? { handling } : {}) }),
 	Shift: (body: Term): Term => mk({ type: "Shift", body }),
 	Bubble: (meta: number, ann: Term, values: NF.Value[], identity: Term, payload: Term): Term => mk({ type: "Bubble", meta, ann, values, identity, payload }),
-	ShiftBubble: (meta: number, ann: NF.Value, values: NF.Value[], shift: Term): Term => mk({ type: "Bubble", meta, ann, values, shift }),
 
 	Patterns: {
 		Binder: (value: string): Pattern => ({ type: "Binder", value }),
@@ -258,7 +254,6 @@ export const CtorPatterns = {
 	Inj: { type: "Inj" },
 	Ann: { type: "Ann" },
 	Bubble: { type: "Bubble", identity: P.nonNullable },
-	ShiftBubble: { type: "Bubble", shift: P.nonNullable },
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } },
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } },
 	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } },

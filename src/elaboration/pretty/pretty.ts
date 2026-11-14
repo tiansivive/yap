@@ -216,9 +216,6 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		.with({ type: "Shift" }, function* ({ body }) {
 			return ["shift (", yield* go(body), ")"] satisfies PP.Doc;
 		})
-		.with(EB.CtorPatterns.ShiftBubble, function* ({ meta, shift }) {
-			return ["bubble#", `${meta}`, " (", yield* go(shift), ")"] satisfies PP.Doc;
-		})
 		.with({ type: "Ann" }, function* ({ term: tm, ann }) {
 			return ["(", yield* go(tm), " : ", yield* go(ann), ")"] satisfies PP.Doc;
 		})
