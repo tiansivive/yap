@@ -79,8 +79,21 @@ describe("Inference: suspend", () => {
 			type: "Bubble",
 			identity: { type: "Var", variable: { type: "Bound", index: 1 } },
 			payload: { type: "Var", variable: { type: "Bound", index: 0 } },
-			ann: { type: "Neutral", value: { type: "Var", variable: { type: "Bound", lvl: 0 } } },
+			ann: { type: "Var", variable: { type: "Bound", index: 2 } },
 		});
+	});
+
+	it("substitutes a concrete type into a dependent suspension result", () => {
+		const result = elaborated("let op = \\(a: Type) (e: Effect a a) (x: a) -> suspend @e x;");
+		const arguments_ = [
+			EB.Constructors.Lit({ type: "Atom", value: "Num" }),
+			EB.Constructors.Lit({ type: "Atom", value: "E" }),
+			EB.Constructors.Lit({ type: "Num", value: 1 }),
+		];
+		const term = arguments_.reduce((func, arg) => EB.Constructors.App("Explicit", func, arg), result.tm);
+		const value = runNF(result.ctx, () => NF.evaluate(term), result.registry);
+
+		expect(value).toMatchObject({ type: "Neutral", kind: "Blocked", value: { type: "Bubble", ann: atom("Num") } });
 	});
 
 	it("instantiates polymorphic carrier parameters independently at each suspension", () => {

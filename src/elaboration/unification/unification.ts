@@ -443,6 +443,7 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			})
 			.with({ type: "Abs" }, ({ binding, body }) => inTerm(binding.annotation) || inTerm(body))
 			.with({ type: "App" }, ({ func, arg }) => inTerm(func) || inTerm(arg))
+			.with(EB.CtorPatterns.Bubble, ({ ann, values, identity, payload }) => inTerm(ann) || values.some(check) || inTerm(identity) || inTerm(payload))
 			.with({ type: "Ann" }, ({ term }) => inTerm(term))
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => inTerm(scrutinee) || alternatives.some(({ term }) => inTerm(term)))
 			.with({ type: "Block" }, ({ return: ret, statements }) => inTerm(ret) || statements.some(stmt => inTerm(stmt.value)))

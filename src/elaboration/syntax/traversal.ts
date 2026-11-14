@@ -66,7 +66,7 @@ export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) =>
 			),
 		)
 		.with(CtorPatterns.Bubble, ({ meta, ann, values, identity, payload }) =>
-			Constructors.Bubble(meta, ann, values, traverse(identity, onVar), traverse(payload, onVar)),
+			Constructors.Bubble(meta, traverse(ann, onVar), values, traverse(identity, onVar), traverse(payload, onVar)),
 		)
 		.with(CtorPatterns.ShiftBubble, ({ meta, ann, values, shift }) => Constructors.ShiftBubble(meta, ann, values, traverse(shift, onVar)))
 		.with({ type: "Modal" }, ({ term, modalities }) => Constructors.Modal(traverse(term, onVar), modalities))

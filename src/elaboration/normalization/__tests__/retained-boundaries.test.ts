@@ -24,7 +24,7 @@ const app = (func: EB.Term, arg: EB.Term) => C.Ann(C.App("Explicit", func, arg),
 const lambda = (name: string, body: EB.Term) => C.Lambda(name, "Explicit", body, number);
 const arrow = C.Pi("x", "Explicit", number, number);
 const reset = (handler: EB.Term, body: EB.Term) => C.Ann(C.Reset(body, { identity: E, handler }), number);
-const suspend = (identity: EB.Term, payload: EB.Term) => C.Bubble(7, NF.Constructors.Atom("Num"), [], identity, payload);
+const suspend = (identity: EB.Term, payload: EB.Term) => C.Bubble(7, C.Lit(Lit.Atom("Num")), [], identity, payload);
 const callback = lambda("x", suspend(E, bound(0)));
 const resume = lambda("p", C.Lambda("k", "Explicit", app(bound(0), bound(1)), arrow));
 const evaluate = (term: EB.Term) => runNF(mkCtx(), () => NF.evaluate(term));

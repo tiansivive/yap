@@ -35,7 +35,7 @@ export const infer = (shift: Shift): M.Elaboration<EB.AST> =>
 		const body = EB.Constructors.Lambda(kBinder, "Explicit", ktm, yield* NF.quote(ctx.env.length, kTy));
 		const { nondeterminism } = yield* M.st.get();
 		const values = nondeterminism.solution[skolem.val] ?? [];
-		const out = EB.Constructors.Bubble(skolem.val, A, values, identity, body);
+		const out = EB.Constructors.Bubble(skolem.val, yield* NF.quote(ctx.env.length, A), values, identity, body);
 
 		return [out, A, us] satisfies EB.AST;
 	});

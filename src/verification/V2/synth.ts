@@ -384,7 +384,11 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 			yield* logger.log("synth: shift expression treated as opaque (stub)");
 			return [NF.Any, { vc: Build.true_() }] satisfies SynthResult;
 		})
-		.with({ type: "Bubble" }, function* (tm) {
+		.with(EB.CtorPatterns.Bubble, function* (tm) {
+			yield* logger.log("synth: bubble treated as opaque (neutral true)");
+			return [yield* NF.evaluate(tm.ann), { vc: Build.true_() }] satisfies SynthResult;
+		})
+		.with(EB.CtorPatterns.ShiftBubble, function* (tm) {
 			yield* logger.log("synth: bubble treated as opaque (neutral true)");
 			return [tm.ann, { vc: Build.true_() }] satisfies SynthResult;
 		})

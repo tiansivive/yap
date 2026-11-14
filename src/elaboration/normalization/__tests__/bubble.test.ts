@@ -17,18 +17,18 @@ const bound = (index: number) => C.Var({ type: "Bound", index });
 const lambda = (body: EB.Term) => C.Lambda("x", "Explicit", body, atom("Type"));
 const evaluate = (term: EB.Term) => runNF(ctx, () => NF.evaluate(term));
 const quote = (value: NF.Value, lvl = 0) => runNF(ctx, () => NF.quote(lvl, value));
-const bubble = (identity: EB.Term, payload: EB.Term) => C.Bubble(7, NF.Type, [NF.Type], identity, payload);
+const bubble = (identity: EB.Term, payload: EB.Term) => C.Bubble(7, atom("Type"), [NF.Type], identity, payload);
 
 describe("Bubble quotation", () => {
 	it("retains the operation, result symbol, signature and resume candidates", () => {
 		const term = bubble(atom("E"), atom("Num"));
 		const value = evaluate(term);
 
-		expect(value).toMatchObject({ type: "Neutral", kind: "Blocked", value: { type: "Bubble", meta: 7, ann: NF.Type, values: [NF.Type] } });
+		expect(value).toMatchObject({ type: "Neutral", kind: "Blocked", value: { type: "Bubble", meta: 7, ann: { type: "Lit", value: { type: "Atom", value: "Type" } }, values: [NF.Type] } });
 		expect(quote(value)).toMatchObject({
 			type: "Bubble",
 			meta: 7,
-			ann: NF.Type,
+			ann: { type: "Lit", value: { type: "Atom", value: "Type" } },
 			values: [NF.Type],
 			identity: { value: { value: "E" } },
 			payload: { value: { value: "Num" } },
@@ -77,7 +77,7 @@ describe("Bubble quotation", () => {
 	});
 
 	it("collects dependencies while retaining the result symbol's skolem role", () => {
-		const ann = V.Flex({ type: "Meta", val: 1, lvl: 0 });
+		const ann = C.Var({ type: "Meta", val: 1, lvl: 0 });
 		const candidate = V.Flex({ type: "Meta", val: 2, lvl: 0 });
 		const term = C.Bubble(7, ann, [candidate], atom("E"), C.Var({ type: "Meta", val: 3, lvl: 0 }));
 		const value = evaluate(term);
@@ -245,7 +245,7 @@ describe("Bubble quotation", () => {
 		const number = atom("Num");
 		const arrow = C.Pi("x", "Explicit", number, number);
 		const handler = C.Lambda("p", "Explicit", C.Lambda("k", "Explicit", C.Lit({ type: "Num", value: 99 }), arrow), number);
-		const callback = C.Lambda("x", "Explicit", C.Bubble(7, V.Atom("Num"), [], atom("E"), bound(0)), number);
+		const callback = C.Lambda("x", "Explicit", C.Bubble(7, atom("Num"), [], atom("E"), bound(0)), number);
 		const program = C.Lambda(
 			"f",
 			"Explicit",

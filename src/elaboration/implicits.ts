@@ -183,7 +183,13 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 			return EB.Constructors.ShiftBubble(meta, ann, values, yield* instantiate(shift, resolutions));
 		})
 		.with(EB.CtorPatterns.Bubble, function* ({ meta, ann, values, identity, payload }) {
-			return EB.Constructors.Bubble(meta, ann, values, yield* instantiate(identity, resolutions), yield* instantiate(payload, resolutions));
+			return EB.Constructors.Bubble(
+				meta,
+				yield* instantiate(ann, resolutions),
+				values,
+				yield* instantiate(identity, resolutions),
+				yield* instantiate(payload, resolutions),
+			);
 		})
 		.with({ type: "Modal" }, function* ({ term, modalities }) {
 			return EB.Constructors.Modal(yield* instantiate(term, resolutions), modalities);

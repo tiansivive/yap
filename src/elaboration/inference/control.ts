@@ -155,7 +155,11 @@ export const suspend = (node: Extract<Src.Term, { type: "suspend" }>): M.Elabora
 		const ctx = yield* M.reader.ask();
 		const symbol = yield* EB.freshMeta(ctx.env.length, result);
 
-		return [EB.Constructors.Bubble(symbol.val, result, [], identity, value), result, Q.add(identityUsages, usages)] satisfies EB.AST;
+		return [
+			EB.Constructors.Bubble(symbol.val, yield* NF.quote(ctx.env.length, result), [], identity, value),
+			result,
+			Q.add(identityUsages, usages),
+		] satisfies EB.AST;
 	});
 
 export function* anonymous(): M.Elaboration<[EB.AST, M.Delimitation["answer"]]> {

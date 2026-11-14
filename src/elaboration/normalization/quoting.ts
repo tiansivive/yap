@@ -93,7 +93,8 @@ function* quoting(lvl: number, val: NF.Value, unfold: NF.Unfolding, levels: Read
 		.with(NF.Patterns.Bubble, ({ meta, ann, values, identity, payload }) =>
 			Do.let("identity", () => quoting(lvl, identity, unfold, levels))
 				.let("payload", () => quoting(lvl, payload, unfold, levels))
-				.in(({ identity, payload }) => result(EB.Constructors.Bubble(meta, ann, values, identity, payload))),
+				.let("ann", () => quoting(lvl, ann, unfold, levels))
+				.in(({ identity, payload, ann }) => result(EB.Constructors.Bubble(meta, ann, values, identity, payload))),
 		)
 		.with({ type: "App" }, ({ func, arg, icit }) =>
 			Do.let("f", () => quoting(lvl, func, unfold, levels))

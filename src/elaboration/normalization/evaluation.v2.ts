@@ -421,7 +421,8 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 		.with(EB.CtorPatterns.Bubble, function* ({ meta, ann, values, identity, payload }) {
 			return yield* Do.let("identity", () => schedule.eval(identity))
 				.let("payload", () => schedule.eval(payload))
-				.in(({ identity, payload }) => suspend(NF.Constructors.Bubble(meta, ann, values, identity, payload)));
+				.let("ann", () => schedule.eval(ann))
+				.in(({ identity, payload, ann }) => suspend(NF.Constructors.Bubble(meta, ann, values, identity, payload)));
 		})
 		.with(EB.CtorPatterns.ShiftBubble, function* ({ meta, shift }) {
 			if (yield* Stack.find<Scope, EB.Term, Handling>(frame => frame.type === "Delimiter")) {

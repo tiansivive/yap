@@ -27,9 +27,9 @@ type Constructor =
 	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
 	| { type: "Reset"; term: Term; handling?: { identity: Term; handler: Term } }
 	| { type: "Shift"; body: Term }
-	| ({ type: "Bubble"; meta: number; ann: NF.Value; values: NF.Value[] } & (
-			| { identity: Term; payload: Term; shift?: never }
-			| { shift: Term; identity?: never; payload?: never }
+	| ({ type: "Bubble"; meta: number; values: NF.Value[] } & (
+			| { ann: Term; identity: Term; payload: Term; shift?: never }
+			| { ann: NF.Value; shift: Term; identity?: never; payload?: never }
 	  ))
 	| { type: "Ann"; term: Term; ann: Term };
 
@@ -201,8 +201,7 @@ export const Constructors = {
 
 	Reset: (term: Term, handling?: { identity: Term; handler: Term }): Term => mk({ type: "Reset", term, ...(handling ? { handling } : {}) }),
 	Shift: (body: Term): Term => mk({ type: "Shift", body }),
-	Bubble: (meta: number, ann: NF.Value, values: NF.Value[], identity: Term, payload: Term): Term =>
-		mk({ type: "Bubble", meta, ann, values, identity, payload }),
+	Bubble: (meta: number, ann: Term, values: NF.Value[], identity: Term, payload: Term): Term => mk({ type: "Bubble", meta, ann, values, identity, payload }),
 	ShiftBubble: (meta: number, ann: NF.Value, values: NF.Value[], shift: Term): Term => mk({ type: "Bubble", meta, ann, values, shift }),
 
 	Patterns: {

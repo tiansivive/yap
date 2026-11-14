@@ -22,7 +22,7 @@ const call = (func: EB.Term, arg: EB.Term, annotation = number) => C.Ann(app(fun
 const add = (a: EB.Term, b: EB.Term) => app(app(C.Var(C.Vars.Foreign("$add")), a), b);
 const install = (identity: EB.Term, handler: EB.Term, term: EB.Term, annotation = number) => C.Ann(C.Reset(term, { identity, handler }), annotation);
 const abort = (value: EB.Term, answer = number) => lambda("p", number, lambda("k", arrow(number, answer), value));
-const suspend = (identity: EB.Term, payload: EB.Term, meta = 7) => C.Bubble(meta, NF.Constructors.Atom("Num"), [], identity, payload);
+const suspend = (identity: EB.Term, payload: EB.Term, meta = 7) => C.Bubble(meta, C.Lit(Lit.Atom("Num")), [], identity, payload);
 const callback = (identity: EB.Term) => lambda("x", number, suspend(identity, bound(0)));
 const evaluate = (term: EB.Term) => runNF(mkCtx(), () => NF.evaluate(term));
 const quote = (term: EB.Term) => runNF(mkCtx(), () => NF.quote(0, evaluate(term)));

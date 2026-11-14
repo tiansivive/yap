@@ -167,7 +167,7 @@ describe("Inference: raw reset", () => {
 		const bubble = reset(second.body).term;
 		assert(bubble.type === "Bubble", "Expected a suspension result binding");
 		assert(bubble.identity, "Expected a suspension");
-		expect(bubble.ann).toMatchObject({ type: "Neutral", value: { type: "Var", variable: { type: "Bound", lvl: 0 } } });
+		expect(bubble.ann).toMatchObject({ type: "Var", variable: { type: "Bound", index: 1 } });
 		expect(bare(body(bubble.payload))).toMatchObject({ type: "App", arg: { type: "Var", variable: { type: "Bound", index: 1 } } });
 	});
 

@@ -264,12 +264,7 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 			.with({ type: "Block" }, ({ return: ret, statements }) => [...eb(ret), ...statements.flatMap(s => eb(s.value))])
 			.with({ type: "Modal" }, ({ term }) => eb(term))
 			.with({ type: "Shift" }, ({ body }) => eb(body))
-			.with(EB.CtorPatterns.Bubble, ({ ann, values, identity, payload }) => [
-				...nf(ann),
-				...values.flatMap(nf),
-				...eb(identity),
-				...eb(payload),
-			])
+			.with(EB.CtorPatterns.Bubble, ({ ann, values, identity, payload }) => [...eb(ann), ...values.flatMap(nf), ...eb(identity), ...eb(payload)])
 			.with(EB.CtorPatterns.ShiftBubble, ({ ann, values, shift }) => [...nf(ann), ...values.flatMap(nf), ...eb(shift)])
 			.with({ type: "Reset" }, ({ term, handling }) => [...eb(term), ...(handling ? [...eb(handling.identity), ...eb(handling.handler)] : [])])
 			.otherwise(() => {
