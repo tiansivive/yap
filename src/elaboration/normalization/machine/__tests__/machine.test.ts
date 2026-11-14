@@ -294,6 +294,18 @@ describe("the machine, on its own", () => {
 			expect(machine(delimited())).toEqual({ type: "Delimiter", scope: builtins });
 		});
 
+		it("searches within the active entry while preserving unmatched delimiters", () => {
+			const program = function* () {
+				yield* Stack.delimit(builtins, "outer");
+				yield* Stack.enter(builtins);
+				yield* Stack.delimit({ inner: 1 }, "inner");
+				const missing = yield* Stack.find<Env, Value, string>(frame => frame.type === "Delimiter" && frame.handling === "outer");
+				const inner = yield* Stack.find<Env, Value, string>(frame => frame.type === "Delimiter");
+				return yield* Stack.fill({ missing, inner });
+			};
+			expect(machine(program())).toEqual({ missing: undefined, inner: { type: "Delimiter", scope: { inner: 1 }, handling: "inner" } });
+		});
+
 		it("gives every replay of a captured continuation its own operands", () => {
 			const shift = function* (): Program<Machine<string>> {
 				const captured = (yield* Stack.capture<Env, Value>())?.captured;

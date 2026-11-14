@@ -23,7 +23,7 @@ type Constructor =
 	| { type: "Row"; row: Row }
 	| { type: "Abs"; binder: Binder; closure: Closure }
 	| { type: "Neutral"; kind: Neutral; value: Value }
-	| { type: "Bubble"; meta: number; ann: Value; values: Value[]; identity: Value; payload: Value; pending?: EB.NF.Captured }
+	| { type: "Bubble"; meta: number; ann: Value; values: Value[]; identity: Value; payload: Value }
 	| { type: "Reset"; value: Value; handling: Handling }
 	| { type: "Modal"; value: Value; modalities: Modalities }
 	| { type: "External"; name: string; arity: number; compute: (...args: Value[]) => Value; args: Value[] }
@@ -163,8 +163,8 @@ export const Constructors = {
 			kind,
 			value,
 		}),
-	Bubble: (meta: number, ann: Value, values: Value[], identity: Value, payload: Value, pending?: EB.NF.Captured): Extract<Value, { type: "Bubble" }> =>
-		mk({ type: "Bubble", meta, ann, values, identity, payload, pending }),
+	Bubble: (meta: number, ann: Value, values: Value[], identity: Value, payload: Value): Extract<Value, { type: "Bubble" }> =>
+		mk({ type: "Bubble", meta, ann, values, identity, payload }),
 	App: (func: Value, arg: Value, icit: Implicitness) =>
 		mk({
 			type: "App" as const,

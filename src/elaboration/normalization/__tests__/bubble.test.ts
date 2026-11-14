@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { match, P } from "ts-pattern";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
@@ -8,10 +7,6 @@ import * as M from "@yap/elaboration/shared/effects";
 import * as Sub from "@yap/elaboration/unification/substitution";
 import * as R from "@yap/shared/rows";
 import * as Eff from "@yap/utils/effects";
-import * as Evaluation from "../evaluation.v2";
-import * as Stack from "../machine/actions";
-import { handlers } from "../machine/handlers";
-import { Mode, scope, type Handling } from "../effects";
 import { mkCtx, runEB, runNF } from "../../inference/__tests__/util";
 
 const ctx = mkCtx();
@@ -23,26 +18,6 @@ const lambda = (body: EB.Term) => C.Lambda("x", "Explicit", body, atom("Type"));
 const evaluate = (term: EB.Term) => runNF(ctx, () => NF.evaluate(term));
 const quote = (value: NF.Value, lvl = 0) => runNF(ctx, () => NF.quote(lvl, value));
 const bubble = (identity: EB.Term, payload: EB.Term) => C.Bubble(7, NF.Type, [NF.Type], identity, payload);
-
-const resume = (value: NF.Value, argument: NF.Value) => {
-	const pending = match(value)
-		.with({ type: "Neutral", value: { type: "Bubble", pending: P.nonNullable } }, ({ value: { pending } }) => pending)
-		.otherwise(() => {
-			throw new Error("Expected a Bubble with saved work");
-		});
-	return runNF(ctx, function* () {
-		const [resumed] = yield* Eff.with([handlers<NF.Scope, EB.Term>(2000), Mode.handlers(NF.defaultMode)], () =>
-			Evaluation.drive(
-				(function* () {
-					yield* Stack.enter(yield* scope());
-					return yield* Stack.resume<NF.Value, NF.Scope, EB.Term, Handling>(pending, argument);
-				})(),
-				steps => `Evaluation exceeded ${steps} steps`,
-			),
-		);
-		return resumed;
-	});
-};
 
 describe("Bubble quotation", () => {
 	it("retains the operation, result symbol, signature and resume candidates", () => {
@@ -232,10 +207,13 @@ describe("Bubble quotation", () => {
 	});
 
 	it.fails("keeps each replay's recursive binding in its returned closure", () => {
-		const continuation = evaluate(C.Block([C.Stmt.Let("A", bubble(atom("E"), atom("Unit")), NF.Type)], lambda(bound(1))));
-		const first = resume(continuation, V.Atom("Num"));
+		const handler = lambda(lambda(bound(0)));
+		const continuation = evaluate(
+			C.Reset(C.Block([C.Stmt.Let("A", bubble(atom("E"), atom("Unit")), NF.Type)], lambda(bound(1))), { identity: atom("E"), handler }),
+		);
+		const first = runNF(ctx, () => NF.reduce(continuation, V.Atom("Num"), "Explicit"));
 		expect(quote(first)).toMatchObject({ type: "Abs", body: { value: { value: "Num" } } });
-		const second = resume(continuation, V.Atom("String"));
+		const second = runNF(ctx, () => NF.reduce(continuation, V.Atom("String"), "Explicit"));
 		expect(quote(second)).toMatchObject({ type: "Abs", body: { value: { value: "String" } } });
 		expect(quote(first)).toMatchObject({ type: "Abs", body: { value: { value: "Num" } } });
 	});

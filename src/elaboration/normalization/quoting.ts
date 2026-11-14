@@ -9,7 +9,6 @@ import { Do, group, result, scope, type Evaluation, type Machine } from "./effec
 import { schedule } from "./evaluation.v2";
 import * as NbE from "./nbe";
 import * as Stack from "./machine/actions";
-import type { Scope, Handling } from "./effects";
 import { match, P } from "ts-pattern";
 import assert from "node:assert";
 
@@ -91,33 +90,6 @@ function* quoting(lvl: number, val: NF.Value, unfold: NF.Unfolding, levels: Read
 				.let("body", () => M.reader.local(_ => body.ctx, quoting(lvl + 1, body.value, unfold, new Map([...levels, [body.level, lvl]]))))
 				.in(({ producer, body }) => result(EB.Constructors.Block([EB.Constructors.Stmt.Let(variable, producer, annotation)], body))),
 		)
-		.with({ type: "Bubble", pending: P.nonNullable }, ({ meta, ann, values, identity, payload, pending: captured }) => {
-			const producer = NF.Constructors.Bubble(meta, ann, values, identity, payload);
-			if (captured.frames.length === 0) {
-				return quoting(lvl, producer, unfold, levels);
-			}
-			/* A symbolic operation identity can later resolve to this delimiter, so its producer stays inside the reset. */
-			const index = captured.frames.findLastIndex(frame => frame.type === "Delimiter" && frame.handling);
-			const inner = { ...captured, frames: captured.frames.slice(index + 1) };
-			return Do.let("continued", function* () {
-				yield* Stack.enter(yield* scope());
-				return yield* Stack.resume<NF.Value, Scope, EB.Term, Handling>(inner, NF.Constructors.Rigid(lvl));
-			}).in(({ continued }) =>
-				Do.let("value", () => {
-					const value = NF.Constructors.Exists("$suspended", ann, { ctx: captured.scope.env, level: lvl, value: continued }, producer);
-					return match(captured.frames[index])
-						.with({ type: "Delimiter", handling: P.nonNullable }, function* ({ handling }) {
-							const reset = NF.Constructors.Neutral("Blocked", NF.Constructors.Reset(value, handling));
-							if (index === 0) {
-								return yield* result(reset);
-							}
-							yield* Stack.enter(yield* scope());
-							return yield* Stack.resume<NF.Value, Scope, EB.Term, Handling>({ ...captured, frames: captured.frames.slice(0, index) }, reset);
-						})
-						.otherwise(() => result(value));
-				}).in(({ value }) => quoting(lvl, value, unfold, levels)),
-			);
-		})
 		.with(NF.Patterns.Bubble, ({ meta, ann, values, identity, payload }) =>
 			Do.let("identity", () => quoting(lvl, identity, unfold, levels))
 				.let("payload", () => quoting(lvl, payload, unfold, levels))

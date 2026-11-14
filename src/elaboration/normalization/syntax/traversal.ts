@@ -49,14 +49,13 @@ export const traverse = (nf: Value, onVar: (v: Extract<Value, { type: "Var" }>) 
 			),
 		)
 		.with({ type: "Neutral" }, ({ kind, value }) => Constructors.Neutral(kind, traverse(value, onVar, onTerm)))
-		.with({ type: "Bubble" }, ({ meta, ann, values, identity, payload, pending }) =>
+		.with({ type: "Bubble" }, ({ meta, ann, values, identity, payload }) =>
 			Constructors.Bubble(
 				meta,
 				traverse(ann, onVar, onTerm),
 				values.map(value => traverse(value, onVar, onTerm)),
 				traverse(identity, onVar, onTerm),
 				traverse(payload, onVar, onTerm),
-				pending,
 			),
 		)
 		.with(Patterns.Glued, ({ folded, unfolded }) => Constructors.Glued(traverse(folded, onVar, onTerm), traverse(unfolded, onVar, onTerm)))

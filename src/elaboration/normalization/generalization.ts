@@ -370,14 +370,13 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 		.with({ type: "Neutral" }, function* ({ kind, value }) {
 			return NF.Constructors.Neutral(kind, yield* instantiate(value));
 		})
-		.with({ type: "Bubble" }, function* ({ meta, ann, values, identity, payload, pending }) {
+		.with({ type: "Bubble" }, function* ({ meta, ann, values, identity, payload }) {
 			return NF.Constructors.Bubble(
 				meta,
 				yield* instantiate(ann),
 				yield* M.traverse(values, instantiate),
 				yield* instantiate(identity),
 				yield* instantiate(payload),
-				pending,
 			);
 		})
 		.with(NF.Patterns.Glued, function* ({ folded, unfolded }) {
@@ -442,14 +441,13 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 			),
 		)
 		.with({ type: "Neutral" }, ({ kind, value }) => NF.Constructors.Neutral(kind, trimClosureEnvs(value)))
-		.with({ type: "Bubble" }, ({ meta, ann, values, identity, payload, pending }) =>
+		.with({ type: "Bubble" }, ({ meta, ann, values, identity, payload }) =>
 			NF.Constructors.Bubble(
 				meta,
 				trimClosureEnvs(ann),
 				values.map(trimClosureEnvs),
 				trimClosureEnvs(identity),
 				trimClosureEnvs(payload),
-				pending,
 			),
 		)
 		.with(NF.Patterns.Glued, ({ folded, unfolded }) => NF.Constructors.Glued(trimClosureEnvs(folded), trimClosureEnvs(unfolded)))
