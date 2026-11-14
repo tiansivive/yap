@@ -9,7 +9,6 @@ import { Do, group, result, scope, type Evaluation, type Machine } from "./effec
 import { schedule } from "./evaluation.v2";
 import * as NbE from "./nbe";
 import * as Stack from "./machine/actions";
-import type { Scope, Handling } from "./effects";
 import { match, P } from "ts-pattern";
 import assert from "node:assert";
 
@@ -76,25 +75,6 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		.with({ type: "Neutral" }, function* ({ value }) {
 			return yield* quote(lvl, value, unfold);
 		})
-		.with(
-			NF.Patterns.Bubble,
-			({ pending }) => !!pending?.frames.length,
-			function* (bubble) {
-				const pending = bubble.pending;
-				assert(pending, "A suspended continuation retains its captured frames");
-				if (pending.frames.some(frame => frame.type === "Delimiter")) {
-					throw new Error("Quoting a handled continuation requires the delimiter's answer type");
-				}
-				return yield* Do.let("continued", function* () {
-					yield* Stack.enter(yield* scope());
-					return yield* Stack.resume<NF.Value, Scope, EB.Term, Handling>(pending, NF.Constructors.Rigid(lvl));
-				}).in(({ continued }) =>
-					Do.let("body", () => quote(lvl + 1, continued, unfold))
-						.let("head", () => quote(lvl + 1, NF.Constructors.Bubble(bubble.meta, bubble.ann, bubble.values, bubble.identity, bubble.payload), unfold))
-						.in(({ body, head }) => result(EB.Constructors.Block([EB.Constructors.Stmt.Let("$suspended", head, bubble.ann)], body))),
-				);
-			},
-		)
 		.with(NF.Patterns.Bubble, ({ meta, ann, values, identity, payload }) =>
 			Do.let("identity", () => quote(lvl, identity, unfold))
 				.let("payload", () => quote(lvl, payload, unfold))

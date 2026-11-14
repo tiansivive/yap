@@ -11,6 +11,9 @@ const V = NF.Constructors;
 const atom = (value: string) => C.Lit({ type: "Atom", value });
 const bound = (index: number) => C.Var(EB.Bound(index));
 const unit = () => C.Lit({ type: "unit" });
+const num = (value: number) => C.Lit({ type: "Num", value });
+const app = (func: EB.Term, arg: EB.Term) => C.App("Explicit", func, arg);
+const add = (left: EB.Term, right: EB.Term) => app(app(C.Var(EB.Constructors.Vars.Foreign("$add")), left), right);
 const evaluate = (term: EB.Term) => runNF(mkCtx(), () => NF.evaluate(term));
 const quote = (value: NF.Value) => runNF(mkCtx(), () => NF.quote(0, value));
 
@@ -92,12 +95,36 @@ describe("direct Bubble representation", () => {
 		});
 	});
 
-	it("passes a concrete operation to its matching handler", () => {
+	it("passes the surrounding computation to its matching handler as a resumption", () => {
 		const number = atom("Num");
 		const handler = C.Lambda("p", "Explicit", C.Lambda("k", "Explicit", C.App("Explicit", bound(0), bound(1)), C.Pi("x", "Explicit", number, number)), number);
-		const operation = C.Bubble(7, number, [], atom("E"), C.Lit({ type: "Num", value: 9 }));
+		const operation = C.Bubble(7, number, [], atom("E"), num(9));
 
-		expect(evaluate(C.Reset(operation, { identity: atom("E"), handler }))).toMatchObject({ type: "Lit", value: { type: "Num", value: 9 } });
+		expect(evaluate(C.Reset(add(num(1), operation), { identity: atom("E"), handler }))).toMatchObject({ type: "Lit", value: { type: "Num", value: 10 } });
+	});
+
+	it("restores an intervening handler when the selected handler resumes", () => {
+		const number = atom("Num");
+		const handler = C.Lambda("p", "Explicit", C.Lambda("k", "Explicit", app(bound(0), bound(1)), C.Pi("x", "Explicit", number, number)), number);
+		const body = add(C.Bubble(7, number, [], atom("E"), num(1)), C.Bubble(8, number, [], atom("F"), num(2)));
+		const term = C.Reset(C.Reset(body, { identity: atom("F"), handler }), { identity: atom("E"), handler });
+
+		expect(evaluate(term)).toMatchObject({ type: "Lit", value: { type: "Num", value: 3 } });
+	});
+
+	it.each<[string, EB.Term]>([
+		["concrete", atom("E")],
+		["symbolic", C.Var({ type: "Meta", val: 42, lvl: 0 })],
+	])("continues the active application around an unresolved %s operation", (_name, identity) => {
+		const operation = C.Bubble(7, atom("Num"), [], identity, unit());
+		const value = evaluate(app(atom("Box"), operation));
+
+		expect(value).toMatchObject({
+			type: "App",
+			func: { type: "Lit", value: { type: "Atom", value: "Box" } },
+			arg: { type: "Neutral", kind: "Blocked", value: { type: "Bubble", meta: 7 } },
+		});
+		expect(quote(value)).toMatchObject({ type: "App", arg: { type: "Bubble", meta: 7 } });
 	});
 
 	it("displays the operation in Core and NF", () => {
