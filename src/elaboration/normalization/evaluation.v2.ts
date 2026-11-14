@@ -418,12 +418,12 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				return yield* schedule.reduce(h, kVal, "Explicit");
 			});
 		})
-		.with({ type: "Bubble", identity: P.nonNullable }, function* ({ meta, ann, values, identity, payload }) {
+		.with(EB.CtorPatterns.Bubble, function* ({ meta, ann, values, identity, payload }) {
 			return yield* Do.let("identity", () => schedule.eval(identity))
 				.let("payload", () => schedule.eval(payload))
 				.in(({ identity, payload }) => suspend(NF.Constructors.Bubble(meta, ann, values, identity, payload)));
 		})
-		.with({ type: "Bubble", shift: P.nonNullable }, function* ({ meta, shift }) {
+		.with(EB.CtorPatterns.ShiftBubble, function* ({ meta, shift }) {
 			if (yield* Stack.find<Scope, EB.Term, Handling>(frame => frame.type === "Delimiter")) {
 				return yield* schedule.eval(shift);
 			}

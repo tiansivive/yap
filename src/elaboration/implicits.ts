@@ -5,7 +5,7 @@ import * as NF from "@yap/elaboration/normalization";
 
 import * as Eff from "@yap/utils/effects";
 
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 
 import * as R from "@yap/shared/rows";
 import assert from "assert";
@@ -179,10 +179,10 @@ export const instantiate = function* (term: EB.Term, resolutions: EB.Resolutions
 				},
 			);
 		})
-		.with({ type: "Bubble", shift: P.nonNullable }, function* ({ meta, ann, values, shift }) {
+		.with(EB.CtorPatterns.ShiftBubble, function* ({ meta, ann, values, shift }) {
 			return EB.Constructors.ShiftBubble(meta, ann, values, yield* instantiate(shift, resolutions));
 		})
-		.with({ type: "Bubble", identity: P.nonNullable }, function* ({ meta, ann, values, identity, payload }) {
+		.with(EB.CtorPatterns.Bubble, function* ({ meta, ann, values, identity, payload }) {
 			return EB.Constructors.Bubble(meta, ann, values, yield* instantiate(identity, resolutions), yield* instantiate(payload, resolutions));
 		})
 		.with({ type: "Modal" }, function* ({ term, modalities }) {

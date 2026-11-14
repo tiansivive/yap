@@ -12,8 +12,8 @@
  */
 
 import assert from "node:assert";
-import type * as EB from "@yap/elaboration";
-import { match, P } from "ts-pattern";
+import * as EB from "@yap/elaboration";
+import { match } from "ts-pattern";
 import * as MIR from "./mir";
 import * as M from "./monad";
 import * as C from "./context";
@@ -70,7 +70,7 @@ function lower(ctx: C.LowerCtx, term: EB.Term): M.Lowering<void> {
 
 			.with(Patterns.Reset, ({ term: t }) => Continuation.Reset.lower(t))
 			.with(Patterns.Shift, ({ body }) => Continuation.Shift.lower(body))
-			.with({ type: "Bubble", shift: P.nonNullable }, ({ shift }) => lower(ctx, shift))
+			.with(EB.CtorPatterns.ShiftBubble, ({ shift }) => lower(ctx, shift))
 
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => Match.lower(scrutinee, alternatives))
 

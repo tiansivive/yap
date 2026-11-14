@@ -185,7 +185,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		.with({ type: "Modal" }, function* ({ term: tm, modalities }) {
 			return ["<", Q.display(modalities.quantity), "> ", yield* go(tm), " [| ", yield* go(modalities.liquid), " |]"] satisfies PP.Doc;
 		})
-		.with({ type: "Bubble", identity: P.nonNullable }, function* ({ meta, identity, payload }) {
+		.with(EB.CtorPatterns.Bubble, function* ({ meta, identity, payload }) {
 			return [
 				"bubble#",
 				`${meta}`,
@@ -216,7 +216,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		.with({ type: "Shift" }, function* ({ body }) {
 			return ["shift (", yield* go(body), ")"] satisfies PP.Doc;
 		})
-		.with({ type: "Bubble" }, function* ({ meta, shift }) {
+		.with(EB.CtorPatterns.ShiftBubble, function* ({ meta, shift }) {
 			return ["bubble#", `${meta}`, " (", yield* go(shift), ")"] satisfies PP.Doc;
 		})
 		.with({ type: "Ann" }, function* ({ term: tm, ann }) {
