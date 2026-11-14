@@ -460,7 +460,11 @@ const identify = (value: NF.Value, args: NF.Value[] = []): Handling["identity"] 
 function* suspend(bubble: Extract<NF.Value, { type: "Bubble" }>): Evaluation<Machine<NF.Value>> {
 	const { identity, payload, ann: annotation } = bubble;
 	const tag = identify(identity);
-	const stopped = yield* Stack.capture<Scope, EB.Term, Handling>(handling => !!handling && !!tag && handling.identity.name === tag.name);
+	const selected = tag && (yield* Stack.find<Scope, EB.Term, Handling>(frame => frame.type === "Delimiter" && frame.handling?.identity.name === tag.name));
+	if (!selected) {
+		return yield* result(NF.Constructors.Neutral("Blocked", bubble));
+	}
+	const stopped = yield* Stack.capture<Scope, EB.Term, Handling>(handling => selected.type === "Delimiter" && handling === selected.handling);
 	return yield* match(stopped)
 		.with({ type: "Delimiter", handling: P.nonNullable }, function* ({ captured, handling }) {
 			const continuation = NF.Constructors.Lambda(
@@ -476,9 +480,9 @@ function* suspend(bubble: Extract<NF.Value, { type: "Bubble" }>): Evaluation<Mac
 				.bind("applied", ({ handler }) => schedule.reduce(handler, payload, "Explicit"))
 				.in(({ applied }) => schedule.reduce(applied, continuation, "Explicit"));
 		})
-		.otherwise(stopped =>
-			result(NF.Constructors.Neutral("Blocked", NF.Constructors.Bubble(bubble.meta, annotation, bubble.values, identity, payload, stopped?.captured))),
-		);
+		.otherwise(() => {
+			throw new Error("The selected suspension handler must remain available until capture");
+		});
 }
 
 function* specialize(handler: NF.Value, args: NF.Value[]): Evaluation<Machine<NF.Value>> {

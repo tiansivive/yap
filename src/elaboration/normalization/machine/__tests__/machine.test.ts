@@ -276,6 +276,27 @@ describe("the machine, on its own", () => {
 			});
 			expect(machine(program)).toEqual({ type: "Delimiter", captured: { frames: [], scope: { inner: 1 } } });
 		});
+
+		it("limits lookup to the active entry and preserves the selected delimiter for capture", () => {
+			const program = function* () {
+				yield* Stack.delimit(builtins, "A");
+				return yield* source(function* () {
+					yield* Stack.delimit({ inner: 1 }, "B");
+					return yield* step(function* () {
+						const outer = yield* Stack.find<Env, Value>(frame => frame.type === "Delimiter" && frame.handling === "A");
+						const selected = yield* Stack.find<Env, Value>(frame => frame.type === "Delimiter" && frame.handling === "B");
+						const captured = yield* Stack.capture<Env, Value>(handling => handling === "B");
+						return yield* Stack.fill({ outer, selected, captured });
+					});
+				});
+			};
+
+			expect(machine(program())).toEqual({
+				outer: undefined,
+				selected: { type: "Delimiter", scope: { inner: 1 }, handling: "B" },
+				captured: { type: "Delimiter", handling: "B", captured: { frames: [], scope: { inner: 1 } } },
+			});
+		});
 	});
 
 	describe("delimited control", () => {
