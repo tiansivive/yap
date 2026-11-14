@@ -300,15 +300,14 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			);
 		})
 		.with({ type: "App" }, ({ func, arg, icit }) =>
-			Do.let("func", () => schedule.eval(func)).in(({ func }) =>
-				Do.let("known", () => schedule.view(func)).in(({ known }) =>
-					Do.let("arg", () =>
-						match(known)
-							.with(View.Blocked(), { value: NF.Patterns.Existential }, () => NbE.eval(arg))
-							.otherwise(() => schedule.eval(arg)),
-					).in(({ arg }) => schedule.reduce(func, arg, icit)),
-				),
-			),
+			Do.let("func", () => schedule.eval(func))
+				.bind("known", ({ func }) => schedule.view(func))
+				.bind("arg", ({ known }) =>
+					match(known)
+						.with(View.Blocked(), { value: NF.Patterns.Existential }, () => NbE.eval(arg))
+						.otherwise(() => schedule.eval(arg)),
+				)
+				.in(({ func, arg }) => schedule.reduce(func, arg, icit)),
 		)
 		.with({ type: "Row" }, function* ({ row }) {
 			const record = row.entries.reduce<EB.Context["record"]>((rec, { label, value: term }) => {
@@ -463,8 +462,9 @@ function* reset({ term, handling }: Extract<EB.Term, { type: "Reset" }>): Evalua
 			}
 			const handling = { identity, handler };
 			yield* Stack.delimit(yield* scope(), handling);
-			return yield* Do.let("value", () => schedule.eval(term)).in(({ value }) =>
-				Do.let("known", () => schedule.view(value)).in(function* ({ known }) {
+			return yield* Do.let("value", () => schedule.eval(term))
+				.bind("known", ({ value }) => schedule.view(value))
+				.in(function* ({ value, known }) {
 					const active = yield* Stack.find<Scope, EB.Term, Handling>(frame => frame.type === "Delimiter" && frame.handling === handling);
 					return yield* result(
 						match(known)
@@ -473,8 +473,7 @@ function* reset({ term, handling }: Extract<EB.Term, { type: "Reset" }>): Evalua
 							)
 							.otherwise(() => value),
 					);
-				}),
-			);
+				});
 		});
 }
 
@@ -504,9 +503,9 @@ function* suspend(identity: NF.Value, payload: NF.Value, annotation: NF.Value, b
 			const args = match(tag)
 				.with(Anonymous, () => [annotation])
 				.otherwise(identity => identity?.args ?? []);
-			return yield* Do.let("handler", () => spine(handling.handler, args, "Implicit")).in(({ handler }) =>
-				Do.let("applied", () => schedule.reduce(handler, payload, "Explicit")).in(({ applied }) => schedule.reduce(applied, continuation, "Explicit")),
-			);
+			return yield* Do.let("handler", () => spine(handling.handler, args, "Implicit"))
+				.bind("applied", ({ handler }) => schedule.reduce(handler, payload, "Explicit"))
+				.in(({ applied }) => schedule.reduce(applied, continuation, "Explicit"));
 		})
 		.otherwise(stopped => {
 			assert(bubble, "A suspended operation carries its elaborated Bubble result symbol");

@@ -16,6 +16,7 @@ export const notation = <S, C, R extends Eff.AnyAction, D = unknown>(scope: () =
 
 	type Chain<B extends Bindings> = {
 		let: <N extends string, T>(name: N, work: Work<T>) => Chain<B & { readonly [P in N]: T }>;
+		bind: <N extends string, T>(name: N, work: (bindings: B) => Program<Machine<T>>) => Chain<B & { readonly [P in N]: T }>;
 		in: <T>(body: (bindings: B) => Program<Machine<T>>) => Program<Machine<T>>;
 	};
 
@@ -30,14 +31,25 @@ export const notation = <S, C, R extends Eff.AnyAction, D = unknown>(scope: () =
 		return result;
 	};
 
-	const from = <B extends Bindings>(steps: readonly { name: string; work: Work<unknown> }[]): Chain<B> => ({
-		let: (name, work) => from([...steps, { name, work }]),
-		in: body =>
-			group(
-				steps.map(({ work }) => work),
-				results => body(Object.fromEntries(steps.map(({ name }, index) => [name, results[index]])) as B),
-			),
-	});
+	const from = <B extends Bindings>(
+		steps: readonly { name: string; work: Work<unknown> }[],
+		run: <T>(body: (bindings: Bindings) => Program<Machine<T>>) => Program<Machine<T>> = body => body({}),
+	): Chain<B> => {
+		const chain: Chain<B> = {
+			let: (name, work) => from([...steps, { name, work }], run),
+			bind: (name, work) => from([], body => chain.in(bindings => group([() => work(bindings)], ([value]) => body({ ...bindings, [name]: value })))),
+			in: body =>
+				run(bindings =>
+					steps.length
+						? group(
+								steps.map(({ work }) => work),
+								results => body({ ...bindings, ...Object.fromEntries(steps.map(({ name }, index) => [name, results[index]])) } as B),
+							)
+						: body(bindings as B),
+				),
+		};
+		return chain;
+	};
 
 	return { result: fill, step, group, Do: from<Record<never, never>>([]) };
 };
