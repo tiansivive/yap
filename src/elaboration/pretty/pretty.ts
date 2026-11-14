@@ -148,7 +148,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		})
 		.with({ type: "App" }, function* ({ icit, func, arg }) {
 			const needsFnParens = func.type !== "Var" && func.type !== "Lit" && func.type !== "App";
-			const needsArgParens = arg.type === "Abs" || arg.type === "App" || arg.type === "Suspend" || arg.type === "Reset";
+			const needsArgParens = arg.type === "Abs" || arg.type === "App" || arg.type === "Bubble" || arg.type === "Reset";
 			return PP.app(PP.parensIf(needsFnParens, yield* go(func)), Icit.display(icit), PP.parensIf(needsArgParens, yield* go(arg)));
 		})
 		.with({ type: "Row" }, function* ({ row }) {
@@ -185,12 +185,15 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		.with({ type: "Modal" }, function* ({ term: tm, modalities }) {
 			return ["<", Q.display(modalities.quantity), "> ", yield* go(tm), " [| ", yield* go(modalities.liquid), " |]"] satisfies PP.Doc;
 		})
-		.with({ type: "Suspend" }, function* ({ identity, payload }) {
+		.with(EB.CtorPatterns.Bubble, function* ({ meta, identity, payload }) {
 			return [
-				"suspend @",
+				"bubble#",
+				`${meta}`,
+				" (suspend @",
 				PP.parensIf(!isMatching({ type: P.union("Var", "Lit", "Proj", "Ann") }, identity), yield* go(identity)),
 				" ",
 				yield* go(payload),
+				")",
 			] satisfies PP.Doc;
 		})
 		.with({ type: "Reset" }, function* ({ term: tm, handling }) {
@@ -213,7 +216,7 @@ const doc = function* (term: EB.Term, opts: Opts = { deBruijn: false, printEnv: 
 		.with({ type: "Shift" }, function* ({ body }) {
 			return ["shift (", yield* go(body), ")"] satisfies PP.Doc;
 		})
-		.with({ type: "Bubble" }, function* ({ meta, shift }) {
+		.with(EB.CtorPatterns.ShiftBubble, function* ({ meta, shift }) {
 			return ["bubble#", `${meta}`, " (", yield* go(shift), ")"] satisfies PP.Doc;
 		})
 		.with({ type: "Ann" }, function* ({ term: tm, ann }) {

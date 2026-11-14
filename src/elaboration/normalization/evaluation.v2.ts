@@ -375,12 +375,6 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 			// Process statements to extend context, then evaluate return
 			return yield* processStatementsAndPush(statements, ret);
 		})
-		.with({ type: "Suspend" }, function* ({ identity, payload, annotation }) {
-			return yield* Do.let("identity", () => schedule.eval(identity))
-				.let("payload", () => schedule.eval(payload))
-				.let("annotation", () => schedule.eval(annotation))
-				.in(({ identity, payload, annotation }) => suspend(identity, payload, annotation));
-		})
 		.with({ type: "Reset", handling: P.nonNullable }, function* ({ term, handling }) {
 			return yield* Do.let("identity", () => schedule.eval(handling.identity))
 				.let("handler", () => schedule.eval(handling.handler))
@@ -433,12 +427,13 @@ function* evaluateTerm(term: EB.Term): Evaluation<Machine<NF.Value>> {
 				return yield* schedule.reduce(h, kVal, "Explicit");
 			});
 		})
-		.with({ type: "Bubble", shift: { type: "Suspend" } }, function* ({ meta, ann, values, shift }) {
-			return yield* Do.let("identity", () => schedule.eval(shift.identity))
-				.let("payload", () => schedule.eval(shift.payload))
-				.in(({ identity, payload }) => suspend(identity, payload, ann, NF.Constructors.Bubble(meta, ann, values, { type: "Suspend", identity, payload })));
+		.with(EB.CtorPatterns.Bubble, function* ({ meta, ann, values, identity, payload }) {
+			return yield* Do.let("identity", () => schedule.eval(identity))
+				.let("payload", () => schedule.eval(payload))
+				.let("ann", () => schedule.eval(ann))
+				.in(({ identity, payload, ann }) => suspend(NF.Constructors.Bubble(meta, ann, values, identity, payload)));
 		})
-		.with({ type: "Bubble" }, function* ({ meta, shift }) {
+		.with(EB.CtorPatterns.ShiftBubble, function* ({ meta, shift }) {
 			if (yield* Stack.find<Scope, EB.Term, Handling>(frame => frame.type === "Delimiter")) {
 				return yield* schedule.eval(shift);
 			}
@@ -469,7 +464,8 @@ const identify = (value: NF.Value, args: NF.Value[] = []): Handling["identity"] 
 		.with({ type: "Lit", value: { type: "Atom" } }, ({ value }) => ({ name: value.value, args }))
 		.otherwise(() => undefined);
 
-function* suspend(identity: NF.Value, payload: NF.Value, annotation: NF.Value, bubble?: Extract<NF.Value, { type: "Bubble" }>): Evaluation<Machine<NF.Value>> {
+function* suspend(bubble: Extract<NF.Value, { type: "Bubble" }>): Evaluation<Machine<NF.Value>> {
+	const { identity, payload, ann: annotation } = bubble;
 	const tag = identify(identity);
 	const stopped = yield* Stack.capture<Scope, EB.Term, Handling>(handling => !!handling && !!tag && handling.identity.name === tag.name);
 	return yield* match(stopped)
@@ -487,12 +483,9 @@ function* suspend(identity: NF.Value, payload: NF.Value, annotation: NF.Value, b
 				.bind("applied", ({ handler }) => schedule.reduce(handler, payload, "Explicit"))
 				.in(({ applied }) => schedule.reduce(applied, continuation, "Explicit"));
 		})
-		.otherwise(stopped => {
-			if (!bubble) {
-				throw new Error("Suspend evaluation is pending without a matching delimiter");
-			}
-			return result(NF.Constructors.Neutral("Blocked", NF.Constructors.Bubble(bubble.meta, bubble.ann, bubble.values, bubble.operation, stopped?.captured)));
-		});
+		.otherwise(stopped =>
+			result(NF.Constructors.Neutral("Blocked", NF.Constructors.Bubble(bubble.meta, annotation, bubble.values, identity, payload, stopped?.captured))),
+		);
 }
 
 function* specialize(handler: NF.Value, args: NF.Value[]): Evaluation<Machine<NF.Value>> {
