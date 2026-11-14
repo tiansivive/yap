@@ -15,6 +15,7 @@ type Ambient = Eff.Actions<typeof Scope> | Eff.Actions<typeof Trace>;
 type Program<A> = Eff.Eff<Ambient | Stack.Actions<Scope, number>, A>;
 
 const outer: Scope = { env: "outer", mode: "full" };
+const fuel = 1_000;
 const { Do, step, group } = notation<Scope, number, Ambient>(Scope.ask);
 
 const machine = <A>(work: Program<Machine<A>>) => {
@@ -41,7 +42,7 @@ const machine = <A>(work: Program<Machine<A>>) => {
 
 		return yield* Stack.finish<A>(mark);
 	};
-	const [value, , , trace] = Eff.run(program, [handlers<Scope, number>(1_000), Scope.handlers(outer), Trace.handlers()]);
+	const [value, , , trace] = Eff.run(program, [handlers<Scope, number>(fuel), Scope.handlers(outer), Trace.handlers()]);
 
 	return { value, trace };
 };
