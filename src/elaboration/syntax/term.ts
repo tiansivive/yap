@@ -25,10 +25,9 @@ type Constructor =
 	| { type: "Match"; scrutinee: Term; alternatives: Array<Alternative> }
 	| { type: "Block"; statements: Array<Statement>; return: Term }
 	| { type: "Modal"; term: Term; modalities: Modal.Annotations<Term> }
-	| { type: "Suspend"; identity: Term; payload: Term; annotation: Term }
 	| { type: "Reset"; term: Term; handling?: { identity: Term; handler: Term } }
 	| { type: "Shift"; body: Term }
-	| { type: "Bubble"; meta: number; ann: NF.Value; values: NF.Value[]; shift: Term }
+	| { type: "Bubble"; meta: number; values: NF.Value[], ann: Term; identity: Term; payload: Term; shift?: never }
 	| { type: "Ann"; term: Term; ann: Term };
 
 export type Variable =
@@ -197,10 +196,9 @@ export const Constructors = {
 
 	Modal: (term: Term, modalities: Modal.Annotations<Term>): Term => mk({ type: "Modal", term, modalities }),
 
-	Suspend: (identity: Term, payload: Term, annotation: Term): Term => mk({ type: "Suspend", identity, payload, annotation }),
 	Reset: (term: Term, handling?: { identity: Term; handler: Term }): Term => mk({ type: "Reset", term, ...(handling ? { handling } : {}) }),
 	Shift: (body: Term): Term => mk({ type: "Shift", body }),
-	Bubble: (meta: number, ann: NF.Value, values: NF.Value[], shift: Term): Term => mk({ type: "Bubble", meta, ann, values, shift }),
+	Bubble: (meta: number, ann: Term, values: NF.Value[], identity: Term, payload: Term): Term => mk({ type: "Bubble", meta, ann, values, identity, payload }),
 
 	Patterns: {
 		Binder: (value: string): Pattern => ({ type: "Binder", value }),
@@ -255,7 +253,7 @@ export const CtorPatterns = {
 	Proj: { type: "Proj" },
 	Inj: { type: "Inj" },
 	Ann: { type: "Ann" },
-	Bubble: { type: "Bubble" },
+	Bubble: { type: "Bubble", identity: P.nonNullable },
 	Variant: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Variant" } }, arg: { type: "Row" } },
 	Schema: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Schema" } }, arg: { type: "Row" } },
 	Struct: { type: "App", func: { type: "Lit", value: { type: "Atom", value: "Struct" } }, arg: { type: "Row" } },

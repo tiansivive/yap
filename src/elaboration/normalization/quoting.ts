@@ -90,16 +90,16 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 					return yield* Stack.resume<NF.Value, Scope, EB.Term, Handling>(pending, NF.Constructors.Rigid(lvl));
 				}).in(({ continued }) =>
 					Do.let("body", () => quote(lvl + 1, continued, unfold))
-						.let("head", () => quote(lvl + 1, NF.Constructors.Bubble(bubble.meta, bubble.ann, bubble.values, bubble.operation), unfold))
+						.let("head", () => quote(lvl + 1, NF.Constructors.Bubble(bubble.meta, bubble.ann, bubble.values, bubble.identity, bubble.payload), unfold))
 						.in(({ body, head }) => result(EB.Constructors.Block([EB.Constructors.Stmt.Let("$suspended", head, bubble.ann)], body))),
 				);
 			},
 		)
-		.with(NF.Patterns.Bubble, ({ meta, ann, values, operation: { identity, payload } }) =>
+		.with(NF.Patterns.Bubble, ({ meta, ann, values, identity, payload }) =>
 			Do.let("identity", () => quote(lvl, identity, unfold))
 				.let("payload", () => quote(lvl, payload, unfold))
 				.let("annotation", () => quote(lvl, ann, unfold))
-				.in(({ identity, payload, annotation }) => result(EB.Constructors.Bubble(meta, ann, values, EB.Constructors.Suspend(identity, payload, annotation)))),
+				.in(({ identity, payload, annotation }) => result(EB.Constructors.Bubble(meta, annotation, values, identity, payload))),
 		)
 		.with({ type: "App" }, ({ func, arg, icit }) =>
 			Do.let("f", () => quote(lvl, func, unfold))
