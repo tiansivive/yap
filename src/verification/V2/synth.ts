@@ -173,7 +173,7 @@ export const synth = function* (term: EB.Term): Verification<SynthResult> {
 					.with(NF.View.Sealed({ type: "Existential" }), function* ({ value: ex }) {
 						const name = yield* supply.freshFrom(ex.variable);
 						const [out, artefacts] = yield* scope(name, { type: "Pi", variable: ex.variable }, ex.annotation, incorporate(arg, ex.body.value));
-						return [NF.Constructors.Exists(ex.variable, ex.annotation, { ctx, value: out }), artefacts] satisfies SynthResult;
+						return [NF.Constructors.Exists(ex.variable, ex.annotation, { ...ex.body, ctx, value: out }), artefacts] satisfies SynthResult;
 					})
 					.with(NF.View.Sealed(NF.Patterns.Pi), function* ({ value: pi }) {
 						const { vc, nf } = yield* reader.local(_ => ctx, check(arg, pi.binder.annotation));

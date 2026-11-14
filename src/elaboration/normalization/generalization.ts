@@ -341,6 +341,20 @@ export const instantiate = function* (nf: NF.Value): EB.Icit.Zonking<NF.Value> {
 		.with({ type: "App" }, function* ({ icit, func, arg }) {
 			return NF.Constructors.App(yield* instantiate(func), yield* instantiate(arg), icit);
 		})
+		.with(NF.Patterns.Reset, function* ({ value, handling }) {
+			return NF.Constructors.Reset(yield* instantiate(value), {
+				identity: yield* instantiate(handling.identity),
+				handler: yield* instantiate(handling.handler),
+			});
+		})
+		.with(NF.Patterns.Existential, function* ({ variable, annotation, body, producer }) {
+			return NF.Constructors.Exists(
+				variable,
+				yield* instantiate(annotation),
+				{ ...body, value: yield* instantiate(body.value) },
+				producer && (yield* instantiate(producer)),
+			);
+		})
 		.with(NF.Patterns.Proj, function* ({ base, label }) {
 			return NF.Constructors.Proj(yield* instantiate(base), label);
 		})
@@ -405,6 +419,15 @@ export const trimClosureEnvs = (nf: NF.Value): NF.Value => {
 		})
 
 		.with({ type: "App" }, ({ icit, func, arg }) => NF.Constructors.App(trimClosureEnvs(func), trimClosureEnvs(arg), icit))
+		.with(NF.Patterns.Reset, ({ value, handling }) =>
+			NF.Constructors.Reset(trimClosureEnvs(value), {
+				identity: trimClosureEnvs(handling.identity),
+				handler: trimClosureEnvs(handling.handler),
+			}),
+		)
+		.with(NF.Patterns.Existential, ({ variable, annotation, body, producer }) =>
+			NF.Constructors.Exists(variable, trimClosureEnvs(annotation), { ...body, value: trimClosureEnvs(body.value) }, producer && trimClosureEnvs(producer)),
+		)
 		.with(NF.Patterns.Proj, ({ base, label }) => NF.Constructors.Proj(trimClosureEnvs(base), label))
 		.with(NF.Patterns.Match, ({ closure, scrutinee }) => NF.Constructors.Match(closure, trimClosureEnvs(scrutinee)))
 		.with(NF.Patterns.Inj, ({ base, label, injected }) => NF.Constructors.Inj(trimClosureEnvs(base), label, trimClosureEnvs(injected)))

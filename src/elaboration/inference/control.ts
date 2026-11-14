@@ -65,10 +65,13 @@ function* install(node: With, answer: NF.Value, [identity, type, identityUsages]
 		EB.Constructors.Stmt.Let("$user", user, expected),
 		EB.Constructors.Stmt.Let("$installed", installed, expected),
 	];
-	const term = EB.Constructors.Reset(body, {
-		identity: yield* NF.quote(installedScope.env.length, references.identity),
-		handler: yield* NF.quote(installedScope.env.length, references.installed),
-	});
+	const term = EB.Constructors.Ann(
+		EB.Constructors.Reset(body, {
+			identity: yield* NF.quote(installedScope.env.length, references.identity),
+			handler: yield* NF.quote(installedScope.env.length, references.installed),
+		}),
+		yield* NF.quote(installedScope.env.length, answer),
+	);
 	return [
 		EB.Constructors.Block(bindings, term),
 		Q.add(
@@ -122,14 +125,23 @@ function* deep(
 	const payloadScope = EB.bind(ctx, { type: "Lambda", variable: "$payload" }, payload, "inserted");
 	const continuationScope = EB.bind(payloadScope, { type: "Lambda", variable: "$k" }, continuation, "inserted");
 	const valueScope = EB.bind(continuationScope, { type: "Lambda", variable: "$value" }, result, "inserted");
-	const resumed = EB.Constructors.Reset(
-		EB.DSL.app(yield* NF.quote(valueScope.env.length, continuationScope.env[0].nf), yield* NF.quote(valueScope.env.length, valueScope.env[0].nf)),
-		{ identity: yield* NF.quote(valueScope.env.length, references.identity), handler: yield* NF.quote(valueScope.env.length, references.installed) },
+	const resumed = EB.Constructors.Ann(
+		EB.Constructors.Reset(
+			EB.Constructors.Ann(
+				EB.DSL.app(yield* NF.quote(valueScope.env.length, continuationScope.env[0].nf), yield* NF.quote(valueScope.env.length, valueScope.env[0].nf)),
+				yield* NF.quote(valueScope.env.length, answer),
+			),
+			{ identity: yield* NF.quote(valueScope.env.length, references.identity), handler: yield* NF.quote(valueScope.env.length, references.installed) },
+		),
+		yield* NF.quote(valueScope.env.length, answer),
 	);
 	const resumption = EB.Constructors.Lambda("$value", "Explicit", resumed, yield* NF.quote(continuationScope.env.length, result));
 	const args = yield* M.traverse(parameters, parameter => NF.quote(continuationScope.env.length, parameter));
 	const user = args.reduce((term, argument) => EB.Constructors.App("Implicit", term, argument), yield* NF.quote(continuationScope.env.length, references.user));
-	const applied = EB.DSL.app(EB.DSL.app(user, yield* NF.quote(continuationScope.env.length, payloadScope.env[0].nf)), resumption);
+	const applied = EB.Constructors.Ann(
+		EB.DSL.app(EB.DSL.app(user, yield* NF.quote(continuationScope.env.length, payloadScope.env[0].nf)), resumption),
+		yield* NF.quote(continuationScope.env.length, answer),
+	);
 	const body = EB.Constructors.Lambda("$k", "Explicit", applied, yield* NF.quote(payloadScope.env.length, continuation));
 	return EB.Constructors.Lambda("$payload", "Explicit", body, yield* NF.quote(ctx.env.length, payload));
 }
@@ -140,9 +152,12 @@ export const suspend = (node: Extract<Src.Term, { type: "suspend" }>): M.Elabora
 		const [identity, effectType, identityUsages] = yield* EB.Icit.insert(ast);
 		const [payload, result] = yield* signature(effectType);
 		const [value, usages] = yield* EB.check(node.term, payload);
-		const annotation = yield* NF.quote((yield* M.reader.ask()).env.length, result);
+		const ctx = yield* M.reader.ask();
+		const symbol = yield* EB.freshMeta(ctx.env.length, result);
+		const annotation = yield* NF.quote(ctx.env.length, result);
+		const suspension = EB.Constructors.Suspend(identity, value, annotation);
 
-		return [EB.Constructors.Suspend(identity, value, annotation), result, Q.add(identityUsages, usages)] satisfies EB.AST;
+		return [EB.Constructors.Bubble(symbol.val, result, [], suspension), result, Q.add(identityUsages, usages)] satisfies EB.AST;
 	});
 
 export function* anonymous(): M.Elaboration<[EB.AST, M.Delimitation["answer"]]> {

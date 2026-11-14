@@ -241,17 +241,24 @@ describe("Bubble quotation", () => {
 		expect(quote(first)).toMatchObject({ type: "Abs", body: { value: { value: "Num" } } });
 	});
 
-	it.fails("retains an unknown call whose result the surrounding function ignores", () => {
+	it("retains an unknown call whose result the surrounding function ignores", () => {
 		const scope = EB.bind(ctx, { type: "Lambda", variable: "f" }, V.Pi("x", "Explicit", NF.Type, V.Closure(ctx, atom("Type"))));
-		const call = C.App("Explicit", bound(0), atom("Num"));
+		const call = C.Ann(C.App("Explicit", bound(0), atom("Num")), atom("Type"));
 		const value = runNF(scope, () => NF.evaluate(C.App("Explicit", lambda(atom("Num")), call)));
 
-		expect(quote(value, 1)).toMatchObject({ type: "Block", statements: [{ type: "Let", value: { type: "App" } }], return: { value: { value: "Num" } } });
+		expect(quote(value, 1)).toMatchObject({
+			type: "Block",
+			statements: [{ type: "Let", value: { type: "App" } }],
+			return: { value: { value: "Num" } },
+		});
 	});
 
-	it.fails("retains the handler around an unknown callback", () => {
+	it("retains the handler around an unknown callback", () => {
 		const scope = EB.bind(ctx, { type: "Lambda", variable: "f" }, V.Pi("x", "Explicit", NF.Type, V.Closure(ctx, atom("Type"))));
-		const term = C.Reset(C.App("Explicit", bound(0), atom("Num")), { identity: atom("E"), handler: lambda(lambda(bound(1))) });
+		const term = C.Ann(
+			C.Reset(C.Ann(C.App("Explicit", bound(0), atom("Num")), atom("Type")), { identity: atom("E"), handler: lambda(lambda(bound(1))) }),
+			atom("Type"),
+		);
 		const value = runNF(scope, () => NF.evaluate(term));
 
 		expect(quote(value, 1)).toMatchObject({ type: "Reset", handling: { identity: { value: { value: "E" } } } });
@@ -262,13 +269,18 @@ describe("Bubble quotation", () => {
 		const arrow = C.Pi("x", "Explicit", number, number);
 		const handler = C.Lambda("p", "Explicit", C.Lambda("k", "Explicit", C.Lit({ type: "Num", value: 99 }), arrow), number);
 		const callback = C.Lambda("x", "Explicit", C.Suspend(atom("E"), bound(0), number), number);
-		const program = C.Lambda("f", "Explicit", C.Reset(C.App("Explicit", bound(0), C.Lit({ type: "Num", value: 5 })), { identity: atom("E"), handler }), arrow);
+		const program = C.Lambda(
+			"f",
+			"Explicit",
+			C.Ann(C.Reset(C.Ann(C.App("Explicit", bound(0), C.Lit({ type: "Num", value: 5 })), number), { identity: atom("E"), handler }), number),
+			arrow,
+		);
 		const expected = { type: "Lit", value: { type: "Num", value: 99 } };
 		it("executes the concrete callback under its handler", () => {
 			expect(evaluate(C.App("Explicit", program, callback))).toMatchObject(expected);
 		});
 
-		it.fails("preserves execution after quoting the open function", () => {
+		it("preserves execution after quoting the open function", () => {
 			const residual = quote(evaluate(program));
 			expect(evaluate(C.App("Explicit", residual, callback))).toMatchObject(expected);
 		});

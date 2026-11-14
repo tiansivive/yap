@@ -69,7 +69,7 @@ describe("concrete handlers", () => {
 		expect(source(text)).toMatchObject({ type: "Lit", value: { value } });
 	});
 
-	it.fails("evaluates two operations used as infix operands", () => {
+	it("evaluates two operations used as infix operands", () => {
 		expect(source("foreign E: Effect Num Num; let result: Num = with E: (\\p k -> k (p + 1)) in (suspend @E 1) + (suspend @E 2);")).toMatchObject({
 			type: "Lit",
 			value: Lit.Num(5),

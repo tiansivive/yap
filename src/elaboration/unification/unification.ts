@@ -408,6 +408,8 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			.with({ type: "Neutral" }, ({ value: inner }) => check(inner))
 			/* Both faces: a meta can occur in the folded face alone (`Const Unit ?a` unfolds to `Unit`), and that is the face a solution reads back as. */
 			.with(NF.Patterns.Glued, ({ folded, unfolded }) => check(folded) || check(unfolded))
+			.with(NF.Patterns.Reset, ({ value, handling }) => check(value) || check(handling.identity) || check(handling.handler))
+			.with(NF.Patterns.Existential, ({ annotation, body, producer }) => check(annotation) || check(body.value) || (producer ? check(producer) : false))
 			.with(NF.Patterns.Proj, ({ base }) => check(base))
 			.with(NF.Patterns.Match, ({ closure, scrutinee }) => check(scrutinee) || inTerm(closure.term))
 			.with(NF.Patterns.Inj, ({ base, injected }) => check(base) || check(injected))

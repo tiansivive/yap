@@ -172,6 +172,8 @@ export const collectors = function* (): Effect<{ nf: (val: NF.Value) => MetaNF[]
 			})
 			.with(NF.Patterns.Var, () => [])
 			.with(NF.Patterns.App, ({ func, arg }) => [...nf(func), ...nf(arg)])
+			.with(NF.Patterns.Reset, ({ value, handling }) => [...nf(value), ...nf(handling.identity), ...nf(handling.handler)])
+			.with(NF.Patterns.Existential, ({ annotation, body, producer }) => [...nf(annotation), ...nf(body.value), ...(producer ? nf(producer) : [])])
 			.with(NF.Patterns.Proj, ({ base }) => nf(base))
 			.with(NF.Patterns.Match, ({ closure, scrutinee }) => [...nf(scrutinee), ...eb(closure.term)])
 			.with(NF.Patterns.Inj, ({ base, injected }) => [...nf(base), ...nf(injected)])

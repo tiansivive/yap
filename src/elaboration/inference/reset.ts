@@ -43,7 +43,7 @@ export function* check(node: Reset, final: NF.Value): M.Elaboration<[EB.Term, Q.
 	);
 	const handler = yield* application(type, initial, final);
 	const identity = EB.Constructors.Ann(EB.Anonymous, yield* NF.quote(ctx.env.length, type));
-	return [EB.Constructors.Reset(body, { identity, handler }), usages];
+	return [EB.Constructors.Ann(EB.Constructors.Reset(body, { identity, handler }), yield* NF.quote(ctx.env.length, final)), usages];
 }
 
 function* install(source: Src.Term, body: Src.Term, final: NF.Value): M.Elaboration<[EB.Term, Q.Usages]> {
@@ -60,10 +60,13 @@ function* install(source: Src.Term, body: Src.Term, final: NF.Value): M.Elaborat
 	return [
 		EB.Constructors.Block(
 			[EB.Constructors.Stmt.Let("$identity", identity, effectType)],
-			EB.Constructors.Reset(checked, {
-				identity: yield* NF.quote(scope.env.length, scope.env[0].nf),
-				handler,
-			}),
+			EB.Constructors.Ann(
+				EB.Constructors.Reset(checked, {
+					identity: yield* NF.quote(scope.env.length, scope.env[0].nf),
+					handler,
+				}),
+				yield* NF.quote(scope.env.length, final),
+			),
 		),
 		Q.add(identityUsages, usages).slice(scope.env.length - ctx.env.length),
 	];
@@ -102,9 +105,12 @@ function* application(effectType: NF.Value, initial: NF.Value, final: NF.Value):
 	yield* M.constrain({ type: "assign", left: payload, right: yield* Types.arrow(continuation, final), lvl: ctx.env.length });
 	const payloadScope = EB.bind(ctx, { type: "Lambda", variable: "$payload" }, payload, "inserted");
 	const continuationScope = EB.bind(payloadScope, { type: "Lambda", variable: "$k" }, continuation, "inserted");
-	const applied = EB.DSL.app(
-		yield* NF.quote(continuationScope.env.length, payloadScope.env[0].nf),
-		yield* NF.quote(continuationScope.env.length, continuationScope.env[0].nf),
+	const applied = EB.Constructors.Ann(
+		EB.DSL.app(
+			yield* NF.quote(continuationScope.env.length, payloadScope.env[0].nf),
+			yield* NF.quote(continuationScope.env.length, continuationScope.env[0].nf),
+		),
+		yield* NF.quote(continuationScope.env.length, final),
 	);
 	const body = EB.Constructors.Lambda("$k", "Explicit", applied, yield* NF.quote(payloadScope.env.length, continuation));
 	return EB.Constructors.Lambda("$payload", "Explicit", body, yield* NF.quote(ctx.env.length, payload));

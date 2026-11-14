@@ -29,19 +29,23 @@ const symbolicRow = (annotation: NF.Value): NF.Row => {
  * Glue reads back as the reference it came from. Unfolding definitions reads back what references
  * compute instead, at every depth, which is what showing a normal form means.
  */
-export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"): Evaluation<Machine<EB.Term>> {
+export const quote = (lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"): Evaluation<Machine<EB.Term>> => quoting(lvl, val, unfold, new Map());
+
+function* quoting(lvl: number, val: NF.Value, unfold: NF.Unfolding, levels: ReadonlyMap<number, number>): Evaluation<Machine<EB.Term>> {
 	return yield* match(val)
-		.with(NF.Patterns.Glued, ({ folded, unfolded }) => quote(lvl, unfold === "definitions" ? unfolded : folded, unfold))
+		.with(NF.Patterns.Glued, ({ folded, unfolded }) => quoting(lvl, unfold === "definitions" ? unfolded : folded, unfold, levels))
 		.with({ type: "Lit" }, function* ({ value }) {
 			return yield* result(EB.Constructors.Lit(value));
 		})
 		.with({ type: "Var" }, function* ({ variable }) {
 			return yield* match(variable)
 				.with({ type: "Bound" }, function* (v) {
-					return yield* result(EB.Constructors.Var({ type: "Bound", index: lvl - v.lvl - 1 }));
+					return yield* result(EB.Constructors.Var({ type: "Bound", index: lvl - (levels.get(v.lvl) ?? v.lvl) - 1 }));
 				})
 				.with({ type: "DepLabel" }, function* (v) {
-					return yield* result(EB.Constructors.Var({ type: "DepLabel", name: v.name, index: lvl - v.lvl - 1, annotation: v.annotation }));
+					return yield* result(
+						EB.Constructors.Var({ type: "DepLabel", name: v.name, index: lvl - (levels.get(v.lvl) ?? v.lvl) - 1, annotation: v.annotation }),
+					);
 				})
 				.with({ type: "NuLabel" }, function* (v) {
 					const { local } = yield* M.reader.ask();
@@ -50,7 +54,7 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 				.with({ type: "Meta" }, function* (v) {
 					const solved = Metas.solution(yield* Metas.registry.get(), v.val);
 
-					return yield* solved ? quote(lvl, solved, unfold) : result(EB.Constructors.Var(v));
+					return yield* solved ? quoting(lvl, solved, unfold, levels) : result(EB.Constructors.Var(v));
 				})
 				.otherwise(function* (v) {
 					return yield* result(EB.Constructors.Var(v));
@@ -63,82 +67,107 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 
 			const alternatives = closure.term.alternatives;
 
-			return yield* Do.let("quoted", () => quote(lvl, scrutinee, unfold)).in(({ quoted }) => result(EB.Constructors.Match(quoted, alternatives)));
+			return yield* Do.let("quoted", () => quoting(lvl, scrutinee, unfold, levels)).in(({ quoted }) => result(EB.Constructors.Match(quoted, alternatives)));
 		})
 		.with(NF.Patterns.StuckProj, ({ value: { label, base } }) =>
-			Do.let("quoted", () => quote(lvl, base, unfold)).in(({ quoted }) => result(EB.Constructors.Proj(label, quoted))),
+			Do.let("quoted", () => quoting(lvl, base, unfold, levels)).in(({ quoted }) => result(EB.Constructors.Proj(label, quoted))),
 		)
 		.with(NF.Patterns.StuckInj, ({ value: { label, base, injected } }) =>
-			Do.let("value", () => quote(lvl, injected, unfold))
-				.let("target", () => quote(lvl, base, unfold))
+			Do.let("value", () => quoting(lvl, injected, unfold, levels))
+				.let("target", () => quoting(lvl, base, unfold, levels))
 				.in(({ value, target }) => result(EB.Constructors.Inj(label, value, target))),
 		)
 		.with({ type: "Neutral" }, function* ({ value }) {
-			return yield* quote(lvl, value, unfold);
+			return yield* quoting(lvl, value, unfold, levels);
 		})
-		.with(
-			NF.Patterns.Bubble,
-			({ pending }) => !!pending?.frames.length,
-			function* (bubble) {
-				const pending = bubble.pending;
-				assert(pending, "A suspended continuation retains its captured frames");
-				if (pending.frames.some(frame => frame.type === "Delimiter")) {
-					throw new Error("Quoting a handled continuation requires the delimiter's answer type");
-				}
-				return yield* Do.let("continued", function* () {
-					yield* Stack.enter(yield* scope());
-					return yield* Stack.resume<NF.Value, Scope, EB.Term, Handling>(pending, NF.Constructors.Rigid(lvl));
-				}).in(({ continued }) =>
-					Do.let("body", () => quote(lvl + 1, continued, unfold))
-						.let("head", () => quote(lvl + 1, NF.Constructors.Bubble(bubble.meta, bubble.ann, bubble.values, bubble.operation), unfold))
-						.in(({ body, head }) => result(EB.Constructors.Block([EB.Constructors.Stmt.Let("$suspended", head, bubble.ann)], body))),
-				);
-			},
+		.with(NF.Patterns.Reset, ({ value, handling }) =>
+			Do.let("body", () => quoting(lvl, value, unfold, levels))
+				.let("identity", () => quoting(lvl, handling.identity, unfold, levels))
+				.let("handler", () => quoting(lvl, handling.handler, unfold, levels))
+				.in(({ body, identity, handler }) => result(EB.Constructors.Reset(body, { identity, handler }))),
 		)
+		.with(NF.Patterns.Produced, ({ variable, annotation, body, producer }) =>
+			Do.let("producer", () => quoting(lvl + 1, producer, unfold, levels))
+				.let("body", () => M.reader.local(_ => body.ctx, quoting(lvl + 1, body.value, unfold, new Map([...levels, [body.level, lvl]]))))
+				.in(({ producer, body }) => result(EB.Constructors.Block([EB.Constructors.Stmt.Let(variable, producer, annotation)], body))),
+		)
+		.with({ type: "Bubble", pending: P.nonNullable }, ({ meta, ann, values, operation, pending: captured }) => {
+			const producer = NF.Constructors.Bubble(meta, ann, values, operation);
+			if (captured.frames.length === 0) {
+				return quoting(lvl, producer, unfold, levels);
+			}
+			/* A symbolic operation identity can later resolve to this delimiter, so its producer stays inside the reset. */
+			const index = captured.frames.findLastIndex(frame => frame.type === "Delimiter" && frame.handling);
+			const inner = { ...captured, frames: captured.frames.slice(index + 1) };
+			return Do.let("continued", function* () {
+				yield* Stack.enter(yield* scope());
+				return yield* Stack.resume<NF.Value, Scope, EB.Term, Handling>(inner, NF.Constructors.Rigid(lvl));
+			}).in(({ continued }) =>
+				Do.let("value", () => {
+					const value = NF.Constructors.Exists("$suspended", ann, { ctx: captured.scope.env, level: lvl, value: continued }, producer);
+					return match(captured.frames[index])
+						.with({ type: "Delimiter", handling: P.nonNullable }, function* ({ handling }) {
+							const reset = NF.Constructors.Neutral("Blocked", NF.Constructors.Reset(value, handling));
+							if (index === 0) {
+								return yield* result(reset);
+							}
+							yield* Stack.enter(yield* scope());
+							return yield* Stack.resume<NF.Value, Scope, EB.Term, Handling>({ ...captured, frames: captured.frames.slice(0, index) }, reset);
+						})
+						.otherwise(() => result(value));
+				}).in(({ value }) => quoting(lvl, value, unfold, levels)),
+			);
+		})
 		.with(NF.Patterns.Bubble, ({ meta, ann, values, operation: { identity, payload } }) =>
-			Do.let("identity", () => quote(lvl, identity, unfold))
-				.let("payload", () => quote(lvl, payload, unfold))
-				.let("annotation", () => quote(lvl, ann, unfold))
+			Do.let("identity", () => quoting(lvl, identity, unfold, levels))
+				.let("payload", () => quoting(lvl, payload, unfold, levels))
+				.let("annotation", () => quoting(lvl, ann, unfold, levels))
 				.in(({ identity, payload, annotation }) => result(EB.Constructors.Bubble(meta, ann, values, EB.Constructors.Suspend(identity, payload, annotation)))),
 		)
 		.with({ type: "App" }, ({ func, arg, icit }) =>
-			Do.let("f", () => quote(lvl, func, unfold))
-				.let("a", () => quote(lvl, arg, unfold))
+			Do.let("f", () => quoting(lvl, func, unfold, levels))
+				.let("a", () => quoting(lvl, arg, unfold, levels))
 				.in(({ f, a }) => result(EB.Constructors.App(icit, f, a))),
 		)
 		.with({ type: "Abs", binder: { type: "Lambda" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
+			const level = levels.size ? closure.ctx.env.length : lvl;
+			const nested = (levels.get(level) ?? level) === lvl ? levels : new Map([...levels, [level, lvl]]);
 
 			return yield* Do.let("applied", function* () {
 				yield* Stack.enter(yield* scope());
-				return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
+				return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(level));
 			}).in(({ applied }) =>
-				Do.let("body", () => M.reader.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
-					.let("ann", () => quote(lvl, annotation, unfold))
+				Do.let("body", () => M.reader.local(_ => closure.ctx, quoting(lvl + 1, applied, unfold, nested)))
+					.let("ann", () => quoting(lvl, annotation, unfold, levels))
 					.in(({ body, ann }) => result(EB.Constructors.Lambda(variable, icit, body, ann))),
 			);
 		})
 		.with({ type: "Abs", binder: { type: "Pi" } }, function* ({ binder, closure }) {
 			const { variable, icit, annotation } = binder;
+			const level = levels.size ? closure.ctx.env.length : lvl;
+			const nested = (levels.get(level) ?? level) === lvl ? levels : new Map([...levels, [level, lvl]]);
 
 			return yield* Do.let("applied", function* () {
 				yield* Stack.enter(yield* scope());
-				return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
+				return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(level));
 			}).in(({ applied }) =>
-				Do.let("body", () => M.reader.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
-					.let("ann", () => quote(lvl, annotation, unfold))
+				Do.let("body", () => M.reader.local(_ => closure.ctx, quoting(lvl + 1, applied, unfold, nested)))
+					.let("ann", () => quoting(lvl, annotation, unfold, levels))
 					.in(({ body, ann }) => result(EB.Constructors.Pi(variable, icit, ann, body))),
 			);
 		})
 		.with({ type: "Abs", binder: { type: "Mu" } }, function* ({ binder, closure }) {
 			const { variable, source, annotation } = binder;
+			const level = levels.size ? closure.ctx.env.length : lvl;
+			const nested = (levels.get(level) ?? level) === lvl ? levels : new Map([...levels, [level, lvl]]);
 
 			return yield* Do.let("applied", function* () {
 				yield* Stack.enter(yield* scope());
-				return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
+				return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(level));
 			}).in(({ applied }) =>
-				Do.let("body", () => M.reader.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
-					.let("ann", () => quote(lvl, annotation, unfold))
+				Do.let("body", () => M.reader.local(_ => closure.ctx, quoting(lvl + 1, applied, unfold, nested)))
+					.let("ann", () => quoting(lvl, annotation, unfold, levels))
 					.in(({ body, ann }) => result(EB.Constructors.Mu(variable, source, ann, body))),
 			);
 		})
@@ -151,20 +180,22 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 				yield* Stack.enter(yield* scope());
 				return yield* schedule.apply(binder, closure, NF.Constructors.Row(symbolicRow(annotation)));
 			}).in(({ applied }) =>
-				Do.let("body", () => M.reader.local(_ => closure.ctx, quote(lvl, applied, unfold)))
-					.let("ann", () => quote(lvl, annotation, unfold))
+				Do.let("body", () => M.reader.local(_ => closure.ctx, quoting(lvl, applied, unfold, levels)))
+					.let("ann", () => quoting(lvl, annotation, unfold, levels))
 					.in(({ body, ann }) => result(EB.Constructors.Sigma(variable, ann, body))),
 			);
 		})
 		.with({ type: "Abs", binder: { type: "SigmaV2" } }, function* ({ binder, closure }) {
 			const { variable, annotation } = binder;
+			const level = levels.size ? closure.ctx.env.length : lvl;
+			const nested = (levels.get(level) ?? level) === lvl ? levels : new Map([...levels, [level, lvl]]);
 
 			return yield* Do.let("applied", function* () {
 				yield* Stack.enter(yield* scope());
-				return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(lvl));
+				return yield* schedule.apply(binder, closure, NF.Constructors.Rigid(level));
 			}).in(({ applied }) =>
-				Do.let("body", () => M.reader.local(_ => closure.ctx, quote(lvl + 1, applied, unfold)))
-					.let("ann", () => quote(lvl, annotation, unfold))
+				Do.let("body", () => M.reader.local(_ => closure.ctx, quoting(lvl + 1, applied, unfold, nested)))
+					.let("ann", () => quoting(lvl, annotation, unfold, levels))
 					.in(({ body, ann }) => result(EB.Constructors.SigmaV2(variable, ann, body))),
 			);
 		})
@@ -174,29 +205,29 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 			const back = (term: EB.Term) =>
 				M.reader.local(
 					_ => held,
-					Do.let("value", () => NbE.eval(term)).in(({ value }) => quote(lvl, value, unfold)),
+					Do.let("value", () => NbE.eval(term)).in(({ value }) => quoting(lvl, value, unfold, levels)),
 				);
 
 			return yield* Do.let("body", () => back(closure.term))
 				.let("scoped", () => back(EB.Constructors.Row(binder.scoped)))
-				.let("annotation", () => M.reader.local(_ => held, quote(lvl, binder.annotation, unfold)))
+				.let("annotation", () => M.reader.local(_ => held, quoting(lvl, binder.annotation, unfold, levels)))
 				.in(function* ({ body, scoped, annotation }) {
 					assert(scoped.type === "Row", "A row reads back as a row");
 					return yield* result(EB.Constructors.Nu({ mode: binder.mode, labels: binder.labels, scoped: scoped.row, annotation }, body));
 				});
 		})
-		.with({ type: "Row" }, ({ row }) => Do.let("quoted", () => quoteRow(lvl, row, unfold)).in(({ quoted }) => result(EB.Constructors.Row(quoted))))
+		.with({ type: "Row" }, ({ row }) => Do.let("quoted", () => quoteRow(lvl, row, unfold, levels)).in(({ quoted }) => result(EB.Constructors.Row(quoted))))
 		.with({ type: "External" }, function* ({ name, args }) {
 			return yield* group(
-				args.map(arg => () => quote(lvl, arg, unfold)),
+				args.map(arg => () => quoting(lvl, arg, unfold, levels)),
 				function* (quoted) {
 					return yield* result(quoted.reduce<EB.Term>((acc, arg) => EB.Constructors.App("Explicit", acc, arg), EB.Constructors.Var({ type: "Foreign", name })));
 				},
 			);
 		})
 		.with({ type: "Modal" }, ({ value, modalities }) =>
-			Do.let("quoted", () => quote(lvl, value, unfold))
-				.let("liquid", () => quote(lvl, modalities.liquid, unfold))
+			Do.let("quoted", () => quoting(lvl, value, unfold, levels))
+				.let("liquid", () => quoting(lvl, modalities.liquid, unfold, levels))
 				.in(({ quoted, liquid }) => result(EB.Constructors.Modal(quoted, { quantity: modalities.quantity, liquid }))),
 		)
 		.otherwise(function* (nf) {
@@ -204,12 +235,15 @@ export function* quote(lvl: number, val: NF.Value, unfold: NF.Unfolding = "none"
 		});
 }
 
-const quoteRow = function* (lvl: number, row: NF.Row, unfold: NF.Unfolding): Evaluation<Machine<EB.Row>> {
+const quoteRow = function* (lvl: number, row: NF.Row, unfold: NF.Unfolding, levels: ReadonlyMap<number, number>): Evaluation<Machine<EB.Row>> {
 	const { local } = yield* M.reader.ask();
 	const tail = match(row.tail)
 		.with(P.nullish, () => undefined)
-		.with({ type: "Bound" }, (b): EB.Variable => ({ type: "Bound", index: lvl - b.lvl - 1 }))
-		.with({ type: "DepLabel" }, (b): EB.Variable => ({ type: "DepLabel", name: b.name, index: lvl - b.lvl - 1, annotation: b.annotation }))
+		.with({ type: "Bound" }, (b): EB.Variable => ({ type: "Bound", index: lvl - (levels.get(b.lvl) ?? b.lvl) - 1 }))
+		.with(
+			{ type: "DepLabel" },
+			(b): EB.Variable => ({ type: "DepLabel", name: b.name, index: lvl - (levels.get(b.lvl) ?? b.lvl) - 1, annotation: b.annotation }),
+		)
 		.with({ type: "NuLabel" }, (b): EB.Variable => ({ type: "NuLabel", name: b.name, index: local.length - b.lvl - 1, annotation: b.annotation }))
 		.otherwise(b => b);
 
@@ -217,7 +251,7 @@ const quoteRow = function* (lvl: number, row: NF.Row, unfold: NF.Unfolding): Eva
 		row.entries.map(
 			({ value }) =>
 				() =>
-					quote(lvl, value, unfold),
+					quoting(lvl, value, unfold, levels),
 		),
 		(quoted: EB.Term[]) =>
 			result(
