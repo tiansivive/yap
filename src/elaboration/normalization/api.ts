@@ -14,7 +14,7 @@ import * as Quoting from "./quoting";
 import * as NbE from "./nbe";
 import * as Recursion from "./recursion";
 import { handlers } from "./machine/handlers";
-import { Mode, defaultMode, type EvalMode, type Evaluation } from "./effects";
+import { Level, Mode, defaultMode, type EvalMode, type Evaluation } from "./effects";
 import type { Closure, Unfolding, Value } from "./syntax/term";
 import { Patterns } from "./syntax/term";
 
@@ -31,7 +31,8 @@ import { Patterns } from "./syntax/term";
 
 /** Runs an internal-layer program on a fresh machine, under its own fuel cap. */
 function* fresh<A>(program: () => Evaluation<A>, mode: EvalMode = defaultMode, maxSteps = options.maxSteps) {
-	const [value] = yield* Eff.with([handlers(maxSteps), Mode.handlers(mode)], program);
+	const { env } = yield* M.reader.ask();
+	const [value] = yield* Eff.with([handlers(maxSteps), Mode.handlers(mode), Level.handlers(env.length)], program);
 
 	return value;
 }
@@ -95,11 +96,11 @@ export function* meet(pattern: EB.Pattern, nf: Value) {
 }
 
 export function* apply(binder: EB.Binder, closure: Closure, value: Value) {
-	return yield* fresh(() => Machine.apply(binder, closure, value));
+	return yield* application(value, () => Machine.apply(binder, closure, value));
 }
 
 export function* reduce(nff: Value, nfa: Value, icit: Implicitness) {
-	return yield* fresh(() => Machine.reduce(nff, nfa, icit));
+	return yield* application(nfa, () => Machine.reduce(nff, nfa, icit));
 }
 
 export function* arity(ty: Value) {
@@ -138,3 +139,12 @@ export function* rowOf(value: Value) {
 
 export { unwrapNeutral, unglue, ignoreModal, isFlex, builtinsOps, View } from "./evaluation.v2";
 export type { Meet, MeetResult, EvalOptions } from "./evaluation.v2";
+
+/** Public application accepts a fresh rigid introduced by the caller and reserves its semantic level. */
+function* application<A>(argument: Value, program: () => Evaluation<A>) {
+	const level = match(argument)
+		.with(Patterns.Rigid, ({ variable }) => variable.lvl + 1)
+		.with({ type: "Neutral", kind: "Symbolic", value: Patterns.Rigid }, ({ value }) => value.variable.lvl + 1)
+		.otherwise(() => 0);
+	return yield* fresh(() => Level.local(current => Math.max(current, level), program()));
+}

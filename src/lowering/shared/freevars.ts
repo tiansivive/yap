@@ -44,14 +44,14 @@ export function freeVars(term: EB.Term, depth: number): Set<number> {
 			return s;
 		})
 		.with({ type: "Modal" }, ({ term: t }) => freeVars(t, depth))
-		.with({ type: "Suspend" }, ({ identity, payload }) => new Set([...freeVars(identity, depth), ...freeVars(payload, depth)]))
+		.with(EB.CtorPatterns.Bubble, ({ identity, payload }) => new Set([...freeVars(identity, depth), ...freeVars(payload, depth)]))
 		.with(
 			{ type: "Reset" },
 			({ term: t, handling }) =>
 				new Set([...freeVars(t, depth), ...(handling ? [...freeVars(handling.identity, depth), ...freeVars(handling.handler, depth)] : [])]),
 		)
 		.with({ type: "Shift" }, ({ body }) => freeVars(body, depth))
-		.with({ type: "Bubble" }, ({ shift }) => freeVars(shift, depth))
+		.with(EB.CtorPatterns.ShiftBubble, ({ shift }) => freeVars(shift, depth))
 		.with({ type: "Ann" }, ({ term }) => freeVars(term, depth))
 		.exhaustive();
 }

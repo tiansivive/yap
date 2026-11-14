@@ -17,18 +17,20 @@ export type EvalMode = {
 
 export const defaultMode: EvalMode = { noInlineBindings: false, noReduceEliminations: false };
 
+export const Level = Eff.reader<number, "NbE.Level">("NbE.Level");
+
 export const Mode = Eff.reader<EvalMode, "EvalMode">("EvalMode");
 
-/** What NbE needs handed back with a frame: the environment a term reads under, and the mode it reads in. */
-export type Scope = { env: EB.Context; mode: EvalMode };
+/** Each frame restores its lexical environment, reduction mode, and next semantic binder level. */
+export type Scope = { env: EB.Context; mode: EvalMode; level: number };
 
-/** Everything the machine does not provide: the metacontext and the two readers. */
-type Ambient = Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof M.reader> | Eff.Actions<typeof Mode>;
+/** Ambient NbE state: the metacontext and scoped readers. */
+type Ambient = Eff.Only<typeof Metas.registry, "Registry.get"> | Eff.Actions<typeof M.reader> | Eff.Actions<typeof Mode> | Eff.Actions<typeof Level>;
 
-/** NbE is the machine instantiated at a scope of env and mode, terms as control, and values as results. */
+/** NbE instantiates the machine with scoped state, Core terms as control, and semantic values as results. */
 export type Evaluation<A> = Eff.Eff<Stack.Actions<Scope, EB.Term, Handling> | Ambient, A>;
 
-export type Handling = { identity: { name: string; args: Value[] }; handler: Value };
+export type Handling = { identity: Value; handler: Value };
 
 export type Machine<A> = Frames.Machine<A>;
 
@@ -37,7 +39,7 @@ export type StackFrame = Frames.StackFrame<Scope, EB.Term, Handling>;
 export type Captured = Frames.Captured<Scope, EB.Term, Handling>;
 
 export const scope = function* (): Eff.Eff<Ambient, Scope> {
-	return { env: yield* M.reader.ask(), mode: yield* Mode.ask() };
+	return { env: yield* M.reader.ask(), mode: yield* Mode.ask(), level: yield* Level.ask() };
 };
 
 export const { result, step, group, Do } = notation<Scope, EB.Term, Ambient, Handling>(scope);

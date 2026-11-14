@@ -1,75 +1,68 @@
-import { match } from "ts-pattern";
-import { update } from "@yap/utils";
+import assert from "assert";
+import { isMatching, match } from "ts-pattern";
 
-import * as F from "fp-ts/lib/function";
-
+import * as NF from "../normalization";
 import * as R from "@yap/shared/rows";
 import { Constructors, CtorPatterns, Term } from "./term";
 
-export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) => Term): Term => {
+/** Supplying `onValue` also visits Core annotations and their embedded semantic values. */
+export const traverse = (tm: Term, onVar: (v: Extract<Term, { type: "Var" }>) => Term, onValue?: (value: NF.Value) => NF.Value): Term => {
+	const go = (term: Term): Term => traverse(term, onVar, onValue);
+	const value = (value: NF.Value) => onValue?.(value) ?? value;
 	return match(tm)
 		.with({ type: "Var" }, onVar)
 		.with({ type: "Lit" }, lit => lit)
-		.with(CtorPatterns.Lambda, ({ binding, body }) => Constructors.Abs(binding, traverse(body, onVar)))
-		.with(CtorPatterns.Pi, ({ binding, body }) =>
+		.with({ type: "Abs" }, ({ binding, body }) =>
 			Constructors.Abs(
-				update(binding, "annotation", tm => tm), // QUESTION: traverse type?
-				traverse(body, onVar),
+				match(binding)
+					.with({ type: "Nu" }, binding => ({
+						...binding,
+						annotation: onValue ? go(binding.annotation) : binding.annotation,
+						scoped: R.traverse(binding.scoped, go, variable => R.Constructors.Variable(variable)),
+					}))
+					.otherwise(binding => ({ ...binding, annotation: onValue ? go(binding.annotation) : binding.annotation })),
+				go(body),
 			),
 		)
-		.with(CtorPatterns.Mu, ({ binding, body }) =>
-			Constructors.Abs(
-				update(binding, "annotation", tm => tm), // QUESTION: traverse type?
-				traverse(body, onVar),
-			),
-		)
-		.with({ type: "App" }, ({ icit, func, arg }) => Constructors.App(icit, traverse(func, onVar), traverse(arg, onVar)))
+		.with({ type: "App" }, ({ icit, func, arg }) => Constructors.App(icit, go(func), go(arg)))
 		.with({ type: "Row" }, ({ row }) =>
 			Constructors.Row(
-				R.traverse(
-					row,
-					v => traverse(v, onVar),
-					v => R.Constructors.Variable(v),
-				),
+				R.traverse(row, go, variable => {
+					const transformed = onValue ? go(Constructors.Var(variable)) : Constructors.Var(variable);
+					assert(isMatching(CtorPatterns.Var, transformed), "A row tail must remain a variable during traversal");
+					return R.Constructors.Variable(transformed.variable);
+				}),
 			),
 		)
-		.with({ type: "Proj" }, ({ label, term }) => Constructors.Proj(label, traverse(term, onVar)))
-		.with({ type: "Inj" }, ({ label, value, term }) => Constructors.Inj(label, traverse(value, onVar), traverse(term, onVar)))
-		.with({ type: "Ann" }, ({ term, ann }) => Constructors.Ann(traverse(term, onVar), traverse(ann, onVar)))
+		.with({ type: "Proj" }, ({ label, term }) => Constructors.Proj(label, go(term)))
+		.with({ type: "Inj" }, ({ label, value, term }) => Constructors.Inj(label, go(value), go(term)))
+		.with({ type: "Ann" }, ({ term, ann }) => Constructors.Ann(go(term), go(ann)))
 		.with({ type: "Match" }, ({ scrutinee, alternatives }) =>
 			Constructors.Match(
-				traverse(scrutinee, onVar),
-				alternatives.map(({ pattern, term, binders }) => ({ pattern, term: traverse(term, onVar), binders })),
+				go(scrutinee),
+				alternatives.map(({ pattern, term, binders }) => ({
+					pattern,
+					term: go(term),
+					binders: binders.map(([name, annotation]) => [name, value(annotation)]),
+				})),
 			),
 		)
-		.with({ type: "Block" }, ({ return: ret, statements }) => {
-			const stmts = statements.map(s =>
-				match(s)
-					.with({ type: "Let" }, letdec =>
-						F.pipe(
-							letdec,
-							update("value", v => traverse(v, onVar)),
-							update("annotation", ann => ann), // QUESTION: traverse type?
-						),
-					)
-					.otherwise(update("value", v => traverse(v, onVar))),
-			);
-			return Constructors.Block(stmts, traverse(ret, onVar));
-		})
+		.with({ type: "Block" }, ({ return: ret, statements }) =>
+			Constructors.Block(
+				statements.map(statement =>
+					match(statement)
+						.with({ type: "Expression" }, statement => ({ ...statement, value: go(statement.value) }))
+						.otherwise(statement => ({ ...statement, value: go(statement.value), annotation: value(statement.annotation) })),
+				),
+				go(ret),
+			),
+		)
 		.with({ type: "Reset" }, ({ term, handling }) =>
-			Constructors.Reset(
-				traverse(term, onVar),
-				handling && {
-					identity: traverse(handling.identity, onVar),
-					handler: traverse(handling.handler, onVar),
-				},
-			),
+			Constructors.Reset(go(term), handling && { identity: go(handling.identity), handler: go(handling.handler) }),
 		)
-		.with({ type: "Suspend" }, ({ identity, payload, annotation }) =>
-			Constructors.Suspend(traverse(identity, onVar), traverse(payload, onVar), traverse(annotation, onVar)),
-		)
-		.with({ type: "Modal" }, ({ term, modalities }) => Constructors.Modal(traverse(term, onVar), modalities))
-		.otherwise(() => {
-			throw new Error("Traverse: Not implemented yet");
-		});
+		.with({ type: "Shift" }, ({ body }) => Constructors.Shift(go(body)))
+		.with(CtorPatterns.Bubble, ({ meta, ann, values, identity, payload }) => Constructors.Bubble(meta, go(ann), values.map(value), go(identity), go(payload)))
+		.with(CtorPatterns.ShiftBubble, ({ meta, ann, values, shift }) => Constructors.ShiftBubble(meta, value(ann), values.map(value), go(shift)))
+		.with({ type: "Modal" }, ({ term, modalities }) => Constructors.Modal(go(term), onValue ? { ...modalities, liquid: go(modalities.liquid) } : modalities))
+		.exhaustive();
 };

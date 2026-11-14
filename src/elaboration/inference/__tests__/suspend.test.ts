@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import assert from "node:assert";
 
 import * as EB from "@yap/elaboration";
 import * as NF from "@yap/elaboration/normalization";
@@ -15,6 +16,12 @@ const elaborated = (source: string, name = "op"): Elaborated => {
 
 const quoted = ({ ty, ctx, registry }: Elaborated) => runNF(ctx, () => NF.quote(0, ty), registry);
 const bare = (tm: EB.Term): EB.Term => (tm.type === "Ann" ? bare(tm.term) : tm);
+const operation = (term: EB.Term) => {
+	const bubble = bare(term);
+	assert(bubble.type === "Bubble", "Expected a suspension result binding");
+	assert(bubble.identity, "Expected a suspension");
+	return bubble;
+};
 const atom = (value: string) => ({ type: "Lit", value: { type: "Atom", value } });
 
 describe("Inference: suspend", () => {
@@ -30,11 +37,11 @@ describe("Inference: suspend", () => {
 
 	it("retains a shared foreign identity, checked payload and result type", () => {
 		const result = elaborated("foreign Ask: Effect Unit Num; let op = suspend @Ask !;");
-		expect(result.tm).toMatchObject({
-			type: "Suspend",
+		expect(operation(result.tm)).toMatchObject({
+			type: "Bubble",
 			identity: { type: "Var", variable: { type: "Foreign", name: "Ask" } },
 			payload: { type: "Lit", value: { type: "unit" } },
-			annotation: atom("Num"),
+			ann: atom("Num"),
 		});
 		expect(quoted(result)).toMatchObject(atom("Num"));
 	});
@@ -49,15 +56,15 @@ describe("Inference: suspend", () => {
 		const result = elaborated("let op = \\(e: Effect Unit Num) -> suspend @e !;");
 		expect(bare(result.tm)).toMatchObject({
 			type: "Abs",
-			body: { type: "Suspend", identity: { type: "Var", variable: { type: "Bound", index: 0 } }, annotation: atom("Num") },
+			body: { type: "Bubble", identity: { type: "Var", variable: { type: "Bound", index: 0 } }, ann: atom("Num") },
 		});
 		const tm = bare(result.tm);
-		if (tm.type !== "Abs" || tm.body.type !== "Suspend") {
+		if (tm.type !== "Abs") {
 			throw new Error("Expected suspend under lambda");
 		}
 		const identity = NF.Constructors.Var({ type: "Foreign", name: "Supplied" });
 		const ctx = EB.extend(result.ctx, tm.binding, identity);
-		const suspend = tm.body;
+		const suspend = operation(tm.body);
 		const value = runNF(ctx, () => NF.evaluate(suspend.identity), result.registry);
 		expect(value).toBe(identity);
 	});
@@ -68,12 +75,25 @@ describe("Inference: suspend", () => {
 			const term = bare(tm);
 			return term.type === "Abs" ? suspension(term.body) : term;
 		};
-		expect(suspension(result.tm)).toMatchObject({
-			type: "Suspend",
+		expect(operation(suspension(result.tm))).toMatchObject({
+			type: "Bubble",
 			identity: { type: "Var", variable: { type: "Bound", index: 1 } },
 			payload: { type: "Var", variable: { type: "Bound", index: 0 } },
-			annotation: { type: "Var", variable: { type: "Bound", index: 2 } },
+			ann: { type: "Var", variable: { type: "Bound", index: 2 } },
 		});
+	});
+
+	it("substitutes a concrete type into a dependent suspension result", () => {
+		const result = elaborated("let op = \\(a: Type) (e: Effect a a) (x: a) -> suspend @e x;");
+		const arguments_ = [
+			EB.Constructors.Lit({ type: "Atom", value: "Num" }),
+			EB.Constructors.Lit({ type: "Atom", value: "E" }),
+			EB.Constructors.Lit({ type: "Num", value: 1 }),
+		];
+		const term = arguments_.reduce((func, arg) => EB.Constructors.App("Explicit", func, arg), result.tm);
+		const value = runNF(result.ctx, () => NF.evaluate(term), result.registry);
+
+		expect(value).toMatchObject({ type: "Neutral", kind: "Blocked", value: { type: "Bubble", ann: atom("Num") } });
 	});
 
 	it("instantiates polymorphic carrier parameters independently at each suspension", () => {
@@ -84,20 +104,14 @@ describe("Inference: suspend", () => {
 			["b", "Bool"],
 		].forEach(([name, type]) => {
 			const result = declaration(module, name)!.elaborated!;
-			expect(result.tm).toMatchObject({
-				type: "Suspend",
-				annotation: atom(type),
-				identity: {
-					type: "App",
-					icit: "Implicit",
-					func: { type: "Var", variable: { type: "Foreign", name: "Echo" } },
-					arg: atom(type),
-				},
+			const suspend = operation(result.tm);
+			expect(suspend.ann).toMatchObject(atom(type));
+			expect(bare(suspend.identity)).toMatchObject({
+				type: "App",
+				icit: "Implicit",
+				func: { type: "Var", variable: { type: "Foreign", name: "Echo" } },
+				arg: atom(type),
 			});
-			if (result.tm.type !== "Suspend") {
-				throw new Error("Expected suspend");
-			}
-			const suspend = result.tm;
 			const value = runNF(result.ctx, () => NF.evaluate(suspend.identity), result.registry);
 			expect(NF.unglue(value)).toMatchObject({ type: "Neutral", value: { type: "External", name: "Echo", args: [atom(type)] } });
 		});
@@ -107,11 +121,11 @@ describe("Inference: suspend", () => {
 		const declarations = elaborated("foreign Ask: Effect Unit Num; let Identity: (a: Type) => Effect Unit Num = \\a => Ask; let op: Effect Unit Num = Ask;");
 		const { answer, registry } = runEB(declarations.ctx, () => EB.infer(parseExpr(`suspend @(${identity}) !`)), declarations.registry);
 		expect(Eff.failed(answer)).toBe(false);
-		if (Eff.failed(answer) || answer[0].type !== "Suspend") {
+		if (Eff.failed(answer)) {
 			throw new Error("Expected suspend");
 		}
-		const suspend = answer[0];
-		expect(suspend.identity).toMatchObject({ type: "App", icit: "Implicit" });
+		const suspend = operation(answer[0]);
+		expect(bare(suspend.identity)).toMatchObject({ type: "App", icit: "Implicit" });
 		const value = runNF(declarations.ctx, () => NF.evaluate(suspend.identity), registry);
 		expect(NF.unglue(value)).toMatchObject({ type: "Neutral", value: { type: "External", name: "Ask", args: [] } });
 	});
@@ -128,10 +142,7 @@ describe("Inference: suspend", () => {
 
 	it.each(["Alias", "record.Ask"])("preserves the value of %s", identity => {
 		const result = elaborated(`foreign Ask: Effect Unit Num; let Alias = Ask; let record = { Ask: Ask }; let op = suspend @(${identity}) !;`);
-		if (result.tm.type !== "Suspend") {
-			throw new Error("Expected suspend");
-		}
-		const suspend = result.tm;
+		const suspend = operation(result.tm);
 		const value = runNF(result.ctx, () => NF.evaluate(suspend.identity), result.registry);
 		expect(NF.unglue(value)).toMatchObject({ type: "Neutral", value: { type: "External", name: "Ask", args: [] } });
 	});

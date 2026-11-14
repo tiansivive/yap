@@ -46,7 +46,7 @@ export const meet = function* (scrutineeTy: NF.Value, patternTy: NF.Value): Veri
 				() => ex.body.ctx,
 				scope(yield* supply.freshFrom(ex.variable), { type: "Pi", variable: ex.variable }, ex.annotation, meet(ex.body.value, patternTy)),
 			);
-			return NF.Constructors.Exists(ex.variable, ex.annotation, { ctx: ex.body.ctx, value: met });
+			return NF.Constructors.Exists(ex.variable, ex.annotation, { ...ex.body, value: met });
 		})
 		.with([NF.View.Sealed(NF.Patterns.Modal), NF.View.Sealed(NF.Patterns.Modal)], function* ([{ value: sm }, { value: pm }]) {
 			const conjoined = NF.Constructors.Lambda(

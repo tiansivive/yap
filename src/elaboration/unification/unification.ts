@@ -408,6 +408,8 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			.with({ type: "Neutral" }, ({ value: inner }) => check(inner))
 			/* Both faces: a meta can occur in the folded face alone (`Const Unit ?a` unfolds to `Unit`), and that is the face a solution reads back as. */
 			.with(NF.Patterns.Glued, ({ folded, unfolded }) => check(folded) || check(unfolded))
+			.with(NF.Patterns.Reset, ({ value, handling }) => check(value) || check(handling.identity) || check(handling.handler))
+			.with(NF.Patterns.Existential, ({ annotation, body, producer }) => check(annotation) || check(body.value) || (producer ? check(producer) : false))
 			.with(NF.Patterns.Proj, ({ base }) => check(base))
 			.with(NF.Patterns.Match, ({ closure, scrutinee }) => check(scrutinee) || inTerm(closure.term))
 			.with(NF.Patterns.Inj, ({ base, injected }) => check(base) || check(injected))
@@ -416,7 +418,7 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			.with(NF.Patterns.Sigma, NF.Patterns.SigmaV2, NF.Patterns.Nu, ({ closure }) => inTerm(closure.term))
 			.with(NF.Patterns.App, ({ func, arg }) => check(func) || check(arg))
 			.with(NF.Patterns.Modal, ({ value: inner, modalities }) => check(inner) || check(modalities.liquid))
-			.with(NF.Patterns.Bubble, ({ ann, values, operation: { identity, payload } }) => check(ann) || values.some(check) || check(identity) || check(payload))
+			.with(NF.Patterns.Bubble, ({ ann, values, identity, payload }) => check(ann) || values.some(check) || check(identity) || check(payload))
 
 			.with(NF.Patterns.Row, ({ row }) =>
 				R.fold(
@@ -441,6 +443,7 @@ const occurs = function* (v: Meta, ty: NF.Value): Unification<boolean> {
 			})
 			.with({ type: "Abs" }, ({ binding, body }) => inTerm(binding.annotation) || inTerm(body))
 			.with({ type: "App" }, ({ func, arg }) => inTerm(func) || inTerm(arg))
+			.with(EB.CtorPatterns.Bubble, ({ ann, values, identity, payload }) => inTerm(ann) || values.some(check) || inTerm(identity) || inTerm(payload))
 			.with({ type: "Ann" }, ({ term }) => inTerm(term))
 			.with({ type: "Match" }, ({ scrutinee, alternatives }) => inTerm(scrutinee) || alternatives.some(({ term }) => inTerm(term)))
 			.with({ type: "Block" }, ({ return: ret, statements }) => inTerm(ret) || statements.some(stmt => inTerm(stmt.value)))

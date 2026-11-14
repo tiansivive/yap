@@ -109,7 +109,7 @@ export const handlers = <S, C, D = unknown>(maxSteps: number): Eff.Handler<Actio
 				return Eff.ctl.resume(undefined);
 			},
 
-			"Machine.find": match => Eff.ctl.resume(workStack.findLast(match)),
+			"Machine.find": accepts => Eff.ctl.resume(workStack.findLast((frame, index) => index >= (entries.at(-1)?.work ?? 0) && accepts(frame))),
 
 			"Machine.capture": accepts => {
 				const entry = entries.at(-1);

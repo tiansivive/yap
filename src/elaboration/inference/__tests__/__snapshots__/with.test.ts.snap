@@ -6,26 +6,30 @@ exports[`Inference: with > binds the identity and handler once and installs a re
   let $user
     : Π(x: Unit) ->
       (closure: Π(x: Π(x: Num) -> Num) -> Num -| Γ: x; $identity; result)
-    = λ(p: Unit) -> λ(k: Π(x: Num) -> Num) -> k 42;
+    = λ(p: Unit) -> λ(k: Π(x: Num) -> Num) -> (k 42 : Num);
   let $installed
     : Π(x: Unit) ->
       (closure: Π(x: Π(x: Num) -> Num) -> Num -| Γ: x; $identity; result)
     = λ($payload: Unit) ->
       λ($k: Π(x: Num) -> Num) ->
-        $user $payload
-          (λ($value: Num) -> reset @$identity $installed |$k $value|);
-  return reset @$identity $installed |suspend @FFI.Ask unit|;
+        ($user $payload
+          (λ($value: Num) ->
+            (reset @$identity $installed |($k $value : Num)| : Num)) : Num);
+  return (reset @$identity $installed |bubble#2 (suspend @FFI.Ask unit)| : Num);
 }"
 `;
 
 exports[`Inference: with > forwards the implicit carrier argument through the polymorphic wrapper 1`] = `
 "{
-  let $identity : Π(a: Type) => (closure: Effect a a -| Γ: a) = FFI.Echo;
+  let $identity
+    : Π(a: Type) =>
+      (closure: (((Effect a : Π(y: Type) -> Type)) a : Type) -| Γ: a)
+    = FFI.Echo;
   let $user
     : Π(a: Type) =>
       (closure: Π(x: a) ->
         Π(x: Π(x: a) -> Num) -> Num -| Γ: a; $identity; result)
-    = λ(a: Type) => λ(p: a) -> λ(k: Π(x: a) -> Num) -> k p;
+    = λ(a: Type) => λ(p: a) -> λ(k: Π(x: a) -> Num) -> (k p : Num);
   let $installed
     : Π(a: Type) =>
       (closure: Π(x: a) ->
@@ -33,8 +37,10 @@ exports[`Inference: with > forwards the implicit carrier argument through the po
     = λ(a: Type) =>
       λ($payload: a) ->
         λ($k: Π(x: a) -> Num) ->
-          $user @a $payload
-            (λ($value: a) -> reset @$identity $installed |$k $value|);
-  return reset @$identity $installed |suspend @(FFI.Echo @Num) 42|;
+          ($user @a $payload
+            (λ($value: a) ->
+              (reset @$identity $installed |($k $value : Num)| : Num)) : Num);
+  return (reset @$identity $installed |bubble#3 (suspend @(FFI.Echo
+    @Num : Effect Num Num) 42)| : Num);
 }"
 `;

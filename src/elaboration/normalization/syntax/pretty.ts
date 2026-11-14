@@ -69,8 +69,11 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 		.with({ type: "Neutral" }, function* ({ value: v }) {
 			return yield* go(v);
 		})
-		.with({ type: "Bubble" }, function* ({ meta, operation: { identity, payload } }) {
-			return ["bubble#", `${meta}`, " (suspend @", yield* go(identity), " ", yield* go(payload), ")"] satisfies PP.Doc;
+		.with({ type: "Bubble" }, function* ({ meta, identity, payload }) {
+			return [`bubble#${meta}`, " (suspend @", yield* go(identity), " ", yield* go(payload), ")"] satisfies PP.Doc;
+		})
+		.with(NF.Patterns.Reset, function* ({ value, handling }) {
+			return ["reset @", yield* go(handling.identity), " ", yield* go(handling.handler), " in ", yield* go(value)] satisfies PP.Doc;
 		})
 		.with(NF.Patterns.Proj, function* ({ base, label }) {
 			return [yield* go(base), ".", label] satisfies PP.Doc;
@@ -141,6 +144,7 @@ export const doc = function* (value: NF.Value, opts: Opts = { deBruijn: false })
 				existential.variable,
 				": ",
 				yield* go(existential.annotation),
+				...(existential.producer ? [" ← ", yield* go(existential.producer)] : []),
 				").",
 				PP.nest(2, [PP.line, "<packed: ", packed, " -| ", EB.Display.Env(xtended.env), ">"]),
 			]);

@@ -8,6 +8,7 @@ import { match, P } from "ts-pattern";
 import { Types } from "@yap/utils";
 
 import * as Modal from "@yap/verification/modalities/shared";
+import type { Handling } from "../effects";
 
 export const nf_tag: unique symbol = Symbol("NF");
 
@@ -22,7 +23,8 @@ type Constructor =
 	| { type: "Row"; row: Row }
 	| { type: "Abs"; binder: Binder; closure: Closure }
 	| { type: "Neutral"; kind: Neutral; value: Value }
-	| { type: "Bubble"; meta: number; ann: Value; values: Value[]; operation: Operation; pending?: EB.NF.Captured }
+	| { type: "Bubble"; meta: number; ann: Value; values: Value[]; identity: Value; payload: Value }
+	| { type: "Reset"; value: Value; handling: Handling }
 	| { type: "Modal"; value: Value; modalities: Modalities }
 	| { type: "External"; name: string; arity: number; compute: (...args: Value[]) => Value; args: Value[] }
 	/**
@@ -42,19 +44,21 @@ type Constructor =
 	| { type: "Glued"; folded: Value; unfolded: Value }
 	| {
 			type: "Existential";
+			producer?: Value;
 			variable: string;
 			annotation: Value;
 			body: {
 				ctx: EB.Context;
+				/** The result binder's semantic level, independent of the saved Core environment slots. */
+				level: number;
 				value: Value;
 			};
-	  }; // Used during verification only
+	  };
 
 export type Row = R.Row<Value, Variable>;
 export type TaggedParts = { label: string; payload: Value };
 export type Neutral = "Symbolic" | "Sealed" | "Blocked";
 
-type Operation = { type: "Suspend"; identity: Value; payload: Value };
 /** Which face readback emits for glue: the reference as written, or what definitions compute. */
 export type Unfolding = "none" | "definitions";
 
@@ -97,6 +101,7 @@ export function mk(val: Constructor): Value {
 }
 
 export const Constructors = {
+	Abs: (binder: Binder, closure: Closure): Value => mk({ type: "Abs", binder, closure }),
 	Var: (variable: Variable): Value => mk({ type: "Var", variable }),
 	Pi: (variable: string, icit: Implicitness, annotation: Value, closure: Closure) =>
 		mk({
@@ -121,12 +126,18 @@ export const Constructors = {
 			binder: { type: "Mu", variable, annotation, source },
 			closure,
 		}),
-	Exists: (variable: string, annotation: Value, body: { ctx: EB.Context; value: Value }): Value =>
+	Exists: (
+		variable: string,
+		annotation: Value,
+		body: { ctx: EB.Context; value: Value; level?: number },
+		producer?: Value,
+	): Extract<Value, { type: "Existential" }> =>
 		mk({
 			type: "Existential",
+			producer,
 			variable,
 			annotation,
-			body,
+			body: { ...body, level: body.level ?? body.ctx.env.length },
 		}),
 	Lambda: (variable: string, icit: Implicitness, closure: Closure, annotation: Value): Value =>
 		mk({
@@ -158,8 +169,8 @@ export const Constructors = {
 			kind,
 			value,
 		}),
-	Bubble: (meta: number, ann: Value, values: Value[], operation: Operation, pending?: EB.NF.Captured): Extract<Value, { type: "Bubble" }> =>
-		mk({ type: "Bubble", meta, ann, values, operation, pending }),
+	Bubble: (meta: number, ann: Value, values: Value[], identity: Value, payload: Value): Extract<Value, { type: "Bubble" }> =>
+		mk({ type: "Bubble", meta, ann, values, identity, payload }),
 	App: (func: Value, arg: Value, icit: Implicitness) =>
 		mk({
 			type: "App" as const,
@@ -167,6 +178,7 @@ export const Constructors = {
 			arg,
 			icit,
 		}),
+	Reset: (value: Value, handling: Handling): Value => mk({ type: "Reset", value, handling }),
 	Indexed: (index: Value, value: Value, strategy: Value): Value => {
 		const indexed = Constructors.App(Constructors.Var({ type: "Foreign", name: "Indexed" }), index, "Explicit");
 		const valued = Constructors.App(indexed, value, "Explicit");
@@ -288,6 +300,9 @@ export const Patterns = {
 	StuckInj: { type: "Neutral", kind: "Blocked", value: { type: "Inj" } } as const,
 
 	App: { type: "App" } as const,
+	Reset: { type: "Reset" } as const,
+	Existential: { type: "Existential" } as const,
+	Produced: { type: "Existential", producer: P.nonNullable } as const,
 	Pi: { type: "Abs", binder: { type: "Pi" } } as const,
 	ImplicitPi: { type: "Abs", binder: { type: "Pi", icit: "Implicit" } } as const,
 	Sigma: { type: "Abs", binder: { type: "Sigma" } } as const,

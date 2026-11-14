@@ -3,7 +3,7 @@ import * as EB from "@yap/elaboration";
 import * as M from "@yap/elaboration/shared/effects";
 import { match } from "ts-pattern";
 
-import type { Evaluation } from "./effects";
+import { Level, type Evaluation } from "./effects";
 import { apply, view, View } from "./evaluation.v2";
 
 const { Patterns } = NF;
@@ -54,11 +54,16 @@ export function* arity(ty: NF.Value): Evaluation<number> {
 	return yield* match(yield* view(ty))
 		.with(View.Sealed(Patterns.Pi), function* ({ value: { binder, closure } }) {
 			const ctx = yield* M.reader.ask();
-			const rigid = NF.Constructors.Rigid(ctx.env.length);
-			const extended = EB.bind(ctx, { type: "Pi", variable: binder.variable }, binder.annotation);
-			const returnType = yield* apply(binder, closure, rigid);
-
-			return 1 + (yield* M.reader.local(_ => extended, arity(returnType)));
+			const level = yield* Level.ask();
+			const rigid = NF.Constructors.Rigid(level);
+			const extended = EB.extend(ctx, { type: "Pi", variable: binder.variable }, rigid);
+			return yield* Level.local(
+				_ => level + 1,
+				(function* () {
+					const returnType = yield* apply(binder, closure, rigid);
+					return 1 + (yield* M.reader.local(_ => extended, arity(returnType)));
+				})(),
+			);
 		})
 		.otherwise(function* () {
 			return yield* match(yield* inert(ty))

@@ -252,7 +252,7 @@ describe("GRAM translate", () => {
 	it("Bubble walks its shift subterm", () => {
 		const shiftBody = EB.DSL.lambda("k", EB.DSL.app(EB.DSL.bound(0), EB.DSL.num(42)), EB.DSL.type("Num"));
 		const shiftTerm = EB.Constructors.Shift(shiftBody);
-		const bubble = EB.Constructors.Bubble(99, NF.Any, [], shiftTerm);
+		const bubble = EB.Constructors.ShiftBubble(99, NF.Any, [], shiftTerm);
 		const term = EB.Constructors.Reset(bubble);
 
 		const g = translate(term);
